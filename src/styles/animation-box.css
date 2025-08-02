@@ -1,0 +1,34 @@
+/* Animation Box Styles */
+
+/* Image scale hover effect */
+.image-scale-hover {
+  display: block; /* Ensures transform works consistently, might need inline-block depending on layout */
+  transition: transform 0.5s ease-in-out; /* Defines the smooth transition */
+  /* You can adjust the duration (0.5s) and timing function (ease-in-out) */
+  transform-origin: center center; /* Optional: Ensures scaling happens from the center */
+  will-change: transform; /* Optional: Hint for browser optimization */
+}
+
+.image-scale-hover:hover {
+  transform: scale(1.1); /* Scales the image up to 110% */
+  /* Adjust the scale value (1.1) for more or less zoom */
+}
+
+/* Slow animation box styles */
+.animation-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: transparent;
+  overflow: hidden;
+}
+
+.animation-box > div {
+  width: 100%;
+  height: 100%;
+  transition: transform 20s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+.animation-box:hover > div {
+  transform: scale(1.25);
+} 

@@ -1,0 +1,55 @@
+/* Custom Scrollbar Styles */
+
+/* Scrollbar customization for WebKit browsers (Chrome, Safari, Edge, etc.) */
+::-webkit-scrollbar {
+  width: 10px; /* Width of the scrollbar */
+}
+
+::-webkit-scrollbar-track {
+  background: transparent; /* Background color of the scrollbar track */
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--border)); /* Color of the scrollbar thumb using CSS variables */
+  border-radius: 5px; /* Rounded corners for the scrollbar thumb */
+}
+
+/* Scrollbar customization for Firefox */
+* {
+  scrollbar-width: thin; /* Makes the scrollbar thinner */
+  scrollbar-color: hsl(var(--border)) transparent; /* Thumb color and track background */
+}
+
+/* Smooth scrolling */
+html {
+  @apply scroll-smooth; /* Applies smooth scrolling to the page */
+}
+
+/* Overscroll behavior (prevents "bounce" effects on scroll) */
+body {
+  @apply overscroll-none;
+  /* Removed bg-background text-foreground to avoid conflicts with main layout */
+}
+
+/* Hiding scrollbar for WebKit browsers (Chrome, Safari, Edge, etc.) */
+.no-scrollbar::-webkit-scrollbar {
+  display: none; /* Hides the scrollbar */
+}
+
+/* Hiding scrollbar for IE, Edge, and Firefox */
+.no-scrollbar {
+  -ms-overflow-style: none; /* Hides scrollbar in IE and Edge */
+  scrollbar-width: none; /* Hides scrollbar in Firefox */
+}
+
+/* Hide scrollbar but allow scrolling */
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+} 
