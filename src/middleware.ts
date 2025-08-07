@@ -17,6 +17,9 @@ export default auth((req) => {
   const isPublicRoute = publicRoutes.includes(pathname)
   const isAuthRoute = authRoutes.includes(pathname)
   
+  // Check if the route is a docs route (all docs routes are public)
+  const isDocsRoute = pathname === "/docs" || pathname.startsWith("/docs/")
+  
   // Check if the route is in the platform directory
   const isPlatformRoute = 
     pathname === "/dashboard" || 
@@ -40,6 +43,11 @@ export default auth((req) => {
     if (isLoggedIn) {
       return Response.redirect(new URL(DEFAULT_LOGIN_REDIRECT, nextUrl))
     }
+    return
+  }
+
+  // Allow all docs routes (they are public)
+  if (isDocsRoute) {
     return
   }
 
