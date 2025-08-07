@@ -27,6 +27,92 @@ The patterns documented here emerge from real-world usage across our [open sourc
 - **API routes**: kebab-case (`/api/user-profile`, `/api/order-history`)
 - **Environment variables**: SCREAMING_SNAKE_CASE (`DATABASE_URL`, `NEXT_PUBLIC_API_KEY`)
 
+## Page & Component Patterns
+
+### Page Structure Pattern
+We follow a consistent pattern for all page components that ensures predictability and maintainability across the codebase.
+
+#### Folder Naming Convention
+- **Page folders**: lowercase (`abc/`, `blog/`, `user-profile/`, `dashboard/`)
+
+#### Page Component Pattern
+Every page follows this exact structure:
+
+```typescript
+import ComponentContent from "@/components/folder-name/content";
+
+export const metadata = {
+  title: "Page Title",
+}
+
+export default function PageName() {
+  return <ComponentContent />;
+}
+```
+
+#### Examples
+
+**ABC Page** (`src/app/abc/page.tsx`):
+```typescript
+import AbcContent from "@/components/abc/content";
+
+export const metadata = {
+  title: "Abc",
+}
+
+export default function Abc() {
+  return <AbcContent />;
+}
+```
+
+**Blog Page** (`src/app/blog/page.tsx`):
+```typescript
+import BlogContent from "@/components/blog/content";
+
+export const metadata = {
+  title: "Blog",
+}
+
+export default function Blog() {
+  return <BlogContent />;
+}
+```
+
+### Component Content Pattern
+Each page imports a corresponding content component that follows a specific naming convention.
+
+#### Content Component Structure
+- **Location**: `src/components/folder-name/content.tsx`
+- **Naming**: `{FolderName}Content` (PascalCase with "Content" suffix)
+- **Export**: Default export of the content component
+
+#### Example Content Component
+```typescript
+// src/components/abc/content.tsx
+import Hero from "./hero";
+import Form from "./form";
+import Cards from "./cards";
+import Actions from "./actions";
+
+export default function AbcContent() {
+  return (
+    <main className="flex min-h-screen flex-col">
+      <Hero />
+      <Form />
+      <Cards />
+      <Actions />
+    </main>
+  );
+}
+```
+
+### Pattern Benefits
+- **Predictable Structure**: Every page follows the same pattern
+- **Easy Navigation**: Folder name directly maps to component name
+- **Consistent Imports**: All content components follow the same import pattern
+- **Maintainable**: Clear separation between page logic and content
+- **Scalable**: Easy to add new pages following the established pattern
+
 ## Function Patterns
 
 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-8">

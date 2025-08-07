@@ -3,7 +3,7 @@
 Hogwarts is a school automation platform that manages students, faculty, and academic processes with an intuitive interface.
 <br>
 
-<!-- ![hero](public/thumb.png) -->
+![hero](public/thumb.png)
 
 # Stack
 
