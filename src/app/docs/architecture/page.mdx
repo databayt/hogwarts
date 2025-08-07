@@ -2,7 +2,7 @@
 
 Our architecture is engineered from the ground up for reusability, modularity, and a world-class developer experience. It's not just a system for building applications; it's a framework for composing "atomic" automation components into a powerful, collaborative, and AI-augmented ecosystem. We prioritize a scalable, feature-based structure to ensure that every contribution adds lasting, discoverable value to the entire codebase.
 
-### Core Architectural Principles
+### Core Principles
 
 Our design decisions are guided by a few key principles:
 
@@ -13,17 +13,26 @@ Our design decisions are guided by a few key principles:
 - **Type-Safety by Default** – We enforce strict type safety across the entire stack, from the database to the frontend. This minimizes runtime errors and enhances code reliability.
 - **AI-Augmented Workflow** – Artificial intelligence is woven into the fabric of our architecture. From AI-assisted coding to intelligent automation agents, we use AI to accelerate the development lifecycle.
 
-### The Composition Hierarchy: From Atoms to Apps
+### The Composition Hierarchy: From Radix UI to Masterpieces
 
-Our methodology is based on a clear and scalable composition hierarchy. We don't just provide code; we provide the building blocks for value creation.
+Our methodology is built on a foundation of proven, composable building blocks that scale from primitive components to complete applications. We leverage the power of the shadcn ecosystem to create a systematic approach to building features.
 
-1. **Atoms** – The foundation is built using core shadcn/ui components and other primitives. These are the most basic, indivisible UI elements.
-2. **Templates** – We shape Atoms into Templates—reusable layouts and component compositions that solve common UI patterns (e.g., a standard page layout, a data table structure).
-3. **Building Blocks** – A Building Block combines Templates with client-side logic (`hooks.ts`, `validation.ts`) to create interactive, feature-rich user experiences.
-4. **Microservices** – A Microservice is the combination of Building Blocks with backend logic (`actions.ts`). It's a fully encapsulated feature, complete with its UI, data models, and API, that can operate independently.
-5. **Full Apps** – Finally, we craft Full Apps by composing various Microservices, creating a cohesive, enterprise-grade solution.
+#### Foundation Layer: Radix UI → shadcn/ui → shadcn Ecosystem
 
-This layered approach, influenced by component management platforms like Bit, ensures that every part of the system is reusable and contributes to a greater whole.
+1. **Radix UI** – The primitive foundation providing unstyled, accessible components
+2. **shadcn/ui** – Built on top of Radix UI, providing styled, customizable components
+3. **shadcn Ecosystem** – Community-driven components and libraries inspired by shadcn/ui patterns
+
+#### Composition Hierarchy: From UI to Masterpieces
+
+1. **UI** – shadcn/ui components serve as our base UI layer, providing consistent styling and behavior
+2. **Atoms** – Two or more shadcn/ui components (or components from the shadcn ecosystem) combined to create atomic building blocks
+3. **Templates** – Reusable layouts and component compositions that solve common UI patterns
+4. **Blocks** – Interactive features combining Templates with client-side logic (`hooks.ts`, `validation.ts`)
+5. **Micro** – Fully encapsulated features with backend logic (`actions.ts`), complete with UI, data models, and API
+6. **Masterpieces** – Complete applications composed of various Micro features, creating cohesive, enterprise-grade solutions
+
+This layered approach ensures that every component is built on solid foundations while maintaining the flexibility to create complex, feature-rich applications. Each level adds value and functionality while remaining composable and reusable.
 
 ### Project Structure: A Feature-Based, Mirror-Pattern Approach
 
@@ -34,51 +43,21 @@ Our project structure follows a predictable, mirror-pattern architecture that en
 Every URL route has a corresponding, mirrored directory structure for its component logic. If you can see a URL, you know exactly where to find its code.
 
 ```text
-URL: /appointment
+URL: /abc
 ```
 
 mirrors to:
 
 ```text
-app/appointment/          (Next.js App Router files)
-components/appointment/   (All related component logic)
+src/app/abc/          (Next.js App Router files)
+src/components/abc/   (All related component logic)
 ```
 
 #### Directory Structure
 
-```text
-project-root/
-├── app/                     # Next.js App Router (Routing & Layouts)
-│   ├── appointment/
-│   │   ├── page.tsx
-│   │   ├── layout.tsx
-│   │   └── loading.tsx
-│   └── dashboard/
-│       ├── page.tsx
-│       └── settings/
-│           └── page.tsx
-│
-├── components/              # Component Logic (Mirrors `app` structure)
-│   ├── appointment/
-│   │   ├── actions.ts       # Server actions & API calls
-│   │   ├── constants.ts     # Arrays, enums, static data
-│   │   ├── validation.ts    # Zod schemas & validation logic
-│   │   ├── types.ts         # TypeScript interfaces & types
-│   │   ├── form.tsx         # Form components
-│   │   ├── cards.tsx        # Card components
-│   │   ├── content.tsx      # UI content components
-│   │   └── hooks.ts         # Custom React hooks
-│   └── dashboard/
-│       ├── actions.ts
-│       ├── constants.ts
-│       └── settings/
-│           ├── form.tsx
-│           └── validation.ts
-│
-├── lib/                     # Shared utilities & functions
-├── types/                   # Global TypeScript definitions
-└── public/                  # Static assets
-```
+import { DirectoryStructure } from './directory-structure'
+
+<DirectoryStructure />
 
 ### Standardized File Patterns
 
@@ -86,14 +65,14 @@ To ensure consistency, each feature directory follows standardized naming conven
 
 | File           | Purpose                                   | Example Content                         |
 |----------------|-------------------------------------------|-----------------------------------------|
-| `actions.ts`   | Server actions, API calls, data mutations | `createAppointment()`, `updateStatus()` |
+| `actions.ts`   | Server actions, API calls, data mutations | `createAbc()`, `updateStatus()` |
 | `constants.ts` | Static data, enums, configuration         | Status arrays, default values           |
 | `validation.ts`| Zod schemas for form and API validation   | Input schemas, error messages           |
 | `types.ts`     | TypeScript interfaces and type definitions| Component props, data models            |
 | `form.tsx`     | Form components using React Hook Form     | Input fields, submission logic, state   |
 | `cards.tsx`    | Card-based UI components                  | Data display cards, interactive elements|
 | `content.tsx`  | General UI content and layout components  | Headers, descriptions, sections         |
-| `hooks.ts`     | Custom React hooks for state and effects  | `useAppointmentState()`, `useStatusQuery()` |
+| `hooks.ts`     | Custom React hooks for state and effects  | `useAbcState()`, `useStatusQuery()` |
 
 We leverage **TypeScript Generics** extensively within these files, especially in `types.ts` and `hooks.ts`, to create highly reusable and flexible logic that can be adapted to various data structures without sacrificing type safety.
 

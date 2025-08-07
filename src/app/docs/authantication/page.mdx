@@ -1,0 +1,220 @@
+## Authentication
+
+Our authentication system is built on Next.js App Router with Auth.js (formerly NextAuth), providing a comprehensive solution for user authentication including OAuth providers, email/password login, two-factor authentication, email verification, and password reset functionality. It's designed with multi-tenant architecture in mind, ensuring secure user isolation across different schools and organizations.
+
+### Core Features
+
+Our authentication module delivers enterprise-grade security with a developer-friendly experience:
+
+- **Multi-Provider Authentication** – Support for Credentials, Google, and Facebook OAuth providers with seamless integration
+- **JWT-Based Sessions** – Secure session management with automatic token refresh and validation
+- **Role-Based Access Control** – Granular permissions with roles including DEVELOPER, ADMIN, TEACHER, STUDENT, GUARDIAN, and more
+- **Two-Factor Authentication** – Enhanced security with 2FA support for sensitive operations
+- **Email Verification Flow** – Complete email verification system with token-based confirmation
+- **Password Reset Functionality** – Secure password recovery with time-limited tokens
+- **Multi-Tenant Support** – School isolation ensuring users can only access their designated organization
+- **Elegant Route Protection** – Smart middleware that automatically handles public and protected routes
+
+### Architecture Overview
+
+Our authentication system follows a layered architecture that prioritizes security, scalability, and developer experience:
+
+#### Core Authentication Files
+
+The foundation of our authentication system consists of several key files that work together to provide a robust authentication experience:
+
+- **`src/auth.ts`** – Main Auth.js configuration with callbacks and session management
+- **`src/auth.config.ts`** – Provider configurations for Google, Facebook, and Credentials
+- **`src/middleware.ts`** – Auth-based route protection with intelligent public route handling
+- **`src/routes.ts`** – Route definitions for authentication and public access patterns
+- **`src/next-auth.d.ts`** – TypeScript declarations for extended user types and session data
+
+#### Component Architecture
+
+Our authentication components are organized for maximum reusability and maintainability:
+
+**Core Components (`src/components/auth/`)**
+- `user.ts` – User database queries with multi-tenant support
+- `user-info.tsx` – User information display component
+- `user-button.tsx` – User dropdown/menu button with role-based options
+- `social.tsx` – OAuth provider login buttons with consistent styling
+- `logout-button.tsx` – Secure logout functionality with session cleanup
+- `login-button.tsx` – Login trigger button with provider selection
+- `role-gate.tsx` – Role-based access control component for UI protection
+- `card-wrapper.tsx` – Authentication form wrapper with consistent styling
+- `header.tsx` – Authentication form headers with branding support
+- `back-button.tsx` – Navigation back button for form flows
+- `form-error.tsx` – Error message display with user-friendly formatting
+- `form-success.tsx` – Success message display for positive feedback
+- `validation.ts` – Zod schemas for comprehensive form validation
+- `tokens.ts` – Token generation and management utilities
+- `mail.ts` – Email sending functionality with template support
+- `auth.ts` – Auth utility functions for common operations
+- `account.ts` – Account management utilities
+- `admin-action.ts` – Admin-specific actions and permissions
+- `use-current-user.ts` – Hook for current user data with caching
+- `use-current-role.ts` – Hook for current user role with real-time updates
+
+**Feature-Specific Directories**
+- `login/` – Complete login form and server actions
+- `join/` – User registration form and validation actions
+- `reset/` – Password reset request components and flows
+- `password/` – Password management and reset functionality
+- `verification/` – Email verification and 2FA components
+- `error/` – Comprehensive error handling components
+- `setting/` – User settings and profile management
+
+### Multi-Tenant Architecture
+
+Our authentication system is built with multi-tenancy as a first-class concern, ensuring secure isolation between different organizations:
+
+#### User Model Features
+
+- **School Isolation** – Users are associated with specific schools via `schoolId` field
+- **Compound Unique Constraint** – Same email can exist across different schools securely
+- **Role-Based Access** – Comprehensive role system including DEVELOPER, ADMIN, TEACHER, STUDENT, GUARDIAN, ACCOUNTANT, STAFF, USER
+- **OAuth Integration** – Google and Facebook integration with automatic email verification
+
+#### Database Queries
+
+Our database layer is optimized for multi-tenant operations:
+
+- `getUserByEmail()` uses `findFirst()` to handle multi-tenant email uniqueness
+- `getUserById()` provides secure user lookups by ID with school isolation
+- Account linking for OAuth providers with tenant-aware associations
+
+### Route Protection Strategy
+
+Our middleware implements an intelligent route protection system that balances security with accessibility:
+
+#### Public Routes
+
+The system automatically handles public documentation routes:
+
+```typescript
+// All /docs routes are automatically public
+pathname.startsWith("/docs/")
+```
+
+This elegant solution ensures all documentation routes are public by default without requiring manual configuration updates when adding new docs pages.
+
+#### Protected Routes
+
+- Platform routes (`/dashboard`, `/project`, `/task`, etc.) require authentication
+- Role-based access control through `RoleGate` component
+- Automatic redirect to login with callback URL preservation for seamless UX
+
+### Environment Configuration
+
+Our authentication system requires specific environment variables for full functionality:
+
+```bash
+# Core Authentication
+AUTH_SECRET=your_auth_secret
+
+# OAuth Providers
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+FACEBOOK_CLIENT_ID=your_facebook_client_id
+FACEBOOK_CLIENT_SECRET=your_facebook_client_secret
+
+# Email Services
+RESEND_API_KEY=your_resend_api_key
+
+# Application URLs
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+```
+
+### Usage Patterns
+
+#### Protected Route Implementation
+
+Use the `auth()` function from your route handlers to protect server-side routes:
+
+```typescript
+import { auth } from "@/auth";
+
+export default async function ProtectedPage() {
+  const session = await auth();
+  
+  if (!session) {
+    // Handle unauthorized access
+    redirect("/login");
+  }
+  
+  return <div>Protected Content</div>;
+}
+```
+
+#### Client Component Integration
+
+Use our provided hooks for seamless client-side authentication:
+
+```typescript
+"use client";
+import { useCurrentUser } from "@/components/auth/use-current-user";
+
+export default function UserComponent() {
+  const user = useCurrentUser();
+  
+  return <div>Hello, {user?.name}</div>;
+}
+```
+
+#### Role-Based Access Control
+
+Implement granular permissions using the `RoleGate` component:
+
+```typescript
+import { RoleGate } from "@/components/auth/role-gate";
+import { UserRole } from "@prisma/client";
+
+<RoleGate allowedRole={UserRole.ADMIN}>
+  <AdminPanel />
+</RoleGate>
+```
+
+### Deployment Considerations
+
+#### Vercel Deployment
+
+When deploying to Vercel, ensure proper configuration:
+
+1. **Environment Variables**:
+   - Set `NEXTAUTH_URL` to your production URL (`https://yourdomain.com`)
+   - Configure all OAuth provider credentials in Vercel environment settings
+   - Add `NODE_ENV=production` to environment variables
+
+2. **Facebook OAuth Configuration**:
+   - Callback URL must exactly match: `https://yourdomain.com/api/auth/callback/facebook`
+   - App must be in "Live" mode, not "Development Mode"
+   - "Facebook Login" product must be added with proper permissions
+
+3. **Build Configuration**:
+   - Use the provided `next.config.js` with proper Prisma configuration
+   - Ensure `vercel-build.js` is correctly set up to generate Prisma client
+   - Verify your `schema.prisma` has `binaryTargets = ["native", "rhel-openssl-3.0.x"]`
+
+### Extending the Module
+
+To extend this authentication module for your specific needs:
+
+1. **Add New Providers** – Update `auth.config.ts` to include additional OAuth providers
+2. **Custom Logic** – Modify `auth.ts` callbacks for custom authentication flows
+3. **New Components** – Add components in `src/components/auth/` following established patterns
+4. **Database Schema** – Extend the database schema for additional user fields
+5. **Route Protection** – Update middleware for new route protection patterns
+
+### Troubleshooting
+
+Common issues and their solutions:
+
+- **Environment Variables** – Ensure all required variables are properly set
+- **OAuth Callbacks** – Verify callback URLs in provider consoles match your application
+- **Facebook OAuth** – Check app domain and callback URLs are configured correctly
+- **Debug Endpoints** – Use `/api/auth/debug/facebook` for Facebook OAuth debugging
+- **Server Logs** – Review Vercel dashboard logs for detailed error information
+
+---
+
+This authentication system provides a solid foundation for building secure, scalable applications with enterprise-grade user management capabilities.
