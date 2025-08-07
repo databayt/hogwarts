@@ -1,4 +1,4 @@
-import AllUsers from "@/components/platform/dashboard/user/all";
+import AllUsers from "@/components/platform/dashboard-two/user/all";
 
 export const metadata = {
   title: "Users",

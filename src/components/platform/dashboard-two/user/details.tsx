@@ -1,4 +1,4 @@
-import DashboardCard from "@/components/platform/dashboard/card";
+import DashboardCard from "@/components/platform/dashboard-two/card";
 import { Badge } from "@/components/ui/badge";
 import {
   Breadcrumb,
@@ -17,9 +17,9 @@ import { Progress } from "@/components/ui/progress";
 import { BadgeCheck, Candy, Citrus, Shield } from "lucide-react";
 import { Sheet, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import EditUser from "@/components/platform/dashboard/edit-user";
+import EditUser from "@/components/platform/dashboard-two/edit-user";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import Linechart from "@/components/platform/dashboard/line-chart";
+import Linechart from "@/components/platform/dashboard-two/line-chart";
 
 export default function UserDetails() {
   return (

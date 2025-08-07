@@ -4,7 +4,7 @@ import { marketingConfig } from './constant'
 import { auth } from "@/auth"
 import { RightActions } from './right-actions'
 
-export default async function SiteHeader() {
+export default async function MarketingHeader() {
   const session = await auth();
     return (
       <header className="sticky top-0 z-40 border-b border-dashed border-muted bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60" style={{

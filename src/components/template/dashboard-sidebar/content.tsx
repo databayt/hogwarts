@@ -70,7 +70,7 @@ const items = [
   },
 ];
 
-export default function AppSidebar() {
+export default function DashboardSidebar() {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader className="py-4">

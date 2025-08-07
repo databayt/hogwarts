@@ -14,20 +14,20 @@ export function RightActions({ isAuthenticated }: RightActionsProps) {
   return (
     <div className="flex items-center gap-2">
       {isAuthenticated ? (
-        <Button
-          variant="secondary"
-          size="sm"
-          className="px-4 text-xs"
-          asChild
+        <LogoutButton
+          className={cn(
+            buttonVariants({ variant: "ghost", size: "sm" }),
+            "px-4 text-xs cursor-pointer bg-muted"
+          )}
         >
-          <LogoutButton>Logout</LogoutButton>
-        </Button>
+          Logout
+        </LogoutButton>
       ) : (
         <Link
           href="/login"
           className={cn(
-            buttonVariants({ variant: "secondary", size: "sm" }),
-            "px-4 text-xs"
+            buttonVariants({ variant: "ghost", size: "sm" }),
+            "px-4 text-xs bg-muted"
           )}
         >
           Login

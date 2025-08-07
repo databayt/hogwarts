@@ -1,5 +1,5 @@
-import SiteHeader from "@/components/template/marketing-header/content";
-import MarketingFooter from "@/components/template/marketing-footer/content";
+import MarketingHeader from "@/components/template/marketing-header/content";
+import { MarketingFooter } from "@/components/template/marketing-footer/content";
 // import { SiteFooter } from "@/components/site-footer";
 
 export default function MarketingLayout({
@@ -9,7 +9,7 @@ export default function MarketingLayout({
 }>) {
   return (
     <div data-slot="site-layout">
-      <SiteHeader />
+      <MarketingHeader />
       <main 
         data-slot="main-content"
         role="main"

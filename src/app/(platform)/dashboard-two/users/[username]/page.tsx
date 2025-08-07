@@ -1,4 +1,4 @@
-import UserDetails from "@/components/platform/dashboard/user/details";
+import UserDetails from "@/components/platform/dashboard-two/user/details";
 
 export const metadata = {
   title: "User Details",
