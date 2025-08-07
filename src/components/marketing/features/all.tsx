@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 export default function AllFeatures() {
   return (
     <div>
+        <div className="flex flex-col items-center space-y-8 mt-8">
         <PageHeader title="Features" />
         
         <div className="relative w-full max-w-xs">
@@ -16,6 +17,7 @@ export default function AllFeatures() {
             placeholder="Search features..."
             className="w-full pl-10"
           />
+        </div>
         </div>
     
     <div className="grid grid-cols-1 gap-4 py-12 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
