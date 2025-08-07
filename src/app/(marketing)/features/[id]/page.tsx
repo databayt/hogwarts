@@ -1,9 +1,9 @@
-export default function FeaturePage() {
+import FeatureDetails from "@/components/marketing/features/details";
 
+export const metadata = {
+  title: "Feature Details",
+}
 
-    return (
-        <div>
-            Detailed information about
-        </div>
-    )
+export default function Feature() {
+  return <FeatureDetails />;
 }

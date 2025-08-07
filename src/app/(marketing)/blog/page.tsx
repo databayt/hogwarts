@@ -1,7 +1,9 @@
+import BlogContent from "@/components/marketing/blog/content";
+
+export const metadata = {
+  title: "Blog",
+}
+
 export default function Blog() {
-  return (
-    <div>
-      <h1>Blog</h1>
-    </div>
-  );
+  return <BlogContent />;
 }
