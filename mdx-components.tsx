@@ -1,8 +1,8 @@
-import type { MDXComponents } from 'mdx/types'
+import type { ComponentProps } from 'react'
 import { cn } from '@/lib/utils'
 
 // This file is required to use MDX in `app` directory.
-export function useMDXComponents(components: MDXComponents): MDXComponents {
+export function useMDXComponents(components: Record<string, React.ComponentType<any>>): Record<string, React.ComponentType<any>> {
   return {
     // Allows customizing built-in components, e.g. to add styling.
     h1: ({ className, ...props }) => (
