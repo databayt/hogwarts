@@ -2,13 +2,62 @@
 
 ## Introduction
 
-**Automate** the boring. at Databayt we're building codebase for business automation, one atomic component at a time. Every line of code is open source, every contribution is valued, and every developer may shape the future of how businesses operate.
+**Automate** the boring. At Databayt, we're building a codebase for business automation, one atomic component at a time. Every line of code is open source, every contribution is valued, and every developer may shape the future of how businesses operate.
 
-We sell the origin of all value — we sell **Time**, the currency that drives the world — what if you could reclaim yours and focus on what truly matters?
-It's more than a service — it's an escape from the matrix.
-A restoration of time through the elimination of repetitive tasks, streamlined operations, and automated processes.
-Break free. Reclaim your hours.
+We sell the origin of all value — we sell **Time**, the currency that drives the world. Reclaim yours and focus on what truly matters by eliminating repetitive tasks, streamlining operations, and automating processes.
 
 The Repository of **Wonders.** Think of our codebase as a living library where every contribution becomes part of something greater. From atomic components to complete templates, from blocks to micro-services to full automation solutions—we're creating the building blocks that will power tomorrow's businesses.
 
 Follow along as we **figure** this out together. This isn't just about building software; it's about creating a collaborative ecosystem where developers, businesses, and innovators unite to solve real problems. Every contribution you make doesn't just help one project—it becomes part of a growing foundation that serves countless businesses worldwide.
+
+### How We Tackle a Multi-tenant School Management System
+
+- Architecture: shared schema, strict row-level isolation via `schoolId` on every domain model. Server actions enforce tenant scoping.
+- Provisioning: each school gets a unique subdomain instantly (e.g., `school.hogwarts.app`). Custom domains are supported via CNAME.
+- Roles & Access: Owner, Admin, Teacher, Student, Parent, Accountant; least privilege by default.
+- Observability: structured logs, metrics, and error tracking; daily backups.
+
+### Product Layout
+
+- Public: marketing site, pricing, docs, school landing pages (`school.hogwarts.app`), authentication
+- App: dashboards per role, attendance, timetable, announcements, settings, billing
+- Admin: platform-wide moderation, domain approvals, plan configurations
+
+### Business Model
+
+- Cloud-based SaaS per school
+- Plans: Trial, Basic, Pro (monthly/annual)
+- Pricing aligns with Sudan context; manual payment option supported
+
+### Subscriptions & Trials
+
+- Trial starts on school creation with clear countdown
+- Upgrade/downgrade at any time; invoices and receipts available
+- Grace period for expired payment before suspension
+
+### Domains & Landing Pages
+
+- Unique subdomain per school at signup
+- Optional custom domain mapped via CNAME with automated certificates
+- Customizable public landing page per school (logo, colors, hero, contact)
+
+### Internal Tools
+
+- School dashboard: enrollment, classes, subjects, users
+- Attendance marking and basic reports
+- Announcements composer
+- Billing center with plan management and history
+
+### Technical Stack & Patterns
+
+- Next.js App Router, Server Components with Server Actions for mutations
+- Prisma with Neon (Postgres); every model has `schoolId`
+- shadcn/ui for primitives; composition via atoms → templates → blocks → micro → apps
+- Mirror-pattern architecture: `app/feature` mirrors `components/feature`
+- Standardized files: `actions.ts`, `constants.ts`, `validation.ts`, `types.ts`, `form.tsx`, `content.tsx`
+
+### Operating Cadence
+
+- Weekly releases, daily standups ≤ 10 minutes, async-first
+- Docs updated with every notable change; keep decisions visible
+

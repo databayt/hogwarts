@@ -1,0 +1,59 @@
+## Add a School
+
+Step-by-step guide to provision a new tenant (school) with a unique subdomain and default settings.
+
+### Prerequisites
+
+- Platform admin access or self-serve signup enabled
+- School name, preferred subdomain, admin email
+
+### Steps
+
+1. Start: click “Create School”
+2. Enter details: name, subdomain (e.g., `hogwarts` → `hogwarts.hogwarts.app`), timezone
+3. Choose plan: Trial, Basic, Pro
+4. Invite users: Owner/Admin, Teachers (optional)
+5. Seed data: example classes and subjects (optional)
+6. Finish: you’ll land in the School Dashboard at the new subdomain
+
+### Invite & Roles
+
+- Owner: full control including billing and domain
+- Admin: manage users, classes, subjects, announcements
+- Teacher: mark attendance and view timetable
+- Parent/Student: read-only portal (MVP)
+
+### Domain & Branding
+
+- Subdomain is created instantly
+- Custom domain: submit a request; we provide DNS instructions (CNAME) and certificate automation
+- Upload logo, set primary color, and landing page content
+
+### Billing & Trial
+
+- Trial starts immediately; countdown shown in dashboard
+- Convert to paid plan anytime; invoices stored in Billing
+
+### Access Control
+
+- First invited user becomes Owner; can add Admins and other roles
+- All data is scoped by `schoolId` automatically
+
+### Automation (Optional)
+
+- Seed script creates demo classes and subjects for evaluation
+- Sample data can be purged from Settings once real data is ready
+
+### Troubleshooting
+
+- Subdomain taken: choose a different one or add `-school`
+- Email not received: check spam, then re-send invite
+- Custom domain pending: verify DNS propagation (may take up to 24 hours)
+
+### FAQ
+
+- Can I change subdomain later? Yes, with redirect; custom domain recommended for branding.
+- Can I pause my subscription? Yes, school becomes read-only until reactivated.
+
+
+

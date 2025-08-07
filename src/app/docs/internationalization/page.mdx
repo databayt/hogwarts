@@ -1,0 +1,237 @@
+## Internationalization (i18n)
+
+Sudan-first experience: Arabic (RTL) is a first-class citizen with English (LTR) alongside it. The platform respects user preference with a school-level default.
+
+### Languages
+
+- Arabic (ar) — RTL layout by default
+- English (en) — LTR layout
+
+### Strategy
+
+- Per-user locale stored in profile; falls back to school default
+- Direction switching via `dir` attribute on `<html>`
+- Content is translation-key based; no hard-coded strings in components
+
+### Locales and Negotiation
+
+- Accept-Language parsing on first visit, then persist in user settings
+- School default used for unauthenticated visitors to subdomain landing pages
+- Admins can set school default locale; users can override
+
+### UI Guidelines
+
+- Use logical properties (margin-inline, padding-inline) where possible
+- Icons and arrows must mirror for RTL when directional
+- Numbers remain western Arabic numerals unless explicitly localized
+
+### Typography & Fonts
+
+- Choose Arabic-friendly fonts with good hinting and readability
+- Verify line-height and letter-spacing for Arabic script
+
+### Implementation
+
+- Next.js middleware sets `locale` and `dir` on each request
+- Shared translation utilities in `src/lib/i18n`
+- Date/time formatting respects `Africa/Khartoum` by default
+
+### Data & Content Storage
+
+- Keep translations collocated by feature to reduce merge conflicts
+- Validate translation keys at build time
+
+### Content
+
+- Product copy managed in JSON or MD files; avoid duplication
+- Avoid concatenating strings; prefer full-sentence translations
+
+### Testing
+
+- Snapshot key screens in both ar/en
+- Verify overflow and truncation in Arabic
+- Verify keyboard navigation in mirrored layouts
+
+### Accessibility
+
+- Ensure focus order remains logical when mirrored
+- Provide clear language switcher with labels in both languages
+
+### Folder Structure (Recommended)
+
+```
+src/
+  lib/i18n/
+    config.ts          // supported locales, defaults
+    index.ts           // helpers: getLocale, getDirection, t
+    messages/
+      ar.json
+      en.json
+```
+
+### Configuration Example
+
+```ts
+// src/lib/i18n/config.ts
+export const supportedLocales = ["ar", "en"] as const
+export type Locale = (typeof supportedLocales)[number]
+
+export const defaultLocale: Locale = "ar"
+
+export function getDirection(locale: Locale): "rtl" | "ltr" {
+  return locale === "ar" ? "rtl" : "ltr"
+}
+```
+
+### Translation Helper
+
+```ts
+// src/lib/i18n/index.ts
+import { cookies } from "next/headers"
+import { defaultLocale, getDirection, supportedLocales, type Locale } from "./config"
+import ar from "./messages/ar.json"
+import en from "./messages/en.json"
+
+const catalogs: Record<Locale, Record<string, string>> = { ar, en }
+
+export function resolveLocale(): Locale {
+  const cookieLocale = cookies().get("locale")?.value
+  if (supportedLocales.includes(cookieLocale as Locale)) return cookieLocale as Locale
+  return defaultLocale
+}
+
+export function t(key: string, params?: Record<string, string | number>, locale?: Locale) {
+  const l = (locale ?? resolveLocale()) as Locale
+  const message = catalogs[l][key] ?? catalogs[defaultLocale][key] ?? key
+  if (!params) return message
+  return Object.keys(params).reduce(
+    (acc, k) => acc.replace(new RegExp(`{${k}}`, "g"), String(params[k]!)),
+    message
+  )
+}
+
+export { getDirection }
+```
+
+### Middleware (Optional locale cookie bootstrap)
+
+```ts
+// middleware.ts (optional)
+import { NextResponse } from "next/server"
+import type { NextRequest } from "next/server"
+
+export function middleware(req: NextRequest) {
+  const res = NextResponse.next()
+  const locale = req.cookies.get("locale")?.value
+  if (!locale) {
+    const accept = req.headers.get("accept-language") ?? ""
+    const first = accept.split(",")[0]?.split("-")[0]
+    const chosen = first === "en" ? "en" : "ar"
+    res.cookies.set("locale", chosen, { path: "/" })
+  }
+  return res
+}
+```
+
+### Layout Integration
+
+```tsx
+// src/app/layout.tsx
+import { resolveLocale, getDirection } from "@/lib/i18n"
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const locale = resolveLocale()
+  const dir = getDirection(locale)
+  return (
+    <html lang={locale} dir={dir}>
+      <body>{children}</body>
+    </html>
+  )
+}
+```
+
+### Messages Example
+
+```json
+// src/lib/i18n/messages/ar.json
+{
+  "welcome": "مرحبًا {name}",
+  "attendance": "الحضور",
+  "announcements": "الإعلانات"
+}
+```
+
+```json
+// src/lib/i18n/messages/en.json
+{
+  "welcome": "Welcome {name}",
+  "attendance": "Attendance",
+  "announcements": "Announcements"
+}
+```
+
+### Using Translations in Components
+
+```tsx
+import { t } from "@/lib/i18n"
+
+export function Greeting({ name }: { name: string }) {
+  return <h1>{t("welcome", { name })}</h1>
+}
+```
+
+### RTL in Tailwind (Optional)
+
+If needed beyond CSS logical properties, use a plugin to enable `rtl:` variants.
+
+```ts
+// tailwind.config.ts
+import type { Config } from "tailwindcss"
+import tailwindRtl from "tailwindcss-rtl"
+
+export default {
+  content: ["./src/**/*.{ts,tsx}"],
+  plugins: [tailwindRtl()],
+} satisfies Config
+```
+
+Example usage:
+
+```tsx
+<div className="pl-4 rtl:pr-4 rtl:pl-0">...</div>
+```
+
+Prefer logical properties where possible to avoid variant duplication.
+
+### Date, Time, Number, Currency
+
+```ts
+const locale = "ar"
+const tz = "Africa/Khartoum"
+
+const formattedDate = new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeZone: tz }).format(new Date())
+const formattedNumber = new Intl.NumberFormat(locale).format(1234567.89)
+const formattedCurrency = new Intl.NumberFormat(locale, { style: "currency", currency: "SDG" }).format(1500)
+```
+
+### Content & SEO
+
+- For public pages, ensure meta tags reflect language and direction
+- Localize page titles/descriptions; leverage Next.js `metadata`
+
+### QA Checklist
+
+- [ ] All primary flows tested in ar/en
+- [ ] Layouts verified under RTL mirroring (icons/arrows)
+- [ ] Screen readers handle language and direction appropriately
+- [ ] Dates/numbers/currency localized
+
+### References
+
+- Next.js App Router internationalization: [Internationalization in Next.js](https://nextjs.org/docs/app/building-your-application/routing/internationalization)
+- MDN Intl APIs: [DateTimeFormat](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/DateTimeFormat), [NumberFormat](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat)
+- W3C: [Authoring HTML & CSS for RTL scripts](https://www.w3.org/International/techniques/authoring-html)
+- Radix UI: [Direction (RTL)](https://www.radix-ui.com/primitives/docs/guides/rtl)
+- Tailwind RTL plugin: [tailwindcss-rtl](https://github.com/20lives/tailwindcss-rtl)
+
+

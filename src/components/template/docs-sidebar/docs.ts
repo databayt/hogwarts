@@ -56,18 +56,13 @@ export const docsConfig: DocsConfig = {
           items: [],
         },
         {
+          title: "Roadmap",
+          href: "/docs/roadmap",
+          items: [],
+        },
+        {
           title: "Architecture",
           href: "/docs/architecture",
-          items: [],
-        },
-        {
-          title: "Database",
-          href: "/docs/database",
-          items: [],
-        },
-        {
-          title: "Stack",
-          href: "/docs/stack",
           items: [],
         },
         {
@@ -76,35 +71,58 @@ export const docsConfig: DocsConfig = {
           items: [],
         },
         {
-          title: "Issues",
-          href: "/docs/issues",
+          title: "Stack",
+          href: "/docs/stack",
+          items: [
+            {
+              title: "Onboarding",
+              href: "/docs/stack/onboarding",
+              items: [],
+            },
+          ],
+        },
+        {
+          title: "Database",
+          href: "/docs/database",
           items: [],
         },
         {
-          title: "Roadmap",
-          href: "/docs/roadmap",
+          title: "Internationalization",
+          href: "/docs/internationalization",
           items: [],
         },
         {
-          title: "Credits",
-          href: "/docs/credit",
+          title: "Add School",
+          href: "/docs/add-school",
           items: [],
         },
         {
-          title: "Vibe Coding",
-          href: "/docs/vibe-coding",
+          title: "Milestones",
+          href: "/docs/milestones",
           items: [],
         },
         {
-          title: "Sales",
-          href: "/docs/sales",
+          title: "Awesome shadcn",
+          href: "/docs/awesome-shadcn",
           items: [],
         },
+        // Issues page can be added later if needed
+        {
+          title: "Changelog",
+          href: "/docs/changelog",
+          items: [],
+        },
+        // Optional sections can be re-added later if needed
       ],
     },
     {
-      title: "Code of Conduct",
+      title: "Community",
       items: [
+        {
+          title: "Community",
+          href: "/docs/community",
+          items: [],
+        },
         {
           title: "Code of Conduct",
           href: "/docs/code-of-conduct",
@@ -130,46 +148,8 @@ export const docsConfig: DocsConfig = {
           href: "/docs/prettier",
           items: [],
         },
-        {
-          title: "Internationalization",
-          href: "/docs/internationalization",
-          items: [],
-        },
-        {
-          title: "Authantication",
-          href: "/docs/authantication",
-          items: [],
-        },
-        {
-          title: "Table",
-          href: "/docs/table",
-          items: [],
-        },
-        {
-          title: "Frontend",
-          href: "/docs/frontend",
-          items: [],
-        },
-        {
-          title: "Backend",
-          href: "/docs/backend",
-          items: [],
-        },
-        {
-          title: "Onboarding",
-          href: "/docs/onboarding",
-          items: [],
-        },
-        {
-          title: "Add School",
-          href: "/docs/add-school",
-          items: [],
-        },
-        {
-          title: "Milestones",
-          href: "/docs/milestones",
-          items: [],
-        },
+        // Internationalization moved to Getting Started for visibility
+        { title: "Authantication", href: "/docs/authantication", items: [] },
         
         
         
