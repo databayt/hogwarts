@@ -1,0 +1,125 @@
+// School and School Structure Models
+
+model School {
+  id          String  @id @default(cuid())
+  name        String
+  domain      String  @unique // e.g., "hogwarts" for hogwarts.schoolapp.com
+  logoUrl     String?
+  address     String?
+  phoneNumber String?
+  email       String?
+  website     String?
+  timezone    String  @default("UTC")
+  
+  // Subscription/billing info
+  planType    String  @default("basic") // basic, premium, enterprise
+  maxStudents Int     @default(100)
+  maxTeachers Int     @default(10)
+  isActive    Boolean @default(true)
+  
+  // School relationships
+  users                 User[]
+  schoolYears           SchoolYear[]
+  periods               Period[]
+  terms                 Term[]
+  departments           Department[]
+  yearLevels            YearLevel[]
+  students              Student[]
+  teachers              Teacher[]
+  guardians             Guardian[]
+  classrooms            Classroom[]
+  classroomTypes        ClassroomType[]
+  teacherDepartments    TeacherDepartment[]
+  teacherPhoneNumbers   TeacherPhoneNumber[]
+  guardianTypes         GuardianType[]
+  studentGuardians      StudentGuardian[]
+  guardianPhoneNumbers  GuardianPhoneNumber[]
+  studentYearLevels     StudentYearLevel[]
+  subjects              Subject[]
+  classes               Class[]
+  studentClasses        StudentClass[]
+  scoreRanges           ScoreRange[]
+  assignments           Assignment[]
+  assignmentSubmissions AssignmentSubmission[]
+  attendances           Attendance[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@map("schools")
+}
+
+model SchoolYear {
+  id        String   @id @default(cuid())
+  schoolId  String
+  yearName  String
+  startDate DateTime
+  endDate   DateTime
+  
+  school            School             @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  periods           Period[]
+  terms             Term[]
+  studentYearLevels StudentYearLevel[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@unique([schoolId, yearName]) // Unique year name per school
+  @@map("school_years")
+}
+
+model Period {
+  id        String   @id @default(cuid())
+  schoolId  String
+  yearId    String
+  name      String
+  startTime DateTime @db.Time()
+  endTime   DateTime @db.Time()
+  
+  school         School     @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  schoolYear     SchoolYear @relation(fields: [yearId], references: [id], onDelete: Cascade)
+  classesAsStart Class[]    @relation("ClassStartPeriod")
+  classesAsEnd   Class[]    @relation("ClassEndPeriod")
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@unique([schoolId, yearId, name]) // Unique period name per school year
+  @@map("periods")
+}
+
+model Term {
+  id         String   @id @default(cuid())
+  schoolId   String
+  yearId     String
+  termNumber Int
+  startDate  DateTime
+  endDate    DateTime
+  
+  school     School     @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  schoolYear SchoolYear @relation(fields: [yearId], references: [id], onDelete: Cascade)
+  classes    Class[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@unique([schoolId, yearId, termNumber]) // Unique term number per school year
+  @@map("terms")
+}
+
+model YearLevel {
+  id         String @id @default(cuid())
+  schoolId   String
+  levelName  String
+  levelOrder Int
+  
+  school            School             @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  studentYearLevels StudentYearLevel[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@unique([schoolId, levelName])  // Unique level name per school
+  @@unique([schoolId, levelOrder]) // Unique level order per school
+  @@map("year_levels")
+}

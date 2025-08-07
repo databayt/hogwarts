@@ -1,0 +1,37 @@
+//related to table block and 
+//has nothing to do with the school database
+
+enum TaskStatus {
+  todo
+  in_progress @map("in-progress")
+  done
+  canceled
+}
+
+enum TaskLabel {
+  bug
+  feature
+  enhancement
+  documentation
+}
+
+enum TaskPriority {
+  low
+  medium
+  high
+}
+
+model Task {
+  id             String      @id @default(cuid()) @db.VarChar(30)
+  code           String      @unique @db.VarChar(128)
+  title          String?     @db.VarChar(128)
+  status         TaskStatus  @default(todo)
+  label          TaskLabel   @default(bug)
+  priority       TaskPriority @default(low)
+  estimatedHours Float       @default(0) @map("estimated_hours")
+  archived       Boolean     @default(false)
+  createdAt      DateTime    @default(now()) @map("created_at")
+  updatedAt      DateTime    @updatedAt @map("updated_at")
+
+  @@map("shadcn_tasks")
+}

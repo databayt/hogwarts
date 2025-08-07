@@ -1,11 +1,11 @@
 import NextAuth from "next-auth"
 import { UserRole } from "@prisma/client"
-import { PrismaAdapter } from "@auth/prisma-adapter"
 import type { DefaultSession } from "next-auth"
 import { db } from "@/lib/db"
 import { getUserById } from "@/components/auth/user"
 import { getTwoFactorConfirmationByUserId } from "@/components/auth/verification/2f-confirmation"
 import { getAccountByUserId } from "@/components/auth/account"
+import { customPrismaAdapter } from "@/components/auth/prisma-adapter"
 import authConfig from "./auth.config"
 
 
@@ -46,10 +46,14 @@ export const {
     async linkAccount({ user }) {
       console.log("OAuth account linked:", user.email);
       if (user.id) {
-        await db.user.update({
-          where: { id: user.id },
-          data: { emailVerified: new Date() }
-        })
+        try {
+          await db.user.update({
+            where: { id: user.id },
+            data: { emailVerified: new Date() }
+          })
+        } catch (error) {
+          console.error("Error updating user email verification:", error);
+        }
       }
     },
     async signIn({ user, account, isNewUser }) {
@@ -60,9 +64,12 @@ export const {
         isNewUser
       });
     },
-    // async error(error) {
-    //   console.error("Auth error event:", error);
-    // }  
+    async createUser({ user }) {
+      console.log("User created:", { 
+        userId: user.id, 
+        email: user.email 
+      });
+    }
   },
   callbacks: {
     async signIn({ user, account }) {
@@ -73,18 +80,30 @@ export const {
         email: user.email
       });
       
-      if (!user.id) return false
+      if (!user.id) {
+        console.error("No user ID in sign-in attempt");
+        return false;
+      }
       
-      if (account?.provider !== "credentials") return true
+      if (account?.provider !== "credentials") {
+        console.log("OAuth sign-in allowed for provider:", account?.provider);
+        return true;
+      }
 
       const existingUser = await getUserById(user.id)
 
-      if (!existingUser?.emailVerified) return false
+      if (!existingUser?.emailVerified) {
+        console.log("User email not verified");
+        return false;
+      }
 
       if (existingUser.isTwoFactorEnabled) {
         const twoFactorConfirmation = await getTwoFactorConfirmationByUserId(existingUser.id)
 
-        if (!twoFactorConfirmation) return false
+        if (!twoFactorConfirmation) {
+          console.log("Two-factor confirmation required");
+          return false;
+        }
 
         await db.twoFactorConfirmation.delete({
           where: { id: twoFactorConfirmation.id }
@@ -129,7 +148,7 @@ export const {
       return token
     }
   },
-  adapter: PrismaAdapter(db),
+  adapter: customPrismaAdapter(),
   session: { strategy: "jwt" },
   // Enable debug mode temporarily to get detailed error information
   debug: true, // Set to true for both dev and production to debug

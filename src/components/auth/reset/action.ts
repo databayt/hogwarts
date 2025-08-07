@@ -3,8 +3,8 @@
 import * as z from "zod";
 
 
-import { sendPasswordResetEmail } from "@/lib/mail";
-import { generatePasswordResetToken } from "@/lib/tokens";
+import { sendPasswordResetEmail } from "@/components/auth/mail";
+import { generatePasswordResetToken } from "@/components/auth/tokens";
 import { ResetSchema } from "../validation";
 import { getUserByEmail } from "../user";
 

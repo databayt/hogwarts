@@ -4,9 +4,9 @@ import * as z from "zod";
 import bcrypt from "bcryptjs";
 import { AuthError } from "next-auth";
 
-import { currentUser } from "@/lib/auth";
-import { generateVerificationToken } from "@/lib/tokens";
-import { sendVerificationEmail } from "@/lib/mail";
+import { currentUser } from "@/components/auth/auth";
+import { generateVerificationToken } from "@/components/auth/tokens";
+import { sendVerificationEmail } from "@/components/auth/mail";
 import { SettingsSchema } from "../validation";
 import { getUserByEmail, getUserById } from "../user";
 import { db } from "@/lib/db";

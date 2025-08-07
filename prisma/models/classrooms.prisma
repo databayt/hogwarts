@@ -1,0 +1,34 @@
+// Classroom Models
+
+model Classroom {
+  id       String @id @default(cuid())
+  schoolId String
+  typeId   String
+  roomName String
+  capacity Int
+  
+  school        School        @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  classroomType ClassroomType @relation(fields: [typeId], references: [id])
+  classes       Class[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@unique([schoolId, roomName]) // Unique room name per school
+  @@map("classrooms")
+}
+
+model ClassroomType {
+  id       String @id @default(cuid())
+  schoolId String
+  name     String // e.g., "Lecture Hall", "Lab", "Computer Room", "Library"
+  
+  school     School      @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  classrooms Classroom[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@unique([schoolId, name]) // Unique classroom type name per school
+  @@map("classroom_types")
+}

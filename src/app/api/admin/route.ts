@@ -1,7 +1,7 @@
 // app/api/admin/route.ts
 
 import { NextResponse } from "next/server";
-import { currentRole } from "@/lib/auth";
+import { currentRole } from "@/components/auth/auth";
 
 export async function GET() {
   try {

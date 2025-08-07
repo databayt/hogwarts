@@ -1,0 +1,32 @@
+// Attendance Models
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LATE
+  EXCUSED
+  SICK
+  HOLIDAY
+}
+
+model Attendance {
+  id        String           @id @default(cuid())
+  schoolId  String
+  studentId String
+  classId   String
+  date      DateTime         @db.Date
+  status    AttendanceStatus
+  notes     String?
+  markedBy  String?          // Teacher ID who marked attendance
+  markedAt  DateTime         @default(now())
+  
+  school  School  @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  class   Class   @relation(fields: [classId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@unique([schoolId, studentId, classId, date]) // Unique attendance per student per class per date per school
+  @@map("attendances")
+}

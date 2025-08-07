@@ -1,19 +1,41 @@
+// Auth Models
 enum UserRole {
-  ADMIN
-  USER
+  DEVELOPER    // Platform admin (across all schools)
+  ADMIN        // School admin
+  TEACHER
+  STUDENT
+  GUARDIAN
+  ACCOUNTANT   // School accountant/finance
+  STAFF        // General school staff
+  USER         // General user
 }
 
 model User {
   id                 String    @id @default(cuid())
   username           String?
-  email              String?   @unique
+  email              String?
   emailVerified      DateTime?
   image              String?
   password           String?
   role               UserRole  @default(USER)
+  
+  // Multi-tenant fields
+  schoolId           String?   // null for DEVELOPER
+  school             School?   @relation(fields: [schoolId], references: [id])
+  
   accounts           Account[]
   isTwoFactorEnabled Boolean   @default(false)
   twoFactorConfirmation TwoFactorConfirmation?
+
+  // School relationships
+  student   Student?
+  teacher   Teacher?
+  guardian  Guardian?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@unique([email, schoolId]) // Allow same email across different schools
 }
 
 model Account {

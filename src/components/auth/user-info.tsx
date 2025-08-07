@@ -1,4 +1,4 @@
-import { ExtendedUser } from "../../../next-auth";
+import { ExtendedUser } from "@/next-auth";
 import { 
   Card, 
   CardContent, 
