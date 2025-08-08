@@ -8,7 +8,7 @@ Our database design is guided by fundamental principles that ensure scalability,
 
 - **Row-Level Security** – Every model includes a `schoolId` field ensuring complete data isolation between schools
 - **Shared Schema Architecture** – All schools use the same database schema, optimizing resource utilization
-- **Domain-Based Tenant Identification** – Schools are uniquely identified by domain (e.g., `hogwarts.com`)
+- **Domain-Based Tenant Identification** – Schools are uniquely identified by subdomain (e.g., `hogwarts.hogwarts.app`), with optional custom domains via CNAME
 - **Type-Safe Database Operations** – Prisma ORM provides end-to-end type safety from database to frontend
 - **Multi-File Schema Organization** – Schema is organized into logical domains for better maintainability
 

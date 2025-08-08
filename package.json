@@ -7,7 +7,8 @@
     "build": "prisma generate && next build",
     "start": "next start",
     "lint": "next lint",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "db:seed": "prisma db seed"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.10.0",
@@ -73,7 +74,8 @@
     "zod": "^4.0.14"
   },
   "prisma": {
-    "schema": "./prisma"
+    "schema": "./prisma",
+    "seed": "tsx prisma/generator/seed.ts"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
@@ -85,6 +87,7 @@
     "eslint": "^9",
     "eslint-config-next": "15.4.4",
     "prisma": "^6.13.0",
+    "tsx": "^4.19.2",
     "tailwindcss": "^4",
     "tw-animate-css": "^1.3.6",
     "typescript": "^5"

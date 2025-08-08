@@ -1,0 +1,89 @@
+## Onboarding (Blocks, Flows, and Patterns)
+
+This guide documents the reusable Onboarding block that handles user joining and school setup flows: create school, invite admins/teachers/parents, add students, subjects, and initial timetable basics.
+
+### Architecture Overview
+
+- UI: shadcn/ui primitives (Input, Button, Select, Dialog, Sheet) composed into small steps.
+- Forms: React Hook Form for controlled state with minimal re-renders.
+- Validation: Zod schemas collocated per feature; parsed again on the server.
+- Actions: Next.js Server Actions ("use server") for mutations, revalidate and redirect on success.
+- Tenancy: all writes include schoolId, derived from subdomain/session.
+
+### Folder Pattern (per feature)
+
+```
+src/components/onboarding/
+  actions.ts        # server actions (createSchool, inviteUser, seedDefaults)
+  validation.ts     # zod schemas
+  types.ts          # shared types
+  form.tsx          # RHF form(s)
+  content.tsx       # step content composition
+```
+
+### Zod + RHF Example
+
+```tsx
+import { z } from "zod"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+
+const schema = z.object({
+  schoolName: z.string().min(2),
+  email: z.string().email(),
+})
+
+export function CreateSchoolForm({ onSubmit }: { onSubmit: (v: z.infer<typeof schema>) => Promise<void> }) {
+  const form = useForm<z.infer<typeof schema>>({ resolver: zodResolver(schema) })
+
+  return (
+    <form onSubmit={form.handleSubmit(async (v) => { await onSubmit(v) })} className="space-y-3">
+      <Input placeholder="School name" {...form.register("schoolName")} />
+      <Input type="email" placeholder="Email" {...form.register("email")} />
+      <Button type="submit">Create</Button>
+    </form>
+  )
+}
+```
+
+### Server Action Pattern
+
+```ts
+"use server"
+import { z } from "zod"
+import { db } from "@/lib/db"
+
+const createSchool = z.object({ schoolName: z.string().min(2), email: z.string().email() })
+
+export async function createSchoolAction(values: z.infer<typeof createSchool>) {
+  const parsed = createSchool.parse(values)
+  const school = await db.school.create({ data: { name: parsed.schoolName, email: parsed.email } })
+  return { ok: true, schoolId: school.id }
+}
+```
+
+### Flow Orchestration
+
+1) Owner: Create school -> choose plan (trial by default) -> invite admin.
+2) Admin: Configure classes and subjects -> invite teachers and parents.
+3) Teacher: Join class -> mark attendance -> post first announcement.
+4) Parent: Accept invite -> verify -> view child.
+
+Use sheets/dialogs to segment steps, keep forms minimal, and show toasts for feedback. Mirror UI for RTL.
+
+### Multi-tenant Considerations
+
+- Derive schoolId from subdomain/session and include in every mutation.
+- Seed defaults per school (roles, example classes/subjects) via server action.
+- Enforce unique constraints scoped by schoolId in Prisma schema.
+
+### Checklists
+
+- Form + schema + action exist and are wired.
+- Success and error toasts present.
+- Revalidate path or redirect after mutations.
+- Add tests or manual steps in PR.
+
+

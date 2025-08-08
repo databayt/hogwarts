@@ -1,6 +1,6 @@
 ## Architecture
 
-Our architecture is engineered from the ground up for reusability, modularity, and a world-class developer experience. It's not just a system for building applications; it's a framework for composing "atomic" automation components into a powerful, collaborative, and AI-augmented ecosystem. We prioritize a scalable, feature-based structure to ensure that every contribution adds lasting, discoverable value to the entire codebase.
+Our architecture prioritizes reusability, modularity, and a world-class developer experience. It’s designed for a small, async, part‑time team to add value safely and predictably. Every feature is composed from small, typed building blocks and mirrors a clear URL-to-directory structure.
 
 ### Core Principles
 
@@ -9,9 +9,9 @@ Our design decisions are guided by a few key principles:
 - **Component-Driven Modularity** – Inspired by the philosophy of shadcn/ui, we provide a codebase of reusable, customizable components at their most minimal, essential state. Every piece of functionality is an "atomic" building block designed for composition.
 - **Superior Developer Experience** – We believe that an intuitive and predictable structure is key to productivity. Our architecture is designed to be easily understood, navigated, and extended.
 - **Feature-Based & Composable** – The system is built as a collection of features, enabling a micro-services and micro-frontends approach. Independent components and services can be developed, deployed, and composed to build complex applications.
-- **Serverless-First** – We leverage a serverless paradigm to eliminate infrastructure management, enable automatic scaling, and optimize operational costs. Our system scales seamlessly from a single user to enterprise-level demand.
-- **Type-Safety by Default** – We enforce strict type safety across the entire stack, from the database to the frontend. This minimizes runtime errors and enhances code reliability.
-- **AI-Augmented Workflow** – Artificial intelligence is woven into the fabric of our architecture. From AI-assisted coding to intelligent automation agents, we use AI to accelerate the development lifecycle.
+- **Serverless-First** – Deploy on Vercel; Neon (Postgres) for serverless DB.
+- **Type-Safety by Default** – Prisma + Zod + TypeScript across the stack.
+- **Async-First** – Small PRs, documented decisions, steady progress.
 
 ### The Composition Hierarchy: From Radix UI to Masterpieces
 
@@ -29,8 +29,8 @@ Our methodology is built on a foundation of proven, composable building blocks t
 2. **Atoms** – Two or more shadcn/ui components (or components from the shadcn ecosystem) combined to create atomic building blocks
 3. **Templates** – Reusable layouts and component compositions that solve common UI patterns
 4. **Blocks** – Interactive features combining Templates with client-side logic (`hooks.ts`, `validation.ts`)
-5. **Micro** – Fully encapsulated features with backend logic (`actions.ts`), complete with UI, data models, and API
-6. **Masterpieces** – Complete applications composed of various Micro features, creating cohesive, enterprise-grade solutions
+5. **Micro** – Encapsulated features with backend logic (`actions.ts`), Prisma access, validation, and UI
+6. **Apps** – Complete applications composed of several Micro features
 
 This layered approach ensures that every component is built on solid foundations while maintaining the flexibility to create complex, feature-rich applications. Each level adds value and functionality while remaining composable and reusable.
 
@@ -56,8 +56,15 @@ src/components/abc/   (All related component logic)
 #### Directory Structure
 
 import { DirectoryStructure } from './directory-structure'
+import { SaaSArrangementsNav } from './index'
 
 <DirectoryStructure />
+
+### School SaaS
+
+See the arrangements for our multi-tenant school SaaS:
+
+- [Overview & Arrangements](/docs/arrangements)
 
 ### Standardized File Patterns
 
@@ -82,16 +89,16 @@ This structured, component-based approach integrates seamlessly with our technic
 
 1. **Presentation Layer (Next.js/React)** – Renders the components defined in `form.tsx`, `cards.tsx`, and `content.tsx`.
 2. **Application & API Layer (Vercel)** – Executes the logic from `actions.ts`, validates data with schemas from `validation.ts`, and handles authentication with Auth.js.
-3. **Data & Persistence Layer (PlanetScale/Prisma)** – Interacts with the database based on the schemas and types defined in `types.ts`.
-4. **AI & Automation Core (Python/Rust/LangGraph)** – The complex automation agents are often invoked from within `actions.ts`, acting as the most powerful type of "microservice."
-5. **Development & Integration Layer** – Our CLI, Cursor editor, and Claude assistant all understand this structure, making development a fluid, AI-augmented experience we call Vibe Coding.
+3. **Data & Persistence Layer (Neon Postgres/Prisma)** – Interacts with the database via Prisma schemas and types, scoping queries by `schoolId`.
+4. **Observability & Ops** – Logging, metrics, backups, and runbooks sized for a small team.
+5. **Developer Tooling** – ESLint, Prettier, pnpm scripts; shadcn/ui conventions.
 
 #### A Typical Interaction
 
 1. A user interacts with a component from `form.tsx` on the Next.js frontend, triggering a Server Action from `actions.ts`.  
 2. The request payload is validated by a Zod schema from `validation.ts`.  
-3. The serverless function uses the type-safe Prisma client to query PlanetScale, using interfaces from `types.ts`.  
-4. For complex tasks, the action invokes a LangGraph agent.  
+3. The serverless function uses the type-safe Prisma client to query Neon Postgres.  
+4. Observability captures request ID and `schoolId` for traceability.  
 5. The result is **streamed** back and managed by a hook from `hooks.ts`, efficiently updating the UI.
 
 ---

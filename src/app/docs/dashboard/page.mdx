@@ -1,0 +1,92 @@
+## Dashboards (Operator and Client)
+
+Two dashboards share one central codebase and database:
+
+- Operator Dashboard (platform team): run the SaaS - schools, billing, domains, moderation, observability.
+- Client Dashboard (per school): run the school - roles, classes, subjects, students, teachers, timetable, attendance, announcements, billing.
+
+Both follow the same patterns: shadcn/ui components, URL-to-state sync where useful, Prisma with tenant scoping, and server actions for mutations.
+
+### Architecture
+
+- Multi-tenant shared schema (Neon + Prisma). Every business table includes schoolId.
+- Tenant resolution via subdomain (for example, hogwarts.hogwarts.app) and session.
+- Central logic: shared actions, filters, table block, and role gates.
+- RBAC: Owner, Admin, Teacher, Student, Parent, Accountant (add Staff or Support for Operator).
+
+### Operator Dashboard (Platform)
+
+Scope:
+
+- Schools: list, create, suspend, plan, limits, trial countdown.
+- Domains: subdomain issuance, custom domain requests, CNAME verification.
+- Billing: invoices, manual receipts, refunds, revenue metrics.
+- Observability: logs, error reports, backups status, job queue.
+- Moderation and Support: impersonate (audited), reset domain, manage users.
+
+Implementation:
+
+- Routes under app/operator/* or app/(operator)/* with guard middleware.
+- Lists use the generic table block (/docs/table), filtering by any platform fields.
+- Server actions for domain approval, plan changes, suspensions.
+- Role gates: RoleGate for platform roles (for example, DEVELOPER, STAFF).
+
+Tenant safety:
+
+- Platform views can search across all schools. Mutations must specify the target schoolId and log an audit entry.
+- Impersonation creates an audit trail (who, when, why) and a time-limited session.
+
+### Client Dashboard (Per School)
+
+Scope:
+
+- Setup: profile, branding, locale and timezone, domain request.
+- People: users and roles, parents, students, teachers.
+- Structure: classes, subjects, timetable slots.
+- Operations: attendance, announcements.
+- Billing: plan, trial, invoices, manual receipt upload.
+
+Implementation:
+
+- Subdomain-based routing: school.hogwarts.app resolves to schoolId.
+- All server queries include schoolId (inject from middleware or context).
+- Lists reuse the generic table; columns define filters via meta.variant and options.
+- Server actions for all mutations, revalidate paths after changes.
+
+RBAC examples:
+
+- Owner or Admin: full access. Teacher: classes they teach. Parent: linked students. Student: own data.
+
+### Data Flow (Both Dashboards)
+
+1) Resolve tenant and role.
+2) Parse URL for filters, sort, page.
+3) Build Prisma where and orderBy, with schoolId enforced for client dashboard; optional for operator dashboard.
+4) Fetch data and total, then compute pageCount.
+5) Render with table block; server actions mutate and revalidate.
+
+### Production Readiness
+
+- Security: least privilege, audit trails for sensitive actions (domain, billing, impersonation).
+- Tenant isolation: all client queries and unique constraints scoped by schoolId.
+- Observability: request IDs, schoolId, and user ID in logs; error tracking with release tags.
+- Backups and disaster recovery: daily backups, retention 7 and 30 days; restore drills.
+- Internationalization and RTL: Arabic and English; mirrored icons and arrows.
+- Accessibility: keyboard navigation and roles across both UIs.
+- Performance: indexes for frequent filters; pagination; avoid N+1; cache lists where safe.
+
+### Reuse and Extensibility
+
+- Reuse table, filters, operators, and toolbars for any list (students, teachers, invoices, domains).
+- Define column factories per domain; keep server query helpers tenant-aware.
+- Centralize role gates and nav items by role; show or hide features by plan.
+
+### References
+
+- Multi-tenant database: /docs/database
+- Arrangements (SaaS layers): /docs/arrangements
+- Table block: /docs/table
+- Internationalization: /docs/internationalization
+- Contributing: /docs/contribute
+
+

@@ -40,7 +40,14 @@ pnpm install
 pnpm dev
 ```
 
-Optional: configure your `.env` per `README.md`. Use `pnpm build` before pushing if you changed types or config.
+Optional: configure your `.env` per `README.md` and set `DATABASE_URL` for Neon. If you changed Prisma models or env, also run:
+
+```bash
+pnpm prisma generate
+pnpm prisma migrate dev --name init
+```
+
+Run `pnpm build` before pushing.
 
 ### Code style
 
@@ -62,5 +69,6 @@ Optional: configure your `.env` per `README.md`. Use `pnpm build` before pushing
 - Teach through code and docs
 
 If you’re unsure where to start, comment on an issue and we’ll guide you.
+
 
 

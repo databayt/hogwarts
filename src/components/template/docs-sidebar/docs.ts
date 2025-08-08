@@ -30,11 +30,7 @@ export const docsConfig: DocsConfig = {
     },
     {
       title: "Contributing",
-      href: "/docs/contributing",
-    },
-    {
-      title: "Business",
-      href: "/docs/business",
+      href: "/docs/contribute",
     },
     {
       title: "Community",
@@ -51,7 +47,7 @@ export const docsConfig: DocsConfig = {
           items: [],
         },
         {
-          title: "Requeriments",
+          title: "Requirements",
           href: "/docs/requeriments",
           items: [],
         },
@@ -66,6 +62,11 @@ export const docsConfig: DocsConfig = {
           items: [],
         },
         {
+          title: "Arrangements",
+          href: "/docs/arrangements",
+          items: [],
+        },
+        {
           title: "Pattern",
           href: "/docs/pattern",
           items: [],
@@ -73,22 +74,11 @@ export const docsConfig: DocsConfig = {
         {
           title: "Stack",
           href: "/docs/stack",
-          items: [
-            {
-              title: "Onboarding",
-              href: "/docs/stack/onboarding",
-              items: [],
-            },
-          ],
+          items: [],
         },
         {
           title: "Database",
           href: "/docs/database",
-          items: [],
-        },
-        {
-          title: "Internationalization",
-          href: "/docs/internationalization",
           items: [],
         },
         {
@@ -112,6 +102,11 @@ export const docsConfig: DocsConfig = {
           href: "/docs/changelog",
           items: [],
         },
+        {
+          title: "Issues",
+          href: "/docs/issues",
+          items: [],
+        },
         // Optional sections can be re-added later if needed
       ],
     },
@@ -133,47 +128,21 @@ export const docsConfig: DocsConfig = {
     {
       title: "Contribute",
       items: [
-        {
-          title: "Contribute",
-          href: "/docs/contribute",
-          items: [],
-        },
-        {
-          title: "ESLint",
-          href: "/docs/eslint",
-          items: [],
-        },
-        {
-          title: "Prettier",
-          href: "/docs/prettier",
-          items: [],
-        },
-        // Internationalization moved to Getting Started for visibility
-        { title: "Authantication", href: "/docs/authantication", items: [] },
-        
-        
-        
-        
-
-
-        
-        
-        
-        // {
-        //   title: "Code Review",
-        //   href: "/docs/contributing/code-review",
-        //   items: [],
-        // },
-        // {
-        //   title: "Issue Guidelines",
-        //   href: "/docs/contributing/issue-guidelines",
-        //   items: [],
-        // },
-        // {
-        //   title: "Pull Requests",
-        //   href: "/docs/contributing/pull-requests",
-        //   items: [],
-        // },
+        { title: "Contribute", href: "/docs/contribute", items: [] },
+        { title: "First PR Guide", href: "/docs/contribute/first-pr", items: [] },
+        { title: "ESLint", href: "/docs/eslint", items: [] },
+        { title: "Prettier", href: "/docs/prettier", items: [] },
+      ],
+    },
+    {
+      title: "Operations",
+      items: [
+        { title: "Internationalization", href: "/docs/internationalization", items: [] },
+        { title: "Authentication", href: "/docs/authantication", items: [] },
+        { title: "Onboarding", href: "/docs/onboarding", items: [] },
+        { title: "Dashboard", href: "/docs/dashboard", items: [] },
+        { title: "Table", href: "/docs/table", items: [] },
+       
       ],
     },
     // {

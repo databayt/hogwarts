@@ -10,54 +10,73 @@ The Repository of **Wonders.** Think of our codebase as a living library where e
 
 Follow along as we **figure** this out together. This isn't just about building software; it's about creating a collaborative ecosystem where developers, businesses, and innovators unite to solve real problems. Every contribution you make doesn't just help one project—it becomes part of a growing foundation that serves countless businesses worldwide.
 
-### How We Tackle a Multi-tenant School Management System
+### Foucs
+We’re building a School Management System for Sudan, together, in our spare time. No deadlines—just clear steps and steady progress.
 
-- Architecture: shared schema, strict row-level isolation via `schoolId` on every domain model. Server actions enforce tenant scoping.
-- Provisioning: each school gets a unique subdomain instantly (e.g., `school.hogwarts.app`). Custom domains are supported via CNAME.
-- Roles & Access: Owner, Admin, Teacher, Student, Parent, Accountant; least privilege by default.
-- Observability: structured logs, metrics, and error tracking; daily backups.
+If you can follow a recipe, you can contribute. Start here.
 
-### Product Layout
+```bash
+pnpm install
+pnpm dev
+```
 
-- Public: marketing site, pricing, docs, school landing pages (`school.hogwarts.app`), authentication
-- App: dashboards per role, attendance, timetable, announcements, settings, billing
-- Admin: platform-wide moderation, domain approvals, plan configurations
+Open `http://localhost:3000`. If Prisma models changed, also run:
 
-### Business Model
+```bash
+pnpm prisma generate
+pnpm prisma migrate dev --name init
+```
 
-- Cloud-based SaaS per school
-- Plans: Trial, Basic, Pro (monthly/annual)
-- Pricing aligns with Sudan context; manual payment option supported
+### 2) Learn the map (what lives where)
 
-### Subscriptions & Trials
+- Routes live in `src/app/...`
+- Components live in `src/components/...`
+- Each feature mirrors its route: `app/feature` ↔ `components/feature`
+- Standard files per feature: `actions.ts`, `validation.ts`, `types.ts`, `form.tsx`, `content.tsx`
 
-- Trial starts on school creation with clear countdown
-- Upgrade/downgrade at any time; invoices and receipts available
-- Grace period for expired payment before suspension
+### 3) Make your first change
 
-### Domains & Landing Pages
+Pick a very small task (typo fix, minor UI tweak, doc improvement):
 
-- Unique subdomain per school at signup
-- Optional custom domain mapped via CNAME with automated certificates
-- Customizable public landing page per school (logo, colors, hero, contact)
+1. Create a new branch
+2. Make the change
+3. Run `pnpm build` to verify
+4. Open a PR with a one-line summary and screenshot if UI changed
 
-### Internal Tools
+### 4) Core product in one minute
 
-- School dashboard: enrollment, classes, subjects, users
-- Attendance marking and basic reports
-- Announcements composer
-- Billing center with plan management and history
+- Multi-tenant: every record belongs to a school via `schoolId`
+- Provisioning: each school gets a subdomain (e.g., `school.hogwarts.app`)
+- Roles: Owner, Admin, Teacher, Student, Parent, Accountant
+- First features: attendance, timetable (basic), announcements, settings, billing (manual-friendly)
 
-### Technical Stack & Patterns
+### 5) Stack (what we use)
 
-- Next.js App Router, Server Components with Server Actions for mutations
-- Prisma with Neon (Postgres); every model has `schoolId`
-- shadcn/ui for primitives; composition via atoms → templates → blocks → micro → apps
-- Mirror-pattern architecture: `app/feature` mirrors `components/feature`
-- Standardized files: `actions.ts`, `constants.ts`, `validation.ts`, `types.ts`, `form.tsx`, `content.tsx`
+- Next.js, React, TypeScript
+- Tailwind + shadcn/ui
+- Prisma + Neon (Postgres)
+- Auth.js, Zod, React Hook Form
 
-### Operating Cadence
+### 6) Contribute (the loop)
 
-- Weekly releases, daily standups ≤ 10 minutes, async-first
-- Docs updated with every notable change; keep decisions visible
+1. Read the issue, ask clarifying questions if needed
+2. Ship a small PR (screenshots for UI; note RTL if relevant)
+3. Update docs or changelog if it helps others
+4. Repeat next week when you have time
+
+### 7) Links you will need
+
+- Requirements: `/docs/requeriments`
+- Architecture: `/docs/architecture`
+- Stack & Onboarding: `/docs/stack` and `/docs/stack/onboarding`
+- Database: `/docs/database`
+- Contribute: `/docs/contribute`
+- Community: `/docs/community`
+- Roadmap & Changelog: `/docs/roadmap`, `/docs/changelog`
+
+### Notes for Sudan context
+
+- Arabic-first (RTL) with English alongside it
+- Low bandwidth: keep pages light; avoid large images
+- Manual payments: billing supports receipt upload from day one
 
