@@ -81,16 +81,16 @@ export const docsConfig: DocsConfig = {
           href: "/docs/database",
           items: [],
         },
-        {
-          title: "Add School",
-          href: "/docs/add-school",
-          items: [],
-        },
-        {
-          title: "Milestones",
-          href: "/docs/milestones",
-          items: [],
-        },
+        // {
+        //   title: "Add School",
+        //   href: "/docs/add-school",
+        //   items: [],
+        // },
+        // {
+        //   title: "Milestones",
+        //   href: "/docs/milestones",
+        //   items: [],
+        // },
         {
           title: "Awesome shadcn",
           href: "/docs/awesome-shadcn",
@@ -115,26 +115,26 @@ export const docsConfig: DocsConfig = {
         // Optional sections can be re-added later if needed
       ],
     },
-    {
-      title: "Community",
-      items: [
-        {
-          title: "Community",
-          href: "/docs/community",
-          items: [],
-        },
-        {
-          title: "Code of Conduct",
-          href: "/docs/code-of-conduct",
-          items: [],
-        },
-      ],
-    },
+    // {
+    //   title: "Community",
+    //   items: [
+    //     {
+    //       title: "Community",
+    //       href: "/docs/community",
+    //       items: [],
+    //     },
+    //     {
+    //       title: "Code of Conduct",
+    //       href: "/docs/code-of-conduct",
+    //       items: [],
+    //     },
+    //   ],
+    // },
     {
       title: "Contribute",
       items: [
-        { title: "Contribute", href: "/docs/contribute", items: [] },
-        { title: "First PR Guide", href: "/docs/contribute/first-pr", items: [] },
+        // { title: "Contribute", href: "/docs/contribute", items: [] },
+        // { title: "First PR Guide", href: "/docs/contribute/first-pr", items: [] },
         { title: "ESLint", href: "/docs/eslint", items: [] },
         { title: "Prettier", href: "/docs/prettier", items: [] },
       ],

@@ -4,6 +4,6 @@ export const metadata = {
   title: "Marketing",
 }
 
-export default function Home() {
+export default function Marketing() {
   return <MarketingContent />;
 }
