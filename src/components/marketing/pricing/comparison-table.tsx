@@ -5,7 +5,7 @@ export default function ComparisonTable() {
     <div className="flex w-full max-w-6xl flex-col gap-8 pt-16">
       <div className="flex w-full flex-col gap-4 text-center">
         <h3 className="font-heading font-bold text-2xl sm:text-3xl">Compare plans</h3>
-        <p className="leading-normal text-muted-foreground sm:text-lg sm:leading-7">All plans include multi‑tenant core and Arabic/English support.</p>
+        <p className="leading-normal text-muted-foreground sm:text-lg sm:leading-7">All plans include multi-tenant core and Arabic/English support.</p>
       </div>
       
       <div className="overflow-x-auto">
@@ -21,10 +21,9 @@ export default function ComparisonTable() {
           <tbody>
             <tr className="border-b">
               <td className="p-4">
-                <div>
+                <div className="space-y-1">
                   <div className="font-medium">Attendance</div>
-                  <div className="text-sm text-muted-foreground max-w-xs">Daily and period marking with CSV export.</div>
-                  </div>
+                  <p className="text-sm text-muted-foreground max-w-xs">Daily and period marking with CSV export.</p>
                 </div>
               </td>
               <td className="p-4"><div className="flex justify-center items-center h-full"><GoodIcon /></div></td>
@@ -33,9 +32,9 @@ export default function ComparisonTable() {
             </tr>
             <tr className="border-b">
               <td className="p-4">
-                <div>
+                <div className="space-y-1">
                   <div className="font-medium">Announcements</div>
-                  <div className="text-sm text-muted-foreground max-w-xs">Publish school‑wide, role‑based, or class scoped.</div>
+                  <p className="text-sm text-muted-foreground max-w-xs">Publish school-wide, role-based, or class scoped.</p>
                 </div>
               </td>
               <td className="p-4"><div className="flex justify-center items-center h-full"><GoodIcon /></div></td>
@@ -44,9 +43,9 @@ export default function ComparisonTable() {
             </tr>
             <tr className="border-b">
               <td className="p-4">
-                <div>
+                <div className="space-y-1">
                   <div className="font-medium">CSV import</div>
-                  <div className="text-sm text-muted-foreground max-w-xs">Students and Teachers with validation preview.</div>
+                  <p className="text-sm text-muted-foreground max-w-xs">Students and Teachers with validation preview.</p>
                 </div>
               </td>
               <td className="p-4"><div className="flex justify-center items-center h-full"><AverageIcon /></div></td>
@@ -55,9 +54,9 @@ export default function ComparisonTable() {
             </tr>
             <tr className="border-b">
               <td className="p-4">
-                <div>
+                <div className="space-y-1">
                   <div className="font-medium">Custom domain</div>
-                  <div className="text-sm text-muted-foreground max-w-xs">CNAME verification and SSL certificates.</div>
+                  <p className="text-sm text-muted-foreground max-w-xs">CNAME verification and SSL certificates.</p>
                 </div>
               </td>
               <td className="p-4"><div className="flex justify-center items-center h-full"><PoorIcon /></div></td>
@@ -66,9 +65,9 @@ export default function ComparisonTable() {
             </tr>
             <tr className="border-b">
               <td className="p-4">
-                <div>
+                <div className="space-y-1">
                   <div className="font-medium">Advanced reports</div>
-                  <div className="text-sm text-muted-foreground max-w-xs">Aggregations and exports for admins/operators.</div>
+                  <p className="text-sm text-muted-foreground max-w-xs">Aggregations and exports for admins/operators.</p>
                 </div>
               </td>
               <td className="p-4"><div className="flex justify-center items-center h-full"><PoorIcon /></div></td>
@@ -77,9 +76,9 @@ export default function ComparisonTable() {
             </tr>
             <tr className="border-b">
               <td className="p-4">
-                <div>
+                <div className="space-y-1">
                   <div className="font-medium">Manual payment approval</div>
-                  <div className="text-sm text-muted-foreground max-w-xs">Receipt uploads, operator approval workflow.</div>
+                  <p className="text-sm text-muted-foreground max-w-xs">Receipt uploads, operator approval workflow.</p>
                 </div>
               </td>
               <td className="p-4"><div className="flex justify-center items-center h-full"><PoorIcon /></div></td>
@@ -88,9 +87,9 @@ export default function ComparisonTable() {
             </tr>
             <tr className="border-b">
               <td className="p-4">
-                <div>
+                <div className="space-y-1">
                   <div className="font-medium">Priority support</div>
-                  <div className="text-sm text-muted-foreground max-w-xs">Faster responses for urgent issues.</div>
+                  <p className="text-sm text-muted-foreground max-w-xs">Faster responses for urgent issues.</p>
                 </div>
               </td>
               <td className="p-4"><div className="flex justify-center items-center h-full"><PoorIcon /></div></td>
@@ -99,9 +98,9 @@ export default function ComparisonTable() {
             </tr>
             <tr className="border-b">
               <td className="p-4">
-                <div>
-                  <div className="font-medium">Multi‑tenant isolation</div>
-                  <div className="text-sm text-muted-foreground max-w-xs">All data scoped by schoolId across the platform.</div>
+                <div className="space-y-1">
+                  <div className="font-medium">Multi-tenant isolation</div>
+                  <p className="text-sm text-muted-foreground max-w-xs">All data scoped by schoolId across the platform.</p>
                 </div>
               </td>
               <td className="p-4"><div className="flex justify-center items-center h-full"><ExcellentIcon /></div></td>
@@ -110,9 +109,9 @@ export default function ComparisonTable() {
             </tr>
             <tr className="border-b">
               <td className="p-4">
-                <div>
+                <div className="space-y-1">
                   <div className="font-medium">Arabic/English + RTL</div>
-                  <div className="text-sm text-muted-foreground max-w-xs">Localization and direction support in all plans.</div>
+                  <p className="text-sm text-muted-foreground max-w-xs">Localization and direction support in all plans.</p>
                 </div>
               </td>
               <td className="p-4"><div className="flex justify-center items-center h-full"><ExcellentIcon /></div></td>
@@ -121,9 +120,9 @@ export default function ComparisonTable() {
             </tr>
             <tr className="border-b">
               <td className="p-4">
-                <div>
+                <div className="space-y-1">
                   <div className="font-medium">Operator dashboard</div>
-                  <div className="text-sm text-muted-foreground max-w-xs">Central control for approvals, observability, backups.</div>
+                  <p className="text-sm text-muted-foreground max-w-xs">Central control for approvals, observability, backups.</p>
                 </div>
               </td>
               <td className="p-4"><div className="flex justify-center items-center h-full"><AverageIcon /></div></td>
@@ -132,9 +131,9 @@ export default function ComparisonTable() {
             </tr>
             <tr className="border-b">
               <td className="p-4">
-                <div>
+                <div className="space-y-1">
                   <div className="font-medium">Parent portal</div>
-                  <div className="text-sm text-muted-foreground max-w-xs">Read‑only portal for linked guardians.</div>
+                  <p className="text-sm text-muted-foreground max-w-xs">Read-only portal for linked guardians.</p>
                 </div>
               </td>
               <td className="p-4"><div className="flex justify-center items-center h-full"><AverageIcon /></div></td>
@@ -143,9 +142,9 @@ export default function ComparisonTable() {
             </tr>
             <tr className="border-b">
               <td className="p-4">
-                <div>
+                <div className="space-y-1">
                   <div className="font-medium">Backups</div>
-                  <div className="text-sm text-muted-foreground max-w-xs">Daily backups and restore drills.</div>
+                  <p className="text-sm text-muted-foreground max-w-xs">Daily backups and restore drills.</p>
                 </div>
               </td>
               <td className="p-4"><div className="flex justify-center items-center h-full"><AverageIcon /></div></td>
