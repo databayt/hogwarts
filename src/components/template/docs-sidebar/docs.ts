@@ -96,6 +96,11 @@ export const docsConfig: DocsConfig = {
           href: "/docs/awesome-shadcn",
           items: [],
         },
+        {
+          title: "Inspiration",
+          href: "/docs/inspiration",
+          items: [],
+        },
         // Issues page can be added later if needed
         {
           title: "Changelog",

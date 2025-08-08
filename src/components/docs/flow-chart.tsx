@@ -1,8 +1,9 @@
 "use client"
 
 import { ArrowRight, Building2, Layers, LayoutPanelLeft, Users, CreditCard, Globe, Settings, School, Calendar, BookOpenCheck, ClipboardList, Presentation, BarChart3, Megaphone } from "lucide-react"
+import type { ComponentType, SVGProps } from "react"
 
-type Node = { id: string; label: string; icon?: React.ComponentType<any> }
+type Node = { id: string; label: string; icon?: ComponentType<SVGProps<SVGSVGElement>> }
 type Edge = { from: string; to: string; note?: string }
 
 export function FlowChart({
