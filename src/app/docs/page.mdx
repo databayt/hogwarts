@@ -2,46 +2,38 @@
 
 ## Introduction
 
-**Automate** the boring. At Databayt, we're building a codebase for business automation, one atomic component at a time. Every line of code is open source, every contribution is valued, and every developer may shape the future of how businesses operate.
+**Hogwarts** is a multi‑tenant school cloud for Sudan. One central database and logic, many schools — each with its own domain, theme, and language (Arabic/English, RTL/LTR).
 
-We sell the origin of all value — we sell **Time**, the currency that drives the world. Reclaim yours and focus on what truly matters by eliminating repetitive tasks, streamlining operations, and automating processes.
+These docs focus on the product, architecture, and how to run and develop the app.
 
-The Repository of **Wonders.** Think of our codebase as a living library where every contribution becomes part of something greater. From atomic components to complete templates, from blocks to micro-services to full automation solutions—we're creating the building blocks that will power tomorrow's businesses.
-
-Follow along as we **figure** this out together. This isn't just about building software; it's about creating a collaborative ecosystem where developers, businesses, and innovators unite to solve real problems. Every contribution you make doesn't just help one project—it becomes part of a growing foundation that serves countless businesses worldwide.
-
-### Foucs
-We’re building a School Management System for Sudan, together, in our spare time. No deadlines—just clear steps and steady progress.
-
-If you can follow a recipe, you can contribute. Start here.
+### 1) Quick start
 
 ```bash
 pnpm install
 pnpm dev
 ```
 
-Open `http://localhost:3000`. If Prisma models changed, also run:
+Open `http://localhost:3000`.
+
+If Prisma models changed, run:
 
 ```bash
 pnpm prisma generate
 pnpm prisma migrate dev --name init
 ```
 
-### 2) Learn the map (what lives where)
+### 2) Project map (what lives where)
 
 - Routes live in `src/app/...`
 - Components live in `src/components/...`
 - Each feature mirrors its route: `app/feature` ↔ `components/feature`
 - Standard files per feature: `actions.ts`, `validation.ts`, `types.ts`, `form.tsx`, `content.tsx`
 
-### 3) Make your first change
+### 3) Build and verify
 
-Pick a very small task (typo fix, minor UI tweak, doc improvement):
-
-1. Create a new branch
-2. Make the change
-3. Run `pnpm build` to verify
-4. Open a PR with a one-line summary and screenshot if UI changed
+1. Make a small change locally
+2. Run `pnpm build` to verify type safety and catch errors
+3. Start the app and validate the change in the browser
 
 ### 4) Core product in one minute
 
@@ -57,21 +49,12 @@ Pick a very small task (typo fix, minor UI tweak, doc improvement):
 - Prisma + Neon (Postgres)
 - Auth.js, Zod, React Hook Form
 
-### 6) Contribute (the loop)
-
-1. Read the issue, ask clarifying questions if needed
-2. Ship a small PR (screenshots for UI; note RTL if relevant)
-3. Update docs or changelog if it helps others
-4. Repeat next week when you have time
-
-### 7) Links you will need
+### 6) Key links
 
 - Requirements: `/docs/requeriments`
 - Architecture: `/docs/architecture`
-- Stack & Onboarding: `/docs/stack` and `/docs/stack/onboarding`
+- Stack: `/docs/stack` — Onboarding: `/docs/onboarding`
 - Database: `/docs/database`
-- Contribute: `/docs/contribute`
-- Community: `/docs/community`
 - Roadmap & Changelog: `/docs/roadmap`, `/docs/changelog`
 
 ### Notes for Sudan context
