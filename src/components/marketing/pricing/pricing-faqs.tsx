@@ -1,19 +1,19 @@
 const faqs = [
   {
-    question: "What's included in the One Project plan?",
-    answer: "The One Project plan includes complete custom development for a single automation solution, including consultation, development, testing, and deployment."
+    question: "How does the free trial work?",
+    answer: "The trial gives you full access for 14 days with no credit card. You can onboard staff and a small class to evaluate the system."
   },
   {
-    question: "How does the hourly billing work for Strategic Partner?",
-    answer: "With Strategic Partner, you get access to our development team at $10/hour. Perfect for ongoing projects, maintenance, or when you need flexible development resources."
+    question: "Do you support manual payments?",
+    answer: "Yes. Upload a payment receipt in the dashboard; our operators review and activate your plan. This is optimized for Sudan."
   },
   {
-    question: "Can I switch between plans?",
-    answer: "Yes, you can upgrade or downgrade your plan at any time. Changes will be reflected in your next billing cycle."
+    question: "Can I switch between Basic and Pro?",
+    answer: "You can upgrade or downgrade anytime. Changes apply to your next billing period, and your data remains intact."
   },
   {
     question: "Do you offer enterprise solutions?",
-    answer: "Absolutely! For enterprise needs, we offer custom solutions with dedicated teams, SLAs, and specialized support. Contact us for a tailored quote."
+    answer: "We provide custom deployments, SLAs, and dedicated support. Contact us for a tailored quote."
   }
 ]
 
@@ -27,7 +27,7 @@ export default function PricingFAQs() {
               Frequently <br className="hidden lg:block" /> Asked <br className="hidden lg:block" />
               Questions
             </h2>
-            <p>Your guide to pricing and plans with Databayt.</p>
+            <p>Your guide to pricing and plans for the school cloud.</p>
           </div>
 
           <div className="divide-y divide-dashed sm:mx-auto sm:max-w-2xl lg:mx-0">

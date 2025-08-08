@@ -4,25 +4,25 @@ import { buttonVariants } from "@/components/ui/button"
 
 const pricingPlans = [
   {
-    title: "One Project",
-    description: "Perfect for businesses looking to automate a particular process or solve a focused challenge. We'll deliver a tailored solution built with precision — one project, one powerful outcome.",
-    price: "$40",
-    billing: "starting from",
-    buttonText: "Custom Quote"
+    title: "Trial",
+    description: "Full product trial with no card required. Ideal for testing with a small class and staff.",
+    price: "$0",
+    billing: "14 days",
+    buttonText: "Start Free Trial"
   },
   {
-    title: "Strategic Partner", 
-    description: "Ideal for businesses to outsource development, tap into specialized talent, or co-build long-term solutions. We become your tech partner — agile, reliable, and aligned with your vision.",
-    price: "$10",
-    billing: "per hours",
-    buttonText: "Schedule Meet"
+    title: "Basic",
+    description: "Everything to run a small to medium school. Manual payments supported (receipt upload).",
+    price: "$19",
+    billing: "per school / month",
+    buttonText: "Get Started"
   },
   {
-    title: "Product Access",
-    description: "Access a growing library of deployable tools designed to solve common business problems — from workflow automation to intelligent integrations. Configure, connect, and go.",
-    price: "$19", 
-    billing: "Billed Monthly",
-    buttonText: "Purchase Plan"
+    title: "Pro",
+    description: "Advanced reporting, custom domains, and priority support for growing schools.",
+    price: "$49", 
+    billing: "per school / month",
+    buttonText: "Upgrade to Pro"
   }
 ]
 
@@ -57,7 +57,7 @@ export default function PricingPlans() {
 
       <div className="flex w-full max-w-[62rem] flex-col gap-6 text-center pt-16">
         <p className="text-lg leading-relaxed text-muted-foreground">
-          Not sure about these plans? Try us for your first project. You will want us for your next. And if you don&apos;t like working with us, we will even refund the money... or something... I don&apos;t know, we&apos;ve never been there before.
+          Manual payments are supported for Sudan: upload a receipt and our operators will review and activate your plan. Online payments will be available later.
         </p>
         <div className="flex justify-center">
           <Link href="/docs/community/support" className={cn(buttonVariants({ size: "lg" }), "")}>
