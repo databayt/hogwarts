@@ -13,7 +13,7 @@ Hogwarts is a school automation platform that manages students, faculty, and aca
 
 ## Documentation
 
-Visit https://databayt.org/docs to view the documentation.
+Visit https://ed.databayt.org/docs to view the documentation.
 
 ## Contributing
 
