@@ -33,7 +33,7 @@ const FILE_PATTERNS: FilePattern[] = [
   { file: "ISSUE.md", purpose: "Known issues and follow-ups for the feature." },
 ]
 
-export function StandardizedFilePatterns(): JSX.Element {
+export function StandardizedFilePatterns() {
   return (
     <div>
       <Table className="w-full text-sm">
