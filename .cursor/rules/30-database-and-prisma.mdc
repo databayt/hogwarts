@@ -1,0 +1,22 @@
+---
+description: Prisma + multi-tenant data rules (Neon Postgres)
+globs:
+  - "prisma/**"
+  - "src/lib/db.ts"
+alwaysApply: false
+---
+
+- One shared database; all business tables include `schoolId`.
+- Enforce uniqueness within tenant scope (e.g., `@@unique([schoolId, domain])`).
+- Every query must include `{ schoolId }` from context; never trust client-provided tenant IDs.
+- Prisma client: reuse a single instance; see `src/lib/db.ts`.
+- Seed and migrations should create sensible defaults per school where applicable.
+- Optimize with proper indexes for frequent filters (attendance, users, tasks).
+
+Referenced context
+
+@src/lib/db.ts
+@src/app/docs/database/index.ts
+@src/app/docs/database/model-tables.tsx
+@prisma/schema.prisma
+

@@ -1,0 +1,75 @@
+---
+alwaysApply: true
+---
+- Composition hierarchy (build from the bottom up):
+  1) UI (shadcn/ui primitives)
+  2) Atoms (compose 2+ UI primitives)
+  3) Templates (reusable layouts/compositions)
+  4) Blocks (templates + client logic: `hooks.ts`, `validation.ts`)
+  5) Micro (adds backend logic: `actions.ts`, Prisma access, validation, UI)
+  6) Apps (compose several Micro features)
+
+- Mirror pattern (URL → directory) is mandatory:
+  - Route: `src/app/<segment>/` mirrors feature code in `src/components/<segment>/`.
+  - Each page imports `{FolderName}Content` from `@/components/<folder>/content`.
+
+- Standardized file set per feature:
+  - `type.ts` (shared types)
+  - `use-<feature>.ts` (client hooks)
+  - `column.tsx` (data-table columns, typed by model)
+  - `validation.ts` (Zod schemas; infer types)
+  - `actions.ts` (server actions; "use server")
+  - `content.tsx` (feature composition)
+  - `page.tsx` (route importing `<FolderName>Content`)
+
+- Deeper structure (example):
+  - `src/`
+    - `app/`
+      - `page.tsx` — Root page component
+      - `layout.tsx` — Root layout component
+      - `abc/` — URL route: /abc
+        - `page.tsx` — ABC main page component
+        - `layout.tsx` — ABC route-specific layout
+        - `loading.tsx` — ABC loading state component
+    - `components/`
+      - `abc/` — Mirrors app/abc/
+        - `content.tsx` — ABC UI content components
+        - `action.ts` — Server actions & API calls
+        - `constant.ts` — Arrays, enums, static data
+        - `validation.ts` — Zod schemas & validation logic
+        - `type.ts` — TypeScript interfaces & types
+        - `form.tsx` — Form components
+        - `card.tsx` — Card components
+        - `all.tsx` — All list
+        - `featured.tsx` — Featured list
+        - `detail.tsx` — Detail content
+        - `util.ts` — Utility functions
+        - `column.tsx` — Table columns
+        - `use-abc.ts` — Custom React hooks
+        - `README.md` — README file
+        - `ISSUE.md` — ISSUE file
+
+- Generics in practice:
+  - Prefer typed factories and generic utilities across hooks, columns, and forms.
+  - Examples: `ColumnDef<TModel>`, `useDataTable<TData>`, `z.infer<typeof schema>`.
+  - Avoid `any`; constrain generics to domain models when possible.
+
+- System layers & data flow responsibilities:
+  - Presentation (Next.js/React): components in `form.tsx`, `cards.tsx`, `content.tsx`.
+  - Application/API (Vercel): `actions.ts` with Zod parsing and Auth.js integration.
+  - Data (Neon/Prisma): queries always scoped by `schoolId`.
+  - Observability: log `requestId` and `schoolId` for traceability.
+
+- Principles (re-state for enforcement): serverless‑first, type‑safe by default, async‑first (small PRs, documented decisions).
+
+- Multi-tenant guardrails:
+  - All business tables include `schoolId`; uniqueness is within tenant scope.
+  - Every read/write includes `{ schoolId }` derived from subdomain/session.
+
+Referenced context
+
+@src/app/docs/architecture/page.mdx
+@src/app/docs/pattern/page.mdx
+@src/app/docs/architecture/directory-structure.tsx
+@src/app/docs/architecture/standardized-file-patterns.tsx
+

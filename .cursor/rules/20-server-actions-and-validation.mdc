@@ -1,0 +1,14 @@
+---
+alwaysApply: true
+---
+- Validate inputs with Zod on the client and parse again on the server.
+- Server Actions must start with "use server" and return typed results.
+- On success, call `revalidatePath` or `redirect`. On failure, surface field errors and a toast.
+- Include `schoolId` from context (subdomain/session) in every mutation and query.
+- Keep actions small and pure; isolate DB code and schema definitions.
+
+Referenced context
+
+@src/app/docs/onboarding/page.mdx
+@src/app/docs/pattern/page.mdx
+

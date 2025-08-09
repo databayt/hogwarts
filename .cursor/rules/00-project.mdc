@@ -1,0 +1,29 @@
+---
+description: Project-wide rules for Hogwarts (Next.js 15, React 19, Tailwind 4, shadcn/ui, Prisma, Auth.js)
+globs:
+alwaysApply: true
+---
+
+- Prefer pnpm for all commands: `pnpm install`, `pnpm dev`, `pnpm build`.
+- UI foundation: shadcn/ui (+ Radix + Tailwind). Follow shadcn naming and file placement:
+  - Base primitives in `src/components/ui/*`.
+  - Small compositions in `src/components/atom/*`.
+  - Feature content in `src/components/<feature>/*` and mirrored under `src/app/<feature>`.
+- Pages mirror feature content. Pattern: each route imports `{FolderName}Content` from `@/components/<folder>/content`.
+- Styling: use Tailwind utilities and the `cn` helper from `@/lib/utils`. Avoid inline styles.
+- TypeScript: strict, no `any`. Prefer explicit function signatures for public APIs.
+- Validation: co-locate `validation.ts` (Zod) with `form.tsx`; parse on server again.
+- Server Actions: use the "use server" directive for mutations; revalidate or redirect on success.
+- Multi-tenant safety: every DB query and write must include `schoolId`. Uniqueness scoped by `schoolId`.
+- Auth: NextAuth v5 (Auth.js). Respect session shape extended in `src/auth.ts`. Keep callbacks pure and typed.
+- Imports: use aliases defined in `components.json` (e.g., `@/components/ui/button`).
+- Contribute with small, typed, composable edits that match our docs patterns.
+
+Referenced context
+
+@components.json
+@src/app/docs/pattern/page.mdx
+@src/app/docs/architecture/page.mdx
+@src/app/docs/requeriments/page.mdx
+@src/lib/utils.ts
+
