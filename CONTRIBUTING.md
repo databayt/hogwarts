@@ -2,13 +2,13 @@
 
 Thanks for your interest in contributing to hogwarts. We're happy to have you here.
 
-Please take a moment to review this document before submitting your first pull request. We also strongly recommend that you check for open issues and pull requests to see if someone else is working on something similar.
+Please review this guide before submitting a pull request. Also check open issues/PRs to avoid duplicate work.
 
 If you need any help, feel free to reach out to the maintainers.
 
 ## About this repository
 
-This repository is a modern rental platform built with Next.js 15, TypeScript, and Prisma.
+This repository is a modern, multi-tenant school platform built with Next.js 15, TypeScript, and Prisma.
 
 - We use [pnpm](https://pnpm.io) for package management.
 - We use [Next.js 15](https://nextjs.org) with App Router for the frontend.
@@ -18,58 +18,101 @@ This repository is a modern rental platform built with Next.js 15, TypeScript, a
 
 ## Structure
 
-This repository is structured as follows:
+The codebase follows a mirror-pattern architecture: every URL under `src/app` has a corresponding feature directory under `src/components` for its component logic. For documentation and data-table features, we refer only to their top-level directories.
 
-```
+```text
 src/
-├── app/                     # Next.js App Router (Routing & Layouts)
-│   ├── (auth)/              # Authentication routes
-│   ├── (dashboard)/         # Dashboard routes
-│   ├── (site)/              # Public site routes
-│   ├── hosting/             # Property hosting routes
-│   └── host/                # Property management routes
+├── app/                         # Next.js App Router (Routing & Layouts)
+│   ├── (auth)/                  # Authentication routes
+│   ├── (marketing)/             # Marketing/Site routes
+│   ├── (platform)/              # App features (e.g., dashboard, attendance)
+│   ├── (site)/                  # Public site pages
+│   ├── docs/                    # Documentation site (top-level reference)
+│   └── table/                   # Data-table area (top-level reference)
 │
-├── components/              # Component Logic (Mirrors `app` structure)
-│   ├── auth/                # Authentication components
-│   ├── host/                # Property hosting components
-│   ├── listings/            # Property listing components
-│   ├── property/            # Property management components
-│   ├── application/         # Rental application components
-│   └── ui/                  # Shared UI components
+├── components/                  # Component logic (mirrors `app` by feature)
+│   ├── auth/                    # Authentication components
+│   ├── marketing/               # Marketing components
+│   ├── platform/                # Feature components (dashboard, attendance, …)
+│   ├── site/                    # Site components
+│   ├── docs/                    # Docs components (top-level reference)
+│   ├── table/                   # Data-table components (top-level reference)
+│   └── ui/                      # Shared UI (shadcn/ui)
 │
-├── lib/                     # Shared utilities & functions
-├── types/                   # Global TypeScript definitions
-├── hooks/                   # Custom React hooks
-└── state/                   # State management
+├── lib/                         # Shared utilities (db, utils, etc.)
+├── hooks/                       # Shared React hooks
+├── prisma/                      # Database schema and migrations
+└── public/                      # Static assets
 ```
 
-| Path                  | Description                              |
-| --------------------- | ---------------------------------------- |
-| `src/app`             | The Next.js application routes and layouts. |
-| `src/components`      | The React components organized by feature. |
-| `src/lib`             | Shared utilities and database functions. |
-| `src/types`           | TypeScript type definitions. |
-| `prisma`              | Database schema and migrations. |
+| Path              | Description                                   |
+| ----------------- | --------------------------------------------- |
+| `src/app`         | Next.js application (routes/layouts).         |
+| `src/components`  | React components organized by feature.        |
+| `src/app/docs`    | Documentation app (top-level reference).      |
+| `src/components/docs` | Documentation components (top-level).    |
+| `src/app/table`   | Data-table area (top-level reference).        |
+| `src/components/table` | Data-table components (top-level).       |
+| `src/app/(platform)/dashboard` | Dashboard area (top-level reference). |
+| `src/components/platform/dashboard` | Dashboard components (top-level). |
+| `src/lib`         | Utilities and database helpers.               |
+| `prisma`          | Prisma schema and migrations.                 |
+| `public`          | Static assets.                                |
+
+### Mirror pattern: URL ↔ directory
+
+If you can see a URL, you should know where to find its code.
+
+```text
+URL: /feature-x
+
+src/app/feature-x/        # Next.js route files
+src/components/feature-x/ # Component logic for that route
+```
+
+### Standardized file patterns (deeper layers)
+
+For deeper feature directories (e.g., under `src/components/platform/dashboard`), follow the standardized file pattern inspired by our documentation (`src/app/docs/architecture/page.mdx`) and its reference table (`src/app/docs/architecture/standardized-file-patterns.tsx`):
+
+| File                    | Purpose                                                             |
+| ----------------------- | ------------------------------------------------------------------- |
+| `content.tsx`           | Compose feature/page UI: headings, sections, layout orchestration. |
+| `action.ts`             | Server actions & API calls: validate, scope tenant, mutate.        |
+| `constant.ts`           | Enums, option lists, labels, defaults for the feature.             |
+| `validation.ts`         | Zod schemas & refinements; parse and infer types.                  |
+| `type.ts`               | Domain and UI types; generic helpers for forms/tables.             |
+| `form.tsx`              | Typed forms (RHF) with resolvers and submit handling.              |
+| `card.tsx`              | Card components for KPIs, summaries, quick actions.                |
+| `all.tsx`               | List view with table, filters, pagination.                         |
+| `featured.tsx`          | Curated feature list showcasing selections.                        |
+| `detail.tsx`            | Detail view with sections, relations, actions.                     |
+| `util.ts`               | Pure utilities and mappers used in the feature.                    |
+| `column.tsx`            | Typed table column builders and cell renderers.                    |
+| `use-abc.ts`            | Feature hooks: fetching, mutations, derived state.                 |
+| `README.md`             | Feature README: purpose, APIs, decisions.                          |
+| `ISSUE.md`              | Known issues and follow-ups for the feature.                       |
+
+Use these names consistently across features to keep the codebase discoverable and composable.
 
 ## Development
 
 ### Fork this repo
 
-You can fork this repo by clicking the fork button in the top right corner of this page.
+You can fork this repo by clicking the fork button in the top-right of the GitHub page.
 
 ### Clone on your local machine
 
 ```bash
-git clone https://github.com/your-username/mkan.git
+git clone <your-fork-url>
 ```
 
 ### Navigate to project directory
 
 ```bash
-cd mkan
+cd hogwarts
 ```
 
-### Create a new Branch
+### Create a new branch
 
 ```bash
 git checkout -b my-new-branch
@@ -83,13 +126,13 @@ pnpm install
 
 ### Set up the database
 
-1. Copy the environment variables:
+1. Copy environment variables:
 
 ```bash
 cp .env.example .env.local
 ```
 
-2. Set up your database and update the `DATABASE_URL` in `.env.local`
+2. Configure your database and update `DATABASE_URL` in `.env.local`.
 
 3. Run database migrations:
 
@@ -109,61 +152,58 @@ pnpm seed
 pnpm dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Build for production
+
+```bash
+pnpm build
+```
+
+Open `http://localhost:3000` with your browser to see the result.
 
 ## Components
 
 We use shadcn/ui as our component foundation. You can find the component configuration in `components.json`.
 
-When adding or modifying components, please ensure that:
+When adding or modifying components:
 
-1. You follow the shadcn/ui patterns and conventions
-2. You maintain consistency with existing components
-3. You add proper TypeScript types
-4. You include proper validation using Zod
-5. You test the components thoroughly
+1. Follow shadcn/ui patterns and naming conventions (keep components minimal and composable).
+2. Maintain consistency with existing components, colocating logic under the mirrored `src/components/<feature>` path.
+3. Add proper TypeScript types.
+4. Include validation using Zod when handling inputs.
+5. Test components and flows thoroughly.
 
-## Commit Convention
+## Commit convention
 
-Before you create a Pull Request, please check whether your commits comply with
-the commit conventions used in this repository.
+Before creating a Pull Request, ensure your commits follow this convention:
 
-When you create a commit we kindly ask you to follow the convention
-`category(scope or module): message` in your commit message while using one of
-the following categories:
+`category(scope or module): message`
 
-- `feat / feature`: all changes that introduce completely new code or new
-  features
-- `fix`: changes that fix a bug (ideally you will additionally reference an
-  issue if present)
-- `refactor`: any code related change that is not a fix nor a feature
-- `docs`: changing existing or creating new documentation (i.e. README, docs for
-  usage of a lib or cli usage)
-- `build`: all changes regarding the build of the software, changes to
-  dependencies or the addition of new dependencies
-- `test`: all changes regarding tests (adding new tests or changing existing
-  ones)
-- `ci`: all changes regarding the configuration of continuous integration (i.e.
-  github actions, ci system)
-- `chore`: all changes to the repository that do not fit into any of the above
-  categories
+Categories:
 
-  e.g. `feat(property): add new property listing component`
+- `feat / feature`: new features
+- `fix`: bug fixes (reference an issue if possible)
+- `refactor`: code changes that are not fixes or features
+- `docs`: documentation changes
+- `build`: build/dependency changes
+- `test`: tests (add/change)
+- `ci`: continuous integration configuration
+- `chore`: repository chores
 
-If you are interested in the detailed specification you can visit
-https://www.conventionalcommits.org/ or check out the
-[Angular Commit Message Guidelines](https://github.com/angular/angular/blob/22b96b9/CONTRIBUTING.md#-commit-message-guidelines).
+Example: `feat(dashboard): add KPI cards`
+
+See `https://www.conventionalcommits.org/` or the
+[Angular Commit Message Guidelines](https://github.com/angular/angular/blob/22b96b9/CONTRIBUTING.md#-commit-message-guidelines) for details.
 
 ## Requests for new features
 
-If you have a request for a new feature, please open a discussion on GitHub. We'll be happy to help you out.
+If you have a request for a new feature, please open a discussion on GitHub.
 
 ## Testing
 
-Tests are written using [Vitest](https://vitest.dev). You can run all the tests from the root of the repository.
+Tests are written using [Vitest](https://vitest.dev). Run all tests from the repository root:
 
 ```bash
 pnpm test
 ```
 
-Please ensure that the tests are passing when submitting a pull request. If you're adding new features, please include tests.
+Ensure tests pass before submitting a PR. When adding features, include appropriate tests.
