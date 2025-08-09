@@ -2,64 +2,72 @@
 
 ## Introduction
 
-**Hogwarts** is a multi‑tenant school cloud for Sudan. One central database and logic, many schools — each with its own domain, theme, and language (Arabic/English, RTL/LTR).
+**Hogwarts** is school automation. Cloud based. One central database and logic, many schools — each with its own domain and theme.
 
-These docs focus on the product, architecture, and how to run and develop the app.
+### Highlights
 
-### 1) Quick start
+- Multi-tenant by design: every record is scoped by `schoolId`
+- Custom subdomains per school (e.g., `school.hogwarts.app`)
+- Role-based access: Owner, Admin, Teacher, Student, Parent, Accountant
+- Core features: attendance, timetable (basic), announcements, settings, billing (manual-friendly)
+- Arabic‑first (RTL) with English alongside it
+- Low-bandwidth UX: light pages and assets
+- Secure authentication, permissions, and auditability
 
-```bash
-pnpm install
-pnpm dev
-```
 
-Open `http://localhost:3000`.
+## What You'll Find Here
 
-If Prisma models changed, run:
+### For Developers
 
-```bash
-pnpm prisma generate
-pnpm prisma migrate dev --name init
-```
+* [Requirements](/docs/requeriments) – Functional and non-functional requirements
+* [Architecture](/docs/architecture) – System design and technical specs
+* [Stack](/docs/stack) – Technology used
+* [Pattern](/docs/pattern) – Best practices and coding standards
+* [Contributing Guide](/docs/contribute) – How to get involved in development
+* [Issues](/docs/issues) – Open Issues
+* [Inspiration](/docs/inspiration) – Source of inspiration
 
-### 2) Project map (what lives where)
+---
 
-- Routes live in `src/app/...`
-- Components live in `src/components/...`
-- Each feature mirrors its route: `app/feature` ↔ `components/feature`
-- Standard files per feature: `actions.ts`, `validation.ts`, `types.ts`, `form.tsx`, `content.tsx`
+### For Stakeholders
 
-### 3) Build and verify
+* [Business Model](/docs/business/earning) – Revenue streams and value creation
+* [Roadmap](/docs/business/roadmap) – Product development plans and strategic goals
+* [Sales Process](/docs/business/sales) – Customer acquisition and revenue generation
+* [Stock Sharing](/docs/governance/stock-sharing) – Equity distribution and governance
 
-1. Make a small change locally
-2. Run `pnpm build` to verify type safety and catch errors
-3. Start the app and validate the change in the browser
+---
 
-### 4) Core product in one minute
+### For Community
 
-- Multi-tenant: every record belongs to a school via `schoolId`
-- Provisioning: each school gets a subdomain (e.g., `school.hogwarts.app`)
-- Roles: Owner, Admin, Teacher, Student, Parent, Accountant
-- First features: attendance, timetable (basic), announcements, settings, billing (manual-friendly)
+* [Code of Conduct](/docs/governance/code-of-conduct) – Community standards and expectations
+* [Issues & Support](/docs/community/issues) – Bug reporting and assistance
+* [Discussions](/docs/community/discussions) – Forums and knowledge sharing
 
-### 5) Stack (what we use)
+---
 
-- Next.js, React, TypeScript
-- Tailwind + shadcn/ui
-- Prisma + Neon (Postgres)
-- Auth.js, Zod, React Hook Form
+### For Clients
 
-### 6) Key links
+* Understand our [Business Model](/docs/business/earning)
+* See what's ahead in the [Roadmap](/docs/business/roadmap)
+* [Contact Sales](/docs/business/sales) to discuss your needs
+* Access [Support Options](/docs/community/support) when needed
 
-- Requirements: `/docs/requeriments`
-- Architecture: `/docs/architecture`
-- Stack: `/docs/stack` — Onboarding: `/docs/onboarding`
-- Database: `/docs/database`
-- Roadmap & Changelog: `/docs/roadmap`, `/docs/changelog`
+---
 
-### Notes for Sudan context
+### For Legal
 
-- Arabic-first (RTL) with English alongside it
-- Low bandwidth: keep pages light; avoid large images
-- Manual payments: billing supports receipt upload from day one
+* [Open Source Licenses](/docs/legal/licenses) – Usage terms and compliance
+* [Terms of Service](/docs/legal/terms) – Legal policies
+* [Privacy Policy](/docs/legal/privacy) – Data protection commitments
 
+---
+
+## Getting Started
+
+New comer? Start with the essentials:
+
+* Review the [Code of Conduct](/docs/code-of-conduct)
+* Explore the [Architecture](/docs/architecture)
+* Check the [Contributing Guide](/docs/contributing)
+* Join [Community Discussions](/docs/community)

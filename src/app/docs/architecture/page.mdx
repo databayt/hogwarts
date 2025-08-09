@@ -60,28 +60,18 @@ import { SaaSArrangementsNav } from './index'
 
 <DirectoryStructure />
 
-### School SaaS
-
-See the arrangements for our multi-tenant school SaaS:
-
-- [Overview & Arrangements](/docs/arrangements)
 
 ### Standardized File Patterns
 
 To ensure consistency, each feature directory follows standardized naming conventions. A CLI tool helps scaffold these files automatically, enforcing the pattern across the codebase.
 
-| File           | Purpose                                   | Example Content                         |
-|----------------|-------------------------------------------|-----------------------------------------|
-| `actions.ts`   | Server actions, API calls, data mutations | `createAbc()`, `updateStatus()` |
-| `constants.ts` | Static data, enums, configuration         | Status arrays, default values           |
-| `validation.ts`| Zod schemas for form and API validation   | Input schemas, error messages           |
-| `types.ts`     | TypeScript interfaces and type definitions| Component props, data models            |
-| `form.tsx`     | Form components using React Hook Form     | Input fields, submission logic, state   |
-| `cards.tsx`    | Card-based UI components                  | Data display cards, interactive elements|
-| `content.tsx`  | General UI content and layout components  | Headers, descriptions, sections         |
-| `hooks.ts`     | Custom React hooks for state and effects  | `useAbcState()`, `useStatusQuery()` |
+import { StandardizedFilePatterns } from './standardized-file-patterns'
 
-We leverage **TypeScript Generics** extensively within these files, especially in `types.ts` and `hooks.ts`, to create highly reusable and flexible logic that can be adapted to various data structures without sacrificing type safety.
+<StandardizedFilePatterns />
+
+### Generics in Practice
+
+We leverage **TypeScript Generics** extensively across `type.ts`, `use-abc.ts`, `column.tsx`, `validation.ts`, and forms to keep logic reusable and type-safe without duplication. See the dedicated guide for patterns and examples: [Pattern docs](/docs/pattern).
 
 ### System Layers & Data Flow
 
@@ -99,7 +89,7 @@ This structured, component-based approach integrates seamlessly with our technic
 2. The request payload is validated by a Zod schema from `validation.ts`.  
 3. The serverless function uses the type-safe Prisma client to query Neon Postgres.  
 4. Observability captures request ID and `schoolId` for traceability.  
-5. The result is **streamed** back and managed by a hook from `hooks.ts`, efficiently updating the UI.
+5. The result is **streamed** back and managed by a hook from `use-abc.ts`, efficiently updating the UI.
 
 ---
 
