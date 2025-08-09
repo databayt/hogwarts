@@ -1,0 +1,22 @@
+---
+description: Standards for UI primitives and atoms (shadcn/ui conventions)
+globs:
+  - "src/components/ui/**"
+  - "src/components/atom/**"
+alwaysApply: false
+---
+
+- Build from shadcn/ui primitives; keep components minimal and composable.
+- Variants: use `class-variance-authority` (CVA). Export `{Component, componentVariants}` from the same file.
+- Class names: merge with `cn()`; never concatenate manually.
+- Accessibility: preserve focus styles, aria props, keyboard interactions from Radix primitives.
+- Composition: prefer Slot API (`@radix-ui/react-slot`) for polymorphism via `asChild`.
+- Files: one component per file; colocate stories/examples elsewhere if needed.
+- Theming: respect Tailwind CSS variables; dark mode ready.
+- Do not inline custom styles; add Tailwind utilities or extend variants.
+
+Referenced context
+
+@src/components/ui/button.tsx
+@src/app/docs/pattern/page.mdx
+
