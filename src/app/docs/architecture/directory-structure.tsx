@@ -134,12 +134,12 @@ export function DirectoryStructure({ className }: DirectoryStructureProps) {
                 description: "ABC UI content components"
               },
               {
-                name: "actions.ts",
+                name: "action.ts",
                 type: "file",
                 description: "Server actions & API calls"
               },
               {
-                name: "constants.ts",
+                name: "constant.ts",
                 type: "file",
                 description: "Arrays, enums, static data"
               },
@@ -149,7 +149,7 @@ export function DirectoryStructure({ className }: DirectoryStructureProps) {
                 description: "Zod schemas & validation logic"
               },
               {
-                name: "types.ts",
+                name: "type.ts",
                 type: "file",
                 description: "TypeScript interfaces & types"
               },
@@ -159,14 +159,49 @@ export function DirectoryStructure({ className }: DirectoryStructureProps) {
                 description: "Form components"
               },
               {
-                name: "cards.tsx",
+                name: "card.tsx",
                 type: "file",
                 description: "Card components"
               },
               {
-                name: "hooks.ts",
+                name: "all.tsx",
+                type: "file",
+                description: "All list"
+              },
+              {
+                name: "featured.tsx",
+                type: "file",
+                description: "Featured list"
+              },
+              {
+                name: "detail.tsx",
+                type: "file",
+                description: "Detail content"
+              },
+              {
+                name: "util.ts",
+                type: "file",
+                description: "Utility functions"
+              },
+              {
+                name: "column.tsx",
+                type: "file",
+                description: "Table columns"
+              },
+              {
+                name: "use-abc.ts",
                 type: "file",
                 description: "Custom React hooks"
+              },
+              {
+                name: "README.md",
+                type: "file",
+                description: "README file"
+              },
+              {
+                name: "ISSUE.md",
+                type: "file",
+                description: "ISSUE file"
               }
             ]
           }
@@ -265,57 +300,6 @@ export function DirectoryStructure({ className }: DirectoryStructureProps) {
           Deeper Layer Structure
         </h4>
         <FileTree item={deeperStructure} />
-      </div>
-
-      <div className="border rounded-lg p-4 mt-8">
-        <h4 className="font-semibold mb-3 flex items-center gap-2">
-          <File className="w-4 h-4" />
-          Standardized File Patterns
-        </h4>
-        <div className="space-y-2 text-sm">
-          <div className="flex justify-between">
-            <span>actions.ts:</span>
-            <span className="font-medium">Server actions, API calls</span>
-          </div>
-          <div className="flex justify-between">
-            <span>constants.ts:</span>
-            <span className="font-medium">Static data, enums</span>
-          </div>
-          <div className="flex justify-between">
-            <span>validation.ts:</span>
-            <span className="font-medium">Zod schemas, validation</span>
-          </div>
-          <div className="flex justify-between">
-            <span>types.ts:</span>
-            <span className="font-medium">TypeScript interfaces</span>
-          </div>
-          <div className="flex justify-between">
-            <span>form.tsx:</span>
-            <span className="font-medium">Form components</span>
-          </div>
-          <div className="flex justify-between">
-            <span>cards.tsx:</span>
-            <span className="font-medium">Card-based UI</span>
-          </div>
-          <div className="flex justify-between">
-            <span>content.tsx:</span>
-            <span className="font-medium">UI content & layout</span>
-          </div>
-          <div className="flex justify-between">
-            <span>hooks.ts:</span>
-            <span className="font-medium">Custom React hooks</span>
-          </div>
-        </div>
-      </div>
-
-      <div className="border-l-4 p-4 rounded-r-lg">
-        <h4 className="font-semibold mb-2">Mirror-Pattern Benefits</h4>
-        <ul className="text-sm space-y-1">
-          <li>• <strong>URL-to-Directory Mapping:</strong> Every URL route has a corresponding mirrored directory structure</li>
-          <li>• <strong>Predictable Navigation:</strong> If you can see a URL, you know exactly where to find its code</li>
-          <li>• <strong>Intuitive Mental Model:</strong> Creates a clear relationship between routing and component logic</li>
-          <li>• <strong>Enhanced Discoverability:</strong> Makes it easy to locate and understand feature organization</li>
-        </ul>
       </div>
     </div>
   )
