@@ -59,15 +59,23 @@ export function useMDXComponents(components: Record<string, React.ComponentType<
         {...props}
       />
     ),
-    a: ({ className, ...props }) => (
-      <a
-        className={cn(
-          "font-medium underline underline-offset-4 hover:no-underline",
-          className
-        )}
-        {...props}
-      />
-    ),
+    a: ({ className, target, rel, href, ...props }: React.AnchorHTMLAttributes<HTMLAnchorElement>) => {
+      const isExternal = typeof href === "string" && /^(https?:)?\/\//.test(href)
+      const isAnchorOrInternal = typeof href === "string" && (href.startsWith("/") || href.startsWith("#") || (!/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(href)))
+
+      return (
+        <a
+          className={cn(
+            "font-medium underline underline-offset-4 hover:no-underline",
+            className
+          )}
+          target={isExternal ? (target ?? "_blank") : target}
+          rel={isExternal ? (rel ?? "noreferrer noopener") : rel}
+          href={href}
+          {...props}
+        />
+      )
+    },
     p: ({ className, ...props }) => (
       <p
         className={cn("leading-7 text-foreground/80 [&:not(:first-child)]:mt-6 mb-4", className)}
