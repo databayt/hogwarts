@@ -2,6 +2,7 @@ import "server-only";
 
 import type { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
+import { getTenantContext } from "@/lib/utils";
 
 import { filterColumns } from "@/components/table/lib/prisma-filter-columns";
 import { unstable_cache } from "@/components/table/lib/unstable-cache";
@@ -12,6 +13,10 @@ export async function getTasks(input: GetTasksSchema) {
   return await unstable_cache(
     async () => {
       try {
+        const { schoolId } = await getTenantContext();
+        if (!schoolId) {
+          return { data: [], pageCount: 0 };
+        }
         const skip = (input.page - 1) * input.perPage;
         const advancedTable =
           input.filterFlag === "advancedFilters" ||
@@ -64,7 +69,10 @@ export async function getTasks(input: GetTasksSchema) {
           }
         }
 
-        const where = advancedTable ? advancedWhere : basicWhere;
+        const where = {
+          ...(advancedTable ? advancedWhere : basicWhere),
+          schoolId,
+        } satisfies Prisma.TaskWhereInput;
 
         // Build orderBy array
         const orderBy: Prisma.TaskOrderByWithRelationInput[] =
@@ -102,11 +110,21 @@ export async function getTaskStatusCounts() {
   return unstable_cache(
     async () => {
       try {
+        const { schoolId } = await getTenantContext();
+        if (!schoolId) {
+          return {
+            todo: 0,
+            in_progress: 0,
+            done: 0,
+            canceled: 0,
+          };
+        }
         const results = await db.task.groupBy({
           by: ["status"],
           _count: {
             status: true,
           },
+          where: { schoolId },
         });
 
         return results.reduce(
@@ -141,11 +159,20 @@ export async function getTaskPriorityCounts() {
   return unstable_cache(
     async () => {
       try {
+        const { schoolId } = await getTenantContext();
+        if (!schoolId) {
+          return {
+            low: 0,
+            medium: 0,
+            high: 0,
+          };
+        }
         const results = await db.task.groupBy({
           by: ["priority"],
           _count: {
             priority: true,
           },
+          where: { schoolId },
         });
 
         return results.reduce(
@@ -178,6 +205,10 @@ export async function getEstimatedHoursRange() {
   return unstable_cache(
     async () => {
       try {
+        const { schoolId } = await getTenantContext();
+        if (!schoolId) {
+          return { min: 0, max: 0 };
+        }
         const result = await db.task.aggregate({
           _min: {
             estimatedHours: true,
@@ -185,6 +216,7 @@ export async function getEstimatedHoursRange() {
           _max: {
             estimatedHours: true,
           },
+          where: { schoolId },
         });
 
         return {

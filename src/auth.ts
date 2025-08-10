@@ -17,6 +17,7 @@ declare module "next-auth" {
       role: UserRole
       isTwoFactorEnabled: boolean
       isOAuth: boolean
+      schoolId: string | null
     } & DefaultSession["user"]
   }
 }
@@ -126,6 +127,8 @@ export const {
         session.user.name = token.name as string
         session.user.email = token.email as string
         session.user.isOAuth = !!token.isOAuth
+        // Propagate tenant info
+        session.user.schoolId = (token as unknown as { schoolId?: string | null }).schoolId ?? null
       }
 
       return session
@@ -144,6 +147,8 @@ export const {
       token.email = existingUser.email
       token.role = existingUser.role
       token.isTwoFactorEnabled = existingUser.isTwoFactorEnabled
+      // Attach tenant info to token for downstream access
+      ;(token as unknown as { schoolId?: string | null }).schoolId = existingUser.schoolId ?? null
 
       return token
     }
