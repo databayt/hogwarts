@@ -10,13 +10,13 @@ model School {
   email       String?
   website     String?
   timezone    String  @default("UTC")
-  
-  // Subscription/billing info
+
+  // Subscription/billing info (high-level; detailed state in Subscription)
   planType    String  @default("basic") // basic, premium, enterprise
   maxStudents Int     @default(100)
   maxTeachers Int     @default(10)
   isActive    Boolean @default(true)
-  
+
   // School relationships
   users                 User[]
   schoolYears           SchoolYear[]
@@ -42,11 +42,51 @@ model School {
   assignments           Assignment[]
   assignmentSubmissions AssignmentSubmission[]
   attendances           Attendance[]
-  
+  announcements         Announcement[]
+  domainRequests        DomainRequest[]
+  subscriptions         Subscription[]
+  invoices              Invoice[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   @@map("schools")
+}
+model Subscription {
+  id                  String   @id @default(cuid())
+  schoolId            String
+  stripeSubscriptionId String  @unique
+  stripeCustomerId     String
+  stripePriceId        String
+  currentPeriodEnd     DateTime
+  cancelAtPeriodEnd    Boolean  @default(false)
+  status               String   // active, past_due, canceled, etc
+
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("subscriptions")
+}
+
+model Invoice {
+  id             String   @id @default(cuid())
+  schoolId       String
+  stripeInvoiceId String  @unique
+  amountDue      Int
+  amountPaid     Int
+  currency       String
+  status         String   // draft, open, paid, uncollectible, void
+  periodStart    DateTime
+  periodEnd      DateTime
+
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("invoices")
 }
 
 model SchoolYear {
@@ -55,15 +95,15 @@ model SchoolYear {
   yearName  String
   startDate DateTime
   endDate   DateTime
-  
+
   school            School             @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   periods           Period[]
   terms             Term[]
   studentYearLevels StudentYearLevel[]
-  
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   @@unique([schoolId, yearName]) // Unique year name per school
   @@map("school_years")
 }
@@ -75,15 +115,15 @@ model Period {
   name      String
   startTime DateTime @db.Time()
   endTime   DateTime @db.Time()
-  
+
   school         School     @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   schoolYear     SchoolYear @relation(fields: [yearId], references: [id], onDelete: Cascade)
   classesAsStart Class[]    @relation("ClassStartPeriod")
   classesAsEnd   Class[]    @relation("ClassEndPeriod")
-  
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   @@unique([schoolId, yearId, name]) // Unique period name per school year
   @@map("periods")
 }
@@ -95,14 +135,14 @@ model Term {
   termNumber Int
   startDate  DateTime
   endDate    DateTime
-  
+
   school     School     @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   schoolYear SchoolYear @relation(fields: [yearId], references: [id], onDelete: Cascade)
   classes    Class[]
-  
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   @@unique([schoolId, yearId, termNumber]) // Unique term number per school year
   @@map("terms")
 }
@@ -112,14 +152,14 @@ model YearLevel {
   schoolId   String
   levelName  String
   levelOrder Int
-  
+
   school            School             @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   studentYearLevels StudentYearLevel[]
-  
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
-  @@unique([schoolId, levelName])  // Unique level name per school
+
+  @@unique([schoolId, levelName]) // Unique level name per school
   @@unique([schoolId, levelOrder]) // Unique level order per school
   @@map("year_levels")
 }

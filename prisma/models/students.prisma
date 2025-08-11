@@ -1,29 +1,29 @@
 // Student and Guardian Models
 
 model Student {
-  id             String    @id @default(cuid())
+  id             String   @id @default(cuid())
   schoolId       String
   givenName      String
   middleName     String?
   surname        String
-  dateOfBirth    DateTime  @db.Date
+  dateOfBirth    DateTime @db.Date
   gender         String
-  enrollmentDate DateTime  @default(now())
-  
-  school            School               @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  enrollmentDate DateTime @default(now())
+
+  school            School                 @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   studentClasses    StudentClass[]
   studentYearLevels StudentYearLevel[]
   studentGuardians  StudentGuardian[]
   attendances       Attendance[]
   submissions       AssignmentSubmission[]
-  
+
   // Auth relationship
   userId String? @unique
   user   User?   @relation(fields: [userId], references: [id])
-  
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   @@map("students")
 }
 
@@ -34,19 +34,19 @@ model Guardian {
   surname      String
   emailAddress String?
   teacherId    String? @unique // Link to teacher if guardian is also a teacher
-  
-  school           School               @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  teacher          Teacher?             @relation(fields: [teacherId], references: [id])
+
+  school           School                @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  teacher          Teacher?              @relation(fields: [teacherId], references: [id])
   phoneNumbers     GuardianPhoneNumber[]
   studentGuardians StudentGuardian[]
-  
+
   // Auth relationship
   userId String? @unique
   user   User?   @relation(fields: [userId], references: [id])
-  
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   @@unique([schoolId, emailAddress]) // Unique email per school (if provided)
   @@map("guardians")
 }
@@ -55,13 +55,13 @@ model GuardianType {
   id       String @id @default(cuid())
   schoolId String
   name     String // mother, father, guardian, etc.
-  
+
   school           School            @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   studentGuardians StudentGuardian[]
-  
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   @@unique([schoolId, name]) // Unique guardian type name per school
   @@map("guardian_types")
 }
@@ -73,15 +73,15 @@ model StudentGuardian {
   guardianId     String
   guardianTypeId String
   isPrimary      Boolean @default(false)
-  
+
   school       School       @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   student      Student      @relation(fields: [studentId], references: [id], onDelete: Cascade)
   guardian     Guardian     @relation(fields: [guardianId], references: [id], onDelete: Cascade)
   guardianType GuardianType @relation(fields: [guardianTypeId], references: [id])
-  
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   @@unique([schoolId, studentId, guardianId]) // Unique student-guardian per school
   @@map("student_guardians")
 }
@@ -93,33 +93,33 @@ model GuardianPhoneNumber {
   phoneNumber String
   phoneType   String  @default("mobile") // mobile, home, work, emergency
   isPrimary   Boolean @default(false)
-  
+
   school   School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   guardian Guardian @relation(fields: [guardianId], references: [id], onDelete: Cascade)
-  
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   @@unique([schoolId, guardianId, phoneNumber]) // Unique phone per guardian per school
   @@map("guardian_phone_numbers")
 }
 
 model StudentYearLevel {
-  id        String  @id @default(cuid())
+  id        String   @id @default(cuid())
   schoolId  String
   studentId String
   levelId   String
   yearId    String
   score     Decimal? @db.Decimal(5, 2) // Year-end score
-  
+
   school     School     @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   student    Student    @relation(fields: [studentId], references: [id], onDelete: Cascade)
   yearLevel  YearLevel  @relation(fields: [levelId], references: [id])
   schoolYear SchoolYear @relation(fields: [yearId], references: [id])
-  
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   @@unique([schoolId, studentId, yearId]) // Unique student-year per school
   @@map("student_year_levels")
 }

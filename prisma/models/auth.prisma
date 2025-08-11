@@ -1,56 +1,62 @@
 // Auth Models
 enum UserRole {
-  DEVELOPER    // Platform admin (across all schools)
-  ADMIN        // School admin
+  DEVELOPER // Platform admin (across all schools)
+  ADMIN // School admin
   TEACHER
   STUDENT
   GUARDIAN
-  ACCOUNTANT   // School accountant/finance
-  STAFF        // General school staff
-  USER         // General user
+  ACCOUNTANT // School accountant/finance
+  STAFF // General school staff
+  USER // General user
 }
 
 model User {
-  id                 String    @id @default(cuid())
-  username           String?
-  email              String?
-  emailVerified      DateTime?
-  image              String?
-  password           String?
-  role               UserRole  @default(USER)
-  
+  id            String    @id @default(cuid())
+  username      String?
+  email         String?
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  role          UserRole  @default(USER)
+
   // Multi-tenant fields
-  schoolId           String?   // null for DEVELOPER
-  school             School?   @relation(fields: [schoolId], references: [id])
-  
-  accounts           Account[]
-  isTwoFactorEnabled Boolean   @default(false)
+  schoolId String? // null for DEVELOPER
+  school   School? @relation(fields: [schoolId], references: [id])
+
+  accounts              Account[]
+  isTwoFactorEnabled    Boolean                @default(false)
   twoFactorConfirmation TwoFactorConfirmation?
 
   // School relationships
-  student   Student?
-  teacher   Teacher?
-  guardian  Guardian?
-  
+  student  Student?
+  teacher  Teacher?
+  guardian Guardian?
+
+  // Stripe subscription fields (user-scoped for compatibility with pricing UI)
+  stripeSubscriptionId   String?
+  stripeCustomerId       String?
+  stripePriceId          String?
+  stripeCurrentPeriodEnd DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   @@unique([email, schoolId]) // Allow same email across different schools
 }
 
 model Account {
-  id                 String   @id @default(cuid())
-  userId             String
-  type               String
-  provider           String
-  providerAccountId  String
-  refresh_token      String?  @db.Text
-  access_token       String?  @db.Text
-  expires_at         Int?
-  token_type         String?
-  scope              String?
-  id_token           String?  @db.Text
-  session_state      String?
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -88,4 +94,4 @@ model TwoFactorConfirmation {
   id     String @id @default(cuid())
   userId String @unique
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-} 
+}

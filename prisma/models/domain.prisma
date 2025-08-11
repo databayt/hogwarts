@@ -1,0 +1,15 @@
+// Domain request/management
+model DomainRequest {
+  id         String    @id @default(cuid())
+  schoolId   String
+  domain     String
+  status     String    @default("pending") // pending|approved|rejected|verified
+  notes      String?
+  verifiedAt DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  @@unique([schoolId, domain])
+}

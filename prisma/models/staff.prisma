@@ -7,20 +7,20 @@ model Teacher {
   surname      String
   gender       String?
   emailAddress String
-  
-  school              School             @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  classes             Class[]
-  teacherDepartments  TeacherDepartment[]
-  phoneNumbers        TeacherPhoneNumber[]
-  guardianProfiles    Guardian[] // Teachers can also be guardians
-  
+
+  school             School               @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  classes            Class[]
+  teacherDepartments TeacherDepartment[]
+  phoneNumbers       TeacherPhoneNumber[]
+  guardianProfiles   Guardian[] // Teachers can also be guardians
+
   // Auth relationship
   userId String? @unique
   user   User?   @relation(fields: [userId], references: [id])
-  
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   @@unique([schoolId, emailAddress]) // Unique email per school
   @@map("teachers")
 }
@@ -29,34 +29,34 @@ model Department {
   id             String @id @default(cuid())
   schoolId       String
   departmentName String
-  
-  school             School             @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  school             School              @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   subjects           Subject[]
   teacherDepartments TeacherDepartment[]
-  
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   @@unique([schoolId, departmentName]) // Unique department name per school
   @@map("departments")
 }
 
 model TeacherDepartment {
-  id           String   @id @default(cuid())
+  id           String    @id @default(cuid())
   schoolId     String
   teacherId    String
   departmentId String
-  isPrimary    Boolean  @default(false) // Primary department for the teacher
-  startDate    DateTime @default(now())
+  isPrimary    Boolean   @default(false) // Primary department for the teacher
+  startDate    DateTime  @default(now())
   endDate      DateTime?
-  
+
   school     School     @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   teacher    Teacher    @relation(fields: [teacherId], references: [id], onDelete: Cascade)
   department Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
-  
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   @@unique([schoolId, teacherId, departmentId]) // Unique teacher-department per school
   @@map("teacher_departments")
 }
@@ -68,13 +68,13 @@ model TeacherPhoneNumber {
   phoneNumber String
   phoneType   String  @default("mobile") // mobile, home, work, emergency
   isPrimary   Boolean @default(false)
-  
+
   school  School  @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   teacher Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
-  
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   @@unique([schoolId, teacherId, phoneNumber]) // Unique phone per teacher per school
   @@map("teacher_phone_numbers")
 }

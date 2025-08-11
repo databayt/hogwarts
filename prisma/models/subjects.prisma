@@ -5,20 +5,20 @@ model Subject {
   schoolId     String
   departmentId String
   subjectName  String
-  
+
   school     School     @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   department Department @relation(fields: [departmentId], references: [id])
   classes    Class[]
-  
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   @@unique([schoolId, departmentId, subjectName]) // Unique subject per department per school
   @@map("subjects")
 }
 
 model Class {
-  id            String  @id @default(cuid())
+  id            String @id @default(cuid())
   schoolId      String
   subjectId     String
   teacherId     String
@@ -27,22 +27,23 @@ model Class {
   endPeriodId   String
   classroomId   String
   name          String
-  
-  school       School       @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  subject      Subject      @relation(fields: [subjectId], references: [id])
-  teacher      Teacher      @relation(fields: [teacherId], references: [id])
-  term         Term         @relation(fields: [termId], references: [id])
-  startPeriod  Period       @relation("ClassStartPeriod", fields: [startPeriodId], references: [id])
-  endPeriod    Period       @relation("ClassEndPeriod", fields: [endPeriodId], references: [id])
-  classroom    Classroom    @relation(fields: [classroomId], references: [id])
-  
+
+  school      School    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  subject     Subject   @relation(fields: [subjectId], references: [id])
+  teacher     Teacher   @relation(fields: [teacherId], references: [id])
+  term        Term      @relation(fields: [termId], references: [id])
+  startPeriod Period    @relation("ClassStartPeriod", fields: [startPeriodId], references: [id])
+  endPeriod   Period    @relation("ClassEndPeriod", fields: [endPeriodId], references: [id])
+  classroom   Classroom @relation(fields: [classroomId], references: [id])
+
   studentClasses StudentClass[]
   assignments    Assignment[]
   attendances    Attendance[]
-  
+  announcements  Announcement[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   @@unique([schoolId, name]) // Unique class name per school
   @@map("classes")
 }
@@ -53,14 +54,14 @@ model StudentClass {
   studentId String
   classId   String
   score     Decimal? @db.Decimal(5, 2) // Final score for the class
-  
+
   school  School  @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
   class   Class   @relation(fields: [classId], references: [id], onDelete: Cascade)
-  
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   @@unique([schoolId, studentId, classId]) // Unique student-class per school
   @@map("student_classes")
 }
@@ -70,13 +71,13 @@ model ScoreRange {
   schoolId String
   minScore Decimal @db.Decimal(5, 2)
   maxScore Decimal @db.Decimal(5, 2)
-  grade    String  // A+, A, B+, B, etc.
-  
+  grade    String // A+, A, B+, B, etc.
+
   school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   @@unique([schoolId, grade]) // Unique grade per school
   @@map("score_ranges")
 }

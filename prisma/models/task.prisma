@@ -22,16 +22,16 @@ enum TaskPriority {
 }
 
 model Task {
-  id             String      @id @default(cuid()) @db.VarChar(30)
-  code           String      @unique @db.VarChar(128)
-  title          String?     @db.VarChar(128)
-  status         TaskStatus  @default(todo)
-  label          TaskLabel   @default(bug)
+  id             String       @id @default(cuid()) @db.VarChar(30)
+  code           String       @unique @db.VarChar(128)
+  title          String?      @db.VarChar(128)
+  status         TaskStatus   @default(todo)
+  label          TaskLabel    @default(bug)
   priority       TaskPriority @default(low)
-  estimatedHours Float       @default(0) @map("estimated_hours")
-  archived       Boolean     @default(false)
-  createdAt      DateTime    @default(now()) @map("created_at")
-  updatedAt      DateTime    @updatedAt @map("updated_at")
+  estimatedHours Float        @default(0) @map("estimated_hours")
+  archived       Boolean      @default(false)
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
 
   @@map("shadcn_tasks")
 }

@@ -1,0 +1,11 @@
+// Audit Log Model
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String
+  schoolId  String?
+  action    String
+  reason    String?
+  ip        String?
+  userAgent String?
+  createdAt DateTime @default(now())
+}

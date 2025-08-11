@@ -33,14 +33,14 @@ model Assignment {
   dueDate      DateTime
   publishDate  DateTime?
   instructions String?          @db.Text
-  
-  school      School             @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  class       Class              @relation(fields: [classId], references: [id], onDelete: Cascade)
+
+  school      School                 @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  class       Class                  @relation(fields: [classId], references: [id], onDelete: Cascade)
   submissions AssignmentSubmission[]
-  
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   @@map("assignments")
 }
 
@@ -54,26 +54,26 @@ enum SubmissionStatus {
 }
 
 model AssignmentSubmission {
-  id            String           @id @default(cuid())
-  schoolId      String
-  assignmentId  String
-  studentId     String
-  status        SubmissionStatus @default(NOT_SUBMITTED)
-  submittedAt   DateTime?
-  content       String?          @db.Text
-  attachments   String[]         // Array of file URLs
-  score         Decimal?         @db.Decimal(5, 2)
-  feedback      String?          @db.Text
-  gradedAt      DateTime?
-  gradedBy      String?          // Teacher ID who graded
-  
+  id           String           @id @default(cuid())
+  schoolId     String
+  assignmentId String
+  studentId    String
+  status       SubmissionStatus @default(NOT_SUBMITTED)
+  submittedAt  DateTime?
+  content      String?          @db.Text
+  attachments  String[] // Array of file URLs
+  score        Decimal?         @db.Decimal(5, 2)
+  feedback     String?          @db.Text
+  gradedAt     DateTime?
+  gradedBy     String? // Teacher ID who graded
+
   school     School     @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   assignment Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
   student    Student    @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   @@unique([schoolId, assignmentId, studentId]) // Unique submission per assignment per student per school
   @@map("assignment_submissions")
 }

@@ -1,3 +1,66 @@
+## Founder Dashboard
+
+This dashboard is for the SaaS founder/operator. It aggregates across all schools by default and supports tenant drill-downs.
+
+### Routes
+- `/dashboard` → redirects to `/dashboard/overview`
+- `/dashboard/overview` → KPIs across all schools (total schools, active schools, users, students)
+- `/dashboard/kanban` → Kanban demo for task management
+- `/dashboard/product` → Product page (tables temporarily disabled)
+- `/dashboard/profile` → Profile
+- `/dashboard/tenants` → Tenants list (temporarily public for build/demo; will be DEVELOPER-only)
+
+### Operator (Platform) Routes
+- `/operator` → redirects to `/operator/overview`
+- `/operator/overview` → Founder/operator KPIs across all tenants
+- `/operator/tenants` → Manage tenants (activate/suspend, impersonate)
+- `/operator/domains` → Domain requests and verification (placeholder)
+- `/operator/billing` → Operator billing overview (placeholder)
+- `/operator/observability` → Logs/errors/backups/jobs (placeholder)
+- Access control: DEVELOPER only. Guarded by middleware and operator layout.
+  - Note: Temporarily disabled for public demo; guards are commented in `src/middleware.ts` and `src/app/(platform)/operator/layout.tsx`. Re-enable by uncommenting.
+
+### Sidebar
+The dashboard uses a docs-like template sidebar:
+
+- Sidebar component: `src/components/template/dashboard-sidebar/content.tsx`
+- Sidebar items: `src/components/template/dashboard-sidebar/constant.ts`
+- Header: `src/components/template/dashboard-header/content.tsx` (Breadcrumbs, notifications, messages, theme, user)
+
+### Auth and Tenant
+- Uses Auth.js (NextAuth v5). Session extended in `src/auth.ts` with `schoolId`, `role`, and flags.
+- `src/lib/tenant.ts` provides `getTenantContext()` returning `{ schoolId, role, isPlatformAdmin, requestId }`.
+- Middleware protects `/dashboard/**`; `/docs/**` public.
+  - Operator guard: intended to restrict `/operator/**` to DEVELOPER via middleware; unauthorized redirects to `/403`.
+  - Temporary: guard disabled for demo; see commented code in middleware and layout.
+
+### KPIs (Overview)
+`src/app/(platform)/dashboard/overview/layout.tsx` reads counts via Prisma (client dashboard):
+- `db.school.count()` (total and active)
+- `db.user.count()`
+- `db.student.count()`
+
+Operator overview KPIs:
+- `src/app/(platform)/operator/overview/layout.tsx` aggregates the same KPIs across all tenants.
+
+### Tables
+- Shared block: `src/components/table/*` (DataTable, toolbar, filters, pagination)
+- Tenants table: `src/app/(platform)/dashboard/tenants/page.tsx`
+  - Columns: `src/components/platform/dashboard/tenants/columns.tsx`
+  - Queries: `src/components/platform/dashboard/tenants/queries.ts`
+  - Wrapper: `src/components/platform/dashboard/tenants/table.tsx`
+  - Note: Server-driven pagination/sort; filters to be added with `nuqs`.
+
+### Cleanup & Centralization
+- Removed old site demo dashboard.
+- Centralized dashboard chrome under `src/components/template/dashboard-header` and `src/components/template/dashboard-sidebar`.
+
+### Next steps
+- Implement subdomain → `schoolId` mapping in middleware.
+- Restrict `/dashboard/tenants` to DEVELOPER when roles are finalized.
+- Add audit logs with `{ requestId, schoolId, userId }`.
+- Operator guard planned: `/operator/**` restricted to DEVELOPER via middleware and layout. Currently disabled for demo.
+ - Impersonation UX: banner under the header shows target school and provides a stop button. Controlled by `impersonate_schoolId` cookie.
 ## Dashboards (Operator and Client)
 
 Two dashboards share one central codebase and database:
@@ -26,7 +89,8 @@ Scope:
 
 Implementation:
 
-- Routes under app/operator/* or app/(operator)/* with guard middleware.
+ - Routes under app/operator/* or app/(operator)/* with guard middleware.
+   - Implemented guard checks `req.auth.user.role === "DEVELOPER"` and otherwise redirects to `/403`.
 - Lists use the generic table block (/docs/table), filtering by any platform fields.
 - Server actions for domain approval, plan changes, suspensions.
 - Role gates: RoleGate for platform roles (for example, DEVELOPER, STAFF).
@@ -35,6 +99,100 @@ Tenant safety:
 
 - Platform views can search across all schools. Mutations must specify the target schoolId and log an audit entry.
 - Impersonation creates an audit trail (who, when, why) and a time-limited session.
+
+### Operator MVP Progress and Checklist
+
+Current status vs MVP scope:
+
+- Overview KPIs
+  - Implemented: `src/app/(platform)/operator/overview/layout.tsx` shows totals for schools, active schools, users, students.
+  - Next: Add trend metrics and drill‑downs (optional post‑MVP).
+
+- Tenants
+  - Implemented: List/table, server query, activate/suspend action with revalidation.
+    - Files: `src/app/(platform)/operator/tenants/page.tsx`, `src/components/platform/operator/tenants/*`, `src/app/(platform)/operator/actions/tenants/toggle-active.ts`.
+  - Remaining (MVP):
+    - [x] Audit log for activate/suspend with `{ userId, schoolId, action, reason }`.
+    - [x] Confirm dialog (reason prompt) and server revalidation.
+    - [x] URL‑synced filters (status/plan/search) using `nuqs`.
+
+- Impersonation (Moderation/Support)
+  - Implemented: Start/stop with cookie + banner + audit log entries.
+    - Files: `src/app/(platform)/operator/actions/impersonation/*`, `src/components/platform/operator/impersonation-banner.tsx`, `prisma/models/audit.prisma`.
+  - Remaining (MVP):
+    - [x] Time‑limited impersonation (30‑min cookie) and explicit reason capture.
+    - [x] Disable sensitive actions while impersonating (except Stop) — enforced in server actions.
+
+- Domains
+  - Implemented: `DomainRequest` model (awaiting migration), operator page scaffold with actions wired (disabled until migration).
+    - Files: `prisma/models/domain.prisma`, `src/app/(platform)/operator/domains/page.tsx`, actions in `src/app/(platform)/operator/actions/domains/*`.
+  - Remaining (MVP):
+    - [ ] Run Prisma migration and enable actions (Approve/Reject/Verify) in UI.
+    - [x] Add audit logs on each action.
+    - [ ] Add Zod validations for actions.
+    - [ ] Optional: school‑side request form and status surface (client dashboard).
+
+- Billing
+  - Implemented: Placeholder route.
+  - Remaining (MVP):
+    - [ ] Add `Invoice` and `Receipt` models (schoolId, amount, status, file/url).
+    - [ ] List invoices + manual receipt review/approval actions with audit.
+    - [ ] Basic revenue metrics card(s) on overview.
+
+- Observability
+  - Implemented: AuditLog list/table (`/operator/observability`).
+    - Files: `src/app/(platform)/operator/observability/page.tsx`, `src/components/platform/operator/observability/logs-table/*`.
+  - Remaining (MVP):
+    - [ ] Filters: action, user, school, date range; pagination.
+    - [ ] Placeholders for errors/backups/jobs; wire when available.
+
+- Subdomain → tenant mapping
+  - Implemented: Middleware attaches `x-subdomain`; server resolves to `schoolId` in `getTenantContext()`.
+    - Files: `src/middleware.ts`, `src/lib/tenant.ts`.
+  - Remaining (MVP):
+    - [ ] Add `NEXT_PUBLIC_ROOT_DOMAIN` and verify mapping in all environments.
+    - [ ] Fallback/dev param `?x-school=<subdomain>` documented and gated.
+
+- Access control
+  - Implemented: Guard code present (middleware + layout) and currently disabled for public demo.
+  - Remaining (MVP):
+    - [ ] Re‑enable DEVELOPER‑only guard for `/operator/**` in `src/middleware.ts` and `src/app/(platform)/operator/layout.tsx`.
+
+Operational checklists (to reach production‑ready MVP):
+
+- Database & migrations
+  - [ ] Run `pnpm prisma generate`.
+  - [ ] Run `pnpm prisma migrate dev --name add_audit_and_domain_request`.
+  - [ ] Seed: 3 demo schools, a few `DomainRequest`, and `AuditLog` entries.
+
+- Server actions & validation
+  - [ ] Add Zod schemas for operator actions (toggle active, domains) with typed results.
+  - [ ] Add `withOperatorAuth` helper to assert DEVELOPER role and capture `{ userId, requestId }`.
+  - [ ] Rate‑limit sensitive actions (basic limiter).
+
+- UX polish
+  - [ ] Confirm modals for suspend/activate and domain actions.
+  - [ ] Disable mutations during impersonation; banner shows target school and expiry.
+
+- Observability & audit
+  - [ ] Ensure all sensitive actions write `AuditLog`.
+  - [ ] Add minimal filters/pagination to logs table.
+
+- Guards & security
+  - [ ] Re‑enable `/operator/**` guard; verify unauthorized → `/403`.
+
+- Docs
+  - [ ] Update once billing models land and actions are enabled.
+
+Quick re‑enable steps (when demo phase ends):
+
+- Uncomment operator guard block in `src/middleware.ts`.
+- Uncomment auth/role checks in `src/app/(platform)/operator/layout.tsx`.
+
+### Operator Actions
+- Toggle tenant active state: `POST /operator/actions/tenants/[tenantId]/toggle-active` (DEVELOPER only). Revalidates `/operator/tenants`.
+- Start impersonation: `POST /operator/actions/impersonation/[schoolId]/start` (DEVELOPER only). Sets cookie `impersonate_schoolId` and logs audit entry.
+- Stop impersonation: `POST /operator/actions/impersonation/stop` (DEVELOPER only). Clears cookie and logs audit entry.
 
 ### Client Dashboard (Per School)
 
@@ -88,6 +246,61 @@ RBAC examples:
 - Table block: /docs/table
 - Internationalization: /docs/internationalization
 - Contributing: /docs/contribute
+
+
+### Environment & Config (Operator)
+- `NEXT_PUBLIC_ROOT_DOMAIN`: used by middleware to derive subdomain → tenant mapping (e.g., `hogwarts.app`).
+- Dev convenience param: `?x-school=<subdomain>` will be read by middleware and passed as `x-subdomain` header.
+- Impersonation cookie: `impersonate_schoolId` controls banner and context override.
+
+### Operator APIs (server actions / routes)
+- Tenants: `POST /operator/actions/tenants/[tenantId]/toggle-active`.
+- Impersonation: `POST /operator/actions/impersonation/[schoolId]/start`, `POST /operator/actions/impersonation/stop`.
+- Domains (enable after migration):
+  - Approve: `POST /operator/actions/domains/approve`
+  - Reject: `POST /operator/actions/domains/reject`
+  - Verify: `POST /operator/actions/domains/verify`
+
+### Data Models (Operator)
+- AuditLog (implemented):
+```prisma
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String
+  schoolId   String?
+  action     String
+  reason     String?
+  ip         String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+}
+```
+- DomainRequest (scaffolded, pending migration):
+```prisma
+model DomainRequest {
+  id         String   @id @default(cuid())
+  schoolId   String
+  domain     String
+  status     String   @default("pending") // pending|approved|rejected|verified
+  notes      String?
+  verifiedAt DateTime?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  school     School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  @@unique([schoolId, domain])
+}
+```
+  - Planned: `Invoice`, `Receipt` (billing MVP).
+
+### Enable Production Guards (when demo ends)
+- Uncomment DEVELOPER guard block in `src/middleware.ts` (redirect unauthorized to `/403`).
+- Uncomment auth/role checks in `src/app/(platform)/operator/layout.tsx`.
+
+### Commands
+```bash
+pnpm prisma generate
+pnpm prisma migrate dev --name add_audit_and_domain_request
+```
 
 
 

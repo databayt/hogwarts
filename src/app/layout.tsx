@@ -7,6 +7,7 @@ import { ThemeProvider } from "@/components/atom/theme-provider";
 import { Toaster } from "sonner";
 import { SessionProvider } from "next-auth/react";
 import { auth } from "@/auth";
+import { NuqsAdapter } from "nuqs/adapters/next/app";
 
 
 export const metadata: Metadata = {
@@ -31,12 +32,14 @@ export default async function RootLayout({
         )}
       >
         <SessionProvider session={session}>
-          <ThemeProvider>
-            <div className="layout-container">
-              <Toaster position="bottom-right" />
-              {children}
-            </div>
-          </ThemeProvider>
+          <NuqsAdapter>
+            <ThemeProvider>
+              <div className="layout-container">
+                <Toaster position="bottom-right" />
+                {children}
+              </div>
+            </ThemeProvider>
+          </NuqsAdapter>
         </SessionProvider>
       </body>
     </html>

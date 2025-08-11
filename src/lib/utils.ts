@@ -6,7 +6,6 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 // --- Tenant helpers ---
-import { auth } from "@/auth"
 import type { UserRole } from "@prisma/client"
 
 export type TenantContext = {
@@ -16,12 +15,11 @@ export type TenantContext = {
   isPlatformAdmin: boolean
 }
 
-export async function getTenantContext(): Promise<TenantContext> {
-  const session = await auth()
-  const schoolId = session?.user?.schoolId ?? null
-  const role = (session?.user?.role as UserRole | undefined) ?? null
-  const isPlatformAdmin = role === "DEVELOPER"
-  // In a full implementation, inject a real requestId via middleware or headers
-  const requestId = null
-  return { schoolId, requestId, role, isPlatformAdmin }
+export function formatBytes(bytes: number, decimals = 2) {
+  if (!+bytes) return '0 Bytes'
+  const k = 1024
+  const dm = decimals < 0 ? 0 : decimals
+  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`
 }

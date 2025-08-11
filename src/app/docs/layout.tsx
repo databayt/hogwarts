@@ -3,7 +3,7 @@ import { Separator } from "@/components/ui/separator"
 import { Button } from "@/components/ui/button"
 import { Home, Search } from "lucide-react"
 import Link from "next/link"
-import { DocsAppSidebar } from "@/components/docs/docs-app-sidebar"
+import { DocsSidebar } from "@/components/template/docs-sidebar/content"
 import { DocsThemeSwitcher } from "@/components/docs/docs-theme-switcher"
 import { DocsTableOfContents } from "@/components/docs/toc"
 
@@ -14,7 +14,7 @@ interface DocsLayoutProps {
 export default function DocsLayout({ children }: DocsLayoutProps) {
   return (
     <SidebarProvider>
-      <DocsAppSidebar />
+      <DocsSidebar />
       <SidebarInset className="flex-1">
         <header className="flex h-14 shrink-0 items-center gap-2 px-4">
           <SidebarTrigger className="size-7" />
