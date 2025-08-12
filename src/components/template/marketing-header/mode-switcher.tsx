@@ -14,8 +14,8 @@ export function ModeSwitcher() {
 
   return (
     <Button
-      variant="ghost"
-      size="sm"
+      variant="link"
+      size="icon"
       className="h-8 w-8 px-0"
       onClick={toggleTheme}
     >

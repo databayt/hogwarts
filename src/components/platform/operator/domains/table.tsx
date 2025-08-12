@@ -35,3 +35,5 @@ export function DomainsTable({ data, columns, pageCount }: { data: DomainRow[]; 
 
 
 
+
+

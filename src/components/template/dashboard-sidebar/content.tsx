@@ -15,6 +15,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { dashboardNav } from "@/components/template/dashboard-sidebar/constant";
+import { Icons } from "@/components/template/dashboard-sidebar/icons";
 
 export default function DashboardSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname();
@@ -25,16 +26,16 @@ export default function DashboardSidebar({ ...props }: React.ComponentProps<type
   }, [setOpenMobile]);
 
   return (
-    <Sidebar {...props} className="w-56" collapsible="offcanvas">
+    <Sidebar {...props} className="w-56 pt-14" collapsible="offcanvas">
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <Link href="/dashboard/overview" className="flex items-center" onClick={handleLinkClick}>
+              {/* <Link href="/dashboard/overview" className="flex items-center" onClick={handleLinkClick}>
                 <div className="flex flex-col leading-none">
                   <span className="font-medium text-base text-foreground -ml-1">Hogwarts Admin</span>
                 </div>
-              </Link>
+              </Link> */}
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
@@ -49,6 +50,12 @@ export default function DashboardSidebar({ ...props }: React.ComponentProps<type
                   <SidebarMenuItem key={item.href}>
                     <SidebarMenuButton asChild isActive={isActive} size="sm">
                       <Link href={item.href} className="text-sm font-normal" onClick={handleLinkClick}>
+                        <span className="mr-2 inline-flex size-4 items-center justify-center">
+                          {(() => {
+                            const Icon = Icons[item.icon];
+                            return Icon ? <Icon className="h-4 w-4" /> : null;
+                          })()}
+                        </span>
                         {item.title}
                       </Link>
                     </SidebarMenuButton>

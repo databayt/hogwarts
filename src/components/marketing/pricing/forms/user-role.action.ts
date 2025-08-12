@@ -1,10 +1,22 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { UserRole } from "@prisma/client";
+import { z } from "zod";
 
-export type FormData = { role: UserRole };
+import { db } from "@/lib/db";
 
-export async function updateUserRole(_userId: string, _data: FormData) {
+const userRoleSchema = z.object({ role: z.nativeEnum(UserRole) });
+export type FormData = z.infer<typeof userRoleSchema>;
+
+export async function updateUserRole(userId: string, data: FormData) {
+  const parsed = userRoleSchema.safeParse(data);
+  if (!parsed.success) {
+    return { status: "error" as const };
+  }
+
+  await db.user.update({ where: { id: userId }, data: { role: parsed.data.role } });
+  revalidatePath("/dashboard/settings");
   return { status: "success" as const };
 }
 

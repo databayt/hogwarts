@@ -38,8 +38,8 @@ export function BillingFormButton({
 
   return (
     <Button
-      variant={userOffer ? "default" : "outline"}
-      className="w-full rounded-full"
+      variant={"default"}
+      className=""
       disabled={isPending || !isAvailable}
       onClick={stripeSessionAction}
     >
@@ -53,6 +53,10 @@ export function BillingFormButton({
             ? "Unavailable"
             : userOffer
             ? "Manage Subscription"
+            : offer.title.toLowerCase() === "pro"
+            ? "Get Pro"
+            : offer.title.toLowerCase() === "ultra"
+            ? "Get Ultra"
             : "Get plan"}
         </>
       )}
