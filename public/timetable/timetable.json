@@ -1,0 +1,47 @@
+{
+  "day_time": ["Mon", "Tue", "Wed", "Thu", "Fri"],
+  "timetable": [
+    [
+      { "period": 1, "subject": "Korean", "teacher": "Kim", "replaced": false, "original": null },
+      { "period": 2, "subject": "Math", "teacher": "Lee", "replaced": false, "original": null },
+      { "period": 3, "subject": "English", "teacher": "Park", "replaced": false, "original": null },
+      { "period": 4, "subject": "Science", "teacher": "Choi", "replaced": false, "original": null },
+      { "period": 5, "subject": "Social", "teacher": "Jung", "replaced": false, "original": null },
+      { "period": 6, "subject": "PE", "teacher": "Oh", "replaced": false, "original": null }
+    ],
+    [
+      { "period": 1, "subject": "Math", "teacher": "Lee", "replaced": false, "original": null },
+      { "period": 2, "subject": "English", "teacher": "Park", "replaced": false, "original": null },
+      { "period": 3, "subject": "Korean", "teacher": "Kim", "replaced": false, "original": null },
+      { "period": 4, "subject": "Social", "teacher": "Jung", "replaced": false, "original": null },
+      { "period": 5, "subject": "Science", "teacher": "Choi", "replaced": false, "original": null },
+      { "period": 6, "subject": "Art", "teacher": "Nam", "replaced": false, "original": null }
+    ],
+    [
+      { "period": 1, "subject": "English", "teacher": "Park", "replaced": false, "original": null },
+      { "period": 2, "subject": "Science", "teacher": "Choi", "replaced": false, "original": null },
+      { "period": 3, "subject": "Social", "teacher": "Jung", "replaced": false, "original": null },
+      { "period": 4, "subject": "Korean", "teacher": "Kim", "replaced": false, "original": null },
+      { "period": 5, "subject": "Math", "teacher": "Lee", "replaced": false, "original": null },
+      { "period": 6, "subject": "Music", "teacher": "Moon", "replaced": false, "original": null }
+    ],
+    [
+      { "period": 1, "subject": "Science", "teacher": "Choi", "replaced": false, "original": null },
+      { "period": 2, "subject": "Social", "teacher": "Jung", "replaced": false, "original": null },
+      { "period": 3, "subject": "Art", "teacher": "Nam", "replaced": false, "original": null },
+      { "period": 4, "subject": "PE", "teacher": "Oh", "replaced": false, "original": null },
+      { "period": 5, "subject": "English", "teacher": "Park", "replaced": false, "original": null },
+      { "period": 6, "subject": "Korean", "teacher": "Kim", "replaced": false, "original": null }
+    ],
+    [
+      { "period": 1, "subject": "Social", "teacher": "Jung", "replaced": false, "original": null },
+      { "period": 2, "subject": "Korean", "teacher": "Kim", "replaced": false, "original": null },
+      { "period": 3, "subject": "Math", "teacher": "Lee", "replaced": false, "original": null },
+      { "period": 4, "subject": "English", "teacher": "Park", "replaced": false, "original": null },
+      { "period": 5, "subject": "PE", "teacher": "Oh", "replaced": false, "original": null },
+      { "period": 6, "subject": "Science", "teacher": "Choi", "replaced": false, "original": null }
+    ]
+  ],
+  "update_date": "2025-08-12"
+}
+

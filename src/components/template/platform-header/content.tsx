@@ -8,9 +8,9 @@ import ImpersonationBanner from "../../platform/operator/impersonation-banner";
 
 export default function DashboardHeader() {
   return (
-    <div className="sticky top-0 z-40 bg-background">
-      <header className="flex h-12 shrink-0 items-center gap-2 border-b ">
-        <SidebarTrigger className="size-7 -ml-1" />
+    <div className="sticky top-0 z-40 bg-background -mx-2">
+      <header className="flex h-12 shrink-0 items-center gap-2 border-b mx-2">
+        <SidebarTrigger className="size-7 -ml-1.5" />
         <div className="hidden md:flex items-center h-7">
           <Breadcrumbs />
         </div>

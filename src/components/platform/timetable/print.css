@@ -1,0 +1,167 @@
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 1.5cm;
+  }
+
+  html {
+    font-size: 12px; /* Reduce base font size for printing */
+  }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    min-height: 100%;
+    background: white !important;
+  }
+
+  main {
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    background: white !important;
+  }
+
+  /* Container adjustments */
+  .max-w-4xl {
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Grid adjustments */
+  .grid {
+    display: grid !important;
+  }
+
+  /* Cell size adjustments */
+  .h-14, .h-18, .h-23 {
+    height: auto !important;
+    min-height: 3.5rem !important;
+  }
+
+  /* Font size adjustments */
+  .text-3xl {
+    font-size: 1.5rem !important;
+    line-height: 2rem !important;
+  }
+
+  .text-xl {
+    font-size: 1.25rem !important;
+    line-height: 1.75rem !important;
+  }
+
+  .text-lg {
+    font-size: 1.125rem !important;
+    line-height: 1.5rem !important;
+  }
+
+  .text-base {
+    font-size: 1rem !important;
+    line-height: 1.25rem !important;
+  }
+
+  .text-sm {
+    font-size: 0.875rem !important;
+    line-height: 1.25rem !important;
+  }
+
+  .text-xs {
+    font-size: 0.75rem !important;
+    line-height: 1rem !important;
+  }
+
+  /* Spacing adjustments */
+  .py-1 {
+    padding-top: 0.25rem !important;
+    padding-bottom: 0.25rem !important;
+  }
+
+  .px-2 {
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+  }
+
+  .mb-2 {
+    margin-bottom: 0.5rem !important;
+  }
+
+  .mb-4 {
+    margin-bottom: 1rem !important;
+  }
+
+  /* Border and visual adjustments */
+  .border {
+    border-width: 1px !important;
+    border-color: #e5e5e5 !important;
+  }
+
+  .border-t {
+    border-top-width: 1px !important;
+    border-top-color: #e5e5e5 !important;
+  }
+
+  .border-r {
+    border-right-width: 1px !important;
+    border-right-color: #e5e5e5 !important;
+  }
+
+  .rounded-xl {
+    border-radius: 0 !important;
+  }
+
+  .shadow-lg {
+    box-shadow: none !important;
+  }
+
+  /* Background colors for cells */
+  [class*="bg-"] {
+    background-color: white !important;
+    print-color-adjust: exact !important;
+    -webkit-print-color-adjust: exact !important;
+  }
+
+  /* Hide unnecessary elements */
+  .print\:hidden {
+    display: none !important;
+  }
+
+  /* Ensure text is black for better printing */
+  * {
+    color: black !important;
+  }
+
+  /* Specific print classes */
+  .print\:py-4 {
+    padding-top: 0.75rem !important;
+    padding-bottom: 0.75rem !important;
+  }
+
+  .print\:text-lg {
+    font-size: 1rem !important;
+    line-height: 1.5rem !important;
+  }
+
+  .print\:text-base {
+    font-size: 0.875rem !important;
+    line-height: 1.25rem !important;
+  }
+
+  .print\:text-4xl {
+    font-size: 1.5rem !important;
+    line-height: 2rem !important;
+  }
+
+  .print\:mb-8 {
+    margin-bottom: 1.5rem !important;
+  }
+
+  /* Force background colors to print */
+  .print\:bg-white {
+    background-color: white !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}
+

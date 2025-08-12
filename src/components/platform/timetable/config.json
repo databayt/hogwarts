@@ -1,0 +1,12 @@
+{
+  "production": {
+    "apiUrl": "https://school-api.ij5.dev",
+    "debug": false
+  },
+  "development": {
+    "apiUrl": "http://localhost:8000",
+    "debug": true
+  },
+  "isDev": false,
+  "useLocalJson": true
+} 
