@@ -1,10 +1,10 @@
 import Link from "next/link";
 
-import { features } from "@/config/landing";
+import { features } from "../config/landing";
 import { Button } from "@/components/ui/button";
-import { HeaderSection } from "@/components/shared/header-section";
-import { Icons } from "@/components/shared/icons";
-import MaxWidthWrapper from "@/components/shared/max-width-wrapper";
+import { HeaderSection } from "@/components/atom/header-section";
+import { Icons } from "../shared/icons";
+import MaxWidthWrapper from "../shared/max-width-wrapper";
 
 export default function Features() {
   return (
@@ -43,8 +43,7 @@ export default function Features() {
                       <Button
                         variant="secondary"
                         size="sm"
-                        rounded="xl"
-                        className="px-4"
+                        className="px-4 rounded-full"
                       >
                         <Link href="/" className="flex items-center gap-2">
                           <span>Visit the site</span>

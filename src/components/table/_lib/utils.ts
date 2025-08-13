@@ -41,6 +41,7 @@ export function generateRandomTask(): Omit<Task, "id"> {
     archived: faker.datatype.boolean({ probability: 0.2 }),
     createdAt: new Date(),
     updatedAt: new Date(),
+    schoolId: null,
   };
 }
 

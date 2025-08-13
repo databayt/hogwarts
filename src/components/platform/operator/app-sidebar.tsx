@@ -38,10 +38,10 @@ export default function AppSidebar({ ...props }: React.ComponentProps<typeof Sid
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={navItems as Array<{ title: string; url: string; icon?: typeof IconDashboard; isActive?: boolean; items?: { title: string; url: string }[] }>} />
+        <NavMain items={[...navItems] as Array<{ title: string; url: string; icon?: typeof IconDashboard; isActive?: boolean; items?: { title: string; url: string }[] }>} />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={{ name: "", email: "" }} />
+        <NavUser user={{ name: "", email: "", avatar: "" }} />
       </SidebarFooter>
     </Sidebar>
   );

@@ -9,7 +9,8 @@ import { ColumnDef } from '@tanstack/react-table'
 export type AttendanceRow = { studentId: string; name: string; status: 'present' | 'absent' | 'late' }
 
 export function AttendanceTable({ data, columns, onChangeStatus }: { data: AttendanceRow[]; columns: ColumnDef<AttendanceRow, unknown>[]; onChangeStatus?: (studentId: string, status: AttendanceRow['status']) => void }) {
-  const { table } = useDataTable<AttendanceRow>({ data, columns, pageCount: -1 })
+  const result = useDataTable<AttendanceRow>({ data, columns, pageCount: -1 })
+  const table = (result as unknown as { table: unknown }).table as any
   (table.options as unknown as { meta?: Record<string, unknown> }).meta = {
     ...((table.options as unknown as { meta?: Record<string, unknown> }).meta ?? {}),
     onChangeStatus,

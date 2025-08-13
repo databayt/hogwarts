@@ -46,6 +46,15 @@ model School {
   domainRequests        DomainRequest[]
   subscriptions         Subscription[]
   invoices              Invoice[]
+  receipts              Receipt[]
+  // Standalone invoice block relations
+  userInvoices          UserInvoice[]
+  userInvoiceItems      UserInvoiceItem[]
+  userInvoiceAddresses  UserInvoiceAddress[]
+  userInvoiceSettings   UserInvoiceSettings[]
+  userInvoiceSignatures UserInvoiceSignature[]
+  timetables            Timetable[]
+  schoolWeekConfigs     SchoolWeekConfig[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -82,6 +91,7 @@ model Invoice {
   periodEnd      DateTime
 
   school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  receipts Receipt[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -120,6 +130,7 @@ model Period {
   schoolYear     SchoolYear @relation(fields: [yearId], references: [id], onDelete: Cascade)
   classesAsStart Class[]    @relation("ClassStartPeriod")
   classesAsEnd   Class[]    @relation("ClassEndPeriod")
+  timetables     Timetable[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -139,6 +150,8 @@ model Term {
   school     School     @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   schoolYear SchoolYear @relation(fields: [yearId], references: [id], onDelete: Cascade)
   classes    Class[]
+  timetables Timetable[]
+  schoolWeekConfigs SchoolWeekConfig[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

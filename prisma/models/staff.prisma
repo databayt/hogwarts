@@ -13,6 +13,7 @@ model Teacher {
   teacherDepartments TeacherDepartment[]
   phoneNumbers       TeacherPhoneNumber[]
   guardianProfiles   Guardian[] // Teachers can also be guardians
+  timetables         Timetable[]
 
   // Auth relationship
   userId String? @unique

@@ -484,56 +484,56 @@ async function ensureClassesAndWork(
 ) {
   const targetSubjects = ["Mathematics", "Arabic Language", "English Language"];
   const chosenSubjects = subjects.filter((s) => targetSubjects.includes(s.subjectName));
+  const sectionLabels = ["A", "B", "C"]; // multi-class per grade
   const classesCreated: { id: string }[] = [];
 
-  for (let i = 0; i < chosenSubjects.length; i++) {
-    const subject = chosenSubjects[i];
-    const teacher = teachers[i % teachers.length];
-    const startPeriod = periods[(i * 2) % periods.length];
-    const endPeriod = periods[((i * 2) + 1) % periods.length];
-    const classroom = classrooms[i % classrooms.length];
+  for (const subject of chosenSubjects) {
+    for (let si = 0; si < sectionLabels.length; si++) {
+      const teacher = teachers[(si + chosenSubjects.indexOf(subject)) % teachers.length];
+      const startPeriod = periods[(si * 2) % periods.length];
+      const endPeriod = periods[((si * 2) + 1) % periods.length];
+      const classroom = classrooms[(si + 1) % classrooms.length];
 
-    const className = `${subject.subjectName} Grade 10 (${i + 1})`;
-    const clazz = await prisma.class.upsert({
-      where: { schoolId_name: { schoolId, name: className } },
-      update: {},
-      create: {
-        schoolId,
-        name: className,
-        subjectId: subject.id,
-        teacherId: teacher.id,
-        termId,
-        startPeriodId: startPeriod.id,
-        endPeriodId: endPeriod.id,
-        classroomId: classroom.id,
-      },
-    });
-    classesCreated.push({ id: clazz.id });
+      const className = `${subject.subjectName} Grade 10 ${sectionLabels[si]}`;
+      const clazz = await prisma.class.upsert({
+        where: { schoolId_name: { schoolId, name: className } },
+        update: {},
+        create: {
+          schoolId,
+          name: className,
+          subjectId: subject.id,
+          teacherId: teacher.id,
+          termId,
+          startPeriodId: startPeriod.id,
+          endPeriodId: endPeriod.id,
+          classroomId: classroom.id,
+        },
+      });
+      classesCreated.push({ id: clazz.id });
 
-    // Enroll a subset of students (20 per class)
-    const enroll = students.slice(i * 10, i * 10 + 20);
-    await prisma.studentClass.createMany({
-      data: enroll.map((s) => ({ schoolId, studentId: s.id, classId: clazz.id })),
-      skipDuplicates: true,
-    });
+      // Enroll ~15 students per section
+      const start = si * 10;
+      const enroll = students.slice(start, start + 15);
+      await prisma.studentClass.createMany({
+        data: enroll.map((s) => ({ schoolId, studentId: s.id, classId: clazz.id })),
+        skipDuplicates: true,
+      });
 
-    // Two assignments per class
-    for (let a = 1; a <= 2; a++) {
+      // One assignment per class
       const assignment = await prisma.assignment.create({
         data: {
           schoolId,
           classId: clazz.id,
-          title: `${subject.subjectName} Homework ${a}`,
-          description: faker.lorem.sentences({ min: 2, max: 4 }),
+          title: `${subject.subjectName} Homework 1`,
+          description: faker.lorem.sentences({ min: 1, max: 3 }),
           type: AssessmentType.HOMEWORK,
           status: AssessmentStatus.PUBLISHED,
           totalPoints: "100.00",
-          weight: (10 * a).toFixed(2),
-          dueDate: new Date(Date.now() + (7 + a) * 24 * 60 * 60 * 1000),
+          weight: (10).toFixed(2),
+          dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
           publishDate: new Date(),
         },
       });
-
       for (const s of enroll) {
         await prisma.assignmentSubmission.upsert({
           where: { schoolId_assignmentId_studentId: { schoolId, assignmentId: assignment.id, studentId: s.id } },
@@ -604,6 +604,53 @@ async function main() {
       teachers,
       students,
     );
+
+    // Schedule config per school (varied working days & lunch)
+    let workingDays: number[] = [0,1,2,3,4]; // Sun–Thu
+    let lunchAfter = 3;
+    if (s.domain === 'omdurman') { workingDays = [1,2,3,4,5]; lunchAfter = 2; } // Mon–Fri
+    if (s.domain === 'portsudan') { workingDays = [1,2,3,4,6]; lunchAfter = 4; } // Mon–Thu + Sat (Fri+Sun off)
+    if (s.domain === 'wadmadani') { workingDays = [0,1,2,3,4]; lunchAfter = 2; } // Sun–Thu, early lunch
+
+    await prisma.schoolWeekConfig.upsert({
+      where: { schoolId_termId: { schoolId: school.id, termId: term1.id } },
+      update: { workingDays, defaultLunchAfterPeriod: lunchAfter },
+      create: { schoolId: school.id, termId: term1.id, workingDays, defaultLunchAfterPeriod: lunchAfter },
+    })
+
+    // Seed a handful of timetable rows for demo
+    const someClasses = await prisma.class.findMany({
+      where: { schoolId: school.id, termId: term1.id },
+      select: { id: true, teacherId: true, classroomId: true },
+      take: 6,
+    })
+    const somePeriods = await prisma.period.findMany({
+      where: { schoolId: school.id, yearId: (await prisma.term.findUnique({ where: { id: term1.id }, select: { yearId: true } }))!.yearId },
+      orderBy: { startTime: 'asc' },
+      select: { id: true },
+      take: 4,
+    })
+    const cfg = await prisma.schoolWeekConfig.findUnique({ where: { schoolId_termId: { schoolId: school.id, termId: term1.id } } })
+    const days = (cfg?.workingDays ?? [0,1,2,3,4]).slice(0, 5)
+    const rows: any[] = []
+    for (let d = 0; d < days.length; d++) {
+      for (let p = 0; p < somePeriods.length; p++) {
+        const cls = someClasses[(d + p) % someClasses.length]
+        rows.push({
+          schoolId: school.id,
+          termId: term1.id,
+          dayOfWeek: days[d],
+          periodId: somePeriods[p].id,
+          classId: cls.id,
+          teacherId: cls.teacherId,
+          classroomId: cls.classroomId,
+          weekOffset: 0,
+        })
+      }
+    }
+    if (rows.length > 0) {
+      await prisma.timetable.createMany({ data: rows, skipDuplicates: true })
+    }
 
     console.log("Seed completed for school:", school.domain);
   }

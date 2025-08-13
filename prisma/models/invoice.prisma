@@ -1,0 +1,99 @@
+model UserInvoice {
+  id             String            @id @default(cuid())
+  invoice_no     String
+  invoice_date   DateTime
+  due_date       DateTime
+  currency       String            @default("USD")
+  from           UserInvoiceAddress  @relation("FromAddress", fields: [fromAddressId], references: [id])
+  fromAddressId  String            @unique
+  to             UserInvoiceAddress  @relation("ToAddress", fields: [toAddressId], references: [id])
+  toAddressId    String            @unique
+  items          UserInvoiceItem[]
+  sub_total      Float
+  discount       Float?
+  tax_percentage Float?
+  total          Float
+  notes          String?           @db.Text
+  status         Status            @default(UNPAID)
+  userId         String
+  user           User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  schoolId       String
+  school         School            @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  @@index([userId])
+  @@index([schoolId])
+  @@unique([schoolId, invoice_no])
+  @@map("user_invoices")
+}
+
+enum Status {
+  PAID
+  UNPAID
+  CANCEL
+}
+
+model UserInvoiceItem {
+  id         String       @id @default(cuid())
+  item_name  String
+  quantity   Int
+  price      Float
+  total      Float
+  invoiceId  String
+  invoice    UserInvoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  schoolId   String
+  school     School       @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+
+  @@index([invoiceId])
+  @@index([schoolId])
+  @@map("user_invoice_items")
+}
+
+model UserInvoiceAddress {
+  id           String        @id @default(cuid())
+  name         String
+  email        String?
+  address1     String
+  address2     String?
+  address3     String?
+  fromInvoice  UserInvoice? @relation("FromAddress")
+  toInvoice    UserInvoice? @relation("ToAddress")
+  schoolId     String
+  school       School       @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  @@index([schoolId])
+  @@map("user_invoice_addresses")
+}
+
+model UserInvoiceSettings {
+  id          String               @id @default(cuid())
+  invoiceLogo String?
+  signature   UserInvoiceSignature?
+  userId      String               @unique
+  user        User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  schoolId    String
+  school      School               @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+
+  @@index([schoolId])
+  @@map("user_invoice_settings")
+}
+
+model UserInvoiceSignature {
+  id         String               @id @default(cuid())
+  name       String?
+  image      String?
+  settingsId String               @unique
+  settings   UserInvoiceSettings  @relation(fields: [settingsId], references: [id], onDelete: Cascade)
+  schoolId   String
+  school     School               @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  @@index([schoolId])
+  @@map("user_invoice_signatures")
+}

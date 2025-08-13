@@ -13,9 +13,6 @@ export function AuditLogTable<TData>({ data, columns }: { data: TData[]; columns
     data: tableData,
     columns,
     pageCount: -1,
-    manualPagination: true,
-    manualFiltering: true,
-    manualSorting: true,
   });
 
   return (

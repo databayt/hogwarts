@@ -18,9 +18,6 @@ export function DomainsTable({ data, columns, pageCount }: { data: DomainRow[]; 
     data,
     columns,
     pageCount,
-    manualPagination: true,
-    manualFiltering: true,
-    manualSorting: true,
   });
   return (
     <DataTable table={table}>
@@ -28,6 +25,9 @@ export function DomainsTable({ data, columns, pageCount }: { data: DomainRow[]; 
     </DataTable>
   );
 }
+
+
+
 
 
 

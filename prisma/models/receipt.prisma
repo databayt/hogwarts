@@ -1,0 +1,24 @@
+// Billing receipts uploaded by operator for offline payments
+model Receipt {
+  id        String   @id @default(cuid())
+  schoolId  String
+  invoiceId String
+
+  filename  String
+  amount    Int
+  status    String   // e.g. pending, approved, rejected
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations (one-sided to avoid changing existing models)
+  school  School  @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@index([schoolId])
+  @@index([invoiceId])
+  @@map("receipts")
+}
+
+
+

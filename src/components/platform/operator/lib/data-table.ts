@@ -2,10 +2,10 @@ import type {
   ExtendedColumnFilter,
   FilterOperator,
   FilterVariant
-} from '@/types/data-table';
+} from '@/components/table/types/data-table';
 import type { Column } from '@tanstack/react-table';
 
-import { dataTableConfig } from '@/config/data-table';
+import { dataTableConfig } from '@/components/table/config/data-table';
 
 export function getCommonPinningStyles<TData>({
   column,
@@ -65,14 +65,12 @@ export function getDefaultFilterOperator(filterVariant: FilterVariant) {
 export function getValidFilters<TData>(
   filters: ExtendedColumnFilter<TData>[]
 ): ExtendedColumnFilter<TData>[] {
-  return filters.filter(
-    (filter) =>
-      filter.operator === 'isEmpty' ||
-      filter.operator === 'isNotEmpty' ||
-      (Array.isArray(filter.value)
-        ? filter.value.length > 0
-        : filter.value !== '' &&
-          filter.value !== null &&
-          filter.value !== undefined)
-  );
+  return filters.filter((filter) => {
+    const operator = (filter as unknown as { operator?: string }).operator;
+    if (operator === 'isEmpty' || operator === 'isNotEmpty') return true;
+    const value = filter.value as unknown;
+    return Array.isArray(value)
+      ? value.length > 0
+      : value !== '' && value !== null && value !== undefined;
+  });
 }

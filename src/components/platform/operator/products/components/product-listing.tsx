@@ -1,6 +1,20 @@
-import { Product } from '@/constants/data';
-import { fakeProducts } from '@/constants/mock-api';
-import { searchParamsCache } from '@/lib/searchparams';
+type Product = {
+  id: string;
+  name: string;
+  category: string;
+  price: number;
+  description?: string;
+  image?: string;
+};
+const fakeProducts = {
+  async getProducts(_: Record<string, unknown>) {
+    return {
+      total_products: 0,
+      products: [] as Product[],
+    };
+  },
+};
+import { searchParamsCache } from '@/components/platform/operator/lib/searchparams';
 import { ProductTable } from './product-tables';
 import { columns } from './product-tables/columns';
 

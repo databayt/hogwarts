@@ -2,12 +2,12 @@ import { db } from "@/lib/db";
 
 export const getUserByEmail = async (email: string) => {
   try {
-    const user = await db.user.findUnique({
+    const user = await db.user.findFirst({
       where: {
         email: email,
       },
       select: {
-        name: true,
+        username: true,
         emailVerified: true,
       },
     });

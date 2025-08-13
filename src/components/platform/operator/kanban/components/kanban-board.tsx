@@ -1,7 +1,7 @@
 'use client';
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Task, useTaskStore } from '../utils/store';
+import { Task, type Status, useTaskStore } from '../utils/store';
 import { hasDraggableData } from '../utils';
 import {
   Announcements,
@@ -279,7 +279,7 @@ export function KanbanBoard() {
     const overData = over.data.current;
 
     const isActiveATask = activeData?.type === 'Task';
-    const isOverATask = activeData?.type === 'Task';
+    const isOverATask = overData?.type === 'Task';
 
     if (!isActiveATask) return;
 
@@ -303,8 +303,10 @@ export function KanbanBoard() {
     if (isActiveATask && isOverAColumn) {
       const activeIndex = tasks.findIndex((t) => t.id === activeId);
       const activeTask = tasks[activeIndex];
-      if (activeTask) {
-        activeTask.status = overId as ColumnId;
+      const isStatus = (id: UniqueIdentifier): id is Status =>
+        id === 'TODO' || id === 'IN_PROGRESS' || id === 'DONE';
+      if (activeTask && isStatus(overId)) {
+        activeTask.status = overId;
         setTasks(arrayMove(tasks, activeIndex, activeIndex));
       }
     }

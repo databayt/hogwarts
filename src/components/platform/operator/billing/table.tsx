@@ -13,9 +13,6 @@ export function InvoicesTable({ data, columns, pageCount }: { data: InvoiceRow[]
     data,
     columns,
     pageCount,
-    manualPagination: true,
-    manualFiltering: true,
-    manualSorting: true,
   });
 
   return (

@@ -12,7 +12,7 @@ export const resend = new Resend(env.RESEND_API_KEY);
 export const sendVerificationRequest: EmailConfig["sendVerificationRequest"] =
   async ({ identifier, url, provider }) => {
     const user = await getUserByEmail(identifier);
-    if (!user || !user.name) return;
+    if (!user) return;
 
     const userVerified = user?.emailVerified ? true : false;
     const authSubject = userVerified
@@ -21,14 +21,14 @@ export const sendVerificationRequest: EmailConfig["sendVerificationRequest"] =
 
     try {
       const { data, error } = await resend.emails.send({
-        from: provider.from,
+        from: env.EMAIL_FROM ?? "no-reply@example.com",
         to:
           process.env.NODE_ENV === "development"
             ? "delivered@resend.dev"
             : identifier,
         subject: authSubject,
         react: MagicLinkEmail({
-          firstName: user?.name as string,
+          firstName: (user.username ?? "") as string,
           actionUrl: url,
           mailType: userVerified ? "login" : "register",
           siteName: siteConfig.name,

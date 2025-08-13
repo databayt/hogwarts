@@ -1,4 +1,5 @@
 import { auth } from "@/auth"
+import { NextResponse } from "next/server"
 import { 
   apiAuthPrefix, 
   authRoutes, 
@@ -43,7 +44,7 @@ export default auth((req) => {
 
   if (isAuthRoute) {
     if (isLoggedIn) {
-      return Response.redirect(new URL(DEFAULT_LOGIN_REDIRECT, nextUrl))
+      return NextResponse.redirect(new URL(DEFAULT_LOGIN_REDIRECT, nextUrl))
     }
     return
   }
@@ -75,7 +76,7 @@ export default auth((req) => {
     if (subdomain) {
       const requestHeaders = new Headers(req.headers)
       requestHeaders.set("x-subdomain", subdomain)
-      return Response.next({ request: { headers: requestHeaders } })
+      return NextResponse.next({ request: { headers: requestHeaders } })
     }
   } catch {}
 
@@ -84,7 +85,7 @@ export default auth((req) => {
     const callbackUrl = pathname + nextUrl.search
     const encodedCallbackUrl = encodeURIComponent(callbackUrl)
 
-    return Response.redirect(new URL(
+    return NextResponse.redirect(new URL(
       `/login?callbackUrl=${encodedCallbackUrl}`,
       nextUrl
     ))
@@ -95,11 +96,11 @@ export default auth((req) => {
   //   if (!isLoggedIn) {
   //     const callbackUrl = pathname + nextUrl.search
   //     const encodedCallbackUrl = encodeURIComponent(callbackUrl)
-  //     return Response.redirect(new URL(`/login?callbackUrl=${encodedCallbackUrl}`, nextUrl))
+  //     return NextResponse.redirect(new URL(`/login?callbackUrl=${encodedCallbackUrl}`, nextUrl))
   //   }
   //   const role = req.auth?.user?.role
   //   if (role !== "DEVELOPER") {
-  //     return Response.redirect(new URL("/403", nextUrl))
+  //     return NextResponse.redirect(new URL("/403", nextUrl))
   //   }
   // }
 
@@ -107,7 +108,7 @@ export default auth((req) => {
     const callbackUrl = pathname + nextUrl.search
     const encodedCallbackUrl = encodeURIComponent(callbackUrl)
 
-    return Response.redirect(new URL(
+    return NextResponse.redirect(new URL(
       `/login?callbackUrl=${encodedCallbackUrl}`,
       nextUrl
     ))

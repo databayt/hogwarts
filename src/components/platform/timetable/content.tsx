@@ -98,7 +98,8 @@ function getCurrentSchoolYear() {
 function generatePeriods(timetableData: any, classConfig: any) {
   if (!timetableData?.day_time?.length || !timetableData?.timetable?.length) return []
   
-  const days = ["Mon", "Tue", "Wed", "Thu", "Fri"]
+  const dayLabels = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"]
+  const days = (timetableData?.days as number[] | undefined)?.map((d) => dayLabels[d] ?? String(d)) ?? ["Mon", "Tue", "Wed", "Thu", "Fri"]
   
   // First, create all regular periods
   const periods = timetableData.day_time.map((timeStr: string, idx: number) => {
@@ -123,9 +124,9 @@ function generatePeriods(timetableData: any, classConfig: any) {
   }
 
   // Insert lunch after the specified period
-  if (typeof classConfig?.lunchAfter === 'number') {
-    periods.splice(classConfig.lunchAfter, 0, lunchPeriod)
-  }
+  const lunchAfterFromServer = typeof timetableData?.lunchAfterPeriod === 'number' ? timetableData.lunchAfterPeriod : null
+  const lunchAfter = lunchAfterFromServer ?? (typeof classConfig?.lunchAfter === 'number' ? classConfig.lunchAfter : null)
+  if (typeof lunchAfter === 'number') periods.splice(lunchAfter, 0, lunchPeriod)
 
   return periods
 }

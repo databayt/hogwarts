@@ -5,10 +5,11 @@ type InvoiceRowLite = { amount: number | null };
 
 export async function GET(
   _req: Request,
-  { params }: { params: { tenantId: string } }
+  { params }: { params: Promise<{ tenantId: string }> }
 ) {
+  const resolvedParams = await params;
   await requireOperator();
-  const tenantId = params.tenantId;
+  const tenantId = resolvedParams.tenantId;
 
   const [school, openInvoices] = await Promise.all([
     db.school.findUnique({ where: { id: tenantId }, select: { planType: true } }),

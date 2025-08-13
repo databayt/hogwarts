@@ -5,7 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Icons } from "@/components/marketing/pricing/shared/icons"
 
 interface UserAvatarProps extends AvatarProps {
-  user: Pick<User, "image" | "name">
+  user: Pick<User, "image" | "username">
 }
 
 export function UserAvatar({ user, ...props }: UserAvatarProps) {
@@ -15,7 +15,7 @@ export function UserAvatar({ user, ...props }: UserAvatarProps) {
         <AvatarImage alt="Picture" src={user.image} referrerPolicy="no-referrer" />
       ) : (
         <AvatarFallback>
-          <span className="sr-only">{user.name}</span>
+          <span className="sr-only">{user.username ?? ""}</span>
           <Icons.user className="size-4" />
         </AvatarFallback>
       )}

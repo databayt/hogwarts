@@ -12,7 +12,7 @@ export async function updateUserName(userId: string, data: FormData) {
   if (!parsed.success) {
     return { status: "error" as const };
   }
-  await db.user.update({ where: { id: userId }, data: { name: parsed.data.name } });
+  await db.user.update({ where: { id: userId }, data: { username: parsed.data.name } });
   revalidatePath("/dashboard/settings");
   return { status: "success" as const };
 }

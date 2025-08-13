@@ -1,4 +1,4 @@
-import { ImageResponse } from "@vercel/og"
+import { ImageResponse } from "next/og"
 
 import { ogImageSchema } from "@/components/marketing/pricing/lib/validations/og"
 

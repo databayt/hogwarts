@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import MaxWidthWrapper from "@/components/shared/max-width-wrapper";
+import MaxWidthWrapper from "../shared/max-width-wrapper";
 
 const logos = [
   {

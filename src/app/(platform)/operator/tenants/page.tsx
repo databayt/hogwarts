@@ -36,7 +36,7 @@ export default async function TenantsPage({ searchParams }: { searchParams: Prom
     isActive: s.isActive,
     planType: s.planType,
     createdAt: s.createdAt?.toISOString?.() ?? String(s.createdAt),
-    trialEndsAt: s.trialEndsAt ? (s.trialEndsAt as unknown as Date).toISOString?.() ?? String(s.trialEndsAt) : null,
+    trialEndsAt: null,
   }));
 
   return <TenantsContent rows={rows} page={sp.page} pageCount={pageCount} />;

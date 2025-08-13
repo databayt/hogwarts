@@ -38,3 +38,7 @@ export async function domainCreate(input: { schoolId: string; domain: string; no
 
 
 
+
+
+
+

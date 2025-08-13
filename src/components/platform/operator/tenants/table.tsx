@@ -30,9 +30,6 @@ export function TenantsTable<TData>({
     data: tableData,
     columns,
     pageCount,
-    manualPagination: true,
-    manualFiltering: true,
-    manualSorting: true,
   });
 
   return (

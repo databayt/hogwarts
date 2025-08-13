@@ -40,6 +40,7 @@ model Class {
   assignments    Assignment[]
   attendances    Attendance[]
   announcements  Announcement[]
+  timetables     Timetable[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

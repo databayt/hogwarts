@@ -51,14 +51,15 @@ const MONO_THEMES = [
 ];
 
 export function ThemeSelector() {
-  const { activeTheme, setActiveTheme } = useThemeConfig();
+  // Align with global theme provider (next-themes)
+  const { theme, setTheme } = require("next-themes").useTheme();
 
   return (
     <div className='flex items-center gap-2'>
       <Label htmlFor='theme-selector' className='sr-only'>
         Theme
       </Label>
-      <Select value={activeTheme} onValueChange={setActiveTheme}>
+      <Select value={theme ?? 'system'} onValueChange={(value) => setTheme(value)}>
         <SelectTrigger
           id='theme-selector'
           className='justify-start *:data-[slot=select-value]:w-12'

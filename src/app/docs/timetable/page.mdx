@@ -1,0 +1,74 @@
+## Timetable — Admin Guide
+
+This guide shows Admins/Owners how to configure working days and lunch, manage weekly slots, detect and resolve conflicts, and print clean A4 timetables.
+
+### Permissions
+
+- Mutations (saving schedule, creating/editing slots) require Admin, Owner, or Developer roles.
+- All operations are tenant‑scoped by `schoolId`.
+
+### Configure Working Days and Lunch
+
+1) Open the Timetable page.
+2) Click “Schedule settings”.
+3) Choose working days (e.g., Sun–Thu or your school’s pattern) and select “Lunch after period” if applicable.
+4) Save. Changes apply to the selected term and propagate to the timetable grid and printing.
+
+Notes:
+- Working days can vary by school and term (e.g., Friday off; Friday+Saturday off; Friday+Sunday off).
+- Lunch row is inserted after your chosen period in the grid and print.
+
+### Add or Edit Timetable Slots
+
+1) Click “Edit slots”.
+2) Pick Day, Period, Class (A/B/C/D…), Teacher, and Classroom.
+3) Save to create/update the weekly slot.
+
+Tips:
+- Use grade + section naming (e.g., Grade 1 A/B/C/D) to manage multi‑class grades.
+- Teacher timetables are supported via the view switch (Class vs Teacher).
+
+### Detect and Resolve Conflicts
+
+Conflict types:
+- Teacher conflict: Same teacher assigned to two classes at the same time.
+- Room conflict: Same room assigned to two classes at the same time.
+
+Workflow:
+1) In the header, check the conflict counter. Click it to open the Conflicts drawer.
+2) Each conflict lists the affected classes. Click “Suggest for teacher” or “Suggest for room” to fetch free slots.
+3) Click “Apply” on a suggestion to pre‑fill the Slot Editor with that day/period.
+4) Save the slot to resolve the conflict.
+
+### Print (A4)
+
+- The Timetable page supports A4 printing with page‑break helpers and row‑split prevention.
+- Use browser print (Ctrl/Cmd + P). Choose A4 portrait. Dark UI accents are stripped for readability.
+
+### Multi‑Tenant Safety
+
+- Every action/query includes `schoolId` from the tenant context (subdomain/session/impersonation).
+- Data changes affect only the current school and selected term.
+
+### Troubleshooting
+
+- No terms listed: ensure academic years/terms exist for the school.
+- Missing periods: define periods under the school year; timetable needs period names and times.
+- Empty suggestions: the teacher/room may be fully occupied for selected days; try another day or adjust schedule settings.
+
+### Technical Reference
+
+- Schedule config APIs: `GET /api/schedule?termId=…`, `POST /api/schedule/config`
+- Weekly data API: `GET /api/timetable?termId=…&weekOffset=0|1&classId=…&teacherId=…`
+- Conflicts: `GET /api/timetable/conflicts?termId=…`
+- Suggestions: `GET /api/timetable/suggest?termId=…&teacherId=…&classroomId=…`
+- Slot upsert: `POST /api/timetable/slot`
+
+### Local Testing Without Subdomains
+
+If tenant context (subdomain/session) isn’t available locally, you can pass a school domain to the public fallbacks:
+
+- Terms: `GET /api/terms?domain=khartoum`
+- Timetable: `GET /api/timetable?domain=khartoum&weekOffset=0`
+
+Available demo domains (seeded): `khartoum`, `omdurman`, `portsudan`, `wadmadani`.

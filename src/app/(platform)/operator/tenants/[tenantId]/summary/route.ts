@@ -4,10 +4,11 @@ import { requireOperator } from "@/components/platform/operator/lib/operator-aut
 
 export async function GET(
   _req: Request,
-  { params }: { params: { tenantId: string } }
+  { params }: { params: Promise<{ tenantId: string }> }
 ) {
+  const resolvedParams = await params;
   await requireOperator();
-  const tenantId = params.tenantId;
+  const tenantId = resolvedParams.tenantId;
 
   const [owners, students, teachers, classes] = await Promise.all([
     db.user.findMany({
@@ -24,6 +25,9 @@ export async function GET(
     metrics: { students, teachers, classes },
   });
 }
+
+
+
 
 
 

@@ -41,6 +41,15 @@
     min-height: 3.5rem !important;
   }
 
+  /* Ensure grid fits within printable width and avoids overflow */
+  .overflow-x-auto {
+    overflow: visible !important;
+  }
+  .max-w-4xl, .min-w-full {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
   /* Font size adjustments */
   .text-3xl {
     font-size: 1.5rem !important;
@@ -163,5 +172,16 @@
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
+}
+
+/* Page break rules to avoid splitting period rows across pages */
+.avoid-break {
+  break-inside: avoid !important;
+  page-break-inside: avoid !important;
+}
+
+.page-break {
+  break-after: always !important;
+  page-break-after: always !important;
 }
 

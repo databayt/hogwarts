@@ -1,7 +1,7 @@
 import Image from "next/image";
 
-import { testimonials } from "@/config/landing";
-import { HeaderSection } from "@/components/shared/header-section";
+import { testimonials } from "../config/landing";
+import { HeaderSection } from "@/components/atom/header-section";
 
 export default function Testimonials() {
   return (

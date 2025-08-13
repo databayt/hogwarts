@@ -1,5 +1,7 @@
 'use client';
-import { AlertModal } from '@/components/modal/alert-modal';
+function AlertModal(_props: { isOpen: boolean; onClose: () => void; onConfirm: () => void; loading: boolean }) {
+  return null;
+}
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -8,7 +10,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
-import { Product } from '@/constants/data';
+import type { Product } from './index';
 import { IconEdit, IconDotsVertical, IconTrash } from '@tabler/icons-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';

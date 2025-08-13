@@ -7,6 +7,7 @@ import {
 } from "react";
 import { signOut, useSession } from "next-auth/react";
 import { toast } from "sonner";
+import { deleteCurrentUser } from "@/actions/user";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,28 +26,18 @@ function DeleteAccountModal({
 
   async function deleteAccount() {
     setDeleting(true);
-    await fetch(`/api/user`, {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    }).then(async (res) => {
-      if (res.status === 200) {
-        // delay to allow for the route change to complete
-        await new Promise((resolve) =>
-          setTimeout(() => {
-            signOut({
-              callbackUrl: `${window.location.origin}/`,
-            });
-            resolve(null);
-          }, 500),
-        );
-      } else {
-        setDeleting(false);
-        const error = await res.text();
-        throw error;
-      }
-    });
+    const result = await deleteCurrentUser();
+    if (result.success) {
+      await new Promise((resolve) =>
+        setTimeout(() => {
+          signOut({ callbackUrl: `${window.location.origin}/` });
+          resolve(null);
+        }, 500),
+      );
+    } else {
+      setDeleting(false);
+      throw result.error || "Failed to delete account";
+    }
   }
 
   return (
@@ -58,7 +49,7 @@ function DeleteAccountModal({
       <div className="flex flex-col items-center justify-center space-y-3 border-b p-4 pt-8 sm:px-16">
         <UserAvatar
           user={{
-            name: session?.user?.name || null,
+            username: (session?.user as any)?.username ?? session?.user?.name ?? null,
             image: session?.user?.image || null,
           }}
         />

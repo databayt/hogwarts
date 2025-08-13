@@ -142,6 +142,7 @@ export const docsConfig: DocsConfig = {
     {
       title: "Operations",
       items: [
+        { title: "Domain & Subdomain", href: "/docs/domain", items: [] },
         { title: "Internationalization", href: "/docs/internationalization", items: [] },
         { title: "Authentication", href: "/docs/authantication", items: [] },
         { title: "Onboarding", href: "/docs/onboarding", items: [] },

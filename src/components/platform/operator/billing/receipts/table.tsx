@@ -12,9 +12,6 @@ export function ReceiptsTable({ data, columns, pageCount }: { data: ReceiptRow[]
     data,
     columns,
     pageCount,
-    manualPagination: true,
-    manualFiltering: true,
-    manualSorting: true,
   });
   const hasRows = table.getRowModel().rows.length > 0;
   return (

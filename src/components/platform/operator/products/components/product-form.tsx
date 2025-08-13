@@ -20,7 +20,14 @@ import {
   SelectValue
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Product } from '@/constants/mock-api';
+type Product = {
+  id: string;
+  name: string;
+  category: string;
+  price: number;
+  description?: string;
+  image?: string;
+};
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
@@ -63,6 +70,7 @@ export default function ProductForm({
   pageTitle: string;
 }) {
   const defaultValues = {
+    image: undefined as unknown as FileList,
     name: initialData?.name || '',
     category: initialData?.category || '',
     price: initialData?.price || 0,

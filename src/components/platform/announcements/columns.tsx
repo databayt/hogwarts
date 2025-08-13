@@ -83,10 +83,10 @@ export const announcementColumns: ColumnDef<AnnouncementRow>[] = [
       };
       return (
         <div className="flex items-center gap-2">
-          <Button size="xs" variant={isPublished ? "outline" : "default"} onClick={onToggle}>
+          <Button size="sm" variant={isPublished ? "outline" : "default"} onClick={onToggle}>
             {isPublished ? "Unpublish" : "Publish"}
           </Button>
-          <Button size="xs" variant="destructive" onClick={onDelete}>Delete</Button>
+          <Button size="sm" variant="destructive" onClick={onDelete}>Delete</Button>
         </div>
       );
     },

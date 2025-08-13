@@ -23,10 +23,18 @@ export async function POST(req: Request) {
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as any;
 
-    // Retrieve the subscription details from Stripe.
-    const subscription = await stripe.subscriptions.retrieve(
+    // Retrieve the subscription details from Stripe (cast to lightweight shape to avoid type deps)
+    const subscriptionRes = await stripe.subscriptions.retrieve(
       session.subscription as string,
     );
+    const subscription = subscriptionRes as unknown as {
+      id: string;
+      customer: string | { id: string };
+      items: { data: Array<{ price: { id: string } }> };
+      current_period_end: number;
+      cancel_at_period_end?: boolean;
+      status: string;
+    };
 
     // Update the user stripe info in our database.
     const updatedUser = await db.user.update({
@@ -72,10 +80,18 @@ export async function POST(req: Request) {
     // If the billing reason is not subscription_create, it means the customer has updated their subscription.
     // If it is subscription_create, we don't need to update the subscription id and it will handle by the checkout.session.completed event.
     if (session.billing_reason != "subscription_create") {
-      // Retrieve the subscription details from Stripe.
-      const subscription = await stripe.subscriptions.retrieve(
+      // Retrieve the subscription details from Stripe (cast to lightweight shape)
+      const subscriptionRes = await stripe.subscriptions.retrieve(
         session.subscription as string,
       );
+      const subscription = subscriptionRes as unknown as {
+        id: string;
+        customer: string | { id: string };
+        items: { data: Array<{ price: { id: string } }> };
+        current_period_end: number;
+        cancel_at_period_end?: boolean;
+        status: string;
+      };
 
       // Find the user by subscription id (not unique) and update by id
       const existingUser = await db.user.findFirst({

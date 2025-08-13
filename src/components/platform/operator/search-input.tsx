@@ -1,7 +1,7 @@
 'use client';
 import { useKBar } from 'kbar';
 import { IconSearch } from '@tabler/icons-react';
-import { Button } from './ui/button';
+import { Button } from '@/components/ui/button';
 
 export default function SearchInput() {
   const { query } = useKBar();

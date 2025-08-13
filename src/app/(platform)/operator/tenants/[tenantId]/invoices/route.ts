@@ -5,11 +5,13 @@ import type { Prisma } from "@prisma/client";
 
 export async function GET(
   _req: Request,
-  { params }: { params: { tenantId: string } }
+  { params }: { params: Promise<{ tenantId: string }> }
 ) {
+  const resolvedParams = await params;
   await requireOperator();
-  const tenantId = params.tenantId;
+  const tenantId = resolvedParams.tenantId;
 
+  // Operator view should use billing invoices (Stripe) table
   const invoices = await db.invoice.findMany({
     where: { schoolId: tenantId },
     orderBy: { createdAt: "desc" },
@@ -18,9 +20,9 @@ export async function GET(
 
   const rows = invoices.map((i) => ({
     id: i.id,
-    number: i.number ?? i.id.slice(0, 8),
-    status: i.status ?? "open",
-    amount: i.amount ?? 0,
+    number: i.stripeInvoiceId ?? i.id.slice(0, 8),
+    status: i.status,
+    amount: i.amountPaid,
     createdAt: i.createdAt?.toISOString?.() ?? String(i.createdAt),
   }));
 

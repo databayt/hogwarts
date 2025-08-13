@@ -33,5 +33,8 @@ model Task {
   createdAt      DateTime     @default(now()) @map("created_at")
   updatedAt      DateTime     @updatedAt @map("updated_at")
 
+  // Multi-tenant scoping (optional for demo data-table)
+  schoolId       String?
+
   @@map("shadcn_tasks")
 }

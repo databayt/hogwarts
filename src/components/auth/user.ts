@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import type { User as PrismaUser } from "@prisma/client";
 
 export const getUserByEmail = async (email: string) => {
   try {
@@ -15,11 +16,16 @@ export const getUserByEmail = async (email: string) => {
   }
 };
 
-export const getUserById = async (id: string) => {
+export type ExtendedUser = PrismaUser & {
+  firstName?: string | null;
+  lastName?: string | null;
+  currency?: string | null;
+};
+
+export const getUserById = async (id: string): Promise<ExtendedUser | null> => {
   try {
     const user = await db.user.findUnique({ where: { id } });
-
-    return user;
+    return (user as unknown as ExtendedUser) ?? null;
   } catch {
     return null;
   }

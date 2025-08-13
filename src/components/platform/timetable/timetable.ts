@@ -38,6 +38,7 @@ interface TimetableState {
   saveTeacherInfo: (subject: string, info: string) => void
   fetchTimetable: (config?: ClassConfig) => Promise<void>
   getTeacherInfo: (subject: string) => string | undefined
+  loadWeekly: (params: { termId: string; weekOffset?: 0 | 1; classId?: string; teacherId?: string }) => Promise<void>
 }
 
 interface ClassConfig {
@@ -49,11 +50,12 @@ interface ClassConfig {
 }
 
 interface TimetableData {
+  days?: number[]
   day_time: string[]
   timetable: Array<Array<{
     period: number
     subject: string
-    teacher: string  // This is the default teacher info from API
+    teacher: string
     replaced: boolean
     original: {
       period: number
@@ -65,6 +67,20 @@ interface TimetableData {
 }
 
 export const useTimetableStore = create<TimetableState>()((set, get) => ({
+  // Safe JSON fetch helper to avoid Unexpected end of JSON
+  _safeFetchJson: async (input: RequestInfo | URL) => {
+    try {
+      const res = await fetch(input)
+      if (!res.ok) return null
+      try {
+        return await res.json()
+      } catch {
+        return null
+      }
+    } catch {
+      return null
+    }
+  },
   // Initialize with default values
   classConfig: DEFAULT_CONFIG,
   teacherInfo: {}, // Only store user overrides
@@ -93,22 +109,17 @@ export const useTimetableStore = create<TimetableState>()((set, get) => ({
     })
 
     try {
-      // Fetch initial timetable
-      const params = new URLSearchParams({
-        grade: config.grade,
-        classno: config.class,
-        week: "0", // Always start with current week
-        schoolcode: config.schoolCode
-      })
-
-      const response = await fetch(
-        USE_LOCAL_JSON
-          ? `/timetable/timetable.json`
-          : `${API_URL}/timetable?${params}`
-      )
-      if (!response.ok) throw new Error(`Error: ${response.status}`)
-      
-      const data = await response.json()
+      // Fetch initial term, then schedule config and timetable from internal API
+      const termsData = await (get() as any)._safeFetchJson(`/api/terms`)
+      const termId: string | undefined = termsData?.terms?.[0]?.id
+      let data = termId
+        ? await (get() as any)._safeFetchJson(`/api/timetable?termId=${termId}&weekOffset=0`)
+        : null
+      if (!data && USE_LOCAL_JSON) {
+        // Fallback to static demo JSON for local dev
+        data = await (get() as any)._safeFetchJson(`/timetable/timetable.json`)
+      }
+      if (!data) throw new Error('No term found')
       set({ 
         timetableData: data,
         isNextWeek: false,
@@ -150,21 +161,16 @@ export const useTimetableStore = create<TimetableState>()((set, get) => ({
 
     set({ isWeekChangeLoading: true })
     try {
-      const params = new URLSearchParams({
-        grade: get().classConfig.grade,
-        classno: get().classConfig.class,
-        week: isNext ? "1" : "0",
-        schoolcode: get().classConfig.schoolCode
-      })
-
-      const response = await fetch(
-        USE_LOCAL_JSON
-          ? `/timetable/timetable${isNext ? '-next' : ''}.json`
-          : `${API_URL}/timetable?${params}`
-      )
-      if (!response.ok) throw new Error(`Error: ${response.status}`)
-      
-      const data = await response.json()
+      // Use selected term (first term for now)
+      const termsData = await (get() as any)._safeFetchJson(`/api/terms`)
+      const termId: string | undefined = termsData?.terms?.[0]?.id
+      let data = termId
+        ? await (get() as any)._safeFetchJson(`/api/timetable?termId=${termId}&weekOffset=${isNext ? '1' : '0'}`)
+        : null
+      if (!data && USE_LOCAL_JSON) {
+        data = await (get() as any)._safeFetchJson(`/timetable/timetable${isNext ? '-next' : ''}.json`)
+      }
+      if (!data) throw new Error('No term found')
       
       set({ 
         timetableData: data,
@@ -268,21 +274,15 @@ export const useTimetableStore = create<TimetableState>()((set, get) => ({
     set({ isLoading: true, error: null })
     
     try {
-      const params = new URLSearchParams({
-        grade: currentConfig.grade,
-        classno: currentConfig.class,
-        week: get().isNextWeek ? "1" : "0",
-        schoolcode: currentConfig.schoolCode
-      })
-
-      const response = await fetch(
-        USE_LOCAL_JSON
-          ? `/timetable/timetable${get().isNextWeek ? '-next' : ''}.json`
-          : `${API_URL}/timetable?${params}`
-      )
-      if (!response.ok) throw new Error(`Error: ${response.status}`)
-      
-      const data = await response.json()
+      const termsData = await (get() as any)._safeFetchJson(`/api/terms`)
+      const termId: string | undefined = termsData?.terms?.[0]?.id
+      let data = termId
+        ? await (get() as any)._safeFetchJson(`/api/timetable?termId=${termId}&weekOffset=${get().isNextWeek ? '1' : '0'}`)
+        : null
+      if (!data && USE_LOCAL_JSON) {
+        data = await (get() as any)._safeFetchJson(`/timetable/timetable${get().isNextWeek ? '-next' : ''}.json`)
+      }
+      if (!data) throw new Error('No term found')
       set({ timetableData: data })
     } catch (err) {
       set({ 
@@ -291,6 +291,26 @@ export const useTimetableStore = create<TimetableState>()((set, get) => ({
           : 'Could not load timetable. Please check school info and your internet connection.'
       })
       throw err // Re-throw for saveConfig to catch
+    } finally {
+      set({ isLoading: false })
+    }
+  },
+
+  loadWeekly: async ({ termId, weekOffset = 0, classId, teacherId }) => {
+    set({ isLoading: true, error: null })
+    try {
+      const params = new URLSearchParams({ termId, weekOffset: String(weekOffset) })
+      if (classId) params.set('classId', classId)
+      if (teacherId) params.set('teacherId', teacherId)
+      const data = await (get() as any)._safeFetchJson(`/api/timetable?${params.toString()}`)
+      if (!data) throw new Error('Empty response')
+      set({ timetableData: data })
+    } catch (err) {
+      set({ 
+        error: err instanceof Error 
+          ? `Failed to load timetable: ${err.message}`
+          : 'Could not load timetable. Please try again.',
+      })
     } finally {
       set({ isLoading: false })
     }

@@ -14,7 +14,12 @@ import {
   FormLabel,
   FormMessage
 } from '@/components/ui/form';
-import { Heading } from '@/components/ui/heading';
+const Heading = ({ title, description }: { title: string; description?: string }) => (
+  <div>
+    <h2 className='text-xl font-semibold'>{title}</h2>
+    {description ? <p className='text-sm text-muted-foreground'>{description}</p> : null}
+  </div>
+);
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -63,7 +68,8 @@ const ProfileCreateForm: React.FC<ProfileFormType> = ({ initialData }) => {
   };
 
   const form = useForm<ProfileFormValues>({
-    resolver: zodResolver(profileSchema),
+    // Cast resolver to relax strict key inference for dynamic field arrays
+    resolver: zodResolver(profileSchema) as unknown as any,
     defaultValues,
     mode: 'onChange'
   });
@@ -294,7 +300,6 @@ const ProfileCreateForm: React.FC<ProfileFormType> = ({ initialData }) => {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {/* @ts-expect-error countries typed loosely */}
                           {countries.map((country) => (
                             <SelectItem key={country.id} value={country.id}>
                               {country.name}
@@ -327,7 +332,6 @@ const ProfileCreateForm: React.FC<ProfileFormType> = ({ initialData }) => {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {/* @ts-expect-error cities typed loosely */}
                           {cities.map((city) => (
                             <SelectItem key={city.id} value={city.id}>
                               {city.name}

@@ -38,6 +38,10 @@ model User {
   stripePriceId          String?
   stripeCurrentPeriodEnd DateTime?
 
+  // User-scoped invoicing (standalone invoice block)
+  userInvoices         UserInvoice[]
+  userInvoiceSettings  UserInvoiceSettings?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

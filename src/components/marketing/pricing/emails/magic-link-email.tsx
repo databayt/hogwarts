@@ -11,7 +11,7 @@ import {
   Text,
 } from "@react-email/components";
 
-import { Icons } from "../components/shared/icons";
+import { Icons } from "../shared/icons";
 
 type MagicLinkEmailProps = {
   actionUrl: string;
