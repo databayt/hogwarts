@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { StepsOverview } from '@/components/onboarding';
+import  StepsOverview  from '@/components/onboarding/overview/steps-overview';
 
 const OverviewPage = () => {
   const router = useRouter();

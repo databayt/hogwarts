@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { HostStepHeader } from '@/components/onboarding';
+import HostStepHeader from '@/components/onboarding/step-header';
 import { useHostValidation } from '@/components/onboarding/host-validation-context';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';

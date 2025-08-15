@@ -15,7 +15,7 @@ import {
 import { useListing } from '@/components/onboarding/use-listing';
 import { FORM_LIMITS } from '@/components/onboarding/constants.client';
 import { useHostValidation } from '@/components/onboarding/host-validation-context';
-import { SelectionCard } from '@/components/onboarding';
+import SelectionCard from '@/components/onboarding/selection-card';
 import { cn } from "@/lib/utils";
 
 export default function DescriptionContent() {

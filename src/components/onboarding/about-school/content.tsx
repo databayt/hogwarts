@@ -1,9 +1,9 @@
 "use client";
 
 import React from 'react';
-import { HostStepHeader } from '@/components/onboarding';
+import HostStepHeader from '@/components/onboarding/step-header';
 import { useHostValidation } from '@/components/onboarding/host-validation-context';
-import { ListingProvider } from '@/components/onboarding/use-listing';
+
 
 export default function AboutSchoolContent() {
   const videoRef = React.useRef<HTMLVideoElement>(null);

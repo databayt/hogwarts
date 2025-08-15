@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import SchoolOnboardingDashboard from './host-dashboard';
+import SchoolOnboardingDashboard from './overview/host-dashboard';
 import { useCurrentUser } from '@/components/auth/use-current-user';
 
 export default function OnboardingContent() {
