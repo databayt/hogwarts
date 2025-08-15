@@ -48,13 +48,20 @@ model School {
   invoices              Invoice[]
   receipts              Receipt[]
   // Standalone invoice block relations
-  userInvoices          UserInvoiceItems[]
+  userInvoices          UserInvoice[]
   userInvoiceItems      UserInvoiceItem[]
   userInvoiceAddresses  UserInvoiceAddress[]
   userInvoiceSettings   UserInvoiceSettings[]
   userInvoiceSignatures UserInvoiceSignature[]
   timetables            Timetable[]
   schoolWeekConfigs     SchoolWeekConfig[]
+  // Legal relations
+  legalConsents         LegalConsent[]
+  legalDocuments        LegalDocument[]
+  complianceLogs        ComplianceLog[]
+  // Subscription relations
+  discounts             Discount[]
+  appliedDiscounts      AppliedDiscount[]
   // Branding and visibility
   branding              SchoolBranding?
 
@@ -72,8 +79,10 @@ model Subscription {
   currentPeriodEnd     DateTime
   cancelAtPeriodEnd    Boolean  @default(false)
   status               String   // active, past_due, canceled, etc
-
+  tierId              String
+  
   school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  subscriptionTier SubscriptionTier @relation(fields: [tierId], references: [id])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -94,6 +103,7 @@ model Invoice {
 
   school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   receipts Receipt[]
+  appliedDiscounts AppliedDiscount[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

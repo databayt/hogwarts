@@ -2,6 +2,7 @@ import { headers } from "next/headers";
 // Avoid direct Stripe type import to keep route lean and avoid type deps
 import { db } from "@/lib/db";
 import { stripe } from "@/components/marketing/pricing/lib/stripe";
+import { getTierIdFromStripePrice } from "@/components/marketing/pricing/lib/get-tier-id";
 
 export async function POST(req: Request) {
   const body = await req.text();
@@ -69,6 +70,7 @@ export async function POST(req: Request) {
           currentPeriodEnd: new Date(subscription.current_period_end * 1000),
           cancelAtPeriodEnd: subscription.cancel_at_period_end ?? false,
           status: subscription.status,
+          tierId: await getTierIdFromStripePrice(subscription.items.data[0].price.id),
         },
       });
     }
@@ -130,6 +132,7 @@ export async function POST(req: Request) {
             currentPeriodEnd: new Date(subscription.current_period_end * 1000),
             cancelAtPeriodEnd: subscription.cancel_at_period_end ?? false,
             status: subscription.status,
+            tierId: await getTierIdFromStripePrice(subscription.items.data[0].price.id),
           },
         });
 

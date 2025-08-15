@@ -2,8 +2,8 @@ import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { getTenantContext } from "@/components/platform/operator/lib/tenant";
 
-export default async function StudentDetailPage({ params }: { params: { id: string } }) {
-  const { id } = params;
+export default async function StudentDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const { schoolId } = await getTenantContext();
   if (!schoolId || !(db as any).student) return notFound();
   const student = await (db as any).student.findFirst({
