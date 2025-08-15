@@ -18,7 +18,7 @@ export default function PlatformLayout({
           <PlatformHeader />
           <div className="flex pt-6">
             <PlatformSidebar />
-            <div className="w-full">{children}</div>
+            <div className="w-full pb-10">{children}</div>
           </div>
         </div>
       </ModalProvider>

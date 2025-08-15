@@ -1,7 +1,7 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 type BreadcrumbItem = {
   title: string;
@@ -24,8 +24,27 @@ const routeMapping: Record<string, BreadcrumbItem[]> = {
 
 export function useBreadcrumbs() {
   const pathname = usePathname();
+	const [dynamicTitle, setDynamicTitle] = useState<string | null>(null);
 
-  const breadcrumbs = useMemo(() => {
+	useEffect(() => {
+		setDynamicTitle(null);
+		// Resolve dynamic names for known resources (e.g., students/:id)
+		try {
+			const match = pathname.match(/^\/students\/([^\/\?]+)/);
+			if (match) {
+				const id = match[1];
+				const qs = typeof window !== 'undefined' ? (window.location.search || '') : '';
+				void fetch(`/api/students/${id}${qs}`)
+					.then((res) => (res.ok ? res.json() : null))
+					.then((data) => {
+						if (data?.name) setDynamicTitle(data.name as string);
+					})
+					.catch(() => {});
+			}
+		} catch {}
+	}, [pathname, dynamicTitle]);
+
+	const breadcrumbs = useMemo(() => {
     // Check if we have a custom mapping for this exact path
     if (routeMapping[pathname]) {
       return routeMapping[pathname];
@@ -33,14 +52,16 @@ export function useBreadcrumbs() {
 
     // If no exact match, fall back to generating breadcrumbs from the path
     const segments = pathname.split('/').filter(Boolean);
-    return segments.map((segment, index) => {
+		const items = segments.map((segment, index) => {
       const path = `/${segments.slice(0, index + 1).join('/')}`;
-      return {
-        title: segment.charAt(0).toUpperCase() + segment.slice(1),
-        link: path
-      };
-    });
-  }, [pathname]);
+			const isIdSegment = index === segments.length - 1 && /^(?:[a-z0-9]{10,}|\w{6,})$/i.test(segment);
+			return {
+				title: isIdSegment && dynamicTitle ? dynamicTitle : segment.charAt(0).toUpperCase() + segment.slice(1),
+				link: path
+			};
+		});
+		return items;
+	}, [pathname, dynamicTitle]);
 
-  return breadcrumbs;
+	return breadcrumbs;
 }

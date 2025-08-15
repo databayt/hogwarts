@@ -9,11 +9,12 @@ This page explains how tenant routing works via subdomains, how the `schoolId` i
 - When you walk into a house, you only see that family’s stuff. In our app, when you go to a school’s subdomain, you only see that school’s data.
 - The “key” we use to make sure we only look at the right family’s stuff is called `schoolId`.
 
-### TL;DR — Quick test without subdomains
+### TL;DR — Quick test (dev + prod)
 
-- Add `?x-school=khartoum` to any URL you’re testing, e.g. `/dashboard?x-school=khartoum`.
-- Make sure your user has the right role (e.g., `ADMIN`) if the page requires it (see “Set my role for testing” below).
-- All server code will treat the request as if you visited `khartoum.hogwarts.app`.
+- Dev (no subdomains): add `?x-school=khartoum` to any page, e.g. `/dashboard?x-school=khartoum`.
+- Dev (with local subdomains): set `NEXT_PUBLIC_ROOT_DOMAIN=localhost` and visit `http://khartoum.localhost:3000/dashboard`.
+- Prod: visit the subdomain directly, e.g., `https://khartoum.hogwarts.app/dashboard`.
+- Role‑gated pages: ensure your user role (e.g., `ADMIN`) is set. See “Set my role for testing”.
 
 ### Concepts
 
@@ -113,6 +114,13 @@ You have two convenient options while developing on `localhost`:
 
 Seeded demo domains: `khartoum`, `omdurman`, `portsudan`, `wadmadani`.
 
+### Hands‑on: interactive debug page
+
+- Visit `/operator/tenant-debug` in the app to see the current tenant and live counts for students/teachers/classes.
+- In development: click a school card to reload with `?x-school=<domain>` and watch the counts change instantly.
+- In production: navigate to the school’s subdomain (e.g., `khartoum.hogwarts.app/operator/tenant-debug`).
+- If you see “No active tenant detected”, either add `?x-school=<domain>` in dev or switch to the correct subdomain in prod.
+
 ### Simple: set my school for testing
 
 Pick one of these:
@@ -139,6 +147,12 @@ NEXT_PUBLIC_ROOT_DOMAIN=hogwarts.app
 ```
 
 If you deploy to a different host, update this variable accordingly (e.g., `ed.databayt.org`).
+
+In local development, to use subdomains like `khartoum.localhost:3000`, set:
+
+```env
+NEXT_PUBLIC_ROOT_DOMAIN=localhost
+```
 
 ### Set my role for testing
 
@@ -190,9 +204,10 @@ await prisma.student.findMany({ where: { schoolId } })
 ### Verifying your setup
 
 1) Visit `/docs` (public) to ensure middleware doesn’t block docs.
-2) Visit a platform page with a dev param: `/dashboard?x-school=khartoum`.
-3) Trigger a server action that reads from the DB; verify data is tenant‑scoped.
-4) Optional: use a subdomain in a deployed preview, e.g., `khartoum.hogwarts.app`.
+2) Open the debug page: `/(platform)/operator/tenant-debug`.
+3) In dev, click a school card (adds `?x-school=<domain>`); in prod, move between subdomains.
+4) Confirm the counts change as you switch tenants.
+5) Navigate to `/students` and `/teachers` with the same `?x-school=<domain>` in dev or under the subdomain in prod.
 
 ### Troubleshooting
 

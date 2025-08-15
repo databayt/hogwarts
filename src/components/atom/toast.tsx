@@ -1,5 +1,9 @@
 'use client';
 import { toast } from 'sonner';
+import { useEffect, useState } from 'react';
+import ReactDOM from 'react-dom/client';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 
 export const SuccessToast = () => {
     toast.success('', {
@@ -40,10 +44,10 @@ export const ErrorToast = (message: string) => {
     });
 };
 
-export const DeleteToast = (message: string = "Deleted successfully") => {
-    toast.success(message, {
+export const DeleteToast = (message: string = "Deleted") => {
+    toast(message, {
         style: {
-            background: 'rgb(34 197 94)',
+            background: 'rgb(239 68 68)',
             color: 'white',
             border: 'none',
             width: '220px',
@@ -54,3 +58,76 @@ export const DeleteToast = (message: string = "Deleted successfully") => {
         position: 'bottom-right'
     });
 };
+
+// Imperative confirm dialog powered by shadcn/ui Dialog
+type ConfirmOptions = { title?: string; description?: string; confirmText?: string; cancelText?: string };
+type InternalConfirmState = ConfirmOptions & { open: boolean; resolve?: (v: boolean) => void };
+
+let confirmController: { open: (opts: ConfirmOptions & { resolve: (v: boolean) => void }) => void } | null = null;
+
+function ConfirmDialogRenderer() {
+    const [state, setState] = useState<InternalConfirmState>({ open: false, title: undefined, description: undefined, confirmText: undefined, cancelText: undefined, resolve: undefined });
+
+    useEffect(() => {
+        confirmController = {
+            open: (opts) => {
+                setState({ open: true, ...opts });
+            },
+        };
+        return () => {
+            confirmController = null;
+        };
+    }, []);
+
+    const onClose = () => {
+        setState((s) => ({ ...s, open: false }));
+    };
+
+    const onCancel = () => {
+        state.resolve?.(false);
+        onClose();
+    };
+
+    const onConfirm = () => {
+        state.resolve?.(true);
+        onClose();
+    };
+
+    return (
+        <Dialog open={state.open} onOpenChange={(o) => { if (!o) onCancel(); }}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>{state.title ?? 'Are you sure?'}</DialogTitle>
+                    {state.description ? (
+                        <DialogDescription>{state.description}</DialogDescription>
+                    ) : null}
+                </DialogHeader>
+                <DialogFooter>
+                    <Button variant="outline" onClick={onCancel}>{state.cancelText ?? 'Cancel'}</Button>
+                    <Button variant="destructive" onClick={onConfirm}>{state.confirmText ?? 'Delete'}</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
+// Ensure a single portal root is mounted on the client
+if (typeof window !== 'undefined') {
+    const id = '__confirm_dialog_root__';
+    let container = document.getElementById(id);
+    if (!container) {
+        container = document.createElement('div');
+        container.id = id;
+        document.body.appendChild(container);
+        ReactDOM.createRoot(container).render(<ConfirmDialogRenderer />);
+    }
+}
+
+export function confirmDeleteDialog(message?: string): Promise<boolean> {
+    return new Promise((resolve) => {
+        const title = 'Delete item';
+        const description = message ?? 'This action cannot be undone.';
+        if (!confirmController) return resolve(false);
+        confirmController.open({ title, description, confirmText: 'Delete', cancelText: 'Cancel', resolve });
+    });
+}

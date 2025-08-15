@@ -38,32 +38,32 @@ export function DataTableToolbar<TData>({
       role="toolbar"
       aria-orientation="horizontal"
       className={cn(
-        "flex w-full items-start justify-between gap-2 p-1",
+        "flex w-full items-center justify-start gap-2 p-1",
         className,
       )}
       {...props}
     >
-      <div className="flex flex-1 flex-wrap items-center gap-2">
-        {columns.map((column) => (
-          <DataTableToolbarFilter key={column.id} column={column} />
-        ))}
-        {isFiltered && (
-          <Button
-            aria-label="Reset filters"
-            variant="outline"
-            size="sm"
-            className="border-dashed"
-            onClick={onReset}
-          >
-            <X />
-            Reset
-          </Button>
-        )}
-      </div>
-      <div className="flex items-center gap-2">
-        {children}
-        <DataTableViewOptions table={table} />
-      </div>
+      {/* Filters (e.g., search, status) */}
+      {columns.map((column) => (
+        <DataTableToolbarFilter key={column.id} column={column} />
+      ))}
+      {/* View (column visibility) */}
+      <DataTableViewOptions table={table} />
+      {/* Create or other actions (icon button) */}
+      {children}
+      {/* Reset at the end of the row when filters active */}
+      {isFiltered && (
+        <Button
+          aria-label="Reset filters"
+          variant="outline"
+          size="sm"
+          className="border-dashed"
+          onClick={onReset}
+        >
+          <X />
+          Reset
+        </Button>
+      )}
     </div>
   );
 }
