@@ -215,13 +215,13 @@
   - [x] description/types.ts
   - [x] location/types.ts
   - [x] capacity/types.ts
-  - [ ] branding/types.ts
-  - [ ] import/types.ts
-  - [ ] join/types.ts
-  - [ ] visibility/types.ts
-  - [ ] price/types.ts
-  - [ ] discount/types.ts
-  - [ ] legal/types.ts
+  - [x] branding/types.ts
+  - [x] import/types.ts
+  - [x] join/types.ts
+  - [x] visibility/types.ts
+  - [x] price/types.ts
+  - [x] discount/types.ts
+  - [x] legal/types.ts
 
 - [ ] Split constants.ts into page-specific files:
   - [ ] about-school/constants.ts
@@ -229,13 +229,13 @@
   - [x] description/constants.ts (school levels and types)
   - [x] location/constants.ts (messages and supported countries)
   - [x] capacity/constants.ts (limits, fields, and messages)
-  - [ ] branding/constants.ts
-  - [ ] import/constants.ts
-  - [ ] join/constants.ts
-  - [ ] visibility/constants.ts
-  - [ ] price/constants.ts
-  - [ ] discount/constants.ts
-  - [ ] legal/constants.ts
+  - [x] branding/constants.ts (colors, styles, and logo limits)
+  - [x] import/constants.ts (data types and file limits)
+  - [x] join/constants.ts (join methods and role configs)
+  - [x] visibility/constants.ts (sharing and access options)
+  - [x] price/constants.ts (fees, billing, and currencies)
+  - [x] discount/constants.ts (discount types, validation, and messages)
+  - [x] legal/constants.ts (documents, safety, and compliance)
 
 ## Architecture Notes
 - ListingProvider is at layout level (src/app/onboarding/layout.tsx)
