@@ -1,11 +1,12 @@
-import { z } from 'zod'
-import { FORM_LIMITS, ERROR_MESSAGES } from '../constants'
+import { z } from 'zod';
 
 export const descriptionSchema = z.object({
-  description: z.string()
-    .min(FORM_LIMITS.DESCRIPTION_MIN_LENGTH, ERROR_MESSAGES.DESCRIPTION_TOO_SHORT)
-    .max(FORM_LIMITS.DESCRIPTION_MAX_LENGTH, ERROR_MESSAGES.DESCRIPTION_TOO_LONG)
-    .trim(),
-})
+  schoolLevel: z.enum(['primary', 'secondary', 'both'], {
+    required_error: "Please select a school level",
+  }),
+  schoolType: z.enum(['private', 'public', 'international', 'technical', 'special'], {
+    required_error: "Please select a school type",
+  }),
+});
 
-export type DescriptionFormData = z.infer<typeof descriptionSchema> 
+export type DescriptionFormData = z.infer<typeof descriptionSchema>;

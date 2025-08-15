@@ -1,10 +1,13 @@
-import { z } from 'zod'
-import { FORM_LIMITS, ERROR_MESSAGES } from '../constants'
+import { z } from 'zod';
 
-export const photosSchema = z.object({
-  photoUrls: z.array(z.string().url())
-    .min(1, 'At least one photo is required')
-    .max(FORM_LIMITS.MAX_PHOTOS, ERROR_MESSAGES.TOO_MANY_PHOTOS),
-})
+export const importSchema = z.object({
+  dataSource: z.enum(['manual', 'csv', 'existing-system'], {
+    required_error: "Please select a data source",
+  }),
+  includeStudents: z.boolean().default(true),
+  includeTeachers: z.boolean().default(true),
+  includeParents: z.boolean().default(true),
+  csvFile: z.string().optional(),
+});
 
-export type PhotosFormData = z.infer<typeof photosSchema> 
+export type ImportFormData = z.infer<typeof importSchema>;
