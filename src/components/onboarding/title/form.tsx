@@ -8,7 +8,7 @@ import { Form, FormControl, FormField, FormItem, FormMessage } from "@/component
 import { Textarea } from "@/components/ui/textarea";
 import { titleSchema, type TitleFormData } from "./validation";
 import { updateSchoolTitle } from "./actions";
-import { FORM_LIMITS } from "../constants";
+import { FORM_LIMITS } from "../constants.client";
 
 interface TitleFormProps {
   schoolId: string;

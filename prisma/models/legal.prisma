@@ -1,0 +1,60 @@
+// Legal and Compliance Models
+
+model LegalConsent {
+  id                String   @id @default(cuid())
+  schoolId          String
+  userId            String
+  documentType      String   // terms, privacy, data-processing, etc.
+  documentVersion   String   // Version of the document consented to
+  consentType       String   // explicit, implicit, parental
+  ipAddress         String?  // IP address at time of consent
+  userAgent         String?  // Browser/device info
+  consentedAt       DateTime @default(now())
+  revokedAt         DateTime?
+  metadata          Json?    // Additional consent metadata
+
+  // Relationships
+  school            School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([schoolId, userId, documentType, documentVersion])
+  @@map("legal_consents")
+}
+
+model LegalDocument {
+  id                String   @id @default(cuid())
+  schoolId          String
+  type              String   // terms, privacy, data-processing, etc.
+  version           String   // Semantic version number
+  content           String   @db.Text
+  effectiveFrom     DateTime
+  effectiveUntil    DateTime?
+  isActive          Boolean  @default(true)
+  requiresExplicit  Boolean  @default(true)
+  metadata          Json?    // Document metadata (e.g., approval info)
+
+  // Relationships
+  school            School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@unique([schoolId, type, version])
+  @@map("legal_documents")
+}
+
+model ComplianceLog {
+  id                String   @id @default(cuid())
+  schoolId          String
+  eventType         String   // consent-given, consent-revoked, document-updated, etc.
+  eventData         Json     // Event-specific data
+  userId            String?  // Optional: user who triggered the event
+  timestamp         DateTime @default(now())
+  metadata          Json?    // Additional event metadata
+
+  // Relationships
+  school            School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  user              User?    @relation(fields: [userId], references: [id])
+
+  @@map("compliance_logs")
+}

@@ -48,13 +48,15 @@ model School {
   invoices              Invoice[]
   receipts              Receipt[]
   // Standalone invoice block relations
-  userInvoices          UserInvoice[]
+  userInvoices          UserInvoiceItems[]
   userInvoiceItems      UserInvoiceItem[]
   userInvoiceAddresses  UserInvoiceAddress[]
   userInvoiceSettings   UserInvoiceSettings[]
   userInvoiceSignatures UserInvoiceSignature[]
   timetables            Timetable[]
   schoolWeekConfigs     SchoolWeekConfig[]
+  // Branding and visibility
+  branding              SchoolBranding?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

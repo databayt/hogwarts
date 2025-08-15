@@ -1,0 +1,65 @@
+// Subscription and Pricing Models
+
+model SubscriptionTier {
+  id                String   @id @default(cuid())
+  name              String   // basic, premium, enterprise
+  description       String
+  monthlyPrice      Int     // Price in cents
+  annualPrice       Int     // Price in cents
+  maxStudents       Int
+  maxTeachers       Int
+  maxClasses        Int
+  features          String[] // Array of feature identifiers
+  isActive          Boolean  @default(true)
+  
+  // Subscription relationships
+  subscriptions     Subscription[]
+  discounts         Discount[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("subscription_tiers")
+}
+
+model Discount {
+  id                String   @id @default(cuid())
+  schoolId          String
+  tierId            String
+  code              String   @unique
+  type              String   // percentage, fixed
+  value             Int      // Percentage or fixed amount in cents
+  description       String
+  validFrom         DateTime
+  validUntil        DateTime
+  maxUses           Int?     // Optional maximum number of uses
+  currentUses       Int      @default(0)
+  isActive          Boolean  @default(true)
+
+  // Relationships
+  school            School           @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  subscriptionTier  SubscriptionTier @relation(fields: [tierId], references: [id])
+  appliedDiscounts  AppliedDiscount[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([schoolId, code])
+  @@map("discounts")
+}
+
+model AppliedDiscount {
+  id          String   @id @default(cuid())
+  schoolId    String
+  discountId  String
+  invoiceId   String
+  amount      Int      // Amount saved in cents
+  appliedAt   DateTime @default(now())
+
+  // Relationships
+  school      School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  discount    Discount @relation(fields: [discountId], references: [id])
+  invoice     Invoice  @relation(fields: [invoiceId], references: [id])
+
+  @@map("applied_discounts")
+}

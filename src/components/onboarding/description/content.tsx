@@ -13,6 +13,7 @@ import {
   Heart
 } from 'lucide-react';
 import { useListing } from '@/components/onboarding/use-listing';
+import { FORM_LIMITS } from '@/components/onboarding/constants.client';
 import { useHostValidation } from '@/components/onboarding/host-validation-context';
 import { SelectionCard } from '@/components/onboarding';
 import { cn } from "@/lib/utils";
