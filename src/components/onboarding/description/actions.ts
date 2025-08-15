@@ -8,12 +8,8 @@ import { db } from "@/lib/db";
 
 // Define description schema
 export const descriptionSchema = z.object({
-  schoolLevel: z.enum(['primary', 'secondary', 'both'], {
-    required_error: "Please select a school level",
-  }),
-  schoolType: z.enum(['private', 'public', 'international', 'technical', 'special'], {
-    required_error: "Please select a school type",
-  }),
+  schoolLevel: z.enum(['primary', 'secondary', 'both']).describe("Please select a school level"),
+  schoolType: z.enum(['private', 'public', 'international', 'technical', 'special']).describe("Please select a school type"),
 });
 
 export type DescriptionFormData = z.infer<typeof descriptionSchema>;
@@ -58,7 +54,7 @@ export async function updateSchoolDescription(
     if (error instanceof z.ZodError) {
       return {
         success: false,
-        errors: error.errors.reduce((acc: Record<string, string>, curr) => {
+        errors: error.issues.reduce((acc: Record<string, string>, curr) => {
           acc[curr.path[0] as string] = curr.message;
           return acc;
         }, {} as Record<string, string>),

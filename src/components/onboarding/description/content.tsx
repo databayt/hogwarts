@@ -24,8 +24,8 @@ export default function DescriptionContent() {
   const { setCustomNavigation } = useHostValidation();
   const { listing, updateListingData } = useListing();
   const [currentStep, setCurrentStep] = useState<'level' | 'type'>('level');
-  const [selectedLevel, setSelectedLevel] = useState<string>('primary');
-  const [selectedType, setSelectedType] = useState<string>('private');
+  const [selectedLevel, setSelectedLevel] = useState<'primary' | 'secondary' | 'both'>('primary');
+  const [selectedType, setSelectedType] = useState<'private' | 'public' | 'international' | 'technical' | 'special'>('private');
 
   // Get the ID from the URL params
   const id = params?.id as string;
@@ -140,11 +140,11 @@ export default function DescriptionContent() {
     };
   }, [currentStep, selectedLevel, selectedType]);
 
-  const handleLevelSelect = (levelId: string) => {
+  const handleLevelSelect = (levelId: 'primary' | 'secondary' | 'both') => {
     setSelectedLevel(levelId);
   };
 
-  const handleTypeSelect = (typeId: string) => {
+  const handleTypeSelect = (typeId: 'private' | 'public' | 'international' | 'technical' | 'special') => {
     setSelectedType(typeId);
   };
 
@@ -181,9 +181,9 @@ export default function DescriptionContent() {
             {currentStep === 'level' ? (
               <div className="space-y-3">
                 {levelOptions.map((level) => (
-                  <SelectionCard
+                  <SelectionCard<'primary' | 'secondary' | 'both'>
                     key={level.id}
-                    id={level.id}
+                    id={level.id as 'primary' | 'secondary' | 'both'}
                     title={level.title}
                     description={level.description}
                     icon={<level.icon size={24} />}
@@ -197,7 +197,7 @@ export default function DescriptionContent() {
                 {schoolTypes.map((type) => (
                   <button
                     key={type.id}
-                    onClick={() => handleTypeSelect(type.id)}
+                    onClick={() => handleTypeSelect(type.id as 'private' | 'public' | 'international' | 'technical' | 'special')}
                     className={cn(
                       "flex flex-col items-center justify-center p-4 rounded-lg border transition-all text-center h-[120px] hover:border-foreground/50",
                       selectedType === type.id

@@ -14,8 +14,8 @@ export default function TitleContent() {
 
   // Load existing title from listing
   useEffect(() => {
-    if (listing?.title) {
-      setSchoolName(listing.title);
+    if (listing?.name) {
+      setSchoolName(listing.name);
     }
   }, [listing]);
 

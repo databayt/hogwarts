@@ -13,9 +13,9 @@ export function useFloorPlan() {
   const form = useForm<FloorPlanFormData>({
     resolver: zodResolver(floorPlanSchema),
     defaultValues: {
-      teachers: listing?.teachers || 1,
-      facilities: listing?.facilities || 1,
-      studentCount: listing?.studentCount || 30,
+      teachers: listing?.maxTeachers || 1,
+      facilities: listing?.maxFacilities || 1,
+      studentCount: listing?.maxStudents || 30,
     },
     mode: 'onChange',
   })
@@ -26,9 +26,9 @@ export function useFloorPlan() {
       
       // Update the listing with the school capacity data
       await updateListingData({
-        teachers: data.teachers,
-        facilities: data.facilities,
-        studentCount: data.studentCount,
+        maxTeachers: data.teachers,
+        maxFacilities: data.facilities,
+        maxStudents: data.studentCount,
       })
 
       // Navigate to next step

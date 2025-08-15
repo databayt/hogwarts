@@ -2,33 +2,37 @@
 
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { priceSchema, PriceFormData } from './validation'
+import { schoolPriceSchema, SchoolPriceFormData } from './validation'
 import { useListing, useHostNavigation } from '../use-listing'
-import { STEP_NAVIGATION } from '../constants'
+import { STEP_NAVIGATION } from '../constants.client'
 
 export function usePrice() {
   const { listing, updateListingData, isLoading, error } = useListing()
   const { goToNextStep, goToPreviousStep } = useHostNavigation('price')
 
-  const form = useForm<PriceFormData>({
-    resolver: zodResolver(priceSchema),
+  const form = useForm<SchoolPriceFormData>({
+    resolver: zodResolver(schoolPriceSchema),
     defaultValues: {
-      pricePerNight: listing?.pricePerNight || 50,
-      securityDeposit: listing?.securityDeposit || 0,
-      applicationFee: listing?.applicationFee || 0,
+      tuitionFee: 5000,
+      registrationFee: 0,
+      applicationFee: 0,
+      currency: 'USD' as const,
+      paymentSchedule: 'semester' as const,
     },
     mode: 'onChange',
   })
 
-  const onSubmit = async (data: PriceFormData) => {
+  const onSubmit = async (data: SchoolPriceFormData) => {
     try {
       console.log('💰 Price - Submitting:', data)
       
       // Update the listing with the pricing data
       await updateListingData({
-        pricePerNight: data.pricePerNight,
-        securityDeposit: data.securityDeposit,
+        tuitionFee: data.tuitionFee,
+        registrationFee: data.registrationFee,
         applicationFee: data.applicationFee,
+        currency: data.currency,
+        paymentSchedule: data.paymentSchedule,
       })
 
       // Navigate to next step
@@ -59,8 +63,5 @@ export function usePrice() {
     error,
     isFormValid,
     isDirty,
-    pricePerNight: form.watch('pricePerNight'),
-    securityDeposit: form.watch('securityDeposit'),
-    applicationFee: form.watch('applicationFee'),
   }
-} 
+}

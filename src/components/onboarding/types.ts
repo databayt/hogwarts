@@ -1,5 +1,5 @@
 // Keep Prisma types minimal here, avoid PropertyType usage on client
-import { Amenity, Highlight } from '@prisma/client'
+import { Amenity, Highlight } from './enums'
 
 export interface StepConfig {
   id: string

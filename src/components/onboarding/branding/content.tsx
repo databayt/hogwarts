@@ -8,16 +8,17 @@ import { useListing } from '@/components/onboarding/use-listing';
 import { useHostValidation } from '@/components/onboarding/host-validation-context';
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { COLOR_OPTIONS, RADIUS_OPTIONS, SHADOW_OPTIONS } from './constants';
 
 export default function BrandingContent() {
   const router = useRouter();
   const params = useParams();
   const { setCustomNavigation } = useHostValidation();
   const { listing, updateListingData } = useListing();
-  const [logo, setLogo] = useState<string | null>(null);
+  const [logo, setLogo] = useState<string>();
   const [primaryColor, setPrimaryColor] = useState<string>('#0f172a'); // Default dark color
-  const [borderRadius, setBorderRadius] = useState<'none' | 'sm' | 'md' | 'lg' | 'xl' | 'full'>('md');
-  const [shadow, setShadow] = useState<'none' | 'sm' | 'md' | 'lg' | 'xl'>('md');
+  const [borderRadius, setBorderRadius] = useState<'none' | 'sm' | 'md' | 'lg'>('md');
+  const [shadow, setShadow] = useState<'none' | 'sm' | 'md' | 'lg'>('md');
 
   // Get the ID from the URL params
   const id = params?.id as string;
@@ -25,10 +26,14 @@ export default function BrandingContent() {
   // Load existing data from listing
   useEffect(() => {
     if (listing) {
-      if (listing.logo) setLogo(listing.logo);
+      if (listing.logo !== undefined) setLogo(listing.logo);
       if (listing.primaryColor) setPrimaryColor(listing.primaryColor);
-      if (listing.borderRadius) setBorderRadius(listing.borderRadius);
-      if (listing.shadow) setShadow(listing.shadow);
+      if (listing.borderRadius && ['none', 'sm', 'md', 'lg'].includes(listing.borderRadius)) {
+        setBorderRadius(listing.borderRadius as 'none' | 'sm' | 'md' | 'lg');
+      }
+      if (listing.shadow && ['none', 'sm', 'md', 'lg'].includes(listing.shadow)) {
+        setShadow(listing.shadow as 'none' | 'sm' | 'md' | 'lg');
+      }
     }
   }, [listing]);
 
@@ -60,30 +65,6 @@ export default function BrandingContent() {
       reader.readAsDataURL(file);
     }
   };
-
-  const colorOptions = [
-    { id: 'slate', color: '#0f172a', name: 'Slate' },
-    { id: 'blue', color: '#1d4ed8', name: 'Blue' },
-    { id: 'green', color: '#15803d', name: 'Green' },
-    { id: 'yellow', color: '#facc15', name: 'Yellow' },
-    { id: 'orange', color: '#ea580c', name: 'Orange' },
-    { id: 'rose', color: '#e11d48', name: 'Rose' },
-    { id: 'purple', color: '#7e22ce', name: 'Purple' },
-  ];
-
-  const radiusOptions = [
-    { id: 'none', label: 'no' },
-    { id: 'sm', label: 'sm' },
-    { id: 'md', label: 'md' },
-    { id: 'lg', label: 'lg' },
-  ];
-
-  const shadowOptions = [
-    { id: 'none', label: 'no' },
-    { id: 'sm', label: 'sm' },
-    { id: 'md', label: 'md' },
-    { id: 'lg', label: 'lg' },
-  ];
 
   // Set custom navigation in context
   useEffect(() => {
@@ -120,7 +101,7 @@ export default function BrandingContent() {
             <div className="flex items-center gap-4">
               <label className="text-sm font-medium w-24">Color</label>
               <div className="flex gap-2">
-                {colorOptions.map((option) => (
+                {COLOR_OPTIONS.map((option) => (
                   <button
                     key={option.id}
                     onClick={() => setPrimaryColor(option.color)}
@@ -141,7 +122,7 @@ export default function BrandingContent() {
             <div className="flex items-center gap-4">
               <label className="text-sm font-medium w-24">Rounded</label>
               <div className="flex gap-2">
-                {radiusOptions.map((option) => (
+                {RADIUS_OPTIONS.map((option) => (
                   <Button
                     key={option.id}
                     onClick={() => setBorderRadius(option.id as any)}
@@ -166,7 +147,7 @@ export default function BrandingContent() {
             <div className="flex items-center gap-4">
               <label className="text-sm font-medium w-24">Shadow</label>
               <div className="flex gap-2">
-                {shadowOptions.map((option) => (
+                {SHADOW_OPTIONS.map((option) => (
                   <Button
                     key={option.id}
                     onClick={() => setShadow(option.id as any)}
@@ -189,7 +170,7 @@ export default function BrandingContent() {
 
                   {/* Right side - Logo Upload and Preview */}
           <div>
-            {!logo ? (
+            {logo === undefined ? (
               // Initial large upload box
               <div className={cn(
                 "border border-dashed border-muted-foreground text-center bg-muted h-[300px] flex flex-col justify-center",
@@ -198,13 +179,10 @@ export default function BrandingContent() {
                   'rounded-sm': borderRadius === 'sm',
                   'rounded-md': borderRadius === 'md',
                   'rounded-lg': borderRadius === 'lg',
-                  'rounded-xl': borderRadius === 'xl',
-                  'rounded-full': borderRadius === 'full',
                   'shadow-none': shadow === 'none',
                   'shadow-sm': shadow === 'sm',
                   'shadow-md': shadow === 'md',
                   'shadow-lg': shadow === 'lg',
-                  'shadow-xl': shadow === 'xl',
                 }
               )}>
                 <div className="space-y-4">
@@ -219,17 +197,14 @@ export default function BrandingContent() {
                       <Button
                         asChild
                         className={cn("mt-2", {
-                          'rounded-none': borderRadius === 'none',
-                          'rounded-sm': borderRadius === 'sm',
-                          'rounded-md': borderRadius === 'md',
-                          'rounded-lg': borderRadius === 'lg',
-                          'rounded-xl': borderRadius === 'xl',
-                          'rounded-full': borderRadius === 'full',
-                          'shadow-none': shadow === 'none',
-                          'shadow-sm': shadow === 'sm',
-                          'shadow-md': shadow === 'md',
-                          'shadow-lg': shadow === 'lg',
-                          'shadow-xl': shadow === 'xl',
+                                            'rounded-none': borderRadius === 'none',
+                  'rounded-sm': borderRadius === 'sm',
+                  'rounded-md': borderRadius === 'md',
+                  'rounded-lg': borderRadius === 'lg',
+                  'shadow-none': shadow === 'none',
+                  'shadow-sm': shadow === 'sm',
+                  'shadow-md': shadow === 'md',
+                  'shadow-lg': shadow === 'lg',
                         })}
                         style={{ 
                           backgroundColor: primaryColor,
@@ -263,11 +238,13 @@ export default function BrandingContent() {
                   "border border-dashed border-muted-foreground rounded-lg h-[300px] relative overflow-hidden",
                   {
                     'rounded-none': borderRadius === 'none',
-                    'rounded-lg': borderRadius === 'medium',
-                    'rounded-full': borderRadius === 'full',
+                    'rounded-sm': borderRadius === 'sm',
+                    'rounded-md': borderRadius === 'md',
+                    'rounded-lg': borderRadius === 'lg',
                     'shadow-none': shadow === 'none',
-                    'shadow-md': shadow === 'medium',
-                    'shadow-xl': shadow === 'large',
+                    'shadow-sm': shadow === 'sm',
+                    'shadow-md': shadow === 'md',
+                    'shadow-lg': shadow === 'lg',
                   }
                 )}
               >
@@ -284,15 +261,12 @@ export default function BrandingContent() {
                     'rounded-sm': borderRadius === 'sm',
                     'rounded-md': borderRadius === 'md',
                     'rounded-lg': borderRadius === 'lg',
-                    'rounded-xl': borderRadius === 'xl',
-                    'rounded-full': borderRadius === 'full',
                     'shadow-none': shadow === 'none',
                     'shadow-sm': shadow === 'sm',
                     'shadow-md': shadow === 'md',
                     'shadow-lg': shadow === 'lg',
-                    'shadow-xl': shadow === 'xl',
                   })}
-                  onClick={() => setLogo(null)}
+                  onClick={() => setLogo(undefined)}
                   style={{ 
                     backgroundColor: primaryColor,
                     '--theme-primary': primaryColor

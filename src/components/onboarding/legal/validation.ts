@@ -1,9 +1,7 @@
 import { z } from 'zod';
 
 export const legalSchema = z.object({
-  operationalStatus: z.enum(['existing-licensed', 'new-seeking-registration'], {
-    required_error: "Please select operational status",
-  }),
+  operationalStatus: z.enum(['existing-licensed', 'new-seeking-registration']).describe("Please select operational status"),
   hasCCTV: z.boolean().default(false),
   hasEmergencyAlarm: z.boolean().default(false),
   hasTransportation: z.boolean().default(false),

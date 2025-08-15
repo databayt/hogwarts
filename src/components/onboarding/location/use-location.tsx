@@ -14,12 +14,6 @@ export function useLocation() {
     resolver: zodResolver(locationSchema),
     defaultValues: {
       address: listing?.address || '',
-      city: listing?.city || '',
-      state: listing?.state || '',
-      country: listing?.country || '',
-      postalCode: listing?.postalCode || '',
-      latitude: listing?.latitude,
-      longitude: listing?.longitude,
     },
     mode: 'onChange',
   })
@@ -31,12 +25,6 @@ export function useLocation() {
       // Update the listing with the location data
       await updateListingData({
         address: data.address,
-        city: data.city,
-        state: data.state,
-        country: data.country,
-        postalCode: data.postalCode,
-        latitude: data.latitude,
-        longitude: data.longitude,
       })
 
       // Navigate to next step

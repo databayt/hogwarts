@@ -1,7 +1,7 @@
 // NOTE: This file previously imported Prisma enums. We are migrating
 // onboarding to a school context, so keep this server-only and avoid
 // importing it on the client. Client code should import from constants.client.
-import { Amenity, Highlight } from '@prisma/client'
+import { Amenity, Highlight } from './enums'
 import { PropertyTypeOption, AmenityOption, HighlightOption, StepConfig } from './types'
 
 // Host onboarding steps configuration

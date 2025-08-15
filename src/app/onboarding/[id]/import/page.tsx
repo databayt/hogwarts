@@ -1,5 +1,4 @@
 import ImportContent from "@/components/onboarding/import/content";
-import { ListingProvider } from '@/components/onboarding/use-listing';
 
 export const metadata = {
   title: "Import Data",
@@ -7,8 +6,6 @@ export const metadata = {
 
 export default function Import() {
   return (
-    <ListingProvider>
-      <ImportContent />
-    </ListingProvider>
+    <ImportContent />
   );
 }

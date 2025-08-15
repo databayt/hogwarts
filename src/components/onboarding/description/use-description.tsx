@@ -13,14 +13,14 @@ export function useDescription() {
   const form = useForm<DescriptionFormData>({
     resolver: zodResolver(descriptionSchema),
     defaultValues: {
-      description: listing?.description || '',
+      schoolLevel: listing?.schoolLevel || 'primary',
+      schoolType: listing?.schoolType || 'private',
     },
     mode: 'onChange',
   })
 
-  const description = form.watch('description')
-  const characterCount = description?.length || 0
-  const remainingCharacters = FORM_LIMITS.DESCRIPTION_MAX_LENGTH - characterCount
+  const schoolLevel = form.watch('schoolLevel')
+  const schoolType = form.watch('schoolType')
 
   const onSubmit = async (data: DescriptionFormData) => {
     try {
@@ -28,7 +28,8 @@ export function useDescription() {
       
       // Update the listing with the description
       await updateListingData({
-        description: data.description,
+        schoolLevel: data.schoolLevel,
+        schoolType: data.schoolType,
       })
 
       // Navigate to next step
@@ -59,8 +60,7 @@ export function useDescription() {
     error,
     isFormValid,
     isDirty,
-    description,
-    characterCount,
-    remainingCharacters,
+    schoolLevel,
+    schoolType,
   }
 } 

@@ -13,7 +13,7 @@ export function useTitle() {
   const form = useForm<TitleFormData>({
     resolver: zodResolver(titleSchema),
     defaultValues: {
-      title: listing?.title || '',
+      title: listing?.name || '',
     },
     mode: 'onChange',
   })

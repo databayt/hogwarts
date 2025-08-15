@@ -48,7 +48,7 @@ export async function updateJoinSettings(
     if (error instanceof z.ZodError) {
       return {
         success: false,
-        errors: error.errors.reduce((acc: Record<string, string>, curr: any) => {
+        errors: error.issues.reduce((acc: Record<string, string>, curr: any) => {
           acc[curr.path[0] as string] = curr.message;
           return acc;
         }, {} as Record<string, string>),

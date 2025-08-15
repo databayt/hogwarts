@@ -15,8 +15,6 @@ export const RADIUS_OPTIONS: StyleOption[] = [
   { id: 'sm', label: 'sm', description: 'Subtle rounding' },
   { id: 'md', label: 'md', description: 'Medium rounding' },
   { id: 'lg', label: 'lg', description: 'Soft rounding' },
-  { id: 'xl', label: 'xl', description: 'Extra soft rounding' },
-  { id: 'full', label: 'full', description: 'Fully rounded' },
 ] as const;
 
 export const SHADOW_OPTIONS: StyleOption[] = [
@@ -24,7 +22,6 @@ export const SHADOW_OPTIONS: StyleOption[] = [
   { id: 'sm', label: 'sm', description: 'Subtle shadow' },
   { id: 'md', label: 'md', description: 'Medium shadow' },
   { id: 'lg', label: 'lg', description: 'Large shadow' },
-  { id: 'xl', label: 'xl', description: 'Extra large shadow' },
 ] as const;
 
 export const LOGO_LIMITS = {

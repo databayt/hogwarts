@@ -12,6 +12,10 @@ model SubscriptionTier {
   features          String[] // Array of feature identifiers
   isActive          Boolean  @default(true)
   
+  // Stripe integration
+  monthlyPriceStripeId String? @unique
+  yearlyPriceStripeId  String? @unique
+  
   // Subscription relationships
   subscriptions     Subscription[]
   discounts         Discount[]

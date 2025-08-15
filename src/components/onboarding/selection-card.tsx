@@ -4,19 +4,19 @@ import React from 'react';
 import { cn } from '@/lib/utils';
 import { Card } from '@/components/ui/card';
 
-interface SelectionCardProps {
-  id: string;
+interface SelectionCardProps<T extends string = string> {
+  id: T;
   title: string;
   description?: string;
   icon?: React.ReactNode;
   isSelected?: boolean;
-  onClick?: (id: string) => void;
+  onClick?: (id: T) => void;
   className?: string;
   compact?: boolean;
   disabled?: boolean;
 }
 
-const SelectionCard: React.FC<SelectionCardProps> = ({
+function SelectionCard<T extends string = string>({
   id,
   title,
   description,
@@ -26,7 +26,7 @@ const SelectionCard: React.FC<SelectionCardProps> = ({
   className,
   compact = false,
   disabled = false,
-}) => {
+}: SelectionCardProps<T>) {
   const handleClick = () => {
     if (!disabled && onClick) {
       onClick(id);

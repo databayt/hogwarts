@@ -13,7 +13,7 @@ interface HostLayoutProps {
 function HostLayoutContent({ children }: HostLayoutProps) {
   const params = useParams();
   const { loadListing } = useListing();
-  const listingId = params.id ? parseInt(params.id as string, 10) : null;
+  const listingId = params.id as string | null;
 
   useEffect(() => {
     if (listingId) {

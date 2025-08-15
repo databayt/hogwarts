@@ -16,6 +16,36 @@ export interface ListingFormData {
   maxTeachers?: number;
   planType?: string;
   website?: string;
+  pricePerNight?: number;
+  domain?: string;
+  // Branding fields
+  logo?: string;
+  primaryColor?: string;
+  borderRadius?: 'none' | 'sm' | 'md' | 'lg' | 'xl' | 'full';
+  shadow?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
+  // Capacity fields
+  maxClasses?: number;
+  maxFacilities?: number;
+  // School fields
+  schoolLevel?: 'primary' | 'secondary' | 'both';
+  schoolType?: 'private' | 'public' | 'international' | 'technical' | 'special';
+  // Pricing fields
+  tuitionFee?: number;
+  registrationFee?: number;
+  applicationFee?: number;
+  currency?: 'USD' | 'EUR' | 'GBP' | 'CAD' | 'AUD';
+  paymentSchedule?: 'monthly' | 'quarterly' | 'semester' | 'annual';
+  // Listing fields
+  title?: string;
+  city?: string;
+  state?: string;
+  guestCount?: number;
+  bedrooms?: number;
+  bathrooms?: number;
+  amenities?: string[];
+  // Status fields
+  draft?: boolean;
+  isPublished?: boolean;
 }
 
 // Listing CRUD actions
@@ -31,6 +61,8 @@ export async function createListing(data: ListingFormData) {
         ...data,
         // TODO: Add schoolId for multi-tenant safety
         // schoolId: session.schoolId,
+        name: data.name || "New School", // Ensure required fields are set
+        domain: data.domain || `school-${Date.now()}`,
         updatedAt: new Date(),
       },
     });

@@ -1,5 +1,11 @@
 import { z } from 'zod'
 
+const CurrencyEnum = ['USD', 'EUR', 'GBP', 'CAD', 'AUD'] as const
+const PaymentScheduleEnum = ['monthly', 'quarterly', 'semester', 'annual'] as const
+
+type Currency = typeof CurrencyEnum[number]
+type PaymentSchedule = typeof PaymentScheduleEnum[number]
+
 // Updated for school pricing context
 export const schoolPriceSchema = z.object({
   tuitionFee: z.number()
@@ -13,16 +19,18 @@ export const schoolPriceSchema = z.object({
     .min(0, "Application fee cannot be negative")
     .max(1000, "Application fee cannot exceed $1,000")
     .optional(),
-  currency: z.enum(['USD', 'EUR', 'GBP', 'CAD', 'AUD'], {
-    required_error: "Please select a currency",
-  }).default('USD'),
-  paymentSchedule: z.enum(['monthly', 'quarterly', 'semester', 'annual'], {
-    required_error: "Please select a payment schedule",
-  }).default('monthly'),
+  currency: z.enum(CurrencyEnum).describe("Please select a currency"),
+  paymentSchedule: z.enum(PaymentScheduleEnum).describe("Please select a payment schedule"),
 })
 
-export type SchoolPriceFormData = z.infer<typeof schoolPriceSchema>
+export type SchoolPriceFormData = {
+  tuitionFee: number;
+  registrationFee?: number;
+  applicationFee?: number;
+  currency: Currency;
+  paymentSchedule: PaymentSchedule;
+}
 
 // Keep legacy schema for backward compatibility
 export const priceSchema = schoolPriceSchema
-export type PriceFormData = SchoolPriceFormData 
+export type PriceFormData = SchoolPriceFormData

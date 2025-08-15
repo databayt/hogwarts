@@ -29,13 +29,7 @@ export async function updateSchoolLocation(
         // schoolId: session.schoolId 
       },
       data: {
-        address: validatedData.address,
-        city: validatedData.city,
-        state: validatedData.state,
-        country: validatedData.country,
-        postalCode: validatedData.postalCode,
-        latitude: validatedData.latitude,
-        longitude: validatedData.longitude,
+        address: `${validatedData.address}, ${validatedData.city}, ${validatedData.state}, ${validatedData.country} ${validatedData.postalCode}`,
         updatedAt: new Date(),
       },
     });
@@ -52,7 +46,7 @@ export async function updateSchoolLocation(
     if (error instanceof z.ZodError) {
       return {
         success: false,
-        errors: error.errors.reduce((acc: Record<string, string>, curr) => {
+        errors: error.issues.reduce((acc: Record<string, string>, curr) => {
           acc[curr.path[0] as string] = curr.message;
           return acc;
         }, {} as Record<string, string>),
@@ -82,12 +76,6 @@ export async function getSchoolLocation(schoolId: string) {
       select: {
         id: true,
         address: true,
-        city: true,
-        state: true,
-        country: true,
-        postalCode: true,
-        latitude: true,
-        longitude: true,
       },
     });
 
@@ -99,12 +87,6 @@ export async function getSchoolLocation(schoolId: string) {
       success: true,
       data: {
         address: school.address || "",
-        city: school.city || "",
-        state: school.state || "",
-        country: school.country || "",
-        postalCode: school.postalCode || "",
-        latitude: school.latitude,
-        longitude: school.longitude,
       },
     };
   } catch (error) {
@@ -126,10 +108,10 @@ export async function proceedToCapacity(schoolId: string) {
     // Validate that location data exists
     const school = await db.school.findUnique({
       where: { id: schoolId },
-      select: { address: true, city: true, country: true },
+      select: { address: true },
     });
 
-    if (!school?.address?.trim() || !school?.city?.trim() || !school?.country?.trim()) {
+    if (!school?.address?.trim()) {
       throw new Error("Please complete location information before proceeding");
     }
 

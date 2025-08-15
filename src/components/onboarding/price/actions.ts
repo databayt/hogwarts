@@ -19,12 +19,8 @@ export const schoolPriceSchema = z.object({
     .min(0, "Application fee cannot be negative")
     .max(1000, "Application fee cannot exceed $1,000")
     .optional(),
-  currency: z.enum(['USD', 'EUR', 'GBP', 'CAD', 'AUD'], {
-    required_error: "Please select a currency",
-  }).default('USD'),
-  paymentSchedule: z.enum(['monthly', 'quarterly', 'semester', 'annual'], {
-    required_error: "Please select a payment schedule",
-  }).default('monthly'),
+  currency: z.enum(['USD', 'EUR', 'GBP', 'CAD', 'AUD']).describe("Please select a currency").default('USD'),
+  paymentSchedule: z.enum(['monthly', 'quarterly', 'semester', 'annual']).describe("Please select a payment schedule").default('monthly'),
 });
 
 export type SchoolPriceFormData = z.infer<typeof schoolPriceSchema>;
@@ -69,7 +65,7 @@ export async function updateSchoolPricing(
     if (error instanceof z.ZodError) {
       return {
         success: false,
-        errors: error.errors.reduce((acc: Record<string, string>, curr) => {
+        errors: error.issues.reduce((acc: Record<string, string>, curr) => {
           acc[curr.path[0] as string] = curr.message;
           return acc;
         }, {} as Record<string, string>),

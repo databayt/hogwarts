@@ -5,7 +5,7 @@ export const studentBaseSchema = z.object({
   middleName: z.string().optional(),
   surname: z.string().min(1, "Required"),
   dateOfBirth: z.string().min(1, "Required"), // ISO date YYYY-MM-DD
-  gender: z.enum(["male", "female"], { required_error: "Required" }),
+  gender: z.enum(["male", "female"]).describe("Required"),
   enrollmentDate: z.string().optional(), // ISO date YYYY-MM-DD
   userId: z.string().optional(),
 })

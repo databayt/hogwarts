@@ -46,7 +46,7 @@ export async function updateSchoolTitle(
     if (error instanceof z.ZodError) {
       return {
         success: false,
-        errors: error.errors.reduce((acc: Record<string, string>, curr) => {
+        errors: error.issues.reduce((acc: Record<string, string>, curr) => {
           acc[curr.path[0] as string] = curr.message;
           return acc;
         }, {} as Record<string, string>),

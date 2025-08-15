@@ -20,10 +20,10 @@ export default function CapacityContent() {
   useEffect(() => {
     if (listing) {
       setCounts({
-        students: listing.guestCount || 400,
-        teachers: listing.bedrooms || 10,
-        classrooms: listing.beds || 10,
-        facilities: listing.bathrooms || 5,
+        students: listing.maxStudents || 400,
+        teachers: listing.maxTeachers || 10,
+        classrooms: listing.maxClasses || 10,
+        facilities: listing.maxFacilities || 5,
       });
     }
   }, [listing]);
@@ -48,10 +48,10 @@ export default function CapacityContent() {
     // Update backend data
     try {
       const updateData: any = {};
-      if (field === 'students') updateData.guestCount = newCounts.students;
-      if (field === 'teachers') updateData.bedrooms = newCounts.teachers;
-      if (field === 'classrooms') updateData.beds = newCounts.classrooms;
-      if (field === 'facilities') updateData.bathrooms = newCounts.facilities;
+      if (field === 'students') updateData.maxStudents = newCounts.students;
+      if (field === 'teachers') updateData.maxTeachers = newCounts.teachers;
+      if (field === 'classrooms') updateData.maxClasses = newCounts.classrooms;
+      if (field === 'facilities') updateData.maxFacilities = newCounts.facilities;
       
       if (Object.keys(updateData).length > 0) {
         await updateListingData(updateData);

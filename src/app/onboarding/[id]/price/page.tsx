@@ -25,17 +25,14 @@ const PricePageContent = ({ params }: PricePageProps) => {
     params.then((resolvedParams) => {
       setId(resolvedParams.id);
       // Load the listing data in the background
-      const listingId = parseInt(resolvedParams.id);
-      if (!isNaN(listingId)) {
-        loadListing(listingId).catch(console.error);
-      }
+      loadListing(resolvedParams.id).catch(console.error);
     });
   }, [params, loadListing]);
 
   // Load existing price from listing
   React.useEffect(() => {
-    if (listing?.pricePerNight) {
-      setPrice(listing.pricePerNight);
+    if (listing?.tuitionFee) {
+      setPrice(listing.tuitionFee);
     }
   }, [listing]);
 
