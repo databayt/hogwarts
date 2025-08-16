@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { useEffect, useState } from "react";
-import { createInvoice, updateInvoice, getInvoiceById } from "@/actions/invoice";
+import { createInvoice, updateInvoice, getInvoiceById } from "@/components/invoice/actions/invoice";
 import { InvoiceSchemaZod } from "./validation";
 import { Form } from "@/components/ui/form";
 import { useModal } from "@/components/atom/modal/context";
@@ -42,7 +42,7 @@ export function InvoiceCreateForm({
       invoice_no: "",
       invoice_date: new Date(),
       due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
-      currency: currency,
+      currency: currency || "USD",
       from: {
         name: `${firstName || ""} ${lastName || ""}`.trim() || "Your Company Name",
         email: email || "",

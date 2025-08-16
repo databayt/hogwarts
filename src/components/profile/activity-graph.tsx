@@ -1,4 +1,13 @@
+"use client";
+
+import { useSidebar } from "@/components/ui/sidebar";
+
 export default function ActivityGraph() {
+  const { state, open, openMobile, isMobile } = useSidebar();
+  
+  // Determine if we should use mobile layout
+  const useMobileLayout = isMobile || (open && !isMobile);
+  
   // Generate activity data for school year (simplified representation)
   const generateActivityData = () => {
     const data = []
@@ -19,10 +28,10 @@ export default function ActivityGraph() {
   const activityData = generateActivityData()
 
   return (
-    <div className="bg-[#212830] rounded-lg p-6">
+    <div className=" rounded-lg p-6">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold">Academic Activity</h3>
-        <div className="flex items-center space-x-2 text-xs text-[#9198a1]">
+        <div className="flex items-center space-x-2 text-xs text-muted-foreground">
           <span>Less</span>
           <div className="flex space-x-1">
             <div className="w-3 h-3 rounded-sm bg-[#161b22]"></div>
@@ -37,7 +46,7 @@ export default function ActivityGraph() {
 
       {/* Activity Grid */}
       <div className="overflow-x-auto">
-        <div className="grid grid-cols-53 gap-1 mb-4" style={{ minWidth: "800px" }}>
+        <div className={`grid gap-1 mb-4 ${useMobileLayout ? 'grid-cols-26' : 'grid-cols-53'}`} style={{ minWidth: useMobileLayout ? "400px" : "800px" }}>
           {activityData.map((day, index) => (
             <div
               key={index}
@@ -58,7 +67,7 @@ export default function ActivityGraph() {
         </div>
       </div>
 
-      <p className="text-sm text-[#9198a1]">Learn how academic activity is calculated and displayed.</p>
+      <p className="text-sm text-muted-foreground">Learn how academic activity is calculated and displayed.</p>
     </div>
   )
 }

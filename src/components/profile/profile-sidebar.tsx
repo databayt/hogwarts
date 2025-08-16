@@ -1,65 +1,126 @@
-import Image from "next/image"
+"use client";
 
-export default function ProfileSidebar() {
+import Image from "next/image"
+import { useSidebar } from "@/components/ui/sidebar";
+
+interface ProfileSidebarProps {
+  role: "student" | "teacher" | "staff" | "parent"
+  data: any
+}
+
+export default function ProfileSidebar({ role, data }: ProfileSidebarProps) {
+  const { state, open, openMobile, isMobile } = useSidebar();
+  
+  // Determine if we should use mobile layout
+  const useMobileLayout = isMobile || (open && !isMobile);
+  
+  const getRoleInfo = () => {
+    switch (role) {
+      case "student":
+        return {
+          title: `${data.givenName} ${data.surname}`,
+          subtitle: `Student ID: ${data.id}`,
+          description: "Student",
+          icon: "📚",
+          imageSrc: "/contributors/h.jpeg"
+        }
+      case "teacher":
+        return {
+          title: `${data.givenName} ${data.surname}`,
+          subtitle: `Teacher ID: ${data.id}`,
+          description: "Teacher",
+          icon: "👩‍🏫",
+          imageSrc: "/contributors/d.jpeg"
+        }
+      case "staff":
+        return {
+          title: `${data.givenName} ${data.surname}`,
+          subtitle: `Staff ID: ${data.id}`,
+          description: "Staff Member",
+          icon: "👨‍💼",
+          imageSrc: "/contributors/d.jpeg"
+        }
+      case "parent":
+        return {
+          title: `${data.givenName} ${data.surname}`,
+          subtitle: `Parent ID: ${data.id}`,
+          description: "Parent/Guardian",
+          icon: "👨‍👩‍👧‍👦",
+          imageSrc: "/contributors/d.jpeg"
+        }
+      default:
+        return {
+          title: "Unknown",
+          subtitle: "ID: Unknown",
+          description: "Unknown Role",
+          icon: "❓",
+          imageSrc: "/contributors/d.jpeg"
+        }
+    }
+  }
+
+  const roleInfo = getRoleInfo()
+
   return (
     <div className="space-y-4">
       {/* Profile Image */}
       <div className="relative">
-        <div className="w-64 h-64 rounded-full overflow-hidden border-4 border-[#3d444d]">
+        <div className="w-64 h-64 rounded-full overflow-hidden border-2 border-border">
           <Image
-            src="/young-indian-man-headshot.png"
-            alt="Student Profile"
+            src={roleInfo.imageSrc}
+            alt={`${roleInfo.description} Profile`}
             width={256}
             height={256}
             className="w-full h-full object-cover"
           />
         </div>
-        <div className="absolute bottom-2 right-2 w-8 h-8 bg-[#212830] rounded-full flex items-center justify-center border-2 border-[#0d1117]">
-          <span className="text-lg">📚</span>
+        <div className="absolute bottom-6 right-6 w-8 h-8 bg-muted rounded-full flex items-center justify-center border-2 border-border">
+          <span className="text-lg">😀
+          </span>
         </div>
       </div>
 
       {/* User Info */}
       <div>
-        <h1 className="text-2xl font-bold text-[#ffffff] mb-1">Rahul Sharma</h1>
-        <p className="text-[#9198a1] text-sm mb-2">Student ID: STU2024001</p>
-        <p className="text-[#9198a1] text-sm mb-2">Grade 12 - Science Stream</p>
-        <p className="text-[#9198a1] text-sm">Academic Year: 2024-25</p>
+        <h1 className="text-2xl font-bold text-foreground mb-1">{roleInfo.title}</h1>
+        <p className="text-muted-foreground text-sm mb-2">{roleInfo.subtitle}</p>
+        <p className="text-muted-foreground text-sm mb-2">{roleInfo.description}</p>
+        <p className="text-muted-foreground text-sm">Academic Year: 2024-25</p>
       </div>
 
       {/* Action Button */}
-      <button className="w-full bg-[#3d444d] hover:bg-[#4c5561] text-[#ffffff] py-2 px-4 rounded-lg transition-colors">
+      <button className="w-full bg-muted hover:bg-muted-foreground/10 text-foreground py-2 px-4 rounded-lg transition-colors">
         View Full Profile
       </button>
 
       {/* Academic Stats */}
       <div className="flex space-x-4 text-sm">
-        <span className="text-[#9198a1]">
-          <span className="text-[#ffffff] font-semibold">8</span> subjects
+        <span className="text-muted-foreground">
+          <span className="text-foreground font-semibold">8</span> subjects
         </span>
-        <span className="text-[#9198a1]">
-          <span className="text-[#ffffff] font-semibold">12</span> projects
+        <span className="text-muted-foreground">
+          <span className="text-foreground font-semibold">12</span> projects
         </span>
       </div>
 
       {/* Achievement Badges */}
       <div className="flex space-x-2 mt-4">
-        <div className="w-12 h-12 rounded-full bg-[#212830] flex items-center justify-center" title="Honor Roll">
+        <div className="w-12 h-12 rounded-full flex items-center justify-center" title="Honor Roll">
           <span className="text-2xl">🏆</span>
         </div>
         <div
-          className="w-12 h-12 rounded-full bg-[#212830] flex items-center justify-center"
+          className="w-12 h-12 rounded-full flex items-center justify-center"
           title="Perfect Attendance"
         >
           <span className="text-2xl">📅</span>
         </div>
         <div
-          className="w-12 h-12 rounded-full bg-[#212830] flex items-center justify-center"
+          className="w-12 h-12 rounded-full flex items-center justify-center"
           title="Science Fair Winner"
         >
           <span className="text-2xl">🔬</span>
         </div>
-        <div className="w-12 h-12 rounded-full bg-[#212830] flex items-center justify-center" title="GPA">
+        <div className="w-12 h-12 rounded-full flex items-center justify-center" title="GPA">
           <span className="text-xl font-bold">3.8</span>
         </div>
       </div>

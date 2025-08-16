@@ -1,62 +1,126 @@
-import ProfileSidebar from "@/components/profile-sidebar"
-import ProfileHeader from "@/components/profile-header"
-import ProjectGrid from "@/components/project-grid"
-import ActivityGraph from "@/components/activity-graph"
-import ActivityOverview from "@/components/activity-overview"
+"use client";
 
-// Role-specific components
-import StudentDashboard from "@/components/roles/student-dashboard"
-import TeacherDashboard from "@/components/roles/teacher-dashboard"
-import StaffDashboard from "@/components/roles/staff-dashboard"
-import ParentDashboard from "@/components/roles/parent-dashboard"
+import { useSidebar } from "@/components/ui/sidebar";
+import ProfileSidebar from "./profile-sidebar"
+import ProfileHeader from "./profile-header"
+import StudentDashboard from "./student"
+import TeacherDashboard from "./teacher"
+import StaffDashboard from "./staff"
+import ParentDashboard from "./parent"
+import ActivityGraph from "./activity-graph"
+import ActivityOverview from "./activity-overview"
 
-export default function SchoolProfile() {
-  // This would come from authentication/context in real implementation
-  const userRole = "student" // student | teacher | staff | parent
+interface ProfileContentProps {
+  role: "student" | "teacher" | "staff" | "parent"
+  data: any
+}
+
+export default function ProfileContent({ role, data }: ProfileContentProps) {
+  const { state, open, openMobile, isMobile } = useSidebar();
+  
+  // Determine if we should use mobile layout
+  // Mobile layout when: 
+  // - On mobile device (isMobile = true)
+  // - On desktop but sidebar is expanded (open = true)
+  // Desktop layout when:
+  // - On desktop and sidebar is collapsed (open = false)
+  const useMobileLayout = isMobile || (open && !isMobile);
+  
+  const getRoleDashboard = () => {
+    switch (role) {
+      case "student":
+        return <StudentDashboard data={data} />
+      case "teacher":
+        return <TeacherDashboard data={data} />
+      case "staff":
+        return <StaffDashboard data={data} />
+      case "parent":
+        return <ParentDashboard data={data} />
+      default:
+        return null
+    }
+  }
 
   return (
-    <div className="min-h-screen bg-[#0d1117] text-[#ffffff]">
-      <div className="max-w-7xl mx-auto p-6">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Left Sidebar - Shared across all roles */}
-          <div className="lg:col-span-1">
-            <ProfileSidebar />
+    <div className="min-h-screen">
+      <div className="max-w-7xl mx-auto">
+        {useMobileLayout ? (
+          // Mobile/Expanded layout: Stack sidebar above content
+          <div className="flex flex-col gap-6 pb-6">
+            {/* Profile Sidebar - Left-aligned when stacked above content */}
+            <div className="flex justify-start">
+              <ProfileSidebar role={role} data={data} />
+            </div>
+            
+            {/* Main Content - Full width below */}
+            <div className="w-full space-y-6">
+              {/* Shared Header */}
+              <ProfileHeader role={role} data={data} />
+
+              {/* Role-specific content */}
+              {getRoleDashboard()}
+
+              {/* Shared components */}
+              {/* <ActivityGraph /> */}
+              <ActivityOverview />
+
+              {/* Current Period Section */}
+              <div className=" rounded-lg py-6">
+                <h3 className="text-lg font-semibold mb-4">December 2024</h3>
+                <p className="text-muted-foreground text-center py-8">No activity recorded for this period.</p>
+                <button className="w-full bg-muted border border-border rounded-lg py-3 text-muted-foreground hover:bg-muted-foreground/10 transition-colors">
+                  Show more activity
+                </button>
+              </div>
+
+              <p className="text-muted-foreground text-sm text-center">
+                Need help navigating the system? Check out the{" "}
+                <a href="#" className="text-[#1f6feb] hover:underline">
+                  school portal guide
+                </a>
+                .
+              </p>
+            </div>
           </div>
-
-          {/* Main Content */}
-          <div className="lg:col-span-3 space-y-6">
-            {/* Shared Header */}
-            <ProfileHeader />
-
-            {/* Role-specific content */}
-            {userRole === "student" && <StudentDashboard />}
-            {userRole === "teacher" && <TeacherDashboard />}
-            {userRole === "staff" && <StaffDashboard />}
-            {userRole === "parent" && <ParentDashboard />}
-
-            {/* Shared components */}
-            <ProjectGrid />
-            <ActivityGraph />
-            <ActivityOverview />
-
-            {/* Current Period Section */}
-            <div className="bg-[#212830] rounded-lg p-6">
-              <h3 className="text-lg font-semibold mb-4">December 2024</h3>
-              <p className="text-[#9198a1] text-center py-8">No activity recorded for this period.</p>
-              <button className="w-full bg-[#212830] border border-[#3d444d] rounded-lg py-3 text-[#ffffff] hover:bg-[#3d444d] transition-colors">
-                Show more activity
-              </button>
+        ) : (
+          // Desktop Collapsed layout: Sidebar + content side by side
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 py-6">
+            {/* Left Sidebar - Fixed width */}
+            <div className="lg:col-span-1">
+              <ProfileSidebar role={role} data={data} />
             </div>
 
-            <p className="text-[#9198a1] text-sm text-center">
-              Need help navigating the system? Check out the{" "}
-              <a href="#" className="text-[#1f6feb] hover:underline">
-                school portal guide
-              </a>
-              .
-            </p>
+            {/* Main Content - Takes remaining space */}
+            <div className="lg:col-span-3 space-y-6">
+              {/* Shared Header */}
+              <ProfileHeader role={role} data={data} />
+
+              {/* Role-specific content */}
+              {getRoleDashboard()}
+
+              {/* Shared components */}
+              {/* <ActivityGraph /> */}
+              <ActivityOverview />
+
+              {/* Current Period Section */}
+              <div className=" rounded-lg py-6">
+                <h3 className="text-lg font-semibold mb-4">December 2024</h3>
+                <p className="text-muted-foreground text-center py-8">No activity recorded for this period.</p>
+                <button className="w-full bg-muted border border-border rounded-lg py-3 text-muted-foreground hover:bg-muted-foreground/10 transition-colors">
+                  Show more activity
+                </button>
+              </div>
+
+              <p className="text-muted-foreground text-sm text-center">
+                Need help navigating the system? Check out the{" "}
+                <a href="#" className="text-[#1f6feb] hover:underline">
+                  school portal guide
+                </a>
+                .
+              </p>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   )

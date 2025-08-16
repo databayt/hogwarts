@@ -69,7 +69,7 @@ export default function InvoiceClientPage({ userId, currency = "USD" }: IInvoice
     try {
       const response = await sendInvoiceEmail(invoiceId, subject);
       if (response.success) SuccessToast();
-      else ErrorToast(response.error);
+      else ErrorToast(response.error || "Failed to send email");
     } catch (error) {
       ErrorToast("Failed to send email");
     }

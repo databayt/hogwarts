@@ -16,7 +16,7 @@ export const InvoiceSchemaZod = z.object({
   invoice_no: z.string().min(1, { message: "Invoice number is required" }),
   invoice_date: z.date({ message: "Invoice date is required" }),
   due_date: z.date({ message: "Due date is required" }),
-  currency: z.string().min(1, { message: "Currency is required" }).default("USD"),
+  currency: z.string().min(1, { message: "Currency is required" }),
   from: z.object({
     name: z.string().min(3, { message: "Name is required" }).max(100, { message: "Name max 100 character" }),
     email: z.string().email({ message: "Valid email is required" }),
@@ -36,15 +36,15 @@ export const InvoiceSchemaZod = z.object({
       item_name: z.string().min(3, { message: "Item name is required" }).max(100, { message: "Max character will be 100" }),
       quantity: z.number().min(0, { message: "Quantity can't be negative" }),
       price: z.number().min(0, { message: "Price can't be negative" }),
-      total: z.number().min(0, { message: "Total can't be negative" }),
+      total: z.number().min(0, { message: "Total is required" }),
     })
   ).min(1, { message: "At least one item is required" }),
   sub_total: z.number().min(0, { message: "Sub total can't be negative" }),
-  discount: z.number().min(0, { message: "Discount can't be negative" }).default(0),
-  tax_percentage: z.number().min(0, { message: "Tax percentage can't be negative" }).default(0),
-  total: z.number().min(0, { message: "Total can't be negative" }),
+  discount: z.number().min(0, { message: "Discount can't be negative" }),
+  tax_percentage: z.number().min(0, { message: "Tax percentage can't be negative" }),
+  total: z.number().min(0, { message: "Total is required" }),
   notes: z.string().optional(),
-  status: z.enum(["UNPAID", "PAID", "OVERDUE", "CANCELLED"]).default("UNPAID"),
+  status: z.enum(["UNPAID", "PAID", "OVERDUE", "CANCELLED"]),
 })
 
 

@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ErrorToast, SuccessToast } from "@/components/atom/toast";
 
-import { InvoiceSchemaZod } from "@/lib/zodSchema";
+import { InvoiceSchemaZod } from "../validation";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
-import { createInvoice, updateInvoice, getInvoiceById } from "@/actions/invoice";
+import { createInvoice, updateInvoice, getInvoiceById } from "@/components/invoice/actions/invoice";
 import * as z from "zod";
 
 interface ICreateEditInvoice {
@@ -46,6 +46,24 @@ export default function CreateEditInvoice({
   } = useForm<z.infer<typeof InvoiceSchemaZod>>({
     resolver: zodResolver(InvoiceSchemaZod),
     defaultValues: {
+      invoice_no: "",
+      invoice_date: new Date(),
+      due_date: new Date(),
+      currency: currency || "USD",
+      from: {
+        name: `${firstName} ${lastName}`,
+        email: email as string,
+        address1: "",
+        address2: "",
+        address3: "",
+      },
+      to: {
+        name: "",
+        email: "",
+        address1: "",
+        address2: "",
+        address3: "",
+      },
       items: [
         {
           item_name: "",
@@ -54,15 +72,12 @@ export default function CreateEditInvoice({
           total: 0,
         },
       ],
-      from: {
-        name: `${firstName} ${lastName}`,
-        email: email as string,
-      },
-      tax_percentage: 0,
-      currency: currency,
-      discount: 0,
       sub_total: 0,
+      tax_percentage: 0,
+      discount: 0,
       total: 0,
+      notes: "",
+      status: "UNPAID" as const,
     },
   });
   const [isLoading, setIsLoading] = useState<boolean>(false);

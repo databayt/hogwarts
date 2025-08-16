@@ -41,10 +41,10 @@ export default function ContributionGraph() {
   }
 
   return (
-    <div className="bg-[#212830] rounded-lg p-6">
+    <div className="rounded-lg p-6">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold">Learn how we count contributions</h3>
-        <div className="flex items-center space-x-2 text-xs text-[#9198a1]">
+        <div className="flex items-center space-x-2 text-xs text-muted-foreground">
           <span>Less</span>
           <div className="flex space-x-1">
             <div className="w-3 h-3 rounded-sm bg-[#161b22]"></div>
@@ -71,7 +71,7 @@ export default function ContributionGraph() {
       </div>
 
       <div className="flex justify-end mt-4">
-        <div className="bg-[#3d444d] rounded p-2">
+        <div className="rounded p-2">
           <div className="space-y-1 text-xs">
             <div>2024</div>
             <div>2023</div>

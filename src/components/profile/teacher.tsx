@@ -1,13 +1,26 @@
-export default function TeacherDashboard() {
+"use client";
+
+import { useSidebar } from "@/components/ui/sidebar";
+
+interface TeacherDashboardProps {
+  data: any
+}
+
+export default function TeacherDashboard({ data }: TeacherDashboardProps) {
+  const { state, open, openMobile, isMobile } = useSidebar();
+  
+  // Determine if we should use mobile layout
+  const useMobileLayout = isMobile || (open && !isMobile);
+  
   return (
-    <div className="bg-[#212830] rounded-lg p-6">
+    <div className=" rounded-lg p-6">
       <h3 className="text-lg font-semibold mb-4 flex items-center">
         <span className="mr-2">👩‍🏫</span>
         Teacher Dashboard
       </h3>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-[#0d1117] rounded-lg p-4">
+      <div className={`grid gap-4 ${useMobileLayout ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1 md:grid-cols-3'}`}>
+        <div className=" rounded-lg p-4">
           <h4 className="font-semibold text-[#39d353] mb-2">Classes Today</h4>
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
@@ -25,16 +38,16 @@ export default function TeacherDashboard() {
           </div>
         </div>
 
-        <div className="bg-[#0d1117] rounded-lg p-4">
+        <div className=" rounded-lg p-4">
           <h4 className="font-semibold text-[#ffa000] mb-2">Pending Grades</h4>
           <div className="text-2xl font-bold text-[#f85149]">23</div>
-          <div className="text-sm text-[#9198a1]">Assignments to Grade</div>
+          <div className="text-sm text-muted-foreground">Assignments to Grade</div>
         </div>
 
-        <div className="bg-[#0d1117] rounded-lg p-4">
+        <div className=" rounded-lg p-4">
           <h4 className="font-semibold text-[#a259ff] mb-2">Students</h4>
           <div className="text-2xl font-bold text-[#39d353]">127</div>
-          <div className="text-sm text-[#9198a1]">Total Enrolled</div>
+          <div className="text-sm text-muted-foreground">Total Enrolled</div>
         </div>
       </div>
     </div>
