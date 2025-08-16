@@ -3,7 +3,7 @@ import { useModal } from "@/components/atom/modal/context";
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { X } from 'lucide-react';
-import { motion, AnimatePresence, Variants } from 'framer-motion';
+
 
 // Custom hook for managing body scroll
 function useBodyScroll(open: boolean) {
@@ -45,59 +45,25 @@ function Modal({ content, sm = false }: Props) {
     return () => window.removeEventListener('resize', checkIfMobile);
   }, []);
 
-  const modalVariants: Variants = {
-    hidden: { 
-      opacity: 0,
-      scale: 0.8,
-    },
-    visible: { 
-      opacity: 1,
-      scale: 1,
-      transition: {
-        duration: 0.2,
-        ease: 'easeOut'
-      }
-    },
-    exit: {
-      opacity: 0,
-      scale: 0.8,
-      transition: {
-        duration: 0.2,
-        ease: 'easeIn'
-      }
-    }
-  };
 
-  const backdropVariants: Variants = {
-    hidden: { opacity: 0 },
-    visible: { opacity: 1 },
-  };
 
   return (
-    <AnimatePresence>
+    <>
       {modal.open && (
         <>
-          <motion.div
+          <div
             className="fixed inset-0 w-full h-screen bg-black bg-opacity-70"
             onClick={closeModal}
-            initial="hidden"
-            animate="visible"
-            exit="hidden"
-            variants={backdropVariants}
           />
           <div className="fixed inset-0 w-full h-screen z-50 flex justify-center items-center">
-            <motion.div 
+            <div 
               className={`relative z-50 bg-background ${
                 sm 
                   ? isMobile
-                    ? 'w-full h-screen p-4 overflow-auto'
-                    : 'm-4 p-8 max-w-2xl w-[24rem] h-[29rem] sm:text-sm rounded-lg' 
-                  : 'w-full h-screen overflow-hidden p-4 sm:p-8'
+                    ? 'w-full h-screen px-20 py-4 overflow-auto'
+                    : 'm-4 px-20 py-8 max-w-2xl w-[24rem] h-[24rem] sm:text-sm rounded-lg' 
+                  : 'w-full h-screen overflow-hidden px-20 py-4 sm:pt-14'
               }`}
-              initial="hidden"
-              animate="visible"
-              exit="exit"
-              variants={modalVariants}
             >
               <Button 
                 size='icon' 
@@ -108,11 +74,11 @@ function Modal({ content, sm = false }: Props) {
                 <X className="h-5 w-5" />
               </Button>
               {content}
-            </motion.div>
+            </div>
           </div>
         </>
       )}
-    </AnimatePresence>
+    </>
   );
 }
 

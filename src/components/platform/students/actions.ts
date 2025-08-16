@@ -11,13 +11,25 @@ export async function createStudent(input: z.infer<typeof studentCreateSchema>) 
   if (!schoolId) throw new Error("Missing school context");
   const parsed = studentCreateSchema.parse(input);
   let normalizedUserId: string | null = parsed.userId && parsed.userId.trim().length > 0 ? parsed.userId.trim() : null;
+  
   if (normalizedUserId) {
     // Ensure the referenced user exists to avoid FK violation
     const user = await (db as any).user.findFirst({ where: { id: normalizedUserId } });
     if (!user) {
       normalizedUserId = null;
+    } else {
+      // Check if this userId is already being used by ANY student (global unique constraint)
+      const existingStudent = await (db as any).student.findFirst({ 
+        where: { 
+          userId: normalizedUserId
+        } 
+      });
+      if (existingStudent) {
+        normalizedUserId = null; // Don't use this userId if it's already taken
+      }
     }
   }
+  
   const row = await (db as any).student.create({
     data: {
       schoolId,
@@ -48,7 +60,18 @@ export async function updateStudent(input: z.infer<typeof studentUpdateSchema>) 
     const trimmed = rest.userId?.trim();
     if (trimmed) {
       const user = await (db as any).user.findFirst({ where: { id: trimmed } });
-      data.userId = user ? trimmed : null;
+      if (user) {
+        // Check if this userId is already being used by ANY other student (global unique constraint)
+        const existingStudent = await (db as any).student.findFirst({ 
+          where: { 
+            userId: trimmed,
+            NOT: { id } // Exclude current student
+          } 
+        });
+        data.userId = existingStudent ? null : trimmed;
+      } else {
+        data.userId = null;
+      }
     } else {
       data.userId = null;
     }

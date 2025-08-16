@@ -1,89 +1,51 @@
-"use client";
+import { AnnouncementsTable } from '@/components/platform/announcements/table'
+import { announcementColumns, type AnnouncementRow } from '@/components/platform/announcements/columns'
+import { SearchParams } from 'nuqs/server'
+import { announcementsSearchParams } from '@/components/platform/announcements/list-params'
+import { db } from '@/lib/db'
+import { getTenantContext } from '@/components/platform/operator/lib/tenant'
+import { Shell as PageContainer } from '@/components/table/shell'
 
-import * as React from 'react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { createAnnouncement } from '@/app/(platform)/announcements/actions'
-import { getClassesForSelection } from '@/components/platform/attendance/actions'
-import { SuccessToast, ErrorToast } from '@/components/atom/toast'
-
-export function AnnouncementsContent() {
-  const [title, setTitle] = React.useState('')
-  const [body, setBody] = React.useState('')
-  const [scope, setScope] = React.useState<'school' | 'class' | 'role'>('school')
-  const [classId, setClassId] = React.useState('')
-  const [role, setRole] = React.useState('')
-  const [classes, setClasses] = React.useState<Array<{ id: string; name: string }>>([])
-  const [submitting, setSubmitting] = React.useState(false)
-
-  React.useEffect(() => {
-    ;(async () => {
-      const res = await getClassesForSelection()
-      setClasses(res.classes)
-    })()
-  }, [])
-
-  const onCreate = async () => {
-    setSubmitting(true)
-    try {
-      await createAnnouncement({ title, body, scope, classId: scope === 'class' ? classId : undefined, role: scope === 'role' ? role : undefined })
-      setTitle('')
-      setBody('')
-      setScope('school')
-      setClassId('')
-      setRole('')
-      SuccessToast()
-    } catch (e) {
-      ErrorToast(e instanceof Error ? e.message : 'Failed')
-    } finally {
-      setSubmitting(false)
+export default async function AnnouncementsContent({ searchParams }: { searchParams: Promise<SearchParams> }) {
+  const sp = await announcementsSearchParams.parse(await searchParams)
+  const { schoolId } = await getTenantContext()
+  let data: AnnouncementRow[] = []
+  let total = 0
+  if (schoolId && (db as any).announcement) {
+    const where: any = {
+      schoolId,
+      ...(sp.title ? { title: { contains: sp.title, mode: 'insensitive' } } : {}),
+      ...(sp.scope ? { scope: sp.scope } : {}),
+      ...(sp.published ? { published: sp.published === 'true' } : {}),
     }
+    const skip = (sp.page - 1) * sp.perPage
+    const take = sp.perPage
+    const orderBy = (sp.sort && Array.isArray(sp.sort) && sp.sort.length)
+      ? sp.sort.map((s: any) => ({ [s.id]: s.desc ? 'desc' : 'asc' }))
+      : [{ createdAt: 'desc' }]
+    const [rows, count] = await Promise.all([
+      (db as any).announcement.findMany({ where, orderBy, skip, take }),
+      (db as any).announcement.count({ where }),
+    ])
+    data = rows.map((a: any) => ({ 
+      id: a.id, 
+      title: a.title, 
+      scope: a.scope, 
+      published: a.published, 
+      createdAt: (a.createdAt as Date).toISOString() 
+    }))
+    total = count as number
   }
-
   return (
-    <div className="grid gap-3">
-      <div className="rounded-lg border bg-card p-4">
-        <div className="mb-2 text-sm font-medium">New announcement</div>
-        <div className="grid gap-2">
-          <Input placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} />
-          <Textarea placeholder="Body" value={body} onChange={(e) => setBody(e.target.value)} />
-          <div className="flex items-center gap-2">
-            <Select value={scope} onValueChange={(v) => setScope(v as any)}>
-              <SelectTrigger className="h-8 w-40"><SelectValue placeholder="Scope" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="school">School</SelectItem>
-                <SelectItem value="class">Class</SelectItem>
-                <SelectItem value="role">Role</SelectItem>
-              </SelectContent>
-            </Select>
-            {scope === 'class' && (
-              <Select value={classId} onValueChange={setClassId}>
-                <SelectTrigger className="h-8 w-56"><SelectValue placeholder="Select class" /></SelectTrigger>
-                <SelectContent>
-                  {classes.map((c) => (<SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>))}
-                </SelectContent>
-              </Select>
-            )}
-            {scope === 'role' && (
-              <Select value={role} onValueChange={setRole}>
-                <SelectTrigger className="h-8 w-40"><SelectValue placeholder="Select role" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ADMIN">Admin</SelectItem>
-                  <SelectItem value="TEACHER">Teacher</SelectItem>
-                  <SelectItem value="STUDENT">Student</SelectItem>
-                  <SelectItem value="GUARDIAN">Guardian</SelectItem>
-                  <SelectItem value="STAFF">Staff</SelectItem>
-                  <SelectItem value="ACCOUNTANT">Accountant</SelectItem>
-                </SelectContent>
-              </Select>
-            )}
-          </div>
-          <Button size="sm" onClick={onCreate} disabled={submitting || !title || !body || (scope === 'class' && !classId) || (scope === 'role' && !role)}>Publish</Button>
+    <PageContainer>
+      <div className="flex flex-1 flex-col gap-4">
+        <div>
+          <h1 className="text-xl font-semibold">Announcements</h1>
+          <p className="text-sm text-muted-foreground">Create and manage announcements for your school</p>
         </div>
+        <AnnouncementsTable data={data} columns={announcementColumns} pageCount={Math.max(1, Math.ceil(total / (sp.perPage || 20)))} />
       </div>
-    </div>
+    </PageContainer>
   )
 }
 

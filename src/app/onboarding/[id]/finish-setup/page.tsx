@@ -3,7 +3,7 @@
 import React from 'react';
 import { StepHeader } from '@/components/onboarding';
 import { useHostValidation } from '@/components/onboarding/host-validation-context';
-import { ListingProvider, useListing } from '@/components/onboarding/use-listing';
+
 
 interface FinishSetupPageProps {
   params: Promise<{ id: string }>;
@@ -13,18 +13,9 @@ const FinishSetupPageContent = ({ params }: FinishSetupPageProps) => {
   const [id, setId] = React.useState<string>('');
   const videoRef = React.useRef<HTMLVideoElement>(null);
   const { enableNext } = useHostValidation();
-  const { listing, loadListing } = useListing();
+  
 
-  React.useEffect(() => {
-    params.then((resolvedParams) => {
-      setId(resolvedParams.id);
-      // Load the listing data in the background
-      const listingId = parseInt(resolvedParams.id);
-      if (!isNaN(listingId)) {
-        loadListing(listingId).catch(console.error);
-      }
-    });
-  }, [params, loadListing]);
+
 
   // Enable next button for this informational page
   React.useEffect(() => {
@@ -82,9 +73,9 @@ const FinishSetupPageContent = ({ params }: FinishSetupPageProps) => {
 
 const FinishSetupPage = ({ params }: FinishSetupPageProps) => {
   return (
-    <ListingProvider>
+  
       <FinishSetupPageContent params={params} />
-    </ListingProvider>
+  
   );
 };
 

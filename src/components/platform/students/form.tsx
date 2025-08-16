@@ -3,20 +3,21 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { createStudent, getStudent, updateStudent } from "@/components/platform/students/actions";
 import { studentCreateSchema } from "@/components/platform/students/validation";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
+import { Form } from "@/components/ui/form";
 import { useModal } from "@/components/atom/modal/context";
 import { useRouter } from "next/navigation";
+import { InformationStep } from "./information";
+import { EnrollmentStep } from "./enrollment";
+import { StudentFormFooter } from "./footer";
 
 export function StudentCreateForm() {
   const { modal, closeModal } = useModal();
   const router = useRouter();
+  const [currentStep, setCurrentStep] = useState(1);
   const form = useForm<z.infer<typeof studentCreateSchema>>({
     resolver: zodResolver(studentCreateSchema),
     defaultValues: {
@@ -66,128 +67,82 @@ export function StudentCreateForm() {
     }
   }
 
+  const handleNext = async () => {
+    if (currentStep === 1) {
+      const step1Fields = ['givenName', 'middleName', 'surname', 'dateOfBirth', 'gender'] as const;
+      const step1Valid = await form.trigger(step1Fields);
+      if (step1Valid) {
+        setCurrentStep(2);
+      }
+    } else if (currentStep === 2) {
+      await form.handleSubmit(onSubmit)();
+    }
+  };
+
+  const handleSaveCurrentStep = async () => {
+    if (currentId) {
+      // For editing, save current step data
+      const currentStepFields = currentStep === 1 
+        ? ['givenName', 'middleName', 'surname', 'dateOfBirth', 'gender'] as const
+        : ['enrollmentDate', 'userId'] as const;
+      
+      const stepValid = await form.trigger(currentStepFields);
+      if (stepValid) {
+        await form.handleSubmit(onSubmit)();
+      }
+    } else {
+      // For creating, just go to next step
+      await handleNext();
+    }
+  };
+
+  const handleBack = () => {
+    if (currentStep === 2) {
+      setCurrentStep(1);
+    } else {
+      closeModal();
+    }
+  };
+
+  const renderCurrentStep = () => {
+    switch (currentStep) {
+      case 1:
+        return <InformationStep form={form} isView={isView} />;
+      case 2:
+        return <EnrollmentStep form={form} isView={isView} />;
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className="flex h-full flex-col">
-      <div className="mb-4">
-        <h2 className="text-lg font-semibold">{isView ? "View Student" : currentId ? "Edit Student" : "Create Student"}</h2>
-        <p className="text-sm text-muted-foreground">{isView ? "View student details" : currentId ? "Update student details" : "Add a new student to your school"}</p>
-      </div>
       <Form {...form}>
-        <form className="grid gap-4" onSubmit={form.handleSubmit(onSubmit)}>
-          <FormField
-            control={form.control}
-            name="givenName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Given name</FormLabel>
-                <FormControl>
-                  <Input placeholder="Harry" disabled={isView} {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+        <form className="flex flex-col h-full" onSubmit={(e) => e.preventDefault()}>
+          <div className="flex-grow flex gap-6">
+            {/* Title Section */}
+            <div className="w-1/3">
+              <h2 className="text-2xl font-semibold">{isView ? "View Student" : currentId ? "Edit Student" : "Create Student"}</h2>
+              <p className="text-sm text-muted-foreground mt-2">{isView ? "View student details" : currentId ? "Update student details" : "Add a new student to your school"}</p>
+            </div>
 
-          <FormField
-            control={form.control}
-            name="middleName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Middle name</FormLabel>
-                <FormControl>
-                  <Input placeholder="James" disabled={isView} {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="surname"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Surname</FormLabel>
-                <FormControl>
-                  <Input placeholder="Potter" disabled={isView} {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="dateOfBirth"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Date of birth</FormLabel>
-                <FormControl>
-                  <Input type="date" placeholder="YYYY-MM-DD" disabled={isView} {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="gender"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Gender</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value} disabled={isView}>
-                  <FormControl>
-                    <SelectTrigger disabled={isView}>
-                      <SelectValue placeholder="Select gender" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="male">Male</SelectItem>
-                    <SelectItem value="female">Female</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="enrollmentDate"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Enrollment date</FormLabel>
-                <FormControl>
-                  <Input type="date" placeholder="YYYY-MM-DD" disabled={isView} {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="userId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>User ID (optional)</FormLabel>
-                <FormControl>
-                  <Input placeholder="Link to user account" disabled={isView} {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <div className="mt-2 flex items-center gap-2">
-            <Button type="button" variant="outline" onClick={closeModal}>
-              Cancel
-            </Button>
-            {!isView && (
-              <Button type="submit">{currentId ? "Save changes" : "Create"}</Button>
-            )}
+            {/* Form Content */}
+            <div className="flex-1">
+              <div className="overflow-y-auto">
+                {renderCurrentStep()}
+              </div>
+            </div>
           </div>
+
+          <StudentFormFooter 
+            currentStep={currentStep}
+            isView={isView}
+            currentId={currentId}
+            onBack={handleBack}
+            onNext={handleNext}
+            onSaveCurrentStep={handleSaveCurrentStep}
+            form={form}
+          />
         </form>
       </Form>
     </div>
@@ -195,4 +150,3 @@ export function StudentCreateForm() {
 }
 
 export default StudentCreateForm;
-

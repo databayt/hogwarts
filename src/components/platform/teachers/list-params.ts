@@ -6,7 +6,8 @@ export const teachersSearchParams = createSearchParamsCache({
   perPage: parseAsInteger.withDefault(20),
   // column filters (ids must match column ids)
   name: parseAsString.withDefault(''),
-  department: parseAsString.withDefault(''),
+  emailAddress: parseAsString.withDefault(''),
+  status: parseAsString.withDefault(''),
   sort: getSortingStateParser().withDefault([]),
 })
 

@@ -6,7 +6,9 @@ export const classesSearchParams = createSearchParamsCache({
   perPage: parseAsInteger.withDefault(20),
   // column filters (ids must match column ids)
   name: parseAsString.withDefault(''),
-  yearTerm: parseAsString.withDefault(''),
+  subjectId: parseAsString.withDefault(''),
+  teacherId: parseAsString.withDefault(''),
+  termId: parseAsString.withDefault(''),
   sort: getSortingStateParser().withDefault([]),
 })
 
