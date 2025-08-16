@@ -26,7 +26,6 @@ export function ResultCreateForm() {
       classId: "",
       score: 0,
       maxScore: 0,
-      percentage: 0,
       grade: "",
       feedback: "",
     },
@@ -47,7 +46,6 @@ export function ResultCreateForm() {
         classId: r.classId ?? "",
         score: r.score ?? 0,
         maxScore: r.maxScore ?? 0,
-        percentage: r.percentage ?? 0,
         grade: r.grade ?? "",
         feedback: r.feedback ?? "",
       });

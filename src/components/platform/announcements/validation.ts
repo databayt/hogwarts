@@ -3,10 +3,10 @@ import { z } from "zod"
 export const announcementBaseSchema = z.object({
   title: z.string().min(1, "Title is required"),
   body: z.string().min(1, "Body is required"),
-  scope: z.enum(["school", "class", "role"]).default("school"),
+  scope: z.enum(["school", "class", "role"]),
   classId: z.string().optional(),
   role: z.string().optional(),
-  published: z.boolean().default(false),
+  published: z.boolean(),
 }).superRefine((val, ctx) => {
   if (val.scope === "class" && !val.classId) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Class is required when scope is class", path: ["classId"] })

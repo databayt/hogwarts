@@ -5,12 +5,12 @@ import { db } from '@/lib/db'
 import type { Prisma } from '@prisma/client'
 import { getTenantContext } from '@/components/platform/operator/lib/tenant'
 import { revalidatePath } from 'next/cache'
-import { announcementSchema } from '@/components/platform/announcements/validation'
+import { announcementCreateSchema, announcementUpdateSchema } from '@/components/platform/announcements/validation'
 
-export async function createAnnouncement(input: z.infer<typeof announcementSchema>) {
+export async function createAnnouncement(input: z.infer<typeof announcementCreateSchema>) {
   const { schoolId } = await getTenantContext()
   if (!schoolId) throw new Error('Missing school context')
-  const parsed = announcementSchema.parse(input)
+  const parsed = announcementCreateSchema.parse(input)
   await db.announcement.create(
     { data: { schoolId, title: parsed.title, body: parsed.body, scope: parsed.scope as unknown as Prisma.AnnouncementCreateInput["scope"], classId: parsed.classId ?? null, role: parsed.role ?? null } } as unknown as Prisma.AnnouncementCreateArgs
   )
@@ -37,10 +37,10 @@ export async function deleteAnnouncement(input: { id: string }) {
   return { success: true as const }
 }
 
-export async function updateAnnouncement(input: Partial<z.infer<typeof announcementSchema>> & { id: string }) {
+export async function updateAnnouncement(input: Partial<z.infer<typeof announcementUpdateSchema>> & { id: string }) {
   const { schoolId } = await getTenantContext()
   if (!schoolId) throw new Error('Missing school context')
-  const base = announcementSchema.partial()
+  const base = announcementUpdateSchema.partial()
   const schema = base.extend({ id: z.string().min(1) }).superRefine((val, ctx) => {
     if (val.scope === 'class' && !val.classId) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['classId'], message: 'classId required for class scope' })
     if (val.scope === 'role' && !val.role) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['role'], message: 'role required for role scope' })

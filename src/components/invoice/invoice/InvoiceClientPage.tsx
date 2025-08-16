@@ -4,7 +4,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { DataTable } from "@/components/table/data-table/data-table";
 import { cn } from "@/lib/utils";
 import { getInvoices, sendInvoiceEmail } from "@/components/invoice/actions";
-import { toast } from "sonner";
+import { ErrorToast, SuccessToast } from "@/components/atom/toast";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { Invoice } from "@/components/invoice/types";
@@ -43,10 +43,10 @@ export default function InvoiceClientPage({ userId, currency = "USD" }: IInvoice
       if (response.success) {
         setData(response.data || []);
       } else {
-        toast.error(response.error || "Something went wrong");
+        ErrorToast(response.error || "Something went wrong");
       }
     } catch (error) {
-      toast.error("Failed to fetch invoices");
+      ErrorToast("Failed to fetch invoices");
     } finally {
       setIsLoading(false);
     }
@@ -67,12 +67,11 @@ export default function InvoiceClientPage({ userId, currency = "USD" }: IInvoice
 
   const handleSendEmail = async (invoiceId: string, subject: string) => {
     try {
-      toast.loading("Please wait...");
       const response = await sendInvoiceEmail(invoiceId, subject);
-      if (response.success) toast.success(response.message);
-      else toast.error(response.error);
+      if (response.success) SuccessToast();
+      else ErrorToast(response.error);
     } catch (error) {
-      toast.error("Failed to send email");
+      ErrorToast("Failed to send email");
     }
   };
 
@@ -117,15 +116,18 @@ export default function InvoiceClientPage({ userId, currency = "USD" }: IInvoice
 
   return (
     <div className="p-4">
+      
       <div className="flex items-center justify-between gap-4 mb-4">
         <h1 className="text-xl font-semibold">Invoice</h1>
-        <button
-          type="button"
-          onClick={() => openModal()}
-          className={cn(buttonVariants(), "cursor-pointer")}
-        >
-          Create Invoice
-        </button>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => openModal()}
+            className={cn(buttonVariants(), "cursor-pointer")}
+          >
+            Create Invoice
+          </button>
+        </div>
       </div>
 
       {isLoading ? <Loading /> : <DataTable table={table} />}

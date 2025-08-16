@@ -65,14 +65,14 @@ function Modal({ content, sm = false }: Props) {
                   : 'w-full h-screen overflow-hidden px-20 py-4 sm:pt-14'
               }`}
             >
-              <Button 
+              {/* <Button 
                 size='icon' 
                 variant='outline' 
                 className="rounded-full absolute top-4 right-4 z-10"
                 onClick={closeModal}
               >
                 <X className="h-5 w-5" />
-              </Button>
+              </Button> */}
               {content}
             </div>
           </div>

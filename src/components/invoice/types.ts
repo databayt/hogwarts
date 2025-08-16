@@ -36,4 +36,15 @@ export interface Invoice {
   updatedAt: Date;
 }
 
+export type InvoiceRow = {
+  id: string;
+  invoice_no: string;
+  client_name: string;
+  total: number;
+  currency: string;
+  status: Status;
+  due_date: string;
+  createdAt: string;
+};
+
 

@@ -36,7 +36,7 @@ export async function createStudent(input: z.infer<typeof studentCreateSchema>) 
       givenName: parsed.givenName,
       middleName: parsed.middleName ?? null,
       surname: parsed.surname,
-      dateOfBirth: new Date(parsed.dateOfBirth),
+      ...(parsed.dateOfBirth ? { dateOfBirth: new Date(parsed.dateOfBirth) } : {}),
       gender: parsed.gender,
       ...(parsed.enrollmentDate ? { enrollmentDate: new Date(parsed.enrollmentDate) } : {}),
       userId: normalizedUserId,

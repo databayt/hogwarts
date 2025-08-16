@@ -11,6 +11,8 @@ import { DeleteToast, ErrorToast, confirmDeleteDialog } from "@/components/atom/
 import { Badge } from "@/components/ui/badge";
 import { ExamRow } from "./types";
 
+export type { ExamRow };
+
 const getStatusBadge = (status: string) => {
   const variants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
     PLANNED: "default",

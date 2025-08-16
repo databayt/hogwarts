@@ -7,6 +7,89 @@ import { Status } from "@prisma/client"
 import { resend } from "@/components/invoice/email.config"
 import { SendInvoiceEmail } from "@/components/invoice/SendInvoiceEmail"
 import { format } from "date-fns"
+import { InvoiceSchemaZod } from "./validation"
+import { z } from "zod"
+
+// Test function to check database connection and auth
+export async function testInvoiceConnection() {
+  try {
+    const session = await auth()
+    
+    if (!session?.user?.id) {
+      return { success: false, error: "No active session" }
+    }
+    
+    const user = await db.user.findUnique({
+      where: { id: session.user.id },
+      select: { id: true, email: true, schoolId: true }
+    })
+    
+    if (!user) {
+      return { success: false, error: "User not found in database" }
+    }
+    
+    const schools = await db.school.findMany({
+      select: { id: true, name: true }
+    })
+    
+    return {
+      success: true,
+      data: {
+        userId: user.id,
+        userEmail: user.email,
+        userSchoolId: user.schoolId,
+        availableSchools: schools,
+        sessionActive: true
+      }
+    }
+  } catch (error) {
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : "Database connection failed" 
+    }
+  }
+}
+
+// Function to associate user with a school by name
+export async function associateUserWithSchool(schoolName: string) {
+  try {
+    const session = await auth()
+    
+    if (!session?.user?.id) {
+      return { success: false, error: "No active session" }
+    }
+    
+    const school = await db.school.findFirst({
+      where: {
+        name: {
+          contains: schoolName,
+          mode: 'insensitive'
+        }
+      },
+      select: { id: true, name: true }
+    })
+    
+    if (!school) {
+      return { success: false, error: `School not found with name containing: ${schoolName}` }
+    }
+    
+    await db.user.update({
+      where: { id: session.user.id },
+      data: { schoolId: school.id }
+    })
+    
+    return { 
+      success: true, 
+      message: `Successfully associated with school: ${school.name}`,
+      schoolId: school.id 
+    }
+  } catch (error) {
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : "Failed to associate with school" 
+    }
+  }
+}
 
 // Invoice CRUD
 interface AddressData { name: string; email?: string; address1: string; address2?: string; address3?: string }
@@ -27,44 +110,254 @@ interface InvoiceFormData {
   status?: Status
 }
 
-export async function createInvoice(data: InvoiceFormData) {
+// Generate unique invoice number for a school
+// Format: I + 2-digit year + 3-digit sequence (e.g., I25001, I25002, etc.)
+async function generateUniqueInvoiceNumber(schoolId: string, prefix: string = "I"): Promise<string> {
+  const currentYear = new Date().getFullYear()
+  const yearPrefix = currentYear.toString().slice(-2) // Last 2 digits of year
+  
+  // Find the highest invoice number for this school and year
+  const latestInvoice = await db.userInvoice.findFirst({
+    where: {
+      schoolId: schoolId,
+      invoice_no: {
+        startsWith: `${prefix}${yearPrefix}`
+      }
+    },
+    orderBy: {
+      invoice_no: 'desc'
+      }
+    })
+
+  if (!latestInvoice) {
+    // First invoice for this school and year
+    return `${prefix}${yearPrefix}001`
+  }
+
+  // Extract the numeric part and increment
+  const numericPart = latestInvoice.invoice_no.replace(`${prefix}${yearPrefix}`, '')
+  const nextNumber = parseInt(numericPart, 10) + 1
+  
+  // Format with leading zeros (e.g., 001, 002, etc.) - reduced from 4 to 3 digits
+  return `${prefix}${yearPrefix}${nextNumber.toString().padStart(3, '0')}`
+}
+
+export async function createInvoice(data: z.infer<typeof InvoiceSchemaZod>) {
   try {
     const session = await auth()
-    const userId = session?.user?.id
-    const schoolId = session?.user?.schoolId
-    if (!userId || !schoolId) throw new Error("Unauthorized")
+    
+    if (!session?.user?.id) {
+      throw new Error("Unauthorized")
+    }
+    
+    const userId = session.user.id
+    const schoolId = session.user.schoolId
+    
+    if (!userId || !schoolId) {
+      throw new Error("Unauthorized - Missing userId or schoolId")
+    }
+    
+    const user = await db.user.findUnique({
+      where: { id: userId },
+      select: { id: true, email: true, schoolId: true }
+    })
+    
+    if (!user) {
+      throw new Error("User not found")
+    }
+    
+    if (!user.schoolId) {
+      throw new Error("User not associated with any school. Please complete the school onboarding process first.")
+    }
 
-    const [fromAddress, toAddress] = await Promise.all([
-      db.userInvoiceAddress.create({ data: { ...data.from, schoolId } }),
-      db.userInvoiceAddress.create({ data: { ...data.to, schoolId } })
-    ])
+    // Check if invoice number already exists for this school
+    const existingInvoice = await db.userInvoice.findFirst({
+      where: {
+        schoolId: schoolId,
+        invoice_no: data.invoice_no
+      }
+    })
 
+    if (existingInvoice) {
+      throw new Error(`Invoice number "${data.invoice_no}" already exists. Please use a different invoice number.`)
+    }
+    
+    // Create addresses first
+    const fromAddress = await db.userInvoiceAddress.create({
+      data: {
+        name: data.from.name,
+        email: data.from.email,
+        address1: data.from.address1,
+        address2: data.from.address2 || "",
+        address3: data.from.address3 || "",
+        schoolId: schoolId,
+      },
+    })
+    
+    const toAddress = await db.userInvoiceAddress.create({
+      data: {
+        name: data.to.name,
+        email: data.to.email,
+        address1: data.to.address1,
+        address2: data.to.address2 || "",
+        address3: data.to.address3 || "",
+        schoolId: schoolId,
+      },
+    })
+    
+    // Create invoice
     const invoice = await db.userInvoice.create({
       data: {
         invoice_no: data.invoice_no,
         invoice_date: data.invoice_date,
         due_date: data.due_date,
-        currency: data.currency || "USD",
+        currency: data.currency,
         fromAddressId: fromAddress.id,
         toAddressId: toAddress.id,
         sub_total: data.sub_total,
         discount: data.discount,
         tax_percentage: data.tax_percentage,
         total: data.total,
-        notes: data.notes,
-        status: data.status || "UNPAID",
-        userId,
-        schoolId,
-        items: { create: data.items.map((it) => ({ ...it, schoolId })) }
+        notes: data.notes || "",
+        status: data.status,
+        userId: userId,
+        schoolId: schoolId,
+        items: {
+          create: data.items.map((item) => ({
+            item_name: item.item_name,
+            quantity: item.quantity,
+            price: item.price,
+            total: item.total,
+            schoolId: schoolId,
+          })),
+        },
       },
-      include: { items: true, from: true, to: true }
+      include: {
+        items: true,
+        from: true,
+        to: true,
+      },
     })
-
-    revalidatePath("/invoice")
+    
     return { success: true, data: invoice }
   } catch (error) {
-    console.error(error)
-    return { success: false, error: "Failed to create invoice" }
+    return { success: false, error: error instanceof Error ? error.message : "Failed to create invoice" }
+  }
+}
+
+// Get next available invoice number for a school
+export async function getNextInvoiceNumber() {
+  try {
+    const session = await auth()
+    
+    if (!session?.user?.id) {
+      throw new Error("Unauthorized")
+    }
+    
+    const schoolId = session.user.schoolId
+    
+    if (!schoolId) {
+      throw new Error("User not associated with any school")
+    }
+
+    const nextNumber = await generateUniqueInvoiceNumber(schoolId)
+    return { success: true, data: nextNumber }
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error.message : "Failed to get next invoice number" }
+  }
+}
+
+// Create invoice with auto-generated invoice number
+export async function createInvoiceWithAutoNumber(data: Omit<z.infer<typeof InvoiceSchemaZod>, 'invoice_no'>) {
+  try {
+    const session = await auth()
+    
+    if (!session?.user?.id) {
+      throw new Error("Unauthorized")
+    }
+    
+    const userId = session.user.id
+    const schoolId = session.user.schoolId
+    
+    if (!userId || !schoolId) {
+      throw new Error("Unauthorized - Missing userId or schoolId")
+    }
+    
+    const user = await db.user.findUnique({
+      where: { id: userId },
+      select: { id: true, email: true, schoolId: true }
+    })
+    
+    if (!user) {
+      throw new Error("User not found")
+    }
+    
+    if (!user.schoolId) {
+      throw new Error("User not associated with any school. Please complete the school onboarding process first.")
+    }
+
+    // Generate unique invoice number
+    const autoInvoiceNo = await generateUniqueInvoiceNumber(schoolId)
+    
+    // Create addresses first
+    const fromAddress = await db.userInvoiceAddress.create({
+      data: {
+        name: data.from.name,
+        email: data.from.email,
+        address1: data.from.address1,
+        address2: data.from.address2 || "",
+        address3: data.from.address3 || "",
+        schoolId: schoolId,
+      },
+    })
+    
+    const toAddress = await db.userInvoiceAddress.create({
+      data: {
+        name: data.to.name,
+        email: data.to.email,
+        address1: data.to.address1,
+        address2: data.to.address2 || "",
+        address3: data.to.address3 || "",
+        schoolId: schoolId,
+      },
+    })
+    
+    // Create invoice with auto-generated number
+    const invoice = await db.userInvoice.create({
+      data: {
+        invoice_no: autoInvoiceNo,
+        invoice_date: data.invoice_date,
+        due_date: data.due_date,
+        currency: data.currency,
+        fromAddressId: fromAddress.id,
+        toAddressId: toAddress.id,
+        sub_total: data.sub_total,
+        discount: data.discount,
+        total: data.total,
+        notes: data.notes || "",
+        status: data.status,
+        userId: userId,
+        schoolId: schoolId,
+        items: {
+          create: data.items.map((item) => ({
+            item_name: item.item_name,
+            quantity: item.quantity,
+            price: item.price,
+            total: item.total,
+            schoolId: schoolId,
+          })),
+        },
+      },
+      include: {
+        items: true,
+        from: true,
+        to: true,
+      },
+    })
+    
+    return { success: true, data: invoice }
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error.message : "Failed to create invoice" }
   }
 }
 
@@ -134,6 +427,62 @@ export async function getInvoices(page: number = 1, limit: number = 5) {
   } catch (error) {
     console.error(error)
     return { success: false, error: "Failed to fetch invoices" }
+  }
+}
+
+export async function getInvoicesWithFilters(searchParams: any) {
+  try {
+    const session = await auth()
+    const userId = session?.user?.id
+    const schoolId = session?.user?.schoolId
+    if (!userId || !schoolId) throw new Error("Unauthorized")
+
+    const { page = 1, perPage = 20, invoice_no = '', status = '', client_name = '', sort = [] } = searchParams
+
+    const where: any = {
+      userId,
+      schoolId,
+      ...(invoice_no ? { invoice_no: { contains: invoice_no, mode: 'insensitive' } } : {}),
+      ...(status ? { status: status as any } : {}),
+      ...(client_name ? { 
+        to: { 
+          name: { contains: client_name, mode: 'insensitive' } 
+        } 
+      } : {}),
+    }
+
+    const skip = (page - 1) * perPage
+    const take = perPage
+    const orderBy = (sort && Array.isArray(sort) && sort.length)
+      ? sort.map((s: any) => ({ [s.id]: s.desc ? 'desc' : 'asc' }))
+      : [{ createdAt: 'desc' as const }]
+
+    const [invoices, total] = await Promise.all([
+      db.userInvoice.findMany({
+        where,
+        include: { to: true },
+        orderBy,
+        skip,
+        take,
+      }),
+      db.userInvoice.count({ where })
+    ])
+
+    const data = invoices.map((invoice: any) => ({
+      id: invoice.id,
+      invoice_no: invoice.invoice_no,
+      client_name: invoice.to.name,
+      total: invoice.total,
+      currency: invoice.currency,
+      status: invoice.status,
+      due_date: invoice.due_date.toISOString(),
+      createdAt: invoice.createdAt.toISOString(),
+    }))
+
+    return { success: true, data, total }
+  } catch (error) {
+    console.error(error)
+    return { success: false, error: "Failed to fetch invoices", data: [], total: 0 }
   }
 }
 
@@ -325,6 +674,35 @@ export async function getDashboardStats() {
   } catch (error) {
     console.error(error)
     return { success: false, error: "Failed to fetch dashboard stats" }
+  }
+}
+
+// Delete invoice
+export async function deleteInvoice({ id }: { id: string }) {
+  try {
+    const session = await auth()
+    if (!session?.user?.id || !session.user.schoolId) {
+      throw new Error("Unauthorized")
+    }
+
+    const invoice = await db.userInvoice.findFirst({
+      where: { id, userId: session.user.id, schoolId: session.user.schoolId }
+    })
+
+    if (!invoice) {
+      throw new Error("Invoice not found")
+    }
+
+    // Delete the invoice (cascade will delete related items and addresses)
+    await db.userInvoice.delete({
+      where: { id }
+    })
+
+    revalidatePath('/invoice')
+    return { success: true }
+  } catch (error) {
+    console.error(error)
+    throw new Error(error instanceof Error ? error.message : "Failed to delete invoice")
   }
 }
 

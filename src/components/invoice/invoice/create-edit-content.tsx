@@ -1,6 +1,6 @@
 "use client";
 
-import CreateEditInvoice from "@/components/invoice/form";
+import { InvoiceCreateForm } from "@/components/invoice/form";
 
 interface CreateEditInvoiceModalContentProps {
   invoiceId?: string;
@@ -17,8 +17,8 @@ export default function CreateEditInvoiceModalContent({
   defaults,
 }: CreateEditInvoiceModalContentProps) {
   return (
-    <div className="p-2 sm:p-4">
-      <CreateEditInvoice
+    <div className="p-2 sm:p-4 h-full">
+      <InvoiceCreateForm
         invoiceId={invoiceId}
         firstName={defaults?.firstName || undefined}
         lastName={defaults?.lastName || undefined}

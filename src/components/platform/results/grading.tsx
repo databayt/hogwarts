@@ -18,10 +18,7 @@ export function GradingStep({ form, isView }: ResultFormStepProps) {
 
   // Auto-calculate percentage when score or maxScore changes
   useEffect(() => {
-    if (score !== undefined && maxScore !== undefined && maxScore > 0) {
-      const percentage = (score / maxScore) * 100;
-      form.setValue("percentage", percentage);
-    }
+    // Percentage is calculated on-the-fly, no need to store it
   }, [score, maxScore, form]);
 
   return (
@@ -72,28 +69,7 @@ export function GradingStep({ form, isView }: ResultFormStepProps) {
         />
       </div>
 
-      <FormField
-        control={form.control}
-        name="percentage"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Percentage</FormLabel>
-            <FormControl>
-              <Input 
-                type="number" 
-                step="0.01" 
-                min="0" 
-                max="100" 
-                placeholder="0.00%" 
-                disabled={true} 
-                {...field}
-                value={field.value ? `${field.value.toFixed(2)}%` : "0.00%"}
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+      {/* Percentage is calculated on-the-fly: {(score / maxScore) * 100}% */}
 
       <FormField
         control={form.control}

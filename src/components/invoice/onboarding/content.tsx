@@ -12,6 +12,7 @@ import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
+import { ErrorToast, SuccessToast } from "@/components/atom/toast"
 
 export function OnboardingContent() {
   const { register, handleSubmit, formState: { errors } } = useForm<z.infer<typeof onboardingSchema>>({
@@ -26,7 +27,14 @@ export function OnboardingContent() {
       setIsLoading(true)
       const res = await import("@/components/invoice/actions")
       const response = await res.updateUser(data)
-      if (response.success) router.push("/dashboard")
+      if (response.success) {
+        SuccessToast()
+        router.push("/dashboard")
+      } else {
+        ErrorToast(response.error || "Failed to update profile")
+      }
+    } catch (error) {
+      ErrorToast("Something went wrong")
     } finally {
       setIsLoading(false)
     }
@@ -47,12 +55,10 @@ export function OnboardingContent() {
             <div className="grid gap-2">
               <Label>First Name</Label>
               <Input placeholder="Joe" type="text" {...register("firstName", { required: true })} disabled={isLoading} />
-              {errors.firstName && <p className="text-xs text-red-500">{errors.firstName.message}</p>}
             </div>
             <div className="grid gap-2">
               <Label>Last Name</Label>
               <Input placeholder="Due" type="text" {...register("lastName", { required: true })} disabled={isLoading} />
-              {errors.lastName && <p className="text-xs text-red-500">{errors.lastName.message}</p>}
             </div>
             <div className="grid gap-2">
               <Label>Select Currency</Label>

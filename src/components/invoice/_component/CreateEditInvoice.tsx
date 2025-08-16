@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
+import { ErrorToast, SuccessToast } from "@/components/atom/toast";
 
 import { InvoiceSchemaZod } from "@/lib/zodSchema";
 import { Button } from "@/components/ui/button";
@@ -110,12 +110,12 @@ export default function CreateEditInvoice({
         } as const;
         
         reset(formData);
-      } else {
-        toast.error(response.error || "Failed to fetch invoice data");
-      }
-    } catch (error) {
-      toast.error("Failed to fetch invoice data");
-    } finally {
+              } else {
+          ErrorToast(response.error || "Failed to fetch invoice data");
+        }
+      } catch (error) {
+        ErrorToast("Failed to fetch invoice data");
+      } finally {
       setIsLoading(false);
     }
   };
@@ -172,14 +172,14 @@ export default function CreateEditInvoice({
         : await updateInvoice(invoiceId, data);
 
       if (response.success) {
-        toast.success(invoiceId ? "Invoice updated successfully" : "Invoice created successfully");
+        SuccessToast();
         router.push("/invoice");
       } else {
-        toast.error(response.error || "Something went wrong");
+        ErrorToast(response.error || "Something went wrong");
       }
     } catch (error) {
       console.error(error);
-      toast.error("Failed to process invoice");
+      ErrorToast("Failed to process invoice");
     } finally {
       setIsLoading(false);
     }

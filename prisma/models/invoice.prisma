@@ -31,7 +31,8 @@ model UserInvoice {
 enum Status {
   PAID
   UNPAID
-  CANCEL
+  OVERDUE
+  CANCELLED
 }
 
 model UserInvoiceItem {

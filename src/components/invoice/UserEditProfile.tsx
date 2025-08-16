@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { onboardingSchema } from "@/components/invoice/validation"
 import { currencyOption } from "@/lib/utils"
-import { toast } from "sonner"
+import { ErrorToast, SuccessToast } from "@/components/atom/toast"
 
 interface UserEditProfileProps {
   firstName?: string
@@ -37,12 +37,12 @@ export default function UserEditProfile({ firstName, lastName, currency, email }
       const mod = await import("@/components/invoice/actions")
       const res = await mod.updateUser(data)
       if (res.success) {
-        toast.success("Profile updated")
+        SuccessToast()
       } else {
-        toast.error(res.error || "Failed to update profile")
+        ErrorToast(res.error || "Failed to update profile")
       }
     } catch (error) {
-      toast.error("Something went wrong")
+      ErrorToast("Something went wrong")
     } finally {
       setIsLoading(false)
     }
@@ -57,12 +57,10 @@ export default function UserEditProfile({ firstName, lastName, currency, email }
       <div className="grid gap-2">
         <Label>First Name</Label>
         <Input placeholder="Joe" type="text" disabled={isLoading} {...register("firstName", { required: true })} />
-        {errors.firstName && <p className="text-xs text-red-500">{errors.firstName.message}</p>}
       </div>
       <div className="grid gap-2">
         <Label>Last Name</Label>
         <Input placeholder="Doe" type="text" disabled={isLoading} {...register("lastName", { required: true })} />
-        {errors.lastName && <p className="text-xs text-red-500">{errors.lastName.message}</p>}
       </div>
       <div className="grid gap-2">
         <Label>Currency</Label>
