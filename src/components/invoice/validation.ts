@@ -40,11 +40,11 @@ export const InvoiceSchemaZod = z.object({
     })
   ).min(1, { message: "At least one item is required" }),
   sub_total: z.number().min(0, { message: "Sub total can't be negative" }),
-  discount: z.number().min(0, { message: "Discount can't be negative" }),
-  tax_percentage: z.number().min(0, { message: "Tax percentage can't be negative" }),
+  discount: z.number().min(0, { message: "Discount can't be negative" }).optional(),
+  tax_percentage: z.number().min(0, { message: "Tax percentage can't be negative" }).optional(),
   total: z.number().min(0, { message: "Total is required" }),
   notes: z.string().optional(),
-  status: z.enum(["UNPAID", "PAID", "OVERDUE", "CANCELLED"]),
+  status: z.enum(["UNPAID", "PAID", "OVERDUE", "CANCELLED"]).optional(),
 })
 
 

@@ -51,8 +51,8 @@ export default function CreateEditInvoice({
       due_date: new Date(),
       currency: currency || "USD",
       from: {
-        name: `${firstName} ${lastName}`,
-        email: email as string,
+        name: `${firstName || ""} ${lastName || ""}`.trim() || "Your Name",
+        email: email || "",
         address1: "",
         address2: "",
         address3: "",
@@ -77,7 +77,7 @@ export default function CreateEditInvoice({
       discount: 0,
       total: 0,
       notes: "",
-      status: "UNPAID" as const,
+      status: "UNPAID",
     },
   });
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -95,20 +95,20 @@ export default function CreateEditInvoice({
           invoice_no: rest.invoice_no,
           invoice_date: new Date(rest.invoice_date),
           due_date: new Date(rest.due_date),
-          currency: rest.currency || undefined,
+          currency: rest.currency || "USD",
           from: {
             name: from.name,
-            email: from.email || undefined,
+            email: from.email || "",
             address1: from.address1,
-            address2: from.address2 || undefined,
-            address3: from.address3 || undefined,
+            address2: from.address2 || "",
+            address3: from.address3 || "",
           },
           to: {
             name: to.name,
-            email: to.email || undefined,
+            email: to.email || "",
             address1: to.address1,
-            address2: to.address2 || undefined,
-            address3: to.address3 || undefined,
+            address2: to.address2 || "",
+            address3: to.address3 || "",
           },
           items: items.map(item => ({
             item_name: item.item_name,
@@ -117,12 +117,12 @@ export default function CreateEditInvoice({
             total: item.total,
           })),
           sub_total: rest.sub_total,
-          discount: rest.discount || undefined,
-          tax_percentage: rest.tax_percentage || undefined,
+          discount: rest.discount || 0,
+          tax_percentage: rest.tax_percentage || 0,
           total: rest.total,
-          notes: rest.notes || undefined,
-          status: rest.status,
-        } as const;
+          notes: rest.notes || "",
+          status: rest.status || "UNPAID",
+        };
         
         reset(formData);
               } else {
@@ -204,7 +204,7 @@ export default function CreateEditInvoice({
   const discount = watch("discount") || 0;
   const sub_totalRemoveDiscount = sub_total - discount;
   const taxAmount =
-    (sub_totalRemoveDiscount * watch("tax_percentage")) / 100 || 0;
+    (sub_totalRemoveDiscount * (watch("tax_percentage") || 0)) / 100 || 0;
   const totalAmount = sub_totalRemoveDiscount - taxAmount;
 
   useEffect(() => {
