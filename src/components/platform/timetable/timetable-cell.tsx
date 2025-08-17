@@ -4,18 +4,7 @@ import { useState } from "react"
 import { cn } from "@/lib/utils"
 import { TeacherInfoPopup } from "./teacher-info-popup"
 import { SubjectSelector } from "./subject-selector"
-
-const COLORS = [
-  'bg-red-100 hover:bg-red-200 dark:bg-red-900/50 dark:hover:bg-red-900/70',
-  'bg-orange-100 hover:bg-orange-200 dark:bg-orange-900/50 dark:hover:bg-orange-900/70',
-  'bg-yellow-100 hover:bg-yellow-200 dark:bg-yellow-900/50 dark:hover:bg-yellow-900/70', 
-  'bg-green-100 hover:bg-green-200 dark:bg-green-900/50 dark:hover:bg-green-900/70',
-  'bg-blue-100 hover:bg-blue-200 dark:bg-blue-900/50 dark:hover:bg-blue-900/70'
-]
-
-function getSubjectColor(subject: string) {
-  return COLORS[subject.charCodeAt(0) % COLORS.length];
-}
+import { getSubjectCategoryColor } from "@/components/profile/subject-colors"
 
 interface TimetableCellProps {
   subject: string
@@ -83,7 +72,7 @@ export function TimetableCell({
       <div className={cn(
         "py-1 px-2 flex flex-col items-center justify-center transition-all duration-200 border-t border-neutral-200 dark:border-neutral-700",
         index < 4 ? 'border-r' : '',
-        getSubjectColor(subject),
+        getSubjectCategoryColor(subject, true),
         "cursor-pointer",
         "print:hover:bg-white print:py-4",
         onSubjectChange ? "hover:opacity-80" : ""

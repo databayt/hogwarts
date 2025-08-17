@@ -1,6 +1,8 @@
 "use client";
 
 import { useSidebar } from "@/components/ui/sidebar";
+import { getSubjectCategoryColor } from "./subject-colors";
+import { cn } from "@/lib/utils";
 
 interface TeacherDashboardProps {
   data: any
@@ -23,16 +25,25 @@ export default function TeacherDashboard({ data }: TeacherDashboardProps) {
         <div className=" rounded-lg p-4">
           <h4 className="font-semibold text-[#39d353] mb-2">Classes Today</h4>
           <div className="space-y-2 text-sm">
-            <div className="flex justify-between">
-              <span>Math - Grade 10</span>
+            <div className={cn(
+              "flex justify-between p-2 rounded-md transition-all duration-200",
+              getSubjectCategoryColor("Mathematics", true)
+            )}>
+              <span className="font-medium">Math - Grade 10</span>
               <span className="text-[#1f6feb]">9:00 AM</span>
             </div>
-            <div className="flex justify-between">
-              <span>Math - Grade 12</span>
+            <div className={cn(
+              "flex justify-between p-2 rounded-md transition-all duration-200",
+              getSubjectCategoryColor("Mathematics", true)
+            )}>
+              <span className="font-medium">Math - Grade 12</span>
               <span className="text-[#1f6feb]">11:00 AM</span>
             </div>
-            <div className="flex justify-between">
-              <span>Advanced Math</span>
+            <div className={cn(
+              "flex justify-between p-2 rounded-md transition-all duration-200",
+              getSubjectCategoryColor("Mathematics", true)
+            )}>
+              <span className="font-medium">Advanced Math</span>
               <span className="text-[#1f6feb]">2:00 PM</span>
             </div>
           </div>
@@ -48,6 +59,67 @@ export default function TeacherDashboard({ data }: TeacherDashboardProps) {
           <h4 className="font-semibold text-[#a259ff] mb-2">Students</h4>
           <div className="text-2xl font-bold text-[#39d353]">127</div>
           <div className="text-sm text-muted-foreground">Total Enrolled</div>
+        </div>
+      </div>
+
+      {/* Teaching Schedule Section */}
+      <div className="mt-6 rounded-lg p-4">
+        <h4 className="font-semibold text-lg mb-4">Teaching Schedule</h4>
+        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+          <div className={cn(
+            "p-3 rounded-lg transition-all duration-200",
+            getSubjectCategoryColor("Mathematics", true)
+          )}>
+            <div className="font-medium">Mathematics</div>
+            <div className="text-sm text-muted-foreground">3 Classes • 45 Students</div>
+          </div>
+          <div className={cn(
+            "p-3 rounded-lg transition-all duration-200",
+            getSubjectCategoryColor("Physics", true)
+          )}>
+            <div className="font-medium">Physics</div>
+            <div className="text-sm text-muted-foreground">2 Classes • 32 Students</div>
+          </div>
+          <div className={cn(
+            "p-3 rounded-lg transition-all duration-200",
+            getSubjectCategoryColor("Computer Science", true)
+          )}>
+            <div className="font-medium">Computer Science</div>
+            <div className="text-sm text-muted-foreground">1 Class • 28 Students</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Recent Assignments Section */}
+      <div className="mt-6 rounded-lg p-4">
+        <h4 className="font-semibold text-lg mb-4">Recent Assignments</h4>
+        <div className="space-y-3">
+          <div className={cn(
+            "flex justify-between items-center p-3 rounded-lg transition-all duration-200",
+            getSubjectCategoryColor("Mathematics", true)
+          )}>
+            <div>
+              <div className="font-medium">Calculus Quiz</div>
+              <div className="text-sm text-muted-foreground">Grade 12 • Due: Dec 22</div>
+            </div>
+            <div className="text-right">
+              <div className="text-sm text-muted-foreground">15/23 Graded</div>
+              <div className="text-xs text-muted-foreground">65% Complete</div>
+            </div>
+          </div>
+          <div className={cn(
+            "flex justify-between items-center p-3 rounded-lg transition-all duration-200",
+            getSubjectCategoryColor("Physics", true)
+          )}>
+            <div>
+              <div className="font-medium">Mechanics Lab Report</div>
+              <div className="text-sm text-muted-foreground">Grade 11 • Due: Dec 20</div>
+            </div>
+            <div className="text-right">
+              <div className="text-sm text-muted-foreground">8/18 Graded</div>
+              <div className="text-xs text-muted-foreground">44% Complete</div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
