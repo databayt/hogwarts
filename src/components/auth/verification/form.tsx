@@ -67,7 +67,7 @@ export const NewVerificationForm = ({
             </div>
 
             <div className="text-center text-sm">
-              <Link href="/auth/login" className="hover:underline underline-offset-4">
+              <Link href="/login" className="hover:underline underline-offset-4">
                 Back to login
               </Link>
             </div>
