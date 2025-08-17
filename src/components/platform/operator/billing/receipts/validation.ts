@@ -26,3 +26,4 @@ export type GetReceiptsSearch = Awaited<ReturnType<typeof receiptsSearchParams.p
 
 
 
+
