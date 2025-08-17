@@ -59,7 +59,7 @@ export const RegisterForm = ({
 
   return (
     <div className={cn("flex flex-col gap-6 min-w-[200px] md:min-w-[350px]", className)} {...props}>
-      <Card className="border-none shadow-none">
+      <Card className="border-none shadow-none bg-background">
         <CardHeader className="text-center" />
         <CardContent>
           <Suspense fallback={<div className="h-10" />}> 

@@ -60,7 +60,7 @@ export const NewPasswordForm = ({
 
   return (
     <div className={cn("flex flex-col gap-6 min-w-[200px] md:min-w-[350px]", className)} {...props}>
-      <Card className="border-none shadow-none">
+      <Card className="border-none shadow-none bg-background">
         <CardHeader className="text-center">
           <h1 className="text-xl font-semibold">Enter a new password</h1>
         </CardHeader>
