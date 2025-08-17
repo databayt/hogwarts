@@ -13,6 +13,13 @@ export const publicRoutes = [
   "/features",
   "/pricing",
   "/blog",
+  "/login",
+  "/join",
+  "/error",
+  "/reset",
+  "/new-password",
+  "/new-verification",
+  "/reset"
   
 ];
 
