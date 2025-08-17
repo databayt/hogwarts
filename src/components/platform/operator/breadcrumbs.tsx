@@ -17,7 +17,7 @@ export function Breadcrumbs() {
 
   return (
     <Breadcrumb>
-      <BreadcrumbList className="items-center h-7">
+      <BreadcrumbList className="flex items-center justify-center">
         {items.map((item, index) => (
           <Fragment key={item.title}>
             {index !== items.length - 1 && (
