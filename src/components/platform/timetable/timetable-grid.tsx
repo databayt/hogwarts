@@ -15,6 +15,9 @@ interface TimetableGridProps {
   timetableData: any // Replace with proper type
   onTeacherInfoSave: (subject: string, info: string) => void
   getTeacherInfo: (subject: string) => string | undefined
+  onSubjectChange?: (dayIndex: number, periodIdx: number, newSubject: string) => void
+  showAllSubjects?: boolean
+  availableSubjects?: string[]
 }
 
 export function TimetableGrid({
@@ -22,6 +25,9 @@ export function TimetableGrid({
   timetableData,
   onTeacherInfoSave,
   getTeacherInfo,
+  onSubjectChange,
+  showAllSubjects = false,
+  availableSubjects = []
 }: TimetableGridProps) {
   const days: number[] | undefined = timetableData?.days
   const labels = days && days.length > 0 ? days.map((d: number) => DAY_LABELS[d] ?? String(d)) : DAY_LABELS.slice(0,5)
@@ -99,6 +105,9 @@ export function TimetableGrid({
                     timetableData={timetableData}
                     onTeacherInfoSave={onTeacherInfoSave}
                     getTeacherInfo={getTeacherInfo}
+                    onSubjectChange={onSubjectChange}
+                    showAllSubjects={showAllSubjects}
+                    availableSubjects={availableSubjects}
                   />
                 )
               })

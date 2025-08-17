@@ -84,6 +84,7 @@ import { AboutHoverCard } from "@/components/platform/timetable/about-hover-card
 import { ConfigDialog } from "@/components/platform/timetable/config-dialog"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useTimetableStore } from "@/components/platform/timetable/timetable"
+import { getFallbackTimetableData } from "@/components/platform/timetable/fallback-data"
 import { useEffect } from "react"
 
 function getCurrentSchoolYear() {
@@ -96,6 +97,12 @@ function getCurrentSchoolYear() {
 }
 
 function generatePeriods(timetableData: any, classConfig: any) {
+  // Use fallback data if enabled and main data is not available
+  if (classConfig?.displayFallbackData && (!timetableData?.day_time?.length || !timetableData?.timetable?.length)) {
+    const fallbackData = getFallbackTimetableData()
+    timetableData = fallbackData
+  }
+  
   if (!timetableData?.day_time?.length || !timetableData?.timetable?.length) return []
   
   const dayLabels = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"]
@@ -165,6 +172,33 @@ export function TimetableContent() {
     setShowConfig(false)
   }
 
+  const handleSubjectChange = (dayIndex: number, periodIdx: number, newSubject: string) => {
+    // This function would typically update the timetable data
+    // For now, we'll just log the change
+    console.log(`Subject changed: Day ${dayIndex}, Period ${periodIdx} -> ${newSubject}`)
+    
+    // In a real implementation, you would:
+    // 1. Update the local state
+    // 2. Send the change to the server
+    // 3. Update the timetable data
+  }
+
+  // Extract available subjects from current timetable data
+  const getAvailableSubjects = () => {
+    if (!timetableData?.timetable) return []
+    
+    const subjects = new Set<string>()
+    timetableData.timetable.forEach((day: any[]) => {
+      day.forEach((period: any) => {
+        if (period.subject && period.subject !== "Lunch") {
+          subjects.add(period.subject)
+        }
+      })
+    })
+    
+    return Array.from(subjects).sort()
+  }
+
   if (!classConfig) {
     return (
       <div className="py-6 px-2 sm:px-6 max-w-4xl mx-auto">
@@ -174,6 +208,7 @@ export function TimetableContent() {
   }
 
   const periods = generatePeriods(timetableData, classConfig)
+  const availableSubjects = getAvailableSubjects()
 
   return (
     
@@ -208,6 +243,9 @@ export function TimetableContent() {
                 timetableData={timetableData}
                 onTeacherInfoSave={saveTeacherInfo}
                 getTeacherInfo={getTeacherInfo}
+                onSubjectChange={handleSubjectChange}
+                showAllSubjects={classConfig.showAllSubjects}
+                availableSubjects={availableSubjects}
               />
             </div>
           )}

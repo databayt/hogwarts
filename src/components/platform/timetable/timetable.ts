@@ -11,7 +11,9 @@ const DEFAULT_CONFIG: ClassConfig = {
   schoolCode: "7081492",
   grade: "3",
   class: "4",
-  lunchAfter: 4
+  lunchAfter: 4,
+  showAllSubjects: false,
+  displayFallbackData: false
 }
 
 interface TimetableState {
@@ -47,6 +49,8 @@ interface ClassConfig {
   grade: string
   class: string
   lunchAfter: number
+  showAllSubjects: boolean
+  displayFallbackData: boolean
 }
 
 interface TimetableData {

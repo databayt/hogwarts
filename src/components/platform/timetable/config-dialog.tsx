@@ -27,6 +27,8 @@ interface ClassConfig {
   grade: string
   class: string
   lunchAfter: number
+  showAllSubjects: boolean
+  displayFallbackData: boolean
 }
 
 interface ConfigDialogProps {
@@ -380,6 +382,34 @@ export function ConfigDialog({ open, onOpenChange, classConfig, onConfigChange, 
             ))}
           </SelectContent>
         </Select>
+      </div>
+
+      <div className="space-y-3">
+        <div className="flex items-center space-x-2">
+          <input
+            type="checkbox"
+            id="showAllSubjects"
+            checked={tempConfig.showAllSubjects}
+            onChange={(e) => setTempConfig({ ...tempConfig, showAllSubjects: e.target.checked })}
+            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-neutral-600 dark:bg-neutral-800 dark:focus:ring-blue-400"
+          />
+          <Label htmlFor="showAllSubjects" className="dark:text-neutral-200">
+            Show all subjects in subject selection
+          </Label>
+        </div>
+        
+        <div className="flex items-center space-x-2">
+          <input
+            type="checkbox"
+            id="displayFallbackData"
+            checked={tempConfig.displayFallbackData}
+            onChange={(e) => setTempConfig({ ...tempConfig, displayFallbackData: e.target.checked })}
+            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-neutral-600 dark:bg-neutral-800 dark:focus:ring-blue-400"
+          />
+          <Label htmlFor="displayFallbackData" className="dark:text-neutral-200">
+            Display fallback data when main data is unavailable
+          </Label>
+        </div>
       </div>
       
       <Button 

@@ -194,6 +194,20 @@ export function TimetableHeader({
             {conflicts} conflict(s)
           </button>
         )}
+
+        {/* Timetable Options Indicators */}
+        <div className="flex items-center gap-2 ml-4">
+          {useTimetableStore.getState().classConfig?.showAllSubjects && (
+            <div className="px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full">
+              All Subjects
+            </div>
+          )}
+          {useTimetableStore.getState().classConfig?.displayFallbackData && (
+            <div className="px-2 py-1 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-full">
+              Fallback Data
+            </div>
+          )}
+        </div>
       </div>
 
       <ScheduleSettingsDialog open={openSettings} onOpenChange={setOpenSettings} termId={termId} onSaved={() => { /* no-op, grid will reflect on next load */ }} />
