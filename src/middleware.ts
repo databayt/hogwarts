@@ -57,7 +57,11 @@ export default auth((req) => {
   // Subdomain → tenant mapping (attach x-school-id header)
   try {
     const host = nextUrl.hostname
-    const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN // e.g. "hogwarts.app"
+    const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN // e.g. "ed.databayt.org"
+    
+    // Debug logging
+    console.log('Middleware Debug:', { host, rootDomain, pathname })
+    
     let resolvedSchoolId: string | null = null
     // Dev convenience: /?x-school=<domain>
     const devDomainParam = nextUrl.searchParams.get("x-school")
@@ -73,12 +77,21 @@ export default auth((req) => {
     } else if (rootDomain && host.endsWith("." + rootDomain)) {
       subdomain = host.slice(0, -(rootDomain.length + 1)) || null
     }
+    
+    // Debug logging
+    console.log('Subdomain extracted:', { subdomain, host, rootDomain })
+    
     if (subdomain) {
       const requestHeaders = new Headers(req.headers)
       requestHeaders.set("x-subdomain", subdomain)
+      console.log('Setting x-subdomain header:', subdomain)
       return NextResponse.next({ request: { headers: requestHeaders } })
     }
-  } catch {}
+  } catch (error) {
+    // Log the actual error instead of swallowing it
+    console.error('Subdomain middleware error:', error)
+    // Don't fail the request, continue without subdomain
+  }
 
   // Explicitly protect platform routes
   if (isPlatformRoute && !isLoggedIn) {
