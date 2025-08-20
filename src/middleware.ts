@@ -158,11 +158,18 @@ export default auth((req) => {
 
   // Explicitly protect platform routes
   if (isPlatformRoute && !isLoggedIn) {
+    console.log('🔒 Platform route protection triggered:', { 
+      pathname, 
+      isPlatformRoute, 
+      isLoggedIn, 
+      user: req.auth?.user 
+    })
     const callbackUrl = pathname + nextUrl.search
     const encodedCallbackUrl = encodeURIComponent(callbackUrl)
     // Use actual host from request headers to maintain subdomain context
     const actualHost = req.headers.get('host') || nextUrl.hostname
     const loginUrl = new URL(`/login?callbackUrl=${encodedCallbackUrl}`, `https://${actualHost}`)
+    console.log('🔄 Redirecting to login:', loginUrl.toString())
 
     return NextResponse.redirect(loginUrl)
   }
@@ -181,11 +188,19 @@ export default auth((req) => {
   // }
 
   if (!isLoggedIn && !isPublicRoute && !isDocsRoute) {
+    console.log('🔒 General auth protection triggered:', { 
+      pathname, 
+      isLoggedIn, 
+      isPublicRoute, 
+      isDocsRoute,
+      user: req.auth?.user 
+    })
     const callbackUrl = pathname + nextUrl.search
     const encodedCallbackUrl = encodeURIComponent(callbackUrl)
     // Use actual host from request headers to maintain subdomain context
     const actualHost = req.headers.get('host') || nextUrl.hostname
     const loginUrl = new URL(`/login?callbackUrl=${encodedCallbackUrl}`, `https://${actualHost}`)
+    console.log('🔄 Redirecting to login:', loginUrl.toString())
 
     return NextResponse.redirect(loginUrl)
   }
