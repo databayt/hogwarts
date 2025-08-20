@@ -73,6 +73,25 @@ export const {
     }
   },
   callbacks: {
+    async redirect({ url, baseUrl }) {
+      // Handle subdomain redirects properly
+      console.log('Redirect callback:', { url, baseUrl })
+      
+      // If the URL is relative, construct it with the current host
+      if (url.startsWith('/')) {
+        // Get the host from the request context
+        // This will be handled by the middleware setting the subdomain header
+        return url
+      }
+      
+      // If it's an external URL, validate it's from our domain
+      if (url.startsWith(baseUrl)) {
+        return url
+      }
+      
+      // Default fallback
+      return baseUrl
+    },
     async signIn({ user, account }) {
       // Log sign-in attempt for debugging
       console.log("Sign-in attempt:", { 

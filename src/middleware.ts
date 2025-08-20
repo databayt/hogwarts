@@ -160,11 +160,11 @@ export default auth((req) => {
   if (isPlatformRoute && !isLoggedIn) {
     const callbackUrl = pathname + nextUrl.search
     const encodedCallbackUrl = encodeURIComponent(callbackUrl)
+    // Use actual host from request headers to maintain subdomain context
+    const actualHost = req.headers.get('host') || nextUrl.hostname
+    const loginUrl = new URL(`/login?callbackUrl=${encodedCallbackUrl}`, `https://${actualHost}`)
 
-    return NextResponse.redirect(new URL(
-      `/login?callbackUrl=${encodedCallbackUrl}`,
-      nextUrl
-    ))
+    return NextResponse.redirect(loginUrl)
   }
 
   // Guard operator routes to DEVELOPER (platform admin) only — temporarily disabled for public demo
@@ -183,11 +183,11 @@ export default auth((req) => {
   if (!isLoggedIn && !isPublicRoute && !isDocsRoute) {
     const callbackUrl = pathname + nextUrl.search
     const encodedCallbackUrl = encodeURIComponent(callbackUrl)
+    // Use actual host from request headers to maintain subdomain context
+    const actualHost = req.headers.get('host') || nextUrl.hostname
+    const loginUrl = new URL(`/login?callbackUrl=${encodedCallbackUrl}`, `https://${actualHost}`)
 
-    return NextResponse.redirect(new URL(
-      `/login?callbackUrl=${encodedCallbackUrl}`,
-      nextUrl
-    ))
+    return NextResponse.redirect(loginUrl)
   }
 
   return
