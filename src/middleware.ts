@@ -59,10 +59,18 @@ export default auth((req) => {
 
   // Subdomain → tenant mapping (attach x-school-id header)
   try {
-    const host = nextUrl.hostname
-    const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN // e.g. "ed.databayt.org"
+    // Use request headers for more reliable host detection
+    const host = req.headers.get('host') || nextUrl.hostname
+    const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN // e.g. "databayt.org"
     
     // Debug logging
+    console.log('🔄 Middleware executing for:', { host: nextUrl.hostname, pathname })
+    console.log('🔍 Host header debug:', { 
+      nextUrlHostname: nextUrl.hostname,
+      requestHostHeader: req.headers.get('host'),
+      xForwardedHost: req.headers.get('x-forwarded-host'),
+      xRealHost: req.headers.get('x-real-host')
+    })
     console.log('Middleware Debug:', { 
       host, 
       rootDomain, 
@@ -70,7 +78,9 @@ export default auth((req) => {
       hostType: typeof host,
       rootDomainType: typeof rootDomain,
       hostLength: host?.length,
-      rootDomainLength: rootDomain?.length
+      rootDomainLength: rootDomain?.length,
+      // Add more debugging
+      allHeaders: Object.fromEntries(req.headers.entries())
     })
     
     let resolvedSchoolId: string | null = null
