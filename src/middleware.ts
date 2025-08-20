@@ -140,7 +140,9 @@ export default auth((req) => {
         
         // Redirect school subdomains root path to home page
         if (pathname === '/') {
-          const homeUrl = new URL('/home', nextUrl.toString())
+          // Use the actual host from request headers for the redirect
+          const actualHost = req.headers.get('host') || nextUrl.hostname
+          const homeUrl = new URL('/home', `https://${actualHost}`)
           console.log('Redirecting school subdomain to home page:', homeUrl.toString())
           return NextResponse.redirect(homeUrl)
         }
