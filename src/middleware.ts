@@ -14,6 +14,9 @@ export default auth((req) => {
 
   const pathname = nextUrl.pathname
   
+  // Add simple log to see if middleware executes
+  console.log('🔄 Middleware executing for:', { host: nextUrl.hostname, pathname })
+  
   const isApiAuthRoute = pathname.startsWith(apiAuthPrefix)
   const isPublicRoute = publicRoutes.includes(pathname)
   const isAuthRoute = authRoutes.includes(pathname)
