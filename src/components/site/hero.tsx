@@ -12,7 +12,7 @@ export function Hero() {
         <div 
           className="absolute inset-0 md:inset-y-8 rounded-none lg:rounded-sm overflow-hidden"
           style={{
-            backgroundImage: "url('/hp.png')",
+            backgroundImage: "url('/site/harry-potter.png')",
             backgroundSize: "cover",
             backgroundPosition: "center",
           }}
@@ -23,9 +23,9 @@ export function Hero() {
         {/* Content for mobile */}
         <div className="relative h-full flex flex-col items-center justify-center p-6 lg:hidden">
           <div className="max-w-xl text-center">
-            <div className="flex items-center justify-center gap-2 mb-6">
-            <Image src="/ball.png" alt="Hogwarts Logo" width={100} height={100} className="w-14 h-14 dark:invert"/>
-            </div>
+                      <div className="flex items-center justify-center gap-2 mb-6">
+            <Image src="/site/ball.png" alt="Hogwarts Logo" width={100} height={100} className="w-14 h-14 dark:invert"/>
+          </div>
             <h1 className="py-4">
             Beautiful Mind, <br />
             Curious. Wonder.
@@ -56,7 +56,7 @@ export function Hero() {
       <div className="relative hidden lg:flex items-center">
         <div className="max-w-xl ">
           <div className="flex items-center gap-2">
-            <Image src="/ball.png" alt="Hogwarts Logo" width={100} height={100} className="w-14 h-14 dark:invert"/>
+            <Image src="/site/ball.png" alt="Hogwarts Logo" width={100} height={100} className="w-14 h-14 dark:invert"/>
           </div>
           <h1 className="py-4">
             Beautiful Mind, <br />

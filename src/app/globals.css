@@ -8,6 +8,7 @@
 /* @import "../styles/image.css";
 @import "../styles/border.css"; */
 @import "../styles/clock.css";
+@import "../styles/gradient-animation.css";
 /* @import "../styles/marquee.css"; */
 
 @custom-variant dark (&:is(.dark *));
