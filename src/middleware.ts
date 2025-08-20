@@ -60,7 +60,15 @@ export default auth((req) => {
     const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN // e.g. "ed.databayt.org"
     
     // Debug logging
-    console.log('Middleware Debug:', { host, rootDomain, pathname })
+    console.log('Middleware Debug:', { 
+      host, 
+      rootDomain, 
+      pathname,
+      hostType: typeof host,
+      rootDomainType: typeof rootDomain,
+      hostLength: host?.length,
+      rootDomainLength: rootDomain?.length
+    })
     
     let resolvedSchoolId: string | null = null
     // Dev convenience: /?x-school=<domain>
@@ -74,18 +82,58 @@ export default auth((req) => {
     let subdomain: string | null = null
     if (devDomainParam) {
       subdomain = devDomainParam
-    } else if (rootDomain && host.endsWith("." + rootDomain)) {
-      subdomain = host.slice(0, -(rootDomain.length + 1)) || null
+      console.log('Using dev domain param:', subdomain)
+    } else if (rootDomain && host && host.endsWith("." + rootDomain)) {
+      // More robust subdomain extraction
+      const dotRootDomain = "." + rootDomain
+      const subdomainEndIndex = host.lastIndexOf(dotRootDomain)
+      if (subdomainEndIndex > 0) {
+        subdomain = host.substring(0, subdomainEndIndex)
+      } else {
+        subdomain = null
+      }
+      console.log('Subdomain extraction details:', {
+        host,
+        rootDomain,
+        dotRootDomain,
+        subdomainEndIndex,
+        extractedSubdomain: subdomain
+      })
+    } else {
+      console.log('No subdomain found:', {
+        host,
+        rootDomain,
+        hostEndsWithRoot: rootDomain ? host?.endsWith("." + rootDomain) : false
+      })
     }
     
     // Debug logging
-    console.log('Subdomain extracted:', { subdomain, host, rootDomain })
+    console.log('Final subdomain result:', { subdomain, host, rootDomain })
     
     if (subdomain) {
-      const requestHeaders = new Headers(req.headers)
-      requestHeaders.set("x-subdomain", subdomain)
-      console.log('Setting x-subdomain header:', subdomain)
-      return NextResponse.next({ request: { headers: requestHeaders } })
+      // Special case: ed.databayt.org should show marketing, not be treated as subdomain
+      if (subdomain === 'ed') {
+        // Don't set x-subdomain header for ed.databayt.org
+        // Let it use the default (marketing) route
+        console.log('ed.databayt.org detected - using marketing route')
+        return NextResponse.next()
+      }
+
+      // For school subdomains, set the header and redirect to home page
+      if (subdomain !== 'ed') {
+        const requestHeaders = new Headers(req.headers)
+        requestHeaders.set("x-subdomain", subdomain)
+        console.log('Setting x-subdomain header for school:', subdomain)
+        
+        // Redirect school subdomains root path to home page
+        if (pathname === '/') {
+          const homeUrl = new URL('/home', nextUrl.toString())
+          console.log('Redirecting school subdomain to home page:', homeUrl.toString())
+          return NextResponse.redirect(homeUrl)
+        }
+        
+        return NextResponse.next({ request: { headers: requestHeaders } })
+      }
     }
   } catch (error) {
     // Log the actual error instead of swallowing it

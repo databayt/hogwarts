@@ -309,7 +309,7 @@ NEXT_PUBLIC_ROOT_DOMAIN=hogwarts.app
 NEXT_PUBLIC_APP_URL=https://hogwarts.app
 
 # Direct subdomain access
-https://khartoum.hogwarts.app/dashboard
+buthttps://khartoum.hogwarts.app/dashboard
 ```
 
 ### 2. Environment-Specific Features
