@@ -59,17 +59,20 @@ export default auth((req) => {
 
   // Subdomain → tenant mapping (attach x-school-id header)
   try {
-    // Use request headers for more reliable host detection
-    const host = req.headers.get('host') || nextUrl.hostname
+    // Use the original URL from the request for more reliable host detection
+    const originalUrl = new URL(req.url)
+    const host = originalUrl.hostname
     const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN // e.g. "databayt.org"
     
     // Debug logging
     console.log('🔄 Middleware executing for:', { host: nextUrl.hostname, pathname })
-    console.log('🔍 Host header debug:', { 
+    console.log('🔍 Host detection debug:', { 
       nextUrlHostname: nextUrl.hostname,
+      originalUrlHostname: originalUrl.hostname,
       requestHostHeader: req.headers.get('host'),
       xForwardedHost: req.headers.get('x-forwarded-host'),
-      xRealHost: req.headers.get('x-real-host')
+      xRealHost: req.headers.get('x-real-host'),
+      originalUrl: req.url
     })
     console.log('Middleware Debug:', { 
       host, 
@@ -78,9 +81,7 @@ export default auth((req) => {
       hostType: typeof host,
       rootDomainType: typeof rootDomain,
       hostLength: host?.length,
-      rootDomainLength: rootDomain?.length,
-      // Add more debugging
-      allHeaders: Object.fromEntries(req.headers.entries())
+      rootDomainLength: rootDomain?.length
     })
     
     let resolvedSchoolId: string | null = null
@@ -166,8 +167,9 @@ export default auth((req) => {
     })
     const callbackUrl = pathname + nextUrl.search
     const encodedCallbackUrl = encodeURIComponent(callbackUrl)
-    // Use actual host from request headers to maintain subdomain context
-    const actualHost = req.headers.get('host') || nextUrl.hostname
+    // Use original URL hostname for reliable subdomain context
+    const originalUrl = new URL(req.url)
+    const actualHost = originalUrl.hostname
     const loginUrl = new URL(`/login?callbackUrl=${encodedCallbackUrl}`, `https://${actualHost}`)
     console.log('🔄 Redirecting to login:', loginUrl.toString())
 
@@ -197,8 +199,9 @@ export default auth((req) => {
     })
     const callbackUrl = pathname + nextUrl.search
     const encodedCallbackUrl = encodeURIComponent(callbackUrl)
-    // Use actual host from request headers to maintain subdomain context
-    const actualHost = req.headers.get('host') || nextUrl.hostname
+    // Use original URL hostname for reliable subdomain context
+    const originalUrl = new URL(req.url)
+    const actualHost = originalUrl.hostname
     const loginUrl = new URL(`/login?callbackUrl=${encodedCallbackUrl}`, `https://${actualHost}`)
     console.log('🔄 Redirecting to login:', loginUrl.toString())
 
