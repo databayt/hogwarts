@@ -141,9 +141,8 @@ export default auth((req) => {
         
         // Redirect school subdomains root path to home page
         if (pathname === '/') {
-          // Use the actual host from request headers for the redirect
-          const actualHost = req.headers.get('host') || nextUrl.hostname
-          const homeUrl = new URL('/home', `https://${actualHost}`)
+          // Use the same reliable host detection method
+          const homeUrl = new URL('/home', `https://${host}`)
           console.log('Redirecting school subdomain to home page:', homeUrl.toString())
           return NextResponse.redirect(homeUrl)
         }
@@ -167,7 +166,7 @@ export default auth((req) => {
     })
     const callbackUrl = pathname + nextUrl.search
     const encodedCallbackUrl = encodeURIComponent(callbackUrl)
-    // Use original URL hostname for reliable subdomain context
+    // Use the same reliable host detection method
     const originalUrl = new URL(req.url)
     const actualHost = originalUrl.hostname
     const loginUrl = new URL(`/login?callbackUrl=${encodedCallbackUrl}`, `https://${actualHost}`)
@@ -199,8 +198,9 @@ export default auth((req) => {
     })
     const callbackUrl = pathname + nextUrl.search
     const encodedCallbackUrl = encodeURIComponent(callbackUrl)
-    // Use actual host from request headers to maintain subdomain context
-    const actualHost = req.headers.get('host') || nextUrl.hostname
+    // Use the same reliable host detection method
+    const originalUrl = new URL(req.url)
+    const actualHost = originalUrl.hostname
     const loginUrl = new URL(`/login?callbackUrl=${encodedCallbackUrl}`, `https://${actualHost}`)
     console.log('🔄 Redirecting to login:', loginUrl.toString())
 
