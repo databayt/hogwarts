@@ -8,6 +8,8 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(db),
   session: {
     strategy: "jwt",
+    maxAge: 24 * 60 * 60, // 24 hours
+    updateAge: 60 * 60, // 1 hour
   },
   pages: {
     signIn: "/login",
@@ -22,20 +24,6 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
         email: user.email,
         provider: account?.provider,
         isNewUser,
-        timestamp: new Date().toISOString()
-      });
-    },
-    async signOut({ session, token }) {
-      console.log('🚪 SIGN OUT EVENT:', {
-        sessionId: session?.user?.id,
-        tokenId: token?.id,
-        timestamp: new Date().toISOString()
-      });
-    },
-    async session({ session, token }) {
-      console.log('📋 SESSION EVENT:', {
-        sessionId: session?.user?.id,
-        tokenId: token?.id,
         timestamp: new Date().toISOString()
       });
     },
@@ -107,6 +95,13 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
           token.providerAccountId = account.providerAccountId
           console.log('🔗 Account linked:', { provider: account.provider, id: account.providerAccountId });
         }
+        
+        // Force session update after OAuth
+        if (trigger === 'signIn') {
+          console.log('🔄 Forcing session update after signIn');
+          token.iat = Math.floor(Date.now() / 1000);
+          token.exp = Math.floor(Date.now() / 1000) + (24 * 60 * 60); // 24 hours
+        }
       }
       
       // Debug JWT state
@@ -122,23 +117,35 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
       
       return token
     },
-    async session({ session, token, user }) {
+    async session({ session, token, user, trigger }) {
       console.log('📋 SESSION CALLBACK START:', { 
+        trigger,
         hasToken: !!token, 
         hasUser: !!user,
         sessionUser: session.user?.id 
       });
       
       if (token) {
+        // Always ensure we have the latest token data
         session.user.id = token.id as string
-        if (token.role) (session.user as any).role = token.role
-        if (token.schoolId) (session.user as any).schoolId = token.schoolId
+        
+        // Apply role and schoolId from token
+        if (token.role) {
+          (session.user as any).role = token.role
+          console.log('🎭 Role applied to session:', token.role);
+        }
+        if (token.schoolId) {
+          (session.user as any).schoolId = token.schoolId
+          console.log('🏫 SchoolId applied to session:', token.schoolId);
+        }
         
         console.log('🔑 Token data applied to session:', {
           id: token.id,
           role: token.role,
           schoolId: token.schoolId
         });
+      } else {
+        console.log('⚠️ No token available in session callback');
       }
       
       // Debug session state
