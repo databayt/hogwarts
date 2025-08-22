@@ -5,12 +5,14 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { updateSchoolSettings } from '@/app/(platform)/settings/actions'
 import { SuccessToast, ErrorToast } from '@/components/atom/toast'
+import { useSchool } from '@/components/platform/context/school-context'
 
 export function SettingsContent() {
-  const [name, setName] = React.useState('')
-  const [timezone, setTimezone] = React.useState('Africa/Khartoum')
+  const { school } = useSchool()
+  const [name, setName] = React.useState(school.name || '')
+  const [timezone, setTimezone] = React.useState(school.timezone || 'Africa/Khartoum')
   const [locale, setLocale] = React.useState<'ar' | 'en'>('ar')
-  const [logoUrl, setLogoUrl] = React.useState('')
+  const [logoUrl, setLogoUrl] = React.useState(school.logoUrl || '')
   const [submitting, setSubmitting] = React.useState(false)
 
   const onSubmit = async () => {

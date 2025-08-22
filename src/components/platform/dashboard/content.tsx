@@ -1,5 +1,4 @@
 import { currentUser } from "@/components/auth/auth";
-import { constructMetadata } from "@/components/marketing/pricing/lib/utils";
 import { DashboardHeader } from "@/components/platform/dashboard/header";
 import { StudentDashboard } from "./dashboards/student-dashboard";
 import { TeacherDashboard } from "./dashboards/teacher-dashboard";
@@ -8,19 +7,32 @@ import { StaffDashboard } from "./dashboards/staff-dashboard";
 import { AdminDashboard } from "./dashboards/admin-dashboard";
 import { PrincipalDashboard } from "./dashboards/principal-dashboard";
 import { AccountantDashboard } from "./dashboards/accountant-dashboard";
+import type { School } from "@/components/site/types";
 
-export const metadata = constructMetadata({
-  title: "Dashboard – Hogwarts School",
-  description: "Your personalized dashboard based on your role.",
-});
+interface DashboardContentProps {
+  school: School; // School data from parent
+}
 
-export default async function DashboardContent() {
+export default async function DashboardContent({ school }: DashboardContentProps) {
+  // Debug logging
+  console.log('DashboardContent - school prop:', school);
+  
   const user = await currentUser();
+  console.log('DashboardContent - user:', user);
 
+  // If no user, the middleware should have already redirected to login
+  // This should not happen in normal flow
   if (!user) {
+    console.log('DashboardContent - no user found');
+    return null;
+  }
+
+  // Defensive check for school data
+  if (!school || !school.name) {
+    console.log('DashboardContent - school data missing:', { school });
     return (
       <div className="flex items-center justify-center h-64">
-        <p className="text-muted-foreground">Please log in to view your dashboard.</p>
+        <p className="text-muted-foreground">Loading school data...</p>
       </div>
     );
   }
@@ -48,7 +60,7 @@ export default async function DashboardContent() {
     <div className="space-y-6">
       <DashboardHeader
         heading={`${user.role.charAt(0) + user.role.slice(1).toLowerCase()} Dashboard`}
-        text={`Welcome back! Here's your personalized dashboard.`}
+        text={`Welcome to ${school.name}! Here's your personalized dashboard.`}
       />
       {renderDashboard()}
     </div>

@@ -10,6 +10,7 @@ import { auth } from "@/auth";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 
 
+
 export const metadata: Metadata = {
   title: "Hogwarts",
   description: "School automation",
@@ -36,6 +37,7 @@ export default async function RootLayout({
             <ThemeProvider>
               <div className="layout-container">
                 <Toaster position="bottom-right" />
+                
                 {children}
               </div>
             </ThemeProvider>

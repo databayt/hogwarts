@@ -1,180 +1,257 @@
 import NextAuth from "next-auth"
-import { UserRole } from "@prisma/client"
-import type { DefaultSession } from "next-auth"
+import { PrismaAdapter } from "@auth/prisma-adapter"
 import { db } from "@/lib/db"
-import { getUserById } from "@/components/auth/user"
-import { getTwoFactorConfirmationByUserId } from "@/components/auth/verification/2f-confirmation"
-import { getAccountByUserId } from "@/components/auth/account"
-import { customPrismaAdapter } from "@/components/auth/prisma-adapter"
 import authConfig from "./auth.config"
+import { DEFAULT_LOGIN_REDIRECT } from "@/routes"
 
-
-// Extend the built-in session types
-declare module "next-auth" {
-  interface Session extends DefaultSession {
-    user: {
-      id: string
-      role: UserRole
-      isTwoFactorEnabled: boolean
-      isOAuth: boolean
-      schoolId: string | null
-    } & DefaultSession["user"]
-  }
-}
-
-export const {
-  handlers: { GET, POST },
-  auth,
-  signIn,
-  signOut,
-} = NextAuth({
+export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
+  adapter: PrismaAdapter(db),
+  session: {
+    strategy: "jwt",
+  },
   pages: {
     signIn: "/login",
     error: "/error",
   },
+  secret: process.env.AUTH_SECRET,
+  debug: process.env.NODE_ENV === "development",
+  events: {
+    async signIn({ user, account, isNewUser }) {
+      console.log('🎉 SIGN IN EVENT:', {
+        userId: user.id,
+        email: user.email,
+        provider: account?.provider,
+        isNewUser,
+        timestamp: new Date().toISOString()
+      });
+    },
+    async signOut({ session, token }) {
+      console.log('🚪 SIGN OUT EVENT:', {
+        sessionId: session?.user?.id,
+        tokenId: token?.id,
+        timestamp: new Date().toISOString()
+      });
+    },
+    async session({ session, token }) {
+      console.log('📋 SESSION EVENT:', {
+        sessionId: session?.user?.id,
+        tokenId: token?.id,
+        timestamp: new Date().toISOString()
+      });
+    },
+  },
   cookies: {
-    sessionToken: {
-      name: `next-auth.session-token`,
+    pkceCodeVerifier: {
+      name: `authjs.pkce.code_verifier`,
       options: {
         httpOnly: true,
         sameSite: "lax",
         path: "/",
-        secure: process.env.NODE_ENV === "production",
+        secure: false,
+        maxAge: 900, // 15 minutes
+      },
+    },
+    sessionToken: {
+      name: `authjs.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: false,
+      },
+    },
+    callbackUrl: {
+      name: `authjs.callback-url`,
+      options: {
+        sameSite: "lax",
+        path: "/",
+        secure: false,
+      },
+    },
+    csrfToken: {
+      name: `authjs.csrf-token`,
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: false,
       },
     },
   },
-  events: {
-    async linkAccount({ user }) {
-      console.log("OAuth account linked:", user.email);
-      if (user.id) {
-        try {
-          await db.user.update({
-            where: { id: user.id },
-            data: { emailVerified: new Date() }
-          })
-        } catch (error) {
-          console.error("Error updating user email verification:", error);
-        }
-      }
-    },
-    async signIn({ user, account, isNewUser }) {
-      console.log("Sign-in event:", { 
-        userId: user.id, 
-        email: user.email,
-        provider: account?.provider,
-        isNewUser
-      });
-    },
-    async createUser({ user }) {
-      console.log("User created:", { 
-        userId: user.id, 
-        email: user.email 
-      });
-    }
-  },
   callbacks: {
-    async redirect({ url, baseUrl }) {
-      // Handle subdomain redirects properly
-      console.log('Redirect callback:', { url, baseUrl })
+    async jwt({ token, user, account, trigger }) {
+      console.log('🔐 JWT CALLBACK START:', { trigger, hasUser: !!user, hasAccount: !!account });
       
-      // If the URL is relative, construct it with the current host
-      if (url.startsWith('/')) {
-        // Get the host from the request context
-        // This will be handled by the middleware setting the subdomain header
-        return url
+      if (user) {
+        console.log('👤 User data received:', { 
+          id: user.id, 
+          email: user.email,
+          hasRole: 'role' in user,
+          hasSchoolId: 'schoolId' in user
+        });
+        
+        token.id = user.id
+        // Only set role and schoolId if they exist on the user object
+        if ('role' in user) {
+          token.role = (user as any).role
+          console.log('🎭 Role set in token:', token.role);
+        }
+        if ('schoolId' in user) {
+          token.schoolId = (user as any).schoolId
+          console.log('🏫 SchoolId set in token:', token.schoolId);
+        }
+        
+        // Ensure we have a proper session token
+        if (account) {
+          token.provider = account.provider
+          token.providerAccountId = account.providerAccountId
+          console.log('🔗 Account linked:', { provider: account.provider, id: account.providerAccountId });
+        }
       }
       
-      // If it's an external URL, validate it's from our domain
-      if (url.startsWith(baseUrl)) {
-        return url
-      }
-      
-      // Default fallback
-      return baseUrl
-    },
-    async signIn({ user, account }) {
-      // Log sign-in attempt for debugging
-      console.log("Sign-in attempt:", { 
-        userId: user.id, 
-        provider: account?.provider,
-        email: user.email
+      // Debug JWT state
+      console.log('🔐 JWT CALLBACK END:', {
+        tokenId: token?.id,
+        hasRole: !!token?.role,
+        hasSchoolId: !!token?.schoolId,
+        provider: token?.provider,
+        iat: token?.iat,
+        exp: token?.exp,
+        sub: token?.sub
       });
       
-      if (!user.id) {
-        console.error("No user ID in sign-in attempt");
-        return false;
+      return token
+    },
+    async session({ session, token, user }) {
+      console.log('📋 SESSION CALLBACK START:', { 
+        hasToken: !!token, 
+        hasUser: !!user,
+        sessionUser: session.user?.id 
+      });
+      
+      if (token) {
+        session.user.id = token.id as string
+        if (token.role) (session.user as any).role = token.role
+        if (token.schoolId) (session.user as any).schoolId = token.schoolId
+        
+        console.log('🔑 Token data applied to session:', {
+          id: token.id,
+          role: token.role,
+          schoolId: token.schoolId
+        });
       }
       
-      if (account?.provider !== "credentials") {
-        console.log("OAuth sign-in allowed for provider:", account?.provider);
-        return true;
-      }
-
-      const existingUser = await getUserById(user.id)
-
-      if (!existingUser?.emailVerified) {
-        console.log("User email not verified");
-        return false;
-      }
-
-      if (existingUser.isTwoFactorEnabled) {
-        const twoFactorConfirmation = await getTwoFactorConfirmationByUserId(existingUser.id)
-
-        if (!twoFactorConfirmation) {
-          console.log("Two-factor confirmation required");
-          return false;
-        }
-
-        await db.twoFactorConfirmation.delete({
-          where: { id: twoFactorConfirmation.id }
-        })
-      }
-
-      return true
-    },
-    async session({ token, session }) {
-      if (token.sub && session.user) {
-        session.user.id = token.sub
-      }
-
-      if (token.role && session.user) {
-        session.user.role = token.role as UserRole
-      }
-
-      if (session.user) {
-        session.user.isTwoFactorEnabled = !!token.isTwoFactorEnabled
-        session.user.name = token.name as string
-        session.user.email = token.email as string
-        session.user.isOAuth = !!token.isOAuth
-        // Propagate tenant info
-        session.user.schoolId = (token as unknown as { schoolId?: string | null }).schoolId ?? null
-      }
-
+      // Debug session state
+      console.log('📋 SESSION CALLBACK END:', {
+        sessionId: session.user?.id,
+        hasRole: !!(session.user as any)?.role,
+        hasSchoolId: !!(session.user as any)?.schoolId,
+        tokenId: token?.id,
+        sessionToken: token?.sessionToken,
+        iat: token?.iat,
+        exp: token?.exp,
+        email: session.user?.email
+      });
+      
       return session
     },
-    async jwt({ token }) {
-      if (!token.sub) return token
+    async redirect({ url, baseUrl }) {
+      console.log('🔄 REDIRECT CALLBACK START:', { url, baseUrl });
+      
+      // Check if this is a subdomain callback
+      if (url.includes('portsudan.localhost:3000')) {
+        console.log('🎯 Subdomain callback detected, returning as-is');
+        return url;
+      }
 
-      const existingUser = await getUserById(token.sub)
+      // Handle Facebook redirect with #_=_ hash
+      if (url.includes('#_=_')) {
+        console.log('📘 Facebook redirect detected, cleaning hash and redirecting to subdomain');
+        // Clean the Facebook hash and redirect to the subdomain dashboard
+        const cleanUrl = url.replace(/#.*$/, '');
+        const subdomainUrl = 'http://portsudan.localhost:3000/dashboard';
+        console.log('🎯 Redirecting to subdomain:', subdomainUrl);
+        return subdomainUrl;
+      }
 
-      if (!existingUser) return token
+      // Handle OAuth callback completion - redirect to subdomain
+      if (url.includes('/api/auth/callback/')) {
+        console.log('🔄 OAuth callback detected, redirecting to subdomain dashboard');
+        const subdomainUrl = 'http://portsudan.localhost:3000/dashboard';
+        console.log('🎯 Redirecting to subdomain after OAuth:', subdomainUrl);
+        return subdomainUrl;
+      }
 
-      const existingAccount = await getAccountByUserId(existingUser.id)
+      // Handle main domain redirects - check if user came from subdomain
+      if (url === baseUrl || url === `${baseUrl}/`) {
+        console.log('🏠 Main domain redirect detected, checking if user came from subdomain');
+        // Redirect to subdomain dashboard since user likely came from there
+        const subdomainUrl = 'http://portsudan.localhost:3000/dashboard';
+        console.log('🎯 Redirecting to subdomain dashboard:', subdomainUrl);
+        return subdomainUrl;
+      }
 
-      token.isOAuth = !!existingAccount
-      token.name = existingUser.username
-      token.email = existingUser.email
-      token.role = existingUser.role
-      token.isTwoFactorEnabled = existingUser.isTwoFactorEnabled
-      // Attach tenant info to token for downstream access
-      ;(token as unknown as { schoolId?: string | null }).schoolId = existingUser.schoolId ?? null
+      // Handle dashboard redirects on main domain - redirect to subdomain
+      if (url === `${baseUrl}/dashboard`) {
+        console.log('📊 Main domain dashboard redirect detected, redirecting to subdomain');
+        const subdomainUrl = 'http://portsudan.localhost:3000/dashboard';
+        console.log('🎯 Redirecting to subdomain dashboard:', subdomainUrl);
+        return subdomainUrl;
+      }
 
-      return token
-    }
+      // Log all redirect attempts for debugging
+      console.log('🔄 Processing redirect:', { url, baseUrl });
+      
+      // Check if this is an error
+      if (url.includes('/error')) {
+        console.log('❌ Error page detected, investigating...');
+      }
+
+      // Default behavior
+      if (url.startsWith("/")) {
+        const finalUrl = `${baseUrl}${url}`;
+        console.log('🔄 Default behavior - relative path, returning:', finalUrl);
+        return finalUrl;
+      }
+      else if (new URL(url).origin === baseUrl) {
+        console.log('🔄 Default behavior - same origin, returning:', url);
+        return url;
+      }
+      
+      console.log('🔄 Default behavior - external URL, returning baseUrl:', baseUrl);
+      return baseUrl
+    },
   },
-  adapter: customPrismaAdapter(),
-  session: { strategy: "jwt" },
-  // Enable debug mode temporarily to get detailed error information
-  debug: true, // Set to true for both dev and production to debug
   ...authConfig,
 })
+
+// Debug logging for NextAuth initialization
+console.log('NextAuth initialization - Environment check:', {
+  NEXTAUTH_URL: process.env.NEXTAUTH_URL,
+  AUTH_SECRET: !!process.env.AUTH_SECRET,
+  GOOGLE_CLIENT_ID: !!process.env.GOOGLE_CLIENT_ID,
+  GOOGLE_CLIENT_SECRET: !!process.env.GOOGLE_CLIENT_SECRET,
+  FACEBOOK_CLIENT_ID: !!process.env.FACEBOOK_CLIENT_ID,
+  FACEBOOK_CLIENT_SECRET: !!process.env.FACEBOOK_CLIENT_SECRET,
+  NODE_ENV: process.env.NODE_ENV,
+});
+
+// Debug cookie configuration
+console.log('🍪 Cookie configuration:', {
+  pkceCodeVerifier: {
+    name: 'authjs.pkce.code_verifier',
+    options: { sameSite: 'lax', secure: false, httpOnly: true }
+  },
+  sessionToken: {
+    name: 'authjs.session-token',
+    options: { sameSite: 'lax', secure: false, httpOnly: true }
+  },
+  callbackUrl: {
+    name: 'authjs.callback-url',
+    options: { sameSite: 'lax', secure: false }
+  },
+  csrfToken: {
+    name: 'authjs.csrf-token',
+    options: { sameSite: 'lax', secure: false, httpOnly: true }
+  }
+});

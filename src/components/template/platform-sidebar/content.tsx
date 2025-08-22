@@ -18,12 +18,26 @@ import { platformNav } from "@/components/template/platform-sidebar/constant";
 import type { Role } from "@/components/template/platform-sidebar/constant";
 import { Icons } from "@/components/template/platform-sidebar/icons";
 import { useCurrentRole } from "@/components/auth/use-current-role";
+import type { School } from "@/components/site/types";
 
-export default function DashboardSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+interface PlatformSidebarProps extends React.ComponentProps<typeof Sidebar> {
+  school: School;
+}
+
+export default function PlatformSidebar({ school, ...props }: PlatformSidebarProps) {
   const pathname = usePathname();
   const { setOpenMobile } = useSidebar();
   const role = useCurrentRole();
   const currentRole = (role as unknown as Role | undefined) ?? undefined;
+
+  // Defensive check for school data
+  if (!school || !school.name) {
+    return (
+      <div className="w-56 top-12 p-4">
+        <div className="text-sm text-muted-foreground">Loading school data...</div>
+      </div>
+    );
+  }
 
   const handleLinkClick = React.useCallback(() => {
     setOpenMobile(false);
@@ -35,11 +49,11 @@ export default function DashboardSidebar({ ...props }: React.ComponentProps<type
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              {/* <Link href="/dashboard/overview" className="flex items-center" onClick={handleLinkClick}>
+              <Link href="/dashboard" className="flex items-center" onClick={handleLinkClick}>
                 <div className="flex flex-col leading-none">
-                  <span className="font-medium text-base text-foreground -ml-1">Hogwarts Admin</span>
+                  <span className="font-medium text-base text-foreground -ml-1">{school.name}</span>
                 </div>
-              </Link> */}
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

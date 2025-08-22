@@ -76,22 +76,43 @@ export default auth((req) => {
   const isPlatformRoute = 
     pathname === "/dashboard" || 
     pathname.startsWith("/dashboard/") ||
-    pathname === "/project" || 
-    pathname.startsWith("/project/") ||
-    pathname === "/task" || 
-    pathname.startsWith("/task/") ||
-    pathname === "/wallet" || 
-    pathname.startsWith("/wallet/") ||
-    pathname === "/daily" || 
-    pathname.startsWith("/daily/") ||
-    pathname === "/resource" || 
-    pathname.startsWith("/resource/");
+    pathname === "/students" || 
+    pathname.startsWith("/students/") ||
+    pathname === "/teachers" || 
+    pathname.startsWith("/teachers/") ||
+    pathname === "/parents" || 
+    pathname.startsWith("/parents/") ||
+    pathname === "/classes" || 
+    pathname.startsWith("/classes/") ||
+    pathname === "/subjects" || 
+    pathname.startsWith("/subjects/") ||
+    pathname === "/announcements" || 
+    pathname.startsWith("/announcements/") ||
+    pathname === "/attendance" || 
+    pathname.startsWith("/attendance/") ||
+    pathname === "/assignments" || 
+    pathname.startsWith("/assignments/") ||
+    pathname === "/exams" || 
+    pathname.startsWith("/exams/") ||
+    pathname === "/results" || 
+    pathname.startsWith("/results/") ||
+    pathname === "/events" || 
+    pathname.startsWith("/events/") ||
+    pathname === "/lessons" || 
+    pathname.startsWith("/lessons/") ||
+    pathname === "/timetable" || 
+    pathname.startsWith("/timetable/") ||
+    pathname === "/settings" || 
+    pathname.startsWith("/settings/") ||
+    pathname === "/profile" || 
+    pathname.startsWith("/profile/");
 
   if (isApiAuthRoute) {
     return
   }
 
   if (isAuthRoute) {
+    console.log('🔐 AUTH ROUTE DETECTED:', { pathname, host: req.headers.get('host') });
     if (isLoggedIn) {
       return NextResponse.redirect(new URL(DEFAULT_LOGIN_REDIRECT, nextUrl))
     }
@@ -106,15 +127,46 @@ export default auth((req) => {
   // Subdomain → tenant routing (Following reference pattern exactly)
   const subdomain = extractSubdomain(req);
 
+  // Debug logging for subdomain detection
+  console.log('🔍 Middleware Debug:', {
+    pathname,
+    host: req.headers.get('host'),
+    subdomain,
+    isPlatformRoute,
+    isLoggedIn
+  });
+
   if (subdomain) {
+    console.log('🚨 SUBDOMAIN DETECTED:', subdomain);
+    console.log('🚨 PATHNAME:', pathname);
+    console.log('🚨 IS PLATFORM ROUTE:', isPlatformRoute);
+    
     // Block access to admin page from subdomains
     if (pathname.startsWith('/admin')) {
       return NextResponse.redirect(new URL('/', req.url));
     }
 
+
+
     // Rewrite all paths on subdomains to include /s/${subdomain} prefix
     // This handles /, /about, /academic, /admission, etc.
-    return NextResponse.rewrite(new URL(`/s/${subdomain}${pathname}`, req.url));
+    // IMPORTANT: This must happen BEFORE the auth check to ensure proper routing
+    const rewrittenUrl = new URL(`/s/${subdomain}${pathname}`, req.url);
+    
+    console.log('🚨 REWRITING TO:', rewrittenUrl.toString());
+    
+    // Handle auth for platform routes on subdomains AFTER rewriting
+    if (isPlatformRoute && !isLoggedIn) {
+      const callbackUrl = pathname + nextUrl.search
+      const encodedCallbackUrl = encodeURIComponent(callbackUrl)
+      console.log('🚨 REDIRECTING TO MAIN DOMAIN LOGIN:', `/login?callbackUrl=${encodedCallbackUrl}`);
+      // Redirect to main domain login page (since we only have one login page)
+      const mainDomain = 'http://localhost:3000';
+      return NextResponse.redirect(new URL(`/login?callbackUrl=${encodedCallbackUrl}`, mainDomain))
+    }
+    
+    console.log('🚨 FINAL REWRITE:', rewrittenUrl.toString());
+    return NextResponse.rewrite(rewrittenUrl);
   }
 
   // Explicitly protect platform routes
@@ -122,7 +174,9 @@ export default auth((req) => {
     const callbackUrl = pathname + nextUrl.search
     const encodedCallbackUrl = encodeURIComponent(callbackUrl)
     const actualHost = req.headers.get('host') || nextUrl.hostname
-    const loginUrl = new URL(`/login?callbackUrl=${encodedCallbackUrl}`, `https://${actualHost}`)
+    // Use http for localhost, https for production
+    const protocol = actualHost.includes('localhost') ? 'http' : 'https'
+    const loginUrl = new URL(`/login?callbackUrl=${encodedCallbackUrl}`, `${protocol}://${actualHost}`)
     return NextResponse.redirect(loginUrl)
   }
 
@@ -130,7 +184,9 @@ export default auth((req) => {
     const callbackUrl = pathname + nextUrl.search
     const encodedCallbackUrl = encodeURIComponent(callbackUrl)
     const actualHost = req.headers.get('host') || nextUrl.hostname
-    const loginUrl = new URL(`/login?callbackUrl=${encodedCallbackUrl}`, `https://${actualHost}`)
+    // Use http for localhost, https for production
+    const protocol = actualHost.includes('localhost') ? 'http' : 'https'
+    const loginUrl = new URL(`/login?callbackUrl=${encodedCallbackUrl}`, `${protocol}://${actualHost}`)
     return NextResponse.redirect(loginUrl)
   }
 
