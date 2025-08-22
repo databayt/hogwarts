@@ -177,6 +177,42 @@ export async function initializeSchoolSetup(userId: string) {
   }
 }
 
+/**
+ * Reserve a subdomain for a school during onboarding
+ */
+export async function reserveSubdomainForSchool(
+  schoolId: string,
+  subdomain: string
+): Promise<{
+  success: boolean;
+  error?: string;
+}> {
+  try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      throw new Error("Authentication required");
+    }
+
+    // Import the subdomain actions
+    const { reserveSubdomain } = await import('@/lib/subdomain-actions');
+    
+    // Reserve the subdomain
+    const result = await reserveSubdomain(subdomain, schoolId);
+    
+    if (result.success) {
+      revalidatePath("/onboarding");
+    }
+    
+    return result;
+  } catch (error) {
+    console.error("Error reserving subdomain:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "An error occurred",
+    };
+  }
+}
+
 export async function getSchoolSetupStatus(schoolId: string) {
   try {
     const session = await auth();

@@ -10,21 +10,43 @@ import { Icons } from "./icons"
 import { MobileNav } from "./mobile-nav"
 import Image from "next/image"
 
+interface School {
+  id: string;
+  name: string;
+  domain: string;
+  logoUrl?: string | null;
+  address?: string | null;
+  phoneNumber?: string | null;
+  email?: string | null;
+  website?: string | null;
+  timezone?: string;
+  planType?: string;
+  maxStudents?: number;
+  maxTeachers?: number;
+  isActive?: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
 interface MainNavProps {
   items?: MainNavItem[]
   children?: React.ReactNode
+  school: School
 }
 
-export function MainNav({ items, children }: MainNavProps) {
+export function MainNav({ items, children, school }: MainNavProps) {
   const segment = useSelectedLayoutSegment()
   const [showMobileMenu, setShowMobileMenu] = React.useState<boolean>(false)
+
+  // Use subdomain instead of full school name and capitalize first letter
+  const displayName = school.domain.charAt(0).toUpperCase() + school.domain.slice(1);
 
   return (
     <div className="flex gap-6 md:gap-10">
       <Link href="/" className="hidden items-center gap-2 md:flex">
-        <Image src="/logo.png" alt="Hogwarts Logo" width={20} height={20} className="dark:invert" />
+        <Image src="/logo.png" alt={`${displayName} Logo`} width={20} height={20} className="dark:invert" />
         <span className="hidden font-bold sm:inline-block  ">
-          {siteConfig.name}
+          {displayName}
         </span>
       </Link>
       {items?.length ? (
@@ -54,7 +76,7 @@ export function MainNav({ items, children }: MainNavProps) {
         <span className="font-bold">Menu</span>
       </button>
       {showMobileMenu && items && (
-        <MobileNav items={items}>{children}</MobileNav>
+        <MobileNav items={items} school={school}>{children}</MobileNav>
       )}
     </div>
   )

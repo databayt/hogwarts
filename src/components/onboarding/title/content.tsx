@@ -4,11 +4,15 @@ import React, { useState, useEffect } from 'react';
 import { useHostValidation } from '@/components/onboarding/host-validation-context';
 import { useListing } from '@/components/onboarding/use-listing';
 import { FORM_LIMITS } from '@/components/onboarding/constants.client';
+import { generateSubdomain } from '@/lib/subdomain';
+import { Badge } from '@/components/ui/badge';
+import { Globe } from 'lucide-react';
 
 export default function TitleContent() {
   const { enableNext, disableNext } = useHostValidation();
   const { listing, updateListingData } = useListing();
   const [schoolName, setSchoolName] = useState<string>('');
+  const [generatedSubdomain, setGeneratedSubdomain] = useState<string>('');
 
   const maxLength = FORM_LIMITS.TITLE_MAX_LENGTH;
 
@@ -33,6 +37,14 @@ export default function TitleContent() {
     const newName = event.target.value;
     if (newName.length <= maxLength) {
       setSchoolName(newName);
+      
+      // Generate subdomain preview
+      if (newName.trim().length >= FORM_LIMITS.TITLE_MIN_LENGTH) {
+        const subdomain = generateSubdomain(newName);
+        setGeneratedSubdomain(subdomain);
+      } else {
+        setGeneratedSubdomain('');
+      }
       
       // Update backend data with debouncing
       try {
@@ -59,6 +71,24 @@ export default function TitleContent() {
             <p className="text-sm sm:text-base text-muted-foreground">
               This will be your school's official name in the system. You can change it later if needed.
             </p>
+            
+            {/* Subdomain preview */}
+            {generatedSubdomain && (
+              <div className="mt-4 p-3 bg-muted rounded-lg">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Globe className="w-4 h-4" />
+                  <span>Your school will be available at:</span>
+                </div>
+                <div className="mt-2">
+                  <Badge variant="secondary" className="font-mono text-sm">
+                    {generatedSubdomain}.databayt.org
+                  </Badge>
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  You can customize this subdomain in the next step
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Right side - Input box */}

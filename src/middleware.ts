@@ -7,15 +7,61 @@ import {
   publicRoutes 
 } from "./routes"
 
+// Constants for production
+const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'localhost:3000';
+
+function extractSubdomain(request: any): string | null {
+  const url = request.url;
+  const host = request.headers.get('host') || '';
+  const hostname = host.split(':')[0];
+
+  // Local development environment
+  if (url.includes('localhost') || url.includes('127.0.0.1')) {
+    // Try to extract subdomain from the full URL
+    const fullUrlMatch = url.match(/http:\/\/([^.]+)\.localhost/);
+    if (fullUrlMatch && fullUrlMatch[1]) {
+      return fullUrlMatch[1];
+    }
+
+    // Fallback to host header approach
+    if (hostname.includes('.localhost')) {
+      const subdomain = hostname.split('.')[0];
+      return subdomain;
+    }
+
+    return null;
+  }
+
+  // Production environment
+  const rootDomainFormatted = rootDomain.split(':')[0];
+
+  // Handle preview deployment URLs (tenant---branch-name.vercel.app)
+  if (hostname.includes('---') && hostname.endsWith('.vercel.app')) {
+    const parts = hostname.split('---');
+    const subdomain = parts.length > 0 ? parts[0] : null;
+    return subdomain;
+  }
+
+  // Regular subdomain detection
+  const isSubdomain =
+    hostname !== rootDomainFormatted &&
+    hostname !== `www.${rootDomainFormatted}` &&
+    hostname.endsWith(`.${rootDomainFormatted}`);
+
+  if (isSubdomain) {
+    const subdomain = hostname.replace(`.${rootDomainFormatted}`, '');
+    return subdomain;
+  }
+
+  return null;
+}
+
 // Middleware using Next.js 14/15 syntax
 export default auth((req) => {
   const { nextUrl } = req
   const isLoggedIn = !!req.auth
 
   const pathname = nextUrl.pathname
-  
-  // Add simple log to see if middleware executes
-  console.log('🔄 Middleware executing for:', { host: nextUrl.hostname, pathname })
   
   const isApiAuthRoute = pathname.startsWith(apiAuthPrefix)
   const isPublicRoute = publicRoutes.includes(pathname)
@@ -57,152 +103,40 @@ export default auth((req) => {
     return
   }
 
-  // Subdomain → tenant mapping (attach x-school-id header)
-  try {
-    // Use the original URL from the request for more reliable host detection
-    const originalUrl = new URL(req.url)
-    const host = originalUrl.hostname
-    const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN // e.g. "databayt.org"
-    
-    // Debug logging
-    console.log('🔄 Middleware executing for:', { host: nextUrl.hostname, pathname })
-    console.log('🔍 Host detection debug:', { 
-      nextUrlHostname: nextUrl.hostname,
-      originalUrlHostname: originalUrl.hostname,
-      requestHostHeader: req.headers.get('host'),
-      xForwardedHost: req.headers.get('x-forwarded-host'),
-      xRealHost: req.headers.get('x-real-host'),
-      originalUrl: req.url
-    })
-    console.log('Middleware Debug:', { 
-      host, 
-      rootDomain, 
-      pathname,
-      hostType: typeof host,
-      rootDomainType: typeof rootDomain,
-      hostLength: host?.length,
-      rootDomainLength: rootDomain?.length
-    })
-    
-    let resolvedSchoolId: string | null = null
-    // Dev convenience: /?x-school=<domain>
-    const devDomainParam = nextUrl.searchParams.get("x-school")
-    if (devDomainParam) {
-      // hint to the type checker that we intentionally may set this below
-      resolvedSchoolId = null
-    }
-    // We cannot query DB in middleware; use header propagation via later server code.
-    // We pass the subdomain (or x-school) as a header; server code resolves to schoolId.
-    let subdomain: string | null = null
-    if (devDomainParam) {
-      subdomain = devDomainParam
-      console.log('Using dev domain param:', subdomain)
-    } else if (rootDomain && host && host.endsWith("." + rootDomain)) {
-      // More robust subdomain extraction
-      const dotRootDomain = "." + rootDomain
-      const subdomainEndIndex = host.lastIndexOf(dotRootDomain)
-      if (subdomainEndIndex > 0) {
-        subdomain = host.substring(0, subdomainEndIndex)
-      } else {
-        subdomain = null
-      }
-      console.log('Subdomain extraction details:', {
-        host,
-        rootDomain,
-        dotRootDomain,
-        subdomainEndIndex,
-        extractedSubdomain: subdomain
-      })
-    } else {
-      console.log('No subdomain found:', {
-        host,
-        rootDomain,
-        hostEndsWithRoot: rootDomain ? host?.endsWith("." + rootDomain) : false
-      })
-    }
-    
-    // Debug logging
-    console.log('Final subdomain result:', { subdomain, host, rootDomain })
-    
-    if (subdomain) {
-      // Special case: ed.databayt.org should show marketing, not be treated as subdomain
-      if (subdomain === 'ed') {
-        // Don't set x-subdomain header for ed.databayt.org
-        // Let it use the default (marketing) route
-        console.log('ed.databayt.org detected - using marketing route')
-        return NextResponse.next()
-      }
+  // Subdomain → tenant routing (Following reference pattern exactly)
+  const subdomain = extractSubdomain(req);
 
-      // For school subdomains, set the header and redirect to home page
-      if (subdomain !== 'ed') {
-        const requestHeaders = new Headers(req.headers)
-        requestHeaders.set("x-subdomain", subdomain)
-        console.log('Setting x-subdomain header for school:', subdomain)
-        
-        // Redirect school subdomains root path to home page
-        if (pathname === '/') {
-          // Use the actual host from request headers for the redirect
-          const actualHost = req.headers.get('host') || nextUrl.hostname
-          const homeUrl = new URL('/home', `https://${actualHost}`)
-          console.log('Redirecting school subdomain to home page:', homeUrl.toString())
-          return NextResponse.redirect(homeUrl)
-        }
-        
-        return NextResponse.next({ request: { headers: requestHeaders } })
-      }
+  if (subdomain) {
+    // Block access to admin page from subdomains
+    if (pathname.startsWith('/admin')) {
+      return NextResponse.redirect(new URL('/', req.url));
     }
-  } catch (error) {
-    // Log the actual error instead of swallowing it
-    console.error('Subdomain middleware error:', error)
-    // Don't fail the request, continue without subdomain
+
+    // For the root path on a subdomain, rewrite to the subdomain page
+    if (pathname === '/') {
+      return NextResponse.rewrite(new URL(`/s/${subdomain}`, req.url));
+    }
+
+    // For other paths, set subdomain header and continue
+    const requestHeaders = new Headers(req.headers)
+    requestHeaders.set("x-subdomain", subdomain)
+    return NextResponse.next({ request: { headers: requestHeaders } })
   }
 
   // Explicitly protect platform routes
   if (isPlatformRoute && !isLoggedIn) {
-    console.log('🔒 Platform route protection triggered:', { 
-      pathname, 
-      isPlatformRoute, 
-      isLoggedIn, 
-      user: req.auth?.user 
-    })
     const callbackUrl = pathname + nextUrl.search
     const encodedCallbackUrl = encodeURIComponent(callbackUrl)
-    // Use actual host from request headers to maintain subdomain context
     const actualHost = req.headers.get('host') || nextUrl.hostname
     const loginUrl = new URL(`/login?callbackUrl=${encodedCallbackUrl}`, `https://${actualHost}`)
-    console.log('🔄 Redirecting to login:', loginUrl.toString())
-
     return NextResponse.redirect(loginUrl)
   }
 
-  // Guard operator routes to DEVELOPER (platform admin) only — temporarily disabled for public demo
-  // if (isOperatorRoute) {
-  //   if (!isLoggedIn) {
-  //     const callbackUrl = pathname + nextUrl.search
-  //     const encodedCallbackUrl = encodeURIComponent(callbackUrl)
-  //     return NextResponse.redirect(new URL(`/login?callbackUrl=${encodedCallbackUrl}`, nextUrl))
-  //   }
-  //   const role = req.auth?.user?.role
-  //   if (role !== "DEVELOPER") {
-  //     return NextResponse.redirect(new URL("/403", nextUrl))
-  //   }
-  // }
-
   if (!isLoggedIn && !isPublicRoute && !isDocsRoute) {
-    console.log('🔒 General auth protection triggered:', { 
-      pathname, 
-      isLoggedIn, 
-      isPublicRoute, 
-      isDocsRoute,
-      user: req.auth?.user 
-    })
     const callbackUrl = pathname + nextUrl.search
     const encodedCallbackUrl = encodeURIComponent(callbackUrl)
-    // Use actual host from request headers to maintain subdomain context
     const actualHost = req.headers.get('host') || nextUrl.hostname
     const loginUrl = new URL(`/login?callbackUrl=${encodedCallbackUrl}`, `https://${actualHost}`)
-    console.log('🔄 Redirecting to login:', loginUrl.toString())
-
     return NextResponse.redirect(loginUrl)
   }
 
@@ -210,5 +144,13 @@ export default auth((req) => {
 })
 
 export const config = {
-  matcher: ['/((?!.+\\.[\\w]+$|_next).*)', '/', '/(api|trpc)(.*)'],
-}
+  matcher: [
+    /*
+     * Match all paths except for:
+     * 1. /api routes
+     * 2. /_next (Next.js internals)
+     * 3. all root files inside /public (e.g. /favicon.ico)
+     */
+    '/((?!api|_next|[\\w-]+\\.\\w+).*)'
+  ]
+};

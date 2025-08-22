@@ -15,7 +15,32 @@ import { BackgroundGradientAnimationDemo } from "./ready";
 import { NewComers } from "./new-comers";
 import { CTA } from "./admission-process";
 
-export default function HomeContent() {
+interface School {
+  id: string;
+  name: string;
+  domain: string;
+  logoUrl?: string | null;
+  address?: string | null;
+  phoneNumber?: string | null;
+  email?: string | null;
+  website?: string | null;
+  timezone?: string;
+  planType?: string;
+  maxStudents?: number;
+  maxTeachers?: number;
+  isActive?: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+interface SiteProps {
+  school: School; // Required - we always pass school data now
+}
+
+export default function SiteContent({ school }: SiteProps) {
+  // For now, we'll just render static content
+  // Later, you can use this data to make components dynamic
+
   return (
     <div>
       <Hero />
@@ -34,10 +59,6 @@ export default function HomeContent() {
       <FAQs />
       <NewComers />
       <Footer />
-     
-
-
-
     </div>
   );
 }

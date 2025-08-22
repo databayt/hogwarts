@@ -19,8 +19,8 @@ This document traces the complete implementation of subdomain-based multi-tenanc
 
 The system implements a **subdomain-based multi-tenant architecture** where:
 
-- **Root Domain**: `hogwarts.app` (configurable via `NEXT_PUBLIC_ROOT_DOMAIN`)
-- **Tenant Subdomains**: Each school gets a unique subdomain (e.g., `khartoum.hogwarts.app`)
+- **Root Domain**: `ed.databayt.org` (configurable via `NEXT_PUBLIC_ROOT_DOMAIN`)
+- **Tenant Subdomains**: Each school gets a unique subdomain (e.g., `khartoum.databayt.org`)
 - **Data Isolation**: All database operations are scoped by `schoolId`
 - **Shared Infrastructure**: Single codebase, database, and deployment
 

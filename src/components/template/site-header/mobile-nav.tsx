@@ -7,13 +7,35 @@ import { cn } from "@/lib/utils"
 import { useLockBody } from "./use-lock-body"
 import { Icons } from "./icons"
 
+interface School {
+  id: string;
+  name: string;
+  domain: string;
+  logoUrl?: string | null;
+  address?: string | null;
+  phoneNumber?: string | null;
+  email?: string | null;
+  website?: string | null;
+  timezone?: string;
+  planType?: string;
+  maxStudents?: number;
+  maxTeachers?: number;
+  isActive?: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
 interface MobileNavProps {
   items: MainNavItem[]
   children?: React.ReactNode
+  school: School
 }
 
-export function MobileNav({ items, children }: MobileNavProps) {
+export function MobileNav({ items, children, school }: MobileNavProps) {
   useLockBody()
+
+  // Use subdomain instead of full school name and capitalize first letter
+  const displayName = school.domain.charAt(0).toUpperCase() + school.domain.slice(1);
 
   return (
     <div
@@ -24,7 +46,7 @@ export function MobileNav({ items, children }: MobileNavProps) {
       <div className="relative z-20 grid gap-6 rounded-md bg-popover p-4 text-popover-foreground shadow-md">
         <Link href="/" className="flex items-center space-x-2">
           <Icons.logo />
-          <span className="font-bold">{siteConfig.name}</span>
+          <span className="font-bold">{displayName}</span>
         </Link>
         <nav className="grid grid-flow-row auto-rows-max text-sm">
           {items.map((item, index) => (

@@ -4,7 +4,29 @@ import { marketingConfig } from './constant'
 import { auth } from "@/auth"
 import { RightActions } from './right-actions'
 
-export default async function SiteHeader() {
+interface School {
+  id: string;
+  name: string;
+  domain: string;
+  logoUrl?: string | null;
+  address?: string | null;
+  phoneNumber?: string | null;
+  email?: string | null;
+  website?: string | null;
+  timezone?: string;
+  planType?: string;
+  maxStudents?: number;
+  maxTeachers?: number;
+  isActive?: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+interface SiteHeaderProps {
+  school: School;
+}
+
+export default async function SiteHeader({ school }: SiteHeaderProps) {
   const session = await auth();
     return (
       <header className="sticky top-0 z-40 border-b border-dashed border-muted bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60" style={{
@@ -15,7 +37,7 @@ export default async function SiteHeader() {
         <div className="container-responsive">
           <div className="flex h-14 items-center justify-between">
             {/* Left side - Logo and Nav */}
-            <MainNav items={marketingConfig.mainNav} />
+            <MainNav items={marketingConfig.mainNav} school={school} />
             
             {/* Right side - Login/Logout and Theme toggle */}
             <RightActions isAuthenticated={!!session?.user} />
