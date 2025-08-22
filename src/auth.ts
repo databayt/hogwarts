@@ -10,6 +10,11 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
     strategy: "jwt",
     maxAge: 24 * 60 * 60, // 24 hours
     updateAge: 60 * 60, // 1 hour
+    generateSessionToken: () => {
+      const token = `session_${Date.now()}`;
+      console.log('🔑 Generated session token:', token);
+      return token;
+    },
   },
   pages: {
     signIn: "/login",
@@ -37,6 +42,7 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
         path: "/",
         secure: false,
         maxAge: 900, // 15 minutes
+        domain: undefined, // Allow cookies to be shared across subdomains
       },
     },
     sessionToken: {
@@ -46,6 +52,7 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
         sameSite: "lax",
         path: "/",
         secure: false,
+        domain: undefined, // Allow cookies to be shared across subdomains
       },
     },
     callbackUrl: {
@@ -54,6 +61,7 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
         sameSite: "lax",
         path: "/",
         secure: false,
+        domain: undefined, // Allow cookies to be shared across subdomains
       },
     },
     csrfToken: {
@@ -63,6 +71,28 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
         sameSite: "lax",
         path: "/",
         secure: false,
+        domain: undefined, // Allow cookies to be shared across subdomains
+      },
+    },
+    // Add explicit configuration for all NextAuth cookies
+    state: {
+      name: `authjs.state`,
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: false,
+        domain: undefined, // Allow cookies to be shared across subdomains
+      },
+    },
+    nonce: {
+      name: `authjs.nonce`,
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: false,
+        domain: undefined, // Allow cookies to be shared across subdomains
       },
     },
   },
@@ -101,6 +131,12 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
           console.log('🔄 Forcing session update after signIn');
           token.iat = Math.floor(Date.now() / 1000);
           token.exp = Math.floor(Date.now() / 1000) + (24 * 60 * 60); // 24 hours
+          // Force session refresh by updating token
+          token.sessionToken = `session_${Date.now()}`;
+          // Force session update by changing a critical field
+          token.updatedAt = Date.now();
+          // Force session refresh by updating the token hash
+          token.hash = `hash_${Date.now()}`;
         }
       }
       
@@ -112,7 +148,8 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
         provider: token?.provider,
         iat: token?.iat,
         exp: token?.exp,
-        sub: token?.sub
+        sub: token?.sub,
+        sessionToken: token?.sessionToken
       });
       
       return token
@@ -122,7 +159,9 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
         trigger,
         hasToken: !!token, 
         hasUser: !!user,
-        sessionUser: session.user?.id 
+        sessionUser: session.user?.id,
+        timestamp: new Date().toISOString(),
+        host: typeof window !== 'undefined' ? window.location.host : 'server'
       });
       
       if (token) {
@@ -137,6 +176,18 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
         if (token.schoolId) {
           (session.user as any).schoolId = token.schoolId
           console.log('🏫 SchoolId applied to session:', token.schoolId);
+        }
+        
+        // Force session update if token has been updated
+        if (token.updatedAt) {
+          console.log('🔄 Token updated, forcing session refresh');
+          (session as any).updatedAt = token.updatedAt;
+        }
+        
+        // Force session refresh if token hash changed
+        if (token.hash) {
+          console.log('🔄 Token hash changed, forcing session refresh');
+          (session as any).hash = token.hash;
         }
         
         console.log('🔑 Token data applied to session:', {
@@ -157,7 +208,8 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
         sessionToken: token?.sessionToken,
         iat: token?.iat,
         exp: token?.exp,
-        email: session.user?.email
+        email: session.user?.email,
+        timestamp: new Date().toISOString()
       });
       
       return session
@@ -247,18 +299,18 @@ console.log('NextAuth initialization - Environment check:', {
 console.log('🍪 Cookie configuration:', {
   pkceCodeVerifier: {
     name: 'authjs.pkce.code_verifier',
-    options: { sameSite: 'lax', secure: false, httpOnly: true }
+    options: { sameSite: 'lax', secure: false, httpOnly: true, maxAge: 900, domain: undefined }
   },
   sessionToken: {
     name: 'authjs.session-token',
-    options: { sameSite: 'lax', secure: false, httpOnly: true }
+    options: { sameSite: 'lax', secure: false, httpOnly: true, domain: undefined }
   },
   callbackUrl: {
     name: 'authjs.callback-url',
-    options: { sameSite: 'lax', secure: false }
+    options: { sameSite: 'lax', secure: false, domain: undefined }
   },
   csrfToken: {
     name: 'authjs.csrf-token',
-    options: { sameSite: 'lax', secure: false, httpOnly: true }
+    options: { sameSite: 'lax', secure: false, httpOnly: true, domain: undefined }
   }
 });

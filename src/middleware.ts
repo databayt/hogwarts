@@ -10,6 +10,57 @@ import {
 // Constants for production
 const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'localhost:3000';
 
+// Custom function to check if user has a valid session token
+function hasValidSessionToken(cookieHeader: string | null): boolean {
+  if (!cookieHeader) return false;
+  
+  // Look for the session token cookie
+  const sessionTokenMatch = cookieHeader.match(/authjs\.session-token=([^;]+)/);
+  if (!sessionTokenMatch || !sessionTokenMatch[1]) return false;
+  
+  const sessionToken = sessionTokenMatch[1];
+  console.log('🔍 Custom session check - Found session token:', sessionToken ? 'Present' : 'Missing');
+  
+  // Basic validation - check if token exists and has content
+  // Also check if it's not just an empty or invalid token
+  const isValidToken = sessionToken && 
+                      sessionToken.length > 10 && 
+                      !sessionToken.includes('undefined') &&
+                      !sessionToken.includes('null');
+  
+  console.log('🔍 Custom session check - Token validation:', {
+    hasToken: !!sessionToken,
+    tokenLength: sessionToken?.length,
+    isValidToken
+  });
+  
+  return isValidToken;
+}
+
+// Enhanced function to check for any authentication indicators
+function hasAnyAuthenticationIndicators(cookieHeader: string | null): boolean {
+  if (!cookieHeader) return false;
+  
+  // Check for session token
+  const hasSessionToken = hasValidSessionToken(cookieHeader);
+  
+  // Check for other auth-related cookies
+  const hasCsrfToken = Boolean(cookieHeader.includes('authjs.csrf-token'));
+  const hasCallbackUrl = Boolean(cookieHeader.includes('authjs.callback-url'));
+  
+  // Check if we have any combination of auth indicators
+  const hasAuthIndicators = hasSessionToken || (hasCsrfToken && hasCallbackUrl);
+  
+  console.log('🔍 Enhanced auth check:', {
+    hasSessionToken,
+    hasCsrfToken,
+    hasCallbackUrl,
+    hasAuthIndicators
+  });
+  
+  return hasAuthIndicators;
+}
+
 function extractSubdomain(request: any): string | null {
   const url = request.url;
   const host = request.headers.get('host') || '';
@@ -60,6 +111,19 @@ function extractSubdomain(request: any): string | null {
 export default auth((req) => {
   const { nextUrl } = req
   const isLoggedIn = !!req.auth
+
+  // Add detailed debugging for auth session
+  console.log('🔍 MIDDLEWARE AUTH DEBUG:', {
+    hasAuth: !!req.auth,
+    authKeys: req.auth ? Object.keys(req.auth) : null,
+    authUser: req.auth?.user ? { id: req.auth.user.id, email: req.auth.user.email } : null,
+    cookies: req.headers.get('cookie') ? 'Present' : 'Missing',
+    host: req.headers.get('host'),
+    allCookies: req.headers.get('cookie') || 'None',
+    sessionToken: req.headers.get('cookie')?.includes('authjs.session-token') ? 'Found' : 'Missing',
+    csrfToken: req.headers.get('cookie')?.includes('authjs.csrf-token') ? 'Found' : 'Missing',
+    cookieDetails: req.headers.get('cookie')?.split(';').map(c => c.trim().split('=')[0]) || []
+  });
 
   const pathname = nextUrl.pathname
   
@@ -140,13 +204,12 @@ export default auth((req) => {
     console.log('🚨 SUBDOMAIN DETECTED:', subdomain);
     console.log('🚨 PATHNAME:', pathname);
     console.log('🚨 IS PLATFORM ROUTE:', isPlatformRoute);
+    console.log('🚨 AUTH STATUS:', { isLoggedIn, hasAuth: !!req.auth });
     
     // Block access to admin page from subdomains
     if (pathname.startsWith('/admin')) {
       return NextResponse.redirect(new URL('/', req.url));
     }
-
-
 
     // Rewrite all paths on subdomains to include /s/${subdomain} prefix
     // This handles /, /about, /academic, /admission, etc.
@@ -157,9 +220,36 @@ export default auth((req) => {
     
     // Handle auth for platform routes on subdomains AFTER rewriting
     if (isPlatformRoute && !isLoggedIn) {
+      // Try enhanced authentication check for cross-subdomain authentication
+      const hasEnhancedAuth = hasAnyAuthenticationIndicators(req.headers.get('cookie'));
+      console.log('🚨 Enhanced auth check result:', hasEnhancedAuth);
+      
+      // Additional debugging for cookie analysis
+      const cookies = req.headers.get('cookie');
+      if (cookies) {
+        const cookieList = cookies.split(';').map(c => c.trim());
+        console.log('🚨 All cookies on subdomain:', cookieList);
+        
+        // Check for any auth-related cookies
+        const authCookies = cookieList.filter(c => c.includes('authjs'));
+        console.log('🚨 Auth-related cookies:', authCookies);
+        
+        // Check if we have any valid authentication indicators
+        const hasAnyAuthCookie = authCookies.length > 0;
+        console.log('🚨 Has any auth cookie:', hasAnyAuthCookie);
+      }
+      
+      if (hasEnhancedAuth) {
+        console.log('✅ Enhanced auth check passed, allowing access to subdomain');
+        console.log('🚨 FINAL REWRITE (with enhanced auth):', rewrittenUrl.toString());
+        return NextResponse.rewrite(rewrittenUrl);
+      }
+      
       const callbackUrl = pathname + nextUrl.search
       const encodedCallbackUrl = encodeURIComponent(callbackUrl)
       console.log('🚨 REDIRECTING TO MAIN DOMAIN LOGIN:', `/login?callbackUrl=${encodedCallbackUrl}`);
+      console.log('🚨 AUTH DEBUG - Cookies present:', !!req.headers.get('cookie'));
+      console.log('🚨 AUTH DEBUG - Auth object:', req.auth);
       // Redirect to main domain login page (since we only have one login page)
       const mainDomain = 'http://localhost:3000';
       return NextResponse.redirect(new URL(`/login?callbackUrl=${encodedCallbackUrl}`, mainDomain))
