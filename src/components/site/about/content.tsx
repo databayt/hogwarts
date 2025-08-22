@@ -1,10 +1,16 @@
 import { StickyScroll } from "@/components/atom/sticky-scroll";
-       
-export default function AboutContent() {
+import type { School } from '../types';
+
+interface AboutContentProps {
+  school: School;
+}
+
+export default function AboutContent({ school }: AboutContentProps) {
+  // For now, we'll keep the content static
+  // Later, you can use the school data to make it dynamic
   return (
     <div>
-             
-    <StickyScroll content={aboutContent} />
+      <StickyScroll content={aboutContent} />
     </div>
   );
 }
@@ -19,7 +25,7 @@ const aboutContent = [
     content: (
       <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-lg">
         <img
-          src="/a.jpeg"
+          src="/site/h.jpeg"
           width={400}
           height={300}
           className="h-full w-full object-cover"
@@ -35,7 +41,7 @@ const aboutContent = [
     content: (
       <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-lg">
         <img
-          src="/c.jpeg"
+          src="/site/trian.jpeg"
           width={400}
           height={300}
           className="h-full w-full object-cover"
@@ -51,7 +57,7 @@ const aboutContent = [
     content: (
       <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br from-destructive to-primary">
         <img
-          src="/d.jpeg"
+          src="/site/a.jpeg"
           width={400}
           height={300}
           className="h-full w-full object-cover"
@@ -67,7 +73,7 @@ const aboutContent = [
     content: (
       <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br from-secondary to-muted">
         <img
-          src="/b.jpeg"
+          src="/site/b.jpeg"
           width={400}
           height={300}
           className="h-full w-full object-cover"
@@ -83,7 +89,7 @@ const aboutContent = [
     content: (
       <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br from-primary to-accent">
         <img
-          src="/e.jpeg"
+          src="/contribute/h.jpeg"
           width={400}
           height={300}
           className="h-full w-full object-cover"

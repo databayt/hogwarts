@@ -112,15 +112,9 @@ export default auth((req) => {
       return NextResponse.redirect(new URL('/', req.url));
     }
 
-    // For the root path on a subdomain, rewrite to the subdomain page
-    if (pathname === '/') {
-      return NextResponse.rewrite(new URL(`/s/${subdomain}`, req.url));
-    }
-
-    // For other paths, set subdomain header and continue
-    const requestHeaders = new Headers(req.headers)
-    requestHeaders.set("x-subdomain", subdomain)
-    return NextResponse.next({ request: { headers: requestHeaders } })
+    // Rewrite all paths on subdomains to include /s/${subdomain} prefix
+    // This handles /, /about, /academic, /admission, etc.
+    return NextResponse.rewrite(new URL(`/s/${subdomain}${pathname}`, req.url));
   }
 
   // Explicitly protect platform routes
