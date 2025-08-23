@@ -254,19 +254,21 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
         console.log('❌ Error page detected, investigating...');
       }
 
-      // Default behavior
+      // Default behavior - ALWAYS redirect to dashboard on main domain
       if (url.startsWith("/")) {
-        const finalUrl = `${baseUrl}${url}`;
-        console.log('🔄 Default behavior - relative path, returning:', finalUrl);
+        const finalUrl = `${baseUrl}/dashboard`;
+        console.log('🔄 Default behavior - redirecting to dashboard:', finalUrl);
         return finalUrl;
       }
       else if (new URL(url).origin === baseUrl) {
-        console.log('🔄 Default behavior - same origin, returning:', url);
-        return url;
+        // If it's the same origin, redirect to dashboard
+        const dashboardUrl = `${baseUrl}/dashboard`;
+        console.log('🔄 Same origin - redirecting to dashboard:', dashboardUrl);
+        return dashboardUrl;
       }
       
-      console.log('🔄 Default behavior - external URL, returning baseUrl:', baseUrl);
-      return baseUrl
+      console.log('🔄 External URL - redirecting to dashboard:', `${baseUrl}/dashboard`);
+      return `${baseUrl}/dashboard`
     },
   },
   ...authConfig,

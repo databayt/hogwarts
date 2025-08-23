@@ -2,7 +2,7 @@
 
 import * as z from "zod";
 import { useForm } from "react-hook-form";
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
@@ -45,6 +45,21 @@ export const LoginForm = ({
   const [error, setError] = useState<string | undefined>("");
   const [success, setSuccess] = useState<string | undefined>("");
   const [isPending, startTransition] = useTransition();
+
+  // Handle tenant redirect after successful login
+  useEffect(() => {
+    const tenant = searchParams.get('tenant');
+    
+    if (tenant && success) {
+      // Redirect back to tenant subdomain after successful login
+      const tenantUrl = process.env.NODE_ENV === 'production'
+        ? `https://${tenant}.ed.databayt.org/dashboard`
+        : `http://${tenant}.localhost:3000/dashboard`;
+      
+      console.log('🔄 Redirecting to tenant after login:', tenantUrl);
+      window.location.href = tenantUrl;
+    }
+  }, [success, searchParams]);
 
   const form = useForm<z.infer<typeof LoginSchema>>({
     resolver: zodResolver(LoginSchema),

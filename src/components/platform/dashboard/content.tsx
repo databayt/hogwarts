@@ -7,6 +7,7 @@ import { StaffDashboard } from "./dashboards/staff-dashboard";
 import { AdminDashboard } from "./dashboards/admin-dashboard";
 import { PrincipalDashboard } from "./dashboards/principal-dashboard";
 import { AccountantDashboard } from "./dashboards/accountant-dashboard";
+import { TenantLoginRedirect } from "@/components/auth/tenant-login-redirect";
 import type { School } from "@/components/site/types";
 
 // Extended user type that includes the properties added by our auth callbacks
@@ -28,11 +29,15 @@ export default async function DashboardContent({ school }: DashboardContentProps
   const user = await currentUser() as ExtendedUser | null;
   console.log('DashboardContent - user:', user);
 
-  // If no user, the middleware should have already redirected to login
-  // This should not happen in normal flow
+  // If no user, show login component
   if (!user) {
-    console.log('DashboardContent - no user found');
-    return null;
+    console.log('DashboardContent - no user found, showing login');
+    return (
+      <TenantLoginRedirect 
+        subdomain={school?.domain || 'unknown'} 
+        className="max-w-md mx-auto mt-20"
+      />
+    );
   }
 
   // For now, use a default school name if not provided
