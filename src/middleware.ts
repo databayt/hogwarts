@@ -241,45 +241,8 @@ export default auth((req) => {
     return
   }
 
-  // Subdomain → tenant routing (Following reference pattern exactly)
+  // Subdomain → tenant routing (Following Vercel Platforms reference pattern)
   const subdomain = extractSubdomain(req);
-
-  // Block direct access to /s/ paths
-  if (pathname.startsWith('/s/')) {
-    console.log('🚨 Direct access to /s/ path detected, analyzing...', {
-      pathname,
-      host: req.headers.get('host'),
-      userAgent: req.headers.get('user-agent')?.substring(0, 100),
-      referer: req.headers.get('referer'),
-      method: req.method
-    });
-    
-    // Extract the subdomain from the path
-    const pathParts = pathname.split('/');
-    const pathSubdomain = pathParts[2]; // /s/subdomain/...
-    
-    console.log('🔍 Path analysis:', {
-      pathname,
-      pathSubdomain,
-      requestSubdomain: subdomain,
-      host: req.headers.get('host')
-    });
-    
-    if (subdomain && pathSubdomain === subdomain) {
-      // User accessed subdomain.domain.com/s/subdomain/path - redirect to clean URL
-      const cleanPath = pathname.replace(`/s/${subdomain}`, '') || '/';
-      console.log('🚨 Redirecting from unwanted /s/ path to clean URL:', cleanPath);
-      return NextResponse.redirect(new URL(cleanPath, req.url));
-    } else if (!subdomain) {
-      // Main domain access to /s/ path - redirect to home
-      console.log('🚨 Blocking direct access to /s/ path from main domain');
-      return NextResponse.redirect(new URL('/', req.url));
-    } else {
-      // This is likely an internal rewrite or valid cross-subdomain access
-      console.log('🎯 Allowing /s/ path access');
-      return;
-    }
-  }
 
   // Debug logging for subdomain detection
   console.log('🔍 Middleware Debug:', {
@@ -291,13 +254,14 @@ export default auth((req) => {
   });
 
   if (subdomain) {
-    console.log('🚨 SUBDOMAIN DETECTED:', subdomain);
-    console.log('🚨 PATHNAME:', pathname);
-    console.log('🚨 IS PLATFORM ROUTE:', isPlatformRoute);
-    console.log('🚨 AUTH STATUS:', { isLoggedIn, hasAuth: !!req.auth });
+    console.log('🎯 SUBDOMAIN DETECTED:', subdomain);
+    console.log('🎯 PATHNAME:', pathname);
+    console.log('🎯 IS PLATFORM ROUTE:', isPlatformRoute);
+    console.log('🎯 AUTH STATUS:', { isLoggedIn, hasAuth: !!req.auth });
     
     // Block access to admin page from subdomains
     if (pathname.startsWith('/admin')) {
+      console.log('🚫 Blocking admin access from subdomain');
       return NextResponse.redirect(new URL('/', req.url));
     }
 
@@ -306,19 +270,19 @@ export default auth((req) => {
       if (!isLoggedIn) {
         // Try enhanced authentication check for cross-subdomain authentication
         const hasEnhancedAuth = hasAnyAuthenticationIndicators(req.headers.get('cookie'));
-        console.log('🚨 Enhanced auth check result:', hasEnhancedAuth);
+        console.log('🔍 Enhanced auth check result:', hasEnhancedAuth);
         
         if (hasEnhancedAuth) {
           console.log('✅ Enhanced auth check passed, allowing access to subdomain platform');
           const platformRewriteUrl = new URL(`/s/${subdomain}${pathname}`, req.url);
-          console.log('🚨 PLATFORM REWRITE (with enhanced auth):', platformRewriteUrl.toString());
+          console.log('🎯 PLATFORM REWRITE (with enhanced auth):', platformRewriteUrl.toString());
           return NextResponse.rewrite(platformRewriteUrl);
         }
         
         // Redirect unauthenticated users to main domain login
         const callbackUrl = pathname + nextUrl.search
         const encodedCallbackUrl = encodeURIComponent(callbackUrl)
-        console.log('🚨 REDIRECTING TO MAIN DOMAIN LOGIN:', `/login?callbackUrl=${encodedCallbackUrl}`);
+        console.log('🔐 REDIRECTING TO MAIN DOMAIN LOGIN:', `/login?callbackUrl=${encodedCallbackUrl}`);
         
         // Use the correct protocol and domain for redirect
         const protocol = req.headers.get('host')?.includes('localhost') ? 'http' : 'https'
@@ -330,14 +294,22 @@ export default auth((req) => {
       
       // Authenticated platform route - rewrite to platform layout
       const platformRewriteUrl = new URL(`/s/${subdomain}${pathname}`, req.url);
-      console.log('🚨 AUTHENTICATED PLATFORM REWRITE:', platformRewriteUrl.toString());
+      console.log('🎯 AUTHENTICATED PLATFORM REWRITE:', platformRewriteUrl.toString());
       return NextResponse.rewrite(platformRewriteUrl);
     }
     
     // Handle public site routes (/, /about, /academic, /admission, etc.)
     // These should go to the (site) layout, not (platform)
+    // Following Vercel Platforms pattern: rewrite to /s/[subdomain] for root path
+    if (pathname === '/') {
+      const siteRewriteUrl = new URL(`/s/${subdomain}`, req.url);
+      console.log('🎯 SITE REWRITE (root path):', siteRewriteUrl.toString());
+      return NextResponse.rewrite(siteRewriteUrl);
+    }
+    
+    // For other site routes, rewrite to the site layout
     const siteRewriteUrl = new URL(`/s/${subdomain}${pathname}`, req.url);
-    console.log('🚨 SITE REWRITE:', siteRewriteUrl.toString());
+    console.log('🎯 SITE REWRITE:', siteRewriteUrl.toString());
     return NextResponse.rewrite(siteRewriteUrl);
   }
 
