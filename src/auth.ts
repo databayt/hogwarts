@@ -217,45 +217,20 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
     async redirect({ url, baseUrl }) {
       console.log('🔄 REDIRECT CALLBACK START:', { url, baseUrl });
       
-      // Check if this is a subdomain callback
-      if (url.includes('portsudan.localhost:3000')) {
-        console.log('🎯 Subdomain callback detected, returning as-is');
-        return url;
-      }
-
       // Handle Facebook redirect with #_=_ hash
       if (url.includes('#_=_')) {
-        console.log('📘 Facebook redirect detected, cleaning hash and redirecting to subdomain');
-        // Clean the Facebook hash and redirect to the subdomain dashboard
+        console.log('📘 Facebook redirect detected, cleaning hash');
+        // Clean the Facebook hash
         const cleanUrl = url.replace(/#.*$/, '');
-        const subdomainUrl = 'http://portsudan.localhost:3000/dashboard';
-        console.log('🎯 Redirecting to subdomain:', subdomainUrl);
-        return subdomainUrl;
+        console.log('🎯 Cleaned Facebook URL:', cleanUrl);
+        return cleanUrl;
       }
 
-      // Handle OAuth callback completion - redirect to subdomain
+      // Handle OAuth callback completion
       if (url.includes('/api/auth/callback/')) {
-        console.log('🔄 OAuth callback detected, redirecting to subdomain dashboard');
-        const subdomainUrl = 'http://portsudan.localhost:3000/dashboard';
-        console.log('🎯 Redirecting to subdomain after OAuth:', subdomainUrl);
-        return subdomainUrl;
-      }
-
-      // Handle main domain redirects - check if user came from subdomain
-      if (url === baseUrl || url === `${baseUrl}/`) {
-        console.log('🏠 Main domain redirect detected, checking if user came from subdomain');
-        // Redirect to subdomain dashboard since user likely came from there
-        const subdomainUrl = 'http://portsudan.localhost:3000/dashboard';
-        console.log('🎯 Redirecting to subdomain dashboard:', subdomainUrl);
-        return subdomainUrl;
-      }
-
-      // Handle dashboard redirects on main domain - redirect to subdomain
-      if (url === `${baseUrl}/dashboard`) {
-        console.log('📊 Main domain dashboard redirect detected, redirecting to subdomain');
-        const subdomainUrl = 'http://portsudan.localhost:3000/dashboard';
-        console.log('🎯 Redirecting to subdomain dashboard:', subdomainUrl);
-        return subdomainUrl;
+        console.log('🔄 OAuth callback detected, processing redirect');
+        // Let the default behavior handle the redirect
+        // The middleware will handle subdomain routing
       }
 
       // Log all redirect attempts for debugging

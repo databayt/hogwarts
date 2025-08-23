@@ -66,16 +66,20 @@ function extractSubdomain(request: any): string | null {
   const host = request.headers.get('host') || '';
   const hostname = host.split(':')[0];
 
-  console.log('🔍 Subdomain extraction debug:', {
+  console.log('🔍 SUBDOMAIN EXTRACTION START:', {
     url,
     host,
     hostname,
     rootDomain,
-    isLocalhost: url.includes('localhost') || url.includes('127.0.0.1')
+    isLocalhost: url.includes('localhost') || url.includes('127.0.0.1'),
+    environment: process.env.NODE_ENV,
+    timestamp: new Date().toISOString()
   });
 
   // Local development environment
   if (url.includes('localhost') || url.includes('127.0.0.1')) {
+    console.log('🔍 LOCALHOST ENVIRONMENT DETECTED');
+    
     // Try to extract subdomain from the full URL
     const fullUrlMatch = url.match(/http:\/\/([^.]+)\.localhost/);
     if (fullUrlMatch && fullUrlMatch[1]) {
@@ -97,21 +101,23 @@ function extractSubdomain(request: any): string | null {
   // Production environment
   const rootDomainFormatted = rootDomain.split(':')[0];
 
-  console.log('🔍 Production subdomain check:', {
+  console.log('🔍 PRODUCTION ENVIRONMENT ANALYSIS:', {
     hostname,
     rootDomain,
     rootDomainFormatted,
     isExactMatch: hostname === rootDomainFormatted,
     isWwwMatch: hostname === `www.${rootDomainFormatted}`,
     endsWithRoot: hostname.endsWith(`.${rootDomainFormatted}`),
-    environment: process.env.NODE_ENV
+    environment: process.env.NODE_ENV,
+    hostnameLength: hostname.length,
+    rootDomainLength: rootDomainFormatted.length
   });
 
   // Handle preview deployment URLs (tenant---branch-name.vercel.app)
   if (hostname.includes('---') && hostname.endsWith('.vercel.app')) {
     const parts = hostname.split('---');
     const subdomain = parts.length > 0 ? parts[0] : null;
-    console.log('🔍 Vercel preview subdomain:', subdomain);
+    console.log('🔍 Vercel preview subdomain detected:', subdomain);
     return subdomain;
   }
 
@@ -120,20 +126,39 @@ function extractSubdomain(request: any): string | null {
   // Subdomains: khartoum.databayt.org, omdurman.databayt.org, etc.
   
   if (rootDomainFormatted === 'ed.databayt.org') {
+    console.log('🔍 ED.DATABAYT.ORG DOMAIN STRUCTURE DETECTED');
+    
     // Check if hostname is the main domain
     if (hostname === 'ed.databayt.org' || hostname === 'www.ed.databayt.org') {
-      console.log('🔍 Main domain detected');
+      console.log('🎯 MAIN DOMAIN DETECTED - ed.databayt.org');
       return null;
     }
     
     // Check if it's a school subdomain (*.databayt.org but not ed.databayt.org)
     if (hostname.endsWith('.databayt.org') && hostname !== 'ed.databayt.org') {
       const subdomain = hostname.replace('.databayt.org', '');
-      console.log('🔍 Found school subdomain:', subdomain);
+      console.log('🎯 SCHOOL SUBDOMAIN DETECTED:', {
+        originalHostname: hostname,
+        extractedSubdomain: subdomain,
+        isEdSubdomain: subdomain === 'ed',
+        finalSubdomain: subdomain === 'ed' ? null : subdomain
+      });
+      
+      // Special case: if someone tries to access ed.databayt.org as a subdomain
+      if (subdomain === 'ed') {
+        console.log('🚫 BLOCKING ed.databayt.org as subdomain - redirecting to main domain');
+        return null;
+      }
+      
       return subdomain;
     }
+    
+    console.log('🔍 No valid subdomain pattern found for ed.databayt.org structure');
+    return null;
   } else {
     // Regular subdomain detection for other domains
+    console.log('🔍 REGULAR DOMAIN STRUCTURE - checking for subdomains');
+    
     const isSubdomain =
       hostname !== rootDomainFormatted &&
       hostname !== `www.${rootDomainFormatted}` &&
@@ -141,12 +166,16 @@ function extractSubdomain(request: any): string | null {
 
     if (isSubdomain) {
       const subdomain = hostname.replace(`.${rootDomainFormatted}`, '');
-      console.log('🔍 Found production subdomain:', subdomain);
+      console.log('🎯 REGULAR SUBDOMAIN DETECTED:', {
+        hostname,
+        rootDomain: rootDomainFormatted,
+        extractedSubdomain: subdomain
+      });
       return subdomain;
     }
   }
 
-  console.log('🔍 No subdomain found');
+  console.log('🔍 NO SUBDOMAIN DETECTED - returning null');
   return null;
 }
 
@@ -162,7 +191,9 @@ export default auth((req) => {
     pathname: nextUrl.pathname,
     host: req.headers.get('host'),
     origin: req.headers.get('origin'),
-    referer: req.headers.get('referer')
+    referer: req.headers.get('referer'),
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV
   });
 
   // Add detailed debugging for auth session
@@ -225,19 +256,23 @@ export default auth((req) => {
     pathname.startsWith("/profile/");
 
   if (isApiAuthRoute) {
+    console.log('🔐 API AUTH ROUTE - allowing through');
     return
   }
 
   if (isAuthRoute) {
     console.log('🔐 AUTH ROUTE DETECTED:', { pathname, host: req.headers.get('host') });
     if (isLoggedIn) {
+      console.log('🔐 User already logged in, redirecting to dashboard');
       return NextResponse.redirect(new URL(DEFAULT_LOGIN_REDIRECT, nextUrl))
     }
+    console.log('🔐 Allowing auth route access');
     return
   }
 
   // Allow all docs routes (they are public)
   if (isDocsRoute) {
+    console.log('📚 DOCS ROUTE - allowing through');
     return
   }
 
@@ -245,28 +280,40 @@ export default auth((req) => {
   const subdomain = extractSubdomain(req);
 
   // Debug logging for subdomain detection
-  console.log('🔍 Middleware Debug:', {
+  console.log('🔍 MIDDLEWARE ROUTING DECISION:', {
     pathname,
     host: req.headers.get('host'),
     subdomain,
     isPlatformRoute,
-    isLoggedIn
+    isLoggedIn,
+    isPublicRoute,
+    rootDomain,
+    timestamp: new Date().toISOString()
   });
 
   if (subdomain) {
-    console.log('🎯 SUBDOMAIN DETECTED:', subdomain);
-    console.log('🎯 PATHNAME:', pathname);
-    console.log('🎯 IS PLATFORM ROUTE:', isPlatformRoute);
-    console.log('🎯 AUTH STATUS:', { isLoggedIn, hasAuth: !!req.auth });
+    console.log('🎯 SUBDOMAIN ROUTING ACTIVATED:', {
+      subdomain,
+      pathname,
+      isPlatformRoute,
+      isLoggedIn,
+      host: req.headers.get('host')
+    });
     
     // Block access to admin page from subdomains
     if (pathname.startsWith('/admin')) {
-      console.log('🚫 Blocking admin access from subdomain');
+      console.log('🚫 BLOCKING ADMIN ACCESS FROM SUBDOMAIN - redirecting to home');
       return NextResponse.redirect(new URL('/', req.url));
     }
 
     // Handle platform routes (protected routes that need auth)
     if (isPlatformRoute) {
+      console.log('🔐 PLATFORM ROUTE DETECTED ON SUBDOMAIN:', {
+        subdomain,
+        pathname,
+        isLoggedIn
+      });
+      
       if (!isLoggedIn) {
         // Try enhanced authentication check for cross-subdomain authentication
         const hasEnhancedAuth = hasAnyAuthenticationIndicators(req.headers.get('cookie'));
@@ -289,7 +336,9 @@ export default auth((req) => {
         const mainDomain = req.headers.get('host')?.includes('localhost') 
           ? 'localhost:3000' 
           : rootDomain
-        return NextResponse.redirect(new URL(`/login?callbackUrl=${encodedCallbackUrl}`, `${protocol}://${mainDomain}`))
+        const loginRedirectUrl = new URL(`/login?callbackUrl=${encodedCallbackUrl}`, `${protocol}://${mainDomain}`)
+        console.log('🔐 LOGIN REDIRECT URL:', loginRedirectUrl.toString());
+        return NextResponse.redirect(loginRedirectUrl)
       }
       
       // Authenticated platform route - rewrite to platform layout
@@ -311,29 +360,36 @@ export default auth((req) => {
     const siteRewriteUrl = new URL(`/s/${subdomain}${pathname}`, req.url);
     console.log('🎯 SITE REWRITE:', siteRewriteUrl.toString());
     return NextResponse.rewrite(siteRewriteUrl);
+  } else {
+    console.log('🏠 MAIN DOMAIN ROUTING - no subdomain detected');
   }
 
   // Explicitly protect platform routes
   if (isPlatformRoute && !isLoggedIn) {
+    console.log('🔐 PROTECTING PLATFORM ROUTE - redirecting to login');
     const callbackUrl = pathname + nextUrl.search
     const encodedCallbackUrl = encodeURIComponent(callbackUrl)
     const actualHost = req.headers.get('host') || nextUrl.hostname
     // Use http for localhost, https for production
     const protocol = actualHost.includes('localhost') ? 'http' : 'https'
     const loginUrl = new URL(`/login?callbackUrl=${encodedCallbackUrl}`, `${protocol}://${actualHost}`)
+    console.log('🔐 LOGIN REDIRECT URL:', loginUrl.toString());
     return NextResponse.redirect(loginUrl)
   }
 
   if (!isLoggedIn && !isPublicRoute && !isDocsRoute) {
+    console.log('🔐 PROTECTING PRIVATE ROUTE - redirecting to login');
     const callbackUrl = pathname + nextUrl.search
     const encodedCallbackUrl = encodeURIComponent(callbackUrl)
     const actualHost = req.headers.get('host') || nextUrl.hostname
     // Use http for localhost, https for production
     const protocol = actualHost.includes('localhost') ? 'http' : 'https'
     const loginUrl = new URL(`/login?callbackUrl=${encodedCallbackUrl}`, `${protocol}://${actualHost}`)
+    console.log('🔐 LOGIN REDIRECT URL:', loginUrl.toString());
     return NextResponse.redirect(loginUrl)
   }
 
+  console.log('✅ MIDDLEWARE COMPLETED - allowing request through');
   return
 })
 
