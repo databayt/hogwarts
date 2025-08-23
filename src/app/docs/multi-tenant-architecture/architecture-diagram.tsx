@@ -101,9 +101,9 @@ export function MultiTenantArchitectureDiagram() {
             <h5 className="font-medium text-gray-800 mb-3">Query Pattern</h5>
             <div className="bg-gray-900 text-green-400 p-3 rounded text-sm font-mono">
               <div>// ✅ Correct - Always include schoolId</div>
-              <div>const students = await db.student.findMany({</div>
-              <div className="ml-4">where: { schoolId: "school_123" }</div>
-              <div>});</div>
+              <div>const students = await db.student.findMany(</div>
+              <div className="ml-4">where: {"{ schoolId: \"school_123\" }"}</div>
+              <div>);</div>
             </div>
           </div>
         </div>

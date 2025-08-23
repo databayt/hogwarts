@@ -9,15 +9,23 @@ import { PrincipalDashboard } from "./dashboards/principal-dashboard";
 import { AccountantDashboard } from "./dashboards/accountant-dashboard";
 import type { School } from "@/components/site/types";
 
+// Extended user type that includes the properties added by our auth callbacks
+type ExtendedUser = {
+  id: string;
+  email?: string | null;
+  role?: string;
+  schoolId?: string | null;
+};
+
 interface DashboardContentProps {
-  school: School; // School data from parent
+  school?: School; // Make school prop optional
 }
 
-export default async function DashboardContent({ school }: DashboardContentProps) {
+export default async function DashboardContent({ school }: DashboardContentProps = {}) {
   // Debug logging
   console.log('DashboardContent - school prop:', school);
   
-  const user = await currentUser();
+  const user = await currentUser() as ExtendedUser | null;
   console.log('DashboardContent - user:', user);
 
   // If no user, the middleware should have already redirected to login
@@ -27,18 +35,12 @@ export default async function DashboardContent({ school }: DashboardContentProps
     return null;
   }
 
-  // Defensive check for school data
-  if (!school || !school.name) {
-    console.log('DashboardContent - school data missing:', { school });
-    return (
-      <div className="flex items-center justify-center h-64">
-        <p className="text-muted-foreground">Loading school data...</p>
-      </div>
-    );
-  }
+  // For now, use a default school name if not provided
+  const schoolName = school?.name || "Your School";
 
   const renderDashboard = () => {
-    switch (user.role) {
+    const userRole = user.role || 'USER';
+    switch (userRole) {
       case "STUDENT":
         return <StudentDashboard user={user} />;
       case "TEACHER":
@@ -59,21 +61,21 @@ export default async function DashboardContent({ school }: DashboardContentProps
   return (
     <div className="space-y-6">
       <DashboardHeader
-        heading={`${user.role.charAt(0) + user.role.slice(1).toLowerCase()} Dashboard`}
-        text={`Welcome to ${school.name}! Here's your personalized dashboard.`}
+        heading={`${user.role ? user.role.charAt(0) + user.role.slice(1).toLowerCase() : 'User'} Dashboard`}
+        text={`Welcome to ${schoolName}! Here's your personalized dashboard.`}
       />
       {renderDashboard()}
     </div>
   );
 }
 
-function DefaultDashboard({ user }: { user: any }) {
+function DefaultDashboard({ user }: { user: ExtendedUser }) {
   return (
     <div className="grid gap-6">
       <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
         <h3 className="text-lg font-semibold mb-4">Dashboard Coming Soon</h3>
         <p className="text-muted-foreground">
-          We're working on a personalized dashboard for your role ({user.role}). 
+          We're working on a personalized dashboard for your role ({user.role || 'Unknown'}). 
           Check back soon for updates!
         </p>
       </div>

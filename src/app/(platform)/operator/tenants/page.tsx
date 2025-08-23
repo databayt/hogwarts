@@ -1,6 +1,6 @@
 // import { auth } from '@/auth';
 // import { redirect } from 'next/navigation';
-import { TenantsContent } from '@/components/platform/operator/tenants/content';
+import TenantsContent from '@/components/platform/operator/tenants/content';
 
 export const metadata = {
   title: "Tenant Management",

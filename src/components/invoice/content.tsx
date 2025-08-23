@@ -6,12 +6,25 @@ import { invoiceSearchParams } from '@/components/invoice/list-params'
 import { getInvoicesWithFilters } from '@/components/invoice/actions'
 import { redirect } from "next/navigation"
 
+// Extended user type that includes the properties added by our auth callbacks
+type ExtendedUser = {
+  id: string;
+  email?: string | null;
+  role?: string;
+  schoolId?: string | null;
+};
+
+// Extended session type
+type ExtendedSession = {
+  user: ExtendedUser;
+};
+
 interface InvoiceContentProps {
   searchParams: Promise<SearchParams>
 }
 
 export async function InvoiceContent({ searchParams }: InvoiceContentProps) {
-  const session = await auth()
+  const session = await auth() as ExtendedSession | null
   
   if (!session?.user?.id) {
     redirect("/login")

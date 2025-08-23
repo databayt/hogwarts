@@ -18,10 +18,10 @@ import { useBreadcrumbs } from "@/components/platform/operator/hooks/use-breadcr
 import type { School } from "@/components/site/types";
 
 interface PlatformHeaderProps {
-  school: School;
+  school?: School;
 }
 
-export default function PlatformHeader({ school }: PlatformHeaderProps) {
+export default function PlatformHeader({ school }: PlatformHeaderProps = {}) {
   const breadcrumbItems = useBreadcrumbs();
 
   return (

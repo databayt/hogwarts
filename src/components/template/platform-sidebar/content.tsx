@@ -21,23 +21,17 @@ import { useCurrentRole } from "@/components/auth/use-current-role";
 import type { School } from "@/components/site/types";
 
 interface PlatformSidebarProps extends React.ComponentProps<typeof Sidebar> {
-  school: School;
+  school?: School;
 }
 
-export default function PlatformSidebar({ school, ...props }: PlatformSidebarProps) {
+export default function PlatformSidebar({ school, ...props }: PlatformSidebarProps = {}) {
   const pathname = usePathname();
   const { setOpenMobile } = useSidebar();
   const role = useCurrentRole();
   const currentRole = (role as unknown as Role | undefined) ?? undefined;
 
-  // Defensive check for school data
-  if (!school || !school.name) {
-    return (
-      <div className="w-56 top-12 p-4">
-        <div className="text-sm text-muted-foreground">Loading school data...</div>
-      </div>
-    );
-  }
+  // Use school name if available, otherwise use a default
+  const schoolName = school?.name || "Your School";
 
   const handleLinkClick = React.useCallback(() => {
     setOpenMobile(false);
@@ -51,7 +45,7 @@ export default function PlatformSidebar({ school, ...props }: PlatformSidebarPro
             <SidebarMenuButton size="lg" asChild>
               <Link href="/dashboard" className="flex items-center" onClick={handleLinkClick}>
                 <div className="flex flex-col leading-none">
-                  <span className="font-medium text-base text-foreground -ml-1">{school.name}</span>
+                  <span className="font-medium text-base text-foreground -ml-1">{schoolName}</span>
                 </div>
               </Link>
             </SidebarMenuButton>

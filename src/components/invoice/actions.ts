@@ -10,10 +10,23 @@ import { format } from "date-fns"
 import { InvoiceSchemaZod } from "./validation"
 import { z } from "zod"
 
+// Extended user type that includes the properties added by our auth callbacks
+type ExtendedUser = {
+  id: string;
+  email?: string | null;
+  role?: string;
+  schoolId?: string | null;
+};
+
+// Extended session type
+type ExtendedSession = {
+  user: ExtendedUser;
+};
+
 // Test function to check database connection and auth
 export async function testInvoiceConnection() {
   try {
-    const session = await auth()
+    const session = await auth() as ExtendedSession | null
     
     if (!session?.user?.id) {
       return { success: false, error: "No active session" }
@@ -53,7 +66,7 @@ export async function testInvoiceConnection() {
 // Function to associate user with a school by name
 export async function associateUserWithSchool(schoolName: string) {
   try {
-    const session = await auth()
+    const session = await auth() as ExtendedSession | null
     
     if (!session?.user?.id) {
       return { success: false, error: "No active session" }
@@ -144,7 +157,7 @@ async function generateUniqueInvoiceNumber(schoolId: string, prefix: string = "I
 
 export async function createInvoice(data: z.infer<typeof InvoiceSchemaZod>) {
   try {
-    const session = await auth()
+    const session = await auth() as ExtendedSession | null
     
     if (!session?.user?.id) {
       throw new Error("Unauthorized")
@@ -248,7 +261,7 @@ export async function createInvoice(data: z.infer<typeof InvoiceSchemaZod>) {
 // Get next available invoice number for a school
 export async function getNextInvoiceNumber() {
   try {
-    const session = await auth()
+    const session = await auth() as ExtendedSession | null
     
     if (!session?.user?.id) {
       throw new Error("Unauthorized")
@@ -270,7 +283,7 @@ export async function getNextInvoiceNumber() {
 // Create invoice with auto-generated invoice number
 export async function createInvoiceWithAutoNumber(data: Omit<z.infer<typeof InvoiceSchemaZod>, 'invoice_no'>) {
   try {
-    const session = await auth()
+    const session = await auth() as ExtendedSession | null
     
     if (!session?.user?.id) {
       throw new Error("Unauthorized")
@@ -363,7 +376,7 @@ export async function createInvoiceWithAutoNumber(data: Omit<z.infer<typeof Invo
 
 export async function updateInvoice(id: string, data: InvoiceFormData) {
   try {
-    const session = await auth()
+    const session = await auth() as ExtendedSession | null
     const userId = session?.user?.id
     const schoolId = session?.user?.schoolId
     if (!userId || !schoolId) throw new Error("Unauthorized")
@@ -406,7 +419,7 @@ export async function updateInvoice(id: string, data: InvoiceFormData) {
 
 export async function getInvoices(page: number = 1, limit: number = 5) {
   try {
-    const session = await auth()
+    const session = await auth() as ExtendedSession | null
     const userId = session?.user?.id
     const schoolId = session?.user?.schoolId
     if (!userId || !schoolId) throw new Error("Unauthorized")
@@ -432,7 +445,7 @@ export async function getInvoices(page: number = 1, limit: number = 5) {
 
 export async function getInvoicesWithFilters(searchParams: any) {
   try {
-    const session = await auth()
+    const session = await auth() as ExtendedSession | null
     const userId = session?.user?.id
     const schoolId = session?.user?.schoolId
     if (!userId || !schoolId) throw new Error("Unauthorized")
@@ -488,7 +501,7 @@ export async function getInvoicesWithFilters(searchParams: any) {
 
 export async function getInvoiceById(id: string) {
   try {
-    const session = await auth()
+    const session = await auth() as ExtendedSession | null
     const userId = session?.user?.id
     const schoolId = session?.user?.schoolId
     if (!userId || !schoolId) throw new Error("Unauthorized")
@@ -505,7 +518,7 @@ export async function getInvoiceById(id: string) {
 // Email
 export async function sendInvoiceEmail(invoiceId: string, subject: string) {
   try {
-    const session = await auth()
+    const session = await auth() as ExtendedSession | null
     if (!session?.user?.id || !session.user.schoolId) {
       return { success: false, error: "Unauthorized" }
     }
@@ -540,7 +553,7 @@ interface UserUpdateData { firstName?: string; lastName?: string; currency?: str
 
 export async function updateUser(data: UserUpdateData) {
   try {
-    const session = await auth()
+    const session = await auth() as ExtendedSession | null
     if (!session?.user?.id) throw new Error("Unauthorized")
 
     const userData: any = {}
@@ -558,7 +571,7 @@ export async function updateUser(data: UserUpdateData) {
 
 export async function getCurrentUser() {
   try {
-    const session = await auth()
+    const session = await auth() as ExtendedSession | null
     if (!session?.user?.id) return { success: false, error: "Unauthorized" }
 
     const user = await db.user.findUnique({ where: { id: session.user.id } })
@@ -575,7 +588,7 @@ interface SettingsFormData { invoiceLogo?: string; signature?: SignatureData }
 
 export async function updateSettings(data: SettingsFormData) {
   try {
-    const session = await auth()
+    const session = await auth() as ExtendedSession | null
     if (!session?.user?.id) throw new Error("Unauthorized")
 
     const currentSettings = await db.userInvoiceSettings.findUnique({
@@ -621,7 +634,7 @@ export async function updateSettings(data: SettingsFormData) {
 
 export async function getSettings() {
   try {
-    const session = await auth()
+    const session = await auth() as ExtendedSession | null
     if (!session?.user?.id) throw new Error("Unauthorized")
 
     const settings = await db.userInvoiceSettings.findUnique({
@@ -638,7 +651,7 @@ export async function getSettings() {
 // Dashboard
 export async function getDashboardStats() {
   try {
-    const session = await auth()
+    const session = await auth() as ExtendedSession | null
     if (!session?.user?.id) throw new Error("Unauthorized")
 
     const thirtyDaysAgo = new Date()
@@ -680,7 +693,7 @@ export async function getDashboardStats() {
 // Delete invoice
 export async function deleteInvoice({ id }: { id: string }) {
   try {
-    const session = await auth()
+    const session = await auth() as ExtendedSession | null
     if (!session?.user?.id || !session.user.schoolId) {
       throw new Error("Unauthorized")
     }

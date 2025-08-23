@@ -4,6 +4,19 @@ import { cookies, headers } from "next/headers";
 import type { UserRole } from "@prisma/client";
 import { db } from "@/lib/db";
 
+// Extended user type that includes the properties added by our auth callbacks
+type ExtendedUser = {
+  id: string;
+  email?: string | null;
+  role?: string;
+  schoolId?: string | null;
+};
+
+// Extended session type
+type ExtendedSession = {
+  user: ExtendedUser;
+};
+
 export type TenantContext = {
   schoolId: string | null;
   requestId: string | null;
@@ -12,7 +25,7 @@ export type TenantContext = {
 };
 
 export async function getTenantContext(): Promise<TenantContext> {
-  const session = await auth();
+  const session = await auth() as ExtendedSession | null;
   const cookieStore = await cookies();
   const hdrs = await headers();
   // 1) Impersonation cookie overrides

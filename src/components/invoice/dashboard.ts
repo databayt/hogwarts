@@ -4,9 +4,22 @@ import { auth } from "@/auth"
 import { db } from "@/lib/db"
 import { Status } from "@prisma/client"
 
+// Extended user type that includes the properties added by our auth callbacks
+type ExtendedUser = {
+  id: string;
+  email?: string | null;
+  role?: string;
+  schoolId?: string | null;
+};
+
+// Extended session type
+type ExtendedSession = {
+  user: ExtendedUser;
+};
+
 export async function getDashboardStats() {
   try {
-    const session = await auth()
+    const session = await auth() as ExtendedSession | null
     if (!session?.user?.id) {
       throw new Error("Unauthorized")
     }

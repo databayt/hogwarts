@@ -9,13 +9,21 @@ import { DashboardHeader } from "@/components/platform/dashboard/header";
 import { BillingInfo } from "@/components/marketing/pricing/billing-info";
 import { Icons } from "@/components/marketing/pricing/shared/icons";
 
+// Extended user type that includes the properties added by our auth callbacks
+type ExtendedUser = {
+  id: string;
+  email?: string | null;
+  role?: string;
+  schoolId?: string | null;
+};
+
 export const metadata = constructMetadata({
-  title: "Billing – SaaS Starter",
+  title: "Billing – SaaS Starter",
   description: "Manage billing and your subscription plan.",
 });
 
 export default async function BillingPage() {
-  const user = await currentUser();
+  const user = await currentUser() as ExtendedUser | null;
 
   if (!user || !user.id) {
     redirect("/login");

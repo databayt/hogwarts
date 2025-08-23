@@ -23,10 +23,10 @@ function hasValidSessionToken(cookieHeader: string | null): boolean {
   
   // Basic validation - check if token exists and has content
   // Also check if it's not just an empty or invalid token
-  const isValidToken = sessionToken && 
+  const isValidToken = Boolean(sessionToken && 
                       sessionToken.length > 10 && 
                       !sessionToken.includes('undefined') &&
-                      !sessionToken.includes('null');
+                      !sessionToken.includes('null'));
   
   console.log('🔍 Custom session check - Token validation:', {
     hasToken: !!sessionToken,
