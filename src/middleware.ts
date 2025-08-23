@@ -189,6 +189,12 @@ export default auth((req) => {
   }
 
   // Subdomain → tenant routing (Following reference pattern exactly)
+  // Check if this is already a rewritten path (starts with /s/)
+  if (pathname.startsWith('/s/')) {
+    console.log('🎯 Subdomain callback detected, returning as-is');
+    return;
+  }
+
   const subdomain = extractSubdomain(req);
 
   // Debug logging for subdomain detection
