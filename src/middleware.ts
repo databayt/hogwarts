@@ -155,6 +155,16 @@ export default auth((req) => {
   const { nextUrl } = req
   const isLoggedIn = !!req.auth
 
+  // Add detailed debugging at the very start
+  console.log('🚀 MIDDLEWARE START:', {
+    method: req.method,
+    url: req.url,
+    pathname: nextUrl.pathname,
+    host: req.headers.get('host'),
+    origin: req.headers.get('origin'),
+    referer: req.headers.get('referer')
+  });
+
   // Add detailed debugging for auth session
   console.log('🔍 MIDDLEWARE AUTH DEBUG:', {
     hasAuth: !!req.auth,
@@ -236,7 +246,13 @@ export default auth((req) => {
 
   // Block direct access to /s/ paths
   if (pathname.startsWith('/s/')) {
-    console.log('🚨 Direct access to /s/ path detected, analyzing...');
+    console.log('🚨 Direct access to /s/ path detected, analyzing...', {
+      pathname,
+      host: req.headers.get('host'),
+      userAgent: req.headers.get('user-agent')?.substring(0, 100),
+      referer: req.headers.get('referer'),
+      method: req.method
+    });
     
     // Extract the subdomain from the path
     const pathParts = pathname.split('/');
