@@ -1,4 +1,5 @@
 import { NextResponse, NextRequest } from "next/server";
+import { authRoutes } from "@/routes";
 
 export function middleware(req: NextRequest) {
   const url = req.nextUrl.clone();
@@ -10,6 +11,11 @@ export function middleware(req: NextRequest) {
     url.pathname.startsWith("/api") ||
     url.pathname.match(/\.(png|jpg|jpeg|gif|ico|svg|css|js|woff2?)$/)
   ) {
+    return NextResponse.next();
+  }
+
+  // Allow auth routes to be handled normally (don't rewrite for subdomains)
+  if (authRoutes.includes(url.pathname)) {
     return NextResponse.next();
   }
 
