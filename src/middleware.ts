@@ -211,19 +211,37 @@ export default auth((req) => {
   }
 
   // Subdomain → tenant routing (Following reference pattern exactly)
-  // Check if this is already a rewritten path (starts with /s/)
-  if (pathname.startsWith('/s/')) {
-    console.log('🎯 Subdomain callback detected, returning as-is');
-    return;
-  }
-
   const subdomain = extractSubdomain(req);
-  
-  // Block direct access to /s/[subdomain] URLs from main domain
-  // This prevents users from seeing /s/subdomain in their URL bar
-  if (!subdomain && pathname.startsWith('/s/')) {
-    console.log('🚨 Blocking direct access to /s/ path from main domain');
-    return NextResponse.redirect(new URL('/', req.url));
+
+  // Block direct access to /s/ paths
+  if (pathname.startsWith('/s/')) {
+    console.log('🚨 Direct access to /s/ path detected, analyzing...');
+    
+    // Extract the subdomain from the path
+    const pathParts = pathname.split('/');
+    const pathSubdomain = pathParts[2]; // /s/subdomain/...
+    
+    console.log('🔍 Path analysis:', {
+      pathname,
+      pathSubdomain,
+      requestSubdomain: subdomain,
+      host: req.headers.get('host')
+    });
+    
+    if (subdomain && pathSubdomain === subdomain) {
+      // User accessed subdomain.domain.com/s/subdomain/path - redirect to clean URL
+      const cleanPath = pathname.replace(`/s/${subdomain}`, '') || '/';
+      console.log('🚨 Redirecting from unwanted /s/ path to clean URL:', cleanPath);
+      return NextResponse.redirect(new URL(cleanPath, req.url));
+    } else if (!subdomain) {
+      // Main domain access to /s/ path - redirect to home
+      console.log('🚨 Blocking direct access to /s/ path from main domain');
+      return NextResponse.redirect(new URL('/', req.url));
+    } else {
+      // This is likely an internal rewrite or valid cross-subdomain access
+      console.log('🎯 Allowing /s/ path access');
+      return;
+    }
   }
 
   // Debug logging for subdomain detection
