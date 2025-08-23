@@ -99,10 +99,12 @@ function extractSubdomain(request: any): string | null {
 
   console.log('🔍 Production subdomain check:', {
     hostname,
+    rootDomain,
     rootDomainFormatted,
     isExactMatch: hostname === rootDomainFormatted,
     isWwwMatch: hostname === `www.${rootDomainFormatted}`,
-    endsWithRoot: hostname.endsWith(`.${rootDomainFormatted}`)
+    endsWithRoot: hostname.endsWith(`.${rootDomainFormatted}`),
+    environment: process.env.NODE_ENV
   });
 
   // Handle preview deployment URLs (tenant---branch-name.vercel.app)
@@ -113,16 +115,35 @@ function extractSubdomain(request: any): string | null {
     return subdomain;
   }
 
-  // Regular subdomain detection
-  const isSubdomain =
-    hostname !== rootDomainFormatted &&
-    hostname !== `www.${rootDomainFormatted}` &&
-    hostname.endsWith(`.${rootDomainFormatted}`);
+  // Special handling for ed.databayt.org domain structure
+  // Main domain: ed.databayt.org
+  // Subdomains: khartoum.databayt.org, omdurman.databayt.org, etc.
+  
+  if (rootDomainFormatted === 'ed.databayt.org') {
+    // Check if hostname is the main domain
+    if (hostname === 'ed.databayt.org' || hostname === 'www.ed.databayt.org') {
+      console.log('🔍 Main domain detected');
+      return null;
+    }
+    
+    // Check if it's a school subdomain (*.databayt.org but not ed.databayt.org)
+    if (hostname.endsWith('.databayt.org') && hostname !== 'ed.databayt.org') {
+      const subdomain = hostname.replace('.databayt.org', '');
+      console.log('🔍 Found school subdomain:', subdomain);
+      return subdomain;
+    }
+  } else {
+    // Regular subdomain detection for other domains
+    const isSubdomain =
+      hostname !== rootDomainFormatted &&
+      hostname !== `www.${rootDomainFormatted}` &&
+      hostname.endsWith(`.${rootDomainFormatted}`);
 
-  if (isSubdomain) {
-    const subdomain = hostname.replace(`.${rootDomainFormatted}`, '');
-    console.log('🔍 Found production subdomain:', subdomain);
-    return subdomain;
+    if (isSubdomain) {
+      const subdomain = hostname.replace(`.${rootDomainFormatted}`, '');
+      console.log('🔍 Found production subdomain:', subdomain);
+      return subdomain;
+    }
   }
 
   console.log('🔍 No subdomain found');
