@@ -217,6 +217,18 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
     async redirect({ url, baseUrl }) {
       console.log('🔄 REDIRECT CALLBACK START:', { url, baseUrl });
       
+      // Extract the host from baseUrl to determine if we're on a subdomain
+      const baseUrlObj = new URL(baseUrl);
+      const host = baseUrlObj.host;
+      
+      // Check if we're on a tenant subdomain (not ed.databayt.org)
+      if (host.endsWith('.databayt.org') && host !== 'ed.databayt.org') {
+        const subdomain = host.split('.')[0];
+        const tenantDashboardUrl = `https://${subdomain}.databayt.org/dashboard`;
+        console.log('🔄 Tenant subdomain detected, redirecting to:', tenantDashboardUrl);
+        return tenantDashboardUrl;
+      }
+      
       // Extract tenant from callbackUrl if present
       const urlObj = new URL(url, baseUrl);
       const tenant = urlObj.searchParams.get('tenant');
@@ -224,7 +236,7 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
       if (tenant) {
         // Redirect back to tenant subdomain
         const tenantUrl = process.env.NODE_ENV === "production" 
-          ? `https://${tenant}.ed.databayt.org/dashboard`
+          ? `https://${tenant}.databayt.org/dashboard`
           : `http://${tenant}.localhost:3000/dashboard`;
         console.log('🔄 Redirecting to tenant:', tenantUrl);
         return tenantUrl;
@@ -254,7 +266,7 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
         console.log('❌ Error page detected, investigating...');
       }
 
-      // Default behavior - ALWAYS redirect to dashboard on main domain
+      // Default behavior - redirect to dashboard on current domain
       if (url.startsWith("/")) {
         const finalUrl = `${baseUrl}/dashboard`;
         console.log('🔄 Default behavior - redirecting to dashboard:', finalUrl);
