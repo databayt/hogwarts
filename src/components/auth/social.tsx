@@ -62,7 +62,9 @@ export const Social = () => {
   const onClick = (provider: "google" | "facebook") => {
     // Check if we're on a subdomain
     const currentHost = window.location.hostname;
-    const isSubdomain = currentHost.includes('.localhost') && currentHost !== 'localhost';
+    const isProdSubdomain = currentHost.includes('.ed.databayt.org') && currentHost !== 'ed.databayt.org';
+    const isDevSubdomain = currentHost.includes('.localhost') && currentHost !== 'localhost';
+    const isSubdomain = isProdSubdomain || isDevSubdomain;
     
     console.log('OAuth flow initiated:', {
       provider,
@@ -72,8 +74,22 @@ export const Social = () => {
       currentUrl: window.location.href
     });
     
-    // Always use NextAuth's built-in signIn function for OAuth
-    // This ensures proper action handling and OAuth flow
+    // If on tenant subdomain, redirect to main domain for OAuth with tenant context
+    if (isSubdomain && provider === "facebook") {
+      const tenantSubdomain = currentHost.split('.')[0];
+      const baseUrl = process.env.NODE_ENV === "production" 
+        ? "https://ed.databayt.org"
+        : "http://localhost:3000";
+      const loginUrl = `${baseUrl}/api/auth/signin/facebook?callbackUrl=${encodeURIComponent(
+        `${baseUrl}/api/auth/callback/facebook?tenant=${tenantSubdomain}`
+      )}`;
+      
+      console.log('🔗 Redirecting to tenant OAuth:', { tenantSubdomain, loginUrl });
+      window.location.href = loginUrl;
+      return;
+    }
+    
+    // Default OAuth flow for main domain or other providers
     console.log('Using NextAuth signIn for OAuth:', {
       provider,
       callbackUrl: callbackUrl || DEFAULT_LOGIN_REDIRECT,

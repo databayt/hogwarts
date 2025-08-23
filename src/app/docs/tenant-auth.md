@@ -43,7 +43,20 @@
 
 ## 🔧 **IMPLEMENTATION**
 
-### **Step 1: Update NextAuth Config**
+### **Step 1: Create Tenant Login Route**
+```typescript
+// src/app/s/[subdomain]/login/page.tsx
+export default function TenantLoginPage({ params }: { params: { subdomain: string } }) {
+  return (
+    <div className="container mx-auto py-8">
+      <h1 className="text-2xl font-bold mb-6">Login to {params.subdomain}</h1>
+      <TenantLoginButton tenantSubdomain={params.subdomain} />
+    </div>
+  );
+}
+```
+
+### **Step 2: Update NextAuth Config**
 ```typescript
 // src/auth.ts
 export const auth = NextAuth({
@@ -51,16 +64,21 @@ export const auth = NextAuth({
   
   callbacks: {
     async redirect({ url, baseUrl }) {
+      console.log('🔄 Redirect callback:', { url, baseUrl });
+      
       // Extract tenant from callbackUrl
       const urlObj = new URL(url);
       const tenant = urlObj.searchParams.get('tenant');
       
       if (tenant) {
         // Redirect back to tenant subdomain
-        return `https://${tenant}.ed.databayt.org/dashboard`;
+        const tenantUrl = `https://${tenant}.ed.databayt.org/dashboard`;
+        console.log('🔄 Redirecting to tenant:', tenantUrl);
+        return tenantUrl;
       }
       
       // Default redirect for main domain
+      console.log('🔄 Default redirect to:', baseUrl);
       return baseUrl;
     }
   },
@@ -79,9 +97,13 @@ export const auth = NextAuth({
 });
 ```
 
-### **Step 2: Tenant Login Button**
+### **Step 3: Tenant Login Button Component**
 ```typescript
 // src/components/auth/tenant-login.tsx
+"use client";
+
+import { Button } from "@/components/ui/button";
+
 export function TenantLoginButton({ tenantSubdomain }: { tenantSubdomain: string }) {
   const handleLogin = () => {
     // Login on ed.databayt.org with tenant context
@@ -89,18 +111,19 @@ export function TenantLoginButton({ tenantSubdomain }: { tenantSubdomain: string
       `https://ed.databayt.org/api/auth/callback/facebook?tenant=${tenantSubdomain}`
     )}`;
     
+    console.log('🔗 Redirecting to login:', loginUrl);
     window.location.href = loginUrl;
   };
   
   return (
-    <Button onClick={handleLogin}>
+    <Button onClick={handleLogin} className="w-full">
       Login with Facebook
     </Button>
   );
 }
 ```
 
-### **Step 3: Use on Tenant Pages**
+### **Step 4: Use on Tenant Pages**
 ```typescript
 // On khartoum.ed.databayt.org/login
 <TenantLoginButton tenantSubdomain="khartoum" />
@@ -116,23 +139,31 @@ export function TenantLoginButton({ tenantSubdomain }: { tenantSubdomain: string
 - ✅ **Cookies accessible** server-side everywhere
 - ✅ **Redirects work** without Configuration errors
 - ✅ **Tenant isolation** maintained
+- ✅ **Tenant login routes exist** (no more 404)
 
 ## 🚀 **TEST IT**
 
-1. **Update auth.ts** with the config above
-2. **Create tenant login button** component
-3. **Test on tenant subdomain**: Visit `khartoum.ed.databayt.org/login`
-4. **Click login** → redirects to `ed.databayt.org` for Facebook OAuth
-5. **After OAuth** → redirects back to `khartoum.ed.databayt.org/dashboard`
-6. **Session works** on tenant subdomain
+1. **Create tenant login route** at `src/app/s/[subdomain]/login/page.tsx`
+2. **Update auth.ts** with the redirect callback above
+3. **Create tenant login button** component
+4. **Test on tenant subdomain**: Visit `https://khartoum.ed.databayt.org/login`
+5. **Click login** → redirects to `ed.databayt.org` for Facebook OAuth
+6. **After OAuth** → redirects back to `khartoum.ed.databayt.org/dashboard`
+7. **Session works** on tenant subdomain
 
 ## 💡 **HOW IT WORKS**
 
-1. **User on tenant subdomain** clicks login
-2. **Redirects to ed.databayt.org** with tenant info in callbackUrl
+1. **User on tenant subdomain** visits `/login` (route now exists)
+2. **Clicks login button** → redirects to `ed.databayt.org` with tenant info in callbackUrl
 3. **Facebook OAuth happens** on ed.databayt.org (whitelisted)
 4. **Session created** with cookies on `.ed.databayt.org` domain
-5. **Redirect callback** sends user back to tenant subdomain
+5. **Redirect callback** extracts tenant and sends user back to tenant subdomain
 6. **Session accessible** everywhere because cookies are shared
 
-**That's it. No more Facebook OAuth errors. No more session problems. No more redirect failures.**
+## 🚨 **CURRENT ISSUES FOUND IN LOGS**
+
+- ❌ **404 on tenant login routes** - Route doesn't exist
+- ❌ **Redirect shows "Default behavior"** - Not using tenant-aware redirects
+- ❌ **No tenant context in redirects** - Always goes to ed.databayt.org
+
+**That's it. No more Facebook OAuth errors. No more session problems. No more redirect failures. No more 404s on tenant login routes.**

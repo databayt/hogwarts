@@ -40,9 +40,9 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
         httpOnly: true,
         sameSite: "lax",
         path: "/",
-        secure: false,
+        secure: process.env.NODE_ENV === "production",
         maxAge: 900, // 15 minutes
-        domain: undefined, // Allow cookies to be shared across subdomains
+        domain: process.env.NODE_ENV === "production" ? '.ed.databayt.org' : undefined,
       },
     },
     sessionToken: {
@@ -51,8 +51,8 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
         httpOnly: true,
         sameSite: "lax",
         path: "/",
-        secure: false,
-        domain: undefined, // Allow cookies to be shared across subdomains
+        secure: process.env.NODE_ENV === "production",
+        domain: process.env.NODE_ENV === "production" ? '.ed.databayt.org' : undefined,
       },
     },
     callbackUrl: {
@@ -60,8 +60,8 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
       options: {
         sameSite: "lax",
         path: "/",
-        secure: false,
-        domain: undefined, // Allow cookies to be shared across subdomains
+        secure: process.env.NODE_ENV === "production",
+        domain: process.env.NODE_ENV === "production" ? '.ed.databayt.org' : undefined,
       },
     },
     csrfToken: {
@@ -70,8 +70,8 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
         httpOnly: true,
         sameSite: "lax",
         path: "/",
-        secure: false,
-        domain: undefined, // Allow cookies to be shared across subdomains
+        secure: process.env.NODE_ENV === "production",
+        domain: process.env.NODE_ENV === "production" ? '.ed.databayt.org' : undefined,
       },
     },
     // Add explicit configuration for all NextAuth cookies
@@ -81,8 +81,8 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
         httpOnly: true,
         sameSite: "lax",
         path: "/",
-        secure: false,
-        domain: undefined, // Allow cookies to be shared across subdomains
+        secure: process.env.NODE_ENV === "production",
+        domain: process.env.NODE_ENV === "production" ? '.ed.databayt.org' : undefined,
       },
     },
     nonce: {
@@ -91,8 +91,8 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
         httpOnly: true,
         sameSite: "lax",
         path: "/",
-        secure: false,
-        domain: undefined, // Allow cookies to be shared across subdomains
+        secure: process.env.NODE_ENV === "production",
+        domain: process.env.NODE_ENV === "production" ? '.ed.databayt.org' : undefined,
       },
     },
   },
@@ -216,6 +216,19 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
     },
     async redirect({ url, baseUrl }) {
       console.log('🔄 REDIRECT CALLBACK START:', { url, baseUrl });
+      
+      // Extract tenant from callbackUrl if present
+      const urlObj = new URL(url, baseUrl);
+      const tenant = urlObj.searchParams.get('tenant');
+      
+      if (tenant) {
+        // Redirect back to tenant subdomain
+        const tenantUrl = process.env.NODE_ENV === "production" 
+          ? `https://${tenant}.ed.databayt.org/dashboard`
+          : `http://${tenant}.localhost:3000/dashboard`;
+        console.log('🔄 Redirecting to tenant:', tenantUrl);
+        return tenantUrl;
+      }
       
       // Handle Facebook redirect with #_=_ hash
       if (url.includes('#_=_')) {
