@@ -211,52 +211,44 @@ export default auth((req) => {
       return NextResponse.redirect(new URL('/', req.url));
     }
 
-    // Rewrite all paths on subdomains to include /s/${subdomain} prefix
-    // This handles /, /about, /academic, /admission, etc.
-    // IMPORTANT: This must happen BEFORE the auth check to ensure proper routing
-    const rewrittenUrl = new URL(`/s/${subdomain}${pathname}`, req.url);
-    
-    console.log('🚨 REWRITING TO:', rewrittenUrl.toString());
-    
-    // Handle auth for platform routes on subdomains AFTER rewriting
-    if (isPlatformRoute && !isLoggedIn) {
-      // Try enhanced authentication check for cross-subdomain authentication
-      const hasEnhancedAuth = hasAnyAuthenticationIndicators(req.headers.get('cookie'));
-      console.log('🚨 Enhanced auth check result:', hasEnhancedAuth);
-      
-      // Additional debugging for cookie analysis
-      const cookies = req.headers.get('cookie');
-      if (cookies) {
-        const cookieList = cookies.split(';').map(c => c.trim());
-        console.log('🚨 All cookies on subdomain:', cookieList);
+    // Handle platform routes (protected routes that need auth)
+    if (isPlatformRoute) {
+      if (!isLoggedIn) {
+        // Try enhanced authentication check for cross-subdomain authentication
+        const hasEnhancedAuth = hasAnyAuthenticationIndicators(req.headers.get('cookie'));
+        console.log('🚨 Enhanced auth check result:', hasEnhancedAuth);
         
-        // Check for any auth-related cookies
-        const authCookies = cookieList.filter(c => c.includes('authjs'));
-        console.log('🚨 Auth-related cookies:', authCookies);
+        if (hasEnhancedAuth) {
+          console.log('✅ Enhanced auth check passed, allowing access to subdomain platform');
+          const platformRewriteUrl = new URL(`/s/${subdomain}${pathname}`, req.url);
+          console.log('🚨 PLATFORM REWRITE (with enhanced auth):', platformRewriteUrl.toString());
+          return NextResponse.rewrite(platformRewriteUrl);
+        }
         
-        // Check if we have any valid authentication indicators
-        const hasAnyAuthCookie = authCookies.length > 0;
-        console.log('🚨 Has any auth cookie:', hasAnyAuthCookie);
+        // Redirect unauthenticated users to main domain login
+        const callbackUrl = pathname + nextUrl.search
+        const encodedCallbackUrl = encodeURIComponent(callbackUrl)
+        console.log('🚨 REDIRECTING TO MAIN DOMAIN LOGIN:', `/login?callbackUrl=${encodedCallbackUrl}`);
+        
+        // Use the correct protocol and domain for redirect
+        const protocol = req.headers.get('host')?.includes('localhost') ? 'http' : 'https'
+        const mainDomain = req.headers.get('host')?.includes('localhost') 
+          ? 'localhost:3000' 
+          : rootDomain
+        return NextResponse.redirect(new URL(`/login?callbackUrl=${encodedCallbackUrl}`, `${protocol}://${mainDomain}`))
       }
       
-      if (hasEnhancedAuth) {
-        console.log('✅ Enhanced auth check passed, allowing access to subdomain');
-        console.log('🚨 FINAL REWRITE (with enhanced auth):', rewrittenUrl.toString());
-        return NextResponse.rewrite(rewrittenUrl);
-      }
-      
-      const callbackUrl = pathname + nextUrl.search
-      const encodedCallbackUrl = encodeURIComponent(callbackUrl)
-      console.log('🚨 REDIRECTING TO MAIN DOMAIN LOGIN:', `/login?callbackUrl=${encodedCallbackUrl}`);
-      console.log('🚨 AUTH DEBUG - Cookies present:', !!req.headers.get('cookie'));
-      console.log('🚨 AUTH DEBUG - Auth object:', req.auth);
-      // Redirect to main domain login page (since we only have one login page)
-      const mainDomain = 'http://localhost:3000';
-      return NextResponse.redirect(new URL(`/login?callbackUrl=${encodedCallbackUrl}`, mainDomain))
+      // Authenticated platform route - rewrite to platform layout
+      const platformRewriteUrl = new URL(`/s/${subdomain}${pathname}`, req.url);
+      console.log('🚨 AUTHENTICATED PLATFORM REWRITE:', platformRewriteUrl.toString());
+      return NextResponse.rewrite(platformRewriteUrl);
     }
     
-    console.log('🚨 FINAL REWRITE:', rewrittenUrl.toString());
-    return NextResponse.rewrite(rewrittenUrl);
+    // Handle public site routes (/, /about, /academic, /admission, etc.)
+    // These should go to the (site) layout, not (platform)
+    const siteRewriteUrl = new URL(`/s/${subdomain}${pathname}`, req.url);
+    console.log('🚨 SITE REWRITE:', siteRewriteUrl.toString());
+    return NextResponse.rewrite(siteRewriteUrl);
   }
 
   // Explicitly protect platform routes
