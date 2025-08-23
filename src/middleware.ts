@@ -66,30 +66,50 @@ function extractSubdomain(request: any): string | null {
   const host = request.headers.get('host') || '';
   const hostname = host.split(':')[0];
 
+  console.log('🔍 Subdomain extraction debug:', {
+    url,
+    host,
+    hostname,
+    rootDomain,
+    isLocalhost: url.includes('localhost') || url.includes('127.0.0.1')
+  });
+
   // Local development environment
   if (url.includes('localhost') || url.includes('127.0.0.1')) {
     // Try to extract subdomain from the full URL
     const fullUrlMatch = url.match(/http:\/\/([^.]+)\.localhost/);
     if (fullUrlMatch && fullUrlMatch[1]) {
+      console.log('🔍 Found subdomain from URL match:', fullUrlMatch[1]);
       return fullUrlMatch[1];
     }
 
     // Fallback to host header approach
     if (hostname.includes('.localhost')) {
       const subdomain = hostname.split('.')[0];
+      console.log('🔍 Found subdomain from hostname:', subdomain);
       return subdomain;
     }
 
+    console.log('🔍 No subdomain found in localhost');
     return null;
   }
 
   // Production environment
   const rootDomainFormatted = rootDomain.split(':')[0];
 
+  console.log('🔍 Production subdomain check:', {
+    hostname,
+    rootDomainFormatted,
+    isExactMatch: hostname === rootDomainFormatted,
+    isWwwMatch: hostname === `www.${rootDomainFormatted}`,
+    endsWithRoot: hostname.endsWith(`.${rootDomainFormatted}`)
+  });
+
   // Handle preview deployment URLs (tenant---branch-name.vercel.app)
   if (hostname.includes('---') && hostname.endsWith('.vercel.app')) {
     const parts = hostname.split('---');
     const subdomain = parts.length > 0 ? parts[0] : null;
+    console.log('🔍 Vercel preview subdomain:', subdomain);
     return subdomain;
   }
 
@@ -101,9 +121,11 @@ function extractSubdomain(request: any): string | null {
 
   if (isSubdomain) {
     const subdomain = hostname.replace(`.${rootDomainFormatted}`, '');
+    console.log('🔍 Found production subdomain:', subdomain);
     return subdomain;
   }
 
+  console.log('🔍 No subdomain found');
   return null;
 }
 
@@ -196,6 +218,13 @@ export default auth((req) => {
   }
 
   const subdomain = extractSubdomain(req);
+  
+  // Block direct access to /s/[subdomain] URLs from main domain
+  // This prevents users from seeing /s/subdomain in their URL bar
+  if (!subdomain && pathname.startsWith('/s/')) {
+    console.log('🚨 Blocking direct access to /s/ path from main domain');
+    return NextResponse.redirect(new URL('/', req.url));
+  }
 
   // Debug logging for subdomain detection
   console.log('🔍 Middleware Debug:', {
