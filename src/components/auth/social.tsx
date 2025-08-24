@@ -65,6 +65,12 @@ export const Social = () => {
   }, []);
 
   const onClick = (provider: "google" | "facebook") => {
+    // Ensure we're on client side
+    if (typeof window === 'undefined') {
+      console.log('❌ onClick called on server side, aborting');
+      return;
+    }
+    
     // Check if we're on a subdomain
     const currentHost = window.location.hostname;
     const isProdSubdomain = currentHost.endsWith('.databayt.org') && currentHost !== 'ed.databayt.org';
