@@ -4,7 +4,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { DataTableColumnHeader } from "@/components/table/data-table/data-table-column-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { updateInvoiceStatus } from "@/app/(platform)/operator/actions/billing/invoices/update-status";
+import { updateInvoiceStatus } from "@/components/operator/actions/billing/invoices/update-status";
 import { SuccessToast, ErrorToast } from "@/components/atom/toast";
 
 export type InvoiceRow = {

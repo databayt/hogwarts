@@ -1,9 +1,9 @@
 "use server";
 
 import { z } from "zod";
-import { createReceipt } from "@/app/(platform)/operator/actions/billing/receipts/create";
-import { reviewReceipt } from "@/app/(platform)/operator/actions/billing/receipts/review";
-import { updateInvoiceStatus } from "@/app/(platform)/operator/actions/billing/invoices/update-status";
+import { createReceipt } from "@/components/operator/actions/billing/receipts/create";
+import { reviewReceipt } from "@/components/operator/actions/billing/receipts/review";
+import { updateInvoiceStatus } from "@/components/operator/actions/billing/invoices/update-status";
 
 export async function billingCreateReceipt(input: { invoiceId: string; schoolId: string; filename: string; amount: number }) {
   const parsed = z.object({ invoiceId: z.string().min(1), schoolId: z.string().min(1), filename: z.string().min(1), amount: z.number().int().nonnegative() }).parse(input);

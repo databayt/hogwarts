@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { createReceipt } from "@/app/(platform)/operator/actions/billing/receipts/create";
+import { createReceipt } from "@/components/operator/actions/billing/receipts/create";
 import { SuccessToast, ErrorToast } from "@/components/atom/toast";
 
 type Props = {

@@ -4,7 +4,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { DataTableColumnHeader } from "@/components/table/data-table/data-table-column-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { reviewReceipt } from "@/app/(platform)/operator/actions/billing/receipts/review";
+import { reviewReceipt } from "@/components/operator/actions/billing/receipts/review";
 import { SuccessToast, ErrorToast } from "@/components/atom/toast";
 
 export type ReceiptRow = {
