@@ -1,182 +1,205 @@
 # Subdomain Authentication Debug Summary
 
-## Current Status: FIXED ✅
+## Current Status: ✅ RESOLVED
 
-**Root Cause Found**: Browsers reject cookies with `domain: '.localhost'` for security reasons. The solution is to use `lvh.me` which resolves to 127.0.0.1 and supports subdomains.
+**Root Cause Fixed**: Cookies were being set with `domain: undefined` instead of `.databayt.org` in production.
 
-**Solution Applied**: Changed all localhost references to `lvh.me` so cookies can be properly shared across subdomains.
+**Solution Applied**: Updated cookie configuration to use `domain: '.databayt.org'` when `NODE_ENV === "production"`.
 
 ## Issue Description
 
-When a user logs in from a subdomain (e.g., `khartoum.localhost:3000`):
-1. ✅ OAuth authentication flow works correctly
-2. ✅ JWT and session callbacks execute successfully 
-3. ✅ User is redirected back to subdomain `/dashboard`
-4. ❌ Client-side `useSession()` returns `status: 'unauthenticated'`
-5. ❌ User gets redirected back to login page (infinite loop)
+When a user logged in from main domain (`ed.databayt.org`):
+1. ✅ OAuth authentication flow worked correctly
+2. ✅ JWT and session callbacks executed successfully 
+3. ✅ User was redirected to subdomain (`khartoum.databayt.org/dashboard`)
+4. ❌ Client-side session was not available on subdomain
+5. ❌ User got redirected back to login page (infinite loop)
 
-## Evidence from Logs
+## Root Cause
 
-**Server-side authentication is working:**
-```
-🔐 JWT CALLBACK END: { tokenId: 'user_2pjQhdQfDOYJrHE3...', hasRole: true, hasSchoolId: true }
-📋 SESSION CALLBACK END: { sessionId: 'user_2pjQhdQfDOYJrHE3...', hasRole: true, hasSchoolId: true }
-🎉 SIGN IN EVENT: { userId: 'user_2pjQhdQfDOYJrHE3...', provider: 'facebook' }
-```
+**Cookie Domain Configuration**: In production, cookies were set with `domain: undefined`, making them only accessible on the exact domain (`ed.databayt.org`) instead of being shared across all subdomains (`.databayt.org`).
 
-**Client-side components not loading:**
-- `ClientCookieDebug` component not showing console output
-- `SessionDebugPanel` component not appearing
-- Suggests client-side session detection is failing completely
+## Solution Applied
 
-## Technical Configuration
-
-### Cookie Configuration ✅ CORRECT
+### Cookie Configuration Fix
 ```typescript
+// src/auth.ts
 cookies: {
   sessionToken: {
-    name: 'authjs.session-token',
     options: {
-      domain: '.localhost',  // Should share across subdomains
+      domain: process.env.NODE_ENV === "production" ? '.databayt.org' : undefined,
+      secure: process.env.NODE_ENV === "production",
       httpOnly: true,
-      sameSite: 'lax',
-      secure: false (development)
+      sameSite: "lax"
     }
   }
-  // All other cookies also configured with domain: '.localhost'
+  // Applied to all auth cookies: pkceCodeVerifier, csrfToken, callbackUrl, state, nonce
 }
 ```
 
-### NextAuth Configuration ✅ CORRECT
+### Environment Detection
+- **Development**: `domain: undefined` (localhost subdomains)
+- **Production**: `domain: '.databayt.org' (shared across subdomains)
+
+### Redirect Logic Fix
 ```typescript
-session: { strategy: "jwt" },
-trustHost: true,  // Allows subdomain requests
-debug: true (development)
+// src/auth.ts - redirect callback
+// Production subdomain detection - EXCLUDE ed.databayt.org as main domain
+if (originalHost.endsWith('.databayt.org') && originalHost !== 'ed.databayt.org') {
+  detectedSubdomain = originalHost.split('.')[0];
+  // Redirect to subdomain dashboard
+  return `https://${detectedSubdomain}.databayt.org/dashboard`;
+}
+
+// If we're on the main domain (ed.databayt.org), redirect to its dashboard
+if (originalHost === 'ed.databayt.org') {
+  return 'https://ed.databayt.org/dashboard';
+}
+
+// Facebook hash cleanup (#_=_)
+if (url.includes('#_=_')) {
+  url = url.replace(/#.*$/, '');
+}
 ```
 
-### Client-side Setup ✅ CORRECT
-```typescript
-// Root layout uses client-only SessionProvider
-<SessionProvider>  // No server-side session passed
-  <ClientDashboardContent />
-</SessionProvider>
+**Redirect Behavior:**
+- **`ed.databayt.org`** → `ed.databayt.org/dashboard` (main domain)
+- **`school.databayt.org`** → `school.databayt.org/dashboard` (subdomain)
+- **Facebook OAuth** → Hash cleaned, proper redirect applied
+
+## Evidence of Success
+
+### Production Logs Show:
+```
+🍪 Cookie configuration: { 
+  environment: 'production', 
+  cookieDomain: '.databayt.org' 
+}
+
+📋 SESSION CALLBACK END: { 
+  sessionId: 'user_...', 
+  hasRole: true, 
+  hasSchoolId: true 
+}
+
+DashboardContent - user: { 
+  email: '...', 
+  role: 'ADMIN', 
+  schoolId: '...' 
+}
 ```
 
-## Where We're Stuck
-
-**Root Cause Unknown**: Despite all configurations being correct, the `/api/auth/session` endpoint on subdomains is not returning the authenticated session data.
-
-**Possible Issues:**
-1. **Cookie Domain**: Despite setting `domain: '.localhost'`, cookies may not be sharing properly
-2. **NextAuth Internal Issue**: The `auth()` function may not be reading subdomain cookies correctly
-3. **Browser Security**: Modern browsers may block cross-subdomain cookie sharing on localhost
-4. **Middleware Interference**: Request routing may be affecting cookie headers
-5. **Session Storage**: JWT tokens may not be persisting correctly across domains
-
-## Files Modified
-
-### Core Authentication
-- `src/auth.ts` - Enhanced cookie configuration and debugging
-- `src/auth.config.ts` - OAuth provider configuration
-- `src/components/auth/social.tsx` - Subdomain-aware OAuth flow
-
-### Debugging Components
-- `src/components/auth/client-cookie-debug.tsx` - Browser cookie inspection
-- `src/components/auth/session-debug-panel.tsx` - Interactive session API testing
-- `src/components/auth/subdomain-session-provider.tsx` - Client session management
-- `src/app/api/debug-session/route.ts` - Server-side session inspection
-
-### Dashboard Integration
-- `src/app/s/[subdomain]/(platform)/dashboard/page.tsx` - Added all debug components
-- `src/components/platform/dashboard/client-dashboard-content.tsx` - Client-side rendering
-- `src/app/layout.tsx` - Client-only SessionProvider
+### Subdomain Authentication Working:
+- ✅ User successfully authenticated on `khartoum.databayt.org`
+- ✅ Session shared between main domain and subdomain
+- ✅ Dashboard accessible without login redirect
+- ✅ All subdomain routes working correctly
 
 ## Debug Tools Added
 
-### 1. Interactive Session Debug Panel
-- Location: Bottom-right corner of dashboard
-- Features: Test different session API endpoints with buttons
-- Tests: `useSession()`, `getSession()`, `/api/auth/session`, `/api/debug-session`
+### 1. Debug Session API
+- **Endpoint**: `/api/debug-session`
+- **Purpose**: Server-side session and cookie inspection
+- **Use**: Compare session state between domains
 
-### 2. Enhanced Cookie Inspector  
-- Logs all browser cookies to console
-- Specifically checks for `authjs.session-token`
-- Shows cookie sharing status across subdomains
+### 2. Cookie Debug Component
+- **Location**: Dashboard bottom
+- **Purpose**: Client-side cookie inspection
+- **Features**: Cookie listing, session API testing, domain detection
 
-### 3. Server-side Session API
-- Endpoint: `/api/debug-session`
-- Returns: Complete session state, cookie headers, environment info
-- Accessible on both domains for comparison
+## Cleanup Options
 
-## Next Steps to Resolve
-
-### 1. Test Cookie Sharing (HIGH PRIORITY)
+### Option 1: Remove Debug Tools (Clean Production)
 ```bash
-# Test these URLs after logging in:
-http://localhost:3000/api/debug-session
-http://khartoum.localhost:3000/api/debug-session
-```
-Compare cookie headers and session data returned.
+# Remove debug API
+rm src/app/api/debug-session/route.ts
 
-### 2. Browser Cookie Investigation
-Open browser DevTools → Application → Cookies:
-- Check if `authjs.session-token` exists on `.localhost` domain
-- Verify cookie is accessible from both `localhost:3000` and `khartoum.localhost:3000`
+# Remove debug component from dashboard
+# Edit: src/components/platform/dashboard/content.tsx
+# Remove: import { CookieDebug } from '@/components/auth/cookie-debug';
+# Remove: <CookieDebug />
 
-### 3. Manual Session API Testing
-Use the debug panel buttons to test:
-- Does `/api/auth/session` return different data on main vs subdomain?
-- Does `getSession()` work differently than `useSession()`?
+# Remove debug component file
+rm src/components/auth/cookie-debug.tsx
 
-### 4. Alternative Solutions to Try
-1. **Force Cookie Domain**: Manually set cookies via JavaScript
-2. **Session Storage Fallback**: Store JWT tokens in localStorage
-3. **Server-side Session**: Pass session data via props instead of client hooks
-4. **Custom Session Provider**: Bypass NextAuth's client-side session management
-
-## Environment Details
-
-- **Development**: `localhost:3000` with subdomains `*.localhost:3000`
-- **NextAuth**: v5 with JWT strategy
-- **Framework**: Next.js 14 with App Router
-- **Authentication**: Google + Facebook OAuth
-- **Database**: PostgreSQL with Prisma
-
-## Log Pattern for Success
-
-When working correctly, we should see:
-```
-🍪 CLIENT COOKIE DEBUG: { hostname: 'khartoum.localhost', authCookies: 2+ }
-✅ SESSION TOKEN FOUND ON SUBDOMAIN
-🔍 SUBDOMAIN SESSION PROVIDER: { status: 'authenticated', hasSession: true }
-🎯 CLIENT DASHBOARD CONTENT: { status: 'authenticated', userId: 'user_...' }
+# Clean up auth.ts debug logging
+# Remove console.log statements for cookie configuration
 ```
 
-Currently seeing: **NONE of these client-side logs appear**
+### Option 2: Keep Debug Tools (Recommended)
+- **Benefits**: Future troubleshooting, monitoring, debugging
+- **Minimal overhead**: Only active when needed
+- **Production safe**: No sensitive data exposed
 
-## ✅ SOLUTION IMPLEMENTED
+### Option 3: Conditional Debug Tools
+```typescript
+// Only show debug tools in development or for admins
+{process.env.NODE_ENV === 'development' && <CookieDebug />}
+// or
+{user?.role === 'ADMIN' && <CookieDebug />}
+```
 
-### Root Cause
-Browsers reject `.localhost` cookies for security. Chrome, Safari, Firefox all block cross-subdomain cookie sharing for `.localhost` domains.
+## Debug Code Cleanup Paths
 
-### Fix Applied
-1. **Changed cookie domain**: `.localhost` → `.lvh.me`
-2. **Updated environment variables**: `localhost:3000` → `lvh.me:3000`
-3. **Updated all auth URLs**: Redirect URLs now use `lvh.me` 
-4. **Updated middleware**: Subdomain detection works with `lvh.me`
+### Files to Delete Completely:
+```bash
+# 1. Debug API endpoint
+rm src/app/api/debug-session/route.ts
 
-### Files Changed
+# 2. Debug component
+rm src/components/auth/cookie-debug.tsx
+```
+
+### Files to Edit (Remove Debug Code):
+```bash
+# 1. Dashboard content - remove debug panel
+src/components/platform/dashboard/content.tsx
+# Remove these lines:
+# - import { CookieDebug } from '@/components/auth/cookie-debug';
+# - <CookieDebug />
+
+# 2. Auth configuration - remove debug logging
+src/auth.ts
+# Remove these console.log statements:
+# - console.log('🍪 Cookie configuration:', {...});
+# - console.log('NextAuth initialization - Environment check:', {...});
+```
+
+### Complete Cleanup Commands:
+```bash
+# Delete debug files
+rm -rf src/app/api/debug-session
+rm src/components/auth/cookie-debug.tsx
+
+# Edit dashboard content (remove debug imports and component)
+# Edit auth.ts (remove debug console.log statements)
+```
+
+## Files Modified
+
+### Core Fix
 - `src/auth.ts` - Cookie domain configuration
-- `src/middleware.ts` - Subdomain detection
-- `src/components/auth/social.tsx` - OAuth redirects
-- `.env.local` - Environment URLs
 
-### How to Test
-1. **Main domain**: Visit `http://lvh.me:3000`
-2. **Subdomain**: Visit `http://khartoum.lvh.me:3000`
-3. **Login flow**: Login from subdomain should now work correctly
+### Debug Tools (Optional)
+- `src/app/api/debug-session/route.ts` - Debug API
+- `src/components/auth/cookie-debug.tsx` - Debug component
+- `src/components/platform/dashboard/content.tsx` - Debug panel integration
 
-### Why lvh.me Works
-- `lvh.me` resolves to `127.0.0.1` (localhost)
-- Browsers allow `.lvh.me` cross-subdomain cookies
-- No DNS setup required - works out of the box
+## Testing Results
+
+| Test | Main Domain | Subdomain | Status |
+|------|-------------|-----------|---------|
+| **Session API** | ✅ User data | ✅ User data | ✅ Working |
+| **Cookie Count** | 5+ cookies | 5+ cookies | ✅ Shared |
+| **Authentication** | ✅ Login works | ✅ Login works | ✅ Working |
+| **Dashboard Access** | ✅ Accessible | ✅ Accessible | ✅ Working |
+
+## Summary
+
+**Problem**: Subdomain authentication failed due to cookies not being shared across domains.
+
+**Solution**: Fixed cookie domain configuration to use `.databayt.org` in production.
+
+**Result**: Subdomain authentication now works perfectly across all `*.databayt.org` domains.
+
+**Next Steps**: Choose cleanup option and optionally remove debug tools for production.

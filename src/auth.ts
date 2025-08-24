@@ -218,6 +218,17 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
     async redirect({ url, baseUrl }) {
       console.log('🔄 REDIRECT CALLBACK START:', { url, baseUrl });
       
+      // Handle Facebook redirect with #_=_ hash FIRST - clean it completely
+      if (url.includes('#_=_')) {
+        console.log('📘 Facebook redirect detected, cleaning hash');
+        // Clean the Facebook hash and redirect appropriately
+        const cleanUrl = url.replace(/#.*$/, '');
+        console.log('🎯 Cleaned Facebook URL:', cleanUrl);
+        
+        // Continue with the cleaned URL
+        url = cleanUrl;
+      }
+      
       // Extract host information from the callback URL which preserves the original domain
       let originalHost = '';
       try {
@@ -236,7 +247,7 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
         // Enhanced subdomain detection for both production and development
         let detectedSubdomain = null;
         
-        // Production subdomain detection
+        // Production subdomain detection - EXCLUDE ed.databayt.org as main domain
         if (originalHost.endsWith('.databayt.org') && originalHost !== 'ed.databayt.org') {
           detectedSubdomain = originalHost.split('.')[0];
           console.log('🎯 PRODUCTION SUBDOMAIN DETECTED:', { 
@@ -267,6 +278,22 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
           });
           
           return tenantDashboardUrl;
+        }
+        
+        // If we're on the main domain (ed.databayt.org), redirect to its dashboard
+        if (originalHost === 'ed.databayt.org') {
+          const mainDomainDashboard = process.env.NODE_ENV === "production"
+            ? 'https://ed.databayt.org/dashboard'
+            : 'http://localhost:3000/dashboard';
+          
+          console.log('🏢 MAIN DOMAIN REDIRECT:', { 
+            host: originalHost,
+            redirectUrl: mainDomainDashboard,
+            environment: process.env.NODE_ENV,
+            source: 'main_domain_detection'
+          });
+          
+          return mainDomainDashboard;
         }
       } catch (error) {
         console.log('❌ Error parsing URLs:', error);
@@ -336,28 +363,6 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
       
       console.log('⚠️ No tenant parameter found in:', { url, baseUrl });
       
-      // Handle Facebook redirect with #_=_ hash - clean it completely
-      if (url.includes('#_=_')) {
-        console.log('📘 Facebook redirect detected, cleaning hash');
-        // Clean the Facebook hash and redirect appropriately
-        const cleanUrl = url.replace(/#.*$/, '');
-        console.log('🎯 Cleaned Facebook URL:', cleanUrl);
-        
-        // If we have tenant info, redirect to tenant dashboard
-        if (tenant) {
-          const tenantUrl = process.env.NODE_ENV === "production" 
-            ? `https://${tenant}.databayt.org/dashboard`
-            : `http://${tenant}.localhost:3000/dashboard`;
-          console.log('🔄 Facebook: Redirecting to tenant after cleaning hash:', tenantUrl);
-          return tenantUrl;
-        }
-        
-        // Otherwise redirect to dashboard on current domain
-        const dashboardUrl = `${baseUrl}/dashboard`;
-        console.log('🔄 Facebook: Redirecting to dashboard after cleaning hash:', dashboardUrl);
-        return dashboardUrl;
-      }
-
       // Handle OAuth callback completion
       if (url.includes('/api/auth/callback/')) {
         console.log('🔄 OAuth callback detected, processing redirect');
