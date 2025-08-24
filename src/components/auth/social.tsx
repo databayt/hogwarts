@@ -66,6 +66,15 @@ export const Social = () => {
     const isDevSubdomain = currentHost.includes('.localhost') && currentHost !== 'localhost';
     const isSubdomain = isProdSubdomain || isDevSubdomain;
     
+    console.log('🔍 Host detection debug:', {
+      currentHost,
+      isProdSubdomain,
+      isDevSubdomain,
+      isSubdomain,
+      endsWithDatabayt: currentHost.endsWith('.databayt.org'),
+      notEdDatabayt: currentHost !== 'ed.databayt.org'
+    });
+    
     console.log('OAuth flow initiated:', {
       provider,
       currentHost,
@@ -74,23 +83,21 @@ export const Social = () => {
       currentUrl: window.location.href
     });
     
-    // If on tenant subdomain, redirect to main domain for OAuth with tenant context
+    // If on tenant subdomain, use NextAuth signIn with custom callback URL
     if (isSubdomain) {
       const tenantSubdomain = currentHost.split('.')[0];
-      const baseUrl = process.env.NODE_ENV === "production" 
-        ? "https://ed.databayt.org"
-        : "http://localhost:3000";
-      const callbackWithTenant = `${baseUrl}/api/auth/callback/${provider}?tenant=${tenantSubdomain}`;
-      const loginUrl = `${baseUrl}/api/auth/signin/${provider}?callbackUrl=${encodeURIComponent(callbackWithTenant)}`;
+      const dashboardUrl = `https://${tenantSubdomain}.databayt.org/dashboard`;
       
-      console.log('🔗 Redirecting to tenant OAuth:', { 
+      console.log('🔗 Redirecting to tenant OAuth via NextAuth:', { 
         tenantSubdomain, 
-        provider, 
-        loginUrl,
-        callbackWithTenant,
-        baseUrl 
+        provider,
+        dashboardUrl,
+        currentHost
       });
-      window.location.href = loginUrl;
+      
+      signIn(provider, {
+        callbackUrl: dashboardUrl,
+      });
       return;
     }
     
