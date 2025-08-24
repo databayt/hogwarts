@@ -39,7 +39,7 @@ export default function PlatformSidebar({ school, ...props }: PlatformSidebarPro
 
   return (
     <Sidebar {...props} className="w-56 top-12" collapsible="offcanvas">
-      <SidebarHeader>
+      {/* <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
@@ -51,7 +51,7 @@ export default function PlatformSidebar({ school, ...props }: PlatformSidebarPro
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
-      </SidebarHeader>
+      </SidebarHeader> */}
       <SidebarContent className="border-0 bg-transparent">
         <ScrollArea className="h-full">
           <SidebarGroup className="p-2">
