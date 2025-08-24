@@ -38,7 +38,7 @@ export default function PlatformSidebar({ school, ...props }: PlatformSidebarPro
   }, [setOpenMobile]);
 
   return (
-    <Sidebar {...props} className="w-56 top-14 pb-8" collapsible="offcanvas">
+    <Sidebar {...props} className="w-56 top-16" collapsible="offcanvas">
       {/* <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
