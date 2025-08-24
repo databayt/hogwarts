@@ -217,20 +217,42 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
     async redirect({ url, baseUrl }) {
       console.log('🔄 REDIRECT CALLBACK START:', { url, baseUrl });
       
-      // Extract the host from baseUrl to determine if we're on a subdomain
-      const baseUrlObj = new URL(baseUrl);
-      const host = baseUrlObj.host;
-      
-      // Check if we're on a tenant subdomain (not ed.databayt.org)
-      if (host.endsWith('.databayt.org') && host !== 'ed.databayt.org') {
-        const subdomain = host.split('.')[0];
-        const tenantDashboardUrl = `https://${subdomain}.databayt.org/dashboard`;
-        console.log('🔄 Tenant subdomain detected, redirecting to:', tenantDashboardUrl);
-        return tenantDashboardUrl;
+      // Extract host information from the callback URL which preserves the original domain
+      let originalHost = '';
+      try {
+        // If url is a full URL, extract the host from it
+        if (url.startsWith('http')) {
+          const urlObj = new URL(url);
+          originalHost = urlObj.host;
+        } else {
+          // If url is relative, use baseUrl
+          const baseUrlObj = new URL(baseUrl);
+          originalHost = baseUrlObj.host;
+        }
+        
+        console.log('🔍 Host detection:', { originalHost, url, baseUrl });
+        
+        // Check if we're on a tenant subdomain (not ed.databayt.org)
+        if (originalHost.endsWith('.databayt.org') && originalHost !== 'ed.databayt.org') {
+          const subdomain = originalHost.split('.')[0];
+          const tenantDashboardUrl = `https://${subdomain}.databayt.org/dashboard`;
+          console.log('🔄 Tenant subdomain detected, redirecting to:', tenantDashboardUrl);
+          return tenantDashboardUrl;
+        }
+      } catch (error) {
+        console.log('❌ Error parsing URLs:', error);
+        // Fall back to baseUrl parsing
+        const baseUrlObj = new URL(baseUrl);
+        originalHost = baseUrlObj.host;
       }
       
       // Extract tenant from callbackUrl if present
-      const urlObj = new URL(url, baseUrl);
+      let urlObj;
+      try {
+        urlObj = new URL(url, baseUrl);
+      } catch {
+        urlObj = new URL(baseUrl);
+      }
       const tenant = urlObj.searchParams.get('tenant');
       
       if (tenant) {
@@ -238,7 +260,7 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
         const tenantUrl = process.env.NODE_ENV === "production" 
           ? `https://${tenant}.databayt.org/dashboard`
           : `http://${tenant}.localhost:3000/dashboard`;
-        console.log('🔄 Redirecting to tenant:', tenantUrl);
+        console.log('🔄 Redirecting to tenant via parameter:', { tenant, tenantUrl });
         return tenantUrl;
       }
       
