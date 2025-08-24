@@ -5,16 +5,25 @@ import { studentsSearchParams } from '@/components/platform/students/list-params
 import { db } from '@/lib/db'
 import { getTenantContext } from '@/components/platform/operator/lib/tenant'
 
-export const metadata = { title: 'Dashboard: Students' }
 
-export default async function StudentsContent({ searchParams }: { searchParams: Promise<SearchParams> }) {
+
+interface StudentsContentProps {
+  searchParams: Promise<SearchParams>;
+  school?: any;
+}
+
+export default async function StudentsContent({ searchParams, school }: StudentsContentProps) {
   const sp = await studentsSearchParams.parse(await searchParams)
   const { schoolId } = await getTenantContext()
+  
+  // Use school from props if available, otherwise fall back to tenant context
+  const effectiveSchoolId = school?.id || schoolId
+  
   let data: StudentRow[] = []
   let total = 0
-  if (schoolId && (db as any).student) {
+  if (effectiveSchoolId && (db as any).student) {
     const where: any = {
-      schoolId,
+      schoolId: effectiveSchoolId,
       ...(sp.name ? { OR: [
         { givenName: { contains: sp.name, mode: 'insensitive' } },
         { surname: { contains: sp.name, mode: 'insensitive' } },
@@ -40,15 +49,15 @@ export default async function StudentsContent({ searchParams }: { searchParams: 
     total = count as number
   }
   return (
-    
-      <div className="flex flex-1 flex-col gap-4">
-        <div>
-          <h1 className="text-xl font-semibold">Students</h1>
-          {/* <p className="text-sm text-muted-foreground">List and manage students (placeholder)</p> */}
-        </div>
-        <StudentsTable data={data} columns={studentColumns} pageCount={Math.max(1, Math.ceil(total / (sp.perPage || 20)))} />
+    <div className="flex flex-1 flex-col gap-4">
+      <div>
+        <h1 className="text-xl font-semibold">
+          {school?.name ? `${school.name} - Students` : 'Students'}
+        </h1>
+        {/* <p className="text-sm text-muted-foreground">List and manage students (placeholder)</p> */}
       </div>
-   
+      <StudentsTable data={data} columns={studentColumns} pageCount={Math.max(1, Math.ceil(total / (sp.perPage || 20)))} />
+    </div>
   )
 }
 
