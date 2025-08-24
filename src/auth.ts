@@ -42,7 +42,7 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
         path: "/",
         secure: process.env.NODE_ENV === "production",
         maxAge: 900, // 15 minutes
-        domain: process.env.NODE_ENV === "production" ? '.ed.databayt.org' : undefined,
+        domain: process.env.NODE_ENV === "production" ? '.databayt.org' : undefined,
       },
     },
     sessionToken: {
@@ -52,7 +52,8 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
         sameSite: "lax",
         path: "/",
         secure: process.env.NODE_ENV === "production",
-        domain: process.env.NODE_ENV === "production" ? '.ed.databayt.org' : undefined,
+        domain: process.env.NODE_ENV === "production" ? '.databayt.org' : undefined,
+        maxAge: 24 * 60 * 60, // 24 hours
       },
     },
     callbackUrl: {
@@ -61,7 +62,7 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
         sameSite: "lax",
         path: "/",
         secure: process.env.NODE_ENV === "production",
-        domain: process.env.NODE_ENV === "production" ? '.ed.databayt.org' : undefined,
+        domain: process.env.NODE_ENV === "production" ? '.databayt.org' : undefined,
       },
     },
     csrfToken: {
@@ -71,7 +72,7 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
         sameSite: "lax",
         path: "/",
         secure: process.env.NODE_ENV === "production",
-        domain: process.env.NODE_ENV === "production" ? '.ed.databayt.org' : undefined,
+        domain: process.env.NODE_ENV === "production" ? '.databayt.org' : undefined,
       },
     },
     // Add explicit configuration for all NextAuth cookies
@@ -82,7 +83,7 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
         sameSite: "lax",
         path: "/",
         secure: process.env.NODE_ENV === "production",
-        domain: process.env.NODE_ENV === "production" ? '.ed.databayt.org' : undefined,
+        domain: process.env.NODE_ENV === "production" ? '.databayt.org' : undefined,
       },
     },
     nonce: {
@@ -92,7 +93,7 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
         sameSite: "lax",
         path: "/",
         secure: process.env.NODE_ENV === "production",
-        domain: process.env.NODE_ENV === "production" ? '.ed.databayt.org' : undefined,
+        domain: process.env.NODE_ENV === "production" ? '.databayt.org' : undefined,
       },
     },
   },
@@ -404,21 +405,24 @@ console.log('NextAuth initialization - Environment check:', {
 });
 
 // Debug cookie configuration
+const cookieDomain = process.env.NODE_ENV === "production" ? '.databayt.org' : undefined;
 console.log('🍪 Cookie configuration:', {
+  environment: process.env.NODE_ENV,
+  cookieDomain,
   pkceCodeVerifier: {
     name: 'authjs.pkce.code_verifier',
-    options: { sameSite: 'lax', secure: false, httpOnly: true, maxAge: 900, domain: undefined }
+    options: { sameSite: 'lax', secure: process.env.NODE_ENV === "production", httpOnly: true, maxAge: 900, domain: cookieDomain }
   },
   sessionToken: {
     name: 'authjs.session-token',
-    options: { sameSite: 'lax', secure: false, httpOnly: true, domain: undefined }
+    options: { sameSite: 'lax', secure: process.env.NODE_ENV === "production", httpOnly: true, domain: cookieDomain }
   },
   callbackUrl: {
     name: 'authjs.callback-url',
-    options: { sameSite: 'lax', secure: false, domain: undefined }
+    options: { sameSite: 'lax', secure: process.env.NODE_ENV === "production", domain: cookieDomain }
   },
   csrfToken: {
     name: 'authjs.csrf-token',
-    options: { sameSite: 'lax', secure: false, httpOnly: true, domain: undefined }
+    options: { sameSite: 'lax', secure: process.env.NODE_ENV === "production", httpOnly: true, domain: cookieDomain }
   }
 });

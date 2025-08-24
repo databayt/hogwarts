@@ -8,6 +8,7 @@ import { AdminDashboard } from "./dashboards/admin-dashboard";
 import { PrincipalDashboard } from "./dashboards/principal-dashboard";
 import { AccountantDashboard } from "./dashboards/accountant-dashboard";
 import { TenantLoginRedirect } from "@/components/auth/tenant-login-redirect";
+import { CookieDebug } from "@/components/auth/cookie-debug";
 import type { School } from "@/components/site/types";
 
 // Extended user type that includes the properties added by our auth callbacks
@@ -83,6 +84,7 @@ function DefaultDashboard({ user }: { user: ExtendedUser }) {
           We're working on a personalized dashboard for your role ({user.role || 'Unknown'}). 
           Check back soon for updates!
         </p>
+        <CookieDebug />
       </div>
     </div>
   );
