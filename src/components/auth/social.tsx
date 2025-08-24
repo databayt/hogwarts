@@ -25,6 +25,11 @@ export const Social = () => {
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl");
   
+  console.log('🚀 Social component loaded on:', {
+    hostname: typeof window !== 'undefined' ? window.location.hostname : 'server',
+    href: typeof window !== 'undefined' ? window.location.href : 'server'
+  });
+  
   // Clean URL hash on component mount - this will handle Facebook redirects
   useEffect(() => {
     cleanUrlHash();
