@@ -3,7 +3,7 @@ import { examColumns, type ExamRow } from '@/components/platform/exams/columns'
 import { SearchParams } from 'nuqs/server'
 import { examsSearchParams } from '@/components/platform/exams/list-params'
 import { db } from '@/lib/db'
-import { getTenantContext } from '@/components/platform/operator/lib/tenant'
+import { getTenantContext } from '@/components/operator/lib/tenant'
 import { Shell as PageContainer } from '@/components/table/shell'
 
 export default async function ExamsContent({ searchParams }: { searchParams: Promise<SearchParams> }) {

@@ -3,7 +3,7 @@
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
-import { getTenantContext } from "@/components/platform/operator/lib/tenant";
+import { getTenantContext } from "@/components/operator/lib/tenant";
 import { examCreateSchema, examUpdateSchema, getExamsSchema } from "@/components/platform/exams/validation";
 
 export async function createExam(input: z.infer<typeof examCreateSchema>) {

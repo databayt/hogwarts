@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { getTenantContext } from "@/components/platform/operator/lib/tenant";
+import { getTenantContext } from "@/components/operator/lib/tenant";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";

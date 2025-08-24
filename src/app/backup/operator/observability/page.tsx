@@ -1,7 +1,7 @@
-import { type AuditRow } from "@/components/platform/operator/observability/logs-table/columns";
-import { ObservabilityContent } from "@/components/platform/operator/observability/content";
+import { type AuditRow } from "@/components/operator/observability/logs-table/columns";
+import { ObservabilityContent } from "@/components/operator/observability/content";
 import { createSearchParamsCache, parseAsInteger, parseAsString } from "nuqs/server";
-import { fetchLogs } from "@/components/platform/operator/observability/provider";
+import { fetchLogs } from "@/components/operator/observability/provider";
 
 export const metadata = {
   title: "Operator: Observability",

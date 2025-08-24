@@ -3,7 +3,7 @@ import { eventColumns, type EventRow } from '@/components/platform/events/column
 import { SearchParams } from 'nuqs/server'
 import { eventsSearchParams } from '@/components/platform/events/list-params'
 import { db } from '@/lib/db'
-import { getTenantContext } from '@/components/platform/operator/lib/tenant'
+import { getTenantContext } from '@/components/operator/lib/tenant'
 import { Shell as PageContainer } from '@/components/table/shell'
 
 export default async function EventsContent({ searchParams }: { searchParams: Promise<SearchParams> }) {

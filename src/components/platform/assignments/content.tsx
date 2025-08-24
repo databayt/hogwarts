@@ -3,7 +3,7 @@ import { assignmentColumns, type AssignmentRow } from '@/components/platform/ass
 import { SearchParams } from 'nuqs/server'
 import { assignmentsSearchParams } from '@/components/platform/assignments/list-params'
 import { db } from '@/lib/db'
-import { getTenantContext } from '@/components/platform/operator/lib/tenant'
+import { getTenantContext } from '@/components/operator/lib/tenant'
 import { Shell as PageContainer } from '@/components/table/shell'
 
 export default async function AssignmentsContent({ searchParams }: { searchParams: Promise<SearchParams> }) {

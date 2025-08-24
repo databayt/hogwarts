@@ -1,8 +1,8 @@
-import { DomainsContent } from "@/components/platform/operator/domains/content";
+import { DomainsContent } from "@/components/operator/domains/content";
 import { db } from "@/lib/db";
-import { domainsSearchParams } from "@/components/platform/operator/domains/validation";
+import { domainsSearchParams } from "@/components/operator/domains/validation";
 import { SearchParams } from "nuqs/server";
-import { CreateDomainRequest } from "@/components/platform/operator/domains/create-request";
+import { CreateDomainRequest } from "@/components/operator/domains/create-request";
 import type { Prisma } from "@prisma/client";
 // Server actions are wired; enable after Prisma migration
 // import { approveDomainRequest } from "@/app/(platform)/operator/actions/domains/approve";

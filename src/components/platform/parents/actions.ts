@@ -3,7 +3,7 @@
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
-import { getTenantContext } from "@/components/platform/operator/lib/tenant";
+import { getTenantContext } from "@/components/operator/lib/tenant";
 import { parentCreateSchema, parentUpdateSchema, getParentsSchema } from "@/components/platform/parents/validation";
 
 export async function createParent(input: z.infer<typeof parentCreateSchema>) {

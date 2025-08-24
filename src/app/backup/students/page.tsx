@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
 import StudentsContent from '@/components/platform/students/content';
-import { getTenantContext } from '@/components/platform/operator/lib/tenant';
+import { getTenantContext } from '@/components/operator/lib/tenant';
 
 export const metadata = { title: 'Dashboard: Students' }
 

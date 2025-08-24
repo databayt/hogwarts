@@ -1,10 +1,10 @@
 import { ModeSwitcher } from "@/components/template/marketing-header/mode-switcher";
 import { UserButton } from "@/components/auth/user-button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { Breadcrumbs } from "@/components/platform/operator/breadcrumbs";
+import { Breadcrumbs } from "@/components/operator/breadcrumbs";
 import { Button } from "@/components/ui/button";
 import { Bell, Mail } from "lucide-react";
-import ImpersonationBanner from "../../platform/operator/impersonation-banner";
+import ImpersonationBanner from "../../operator/impersonation-banner";
 
 export default function DashboardHeader() {
   return (

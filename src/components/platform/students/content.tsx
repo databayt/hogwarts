@@ -3,7 +3,7 @@ import { studentColumns, type StudentRow } from '@/components/platform/students/
 import { SearchParams } from 'nuqs/server'
 import { studentsSearchParams } from '@/components/platform/students/list-params'
 import { db } from '@/lib/db'
-import { getTenantContext } from '@/components/platform/operator/lib/tenant'
+import { getTenantContext } from '@/components/operator/lib/tenant'
 
 
 

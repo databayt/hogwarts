@@ -3,7 +3,7 @@ import { classColumns, type ClassRow } from '@/components/platform/classes/colum
 import { SearchParams } from 'nuqs/server'
 import { classesSearchParams } from '@/components/platform/classes/list-params'
 import { db } from '@/lib/db'
-import { getTenantContext } from '@/components/platform/operator/lib/tenant'
+import { getTenantContext } from '@/components/operator/lib/tenant'
 import { Shell as PageContainer } from '@/components/table/shell'
 
 export default async function ClassesContent({ searchParams }: { searchParams: Promise<SearchParams> }) {

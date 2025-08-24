@@ -3,7 +3,7 @@ import { announcementColumns, type AnnouncementRow } from '@/components/platform
 import { SearchParams } from 'nuqs/server'
 import { announcementsSearchParams } from '@/components/platform/announcements/list-params'
 import { db } from '@/lib/db'
-import { getTenantContext } from '@/components/platform/operator/lib/tenant'
+import { getTenantContext } from '@/components/operator/lib/tenant'
 import { Shell as PageContainer } from '@/components/table/shell'
 
 export default async function AnnouncementsContent({ searchParams }: { searchParams: Promise<SearchParams> }) {

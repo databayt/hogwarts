@@ -3,7 +3,7 @@
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
-import { getTenantContext } from "@/components/platform/operator/lib/tenant";
+import { getTenantContext } from "@/components/operator/lib/tenant";
 import { subjectCreateSchema, subjectUpdateSchema, getSubjectsSchema } from "@/components/platform/subjects/validation";
 
 export async function createSubject(input: z.infer<typeof subjectCreateSchema>) {

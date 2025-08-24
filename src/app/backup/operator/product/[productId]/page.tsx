@@ -1,7 +1,7 @@
-import FormCardSkeleton from '@/components/platform/operator/form-card-skeleton';
+import FormCardSkeleton from '@/components/operator/form-card-skeleton';
 import { Shell as PageContainer } from '@/components/table/shell';
 import { Suspense } from 'react';
-import ProductViewPage from '@/components/platform/operator/products/components/product-view-page';
+import ProductViewPage from '@/components/operator/products/components/product-view-page';
 
 export const metadata = {
   title: 'Dashboard : Product View'

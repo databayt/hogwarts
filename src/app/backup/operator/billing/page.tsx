@@ -1,11 +1,11 @@
-import { BillingContent } from "@/components/platform/operator/billing/content";
-import { billingSearchParams } from "@/components/platform/operator/billing/validation";
+import { BillingContent } from "@/components/operator/billing/content";
+import { billingSearchParams } from "@/components/operator/billing/validation";
 import { SearchParams } from "nuqs/server";
 import { db } from "@/lib/db";
-import { ReceiptsTable } from "@/components/platform/operator/billing/receipts/table";
-import { receiptColumns, type ReceiptRow } from "@/components/platform/operator/billing/receipts/columns";
-import { receiptsSearchParams } from "@/components/platform/operator/billing/receipts/validation";
-import { ReceiptUpload } from "@/components/platform/operator/billing/receipts/upload";
+import { ReceiptsTable } from "@/components/operator/billing/receipts/table";
+import { receiptColumns, type ReceiptRow } from "@/components/operator/billing/receipts/columns";
+import { receiptsSearchParams } from "@/components/operator/billing/receipts/validation";
+import { ReceiptUpload } from "@/components/operator/billing/receipts/upload";
 import type { Prisma } from "@prisma/client";
 
 export const metadata = {

@@ -3,7 +3,7 @@
 import { z } from 'zod'
 import { db } from '@/lib/db'
 import type { Prisma } from '@prisma/client'
-import { getTenantContext } from '@/components/platform/operator/lib/tenant'
+import { getTenantContext } from '@/components/operator/lib/tenant'
 import { revalidatePath } from 'next/cache'
 import { markAttendanceSchema } from '@/components/platform/attendance/validation'
 

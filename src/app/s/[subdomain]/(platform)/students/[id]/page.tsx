@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
-import { getTenantContext } from "@/components/platform/operator/lib/tenant";
+import { getTenantContext } from "@/components/operator/lib/tenant";
 import ProfileContent from "@/components/profile/content";
 
 export default async function StudentDetailPage({ params }: { params: Promise<{ id: string }> }) {

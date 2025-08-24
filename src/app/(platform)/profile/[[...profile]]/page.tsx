@@ -1,4 +1,4 @@
-import ProfileViewPage from '@/components/platform/operator/profile/components/profile-view-page';
+import ProfileViewPage from '@/components/operator/profile/components/profile-view-page';
 
 export const metadata = {
   title: 'Dashboard : Profile'

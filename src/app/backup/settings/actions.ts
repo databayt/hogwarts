@@ -2,7 +2,7 @@
 
 import { z } from 'zod'
 import { db } from '@/lib/db'
-import { getTenantContext } from '@/components/platform/operator/lib/tenant'
+import { getTenantContext } from '@/components/operator/lib/tenant'
 import { revalidatePath } from 'next/cache'
 import { schoolSettingsSchema } from '@/components/platform/settings/validation'
 

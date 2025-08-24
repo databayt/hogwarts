@@ -1,4 +1,4 @@
-import KanbanViewPage from '@/components/platform/operator/kanban/components/kanban-view-page';
+import KanbanViewPage from '@/components/operator/kanban/components/kanban-view-page';
 
 export const metadata = {
   title: 'Dashboard : Kanban view'

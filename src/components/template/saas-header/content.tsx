@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
 import { Bell, Mail } from "lucide-react";
-import { useBreadcrumbs } from "@/components/platform/operator/hooks/use-breadcrumbs";
+import { useBreadcrumbs } from "@/components/operator/hooks/use-breadcrumbs";
 
 export default function SaasHeader() {
   const breadcrumbItems = useBreadcrumbs();

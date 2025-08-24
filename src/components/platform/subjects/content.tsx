@@ -3,7 +3,7 @@ import { subjectColumns, type SubjectRow } from '@/components/platform/subjects/
 import { SearchParams } from 'nuqs/server'
 import { subjectsSearchParams } from '@/components/platform/subjects/list-params'
 import { db } from '@/lib/db'
-import { getTenantContext } from '@/components/platform/operator/lib/tenant'
+import { getTenantContext } from '@/components/operator/lib/tenant'
 import { Shell as PageContainer } from '@/components/table/shell'
 
 export default async function SubjectsContent({ searchParams }: { searchParams: Promise<SearchParams> }) {

@@ -3,7 +3,7 @@
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
-import { getTenantContext } from "@/components/platform/operator/lib/tenant";
+import { getTenantContext } from "@/components/operator/lib/tenant";
 import { eventCreateSchema, eventUpdateSchema, getEventsSchema } from "@/components/platform/events/validation";
 
 export async function createEvent(input: z.infer<typeof eventCreateSchema>) {

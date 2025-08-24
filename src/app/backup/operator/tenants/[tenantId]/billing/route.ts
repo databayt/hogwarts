@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { requireOperator } from "@/components/platform/operator/lib/operator-auth";
+import { requireOperator } from "@/components/operator/lib/operator-auth";
 type InvoiceRowLite = { amount: number | null };
 
 export async function GET(

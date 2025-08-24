@@ -13,8 +13,8 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { Bell, Mail } from "lucide-react";
-import ImpersonationBanner from "../../platform/operator/impersonation-banner";
-import { useBreadcrumbs } from "@/components/platform/operator/hooks/use-breadcrumbs";
+import ImpersonationBanner from "../../operator/impersonation-banner";
+import { useBreadcrumbs } from "@/components/operator/hooks/use-breadcrumbs";
 import type { School } from "@/components/site/types";
 
 interface PlatformHeaderProps {
