@@ -3,9 +3,10 @@
 import * as React from 'react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { updateSchoolSettings } from '@/app/(platform)/settings/actions'
+
 import { SuccessToast, ErrorToast } from '@/components/atom/toast'
 import { useSchool } from '@/components/platform/context/school-context'
+import { updateSchoolSettings } from '@/app/s/[subdomain]/(platform)/settings/actions';
 
 export function SettingsContent() {
   const { school } = useSchool()
