@@ -1,10 +1,10 @@
 "use server";
 
 import { z } from "zod";
-import { approveDomainRequest } from "@/app/(platform)/operator/actions/domains/approve";
-import { rejectDomainRequest } from "@/app/(platform)/operator/actions/domains/reject";
-import { verifyDomainRequest } from "@/app/(platform)/operator/actions/domains/verify";
-import { createDomainRequest } from "@/app/(platform)/operator/actions/domains/create";
+import { approveDomainRequest } from "@/components/operator/actions/domains/approve";
+import { rejectDomainRequest } from "@/components/operator/actions/domains/reject";
+import { verifyDomainRequest } from "@/components/operator/actions/domains/verify";
+import { createDomainRequest } from "@/components/operator/actions/domains/create";
 
 export async function domainApprove(input: { id: string; notes?: string }) {
   const parsed = z.object({ id: z.string().min(1), notes: z.string().optional() }).parse(input);

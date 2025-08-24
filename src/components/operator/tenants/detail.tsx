@@ -4,11 +4,11 @@ import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Card } from "@/components/ui/card";
-import { startImpersonation } from "@/app/(platform)/operator/actions/impersonation/start";
-import { stopImpersonation } from "@/app/(platform)/operator/actions/impersonation/stop";
-import { toggleTenantActive } from "@/app/(platform)/operator/actions/tenants/toggle-active";
+import { startImpersonation } from "@/components/operator/actions/impersonation/start";
+import { stopImpersonation } from "@/components/operator/actions/impersonation/stop";
+import { toggleTenantActive } from "@/components/operator/actions/tenants/toggle-active";
 // change plan action not present; remove import and button for now or implement
-import { endTenantTrial } from "@/app/(platform)/operator/actions/tenants/end-trial";
+import { endTenantTrial } from "@/components/operator/actions/tenants/end-trial";
 import { SuccessToast, ErrorToast } from "@/components/atom/toast";
 
 type TenantDetailProps = {

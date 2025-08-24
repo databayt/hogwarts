@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { stopImpersonation } from "@/app/(platform)/operator/actions/impersonation/stop";
+import { stopImpersonation } from "@/components/operator/actions/impersonation/stop";
 import { SuccessToast, ErrorToast } from "@/components/atom/toast";
 
 export default function ImpersonationBanner() {

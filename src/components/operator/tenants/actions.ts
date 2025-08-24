@@ -1,11 +1,11 @@
 "use server";
 
 import { z } from "zod";
-import { toggleTenantActive } from "@/app/(platform)/operator/actions/tenants/toggle-active";
-import { changeTenantPlan } from "@/app/(platform)/operator/actions/tenants/change-plan";
-import { endTenantTrial } from "@/app/(platform)/operator/actions/tenants/end-trial";
-import { startImpersonation } from "@/app/(platform)/operator/actions/impersonation/start";
-import { stopImpersonation } from "@/app/(platform)/operator/actions/impersonation/stop";
+import { toggleTenantActive } from "@/components/operator/actions/tenants/toggle-active";
+import { changeTenantPlan } from "@/components/operator/actions/tenants/change-plan";
+import { endTenantTrial } from "@/components/operator/actions/tenants/end-trial";
+import { startImpersonation } from "@/components/operator/actions/impersonation/start";
+import { stopImpersonation } from "@/components/operator/actions/impersonation/stop";
 
 const idSchema = z.object({ tenantId: z.string().min(1), reason: z.string().optional() });
 

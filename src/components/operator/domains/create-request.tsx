@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
-import { createDomainRequest } from "@/app/(platform)/operator/actions/domains/create";
+import { createDomainRequest } from "@/components/operator/actions/domains/create";
 import { SuccessToast, ErrorToast } from "@/components/atom/toast";
 
 const schema = z.object({

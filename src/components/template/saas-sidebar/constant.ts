@@ -9,14 +9,14 @@ export type PlatformNavItem = {
 
 export const platformNav: PlatformNavItem[] = [
   // Developer (operator) – developer only
-  { title: "Overview", href: "/operator/overview", icon: "box" },
-  { title: "Kanban", href: "/operator/kanban", icon: "checkCircle" },
-  { title: "Products", href: "/operator/product", icon: "file" },
-  { title: "Domains", href: "/operator/domains", icon: "browser" },
-  { title: "Billing", href: "/operator/billing", icon: "pieChart" },
-  { title: "Observability", href: "/operator/observability", icon: "barChart" },
-  { title: "Tenants", href: "/operator/tenants", icon: "envelope" },
-  { title: "Dev Profile", href: "/operator/profile", icon: "cog" },
+  { title: "Overview", href: "/overview", icon: "box" },
+  { title: "Kanban", href: "/kanban", icon: "checkCircle" },
+  { title: "Products", href: "/product", icon: "file" },
+  { title: "Domains", href: "/domains", icon: "browser" },
+  { title: "Billing", href: "/billing", icon: "pieChart" },
+  { title: "Observability", href: "/observability", icon: "barChart" },
+  { title: "Tenants", href: "/tenants", icon: "envelope" },
+  { title: "Profile", href: "/profile", icon: "cog" },
 ];
 
 
