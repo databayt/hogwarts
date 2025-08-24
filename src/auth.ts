@@ -232,11 +232,39 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
         
         console.log('🔍 Host detection:', { originalHost, url, baseUrl });
         
-        // Check if we're on a tenant subdomain (not ed.databayt.org)
+        // Enhanced subdomain detection for both production and development
+        let detectedSubdomain = null;
+        
+        // Production subdomain detection
         if (originalHost.endsWith('.databayt.org') && originalHost !== 'ed.databayt.org') {
-          const subdomain = originalHost.split('.')[0];
-          const tenantDashboardUrl = `https://${subdomain}.databayt.org/dashboard`;
-          console.log('🔄 Tenant subdomain detected, redirecting to:', tenantDashboardUrl);
+          detectedSubdomain = originalHost.split('.')[0];
+          console.log('🎯 PRODUCTION SUBDOMAIN DETECTED:', { 
+            host: originalHost, 
+            subdomain: detectedSubdomain 
+          });
+        }
+        // Development subdomain detection  
+        else if (originalHost.includes('.localhost') && originalHost !== 'localhost:3000' && originalHost !== 'localhost') {
+          detectedSubdomain = originalHost.split('.')[0];
+          console.log('🎯 DEVELOPMENT SUBDOMAIN DETECTED:', { 
+            host: originalHost, 
+            subdomain: detectedSubdomain 
+          });
+        }
+        
+        // Direct subdomain redirect if detected
+        if (detectedSubdomain) {
+          const tenantDashboardUrl = process.env.NODE_ENV === "production"
+            ? `https://${detectedSubdomain}.databayt.org/dashboard`
+            : `http://${detectedSubdomain}.localhost:3000/dashboard`;
+          
+          console.log('🚀 DIRECT SUBDOMAIN REDIRECT:', { 
+            subdomain: detectedSubdomain,
+            redirectUrl: tenantDashboardUrl,
+            environment: process.env.NODE_ENV,
+            source: 'host_detection'
+          });
+          
           return tenantDashboardUrl;
         }
       } catch (error) {
@@ -272,9 +300,27 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
         try {
           const baseUrlObj = new URL(baseUrl);
           tenant = baseUrlObj.searchParams.get('tenant');
-          console.log('🔍 Tenant from baseUrl params:', { tenant, baseUrl });
+          if (tenant) {
+            console.log('🔍 Tenant from baseUrl params:', { tenant, baseUrl });
+          }
         } catch (error) {
           console.log('❌ Error parsing baseUrl for tenant:', error);
+        }
+      }
+      
+      // Method 4: Check session storage for tenant (client-side fallback)
+      // Note: This won't work on server-side, but useful for debugging
+      if (!tenant && typeof window !== 'undefined') {
+        try {
+          const sessionTenant = window.sessionStorage?.getItem('oauth_tenant');
+          if (sessionTenant) {
+            tenant = sessionTenant;
+            console.log('🔍 Tenant from session storage:', { tenant });
+            // Clear it after use
+            window.sessionStorage.removeItem('oauth_tenant');
+          }
+        } catch (error) {
+          console.log('❌ Error accessing session storage:', error);
         }
       }
       

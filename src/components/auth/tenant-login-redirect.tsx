@@ -10,9 +10,23 @@ interface TenantLoginRedirectProps {
 
 export function TenantLoginRedirect({ subdomain, className }: TenantLoginRedirectProps) {
   const handleLogin = () => {
+    // Store tenant info for post-auth redirect
+    if (typeof window !== 'undefined' && window.sessionStorage) {
+      sessionStorage.setItem('oauth_tenant', subdomain);
+      console.log('💾 Stored tenant for auth:', subdomain);
+    }
+    
     // Redirect to central auth with tenant context
-    const loginUrl = `https://ed.databayt.org/login?tenant=${subdomain}`;
-    console.log('🔗 Redirecting to central login:', loginUrl);
+    const loginUrl = process.env.NODE_ENV === 'production'
+      ? `https://ed.databayt.org/login?tenant=${subdomain}`
+      : `http://localhost:3000/login?tenant=${subdomain}`;
+      
+    console.log('🔗 TENANT LOGIN REDIRECT:', { 
+      subdomain, 
+      loginUrl, 
+      environment: process.env.NODE_ENV 
+    });
+    
     window.location.href = loginUrl;
   };
 

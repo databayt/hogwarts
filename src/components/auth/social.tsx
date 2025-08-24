@@ -24,6 +24,7 @@ const cleanUrlHash = () => {
 export const Social = () => {
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl");
+  const tenant = searchParams.get("tenant");
   
   console.log('🚀 Social component loaded on:', {
     hostname: typeof window !== 'undefined' ? window.location.hostname : 'server',
@@ -86,28 +87,56 @@ export const Social = () => {
       notEdDatabayt: currentHost !== 'ed.databayt.org'
     });
     
-    console.log('OAuth flow initiated:', {
+    console.log('🚀 OAUTH FLOW INITIATED:', {
       provider,
       currentHost,
       isSubdomain,
       callbackUrl,
+      tenant,
       currentUrl: window.location.href
     });
     
-    // If on tenant subdomain, use NextAuth signIn with custom callback URL
+    // Determine tenant - use subdomain detection or URL parameter
+    let tenantSubdomain = null;
+    
     if (isSubdomain) {
-      const tenantSubdomain = currentHost.split('.')[0];
-      const dashboardUrl = `https://${tenantSubdomain}.databayt.org/dashboard`;
+      tenantSubdomain = currentHost.split('.')[0];
+      console.log('🎯 Tenant from subdomain detection:', tenantSubdomain);
+    } else if (tenant) {
+      tenantSubdomain = tenant;
+      console.log('🎯 Tenant from URL parameter:', tenantSubdomain);
+    }
+    
+    // If we have a tenant (either from subdomain or parameter), use custom OAuth flow
+    if (tenantSubdomain) {
+      // Use appropriate URL based on environment
+      const dashboardUrl = process.env.NODE_ENV === 'production' 
+        ? `https://${tenantSubdomain}.databayt.org/dashboard`
+        : `http://${tenantSubdomain}.localhost:3000/dashboard`;
       
-      console.log('🔗 Redirecting to tenant OAuth via NextAuth:', { 
+      console.log('🔗 TENANT OAUTH INITIATED:', { 
         tenantSubdomain, 
         provider,
         dashboardUrl,
-        currentHost
+        currentHost,
+        environment: process.env.NODE_ENV,
+        source: isSubdomain ? 'subdomain_detection' : 'url_parameter',
+        isProdSubdomain,
+        isDevSubdomain
       });
       
+      // Store tenant info for fallback
+      if (typeof window !== 'undefined' && window.sessionStorage) {
+        sessionStorage.setItem('oauth_tenant', tenantSubdomain);
+        sessionStorage.setItem('oauth_callback_url', dashboardUrl);
+        console.log('💾 Stored OAuth context:', { 
+          tenant: tenantSubdomain, 
+          callbackUrl: dashboardUrl 
+        });
+      }
+      
       signIn(provider, {
-        callbackUrl: dashboardUrl,
+        callbackUrl: `${dashboardUrl}?tenant=${tenantSubdomain}`,
       });
       return;
     }

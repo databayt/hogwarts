@@ -37,6 +37,7 @@ export const LoginForm = ({
 }: React.ComponentPropsWithoutRef<"div">) => {
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl");
+  const tenant = searchParams.get("tenant");
   const urlError = searchParams.get("error") === "OAuthAccountNotLinked"
     ? "Email already in use with different provider!"
     : "";
@@ -73,8 +74,22 @@ export const LoginForm = ({
     setError("");
     setSuccess("");
     
+    // Construct callback URL with tenant if present
+    let finalCallbackUrl = callbackUrl;
+    if (tenant && !finalCallbackUrl?.includes('tenant=')) {
+      const separator = finalCallbackUrl?.includes('?') ? '&' : '?';
+      finalCallbackUrl = `${finalCallbackUrl || '/dashboard'}${separator}tenant=${tenant}`;
+    }
+    
+    console.log('📋 LOGIN FORM SUBMIT:', {
+      tenant,
+      callbackUrl,
+      finalCallbackUrl,
+      hasValues: !!values
+    });
+    
     startTransition(() => {
-      login(values, callbackUrl)
+      login(values, finalCallbackUrl)
         .then((data) => {
           if (data?.error) {
             form.reset();
