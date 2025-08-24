@@ -246,31 +246,69 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
         originalHost = baseUrlObj.host;
       }
       
-      // Extract tenant from callbackUrl if present
-      let urlObj;
+      // Extract tenant from callbackUrl if present - check multiple sources
+      let tenant = null;
+      
+      // Method 1: Check URL searchParams
       try {
-        urlObj = new URL(url, baseUrl);
-      } catch {
-        urlObj = new URL(baseUrl);
+        const urlObj = new URL(url, baseUrl);
+        tenant = urlObj.searchParams.get('tenant');
+        console.log('🔍 Tenant from URL params:', { tenant, url: urlObj.href });
+      } catch (error) {
+        console.log('❌ Error parsing URL for tenant:', error);
       }
-      const tenant = urlObj.searchParams.get('tenant');
+      
+      // Method 2: Check if URL contains tenant info in path
+      if (!tenant && url.includes('/callback/')) {
+        const urlMatch = url.match(/tenant=([^&]+)/);
+        if (urlMatch) {
+          tenant = urlMatch[1];
+          console.log('🔍 Tenant from URL regex match:', tenant);
+        }
+      }
+      
+      // Method 3: Check baseUrl for tenant info
+      if (!tenant) {
+        try {
+          const baseUrlObj = new URL(baseUrl);
+          tenant = baseUrlObj.searchParams.get('tenant');
+          console.log('🔍 Tenant from baseUrl params:', { tenant, baseUrl });
+        } catch (error) {
+          console.log('❌ Error parsing baseUrl for tenant:', error);
+        }
+      }
       
       if (tenant) {
         // Redirect back to tenant subdomain
         const tenantUrl = process.env.NODE_ENV === "production" 
           ? `https://${tenant}.databayt.org/dashboard`
           : `http://${tenant}.localhost:3000/dashboard`;
-        console.log('🔄 Redirecting to tenant via parameter:', { tenant, tenantUrl });
+        console.log('🔄 Redirecting to tenant via parameter:', { tenant, tenantUrl, originalUrl: url });
         return tenantUrl;
       }
       
-      // Handle Facebook redirect with #_=_ hash
+      console.log('⚠️ No tenant parameter found in:', { url, baseUrl });
+      
+      // Handle Facebook redirect with #_=_ hash - clean it completely
       if (url.includes('#_=_')) {
         console.log('📘 Facebook redirect detected, cleaning hash');
-        // Clean the Facebook hash
+        // Clean the Facebook hash and redirect appropriately
         const cleanUrl = url.replace(/#.*$/, '');
         console.log('🎯 Cleaned Facebook URL:', cleanUrl);
-        return cleanUrl;
+        
+        // If we have tenant info, redirect to tenant dashboard
+        if (tenant) {
+          const tenantUrl = process.env.NODE_ENV === "production" 
+            ? `https://${tenant}.databayt.org/dashboard`
+            : `http://${tenant}.localhost:3000/dashboard`;
+          console.log('🔄 Facebook: Redirecting to tenant after cleaning hash:', tenantUrl);
+          return tenantUrl;
+        }
+        
+        // Otherwise redirect to dashboard on current domain
+        const dashboardUrl = `${baseUrl}/dashboard`;
+        console.log('🔄 Facebook: Redirecting to dashboard after cleaning hash:', dashboardUrl);
+        return dashboardUrl;
       }
 
       // Handle OAuth callback completion

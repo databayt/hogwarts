@@ -53,7 +53,7 @@ export const LoginForm = ({
     if (tenant && success) {
       // Redirect back to tenant subdomain after successful login
       const tenantUrl = process.env.NODE_ENV === 'production'
-        ? `https://${tenant}.ed.databayt.org/dashboard`
+        ? `https://${tenant}.databayt.org/dashboard`
         : `http://${tenant}.localhost:3000/dashboard`;
       
       console.log('🔄 Redirecting to tenant after login:', tenantUrl);

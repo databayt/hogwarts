@@ -80,11 +80,16 @@ export const Social = () => {
       const baseUrl = process.env.NODE_ENV === "production" 
         ? "https://ed.databayt.org"
         : "http://localhost:3000";
-      const loginUrl = `${baseUrl}/api/auth/signin/${provider}?callbackUrl=${encodeURIComponent(
-        `${baseUrl}/api/auth/callback/${provider}?tenant=${tenantSubdomain}`
-      )}`;
+      const callbackWithTenant = `${baseUrl}/api/auth/callback/${provider}?tenant=${tenantSubdomain}`;
+      const loginUrl = `${baseUrl}/api/auth/signin/${provider}?callbackUrl=${encodeURIComponent(callbackWithTenant)}`;
       
-      console.log('🔗 Redirecting to tenant OAuth:', { tenantSubdomain, provider, loginUrl });
+      console.log('🔗 Redirecting to tenant OAuth:', { 
+        tenantSubdomain, 
+        provider, 
+        loginUrl,
+        callbackWithTenant,
+        baseUrl 
+      });
       window.location.href = loginUrl;
       return;
     }
