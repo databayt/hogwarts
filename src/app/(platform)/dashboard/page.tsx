@@ -1,5 +1,6 @@
-import DashboardContent from "@/components/platform/dashboard/content";
+// import { auth } from '@/auth';
+import { redirect } from 'next/navigation';
 
-export default async function DashboardPage() {
-  return <DashboardContent />;
+export default async function Dashboard() {
+  redirect('/overview');
 }

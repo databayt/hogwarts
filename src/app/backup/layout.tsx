@@ -1,7 +1,9 @@
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { ModalProvider } from "@/components/atom/modal/context";
-import SaasHeader from "@/components/template/saas-header/content";
-import SaasSidebar from "@/components/template/saas-sidebar/content";
+import PlatformHeader from "@/components/template/platform-header/content";
+import PlatformSidebar from "@/components/template/platform-sidebar/content";
+
+
 
 export default function PlatformLayout({
   children,
@@ -11,10 +13,11 @@ export default function PlatformLayout({
   return (
     <SidebarProvider>
       <ModalProvider>
+        {/* Ensure the provider's flex wrapper has a single column child to preserve layout */}
         <div className="flex min-h-svh w-full flex-col">
-          <SaasHeader />
+          <PlatformHeader />
           <div className="flex pt-6">
-            <SaasSidebar />
+            <PlatformSidebar />
             <div className="w-full pb-10">{children}</div>
           </div>
         </div>
