@@ -62,37 +62,24 @@ export async function GET(request: NextRequest) {
       total: allCookies.length,
       authCookies: authCookies.map(c => ({
         name: c.name,
-        value: c.value ? `${c.value.slice(0, 20)}...` : 'undefined',
-        domain: c.domain || 'undefined',
-        path: c.path,
-        secure: c.secure,
-        httpOnly: c.httpOnly,
-        sameSite: c.sameSite
+        value: c.value ? `${c.value.slice(0, 20)}...` : 'undefined'
       })),
       specific: {
         sessionToken: sessionToken ? {
           name: sessionToken.name,
-          value: sessionToken.value ? `${sessionToken.value.slice(0, 20)}...` : 'undefined',
-          domain: sessionToken.domain || 'undefined',
-          path: sessionToken.path,
-          secure: sessionToken.secure,
-          httpOnly: sessionToken.httpOnly,
-          sameSite: sessionToken.sameSite
+          value: sessionToken.value ? `${sessionToken.value.slice(0, 20)}...` : 'undefined'
         } : null,
         pkceCodeVerifier: pkceCodeVerifier ? {
           name: pkceCodeVerifier.name,
-          value: pkceCodeVerifier.value ? `${pkceCodeVerifier.value.slice(0, 20)}...` : 'undefined',
-          domain: pkceCodeVerifier.domain || 'undefined'
+          value: pkceCodeVerifier.value ? `${pkceCodeVerifier.value.slice(0, 20)}...` : 'undefined'
         } : null,
         csrfToken: csrfToken ? {
           name: csrfToken.name,
-          value: csrfToken.value ? `${csrfToken.value.slice(0, 20)}...` : 'undefined',
-          domain: csrfToken.domain || 'undefined'
+          value: csrfToken.value ? `${csrfToken.value.slice(0, 20)}...` : 'undefined'
         } : null,
         callbackUrl: callbackUrl ? {
           name: callbackUrl.name,
-          value: callbackUrl.value || 'undefined',
-          domain: callbackUrl.domain || 'undefined'
+          value: callbackUrl.value || 'undefined'
         } : null
       }
     },
@@ -101,7 +88,7 @@ export async function GET(request: NextRequest) {
       userId: session?.user?.id || null,
       email: session?.user?.email || null,
       role: session?.user?.role || null,
-      schoolId: session?.user?.schoolId || null,
+      schoolId: (session?.user as any)?.schoolId || null,
       error: sessionError
     },
     environment: {

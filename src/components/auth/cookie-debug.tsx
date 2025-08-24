@@ -53,7 +53,7 @@ export function CookieDebug() {
       hostname: currentHostname,
       isSubdomain: isSub,
       totalCookies: allCookies.length,
-      authCookies: auth.length,
+      authCookieCount: auth.length,
       allCookies: allCookies,
       authCookies: auth
     });
