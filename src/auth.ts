@@ -229,6 +229,15 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
         url = cleanUrl;
       }
       
+      // Debug: Log the exact URL and baseUrl we're working with
+      console.log('🔍 RAW URL ANALYSIS:', {
+        originalUrl: url,
+        baseUrl: baseUrl,
+        hasHash: url.includes('#'),
+        hasQueryParams: url.includes('?'),
+        isFullUrl: url.startsWith('http')
+      });
+      
       // Extract host information from the callback URL which preserves the original domain
       let originalHost = '';
       try {
@@ -264,6 +273,14 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
           });
         }
         
+        // Debug: Log what we're NOT detecting as subdomain
+        if (originalHost.endsWith('.databayt.org') && originalHost === 'ed.databayt.org') {
+          console.log('🏢 MAIN DOMAIN IDENTIFIED (not subdomain):', { 
+            host: originalHost,
+            reason: 'explicitly excluded from subdomain detection'
+          });
+        }
+        
         // Direct subdomain redirect if detected
         if (detectedSubdomain) {
           const tenantDashboardUrl = process.env.NODE_ENV === "production"
@@ -295,11 +312,54 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
           
           return mainDomainDashboard;
         }
+        
+        // Additional safety check: if host contains 'ed.databayt.org' in any form, treat as main domain
+        if (originalHost.includes('ed.databayt.org')) {
+          const mainDomainDashboard = process.env.NODE_ENV === "production"
+            ? 'https://ed.databayt.org/dashboard'
+            : 'http://localhost:3000/dashboard';
+          
+          console.log('🏢 MAIN DOMAIN SAFETY REDIRECT:', { 
+            host: originalHost,
+            redirectUrl: mainDomainDashboard,
+            environment: process.env.NODE_ENV,
+            source: 'safety_check'
+          });
+          
+          return mainDomainDashboard;
+        }
       } catch (error) {
         console.log('❌ Error parsing URLs:', error);
         // Fall back to baseUrl parsing
         const baseUrlObj = new URL(baseUrl);
         originalHost = baseUrlObj.host;
+      }
+      
+      // If we still don't have a host, use baseUrl as fallback
+      if (!originalHost) {
+        try {
+          const baseUrlObj = new URL(baseUrl);
+          originalHost = baseUrlObj.host;
+          console.log('🔄 Fallback host detection:', { originalHost, baseUrl });
+        } catch (error) {
+          console.log('❌ Error in fallback host detection:', error);
+        }
+      }
+      
+      // Final check: if we're on ed.databayt.org, redirect to its dashboard
+      if (originalHost === 'ed.databayt.org') {
+        const mainDomainDashboard = process.env.NODE_ENV === "production"
+          ? 'https://ed.databayt.org/dashboard'
+          : 'http://localhost:3000/dashboard';
+        
+        console.log('🏢 FINAL MAIN DOMAIN REDIRECT:', { 
+          host: originalHost,
+          redirectUrl: mainDomainDashboard,
+          environment: process.env.NODE_ENV,
+          source: 'final_fallback'
+        });
+        
+        return mainDomainDashboard;
       }
       
       // Extract tenant from callbackUrl if present - check multiple sources
