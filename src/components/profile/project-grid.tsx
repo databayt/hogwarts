@@ -63,14 +63,14 @@ export default function ProjectGrid() {
                 {project.name}
               </a>
             </div>
-            <span className="text-xs text-muted-foreground border border-border rounded-full px-2 py-1">
+            <span className="muted border border-border rounded-full px-2 py-1">
               {project.type}
             </span>
           </div>
 
-          <p className="text-muted-foreground text-sm mb-3 line-clamp-2">{project.description}</p>
+          <p className="muted mb-3 line-clamp-2">{project.description}</p>
 
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
+          <div className="flex items-center justify-between muted">
             <div className="flex items-center space-x-4">
               <div className="flex items-center">
                 <div
@@ -102,7 +102,7 @@ export default function ProjectGrid() {
 
               <div className="flex items-center">
                 <span
-                  className={`px-2 py-1 rounded-full text-xs ${
+                  className={`px-2 py-1 rounded-full muted ${
                     project.status === "Completed"
                       ? "bg-[#26a641] text-white"
                       : project.status === "In Progress"

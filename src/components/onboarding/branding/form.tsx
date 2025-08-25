@@ -58,7 +58,7 @@ export function BrandingForm({ schoolId, initialData, onSuccess }: BrandingFormP
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
         {error && (
-          <div className="text-sm text-destructive bg-destructive/10 p-3 rounded-md">
+          <div className="muted text-destructive bg-destructive/10 p-3 rounded-md">
             {error}
           </div>
         )}

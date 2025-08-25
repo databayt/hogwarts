@@ -117,11 +117,11 @@ export default function AbcContent() {
 
 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-8">
   <div className="p-6 border rounded-lg">
-    <h4 className="font-semibold mb-2">Arrow Functions</h4>
-    <div className="text-sm text-muted-foreground mb-4">
+    <h4 className="mb-2">Arrow Functions</h4>
+    <div className="muted mb-4">
       Preferred for utilities, event handlers, and inline functions. Excellent for maintaining lexical scope and modern JavaScript patterns.
     </div>
-    <pre className="text-xs bg-muted p-2 rounded">
+    <pre className="muted bg-muted p-2 rounded">
 {`const formatPrice = (amount: number) => {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
@@ -131,11 +131,11 @@ export default function AbcContent() {
     </pre>
   </div>
   <div className="p-6 border rounded-lg">
-    <h4 className="font-semibold mb-2">Function Declarations</h4>
-    <div className="text-sm text-muted-foreground mb-4">
+    <h4 className="mb-2">Function Declarations</h4>
+    <div className="muted mb-4">
       Used for React components, API route handlers, and exported functions. Better for hoisting and debugging stack traces.
     </div>
-    <pre className="text-xs bg-muted p-2 rounded">
+    <pre className="muted bg-muted p-2 rounded">
 {`export function UserProfile({ userId }: Props) {
   const { user, loading } = useUser(userId)
   
@@ -338,7 +338,7 @@ import { UserCard } from '@/components/molecule/user-card'
 ```typescript
 // Extend base components
 const buttonVariants = cva(
-  "inline-flex items-center justify-center rounded-md text-sm font-medium",
+          "inline-flex items-center justify-center rounded-md muted font-medium",
   {
     variants: {
       variant: {

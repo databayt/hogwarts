@@ -45,7 +45,7 @@ export function BrandingCard({
               <div>
                 <h3 className="font-semibold text-foreground">{brandName || "School Name"}</h3>
                 {tagline && (
-                  <p className="text-sm text-muted-foreground">{tagline}</p>
+                  <p className="muted text-muted-foreground">{tagline}</p>
                 )}
               </div>
             </div>
@@ -59,7 +59,7 @@ export function BrandingCard({
                   className="w-4 h-4 rounded border"
                   style={{ backgroundColor: primaryColor }}
                 />
-                <span className="text-sm font-medium">Primary</span>
+                <span className="muted font-medium">Primary</span>
               </div>
               <span className="text-xs text-muted-foreground font-mono">{primaryColor}</span>
             </div>
@@ -70,7 +70,7 @@ export function BrandingCard({
                   className="w-4 h-4 rounded border"
                   style={{ backgroundColor: secondaryColor }}
                 />
-                <span className="text-sm font-medium">Secondary</span>
+                <span className="muted font-medium">Secondary</span>
               </div>
               <span className="text-xs text-muted-foreground font-mono">{secondaryColor}</span>
             </div>
@@ -78,7 +78,7 @@ export function BrandingCard({
 
           {!brandName && (
             <div className="p-3 bg-accent/50 rounded-lg">
-              <p className="text-sm text-muted-foreground">
+              <p className="muted text-muted-foreground">
                 Please set your school branding to continue setup
               </p>
             </div>

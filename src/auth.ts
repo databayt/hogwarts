@@ -228,6 +228,39 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
         // Continue with the cleaned URL
         url = cleanUrl;
       }
+
+      // PRIORITY: Check for callbackUrl parameter first (from login redirect)
+      let callbackUrl = null;
+      try {
+        const urlObj = new URL(url, baseUrl);
+        callbackUrl = urlObj.searchParams.get('callbackUrl');
+        
+        // Also check if the URL itself contains a decoded callback
+        if (!callbackUrl && url.includes('callbackUrl=')) {
+          const match = url.match(/callbackUrl=([^&]+)/);
+          if (match) {
+            callbackUrl = decodeURIComponent(match[1]);
+          }
+        }
+        
+        if (callbackUrl) {
+          console.log('🎯 CALLBACK URL FOUND - Redirecting to:', callbackUrl);
+          // Validate callback URL is from same origin for security
+          const callbackUrlObj = new URL(callbackUrl);
+          const baseUrlObj = new URL(baseUrl);
+          
+          if (callbackUrlObj.origin === baseUrlObj.origin) {
+            return callbackUrl;
+          } else {
+            console.log('⚠️ SECURITY: Callback URL origin mismatch, ignoring:', { 
+              callbackOrigin: callbackUrlObj.origin, 
+              baseOrigin: baseUrlObj.origin 
+            });
+          }
+        }
+      } catch (error) {
+        console.log('❌ Error parsing callback URL:', error);
+      }
       
       // Debug: Log the exact URL and baseUrl we're working with
       console.log('🔍 RAW URL ANALYSIS:', {

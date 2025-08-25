@@ -14,11 +14,11 @@ const PageHeader = React.forwardRef<HTMLDivElement, PageHeaderProps>(
         className={cn("flex w-full max-w-4xl flex-col gap-2 text-center", className)}
         {...props}
       >
-        <h2 className="font-heading font-extrabold text-3xl sm:text-3xl md:text-6xl">
+        <h2 className="font-heading font-extrabold">
           {title}
         </h2>
         {description && (
-          <p className="mx-auto max-w-[85%] leading-normal text-muted-foreground sm:text-lg sm:leading-7">
+          <p className="mx-auto max-w-[85%] leading-normal text-muted-foreground sm:leading-7">
             {description}
           </p>
         )}

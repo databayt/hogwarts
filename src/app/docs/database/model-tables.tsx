@@ -72,7 +72,7 @@ export function ModelTables({ className }: ModelTablesProps) {
   }) => (
     <div className="border rounded-lg overflow-hidden mb-6">
       <div className="bg-muted px-4 py-3 border-b">
-        <h4 className="font-semibold text-lg">{title}</h4>
+        <h4 className="font-semibold">{title}</h4>
         <p className="text-sm text-muted-foreground mt-1">{description}</p>
       </div>
       
@@ -81,7 +81,7 @@ export function ModelTables({ className }: ModelTablesProps) {
           <thead>
             <tr className="border-b bg-muted/50">
               {columns.map((col) => (
-                <th key={col.key} className={`text-left px-3 py-2 font-medium text-sm ${col.width || ''}`}>
+                <th key={col.key} className={`text-left px-3 py-2 font-medium ${col.width || ''}`}>
                   {col.label}
                 </th>
               ))}
@@ -96,23 +96,23 @@ export function ModelTables({ className }: ModelTablesProps) {
                 }`}
               >
                 {columns.map((col) => (
-                  <td key={col.key} className="px-3 py-2 text-sm">
+                  <td key={col.key} className="px-3 py-2">
                     {col.key === 'schoolId' && row[col.key] === null ? (
                       <span className="text-muted-foreground italic">null (all schools)</span>
                     ) : col.key.includes('Date') ? (
-                      <code className="text-xs">{row[col.key]}</code>
+                                              <code className="muted">{row[col.key]}</code>
                     ) : col.key === 'emailVerified' || col.key === 'isActive' ? (
-                      <span className={`px-2 py-1 rounded text-xs ${
+                                              <span className={`px-2 py-1 rounded muted ${
                         row[col.key] ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                       }`}>
                         {row[col.key] ? 'Yes' : 'No'}
                       </span>
                     ) : col.key === 'status' ? (
-                      <span className="px-2 py-1 rounded text-xs bg-blue-100 text-blue-800">
+                                              <span className="px-2 py-1 rounded muted bg-blue-100 text-blue-800">
                         {row[col.key]}
                       </span>
                     ) : col.key === 'role' ? (
-                      <span className={`px-2 py-1 rounded text-xs font-medium ${
+                                              <span className={`px-2 py-1 rounded muted font-medium ${
                         row[col.key] === 'DEVELOPER' ? 'bg-purple-100 text-purple-800' :
                         row[col.key] === 'ADMIN' ? 'bg-red-100 text-red-800' :
                         row[col.key] === 'TEACHER' ? 'bg-blue-100 text-blue-800' :
@@ -122,7 +122,7 @@ export function ModelTables({ className }: ModelTablesProps) {
                         {row[col.key]}
                       </span>
                     ) : (
-                      <span className={col.key === 'id' || col.key.endsWith('Id') ? 'font-mono text-xs text-muted-foreground' : ''}>
+                                              <span className={col.key === 'id' || col.key.endsWith('Id') ? 'font-mono muted text-muted-foreground' : ''}>
                         {row[col.key]}
                       </span>
                     )}

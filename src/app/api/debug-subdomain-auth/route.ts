@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
 import { NextRequest } from 'next/server';
+import { secureDebugEndpoint, createDebugResponse, getSafeEnvVars } from '@/lib/debug-security';
 
 export async function GET(request: NextRequest) {
+  return secureDebugEndpoint(request, async (req) => {
   const host = request.headers.get('host') || '';
   const userAgent = request.headers.get('user-agent') || '';
   const referer = request.headers.get('referer') || '';
@@ -43,10 +45,7 @@ export async function GET(request: NextRequest) {
       type: subdomainType,
       isSubdomain: !!subdomain
     },
-    environment: {
-      NODE_ENV: process.env.NODE_ENV,
-      NEXTAUTH_URL: process.env.NEXTAUTH_URL,
-    },
+    environment: getSafeEnvVars(),
     detection: {
       hostParts: host.split('.'),
       endsWithDatabayt: host.endsWith('.databayt.org'),
@@ -58,11 +57,8 @@ export async function GET(request: NextRequest) {
     }
   };
   
-  console.log('🔍 SUBDOMAIN DEBUG API CALLED:', debugInfo);
+  console.log('🔍 SUBDOMAIN DEBUG API CALLED (AUTHORIZED):', debugInfo);
   
-  return NextResponse.json(debugInfo, {
-    headers: {
-      'Cache-Control': 'no-store',
-    }
+  return createDebugResponse(debugInfo);
   });
 }

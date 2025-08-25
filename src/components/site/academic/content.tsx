@@ -180,7 +180,7 @@ export default function AcademicContent({ school }: AcademicContentProps) {
                   </div>
                 </div>
                 <div className="text-3xl md:text-4xl font-bold mb-1">{achievement.number}</div>
-                <div className="text-blue-100 text-sm font-medium">{achievement.label}</div>
+                <div className="text-blue-100 muted font-medium">{achievement.label}</div>
               </div>
             ))}
           </div>
@@ -222,7 +222,7 @@ export default function AcademicContent({ school }: AcademicContentProps) {
                   </CardDescription>
                   <ul className="space-y-2">
                     {level.features.map((feature, featureIndex) => (
-                      <li key={featureIndex} className="flex items-center text-sm">
+                      <li key={featureIndex} className="flex items-center muted">
                         <div className="w-2 h-2 bg-blue-500 rounded-full mr-3 flex-shrink-0"></div>
                         {feature}
                       </li>

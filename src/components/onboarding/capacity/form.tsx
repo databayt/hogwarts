@@ -7,12 +7,12 @@ import { Minus, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { cn } from "@/lib/utils";
-import { floorPlanSchema, type FloorPlanFormData } from "./validation";
+import { capacitySchema, type CapacityFormData } from "./validation";
 import { updateSchoolCapacity } from "./actions";
 
 interface CapacityFormProps {
   schoolId: string;
-  initialData?: Partial<FloorPlanFormData>;
+  initialData?: Partial<CapacityFormData>;
   onSuccess?: () => void;
 }
 
@@ -20,16 +20,17 @@ export function CapacityForm({ schoolId, initialData, onSuccess }: CapacityFormP
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string>("");
 
-  const form = useForm<FloorPlanFormData>({
-    resolver: zodResolver(floorPlanSchema),
+  const form = useForm<CapacityFormData>({
+    resolver: zodResolver(capacitySchema),
     defaultValues: {
       studentCount: initialData?.studentCount || 400,
       teachers: initialData?.teachers || 10,
+      classrooms: initialData?.classrooms || 10,
       facilities: initialData?.facilities || 5,
     },
   });
 
-  const handleSubmit = (data: FloorPlanFormData) => {
+  const handleSubmit = (data: CapacityFormData) => {
     startTransition(async () => {
       try {
         setError("");
@@ -41,7 +42,7 @@ export function CapacityForm({ schoolId, initialData, onSuccess }: CapacityFormP
           setError(result.error || "Failed to update capacity");
           if (result.errors) {
             Object.entries(result.errors).forEach(([field, message]) => {
-              form.setError(field as keyof FloorPlanFormData, { message });
+              form.setError(field as keyof CapacityFormData, { message });
             });
           }
         }
@@ -51,9 +52,9 @@ export function CapacityForm({ schoolId, initialData, onSuccess }: CapacityFormP
     });
   };
 
-  const updateField = (field: keyof FloorPlanFormData, delta: number) => {
+  const updateField = (field: keyof CapacityFormData, delta: number) => {
     const currentValue = form.getValues(field);
-    const newValue = Math.max(0, currentValue + delta);
+    const newValue = Math.max(1, currentValue + delta);
     form.setValue(field, newValue);
   };
 
@@ -65,10 +66,10 @@ export function CapacityForm({ schoolId, initialData, onSuccess }: CapacityFormP
     label,
     field,
     step = 1,
-    minValue = 0,
+    minValue = 1,
   }: {
     label: string;
-    field: keyof FloorPlanFormData;
+    field: keyof CapacityFormData;
     step?: number;
     minValue?: number;
   }) => {
@@ -130,6 +131,12 @@ export function CapacityForm({ schoolId, initialData, onSuccess }: CapacityFormP
           <CounterRow
             label="Teachers"
             field="teachers"
+            step={1}
+            minValue={1}
+          />
+          <CounterRow
+            label="Classrooms"
+            field="classrooms"
             step={1}
             minValue={1}
           />

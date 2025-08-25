@@ -45,7 +45,7 @@ export function MainNav({ items, children, school }: MainNavProps) {
     <div className="flex gap-6 md:gap-10">
       <Link href="/" className="hidden items-center gap-2 md:flex">
         <Image src="/logo.png" alt={`${displayName} Logo`} width={20} height={20} className="dark:invert" />
-        <span className="hidden font-bold sm:inline-block  ">
+        <span className="hidden sm:inline-block  ">
           {displayName}
         </span>
       </Link>
@@ -56,7 +56,7 @@ export function MainNav({ items, children, school }: MainNavProps) {
               key={index}
               href={item.disabled ? "#" : item.href}
               className={cn(
-                "flex items-center text-lg font-medium transition-colors hover:text-foreground/80 sm:text-sm",
+                "flex items-center font-medium transition-colors hover:text-foreground/80",
                 item.href.startsWith(`/${segment}`)
                   ? "text-foreground"
                   : "text-foreground/60",
@@ -73,7 +73,7 @@ export function MainNav({ items, children, school }: MainNavProps) {
         onClick={() => setShowMobileMenu(!showMobileMenu)}
       >
         {showMobileMenu ? <Icons.close /> : <Icons.logo />}
-        <span className="font-bold">Menu</span>
+        <span>Menu</span>
       </button>
       {showMobileMenu && items && (
         <MobileNav items={items} school={school}>{children}</MobileNav>

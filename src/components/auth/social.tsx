@@ -156,7 +156,7 @@ export const Social = () => {
   return (
     <div className="space-y-4">
       {/* Debug test button */}
-      <Button
+      {/* <Button
         size="sm"
         variant="outline"
         onClick={() => {
@@ -167,7 +167,7 @@ export const Social = () => {
         className="w-full"
       >
         🐛 Debug Test Button
-      </Button>
+      </Button> */}
       
       <div className="grid md:gap-4 gap-3 grid-cols-2">
         <Button

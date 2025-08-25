@@ -12,9 +12,9 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
     <PageContainer>
       <div className="flex flex-1 flex-col gap-4">
         <div>
-          <h1 className="text-xl font-semibold">Attendance Reports</h1>
-          <p className="text-sm text-muted-foreground">Filters and CSV export coming soon</p>
-          <div className="text-sm flex items-center gap-3">
+          <h1 className="font-semibold">Attendance Reports</h1>
+          <p className="muted text-muted-foreground">Filters and CSV export coming soon</p>
+          <div className="muted flex items-center gap-3">
             <Link className="underline" href={`/dashboard/attendance/reports?${new URLSearchParams({
               ...(sp.classId ? { classId: sp.classId } : {}),
               ...(sp.studentId ? { studentId: sp.studentId } : {}),

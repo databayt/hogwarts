@@ -90,8 +90,8 @@ export function SchemaTable({ className }: SchemaTableProps) {
         <div key={domain.domain} className="border rounded-lg overflow-hidden">
           <div className="bg-muted px-4 py-3 border-b">
             <div className="flex items-center justify-between">
-              <h3 className="font-semibold text-lg">{domain.domain}</h3>
-              <code className="text-sm bg-background px-2 py-1 rounded border">
+              <h3>{domain.domain}</h3>
+              <code className="muted bg-background px-2 py-1 rounded border">
                 {domain.file}
               </code>
             </div>
@@ -101,8 +101,8 @@ export function SchemaTable({ className }: SchemaTableProps) {
             <table className="w-full">
               <thead>
                 <tr className="border-b bg-muted/50">
-                  <th className="text-left px-4 py-3 font-medium text-sm">Table Name</th>
-                  <th className="text-left px-4 py-3 font-medium text-sm">Description</th>
+                  <th className="text-left px-4 py-3">Table Name</th>
+                  <th className="text-left px-4 py-3">Description</th>
                 </tr>
               </thead>
               <tbody>
@@ -114,11 +114,11 @@ export function SchemaTable({ className }: SchemaTableProps) {
                     }`}
                   >
                     <td className="px-4 py-3">
-                      <code className="text-sm font-medium text-primary">
+                      <code className="text-primary">
                         {table.name}
                       </code>
                     </td>
-                    <td className="px-4 py-3 text-sm text-muted-foreground">
+                    <td className="px-4 py-3 muted text-muted-foreground">
                       {table.description}
                     </td>
                   </tr>
@@ -132,26 +132,26 @@ export function SchemaTable({ className }: SchemaTableProps) {
       {/* Sample Data Summary */}
       <div className="border rounded-lg overflow-hidden mt-8">
         <div className="bg-muted px-4 py-3 border-b">
-          <h3 className="font-semibold text-lg">Sample Schools Data</h3>
+          <h3>Sample Schools Data</h3>
         </div>
         
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="border-b bg-muted/50">
-                <th className="text-left px-4 py-3 font-medium text-sm">School</th>
-                <th className="text-left px-4 py-3 font-medium text-sm">Domain</th>
-                <th className="text-left px-4 py-3 font-medium text-sm">Students</th>
-                <th className="text-left px-4 py-3 font-medium text-sm">Teachers</th>
-                <th className="text-left px-4 py-3 font-medium text-sm">Departments</th>
-                <th className="text-left px-4 py-3 font-medium text-sm">Classes</th>
+                <th className="text-left px-4 py-3">School</th>
+                <th className="text-left px-4 py-3">Domain</th>
+                <th className="text-left px-4 py-3">Students</th>
+                <th className="text-left px-4 py-3">Teachers</th>
+                <th className="text-left px-4 py-3">Departments</th>
+                <th className="text-left px-4 py-3">Classes</th>
               </tr>
             </thead>
             <tbody>
               <tr className="border-b hover:bg-muted/30 transition-colors">
-                <td className="px-4 py-3 font-medium">Hogwarts School of Witchcraft and Wizardry</td>
+                <td className="px-4 py-3">Hogwarts School of Witchcraft and Wizardry</td>
                 <td className="px-4 py-3">
-                  <code className="text-sm">hogwarts.schoolapp.com</code>
+                  <code className="muted">hogwarts.schoolapp.com</code>
                 </td>
                 <td className="px-4 py-3 text-center">280</td>
                 <td className="px-4 py-3 text-center">45</td>
@@ -159,9 +159,9 @@ export function SchemaTable({ className }: SchemaTableProps) {
                 <td className="px-4 py-3 text-center">120</td>
               </tr>
               <tr className="border-b hover:bg-muted/30 transition-colors bg-muted/10">
-                <td className="px-4 py-3 font-medium">Beauxbatons Academy of Magic</td>
+                <td className="px-4 py-3">Beauxbatons Academy of Magic</td>
                 <td className="px-4 py-3">
-                  <code className="text-sm">beauxbatons.schoolapp.com</code>
+                  <code className="muted">beauxbatons.schoolapp.com</code>
                 </td>
                 <td className="px-4 py-3 text-center">210</td>
                 <td className="px-4 py-3 text-center">35</td>
@@ -169,9 +169,9 @@ export function SchemaTable({ className }: SchemaTableProps) {
                 <td className="px-4 py-3 text-center">85</td>
               </tr>
               <tr className="hover:bg-muted/30 transition-colors">
-                <td className="px-4 py-3 font-medium">Durmstrang Institute</td>
+                <td className="px-4 py-3">Durmstrang Institute</td>
                 <td className="px-4 py-3">
-                  <code className="text-sm">durmstrang.schoolapp.com</code>
+                  <code className="muted">durmstrang.schoolapp.com</code>
                 </td>
                 <td className="px-4 py-3 text-center">195</td>
                 <td className="px-4 py-3 text-center">30</td>

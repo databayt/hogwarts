@@ -1,19 +1,21 @@
-// app/api/admin/route.ts
+import { NextRequest, NextResponse } from "next/server";
+import { requireRole } from "@/lib/auth-security";
+import { rateLimit, RATE_LIMITS } from "@/lib/rate-limit";
 
-import { NextResponse } from "next/server";
-import { currentRole } from "@/components/auth/auth";
-
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const role = await currentRole();
-
-    if (role === "ADMIN") {
-      return NextResponse.json({ message: "Access granted" }, { status: 200 });
+    // Apply rate limiting for admin endpoints
+    const rateLimitResponse = await rateLimit(request, RATE_LIMITS.ADMIN, 'admin');
+    if (rateLimitResponse) {
+      return rateLimitResponse;
     }
 
-    return NextResponse.json({ message: "Forbidden" }, { status: 403 });
+    // Only allow ADMIN and DEVELOPER roles
+    await requireRole("ADMIN", "DEVELOPER");
+
+    return NextResponse.json({ message: "Admin access granted" }, { status: 200 });
   } catch (error) {
-    console.error("Error in /api/admin:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    console.error("Admin endpoint access denied:", error);
+    return NextResponse.json({ message: "Forbidden" }, { status: 403 });
   }
 }

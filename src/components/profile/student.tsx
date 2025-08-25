@@ -16,7 +16,7 @@ export default function StudentDashboard({ data }: StudentDashboardProps) {
   
   return (
     <div className=" rounded-lg p-6">
-      <h3 className="text-lg font-semibold mb-4 flex items-center">
+      <h3 className="mb-4 flex items-center">
         <span className="mr-2">🎓</span>
         Student Dashboard
       </h3>
@@ -24,7 +24,7 @@ export default function StudentDashboard({ data }: StudentDashboardProps) {
       <div className={`grid gap-4 ${useMobileLayout ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1 md:grid-cols-3'}`}>
         <div className=" rounded-lg p-4">
           <h4 className="font-semibold text-[#39d353] mb-2">Upcoming Assignments</h4>
-          <div className="space-y-2 text-sm">
+          <div className="space-y-2 muted">
             <div className={cn(
               "flex justify-between p-2 rounded-md transition-all duration-200",
               getSubjectCategoryColor("Mathematics", true)
@@ -51,62 +51,62 @@ export default function StudentDashboard({ data }: StudentDashboardProps) {
 
         <div className=" rounded-lg p-4">
           <h4 className="font-semibold text-[#1f6feb] mb-2">Current GPA</h4>
-          <div className="text-2xl font-bold text-[#39d353]">3.8</div>
-          <div className="text-sm text-muted-foreground">Semester Average</div>
+          <h3 className="text-[#39d353]">3.8</h3>
+          <p className="muted">Semester Average</p>
         </div>
 
         <div className=" rounded-lg p-4">
           <h4 className="font-semibold text-[#a259ff] mb-2">Attendance</h4>
-          <div className="text-2xl font-bold text-[#39d353]">95%</div>
-          <div className="text-sm text-muted-foreground">This Month</div>
+          <h3 className="text-[#39d353]">95%</h3>
+          <p className="muted">This Month</p>
         </div>
       </div>
 
       {/* Subject Performance Section */}
       <div className="mt-6 rounded-lg p-4">
-        <h4 className="font-semibold text-lg mb-4">Subject Performance</h4>
+        <h4 className="mb-4">Subject Performance</h4>
         <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
           <div className={cn(
             "p-3 rounded-lg transition-all duration-200",
             getSubjectCategoryColor("Mathematics", true)
           )}>
             <div className="font-medium">Mathematics</div>
-            <div className="text-sm text-muted-foreground">Grade: A- (90%)</div>
+            <p className="muted">Grade: A- (90%)</p>
           </div>
           <div className={cn(
             "p-3 rounded-lg transition-all duration-200",
             getSubjectCategoryColor("Science", true)
           )}>
             <div className="font-medium">Science</div>
-            <div className="text-sm text-muted-foreground">Grade: A (95%)</div>
+            <p className="muted">Grade: A (95%)</p>
           </div>
           <div className={cn(
             "p-3 rounded-lg transition-all duration-200",
             getSubjectCategoryColor("English", true)
           )}>
             <div className="font-medium">English</div>
-            <div className="text-sm text-muted-foreground">Grade: B+ (87%)</div>
+            <p className="muted">Grade: B+ (87%)</p>
           </div>
           <div className={cn(
             "p-3 rounded-lg transition-all duration-200",
             getSubjectCategoryColor("History", true)
           )}>
             <div className="font-medium">History</div>
-            <div className="text-sm text-muted-foreground">Grade: A- (91%)</div>
+            <p className="muted">Grade: A- (91%)</p>
           </div>
           <div className={cn(
             "p-3 rounded-lg transition-all duration-200",
             getSubjectCategoryColor("Art", true)
           )}>
             <div className="font-medium">Art</div>
-            <div className="text-sm text-muted-foreground">Grade: A (96%)</div>
+            <p className="muted">Grade: A (96%)</p>
           </div>
           <div className={cn(
             "p-3 rounded-lg transition-all duration-200",
             getSubjectCategoryColor("Physical Education", true)
           )}>
             <div className="font-medium">Physical Education</div>
-            <div className="text-sm text-muted-foreground">Grade: A+ (98%)</div>
+            <p className="muted">Grade: A+ (98%)</p>
           </div>
         </div>
       </div>

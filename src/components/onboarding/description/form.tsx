@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { cn } from "@/lib/utils";
-import { descriptionSchema, type DescriptionFormData } from "./actions";
+import { descriptionSchema, type DescriptionFormData } from "./validation";
 import { updateSchoolDescription } from "./actions";
 
 interface DescriptionFormProps {

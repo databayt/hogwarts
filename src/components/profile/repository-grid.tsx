@@ -64,14 +64,14 @@ export default function RepositoryGrid() {
                 {repo.name}
               </a>
             </div>
-            <span className="text-xs text-muted-foreground border border-border rounded-full px-2 py-1">
+            <span className="muted border border-border rounded-full px-2 py-1">
               {repo.visibility}
             </span>
           </div>
 
-          <p className="text-muted-foreground text-sm mb-3 line-clamp-2">{repo.description}</p>
+          <p className="muted mb-3 line-clamp-2">{repo.description}</p>
 
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
+          <div className="flex items-center justify-between muted">
             <div className="flex items-center space-x-4">
               <div className="flex items-center">
                 <div

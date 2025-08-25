@@ -14,8 +14,18 @@ export const publicRoutes = [
   "/pricing",
   "/blog",
   "/debug",
-  
-  
+];
+
+/**
+ * An array of routes that require authentication
+ * Users must be logged in to access these routes
+ * @type {string[]}
+ */
+export const protectedRoutes = [
+  "/dashboard",
+  "/onboarding",
+  "/profile",
+  "/settings",
 ];
 
 /**

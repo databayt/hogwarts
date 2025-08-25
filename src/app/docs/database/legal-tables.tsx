@@ -4,7 +4,7 @@ export function LegalTables() {
   return (
     <div className="space-y-8">
       <div>
-        <h3 className="text-lg font-semibold mb-4">Legal & Compliance Models</h3>
+        <h3 className="font-semibold mb-4">Legal & Compliance Models</h3>
         <CodeBlock language="typescript" value={`
 model LegalConsent {
   id                String   @id @default(cuid())
@@ -59,7 +59,7 @@ model ComplianceLog {
 
       <div>
         <h4 className="font-medium mb-2">Key Features</h4>
-        <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
+        <ul className="list-disc list-inside space-y-2 muted text-muted-foreground">
           <li>Comprehensive consent tracking with version control</li>
           <li>Support for multiple document types and consent types</li>
           <li>Audit trail with detailed event logging</li>

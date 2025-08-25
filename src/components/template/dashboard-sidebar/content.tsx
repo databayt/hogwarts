@@ -49,7 +49,7 @@ export default function DashboardSidebar({ ...props }: React.ComponentProps<type
                 return (
                   <SidebarMenuItem key={item.href}>
                     <SidebarMenuButton asChild isActive={isActive} size="sm">
-                      <Link href={item.href} className="text-sm font-normal" onClick={handleLinkClick}>
+                      <Link href={item.href} className="muted font-normal" onClick={handleLinkClick}>
                         <span className="mr-2 inline-flex size-4 items-center justify-center">
                           {(() => {
                             const Icon = Icons[item.icon];

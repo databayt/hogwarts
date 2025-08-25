@@ -36,7 +36,7 @@ const FILE_PATTERNS: FilePattern[] = [
 export function StandardizedFilePatterns() {
   return (
     <div>
-      <Table className="w-full text-sm">
+      <Table className="w-full muted">
         <TableHeader>
           <TableRow>
             <TableHead className="w-[160px]">File</TableHead>

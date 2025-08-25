@@ -79,8 +79,8 @@ export default function TenantWelcome({ school, subdomain }: TenantWelcomeProps)
                 <Building2 className="w-6 h-6 text-primary" />
               </div>
               <div>
-                <h1 className="text-xl font-semibold text-gray-900">{school.name}</h1>
-                <p className="text-sm text-gray-500">{subdomain}.databayt.org</p>
+                <h4 className="text-gray-900">{school.name}</h4>
+                <p className="text-gray-500">{subdomain}.databayt.org</p>
               </div>
             </div>
             
@@ -98,10 +98,10 @@ export default function TenantWelcome({ school, subdomain }: TenantWelcomeProps)
           <div className="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
             <GraduationCap className="w-12 h-12 text-primary" />
           </div>
-          <h2 className="text-4xl font-bold text-gray-900 mb-4">
+          <h1 className="text-gray-900 mb-4">
             Welcome to {school.name}
-          </h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+          </h1>
+          <p className="lead text-gray-600 max-w-3xl mx-auto">
             Your comprehensive school management portal is ready. Access student records, 
             manage classes, track attendance, and more all in one place.
           </p>
@@ -111,12 +111,12 @@ export default function TenantWelcome({ school, subdomain }: TenantWelcomeProps)
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Students</CardTitle>
+              <CardTitle>Students</CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{school.maxStudents || 'Unlimited'}</div>
-              <p className="text-xs text-muted-foreground">
+              <h3>{school.maxStudents || 'Unlimited'}</h3>
+              <p className="muted">
                 Maximum student capacity
               </p>
             </CardContent>
@@ -124,12 +124,12 @@ export default function TenantWelcome({ school, subdomain }: TenantWelcomeProps)
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Teachers</CardTitle>
+              <CardTitle>Teachers</CardTitle>
               <BookOpen className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{school.maxTeachers || 'Unlimited'}</div>
-              <p className="text-xs text-muted-foreground">
+              <h3>{school.maxTeachers || 'Unlimited'}</h3>
+              <p className="muted">
                 Maximum teacher capacity
               </p>
             </CardContent>
@@ -137,12 +137,12 @@ export default function TenantWelcome({ school, subdomain }: TenantWelcomeProps)
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Timezone</CardTitle>
+              <CardTitle>Timezone</CardTitle>
               <Clock className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{school.timezone || 'UTC'}</div>
-              <p className="text-xs text-muted-foreground">
+              <h3>{school.timezone || 'UTC'}</h3>
+              <p className="muted">
                 School timezone
               </p>
             </CardContent>
@@ -204,19 +204,19 @@ export default function TenantWelcome({ school, subdomain }: TenantWelcomeProps)
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {school.address && (
                   <div>
-                    <h4 className="font-medium text-gray-900 mb-1">Address</h4>
+                                         <h5 className="text-gray-900 mb-1">Address</h5>
                     <p className="text-gray-600">{school.address}</p>
                   </div>
                 )}
                 {school.phoneNumber && (
                   <div>
-                    <h4 className="font-medium text-gray-900 mb-1">Phone</h4>
+                                         <h5 className="text-gray-900 mb-1">Phone</h5>
                     <p className="text-gray-600">{school.phoneNumber}</p>
                   </div>
                 )}
                 {school.email && (
                   <div>
-                    <h4 className="font-medium text-gray-900 mb-1">Email</h4>
+                                         <h5 className="text-gray-900 mb-1">Email</h5>
                     <p className="text-gray-600">{school.email}</p>
                   </div>
                 )}
@@ -228,7 +228,7 @@ export default function TenantWelcome({ school, subdomain }: TenantWelcomeProps)
         {/* Footer */}
         <div className="text-center mt-12 text-gray-500">
           <p>Powered by Databayt - School Management Platform</p>
-          <p className="text-sm mt-1">
+          <p className="muted mt-1">
             Created on {school.createdAt ? new Date(school.createdAt).toLocaleDateString() : 'Recently'}
           </p>
         </div>

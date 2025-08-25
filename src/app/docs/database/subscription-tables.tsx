@@ -4,7 +4,7 @@ export function SubscriptionTables() {
   return (
     <div className="space-y-8">
       <div>
-        <h3 className="text-lg font-semibold mb-4">Subscription & Pricing Models</h3>
+        <h3 className="mb-4">Subscription & Pricing Models</h3>
         <CodeBlock language="typescript" value={`
 model SubscriptionTier {
   id                String   @id @default(cuid())
@@ -59,8 +59,8 @@ model AppliedDiscount {
       </div>
 
       <div>
-        <h4 className="font-medium mb-2">Key Features</h4>
-        <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
+        <h4 className="mb-2">Key Features</h4>
+        <ul className="list-disc list-inside space-y-2 muted text-muted-foreground">
           <li>Tiered subscription plans with different limits and features</li>
           <li>Flexible discount system supporting both percentage and fixed amounts</li>
           <li>Usage tracking for limited-use discount codes</li>
@@ -70,7 +70,7 @@ model AppliedDiscount {
       </div>
 
       <div>
-        <h4 className="font-medium mb-2">Example Usage</h4>
+        <h4 className="mb-2">Example Usage</h4>
         <CodeBlock language="typescript" value={`
 // Create a new subscription tier
 const tier = await prisma.subscriptionTier.create({

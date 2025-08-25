@@ -98,9 +98,9 @@ export default async function BillingPage() {
         {isPrivileged && (
           <div className="space-y-10">
             <div>
-              <h3 className="mb-3 text-lg font-semibold">Subscriptions</h3>
+              <h3 className="mb-3 font-semibold">Subscriptions</h3>
               <div className="overflow-x-auto rounded-md border">
-                <table className="w-full text-sm">
+                <table className="w-full muted">
                   <thead className="bg-muted/50">
                     <tr>
                       <th className="px-3 py-2 text-left">Stripe Sub ID</th>
@@ -134,9 +134,9 @@ export default async function BillingPage() {
             </div>
 
             <div>
-              <h3 className="mb-3 text-lg font-semibold">Invoices</h3>
+              <h3 className="mb-3 font-semibold">Invoices</h3>
               <div className="overflow-x-auto rounded-md border">
-                <table className="w-full text-sm">
+                <table className="w-full muted">
                   <thead className="bg-muted/50">
                     <tr>
                       <th className="px-3 py-2 text-left">Stripe Invoice ID</th>

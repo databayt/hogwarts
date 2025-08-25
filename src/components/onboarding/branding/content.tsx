@@ -90,7 +90,7 @@ export default function BrandingContent() {
               <br />
               brand identity
             </h3>
-            <p className="text-sm sm:text-base text-muted-foreground">
+            <p className="muted sm:text-base text-muted-foreground">
               Upload your logo and customize your school's visual style.
             </p>
           </div>
@@ -99,7 +99,7 @@ export default function BrandingContent() {
           <div className="space-y-5">
             {/* Color Selection */}
             <div className="flex items-center gap-4">
-              <label className="text-sm font-medium w-24">Color</label>
+              <label className="muted font-medium w-24">Color</label>
               <div className="flex gap-2">
                 {COLOR_OPTIONS.map((option) => (
                   <button
@@ -120,7 +120,7 @@ export default function BrandingContent() {
 
             {/* Border Radius Selection */}
             <div className="flex items-center gap-4">
-              <label className="text-sm font-medium w-24">Rounded</label>
+              <label className="muted font-medium w-24">Rounded</label>
               <div className="flex gap-2">
                 {RADIUS_OPTIONS.map((option) => (
                   <Button
@@ -145,7 +145,7 @@ export default function BrandingContent() {
 
             {/* Shadow Selection */}
             <div className="flex items-center gap-4">
-              <label className="text-sm font-medium w-24">Shadow</label>
+              <label className="muted font-medium w-24">Shadow</label>
               <div className="flex gap-2">
                 {SHADOW_OPTIONS.map((option) => (
                   <Button

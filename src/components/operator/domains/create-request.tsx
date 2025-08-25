@@ -46,7 +46,7 @@ export function CreateDomainRequest({ tenants }: Props) {
     <Card className="p-4">
       <form onSubmit={onSubmit} className="grid gap-3 md:grid-cols-3">
         <div className="md:col-span-1">
-          <label className="block text-xs text-muted-foreground mb-1">School</label>
+          <label className="block muted mb-1">School</label>
           <Select value={schoolId} onValueChange={setSchoolId}>
             <SelectTrigger className="h-8">
               <SelectValue placeholder="Select school" />
@@ -59,11 +59,11 @@ export function CreateDomainRequest({ tenants }: Props) {
           </Select>
         </div>
         <div className="md:col-span-1">
-          <label className="block text-xs text-muted-foreground mb-1">Domain</label>
+          <label className="block muted mb-1">Domain</label>
           <Input className="h-8" placeholder="example.school.app" value={domain} onChange={(e) => setDomain(e.target.value)} />
         </div>
         <div className="md:col-span-1">
-          <label className="block text-xs text-muted-foreground mb-1">Notes</label>
+          <label className="block muted mb-1">Notes</label>
           <Input className="h-8" placeholder="Optional" value={notes} onChange={(e) => setNotes(e.target.value)} />
         </div>
         <div className="md:col-span-3">

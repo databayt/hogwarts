@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { secureDebugEndpoint, createDebugResponse } from '@/lib/debug-security';
 
 export async function GET(request: NextRequest) {
+  return secureDebugEndpoint(request, async (req) => {
   try {
     const url = request.url;
     const host = request.headers.get('host') || '';
@@ -34,19 +36,19 @@ export async function GET(request: NextRequest) {
       timestamp: new Date().toISOString()
     };
     
-    console.log('OAuth subdomain test:', debugInfo);
+    console.log('OAuth subdomain test (AUTHORIZED):', debugInfo);
     
-    return NextResponse.json({
+    return createDebugResponse({
       success: true,
       debugInfo,
-      message: 'OAuth subdomain test completed'
+      message: 'OAuth subdomain test completed (secured)'
     });
   } catch (error) {
     console.error('OAuth subdomain test error:', error);
-    return NextResponse.json({
+    return createDebugResponse({
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
-      timestamp: new Date().toISOString()
+      error: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 });
   }
+  });
 }

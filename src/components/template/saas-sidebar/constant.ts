@@ -9,7 +9,7 @@ export type PlatformNavItem = {
 
 export const platformNav: PlatformNavItem[] = [
   // Developer (operator) – developer only
-  { title: "Overview", href: "/overview", icon: "box" },
+  { title: "Dashboard", href: "/dashboard", icon: "box" },
   { title: "Kanban", href: "/kanban", icon: "checkCircle" },
   { title: "Products", href: "/product", icon: "file" },
   { title: "Domains", href: "/domains", icon: "browser" },

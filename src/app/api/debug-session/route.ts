@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server';
 import { NextRequest } from 'next/server';
 import { auth } from '@/auth';
+import { secureDebugEndpoint, createDebugResponse, sanitizeDebugData } from '@/lib/debug-security';
 
 export async function GET(request: NextRequest) {
+  return secureDebugEndpoint(request, async (req) => {
   const host = request.headers.get('host') || '';
   const url = new URL(request.url);
   
@@ -102,17 +104,16 @@ export async function GET(request: NextRequest) {
     }
   };
   
-  console.log('🔍 SESSION DEBUG API CALLED:', {
-    host,
-    subdomain,
-    sessionExists: !!session,
-    cookieCount: allCookies.length,
-    authCookieCount: authCookies.length
-  });
-  
-  return NextResponse.json(debugInfo, {
-    headers: {
-      'Cache-Control': 'no-store',
-    }
+    // Sanitize sensitive data before logging
+    const sanitizedInfo = sanitizeDebugData(debugInfo);
+    console.log('🔍 SESSION DEBUG API CALLED (AUTHORIZED):', {
+      host,
+      subdomain,
+      sessionExists: !!session,
+      cookieCount: allCookies.length,
+      authCookieCount: authCookies.length
+    });
+    
+    return createDebugResponse(sanitizedInfo);
   });
 }

@@ -3,8 +3,12 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { auth } from "@/auth";
 import { db } from "@/lib/db";
+import { 
+  requireSchoolOwnership,
+  createActionResponse,
+  type ActionResponse 
+} from "@/lib/auth-security";
 
 // Update price schema for school context
 export const schoolPriceSchema = z.object({
@@ -28,12 +32,10 @@ export type SchoolPriceFormData = z.infer<typeof schoolPriceSchema>;
 export async function updateSchoolPricing(
   schoolId: string,
   data: SchoolPriceFormData
-) {
+): Promise<ActionResponse> {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      throw new Error("Authentication required");
-    }
+    // Validate user has ownership/access to this school
+    await requireSchoolOwnership(schoolId);
 
     const validatedData = schoolPriceSchema.parse(data);
 
@@ -41,11 +43,7 @@ export async function updateSchoolPricing(
     // Note: tuitionFee, registrationFee, etc. are not in current schema
     // For now, we'll just mark the school as having pricing set
     const updatedSchool = await db.school.update({
-      where: { 
-        id: schoolId,
-        // TODO: Add multi-tenant safety with schoolId from session
-        // schoolId: session.schoolId 
-      },
+      where: { id: schoolId },
       data: {
         // Store basic pricing info in available fields
         website: `pricing-set-${validatedData.tuitionFee}`, // Temporary solution
@@ -55,43 +53,27 @@ export async function updateSchoolPricing(
 
     revalidatePath(`/onboarding/${schoolId}/price`);
     
-    return {
-      success: true,
-      data: updatedSchool,
-    };
+    return createActionResponse(updatedSchool);
   } catch (error) {
-    console.error("Error updating school pricing:", error);
-    
     if (error instanceof z.ZodError) {
-      return {
-        success: false,
-        errors: error.issues.reduce((acc: Record<string, string>, curr) => {
-          acc[curr.path[0] as string] = curr.message;
-          return acc;
-        }, {} as Record<string, string>),
-      };
+      return createActionResponse(undefined, {
+        message: "Validation failed",
+        name: "ValidationError",
+        issues: error.issues
+      });
     }
-
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "An error occurred",
-    };
+    
+    return createActionResponse(undefined, error);
   }
 }
 
-export async function getSchoolPricing(schoolId: string) {
+export async function getSchoolPricing(schoolId: string): Promise<ActionResponse> {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      throw new Error("Authentication required");
-    }
+    // Validate user has ownership/access to this school
+    await requireSchoolOwnership(schoolId);
 
     const school = await db.school.findUnique({
-      where: { 
-        id: schoolId,
-        // TODO: Add multi-tenant safety
-        // schoolId: session.schoolId 
-      },
+      where: { id: schoolId },
       select: {
         id: true,
         website: true, // Temporary field for pricing info
@@ -107,31 +89,22 @@ export async function getSchoolPricing(schoolId: string) {
       ? parseInt(school.website.replace('pricing-set-', '')) || 0
       : 0;
 
-    return {
-      success: true,
-      data: {
-        tuitionFee,
-        registrationFee: 0, // Default values since not stored
-        applicationFee: 0,
-        currency: 'USD' as const,
-        paymentSchedule: 'monthly' as const,
-      },
-    };
+    return createActionResponse({
+      tuitionFee,
+      registrationFee: 0, // Default values since not stored
+      applicationFee: 0,
+      currency: 'USD' as const,
+      paymentSchedule: 'monthly' as const,
+    });
   } catch (error) {
-    console.error("Error fetching school pricing:", error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "An error occurred",
-    };
+    return createActionResponse(undefined, error);
   }
 }
 
 export async function proceedToFinishSetup(schoolId: string) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      throw new Error("Authentication required");
-    }
+    // Validate user has ownership/access to this school
+    await requireSchoolOwnership(schoolId);
 
     // Validate that pricing data exists
     const school = await db.school.findUnique({

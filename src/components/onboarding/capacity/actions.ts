@@ -3,37 +3,27 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { auth } from "@/auth";
 import { db } from "@/lib/db";
-import { floorPlanSchema } from "./validation";
-
-export type CapacityFormData = z.infer<typeof floorPlanSchema>;
+import { 
+  requireSchoolOwnership,
+  createActionResponse,
+  type ActionResponse 
+} from "@/lib/auth-security";
+import { capacitySchema, type CapacityFormData } from "./validation";
 
 export async function updateSchoolCapacity(
   schoolId: string,
   data: CapacityFormData
-) {
+): Promise<ActionResponse> {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      throw new Error("Authentication required");
-    }
+    // Validate user has ownership/access to this school
+    await requireSchoolOwnership(schoolId);
 
-    // TODO: Add schoolId validation to ensure user has access to this school
-    // const hasAccess = await checkSchoolAccess(session.user.id, schoolId);
-    // if (!hasAccess) {
-    //   throw new Error("Access denied");
-    // }
-
-    const validatedData = floorPlanSchema.parse(data);
+    const validatedData = capacitySchema.parse(data);
 
     // Update school capacity in database
     const updatedSchool = await db.school.update({
-      where: { 
-        id: schoolId,
-        // TODO: Add multi-tenant safety with schoolId from session
-        // schoolId: session.schoolId 
-      },
+      where: { id: schoolId },
       data: {
         maxStudents: validatedData.studentCount,
         maxTeachers: validatedData.teachers,
@@ -44,43 +34,27 @@ export async function updateSchoolCapacity(
 
     revalidatePath(`/onboarding/${schoolId}/capacity`);
     
-    return {
-      success: true,
-      data: updatedSchool,
-    };
+    return createActionResponse(updatedSchool);
   } catch (error) {
-    console.error("Error updating school capacity:", error);
-    
     if (error instanceof z.ZodError) {
-      return {
-        success: false,
-        errors: error.issues.reduce((acc: Record<string, string>, curr: any) => {
-          acc[curr.path[0] as string] = curr.message;
-          return acc;
-        }, {} as Record<string, string>),
-      };
+      return createActionResponse(undefined, {
+        message: "Validation failed",
+        name: "ValidationError",
+        issues: error.issues
+      });
     }
-
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "An error occurred",
-    };
+    
+    return createActionResponse(undefined, error);
   }
 }
 
-export async function getSchoolCapacity(schoolId: string) {
+export async function getSchoolCapacity(schoolId: string): Promise<ActionResponse> {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      throw new Error("Authentication required");
-    }
+    // Validate user has ownership/access to this school
+    await requireSchoolOwnership(schoolId);
 
     const school = await db.school.findUnique({
-      where: { 
-        id: schoolId,
-        // TODO: Add multi-tenant safety
-        // schoolId: session.schoolId 
-      },
+      where: { id: schoolId },
       select: {
         id: true,
         maxStudents: true,
@@ -92,29 +66,21 @@ export async function getSchoolCapacity(schoolId: string) {
       throw new Error("School not found");
     }
 
-    return {
-      success: true,
-      data: {
-        studentCount: school.maxStudents || 400,
-        teachers: school.maxTeachers || 10,
-        facilities: 5, // Default since not in schema
-      },
-    };
+    return createActionResponse({
+      studentCount: school.maxStudents || 400,
+      teachers: school.maxTeachers || 10,
+      classrooms: 10, // Default since not in schema
+      facilities: 5, // Default since not in schema
+    });
   } catch (error) {
-    console.error("Error fetching school capacity:", error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "An error occurred",
-    };
+    return createActionResponse(undefined, error);
   }
 }
 
 export async function proceedToNextStep(schoolId: string) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      throw new Error("Authentication required");
-    }
+    // Validate user has ownership/access to this school
+    await requireSchoolOwnership(schoolId);
 
     // Validate that capacity data exists
     const school = await db.school.findUnique({

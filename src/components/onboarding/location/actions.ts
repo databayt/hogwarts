@@ -3,8 +3,12 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { auth } from "@/auth";
 import { db } from "@/lib/db";
+import { 
+  requireSchoolOwnership,
+  createActionResponse,
+  type ActionResponse 
+} from "@/lib/auth-security";
 import { locationSchema } from "./validation";
 
 export type LocationFormData = z.infer<typeof locationSchema>;
@@ -12,22 +16,16 @@ export type LocationFormData = z.infer<typeof locationSchema>;
 export async function updateSchoolLocation(
   schoolId: string,
   data: LocationFormData
-) {
+): Promise<ActionResponse> {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      throw new Error("Authentication required");
-    }
+    // Validate user has ownership/access to this school
+    await requireSchoolOwnership(schoolId);
 
     const validatedData = locationSchema.parse(data);
 
     // Update school location in database
     const updatedSchool = await db.school.update({
-      where: { 
-        id: schoolId,
-        // TODO: Add multi-tenant safety with schoolId from session
-        // schoolId: session.schoolId 
-      },
+      where: { id: schoolId },
       data: {
         address: `${validatedData.address}, ${validatedData.city}, ${validatedData.state}, ${validatedData.country} ${validatedData.postalCode}`,
         updatedAt: new Date(),
@@ -36,43 +34,23 @@ export async function updateSchoolLocation(
 
     revalidatePath(`/onboarding/${schoolId}/location`);
     
-    return {
-      success: true,
-      data: updatedSchool,
-    };
+    return createActionResponse(updatedSchool);
   } catch (error) {
-    console.error("Error updating school location:", error);
-    
     if (error instanceof z.ZodError) {
-      return {
-        success: false,
-        errors: error.issues.reduce((acc: Record<string, string>, curr) => {
-          acc[curr.path[0] as string] = curr.message;
-          return acc;
-        }, {} as Record<string, string>),
-      };
+      return createActionResponse(undefined, error);
     }
-
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "An error occurred",
-    };
+    
+    return createActionResponse(undefined, error);
   }
 }
 
-export async function getSchoolLocation(schoolId: string) {
+export async function getSchoolLocation(schoolId: string): Promise<ActionResponse> {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      throw new Error("Authentication required");
-    }
+    // Validate user has ownership/access to this school
+    await requireSchoolOwnership(schoolId);
 
     const school = await db.school.findUnique({
-      where: { 
-        id: schoolId,
-        // TODO: Add multi-tenant safety
-        // schoolId: session.schoolId 
-      },
+      where: { id: schoolId },
       select: {
         id: true,
         address: true,
@@ -83,27 +61,46 @@ export async function getSchoolLocation(schoolId: string) {
       throw new Error("School not found");
     }
 
-    return {
-      success: true,
-      data: {
-        address: school.address || "",
-      },
+    // Parse the concatenated address string
+    let parsedAddress = {
+      address: "",
+      city: "",
+      state: "",
+      country: "",
+      postalCode: "",
+      latitude: undefined as number | undefined,
+      longitude: undefined as number | undefined,
     };
+
+    if (school.address) {
+      // Simple parsing of "address, city, state, country postalCode"
+      const parts = school.address.split(',').map(part => part.trim());
+      if (parts.length >= 4) {
+        parsedAddress.address = parts[0];
+        parsedAddress.city = parts[1];
+        parsedAddress.state = parts[2];
+        // Last part might contain country and postal code
+        const lastPart = parts[3];
+        const lastSpaceIndex = lastPart.lastIndexOf(' ');
+        if (lastSpaceIndex > 0) {
+          parsedAddress.country = lastPart.substring(0, lastSpaceIndex);
+          parsedAddress.postalCode = lastPart.substring(lastSpaceIndex + 1);
+        } else {
+          parsedAddress.country = lastPart;
+        }
+      }
+    }
+
+    return createActionResponse(parsedAddress);
   } catch (error) {
-    console.error("Error fetching school location:", error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "An error occurred",
-    };
+    return createActionResponse(undefined, error);
   }
 }
 
 export async function proceedToCapacity(schoolId: string) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      throw new Error("Authentication required");
-    }
+    // Validate user has ownership/access to this school
+    await requireSchoolOwnership(schoolId);
 
     // Validate that location data exists
     const school = await db.school.findUnique({

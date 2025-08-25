@@ -6,7 +6,7 @@
   }
 
   h2 {
-    @apply scroll-m-20  text-5xl font-bold tracking-tight first:mt-0;
+    @apply scroll-m-20  text-3xl font-bold tracking-tight first:mt-0;
   }
 
   h3 {

@@ -1,67 +1,66 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import { useParams } from 'next/navigation';
 import { useHostValidation } from '@/components/onboarding/host-validation-context';
 import { useListing } from '@/components/onboarding/use-listing';
+import { useTitle } from './use-title';
+import { TitleForm } from './form';
+import { TitleCard } from './card';
 import { FORM_LIMITS } from '@/components/onboarding/constants.client';
 import { generateSubdomain } from '@/lib/subdomain';
 import { Badge } from '@/components/ui/badge';
 import { Globe } from 'lucide-react';
 
 export default function TitleContent() {
+  const params = useParams();
+  const schoolId = params.id as string;
   const { enableNext, disableNext } = useHostValidation();
-  const { listing, updateListingData } = useListing();
-  const [schoolName, setSchoolName] = useState<string>('');
+  const { listing } = useListing();
+  const { data: titleData, loading } = useTitle(schoolId);
   const [generatedSubdomain, setGeneratedSubdomain] = useState<string>('');
 
-  const maxLength = FORM_LIMITS.TITLE_MAX_LENGTH;
+  const currentTitle = titleData?.title || listing?.name || '';
 
-  // Load existing title from listing
+  // Enable/disable next button based on title
   useEffect(() => {
-    if (listing?.name) {
-      setSchoolName(listing.name);
-    }
-  }, [listing]);
-
-  // Enable/disable next button based on title length
-  useEffect(() => {
-    const trimmedLength = schoolName.trim().length;
+    const trimmedLength = currentTitle.trim().length;
     if (trimmedLength >= FORM_LIMITS.TITLE_MIN_LENGTH && trimmedLength <= FORM_LIMITS.TITLE_MAX_LENGTH) {
       enableNext();
     } else {
       disableNext();
     }
-  }, [schoolName, enableNext, disableNext]);
+  }, [currentTitle, enableNext, disableNext]);
 
-  const handleSchoolNameChange = async (event: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const newName = event.target.value;
-    if (newName.length <= maxLength) {
-      setSchoolName(newName);
-      
-      // Generate subdomain preview
-      if (newName.trim().length >= FORM_LIMITS.TITLE_MIN_LENGTH) {
-        const subdomain = generateSubdomain(newName);
-        setGeneratedSubdomain(subdomain);
-      } else {
-        setGeneratedSubdomain('');
-      }
-      
-      // Update backend data with debouncing
-      try {
-        await updateListingData({
-          title: newName
-        });
-      } catch (error) {
-        console.error('Error updating school name:', error);
-      }
+  // Generate subdomain preview
+  useEffect(() => {
+    if (currentTitle.trim().length >= FORM_LIMITS.TITLE_MIN_LENGTH) {
+      const subdomain = generateSubdomain(currentTitle);
+      setGeneratedSubdomain(subdomain);
+    } else {
+      setGeneratedSubdomain('');
     }
-  };
+  }, [currentTitle]);
 
-  return (
-    <div className="">
+  if (loading) {
+    return (
       <div className="max-w-6xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-20 items-start">
-          {/* Left side - Text content */}
+          <div className="space-y-4">
+            <div className="h-6 bg-muted animate-pulse rounded" />
+            <div className="h-4 bg-muted animate-pulse rounded w-3/4" />
+          </div>
+          <div className="h-32 bg-muted animate-pulse rounded" />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-8">
+      <div className="max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-20 items-start">
+          {/* Left side - Text content and preview */}
           <div className="space-y-3 sm:space-y-4">
             <h3>
               What's your school's
@@ -89,20 +88,21 @@ export default function TitleContent() {
                 </p>
               </div>
             )}
+
+            {/* Title preview card */}
+            {currentTitle && (
+              <div className="mt-6">
+                <TitleCard title={currentTitle} />
+              </div>
+            )}
           </div>
 
-          {/* Right side - Input box */}
+          {/* Right side - Form */}
           <div>
-            <textarea
-              value={schoolName}
-              onChange={handleSchoolNameChange}
-              placeholder="e.g., Al-Azhar International School"
-              className="w-full h-[80px] sm:h-[100px] p-4 sm:p-6 border border-input rounded-lg resize-none focus:outline-none focus:border-ring transition-colors text-sm sm:text-base"
-              maxLength={maxLength}
+            <TitleForm
+              schoolId={schoolId}
+              initialData={{ title: currentTitle }}
             />
-            <div className="mt-2 text-xs sm:text-sm text-muted-foreground">
-              {schoolName.length}/{maxLength}
-            </div>
           </div>
         </div>
       </div>

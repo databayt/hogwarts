@@ -1,0 +1,575 @@
+# Typography System
+
+Our typography system is built on a foundation of preconfigured styles that ensure consistency across the application. This system eliminates the need for hardcoded font sizes and weights, making our codebase more maintainable and visually cohesive.
+
+## Core Principles
+
+- **No hardcoded typography**: Never use `text-*` or `font-*` classes directly
+- **Map to closest semantic element**: Find the nearest matching typography configuration
+- **Semantic HTML**: Use appropriate heading tags (h1-h6) for structure
+- **Consistent sizing**: Predefined scale from h1 (largest) to h6 (smallest)
+- **Maintainable**: Centralized typography definitions in `src/styles/typography.css`
+
+## Critical Rules
+
+### ❌ Never Use `<div>` for Text Content
+```tsx
+// ❌ WRONG - Never do this
+<div className="text-lg font-semibold text-gray-900">
+  Section Title
+</div>
+
+<div className="text-sm text-muted-foreground">
+  Description text
+</div>
+
+// ✅ CORRECT - Use semantic HTML tags
+<h5 className="text-gray-900">
+  Section Title
+</h5>
+
+<p className="muted">
+  Description text
+</p>
+```
+
+### Why This Matters
+1. **Accessibility**: Screen readers need semantic structure
+2. **SEO**: Search engines prefer semantic HTML
+3. **Maintainability**: Easier to style and modify
+4. **Consistency**: Follows web standards
+5. **Performance**: Better CSS specificity management
+
+### Quick Decision Guide
+- **Is it a title/heading?** → Use `h1`, `h2`, `h3`, `h4`, `h5`, `h6`
+- **Is it body text?** → Use `p` (with `.lead` or `.muted` if needed)
+- **Is it a caption?** → Use `small`
+- **Is it code?** → Use `code`
+- **Is it a list item?** → Use `li` (within `ul` or `ol`)
+- **Is it just a container?** → Keep as `div` but move text to semantic tags
+
+## Available Typography Elements
+
+### Headings
+
+```tsx
+// ✅ Correct - Use semantic HTML tags
+<h1>Main Page Title</h1>
+<h2>Section Heading</h2>
+<h3>Subsection Title</h3>
+<h4>Card Title</h4>
+<h5>Small Heading</h5>
+<h6>Smallest Heading</h6>
+
+// ❌ Incorrect - Don't use hardcoded classes
+<div className="text-4xl font-bold">Title</div>
+<span className="text-2xl font-semibold">Heading</span>
+```
+
+### Text Elements
+
+```tsx
+// ✅ Correct - Use semantic elements
+<p>Regular paragraph text</p>
+<small>Small text for captions</small>
+<div className="lead">Large introductory text</div>
+<div className="muted">Muted secondary text</div>
+
+// ❌ Incorrect - Don't use hardcoded classes
+<div className="text-base text-muted-foreground">Text</div>
+<span className="text-sm text-muted-foreground">Small text</span>
+```
+
+## Typography Scale
+
+| Element | Font Size | Font Weight | Use Case |
+|---------|-----------|-------------|----------|
+| `h1` | `text-4xl` → `lg:text-5xl` | `font-extrabold` | Main page titles, hero sections |
+| `h2` | `text-3xl` | `font-bold` | Section headings, major content areas |
+| `h3` | `text-2xl` | `font-semibold` | Subsection titles, card headers |
+| `h4` | `text-xl` | `font-semibold` | Group titles, form sections |
+| `h5` | `text-lg` | `font-semibold` | Small headings, list titles |
+| `h6` | `text-base` | `font-semibold` | Smallest headings, micro titles |
+| `p` | Default | Default | Body text, descriptions |
+| `.lead` | `text-xl` | Default | Introductory text, summaries |
+| `.muted` | `text-sm` | Default | Secondary information, captions |
+
+## Implementation Examples
+
+### Card Component
+```tsx
+// ✅ Good - Uses semantic typography
+<div className="p-6 border rounded-lg">
+  <h3 className="mb-2">Card Title</h3>
+  <p className="text-muted-foreground mb-4">
+    Card description text goes here.
+  </p>
+  <small className="text-muted-foreground">
+    Additional info
+  </small>
+</div>
+
+// ❌ Bad - Hardcoded typography
+<div className="p-6 border rounded-lg">
+  <div className="text-2xl font-semibold mb-2">Card Title</div>
+  <div className="text-base text-muted-foreground mb-4">
+    Card description text goes here.
+  </div>
+  <div className="text-sm text-muted-foreground">
+    Additional info
+  </div>
+</div>
+```
+
+### Form Section
+```tsx
+// ✅ Good - Semantic structure
+<form className="space-y-6">
+  <div>
+    <h4 className="mb-3">Personal Information</h4>
+    <p className="text-muted-foreground mb-4">
+      Please provide your basic details below.
+    </p>
+    {/* form fields */}
+  </div>
+</form>
+
+// ❌ Bad - Hardcoded classes
+<form className="space-y-6">
+  <div>
+    <div className="text-xl font-semibold mb-3">Personal Information</div>
+    <div className="text-base text-muted-foreground mb-4">
+      Please provide your basic details below.
+    </div>
+    {/* form fields */}
+  </div>
+</form>
+```
+
+## Generic Workflow for Every Project
+
+### Step 1: Setup Typography System
+1. **Create `src/styles/typography.css`** with your design system
+2. **Define semantic elements** (h1-h6, p, .lead, .muted, etc.)
+3. **Import globally** in your main CSS file
+4. **Document the scale** and use cases for each element
+
+### Step 2: Component Analysis Workflow
+For every component you encounter:
+
+1. **Scan for hardcoded typography**:
+   ```bash
+   # Search for font size classes
+   grep -r "text-(xs|sm|base|lg|xl|2xl|3xl|4xl|5xl|6xl)" src/
+   
+   # Search for font weight classes  
+   grep -r "font-(thin|extralight|light|normal|medium|semibold|bold|extrabold|black)" src/
+   ```
+
+2. **Identify text content** that should be semantic HTML
+3. **Map to closest typography element** using the decision tree below
+4. **Replace `<div>` with text** with appropriate semantic tags
+5. **Preserve all other styling** (layout, spacing, colors, etc.)
+
+### Step 3: Decision Tree for Mapping
+
+```
+Is it a heading/title? 
+├─ Yes → Use h1-h6 based on size/importance
+│   ├─ Main page title → h1
+│   ├─ Section heading → h2  
+│   ├─ Subsection → h3
+│   ├─ Card/group title → h4
+│   ├─ Small heading → h5
+│   └─ Micro title → h6
+└─ No → Is it body text?
+    ├─ Yes → Use p or utility classes
+    │   ├─ Large intro text → p with .lead
+    │   ├─ Regular text → p (default)
+    │   ├─ Small text → p with .muted
+    │   └─ Captions → small
+    └─ No → Keep as is (buttons, badges, etc.)
+```
+
+### Step 4: Implementation Checklist
+
+- [ ] **Never use hardcoded typography** (`text-*`, `font-*`)
+- [ ] **Always use semantic HTML** (h1-h6, p, small)
+- [ ] **Map to closest match** in your typography system
+- [ ] **Preserve visual appearance** after refactoring
+- [ ] **Keep other utility classes** (w-, p-, m-, flex, etc.)
+- [ ] **Test visually** to ensure consistency
+
+## Migration Guidelines
+
+When refactoring existing components:
+
+1. **Identify hardcoded typography**: Look for `text-*` and `font-*` classes
+2. **Map to closest semantic element**: Find the nearest matching typography configuration
+3. **Preserve other styling**: Keep layout, spacing, and color classes
+4. **Test visually**: Ensure the component looks the same after refactoring
+
+### Mapping Examples
+
+| Hardcoded Classes | Closest Match | Result |
+|-------------------|----------------|---------|
+| `text-xl font-semibold` | `h4` (text-xl font-semibold) | `<h4>` |
+| `text-2xl font-bold` | `h2` (text-3xl font-bold) | `<h2>` |
+| `text-lg font-medium` | `h5` (text-lg font-semibold) | `<h5>` |
+| `text-sm` | `.muted` (text-sm) | `<p className="muted">` |
+| `text-xs` | `.muted` (text-sm) | `<p className="muted">` |
+
+## Common Patterns
+
+### Before (Hardcoded)
+```tsx
+<div className="text-2xl font-semibold mb-4 text-center">
+  Section Title
+</div>
+```
+
+### After (Semantic)
+```tsx
+<h3 className="mb-4 text-center">
+  Section Title
+</h3>
+```
+
+**Note**: `text-2xl font-semibold` maps to `h3` (text-2xl font-semibold) - exact match!
+
+### Before (Mixed)
+```tsx
+<div className="text-lg font-medium text-muted-foreground">
+  Description text
+</div>
+```
+
+### After (Semantic)
+```tsx
+<h5 className="text-muted-foreground">
+  Description text
+</h5>
+```
+
+**Note**: `text-lg font-medium` maps to `h5` (text-lg font-semibold) - closest match!
+
+### Before (Small Text)
+```tsx
+<div className="text-sm text-muted-foreground">
+  Additional information
+</div>
+```
+
+### After (Semantic)
+```tsx
+<p className="muted">
+  Additional information
+</p>
+```
+
+**Note**: `text-sm` maps to `.muted` class - exact match!
+
+### Before (Large Intro Text)
+```tsx
+<div className="text-xl text-gray-600 max-w-3xl mx-auto">
+  Welcome to our platform
+</div>
+```
+
+### After (Semantic)
+```tsx
+<p className="lead text-gray-600 max-w-3xl mx-auto">
+  Welcome to our platform
+</p>
+```
+
+**Note**: `text-xl` maps to `.lead` class - exact match!
+
+## Real-World Refactoring Examples
+
+### Example 1: Card Component
+```tsx
+// Before: Hardcoded typography
+<div className="p-6 border rounded-lg">
+  <h1 className="text-xl font-semibold text-gray-900">Card Title</h1>
+  <p className="text-sm text-muted-foreground">Description</p>
+  <div className="text-2xl font-bold">Value</div>
+</div>
+
+// After: Semantic typography
+<div className="p-6 border rounded-lg">
+  <h4 className="text-gray-900">Card Title</h4>
+  <p className="muted">Description</p>
+  <h3>Value</h3>
+</div>
+```
+
+**Mapping Logic**:
+- `text-xl font-semibold` → `h4` (closest match: text-xl font-semibold)
+- `text-sm` → `.muted` (exact match)
+- `text-2xl font-bold` → `h3` (closest match: text-2xl font-semibold)
+
+### Example 2: Form Section
+```tsx
+// Before: Mixed hardcoded classes
+<div className="space-y-4">
+  <h3 className="font-semibold text-lg mb-2">Section Title</h3>
+  <label className="text-sm font-medium text-gray-500">Field Label</label>
+  <p className="text-xs text-muted-foreground">Help text</p>
+</div>
+
+// After: Semantic typography
+<div className="space-y-4">
+  <h5 className="mb-2">Section Title</h5>
+  <label className="muted text-gray-500">Field Label</label>
+  <p className="muted">Help text</p>
+</div>
+```
+
+**Mapping Logic**:
+- `text-lg font-semibold` → `h5` (exact match)
+- `text-sm font-medium` → `.muted` (closest match for size)
+- `text-xs` → `.muted` (closest match for size)
+
+### Example 3: Navigation Component
+```tsx
+// Before: Hardcoded in navigation
+<span className="font-bold">{displayName}</span>
+<nav className="grid grid-flow-row auto-rows-max text-sm">
+  <a className="text-sm font-medium hover:underline">Menu Item</a>
+</nav>
+
+// After: Semantic typography
+<span>{displayName}</span>
+<nav className="grid grid-flow-row auto-rows-max muted">
+  <a className="muted hover:underline">Menu Item</a>
+</nav>
+```
+
+**Mapping Logic**:
+- `font-bold` → Remove (use default heading weight)
+- `text-sm` → `.muted` (exact match)
+- `text-sm font-medium` → `.muted` (closest match for size)
+
+## Advanced Mapping Scenarios
+
+### Scenario 1: No Exact Font Weight Match
+```tsx
+// Before: font-medium (no exact match in typography system)
+<div className="text-lg font-medium text-gray-900">
+  Section Title
+</div>
+
+// After: Use closest available weight
+<h5 className="text-gray-900">
+  Section Title
+</h5>
+```
+
+**Logic**: `text-lg font-medium` → `h5` (text-lg font-semibold) - closest match for size, weight is slightly different but acceptable.
+
+### Scenario 2: Text Size Between Defined Elements
+```tsx
+// Before: text-base (between h6 and p)
+<div className="text-base font-semibold text-gray-900">
+  Group Title
+</div>
+
+// After: Choose based on semantic meaning
+<h6 className="text-gray-900">
+  Group Title
+</h6>
+```
+
+**Logic**: `text-base font-semibold` → `h6` (text-base font-semibold) - exact match!
+
+### Scenario 3: Multiple Typography Classes
+```tsx
+// Before: Complex combination
+<div className="text-sm font-medium text-muted-foreground leading-tight">
+  Metadata text
+</div>
+
+// After: Simplify to semantic element
+<p className="muted leading-tight">
+  Metadata text
+</p>
+```
+
+**Logic**: `text-sm font-medium text-muted-foreground` → `.muted` (text-sm text-muted-foreground) - exact match for size and color, weight difference is minimal.
+
+## Project Setup Template
+
+### 1. Create Typography CSS File
+```css
+/* src/styles/typography.css */
+@layer base {
+  /* Headings */
+  h1 { @apply scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl; }
+  h2 { @apply scroll-m-20 text-3xl font-bold tracking-tight first:mt-0; }
+  h3 { @apply scroll-m-20 text-2xl font-semibold tracking-tight; }
+  h4 { @apply scroll-m-20 text-xl font-semibold tracking-tight; }
+  h5 { @apply scroll-m-20 text-lg font-semibold tracking-tight; }
+  h6 { @apply scroll-m-20 text-base font-semibold tracking-tight; }
+  
+  /* Text Elements */
+  p { @apply leading-6 text-muted-foreground; }
+  .lead { @apply text-xl text-muted-foreground; }
+  .muted { @apply text-sm text-muted-foreground; }
+  
+  /* Inline Elements */
+  code { @apply relative rounded bg-muted px-[0.3rem] py-[0.2rem] font-mono text-sm font-semibold; }
+  small { @apply text-sm font-medium leading-none; }
+  
+  /* Links */
+  a { @apply font-medium text-primary hover:text-primary/80; }
+}
+```
+
+### 2. Import Globally
+```css
+/* src/app/globals.css */
+@import './typography.css';
+```
+
+### 3. Component Template
+```tsx
+// ✅ Good - Semantic typography
+export function MyComponent() {
+  return (
+    <div className="p-6 border rounded-lg">
+      <h2 className="mb-4">Component Title</h2>
+      <p className="lead mb-4">Component description</p>
+      <div className="space-y-4">
+        <h4>Section Title</h4>
+        <p>Section content</p>
+        <small className="muted">Additional info</small>
+      </div>
+    </div>
+  );
+}
+
+// ❌ Bad - Hardcoded typography
+export function MyComponent() {
+  return (
+    <div className="p-6 border rounded-lg">
+      <div className="text-3xl font-bold mb-4">Component Title</div>
+      <div className="text-xl text-muted-foreground mb-4">Component description</div>
+      <div className="space-y-4">
+        <div className="text-xl font-semibold">Section Title</div>
+        <div className="text-base">Section content</div>
+        <div className="text-sm text-muted-foreground">Additional info</div>
+      </div>
+    </div>
+  );
+}
+```
+
+## Common Patterns & Anti-Patterns
+
+### ✅ Good Patterns
+- **Headings**: `<h1>`, `<h2>`, `<h3>`, `<h4>`, `<h5>`, `<h6>`
+- **Body Text**: `<p>`, `<p className="lead">`, `<p className="muted">`
+- **Captions**: `<small>`, `<small className="muted">`
+- **Code**: `<code>`, `<pre>`
+- **Lists**: `<ul>`, `<ol>`, `<li>`
+
+### ❌ Anti-Patterns
+- **Hardcoded**: `<div className="text-2xl font-bold">Title</div>`
+- **Mixed**: `<span className="text-lg font-semibold">Heading</span>`
+- **Generic**: `<div className="font-medium">Text</div>`
+- **Over-specific**: `<p className="text-sm font-normal leading-6">Content</p>`
+
+## Benefits
+
+- **Consistency**: All text follows the same scale and weight system
+- **Maintainability**: Typography changes happen in one place
+- **Accessibility**: Semantic HTML improves screen reader experience
+- **Performance**: Fewer CSS classes to process
+- **Design System**: Easier to maintain visual hierarchy
+- **Scalability**: Easy to add new typography variants
+- **Team Collaboration**: Clear rules for all developers
+
+## File Location
+
+Typography styles are defined in: `src/styles/typography.css`
+
+This file is imported globally and provides the foundation for all typography across the application.
+
+## Quick Reference
+
+| Use Case | Element | Example |
+|----------|---------|---------|
+| Main title | `<h1>` | Page headers, hero titles |
+| Section | `<h2>` | Major content sections |
+| Subsection | `<h3>` | Content groups, card headers |
+| Group title | `<h4>` | Form sections, sidebar titles |
+| Small heading | `<h5>` | List titles, micro sections |
+| Micro title | `<h6>` | Smallest headings |
+| Intro text | `<p className="lead">` | Large descriptive text |
+| Body text | `<p>` | Regular content |
+| Small text | `<p className="muted">` | Captions, secondary info |
+| Code | `<code>` | Inline code snippets |
+| Captions | `<small>` | Fine print, metadata |
+
+## Troubleshooting & Best Practices
+
+### Common Issues & Solutions
+
+#### Issue: Component looks different after refactoring
+**Solution**: 
+- Ensure you mapped to the **closest** typography element
+- Check that you preserved all other styling classes
+- Verify the mapping in your typography system
+
+#### Issue: No exact match for font weight
+**Solution**:
+- Use the closest available weight (e.g., `font-medium` → `font-semibold`)
+- Consider adding new typography variants if needed
+- Document the mapping for team reference
+
+#### Issue: Text size doesn't match exactly
+**Solution**:
+- Map to the next larger size if no exact match
+- Use utility classes for fine-tuning when necessary
+- Keep the visual hierarchy intact
+
+### Performance Tips
+
+1. **Avoid over-engineering**: Don't create too many typography variants
+2. **Use CSS custom properties**: For dynamic typography (themes, etc.)
+3. **Leverage Tailwind's @apply**: Keep typography definitions clean
+4. **Minimize CSS bundle**: Only include what you actually use
+
+### Team Collaboration
+
+1. **Code Review Checklist**:
+   - [ ] No hardcoded `text-*` or `font-*` classes
+   - [ ] Proper semantic HTML structure
+   - [ ] Typography follows design system
+   - [ ] Visual appearance maintained
+
+2. **Documentation**:
+   - Keep typography scale updated
+   - Document any custom variants
+   - Share examples of good/bad patterns
+
+3. **Consistency**:
+   - Use the same mapping across all components
+   - Follow established patterns
+   - Ask questions when unsure about mapping
+
+### Migration Strategy
+
+1. **Phase 1**: High-impact components (headers, main content)
+2. **Phase 2**: Feature components (forms, cards, lists)
+3. **Phase 3**: Utility components (buttons, badges, modals)
+4. **Phase 4**: Documentation and examples
+
+### Testing Checklist
+
+- [ ] **Visual regression**: Component looks identical
+- [ ] **Accessibility**: Screen readers work correctly
+- [ ] **Responsive**: Typography scales properly
+- [ ] **Performance**: No CSS bloat introduced
+- [ ] **Consistency**: Matches design system

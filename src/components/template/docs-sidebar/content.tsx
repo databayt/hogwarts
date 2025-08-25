@@ -70,7 +70,7 @@ export function DocsSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) 
             <SidebarMenuButton size="lg" asChild>
               <Link href="/docs" className="flex items-center" onClick={handleLinkClick}>
                 <div className="flex flex-col leading-none">
-                  <span className="font-medium text-base text-foreground -ml-1">Documentation</span>
+                  <span className="font-medium text-foreground -ml-1">Documentation</span>
                 </div>
               </Link>
             </SidebarMenuButton>
@@ -86,7 +86,7 @@ export function DocsSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) 
                 return (
                   <SidebarMenuItem key={item.href}>
                     <SidebarMenuButton asChild isActive={isActive} size="sm">
-                      <Link href={item.href} className="text-sm font-normal" onClick={handleLinkClick}>
+                      <Link href={item.href} className="muted font-normal" onClick={handleLinkClick}>
                         {item.title}
                       </Link>
                     </SidebarMenuButton>

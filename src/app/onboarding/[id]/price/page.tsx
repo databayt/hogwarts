@@ -110,7 +110,7 @@ const PricePageContent = ({ params }: PricePageProps) => {
                   e.currentTarget.setSelectionRange(2, 2);
                 }
               }}
-              className="display text-foreground border-none outline-none text-center w-auto min-w-0 bg-transparent text-6xl font-extrabold"
+              className="display text-foreground border-none outline-none text-center w-auto min-w-0 bg-transparent font-extrabold"
               style={{ 
                 width: `${(`SDG${price}`).length * 0.8}em`,
                 caretColor: 'var(--foreground)'

@@ -37,7 +37,7 @@ export default function SaasSidebar() {
                 return (
                   <SidebarMenuItem key={item.href}>
                     <SidebarMenuButton asChild isActive={isActive} size="sm">
-                      <Link href={item.href} className="text-sm font-normal" onClick={handleLinkClick}>
+                      <Link href={item.href} className="muted font-normal" onClick={handleLinkClick}>
                         <span className={`mr-2 inline-flex items-center justify-center ${
                           item.className ? "size-auto" : "size-4"
                         }`}>

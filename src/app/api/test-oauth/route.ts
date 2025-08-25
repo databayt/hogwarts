@@ -1,37 +1,38 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { secureDebugEndpoint, createDebugResponse, getSafeEnvVars } from '@/lib/debug-security';
 
 export async function GET(request: NextRequest) {
+  return secureDebugEndpoint(request, async (req) => {
   try {
-    // Test environment variables
-    const envCheck = {
-      GOOGLE_CLIENT_ID: !!process.env.GOOGLE_CLIENT_ID,
-      GOOGLE_CLIENT_SECRET: !!process.env.GOOGLE_CLIENT_SECRET,
-      FACEBOOK_CLIENT_ID: !!process.env.FACEBOOK_CLIENT_ID,
-      FACEBOOK_CLIENT_SECRET: !!process.env.FACEBOOK_CLIENT_SECRET,
-      AUTH_SECRET: !!process.env.AUTH_SECRET,
-      NEXTAUTH_URL: process.env.NEXTAUTH_URL,
-      NODE_ENV: process.env.NODE_ENV
+    // Use safe environment variables
+    const envCheck = getSafeEnvVars();
+
+    // Only show OAuth URLs are configured, not the actual URLs with secrets
+    const oauthStatus = {
+      facebook: {
+        clientIdConfigured: !!process.env.FACEBOOK_CLIENT_ID,
+        clientSecretConfigured: !!process.env.FACEBOOK_CLIENT_SECRET,
+        callbackUrl: `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/auth/callback/facebook`
+      },
+      google: {
+        clientIdConfigured: !!process.env.GOOGLE_CLIENT_ID,
+        clientSecretConfigured: !!process.env.GOOGLE_CLIENT_SECRET,
+        callbackUrl: `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/auth/callback/google`
+      }
     };
 
-    // Test OAuth URLs
-    const oauthUrls = {
-      facebook: `https://www.facebook.com/v18.0/dialog/oauth?client_id=${process.env.FACEBOOK_CLIENT_ID}&redirect_uri=${encodeURIComponent(process.env.NEXTAUTH_URL || 'http://localhost:3000')}/api/auth/callback/facebook&scope=email`,
-      google: `https://accounts.google.com/o/oauth2/v2/auth?client_id=${process.env.GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(process.env.NEXTAUTH_URL || 'http://localhost:3000')}/api/auth/callback/google&scope=openid%20email%20profile&response_type=code`
-    };
-
-    return NextResponse.json({
+    return createDebugResponse({
       success: true,
-      timestamp: new Date().toISOString(),
       environment: envCheck,
-      oauthUrls,
-      message: 'OAuth configuration test completed'
+      oauthStatus,
+      message: 'OAuth configuration test completed (secured)'
     });
   } catch (error) {
     console.error('OAuth test error:', error);
-    return NextResponse.json({
+    return createDebugResponse({
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
-      timestamp: new Date().toISOString()
+      error: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 });
   }
+  });
 }

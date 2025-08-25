@@ -61,7 +61,7 @@ export default function PaidInvoicePage() {
         <Link href={"/invoice"} className={buttonVariants({ size: "icon" })}>
           <ArrowLeft />
         </Link>
-        <h1 className="text-xl font-semibold"> Invoice Status</h1>
+        <h1 className="font-semibold"> Invoice Status</h1>
       </div>
 
       <div className="min-h-[calc(100dvh-200px)] relative flex justify-center flex-col items-center">

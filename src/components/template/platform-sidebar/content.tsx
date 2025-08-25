@@ -45,7 +45,7 @@ export default function PlatformSidebar({ school, ...props }: PlatformSidebarPro
             <SidebarMenuButton size="lg" asChild>
               <Link href="/dashboard" className="flex items-center" onClick={handleLinkClick}>
                 <div className="flex flex-col leading-none">
-                  <span className="font-medium text-base text-foreground -ml-1">{schoolName}</span>
+                  <span className="font-medium text-foreground -ml-1">{schoolName}</span>
                 </div>
               </Link>
             </SidebarMenuButton>
@@ -63,7 +63,7 @@ export default function PlatformSidebar({ school, ...props }: PlatformSidebarPro
                 return (
                   <SidebarMenuItem key={item.href}>
                     <SidebarMenuButton asChild isActive={isActive} size="sm">
-                      <Link href={item.href} className="text-sm font-normal" onClick={handleLinkClick}>
+                      <Link href={item.href} className="muted font-normal" onClick={handleLinkClick}>
                         <span className={`mr-2 inline-flex items-center justify-center ${
                           item.className ? "size-auto" : "size-4"
                         }`}>

@@ -1,7 +1,8 @@
 import { NextResponse, NextRequest } from "next/server";
-import { authRoutes } from "@/routes";
+import { authRoutes, publicRoutes, apiAuthPrefix } from "@/routes";
+import { auth } from "@/auth";
 
-export function middleware(req: NextRequest) {
+export async function middleware(req: NextRequest) {
   const url = req.nextUrl.clone();
   const host = req.headers.get("host") || "";
   const userAgent = req.headers.get("user-agent") || "";
@@ -10,11 +11,15 @@ export function middleware(req: NextRequest) {
   // Ignore static files and Next internals
   if (
     url.pathname.startsWith("/_next") ||
-    url.pathname.startsWith("/api") ||
+    url.pathname.startsWith(apiAuthPrefix) ||
     url.pathname.match(/\.(png|jpg|jpeg|gif|ico|svg|css|js|woff2?)$/)
   ) {
     return NextResponse.next();
   }
+
+  // Get session for authentication check
+  const session = await auth();
+  const isLoggedIn = !!session?.user;
 
   // Debug logging for subdomain handling
   console.log('🌐 MIDDLEWARE REQUEST:', {
@@ -30,6 +35,47 @@ export function middleware(req: NextRequest) {
   if (authRoutes.includes(url.pathname)) {
     console.log('🔐 AUTH ROUTE - No rewrite:', { pathname: url.pathname, host });
     return NextResponse.next();
+  }
+
+  // Authentication protection for protected routes
+  const isPublicRoute = publicRoutes.includes(url.pathname);
+  const isOnboardingRoute = url.pathname.startsWith('/onboarding');
+  
+  // Redirect to login if accessing protected routes without authentication
+  if (!isLoggedIn && !isPublicRoute) {
+    console.log('🚫 UNAUTHORIZED ACCESS - Redirecting to login:', { 
+      pathname: url.pathname, 
+      host, 
+      isLoggedIn,
+      isPublicRoute 
+    });
+    
+    const loginUrl = new URL('/login', req.url);
+    loginUrl.searchParams.set('callbackUrl', req.url);
+    return NextResponse.redirect(loginUrl);
+  }
+
+  // Special handling for onboarding routes - require authentication
+  if (isOnboardingRoute && !isLoggedIn) {
+    console.log('🎓 ONBOARDING ACCESS DENIED - Redirecting to login:', { 
+      pathname: url.pathname, 
+      host,
+      userId: session?.user?.id 
+    });
+    
+    const loginUrl = new URL('/login', req.url);
+    loginUrl.searchParams.set('callbackUrl', req.url);
+    loginUrl.searchParams.set('message', 'Please sign in to continue with school setup');
+    return NextResponse.redirect(loginUrl);
+  }
+
+  // If user is logged in and accessing auth routes, redirect to dashboard
+  if (isLoggedIn && authRoutes.includes(url.pathname)) {
+    console.log('🏠 ALREADY LOGGED IN - Redirecting to dashboard:', { 
+      pathname: url.pathname, 
+      userId: session?.user?.id 
+    });
+    return NextResponse.redirect(new URL('/dashboard', req.url));
   }
 
   // Case 1: ed.databayt.org = marketing

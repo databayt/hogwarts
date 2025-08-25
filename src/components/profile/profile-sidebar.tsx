@@ -82,10 +82,10 @@ export default function ProfileSidebar({ role, data }: ProfileSidebarProps) {
 
       {/* User Info */}
       <div>
-        <h1 className="text-2xl font-bold text-foreground mb-1">{roleInfo.title}</h1>
-        <p className="text-muted-foreground text-sm mb-2">{roleInfo.subtitle}</p>
-        <p className="text-muted-foreground text-sm mb-2">{roleInfo.description}</p>
-        <p className="text-muted-foreground text-sm">Academic Year: 2024-25</p>
+        <h1 className="text-foreground mb-1">{roleInfo.title}</h1>
+        <p className="muted mb-2">{roleInfo.subtitle}</p>
+        <p className="muted mb-2">{roleInfo.description}</p>
+        <p className="muted">Academic Year: 2024-25</p>
       </div>
 
       {/* Action Button */}
@@ -94,7 +94,7 @@ export default function ProfileSidebar({ role, data }: ProfileSidebarProps) {
       </button>
 
       {/* Academic Stats */}
-      <div className="flex space-x-4 text-sm">
+      <div className="flex space-x-4 muted">
         <span className="text-muted-foreground">
           <span className="text-foreground font-semibold">8</span> subjects
         </span>
@@ -121,7 +121,7 @@ export default function ProfileSidebar({ role, data }: ProfileSidebarProps) {
           <span className="text-2xl">🔬</span>
         </div>
         <div className="w-12 h-12 rounded-full flex items-center justify-center" title="GPA">
-          <span className="text-xl font-bold">3.8</span>
+          <span className="text-xl">3.8</span>
         </div>
       </div>
     </div>

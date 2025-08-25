@@ -34,7 +34,7 @@ export default function SectionHeading({
     <div className={cn("flex flex-col items-center space-y-2 text-center pt-20", className)}>
       <h2 
         className={cn(
-          "font-heading text-2xl leading-[1.1] sm:text-3xl md:text-5xl",
+          "font-heading leading-[1.1]",
           titleClassName
         )}
       >
@@ -44,7 +44,7 @@ export default function SectionHeading({
       {(description || linkText) && (
         <p 
           className={cn(
-            "pb-8 leading-normal text-muted-foreground sm:text-lg sm:leading-7 max-w-3xl",
+            "pb-8 leading-normal text-muted-foreground sm:leading-7 max-w-3xl",
             descriptionClassName
           )}
         >

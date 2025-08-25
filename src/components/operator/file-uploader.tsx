@@ -256,7 +256,7 @@ export function FileUploader(props: FileUploaderProps) {
                   <p className='text-muted-foreground font-medium'>
                     Drag {`'n'`} drop files here, or click to select files
                   </p>
-                  <p className='text-muted-foreground/70 text-sm'>
+                  <p className='muted'>
                     You can upload
                     {maxFiles > 1
                       ? ` ${maxFiles === Infinity ? 'multiple' : maxFiles}
@@ -309,10 +309,10 @@ function FileCard({ file, progress, onRemove }: FileCardProps) {
         ) : null}
         <div className='flex w-full flex-col gap-2'>
           <div className='space-y-px'>
-            <p className='text-foreground/80 line-clamp-1 text-sm font-medium'>
+            <h6 className='line-clamp-1'>
               {file.name}
-            </p>
-            <p className='text-muted-foreground text-xs'>
+            </h6>
+            <p className='muted'>
               {formatBytes(file.size)}
             </p>
           </div>

@@ -21,13 +21,13 @@ export function MarketingFooter() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 lg:gap-20 lg:flex  lg:items-start px-0 text-center lg:text-left">
               {footerSections.map((section) => (
                 <div key={section.title} className="w-full lg:flex-1">
-                  <h3 className="text-sm font-medium mb-4">{section.title}</h3>
+                  <h3 className="muted font-medium mb-4">{section.title}</h3>
                   <ul className="space-y-2">
                     {section.links.map((link) => (
                       <li key={link.href}>
                         <Link
                           href={link.href}
-                          className="text-xs font-normal lg:text-sm text-primary/70 hover:text-primary transition-colors"
+                          className="text-xs font-normal lg:muted text-primary/70 hover:text-primary transition-colors"
                         >
                           {link.text}
                         </Link>
@@ -45,7 +45,7 @@ export function MarketingFooter() {
           <div className="flex flex-col lg:flex-row items-start lg:items-center gap-4 lg:gap-10">
             <Link href="/" className="hidden items-center gap-2 md:flex">
               <Logo width={32} height={32} className="text-foreground" />
-              <h1 className="text-2xl font-bold">Databayt</h1>
+              <h1 className="font-bold">Databayt</h1>
             </Link>
             <div className="w-full lg:w-[75%] text-xs text-primary/70 ">
               <div className="flex flex-wrap items-center justify-center lg:justify-start gap-1 mt-2">

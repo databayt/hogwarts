@@ -3,8 +3,12 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { auth } from "@/auth";
 import { db } from "@/lib/db";
+import { 
+  requireSchoolOwnership,
+  createActionResponse,
+  type ActionResponse 
+} from "@/lib/auth-security";
 import { joinSchema } from "./validation";
 
 export type JoinFormData = z.infer<typeof joinSchema>;
@@ -12,12 +16,10 @@ export type JoinFormData = z.infer<typeof joinSchema>;
 export async function updateJoinSettings(
   schoolId: string,
   data: JoinFormData
-) {
+): Promise<ActionResponse> {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      throw new Error("Authentication required");
-    }
+    // Validate user has ownership/access to this school
+    await requireSchoolOwnership(schoolId);
 
     const validatedData = joinSchema.parse(data);
 
@@ -25,11 +27,7 @@ export async function updateJoinSettings(
     // Note: These fields are not in current schema, storing in email field temporarily
     const joinSettings = JSON.stringify(validatedData);
     const updatedSchool = await db.school.update({
-      where: { 
-        id: schoolId,
-        // TODO: Add multi-tenant safety with schoolId from session
-        // schoolId: session.schoolId 
-      },
+      where: { id: schoolId },
       data: {
         email: `join-settings:${joinSettings}`, // Temporary storage
         updatedAt: new Date(),
@@ -38,43 +36,27 @@ export async function updateJoinSettings(
 
     revalidatePath(`/onboarding/${schoolId}/join`);
     
-    return {
-      success: true,
-      data: updatedSchool,
-    };
+    return createActionResponse(updatedSchool);
   } catch (error) {
-    console.error("Error updating join settings:", error);
-    
     if (error instanceof z.ZodError) {
-      return {
-        success: false,
-        errors: error.issues.reduce((acc: Record<string, string>, curr: any) => {
-          acc[curr.path[0] as string] = curr.message;
-          return acc;
-        }, {} as Record<string, string>),
-      };
+      return createActionResponse(undefined, {
+        message: "Validation failed",
+        name: "ValidationError",
+        issues: error.issues
+      });
     }
-
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "An error occurred",
-    };
+    
+    return createActionResponse(undefined, error);
   }
 }
 
-export async function getJoinSettings(schoolId: string) {
+export async function getJoinSettings(schoolId: string): Promise<ActionResponse> {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      throw new Error("Authentication required");
-    }
+    // Validate user has ownership/access to this school
+    await requireSchoolOwnership(schoolId);
 
     const school = await db.school.findUnique({
-      where: { 
-        id: schoolId,
-        // TODO: Add multi-tenant safety
-        // schoolId: session.schoolId 
-      },
+      where: { id: schoolId },
       select: {
         id: true,
         email: true, // Temporary field for join settings
@@ -102,25 +84,16 @@ export async function getJoinSettings(schoolId: string) {
       }
     }
 
-    return {
-      success: true,
-      data: joinSettings,
-    };
+    return createActionResponse(joinSettings);
   } catch (error) {
-    console.error("Error fetching join settings:", error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "An error occurred",
-    };
+    return createActionResponse(undefined, error);
   }
 }
 
 export async function proceedToVisibility(schoolId: string) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      throw new Error("Authentication required");
-    }
+    // Validate user has ownership/access to this school
+    await requireSchoolOwnership(schoolId);
 
     revalidatePath(`/onboarding/${schoolId}`);
   } catch (error) {

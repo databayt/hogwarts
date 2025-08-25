@@ -213,7 +213,7 @@ export default function AdmissionContent({ school }: AdmissionContentProps) {
                       <h3 className="text-lg font-semibold mb-2">
                         {step.title}
                       </h3>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="muted text-muted-foreground">
                         {step.description}
                       </p>
                     </div>
@@ -234,7 +234,7 @@ export default function AdmissionContent({ school }: AdmissionContentProps) {
                       <h3 className="text-lg font-semibold mb-2">
                         {step.title}
                       </h3>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="muted text-muted-foreground">
                         {step.description}
                       </p>
                     </div>
@@ -282,7 +282,7 @@ export default function AdmissionContent({ school }: AdmissionContentProps) {
                   </CardDescription>
                   <ul className="space-y-2">
                     {requirement.requirements.map((req, reqIndex) => (
-                      <li key={reqIndex} className="flex items-center text-sm">
+                      <li key={reqIndex} className="flex items-center muted">
                         <CheckCircle className="w-4 h-4 text-green-500 mr-3 flex-shrink-0" />
                         {req}
                       </li>
@@ -318,7 +318,7 @@ export default function AdmissionContent({ school }: AdmissionContentProps) {
                   <CardDescription className="font-semibold mb-2">
                     {date.event}
                   </CardDescription>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="muted text-muted-foreground">
                     {date.description}
                   </p>
                 </CardContent>

@@ -163,13 +163,13 @@ export function DirectoryStructure({ className }: DirectoryStructureProps) {
       >
         <FileIcon type={item.type} />
         <div className="flex-1 min-w-0 flex items-center gap-2">
-          <code className={`text-sm bg-transparent px-0 py-0 ${
+          <code className={`muted bg-transparent px-0 py-0 ${
             item.type === 'directory' ? 'font-semibold' : ''
           }`}>
             {item.name}
           </code>
           {item.description && (
-            <span className="text-sm text-muted-foreground">
+            <span className="muted text-muted-foreground">
               — {item.description}
             </span>
           )}

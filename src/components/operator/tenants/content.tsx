@@ -26,7 +26,7 @@ interface Tenant {
   isActive: boolean;
 }
 
-export default function TenantsContent() {
+export function TenantsContent() {
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);

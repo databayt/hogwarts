@@ -1,66 +1,54 @@
 "use client"
 
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { titleSchema, TitleFormData } from './validation'
-import { useListing, useHostNavigation } from '../use-listing'
-import { STEP_NAVIGATION, FORM_LIMITS } from '../constants'
+import { useState, useEffect } from 'react'
+import { getSchoolTitle } from './actions'
+import { type TitleFormData } from './validation'
 
-export function useTitle() {
-  const { listing, updateListingData, isLoading, error } = useListing()
-  const { goToNextStep, goToPreviousStep } = useHostNavigation('title')
+interface UseTitleReturn {
+  data: TitleFormData | null
+  loading: boolean
+  error: string | null
+  refresh: () => Promise<void>
+}
 
-  const form = useForm<TitleFormData>({
-    resolver: zodResolver(titleSchema),
-    defaultValues: {
-      title: listing?.name || '',
-    },
-    mode: 'onChange',
-  })
+export function useTitle(schoolId: string): UseTitleReturn {
+  const [data, setData] = useState<TitleFormData | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  const title = form.watch('title')
-  const characterCount = title?.length || 0
-  const remainingCharacters = FORM_LIMITS.TITLE_MAX_LENGTH - characterCount
-
-  const onSubmit = async (data: TitleFormData) => {
+  const fetchTitle = async () => {
+    if (!schoolId) return
+    
     try {
-      console.log('📝 Title - Submitting:', data)
+      setLoading(true)
+      setError(null)
+      const result = await getSchoolTitle(schoolId)
       
-      // Update the listing with the title
-      await updateListingData({
-        title: data.title,
-      })
-
-      // Navigate to next step
-      const nextStep = STEP_NAVIGATION['title'].next
-      if (nextStep) {
-        goToNextStep(nextStep)
+      if (result.success) {
+        setData(result.data)
+      } else {
+        setError(result.error || 'Failed to fetch title')
       }
-    } catch (error) {
-      console.error('❌ Error submitting title form:', error)
+    } catch (err) {
+      setError('An unexpected error occurred')
+      console.error('Error fetching title:', err)
+    } finally {
+      setLoading(false)
     }
   }
 
-  const onBack = () => {
-    const previousStep = STEP_NAVIGATION['title'].previous
-    if (previousStep) {
-      goToPreviousStep(previousStep)
-    }
-  }
+  useEffect(() => {
+    fetchTitle()
+  }, [schoolId])
 
-  const isFormValid = form.formState.isValid
-  const isDirty = form.formState.isDirty
+  const refresh = async () => {
+    await fetchTitle()
+  }
 
   return {
-    form,
-    onSubmit: form.handleSubmit(onSubmit),
-    onBack,
-    isLoading,
+    data,
+    loading,
     error,
-    isFormValid,
-    isDirty,
-    title,
-    characterCount,
-    remainingCharacters,
+    refresh
   }
 } 

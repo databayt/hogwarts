@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server'
+import { secureDebugEndpoint, createDebugResponse, getSafeEnvVars } from '@/lib/debug-security';
 
 function extractSubdomain(request: NextRequest): string | null {
   const url = request.url;
@@ -6,11 +7,11 @@ function extractSubdomain(request: NextRequest): string | null {
   const hostname = host.split(':')[0];
   const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'localhost:3000';
 
-  console.log('🔍 TEST ENDPOINT - Subdomain extraction:', {
-    url,
+  console.log('🔍 TEST ENDPOINT - Subdomain extraction (AUTHORIZED):', {
+    url: url.split('?')[0], // Remove query params for security
     host,
     hostname,
-    rootDomain,
+    rootDomain: rootDomain ? '[CONFIGURED]' : '[NOT_SET]',
     environment: process.env.NODE_ENV
   });
 
@@ -55,24 +56,25 @@ function extractSubdomain(request: NextRequest): string | null {
 }
 
 export async function GET(request: NextRequest) {
-  const host = request.headers.get('host') || 'unknown'
-  const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN
-  const subdomain = extractSubdomain(request)
-  
-  return Response.json({ 
-    success: true,
-    host,
-    rootDomain,
-    subdomain,
-    subdomainDetection: {
-      hostEndsWithRoot: rootDomain ? host?.endsWith("." + rootDomain) : false,
-      dotRootDomain: rootDomain ? "." + rootDomain : null,
-      subdomainEndIndex: rootDomain ? host.lastIndexOf("." + rootDomain) : -1,
-      extractedSubdomain: subdomain
-    },
-    environment: process.env.NODE_ENV,
-    timestamp: new Date().toISOString(),
-    message: "Subdomain detection test - using middleware logic"
-  })
+  return secureDebugEndpoint(request, async (req) => {
+    const host = request.headers.get('host') || 'unknown'
+    const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN
+    const subdomain = extractSubdomain(request)
+    
+    return createDebugResponse({ 
+      success: true,
+      host,
+      rootDomain: rootDomain ? '[CONFIGURED]' : '[NOT_SET]',
+      subdomain,
+      subdomainDetection: {
+        hostEndsWithRoot: rootDomain ? host?.endsWith("." + rootDomain) : false,
+        dotRootDomain: rootDomain ? "[CONFIGURED]" : null,
+        subdomainEndIndex: rootDomain ? host.lastIndexOf("." + rootDomain) : -1,
+        extractedSubdomain: subdomain
+      },
+      environment: getSafeEnvVars(),
+      message: "Subdomain detection test (secured) - using middleware logic"
+    });
+  });
 }
 

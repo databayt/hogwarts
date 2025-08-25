@@ -1,66 +1,54 @@
 "use client"
 
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { descriptionSchema, DescriptionFormData } from './validation'
-import { useListing, useHostNavigation } from '../use-listing'
-import { STEP_NAVIGATION, FORM_LIMITS } from '../constants'
+import { useState, useEffect } from 'react'
+import { getSchoolDescription } from './actions'
+import { type DescriptionFormData } from './validation'
 
-export function useDescription() {
-  const { listing, updateListingData, isLoading, error } = useListing()
-  const { goToNextStep, goToPreviousStep } = useHostNavigation('description')
+interface UseDescriptionReturn {
+  data: DescriptionFormData | null
+  loading: boolean
+  error: string | null
+  refresh: () => Promise<void>
+}
 
-  const form = useForm<DescriptionFormData>({
-    resolver: zodResolver(descriptionSchema),
-    defaultValues: {
-      schoolLevel: listing?.schoolLevel || 'primary',
-      schoolType: listing?.schoolType || 'private',
-    },
-    mode: 'onChange',
-  })
+export function useDescription(schoolId: string): UseDescriptionReturn {
+  const [data, setData] = useState<DescriptionFormData | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  const schoolLevel = form.watch('schoolLevel')
-  const schoolType = form.watch('schoolType')
-
-  const onSubmit = async (data: DescriptionFormData) => {
+  const fetchDescription = async () => {
+    if (!schoolId) return
+    
     try {
-      console.log('📝 Description - Submitting:', data)
+      setLoading(true)
+      setError(null)
+      const result = await getSchoolDescription(schoolId)
       
-      // Update the listing with the description
-      await updateListingData({
-        schoolLevel: data.schoolLevel,
-        schoolType: data.schoolType,
-      })
-
-      // Navigate to next step
-      const nextStep = STEP_NAVIGATION['description'].next
-      if (nextStep) {
-        goToNextStep(nextStep)
+      if (result.success) {
+        setData(result.data)
+      } else {
+        setError(result.error || 'Failed to fetch description')
       }
-    } catch (error) {
-      console.error('❌ Error submitting description form:', error)
+    } catch (err) {
+      setError('An unexpected error occurred')
+      console.error('Error fetching description:', err)
+    } finally {
+      setLoading(false)
     }
   }
 
-  const onBack = () => {
-    const previousStep = STEP_NAVIGATION['description'].previous
-    if (previousStep) {
-      goToPreviousStep(previousStep)
-    }
-  }
+  useEffect(() => {
+    fetchDescription()
+  }, [schoolId])
 
-  const isFormValid = form.formState.isValid
-  const isDirty = form.formState.isDirty
+  const refresh = async () => {
+    await fetchDescription()
+  }
 
   return {
-    form,
-    onSubmit: form.handleSubmit(onSubmit),
-    onBack,
-    isLoading,
+    data,
+    loading,
     error,
-    isFormValid,
-    isDirty,
-    schoolLevel,
-    schoolType,
+    refresh
   }
 } 

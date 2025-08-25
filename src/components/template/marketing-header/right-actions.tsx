@@ -17,7 +17,7 @@ export function RightActions({ isAuthenticated }: RightActionsProps) {
         <LogoutButton
           className={cn(
             buttonVariants({ variant: "ghost", size: "sm" }),
-            "px-4 text-xs cursor-pointer bg-muted"
+            "px-4 muted cursor-pointer bg-muted"
           )}
         >
           Logout
@@ -27,7 +27,7 @@ export function RightActions({ isAuthenticated }: RightActionsProps) {
           href="/login"
           className={cn(
             buttonVariants({ variant: "ghost", size: "sm" }),
-            "px-4 text-xs bg-muted"
+            "px-4 muted bg-muted"
           )}
         >
           Login

@@ -1,59 +1,54 @@
 "use client"
 
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { locationSchema, LocationFormData } from './validation'
-import { useListing, useHostNavigation } from '../use-listing'
-import { STEP_NAVIGATION } from '../constants.client'
+import { useState, useEffect } from 'react'
+import { getSchoolLocation } from './actions'
+import { type LocationFormData } from './validation'
 
-export function useLocation() {
-  const { listing, updateListingData, isLoading, error } = useListing()
-  const { goToNextStep, goToPreviousStep } = useHostNavigation('location')
+interface UseLocationReturn {
+  data: LocationFormData | null
+  loading: boolean
+  error: string | null
+  refresh: () => Promise<void>
+}
 
-  const form = useForm<LocationFormData>({
-    resolver: zodResolver(locationSchema),
-    defaultValues: {
-      address: listing?.address || '',
-    },
-    mode: 'onChange',
-  })
+export function useLocation(schoolId: string): UseLocationReturn {
+  const [data, setData] = useState<LocationFormData | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  const onSubmit = async (data: LocationFormData) => {
+  const fetchLocation = async () => {
+    if (!schoolId) return
+    
     try {
-      console.log('📍 Location - Submitting:', data)
+      setLoading(true)
+      setError(null)
+      const result = await getSchoolLocation(schoolId)
       
-      // Update the listing with the location data
-      await updateListingData({
-        address: data.address,
-      })
-
-      // Navigate to next step
-      const nextStep = STEP_NAVIGATION['location'].next
-      if (nextStep) {
-        goToNextStep(nextStep)
+      if (result.success) {
+        setData(result.data)
+      } else {
+        setError(result.error || 'Failed to fetch location')
       }
-    } catch (error) {
-      console.error('❌ Error submitting location form:', error)
+    } catch (err) {
+      setError('An unexpected error occurred')
+      console.error('Error fetching location:', err)
+    } finally {
+      setLoading(false)
     }
   }
 
-  const onBack = () => {
-    const previousStep = STEP_NAVIGATION['location'].previous
-    if (previousStep) {
-      goToPreviousStep(previousStep)
-    }
-  }
+  useEffect(() => {
+    fetchLocation()
+  }, [schoolId])
 
-  const isFormValid = form.formState.isValid
-  const isDirty = form.formState.isDirty
+  const refresh = async () => {
+    await fetchLocation()
+  }
 
   return {
-    form,
-    onSubmit: form.handleSubmit(onSubmit),
-    onBack,
-    isLoading,
+    data,
+    loading,
     error,
-    isFormValid,
-    isDirty,
+    refresh
   }
 } 
