@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { stopImpersonation } from "@/app/(platform)/operator/actions/impersonation/stop";
+import { stopImpersonation } from "@/components/operator/actions/impersonation/stop";
 
 export async function POST() {
   try {
