@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { startImpersonation } from "@/app/(platform)/operator/actions/impersonation/start";
+import { startImpersonation } from "@/components/operator/actions/impersonation/start";
 
 export async function POST(
   request: Request,
