@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { toggleTenantActive } from "@/app/(platform)/operator/actions/tenants/toggle-active";
+import { toggleTenantActive } from "@/components/operator/actions/tenants/toggle-active";
 
 export async function POST(
   request: Request,
