@@ -50,8 +50,8 @@ export default function TransactionsList() {
           <TableBody>
             <TableRow>
               <TableCell>
-                <div className="font-medium">Liam Johnson</div>
-                <div className="hidden text-sm text-muted-foreground md:inline">
+                <div>Liam Johnson</div>
+                <div className="hidden muted md:inline">
                   liam@example.com
                 </div>
               </TableCell>
@@ -68,8 +68,8 @@ export default function TransactionsList() {
             </TableRow>
             <TableRow>
               <TableCell>
-                <div className="font-medium">Olivia Smith</div>
-                <div className="hidden text-sm text-muted-foreground md:inline">
+                <div>Olivia Smith</div>
+                <div className="hidden muted md:inline">
                   olivia@example.com
                 </div>
               </TableCell>
@@ -86,8 +86,8 @@ export default function TransactionsList() {
             </TableRow>
             <TableRow>
               <TableCell>
-                <div className="font-medium">Noah Williams</div>
-                <div className="hidden text-sm text-muted-foreground md:inline">
+                <div>Noah Williams</div>
+                <div className="hidden muted md:inline">
                   noah@example.com
                 </div>
               </TableCell>
@@ -106,8 +106,8 @@ export default function TransactionsList() {
             </TableRow>
             <TableRow>
               <TableCell>
-                <div className="font-medium">Emma Brown</div>
-                <div className="hidden text-sm text-muted-foreground md:inline">
+                <div>Emma Brown</div>
+                <div className="hidden muted md:inline">
                   emma@example.com
                 </div>
               </TableCell>
@@ -124,8 +124,8 @@ export default function TransactionsList() {
             </TableRow>
             <TableRow>
               <TableCell>
-                <div className="font-medium">Liam Johnson</div>
-                <div className="hidden text-sm text-muted-foreground md:inline">
+                <div>Liam Johnson</div>
+                <div className="hidden muted md:inline">
                   liam@example.com
                 </div>
               </TableCell>

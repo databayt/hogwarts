@@ -192,6 +192,7 @@ const HostFooter: React.FC<HostFooterProps> = ({
               src="/logo.png"
               alt="Tent icon"
               fill
+              sizes="20px"
               className="object-contain"
             />
           </div>

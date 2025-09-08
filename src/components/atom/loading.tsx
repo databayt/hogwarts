@@ -1,52 +1,27 @@
-'use client'
-
-import React, { useState, useEffect } from 'react'
-import { cn } from '@/lib/utils'
+import React from "react";
 
 interface LoadingProps {
-  onComplete: () => void
+  onComplete?: () => void;
 }
 
-export const Loading: React.FC<LoadingProps> = ({ onComplete }) => {
-  const [count, setCount] = useState(0)
-  const [isAnimatingOut, setIsAnimatingOut] = useState(false)
-
-  useEffect(() => {
-    if (count < 100) {
-      const timeout = setTimeout(() => {
-        const increment = Math.floor(Math.random() * 8) + 1
-        setCount((prev) => Math.min(prev + increment, 100))
-      }, 50 + Math.random() * 100)
-
-      return () => clearTimeout(timeout)
-    } else {
-      const animationTimeout = setTimeout(() => {
-        setIsAnimatingOut(true)
-      }, 200)
-
-      // 200ms delay + 800ms animation = 1000ms
-      const completeTimeout = setTimeout(onComplete, 1000)
-
-      return () => {
-        clearTimeout(animationTimeout)
-        clearTimeout(completeTimeout)
-      }
+const Loading: React.FC<LoadingProps> = ({ onComplete }) => {
+  React.useEffect(() => {
+    if (onComplete) {
+      // Simulate loading completion after a short delay
+      const timer = setTimeout(() => {
+        onComplete();
+      }, 1000);
+      return () => clearTimeout(timer);
     }
-  }, [count, onComplete])
+  }, [onComplete]);
 
   return (
-    <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-white dark:bg-black">
-      {/* Clipping container for the single-line reveal effect */}
-      <div className="flex h-3 items-center justify-center overflow-hidden">
-        <div
-          className={cn(
-            'text-black dark:text-white text-[12px] font-medium leading-[12px] transition-transform duration-[1400ms] ease-out',
-            isAnimatingOut ? '-translate-y-6' : 'translate-y-0',
-          )}
-        >
-          {count}%
-        </div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+      <div className="flex flex-col items-center">
+        <div className="w-9 h-9 border-2 border-foreground/20 border-t-foreground rounded-full animate-spin"></div>
       </div>
     </div>
-  )
-}
+  );
+};
+
+export default Loading; 

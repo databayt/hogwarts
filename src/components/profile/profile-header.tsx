@@ -76,10 +76,10 @@ export default function ProfileHeader({ role, data }: ProfileHeaderProps) {
   return (
     <div className=" rounded-lg py-6">
       <div className="mb-6">
-        <h2 className="text-2xl font-bold mb-2">{roleContent.greeting}</h2>
+        <h2 className="mb-2">{roleContent.greeting}</h2>
         <p className="text-muted-foreground mb-4">{roleContent.subtitle}</p>
 
-        <ul className="space-y-2 text-sm">
+        <ul className="space-y-2 muted">
           <li className="flex items-center">
             <span className="text-[#39d353] mr-2">📖</span>
             Currently studying Advanced Mathematics and Computer Science.
@@ -104,7 +104,7 @@ export default function ProfileHeader({ role, data }: ProfileHeaderProps) {
       </div>
 
       <div className="mb-6">
-        <h3 className="text-lg font-semibold mb-3">Current Subjects:</h3>
+        <h5 className="mb-3">Current Subjects:</h5>
         <div className="flex flex-wrap gap-3">
           {roleContent.subjects.map((subject, index) => (
             <div
@@ -121,36 +121,36 @@ export default function ProfileHeader({ role, data }: ProfileHeaderProps) {
       <div className={`grid gap-6 ${useMobileLayout ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-2'}`}>
         {/* Academic Performance */}
         <div>
-          <h3 className="text-lg font-semibold mb-3">Subject Performance</h3>
+          <h5 className="mb-3">Subject Performance</h5>
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <div className="w-3 h-3 rounded-full bg-[#26a641] mr-2"></div>
-                <span className="text-sm">Mathematics 95%</span>
+                <span className="muted">Mathematics 95%</span>
               </div>
             </div>
             <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <div className="w-3 h-3 rounded-full bg-[#1f6feb] mr-2"></div>
-                <span className="text-sm">Computer Science 92%</span>
+                <span className="muted">Computer Science 92%</span>
               </div>
             </div>
             <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <div className="w-3 h-3 rounded-full bg-[#a259ff] mr-2"></div>
-                <span className="text-sm">Physics 88%</span>
+                <span className="muted">Physics 88%</span>
               </div>
             </div>
             <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <div className="w-3 h-3 rounded-full bg-[#ffa000] mr-2"></div>
-                <span className="text-sm">Chemistry 85%</span>
+                <span className="muted">Chemistry 85%</span>
               </div>
             </div>
             <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <div className="w-3 h-3 rounded-full bg-[#f24e1e] mr-2"></div>
-                <span className="text-sm">English 82%</span>
+                <span className="muted">English 82%</span>
               </div>
             </div>
           </div>
@@ -158,8 +158,8 @@ export default function ProfileHeader({ role, data }: ProfileHeaderProps) {
 
         {/* Recent Projects */}
         <div>
-          <h3 className="text-lg font-semibold mb-3">📚 Recent Projects</h3>
-          <div className="space-y-2 text-sm">
+          <h5 className="mb-3">📚 Recent Projects</h5>
+          <div className="space-y-2 muted">
             <div>
               <a href="#" className="text-[#1f6feb] hover:underline">
                 Solar System Model

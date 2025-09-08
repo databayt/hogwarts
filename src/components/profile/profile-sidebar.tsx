@@ -75,7 +75,7 @@ export default function ProfileSidebar({ role, data }: ProfileSidebarProps) {
           />
         </div>
         <div className="absolute bottom-6 right-6 w-8 h-8 bg-muted rounded-full flex items-center justify-center border-2 border-border">
-          <span className="text-lg">😀
+          <span>😀
           </span>
         </div>
       </div>
@@ -96,32 +96,32 @@ export default function ProfileSidebar({ role, data }: ProfileSidebarProps) {
       {/* Academic Stats */}
       <div className="flex space-x-4 muted">
         <span className="text-muted-foreground">
-          <span className="text-foreground font-semibold">8</span> subjects
+          <span className="text-foreground">8</span> subjects
         </span>
         <span className="text-muted-foreground">
-          <span className="text-foreground font-semibold">12</span> projects
+          <span className="text-foreground">12</span> projects
         </span>
       </div>
 
       {/* Achievement Badges */}
       <div className="flex space-x-2 mt-4">
         <div className="w-12 h-12 rounded-full flex items-center justify-center" title="Honor Roll">
-          <span className="text-2xl">🏆</span>
+          <span>🏆</span>
         </div>
         <div
           className="w-12 h-12 rounded-full flex items-center justify-center"
           title="Perfect Attendance"
         >
-          <span className="text-2xl">📅</span>
+          <span>📅</span>
         </div>
         <div
           className="w-12 h-12 rounded-full flex items-center justify-center"
           title="Science Fair Winner"
         >
-          <span className="text-2xl">🔬</span>
+          <span>🔬</span>
         </div>
         <div className="w-12 h-12 rounded-full flex items-center justify-center" title="GPA">
-          <span className="text-xl">3.8</span>
+          <span>3.8</span>
         </div>
       </div>
     </div>

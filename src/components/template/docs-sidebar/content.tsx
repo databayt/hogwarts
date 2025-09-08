@@ -86,7 +86,7 @@ export function DocsSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) 
                 return (
                   <SidebarMenuItem key={item.href}>
                     <SidebarMenuButton asChild isActive={isActive} size="sm">
-                      <Link href={item.href} className="muted font-normal" onClick={handleLinkClick}>
+                      <Link href={item.href} className="muted" onClick={handleLinkClick}>
                         {item.title}
                       </Link>
                     </SidebarMenuButton>

@@ -53,7 +53,7 @@ export function isValidSubdomain(subdomain: string): boolean {
   // Only allow letters, numbers, hyphens
   const validPattern = /^[a-z0-9-]+$/
   return validPattern.test(subdomain) && 
-         subdomain.length >= 3 && 
+         subdomain.length >= 2 && 
          subdomain.length <= 63 &&
          !subdomain.startsWith('-') &&
          !subdomain.endsWith('-')
@@ -120,10 +120,7 @@ export function generateSubdomain(schoolName: string): string {
   // Remove leading/trailing hyphens
   subdomain = subdomain.replace(/^-+|-+$/g, '')
   
-  // Ensure minimum length
-  if (subdomain.length < 3) {
-    subdomain = `school-${subdomain}`
-  }
+  // Remove minimum length requirement - treat 2-letter names same as long names
   
   // Ensure maximum length
   if (subdomain.length > 63) {
@@ -169,13 +166,13 @@ export function generateSubdomainSuggestions(schoolName: string): string[] {
   if (words.length >= 2) {
     // Try first two words
     const firstTwo = words.slice(0, 2).join('-')
-    if (firstTwo !== base && firstTwo.length >= 3) {
+    if (firstTwo !== base && firstTwo.length >= 2) {
       suggestions.push(firstTwo)
     }
     
     // Try first word only
     const firstWord = words[0]
-    if (firstWord !== base && firstWord.length >= 3) {
+    if (firstWord !== base && firstWord.length >= 2) {
       suggestions.push(firstWord)
     }
   }

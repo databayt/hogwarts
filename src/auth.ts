@@ -99,37 +99,45 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
   },
   callbacks: {
     async jwt({ token, user, account, trigger }) {
-      console.log('🔐 JWT CALLBACK START:', { trigger, hasUser: !!user, hasAccount: !!account });
+      console.log('🔐 [DEBUG] JWT CALLBACK START:', { 
+        trigger, 
+        hasUser: !!user, 
+        hasAccount: !!account,
+        timestamp: new Date().toISOString()
+      });
       
       if (user) {
-        console.log('👤 User data received:', { 
+        console.log('👤 [DEBUG] User data received:', { 
           id: user.id, 
           email: user.email,
           hasRole: 'role' in user,
-          hasSchoolId: 'schoolId' in user
+          hasSchoolId: 'schoolId' in user,
+          userKeys: Object.keys(user),
+          userRole: (user as any).role,
+          userSchoolId: (user as any).schoolId
         });
         
         token.id = user.id
         // Only set role and schoolId if they exist on the user object
         if ('role' in user) {
           token.role = (user as any).role
-          console.log('🎭 Role set in token:', token.role);
+          console.log('🎭 [DEBUG] Role set in token:', token.role);
         }
         if ('schoolId' in user) {
           token.schoolId = (user as any).schoolId
-          console.log('🏫 SchoolId set in token:', token.schoolId);
+          console.log('🏫 [DEBUG] SchoolId set in token:', token.schoolId);
         }
         
         // Ensure we have a proper session token
         if (account) {
           token.provider = account.provider
           token.providerAccountId = account.providerAccountId
-          console.log('🔗 Account linked:', { provider: account.provider, id: account.providerAccountId });
+          console.log('🔗 [DEBUG] Account linked:', { provider: account.provider, id: account.providerAccountId });
         }
         
         // Force session update after OAuth
         if (trigger === 'signIn') {
-          console.log('🔄 Forcing session update after signIn');
+          console.log('🔄 [DEBUG] Forcing session update after signIn');
           token.iat = Math.floor(Date.now() / 1000);
           token.exp = Math.floor(Date.now() / 1000) + (24 * 60 * 60); // 24 hours
           // Force session refresh by updating token
@@ -142,21 +150,25 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
       }
       
       // Debug JWT state
-      console.log('🔐 JWT CALLBACK END:', {
+      console.log('🔐 [DEBUG] JWT CALLBACK END:', {
         tokenId: token?.id,
         hasRole: !!token?.role,
         hasSchoolId: !!token?.schoolId,
+        tokenRole: token?.role,
+        tokenSchoolId: token?.schoolId,
         provider: token?.provider,
         iat: token?.iat,
         exp: token?.exp,
         sub: token?.sub,
-        sessionToken: token?.sessionToken
+        sessionToken: token?.sessionToken,
+        updatedAt: token?.updatedAt,
+        hash: token?.hash
       });
       
       return token
     },
     async session({ session, token, user, trigger }) {
-      console.log('📋 SESSION CALLBACK START:', { 
+      console.log('📋 [DEBUG] SESSION CALLBACK START:', { 
         trigger,
         hasToken: !!token, 
         hasUser: !!user,
@@ -166,42 +178,50 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
       });
       
       if (token) {
+        console.log('🔑 [DEBUG] Token data available:', {
+          tokenId: token.id,
+          tokenRole: token.role,
+          tokenSchoolId: token.schoolId,
+          tokenUpdatedAt: token.updatedAt,
+          tokenHash: token.hash
+        });
+        
         // Always ensure we have the latest token data
         session.user.id = token.id as string
         
         // Apply role and schoolId from token
         if (token.role) {
           (session.user as any).role = token.role
-          console.log('🎭 Role applied to session:', token.role);
+          console.log('🎭 [DEBUG] Role applied to session:', token.role);
         }
         if (token.schoolId) {
           (session.user as any).schoolId = token.schoolId
-          console.log('🏫 SchoolId applied to session:', token.schoolId);
+          console.log('🏫 [DEBUG] SchoolId applied to session:', token.schoolId);
         }
         
         // Force session update if token has been updated
         if (token.updatedAt) {
-          console.log('🔄 Token updated, forcing session refresh');
+          console.log('🔄 [DEBUG] Token updated, forcing session refresh');
           (session as any).updatedAt = token.updatedAt;
         }
         
         // Force session refresh if token hash changed
         if (token.hash) {
-          console.log('🔄 Token hash changed, forcing session refresh');
+          console.log('🔄 [DEBUG] Token hash changed, forcing session refresh');
           (session as any).hash = token.hash;
         }
         
-        console.log('🔑 Token data applied to session:', {
+        console.log('✅ [DEBUG] Token data applied to session:', {
           id: token.id,
           role: token.role,
           schoolId: token.schoolId
         });
       } else {
-        console.log('⚠️ No token available in session callback');
+        console.log('⚠️ [DEBUG] No token available in session callback');
       }
       
       // Debug session state
-      console.log('📋 SESSION CALLBACK END:', {
+      console.log('📋 [DEBUG] SESSION CALLBACK END:', {
         sessionId: session.user?.id,
         hasRole: !!(session.user as any)?.role,
         hasSchoolId: !!(session.user as any)?.schoolId,

@@ -21,7 +21,7 @@ export default function Testimonials() {
                 <div className="flex flex-col px-4 py-5 sm:p-6">
                   <div>
                     <div className="relative mb-4 flex items-center gap-3">
-                      <span className="relative inline-flex size-10 shrink-0 items-center justify-center rounded-full text-base">
+                      <span className="relative inline-flex size-10 shrink-0 items-center justify-center rounded-full">
                         <Image
                           width={100}
                           height={100}
@@ -31,10 +31,10 @@ export default function Testimonials() {
                         />
                       </span>
                       <div>
-                        <p className="text-sm font-semibold text-foreground">
+                        <p className="muted text-foreground">
                           {item.name}
                         </p>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="muted">
                           {item.job}
                         </p>
                       </div>

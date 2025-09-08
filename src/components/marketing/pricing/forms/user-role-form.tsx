@@ -123,7 +123,7 @@ export function UserRoleForm({ user }: UserNameFormProps) {
             </Button>
           </div>
           <div className="flex flex-col justify-between p-1">
-            <p className="text-[13px] text-muted-foreground">
+            <p className="muted text-muted-foreground">
               Remove this field on real production
             </p>
           </div>

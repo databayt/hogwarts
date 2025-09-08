@@ -13,8 +13,8 @@ export function ProductContent() {
       <div className='flex flex-1 flex-col space-y-4'>
         <div className='flex items-start justify-between'>
           <div>
-            <h1 className='text-xl font-semibold'>Products</h1>
-            <p className='text-sm text-muted-foreground'>Manage products (Server side table functionalities.)</p>
+            <h4>Products</h4>
+            <p className='muted'>Manage products (Server side table functionalities.)</p>
           </div>
           <Link
             href='/dashboard/product/new'
@@ -25,7 +25,7 @@ export function ProductContent() {
         </div>
         <Separator />
         {/* Tables temporarily disabled */}
-        <div className='rounded-lg border bg-card p-6 text-sm text-muted-foreground'>
+        <div className='rounded-lg border bg-card p-6 muted'>
           Product table is temporarily disabled while we integrate tenant-scoped data.
         </div>
       </div>

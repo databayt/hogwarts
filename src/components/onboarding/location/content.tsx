@@ -6,6 +6,7 @@ import { useHostValidation } from '@/components/onboarding/host-validation-conte
 import { useLocation } from './use-location';
 import { LocationForm } from './form';
 import { LocationCard } from './card';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function LocationContent() {
   const params = useParams();
@@ -26,11 +27,40 @@ export default function LocationContent() {
     return (
       <div className="max-w-6xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-20 items-start">
-          <div className="space-y-4">
-            <div className="h-6 bg-muted animate-pulse rounded" />
-            <div className="h-4 bg-muted animate-pulse rounded w-3/4" />
+          {/* Left side - Text content skeleton */}
+          <div className="space-y-6">
+            <div className="space-y-4">
+              <Skeleton className="h-8 w-64" />
+              <Skeleton className="h-4 w-96" />
+            </div>
+            
+            {/* Preview card skeleton */}
+            <div className="space-y-3">
+              <Skeleton className="h-4 w-32" />
+              <div className="p-4 border rounded-lg space-y-3">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-4 w-28" />
+              </div>
+            </div>
           </div>
-          <div className="h-64 bg-muted animate-pulse rounded" />
+          
+          {/* Right side - Form skeleton */}
+          <div className="space-y-6">
+            <Skeleton className="h-8 w-48" />
+            <div className="space-y-4">
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+            <div className="space-y-3">
+              <Skeleton className="h-4 w-40" />
+              <Skeleton className="h-32 w-full rounded-lg" />
+            </div>
+          </div>
         </div>
       </div>
     );

@@ -22,20 +22,20 @@ export function FlowChart({
   const nodeById = Object.fromEntries(nodes.map((n) => [n.id, n]))
   return (
     <div className={`rounded-md border ${large ? "p-6" : "p-4"}`}>
-      <div className={`mb-4 ${large ? "text-lg" : "text-sm"} font-medium`}>{title}</div>
+      <div className={`mb-4 ${large ? "lead" : "muted"}`}>{title}</div>
       <div className={`flex flex-col ${large ? "gap-4" : "gap-3"}`}>
         {edges.map((e, i) => {
           const FromIcon = nodeById[e.from]?.icon ?? LayoutPanelLeft
           const ToIcon = nodeById[e.to]?.icon ?? Layers
           return (
             <div key={`${e.from}-${e.to}-${i}`} className="flex items-center gap-3">
-              <div className={`flex items-center ${showIcons ? "gap-2" : "gap-1"} rounded-md border ${large ? "p-2" : "px-2 py-1"} ${large ? "text-base" : "text-xs"}`}>
+              <div className={`flex items-center ${showIcons ? "gap-2" : "gap-1"} rounded-md border ${large ? "p-2" : "px-2 py-1"}`}>
                 {showIcons ? <FromIcon className={`${large ? "h-6 w-6" : "h-4 w-4"}`} /> : null}
                 <span>{nodeById[e.from]?.label ?? e.from}</span>
               </div>
               <ArrowRight className={`${large ? "h-6 w-6" : "h-4 w-4"} text-muted-foreground`} />
               {e.note && <span className={`${large ? "text-xs" : "text-[10px]"} text-muted-foreground`}>{e.note}</span>}
-              <div className={`flex items-center ${showIcons ? "gap-2" : "gap-1"} rounded-md border ${large ? "p-2" : "px-2 py-1"} ${large ? "text-base" : "text-xs"}`}>
+              <div className={`flex items-center ${showIcons ? "gap-2" : "gap-1"} rounded-md border ${large ? "p-2" : "px-2 py-1"}`}>
                 {showIcons ? <ToIcon className={`${large ? "h-6 w-6" : "h-4 w-4"}`} /> : null}
                 <span>{nodeById[e.to]?.label ?? e.to}</span>
               </div>

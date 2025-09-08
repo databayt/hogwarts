@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { db } from "@/lib/db";
+import { logger } from "@/lib/logger";
+import { mapsService } from "@/lib/maps-service";
 import { 
   requireSchoolOwnership,
   createActionResponse,
@@ -23,11 +25,34 @@ export async function updateSchoolLocation(
 
     const validatedData = locationSchema.parse(data);
 
+    // Format full address
+    const fullAddress = `${validatedData.address}, ${validatedData.city}, ${validatedData.state}, ${validatedData.country} ${validatedData.postalCode}`;
+    
+    // Geocode the address to get coordinates
+    const geocodeResult = await mapsService.geocodeAddress(fullAddress);
+    
+    if (geocodeResult.success && geocodeResult.coordinates) {
+      logger.info('Address geocoded successfully', {
+        schoolId,
+        coordinates: geocodeResult.coordinates,
+        formattedAddress: geocodeResult.formattedAddress
+      });
+    } else {
+      logger.warn('Failed to geocode address', {
+        schoolId,
+        address: fullAddress,
+        error: geocodeResult.error
+      });
+    }
+
     // Update school location in database
     const updatedSchool = await db.school.update({
       where: { id: schoolId },
       data: {
-        address: `${validatedData.address}, ${validatedData.city}, ${validatedData.state}, ${validatedData.country} ${validatedData.postalCode}`,
+        address: geocodeResult.formattedAddress || fullAddress,
+        // Store coordinates if we have them (you may need to add these fields to your schema)
+        // latitude: geocodeResult.coordinates?.latitude,
+        // longitude: geocodeResult.coordinates?.longitude,
         updatedAt: new Date(),
       },
     });

@@ -25,17 +25,17 @@ const HostStepHeader: React.FC<HostStepHeaderProps> = ({
         {/* Left Side - Content */}
         <div className="space-y-4 sm:space-y-6">
           {stepNumber && (
-            <h6 className="text-sm sm:text-base font-medium text-muted-foreground">
+            <h6 className="text-muted-foreground">
               Step {stepNumber}
             </h6>
           )}
           
-          <h2 className="leading-tight text-xl sm:text-2xl lg:text-3xl font-semibold">
+          <h2 className="leading-tight">
             {title}
           </h2>
           
           {description && (
-            <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
+            <p className="text-muted-foreground leading-relaxed">
               {description}
             </p>
           )}

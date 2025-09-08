@@ -46,37 +46,37 @@ const Footer = () => {
           <div className="lg:flex-[3] grid grid-cols-2 md:flex md:justify-between gap-4 md:gap-0">
             {/* Academics */}
             <div>
-              <h3 className="text-sm font-semibold text-foreground tracking-wider uppercase mb-3">
+              <h3 className="muted tracking-wider uppercase mb-3">
                 Academics
               </h3>
               <ul className="space-y-2">
                 <li>
-                  <Link href="/houses" className="text-base font-light text-muted-foreground hover:text-primary transition-colors">
+                  <Link href="/houses" className="muted hover:text-primary transition-colors">
                     Houses
                   </Link>
                 </li>
                 <li>
-                  <Link href="/curriculum" className="text-base font-light text-muted-foreground hover:text-primary transition-colors">
+                  <Link href="/curriculum" className="muted hover:text-primary transition-colors">
                     Curriculum
                   </Link>
                 </li>
                 <li>
-                  <Link href="/faculty" className="text-base font-light text-muted-foreground hover:text-primary transition-colors">
+                  <Link href="/faculty" className="muted hover:text-primary transition-colors">
                     Faculty
                   </Link>
                 </li>
                 <li>
-                  <Link href="/library" className="text-base font-light text-muted-foreground hover:text-primary transition-colors">
+                  <Link href="/library" className="muted hover:text-primary transition-colors">
                     Library
                   </Link>
                 </li>
                 <li>
-                  <Link href="/subjects" className="text-base font-light text-muted-foreground hover:text-primary transition-colors">
+                  <Link href="/subjects" className="muted hover:text-primary transition-colors">
                     Subjects
                   </Link>
                 </li>
                 <li>
-                  <Link href="/exams" className="text-base font-light text-muted-foreground hover:text-primary transition-colors">
+                  <Link href="/exams" className="muted hover:text-primary transition-colors">
                     Exams
                   </Link>
                 </li>
@@ -85,32 +85,32 @@ const Footer = () => {
 
             {/* Campus */}
             <div>
-              <h3 className="text-sm font-semibold text-foreground tracking-wider uppercase mb-3">
+              <h3 className="muted tracking-wider uppercase mb-3">
                 Campus
               </h3>
               <ul className="space-y-2">
                 <li>
-                  <Link href="/admission" className="text-base font-light text-muted-foreground hover:text-primary transition-colors">
+                  <Link href="/admission" className="muted hover:text-primary transition-colors">
                     Admissions
                   </Link>
                 </li>
                 <li>
-                  <Link href="/dormitories" className="text-base font-light text-muted-foreground hover:text-primary transition-colors">
+                  <Link href="/dormitories" className="muted hover:text-primary transition-colors">
                     Dormitories
                   </Link>
                 </li>
                 <li>
-                  <Link href="/great-hall" className="text-base font-light text-muted-foreground hover:text-primary transition-colors">
+                  <Link href="/great-hall" className="muted hover:text-primary transition-colors">
                     Great Hall
                   </Link>
                 </li>
                 <li>
-                  <Link href="/quidditch" className="text-base font-light text-muted-foreground hover:text-primary transition-colors">
+                  <Link href="/quidditch" className="muted hover:text-primary transition-colors">
                     Quidditch
                   </Link>
                 </li>
                 <li>
-                  <Link href="/grounds" className="text-base font-light text-muted-foreground hover:text-primary transition-colors">
+                  <Link href="/grounds" className="muted hover:text-primary transition-colors">
                     Grounds
                   </Link>
                 </li>
@@ -119,42 +119,42 @@ const Footer = () => {
 
             {/* Activities */}
             <div>
-              <h3 className="text-sm font-semibold text-foreground tracking-wider uppercase mb-3">
+              <h3 className="muted tracking-wider uppercase mb-3">
                 Activities
               </h3>
               <ul className="space-y-2">
                 <li>
-                  <Link href="/clubs" className="text-base font-light text-muted-foreground hover:text-primary transition-colors">
+                  <Link href="/clubs" className="muted hover:text-primary transition-colors">
                     Clubs
                   </Link>
                 </li>
                 <li>
-                  <Link href="/events" className="text-base font-light text-muted-foreground hover:text-primary transition-colors">
+                  <Link href="/events" className="muted hover:text-primary transition-colors">
                     Events
                   </Link>
                 </li>
                 <li>
-                  <Link href="/sports" className="text-base font-light text-muted-foreground hover:text-primary transition-colors">
+                  <Link href="/sports" className="muted hover:text-primary transition-colors">
                     Sports
                   </Link>
                 </li>
                 <li>
-                  <Link href="/competitions" className="text-base font-light text-muted-foreground hover:text-primary transition-colors">
+                  <Link href="/competitions" className="muted hover:text-primary transition-colors">
                     Competitions
                   </Link>
                 </li>
                 <li>
-                  <Link href="/tournaments" className="text-base font-light text-muted-foreground hover:text-primary transition-colors">
+                  <Link href="/tournaments" className="muted hover:text-primary transition-colors">
                     Tournaments
                   </Link>
                 </li>
                 <li>
-                  <Link href="/ceremonies" className="text-base font-light text-muted-foreground hover:text-primary transition-colors">
+                  <Link href="/ceremonies" className="muted hover:text-primary transition-colors">
                     Ceremonies
                   </Link>
                 </li>
                 <li>
-                  <Link href="/traditions" className="text-base font-light text-muted-foreground hover:text-primary transition-colors">
+                  <Link href="/traditions" className="muted hover:text-primary transition-colors">
                     Traditions
                   </Link>
                 </li>

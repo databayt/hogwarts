@@ -39,7 +39,7 @@ export function BillingInfo({ userSubscriptionPlan }: BillingInfoProps) {
       <CardContent>{description}</CardContent>
       <CardFooter className="flex flex-col items-center space-y-2 border-t bg-accent py-2 md:flex-row md:justify-between md:space-y-0">
         {isPaid ? (
-          <p className="text-sm font-medium text-muted-foreground">
+          <p className="muted">
             {isCanceled
               ? "Your plan will be canceled on "
               : "Your plan renews on "}

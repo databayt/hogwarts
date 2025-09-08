@@ -19,7 +19,7 @@ function Modal({ content, big = false, full = false }: Props) {
     <div className={`fixed inset-0 w-full h-screen z-50 flex  ${theme === 'dark' ? 'bg-black' : 'bg-white'}  justify-center items-center`}>
       <div className="absolute inset-0 w-full h-screen" onClick={closeModal}></div>
       <div className={`
-        relative p-8 z-70 sm:text-sm z-80
+        relative p-8 z-70 z-80
         ${full ? 'w-full h-full max-w-none' : big ? 'max-w-4xl w-[35rem] h-[42rem]' : 'max-w-2xl w-[24rem] h-[29rem]'} 
         ${theme === 'dark' ? 'dark' : 'light'}
         

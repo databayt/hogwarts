@@ -86,13 +86,13 @@ export const ResetForm = ({
                 <Button 
                   disabled={isPending} 
                   type="submit" 
-                  className="w-full h-11 text-base"
+                  className="w-full h-11"
                 >
                   Reset password
                 </Button>
               </div>
 
-              <div className="text-center text-sm">
+              <div className="text-center muted">
                 <Link href="/login" className="hover:underline underline-offset-4">
                   Back to login
                 </Link>

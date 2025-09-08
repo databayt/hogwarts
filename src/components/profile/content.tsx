@@ -66,14 +66,14 @@ export default function ProfileContent({ role, data }: ProfileContentProps) {
 
               {/* Current Period Section */}
               <div className=" rounded-lg py-6">
-                <h3 className="text-lg font-semibold mb-4">December 2024</h3>
+                <h3 className="mb-4">December 2024</h3>
                 <p className="text-muted-foreground text-center py-8">No activity recorded for this period.</p>
                 <button className="w-full bg-muted border border-border rounded-lg py-3 text-muted-foreground hover:bg-muted-foreground/10 transition-colors">
                   Show more activity
                 </button>
               </div>
 
-              <p className="text-muted-foreground text-sm text-center">
+              <p className="muted text-center">
                 Need help navigating the system? Check out the{" "}
                 <a href="#" className="text-[#1f6feb] hover:underline">
                   school portal guide
@@ -104,14 +104,14 @@ export default function ProfileContent({ role, data }: ProfileContentProps) {
 
               {/* Current Period Section */}
               <div className=" rounded-lg py-6">
-                <h3 className="text-lg font-semibold mb-4">December 2024</h3>
+                <h3 className="mb-4">December 2024</h3>
                 <p className="text-muted-foreground text-center py-8">No activity recorded for this period.</p>
                 <button className="w-full bg-muted border border-border rounded-lg py-3 text-muted-foreground hover:bg-muted-foreground/10 transition-colors">
                   Show more activity
                 </button>
               </div>
 
-              <p className="text-muted-foreground text-sm text-center">
+              <p className="muted text-center">
                 Need help navigating the system? Check out the{" "}
                 <a href="#" className="text-[#1f6feb] hover:underline">
                   school portal guide

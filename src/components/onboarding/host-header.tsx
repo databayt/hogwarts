@@ -16,9 +16,10 @@ const HostHeader: React.FC<HostHeaderProps> = ({ onHelp, onSave }) => {
         <div className="flex items-center">
           <div className="relative w-5 h-5">
             <Image
-              src="/tent.png"
+              src="/site/tent.png"
               alt="Tent icon"
               fill
+              sizes="20px"
               className="object-contain"
             />
           </div>

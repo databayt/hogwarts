@@ -23,7 +23,7 @@ export default function TeacherDashboard({ data }: TeacherDashboardProps) {
 
       <div className={`grid gap-4 ${useMobileLayout ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1 md:grid-cols-3'}`}>
         <div className=" rounded-lg p-4">
-          <h4 className="font-semibold text-[#39d353] mb-2">Classes Today</h4>
+          <h4 className="text-[#39d353] mb-2">Classes Today</h4>
           <div className="space-y-2 muted">
             <div className={cn(
               "flex justify-between p-2 rounded-md transition-all duration-200",
@@ -50,13 +50,13 @@ export default function TeacherDashboard({ data }: TeacherDashboardProps) {
         </div>
 
         <div className=" rounded-lg p-4">
-          <h4 className="font-semibold text-[#ffa000] mb-2">Pending Grades</h4>
+          <h4 className="text-[#ffa000] mb-2">Pending Grades</h4>
           <h3 className="text-[#f85149]">23</h3>
           <p className="muted">Assignments to Grade</p>
         </div>
 
         <div className=" rounded-lg p-4">
-          <h4 className="font-semibold text-[#a259ff] mb-2">Students</h4>
+          <h4 className="text-[#a259ff] mb-2">Students</h4>
           <h3 className="text-[#39d353]">127</h3>
           <p className="muted">Total Enrolled</p>
         </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useMemo, useCallback } from 'react';
 
 interface HostValidationContextType {
   isNextDisabled: boolean;
@@ -41,17 +41,17 @@ export const HostValidationProvider: React.FC<HostValidationProviderProps> = ({ 
     nextDisabled?: boolean;
   } | undefined>(undefined);
 
-  const enableNext = () => setIsNextDisabled(false);
-  const disableNext = () => setIsNextDisabled(true);
+  const enableNext = useCallback(() => setIsNextDisabled(false), []);
+  const disableNext = useCallback(() => setIsNextDisabled(true), []);
 
-  const value: HostValidationContextType = {
+  const value: HostValidationContextType = useMemo(() => ({
     isNextDisabled,
     setIsNextDisabled,
     enableNext,
     disableNext,
     customNavigation,
     setCustomNavigation
-  };
+  }), [isNextDisabled, enableNext, disableNext, customNavigation, setCustomNavigation]);
 
   return (
     <HostValidationContext.Provider value={value}>

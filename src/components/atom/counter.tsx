@@ -33,7 +33,7 @@ export function Counter({
       >
         <Minus size={16} strokeWidth={2} className="sm:w-3.5 sm:h-3.5" />
       </button>
-      <span className="w-8 sm:w-2.5 text-center text-lg sm:text-base font-medium">
+      <span className="w-8 sm:w-2.5 text-center">
         {value}
       </span>
       <button

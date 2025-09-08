@@ -55,7 +55,7 @@ export function Nav() {
                         href={link.href}
                         onClick={() => setOpen(false)}
                         className={cn(
-                          "flex items-center gap-2 text-lg font-medium",
+                          "flex items-center gap-2 lead",
                           "text-neutral-500 dark:text-neutral-400",
                           "hover:text-neutral-900 dark:hover:text-neutral-50",
                           pathname === link.href && "text-neutral-900 dark:text-neutral-50"
@@ -80,7 +80,7 @@ export function Nav() {
                 key={link.href}
                 href={link.href}
                 className={cn(
-                  "flex items-center gap-2 text-base font-medium",
+                  "flex items-center gap-2",
                   "text-neutral-500 dark:text-neutral-400",
                   "hover:text-neutral-900 dark:hover:text-neutral-50",
                   pathname === link.href && "text-neutral-900 dark:text-neutral-50"
@@ -98,7 +98,7 @@ export function Nav() {
           <button
             onClick={() => setShowConfig(true)}
             className={cn(
-              "flex items-center gap-2 text-base font-medium p-2 rounded-lg",
+              "flex items-center gap-2 p-2 rounded-lg",
               "text-neutral-500 dark:text-neutral-400",
               "hover:bg-neutral-100 dark:hover:bg-neutral-900"
             )}

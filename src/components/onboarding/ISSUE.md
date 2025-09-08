@@ -1,263 +1,227 @@
-# Onboarding Block Implementation Tasks
+# Onboarding Block - Production Readiness Tracker
 
-## Static Pages
-- [x] About School
-  - [x] Create content.tsx with static UI
-  - [x] Add school type selector component
-  - [x] Implement step navigation
+## 🚨 Critical Issues for Production
 
-- [x] Stand Out
-  - [x] Create content.tsx with static UI
-  - [x] Add feature highlights section
-  - [x] Add amenities showcase
+### P0 - Blockers (Must fix before production)
 
-- [x] Finish Setup
-  - [x] Create content.tsx with static UI
-  - [x] Add completion celebration
-  - [x] Add next steps guidance
+#### 1. Debug Logging in Production Code
+- **Issue**: Extensive console.log statements throughout actions.ts
+- **Files**: `src/components/onboarding/actions.ts` (lines 123-237)
+- **Impact**: Performance degradation, potential security info leakage
+- **Fix**: Remove all debug console.log statements or wrap in development-only conditions
+```typescript
+// Replace with:
+if (process.env.NODE_ENV === 'development') {
+  console.log(...);
+}
+```
 
-## Interactive Pages
+#### 2. Authentication Fallback Logic
+- **Issue**: Complex try-catch fallback in `getListing()` suggests auth flow issues
+- **Files**: `src/components/onboarding/actions.ts`
+- **Impact**: Potential security vulnerability, unreliable auth state
+- **Fix**: Implement proper auth middleware and session management
 
-### Title Step
-- [x] Create directory structure
-  - [x] content.tsx
-  - [x] actions.ts
-  - [x] validation.ts
-  - [x] types.ts
-  - [x] form.tsx
-  - [x] use-title.ts
-- [x] Implement school name validation
-- [x] Add character counter
-- [ ] Add SEO preview
+#### 3. Missing Error Boundaries
+- **Issue**: Some steps lack proper error handling for failed data fetches
+- **Impact**: White screen of death on errors
+- **Fix**: Wrap all step components with ErrorBoundary
 
-### Description Step
-- [x] Create directory structure
-  - [x] content.tsx
-  - [x] actions.ts
-  - [x] validation.ts
-  - [x] types.ts
-  - [x] form.tsx
-  - [x] use-description.ts
-- [x] Add school level selection
-- [x] Add school type selection
-- [x] Implement two-step navigation
+### P1 - High Priority (Should fix before production)
 
-### Location Step
-- [x] Create directory structure
-  - [x] content.tsx
-  - [x] actions.ts
-  - [x] validation.ts
-  - [x] types.ts
-  - [x] form.tsx
-  - [x] use-location.tsx
-- [ ] Integrate maps API
-- [x] Add address validation
-- [ ] Implement geocoding
+#### 1. External Service Integrations
 
-### Capacity Step
-- [x] Create directory structure
-  - [x] content.tsx
-  - [x] actions.ts
-  - [x] validation.ts
-  - [x] types.ts
-  - [x] form.tsx
-  - [x] use-capacity.ts
-- [x] Add student capacity input
-- [x] Add teacher capacity input
-- [x] Add facilities counter
-- [x] Add classrooms counter
-- [x] Implement plan limits validation
+##### Maps API Integration
+- **Status**: Not implemented
+- **Steps Affected**: Location
+- **Required Actions**:
+  - [ ] Integrate Google Maps or Mapbox API
+  - [ ] Implement geocoding for addresses
+  - [ ] Add location picker component
+  - [ ] Store latitude/longitude in database
 
-### Branding Step
-- [x] Create directory structure
-  - [x] content.tsx
-  - [x] actions.ts
-  - [x] validation.ts
-  - [x] types.ts
-  - [x] form.tsx
-  - [x] use-branding.ts
-- [x] Add logo upload
-- [x] Add color scheme picker
-- [x] Add border radius options
-- [x] Add shadow options
-- [x] Implement brand preview
+##### Payment Processing (Stripe)
+- **Status**: Not implemented
+- **Steps Affected**: Price, Discount
+- **Required Actions**:
+  - [ ] Set up Stripe Connect for schools
+  - [ ] Implement subscription billing
+  - [ ] Add payment method collection
+  - [ ] Create invoice generation system
 
-### Import Step
-- [x] Create directory structure
-  - [x] content.tsx
-  - [x] actions.ts
-  - [x] validation.ts
-  - [x] types.ts
-  - [x] form.tsx
-  - [x] use-import.ts
-- [x] Add file upload UI
-- [x] Add file type validation
-- [x] Add progress tracking
-- [ ] Implement CSV parsing
-- [ ] Add column mapping
-- [ ] Add data validation
+##### File Upload Service
+- **Status**: Partially implemented
+- **Steps Affected**: Import, Branding (logo)
+- **Required Actions**:
+  - [ ] Complete CSV/Excel parser for Import step
+  - [ ] Add file size validation
+  - [ ] Implement virus scanning
+  - [ ] Set up CDN for uploaded files
 
-### Join Step
-- [x] Create directory structure
-  - [x] content.tsx
-  - [x] actions.ts
-  - [x] validation.ts
-  - [x] types.ts
-  - [x] form.tsx
-  - [x] use-join.ts
-- [x] Add join method selection
-- [x] Add validation schema
-- [ ] Add invitation code generation
-- [ ] Add role management
-- [ ] Implement approval workflow
+#### 2. Data Import Parser
+- **Status**: UI complete, parser missing
+- **Files**: `src/components/onboarding/import/`
+- **Required Actions**:
+  - [ ] Implement CSV parsing logic
+  - [ ] Add Excel file support
+  - [ ] Create column mapping interface
+  - [ ] Add data validation and sanitization
+  - [ ] Implement batch import with progress tracking
 
-### Visibility Step
-- [x] Create directory structure
-  - [x] content.tsx
-  - [x] actions.ts
-  - [x] validation.ts
-  - [x] types.ts
-  - [x] form.tsx
-  - [x] use-visibility.ts
-- [x] Add information sharing options
-- [x] Add access controls
-- [ ] Add directory settings
-- [ ] Add preview mode
+#### 3. DNS Configuration for Subdomains
+- **Status**: Form complete, DNS setup missing
+- **Files**: `src/components/onboarding/subdomain/`
+- **Required Actions**:
+  - [ ] Integrate with DNS provider (Cloudflare/Route53)
+  - [ ] Implement subdomain availability checking
+  - [ ] Add SSL certificate provisioning
+  - [ ] Create subdomain verification process
 
-### Price Step
-- [x] Create directory structure
-  - [x] content.tsx
-  - [x] actions.ts
-  - [x] validation.ts
-  - [x] types.ts
-  - [x] form.tsx
-  - [x] use-price.ts
-- [x] Add price input UI
-- [x] Add fee breakdown
-- [x] Add validation schema
-- [ ] Add payment schedule selection
-- [ ] Integrate with Stripe
+### P2 - Medium Priority (Nice to have for production)
 
-### Discount Step
-- [x] Create directory structure
-  - [x] content.tsx
-  - [x] actions.ts
-  - [x] validation.ts
-  - [x] types.ts
-  - [x] form.tsx
-  - [x] use-discount.ts
-- [x] Add discount selection UI
-- [x] Add percentage badges
-- [x] Add validation schema
-- [ ] Add custom discount creation
-- [ ] Add discount scheduling
+#### 1. Invitation & Role Management
+- **Status**: Basic implementation
+- **Steps Affected**: Join
+- **Required Actions**:
+  - [ ] Generate unique invitation codes
+  - [ ] Implement role-based access control
+  - [ ] Add approval workflow for teachers/staff
+  - [ ] Create invitation email templates
 
-### Legal Step
-- [x] Create directory structure
-  - [x] content.tsx
-  - [x] actions.ts
-  - [x] validation.ts
-  - [x] types.ts
-  - [x] form.tsx
-  - [x] use-legal.ts
-- [x] Add operational status selection
-- [x] Add safety features checklist
-- [x] Add compliance information
-- [ ] Add terms acceptance
-- [ ] Add document upload
+#### 2. Legal Document Management
+- **Status**: UI complete, documents missing
+- **Steps Affected**: Legal
+- **Required Actions**:
+  - [ ] Add terms of service template
+  - [ ] Add privacy policy template
+  - [ ] Implement version control for legal docs
+  - [ ] Add consent tracking with timestamps
 
-## Database Updates
+#### 3. Performance Optimizations
+- [ ] Implement step data caching
+- [ ] Add optimistic UI updates
+- [ ] Reduce bundle size with dynamic imports
+- [ ] Add prefetching for next steps
+- [ ] Implement virtual scrolling for large lists
 
-### Core Models
-- [x] Add missing fields to School model
-  - [x] Add branding fields (primaryColor, secondaryColor, borderRadius, shadow)
-  - [x] Add visibility settings (isPubliclyListed, allowSelfEnrollment, requireParentApproval)
-  - [x] Add import tracking (lastImportDate, importStatus, totalImported)
-- [x] Create SchoolBranding model
-  - [x] Add visual customization options
-  - [x] Add font and CSS customization
-  - [x] Add visibility preferences
+### P3 - Low Priority (Post-launch improvements)
 
-### Subscription & Pricing
-- [x] Create SubscriptionTier model
-  - [x] Add feature flags
-  - [x] Add usage limits
-  - [x] Add pricing tiers
-- [x] Create Discount model
-  - [x] Add code generation
-  - [x] Add usage tracking
-  - [x] Add validity periods
-- [x] Create AppliedDiscount model
-  - [x] Add audit trail
-  - [x] Add amount tracking
-  - [x] Add invoice linking
+#### 1. Enhanced Features
+- [ ] Multi-language support
+- [ ] Bulk operations for admin
+- [ ] Advanced analytics dashboard
+- [ ] A/B testing framework
+- [ ] Customizable onboarding flows
 
-### Legal & Compliance
-- [x] Create LegalConsent model
-  - [x] Add version control
-  - [x] Add consent evidence
-  - [x] Add GDPR compliance
-- [x] Create LegalDocument model
-  - [x] Add document versioning
-  - [x] Add effective dates
-  - [x] Add consent requirements
-- [x] Create ComplianceLog model
-  - [x] Add event tracking
-  - [x] Add user auditing
-  - [x] Add event metadata
+#### 2. Testing Coverage
+- [ ] Unit tests for all validation schemas
+- [ ] Integration tests for server actions
+- [ ] E2E tests for critical paths
+- [ ] Performance testing
+- [ ] Security penetration testing
 
-## Code Organization
+## 📊 Production Readiness Checklist
 
-### Types and Constants Separation
-- [ ] Split types.ts into page-specific files:
-  - [ ] about-school/types.ts
-  - [x] title/types.ts
-  - [x] description/types.ts
-  - [x] location/types.ts
-  - [x] capacity/types.ts
-  - [x] branding/types.ts
-  - [x] import/types.ts
-  - [x] join/types.ts
-  - [x] visibility/types.ts
-  - [x] price/types.ts
-  - [x] discount/types.ts
-  - [x] legal/types.ts
+### Core Functionality
+- [x] All steps have UI components
+- [x] Form validation implemented
+- [x] Server actions configured
+- [x] Database models created
+- [x] Navigation flow working
+- [ ] All external services integrated
+- [ ] Error recovery mechanisms
+- [ ] Data persistence across sessions
 
-- [ ] Split constants.ts into page-specific files:
-  - [ ] about-school/constants.ts
-  - [x] title/constants.ts (title limits and messages)
-  - [x] description/constants.ts (school levels and types)
-  - [x] location/constants.ts (messages and supported countries)
-  - [x] capacity/constants.ts (limits, fields, and messages)
-  - [x] branding/constants.ts (colors, styles, and logo limits)
-  - [x] import/constants.ts (data types and file limits)
-  - [x] join/constants.ts (join methods and role configs)
-  - [x] visibility/constants.ts (sharing and access options)
-  - [x] price/constants.ts (fees, billing, and currencies)
-  - [x] discount/constants.ts (discount types, validation, and messages)
-  - [x] legal/constants.ts (documents, safety, and compliance)
+### Security
+- [ ] Remove all debug logging
+- [ ] Input sanitization complete
+- [ ] CSRF protection enabled
+- [ ] Rate limiting implemented
+- [ ] SQL injection prevention
+- [ ] XSS protection
+- [ ] Authentication properly secured
 
-## Architecture Notes
-- ListingProvider is at layout level (src/app/onboarding/layout.tsx)
-- Remove any local ListingProvider wrapping in pages
-- Use client-side constants from constants.client.ts, not constants.ts
+### Performance
+- [ ] Page load time < 3s
+- [ ] Time to interactive < 5s
+- [ ] Bundle size optimized
+- [ ] Images optimized
+- [ ] Code splitting implemented
+- [ ] Caching strategy defined
 
-## General Improvements
-- [ ] Add progress persistence
-- [ ] Implement step validation
-- [ ] Add error handling
-- [ ] Add loading states
-- [ ] Add success notifications
-- [ ] Add analytics tracking
-- [ ] Add A/B testing
-- [ ] Improve accessibility
-- [ ] Add E2E tests
-- [ ] Add unit tests
-- [ ] Add documentation
+### Monitoring
+- [ ] Error tracking setup (Sentry)
+- [ ] Analytics configured
+- [ ] Performance monitoring
+- [ ] User session recording
+- [ ] Conversion funnel tracking
 
-## Technical Debt
-- [ ] Refactor step navigation
-- [ ] Optimize form validation
-- [ ] Improve error messages
-- [ ] Clean up unused code
-- [ ] Update dependencies
+### Documentation
+- [x] README.md updated
+- [x] ISSUE.md created
+- [ ] API documentation
+- [ ] User guide created
+- [ ] Admin documentation
+- [ ] Deployment guide
+
+## 🔄 Recent Updates (December 2024)
+
+### Completed
+- ✅ Updated README.md with current architecture
+- ✅ All UI components implemented
+- ✅ Form validation with Zod schemas
+- ✅ Server actions with auth
+- ✅ Database schema defined
+
+### In Progress
+- 🔄 Removing debug logging
+- 🔄 External service integrations
+- 🔄 Testing implementation
+
+### Blocked
+- ❌ Maps API (waiting for API key)
+- ❌ Stripe integration (waiting for account setup)
+- ❌ DNS provider (waiting for decision)
+
+## 🎯 Sprint Planning
+
+### Current Sprint (Week 1-2)
+1. Remove all debug logging
+2. Fix authentication fallback
+3. Implement error boundaries
+4. Begin Maps API integration
+
+### Next Sprint (Week 3-4)
+1. Complete Maps integration
+2. Start Stripe integration
+3. Implement CSV parser
+4. Add invitation system
+
+### Future Sprints
+- Legal document templates
+- DNS configuration
+- Performance optimizations
+- Testing suite
+
+## 📝 Notes
+
+- The UI is production-ready and should remain unchanged
+- Focus on backend integrations and data processing
+- Prioritize security fixes before feature additions
+- Consider gradual rollout with feature flags
+
+## 🚀 Launch Criteria
+
+Minimum requirements for production launch:
+1. All P0 issues resolved
+2. At least 50% of P1 issues resolved
+3. Security checklist complete
+4. Performance targets met
+5. Error tracking configured
+6. Backup and recovery tested
+
+---
+
+**Last Updated**: December 2024  
+**Assigned Team**: Platform Engineering  
+**Target Launch**: Q1 2025

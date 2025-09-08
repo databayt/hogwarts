@@ -22,11 +22,11 @@ export default function BentoGrid() {
                     fill="currentColor"
                   />
                 </svg>
-                <span className="text-gradient_indigo-purple mx-auto block w-fit font-heading text-5xl">
+                <span className="text-gradient_indigo-purple mx-auto block w-fit font-heading">
                   100%
                 </span>
               </div>
-              <h2 className="mt-6 text-center font-heading text-3xl md:text-4xl lg:text-[40px]">
+              <h2 className="mt-6 text-center font-heading">
                 Customizable
               </h2>
             </div>
@@ -89,7 +89,7 @@ export default function BentoGrid() {
                 </svg>
               </div>
               <div className="relative z-10 mt-8 space-y-1.5 text-center">
-                <h2 className="text-lg font-medium text-foreground">
+                <h2 className="text-foreground">
                   Secure by default
                 </h2>
                 <p className="text-muted-foreground">
@@ -218,7 +218,7 @@ export default function BentoGrid() {
                   </svg>
                 </div>
                 <div className="space-y-2">
-                  <h2 className="text-lg font-medium text-foreground">
+                  <h2 className="text-foreground">
                     Faster than light
                   </h2>
                   <p className="text-muted-foreground">
@@ -303,7 +303,7 @@ export default function BentoGrid() {
                   </svg>
                 </div>
                 <div className="space-y-2">
-                  <h2 className="text-lg font-medium text-foreground">
+                  <h2 className="text-foreground">
                     Keep your loved ones safe
                   </h2>
                   <p className="text-muted-foreground">
@@ -315,7 +315,7 @@ export default function BentoGrid() {
               <div className="relative mt-6 before:absolute before:inset-0 before:mx-auto before:w-px before:bg-purple-500/50 sm:-my-8 sm:-mr-8">
                 <div className="relative flex h-full flex-col justify-center space-y-6 py-6">
                   <div className="relative flex w-[calc(50%+0.875rem)] items-center justify-end gap-2">
-                    <span className="block h-fit rounded-md border bg-muted/50 px-2 py-1 text-xs">
+                    <span className="block h-fit rounded-md border bg-muted/50 px-2 py-1 muted">
                       Glodie
                     </span>
                     <div className="size-7 ring-4 ring-background">
@@ -338,12 +338,12 @@ export default function BentoGrid() {
                         alt="fake-avatar"
                       />
                     </div>
-                    <span className="block h-fit rounded-md border bg-muted/50 px-2 py-1 text-xs">
+                    <span className="block h-fit rounded-md border bg-muted/50 px-2 py-1 muted">
                       M. Irung
                     </span>
                   </div>
                   <div className="relative flex w-[calc(50%+0.875rem)] items-center justify-end gap-2">
-                    <span className="block h-fit rounded-md border bg-muted/50 px-2 py-1 text-xs">
+                    <span className="block h-fit rounded-md border bg-muted/50 px-2 py-1 muted">
                       B. Ng
                     </span>
                     <div className="size-7 ring-4 ring-background">

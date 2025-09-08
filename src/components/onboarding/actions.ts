@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
+import { logger } from "@/lib/logger";
+import { getSchoolWithOnboardingFallback } from "@/lib/onboarding-auth";
 import { 
   getAuthContext, 
   requireSchoolAccess,
@@ -94,7 +96,7 @@ export async function createListing(data: ListingFormData): Promise<ActionRespon
     revalidatePath("/onboarding");
     return createActionResponse(listing);
   } catch (error) {
-    console.error("Failed to create school listing:", error);
+    logger.error("Failed to create school listing", error, { action: 'createListing' });
     return createActionResponse(undefined, error);
   }
 }
@@ -121,33 +123,83 @@ export async function updateListing(id: string, data: Partial<ListingFormData>):
 
 export async function getListing(id: string): Promise<ActionResponse> {
   try {
-    // Validate user has ownership/access to this school
-    await requireSchoolOwnership(id);
+    logger.debug('getListing called', { schoolId: id });
+    
+    // Use the new helper that handles onboarding fallback cleanly
+    const { school, fallbackUsed } = await getSchoolWithOnboardingFallback(
+      id,
+      requireSchoolOwnership
+    );
+    
+    if (fallbackUsed) {
+      logger.info('Using onboarding fallback for school access', { schoolId: id });
+    }
+    
+    return createActionResponse(school);
+  } catch (error) {
+    logger.error('Failed to get listing', error, { schoolId: id });
+    return createActionResponse(undefined, error);
+  }
+}
 
-    const listing = await db.school.findUnique({
-      where: { id },
+export async function getCurrentUserSchool(): Promise<ActionResponse> {
+  try {
+    const authContext = await getAuthContext();
+    logger.debug('Getting current user school', {
+      userId: authContext.userId,
+      hasSessionSchoolId: !!authContext.schoolId
     });
 
-    if (!listing) {
-      throw new Error("School not found");
+    // If user has a schoolId in session, return it
+    if (authContext.schoolId) {
+      logger.debug('Returning session schoolId', { schoolId: authContext.schoolId });
+      return createActionResponse({ schoolId: authContext.schoolId });
     }
 
-    return createActionResponse(listing);
+    // Otherwise check database for user's school
+    const user = await db.user.findUnique({
+      where: { id: authContext.userId },
+      select: { id: true, schoolId: true, email: true }
+    });
+
+    logger.debug('Database user lookup', {
+      userId: authContext.userId,
+      hasSchoolId: !!user?.schoolId
+    });
+
+    if (user?.schoolId) {
+      logger.debug('Returning database schoolId', { schoolId: user.schoolId });
+      return createActionResponse({ schoolId: user.schoolId });
+    }
+
+    logger.debug('No schoolId found for user', { userId: authContext.userId });
+    return createActionResponse(null, { message: "No school found for user", code: "NO_SCHOOL" });
   } catch (error) {
+    logger.error('Failed to get current user school', error, { action: 'getCurrentUserSchool' });
     return createActionResponse(undefined, error);
   }
 }
 
 export async function getUserSchools(): Promise<ActionResponse> {
+  let authContext: any;
   try {
-    const authContext = await getAuthContext();
+    authContext = await getAuthContext();
 
-    // Get all schools associated with this user (drafts and completed)
+    // Get schools associated with this user
     const schools = await db.school.findMany({
       where: {
-        // Add your user relationship field here when available
-        // ownerId: authContext.userId,
-        // For now, we'll use a different approach or get all and filter by session
+        // Filter by user's schoolId if they belong to a specific school
+        // For DEVELOPER role, they might see all schools, but for others filter by schoolId
+        ...(authContext.schoolId && { id: authContext.schoolId }),
+        // If user has no schoolId (like DEVELOPER), we could show schools they have access to
+        // For now, if no schoolId, show schools where they have user record
+        ...(!authContext.schoolId && {
+          users: {
+            some: {
+              id: authContext.userId
+            }
+          }
+        })
       },
       select: {
         id: true,
@@ -163,39 +215,163 @@ export async function getUserSchools(): Promise<ActionResponse> {
       },
       orderBy: {
         updatedAt: 'desc'
+      },
+      take: 2 // Limit to 2 schools
+    });
+
+    // Get total count for "more" indicator
+    const totalCount = await db.school.count({
+      where: {
+        // Same filter as above
+        ...(authContext.schoolId && { id: authContext.schoolId }),
+        ...(!authContext.schoolId && {
+          users: {
+            some: {
+              id: authContext.userId
+            }
+          }
+        })
       }
     });
 
-    return createActionResponse(schools);
+    return createActionResponse({ schools, totalCount });
   } catch (error) {
-    console.error("Failed to get user schools:", error);
+    logger.error("Failed to get user schools", error, { userId: authContext?.userId });
     return createActionResponse(undefined, error);
   }
 }
 
 export async function initializeSchoolSetup(): Promise<ActionResponse> {
+  const timestamp = new Date().toISOString();
+  logger.debug('initializeSchoolSetup started', { timestamp });
+  
   try {
+    logger.debug('Getting auth context');
     const authContext = await getAuthContext();
-
-    // Create a new school draft for the authenticated user
-    const school = await db.school.create({
-      data: {
-        name: "New School",
-        domain: `school-${Date.now()}`, // Temporary domain
-        updatedAt: new Date(),
-        // Set default values using available fields
-        maxStudents: 400,
-        maxTeachers: 10,
-        // Link to user when field is available
-        // ownerId: authContext.userId,
-      },
+    logger.debug('Auth context received', {
+      userId: authContext.userId,
+      email: authContext.email,
+      hasSessionSchoolId: !!authContext.schoolId
     });
 
+    // Create a new school draft for the authenticated user
+    logger.debug('Creating new school in database');
+    const schoolData = {
+      name: "New School",
+      domain: `school-${Date.now()}`, // Temporary domain
+      updatedAt: new Date(),
+      // Set default values using available fields
+      maxStudents: 400,
+      maxTeachers: 10,
+    };
+    
+    logger.debug("School data to be created:", schoolData);
+    
+    const school = await db.school.create({
+      data: schoolData,
+    });
+
+    logger.debug("School created successfully:", {
+      schoolId: school.id,
+      schoolName: school.name,
+      schoolDomain: school.domain,
+      schoolCreatedAt: school.createdAt,
+      schoolUpdatedAt: school.updatedAt,
+      creationTimestamp: new Date().toISOString()
+    });
+
+    // Update the user's schoolId to link them to this school
+    logger.debug("Step 3: Updating user with schoolId...");
+    logger.debug("About to update user:", {
+      userId: authContext.userId,
+      newSchoolId: school.id,
+      updateTimestamp: new Date().toISOString()
+    });
+    
+    const updatedUser = await db.user.update({
+      where: { id: authContext.userId },
+      data: { 
+        schoolId: school.id,
+        updatedAt: new Date() // Force timestamp update
+      }
+    });
+
+    logger.debug("User updated successfully:", {
+      userId: updatedUser.id,
+      oldSchoolId: authContext.schoolId,
+      newSchoolId: updatedUser.schoolId,
+      userUpdatedAt: updatedUser.updatedAt,
+      updateTimestamp: new Date().toISOString(),
+      updateWasSuccessful: updatedUser.schoolId === school.id
+    });
+
+    // Verify the association was created correctly
+    logger.debug("Step 4: Verifying user-school association...");
+    const verifiedUser = await db.user.findUnique({
+      where: { id: authContext.userId },
+      select: { id: true, schoolId: true, email: true, updatedAt: true }
+    });
+
+    logger.debug("User verification result:", {
+      userId: verifiedUser?.id,
+      userSchoolId: verifiedUser?.schoolId,
+      userEmail: verifiedUser?.email,
+      userUpdatedAt: verifiedUser?.updatedAt,
+      associationCorrect: verifiedUser?.schoolId === school.id,
+      verificationTimestamp: new Date().toISOString()
+    });
+
+    // Additional verification: Check the school-user relationship from school side
+    logger.debug("Step 5: Double-checking school-user relationship...");
+    const schoolWithUsers = await db.school.findUnique({
+      where: { id: school.id },
+      include: {
+        users: {
+          where: { id: authContext.userId }
+        }
+      }
+    });
+
+    logger.debug("School relationship verification:", {
+      schoolId: schoolWithUsers?.id,
+      schoolName: schoolWithUsers?.name,
+      associatedUsersCount: schoolWithUsers?.users.length || 0,
+      userIsAssociated: schoolWithUsers?.users.some(u => u.id === authContext.userId),
+      associatedUserIds: schoolWithUsers?.users.map(u => u.id) || []
+    });
+
+    // Force session refresh by updating the user record timestamp
+    logger.debug("Step 6: Forcing session refresh...");
+    const finalUserUpdate = await db.user.update({
+      where: { id: authContext.userId },
+      data: { updatedAt: new Date() }
+    });
+
+    logger.debug("Final user update for session refresh:", {
+      userId: finalUserUpdate.id,
+      schoolId: finalUserUpdate.schoolId,
+      updatedAt: finalUserUpdate.updatedAt,
+      sessionRefreshTimestamp: new Date().toISOString()
+    });
+
+    logger.debug("Step 7: Revalidating path...");
     revalidatePath("/onboarding");
+    
+    logger.debug("initializeSchoolSetup completed successfully:", {
+      schoolId: school.id,
+      userId: authContext.userId,
+      finalTimestamp: new Date().toISOString(),
+      totalSteps: 7
+    });
     
     return createActionResponse(school);
   } catch (error) {
-    console.error("Failed to initialize school setup:", error);
+    logger.error("initializeSchoolSetup FAILED at some step:", {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      errorType: error?.constructor?.name,
+      errorStack: error instanceof Error ? error.stack : undefined,
+      failureTimestamp: new Date().toISOString()
+    });
     return createActionResponse(undefined, error);
   }
 }
@@ -299,9 +475,9 @@ export async function proceedToTitle(schoolId: string) {
 
     revalidatePath(`/onboarding/${schoolId}`);
   } catch (error) {
-    console.error("Error proceeding to title:", error);
+    logger.error("Error proceeding to about-school:", error);
     throw error;
   }
 
-  redirect(`/onboarding/${schoolId}/title`);
+  redirect(`/onboarding/${schoolId}/about-school`);
 }

@@ -14,6 +14,7 @@ export const publicRoutes = [
   "/pricing",
   "/blog",
   "/debug",
+  "/docs",
 ];
 
 /**

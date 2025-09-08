@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import React, { useState, useTransition, useImperativeHandle, forwardRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
 import { titleSchema, type TitleFormData } from "./validation";
@@ -14,9 +13,14 @@ interface TitleFormProps {
   schoolId: string;
   initialData?: Partial<TitleFormData>;
   onSuccess?: () => void;
+  onTitleChange?: (title: string) => void;
 }
 
-export function TitleForm({ schoolId, initialData, onSuccess }: TitleFormProps) {
+export interface TitleFormRef {
+  saveAndNext: () => Promise<void>;
+}
+
+export const TitleForm = forwardRef<TitleFormRef, TitleFormProps>(({ schoolId, initialData, onSuccess, onTitleChange }, ref) => {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string>("");
 
@@ -27,34 +31,49 @@ export function TitleForm({ schoolId, initialData, onSuccess }: TitleFormProps) 
     },
   });
 
-  const handleSubmit = (data: TitleFormData) => {
-    startTransition(async () => {
-      try {
-        setError("");
-        const result = await updateSchoolTitle(schoolId, data);
-        
-        if (result.success) {
-          onSuccess?.();
-        } else {
-          setError(result.error || "Failed to update school name");
-          if (result.errors) {
-            Object.entries(result.errors).forEach(([field, message]) => {
-              form.setError(field as keyof TitleFormData, { message });
-            });
+  const saveAndNext = async () => {
+    const data = form.getValues();
+    return new Promise<void>((resolve, reject) => {
+      startTransition(async () => {
+        try {
+          setError("");
+          const result = await updateSchoolTitle(schoolId, data);
+          
+          if (result.success) {
+            onSuccess?.();
+            resolve();
+          } else {
+            setError(result.error || "Failed to update school name");
+            if (result.errors) {
+              Object.entries(result.errors).forEach(([field, message]) => {
+                form.setError(field as keyof TitleFormData, { message });
+              });
+            }
+            reject(new Error(result.error || "Failed to update school name"));
           }
+        } catch (err) {
+          setError("An unexpected error occurred");
+          reject(err);
         }
-      } catch (err) {
-        setError("An unexpected error occurred");
-      }
+      });
     });
   };
+
+  useImperativeHandle(ref, () => ({
+    saveAndNext
+  }));
 
   const titleValue = form.watch("title");
   const maxLength = FORM_LIMITS.TITLE_MAX_LENGTH;
 
+  // Notify parent of title changes
+  React.useEffect(() => {
+    onTitleChange?.(titleValue);
+  }, [titleValue, onTitleChange]);
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+      <div className="space-y-6">
         {error && (
           <div className="text-sm text-destructive bg-destructive/10 p-3 rounded-md">
             {error}
@@ -84,15 +103,9 @@ export function TitleForm({ schoolId, initialData, onSuccess }: TitleFormProps) 
             </FormItem>
           )}
         />
-
-        <Button 
-          type="submit" 
-          disabled={isPending || !titleValue.trim()}
-          className="w-full"
-        >
-          {isPending ? "Updating..." : "Update School Name"}
-        </Button>
-      </form>
+      </div>
     </Form>
   );
-}
+});
+
+TitleForm.displayName = "TitleForm";

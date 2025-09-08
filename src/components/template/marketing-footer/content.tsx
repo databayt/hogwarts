@@ -21,13 +21,13 @@ export function MarketingFooter() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 lg:gap-20 lg:flex  lg:items-start px-0 text-center lg:text-left">
               {footerSections.map((section) => (
                 <div key={section.title} className="w-full lg:flex-1">
-                  <h3 className="muted font-medium mb-4">{section.title}</h3>
+                  <h3 className="muted mb-4">{section.title}</h3>
                   <ul className="space-y-2">
                     {section.links.map((link) => (
                       <li key={link.href}>
                         <Link
                           href={link.href}
-                          className="text-xs font-normal lg:muted text-primary/70 hover:text-primary transition-colors"
+                          className="text-xs lg:muted text-primary/70 hover:text-primary transition-colors"
                         >
                           {link.text}
                         </Link>

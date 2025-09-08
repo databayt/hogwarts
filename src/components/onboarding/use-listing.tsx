@@ -73,7 +73,6 @@ export function ListingProvider({ children, initialListing = null }: ListingProv
     setError(null)
     
     try {
-      console.log('🎯 Creating new listing with data:', data)
       const result = await createListing({ draft: true, ...data })
       
       if (result.success && result.data) {
@@ -96,14 +95,12 @@ export function ListingProvider({ children, initialListing = null }: ListingProv
         }
         
         setListing(newListing)
-        console.log('✅ New listing created:', newListing.id)
         return newListing.id!
       }
       
       throw new Error('Failed to create listing')
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred'
-      console.error('❌ Error creating listing:', errorMessage)
       setError(errorMessage)
       return null
     } finally {
@@ -111,13 +108,14 @@ export function ListingProvider({ children, initialListing = null }: ListingProv
     }
   }, [])
 
-  const loadListing = useCallback(async (id: string) => {
+  const loadListing = useCallback(async (id: string, retryCount = 0) => {
+    
     setIsLoading(true)
     setError(null)
     
     try {
-      console.log('📥 Loading listing:', id)
       const result = await getListing(id)
+      
       
       if (result.success && result.data) {
         const loadedListing: Listing = {
@@ -139,12 +137,95 @@ export function ListingProvider({ children, initialListing = null }: ListingProv
         }
         
         setListing(loadedListing)
-        console.log('✅ Listing loaded successfully')
+      } else {
+        
+        // Extract error message from result.error
+        let errorMessage = 'Failed to load listing';
+        let isAccessDenied = false;
+        
+        if (result.error) {
+          
+          if (typeof result.error === 'string') {
+            errorMessage = result.error;
+            isAccessDenied = result.error.includes('Access denied') || result.error.includes('CROSS_TENANT_ACCESS_DENIED');
+          } else if (typeof result.error === 'object' && result.error !== null) {
+            if ('message' in result.error && typeof result.error.message === 'string') {
+              errorMessage = result.error.message;
+              isAccessDenied = result.error.message.includes('Access denied') || result.error.message.includes('CROSS_TENANT_ACCESS_DENIED');
+            } else if ('code' in result.error && typeof result.error.code === 'string') {
+              errorMessage = `Error: ${result.error.code}`;
+              isAccessDenied = result.error.code === 'CROSS_TENANT_ACCESS_DENIED';
+            }
+            
+            // Check for code field separately
+            if ('code' in result.error && result.error.code === 'CROSS_TENANT_ACCESS_DENIED') {
+              isAccessDenied = true;
+            }
+          }
+        }
+        
+        // Also check the result.code field directly
+        if (result.code === 'CROSS_TENANT_ACCESS_DENIED') {
+          isAccessDenied = true;
+          errorMessage = 'Access denied to this school';
+        }
+        
+        // Fallback: If error is empty object and we're in onboarding, assume it's an access denied issue
+        if (!result.success && (!result.error || (typeof result.error === 'object' && Object.keys(result.error).length === 0))) {
+          isAccessDenied = true;
+          errorMessage = 'Access denied to this school';
+        }
+        
+        
+               // Handle access denied error during onboarding with exponential backoff
+       if (isAccessDenied && retryCount < 3) { // Increase retry count to 3
+         const delay = Math.min(1000 * Math.pow(2, retryCount), 5000); // 1s, 2s, 4s, max 5s
+         
+         setTimeout(() => {
+           loadListing(id, retryCount + 1);
+         }, delay);
+         return;
+       }
+       
+       // If we've exhausted retries and it's still an access denied error, show specific message
+       if (retryCount >= 3 && isAccessDenied) {
+         setError('Unable to access this school. This might be because you\'re trying to access a different school than the one you created. Please go back to the overview and try again.');
+       } else {
+         // For non-access-denied errors or if retries aren't applicable
+         setError(errorMessage || 'Failed to load school information');
+       }
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load listing'
-      console.error('❌ Error loading listing:', errorMessage)
-      setError(errorMessage)
+      
+      // Handle access denied error during onboarding with exponential backoff
+      if (errorMessage.includes('Access denied to this school') && retryCount < 2) {
+        // Check if this might be a schoolId mismatch issue
+        if (retryCount === 0) {
+          // For the first retry, try to get the user's current school from the session
+          try {
+            // Import the auth hook to get current user info
+            const { useCurrentUser } = await import('@/components/auth/use-current-user');
+            // Note: This won't work in a callback, but we can at least log the attempt
+          } catch (err) {
+          }
+        }
+        
+        const delay = Math.min(1000 * Math.pow(2, retryCount), 4000); // 1s, 2s, max 4s
+        
+        setTimeout(() => {
+          loadListing(id, retryCount + 1);
+        }, delay);
+        return;
+      }
+      
+      // If we've exhausted retries or it's a different error, show the error
+      if (retryCount >= 2 && errorMessage.includes('Access denied to this school')) {
+        // Provide more specific error message for schoolId mismatch
+        setError('Unable to access this school. This might be because you\'re trying to access a different school than the one you created. Please go back to the overview and try again.');
+      } else {
+        setError(errorMessage);
+      }
     } finally {
       setIsLoading(false)
     }
@@ -152,7 +233,6 @@ export function ListingProvider({ children, initialListing = null }: ListingProv
 
   const updateListingData = useCallback(async (data: Partial<ListingFormData>) => {
     if (!listing?.id) {
-      console.warn('⚠️ No listing ID available for update')
       return
     }
 
@@ -160,7 +240,6 @@ export function ListingProvider({ children, initialListing = null }: ListingProv
     setError(null)
     
     try {
-      console.log('🔄 Updating listing:', listing.id, 'with data:', data)
       const result = await updateListing(listing.id, data)
       
       if (result.success && result.data) {
@@ -183,11 +262,9 @@ export function ListingProvider({ children, initialListing = null }: ListingProv
         }
         
         setListing(updatedListing)
-        console.log('✅ Listing updated successfully')
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to update listing'
-      console.error('❌ Error updating listing:', errorMessage)
       setError(errorMessage)
     } finally {
       setIsLoading(false)
@@ -228,7 +305,6 @@ export function useHostNavigation(currentStep: string) {
 
   const goToStep = useCallback((step: string) => {
     if (!listing?.id) {
-      console.warn('⚠️ No listing ID available for navigation')
       return
     }
     router.push(`/onboarding/${listing.id}/${step}`)

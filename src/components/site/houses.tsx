@@ -71,10 +71,10 @@ export function Houses() {
                 </div>
 
                 <div className="p-6 text-center">
-                  <h3 className={`font-semibold text-base ${house.textColor}`}>
+                  <h3 className={`${house.textColor}`}>
                     {house.description}
                   </h3>
-                  <p className="text-sm leading-relaxed">
+                  <p className="muted leading-relaxed">
                     {house.longDescription}
                   </p>
                 </div>

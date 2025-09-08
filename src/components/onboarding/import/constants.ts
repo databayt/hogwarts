@@ -23,6 +23,14 @@ export const IMPORT_SOURCES: { id: ImportSource; label: string; description: str
   },
 ] as const;
 
+export const IMPORT_TYPES = IMPORT_SOURCES.map(source => ({
+  value: source.id,
+  label: source.label,
+  description: source.description,
+}));
+
+export const SUPPORTED_FORMATS = ['csv', 'xlsx', 'xls'];
+
 export const DATA_TYPES: DataTypeConfig[] = [
   {
     id: 'students',

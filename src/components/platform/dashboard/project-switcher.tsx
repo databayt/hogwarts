@@ -63,7 +63,7 @@ export default function ProjectSwitcher({
               <div className="flex items-center space-x-3">
                 <span
                   className={cn(
-                    "inline-block truncate text-sm font-medium xl:max-w-[120px]",
+                    "inline-block truncate muted xl:max-w-[120px]",
                     large ? "w-full" : "max-w-[80px]",
                   )}
                 >
@@ -112,10 +112,10 @@ function ProjectList({
         >
           <div className={cn("size-3 shrink-0 rounded-full", color)} />
           <span
-            className={`flex-1 truncate text-sm ${
+            className={`flex-1 truncate muted ${
               selected.slug === slug
-                ? "font-medium text-foreground"
-                : "font-normal"
+                ? "text-foreground"
+                : ""
             }`}
           >
             {slug}

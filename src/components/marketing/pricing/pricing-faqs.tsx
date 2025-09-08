@@ -23,7 +23,7 @@ export default function PricingFAQs() {
       <div className="flex w-full max-w-6xl">
         <div className="grid gap-y-12 gap-x-32 px-2 lg:[grid-template-columns:1fr_auto]">
           <div className="text-center lg:text-left">
-            <h2 className="mb-4 text-3xl font-semibold md:text-4xl">
+            <h2 className="mb-4">
               Frequently <br className="hidden lg:block" /> Asked <br className="hidden lg:block" />
               Questions
             </h2>
@@ -33,7 +33,7 @@ export default function PricingFAQs() {
           <div className="divide-y divide-dashed sm:mx-auto sm:max-w-2xl lg:mx-0">
             {faqs.map((faq, index) => (
               <div key={index} className={index === 0 ? "pb-6" : "py-6"}>
-                <h3 className="font-medium">{faq.question}</h3>
+                <h3>{faq.question}</h3>
                 <p className="text-muted-foreground mt-4">{faq.answer}</p>
               </div>
             ))}

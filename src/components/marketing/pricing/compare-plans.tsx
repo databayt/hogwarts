@@ -34,7 +34,7 @@ export function ComparePlans() {
               {plansColumns.map((col) => (
                 <th
                   key={col}
-                  className="sticky z-10 w-40 bg-background py-5 font-heading text-lg font-bold text-center text-black capitalize tracking-wide md:w-auto lg:top-14 lg:text-xl"
+                  className="sticky z-10 w-40 bg-background py-5 font-heading text-center text-black capitalize tracking-wide md:w-auto lg:top-14"
                 >
                   {col}
                 </th>
@@ -49,7 +49,7 @@ export function ComparePlans() {
                   className="sticky left-0 bg-background md:bg-transparent"
                 >
                   <div className="flex items-center justify-between space-x-2 py-4">
-                    <span className="text-[15px] font-medium lg:text-base">
+                    <span className="lg:text-base">
                       {row.feature}
                     </span>
                     {row.tooltip && (
@@ -59,7 +59,7 @@ export function ComparePlans() {
                         </PopoverTrigger>
                         <PopoverContent
                           side="top"
-                          className="max-w-80 py-3 text-sm"
+                          className="max-w-80 py-3"
                         >
                           {row.tooltip}
                         </PopoverContent>
@@ -70,7 +70,7 @@ export function ComparePlans() {
                 {plansColumns.map((col) => (
                   <td
                     key={col}
-                    className="py-4 text-center text-[15px] text-muted-foreground lg:text-base"
+                    className="py-4 text-center text-muted-foreground lg:text-base"
                   >
                     {renderCell(row[col])}
                   </td>

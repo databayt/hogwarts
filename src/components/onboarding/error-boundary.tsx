@@ -4,6 +4,7 @@ import React from 'react'
 import { AlertTriangle, RefreshCcw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { logger } from '@/lib/logger'
 
 interface ErrorBoundaryState {
   hasError: boolean
@@ -29,13 +30,12 @@ class OnboardingErrorBoundary extends React.Component<
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    // Log error to monitoring service in production
-    console.error('Onboarding Error Boundary caught an error:', error, errorInfo)
-    
-    // In production, send to error tracking service
-    if (process.env.NODE_ENV === 'production') {
-      // Example: Sentry.captureException(error, { extra: errorInfo })
-    }
+    // Log error using the logger service
+    logger.error('Onboarding Error Boundary caught an error', error, {
+      component: 'OnboardingErrorBoundary',
+      componentStack: errorInfo.componentStack,
+      errorBoundary: true
+    })
   }
 
   render() {
@@ -98,4 +98,47 @@ function DefaultErrorFallback({ error, reset }: { error?: Error; reset: () => vo
   )
 }
 
+// Enhanced error boundary with more features
+interface ErrorBoundaryOptions {
+  onError?: (error: Error, errorInfo: React.ErrorInfo) => void;
+  enableReporting?: boolean;
+  showErrorDetails?: boolean;
+}
+
+export function createErrorBoundary(options: ErrorBoundaryOptions = {}) {
+  return class extends OnboardingErrorBoundary {
+    componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+      super.componentDidCatch(error, errorInfo);
+      
+      if (options.onError) {
+        options.onError(error, errorInfo);
+      }
+      
+      if (options.enableReporting && process.env.NODE_ENV === 'production') {
+        // Send to error tracking service
+        try {
+          // Example implementation - replace with your error tracking service
+          fetch('/api/error-report', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              error: error.message,
+              stack: error.stack,
+              componentStack: errorInfo.componentStack,
+              url: window.location.href,
+              userAgent: navigator.userAgent,
+              timestamp: new Date().toISOString(),
+            }),
+          }).catch((err) => logger.error('Failed to send error report', err));
+        } catch (e) {
+          logger.error('Failed to report error', e as Error);
+        }
+      }
+    }
+  };
+}
+
 export { OnboardingErrorBoundary }
+
+// Re-export with alias for backward compatibility
+export const ErrorBoundary = OnboardingErrorBoundary;

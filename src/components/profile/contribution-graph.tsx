@@ -43,7 +43,7 @@ export default function ContributionGraph() {
   return (
     <div className="rounded-lg p-6">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold">Learn how we count contributions</h3>
+        <h3>Learn how we count contributions</h3>
         <div className="flex items-center space-x-2 text-xs text-muted-foreground">
           <span>Less</span>
           <div className="flex space-x-1">

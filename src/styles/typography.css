@@ -74,9 +74,31 @@
     @apply p-4 align-middle [&:has([role=checkbox])]:pr-0;
   }
 
-  /* Links */
+  /* Links - Base styling for all links */
   a {
-    @apply font-medium text-primary  hover:text-primary/80;
+    @apply text-base font-medium text-primary hover:text-primary/80;
+  }
+
+  /* Next.js Link component styling */
+  a[href] {
+    @apply text-base font-medium text-primary hover:text-primary/80 transition-colors;
+  }
+
+  /* Header navigation links */
+  header a[href],
+  header a[href]:visited {
+    @apply text-base font-medium transition-colors;
+  }
+
+  /* Header navigation active state */
+  header a[href].active,
+  header a[href][aria-current="page"] {
+    @apply text-foreground;
+  }
+
+  /* Header navigation inactive state */
+  header a[href]:not(.active):not([aria-current="page"]) {
+    @apply text-foreground/60 hover:text-foreground/80;
   }
 
   /* Small text */

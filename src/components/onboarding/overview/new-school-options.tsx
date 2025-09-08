@@ -25,7 +25,7 @@ const NewSchoolOptions: React.FC<NewSchoolOptionsProps> = ({
 
   return (
     <div className="space-y-2 sm:space-y-3">
-      <h5 className="text-base sm:text-lg font-semibold">
+      <h5>
         Add a new school
       </h5>
       
@@ -37,10 +37,10 @@ const NewSchoolOptions: React.FC<NewSchoolOptionsProps> = ({
               <GraduationCap className="w-4 h-4 sm:w-5 sm:h-5 text-foreground" />
             </div>
             <div className="text-left min-w-0 flex-1">
-              <h5 className="text-xs sm:text-sm font-medium">
+              <h5>
                 Create a new school
               </h5>
-              <p className="text-xs text-muted-foreground mt-0.5">
+              <p className="muted mt-0.5">
                 Start from scratch with basic setup
               </p>
             </div>
@@ -55,10 +55,10 @@ const NewSchoolOptions: React.FC<NewSchoolOptionsProps> = ({
               <BookOpen className="w-4 h-4 sm:w-5 sm:h-5 text-foreground" />
             </div>
             <div className="text-left min-w-0 flex-1">
-              <h5 className="text-xs sm:text-sm font-medium">
+              <h5>
                 Use a school template
               </h5>
-              <p className="text-xs text-muted-foreground mt-0.5">
+              <p className="muted mt-0.5">
                 Start with pre-configured settings
               </p>
             </div>

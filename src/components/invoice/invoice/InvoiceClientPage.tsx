@@ -118,7 +118,7 @@ export default function InvoiceClientPage({ userId, currency = "USD" }: IInvoice
     <div className="p-4">
       
       <div className="flex items-center justify-between gap-4 mb-4">
-        <h1 className="text-xl font-semibold">Invoice</h1>
+        <h4>Invoice</h4>
         <div className="flex gap-2">
           <button
             type="button"

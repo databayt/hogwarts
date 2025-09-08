@@ -53,8 +53,8 @@ function DeleteAccountModal({
             image: session?.user?.image || null,
           }}
         />
-        <h3 className="text-lg font-semibold">Delete Account</h3>
-        <p className="text-center text-sm text-muted-foreground">
+        <h3>Delete Account</h3>
+        <p className="text-center muted text-muted-foreground">
           <b>Warning:</b> This will permanently delete your account and your
           active subscription!
         </p>
@@ -74,9 +74,9 @@ function DeleteAccountModal({
         className="flex flex-col space-y-6 bg-accent px-4 py-8 text-left sm:px-16"
       >
         <div>
-          <label htmlFor="verification" className="block text-sm">
+          <label htmlFor="verification" className="block muted">
             To verify, type{" "}
-            <span className="font-semibold text-black dark:text-white">
+            <span className="text-black dark:text-white">
               confirm delete account
             </span>{" "}
             below

@@ -23,7 +23,7 @@ export default function StaffDashboard({ data }: StaffDashboardProps) {
 
       <div className={`grid gap-4 ${useMobileLayout ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1 md:grid-cols-3'}`}>
         <div className=" rounded-lg p-4">
-          <h4 className="font-semibold text-[#39d353] mb-2">Department Overview</h4>
+          <h4 className="text-[#39d353] mb-2">Department Overview</h4>
           <div className="space-y-2 muted">
             <div className="flex justify-between">
               <span>Total Students</span>
@@ -41,13 +41,13 @@ export default function StaffDashboard({ data }: StaffDashboardProps) {
         </div>
 
         <div className=" rounded-lg p-4">
-          <h4 className="font-semibold text-[#ffa000] mb-2">Pending Requests</h4>
+          <h4 className="text-[#ffa000] mb-2">Pending Requests</h4>
           <h3 className="text-[#f85149]">12</h3>
           <p className="muted">Administrative Tasks</p>
         </div>
 
         <div className=" rounded-lg p-4">
-          <h4 className="font-semibold text-[#a259ff] mb-2">Attendance Rate</h4>
+          <h4 className="text-[#a259ff] mb-2">Attendance Rate</h4>
           <h3 className="text-[#39d353]">94.2%</h3>
           <p className="muted">School Average</p>
         </div>

@@ -74,7 +74,7 @@ export function UserAuthForm({ className, type, ...props }: UserAuthFormProps) {
               {...register("email")}
             />
             {errors?.email && (
-              <p className="px-1 text-xs text-red-600">
+              <p className="px-1 muted text-red-600">
                 {errors.email.message}
               </p>
             )}
@@ -91,7 +91,7 @@ export function UserAuthForm({ className, type, ...props }: UserAuthFormProps) {
         <div className="absolute inset-0 flex items-center">
           <span className="w-full border-t" />
         </div>
-        <div className="relative flex justify-center text-xs uppercase">
+        <div className="relative flex justify-center uppercase">
           <span className="bg-background px-2 text-muted-foreground">
             Or continue with
           </span>

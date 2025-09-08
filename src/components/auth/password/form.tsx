@@ -62,7 +62,7 @@ export const NewPasswordForm = ({
     <div className={cn("flex flex-col gap-6 min-w-[200px] md:min-w-[350px]", className)} {...props}>
       <Card className="border-none shadow-none bg-background">
         <CardHeader className="text-center">
-          <h1 className="text-xl font-semibold">Enter a new password</h1>
+          <h4>Enter a new password</h4>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -92,13 +92,13 @@ export const NewPasswordForm = ({
                 <Button 
                   disabled={isPending} 
                   type="submit" 
-                  className="w-full h-11 text-base"
+                  className="w-full h-11"
                 >
                   Reset password
                 </Button>
               </div>
 
-              <div className="text-center text-sm">
+              <div className="text-center muted">
                 <Link href="/login" className="hover:underline underline-offset-4">
                   Back to login
                 </Link>

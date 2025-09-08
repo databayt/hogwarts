@@ -14,8 +14,8 @@ export function AboutHoverCard() {
 
   const AboutContent = () => (
     <>
-      <div className="text-sm dark:text-neutral-400 space-y-2 break-all mb-2">
-        <p>• Click a subject cell to enter the teacher’s name.</p>
+      <div className="muted dark:text-neutral-400 space-y-2 break-all mb-2">
+        <p>• Click a subject cell to enter the teacher's name.</p>
         <p>• Use Settings to change school, grade, and class.</p>
         <p>• Data is loaded from NEIS API or local JSON (mock mode).</p>
         <p>• Teacher names may be truncated; please edit manually if needed.</p>
@@ -23,12 +23,12 @@ export function AboutHoverCard() {
         <p>• Your inputs are stored locally in the browser.</p>
       </div>
       <div className="pt-2 border-t dark:border-neutral-800">
-        <p className="text-sm dark:text-neutral-400">
+        <p className="muted dark:text-neutral-400">
           Made by{" "}
           <Link
             href="https://github.com/injoon5"
             target="_blank" 
-            className="font-medium text-neutral-900 dark:text-neutral-100 hover:underline transition-colors duration-200"
+            className="text-neutral-900 dark:text-neutral-100 hover:underline transition-colors duration-200"
           >
             @injoon5
           </Link>
@@ -36,7 +36,7 @@ export function AboutHoverCard() {
           <Link
             href="https://injoon5.com"
             target="_blank"
-            className="font-medium text-neutral-900 dark:text-neutral-100 hover:underline transition-colors duration-200"
+            className="text-neutral-900 dark:text-neutral-100 hover:underline transition-colors duration-200"
           >
             Website
           </Link>

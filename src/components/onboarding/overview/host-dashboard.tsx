@@ -18,32 +18,20 @@ interface SchoolOnboardingDashboardProps {
   onSchoolClick?: (id: string) => void;
   onCreateNew?: () => void;
   onCreateFromTemplate?: () => void;
+  totalSchools?: number; // Total number of schools available
 }
 
 const SchoolOnboardingDashboard: React.FC<SchoolOnboardingDashboardProps> = ({
   userName = "Admin",
-  schools = [
-    {
-      id: "1",
-      name: "Al-Noor Primary School",
-      startDate: "January 15, 2025",
-      status: "draft",
-      subdomain: "al-noor"
-    },
-    {
-      id: "2", 
-      name: "Future Leaders Academy",
-      startDate: "January 20, 2025",
-      status: "pending",
-      subdomain: "future-leaders"
-    }
-  ],
+  schools = [],
   onSchoolClick,
   onCreateNew,
-  onCreateFromTemplate
+  onCreateFromTemplate,
+  totalSchools
 }) => {
   const draftSchools = schools.filter(school => school.status === 'draft');
   const hasInProgressSchools = draftSchools.length > 0;
+  const hasMoreSchools = totalSchools && totalSchools > schools.length;
 
   return (
     <div className="w-full max-w-xl mx-auto px-3 sm:px-4 space-y-3 sm:space-y-4">
@@ -73,6 +61,13 @@ const SchoolOnboardingDashboard: React.FC<SchoolOnboardingDashboardProps> = ({
                 onClick={onSchoolClick}
               />
             ))}
+            {hasMoreSchools && (
+              <div className="text-center py-2">
+                <p className="muted">
+                  +{totalSchools! - schools.length} more school{totalSchools! - schools.length > 1 ? 's' : ''}
+                </p>
+              </div>
+            )}
           </div>
         </div>
       )}

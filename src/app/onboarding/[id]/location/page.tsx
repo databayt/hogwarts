@@ -1,14 +1,10 @@
 import LocationContent from "@/components/onboarding/location/content";
-import { ListingProvider } from '@/components/onboarding/use-listing';
 
 export const metadata = {
-  title: "School Location",
+  title: "School Location | Onboarding",
+  description: "Set your school's location and address details.",
 };
 
 export default function Location() {
-  return (
-    <ListingProvider>
-      <LocationContent />
-    </ListingProvider>
-  );
+  return <LocationContent />;
 }

@@ -30,7 +30,7 @@ export default function ActivityGraph() {
   return (
     <div className=" rounded-lg p-6">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold">Academic Activity</h3>
+        <h3>Academic Activity</h3>
         <div className="flex items-center space-x-2 text-xs text-muted-foreground">
           <span>Less</span>
           <div className="flex space-x-1">
@@ -67,7 +67,7 @@ export default function ActivityGraph() {
         </div>
       </div>
 
-      <p className="text-sm text-muted-foreground">Learn how academic activity is calculated and displayed.</p>
+      <p className="muted">Learn how academic activity is calculated and displayed.</p>
     </div>
   )
 }

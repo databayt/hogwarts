@@ -32,7 +32,7 @@ export function TenantLoginRedirect({ subdomain, className }: TenantLoginRedirec
 
   return (
     <div className={`text-center space-y-4 ${className}`}>
-      <h2 className="text-2xl font-bold">Login Required</h2>
+      <h2>Login Required</h2>
       <p className="text-muted-foreground">
         Please log in to access the {subdomain} dashboard.
       </p>

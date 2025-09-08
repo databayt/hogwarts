@@ -61,7 +61,7 @@ function Modal({ content, sm = false }: Props) {
                 sm 
                   ? isMobile
                     ? 'w-full h-screen px-20 py-4 overflow-auto'
-                    : 'm-4 px-20 py-8 max-w-2xl w-[24rem] h-[24rem] sm:text-sm rounded-lg' 
+                    : 'm-4 px-20 py-8 max-w-2xl w-[24rem] h-[24rem] rounded-lg' 
                   : 'w-full h-screen overflow-hidden px-20 py-4 sm:pt-14'
               }`}
             >

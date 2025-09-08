@@ -32,7 +32,7 @@ export function BillingToggle({ isYearly, onChange }: BillingToggleProps) {
         <ToggleGroupItem
           value="monthly"
           className={cn(
-            "z-10 h-9 w-full min-w-[148px] justify-center rounded-md px-6 text-xs ",
+            "z-10 h-9 w-full min-w-[148px] justify-center rounded-md px-6",
             isYearly ? "text-muted-foreground hover:text-foreground hover:bg-background" : "text-foreground",
           )}
           aria-label="Toggle monthly billing"
@@ -42,7 +42,7 @@ export function BillingToggle({ isYearly, onChange }: BillingToggleProps) {
         <ToggleGroupItem
           value="yearly"
           className={cn(
-            "z-10 h-9 w-full min-w-[148px] justify-center rounded-md px-6 text-xs",
+            "z-10 h-9 w-full min-w-[148px] justify-center rounded-md px-6",
             isYearly ? "text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-background",
           )}
           aria-label="Toggle yearly billing"

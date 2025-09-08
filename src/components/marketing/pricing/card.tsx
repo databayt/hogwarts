@@ -84,10 +84,10 @@ export function PricingCard({ offer, isYearly, userId, subscriptionPlan, userRol
       )}
     >
       <CardHeader className="">
-        <p className="text-lg text-foreground">{offer.title}</p>
-        <CardTitle className="text-4xl font-bold tracking-tight">
+        <p className="lead text-foreground">{offer.title}</p>
+        <CardTitle className="tracking-tight">
           {priceDisplay}
-          <span className="text-lg font-light text-muted-foreground ml-1">
+          <span className="muted ml-1">
             {offer.prices.monthly > 0 ? "/mo" : ""}
           </span>
         </CardTitle>
@@ -97,12 +97,12 @@ export function PricingCard({ offer, isYearly, userId, subscriptionPlan, userRol
       </div>
 
       <CardContent className=" flex-1">
-        <p className="text-sm font-semibold text-muted-foreground mb-2">{includesHeading}</p>
+        <p className="muted mb-2">{includesHeading}</p>
         <ul>
           {offer.benefits.map((feature) => (
             <li key={feature} className="flex items-start gap-3">
               <Check className="mt-1 text-primary size-3" />
-              <span className="text-xs leading-6">{feature}</span>
+              <span className="muted leading-6">{feature}</span>
             </li>
           ))}
           {/* limitations intentionally not rendered */}

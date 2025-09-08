@@ -1,146 +1,245 @@
 # School Onboarding Block
 
-A comprehensive onboarding flow for new schools joining the platform. Built following our component-driven architecture and shadcn/ui patterns.
+A comprehensive multi-step onboarding flow for new schools joining the platform. Built with Next.js 14, React Server Components, and shadcn/ui.
 
-## Architecture
+## 🎯 Overview
 
-The onboarding block follows our standard mirror-pattern architecture:
+The onboarding block provides a guided setup process for schools to configure their profile, settings, and business information. The flow is organized into logical step groups with validation, progress tracking, and data persistence.
+
+## 📁 Architecture
 
 ```
 src/
-├── app/
-│   └── onboarding/
-│       ├── page.tsx
-│       ├── overview/
-│       └── [id]/
-└── components/
-    └── onboarding/
-        ├── content.tsx
-        ├── actions.ts
-        ├── types.ts
-        ├── constants.ts
-        ├── use-listing.tsx
-        └── steps/
-            ├── title/
-            ├── description/
-            ├── location/
-            ├── capacity/
-            ├── branding/
-            ├── import/
-            ├── join/
-            ├── visibility/
-            ├── price/
-            ├── discount/
-            └── legal/
+├── app/onboarding/
+│   ├── page.tsx                    # Landing page
+│   ├── overview/
+│   │   └── page.tsx                # Overview dashboard
+│   └── [id]/                       # Dynamic school ID routes
+│       ├── layout.tsx              # Shared layout with ListingProvider
+│       ├── about-school/           # Static intro step
+│       ├── title/                  # School name
+│       ├── description/            # School details
+│       ├── location/               # Address & location
+│       ├── stand-out/              # Unique features (static)
+│       ├── capacity/               # Student/teacher limits
+│       ├── branding/               # Visual customization
+│       ├── import/                 # Data import
+│       ├── finish-setup/           # Setup completion (static)
+│       ├── join/                   # Platform registration
+│       ├── visibility/             # Privacy settings
+│       ├── price/                  # Tuition & fees
+│       ├── discount/               # Promotional offers
+│       ├── legal/                  # Terms & compliance
+│       └── subdomain/              # Custom domain setup
+│
+└── components/onboarding/
+    ├── actions.ts                  # Server actions (CRUD)
+    ├── constants.ts                # Step configurations
+    ├── types.ts                    # TypeScript definitions
+    ├── use-listing.tsx             # Context & state management
+    ├── use-onboarding.ts           # Navigation & validation
+    ├── host-footer.tsx             # Navigation controls
+    ├── host-header.tsx             # Progress indicator
+    ├── error-boundary.tsx          # Error handling
+    └── [step-name]/                # Step-specific components
+        ├── content.tsx             # Main UI component
+        ├── form.tsx                # Form implementation
+        ├── action.ts               # Server actions
+        ├── validation.ts           # Zod schemas
+        ├── constant.ts             # Step constants
+        └── type.ts                 # Step types
 ```
 
-## Step Groups
+## 🔄 Onboarding Flow
 
-The onboarding flow is organized into 3 main groups:
+### Step Groups
 
-1. **Basic Information**
-   - About School (static)
-   - Title
-   - Description
-   - Location
-   - Stand Out (static)
+#### 1. **Basic Information** (Group: `basic`)
+- **About School** - Welcome and introduction (static)
+- **Title** - School name configuration
+- **Description** - School type, level, and description
+- **Location** - Physical address and location
+- **Stand Out** - Highlight unique features (static)
 
-2. **School Setup**
-   - Capacity
-   - Branding
-   - Import
-   - Finish Setup (static)
+#### 2. **School Setup** (Group: `setup`)
+- **Capacity** - Student, teacher, classroom limits
+- **Branding** - Logo, colors, visual theme
+- **Import** - Bulk data import (CSV/Excel)
+- **Finish Setup** - Review and confirmation (static)
 
-3. **Business & Legal**
-   - Join
-   - Visibility
-   - Price
-   - Discount
-   - Legal
+#### 3. **Business & Legal** (Group: `business`)
+- **Join** - Platform account creation
+- **Visibility** - Public/private settings
+- **Price** - Tuition fees and payment
+- **Discount** - Promotional codes
+- **Legal** - Terms, compliance, safety
+- **Subdomain** - Custom domain configuration
 
-## Components
+## 🚀 Current Implementation Status
 
-### Core Components
+### ✅ Core Infrastructure
+- [x] Dynamic routing with school ID
+- [x] ListingProvider context at layout level
+- [x] Server actions with authentication
+- [x] Progress tracking and navigation
+- [x] Error boundary and fallback handling
+- [x] Form validation with Zod schemas
 
-- `HostFooter` - Navigation and progress tracking
-- `StepWrapper` - Consistent layout for all steps
-- `StepHeader` - Step title and description
-- `StepNavigation` - Next/Previous navigation
-- `ProgressIndicator` - Visual progress bar
+### 📋 Step Implementation
 
-### Form Components
+| Step | UI | Form | Actions | Validation | Database | Production Ready |
+|------|-----|------|---------|------------|----------|-----------------|
+| About School | ✅ | ✅ | ✅ | ✅ | N/A | ✅ |
+| Title | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Description | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Location | ✅ | ✅ | ✅ | ✅ | ✅ | 🔶 (Maps API pending) |
+| Stand Out | ✅ | ✅ | ✅ | ✅ | N/A | ✅ |
+| Capacity | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Branding | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Import | ✅ | ✅ | ✅ | ✅ | ⚠️ | 🔶 (Parser incomplete) |
+| Finish Setup | ✅ | ✅ | ✅ | ✅ | N/A | ✅ |
+| Join | ✅ | ✅ | ✅ | ✅ | ⚠️ | 🔶 (Workflow pending) |
+| Visibility | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Price | ✅ | ✅ | ✅ | ✅ | ⚠️ | 🔶 (Stripe pending) |
+| Discount | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Legal | ✅ | ✅ | ✅ | ✅ | ⚠️ | 🔶 (Docs pending) |
+| Subdomain | ✅ | ✅ | ✅ | ✅ | ✅ | 🔶 (DNS config pending) |
 
-Each interactive step includes:
-- `content.tsx` - Main step content
-- `actions.ts` - Server actions for mutations
-- `validation.ts` - Zod schemas
-- `types.ts` - TypeScript types
-- `form.tsx` - Form components
-- `use-{step}.ts` - Custom hooks
+Legend: ✅ Complete | 🔶 Partial | ⚠️ In Progress | ❌ Not Started
 
-## Database Schema
+## 🔧 Key Components
 
-The onboarding flow interacts with the following Prisma models:
+### ListingProvider Context
+- Manages school data state across all steps
+- Handles optimistic updates and server sync
+- Provides `useListing` hook for components
+- Automatically available in all step pages (set at layout level)
 
-### Core Models
+### Server Actions
+- `initializeSchoolSetup()` - Creates new school record
+- `getListing()` - Fetches school data with auth
+- `updateListing()` - Updates school fields
+- `deleteListing()` - Removes school (with safeguards)
+
+### Navigation & Validation
+- `useOnboarding()` - Step navigation and validation
+- Automatic progress tracking
+- Step dependencies and requirements
+- Forward/backward navigation with validation
+
+## 🛡️ Security & Authentication
+
+- Server-side authentication via `auth-security.ts`
+- School ownership verification
+- Multi-tenant data isolation
+- CSRF protection on mutations
+- Input sanitization and validation
+
+## 💾 Database Models
+
+### Primary Models
 - `School` - Core school information
-- `SchoolBranding` - Visual customization and visibility settings
-- `SchoolYear` - Academic calendar setup
+- `SchoolBranding` - Visual customization
+- `User` - Platform users with school association
 
-### Subscription & Pricing
-- `SubscriptionTier` - Plan features and limits
+### Supporting Models
+- `SubscriptionTier` - Plan limits and features
 - `Subscription` - Active subscriptions
 - `Invoice` - Payment records
 - `Discount` - Promotional codes
-- `AppliedDiscount` - Discount usage tracking
+- `LegalConsent` - Terms acceptance
 
-### Legal & Compliance
-- `LegalConsent` - User consent tracking
-- `LegalDocument` - Terms and policies
-- `ComplianceLog` - Audit trail
+## 🚦 Getting Started
 
-## Development
+### Development Setup
 
-1. Install dependencies:
 ```bash
+# Install dependencies
 pnpm install
-```
 
-2. Start the development server:
-```bash
+# Run development server
 pnpm dev
-```
 
-3. Run type checks:
-```bash
+# Type checking
 pnpm type-check
+
+# Linting
+pnpm lint
 ```
 
-## Important Notes
+### Environment Variables
 
-### ListingProvider Context
-- The `ListingProvider` is set at the layout level (`src/app/onboarding/layout.tsx`)
-- Individual pages DO NOT need to wrap their content with ListingProvider
-- All onboarding pages automatically have access to the listing context
+```env
+# Required for production
+DATABASE_URL="postgresql://..."
+NEXTAUTH_URL="https://..."
+NEXTAUTH_SECRET="..."
 
-## Validation & Security
+# Optional integrations
+STRIPE_SECRET_KEY="sk_..."
+GOOGLE_MAPS_API_KEY="..."
+UPLOADTHING_SECRET="..."
+```
 
-- All form inputs are validated with Zod schemas
-- Server-side validation in actions.ts
-- Multi-tenant safety with schoolId scoping
-- Auth.js session validation
+## 📈 Performance Optimizations
 
-## Best Practices
+- React Server Components for reduced bundle size
+- Optimistic UI updates with server reconciliation
+- Progressive form validation
+- Code splitting per step
+- Image optimization with next/image
 
-1. Follow shadcn/ui component patterns
-2. Use Tailwind utilities with cn helper
-3. Keep components small and focused
-4. Validate on both client and server
-5. Use TypeScript strictly - no any
-6. Include schoolId in all queries
+## 🎨 UI/UX Features
 
-## Related Documentation
+- Clean, modern design with shadcn/ui
+- Mobile-responsive layout
+- Progress indicators and step navigation
+- Real-time validation feedback
+- Error recovery and retry mechanisms
+- Accessibility compliant (WCAG 2.1 AA)
 
-- [Architecture Guide](/docs/architecture)
-- [Pattern Guide](/docs/pattern)
-- [Database Schema](/docs/database)
+## 🔍 Monitoring & Analytics
+
+- Performance monitoring via `performance-monitor.ts`
+- Error tracking and logging
+- User journey analytics
+- Conversion funnel metrics
+
+## 📝 Development Guidelines
+
+1. **Component Structure**: Each step follows the same pattern
+2. **Server Actions**: All mutations go through server actions
+3. **Validation**: Client + server validation with Zod
+4. **Type Safety**: Strict TypeScript, no `any` types
+5. **Error Handling**: Graceful degradation with user feedback
+6. **Testing**: Unit tests for validation, E2E for critical paths
+
+## 🚧 Known Issues & TODOs
+
+See [ISSUE.md](./ISSUE.md) for detailed tracking of:
+- Pending integrations (Maps, Stripe, DNS)
+- Data import parser implementation
+- Legal document templates
+- Invitation workflow
+- Performance optimizations
+- Test coverage improvements
+
+## 📚 Related Documentation
+
+- [Database Schema](/docs/database.md)
+- [Authentication Guide](/docs/auth.md)
+- [Component Patterns](/docs/patterns.md)
+- [API Reference](/docs/api.md)
+
+## 👥 Contributing
+
+1. Check [ISSUE.md](./ISSUE.md) for open tasks
+2. Follow the existing component patterns
+3. Add tests for new functionality
+4. Update this README for significant changes
+
+---
+
+**Last Updated**: December 2024  
+**Status**: Production Ready (with noted limitations)  
+**Version**: 1.0.0

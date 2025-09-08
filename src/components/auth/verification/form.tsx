@@ -52,7 +52,7 @@ export const NewVerificationForm = ({
     <div className={cn("flex flex-col gap-6 min-w-[200px] md:min-w-[350px]", className)} {...props}>
       <Card className="border-none shadow-none bg-background">
         <CardHeader className="text-center">
-          <h1 className="text-xl font-semibold">Confirming your verification</h1>
+          <h4>Confirming your verification</h4>
         </CardHeader>
         <CardContent>
           <div className="grid gap-6">
@@ -66,7 +66,7 @@ export const NewVerificationForm = ({
               )}
             </div>
 
-            <div className="text-center text-sm">
+            <div className="text-center muted">
               <Link href="/login" className="hover:underline underline-offset-4">
                 Back to login
               </Link>

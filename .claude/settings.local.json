@@ -1,7 +1,21 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "WebFetch(domain:github.com)",
+      "WebSearch",
+      "Bash(find:*)",
+      "Bash(for dir in about-school branding capacity description import location subdomain title stand-out finish-setup)",
+      "Bash(do if [ -d \"$dir\" ])",
+      "Bash(then echo \"✓ $dir\")",
+      "Bash(else echo \"✗ $dir\")",
+      "Bash(fi)",
+      "Bash(done)",
+      "Bash(test:*)",
+      "Bash(sed:*)",
+      "Bash(pnpm build:*)",
+      "Bash(pnpm prisma generate:*)",
+      "Bash(pnpm next:*)"
     ],
     "deny": [],
     "ask": []

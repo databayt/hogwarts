@@ -208,7 +208,7 @@ export function AnimatedButton({
       </div>
       
       {/* Button content */}
-      <span className="relative z-10 font-medium">{children}</span>
+      <span className="relative z-10">{children}</span>
     </Button>
   );
 } 

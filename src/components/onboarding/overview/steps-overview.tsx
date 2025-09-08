@@ -3,6 +3,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { Skeleton } from '@/components/ui/skeleton';
 import Image from 'next/image';
 
 interface Step {
@@ -14,27 +15,28 @@ interface Step {
 
 interface StepsOverviewProps {
   onGetStarted?: () => void;
+  isLoading?: boolean;
 }
 
-const StepsOverview: React.FC<StepsOverviewProps> = ({ onGetStarted }) => {
+const StepsOverview: React.FC<StepsOverviewProps> = ({ onGetStarted, isLoading = false }) => {
   const steps: Step[] = [
     {
       number: 1,
       title: "Tell us about your school",
       description: "Share some basic info, like where it is, and how many students it has.",
-      illustration: "/airbnb/place.webp"
+      illustration: "/site/tent.png"
     },
     {
       number: 2,
       title: "Add people and data",
       description: "Invite staff, and import students and classes—we'll help you out.. ",
-      illustration: "/airbnb/stand-out.webp"
+      illustration: "/site/light-bulb.png"
     },
     {
       number: 3,
       title: "Set up and launch",
       description: "Configure timetable and attendance, publish announcements, and go live.",
-      illustration: "/airbnb/publish.png"
+      illustration: "/site/world.png"
     }
   ];
 
@@ -77,6 +79,7 @@ const StepsOverview: React.FC<StepsOverviewProps> = ({ onGetStarted }) => {
                         src={step.illustration}
                         alt={step.title}
                         fill
+                        sizes="96px"
                         className="object-contain"
                       />
                     </div>
@@ -90,8 +93,15 @@ const StepsOverview: React.FC<StepsOverviewProps> = ({ onGetStarted }) => {
           <div className="">
             <Separator className="w-full" />
             <div className="flex justify-end py-4">
-              <Button onClick={onGetStarted}>
-                Get started
+              <Button onClick={onGetStarted} disabled={isLoading}>
+                {isLoading ? (
+                  <>
+                    <Skeleton className="w-4 h-4 mr-2" />
+                    Creating school...
+                  </>
+                ) : (
+                  'Get started'
+                )}
               </Button>
             </div>
           </div>

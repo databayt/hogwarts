@@ -1,36 +1,53 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { useHostValidation } from '@/components/onboarding/host-validation-context';
 import { useListing } from '@/components/onboarding/use-listing';
 import { useTitle } from './use-title';
-import { TitleForm } from './form';
+import { TitleForm, type TitleFormRef } from './form';
 import { TitleCard } from './card';
 import { FORM_LIMITS } from '@/components/onboarding/constants.client';
 import { generateSubdomain } from '@/lib/subdomain';
 import { Badge } from '@/components/ui/badge';
 import { Globe } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function TitleContent() {
   const params = useParams();
   const schoolId = params.id as string;
-  const { enableNext, disableNext } = useHostValidation();
+  const { enableNext, disableNext, setCustomNavigation } = useHostValidation();
+  const titleFormRef = useRef<TitleFormRef>(null);
   const { listing } = useListing();
   const { data: titleData, loading } = useTitle(schoolId);
   const [generatedSubdomain, setGeneratedSubdomain] = useState<string>('');
+  const [currentFormTitle, setCurrentFormTitle] = useState<string>('');
 
-  const currentTitle = titleData?.title || listing?.name || '';
+  const currentTitle = currentFormTitle || titleData?.title || listing?.name || '';
 
-  // Enable/disable next button based on title
+  const handleTitleChange = useCallback((title: string) => {
+    setCurrentFormTitle(title);
+  }, []);
+
+  const onNext = useCallback(async () => {
+    if (titleFormRef.current) {
+      await titleFormRef.current.saveAndNext();
+    }
+  }, []);
+
+  // Enable/disable next button based on title and set custom navigation
   useEffect(() => {
     const trimmedLength = currentTitle.trim().length;
     if (trimmedLength >= FORM_LIMITS.TITLE_MIN_LENGTH && trimmedLength <= FORM_LIMITS.TITLE_MAX_LENGTH) {
       enableNext();
+      setCustomNavigation({
+        onNext
+      });
     } else {
       disableNext();
+      setCustomNavigation(null);
     }
-  }, [currentTitle, enableNext, disableNext]);
+  }, [currentTitle, enableNext, disableNext, setCustomNavigation, onNext]);
 
   // Generate subdomain preview
   useEffect(() => {
@@ -46,11 +63,35 @@ export default function TitleContent() {
     return (
       <div className="max-w-6xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-20 items-start">
-          <div className="space-y-4">
-            <div className="h-6 bg-muted animate-pulse rounded" />
-            <div className="h-4 bg-muted animate-pulse rounded w-3/4" />
+          {/* Left side - Text content skeleton */}
+          <div className="space-y-6">
+            <div className="space-y-4">
+              <Skeleton className="h-8 w-64" />
+              <Skeleton className="h-4 w-96" />
+            </div>
+            
+            {/* Form skeleton */}
+            <div className="space-y-4">
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-4 w-48" />
+            </div>
+            
+            {/* Subdomain preview skeleton */}
+            <div className="space-y-3">
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-8 w-48" />
+            </div>
           </div>
-          <div className="h-32 bg-muted animate-pulse rounded" />
+          
+          {/* Right side - Card skeleton */}
+          <div className="space-y-4">
+            <Skeleton className="h-32 w-full" />
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-4 w-24" />
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -100,8 +141,10 @@ export default function TitleContent() {
           {/* Right side - Form */}
           <div>
             <TitleForm
+              ref={titleFormRef}
               schoolId={schoolId}
               initialData={{ title: currentTitle }}
+              onTitleChange={handleTitleChange}
             />
           </div>
         </div>

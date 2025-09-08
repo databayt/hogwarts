@@ -40,14 +40,16 @@ export async function middleware(req: NextRequest) {
   // Authentication protection for protected routes
   const isPublicRoute = publicRoutes.includes(url.pathname);
   const isOnboardingRoute = url.pathname.startsWith('/onboarding');
+  const isDocsRoute = url.pathname.startsWith('/docs');
   
   // Redirect to login if accessing protected routes without authentication
-  if (!isLoggedIn && !isPublicRoute) {
+  if (!isLoggedIn && !isPublicRoute && !isDocsRoute) {
     console.log('🚫 UNAUTHORIZED ACCESS - Redirecting to login:', { 
       pathname: url.pathname, 
       host, 
       isLoggedIn,
-      isPublicRoute 
+      isPublicRoute,
+      isDocsRoute
     });
     
     const loginUrl = new URL('/login', req.url);

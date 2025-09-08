@@ -6,7 +6,7 @@ import { HostStepLayout } from '@/components/onboarding';
 import { Button } from '@/components/ui/button';
 import { ChevronDown } from 'lucide-react';
 import { useHostValidation } from '@/components/onboarding/host-validation-context';
-import { ListingProvider, useListing } from '@/components/onboarding/use-listing';
+import { useListing } from '@/components/onboarding/use-listing';
 
 interface PricePageProps {
   params: Promise<{ id: string }>;
@@ -164,12 +164,8 @@ const PricePageContent = ({ params }: PricePageProps) => {
   );
 };
 
-const PricePage = ({ params }: PricePageProps) => {
-  return (
-    <ListingProvider>
-      <PricePageContent params={params} />
-    </ListingProvider>
-  );
+const Price = ({ params }: PricePageProps) => {
+  return <PricePageContent params={params} />;
 };
 
-export default PricePage; 
+export default Price; 
