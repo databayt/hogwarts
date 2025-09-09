@@ -47,7 +47,6 @@ export function ImportForm({
     const file = event.target.files?.[0];
     if (file) {
       setSelectedFile(file);
-      form.setValue('fileName', file.name);
     }
   };
 
