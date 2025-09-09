@@ -149,16 +149,17 @@ export function ListingProvider({ children, initialListing = null }: ListingProv
             errorMessage = result.error;
             isAccessDenied = result.error.includes('Access denied') || result.error.includes('CROSS_TENANT_ACCESS_DENIED');
           } else if (typeof result.error === 'object' && result.error !== null) {
-            if ('message' in result.error && typeof result.error.message === 'string') {
-              errorMessage = result.error.message;
-              isAccessDenied = result.error.message.includes('Access denied') || result.error.message.includes('CROSS_TENANT_ACCESS_DENIED');
-            } else if ('code' in result.error && typeof result.error.code === 'string') {
-              errorMessage = `Error: ${result.error.code}`;
-              isAccessDenied = result.error.code === 'CROSS_TENANT_ACCESS_DENIED';
+            const errorObj = result.error as any; // Type assertion to handle the object case
+            if ('message' in errorObj && typeof errorObj.message === 'string') {
+              errorMessage = errorObj.message;
+              isAccessDenied = errorObj.message.includes('Access denied') || errorObj.message.includes('CROSS_TENANT_ACCESS_DENIED');
+            } else if ('code' in errorObj && typeof errorObj.code === 'string') {
+              errorMessage = `Error: ${errorObj.code}`;
+              isAccessDenied = errorObj.code === 'CROSS_TENANT_ACCESS_DENIED';
             }
             
             // Check for code field separately
-            if ('code' in result.error && result.error.code === 'CROSS_TENANT_ACCESS_DENIED') {
+            if ('code' in errorObj && errorObj.code === 'CROSS_TENANT_ACCESS_DENIED') {
               isAccessDenied = true;
             }
           }
