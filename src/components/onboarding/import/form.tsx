@@ -133,7 +133,7 @@ export function ImportForm({
                   <div className="border-2 border-dashed border-muted rounded-lg p-6 text-center">
                     <input
                       type="file"
-                      accept={SUPPORTED_FORMATS[selectedImportType as keyof typeof SUPPORTED_FORMATS]}
+                      accept={selectedImportType === 'csv' ? '.csv,.xlsx,.xls' : undefined}
                       onChange={handleFileChange}
                       className="hidden"
                       id="file-upload"
@@ -148,7 +148,7 @@ export function ImportForm({
                         )}
                       </p>
                       <p className="text-xs text-muted-foreground mt-1">
-                        {SUPPORTED_FORMATS[selectedImportType as keyof typeof SUPPORTED_FORMATS]}
+                        {selectedImportType === 'csv' ? 'CSV, Excel (.csv, .xlsx, .xls)' : 'Select import type'}
                       </p>
                     </Label>
                   </div>
@@ -215,7 +215,7 @@ export function ImportForm({
               type="submit"
               disabled={
                 isSubmitting || 
-                ((selectedImportType === 'csv' || selectedImportType === 'excel') && !selectedFile)
+                (selectedImportType === 'csv' && !selectedFile)
               }
             >
               {isSubmitting ? (

@@ -26,8 +26,9 @@ export async function updateStandOutFeatures(
       data: {
         // Store features in a way that fits your schema
         // This could be in a JSON field or separate table
-        description: validatedData.features.length > 0 
-          ? `${validatedData.description || ''}\n\nKey Features:\n${validatedData.features.join(', ')}`
+        // Note: School model doesn't have description field, storing in website for now
+        website: validatedData.features.length > 0 
+          ? `Features: ${validatedData.features.join(', ')}`
           : validatedData.description,
         updatedAt: new Date(),
       },
@@ -48,8 +49,10 @@ export async function getStandOutData(schoolId: string): Promise<ActionResponse>
     const school = await db.school.findUnique({
       where: { id: schoolId },
       select: {
-        description: true,
+        website: true,
         // Add other fields that might contain stand-out features
+        id: true,
+        name: true,
       },
     });
 
@@ -63,13 +66,13 @@ export async function getStandOutData(schoolId: string): Promise<ActionResponse>
     // Extract stand-out features from description or other fields
     // This is a simplified approach - you might have a dedicated field/table
     const features: string[] = [];
-    if (school.description?.includes('Key Features:')) {
-      const featuresSection = school.description.split('Key Features:')[1];
+    if (school.website?.includes('Features:')) {
+      const featuresSection = school.website.split('Features:')[1];
       features.push(...featuresSection.split(',').map(f => f.trim()).filter(Boolean));
     }
 
     return createActionResponse({
-      description: school.description,
+      description: school.website || '',
       features,
     });
   } catch (error) {

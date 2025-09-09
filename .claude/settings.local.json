@@ -17,7 +17,8 @@
       "Bash(pnpm prisma generate:*)",
       "Bash(pnpm next:*)",
       "Bash(pnpm lint:*)",
-      "Bash(npx next:*)"
+      "Bash(npx next:*)",
+      "Bash(timeout 30 npx tsc --noEmit --skipLibCheck)"
     ],
     "deny": [],
     "ask": []
