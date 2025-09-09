@@ -84,7 +84,7 @@ export function ImportForm({
             <CardContent>
               <FormField
                 control={form.control}
-                name="importType"
+                name="dataSource"
                 render={({ field }) => (
                   <FormItem>
                     <FormControl>
