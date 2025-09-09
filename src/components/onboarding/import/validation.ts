@@ -2,9 +2,9 @@ import { z } from 'zod';
 
 export const importSchema = z.object({
   dataSource: z.enum(['manual', 'csv', 'existing-system']).describe("Please select a data source"),
-  includeStudents: z.boolean().default(true),
-  includeTeachers: z.boolean().default(true),
-  includeParents: z.boolean().default(true),
+  includeStudents: z.boolean(),
+  includeTeachers: z.boolean(),
+  includeParents: z.boolean(),
   csvFile: z.string().optional(),
 });
 

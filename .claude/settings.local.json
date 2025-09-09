@@ -15,7 +15,9 @@
       "Bash(sed:*)",
       "Bash(pnpm build:*)",
       "Bash(pnpm prisma generate:*)",
-      "Bash(pnpm next:*)"
+      "Bash(pnpm next:*)",
+      "Bash(pnpm lint:*)",
+      "Bash(npx next:*)"
     ],
     "deny": [],
     "ask": []

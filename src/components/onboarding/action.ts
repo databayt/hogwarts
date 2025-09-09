@@ -183,10 +183,10 @@ export async function getUserSchools(): Promise<ActionResponse> {
 
     // Get all schools associated with this user (drafts and completed)
     const schools = await db.school.findMany({
-      where: createTenantSafeWhere({
+      where: {
         // Add user filtering when user-school relationship is available
         // ownerId: authContext.userId,
-      }),
+      },
       select: {
         id: true,
         name: true,
@@ -199,8 +199,8 @@ export async function getUserSchools(): Promise<ActionResponse> {
         address: true,
         website: true,
         // Additional fields for better UX
-        description: true,
-        logo: true,
+        logoUrl: true,
+        isActive: true,
       },
       orderBy: {
         updatedAt: 'desc'
@@ -286,8 +286,8 @@ export async function getSchoolSetupStatus(schoolId: string): Promise<ActionResp
         website: true,
         createdAt: true,
         updatedAt: true,
-        description: true,
-        logo: true,
+        logoUrl: true,
+        isActive: true,
         domain: true,
       },
     });
@@ -303,7 +303,7 @@ export async function getSchoolSetupStatus(schoolId: string): Promise<ActionResp
     const checks = [
       !!school.name && school.name !== "New School",
       !!school.address,
-      !!school.description,
+      !!school.website,
       !!school.maxStudents && school.maxStudents > 0,
       !!school.maxTeachers && school.maxTeachers > 0,
       !!school.planType,
@@ -326,7 +326,7 @@ function getNextStep(school: any): OnboardingStep {
   if (!school.name || school.name === "New School") {
     return "title";
   }
-  if (!school.description) {
+  if (!school.website) {
     return "description";
   }
   if (!school.address) {

@@ -12,7 +12,7 @@ import { Upload, FileSpreadsheet, Edit, Info, Download } from 'lucide-react';
 import { importSchema } from './validation';
 import { IMPORT_TYPES, SUPPORTED_FORMATS } from './constants';
 import { ImportCard } from './card';
-import type { ImportFormData } from './types';
+import type { ImportFormData } from './validation';
 
 interface ImportFormProps {
   initialData?: ImportFormData;
@@ -23,7 +23,12 @@ interface ImportFormProps {
 }
 
 export function ImportForm({
-  initialData = { importType: 'manual' },
+  initialData = { 
+    dataSource: 'manual' as const,
+    includeStudents: true,
+    includeTeachers: true,
+    includeParents: true,
+  },
   onSubmit,
   onSkip,
   onBack,
@@ -36,7 +41,7 @@ export function ImportForm({
     defaultValues: initialData,
   });
 
-  const selectedImportType = form.watch('importType');
+  const selectedImportType = form.watch('dataSource');
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];

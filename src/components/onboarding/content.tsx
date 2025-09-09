@@ -12,7 +12,7 @@ export default function OnboardingContent() {
   const router = useRouter();
   const user = useCurrentUser();
   const [isCreating, setIsCreating] = React.useState(false);
-  const [schools, setSchools] = React.useState([]);
+  const [schools, setSchools] = React.useState<any[]>([]);
   const [totalSchools, setTotalSchools] = React.useState<number>(0);
   const [isLoading, setIsLoading] = React.useState(true);
 
@@ -112,7 +112,7 @@ export default function OnboardingContent() {
             id: school.id!,
             name: school.name || 'Unnamed School',
             startDate: school.createdAt ? new Date(school.createdAt).toLocaleDateString() : 'Unknown',
-            status: school.isPublished ? 'active' : 'draft' as const,
+            status: school.isActive ? 'active' : 'draft' as const,
             subdomain: school.domain,
           }))}
           totalSchools={totalSchools}

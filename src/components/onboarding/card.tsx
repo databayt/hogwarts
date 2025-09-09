@@ -8,7 +8,7 @@ import { Progress } from '@/components/ui/progress';
 import { CalendarDays, MapPin, Users, GraduationCap, DollarSign, Building } from 'lucide-react';
 import type { OnboardingSchoolData, OnboardingProgress, OnboardingStep } from './type';
 import { formatCurrency, formatCapacity, formatSchoolType } from './util';
-import { STEP_GROUPS } from './constant';
+import { STEP_GROUPS, ONBOARDING_STEPS } from './constant';
 
 interface SchoolCardProps {
   school: OnboardingSchoolData;
@@ -335,13 +335,6 @@ export function StepCard({
 }
 
 // Helper function imports (need to be defined in this file for now)
-const ONBOARDING_STEPS = {
-  'title': { title: 'School Name', description: 'Enter your school name', group: 'basic', isRequired: true, order: 1, step: 'title' as const },
-  'description': { title: 'Description', description: 'Describe your school', group: 'basic', isRequired: true, order: 2, step: 'description' as const },
-  'location': { title: 'Location', description: 'Set your school location', group: 'basic', isRequired: true, order: 3, step: 'location' as const },
-  'capacity': { title: 'Capacity', description: 'Set student and teacher capacity', group: 'setup', isRequired: true, order: 4, step: 'capacity' as const },
-  'price': { title: 'Pricing', description: 'Set tuition and fees', group: 'business', isRequired: true, order: 5, step: 'price' as const },
-} as const;
 
 function getStepTitle(step: string): string {
   return (ONBOARDING_STEPS as any)[step]?.title || step;

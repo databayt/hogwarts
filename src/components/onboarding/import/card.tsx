@@ -92,7 +92,9 @@ export function ImportCard({
               <p className="text-muted-foreground mb-2">Errors:</p>
               <div className="space-y-1">
                 {result.errors.slice(0, 3).map((error, index) => (
-                  <p key={index} className="muted text-red-600">{error}</p>
+                  <p key={index} className="muted text-red-600">
+                    {typeof error === 'string' ? error : `Row ${error.row}: ${error.message}`}
+                  </p>
                 ))}
                 {result.errors.length > 3 && (
                   <p className="muted">

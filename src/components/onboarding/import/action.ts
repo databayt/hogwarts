@@ -139,7 +139,8 @@ async function processExcelImport(
     const dataType = data.dataTypes?.[0] || 'students';
     let buffer: ArrayBuffer;
     if (typeof data.file === 'string') {
-      buffer = new TextEncoder().encode(data.file).buffer;
+      const encoded = new TextEncoder().encode(data.file);
+      buffer = encoded.buffer.slice(encoded.byteOffset, encoded.byteOffset + encoded.byteLength) as ArrayBuffer;
     } else {
       const tempBuffer = await data.file.arrayBuffer();
       buffer = tempBuffer instanceof ArrayBuffer ? tempBuffer : tempBuffer as ArrayBuffer;

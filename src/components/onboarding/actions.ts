@@ -125,10 +125,15 @@ export async function getListing(id: string): Promise<ActionResponse> {
   try {
     logger.debug('getListing called', { schoolId: id });
     
+    // Create a wrapper that returns void
+    const requireOwnership = async (schoolId: string): Promise<void> => {
+      await requireSchoolOwnership(schoolId);
+    };
+
     // Use the new helper that handles onboarding fallback cleanly
     const { school, fallbackUsed } = await getSchoolWithOnboardingFallback(
       id,
-      requireSchoolOwnership
+      requireOwnership
     );
     
     if (fallbackUsed) {
@@ -349,7 +354,7 @@ export async function initializeSchoolSetup(): Promise<ActionResponse> {
 
     logger.debug("Final user update for session refresh:", {
       userId: finalUserUpdate.id,
-      schoolId: finalUserUpdate.schoolId,
+      schoolId: finalUserUpdate.schoolId ?? undefined,
       updatedAt: finalUserUpdate.updatedAt,
       sessionRefreshTimestamp: new Date().toISOString()
     });
