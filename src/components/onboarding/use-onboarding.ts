@@ -10,10 +10,10 @@ import type {
   SchoolWithStatus
 } from './type';
 import { 
-  getSchool, 
-  updateSchool, 
+  getListing, 
+  updateListing, 
   getSchoolSetupStatus, 
-  proceedToNextStep,
+  proceedToTitle,
   getUserSchools 
 } from './actions';
 import { validateStep } from './validation';
@@ -42,14 +42,14 @@ export function useOnboarding(schoolId?: string) {
       setError(null);
 
       const [schoolResponse, statusResponse] = await Promise.all([
-        getSchool(currentSchoolId),
+        getListing(currentSchoolId),
         getSchoolSetupStatus(currentSchoolId)
       ]);
 
       if (schoolResponse.success && schoolResponse.data) {
         setSchool(schoolResponse.data);
       } else {
-        setError(schoolResponse.error?.message || 'Failed to load school');
+        setError(typeof schoolResponse.error === 'string' ? schoolResponse.error : 'Failed to load school');
       }
 
       if (statusResponse.success && statusResponse.data) {
@@ -78,7 +78,7 @@ export function useOnboarding(schoolId?: string) {
 
     try {
       setIsSaving(true);
-      const response = await updateSchool(currentSchoolId, data);
+      const response = await updateListing(currentSchoolId, data);
 
       if (response.success && response.data) {
         setSchool(prev => ({ ...prev, ...response.data }));
@@ -87,7 +87,7 @@ export function useOnboarding(schoolId?: string) {
         // Refresh progress after update
         await loadSchoolData();
       } else {
-        throw new Error(response.error?.message || 'Failed to update school');
+        throw new Error(typeof response.error === 'string' ? response.error : 'Failed to update school');
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to save changes';
@@ -103,7 +103,7 @@ export function useOnboarding(schoolId?: string) {
     if (!currentSchoolId || !progress?.nextStep) return;
 
     try {
-      await proceedToNextStep(currentSchoolId);
+      await proceedToTitle(currentSchoolId);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to proceed to next step';
       console.error('Error proceeding to next step:', errorMessage);
@@ -255,7 +255,7 @@ export function useUserSchools() {
       if (response.success && response.data) {
         setSchools(response.data);
       } else {
-        setError(response.error?.message || 'Failed to load schools');
+        setError(typeof response.error === 'string' ? response.error : 'Failed to load schools');
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load schools';
