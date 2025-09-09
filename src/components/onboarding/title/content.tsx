@@ -45,7 +45,7 @@ export default function TitleContent() {
       });
     } else {
       disableNext();
-      setCustomNavigation(null);
+      setCustomNavigation(undefined);
     }
   }, [currentTitle, enableNext, disableNext, setCustomNavigation, onNext]);
 
