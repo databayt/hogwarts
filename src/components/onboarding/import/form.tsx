@@ -120,7 +120,7 @@ export function ImportForm({
           </Card>
 
           {/* File Upload (if file import selected) */}
-          {(selectedImportType === 'csv' || selectedImportType === 'excel') && (
+          {selectedImportType === 'csv' && (
             <Card>
               <CardHeader>
                 <CardTitle>Upload File</CardTitle>
