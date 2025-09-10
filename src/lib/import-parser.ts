@@ -158,7 +158,7 @@ export async function parseCsvData(
       const validation = schema.safeParse(rowData);
       
       if (!validation.success) {
-        validation.error.errors.forEach(err => {
+        validation.error.issues.forEach((err: any) => {
           rowErrors.push({
             row: i + 1,
             column: err.path.join('.'),
