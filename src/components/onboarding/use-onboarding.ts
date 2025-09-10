@@ -176,12 +176,16 @@ export function useOnboardingForm(initialData?: Partial<OnboardingSchoolData>) {
 
   const updateField = useCallback((field: keyof OnboardingSchoolData, value: any) => {
     setData(prev => ({ ...prev, [field]: value }));
-    setFormState(prev => ({
-      ...prev,
-      touched: { ...prev.touched, [field]: true },
-      isDirty: true,
-      errors: { ...prev.errors, [field]: undefined }, // Clear field error on change
-    }));
+    setFormState(prev => {
+      const newErrors = { ...prev.errors };
+      delete newErrors[field]; // Clear field error on change
+      return {
+        ...prev,
+        touched: { ...prev.touched, [field]: true },
+        isDirty: true,
+        errors: newErrors,
+      };
+    });
   }, []);
 
   const updateFields = useCallback((fields: Partial<OnboardingSchoolData>) => {
@@ -201,10 +205,14 @@ export function useOnboardingForm(initialData?: Partial<OnboardingSchoolData>) {
   }, []);
 
   const clearFieldError = useCallback((field: string) => {
-    setFormState(prev => ({
-      ...prev,
-      errors: { ...prev.errors, [field]: undefined },
-    }));
+    setFormState(prev => {
+      const newErrors = { ...prev.errors };
+      delete newErrors[field];
+      return {
+        ...prev,
+        errors: newErrors,
+      };
+    });
   }, []);
 
   const setLoading = useCallback((isLoading: boolean) => {

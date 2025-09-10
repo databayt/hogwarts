@@ -242,7 +242,7 @@ export function createProgressState(
     currentStep,
     completedSteps,
     completionPercentage,
-    nextStep,
+    nextStep: nextStep || undefined,
     canProceed: completionPercentage >= 80, // Can proceed if 80% complete
   };
 }
