@@ -174,3 +174,6 @@ Use these path aliases:
 - Uniqueness constraints are scoped within tenant (`schoolId`)
 - Every read/write operation includes `{ schoolId }` from session/subdomain
 - Log `requestId` and `schoolId` for traceability
+
+
+auto push to github 

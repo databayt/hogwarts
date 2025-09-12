@@ -1,22 +1,16 @@
 "use client"
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { MapContainer, TileLayer, Marker, useMap } from "react-leaflet";
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
+import mapboxgl from "mapbox-gl";
+import "mapbox-gl/dist/mapbox-gl.css";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Loader2, MapPin } from "lucide-react";
 import { useDebounce } from "@/hooks/use-debounce";
 import { type LocationFormData } from "./validation";
 
-// Fix for default markers in React Leaflet
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: "/leaflet/marker-icon-2x.png",
-  iconUrl: "/leaflet/marker-icon.png",
-  shadowUrl: "/leaflet/marker-shadow.png",
-});
+// Set Mapbox access token - you'll need to provide this
+mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "";
 
 interface MapFormProps {
   initialData?: Partial<LocationFormData>;
@@ -38,15 +32,6 @@ interface SearchResult {
   };
 }
 
-function MapController({ center }: { center: [number, number] }) {
-  const map = useMap();
-  
-  useEffect(() => {
-    map.setView(center, 16);
-  }, [map, center]);
-  
-  return null;
-}
 
 export function MapForm({ initialData, onLocationChange }: MapFormProps) {
   const [searchQuery, setSearchQuery] = useState("");
@@ -63,8 +48,53 @@ export function MapForm({ initialData, onLocationChange }: MapFormProps) {
     longitude: initialData?.longitude || -74.0060,
   });
 
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<mapboxgl.Map | null>(null);
+  const markerRef = useRef<mapboxgl.Marker | null>(null);
   const searchRef = useRef<HTMLDivElement>(null);
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
+
+  // Initialize Mapbox map
+  useEffect(() => {
+    if (!mapContainerRef.current) return;
+
+    const map = new mapboxgl.Map({
+      container: mapContainerRef.current,
+      style: 'mapbox://styles/mapbox/streets-v12',
+      center: [selectedLocation.longitude!, selectedLocation.latitude!],
+      zoom: 16,
+    });
+
+    mapRef.current = map;
+
+    // Add marker
+    const marker = new mapboxgl.Marker()
+      .setLngLat([selectedLocation.longitude!, selectedLocation.latitude!])
+      .addTo(map);
+    
+    markerRef.current = marker;
+
+    // Handle map click
+    map.on('click', (e) => {
+      const { lng, lat } = e.lngLat;
+      handleMapClick(lat, lng);
+    });
+
+    return () => {
+      map.remove();
+    };
+  }, []);
+
+  // Update map center and marker when location changes
+  useEffect(() => {
+    if (!mapRef.current || !markerRef.current) return;
+    
+    const lng = selectedLocation.longitude!;
+    const lat = selectedLocation.latitude!;
+    
+    mapRef.current.setCenter([lng, lat]);
+    markerRef.current.setLngLat([lng, lat]);
+  }, [selectedLocation.latitude, selectedLocation.longitude]);
 
   // Close search results when clicking outside
   useEffect(() => {
@@ -211,21 +241,10 @@ export function MapForm({ initialData, onLocationChange }: MapFormProps) {
       </div>
 
       {/* Interactive Map */}
-      <div className="rounded-lg overflow-hidden border h-[400px]">
-        <MapContainer
-          center={[selectedLocation.latitude!, selectedLocation.longitude!]}
-          zoom={16}
-          style={{ height: "100%", width: "100%" }}
-          onClick={(e) => handleMapClick(e.latlng.lat, e.latlng.lng)}
-        >
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
-          <Marker position={[selectedLocation.latitude!, selectedLocation.longitude!]} />
-          <MapController center={[selectedLocation.latitude!, selectedLocation.longitude!]} />
-        </MapContainer>
-      </div>
+      <div 
+        ref={mapContainerRef}
+        className="rounded-lg overflow-hidden border h-[400px] w-full"
+      />
 
       {/* Selected Location Display */}
       {selectedLocation.address && (
