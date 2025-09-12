@@ -12,7 +12,7 @@ export async function POST(request: Request) {
     console.log('📝 Storing callback URL server-side:', callbackUrl);
     
     // Store the callback URL in a server-side cookie
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     cookieStore.set({
       name: 'oauth_callback_intended',
       value: callbackUrl,

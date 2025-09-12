@@ -310,7 +310,7 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
       // Method 0: Check server-side cookies using Next.js cookies helper
       if (!callbackUrl) {
         try {
-          const cookieStore = cookies();
+          const cookieStore = await cookies();
           const oauthCallbackCookie = cookieStore.get('oauth_callback_intended');
           if (oauthCallbackCookie) {
             callbackUrl = oauthCallbackCookie.value;
