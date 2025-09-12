@@ -305,7 +305,7 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
 
       // PRIORITY: Check for callbackUrl parameter first (from login redirect)
       console.log('\n🎯 CHECKING FOR CALLBACK URL...');
-      let callbackUrl = intendedCallbackUrl;
+      let callbackUrl: string | null = intendedCallbackUrl;
       
       // Method 0: Check server-side cookies using Next.js cookies helper
       if (!callbackUrl) {
