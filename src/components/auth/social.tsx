@@ -66,11 +66,25 @@ export const Social = () => {
   }, []);
 
   const onClick = (provider: "google" | "facebook") => {
+    console.log('=====================================');
+    console.log(`🚀 OAuth ${provider.toUpperCase()} INITIATED`);
+    console.log('=====================================');
+    
     // Ensure we're on client side
     if (typeof window === 'undefined') {
       console.log('❌ onClick called on server side, aborting');
       return;
     }
+    
+    // Log current page state
+    console.log('📍 Current Page State:', {
+      url: window.location.href,
+      pathname: window.location.pathname,
+      search: window.location.search,
+      searchParams: Object.fromEntries(new URLSearchParams(window.location.search).entries()),
+      callbackUrlFromParams: callbackUrl,
+      tenantFromParams: tenant
+    });
     
     // Check if we're on a subdomain
     const currentHost = window.location.hostname;
@@ -145,19 +159,39 @@ export const Social = () => {
     // IMPORTANT: Preserve the original callbackUrl from the login page
     const finalCallbackUrl = callbackUrl || DEFAULT_LOGIN_REDIRECT;
     
-    console.log('Using NextAuth signIn for OAuth:', {
+    console.log('\n🌐 MAIN DOMAIN OAUTH FLOW');
+    console.log('📊 OAuth Configuration:', {
       provider,
       callbackUrl: finalCallbackUrl,
       originalCallbackUrl: callbackUrl,
+      DEFAULT_LOGIN_REDIRECT,
       currentHost,
-      searchParams: searchParams.toString()
+      searchParamsString: searchParams.toString(),
+      allSearchParams: Object.fromEntries(searchParams.entries())
     });
     
     // Store the callback URL in session storage as a fallback
-    if (callbackUrl && typeof window !== 'undefined' && window.sessionStorage) {
-      sessionStorage.setItem('oauth_callback_intended', callbackUrl);
-      console.log('💾 Stored intended callback URL:', callbackUrl);
+    if (callbackUrl) {
+      console.log('\n💾 STORING CALLBACK URL IN SESSION STORAGE');
+      if (typeof window !== 'undefined' && window.sessionStorage) {
+        sessionStorage.setItem('oauth_callback_intended', callbackUrl);
+        console.log('✅ Successfully stored:', {
+          key: 'oauth_callback_intended',
+          value: callbackUrl,
+          verified: sessionStorage.getItem('oauth_callback_intended') === callbackUrl
+        });
+      } else {
+        console.log('❌ Session storage not available');
+      }
+    } else {
+      console.log('⚠️ No callback URL to store');
     }
+    
+    console.log('\n🔐 Calling NextAuth signIn with:', {
+      provider,
+      callbackUrl: finalCallbackUrl,
+      redirect: true
+    });
     
     signIn(provider, {
       callbackUrl: finalCallbackUrl,

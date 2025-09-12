@@ -244,7 +244,15 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
       return session
     },
     async redirect({ url, baseUrl }) {
-      console.log('🔄 REDIRECT CALLBACK START:', { url, baseUrl });
+      console.log('=====================================');
+      console.log('🔄 REDIRECT CALLBACK START');
+      console.log('=====================================');
+      console.log('📍 Input Parameters:', {
+        url,
+        baseUrl,
+        urlLength: url?.length,
+        baseUrlLength: baseUrl?.length
+      });
       
       // Handle Facebook redirect with #_=_ hash FIRST - clean it completely
       if (url.includes('#_=_')) {
@@ -258,12 +266,25 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
       }
 
       // PRIORITY: Check for callbackUrl parameter first (from login redirect)
+      console.log('\n🎯 CHECKING FOR CALLBACK URL...');
       let callbackUrl = null;
       try {
         // Method 1: Parse as URL and check searchParams
         const urlObj = new URL(url, baseUrl);
+        console.log('📊 URL Object Analysis:', {
+          href: urlObj.href,
+          pathname: urlObj.pathname,
+          search: urlObj.search,
+          searchParams: Array.from(urlObj.searchParams.entries()),
+          hash: urlObj.hash
+        });
         callbackUrl = urlObj.searchParams.get('callbackUrl') || urlObj.searchParams.get('redirect');
-        console.log('🔍 Method 1 - URL searchParams:', { callbackUrl, searchParams: urlObj.searchParams.toString() });
+        console.log('🔍 Method 1 - URL searchParams:', { 
+          callbackUrl, 
+          hasCallbackParam: urlObj.searchParams.has('callbackUrl'),
+          hasRedirectParam: urlObj.searchParams.has('redirect'),
+          allParams: Object.fromEntries(urlObj.searchParams.entries())
+        });
         
         // Method 2: Check if the URL itself contains a callback parameter
         if (!callbackUrl && url.includes('callbackUrl=')) {
@@ -306,6 +327,16 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
         if (!callbackUrl && typeof window !== 'undefined' && window.sessionStorage) {
           try {
             const intendedCallback = window.sessionStorage.getItem('oauth_callback_intended');
+            const allStorageKeys = Object.keys(window.sessionStorage);
+            console.log('💾 Session Storage Check:', {
+              intendedCallback,
+              hasIntendedCallback: !!intendedCallback,
+              allKeys: allStorageKeys,
+              allValues: allStorageKeys.reduce((acc, key) => {
+                acc[key] = window.sessionStorage.getItem(key);
+                return acc;
+              }, {} as Record<string, string | null>)
+            });
             if (intendedCallback) {
               callbackUrl = intendedCallback;
               console.log('🔍 Method 5 - session storage intended callback:', { callbackUrl });
@@ -317,8 +348,15 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
           }
         }
         
+        console.log('\n📋 CALLBACK URL RESOLUTION SUMMARY:', {
+          found: !!callbackUrl,
+          value: callbackUrl,
+          type: typeof callbackUrl
+        });
+        
         if (callbackUrl) {
-          console.log('🎯 CALLBACK URL FOUND - Redirecting to:', callbackUrl);
+          console.log('\n✅ CALLBACK URL FOUND!');
+          console.log('🎯 Attempting redirect to:', callbackUrl);
           // Validate callback URL is from same origin for security
           try {
             const callbackUrlObj = new URL(callbackUrl, baseUrl);
@@ -331,8 +369,20 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
               
               // If it's a relative URL, make it absolute with the current baseUrl
               if (callbackUrl.startsWith('/')) {
-                return `${baseUrl}${callbackUrl}`;
+                const absoluteUrl = `${baseUrl}${callbackUrl}`;
+                console.log('✅ RETURNING CALLBACK URL (relative->absolute):', {
+                  original: callbackUrl,
+                  absolute: absoluteUrl
+                });
+                console.log('=====================================');
+                console.log('🔄 REDIRECT CALLBACK END');
+                console.log('=====================================\n');
+                return absoluteUrl;
               }
+              console.log('✅ RETURNING CALLBACK URL (absolute):', callbackUrl);
+              console.log('=====================================');
+              console.log('🔄 REDIRECT CALLBACK END');
+              console.log('=====================================\n');
               return callbackUrl;
             } else {
               console.log('⚠️ SECURITY: Callback URL origin mismatch, ignoring:', { 
@@ -345,8 +395,15 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
             console.log('❌ Error validating callback URL:', error);
             // If it's a relative path, still try to use it
             if (callbackUrl.startsWith('/')) {
-              console.log('📍 Using relative callback URL:', callbackUrl);
-              return `${baseUrl}${callbackUrl}`;
+              const absoluteUrl = `${baseUrl}${callbackUrl}`;
+              console.log('📍 Using relative callback URL (fallback):', {
+                original: callbackUrl,
+                absolute: absoluteUrl
+              });
+              console.log('=====================================');
+              console.log('🔄 REDIRECT CALLBACK END');
+              console.log('=====================================\n');
+              return absoluteUrl;
             }
           }
         }
@@ -563,21 +620,54 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
         console.log('❌ Error page detected, investigating...');
       }
 
+      // Final redirect decision
+      console.log('\n🎯 FINAL REDIRECT DECISION');
+      console.log('Current state:', {
+        hasCallbackUrl: !!callbackUrl,
+        callbackUrl,
+        url,
+        baseUrl,
+        urlStartsWithSlash: url.startsWith("/"),
+        isSameOrigin: url.startsWith("http") ? new URL(url).origin === baseUrl : false
+      });
+      
       // Default behavior - redirect to dashboard on current domain
       if (url.startsWith("/")) {
         const finalUrl = `${baseUrl}/dashboard`;
-        console.log('🔄 Default behavior - redirecting to dashboard:', finalUrl);
+        console.log('📍 Relative URL - defaulting to dashboard:', {
+          reason: 'URL starts with /',
+          originalUrl: url,
+          finalUrl
+        });
+        console.log('=====================================');
+        console.log('🔄 REDIRECT CALLBACK END');
+        console.log('=====================================\n');
         return finalUrl;
       }
       else if (new URL(url).origin === baseUrl) {
         // If it's the same origin, redirect to dashboard
         const dashboardUrl = `${baseUrl}/dashboard`;
-        console.log('🔄 Same origin - redirecting to dashboard:', dashboardUrl);
+        console.log('📍 Same origin - defaulting to dashboard:', {
+          reason: 'Same origin as baseUrl',
+          originalUrl: url,
+          finalUrl: dashboardUrl
+        });
+        console.log('=====================================');
+        console.log('🔄 REDIRECT CALLBACK END');
+        console.log('=====================================\n');
         return dashboardUrl;
       }
       
-      console.log('🔄 External URL - redirecting to dashboard:', `${baseUrl}/dashboard`);
-      return `${baseUrl}/dashboard`
+      const externalDashboard = `${baseUrl}/dashboard`;
+      console.log('📍 External URL - defaulting to dashboard:', {
+        reason: 'External URL',
+        originalUrl: url,
+        finalUrl: externalDashboard
+      });
+      console.log('=====================================');
+      console.log('🔄 REDIRECT CALLBACK END');
+      console.log('=====================================\n');
+      return externalDashboard
     },
   },
   ...authConfig,
