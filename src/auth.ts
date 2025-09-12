@@ -3,6 +3,7 @@ import { PrismaAdapter } from "@auth/prisma-adapter"
 import { db } from "@/lib/db"
 import authConfig from "./auth.config"
 import { DEFAULT_LOGIN_REDIRECT } from "@/routes"
+import { cookies } from "next/headers"
 
 export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(db),
@@ -306,17 +307,25 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
       console.log('\n🎯 CHECKING FOR CALLBACK URL...');
       let callbackUrl = intendedCallbackUrl;
       
-      // Method 0: Check headers for cookies (server-side)
-      try {
-        // Try to get cookies from the request headers if available
-        if (typeof window === 'undefined') {
-          // We're on the server
-          console.log('🖥️ Server-side execution detected');
-          // Note: In the redirect callback, we don't have direct access to headers
-          // but NextAuth might pass cookie values through the URL
+      // Method 0: Check server-side cookies using Next.js cookies helper
+      if (!callbackUrl) {
+        try {
+          const cookieStore = cookies();
+          const oauthCallbackCookie = cookieStore.get('oauth_callback_intended');
+          if (oauthCallbackCookie) {
+            callbackUrl = oauthCallbackCookie.value;
+            console.log('🍪 Method 0 - Server-side cookie found:', {
+              callbackUrl,
+              cookieName: 'oauth_callback_intended'
+            });
+            // Clear the cookie after use
+            cookieStore.delete('oauth_callback_intended');
+          } else {
+            console.log('📭 No server-side oauth_callback_intended cookie found');
+          }
+        } catch (error) {
+          console.log('⚠️ Could not check server-side cookies:', error);
         }
-      } catch (error) {
-        console.log('⚠️ Could not check server-side cookies:', error);
       }
       
       try {

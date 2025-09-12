@@ -65,7 +65,7 @@ export const Social = () => {
     });
   }, []);
 
-  const onClick = (provider: "google" | "facebook") => {
+  const onClick = async (provider: "google" | "facebook") => {
     console.log('=====================================');
     console.log(`🚀 OAuth ${provider.toUpperCase()} INITIATED`);
     console.log('=====================================');
@@ -170,9 +170,28 @@ export const Social = () => {
       allSearchParams: Object.fromEntries(searchParams.entries())
     });
     
-    // Store the callback URL in session storage AND cookie as a fallback
+    // Store the callback URL server-side AND client-side
     if (callbackUrl) {
-      console.log('\n💾 STORING CALLBACK URL IN SESSION STORAGE AND COOKIE');
+      console.log('\n💾 STORING CALLBACK URL...');
+      
+      // Store server-side via API (most reliable)
+      try {
+        const response = await fetch('/api/auth/store-callback', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ callbackUrl })
+        });
+        
+        if (response.ok) {
+          console.log('✅ Callback URL stored server-side via API');
+        } else {
+          console.log('⚠️ Failed to store callback URL server-side');
+        }
+      } catch (error) {
+        console.log('❌ Error calling store-callback API:', error);
+      }
+      
+      // Also store client-side as backup
       if (typeof window !== 'undefined') {
         // Store in session storage
         if (window.sessionStorage) {
@@ -184,15 +203,15 @@ export const Social = () => {
           });
         }
         
-        // Also store as a cookie for server-side access
-        document.cookie = `oauth_callback_intended=${encodeURIComponent(callbackUrl)}; path=/; max-age=900; SameSite=Lax`;
-        console.log('🍪 Stored in cookie:', {
+        // Store as a cookie with proper domain settings
+        const cookieDomain = process.env.NODE_ENV === 'production' ? '.databayt.org' : '';
+        const cookieString = `oauth_callback_intended=${encodeURIComponent(callbackUrl)}; path=/; max-age=900; SameSite=Lax${cookieDomain ? `; Domain=${cookieDomain}` : ''}`;
+        document.cookie = cookieString;
+        console.log('🍪 Stored in client cookie:', {
           key: 'oauth_callback_intended',
           value: callbackUrl,
           cookie: document.cookie.includes('oauth_callback_intended')
         });
-      } else {
-        console.log('❌ Window not available');
       }
     } else {
       console.log('⚠️ No callback URL to store');
