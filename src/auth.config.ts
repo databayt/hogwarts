@@ -45,6 +45,12 @@ export default {
     Facebook({
       clientId: env.FACEBOOK_CLIENT_ID || "",
       clientSecret: env.FACEBOOK_CLIENT_SECRET || "",
+      authorization: {
+        params: {
+          // Pass additional parameters to Facebook
+          scope: 'email',
+        }
+      },
       profile(profile) {
         return {
           id: profile.id,

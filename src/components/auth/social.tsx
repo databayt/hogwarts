@@ -204,10 +204,18 @@ export const Social = () => {
       redirect: true
     });
     
+    // Try to ensure the callback URL is preserved
+    // NextAuth might not properly pass callbackUrl through OAuth providers
+    // So we'll try multiple approaches
+    
+    // Approach 1: Standard NextAuth way
     signIn(provider, {
       callbackUrl: finalCallbackUrl,
       redirect: true
     });
+    
+    // Note: If the above doesn't work, we're also storing in cookie and sessionStorage
+    // The redirect callback will check those as fallback
   }
 
   return (

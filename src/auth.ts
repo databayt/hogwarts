@@ -254,6 +254,17 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
         baseUrlLength: baseUrl?.length
       });
       
+      // Try to get callback URL from the original request if possible
+      // This is a workaround for NextAuth not properly passing callbackUrl through OAuth
+      let intendedCallbackUrl: string | null = null;
+      
+      // Check if we're coming from an OAuth callback
+      if (url.includes('/api/auth/callback/')) {
+        console.log('🔐 OAuth callback detected - checking for stored callback URL');
+        // The callback URL should have been stored before OAuth redirect
+        // We'll check for it in multiple places below
+      }
+      
       // Check if this is an OAuth callback
       const isOAuthCallback = url.includes('/api/auth/callback/');
       if (isOAuthCallback) {
@@ -293,7 +304,7 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
 
       // PRIORITY: Check for callbackUrl parameter first (from login redirect)
       console.log('\n🎯 CHECKING FOR CALLBACK URL...');
-      let callbackUrl = null;
+      let callbackUrl = intendedCallbackUrl;
       
       // Method 0: Check headers for cookies (server-side)
       try {
