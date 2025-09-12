@@ -254,6 +254,17 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
         baseUrlLength: baseUrl?.length
       });
       
+      // Check if this is an OAuth callback
+      const isOAuthCallback = url.includes('/api/auth/callback/');
+      if (isOAuthCallback) {
+        console.log('🔐 OAuth Callback Detected:', {
+          url,
+          provider: url.match(/callback\/(\w+)/)?.[1],
+          hasHash: url.includes('#'),
+          hashContent: url.includes('#') ? url.split('#')[1] : null
+        });
+      }
+      
       // Handle Facebook redirect with #_=_ hash FIRST - clean it completely
       if (url.includes('#_=_')) {
         console.log('📘 Facebook redirect detected, cleaning hash');
@@ -479,36 +490,62 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
           return tenantDashboardUrl;
         }
         
-        // If we're on the main domain (ed.databayt.org), redirect to its dashboard
+        // If we're on the main domain (ed.databayt.org), check for callback URL first
         if (originalHost === 'ed.databayt.org') {
-          const mainDomainDashboard = process.env.NODE_ENV === "production"
-            ? 'https://ed.databayt.org/dashboard'
-            : 'http://localhost:3000/dashboard';
-          
-          console.log('🏢 MAIN DOMAIN REDIRECT:', { 
+          // Don't immediately redirect to dashboard - check if we have a callback URL
+          console.log('🏢 MAIN DOMAIN DETECTED:', { 
             host: originalHost,
-            redirectUrl: mainDomainDashboard,
+            hasCallbackUrl: !!callbackUrl,
+            callbackUrl,
             environment: process.env.NODE_ENV,
             source: 'main_domain_detection'
           });
           
-          return mainDomainDashboard;
+          // If we have a callback URL, use it
+          if (callbackUrl) {
+            console.log('✅ Using callback URL on main domain:', callbackUrl);
+            // Continue to validate and use the callback URL below
+          } else {
+            // Only default to dashboard if no callback URL
+            const mainDomainDashboard = process.env.NODE_ENV === "production"
+              ? 'https://ed.databayt.org/dashboard'
+              : 'http://localhost:3000/dashboard';
+            
+            console.log('🏢 MAIN DOMAIN DEFAULT REDIRECT (no callback):', { 
+              host: originalHost,
+              redirectUrl: mainDomainDashboard
+            });
+            
+            return mainDomainDashboard;
+          }
         }
         
         // Additional safety check: if host contains 'ed.databayt.org' in any form, treat as main domain
         if (originalHost.includes('ed.databayt.org')) {
-          const mainDomainDashboard = process.env.NODE_ENV === "production"
-            ? 'https://ed.databayt.org/dashboard'
-            : 'http://localhost:3000/dashboard';
-          
-          console.log('🏢 MAIN DOMAIN SAFETY REDIRECT:', { 
+          console.log('🏢 MAIN DOMAIN SAFETY CHECK:', { 
             host: originalHost,
-            redirectUrl: mainDomainDashboard,
+            hasCallbackUrl: !!callbackUrl,
+            callbackUrl,
             environment: process.env.NODE_ENV,
             source: 'safety_check'
           });
           
-          return mainDomainDashboard;
+          // If we have a callback URL, use it
+          if (callbackUrl) {
+            console.log('✅ Using callback URL on main domain (safety check):', callbackUrl);
+            // Continue to validate and use the callback URL below
+          } else {
+            const mainDomainDashboard = process.env.NODE_ENV === "production"
+              ? 'https://ed.databayt.org/dashboard'
+              : 'http://localhost:3000/dashboard';
+            
+            console.log('🏢 MAIN DOMAIN SAFETY REDIRECT (no callback):', { 
+              host: originalHost,
+              redirectUrl: mainDomainDashboard
+            });
+            
+            return mainDomainDashboard;
+          }
         }
       } catch (error) {
         console.log('❌ Error parsing URLs:', error);
@@ -528,20 +565,31 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
         }
       }
       
-      // Final check: if we're on ed.databayt.org, redirect to its dashboard
+      // Final check: if we're on ed.databayt.org, check callback URL first
       if (originalHost === 'ed.databayt.org') {
-        const mainDomainDashboard = process.env.NODE_ENV === "production"
-          ? 'https://ed.databayt.org/dashboard'
-          : 'http://localhost:3000/dashboard';
-        
-        console.log('🏢 FINAL MAIN DOMAIN REDIRECT:', { 
+        console.log('🏢 FINAL MAIN DOMAIN CHECK:', { 
           host: originalHost,
-          redirectUrl: mainDomainDashboard,
+          hasCallbackUrl: !!callbackUrl,
+          callbackUrl,
           environment: process.env.NODE_ENV,
           source: 'final_fallback'
         });
         
-        return mainDomainDashboard;
+        if (callbackUrl) {
+          console.log('✅ Using callback URL on main domain (final check):', callbackUrl);
+          // Continue to validate and use the callback URL below
+        } else {
+          const mainDomainDashboard = process.env.NODE_ENV === "production"
+            ? 'https://ed.databayt.org/dashboard'
+            : 'http://localhost:3000/dashboard';
+          
+          console.log('🏢 FINAL MAIN DOMAIN REDIRECT (no callback):', { 
+            host: originalHost,
+            redirectUrl: mainDomainDashboard
+          });
+          
+          return mainDomainDashboard;
+        }
       }
       
       // Extract tenant from callbackUrl if present - check multiple sources
