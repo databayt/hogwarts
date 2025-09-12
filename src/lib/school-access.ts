@@ -43,7 +43,6 @@ export async function canUserAccessSchool(
         id: true,
         role: true,
         schoolId: true,
-        isPlatformAdmin: true,
       },
     });
 
@@ -51,8 +50,8 @@ export async function canUserAccessSchool(
       return { hasAccess: false, reason: "User not found" };
     }
 
-    // Platform admins and developers can access any school
-    if (user.isPlatformAdmin || user.role === "DEVELOPER") {
+    // Developers (platform admins) can access any school
+    if (user.role === "DEVELOPER") {
       const school = await db.school.findUnique({
         where: { id: schoolId },
       });
@@ -181,8 +180,6 @@ export async function ensureUserSchool(userId: string): Promise<SchoolCreationRe
         domain: `school-${Date.now()}`,
         maxStudents: 500,
         maxTeachers: 50,
-        maxClasses: 20,
-        maxFacilities: 10,
         isActive: true,
         planType: "starter",
       },
@@ -309,7 +306,6 @@ export async function validateSchoolOwnership(
         id: true,
         role: true,
         schoolId: true,
-        isPlatformAdmin: true,
       },
     });
 
@@ -317,8 +313,8 @@ export async function validateSchoolOwnership(
       return { isValid: false, error: "User not found" };
     }
 
-    // Platform admins bypass all checks
-    if (user.isPlatformAdmin) {
+    // Developers (platform admins) bypass all checks
+    if (user.role === "DEVELOPER") {
       return { isValid: true };
     }
 
@@ -340,11 +336,14 @@ export async function validateSchoolOwnership(
     // Check role requirements
     if (requiredRole) {
       const roleHierarchy: Record<UserRole, number> = {
-        STUDENT: 1,
-        PARENT: 2,
-        TEACHER: 3,
-        ADMIN: 4,
-        DEVELOPER: 5,
+        USER: 1,
+        STUDENT: 2,
+        GUARDIAN: 3,
+        STAFF: 4,
+        ACCOUNTANT: 5,
+        TEACHER: 6,
+        ADMIN: 7,
+        DEVELOPER: 8,
       };
 
       if (roleHierarchy[user.role] < roleHierarchy[requiredRole]) {
