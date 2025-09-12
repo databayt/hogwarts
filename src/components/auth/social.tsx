@@ -142,14 +142,20 @@ export const Social = () => {
     }
     
     // Default OAuth flow for main domain
+    // IMPORTANT: Preserve the original callbackUrl from the login page
+    const finalCallbackUrl = callbackUrl || DEFAULT_LOGIN_REDIRECT;
+    
     console.log('Using NextAuth signIn for OAuth:', {
       provider,
-      callbackUrl: callbackUrl || DEFAULT_LOGIN_REDIRECT,
-      currentHost
+      callbackUrl: finalCallbackUrl,
+      originalCallbackUrl: callbackUrl,
+      currentHost,
+      searchParams: searchParams.toString()
     });
     
     signIn(provider, {
-      callbackUrl: callbackUrl || DEFAULT_LOGIN_REDIRECT,
+      callbackUrl: finalCallbackUrl,
+      redirect: true
     });
   }
 

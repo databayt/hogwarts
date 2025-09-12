@@ -123,13 +123,50 @@ export async function requireSchoolAccess(targetSchoolId: string): Promise<AuthC
 export async function requireSchoolOwnership(targetSchoolId: string): Promise<AuthContext> {
   const authContext = await getAuthContext();
   
-  // During onboarding, just check that user is authenticated
-  // Like mkan - simple and permissive for creation flows
-  console.log("✅ [DEBUG] Authenticated user accessing school during onboarding:", {
+  // Import school access functions
+  const { canUserAccessSchool, ensureUserSchool } = await import('@/lib/school-access');
+  
+  console.log("🔐 [SCHOOL OWNERSHIP CHECK] Starting:", {
     userId: authContext.userId,
     role: authContext.role,
-    targetSchoolId
+    targetSchoolId,
+    userSchoolId: authContext.schoolId,
+    timestamp: new Date().toISOString()
   });
+  
+  // Check if user can access this school
+  const accessResult = await canUserAccessSchool(authContext.userId, targetSchoolId);
+  
+  if (!accessResult.hasAccess) {
+    // If user doesn't have access but is authenticated, try to create/ensure they have a school
+    if (!authContext.schoolId) {
+      console.log("🏫 [SCHOOL OWNERSHIP] User has no school, ensuring one exists");
+      const schoolResult = await ensureUserSchool(authContext.userId);
+      
+      if (schoolResult.success && schoolResult.schoolId) {
+        // Update auth context with new school
+        authContext.schoolId = schoolResult.schoolId;
+        console.log("✅ [SCHOOL OWNERSHIP] School created/ensured for user:", {
+          userId: authContext.userId,
+          schoolId: schoolResult.schoolId
+        });
+      }
+    }
+    
+    // For onboarding, be permissive if user is authenticated
+    console.warn("⚠️ [SCHOOL OWNERSHIP] Access check failed but allowing for onboarding:", {
+      reason: accessResult.reason,
+      userId: authContext.userId,
+      targetSchoolId
+    });
+  } else {
+    console.log("✅ [SCHOOL OWNERSHIP] Access granted:", {
+      userId: authContext.userId,
+      targetSchoolId,
+      reason: accessResult.reason,
+      isOwner: accessResult.isOwner
+    });
+  }
   
   return authContext;
 }

@@ -33,16 +33,40 @@ export const TitleForm = forwardRef<TitleFormRef, TitleFormProps>(({ schoolId, i
 
   const saveAndNext = async () => {
     const data = form.getValues();
+    console.log("🎯 [TITLE FORM] saveAndNext called", {
+      schoolId,
+      data,
+      timestamp: new Date().toISOString()
+    });
+    
     return new Promise<void>((resolve, reject) => {
       startTransition(async () => {
         try {
           setError("");
+          console.log("📤 [TITLE FORM] Calling updateSchoolTitle", {
+            schoolId,
+            title: data.title,
+            timestamp: new Date().toISOString()
+          });
+          
           const result = await updateSchoolTitle(schoolId, data);
           
+          console.log("📥 [TITLE FORM] updateSchoolTitle response", {
+            success: result.success,
+            error: result.error,
+            data: result.data,
+            timestamp: new Date().toISOString()
+          });
+          
           if (result.success) {
+            console.log("✅ [TITLE FORM] Update successful, calling onSuccess callback");
             onSuccess?.();
             resolve();
           } else {
+            console.log("❌ [TITLE FORM] Update failed", {
+              error: result.error,
+              errors: result.errors
+            });
             setError(result.error || "Failed to update school name");
             if (result.errors) {
               Object.entries(result.errors).forEach(([field, message]) => {

@@ -119,26 +119,45 @@ const HostFooter: React.FC<HostFooterProps> = ({
   };
   
   const handleNext = () => {
+    console.log("🔵 [HOST FOOTER] handleNext called", {
+      hasCustomNavigation: !!customNavigation?.onNext,
+      hasOnNext: !!onNext,
+      currentStepSlug,
+      currentStepIndex,
+      schoolId: params.id,
+      timestamp: new Date().toISOString()
+    });
+    
     // Use custom navigation if available
     if (customNavigation?.onNext) {
+      console.log("🔷 [HOST FOOTER] Using custom navigation onNext");
       customNavigation.onNext();
       return;
     }
     
     if (onNext) {
+      console.log("🔶 [HOST FOOTER] Using prop onNext");
       onNext();
       return;
     }
     
     // If we're on the legal step (last step), navigate to listings
     if (currentStepSlug === 'legal') {
+      console.log("🏁 [HOST FOOTER] Last step - navigating to dashboard");
       router.push('/dashboard');
       return;
     }
     
     if (currentStepIndex < HOSTING_STEPS.length - 1) {
       const nextStep = HOSTING_STEPS[currentStepIndex + 1];
+      console.log("➡️ [HOST FOOTER] Default navigation to next step", {
+        from: currentStepSlug,
+        to: nextStep,
+        url: `/onboarding/${params.id}/${nextStep}`
+      });
       router.push(`/onboarding/${params.id}/${nextStep}`);
+    } else {
+      console.warn("⚠️ [HOST FOOTER] No navigation action taken");
     }
   };
   
@@ -164,6 +183,17 @@ const HostFooter: React.FC<HostFooterProps> = ({
   // Check if back/next are available
   const canGoBackActual = canGoBack && (currentStepIndex > 0);
   const canGoNextActual = canGoNext && (currentStepIndex < HOSTING_STEPS.length - 1 || currentStepSlug === 'legal') && !nextDisabled && !contextNextDisabled && !(customNavigation?.nextDisabled);
+  
+  // Debug logging for next button state
+  console.log("🔍 [HOST FOOTER] Next button state:", {
+    canGoNext,
+    nextDisabled,
+    contextNextDisabled,
+    customNavigationDisabled: customNavigation?.nextDisabled,
+    canGoNextActual,
+    currentStepSlug,
+    currentStepIndex
+  });
   
   // Set the next button label based on current step
   const actualNextLabel = currentStepSlug === 'legal' ? 'Create school' : nextLabel;

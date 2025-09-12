@@ -9,10 +9,12 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
   session: {
     strategy: "jwt",
     maxAge: 24 * 60 * 60, // 24 hours
-    updateAge: 60 * 60, // 1 hour
+    updateAge: process.env.NODE_ENV === 'production' ? 5 * 60 : 60 * 60, // 5 minutes in prod (for critical updates), 1 hour in dev
     generateSessionToken: () => {
       const token = `session_${Date.now()}`;
-      console.log('🔑 Generated session token:', token);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🔑 Generated session token:', token);
+      }
       return token;
     },
   },
@@ -99,12 +101,15 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
   },
   callbacks: {
     async jwt({ token, user, account, trigger }) {
-      console.log('🔐 [DEBUG] JWT CALLBACK START:', { 
-        trigger, 
-        hasUser: !!user, 
-        hasAccount: !!account,
-        timestamp: new Date().toISOString()
-      });
+      // Only log in development
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🔐 [DEBUG] JWT CALLBACK START:', { 
+          trigger, 
+          hasUser: !!user, 
+          hasAccount: !!account,
+          timestamp: new Date().toISOString()
+        });
+      }
       
       if (user) {
         console.log('👤 [DEBUG] User data received:', { 
@@ -168,14 +173,17 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
       return token
     },
     async session({ session, token, user, trigger }) {
-      console.log('📋 [DEBUG] SESSION CALLBACK START:', { 
-        trigger,
-        hasToken: !!token, 
-        hasUser: !!user,
-        sessionUser: session.user?.id,
-        timestamp: new Date().toISOString(),
-        host: typeof window !== 'undefined' ? window.location.host : 'server'
-      });
+      // Only log in development
+      if (process.env.NODE_ENV === 'development') {
+        console.log('📋 [DEBUG] SESSION CALLBACK START:', { 
+          trigger,
+          hasToken: !!token, 
+          hasUser: !!user,
+          sessionUser: session.user?.id,
+          timestamp: new Date().toISOString(),
+          host: typeof window !== 'undefined' ? window.location.host : 'server'
+        });
+      }
       
       if (token) {
         console.log('🔑 [DEBUG] Token data available:', {
@@ -252,30 +260,79 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
       // PRIORITY: Check for callbackUrl parameter first (from login redirect)
       let callbackUrl = null;
       try {
+        // Method 1: Parse as URL and check searchParams
         const urlObj = new URL(url, baseUrl);
-        callbackUrl = urlObj.searchParams.get('callbackUrl');
+        callbackUrl = urlObj.searchParams.get('callbackUrl') || urlObj.searchParams.get('redirect');
+        console.log('🔍 Method 1 - URL searchParams:', { callbackUrl, searchParams: urlObj.searchParams.toString() });
         
-        // Also check if the URL itself contains a decoded callback
+        // Method 2: Check if the URL itself contains a callback parameter
         if (!callbackUrl && url.includes('callbackUrl=')) {
           const match = url.match(/callbackUrl=([^&]+)/);
           if (match) {
             callbackUrl = decodeURIComponent(match[1]);
+            console.log('🔍 Method 2 - URL regex match:', { callbackUrl, match: match[1] });
+          }
+        }
+        
+        // Method 3: Check baseUrl for callback parameter (during OAuth flow)
+        if (!callbackUrl && baseUrl) {
+          try {
+            const baseUrlObj = new URL(baseUrl);
+            const baseCallbackUrl = baseUrlObj.searchParams.get('callbackUrl');
+            if (baseCallbackUrl) {
+              callbackUrl = baseCallbackUrl;
+              console.log('🔍 Method 3 - baseUrl searchParams:', { callbackUrl });
+            }
+          } catch (error) {
+            console.log('❌ Error parsing baseUrl for callback:', error);
+          }
+        }
+        
+        // Method 4: Check cookies for stored callback URL
+        if (!callbackUrl && typeof document !== 'undefined') {
+          try {
+            const cookies = document.cookie.split(';');
+            const callbackCookie = cookies.find(cookie => cookie.trim().startsWith('authjs.callback-url='));
+            if (callbackCookie) {
+              callbackUrl = decodeURIComponent(callbackCookie.split('=')[1]);
+              console.log('🔍 Method 4 - cookie callback:', { callbackUrl });
+            }
+          } catch (error) {
+            console.log('❌ Error reading callback from cookies:', error);
           }
         }
         
         if (callbackUrl) {
           console.log('🎯 CALLBACK URL FOUND - Redirecting to:', callbackUrl);
           // Validate callback URL is from same origin for security
-          const callbackUrlObj = new URL(callbackUrl);
-          const baseUrlObj = new URL(baseUrl);
-          
-          if (callbackUrlObj.origin === baseUrlObj.origin) {
-            return callbackUrl;
-          } else {
-            console.log('⚠️ SECURITY: Callback URL origin mismatch, ignoring:', { 
-              callbackOrigin: callbackUrlObj.origin, 
-              baseOrigin: baseUrlObj.origin 
-            });
+          try {
+            const callbackUrlObj = new URL(callbackUrl, baseUrl);
+            const baseUrlObj = new URL(baseUrl);
+            
+            // Check if it's a relative URL or same origin
+            if (callbackUrl.startsWith('/') || 
+                callbackUrlObj.origin === baseUrlObj.origin) {
+              console.log('✅ CALLBACK URL VALIDATED - Redirecting:', callbackUrl);
+              
+              // If it's a relative URL, make it absolute with the current baseUrl
+              if (callbackUrl.startsWith('/')) {
+                return `${baseUrl}${callbackUrl}`;
+              }
+              return callbackUrl;
+            } else {
+              console.log('⚠️ SECURITY: Callback URL origin mismatch, ignoring:', { 
+                callbackOrigin: callbackUrlObj.origin, 
+                baseOrigin: baseUrlObj.origin,
+                callbackPath: callbackUrlObj.pathname
+              });
+            }
+          } catch (error) {
+            console.log('❌ Error validating callback URL:', error);
+            // If it's a relative path, still try to use it
+            if (callbackUrl.startsWith('/')) {
+              console.log('📍 Using relative callback URL:', callbackUrl);
+              return `${baseUrl}${callbackUrl}`;
+            }
           }
         }
       } catch (error) {

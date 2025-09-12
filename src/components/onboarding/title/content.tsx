@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useHostValidation } from '@/components/onboarding/host-validation-context';
 import { useListing } from '@/components/onboarding/use-listing';
 import { useTitle } from './use-title';
@@ -15,6 +15,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 export default function TitleContent() {
   const params = useParams();
+  const router = useRouter();
   const schoolId = params.id as string;
   const { enableNext, disableNext, setCustomNavigation } = useHostValidation();
   const titleFormRef = useRef<TitleFormRef>(null);
@@ -30,10 +31,27 @@ export default function TitleContent() {
   }, []);
 
   const onNext = useCallback(async () => {
+    console.log("🚀 [TITLE CONTENT] onNext called", {
+      schoolId,
+      hasFormRef: !!titleFormRef.current,
+      timestamp: new Date().toISOString()
+    });
+    
     if (titleFormRef.current) {
-      await titleFormRef.current.saveAndNext();
+      try {
+        await titleFormRef.current.saveAndNext();
+        console.log("✅ [TITLE CONTENT] saveAndNext completed successfully");
+        
+        // Navigate to the next step after successful save
+        console.log("🦭 [TITLE CONTENT] Navigating to description step");
+        router.push(`/onboarding/${schoolId}/description`);
+      } catch (error) {
+        console.error("❌ [TITLE CONTENT] Error during saveAndNext:", error);
+      }
+    } else {
+      console.warn("⚠️ [TITLE CONTENT] No form ref available");
     }
-  }, []);
+  }, [schoolId]);
 
   // Enable/disable next button based on title and set custom navigation
   useEffect(() => {

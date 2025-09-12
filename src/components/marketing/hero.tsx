@@ -23,7 +23,7 @@ const Hero = () => {
           Educational management system streamlining operations for students, educators, and school leaders. Transform your institution&apos;s efficiency today.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 sm:space-x-4 w-full sm:w-auto px-4 sm:px-0 max-w-[300px] sm:max-w-none mx-auto">
-            <Link href="/docs/get-started" className={cn(buttonVariants({ size: "lg" }), "w-full sm:w-auto")}>
+            <Link href="/onboarding" className={cn(buttonVariants({ size: "lg" }), "w-full sm:w-auto")}>
               Get Started
             </Link>
             <Link

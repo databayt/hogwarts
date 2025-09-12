@@ -1,13 +1,11 @@
 "use client"
 
-import { useState, useTransition } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+import { useState, useEffect, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { locationSchema, type LocationFormData } from "./validation";
 import { updateSchoolLocation } from "./actions";
+import { MapboxForm } from "./mapbox-form";
+import { useHostValidation } from "../host-validation-context";
 
 interface LocationFormProps {
   schoolId: string;
@@ -16,151 +14,86 @@ interface LocationFormProps {
 }
 
 export function LocationForm({ schoolId, initialData, onSuccess }: LocationFormProps) {
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string>("");
-
-  const form = useForm<LocationFormData>({
-    resolver: zodResolver(locationSchema),
-    defaultValues: {
-      address: initialData?.address || "",
-      city: initialData?.city || "",
-      state: initialData?.state || "",
-      country: initialData?.country || "",
-      postalCode: initialData?.postalCode || "",
-      latitude: initialData?.latitude,
-      longitude: initialData?.longitude,
-    },
+  const [locationData, setLocationData] = useState<LocationFormData>({
+    address: initialData?.address || "",
+    city: initialData?.city || "",
+    state: initialData?.state || "",
+    country: initialData?.country || "",
+    postalCode: initialData?.postalCode || "",
+    latitude: initialData?.latitude,
+    longitude: initialData?.longitude,
   });
 
-  const handleSubmit = (data: LocationFormData) => {
-    startTransition(async () => {
-      try {
-        setError("");
-        const result = await updateSchoolLocation(schoolId, data);
-        
-        if (result.success) {
-          onSuccess?.();
-        } else {
-          setError(result.error || "Failed to update location");
-          if (result.errors) {
-            Object.entries(result.errors).forEach(([field, message]) => {
-              form.setError(field as keyof LocationFormData, { message });
-            });
+  const { setCustomNavigation, enableNext, disableNext } = useHostValidation();
+
+  // Enable/disable next button based on location selection
+  useEffect(() => {
+    if (locationData.address && locationData.latitude && locationData.longitude) {
+      enableNext();
+    } else {
+      disableNext();
+    }
+  }, [locationData, enableNext, disableNext]);
+
+  // Set up custom navigation to save on next
+  useEffect(() => {
+    const handleNext = () => {
+      if (!locationData.address) {
+        setError("Please select a location");
+        return;
+      }
+
+      startTransition(async () => {
+        try {
+          setError("");
+          
+          // Validate the data
+          const validatedData = locationSchema.parse(locationData);
+          
+          const result = await updateSchoolLocation(schoolId, validatedData);
+          
+          if (result.success) {
+            onSuccess?.();
+            // Navigate to next step
+            router.push(`/onboarding/${schoolId}/stand-out`);
+          } else {
+            setError(result.error || "Failed to update location");
+          }
+        } catch (err: any) {
+          if (err.errors) {
+            setError("Please fill in all required fields");
+          } else {
+            setError("An unexpected error occurred");
           }
         }
-      } catch (err) {
-        setError("An unexpected error occurred");
-      }
+      });
+    };
+
+    setCustomNavigation({
+      onNext: handleNext,
+      nextDisabled: isPending || !locationData.address
     });
-  };
+
+    return () => {
+      setCustomNavigation(undefined);
+    };
+  }, [locationData, schoolId, router, onSuccess, setCustomNavigation, isPending]);
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-        {error && (
-          <div className="muted text-destructive bg-destructive/10 p-3 rounded-md">
-            {error}
-          </div>
-        )}
-        
-        <FormField
-          control={form.control}
-          name="address"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Street Address</FormLabel>
-              <FormControl>
-                <Input
-                  {...field}
-                  placeholder="123 Main Street"
-                  disabled={isPending}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="city"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>City</FormLabel>
-                <FormControl>
-                  <Input
-                    {...field}
-                    placeholder="New York"
-                    disabled={isPending}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="state"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>State/Province</FormLabel>
-                <FormControl>
-                  <Input
-                    {...field}
-                    placeholder="NY"
-                    disabled={isPending}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+    <div className="space-y-4">
+      {error && (
+        <div className="text-sm text-destructive bg-destructive/10 p-3 rounded-md">
+          {error}
         </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="country"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Country</FormLabel>
-                <FormControl>
-                  <Input
-                    {...field}
-                    placeholder="United States"
-                    disabled={isPending}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="postalCode"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Postal Code</FormLabel>
-                <FormControl>
-                  <Input
-                    {...field}
-                    placeholder="10001"
-                    disabled={isPending}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <Button type="submit" disabled={isPending} className="w-full">
-          {isPending ? "Updating..." : "Update Location"}
-        </Button>
-      </form>
-    </Form>
+      )}
+      
+      <MapboxForm 
+        initialData={initialData}
+        onLocationChange={setLocationData}
+      />
+    </div>
   );
-} 
+}

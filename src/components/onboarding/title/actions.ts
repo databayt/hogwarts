@@ -17,13 +17,26 @@ export async function updateSchoolTitle(
   schoolId: string,
   data: TitleFormData
 ): Promise<ActionResponse> {
+  console.log("🎯 [UPDATE SCHOOL TITLE] Starting", {
+    schoolId,
+    data,
+    timestamp: new Date().toISOString()
+  });
+  
   try {
     // Validate user has ownership/access to this school
+    console.log("🔐 [UPDATE SCHOOL TITLE] Checking ownership", { schoolId });
     await requireSchoolOwnership(schoolId);
+    console.log("✅ [UPDATE SCHOOL TITLE] Ownership verified");
 
     const validatedData = titleSchema.parse(data);
 
     // Update school title in database
+    console.log("📝 [UPDATE SCHOOL TITLE] Updating database", {
+      schoolId,
+      newTitle: validatedData.title
+    });
+    
     const updatedSchool = await db.school.update({
       where: { id: schoolId },
       data: {
@@ -31,11 +44,20 @@ export async function updateSchoolTitle(
         updatedAt: new Date(),
       },
     });
+    
+    console.log("✅ [UPDATE SCHOOL TITLE] Database updated", {
+      schoolId: updatedSchool.id,
+      name: updatedSchool.name,
+      timestamp: updatedSchool.updatedAt
+    });
 
     revalidatePath(`/onboarding/${schoolId}/title`);
     
+    console.log("🎉 [UPDATE SCHOOL TITLE] Complete - returning success");
     return createActionResponse(updatedSchool);
   } catch (error) {
+    console.error("❌ [UPDATE SCHOOL TITLE] Error:", error);
+    
     if (error instanceof z.ZodError) {
       return createActionResponse(undefined, {
         message: "Validation failed",

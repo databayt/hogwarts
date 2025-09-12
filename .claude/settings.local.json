@@ -18,7 +18,13 @@
       "Bash(pnpm next:*)",
       "Bash(pnpm lint:*)",
       "Bash(npx next:*)",
-      "Bash(timeout 30 npx tsc --noEmit --skipLibCheck)"
+      "Bash(timeout 30 npx tsc --noEmit --skipLibCheck)",
+      "Bash(pnpm add:*)",
+      "Bash(pnpm install:*)",
+      "Bash(curl:*)",
+      "Bash(pnpm remove:*)",
+      "Bash(git push:*)",
+      "Bash(pnpm dev:*)"
     ],
     "deny": [],
     "ask": []

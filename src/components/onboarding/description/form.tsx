@@ -13,10 +13,10 @@ import {
   Wrench,
   Heart
 } from 'lucide-react';
-import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { cn } from "@/lib/utils";
+import { Loader2 } from "lucide-react";
 import { descriptionSchema, type DescriptionFormData } from "./validation";
 import { updateSchoolDescription } from "./actions";
 
@@ -24,16 +24,16 @@ interface DescriptionFormProps {
   schoolId: string;
   initialData?: Partial<DescriptionFormData>;
   onSuccess?: () => void;
+  onTypeSelect?: (type: string) => void;
 }
 
-export function DescriptionForm({ schoolId, initialData, onSuccess }: DescriptionFormProps) {
+export function DescriptionForm({ schoolId, initialData, onSuccess, onTypeSelect }: DescriptionFormProps) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string>("");
 
   const form = useForm<DescriptionFormData>({
     resolver: zodResolver(descriptionSchema),
     defaultValues: {
-      schoolLevel: initialData?.schoolLevel,
       schoolType: initialData?.schoolType,
     },
   });
@@ -59,27 +59,6 @@ export function DescriptionForm({ schoolId, initialData, onSuccess }: Descriptio
       }
     });
   };
-
-  const levelOptions = [
-    {
-      id: 'primary',
-      title: 'Primary School',
-      description: 'Elementary education (typically ages 6-11)',
-      icon: BookOpen,
-    },
-    {
-      id: 'secondary',
-      title: 'Secondary School', 
-      description: 'Middle and high school education (typically ages 12-18)',
-      icon: GraduationCap,
-    },
-    {
-      id: 'both',
-      title: 'Primary & Secondary',
-      description: 'Complete K-12 education system',
-      icon: Library,
-    },
-  ];
 
   const schoolTypes = [
     {
@@ -118,43 +97,6 @@ export function DescriptionForm({ schoolId, initialData, onSuccess }: Descriptio
           </div>
         )}
         
-        {/* School Level Selection */}
-        <FormField
-          control={form.control}
-          name="schoolLevel"
-          render={({ field }) => (
-            <FormItem>
-              <div className="space-y-4">
-                <h4 className="text-lg font-medium">What grade levels does your school teach?</h4>
-                <FormControl>
-                  <RadioGroup
-                    onValueChange={field.onChange}
-                    value={field.value}
-                    className="space-y-3"
-                  >
-                    {levelOptions.map((level) => (
-                      <div key={level.id} className="flex items-center space-x-3">
-                        <RadioGroupItem value={level.id} id={level.id} />
-                        <label
-                          htmlFor={level.id}
-                          className="flex-1 flex items-center gap-3 p-4 rounded-lg border cursor-pointer hover:bg-accent transition-colors"
-                        >
-                          <level.icon size={24} />
-                          <div>
-                            <div className="font-medium">{level.title}</div>
-                            <div className="text-sm text-muted-foreground">{level.description}</div>
-                          </div>
-                        </label>
-                      </div>
-                    ))}
-                  </RadioGroup>
-                </FormControl>
-                <FormMessage />
-              </div>
-            </FormItem>
-          )}
-        />
-
         {/* School Type Selection */}
         <FormField
           control={form.control}
@@ -165,7 +107,16 @@ export function DescriptionForm({ schoolId, initialData, onSuccess }: Descriptio
                 <h4 className="text-lg font-medium">What type of school are you setting up?</h4>
                 <FormControl>
                   <RadioGroup
-                    onValueChange={field.onChange}
+                    onValueChange={(value) => {
+                      field.onChange(value);
+                      // Immediately notify parent component
+                      onTypeSelect?.(value);
+                      console.log("📝 School type selected:", value);
+                      // Auto-submit the form when school type is selected
+                      setTimeout(() => {
+                        form.handleSubmit(handleSubmit)();
+                      }, 100);
+                    }}
                     value={field.value}
                     className="grid grid-cols-2 sm:grid-cols-3 gap-3"
                   >
@@ -194,13 +145,12 @@ export function DescriptionForm({ schoolId, initialData, onSuccess }: Descriptio
           )}
         />
 
-        <Button 
-          type="submit" 
-          disabled={isPending || !form.formState.isValid}
-          className="w-full"
-        >
-          {isPending ? "Updating..." : "Update School Description"}
-        </Button>
+        {isPending && (
+          <div className="flex items-center justify-center mt-4">
+            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            <span className="ml-2 text-sm text-muted-foreground">Saving your selection...</span>
+          </div>
+        )}
       </form>
     </Form>
   );

@@ -34,15 +34,28 @@ interface HostValidationProviderProps {
 }
 
 export const HostValidationProvider: React.FC<HostValidationProviderProps> = ({ children }) => {
-  const [isNextDisabled, setIsNextDisabled] = useState(false);
+  // Default to disabled state so pages must explicitly enable the next button
+  const [isNextDisabled, setIsNextDisabled] = useState(true);
   const [customNavigation, setCustomNavigation] = useState<{
     onBack?: () => void;
     onNext?: () => void;
     nextDisabled?: boolean;
   } | undefined>(undefined);
+  
+  console.log("🔄 [HOST VALIDATION PROVIDER] Current state:", {
+    isNextDisabled,
+    hasCustomNavigation: !!customNavigation
+  });
 
-  const enableNext = useCallback(() => setIsNextDisabled(false), []);
-  const disableNext = useCallback(() => setIsNextDisabled(true), []);
+  const enableNext = useCallback(() => {
+    console.log("✅ [HOST VALIDATION] enableNext called");
+    setIsNextDisabled(false);
+  }, []);
+  
+  const disableNext = useCallback(() => {
+    console.log("⛔ [HOST VALIDATION] disableNext called");
+    setIsNextDisabled(true);
+  }, []);
 
   const value: HostValidationContextType = useMemo(() => ({
     isNextDisabled,

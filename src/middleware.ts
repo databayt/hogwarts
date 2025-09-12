@@ -53,7 +53,10 @@ export async function middleware(req: NextRequest) {
     });
     
     const loginUrl = new URL('/login', req.url);
-    loginUrl.searchParams.set('callbackUrl', req.url);
+    // Preserve the full path including pathname
+    const callbackUrl = url.pathname + url.search;
+    loginUrl.searchParams.set('callbackUrl', callbackUrl);
+    console.log('🔐 Setting callbackUrl:', { callbackUrl, loginUrl: loginUrl.toString() });
     return NextResponse.redirect(loginUrl);
   }
 
@@ -66,8 +69,11 @@ export async function middleware(req: NextRequest) {
     });
     
     const loginUrl = new URL('/login', req.url);
-    loginUrl.searchParams.set('callbackUrl', req.url);
+    // Preserve the full onboarding path
+    const callbackUrl = url.pathname + url.search;
+    loginUrl.searchParams.set('callbackUrl', callbackUrl);
     loginUrl.searchParams.set('message', 'Please sign in to continue with school setup');
+    console.log('🎓 Onboarding callbackUrl:', { callbackUrl, loginUrl: loginUrl.toString() });
     return NextResponse.redirect(loginUrl);
   }
 

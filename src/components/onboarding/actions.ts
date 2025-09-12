@@ -259,117 +259,27 @@ export async function initializeSchoolSetup(): Promise<ActionResponse> {
       hasSessionSchoolId: !!authContext.schoolId
     });
 
-    // Create a new school draft for the authenticated user
-    logger.debug('Creating new school in database');
-    const schoolData = {
-      name: "New School",
-      domain: `school-${Date.now()}`, // Temporary domain
-      updatedAt: new Date(),
-      // Set default values using available fields
-      maxStudents: 400,
-      maxTeachers: 10,
-    };
+    // Use the new school access system
+    const { ensureUserSchool } = await import('@/lib/school-access');
+    const schoolResult = await ensureUserSchool(authContext.userId);
     
-    logger.debug("School data to be created:", schoolData);
+    if (!schoolResult.success) {
+      logger.error('Failed to ensure user school:', schoolResult.error);
+      return createActionResponse(undefined, {
+        message: schoolResult.error || 'Failed to initialize school',
+        code: 'SCHOOL_INIT_FAILED'
+      });
+    }
     
-    const school = await db.school.create({
-      data: schoolData,
-    });
-
-    logger.debug("School created successfully:", {
-      schoolId: school.id,
-      schoolName: school.name,
-      schoolDomain: school.domain,
-      schoolCreatedAt: school.createdAt,
-      schoolUpdatedAt: school.updatedAt,
-      creationTimestamp: new Date().toISOString()
-    });
-
-    // Update the user's schoolId to link them to this school
-    logger.debug("Step 3: Updating user with schoolId...");
-    logger.debug("About to update user:", {
-      userId: authContext.userId,
-      newSchoolId: school.id,
-      updateTimestamp: new Date().toISOString()
+    logger.debug('School ensured successfully:', {
+      schoolId: schoolResult.schoolId,
+      schoolName: schoolResult.school?.name
     });
     
-    const updatedUser = await db.user.update({
-      where: { id: authContext.userId },
-      data: { 
-        schoolId: school.id,
-        updatedAt: new Date() // Force timestamp update
-      }
-    });
-
-    logger.debug("User updated successfully:", {
-      userId: updatedUser.id,
-      oldSchoolId: authContext.schoolId,
-      newSchoolId: updatedUser.schoolId,
-      userUpdatedAt: updatedUser.updatedAt,
-      updateTimestamp: new Date().toISOString(),
-      updateWasSuccessful: updatedUser.schoolId === school.id
-    });
-
-    // Verify the association was created correctly
-    logger.debug("Step 4: Verifying user-school association...");
-    const verifiedUser = await db.user.findUnique({
-      where: { id: authContext.userId },
-      select: { id: true, schoolId: true, email: true, updatedAt: true }
-    });
-
-    logger.debug("User verification result:", {
-      userId: verifiedUser?.id,
-      userSchoolId: verifiedUser?.schoolId,
-      userEmail: verifiedUser?.email,
-      userUpdatedAt: verifiedUser?.updatedAt,
-      associationCorrect: verifiedUser?.schoolId === school.id,
-      verificationTimestamp: new Date().toISOString()
-    });
-
-    // Additional verification: Check the school-user relationship from school side
-    logger.debug("Step 5: Double-checking school-user relationship...");
-    const schoolWithUsers = await db.school.findUnique({
-      where: { id: school.id },
-      include: {
-        users: {
-          where: { id: authContext.userId }
-        }
-      }
-    });
-
-    logger.debug("School relationship verification:", {
-      schoolId: schoolWithUsers?.id,
-      schoolName: schoolWithUsers?.name,
-      associatedUsersCount: schoolWithUsers?.users.length || 0,
-      userIsAssociated: schoolWithUsers?.users.some(u => u.id === authContext.userId),
-      associatedUserIds: schoolWithUsers?.users.map(u => u.id) || []
-    });
-
-    // Force session refresh by updating the user record timestamp
-    logger.debug("Step 6: Forcing session refresh...");
-    const finalUserUpdate = await db.user.update({
-      where: { id: authContext.userId },
-      data: { updatedAt: new Date() }
-    });
-
-    logger.debug("Final user update for session refresh:", {
-      userId: finalUserUpdate.id,
-      schoolId: finalUserUpdate.schoolId ?? undefined,
-      updatedAt: finalUserUpdate.updatedAt,
-      sessionRefreshTimestamp: new Date().toISOString()
-    });
-
-    logger.debug("Step 7: Revalidating path...");
+    // Revalidate the onboarding path
     revalidatePath("/onboarding");
     
-    logger.debug("initializeSchoolSetup completed successfully:", {
-      schoolId: school.id,
-      userId: authContext.userId,
-      finalTimestamp: new Date().toISOString(),
-      totalSteps: 7
-    });
-    
-    return createActionResponse(school);
+    return createActionResponse(schoolResult.school);
   } catch (error) {
     logger.error("initializeSchoolSetup FAILED at some step:", {
       error: error instanceof Error ? error.message : 'Unknown error',

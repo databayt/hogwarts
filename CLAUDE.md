@@ -147,3 +147,30 @@ Use these path aliases:
 5. **Use server actions** for mutations with "use server"
 6. **Validate twice** - client (UX) and server (security)
 7. **Style with Tailwind** - use cn() helper, avoid inline styles
+
+### Additional Architecture Details
+
+**Composition Hierarchy** (build from bottom up):
+1. **UI** - shadcn/ui primitives (`@/components/ui/*`)
+2. **Atoms** - Compose 2+ UI primitives (`@/components/atom/*`)
+3. **Templates** - Reusable layouts/compositions
+4. **Blocks** - Templates + client logic (hooks, validation)
+5. **Micro** - Adds backend logic (actions, Prisma access)
+6. **Apps** - Compose several Micro features
+
+**Standardized Files per Feature**:
+- `type.ts` - Shared TypeScript types
+- `use-<feature>.ts` - Custom React hooks
+- `column.tsx` - Data table columns (typed by model)
+- `validation.ts` - Zod schemas (infer types)
+- `actions.ts` - Server actions ("use server")
+- `content.tsx` - Main UI composition
+- `form.tsx` - Form components
+- `card.tsx` - Card components
+- `util.ts` - Utility functions
+
+**Multi-Tenant Guardrails**:
+- All business tables include `schoolId` field
+- Uniqueness constraints are scoped within tenant (`schoolId`)
+- Every read/write operation includes `{ schoolId }` from session/subdomain
+- Log `requestId` and `schoolId` for traceability
