@@ -24,7 +24,8 @@
       "Bash(curl:*)",
       "Bash(pnpm remove:*)",
       "Bash(git push:*)",
-      "Bash(pnpm dev:*)"
+      "Bash(pnpm dev:*)",
+      "Bash(git add:*)"
     ],
     "deny": [],
     "ask": []

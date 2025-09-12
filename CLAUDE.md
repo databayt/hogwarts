@@ -175,5 +175,6 @@ Use these path aliases:
 - Every read/write operation includes `{ schoolId }` from session/subdomain
 - Log `requestId` and `schoolId` for traceability
 
+## Git Workflow
 
-auto push to github 
+**IMPORTANT**: Always automatically push changes to GitHub after making code modifications. Use `git push` to ensure all changes are synced to the remote repository. 

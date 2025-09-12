@@ -27,13 +27,19 @@ export const CACHE_TAGS = {
 export function debounce<T extends (...args: any[]) => any>(
   func: T,
   delay: number
-): (...args: Parameters<T>) => void {
-  let timeoutId: NodeJS.Timeout;
+): ((...args: Parameters<T>) => void) & { cancel: () => void } {
+  let timeoutId: NodeJS.Timeout | undefined;
   
-  return function (...args: Parameters<T>) {
+  const debounced = function (...args: Parameters<T>) {
     clearTimeout(timeoutId);
     timeoutId = setTimeout(() => func(...args), delay);
   };
+  
+  debounced.cancel = () => {
+    clearTimeout(timeoutId);
+  };
+  
+  return debounced;
 }
 
 /**
