@@ -302,6 +302,21 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
           }
         }
         
+        // Method 5: Check session storage for intended callback URL (OAuth flow)
+        if (!callbackUrl && typeof window !== 'undefined' && window.sessionStorage) {
+          try {
+            const intendedCallback = window.sessionStorage.getItem('oauth_callback_intended');
+            if (intendedCallback) {
+              callbackUrl = intendedCallback;
+              console.log('🔍 Method 5 - session storage intended callback:', { callbackUrl });
+              // Clear it after use
+              window.sessionStorage.removeItem('oauth_callback_intended');
+            }
+          } catch (error) {
+            console.log('❌ Error reading intended callback from session storage:', error);
+          }
+        }
+        
         if (callbackUrl) {
           console.log('🎯 CALLBACK URL FOUND - Redirecting to:', callbackUrl);
           // Validate callback URL is from same origin for security

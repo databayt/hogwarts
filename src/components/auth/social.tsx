@@ -153,6 +153,12 @@ export const Social = () => {
       searchParams: searchParams.toString()
     });
     
+    // Store the callback URL in session storage as a fallback
+    if (callbackUrl && typeof window !== 'undefined' && window.sessionStorage) {
+      sessionStorage.setItem('oauth_callback_intended', callbackUrl);
+      console.log('💾 Stored intended callback URL:', callbackUrl);
+    }
+    
     signIn(provider, {
       callbackUrl: finalCallbackUrl,
       redirect: true
