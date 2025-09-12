@@ -268,9 +268,24 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
       // Handle Facebook redirect with #_=_ hash FIRST - clean it completely
       if (url.includes('#_=_')) {
         console.log('📘 Facebook redirect detected, cleaning hash');
+        console.log('Original URL with hash:', url);
+        
         // Clean the Facebook hash and redirect appropriately
         const cleanUrl = url.replace(/#.*$/, '');
         console.log('🎯 Cleaned Facebook URL:', cleanUrl);
+        
+        // Check if the cleaned URL has callback parameters
+        try {
+          const cleanUrlObj = new URL(cleanUrl, baseUrl);
+          console.log('📘 Facebook cleaned URL analysis:', {
+            pathname: cleanUrlObj.pathname,
+            search: cleanUrlObj.search,
+            searchParams: Array.from(cleanUrlObj.searchParams.entries()),
+            hasCallbackUrl: cleanUrlObj.searchParams.has('callbackUrl')
+          });
+        } catch (e) {
+          console.log('Error parsing cleaned URL:', e);
+        }
         
         // Continue with the cleaned URL
         url = cleanUrl;
@@ -279,6 +294,20 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
       // PRIORITY: Check for callbackUrl parameter first (from login redirect)
       console.log('\n🎯 CHECKING FOR CALLBACK URL...');
       let callbackUrl = null;
+      
+      // Method 0: Check headers for cookies (server-side)
+      try {
+        // Try to get cookies from the request headers if available
+        if (typeof window === 'undefined') {
+          // We're on the server
+          console.log('🖥️ Server-side execution detected');
+          // Note: In the redirect callback, we don't have direct access to headers
+          // but NextAuth might pass cookie values through the URL
+        }
+      } catch (error) {
+        console.log('⚠️ Could not check server-side cookies:', error);
+      }
+      
       try {
         // Method 1: Parse as URL and check searchParams
         const urlObj = new URL(url, baseUrl);
@@ -324,10 +353,23 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
         if (!callbackUrl && typeof document !== 'undefined') {
           try {
             const cookies = document.cookie.split(';');
+            
+            // Check for NextAuth callback cookie
             const callbackCookie = cookies.find(cookie => cookie.trim().startsWith('authjs.callback-url='));
             if (callbackCookie) {
               callbackUrl = decodeURIComponent(callbackCookie.split('=')[1]);
-              console.log('🔍 Method 4 - cookie callback:', { callbackUrl });
+              console.log('🔍 Method 4a - NextAuth cookie callback:', { callbackUrl });
+            }
+            
+            // Check for our custom OAuth callback cookie
+            if (!callbackUrl) {
+              const oauthCookie = cookies.find(cookie => cookie.trim().startsWith('oauth_callback_intended='));
+              if (oauthCookie) {
+                callbackUrl = decodeURIComponent(oauthCookie.split('=')[1]);
+                console.log('🔍 Method 4b - OAuth intended cookie callback:', { callbackUrl });
+                // Clear the cookie after use
+                document.cookie = 'oauth_callback_intended=; path=/; max-age=0';
+              }
             }
           } catch (error) {
             console.log('❌ Error reading callback from cookies:', error);

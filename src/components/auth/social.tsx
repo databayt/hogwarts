@@ -170,18 +170,29 @@ export const Social = () => {
       allSearchParams: Object.fromEntries(searchParams.entries())
     });
     
-    // Store the callback URL in session storage as a fallback
+    // Store the callback URL in session storage AND cookie as a fallback
     if (callbackUrl) {
-      console.log('\n💾 STORING CALLBACK URL IN SESSION STORAGE');
-      if (typeof window !== 'undefined' && window.sessionStorage) {
-        sessionStorage.setItem('oauth_callback_intended', callbackUrl);
-        console.log('✅ Successfully stored:', {
+      console.log('\n💾 STORING CALLBACK URL IN SESSION STORAGE AND COOKIE');
+      if (typeof window !== 'undefined') {
+        // Store in session storage
+        if (window.sessionStorage) {
+          sessionStorage.setItem('oauth_callback_intended', callbackUrl);
+          console.log('✅ Stored in session storage:', {
+            key: 'oauth_callback_intended',
+            value: callbackUrl,
+            verified: sessionStorage.getItem('oauth_callback_intended') === callbackUrl
+          });
+        }
+        
+        // Also store as a cookie for server-side access
+        document.cookie = `oauth_callback_intended=${encodeURIComponent(callbackUrl)}; path=/; max-age=900; SameSite=Lax`;
+        console.log('🍪 Stored in cookie:', {
           key: 'oauth_callback_intended',
           value: callbackUrl,
-          verified: sessionStorage.getItem('oauth_callback_intended') === callbackUrl
+          cookie: document.cookie.includes('oauth_callback_intended')
         });
       } else {
-        console.log('❌ Session storage not available');
+        console.log('❌ Window not available');
       }
     } else {
       console.log('⚠️ No callback URL to store');
