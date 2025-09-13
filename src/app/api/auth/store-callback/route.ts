@@ -46,15 +46,19 @@ export async function POST(request: Request) {
       hasOauthCallback: existingCookies.some(c => c.name === 'oauth_callback_intended')
     });
     
+    // Don't set domain in development to avoid cookie issues
+    const isDevelopment = process.env.NODE_ENV !== 'production';
+    
     const cookieOptions = {
       name: 'oauth_callback_intended',
       value: callbackUrl,
       httpOnly: true,
       sameSite: 'lax' as const,
-      secure: process.env.NODE_ENV === 'production',
+      secure: !isDevelopment, // Only secure in production
       maxAge: 900, // 15 minutes
       path: '/',
-      domain: process.env.NODE_ENV === 'production' ? '.databayt.org' : undefined,
+      // Remove domain specification entirely to let browser handle it
+      // This ensures cookie works across OAuth redirects
     };
     
     console.log('🔧 Cookie options:', {

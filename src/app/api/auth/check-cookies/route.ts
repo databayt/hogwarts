@@ -14,12 +14,7 @@ export async function GET() {
       count: allCookies.length,
       cookies: allCookies.map(c => ({
         name: c.name,
-        value: c.value?.substring(0, 100),
-        httpOnly: c.httpOnly,
-        sameSite: c.sameSite,
-        secure: c.secure,
-        path: c.path,
-        domain: c.domain
+        value: c.value?.substring(0, 100)
       }))
     });
     

@@ -260,11 +260,26 @@ export const Social = () => {
     
     console.log('🚀 INITIATING OAUTH REDIRECT NOW...');
     
-    // Approach 1: Standard NextAuth way
-    signIn(provider, {
+    // Approach 1: Standard NextAuth way with explicit redirect parameter
+    // Also try passing it as state for OAuth providers
+    const signInOptions: any = {
       callbackUrl: finalCallbackUrl,
-      redirect: true
-    });
+      redirect: true,
+    };
+    
+    // For OAuth providers, also try to use the state parameter
+    if (provider === 'google' || provider === 'facebook') {
+      // Add state parameter to preserve callback through OAuth flow
+      signInOptions.state = btoa(JSON.stringify({ 
+        callbackUrl: finalCallbackUrl,
+        timestamp: Date.now()
+      }));
+      console.log('📦 Added state parameter for OAuth:', signInOptions.state);
+    }
+    
+    console.log('🎯 Final signIn options:', signInOptions);
+    
+    signIn(provider, signInOptions);
     
     console.log('✅ SignIn called - redirect should happen now');
     

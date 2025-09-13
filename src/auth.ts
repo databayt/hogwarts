@@ -320,6 +320,10 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
       console.log('\n🎯 CHECKING FOR CALLBACK URL...');
       let callbackUrl: string | null = intendedCallbackUrl;
       
+      // First check if this is coming back from OAuth and we had a stored callback
+      const isReturningFromOAuth = url.includes('/api/auth/callback/');
+      console.log('🔐 OAuth return check:', { isReturningFromOAuth, url });
+      
       // Method 0: Check server-side cookies using Next.js cookies helper
       if (!callbackUrl) {
         try {
