@@ -4,7 +4,7 @@ import { useState, useEffect, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { locationSchema, type LocationFormData } from "./validation";
 import { updateSchoolLocation } from "./actions";
-import { MapboxForm } from "./mapbox-form";
+import { MapForm } from "./map-form";
 import { useHostValidation } from "../host-validation-context";
 
 interface LocationFormProps {
@@ -31,7 +31,7 @@ export function LocationForm({ schoolId, initialData, onSuccess }: LocationFormP
 
   // Enable/disable next button based on location selection
   useEffect(() => {
-    if (locationData.address && locationData.latitude && locationData.longitude) {
+    if (locationData.address) {
       enableNext();
     } else {
       disableNext();
@@ -90,7 +90,7 @@ export function LocationForm({ schoolId, initialData, onSuccess }: LocationFormP
         </div>
       )}
       
-      <MapboxForm 
+      <MapForm 
         initialData={initialData}
         onLocationChange={setLocationData}
       />
