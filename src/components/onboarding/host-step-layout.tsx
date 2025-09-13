@@ -22,14 +22,16 @@ const HostStepLayout: React.FC<HostStepLayoutProps> = ({
         <div className="flex flex-col lg:flex-row gap-6 lg:gap-12">
           {/* Left div - Title and subtitle */}
           <div className="flex-1 flex flex-col">
-            <div className="leading-tight text-start">
-              {typeof title === 'string' ? (
-                <h3>{title}</h3>
-              ) : (
-                title
-              )}
-            </div>
-            {subtitle && (
+            {title && title !== ' ' && (
+              <div className="leading-tight text-start">
+                {typeof title === 'string' ? (
+                  <h3>{title}</h3>
+                ) : (
+                  title
+                )}
+              </div>
+            )}
+            {subtitle && subtitle !== ' ' && (
               <div className="mt-3 sm:mt-4">
                 {typeof subtitle === 'string' ? (
                   <p className="text-gray-600">{subtitle}</p>
