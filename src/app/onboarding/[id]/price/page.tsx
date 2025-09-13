@@ -9,7 +9,7 @@ export default async function PricePage({ params }: PricePageProps) {
   const { id } = await params;
 
   return (
-    <HostStepLayout>
+    <HostStepLayout title="" subtitle="">
       <PriceContent />
     </HostStepLayout>
   );
