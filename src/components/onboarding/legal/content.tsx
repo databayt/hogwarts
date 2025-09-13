@@ -1,24 +1,52 @@
 "use client";
 
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useEffect } from 'react';
+import { useRouter, useParams } from 'next/navigation';
 import { HelpCircle } from 'lucide-react';
+import { useHostValidation } from '@/components/onboarding/host-validation-context';
+import { completeOnboarding } from './actions';
 
-interface LegalProps {
-  params: Promise<{ id: string }>;
-}
-
-const LegalContent = ({ params }: LegalProps) => {
+const LegalContent = () => {
   const router = useRouter();
-  const [id, setId] = React.useState<string>('');
+  const params = useParams();
+  const schoolId = params.id as string;
   const [hostingType, setHostingType] = useState<string>('private-individual');
   const [safetyFeatures, setSafetyFeatures] = useState<string[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { setCustomNavigation } = useHostValidation();
 
-  React.useEffect(() => {
-    params.then((resolvedParams) => {
-      setId(resolvedParams.id);
+  // Set up custom navigation to handle completion
+  useEffect(() => {
+    const handleNext = async () => {
+      setIsSubmitting(true);
+      try {
+        const result = await completeOnboarding(schoolId, {
+          operationalStatus: hostingType,
+          safetyFeatures: safetyFeatures
+        });
+
+        if (result.success && result.data) {
+          // Navigate to congratulations page
+          router.push(result.data.redirectUrl);
+        } else {
+          console.error('Failed to complete onboarding:', result.error);
+          setIsSubmitting(false);
+        }
+      } catch (error) {
+        console.error('Error completing onboarding:', error);
+        setIsSubmitting(false);
+      }
+    };
+
+    setCustomNavigation({
+      onNext: handleNext,
+      nextDisabled: isSubmitting || !hostingType
     });
-  }, [params]);
+
+    return () => {
+      setCustomNavigation(undefined);
+    };
+  }, [hostingType, safetyFeatures, schoolId, router, setCustomNavigation, isSubmitting]);
 
 
 

@@ -16,6 +16,11 @@ model School {
   maxStudents Int     @default(100)
   maxTeachers Int     @default(10)
   isActive    Boolean @default(true)
+  
+  // Onboarding status
+  onboardingCompletedAt DateTime?
+  operationalStatus     String? // existing school, new school
+  safetyFeatures        String[] @default([])
 
   // School relationships
   users                 User[]
