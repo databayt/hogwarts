@@ -22,6 +22,7 @@ export interface ListingFormData {
   description?: string;
   propertyType?: string;
   address?: string;
+  logoUrl?: string;
   maxStudents?: number;
   maxTeachers?: number;
   planType?: string;
@@ -29,7 +30,6 @@ export interface ListingFormData {
   pricePerNight?: number;
   domain?: string;
   // Branding fields
-  logo?: string;
   primaryColor?: string;
   borderRadius?: 'none' | 'sm' | 'md' | 'lg' | 'xl' | 'full';
   shadow?: 'none' | 'sm' | 'md' | 'lg' | 'xl';

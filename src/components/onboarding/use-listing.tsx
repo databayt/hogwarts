@@ -31,7 +31,6 @@ export interface Listing {
   currency?: 'USD' | 'EUR' | 'GBP' | 'CAD' | 'AUD'
   paymentSchedule?: 'monthly' | 'quarterly' | 'semester' | 'annual'
   // Branding fields
-  logo?: string
   primaryColor?: string
   borderRadius?: 'none' | 'sm' | 'md' | 'lg' | 'xl' | 'full'
   shadow?: 'none' | 'sm' | 'md' | 'lg' | 'xl'

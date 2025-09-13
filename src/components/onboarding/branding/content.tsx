@@ -26,7 +26,7 @@ export default function BrandingContent() {
   // Load existing data from listing
   useEffect(() => {
     if (listing) {
-      if (listing.logo !== undefined) setLogo(listing.logo);
+      if (listing.logoUrl !== undefined) setLogo(listing.logoUrl);
       if (listing.primaryColor) setPrimaryColor(listing.primaryColor);
       if (listing.borderRadius && ['none', 'sm', 'md', 'lg'].includes(listing.borderRadius)) {
         setBorderRadius(listing.borderRadius as 'none' | 'sm' | 'md' | 'lg');
@@ -44,7 +44,7 @@ export default function BrandingContent() {
   const handleNext = async () => {
     try {
       await updateListingData({
-        logo,
+        logoUrl: logo,
         primaryColor,
         borderRadius,
         shadow

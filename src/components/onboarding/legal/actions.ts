@@ -38,21 +38,8 @@ export async function completeOnboarding(
 
     console.log("🏗️ [COMPLETE ONBOARDING ACTION] Initial update data:", updateData);
 
-    // Only add these fields if they exist in the database
-    try {
-      console.log("🔧 [COMPLETE ONBOARDING ACTION] Adding legal fields to update data");
-      updateData.operationalStatus = legalData.operationalStatus;
-      updateData.safetyFeatures = legalData.safetyFeatures;
-      updateData.onboardingCompletedAt = new Date();
-
-      console.log("✅ [COMPLETE ONBOARDING ACTION] Legal fields added successfully:", {
-        operationalStatus: updateData.operationalStatus,
-        safetyFeatures: updateData.safetyFeatures,
-        onboardingCompletedAt: updateData.onboardingCompletedAt
-      });
-    } catch (e) {
-      console.log('⚠️ [COMPLETE ONBOARDING ACTION] New fields not yet migrated, skipping...', e);
-    }
+    // Skip legal fields until migration is applied
+    console.log("⚠️ [COMPLETE ONBOARDING ACTION] Skipping legal fields (operationalStatus, safetyFeatures) - not yet in database schema");
     
     console.log("💾 [COMPLETE ONBOARDING ACTION] Updating school in database", {
       where: { id: schoolId },
