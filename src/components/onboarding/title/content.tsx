@@ -121,14 +121,7 @@ export default function TitleContent() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-20 items-start">
           {/* Left side - Text content and preview */}
           <div className="space-y-3 sm:space-y-4">
-            <h3>
-              What's your school's
-              <br />
-              name?
-            </h3>
-            <p className="text-sm sm:text-base text-muted-foreground">
-              This will be your school's official name in the system. You can change it later if needed.
-            </p>
+            <h3>What's your school's name?</h3>
 
             {/* Title preview card */}
             {currentTitle && (

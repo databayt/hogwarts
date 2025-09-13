@@ -64,11 +64,7 @@ export default function LocationContent() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-20 items-start">
           {/* Left side - Text content */}
           <div className="space-y-3 sm:space-y-4">
-            <h3>
-              Where's your school
-              <br />
-              located?
-            </h3>
+            <h3>Where's your school located?</h3>
             <p className="text-sm sm:text-base text-muted-foreground">
               Your school's address will be visible to parents and staff members.
             </p>

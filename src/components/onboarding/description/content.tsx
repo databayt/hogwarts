@@ -99,6 +99,9 @@ export default function DescriptionContent() {
               <br />
               education model
             </h3>
+            <p className="text-sm sm:text-base text-muted-foreground">
+              Select the type that best describes your school's educational approach and governance structure.
+            </p>
           </div>
 
           {/* Right side - Form */}
