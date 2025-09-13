@@ -48,8 +48,8 @@ export default function OnboardingContent() {
     try {
       const response = await initializeSchoolSetup();
       if (response.success && response.data) {
-        // Force a page refresh to ensure session is updated
-        window.location.href = `/onboarding/overview?schoolId=${response.data.id}`;
+        // Navigate directly to the first onboarding step
+        router.push(`/onboarding/${response.data.id}/about-school`);
       } else {
         console.error('Failed to create school:', response.error);
       }
