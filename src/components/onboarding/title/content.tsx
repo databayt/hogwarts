@@ -129,24 +129,6 @@ export default function TitleContent() {
             <p className="text-sm sm:text-base text-muted-foreground">
               This will be your school's official name in the system. You can change it later if needed.
             </p>
-            
-            {/* Subdomain preview */}
-            {generatedSubdomain && (
-              <div className="mt-4 p-3 bg-muted rounded-lg">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Globe className="w-4 h-4" />
-                  <span>Your school will be available at:</span>
-                </div>
-                <div className="mt-2">
-                  <Badge variant="secondary" className="font-mono text-sm">
-                    {generatedSubdomain}.databayt.org
-                  </Badge>
-                </div>
-                <p className="text-xs text-muted-foreground mt-2">
-                  You can customize this subdomain in the next step
-                </p>
-              </div>
-            )}
 
             {/* Title preview card */}
             {currentTitle && (
@@ -161,7 +143,10 @@ export default function TitleContent() {
             <TitleForm
               ref={titleFormRef}
               schoolId={schoolId}
-              initialData={{ title: currentTitle }}
+              initialData={{
+                title: currentTitle,
+                subdomain: titleData?.subdomain || ""
+              }}
               onTitleChange={handleTitleChange}
             />
           </div>

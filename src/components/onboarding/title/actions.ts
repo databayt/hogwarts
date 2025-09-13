@@ -37,12 +37,19 @@ export async function updateSchoolTitle(
       newTitle: validatedData.title
     });
     
+    const updateData: { name: string; domain?: string; updatedAt: Date } = {
+      name: validatedData.title,
+      updatedAt: new Date(),
+    };
+
+    // Only update domain if subdomain is provided
+    if (validatedData.subdomain) {
+      updateData.domain = validatedData.subdomain;
+    }
+
     const updatedSchool = await db.school.update({
       where: { id: schoolId },
-      data: {
-        name: validatedData.title,
-        updatedAt: new Date(),
-      },
+      data: updateData,
     });
     
     console.log("✅ [UPDATE SCHOOL TITLE] Database updated", {
@@ -80,6 +87,7 @@ export async function getSchoolTitle(schoolId: string): Promise<ActionResponse> 
       select: {
         id: true,
         name: true,
+        domain: true,
       },
     });
 
@@ -89,6 +97,7 @@ export async function getSchoolTitle(schoolId: string): Promise<ActionResponse> 
 
     return createActionResponse({
       title: school.name || "",
+      subdomain: school.domain || "",
     });
   } catch (error) {
     return createActionResponse(undefined, error);

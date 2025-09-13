@@ -3,11 +3,13 @@
 import React, { useState, useTransition, useImperativeHandle, forwardRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { titleSchema, type TitleFormData } from "./validation";
 import { updateSchoolTitle } from "./actions";
 import { FORM_LIMITS } from "../constants.client";
+import { generateSubdomain } from "@/lib/subdomain";
 
 interface TitleFormProps {
   schoolId: string;
@@ -28,6 +30,7 @@ export const TitleForm = forwardRef<TitleFormRef, TitleFormProps>(({ schoolId, i
     resolver: zodResolver(titleSchema),
     defaultValues: {
       title: initialData?.title || "",
+      subdomain: initialData?.subdomain || "",
     },
   });
 
@@ -88,7 +91,16 @@ export const TitleForm = forwardRef<TitleFormRef, TitleFormProps>(({ schoolId, i
   }));
 
   const titleValue = form.watch("title");
+  const subdomainValue = form.watch("subdomain");
   const maxLength = FORM_LIMITS.TITLE_MAX_LENGTH;
+
+  // Auto-generate subdomain from title
+  React.useEffect(() => {
+    if (titleValue && titleValue.trim().length >= FORM_LIMITS.TITLE_MIN_LENGTH && !subdomainValue) {
+      const generated = generateSubdomain(titleValue);
+      form.setValue("subdomain", generated);
+    }
+  }, [titleValue, subdomainValue, form]);
 
   // Notify parent of title changes
   React.useEffect(() => {
@@ -124,6 +136,33 @@ export const TitleForm = forwardRef<TitleFormRef, TitleFormProps>(({ schoolId, i
                   {titleValue.length}/{maxLength}
                 </div>
               </div>
+            </FormItem>
+          )}
+        />
+
+        {/* Subdomain field */}
+        <FormField
+          control={form.control}
+          name="subdomain"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-sm text-muted-foreground">
+                Your school will be available at:
+              </FormLabel>
+              <FormControl>
+                <div className="flex items-center border border-input rounded-lg focus-within:border-ring transition-colors">
+                  <Input
+                    {...field}
+                    placeholder="your-school"
+                    className="border-0 focus-visible:ring-0 focus-visible:ring-offset-0 rounded-r-none"
+                    disabled={isPending}
+                  />
+                  <span className="px-3 py-2 bg-muted text-muted-foreground border-l font-mono text-sm rounded-r-lg">
+                    @databayt.org
+                  </span>
+                </div>
+              </FormControl>
+              <FormMessage />
             </FormItem>
           )}
         />

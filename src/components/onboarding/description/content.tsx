@@ -17,13 +17,14 @@ export default function DescriptionContent() {
 
   // Enable/disable next button based on school type selection
   useEffect(() => {
-    // Enable if either we have selected a type locally OR we have it from the server
-    if (selectedType || descriptionData?.schoolType) {
-      console.log("🟢 Enabling Next button - School type:", selectedType || descriptionData?.schoolType);
-      enableNext();
-    } else {
-      console.log("🔴 Disabling Next button - No school type selected");
-      disableNext();
+    // Default to 'private' if no data exists
+    const currentType = selectedType || descriptionData?.schoolType || 'private';
+    console.log("🟢 Enabling Next button - School type:", currentType);
+    enableNext();
+
+    // Set selectedType to 'private' if no data exists
+    if (!selectedType && !descriptionData?.schoolType) {
+      setSelectedType('private');
     }
   }, [selectedType, descriptionData?.schoolType, enableNext, disableNext]);
 
@@ -34,18 +35,14 @@ export default function DescriptionContent() {
       router.push(`/onboarding/${schoolId}/location`);
     };
 
-    if (selectedType || descriptionData?.schoolType) {
-      setCustomNavigation({
-        onNext: handleNext
-      });
-    } else {
-      setCustomNavigation(undefined);
-    }
+    setCustomNavigation({
+      onNext: handleNext
+    });
 
     return () => {
       setCustomNavigation(undefined);
     };
-  }, [selectedType, descriptionData?.schoolType, schoolId, router, setCustomNavigation]);
+  }, [schoolId, router, setCustomNavigation]);
 
   if (loading) {
     return (
@@ -102,9 +99,6 @@ export default function DescriptionContent() {
               <br />
               education model
             </h3>
-            <p className="text-sm sm:text-base text-muted-foreground">
-              Help us understand what type of school you're setting up.
-            </p>
           </div>
 
           {/* Right side - Form */}

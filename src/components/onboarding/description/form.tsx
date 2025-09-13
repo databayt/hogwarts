@@ -34,7 +34,7 @@ export function DescriptionForm({ schoolId, initialData, onSuccess, onTypeSelect
   const form = useForm<DescriptionFormData>({
     resolver: zodResolver(descriptionSchema),
     defaultValues: {
-      schoolType: initialData?.schoolType,
+      schoolType: initialData?.schoolType || 'private',
     },
   });
 
@@ -104,7 +104,6 @@ export function DescriptionForm({ schoolId, initialData, onSuccess, onTypeSelect
           render={({ field }) => (
             <FormItem>
               <div className="space-y-4">
-                <h4 className="text-lg font-medium">What type of school are you setting up?</h4>
                 <FormControl>
                   <RadioGroup
                     onValueChange={(value) => {

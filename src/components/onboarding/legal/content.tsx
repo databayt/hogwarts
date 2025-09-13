@@ -13,7 +13,7 @@ const LegalContent = () => {
   const [hostingType, setHostingType] = useState<string>('private-individual');
   const [safetyFeatures, setSafetyFeatures] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { setCustomNavigation } = useHostValidation();
+  const { setCustomNavigation, enableNext } = useHostValidation();
 
   // Set up custom navigation to handle completion
   useEffect(() => {
@@ -48,7 +48,12 @@ const LegalContent = () => {
     };
   }, [hostingType, safetyFeatures, schoolId, router, setCustomNavigation, isSubmitting]);
 
-
+  // Enable next button when form is valid
+  useEffect(() => {
+    if (hostingType && !isSubmitting) {
+      enableNext();
+    }
+  }, [hostingType, isSubmitting, enableNext]);
 
   const toggleSafetyFeature = (feature: string) => {
     setSafetyFeatures(prev => 
