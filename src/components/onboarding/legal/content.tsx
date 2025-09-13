@@ -15,28 +15,66 @@ const LegalContent = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { setCustomNavigation, enableNext } = useHostValidation();
 
+  console.log("🏗️ [LEGAL CONTENT] Component initialized", {
+    schoolId,
+    initialHostingType: 'private-individual',
+    initialSafetyFeatures: [],
+    timestamp: new Date().toISOString()
+  });
+
   // Set up custom navigation to handle completion
   useEffect(() => {
     const handleNext = async () => {
+      console.log("🚀 [LEGAL CONTENT] CREATE SCHOOL button clicked", {
+        schoolId,
+        hostingType,
+        safetyFeatures,
+        timestamp: new Date().toISOString()
+      });
+
       setIsSubmitting(true);
+      console.log("⏳ [LEGAL CONTENT] Setting isSubmitting to true");
+
       try {
+        console.log("📤 [LEGAL CONTENT] Calling completeOnboarding action with data:", {
+          schoolId,
+          operationalStatus: hostingType,
+          safetyFeatures: safetyFeatures
+        });
+
         const result = await completeOnboarding(schoolId, {
           operationalStatus: hostingType,
           safetyFeatures: safetyFeatures
         });
 
+        console.log("📥 [LEGAL CONTENT] completeOnboarding action result:", result);
+
         if (result.success && result.data) {
-          // Navigate to congratulations page
+          console.log("✅ [LEGAL CONTENT] Onboarding completed successfully", {
+            school: result.data.school,
+            redirectUrl: result.data.redirectUrl
+          });
+
+          console.log("🦭 [LEGAL CONTENT] Navigating to congratulations page:", result.data.redirectUrl);
           router.push(result.data.redirectUrl);
         } else {
-          console.error('Failed to complete onboarding:', result.error);
+          console.error("❌ [LEGAL CONTENT] Failed to complete onboarding:", result.error);
+          console.log("🔄 [LEGAL CONTENT] Setting isSubmitting back to false");
           setIsSubmitting(false);
         }
       } catch (error) {
-        console.error('Error completing onboarding:', error);
+        console.error("💥 [LEGAL CONTENT] Error completing onboarding:", error);
+        console.log("🔄 [LEGAL CONTENT] Setting isSubmitting back to false due to error");
         setIsSubmitting(false);
       }
     };
+
+    console.log("🔧 [LEGAL CONTENT] Setting up custom navigation", {
+      hostingType,
+      safetyFeatures,
+      isSubmitting,
+      nextDisabled: isSubmitting || !hostingType
+    });
 
     setCustomNavigation({
       onNext: handleNext,
@@ -44,23 +82,44 @@ const LegalContent = () => {
     });
 
     return () => {
+      console.log("🧹 [LEGAL CONTENT] Cleaning up custom navigation");
       setCustomNavigation(undefined);
     };
   }, [hostingType, safetyFeatures, schoolId, router, setCustomNavigation, isSubmitting]);
 
   // Enable next button when form is valid
   useEffect(() => {
+    console.log("🔘 [LEGAL CONTENT] Checking form validity", {
+      hostingType,
+      isSubmitting,
+      shouldEnableNext: hostingType && !isSubmitting
+    });
+
     if (hostingType && !isSubmitting) {
+      console.log("✅ [LEGAL CONTENT] Enabling next button");
       enableNext();
     }
   }, [hostingType, isSubmitting, enableNext]);
 
   const toggleSafetyFeature = (feature: string) => {
-    setSafetyFeatures(prev => 
-      prev.includes(feature)
+    console.log("🔄 [LEGAL CONTENT] Toggling safety feature", {
+      feature,
+      currentFeatures: safetyFeatures,
+      willAdd: !safetyFeatures.includes(feature)
+    });
+
+    setSafetyFeatures(prev => {
+      const newFeatures = prev.includes(feature)
         ? prev.filter(f => f !== feature)
-        : [...prev, feature]
-    );
+        : [...prev, feature];
+
+      console.log("📝 [LEGAL CONTENT] Updated safety features", {
+        previous: prev,
+        new: newFeatures
+      });
+
+      return newFeatures;
+    });
   };
 
   const safetyOptions = [
@@ -99,7 +158,13 @@ const LegalContent = () => {
                   name="hosting-type"
                   value="private-individual"
                   checked={hostingType === 'private-individual'}
-                  onChange={(e) => setHostingType(e.target.value)}
+                  onChange={(e) => {
+                    console.log("🔘 [LEGAL CONTENT] Hosting type changed", {
+                      from: hostingType,
+                      to: e.target.value
+                    });
+                    setHostingType(e.target.value);
+                  }}
                   className="sr-only"
                 />
                 <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
@@ -120,7 +185,13 @@ const LegalContent = () => {
                   name="hosting-type"
                   value="business"
                   checked={hostingType === 'business'}
-                  onChange={(e) => setHostingType(e.target.value)}
+                  onChange={(e) => {
+                    console.log("🔘 [LEGAL CONTENT] Hosting type changed", {
+                      from: hostingType,
+                      to: e.target.value
+                    });
+                    setHostingType(e.target.value);
+                  }}
                   className="sr-only"
                 />
                 <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
