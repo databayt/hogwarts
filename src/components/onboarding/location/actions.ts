@@ -4,8 +4,6 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { db } from "@/lib/db";
-import { logger } from "@/lib/logger";
-import { mapsService } from "@/lib/maps-service";
 import { 
   requireSchoolOwnership,
   createActionResponse,
@@ -25,34 +23,21 @@ export async function updateSchoolLocation(
 
     const validatedData = locationSchema.parse(data);
 
-    // Format full address
-    const fullAddress = `${validatedData.address}, ${validatedData.city}, ${validatedData.state}, ${validatedData.country} ${validatedData.postalCode}`;
+    // Format full address without postal code
+    const addressParts = [
+      validatedData.address,
+      validatedData.city,
+      validatedData.state,
+      validatedData.country
+    ].filter(Boolean); // Remove empty parts
     
-    // Geocode the address to get coordinates
-    const geocodeResult = await mapsService.geocodeAddress(fullAddress);
+    const fullAddress = addressParts.join(', ');
     
-    if (geocodeResult.success && geocodeResult.coordinates) {
-      logger.info('Address geocoded successfully', {
-        schoolId,
-        coordinates: geocodeResult.coordinates,
-        formattedAddress: geocodeResult.formattedAddress
-      });
-    } else {
-      logger.warn('Failed to geocode address', {
-        schoolId,
-        address: fullAddress,
-        error: geocodeResult.error
-      });
-    }
-
     // Update school location in database
     const updatedSchool = await db.school.update({
       where: { id: schoolId },
       data: {
-        address: geocodeResult.formattedAddress || fullAddress,
-        // Store coordinates if we have them (you may need to add these fields to your schema)
-        // latitude: geocodeResult.coordinates?.latitude,
-        // longitude: geocodeResult.coordinates?.longitude,
+        address: fullAddress,
         updatedAt: new Date(),
       },
     });
@@ -98,21 +83,13 @@ export async function getSchoolLocation(schoolId: string): Promise<ActionRespons
     };
 
     if (school.address) {
-      // Simple parsing of "address, city, state, country postalCode"
+      // Simple parsing of "address, city, state, country"
       const parts = school.address.split(',').map(part => part.trim());
-      if (parts.length >= 4) {
-        parsedAddress.address = parts[0];
-        parsedAddress.city = parts[1];
-        parsedAddress.state = parts[2];
-        // Last part might contain country and postal code
-        const lastPart = parts[3];
-        const lastSpaceIndex = lastPart.lastIndexOf(' ');
-        if (lastSpaceIndex > 0) {
-          parsedAddress.country = lastPart.substring(0, lastSpaceIndex);
-          parsedAddress.postalCode = lastPart.substring(lastSpaceIndex + 1);
-        } else {
-          parsedAddress.country = lastPart;
-        }
+      if (parts.length >= 1) {
+        parsedAddress.address = parts[0] || "";
+        parsedAddress.city = parts[1] || "";
+        parsedAddress.state = parts[2] || "";
+        parsedAddress.country = parts[3] || "";
       }
     }
 
