@@ -1,15 +1,16 @@
 "use client";
 
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { StepsOverview } from '@/components/onboarding';
 
 export default function OnboardingOverviewContent() {
   const router = useRouter();
+  const params = useParams();
+  const schoolId = params.id as string;
 
   const handleGetStarted = async () => {
-    // Temporary navigation without creating a DB record
-    const tempId = `draft-${Date.now()}`;
-    router.push(`/onboarding/${tempId}/about-school`);
+    // Navigate to the first step with the existing school ID
+    router.push(`/onboarding/${schoolId}/about-school`);
   };
 
   return (
