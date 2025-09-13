@@ -56,6 +56,10 @@ export function CapacityForm({ schoolId, initialData, onSuccess }: CapacityFormP
     const currentValue = form.getValues(field);
     const newValue = Math.max(1, currentValue + delta);
     form.setValue(field, newValue);
+    
+    // Auto-save on change
+    const updatedData = form.getValues();
+    handleSubmit(updatedData);
   };
 
   const formatNumber = (num: number): string => {
@@ -147,14 +151,6 @@ export function CapacityForm({ schoolId, initialData, onSuccess }: CapacityFormP
             minValue={1}
           />
         </div>
-
-        <Button 
-          type="submit" 
-          disabled={isPending}
-          className="w-full"
-        >
-          {isPending ? "Updating..." : "Update Capacity"}
-        </Button>
       </form>
     </Form>
   );

@@ -5,7 +5,6 @@ import { useParams } from 'next/navigation';
 import { useHostValidation } from '@/components/onboarding/host-validation-context';
 import { useCapacity } from './use-capacity';
 import { CapacityForm } from './form';
-import { CapacityCard } from './card';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function CapacityContent() {
@@ -84,17 +83,6 @@ export default function CapacityContent() {
               Tell us about your school's capacity and facilities. These numbers will help us configure your system properly.
             </p>
 
-            {/* Capacity preview card */}
-            {capacityData && (
-              <div className="mt-6">
-                <CapacityCard 
-                  studentCount={capacityData.studentCount}
-                  teachers={capacityData.teachers}
-                  classrooms={capacityData.classrooms}
-                  facilities={capacityData.facilities}
-                />
-              </div>
-            )}
           </div>
 
           {/* Right side - Form */}
