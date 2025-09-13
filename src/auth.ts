@@ -269,12 +269,25 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
       // Check if this is an OAuth callback
       const isOAuthCallback = url.includes('/api/auth/callback/');
       if (isOAuthCallback) {
-        console.log('🔐 OAuth Callback Detected:', {
+        const provider = url.match(/callback\/(\w+)/)?.[1];
+        console.log('🔐 OAUTH CALLBACK DETECTED:', {
+          provider,
           url,
-          provider: url.match(/callback\/(\w+)/)?.[1],
+          urlLength: url.length,
           hasHash: url.includes('#'),
-          hashContent: url.includes('#') ? url.split('#')[1] : null
+          hashContent: url.includes('#') ? url.split('#')[1] : null,
+          hasQuery: url.includes('?'),
+          queryContent: url.includes('?') ? url.split('?')[1]?.split('#')[0] : null,
+          timestamp: new Date().toISOString()
         });
+        
+        // Log request headers if available (for debugging)
+        if (typeof process !== 'undefined' && process.env) {
+          console.log('🌍 Environment:', {
+            NODE_ENV: process.env.NODE_ENV,
+            NEXTAUTH_URL: process.env.NEXTAUTH_URL
+          });
+        }
       }
       
       // Handle Facebook redirect with #_=_ hash FIRST - clean it completely
@@ -310,18 +323,32 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
       // Method 0: Check server-side cookies using Next.js cookies helper
       if (!callbackUrl) {
         try {
+          console.log('🔍 Method 0 - Checking server-side cookies...');
           const cookieStore = await cookies();
+          
+          // List ALL server-side cookies for debugging
+          const allCookies = cookieStore.getAll();
+          console.log('🍪 ALL SERVER-SIDE COOKIES:', {
+            count: allCookies.length,
+            cookies: allCookies.map(c => ({ name: c.name, value: c.value?.substring(0, 50) + '...', httpOnly: c.httpOnly, sameSite: c.sameSite }))
+          });
+          
           const oauthCallbackCookie = cookieStore.get('oauth_callback_intended');
           if (oauthCallbackCookie) {
             callbackUrl = oauthCallbackCookie.value;
-            console.log('🍪 Method 0 - Server-side cookie found:', {
+            console.log('✅ Method 0 - Server-side cookie FOUND:', {
               callbackUrl,
-              cookieName: 'oauth_callback_intended'
+              cookieName: 'oauth_callback_intended',
+              fullValue: oauthCallbackCookie.value
             });
             // Clear the cookie after use
             cookieStore.delete('oauth_callback_intended');
+            console.log('🗑️ Deleted oauth_callback_intended cookie');
           } else {
-            console.log('📭 No server-side oauth_callback_intended cookie found');
+            console.log('❌ Method 0 - No oauth_callback_intended cookie found');
+            // Check if any cookies start with oauth
+            const oauthRelatedCookies = allCookies.filter(c => c.name.toLowerCase().includes('oauth') || c.name.toLowerCase().includes('callback'));
+            console.log('🔍 OAuth-related cookies found:', oauthRelatedCookies.length > 0 ? oauthRelatedCookies : 'NONE');
           }
         } catch (error) {
           console.log('⚠️ Could not check server-side cookies:', error);

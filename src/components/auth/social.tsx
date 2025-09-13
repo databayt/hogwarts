@@ -176,19 +176,32 @@ export const Social = () => {
       
       // Store server-side via API (most reliable)
       try {
+        console.log('📡 Calling store-callback API...');
         const response = await fetch('/api/auth/store-callback', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ callbackUrl })
         });
         
+        const responseData = await response.json();
+        console.log('📡 Store-callback API response:', {
+          status: response.status,
+          ok: response.ok,
+          data: responseData,
+          headers: {
+            'content-type': response.headers.get('content-type'),
+            'set-cookie': response.headers.get('set-cookie')
+          }
+        });
+        
         if (response.ok) {
           console.log('✅ Callback URL stored server-side via API');
         } else {
-          console.log('⚠️ Failed to store callback URL server-side');
+          console.log('⚠️ Failed to store callback URL server-side:', responseData);
         }
       } catch (error) {
         console.log('❌ Error calling store-callback API:', error);
+        console.log('Stack:', error instanceof Error ? error.stack : 'No stack');
       }
       
       // Also store client-side as backup
@@ -217,21 +230,43 @@ export const Social = () => {
       console.log('⚠️ No callback URL to store');
     }
     
-    console.log('\n🔐 Calling NextAuth signIn with:', {
+    console.log('\n🔐 CALLING NEXTAUTH SIGNIN...');
+    console.log('📋 Final configuration:', {
       provider,
       callbackUrl: finalCallbackUrl,
-      redirect: true
+      redirect: true,
+      timestamp: new Date().toISOString()
     });
+    
+    // Check all storage mechanisms right before redirect
+    console.log('🔍 Pre-redirect storage check:');
+    if (typeof window !== 'undefined') {
+      // Check sessionStorage
+      console.log('  Session Storage:', {
+        oauth_callback_intended: sessionStorage.getItem('oauth_callback_intended'),
+        oauth_tenant: sessionStorage.getItem('oauth_tenant'),
+        oauth_callback_url: sessionStorage.getItem('oauth_callback_url')
+      });
+      
+      // Check cookies
+      console.log('  Document cookies:', document.cookie.split(';').filter(c => 
+        c.includes('oauth') || c.includes('callback')
+      ));
+    }
     
     // Try to ensure the callback URL is preserved
     // NextAuth might not properly pass callbackUrl through OAuth providers
     // So we'll try multiple approaches
+    
+    console.log('🚀 INITIATING OAUTH REDIRECT NOW...');
     
     // Approach 1: Standard NextAuth way
     signIn(provider, {
       callbackUrl: finalCallbackUrl,
       redirect: true
     });
+    
+    console.log('✅ SignIn called - redirect should happen now');
     
     // Note: If the above doesn't work, we're also storing in cookie and sessionStorage
     // The redirect callback will check those as fallback
