@@ -48,8 +48,9 @@ export default function OnboardingContent() {
     try {
       const response = await initializeSchoolSetup();
       if (response.success && response.data) {
-        // Navigate to overview page with the new school ID
-        router.push(`/onboarding/${response.data.id}/overview`);
+        // Store the school ID and navigate to overview page
+        sessionStorage.setItem('currentSchoolId', response.data.id);
+        router.push(`/onboarding/overview`);
       } else {
         console.error('Failed to create school:', response.error);
       }

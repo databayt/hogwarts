@@ -31,9 +31,15 @@ const OverviewPage = () => {
     });
     setIsCreating(true);
     
-    // Check if we have a real school ID from query params
-    const schoolId = searchParams.get('schoolId');
-    console.log('🔍 [DEBUG] Query param schoolId:', schoolId);
+    // Check if we have a real school ID from query params or sessionStorage
+    const schoolIdFromParams = searchParams.get('schoolId');
+    const schoolIdFromSession = sessionStorage.getItem('currentSchoolId');
+    const schoolId = schoolIdFromParams || schoolIdFromSession;
+    console.log('🔍 [DEBUG] School ID sources:', {
+      fromParams: schoolIdFromParams,
+      fromSession: schoolIdFromSession,
+      final: schoolId
+    });
     
     if (schoolId) {
       console.log('✅ [DEBUG] Using existing schoolId, redirecting...');
