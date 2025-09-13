@@ -334,7 +334,7 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
           const allCookies = cookieStore.getAll();
           console.log('🍪 ALL SERVER-SIDE COOKIES:', {
             count: allCookies.length,
-            cookies: allCookies.map(c => ({ name: c.name, value: c.value?.substring(0, 50) + '...', httpOnly: c.httpOnly, sameSite: c.sameSite }))
+            cookies: allCookies.map(c => ({ name: c.name, value: c.value?.substring(0, 50) + '...' }))
           });
           
           const oauthCallbackCookie = cookieStore.get('oauth_callback_intended');
@@ -369,12 +369,16 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
           searchParams: Array.from(urlObj.searchParams.entries()),
           hash: urlObj.hash
         });
-        callbackUrl = urlObj.searchParams.get('callbackUrl') || urlObj.searchParams.get('redirect');
+        // Only check URL params if we don't already have a callback URL from cookies
+        if (!callbackUrl) {
+          callbackUrl = urlObj.searchParams.get('callbackUrl') || urlObj.searchParams.get('redirect');
+        }
         console.log('🔍 Method 1 - URL searchParams:', { 
           callbackUrl, 
           hasCallbackParam: urlObj.searchParams.has('callbackUrl'),
           hasRedirectParam: urlObj.searchParams.has('redirect'),
-          allParams: Object.fromEntries(urlObj.searchParams.entries())
+          allParams: Object.fromEntries(urlObj.searchParams.entries()),
+          skipped: !!callbackUrl
         });
         
         // Method 2: Check if the URL itself contains a callback parameter
