@@ -3,7 +3,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { ChevronDown, DollarSign } from 'lucide-react';
+import { ChevronDown, DollarSign, Edit2 } from 'lucide-react';
+import { useHostValidation } from '@/components/onboarding/host-validation-context';
 
 export default function PriceContent() {
   const params = useParams();
@@ -11,6 +12,12 @@ export default function PriceContent() {
   const [isFocused, setIsFocused] = useState<boolean>(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const schoolId = params?.id as string;
+  const { enableNext } = useHostValidation();
+
+  // Enable next button since we have a default price
+  useEffect(() => {
+    enableNext();
+  }, [enableNext]);
 
   useEffect(() => {
     // Auto-focus the input when component mounts
@@ -37,18 +44,9 @@ export default function PriceContent() {
     setPrice(numValue);
   };
 
-  const guestPriceBeforeTaxes = price + 22; // Adding estimated fees
-
   return (
     <div className="">
       <div className="space-y-6">
-        <div className="space-y-3">
-          <h3>Now, set an annual fee</h3>
-          <p className="text-sm sm:text-base text-muted-foreground">
-            Tip: $158. You may set a monthly fee later.
-          </p>
-        </div>
-
         <div className="flex flex-col items-center">
           {/* Large price display with edit functionality */}
           <div className="flex items-center justify-center mb-6">
@@ -92,18 +90,10 @@ export default function PriceContent() {
                     }
                   }}
                 >
-                  <DollarSign size={16} />
+                  <Edit2 size={16} />
                 </div>
               )}
             </div>
-          </div>
-
-          {/* Student price info */}
-          <div className="mb-4">
-            <Button variant="ghost" className="inline-flex items-center space-x-2 text-muted-foreground hover:text-foreground">
-              <span>Student fee before discount ${guestPriceBeforeTaxes}</span>
-              <ChevronDown size={16} />
-            </Button>
           </div>
 
           {/* View similar schools button */}

@@ -9,10 +9,7 @@ export default async function PricePage({ params }: PricePageProps) {
   const { id } = await params;
 
   return (
-    <HostStepLayout
-      title="Now, set an annual fee"
-      subtitle="Tip: $158. You may set a monthly fee later."
-    >
+    <HostStepLayout>
       <PriceContent />
     </HostStepLayout>
   );
