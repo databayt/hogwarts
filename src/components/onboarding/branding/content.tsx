@@ -26,7 +26,7 @@ export default function BrandingContent() {
   // Load existing data from listing
   useEffect(() => {
     if (listing) {
-      if (listing.logoUrl !== undefined) setLogo(listing.logoUrl);
+      if (listing.logoUrl !== undefined && listing.logoUrl !== null) setLogo(listing.logoUrl);
       if (listing.primaryColor) setPrimaryColor(listing.primaryColor);
       if (listing.borderRadius && ['none', 'sm', 'md', 'lg'].includes(listing.borderRadius)) {
         setBorderRadius(listing.borderRadius as 'none' | 'sm' | 'md' | 'lg');
