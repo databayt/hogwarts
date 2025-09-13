@@ -78,8 +78,8 @@ export async function getSchoolLocation(schoolId: string): Promise<ActionRespons
       state: "",
       country: "",
       postalCode: "",
-      latitude: undefined as number | undefined,
-      longitude: undefined as number | undefined,
+      latitude: 0,
+      longitude: 0,
     };
 
     if (school.address) {

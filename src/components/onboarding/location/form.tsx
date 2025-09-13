@@ -23,8 +23,8 @@ export function LocationForm({ schoolId, initialData, onSuccess }: LocationFormP
     state: initialData?.state || "",
     country: initialData?.country || "",
     postalCode: initialData?.postalCode || "",
-    latitude: initialData?.latitude,
-    longitude: initialData?.longitude,
+    latitude: initialData?.latitude || 0,
+    longitude: initialData?.longitude || 0,
   });
 
   const { setCustomNavigation, enableNext, disableNext } = useHostValidation();
