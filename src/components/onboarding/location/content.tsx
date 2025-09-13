@@ -26,15 +26,28 @@ export default function LocationContent() {
 
   if (loading) {
     return (
-      <div className="max-w-3xl mx-auto">
-        <Skeleton className="h-[400px] w-full rounded-lg" />
+      <div className="max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-20 items-start">
+          {/* Left side - Text content skeleton */}
+          <div className="space-y-6">
+            <div className="space-y-4">
+              <Skeleton className="h-8 w-64" />
+              <Skeleton className="h-4 w-96" />
+            </div>
+          </div>
+          
+          {/* Right side - Form skeleton */}
+          <div className="space-y-6">
+            <Skeleton className="h-[300px] w-full rounded-lg" />
+          </div>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="max-w-3xl mx-auto">
+      <div className="max-w-6xl mx-auto">
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
@@ -46,21 +59,29 @@ export default function LocationContent() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto">
-      <div className="space-y-6">
-        <div>
-          <h3 className="text-2xl font-semibold">
-            Where's your school located?
-          </h3>
-          <p className="text-muted-foreground mt-2">
-            Your school's address will be visible to parents and staff members.
-          </p>
-        </div>
+    <div className="space-y-8">
+      <div className="max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-20 items-start">
+          {/* Left side - Text content */}
+          <div className="space-y-3 sm:space-y-4">
+            <h3>
+              Where's your school
+              <br />
+              located?
+            </h3>
+            <p className="text-sm sm:text-base text-muted-foreground">
+              Your school's address will be visible to parents and staff members.
+            </p>
+          </div>
 
-        <LocationForm
-          schoolId={schoolId}
-          initialData={locationData || undefined}
-        />
+          {/* Right side - Form */}
+          <div>
+            <LocationForm
+              schoolId={schoolId}
+              initialData={locationData || undefined}
+            />
+          </div>
+        </div>
       </div>
     </div>
   );
