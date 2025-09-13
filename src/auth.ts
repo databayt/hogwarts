@@ -778,6 +778,20 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
       
       // Default behavior - redirect to dashboard on current domain
       if (url.startsWith("/")) {
+        // Special case: if URL is exactly "/" (home page), respect it (for logout)
+        if (url === "/") {
+          const homeUrl = baseUrl; // Just the base URL without any path
+          console.log('🏠 Redirecting to home page (logout):', {
+            reason: 'URL is exactly /',
+            originalUrl: url,
+            finalUrl: homeUrl
+          });
+          console.log('=====================================');
+          console.log('🔄 REDIRECT CALLBACK END');
+          console.log('=====================================\n');
+          return homeUrl;
+        }
+        
         const finalUrl = `${baseUrl}/dashboard`;
         console.log('📍 Relative URL - defaulting to dashboard:', {
           reason: 'URL starts with /',
