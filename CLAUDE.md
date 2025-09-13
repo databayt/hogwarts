@@ -175,6 +175,37 @@ Use these path aliases:
 - Every read/write operation includes `{ schoolId }` from session/subdomain
 - Log `requestId` and `schoolId` for traceability
 
+## Environment & Deployment
+
+- **Production**: https://ed.databayt.org (main domain)
+- **Platform**: Vercel (automatic deployments from main branch)
+- **Database**: PostgreSQL on Neon (connection string in DATABASE_URL)
+- **Package Manager**: pnpm v9.x (lockfile must be up to date for Vercel)
+
+## School Onboarding Flow
+
+The onboarding follows this exact sequence (defined in `host-footer.tsx`):
+1. about-school → 2. title → 3. description → 4. location → 5. stand-out → 
+6. capacity → 7. branding → 8. import → 9. finish-setup → 10. join → 
+11. visibility → 12. price → 13. discount → 14. legal
+
+Navigation is handled by `HostFooter` component with context-aware validation.
+
+## Authentication & OAuth
+
+- OAuth providers: Google, Facebook
+- Callback URL preservation: Uses httpOnly cookies (`auth-callback-url`)
+- Login flow: Stores intended destination before OAuth redirect
+- Logout: Redirects to home page (`/`) not dashboard
+
+## Common Gotchas
+
+1. **Vercel Build Failures**: Run `pnpm install` locally to update lockfile before pushing
+2. **OAuth Redirects**: Check `auth.ts` redirect callback for URL handling logic
+3. **Location Form**: Uses simplified inputs (no Mapbox), stores concatenated address string
+4. **Capacity Form**: Auto-saves on change, no explicit submit button
+5. **Price Page**: Uses empty title/subtitle to maintain two-column layout consistency
+
 ## Git Workflow
 
 **IMPORTANT**: Always automatically push changes to GitHub after making code modifications. Use `git push` to ensure all changes are synced to the remote repository. 
