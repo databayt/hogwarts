@@ -63,7 +63,7 @@ export default function PriceContent() {
           {/* Right side - Price form */}
           <div className="space-y-6">
             {/* Large price display with edit functionality */}
-            <div className="flex items-center justify-start mb-6">
+            <div className="flex items-start justify-start mb-6">
               <div className="relative flex items-center">
                 <input
                   ref={inputRef}

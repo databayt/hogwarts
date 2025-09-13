@@ -35,10 +35,7 @@ export function MapForm({ initialData, onLocationChange }: MapFormProps) {
   };
 
   return (
-    <Card className="p-6 bg-transparent border-0 shadow-none">
-      <div className="mb-6">
-      </div>
-      
+    <Card className="p-0 bg-transparent border-0 shadow-none">
       <div className="grid gap-4">
         {/* Address */}
         <Input

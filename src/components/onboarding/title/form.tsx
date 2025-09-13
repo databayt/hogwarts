@@ -94,13 +94,13 @@ export const TitleForm = forwardRef<TitleFormRef, TitleFormProps>(({ schoolId, i
   const subdomainValue = form.watch("subdomain");
   const maxLength = FORM_LIMITS.TITLE_MAX_LENGTH;
 
-  // Auto-generate subdomain from title
+  // Auto-generate subdomain from title in real-time
   React.useEffect(() => {
-    if (titleValue && titleValue.trim().length >= FORM_LIMITS.TITLE_MIN_LENGTH && !subdomainValue) {
+    if (titleValue && titleValue.trim().length >= FORM_LIMITS.TITLE_MIN_LENGTH) {
       const generated = generateSubdomain(titleValue);
       form.setValue("subdomain", generated);
     }
-  }, [titleValue, subdomainValue, form]);
+  }, [titleValue, form]);
 
   // Notify parent of title changes
   React.useEffect(() => {
