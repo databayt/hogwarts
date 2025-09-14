@@ -23,10 +23,11 @@ const rubik = Rubik({
 });
 
 export async function generateMetadata({
-  params: { lang },
+  params,
 }: {
-  params: { lang: Locale };
+  params: Promise<{ lang: Locale }>;
 }): Promise<Metadata> {
+  const { lang } = await params;
   const dictionary = await getDictionary(lang);
   const config = localeConfig[lang];
 
@@ -48,11 +49,12 @@ export async function generateMetadata({
 
 export default async function LocaleLayout({
   children,
-  params: { lang },
+  params,
 }: {
   children: React.ReactNode;
-  params: { lang: Locale };
+  params: Promise<{ lang: Locale }>;
 }) {
+  const { lang } = await params;
   const session = await auth();
   const config = localeConfig[lang];
   const isRTL = config.dir === 'rtl';

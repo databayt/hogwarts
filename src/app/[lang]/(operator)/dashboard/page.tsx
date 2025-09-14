@@ -15,5 +15,5 @@ export default async function Dashboard({ params }: DashboardPageProps) {
   const { lang } = await params;
   const dictionary = await getDictionary(lang);
 
-  return <DashboardContent dictionary={dictionary} />;
+  return <DashboardContent />;
 }
