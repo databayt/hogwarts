@@ -46,7 +46,7 @@ export async function StudentDashboard({ user, dictionary }: StudentDashboardPro
   const attendancePercentage = totalDays > 0 ? (presentDays / totalDays) * 100 : 0;
 
   // Get dashboard dictionary with fallbacks
-  const dashDict = dictionary?.dashboard?.student || {
+  const dashDict = {
     stats: {
       gpa: "Current GPA",
       attendance: "Attendance",
