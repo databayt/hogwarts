@@ -138,7 +138,13 @@ function generatePeriods(timetableData: any, classConfig: any) {
   return periods
 }
 
-export function TimetableContent() {
+import type { Dictionary } from '@/components/internationalization/dictionaries'
+
+interface TimetableContentProps {
+  dictionary?: Dictionary['school']
+}
+
+export function TimetableContent({ dictionary }: TimetableContentProps) {
   const { 
     isNextWeek, 
     isWeekChangeLoading,

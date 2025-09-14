@@ -1,6 +1,7 @@
 import { InfiniteSlider } from '@/components/atom/infinite-slider'
 import { ProgressiveBlur } from '@/components/atom/progressive-blur'
 import Image from 'next/image'
+import type { Dictionary } from '@/components/internationalization/dictionaries'
 
 const sponsors = [
     { 
@@ -54,13 +55,19 @@ const sponsors = [
     },
 ]
 
-export default function LogoCloud() {
+interface LogoCloudProps {
+    dictionary?: Dictionary
+}
+
+export default function LogoCloud({ dictionary }: LogoCloudProps) {
+    const text = dictionary?.marketing?.logoCloud?.trustedBy || "Trusted by amazing\nsponsors"
+
     return (
         <section className="bg-background overflow-hidden py-16">
             <div className="group relative m-auto max-w-7xl px-6">
                 <div className="flex flex-col items-center md:flex-row">
                     <div className="md:max-w-44 md:border-r md:pr-6">
-                        <p className="text-end text-sm">Trusted by amazing sponsors</p>
+                        <p className="text-end text-sm whitespace-pre-line">{text}</p>
                     </div>
                     <div className="relative py-6 md:w-[calc(100%-11rem)]">
                         <InfiniteSlider

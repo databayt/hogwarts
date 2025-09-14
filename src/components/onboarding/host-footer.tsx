@@ -19,6 +19,7 @@ interface HostFooterProps {
   canGoBack?: boolean;
   canGoNext?: boolean;
   nextDisabled?: boolean;
+  dictionary?: any;
 }
 
 // Define the step order for the hosting flow
@@ -57,7 +58,8 @@ const HostFooter: React.FC<HostFooterProps> = ({
   nextLabel = "Next",
   canGoBack = true,
   canGoNext = true,
-  nextDisabled = false
+  nextDisabled = false,
+  dictionary
 }) => {
   const router = useRouter();
   const params = useParams();
@@ -174,10 +176,12 @@ const HostFooter: React.FC<HostFooterProps> = ({
     return 0; // Not started
   };
   
+  const dict = dictionary?.onboarding || {};
+
   const stepLabels = [
-    "Tell us about your place",
-    "Make it stand out", 
-    "Finish up and publish"
+    dict.tellUsAboutYourPlace || "Tell us about your place",
+    dict.makeItStandOut || "Make it stand out",
+    dict.finishUpAndPublish || "Finish up and publish"
   ];
   
   // Check if back/next are available
@@ -196,17 +200,18 @@ const HostFooter: React.FC<HostFooterProps> = ({
   });
   
   // Set the next button label based on current step
-  const actualNextLabel = currentStepSlug === 'legal' ? 'Create school' : nextLabel;
+  const actualBackLabel = backLabel || dict.back || "Back";
+  const actualNextLabel = currentStepSlug === 'legal' ? (dict.createSchool || 'Create school') : (nextLabel || dict.next || "Next");
 
   return (
     <footer className="fixed bottom-0 left-0 right-0 bg-white">
-      {/* Three separate progress bars */}
-      <div className="">
+      {/* Three separate progress bars - always LTR */}
+      <div className="" dir="ltr">
         <div className="grid grid-cols-3 gap-1 sm:gap-2 px-4 sm:px-6 md:px-12 lg:px-20">
           {stepLabels.map((label, index) => (
-            <Progress 
+            <Progress
               key={index}
-              value={getStepProgress(index + 1)} 
+              value={getStepProgress(index + 1)}
               className="h-1 w-full"
             />
           ))}
@@ -253,7 +258,7 @@ const HostFooter: React.FC<HostFooterProps> = ({
             size='sm'
             
           >
-            {backLabel}
+            {actualBackLabel}
           </Button>
 
           <Button

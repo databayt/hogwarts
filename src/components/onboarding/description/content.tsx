@@ -7,13 +7,18 @@ import { useDescription } from './use-description';
 import { DescriptionForm } from './form';
 import { Skeleton } from '@/components/ui/skeleton';
 
-export default function DescriptionContent() {
+interface DescriptionContentProps {
+  dictionary?: any;
+}
+
+export default function DescriptionContent({ dictionary }: DescriptionContentProps) {
   const params = useParams();
   const router = useRouter();
   const schoolId = params.id as string;
   const { enableNext, disableNext, setCustomNavigation } = useHostValidation();
   const { data: descriptionData, loading, refresh } = useDescription(schoolId);
   const [selectedType, setSelectedType] = useState<string | null>(null);
+  const dict = dictionary?.onboarding || {};
 
   // Enable/disable next button based on school type selection
   useEffect(() => {
@@ -95,12 +100,12 @@ export default function DescriptionContent() {
           {/* Left side - Text content */}
           <div className="space-y-3 sm:space-y-4">
             <h3>
-              Describe your school's
+              {dict.describeEducationModel || "Describe your school's"}
               <br />
-              education model
+              {dict.educationModel || "education model"}
             </h3>
             <p className="text-sm sm:text-base text-muted-foreground">
-              Select the type that best describes your school's educational approach and governance structure.
+              {dict.selectSchoolTypeDescription || "Select the type that best describes your school's educational approach and governance structure."}
             </p>
           </div>
 
@@ -111,6 +116,7 @@ export default function DescriptionContent() {
               initialData={descriptionData || undefined}
               onTypeSelect={setSelectedType}
               onSuccess={() => refresh()}
+              dictionary={dictionary}
             />
           </div>
         </div>

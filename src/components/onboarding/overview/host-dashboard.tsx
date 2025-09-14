@@ -19,6 +19,7 @@ interface SchoolOnboardingDashboardProps {
   onCreateNew?: () => void;
   onCreateFromTemplate?: () => void;
   totalSchools?: number; // Total number of schools available
+  dictionary?: any;
 }
 
 const SchoolOnboardingDashboard: React.FC<SchoolOnboardingDashboardProps> = ({
@@ -27,8 +28,10 @@ const SchoolOnboardingDashboard: React.FC<SchoolOnboardingDashboardProps> = ({
   onSchoolClick,
   onCreateNew,
   onCreateFromTemplate,
-  totalSchools
+  totalSchools,
+  dictionary
 }) => {
+  const dict = dictionary?.onboarding || {};
   const draftSchools = schools.filter(school => school.status === 'draft');
   const hasInProgressSchools = draftSchools.length > 0;
   const hasMoreSchools = totalSchools && totalSchools > schools.length;
@@ -38,7 +41,7 @@ const SchoolOnboardingDashboard: React.FC<SchoolOnboardingDashboardProps> = ({
       {/* Welcome Header */}
       <div>
         <h3 className="mb-3 sm:mb-4 text-lg sm:text-xl lg:text-2xl">
-          Welcome back, {userName}
+          {dict.welcomeBack || 'Welcome back'}, {userName}
         </h3>
       </div>
 
@@ -46,7 +49,7 @@ const SchoolOnboardingDashboard: React.FC<SchoolOnboardingDashboardProps> = ({
       {hasInProgressSchools && (
         <div className="space-y-2 sm:space-y-3">
           <h5 className="text-base sm:text-lg font-semibold">
-            Complete your school setup
+            {dict.completeSetup || 'Complete your school setup'}
           </h5>
           
           <div className="space-y-2">
@@ -59,12 +62,13 @@ const SchoolOnboardingDashboard: React.FC<SchoolOnboardingDashboardProps> = ({
                 status={school.status}
                 subdomain={school.subdomain}
                 onClick={onSchoolClick}
+                dictionary={dictionary}
               />
             ))}
             {hasMoreSchools && (
               <div className="text-center py-2">
                 <p className="muted">
-                  +{totalSchools! - schools.length} more school{totalSchools! - schools.length > 1 ? 's' : ''}
+                  +{totalSchools! - schools.length} {totalSchools! - schools.length > 1 ? (dict.moreSchoolsPlural || 'more schools') : (dict.moreSchools || 'more school')}
                 </p>
               </div>
             )}
@@ -76,6 +80,7 @@ const SchoolOnboardingDashboard: React.FC<SchoolOnboardingDashboardProps> = ({
       <NewSchoolOptions
         onCreateNew={onCreateNew}
         onCreateFromTemplate={onCreateFromTemplate}
+        dictionary={dictionary}
       />
     </div>
   );

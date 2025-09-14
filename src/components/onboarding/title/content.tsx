@@ -13,7 +13,11 @@ import { Badge } from '@/components/ui/badge';
 import { Globe } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
-export default function TitleContent() {
+interface TitleContentProps {
+  dictionary?: any;
+}
+
+export default function TitleContent({ dictionary }: TitleContentProps) {
   const params = useParams();
   const router = useRouter();
   const schoolId = params.id as string;
@@ -24,6 +28,7 @@ export default function TitleContent() {
   const [generatedSubdomain, setGeneratedSubdomain] = useState<string>('');
   const [currentFormTitle, setCurrentFormTitle] = useState<string>('');
 
+  const dict = dictionary?.onboarding || {};
   const currentTitle = currentFormTitle || titleData?.title || listing?.name || '';
 
   const handleTitleChange = useCallback((title: string) => {
@@ -121,9 +126,9 @@ export default function TitleContent() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-20 items-start">
           {/* Left side - Text content */}
           <div className="space-y-3 sm:space-y-4">
-            <h3>What's your school's name?</h3>
+            <h3>{dict.whatsYourSchoolName || "What's your school's name?"}</h3>
             <p className="text-sm sm:text-base text-muted-foreground">
-              This will be your school's official name in the system.
+              {dict.schoolNameDescription || "This will be your school's official name in the system."}
             </p>
           </div>
 
@@ -137,6 +142,7 @@ export default function TitleContent() {
                 subdomain: titleData?.subdomain || ""
               }}
               onTitleChange={handleTitleChange}
+              dictionary={dictionary}
             />
           </div>
         </div>

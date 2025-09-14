@@ -12,6 +12,7 @@ interface SchoolCardProps {
   status?: 'draft' | 'pending' | 'active';
   subdomain?: string;
   onClick?: (id: string) => void;
+  dictionary?: any;
 }
 
 const SchoolCard: React.FC<SchoolCardProps> = ({
@@ -20,8 +21,10 @@ const SchoolCard: React.FC<SchoolCardProps> = ({
   startDate,
   status = 'draft',
   subdomain,
-  onClick
+  onClick,
+  dictionary
 }) => {
+  const dict = dictionary?.onboarding || {};
   const handleClick = () => {
     onClick?.(id);
   };
@@ -40,11 +43,11 @@ const SchoolCard: React.FC<SchoolCardProps> = ({
   const getStatusBadge = () => {
     switch (status) {
       case 'active':
-        return <Badge variant="secondary" className="text-xs bg-green-100 text-green-800">Active</Badge>;
+        return <Badge variant="secondary" className="text-xs bg-green-100 text-green-800">{dict.activeStatus || 'Active'}</Badge>;
       case 'pending':
-        return <Badge variant="secondary" className="text-xs bg-yellow-100 text-yellow-800">Pending</Badge>;
+        return <Badge variant="secondary" className="text-xs bg-yellow-100 text-yellow-800">{dict.pendingStatus || 'Pending'}</Badge>;
       default:
-        return <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-800">Draft</Badge>;
+        return <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-800">{dict.draftStatus || 'Draft'}</Badge>;
     }
   };
 

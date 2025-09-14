@@ -1,3 +1,4 @@
+import type { Dictionary } from "@/components/internationalization/dictionaries";
 import { db } from "@/lib/db";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -7,9 +8,11 @@ import { Users, Search, FileText, Settings, Clock, AlertTriangle, CheckCircle, B
 
 interface StaffDashboardProps {
   user: any;
+  dictionary?: Dictionary["school"];
+  user: any;
 }
 
-export async function StaffDashboard({ user }: StaffDashboardProps) {
+export async function StaffDashboard({ user, dictionary }: StaffDashboardProps) {
   // Fetch real data from database
   const announcements = await db.announcement.findMany({
     where: {

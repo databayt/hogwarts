@@ -5,12 +5,15 @@ import { LogoutButton } from '@/components/auth/logout-button'
 import { buttonVariants } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
+import { LanguageSwitcher } from '@/components/internationalization/language-switcher'
+import type { Dictionary } from '@/components/internationalization/dictionaries'
 
 interface RightActionsProps {
   isAuthenticated: boolean;
+  dictionary?: Dictionary;
 }
 
-export function RightActions({ isAuthenticated }: RightActionsProps) {
+export function RightActions({ isAuthenticated, dictionary }: RightActionsProps) {
   return (
     <div className="flex items-center gap-2">
       {isAuthenticated ? (
@@ -20,7 +23,7 @@ export function RightActions({ isAuthenticated }: RightActionsProps) {
             "px-4 muted cursor-pointer bg-muted"
           )}
         >
-          Logout
+          {dictionary?.auth?.signOut || 'Logout'}
         </LogoutButton>
       ) : (
         <Link
@@ -30,9 +33,10 @@ export function RightActions({ isAuthenticated }: RightActionsProps) {
             "px-4 muted bg-muted"
           )}
         >
-          Login
+          {dictionary?.auth?.signIn || 'Login'}
         </Link>
       )}
+      <LanguageSwitcher variant="dropdown" />
       <ModeSwitcher />
     </div>
   );

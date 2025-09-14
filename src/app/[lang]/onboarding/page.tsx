@@ -1,0 +1,18 @@
+import OnboardingContent from '@/components/onboarding/content';
+import { getDictionary } from '@/components/internationalization/dictionaries';
+import { type Locale } from '@/components/internationalization/config';
+
+export const metadata = {
+  title: "School Onboarding | Hogwarts SaaS",
+  description: "Create and manage your school in our multi-tenant platform. Start with templates or build from scratch.",
+};
+
+interface OnboardingPageProps {
+  params: Promise<{ lang: Locale }>
+}
+
+export default async function OnboardingPage({ params }: OnboardingPageProps) {
+  const { lang } = await params
+  const dictionary = await getDictionary(lang)
+  return <OnboardingContent dictionary={dictionary.school} />;
+}

@@ -7,7 +7,12 @@ import { useCapacity } from './use-capacity';
 import { CapacityForm } from './form';
 import { Skeleton } from '@/components/ui/skeleton';
 
-export default function CapacityContent() {
+interface CapacityContentProps {
+  dictionary?: any;
+}
+
+export default function CapacityContent({ dictionary }: CapacityContentProps) {
+  const dict = dictionary?.onboarding || {};
   const params = useParams();
   const schoolId = params.id as string;
   const { enableNext, disableNext } = useHostValidation();
@@ -75,12 +80,12 @@ export default function CapacityContent() {
           {/* Left side - Text content and preview */}
           <div className="space-y-3 sm:space-y-4">
             <h3>
-              Share some basics
+              {dict.howManyStudents || "Share some basics"}
               <br />
-              about your school
+              {dict.aboutYourSchool || "about your school"}
             </h3>
             <p className="text-sm sm:text-base text-muted-foreground">
-              Tell us about your school's capacity and facilities. These numbers will help us configure your system properly.
+              {dict.capacityDescription || "Tell us about your school's capacity and facilities. These numbers will help us configure your system properly."}
             </p>
 
           </div>
@@ -90,6 +95,7 @@ export default function CapacityContent() {
             <CapacityForm
               schoolId={schoolId}
               initialData={capacityData || undefined}
+              dictionary={dictionary}
             />
           </div>
         </div>

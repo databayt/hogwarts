@@ -9,7 +9,12 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
-export default function LocationContent() {
+interface LocationContentProps {
+  dictionary?: any;
+}
+
+export default function LocationContent({ dictionary }: LocationContentProps) {
+  const dict = dictionary?.onboarding || {};
   const params = useParams();
   const schoolId = params.id as string;
   const { enableNext, disableNext } = useHostValidation();
@@ -64,9 +69,9 @@ export default function LocationContent() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-20 items-start">
           {/* Left side - Text content */}
           <div className="space-y-3 sm:space-y-4">
-            <h3>Where's your school located?</h3>
+            <h3>{dict.whereIsYourSchool || "Where's your school located?"}</h3>
             <p className="text-sm sm:text-base text-muted-foreground">
-              Your school's address will be visible to parents and staff members.
+              {dict.schoolLocationDescription || "Your school's address will be visible to parents and staff members."}
             </p>
           </div>
 
@@ -75,6 +80,7 @@ export default function LocationContent() {
             <LocationForm
               schoolId={schoolId}
               initialData={locationData || undefined}
+              dictionary={dictionary}
             />
           </div>
         </div>

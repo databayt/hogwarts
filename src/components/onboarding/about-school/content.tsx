@@ -4,8 +4,12 @@ import React from 'react';
 import HostStepHeader from '@/components/onboarding/step-header';
 import { useHostValidation } from '@/components/onboarding/host-validation-context';
 
+interface AboutSchoolContentProps {
+  dictionary?: any;
+}
 
-export default function AboutSchoolContent() {
+export default function AboutSchoolContent({ dictionary }: AboutSchoolContentProps) {
+  const dict = dictionary?.onboarding || {};
   const videoRef = React.useRef<HTMLVideoElement>(null);
   const { enableNext } = useHostValidation();
 
@@ -54,9 +58,10 @@ export default function AboutSchoolContent() {
       <div className="w-full">
         <HostStepHeader
           stepNumber={1}
-          title="Tell us about your school"
-          description="In this step, we'll ask you about your school type, location, and student capacity. Then we'll help you set up your academic structure."
+          title={dict.tellUsAboutYourSchool || "Tell us about your school"}
+          description={dict.aboutSchoolDescription || "In this step, we'll ask you about your school type, location, and student capacity. Then we'll help you set up your academic structure."}
           illustration={illustration}
+          dictionary={dictionary}
         />
       </div>
     </div>

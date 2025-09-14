@@ -7,8 +7,13 @@ import { useCurrentUser } from '@/components/auth/use-current-user';
 import { ErrorBoundary } from './error-boundary';
 import { getUserSchools, initializeSchoolSetup } from './actions';
 import { Skeleton } from '@/components/ui/skeleton';
+import type { Dictionary } from '@/components/internationalization/dictionaries';
 
-export default function OnboardingContent() {
+interface OnboardingContentProps {
+  dictionary?: Dictionary['school'];
+}
+
+export default function OnboardingContent({ dictionary }: OnboardingContentProps) {
   const router = useRouter();
   const user = useCurrentUser();
   const [isCreating, setIsCreating] = React.useState(false);
@@ -120,6 +125,7 @@ export default function OnboardingContent() {
           onSchoolClick={handleSchoolClick}
           onCreateNew={handleCreateNew}
           onCreateFromTemplate={handleCreateFromTemplate}
+          dictionary={dictionary}
         />
       </div>
     </ErrorBoundary>

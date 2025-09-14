@@ -30,11 +30,17 @@ import { FormError } from "../error/form-error";
 import { FormSuccess } from "../form-success";
 import { Social } from "../social";
 import { Suspense } from "react";
+import type { Dictionary } from "@/components/internationalization/dictionaries";
+
+interface LoginFormProps extends React.ComponentPropsWithoutRef<"div"> {
+  dictionary?: Dictionary;
+}
 
 export const LoginForm = ({
   className,
+  dictionary,
   ...props
-}: React.ComponentPropsWithoutRef<"div">) => {
+}: LoginFormProps) => {
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl");
   const tenant = searchParams.get("tenant");

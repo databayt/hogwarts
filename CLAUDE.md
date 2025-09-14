@@ -8,6 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 # Development
 pnpm dev            # Start Next.js with Turbopack
 pnpm build          # Build for production (includes Prisma generation)
+pnpm start          # Start production server
 pnpm lint           # Run ESLint
 pnpm test           # Run Vitest tests
 
@@ -18,6 +19,7 @@ pnpm prisma migrate dev # Run database migrations
 
 # Testing specific files
 pnpm test src/components/platform/operator/**/*.test.tsx
+pnpm test path/to/specific/test.tsx  # Run specific test file
 ```
 
 ## Architecture Overview
@@ -67,6 +69,8 @@ Build components from bottom up:
 
 ### Server Actions Pattern
 
+Server actions MUST follow this pattern for security and consistency:
+
 ```typescript
 // In actions.ts
 "use server"
@@ -74,19 +78,26 @@ Build components from bottom up:
 export async function createItem(data: FormData) {
   const session = await auth()
   const schoolId = session?.user?.schoolId
-  
-  // 1. Parse and validate with Zod
+
+  // 1. Parse and validate with Zod (validate twice - client UX, server security)
   const validated = schema.parse(Object.fromEntries(data))
-  
-  // 2. Execute with schoolId scope
+
+  // 2. Execute with schoolId scope (CRITICAL for multi-tenant safety)
   await db.model.create({
     data: { ...validated, schoolId }
   })
-  
-  // 3. Revalidate or redirect
+
+  // 3. Revalidate or redirect (never return without this)
   revalidatePath('/items')
 }
 ```
+
+**Key requirements:**
+- Start with "use server" directive
+- Include schoolId from session/subdomain in ALL queries
+- Return typed results, handle errors gracefully
+- Call `revalidatePath()` or `redirect()` on success
+- Keep actions small and pure
 
 ### Form & Validation Pattern
 
@@ -141,12 +152,15 @@ Use these path aliases:
 ### Development Guidelines
 
 1. **Always use pnpm** for package management
-2. **Follow the mirror pattern** - routes mirror component folders
-3. **Scope by tenant** - include schoolId in all queries
-4. **Type everything** - no `any`, use Zod inference
-5. **Use server actions** for mutations with "use server"
+2. **Follow the mirror pattern** - routes mirror component folders (mandatory)
+3. **Scope by tenant** - include schoolId in all queries (CRITICAL)
+4. **Type everything** - no `any`, prefer explicit function signatures
+5. **Use server actions** for mutations with "use server" directive
 6. **Validate twice** - client (UX) and server (security)
-7. **Style with Tailwind** - use cn() helper, avoid inline styles
+7. **Style with Tailwind** - use cn() helper from @/lib/utils, avoid inline styles
+8. **Co-locate validation** - keep validation.ts with form.tsx
+9. **Build bottom-up** - UI → Atoms → Templates → Blocks → Micro → Apps
+10. **Keep actions small and pure** - isolate DB code and schema definitions
 
 ### Additional Architecture Details
 
@@ -167,6 +181,10 @@ Use these path aliases:
 - `content.tsx` - Main UI composition
 - `form.tsx` - Form components
 - `card.tsx` - Card components
+- `all.tsx` - All/list views
+- `featured.tsx` - Featured list components
+- `detail.tsx` - Detail view components
+- `constant.ts` - Arrays, enums, static data
 - `util.ts` - Utility functions
 
 **Multi-Tenant Guardrails**:
@@ -208,4 +226,10 @@ Navigation is handled by `HostFooter` component with context-aware validation.
 
 ## Git Workflow
 
-**IMPORTANT**: Always automatically push changes to GitHub after making code modifications. Use `git push` to ensure all changes are synced to the remote repository. 
+**IMPORTANT**: Always automatically push changes to GitHub after making code modifications. Use `git push` to ensure all changes are synced to the remote repository.
+
+## Key Project Information
+
+- **Platform Description**: Hogwarts is a school automation platform that manages students, faculty, and academic processes with an intuitive interface
+- **Documentation**: Full documentation available at https://ed.databayt.org/docs
+- **License**: MIT License 

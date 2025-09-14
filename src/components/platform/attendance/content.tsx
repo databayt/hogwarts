@@ -6,14 +6,19 @@ import { useCallback } from 'react'
 import { markAttendance } from '@/components/platform/attendance/actions'
 import { SuccessToast, ErrorToast } from '@/components/atom/toast'
 import { AttendanceTable, type AttendanceRow } from './table'
-import { attendanceColumns } from './columns'
+import { getAttendanceColumns } from './columns'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Input } from '@/components/ui/input'
 import { getAttendanceList, getClassesForSelection, getAttendanceReportCsv } from '@/components/platform/attendance/actions'
+import type { Dictionary } from '@/components/internationalization/dictionaries'
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
-export function AttendanceContent() {
+interface AttendanceContentProps {
+  dictionary?: Dictionary['school']
+}
+
+export function AttendanceContent({ dictionary }: AttendanceContentProps) {
   const [submitting, setSubmitting] = React.useState(false)
   const [classId, setClassId] = React.useState('')
   const [date, setDate] = React.useState(new Date().toISOString().slice(0, 10))
@@ -57,6 +62,22 @@ export function AttendanceContent() {
     setChanged((prev) => ({ ...prev, [studentId]: status }))
     setRows((prev) => prev.map((r) => (r.studentId === studentId ? { ...r, status } : r)))
   }
+  // Get dictionary with fallbacks
+  const dict = dictionary?.attendance || {
+    title: "Attendance",
+    selectClass: "Select class",
+    allPresent: "All Present",
+    allAbsent: "All Absent",
+    allLate: "All Late",
+    saveAttendance: "Save Attendance",
+    status: {
+      present: "Present",
+      absent: "Absent",
+      late: "Late",
+      excused: "Excused"
+    }
+  }
+
   React.useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key.toLowerCase() === 'p') setRows((r) => r.map((x) => ({ ...x, status: 'present' })))
@@ -70,24 +91,24 @@ export function AttendanceContent() {
   return (
     <div className="grid gap-3">
       <div className="rounded-lg border bg-card p-4">
-        <div className="mb-2 text-sm text-muted-foreground">Attendance</div>
+        <div className="mb-2 text-sm text-muted-foreground">{dict.title}</div>
         <div className="flex flex-wrap items-center gap-2 mb-2">
           <Select value={classId} onValueChange={setClassId}>
-            <SelectTrigger className="h-8 w-56"><SelectValue placeholder="Select class" /></SelectTrigger>
+            <SelectTrigger className="h-8 w-56"><SelectValue placeholder={dict.selectClass} /></SelectTrigger>
             <SelectContent>
               {classes.map((c) => (<SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>))}
             </SelectContent>
           </Select>
           <Input type="date" className="h-8 w-44" value={date} onChange={(e) => setDate(e.target.value)} />
           <div className="ml-auto flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => setRows((r) => r.map((x) => ({ ...x, status: 'present' })))}>All Present</Button>
-            <Button variant="outline" size="sm" onClick={() => setRows((r) => r.map((x) => ({ ...x, status: 'absent' })))}>All Absent</Button>
-            <Button variant="outline" size="sm" onClick={() => setRows((r) => r.map((x) => ({ ...x, status: 'late' })))}>All Late</Button>
+            <Button variant="outline" size="sm" onClick={() => setRows((r) => r.map((x) => ({ ...x, status: 'present' })))}>{dict.allPresent}</Button>
+            <Button variant="outline" size="sm" onClick={() => setRows((r) => r.map((x) => ({ ...x, status: 'absent' })))}>{dict.allAbsent}</Button>
+            <Button variant="outline" size="sm" onClick={() => setRows((r) => r.map((x) => ({ ...x, status: 'late' })))}>{dict.allLate}</Button>
           </div>
         </div>
-        <Button size="sm" onClick={onSubmit} disabled={submitting || !Object.keys(changed).length}>Save Attendance</Button>
+        <Button size="sm" onClick={onSubmit} disabled={submitting || !Object.keys(changed).length}>{dict.saveAttendance}</Button>
       </div>
-      <AttendanceTable data={rows} columns={attendanceColumns} onChangeStatus={onChangeStatus} />
+      <AttendanceTable data={rows} columns={getAttendanceColumns(dictionary?.attendance)} onChangeStatus={onChangeStatus} />
     </div>
   )
 }

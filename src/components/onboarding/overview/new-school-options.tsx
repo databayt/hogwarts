@@ -7,12 +7,15 @@ import Link from 'next/link';
 interface NewSchoolOptionsProps {
   onCreateNew?: () => void;
   onCreateFromTemplate?: () => void;
+  dictionary?: any;
 }
 
 const NewSchoolOptions: React.FC<NewSchoolOptionsProps> = ({
   onCreateNew,
-  onCreateFromTemplate
+  onCreateFromTemplate,
+  dictionary
 }) => {
+  const dict = dictionary?.onboarding || {};
   const handleCreateNew = (e: React.MouseEvent) => {
     e.preventDefault();
     onCreateNew?.();
@@ -26,7 +29,7 @@ const NewSchoolOptions: React.FC<NewSchoolOptionsProps> = ({
   return (
     <div className="space-y-2 sm:space-y-3">
       <h5>
-        Add a new school
+        {dict.startNewSchool || 'Start a new school'}
       </h5>
       
       <div className="space-y-2">
@@ -38,7 +41,7 @@ const NewSchoolOptions: React.FC<NewSchoolOptionsProps> = ({
             </div>
             <div className="text-left min-w-0 flex-1">
               <h5>
-                Create a new school
+                {dict.createNewSchool || 'Create a new school'}
               </h5>
               <p className="muted mt-0.5">
                 Start from scratch with basic setup
@@ -56,7 +59,7 @@ const NewSchoolOptions: React.FC<NewSchoolOptionsProps> = ({
             </div>
             <div className="text-left min-w-0 flex-1">
               <h5>
-                Use a school template
+                {dict.createFromTemplate || 'Create from template'}
               </h5>
               <p className="muted mt-0.5">
                 Start with pre-configured settings

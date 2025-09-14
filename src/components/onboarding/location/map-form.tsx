@@ -9,9 +9,10 @@ import { type LocationFormData } from "./validation";
 interface MapFormProps {
   initialData?: Partial<LocationFormData>;
   onLocationChange: (data: LocationFormData) => void;
+  dictionary?: any;
 }
 
-export function MapForm({ initialData, onLocationChange }: MapFormProps) {
+export function MapForm({ initialData, onLocationChange, dictionary }: MapFormProps) {
   const [locationData, setLocationData] = useState<LocationFormData>({
     address: initialData?.address || "",
     city: initialData?.city || "",

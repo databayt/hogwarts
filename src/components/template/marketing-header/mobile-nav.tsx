@@ -6,13 +6,15 @@ import { siteConfig } from "./constant"
 import { cn } from "@/lib/utils"
 import { useLockBody } from "./use-lock-body"
 import { Icons } from "./icons"
+import type { Dictionary } from '@/components/internationalization/dictionaries'
 
 interface MobileNavProps {
   items: MainNavItem[]
   children?: React.ReactNode
+  dictionary?: Dictionary
 }
 
-export function MobileNav({ items, children }: MobileNavProps) {
+export function MobileNav({ items, children, dictionary }: MobileNavProps) {
   useLockBody()
 
   return (
@@ -24,7 +26,7 @@ export function MobileNav({ items, children }: MobileNavProps) {
       <div className="relative z-20 grid gap-6 rounded-md bg-popover p-4 text-popover-foreground shadow-md">
         <Link href="/" className="flex items-center space-x-2">
           <Icons.logo />
-          <span>{siteConfig.name}</span>
+          <span>{dictionary?.navigation?.brandName || siteConfig.name}</span>
         </Link>
         <nav className="grid grid-flow-row auto-rows-max muted">
           {items.map((item, index) => (
@@ -36,7 +38,7 @@ export function MobileNav({ items, children }: MobileNavProps) {
                 item.disabled && "cursor-not-allowed opacity-60"
               )}
             >
-              {item.title}
+              {dictionary?.navigation?.[item.title.toLowerCase() as keyof typeof dictionary.navigation] || item.title}
             </Link>
           ))}
         </nav>

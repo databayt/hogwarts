@@ -4,12 +4,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Calendar, Clock, Users, FileText, MessageSquare, AlertTriangle, BookOpen, CheckCircle } from "lucide-react";
+import type { Dictionary } from "@/components/internationalization/dictionaries";
 
 interface TeacherDashboardProps {
   user: any;
+  dictionary?: Dictionary['school'];
 }
 
-export async function TeacherDashboard({ user }: TeacherDashboardProps) {
+export async function TeacherDashboard({ user, dictionary }: TeacherDashboardProps) {
   // Fetch real data from database
   const teacher = await db.teacher.findFirst({
     where: { userId: user.id, schoolId: user.schoolId },
@@ -57,6 +59,47 @@ export async function TeacherDashboard({ user }: TeacherDashboardProps) {
     lessonPlans: 2
   };
 
+  // Get dashboard dictionary with fallbacks
+  const dashDict = dictionary?.dashboard?.teacher || {
+    stats: {
+      todaysClasses: "Today's Classes",
+      pendingGrading: "Pending Grading",
+      attendanceDue: "Attendance Due",
+      totalStudents: "Total Students"
+    },
+    quickActions: {
+      title: "Quick Actions",
+      takeAttendance: "Take Attendance",
+      enterGrades: "Enter Grades",
+      createAssignment: "Create Assignment",
+      messageParents: "Message Parents"
+    },
+    sections: {
+      todaysClasses: "Today's Classes",
+      pendingAssignments: "Pending Assignments",
+      classPerformance: "Class Performance Summary",
+      upcomingDeadlines: "Upcoming Deadlines",
+      behaviorAlerts: "Student Behavior Alerts",
+      urgentNotifications: "Urgent Notifications",
+      weekSchedule: "This Week's Schedule"
+    },
+    labels: {
+      classesScheduled: "Classes scheduled",
+      assignmentsToGrade: "Assignments to grade",
+      needAttendance: "Classes need attendance",
+      acrossAllClasses: "Across all classes",
+      room: "Room",
+      students: "students",
+      submissions: "submissions",
+      due: "Due",
+      noPending: "No pending assignments",
+      average: "Average",
+      high: "high",
+      medium: "medium",
+      low: "low"
+    }
+  };
+
   const mockUrgentNotifications = [
     { type: "Staff Meeting", message: "Emergency staff meeting at 3 PM", priority: "high" },
     { type: "Exam Schedule", message: "Final exam schedule due tomorrow", priority: "medium" }
@@ -85,47 +128,47 @@ export async function TeacherDashboard({ user }: TeacherDashboardProps) {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Today's Classes</CardTitle>
+            <CardTitle className="text-sm font-medium">{dashDict.stats.todaysClasses}</CardTitle>
             <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{todaysClasses.length}</div>
-            <p className="text-xs text-muted-foreground">Classes scheduled</p>
+            <p className="text-xs text-muted-foreground">{dashDict.labels.classesScheduled}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending Grading</CardTitle>
+            <CardTitle className="text-sm font-medium">{dashDict.stats.pendingGrading}</CardTitle>
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{mockPendingTasks.grading}</div>
-            <p className="text-xs text-muted-foreground">Assignments to grade</p>
+            <p className="text-xs text-muted-foreground">{dashDict.labels.assignmentsToGrade}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Attendance Due</CardTitle>
+            <CardTitle className="text-sm font-medium">{dashDict.stats.attendanceDue}</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{mockPendingTasks.attendance}</div>
-            <p className="text-xs text-muted-foreground">Classes need attendance</p>
+            <p className="text-xs text-muted-foreground">{dashDict.labels.needAttendance}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Students</CardTitle>
+            <CardTitle className="text-sm font-medium">{dashDict.stats.totalStudents}</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
               {teacher?.classes.reduce((sum: number, cls: any) => sum + cls._count.studentClasses, 0) || 0}
             </div>
-            <p className="text-xs text-muted-foreground">Across all classes</p>
+            <p className="text-xs text-muted-foreground">{dashDict.labels.acrossAllClasses}</p>
           </CardContent>
         </Card>
       </div>
@@ -133,25 +176,25 @@ export async function TeacherDashboard({ user }: TeacherDashboardProps) {
       {/* Quick Actions */}
       <Card>
         <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
+          <CardTitle>{dashDict.quickActions.title}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" size="sm">
               <Users className="mr-2 h-4 w-4" />
-              Take Attendance
+              {dashDict.quickActions.takeAttendance}
             </Button>
             <Button variant="outline" size="sm">
               <FileText className="mr-2 h-4 w-4" />
-              Enter Grades
+              {dashDict.quickActions.enterGrades}
             </Button>
             <Button variant="outline" size="sm">
               <BookOpen className="mr-2 h-4 w-4" />
-              Create Assignment
+              {dashDict.quickActions.createAssignment}
             </Button>
             <Button variant="outline" size="sm">
               <MessageSquare className="mr-2 h-4 w-4" />
-              Message Parents
+              {dashDict.quickActions.messageParents}
             </Button>
           </div>
         </CardContent>
@@ -162,18 +205,18 @@ export async function TeacherDashboard({ user }: TeacherDashboardProps) {
         {/* Today's Classes */}
         <Card>
           <CardHeader>
-            <CardTitle>Today's Classes</CardTitle>
+            <CardTitle>{dashDict.sections.todaysClasses}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {todaysClasses.map((cls, index) => (
               <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
                 <div>
                   <p className="font-medium">{cls.name}</p>
-                  <p className="text-sm text-muted-foreground">Room {cls.room}</p>
+                  <p className="text-sm text-muted-foreground">{dashDict.labels.room} {cls.room}</p>
                 </div>
                 <div className="text-right">
                   <Badge>{cls.time}</Badge>
-                  <p className="text-xs text-muted-foreground mt-1">{cls.students} students</p>
+                  <p className="text-xs text-muted-foreground mt-1">{cls.students} {dashDict.labels.students}</p>
                 </div>
               </div>
             ))}
@@ -183,7 +226,7 @@ export async function TeacherDashboard({ user }: TeacherDashboardProps) {
         {/* Pending Assignments */}
         <Card>
           <CardHeader>
-            <CardTitle>Pending Assignments</CardTitle>
+            <CardTitle>{dashDict.sections.pendingAssignments}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {pendingAssignments.length ? (
@@ -194,15 +237,15 @@ export async function TeacherDashboard({ user }: TeacherDashboardProps) {
                     <p className="text-sm text-muted-foreground">{assignment.class.name}</p>
                   </div>
                   <div className="text-right">
-                    <Badge variant="secondary">{assignment.submissions.length} submissions</Badge>
+                    <Badge variant="secondary">{assignment.submissions.length} {dashDict.labels.submissions}</Badge>
                     <p className="text-xs text-muted-foreground mt-1">
-                      Due: {new Date(assignment.dueDate).toLocaleDateString()}
+                      {dashDict.labels.due}: {new Date(assignment.dueDate).toLocaleDateString()}
                     </p>
                   </div>
                 </div>
               ))
             ) : (
-              <p className="text-muted-foreground text-center py-4">No pending assignments</p>
+              <p className="text-muted-foreground text-center py-4">{dashDict.labels.noPending}</p>
             )}
           </CardContent>
         </Card>
@@ -210,7 +253,7 @@ export async function TeacherDashboard({ user }: TeacherDashboardProps) {
         {/* Class Performance Summary */}
         <Card>
           <CardHeader>
-            <CardTitle>Class Performance Summary</CardTitle>
+            <CardTitle>{dashDict.sections.classPerformance}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {mockClassPerformance.map((cls, index) => (
@@ -218,7 +261,7 @@ export async function TeacherDashboard({ user }: TeacherDashboardProps) {
                 <div>
                   <p className="font-medium">{cls.className}</p>
                   <p className="text-sm text-muted-foreground">
-                    Average: {cls.average}%
+                    {dashDict.labels.average}: {cls.average}%
                   </p>
                 </div>
                 <Badge variant={cls.trend === "up" ? "default" : cls.trend === "down" ? "destructive" : "secondary"}>
@@ -232,7 +275,7 @@ export async function TeacherDashboard({ user }: TeacherDashboardProps) {
         {/* Upcoming Deadlines */}
         <Card>
           <CardHeader>
-            <CardTitle>Upcoming Deadlines</CardTitle>
+            <CardTitle>{dashDict.sections.upcomingDeadlines}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {mockUpcomingDeadlines.map((deadline, index) => (
@@ -240,7 +283,7 @@ export async function TeacherDashboard({ user }: TeacherDashboardProps) {
                 <div>
                   <p className="font-medium">{deadline.task}</p>
                   <p className="text-sm text-muted-foreground">
-                    Due: {new Date(deadline.dueDate).toLocaleDateString()}
+                    {dashDict.labels.due}: {new Date(deadline.dueDate).toLocaleDateString()}
                   </p>
                 </div>
                 <Badge variant={deadline.priority === "high" ? "destructive" : deadline.priority === "medium" ? "default" : "secondary"}>
@@ -254,7 +297,7 @@ export async function TeacherDashboard({ user }: TeacherDashboardProps) {
         {/* Student Behavior Alerts */}
         <Card>
           <CardHeader>
-            <CardTitle>Student Behavior Alerts</CardTitle>
+            <CardTitle>{dashDict.sections.behaviorAlerts}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {mockStudentBehaviorAlerts.map((alert, index) => (
@@ -274,7 +317,7 @@ export async function TeacherDashboard({ user }: TeacherDashboardProps) {
         {/* Urgent Notifications */}
         <Card>
           <CardHeader>
-            <CardTitle>Urgent Notifications</CardTitle>
+            <CardTitle>{dashDict.sections.urgentNotifications}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {mockUrgentNotifications.map((notification, index) => (
@@ -298,7 +341,7 @@ export async function TeacherDashboard({ user }: TeacherDashboardProps) {
       {/* Calendar View */}
       <Card>
         <CardHeader>
-          <CardTitle>This Week's Schedule</CardTitle>
+          <CardTitle>{dashDict.sections.weekSchedule}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-5">

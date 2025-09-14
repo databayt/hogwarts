@@ -27,7 +27,11 @@
       "Bash(pnpm dev:*)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(pnpm prisma migrate dev:*)"
+      "Bash(pnpm prisma migrate dev:*)",
+      "Bash(ls:*)",
+      "Bash(for file in src/components/platform/dashboard/dashboards/{admin,staff,principal,accountant}-dashboard.tsx)",
+      "Bash(do echo \"Updating $file\")",
+      "Bash(do)"
     ],
     "deny": [],
     "ask": []

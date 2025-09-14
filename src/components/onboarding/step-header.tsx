@@ -7,14 +7,17 @@ interface StepHeaderProps {
   title: string;
   description?: string;
   illustration?: React.ReactNode;
+  dictionary?: any;
 }
 
 const StepHeader: React.FC<StepHeaderProps> = ({
   stepNumber,
   title,
   description,
-  illustration
+  illustration,
+  dictionary
 }) => {
+  const dict = dictionary?.onboarding || {};
   return (
     <div className="w-full -mt-6 sm:-mt-10">
       <div className="grid grid-cols-1 lg:grid-cols-2 items-center gap-6 lg:gap-12">
@@ -22,7 +25,7 @@ const StepHeader: React.FC<StepHeaderProps> = ({
         <div className="space-y-4 sm:space-y-6">
           {stepNumber && (
             <div className="text-sm sm:text-base font-medium text-muted-foreground">
-              Step {stepNumber}
+              {dict.step || 'Step'} {stepNumber}
             </div>
           )}
           

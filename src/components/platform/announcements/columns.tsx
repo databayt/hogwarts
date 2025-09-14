@@ -9,6 +9,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { useModal } from "@/components/atom/modal/context";
 import { deleteAnnouncement, toggleAnnouncementPublish } from "@/components/platform/announcements/actions";
 import { DeleteToast, ErrorToast, confirmDeleteDialog } from "@/components/atom/toast";
+import type { Dictionary } from "@/components/internationalization/dictionaries";
 
 export type AnnouncementRow = {
   id: string;
@@ -18,41 +19,67 @@ export type AnnouncementRow = {
   createdAt: string;
 };
 
-export const announcementColumns: ColumnDef<AnnouncementRow>[] = [
+export const getAnnouncementColumns = (dictionary?: Dictionary['school']['announcements']): ColumnDef<AnnouncementRow>[] => {
+  const dict = dictionary || {
+    columns: {
+      title: "Title",
+      scope: "Scope",
+      status: "Status",
+      created: "Created",
+      actions: "Actions"
+    },
+    scope: {
+      school: "School",
+      class: "Class",
+      role: "Role"
+    },
+    status: {
+      published: "Published",
+      draft: "Draft"
+    },
+    actions: {
+      view: "View",
+      edit: "Edit",
+      togglePublish: "Toggle Publish",
+      delete: "Delete"
+    }
+  };
+
+  return [
   {
     accessorKey: "title",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Title" />,
-    meta: { label: "Title", variant: "text" },
+    header: ({ column }) => <DataTableColumnHeader column={column} title={dict.columns.title} />,
+    meta: { label: dict.columns.title, variant: "text" },
     id: 'title',
     enableColumnFilter: true,
   },
   {
     accessorKey: "scope",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Scope" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title={dict.columns.scope} />,
     meta: {
-      label: "Scope",
+      label: dict.columns.scope,
       variant: "select",
       options: [
-        { label: "School", value: "school" },
-        { label: "Class", value: "class" },
-        { label: "Role", value: "role" },
+        { label: dict.scope.school, value: "school" },
+        { label: dict.scope.class, value: "class" },
+        { label: dict.scope.role, value: "role" },
       ],
     },
     enableColumnFilter: true,
   },
   {
     accessorKey: "published",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title={dict.columns.status} />,
     cell: ({ getValue }) => {
       const is = getValue<boolean>();
-      return <Badge variant={is ? "default" : "outline"}>{is ? "Published" : "Draft"}</Badge>;
+      return <Badge variant={is ? "default" : "outline"}>{is ? dict.status.published : dict.status.draft}</Badge>;
     },
     meta: {
-      label: "Published",
+      label: dict.columns.status,
       variant: "select",
       options: [
-        { label: "Published", value: "true" },
-        { label: "Draft", value: "false" },
+        { label: dict.status.published, value: "true" },
+        { label: dict.status.draft, value: "false" },
       ],
     },
     id: 'published',
@@ -60,15 +87,15 @@ export const announcementColumns: ColumnDef<AnnouncementRow>[] = [
   },
   {
     accessorKey: "createdAt",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Created" />,
-    meta: { label: "Created", variant: "text" },
+    header: ({ column }) => <DataTableColumnHeader column={column} title={dict.columns.created} />,
+    meta: { label: dict.columns.created, variant: "text" },
     cell: ({ getValue }) => (
       <span className="text-xs tabular-nums text-muted-foreground">{new Date(getValue<string>()).toLocaleDateString()}</span>
     ),
   },
   {
     id: "actions",
-    header: () => <span className="sr-only">Actions</span>,
+    header: () => <span className="sr-only">{dict.columns.actions}</span>,
     cell: ({ row }) => {
       const announcement = row.original;
       const { openModal } = useModal();
@@ -104,14 +131,14 @@ export const announcementColumns: ColumnDef<AnnouncementRow>[] = [
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+            <DropdownMenuLabel>{dict.columns.actions}</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={onView}>View</DropdownMenuItem>
-            <DropdownMenuItem onClick={onEdit}>Edit</DropdownMenuItem>
+            <DropdownMenuItem onClick={onView}>{dict.actions.view}</DropdownMenuItem>
+            <DropdownMenuItem onClick={onEdit}>{dict.actions.edit}</DropdownMenuItem>
             <DropdownMenuItem onClick={onToggle}>
-              {announcement.published ? "Unpublish" : "Publish"}
+              {announcement.published ? dict.status.draft : dict.status.published}
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={onDelete}>Delete</DropdownMenuItem>
+            <DropdownMenuItem onClick={onDelete}>{dict.actions.delete}</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       );
@@ -119,7 +146,11 @@ export const announcementColumns: ColumnDef<AnnouncementRow>[] = [
     enableSorting: false,
     enableColumnFilter: false,
   },
-];
+  ];
+}
+
+// Export a default version for backward compatibility
+export const announcementColumns = getAnnouncementColumns();
 
 
 

@@ -1,8 +1,19 @@
 import Image from "next/image"
 import SectionHeading from "@/components/atom/section-heading"
+import type { Dictionary } from '@/components/internationalization/dictionaries'
 
-export default function Testimonial() {
-    const testimonials = [
+interface TestimonialProps {
+    dictionary?: Dictionary
+}
+
+export default function Testimonial({ dictionary }: TestimonialProps) {
+    const testDict = dictionary?.marketing?.testimonial || {
+        title: "Testimonials",
+        subtitle: "Trusted by educational institutions worldwide to streamline operations and enhance learning outcomes.",
+        items: []
+    }
+
+    const defaultTestimonials = [
         {
             name: "Amira Bashir",
             role: "School Principal",
@@ -38,16 +49,23 @@ export default function Testimonial() {
             role: "School Administrator",
             content: "Enhanced student tracking and attendance. Essential for education.",
             avatar: "/contributors/6.jpg"
-        }        
+        }
     ]
+
+    const testimonials = testDict.items && testDict.items.length > 0
+        ? testDict.items.map((item, index) => ({
+            ...item,
+            avatar: defaultTestimonials[index]?.avatar || `/contributors/${index + 1}.jpg`
+        }))
+        : defaultTestimonials
 
     return (
         <section
             id="features"
         >
             <SectionHeading
-                title="Testimonials"
-                description="Trusted by educational institutions worldwide to streamline operations and enhance learning outcomes."
+                title={testDict.title}
+                description={testDict.subtitle}
             />
             <div className="grid justify-center gap-4 sm:grid-cols-2 md:grid-cols-3">
                 {testimonials.map((testimonial, index) => (

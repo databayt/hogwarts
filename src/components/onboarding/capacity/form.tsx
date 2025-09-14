@@ -14,9 +14,11 @@ interface CapacityFormProps {
   schoolId: string;
   initialData?: Partial<CapacityFormData>;
   onSuccess?: () => void;
+  dictionary?: any;
 }
 
-export function CapacityForm({ schoolId, initialData, onSuccess }: CapacityFormProps) {
+export function CapacityForm({ schoolId, initialData, onSuccess, dictionary }: CapacityFormProps) {
+  const dict = dictionary?.onboarding || {};
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string>("");
 
@@ -127,25 +129,25 @@ export function CapacityForm({ schoolId, initialData, onSuccess }: CapacityFormP
         
         <div className="bg-background">
           <CounterRow
-            label="Students"
+            label={dict.students || "Students"}
             field="studentCount"
             step={20}
             minValue={1}
           />
           <CounterRow
-            label="Teachers"
+            label={dict.teachers || "Teachers"}
             field="teachers"
             step={1}
             minValue={1}
           />
           <CounterRow
-            label="Classrooms"
+            label={dict.classrooms || "Classrooms"}
             field="classrooms"
             step={1}
             minValue={1}
           />
           <CounterRow
-            label="Facilities"
+            label={dict.facilities || "Facilities"}
             field="facilities"
             step={1}
             minValue={1}
