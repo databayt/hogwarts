@@ -101,12 +101,12 @@ export function AttendanceContent({ dictionary }: AttendanceContentProps) {
           </Select>
           <Input type="date" className="h-8 w-44" value={date} onChange={(e) => setDate(e.target.value)} />
           <div className="ml-auto flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => setRows((r) => r.map((x) => ({ ...x, status: 'present' })))}>{dict.allPresent}</Button>
-            <Button variant="outline" size="sm" onClick={() => setRows((r) => r.map((x) => ({ ...x, status: 'absent' })))}>{dict.allAbsent}</Button>
-            <Button variant="outline" size="sm" onClick={() => setRows((r) => r.map((x) => ({ ...x, status: 'late' })))}>{dict.allLate}</Button>
+            <Button variant="outline" size="sm" onClick={() => setRows((r) => r.map((x) => ({ ...x, status: 'present' })))}>{dict.allPresent || "All Present"}</Button>
+            <Button variant="outline" size="sm" onClick={() => setRows((r) => r.map((x) => ({ ...x, status: 'absent' })))}>{dict.allAbsent || "All Absent"}</Button>
+            <Button variant="outline" size="sm" onClick={() => setRows((r) => r.map((x) => ({ ...x, status: 'late' })))}>All Late</Button>
           </div>
         </div>
-        <Button size="sm" onClick={onSubmit} disabled={submitting || !Object.keys(changed).length}>{dict.saveAttendance}</Button>
+        <Button size="sm" onClick={onSubmit} disabled={submitting || !Object.keys(changed).length}>{dict.saveAttendance || "Save Attendance"}</Button>
       </div>
       <AttendanceTable data={rows} columns={getAttendanceColumns(dictionary?.attendance)} onChangeStatus={onChangeStatus} />
     </div>
