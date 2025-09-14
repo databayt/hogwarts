@@ -9,23 +9,22 @@ import type { AttendanceRow } from './table'
 
 export const getAttendanceColumns = (dictionary?: Dictionary['school']['attendance']): ColumnDef<AttendanceRow>[] => {
   const dict = dictionary || {
-    student: "Student",
-    status: {
-      title: "Status",
-      present: "Present",
-      absent: "Absent",
-      late: "Late"
-    }
+    title: "Attendance",
+    present: "Present",
+    absent: "Absent",
+    late: "Late",
+    holiday: "Holiday",
+    excused: "Excused"
   }
 
   return [
   {
     accessorKey: 'name',
-    header: ({ column }) => <DataTableColumnHeader column={column} title={dict.student} />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Student" />,
   },
   {
     accessorKey: 'status',
-    header: ({ column }) => <DataTableColumnHeader column={column} title={dict.status.title} />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
     cell: ({ getValue, row, column, table }) => {
       const v = getValue<'present' | 'absent' | 'late'>()
       return (
@@ -41,9 +40,9 @@ export const getAttendanceColumns = (dictionary?: Dictionary['school']['attendan
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="present">{dict.status.present}</SelectItem>
-            <SelectItem value="absent">{dict.status.absent}</SelectItem>
-            <SelectItem value="late">{dict.status.late}</SelectItem>
+            <SelectItem value="present">{dict.present || "Present"}</SelectItem>
+            <SelectItem value="absent">{dict.absent || "Absent"}</SelectItem>
+            <SelectItem value="late">{dict.late || "Late"}</SelectItem>
           </SelectContent>
         </Select>
       )
