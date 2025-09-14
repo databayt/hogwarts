@@ -46,7 +46,7 @@ export default function StandOutContent({ dictionary }: StandOutContentProps) {
         }}
       >
         <source
-          src="https://stream.media.muscache.com/zFaydEaihX6LP01x8TSCl76WHblb01Z01RrFELxyCXoNek.mp4?v_q=high"
+          src="https://stream.media.muscache.com/H0101WTUG2qWbyFhy02jlOggSkpsM9H02VOWN52g02oxhDVM.mp4?v_q=high"
           type="video/mp4"
         />
       </video>

@@ -370,7 +370,8 @@
       "chooseBrandColors": "اختر ألوان العلامة التجارية",
       "primaryColor": "اللون الأساسي",
       "secondaryColor": "اللون الثانوي",
-      "importData": "استيراد البيانات",
+      "importData": "استيراد بيانات الطلاب",
+      "importDescription": "ارفع سجلات الطلاب الخاصة بك بصيغة Excel أو CSV.",
       "importExistingData": "استيراد بيانات الطلاب والمعلمين الموجودة",
       "uploadCSV": "رفع ملف CSV",
       "downloadTemplate": "تحميل القالب",
@@ -398,7 +399,62 @@
       "termsAndConditions": "الشروط والأحكام",
       "privacyPolicy": "سياسة الخصوصية",
       "dataProtection": "حماية البيانات",
-      "acceptTerms": "أوافق على الشروط والأحكام"
+      "acceptTerms": "أوافق على الشروط والأحكام",
+      "schoolAvailableAt": "ستكون مدرستك متاحة على:",
+      "subdomainPlaceholder": "your-school",
+      "describeEducationModel": "صف نموذج التعليم",
+      "educationModel": "في مدرستك",
+      "selectSchoolTypeDescription": "اختر النوع الذي يصف بشكل أفضل نهج التعليم وهيكل الإدارة في مدرستك.",
+      "privateSchool": "خاص",
+      "publicSchool": "حكومي",
+      "internationalSchool": "دولي",
+      "technicalSchool": "تقني",
+      "specialSchool": "خاص",
+      "whereIsYourSchool": "أين تقع مدرستك؟",
+      "schoolLocationDescription": "سيكون عنوان مدرستك مرئياً لأولياء الأمور وأعضاء هيئة التدريس.",
+      "whatMakesYourSchoolUnique": "ما الذي يميز مدرستك؟",
+      "uniqueFeaturesDescription": "أخبرنا عن الميزات والبرامج والصفات الفريدة التي تجعل مدرستك مميزة.",
+      "howManyStudents": "شارك بعض الأساسيات",
+      "aboutYourSchool": "عن مدرستك",
+      "capacityDescription": "أخبرنا عن سعة مدرستك ومرافقها.",
+      "students": "الطلاب",
+      "teachers": "المعلمون",
+      "classrooms": "الفصول الدراسية",
+      "facilities": "المرافق",
+      "color": "اللون",
+      "rounded": "مستدير",
+      "shadow": "الظل",
+      "uploadSchoolLogo": "ارفع شعار مدرستك",
+      "logoFileTypes": "SVG، PNG، JPG (بحد أقصى 800x800 بكسل)",
+      "chooseFile": "اختر ملف",
+      "fileSelected": "تم اختيار الملف",
+      "uploadYourFile": "ارفع ملفك",
+      "supportedFileTypes": "pdf، xlsx، xls، csv، docx، doc",
+      "uploading": "جاري الرفع...",
+      "importGuide": "دليل الاستيراد",
+      "brandIdentity": "الهوية البصرية",
+      "finishSetupDescription": "راجع إعداد مدرستك وأكمل عملية الإعداد.",
+      "setupComplete": "إعداد مدرستك على وشك الاكتمال!",
+      "clickNextToFinish": "انقر على التالي للإنهاء والذهاب إلى لوحة التحكم.",
+      "overview": {
+        "title": "من السهل البدء في داتابيت",
+        "getStarted": "ابدأ الآن",
+        "creatingSchool": "جاري إنشاء المدرسة...",
+        "steps": {
+          "step1": {
+            "title": "أخبرنا عن مدرستك",
+            "description": "شارك بعض المعلومات الأساسية، مثل موقعها وعدد الطلاب فيها."
+          },
+          "step2": {
+            "title": "أضف الأشخاص والبيانات",
+            "description": "ادع الموظفين واستورد الطلاب والفصول - سنساعدك في ذلك."
+          },
+          "step3": {
+            "title": "قم بالإعداد والإطلاق",
+            "description": "اضبط الجدول الدراسي والحضور، وانشر الإعلانات، وابدأ العمل."
+          }
+        }
+      }
     },
     "common": {
       "actions": {

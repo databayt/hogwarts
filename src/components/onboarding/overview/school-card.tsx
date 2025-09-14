@@ -74,7 +74,7 @@ const SchoolCard: React.FC<SchoolCardProps> = ({
               </p>
               {subdomain && (
                 <p className="text-xs text-muted-foreground">
-                  <span className="hidden sm:inline">•</span> {subdomain}.hogwarts.app
+                  <span className="hidden sm:inline">•</span> {subdomain}.databayt.org
                 </p>
               )}
             </div>

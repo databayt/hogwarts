@@ -37,7 +37,7 @@
     "dark": "Dark",
     "system": "System",
     "platform": "Platform",
-    "brandName": "Databayt"
+    "brandName": "Hogwarts"
   },
   "navigation": {
     "menu": "Menu",
@@ -47,12 +47,12 @@
     "blog": "Blog",
     "pricing": "Pricing",
     "documentation": "Documentation",
-    "brandName": "Databayt"
+    "brandName": "Hogwarts"
   },
   "auth": {
-    "signIn": "Sign In",
+    "signIn": "Login",
     "signUp": "Sign Up",
-    "signOut": "Sign Out",
+    "signOut": "Logout",
     "email": "Email",
     "password": "Password",
     "confirmPassword": "Confirm Password",
@@ -64,13 +64,16 @@
     "enterEmail": "Enter your email",
     "enterPassword": "Enter your password",
     "welcomeBack": "Welcome back",
-    "createNewAccount": "Create a new account"
+    "createNewAccount": "Create a new account",
+    "orContinueWith": "Or continue with",
+    "twoFactorCode": "Two Factor Code",
+    "confirm": "Confirm"
   },
   "marketing": {
     "hero": {
-      "title": "Automate Education,\nUnleash Creativity",
-      "titleMobile": "Automate\nEducation\nUnleash\nCreativity",
-      "subtitle": "Comprehensive school management system that simplifies operations for students, teachers, and school leaders. Transform your educational institution's efficiency today.",
+      "title": "Automate Education,\nelevate the curiosity.",
+      "titleMobile": "Automate\nEducation\nelevate\nthe curiosity.",
+      "subtitle": "Educational management system streamlining operations for students, educators, and school leaders. Transform your institution's efficiency today.",
       "badge": "700+ School automated",
       "appointment": "Get Started",
       "services": "GitHub"
@@ -709,7 +712,7 @@
     "privacy": "Privacy",
     "safety": "Safety",
     "status": "Status",
-    "brandName": "Databayt",
+    "brandName": "Hogwarts",
     "newsletter": {
       "title": "Newsletter",
       "emailPlaceholder": "Email address",

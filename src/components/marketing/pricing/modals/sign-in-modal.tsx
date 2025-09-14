@@ -28,7 +28,7 @@ function SignInModal({
           <a href={siteConfig.url}>
             <Icons.logo className="size-10" />
           </a>
-          <h3>Sign In</h3>
+          <h3>Login</h3>
           <p className="muted text-gray-500">
             This is strictly for demo purposes - only your email and profile
             picture will be stored.

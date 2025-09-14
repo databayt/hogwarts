@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { HelpCircle, Bookmark } from 'lucide-react';
 import { useHostValidation } from './host-validation-context';
+import { useLocale } from '@/components/internationalization/use-locale';
 
 interface HostFooterProps {
   onBack?: () => void;
@@ -64,6 +65,7 @@ const HostFooter: React.FC<HostFooterProps> = ({
   const router = useRouter();
   const params = useParams();
   const pathname = usePathname();
+  const { isRTL } = useLocale();
   
   // Use validation context if available
   let contextNextDisabled = false;
@@ -219,9 +221,9 @@ const HostFooter: React.FC<HostFooterProps> = ({
       </div>
 
       {/* All controls in one row */}
-      <div className="flex items-center justify-between px-4 sm:px-6 md:px-12 lg:px-20 py-3 sm:py-4">
-        {/* Left side - Logo, Help, Save */}
-        <div className="flex items-center">
+      <div className={`flex items-center justify-between px-4 sm:px-6 md:px-12 lg:px-20 py-3 sm:py-4 ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
+        {/* Left side - Logo, Help, Save (Right side in RTL) */}
+        <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
           <div className="relative w-5 h-5">
             <Image
               src="/logo.png"
@@ -235,7 +237,7 @@ const HostFooter: React.FC<HostFooterProps> = ({
             variant="link"
             size="icon"
             onClick={onHelp}
-            className="rounded-full ml-2 w-10 h-10 sm:w-10 sm:h-10"
+            className={`rounded-full w-10 h-10 sm:w-10 sm:h-10 ${isRTL ? 'mr-2' : 'ml-2'}`}
           >
             <HelpCircle className="h-5 w-5 sm:h-10 sm:w-10" />
           </Button>
@@ -249,14 +251,13 @@ const HostFooter: React.FC<HostFooterProps> = ({
           </Button>
         </div>
 
-        {/* Right side - Back and Next buttons */}
-        <div className="flex items-center gap-2 sm:gap-4">
+        {/* Right side - Back and Next buttons (Left side in RTL) */}
+        <div className={`flex items-center gap-2 sm:gap-4 ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
           <Button
             variant="ghost"
             onClick={handleBack}
             disabled={!canGoBackActual}
             size='sm'
-            
           >
             {actualBackLabel}
           </Button>

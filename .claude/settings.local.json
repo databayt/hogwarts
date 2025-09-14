@@ -31,7 +31,9 @@
       "Bash(ls:*)",
       "Bash(for file in src/components/platform/dashboard/dashboards/{admin,staff,principal,accountant}-dashboard.tsx)",
       "Bash(do echo \"Updating $file\")",
-      "Bash(do)"
+      "Bash(do)",
+      "Bash(cat:*)",
+      "Bash(xcopy:*)"
     ],
     "deny": [],
     "ask": []

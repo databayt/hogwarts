@@ -398,7 +398,62 @@
       "termsAndConditions": "Terms and Conditions",
       "privacyPolicy": "Privacy Policy",
       "dataProtection": "Data Protection",
-      "acceptTerms": "I accept the terms and conditions"
+      "acceptTerms": "I accept the terms and conditions",
+      "schoolAvailableAt": "Your school will be available at:",
+      "subdomainPlaceholder": "your-school",
+      "describeEducationModel": "Describe your school's",
+      "educationModel": "education model",
+      "selectSchoolTypeDescription": "Select the type that best describes your school's educational approach and governance structure.",
+      "privateSchool": "Private",
+      "publicSchool": "Public",
+      "internationalSchool": "International",
+      "technicalSchool": "Technical",
+      "specialSchool": "Special",
+      "whereIsYourSchool": "Where's your school located?",
+      "schoolLocationDescription": "Your school's address will be visible to parents and staff members.",
+      "whatMakesYourSchoolUnique": "What makes your school stand out?",
+      "uniqueFeaturesDescription": "Tell us about the unique features, programs, and qualities that make your school special.",
+      "howManyStudents": "Share some basics",
+      "aboutYourSchool": "about your school",
+      "capacityDescription": "Tell us about your school's capacity and facilities.",
+      "students": "Students",
+      "teachers": "Teachers",
+      "classrooms": "Classrooms",
+      "facilities": "Facilities",
+      "color": "Color",
+      "rounded": "Rounded",
+      "shadow": "Shadow",
+      "uploadSchoolLogo": "Upload your school logo",
+      "logoFileTypes": "SVG, PNG, JPG (max. 800x800px)",
+      "chooseFile": "Choose file",
+      "fileSelected": "File selected",
+      "uploadYourFile": "Upload your file",
+      "supportedFileTypes": "pdf, xlsx, xls, csv, docx, doc",
+      "uploading": "Uploading...",
+      "importGuide": "import guide",
+      "brandIdentity": "brand identity",
+      "finishSetupDescription": "Review your school setup and complete the onboarding process.",
+      "setupComplete": "Your school setup is almost complete!",
+      "clickNextToFinish": "Click next to finish and go to your dashboard.",
+      "overview": {
+        "title": "It's easy to get started on Databayt",
+        "getStarted": "Get started",
+        "creatingSchool": "Creating school...",
+        "steps": {
+          "step1": {
+            "title": "Tell us about your school",
+            "description": "Share some basic info, like where it is, and how many students it has."
+          },
+          "step2": {
+            "title": "Add people and data",
+            "description": "Invite staff, and import students and classes—we'll help you out."
+          },
+          "step3": {
+            "title": "Set up and launch",
+            "description": "Configure timetable and attendance, publish announcements, and go live."
+          }
+        }
+      }
     },
     "common": {
       "actions": {

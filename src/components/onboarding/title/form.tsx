@@ -10,6 +10,7 @@ import { titleSchema, type TitleFormData } from "./validation";
 import { updateSchoolTitle } from "./actions";
 import { FORM_LIMITS } from "../constants.client";
 import { generateSubdomain } from "@/lib/subdomain";
+import { useLocale } from '@/components/internationalization/use-locale';
 
 interface TitleFormProps {
   schoolId: string;
@@ -26,6 +27,7 @@ export interface TitleFormRef {
 export const TitleForm = forwardRef<TitleFormRef, TitleFormProps>(({ schoolId, initialData, onSuccess, onTitleChange, dictionary }, ref) => {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string>("");
+  const { isRTL } = useLocale();
   const dict = dictionary?.onboarding || {};
 
   const form = useForm<TitleFormData>({
@@ -111,13 +113,13 @@ export const TitleForm = forwardRef<TitleFormRef, TitleFormProps>(({ schoolId, i
 
   return (
     <Form {...form}>
-      <div className="space-y-6">
+      <div className={`space-y-6 ${isRTL ? 'rtl' : 'ltr'}`}>
         {error && (
-          <div className="text-sm text-destructive bg-destructive/10 p-3 rounded-md">
+          <div className={`text-sm text-destructive bg-destructive/10 p-3 rounded-md ${isRTL ? 'text-right' : 'text-left'}`}>
             {error}
           </div>
         )}
-        
+
         <FormField
           control={form.control}
           name="title"
@@ -127,12 +129,13 @@ export const TitleForm = forwardRef<TitleFormRef, TitleFormProps>(({ schoolId, i
                 <Textarea
                   {...field}
                   placeholder={dict.schoolNamePlaceholder || "e.g., Al-Azhar International School"}
-                  className="w-full h-[80px] sm:h-[100px] p-4 sm:p-6 border border-input rounded-lg resize-none focus:outline-none focus:border-ring transition-colors text-sm sm:text-base"
+                  className={`w-full h-[80px] sm:h-[100px] p-4 sm:p-6 border border-input rounded-lg resize-none focus:outline-none focus:border-ring transition-colors text-sm sm:text-base ${isRTL ? 'text-right' : 'text-left'}`}
                   maxLength={maxLength}
                   disabled={isPending}
+                  dir={isRTL ? 'rtl' : 'ltr'}
                 />
               </FormControl>
-              <div className="flex justify-between items-center">
+              <div className={`flex justify-between items-center ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
                 <FormMessage />
                 <div className="text-xs sm:text-sm text-muted-foreground">
                   {titleValue.length}/{maxLength}
@@ -148,19 +151,19 @@ export const TitleForm = forwardRef<TitleFormRef, TitleFormProps>(({ schoolId, i
           name="subdomain"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-sm text-muted-foreground">
+              <FormLabel className={`text-sm text-muted-foreground ${isRTL ? 'text-right' : 'text-left'}`}>
                 {dict.schoolAvailableAt || "Your school will be available at:"}
               </FormLabel>
               <FormControl>
-                <div className="flex items-center border border-input rounded-lg focus-within:border-ring transition-colors" dir="ltr">
+                <div className="flex items-center border border-input rounded-lg focus-within:border-ring transition-colors max-w-xs" dir="ltr">
                   <Input
                     {...field}
                     placeholder={dict.subdomainPlaceholder || "your-school"}
                     className="border-0 focus-visible:ring-0 focus-visible:ring-offset-0 rounded-r-none"
                     disabled={isPending}
                   />
-                  <span className="px-3 py-2 bg-muted text-muted-foreground border-l font-mono text-sm rounded-r-lg">
-                    @databayt.org
+                  <span className="px-3 py-2 bg-muted text-muted-foreground border-l font-mono text-sm rounded-r-lg whitespace-nowrap">
+                    .databayt.org
                   </span>
                 </div>
               </FormControl>

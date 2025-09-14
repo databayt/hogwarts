@@ -59,7 +59,10 @@
     "enterEmail": "أدخل بريدك الإلكتروني",
     "enterPassword": "أدخل كلمة المرور",
     "welcomeBack": "مرحباً بعودتك",
-    "createNewAccount": "إنشاء حساب جديد"
+    "createNewAccount": "إنشاء حساب جديد",
+    "orContinueWith": "أو تابع بواسطة",
+    "twoFactorCode": "رمز المصادقة الثنائية",
+    "confirm": "تأكيد"
   },
   "marketing": {
     "hero": {
