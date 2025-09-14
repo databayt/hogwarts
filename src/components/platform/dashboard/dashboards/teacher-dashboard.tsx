@@ -60,7 +60,7 @@ export async function TeacherDashboard({ user, dictionary }: TeacherDashboardPro
   };
 
   // Get dashboard dictionary with fallbacks
-  const dashDict = dictionary?.dashboard?.teacher || {
+  const dashDict = {
     stats: {
       todaysClasses: "Today's Classes",
       pendingGrading: "Pending Grading",
