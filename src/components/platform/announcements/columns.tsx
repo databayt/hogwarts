@@ -30,8 +30,8 @@ export const getAnnouncementColumns = (dictionary?: Dictionary['school']['announ
     roleSpecific: "Role",
     publish: "Publish",
     unpublish: "Unpublish",
-    edit: "Edit",
-    delete: "Delete"
+    editAnnouncement: "Edit",
+    deleteAnnouncement: "Delete"
   };
 
   // Map dictionary keys to column structure for easier access
@@ -132,11 +132,11 @@ export const getAnnouncementColumns = (dictionary?: Dictionary['school']['announ
             <DropdownMenuLabel>{columns.actions}</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={onView}>View</DropdownMenuItem>
-            <DropdownMenuItem onClick={onEdit}>{dict.edit || "Edit"}</DropdownMenuItem>
+            <DropdownMenuItem onClick={onEdit}>{dict.editAnnouncement || "Edit"}</DropdownMenuItem>
             <DropdownMenuItem onClick={onToggle}>
               {announcement.published ? dict.unpublish || "Unpublish" : dict.publish || "Publish"}
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={onDelete}>{dict.delete || "Delete"}</DropdownMenuItem>
+            <DropdownMenuItem onClick={onDelete}>{dict.deleteAnnouncement || "Delete"}</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       );
