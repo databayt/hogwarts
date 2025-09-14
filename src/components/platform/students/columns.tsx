@@ -20,32 +20,34 @@ export type StudentRow = {
 
 export const getStudentColumns = (dictionary?: Dictionary['school']['students']): ColumnDef<StudentRow>[] => {
   const dict = dictionary || {
-    columns: {
-      name: "Name",
-      class: "Class",
-      status: "Status",
-      created: "Created",
-      actions: "Actions"
-    },
-    actions: {
-      view: "View",
-      edit: "Edit",
-      delete: "Delete"
-    },
-    status: {
-      active: "Active",
-      inactive: "Inactive"
-    }
+    fullName: "Name",
+    class: "Class",
+    editStudent: "Edit Student",
+    deleteStudent: "Delete Student"
+  };
+
+  // Map dictionary keys to column structure for easier access
+  const columns = {
+    name: dict.fullName || "Name",
+    class: dict.class || "Class",
+    status: "Status",
+    created: "Created",
+    actions: "Actions"
+  };
+
+  const status = {
+    active: "Active",
+    inactive: "Inactive"
   };
 
   return [
-  { accessorKey: "name", id: 'name', header: ({ column }) => <DataTableColumnHeader column={column} title={dict.columns.name} />, meta: { label: dict.columns.name, variant: "text" }, enableColumnFilter: true },
-  { accessorKey: "className", id: 'className', header: ({ column }) => <DataTableColumnHeader column={column} title={dict.columns.class} />, meta: { label: dict.columns.class, variant: "text" } },
-  { accessorKey: "status", id: 'status', header: ({ column }) => <DataTableColumnHeader column={column} title={dict.columns.status} />, meta: { label: dict.columns.status, variant: "select", options: [{ label: dict.status.active, value: 'active' }, { label: dict.status.inactive, value: 'inactive' }] }, enableColumnFilter: true },
-  { accessorKey: "createdAt", id: 'createdAt', header: ({ column }) => <DataTableColumnHeader column={column} title={dict.columns.created} />, cell: ({ getValue }) => <span className="text-xs tabular-nums text-muted-foreground">{new Date(getValue<string>()).toLocaleDateString()}</span>, meta: { label: dict.columns.created, variant: "text" } },
+  { accessorKey: "name", id: 'name', header: ({ column }) => <DataTableColumnHeader column={column} title={columns.name} />, meta: { label: columns.name, variant: "text" }, enableColumnFilter: true },
+  { accessorKey: "className", id: 'className', header: ({ column }) => <DataTableColumnHeader column={column} title={columns.class} />, meta: { label: columns.class, variant: "text" } },
+  { accessorKey: "status", id: 'status', header: ({ column }) => <DataTableColumnHeader column={column} title={columns.status} />, meta: { label: columns.status, variant: "select", options: [{ label: status.active, value: 'active' }, { label: status.inactive, value: 'inactive' }] }, enableColumnFilter: true },
+  { accessorKey: "createdAt", id: 'createdAt', header: ({ column }) => <DataTableColumnHeader column={column} title={columns.created} />, cell: ({ getValue }) => <span className="text-xs tabular-nums text-muted-foreground">{new Date(getValue<string>()).toLocaleDateString()}</span>, meta: { label: columns.created, variant: "text" } },
   {
     id: "actions",
-    header: () => <span className="sr-only">{dict.columns.actions}</span>,
+    header: () => <span className="sr-only">{columns.actions}</span>,
     cell: ({ row }) => {
       const student = row.original;
       const { openModal } = useModal();
@@ -73,11 +75,11 @@ export const getStudentColumns = (dictionary?: Dictionary['school']['students'])
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuLabel>{dict.columns.actions}</DropdownMenuLabel>
+            <DropdownMenuLabel>{columns.actions}</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={onView}>{dict.actions.view}</DropdownMenuItem>
-            <DropdownMenuItem onClick={onEdit}>{dict.actions.edit}</DropdownMenuItem>
-            <DropdownMenuItem onClick={onDelete}>{dict.actions.delete}</DropdownMenuItem>
+            <DropdownMenuItem onClick={onView}>View</DropdownMenuItem>
+            <DropdownMenuItem onClick={onEdit}>{dict.editStudent || "Edit"}</DropdownMenuItem>
+            <DropdownMenuItem onClick={onDelete}>{dict.deleteStudent || "Delete"}</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       );
