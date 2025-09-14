@@ -5,6 +5,10 @@ export const metadata = {
   description: "Join your school community.",
 };
 
-export default function Join() {
-  return <JoinContent />;
+interface PageProps {
+  params: Promise<{ id: string }>;
+}
+
+export default function Join({ params }: PageProps) {
+  return <JoinContent params={params} />;
 }

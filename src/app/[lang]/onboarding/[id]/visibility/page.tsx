@@ -5,6 +5,10 @@ export const metadata = {
   description: "Set your school's visibility settings.",
 };
 
-export default function Visibility() {
-  return <VisibilityContent />;
+interface PageProps {
+  params: Promise<{ id: string }>;
+}
+
+export default function Visibility({ params }: PageProps) {
+  return <VisibilityContent params={params} />;
 }
