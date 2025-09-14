@@ -20,32 +20,33 @@ export type TeacherRow = {
 
 export const getTeacherColumns = (dictionary?: Dictionary['school']['teachers']): ColumnDef<TeacherRow>[] => {
   const dict = dictionary || {
-    columns: {
-      name: "Name",
-      email: "Email",
-      status: "Status",
-      created: "Created",
-      actions: "Actions"
-    },
-    actions: {
-      view: "View",
-      edit: "Edit",
-      delete: "Delete"
-    },
-    status: {
-      active: "Active",
-      inactive: "Inactive"
-    }
+    fullName: "Name",
+    editTeacher: "Edit Teacher",
+    deleteTeacher: "Delete Teacher"
+  };
+
+  // Map dictionary keys to column structure for easier access
+  const columns = {
+    name: dict.fullName || "Name",
+    email: "Email",
+    status: "Status",
+    created: "Created",
+    actions: "Actions"
+  };
+
+  const status = {
+    active: "Active",
+    inactive: "Inactive"
   };
 
   return [
-  { accessorKey: "name", id: 'name', header: ({ column }) => <DataTableColumnHeader column={column} title={dict.columns.name} />, meta: { label: dict.columns.name, variant: "text" }, enableColumnFilter: true },
-  { accessorKey: "emailAddress", id: 'emailAddress', header: ({ column }) => <DataTableColumnHeader column={column} title={dict.columns.email} />, meta: { label: dict.columns.email, variant: "text" }, enableColumnFilter: true },
-  { accessorKey: "status", id: 'status', header: ({ column }) => <DataTableColumnHeader column={column} title={dict.columns.status} />, meta: { label: dict.columns.status, variant: "select", options: [{ label: dict.status.active, value: 'active' }, { label: dict.status.inactive, value: 'inactive' }] }, enableColumnFilter: true },
-  { accessorKey: "createdAt", id: 'createdAt', header: ({ column }) => <DataTableColumnHeader column={column} title={dict.columns.created} />, cell: ({ getValue }) => <span className="text-xs tabular-nums text-muted-foreground">{new Date(getValue<string>()).toLocaleDateString()}</span>, meta: { label: dict.columns.created, variant: "text" } },
+  { accessorKey: "name", id: 'name', header: ({ column }) => <DataTableColumnHeader column={column} title={columns.name} />, meta: { label: columns.name, variant: "text" }, enableColumnFilter: true },
+  { accessorKey: "emailAddress", id: 'emailAddress', header: ({ column }) => <DataTableColumnHeader column={column} title={columns.email} />, meta: { label: columns.email, variant: "text" }, enableColumnFilter: true },
+  { accessorKey: "status", id: 'status', header: ({ column }) => <DataTableColumnHeader column={column} title={columns.status} />, meta: { label: columns.status, variant: "select", options: [{ label: status.active, value: 'active' }, { label: status.inactive, value: 'inactive' }] }, enableColumnFilter: true },
+  { accessorKey: "createdAt", id: 'createdAt', header: ({ column }) => <DataTableColumnHeader column={column} title={columns.created} />, cell: ({ getValue }) => <span className="text-xs tabular-nums text-muted-foreground">{new Date(getValue<string>()).toLocaleDateString()}</span>, meta: { label: columns.created, variant: "text" } },
   {
     id: "actions",
-    header: () => <span className="sr-only">{dict.columns.actions}</span>,
+    header: () => <span className="sr-only">{columns.actions}</span>,
     cell: ({ row }) => {
       const teacher = row.original;
       const { openModal } = useModal();
@@ -73,11 +74,11 @@ export const getTeacherColumns = (dictionary?: Dictionary['school']['teachers'])
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuLabel>{dict.columns.actions}</DropdownMenuLabel>
+            <DropdownMenuLabel>{columns.actions}</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={onView}>{dict.actions.view}</DropdownMenuItem>
-            <DropdownMenuItem onClick={onEdit}>{dict.actions.edit}</DropdownMenuItem>
-            <DropdownMenuItem onClick={onDelete}>{dict.actions.delete}</DropdownMenuItem>
+            <DropdownMenuItem onClick={onView}>View</DropdownMenuItem>
+            <DropdownMenuItem onClick={onEdit}>{dict.editTeacher || "Edit"}</DropdownMenuItem>
+            <DropdownMenuItem onClick={onDelete}>{dict.deleteTeacher || "Delete"}</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       );
