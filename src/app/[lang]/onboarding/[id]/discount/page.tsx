@@ -5,6 +5,10 @@ export const metadata = {
   description: "Set up discount options for your school.",
 };
 
-export default function Discount() {
-  return <DiscountContent />;
+interface PageProps {
+  params: Promise<{ id: string }>;
+}
+
+export default function Discount({ params }: PageProps) {
+  return <DiscountContent params={params} />;
 }
