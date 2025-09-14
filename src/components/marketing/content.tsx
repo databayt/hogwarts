@@ -12,24 +12,28 @@ import Boost from "./boost";
 import FAQs from "./faqs";
 import LogoCloud from "./logo-cloud";
 // import { Gallery } from "@/components/landing/gallery";
+import type { Dictionary } from '@/components/internationalization/dictionaries';
 
+interface HomeContentProps {
+  dictionary?: Dictionary
+}
 
-export default function HomeContent() {
+export default function HomeContent({ dictionary }: HomeContentProps) {
   return (
     <main className="flex min-h-screen flex-col">
-      <Hero />
+      <Hero dictionary={dictionary} />
       {/* <Gallery />
       <Stack />
       <Automated />
       <OpenSource /> */}
       {/* <Codebase /> */}
-      <Time />
+      <Time dictionary={dictionary} />
       {/* <Wizard /> */}
-      <Testimonial />
-      <LogoCloud />
-      <FAQs />
-      <LetsWorkTogether />
-      <Boost />
+      <Testimonial dictionary={dictionary} />
+      <LogoCloud dictionary={dictionary} />
+      <FAQs dictionary={dictionary} />
+      <LetsWorkTogether dictionary={dictionary} />
+      <Boost dictionary={dictionary} />
     </main>
   );
 }

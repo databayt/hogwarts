@@ -4,12 +4,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Users, CreditCard, MessageSquare, FileText, Calendar, AlertTriangle, Bell, Car } from "lucide-react";
+import type { Dictionary } from "@/components/internationalization/dictionaries";
 
 interface ParentDashboardProps {
   user: any;
+  dictionary?: Dictionary['school'];
 }
 
-export async function ParentDashboard({ user }: ParentDashboardProps) {
+export async function ParentDashboard({ user, dictionary }: ParentDashboardProps) {
   // Fetch real data from database
   const guardian = await db.guardian.findFirst({
     where: { userId: user.id, schoolId: user.schoolId },

@@ -9,13 +9,15 @@ import { cn } from "@/lib/utils"
 import { Icons } from "./icons"
 import { MobileNav } from "./mobile-nav"
 import Image from "next/image"
+import type { Dictionary } from '@/components/internationalization/dictionaries'
 
 interface MainNavProps {
   items?: MainNavItem[]
   children?: React.ReactNode
+  dictionary?: Dictionary
 }
 
-export function MainNav({ items, children }: MainNavProps) {
+export function MainNav({ items, children, dictionary }: MainNavProps) {
   const segment = useSelectedLayoutSegment()
   const [showMobileMenu, setShowMobileMenu] = React.useState<boolean>(false)
 
@@ -24,7 +26,7 @@ export function MainNav({ items, children }: MainNavProps) {
       <Link href="/" className="hidden items-center gap-2 md:flex">
         <Image src="/logo.png" alt="Hogwarts Logo" width={20} height={20} className="dark:invert" />
         <span className="hidden sm:inline-block  ">
-          {siteConfig.name}
+          {dictionary?.navigation?.brandName || siteConfig.name}
         </span>
       </Link>
       {items?.length ? (
@@ -41,7 +43,7 @@ export function MainNav({ items, children }: MainNavProps) {
                 item.disabled && "cursor-not-allowed opacity-80"
               )}
             >
-              {item.title}
+              {dictionary?.navigation?.[item.title.toLowerCase() as keyof typeof dictionary.navigation] || item.title}
             </Link>
           ))}
         </nav>
@@ -51,10 +53,10 @@ export function MainNav({ items, children }: MainNavProps) {
         onClick={() => setShowMobileMenu(!showMobileMenu)}
       >
         {showMobileMenu ? <Icons.close /> : <Icons.logo />}
-        <span>Menu</span>
+        <span>{dictionary?.navigation?.menu || 'Menu'}</span>
       </button>
       {showMobileMenu && items && (
-        <MobileNav items={items}>{children}</MobileNav>
+        <MobileNav items={items} dictionary={dictionary}>{children}</MobileNav>
       )}
     </div>
   )

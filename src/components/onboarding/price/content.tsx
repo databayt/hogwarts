@@ -49,15 +49,35 @@ export default function PriceContent() {
       <div className="max-w-6xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-20 items-start">
           {/* Left side - Text content */}
-          <div className="space-y-3 sm:space-y-4">
-            <h3>
-              Set your school's
-              <br />
-              tuition fees
-            </h3>
-            <p className="text-sm sm:text-base text-muted-foreground">
-              This will be the annual tuition fee for your school. You can change this later.
-            </p>
+          <div className="space-y-6">
+            <div className="space-y-3 sm:space-y-4">
+              <h3>
+                Set your school's
+                <br />
+                tuition fees
+              </h3>
+              <p className="text-sm sm:text-base text-muted-foreground">
+                This will be the annual tuition fee for your school. You can change this later in your school settings.
+              </p>
+            </div>
+
+            {/* Pricing context section */}
+            <div className="space-y-3">
+              <p className="text-sm font-medium text-muted-foreground">
+                Pricing Guidelines
+              </p>
+              <div className="p-4 border rounded-lg space-y-3 bg-muted/20">
+                <div className="text-sm text-muted-foreground">
+                  <p className="font-medium text-foreground mb-2">Consider these factors:</p>
+                  <ul className="space-y-1 text-xs">
+                    <li>• Local market rates and competition</li>
+                    <li>• Your school's unique value proposition</li>
+                    <li>• Additional fees and payment schedules</li>
+                    <li>• Financial aid and scholarship offerings</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Right side - Price form */}

@@ -5,7 +5,12 @@ import { Upload, FileText, X } from 'lucide-react';
 import { useHostValidation } from '@/components/onboarding/host-validation-context';
 import { Button } from '@/components/ui/button';
 
-export default function ImportContent() {
+interface ImportContentProps {
+  dictionary?: any;
+}
+
+export default function ImportContent({ dictionary }: ImportContentProps) {
+  const dict = dictionary?.onboarding || {};
   const { enableNext } = useHostValidation();
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -46,10 +51,10 @@ export default function ImportContent() {
           {/* Left side - Text content */}
           <div className="space-y-3 sm:space-y-4">
             <h3>
-              Import your student data
+              {dict.importData || "Import your student data"}
             </h3>
             <p className="text-sm sm:text-base text-muted-foreground">
-              Upload your student records in Excel or CSV format. <br /> <a href="/docs/import" className="text-primary underline">import guide</a>
+              {dict.importDescription || "Upload your student records in Excel or CSV format."} <br /> <a href="/docs/import" className="text-primary underline">{dict.importGuide || "import guide"}</a>
             </p>
           </div>
           
@@ -63,9 +68,9 @@ export default function ImportContent() {
                 </div>
 
                 <div className="space-y-2">
-                  <p className="text-sm font-medium">Upload your file</p>
+                  <p className="text-sm font-medium">{dict.uploadYourFile || "Upload your file"}</p>
                   <p className="text-xs text-muted-foreground">
-                  pdf, xlsx, xls, csv, docx, doc
+                  {dict.supportedFileTypes || "pdf, xlsx, xls, csv, docx, doc"}
                   </p>
                 </div>
 
@@ -76,7 +81,7 @@ export default function ImportContent() {
                       className="relative cursor-pointer"
                       disabled={isUploading}
                     >
-                      {isUploading ? 'Uploading...' : 'Choose file'}
+                      {isUploading ? (dict.uploading || 'Uploading...') : (dict.chooseFile || 'Choose file')}
                       <input
                         id="file-upload"
                         type="file"

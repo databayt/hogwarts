@@ -8,6 +8,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { useModal } from "@/components/atom/modal/context";
 import { deleteTeacher } from "@/components/platform/teachers/actions";
 import { DeleteToast, ErrorToast, confirmDeleteDialog } from "@/components/atom/toast";
+import type { Dictionary } from "@/components/internationalization/dictionaries";
 
 export type TeacherRow = {
   id: string;
@@ -17,14 +18,34 @@ export type TeacherRow = {
   createdAt: string;
 };
 
-export const teacherColumns: ColumnDef<TeacherRow>[] = [
-  { accessorKey: "name", id: 'name', header: ({ column }) => <DataTableColumnHeader column={column} title="Name" />, meta: { label: "Name", variant: "text" }, enableColumnFilter: true },
-  { accessorKey: "emailAddress", id: 'emailAddress', header: ({ column }) => <DataTableColumnHeader column={column} title="Email" />, meta: { label: "Email", variant: "text" }, enableColumnFilter: true },
-  { accessorKey: "status", id: 'status', header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />, meta: { label: "Status", variant: "select", options: [{ label: 'Active', value: 'active' }, { label: 'Inactive', value: 'inactive' }] }, enableColumnFilter: true },
-  { accessorKey: "createdAt", id: 'createdAt', header: ({ column }) => <DataTableColumnHeader column={column} title="Created" />, cell: ({ getValue }) => <span className="text-xs tabular-nums text-muted-foreground">{new Date(getValue<string>()).toLocaleDateString()}</span>, meta: { label: "Created", variant: "text" } },
+export const getTeacherColumns = (dictionary?: Dictionary['school']['teachers']): ColumnDef<TeacherRow>[] => {
+  const dict = dictionary || {
+    columns: {
+      name: "Name",
+      email: "Email",
+      status: "Status",
+      created: "Created",
+      actions: "Actions"
+    },
+    actions: {
+      view: "View",
+      edit: "Edit",
+      delete: "Delete"
+    },
+    status: {
+      active: "Active",
+      inactive: "Inactive"
+    }
+  };
+
+  return [
+  { accessorKey: "name", id: 'name', header: ({ column }) => <DataTableColumnHeader column={column} title={dict.columns.name} />, meta: { label: dict.columns.name, variant: "text" }, enableColumnFilter: true },
+  { accessorKey: "emailAddress", id: 'emailAddress', header: ({ column }) => <DataTableColumnHeader column={column} title={dict.columns.email} />, meta: { label: dict.columns.email, variant: "text" }, enableColumnFilter: true },
+  { accessorKey: "status", id: 'status', header: ({ column }) => <DataTableColumnHeader column={column} title={dict.columns.status} />, meta: { label: dict.columns.status, variant: "select", options: [{ label: dict.status.active, value: 'active' }, { label: dict.status.inactive, value: 'inactive' }] }, enableColumnFilter: true },
+  { accessorKey: "createdAt", id: 'createdAt', header: ({ column }) => <DataTableColumnHeader column={column} title={dict.columns.created} />, cell: ({ getValue }) => <span className="text-xs tabular-nums text-muted-foreground">{new Date(getValue<string>()).toLocaleDateString()}</span>, meta: { label: dict.columns.created, variant: "text" } },
   {
     id: "actions",
-    header: () => <span className="sr-only">Actions</span>,
+    header: () => <span className="sr-only">{dict.columns.actions}</span>,
     cell: ({ row }) => {
       const teacher = row.original;
       const { openModal } = useModal();
@@ -52,11 +73,11 @@ export const teacherColumns: ColumnDef<TeacherRow>[] = [
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+            <DropdownMenuLabel>{dict.columns.actions}</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={onView}>View</DropdownMenuItem>
-            <DropdownMenuItem onClick={onEdit}>Edit</DropdownMenuItem>
-            <DropdownMenuItem onClick={onDelete}>Delete</DropdownMenuItem>
+            <DropdownMenuItem onClick={onView}>{dict.actions.view}</DropdownMenuItem>
+            <DropdownMenuItem onClick={onEdit}>{dict.actions.edit}</DropdownMenuItem>
+            <DropdownMenuItem onClick={onDelete}>{dict.actions.delete}</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       );
@@ -64,7 +85,11 @@ export const teacherColumns: ColumnDef<TeacherRow>[] = [
     enableSorting: false,
     enableColumnFilter: false,
   },
-];
+  ];
+}
+
+// Export a default version for backward compatibility
+export const teacherColumns = getTeacherColumns();
 
 
 

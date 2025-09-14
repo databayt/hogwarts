@@ -10,6 +10,7 @@ import { AccountantDashboard } from "./dashboards/accountant-dashboard";
 import { TenantLoginRedirect } from "@/components/auth/tenant-login-redirect";
 import { CookieDebug } from "@/components/auth/cookie-debug";
 import type { School } from "@/components/site/types";
+import type { Dictionary } from "@/components/internationalization/dictionaries";
 
 // Extended user type that includes the properties added by our auth callbacks
 type ExtendedUser = {
@@ -21,9 +22,10 @@ type ExtendedUser = {
 
 interface DashboardContentProps {
   school?: School; // Make school prop optional
+  dictionary?: Dictionary['school']; // Add dictionary prop
 }
 
-export default async function DashboardContent({ school }: DashboardContentProps = {}) {
+export default async function DashboardContent({ school, dictionary }: DashboardContentProps = {}) {
   // Debug logging
   console.log('DashboardContent - school prop:', school);
   
@@ -44,38 +46,44 @@ export default async function DashboardContent({ school }: DashboardContentProps
   // For now, use a default school name if not provided
   const schoolName = school?.name || "Your School";
 
+  // Provide default translations if dictionary is not provided
+  const dashboardDict = dictionary?.dashboard || {
+    title: "Dashboard",
+    welcome: "Welcome to Hogwarts"
+  };
+
   const renderDashboard = () => {
     const userRole = user.role || 'USER';
     switch (userRole) {
       case "STUDENT":
-        return <StudentDashboard user={user} />;
+        return <StudentDashboard user={user} dictionary={dictionary} />;
       case "TEACHER":
-        return <TeacherDashboard user={user} />;
+        return <TeacherDashboard user={user} dictionary={dictionary} />;
       case "GUARDIAN":
-        return <ParentDashboard user={user} />;
+        return <ParentDashboard user={user} dictionary={dictionary} />;
       case "STAFF":
-        return <StaffDashboard user={user} />;
+        return <StaffDashboard user={user} dictionary={dictionary} />;
       case "ADMIN":
-        return <AdminDashboard user={user} />;
+        return <AdminDashboard user={user} dictionary={dictionary} />;
       case "ACCOUNTANT":
-        return <AccountantDashboard user={user} />;
+        return <AccountantDashboard user={user} dictionary={dictionary} />;
       default:
-        return <DefaultDashboard user={user} />;
+        return <DefaultDashboard user={user} dictionary={dictionary} />;
     }
   };
 
   return (
     <div className="space-y-6">
       <DashboardHeader
-        heading={`${user.role ? user.role.charAt(0) + user.role.slice(1).toLowerCase() : 'User'} Dashboard`}
-        text={`Welcome to ${schoolName}! Here's your personalized dashboard.`}
+        heading={dashboardDict.title}
+        text={`${dashboardDict.welcome.replace('Hogwarts', schoolName)}`}
       />
       {renderDashboard()}
     </div>
   );
 }
 
-function DefaultDashboard({ user }: { user: ExtendedUser }) {
+function DefaultDashboard({ user, dictionary }: { user: ExtendedUser, dictionary?: Dictionary['school'] }) {
   return (
     <div className="grid gap-6">
       <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">

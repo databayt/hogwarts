@@ -4,12 +4,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Calendar, Clock, BookOpen, Award, AlertCircle, MessageSquare, FileText, CalendarDays } from "lucide-react";
+import type { Dictionary } from "@/components/internationalization/dictionaries";
 
 interface StudentDashboardProps {
   user: any;
+  dictionary?: Dictionary['school'];
 }
 
-export async function StudentDashboard({ user }: StudentDashboardProps) {
+export async function StudentDashboard({ user, dictionary }: StudentDashboardProps) {
   // Fetch real data from database
   const student = await db.student.findFirst({
     where: { userId: user.id, schoolId: user.schoolId },
@@ -43,6 +45,44 @@ export async function StudentDashboard({ user }: StudentDashboardProps) {
   const presentDays = student?.attendances.filter(a => a.status === "PRESENT").length || 0;
   const attendancePercentage = totalDays > 0 ? (presentDays / totalDays) * 100 : 0;
 
+  // Get dashboard dictionary with fallbacks
+  const dashDict = dictionary?.dashboard?.student || {
+    stats: {
+      gpa: "Current GPA",
+      attendance: "Attendance",
+      assignments: "Upcoming Assignments",
+      balance: "Fee Balance"
+    },
+    quickActions: {
+      title: "Quick Actions",
+      submitAssignment: "Submit Assignment",
+      checkGrades: "Check Grades",
+      viewTimetable: "View Timetable",
+      messages: "Messages"
+    },
+    sections: {
+      upcomingAssignments: "Upcoming Assignments",
+      recentGrades: "Recent Grades",
+      upcomingExams: "Upcoming Exams",
+      libraryBooks: "Library Books",
+      announcements: "School Announcements",
+      todaySchedule: "Today's Schedule"
+    },
+    labels: {
+      outOf: "Out of 4.0 scale",
+      daysPresent: "days present",
+      dueThisWeek: "Due this week",
+      outstanding: "Outstanding amount",
+      noAssignments: "No upcoming assignments",
+      noGrades: "No recent grades",
+      due: "Due",
+      overdue: "Overdue",
+      dueSoon: "Due Soon",
+      room: "Room",
+      lab: "Lab"
+    }
+  };
+
   // Mock data for unimplemented features
   const mockGPA = 3.8;
   const mockUpcomingExams = [
@@ -68,46 +108,46 @@ export async function StudentDashboard({ user }: StudentDashboardProps) {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Current GPA</CardTitle>
+            <CardTitle className="text-sm font-medium">{dashDict.stats.gpa}</CardTitle>
             <Award className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{mockGPA}</div>
-            <p className="text-xs text-muted-foreground">Out of 4.0 scale</p>
+            <p className="text-xs text-muted-foreground">{dashDict.labels.outOf}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Attendance</CardTitle>
+            <CardTitle className="text-sm font-medium">{dashDict.stats.attendance}</CardTitle>
             <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{attendancePercentage.toFixed(1)}%</div>
-            <p className="text-xs text-muted-foreground">{presentDays}/{totalDays} days present</p>
+            <p className="text-xs text-muted-foreground">{presentDays}/{totalDays} {dashDict.labels.daysPresent}</p>
             <Progress value={attendancePercentage} className="mt-2" />
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Upcoming Assignments</CardTitle>
+            <CardTitle className="text-sm font-medium">{dashDict.stats.assignments}</CardTitle>
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{student?.submissions.length || 0}</div>
-            <p className="text-xs text-muted-foreground">Due this week</p>
+            <p className="text-xs text-muted-foreground">{dashDict.labels.dueThisWeek}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Fee Balance</CardTitle>
+            <CardTitle className="text-sm font-medium">{dashDict.stats.balance}</CardTitle>
             <AlertCircle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">${mockFeeBalance}</div>
-            <p className="text-xs text-muted-foreground">Outstanding amount</p>
+            <p className="text-xs text-muted-foreground">{dashDict.labels.outstanding}</p>
           </CardContent>
         </Card>
       </div>
@@ -115,25 +155,25 @@ export async function StudentDashboard({ user }: StudentDashboardProps) {
       {/* Quick Actions */}
       <Card>
         <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
+          <CardTitle>{dashDict.quickActions.title}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" size="sm">
               <FileText className="mr-2 h-4 w-4" />
-              Submit Assignment
+              {dashDict.quickActions.submitAssignment}
             </Button>
             <Button variant="outline" size="sm">
               <Award className="mr-2 h-4 w-4" />
-              Check Grades
+              {dashDict.quickActions.checkGrades}
             </Button>
             <Button variant="outline" size="sm">
               <CalendarDays className="mr-2 h-4 w-4" />
-              View Timetable
+              {dashDict.quickActions.viewTimetable}
             </Button>
             <Button variant="outline" size="sm">
               <MessageSquare className="mr-2 h-4 w-4" />
-              Messages
+              {dashDict.quickActions.messages}
             </Button>
           </div>
         </CardContent>
@@ -144,7 +184,7 @@ export async function StudentDashboard({ user }: StudentDashboardProps) {
         {/* Upcoming Assignments */}
         <Card>
           <CardHeader>
-            <CardTitle>Upcoming Assignments</CardTitle>
+            <CardTitle>{dashDict.sections.upcomingAssignments}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {student?.submissions.length ? (
@@ -153,7 +193,7 @@ export async function StudentDashboard({ user }: StudentDashboardProps) {
                   <div>
                     <p className="font-medium">{submission.assignment.title}</p>
                     <p className="text-sm text-muted-foreground">
-                      Due: {new Date(submission.assignment.dueDate).toLocaleDateString()}
+                      {dashDict.labels.due}: {new Date(submission.assignment.dueDate).toLocaleDateString()}
                     </p>
                   </div>
                   <Badge variant={submission.status === "SUBMITTED" ? "default" : "secondary"}>
@@ -162,7 +202,7 @@ export async function StudentDashboard({ user }: StudentDashboardProps) {
                 </div>
               ))
             ) : (
-              <p className="text-muted-foreground text-center py-4">No upcoming assignments</p>
+              <p className="text-muted-foreground text-center py-4">{dashDict.labels.noAssignments}</p>
             )}
           </CardContent>
         </Card>
@@ -170,7 +210,7 @@ export async function StudentDashboard({ user }: StudentDashboardProps) {
         {/* Recent Grades */}
         <Card>
           <CardHeader>
-            <CardTitle>Recent Grades</CardTitle>
+            <CardTitle>{dashDict.sections.recentGrades}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {student?.submissions.filter((s: any) => s.score)?.slice(0, 3).map((submission: any) => (
@@ -189,7 +229,7 @@ export async function StudentDashboard({ user }: StudentDashboardProps) {
                 </div>
               </div>
             )) || (
-              <p className="text-muted-foreground text-center py-4">No recent grades</p>
+              <p className="text-muted-foreground text-center py-4">{dashDict.labels.noGrades}</p>
             )}
           </CardContent>
         </Card>
@@ -197,7 +237,7 @@ export async function StudentDashboard({ user }: StudentDashboardProps) {
         {/* Upcoming Exams */}
         <Card>
           <CardHeader>
-            <CardTitle>Upcoming Exams</CardTitle>
+            <CardTitle>{dashDict.sections.upcomingExams}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {mockUpcomingExams.map((exam, index) => (
@@ -217,7 +257,7 @@ export async function StudentDashboard({ user }: StudentDashboardProps) {
         {/* Library Books */}
         <Card>
           <CardHeader>
-            <CardTitle>Library Books</CardTitle>
+            <CardTitle>{dashDict.sections.libraryBooks}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {mockLibraryBooks.map((book, index) => (
@@ -225,11 +265,11 @@ export async function StudentDashboard({ user }: StudentDashboardProps) {
                 <div>
                   <p className="font-medium">{book.title}</p>
                   <p className="text-sm text-muted-foreground">
-                    Due: {new Date(book.dueDate).toLocaleDateString()}
+                    {dashDict.labels.due}: {new Date(book.dueDate).toLocaleDateString()}
                   </p>
                 </div>
                 <Badge variant={book.overdue ? "destructive" : "default"}>
-                  {book.overdue ? "Overdue" : "Due Soon"}
+                  {book.overdue ? dashDict.labels.overdue : dashDict.labels.dueSoon}
                 </Badge>
               </div>
             ))}
@@ -239,7 +279,7 @@ export async function StudentDashboard({ user }: StudentDashboardProps) {
         {/* School Announcements */}
         <Card>
           <CardHeader>
-            <CardTitle>School Announcements</CardTitle>
+            <CardTitle>{dashDict.sections.announcements}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {mockAnnouncements.map((announcement, index) => (
@@ -256,7 +296,7 @@ export async function StudentDashboard({ user }: StudentDashboardProps) {
         {/* Today's Schedule */}
         <Card>
           <CardHeader>
-            <CardTitle>Today's Schedule</CardTitle>
+            <CardTitle>{dashDict.sections.todaySchedule}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
@@ -265,7 +305,7 @@ export async function StudentDashboard({ user }: StudentDashboardProps) {
                   <Clock className="h-4 w-4 text-muted-foreground" />
                   <div>
                     <p className="font-medium">Mathematics</p>
-                    <p className="text-sm text-muted-foreground">Room 101</p>
+                    <p className="text-sm text-muted-foreground">{dashDict.labels.room} 101</p>
                   </div>
                 </div>
                 <Badge>9:00 AM</Badge>
@@ -275,7 +315,7 @@ export async function StudentDashboard({ user }: StudentDashboardProps) {
                   <BookOpen className="h-4 w-4 text-muted-foreground" />
                   <div>
                     <p className="font-medium">Science</p>
-                    <p className="text-sm text-muted-foreground">Lab 2</p>
+                    <p className="text-sm text-muted-foreground">{dashDict.labels.lab} 2</p>
                   </div>
                 </div>
                 <Badge>10:30 AM</Badge>

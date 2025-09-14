@@ -1,72 +1,73 @@
-"use client"
+"use client";
 
-import { useRouter } from 'next/navigation'
-import { StepWrapper } from '../step-wrapper'
-import { Check, Rocket } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import React, { useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
+import { useHostValidation } from '@/components/onboarding/host-validation-context';
+import HostStepHeader from '@/components/onboarding/step-header';
+import { Button } from '@/components/ui/button';
 
-export default function FinishSetupContent() {
-  const router = useRouter()
+interface FinishSetupContentProps {
+  dictionary?: any;
+}
+
+export default function FinishSetupContent({ dictionary }: FinishSetupContentProps) {
+  const dict = dictionary?.onboarding || {};
+  const router = useRouter();
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const { enableNext } = useHostValidation();
+
+  // Enable next button for this step
+  useEffect(() => {
+    enableNext();
+  }, [enableNext]);
+
+  // Auto-play video when component mounts
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.play().catch((error) => {
+        console.log('Auto-play was prevented:', error);
+      });
+    }
+  }, []);
+
+  const illustration = (
+    <div className="w-full sm:w-3/4 max-w-xl mx-auto bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl sm:rounded-2xl flex items-center justify-center overflow-hidden h-[300px] sm:aspect-video">
+      <video
+        ref={videoRef}
+        className="w-full h-full object-cover"
+        autoPlay
+        muted
+        loop
+        playsInline
+        preload="auto"
+        onLoadedData={() => {
+          if (videoRef.current) {
+            videoRef.current.play().catch((error) => {
+              console.log('Video play failed:', error);
+            });
+          }
+        }}
+      >
+        <source
+          src="https://stream.media.muscache.com/KeNKUpa01dRaT5g00SSBV95FqXYkqf01DJdzn01F1aT00vCI.mp4?v_q=high"
+          type="video/mp4"
+        />
+      </video>
+    </div>
+  );
 
   return (
-    <StepWrapper>
-      <div className="text-center space-y-8">
-        {/* Success Icon */}
-        <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto">
-          <Check className="w-10 h-10 text-green-600" />
-        </div>
-        
-        {/* Main Message */}
-        <div>
-          <h2 className="text-2xl font-medium mb-2">
-            Congratulations! Your school setup is complete
-          </h2>
-          <p className="text-muted-foreground">
-            You've successfully completed all the required steps to set up your school.
-          </p>
-        </div>
+    <div className="">
+      <div className="w-full">
+        <HostStepHeader
+          stepNumber={3}
+          title={dict.finishSetup || "Finish setup"}
+          description={dict.finishSetupDescription || "Review your school setup and complete the onboarding process."}
+          illustration={illustration}
+          dictionary={dictionary}
+        />
 
-        {/* Next Steps */}
-        <div className="bg-muted/50 p-6 rounded-lg space-y-4">
-          <h3 className="font-medium">What's next?</h3>
-          <ul className="text-sm text-muted-foreground space-y-3">
-            <li className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                <span className="text-xs text-primary">1</span>
-              </div>
-              <span>Review your school dashboard and familiarize yourself with the features</span>
-            </li>
-            <li className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                <span className="text-xs text-primary">2</span>
-              </div>
-              <span>Set up your staff accounts and assign roles</span>
-            </li>
-            <li className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                <span className="text-xs text-primary">3</span>
-              </div>
-              <span>Start adding students and organizing classes</span>
-            </li>
-          </ul>
-        </div>
-
-        {/* Action Button */}
-        <div>
-          <Button
-            onClick={() => router.push('/dashboard')}
-            className="gap-2"
-          >
-            <Rocket className="w-4 h-4" />
-            Go to Dashboard
-          </Button>
-        </div>
-
-        {/* Help Text */}
-        <div className="text-sm text-muted-foreground">
-          Need help? Check out our <a href="/docs" className="text-primary hover:underline">documentation</a> or <a href="/support" className="text-primary hover:underline">contact support</a>
-        </div>
       </div>
-    </StepWrapper>
-  )
+    </div>
+  );
 }

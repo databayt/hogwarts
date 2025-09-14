@@ -25,11 +25,13 @@ interface DescriptionFormProps {
   initialData?: Partial<DescriptionFormData>;
   onSuccess?: () => void;
   onTypeSelect?: (type: string) => void;
+  dictionary?: any;
 }
 
-export function DescriptionForm({ schoolId, initialData, onSuccess, onTypeSelect }: DescriptionFormProps) {
+export function DescriptionForm({ schoolId, initialData, onSuccess, onTypeSelect, dictionary }: DescriptionFormProps) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string>("");
+  const dict = dictionary?.onboarding || {};
 
   const form = useForm<DescriptionFormData>({
     resolver: zodResolver(descriptionSchema),
@@ -63,27 +65,27 @@ export function DescriptionForm({ schoolId, initialData, onSuccess, onTypeSelect
   const schoolTypes = [
     {
       id: 'private',
-      title: 'Private',
+      title: dict.privateSchool || 'Private',
       icon: Building2,
     },
     {
       id: 'public',
-      title: 'Public',
+      title: dict.publicSchool || 'Public',
       icon: School,
     },
     {
       id: 'international',
-      title: 'International',
+      title: dict.internationalSchool || 'International',
       icon: Landmark,
     },
     {
       id: 'technical',
-      title: 'Technical',
+      title: dict.technicalSchool || 'Technical',
       icon: Wrench,
     },
     {
       id: 'special',
-      title: 'Special',
+      title: dict.specialSchool || 'Special',
       icon: Heart,
     }
   ];

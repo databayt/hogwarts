@@ -3,17 +3,30 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { GitHub, Discord } from "@/components/atom/icons"
 import Link from "next/link"
+import type { Dictionary } from '@/components/internationalization/dictionaries'
 
-export default function LetsWorkTogether() {
+interface LetsWorkTogetherProps {
+    dictionary?: Dictionary
+}
+
+export default function LetsWorkTogether({ dictionary }: LetsWorkTogetherProps) {
+  const dict = dictionary?.marketing?.letsWorkTogether || {
+    title: "Let's Work Together",
+    description: "Ready to revolutionize your educational institution with advanced automation? Experience streamlined operations and enhanced learning outcomes for students and educators.",
+    emailPlaceholder: "Email address",
+    messagePlaceholder: "What educational processes would you like to automate?",
+    submit: "Submit",
+    liveChat: "Live chat"
+  }
   return (
    
   
       <section className="">
-        <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl mb-8">Let&apos;s Work Together</h2>
+        <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl mb-8">{dict.title}</h2>
         <div className="flex flex-col lg:flex-row gap-8 lg:gap-14 ">
           <div className="flex-1">
             <p className="text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed mb-4 ">
-            Ready to revolutionize your educational institution with advanced automation? Experience streamlined operations and enhanced learning outcomes for students and educators.
+            {dict.description}
             </p>
             <div className="flex gap-4 mt-4 items-center">
               <Link 
@@ -37,7 +50,7 @@ export default function LetsWorkTogether() {
           <div className="flex-1 pt-1">
             <form className="space-y-4">
               <Input
-                placeholder="Email address"
+                placeholder={dict.emailPlaceholder}
                 type="email"
                 autoCapitalize="none"
                 autoComplete="email"
@@ -46,7 +59,7 @@ export default function LetsWorkTogether() {
                 aria-label="Email"
               />
               <Textarea
-                placeholder="What educational processes would you like to automate?"
+                placeholder={dict.messagePlaceholder}
                 required
                 className="min-h-[70px] resize-none"
                 aria-label="Educational automation needs"
@@ -54,10 +67,10 @@ export default function LetsWorkTogether() {
               <div className="flex gap-2">
 
                 <Button type="submit" className="w-fit px-8">
-                  Submit
+                  {dict.submit}
                 </Button>
                 <Button type="submit" variant="ghost" className="w-fit px-4">
-                  Live chat
+                  {dict.liveChat}
                 </Button>
               </div>
             </form>

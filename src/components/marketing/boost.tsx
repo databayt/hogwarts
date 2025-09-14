@@ -2,13 +2,24 @@ import Link from 'next/link'
 import SectionHeading from '../atom/section-heading'
 import { cn } from '@/lib/utils'
 import { Patreon, Coffee } from '@/components/atom/icons'
+import type { Dictionary } from '@/components/internationalization/dictionaries'
 
-const Boost = () => {
+interface BoostProps {
+    dictionary?: Dictionary
+}
+
+const Boost = ({ dictionary }: BoostProps) => {
+    const boostDict = dictionary?.marketing?.boost || {
+        title: "Boost",
+        subtitle: "Thank you for the boost",
+        becomePatron: "Become a Patron",
+        buyMeCoffee: "Buy me a coffee"
+    }
     return (
         <section className="py-14">
             <SectionHeading
-                title="Boost"
-                description="Thank you for the boost"
+                title={boostDict.title}
+                description={boostDict.subtitle}
             />  
             <div className="mx-auto flex max-w-[58rem] flex-col items-center justify-center gap-4 text-center">
                 
@@ -25,7 +36,7 @@ const Boost = () => {
                         aria-label="Become a Patron"
                     >
                         <Patreon className="w-4 h-4 mr-2" />
-                        <span>Become a Patron</span>
+                        <span>{boostDict.becomePatron}</span>
                     </Link>
                     <Link
                         href="https://www.buymeacoffee.com/your_buymeacoffee_page"
@@ -39,7 +50,7 @@ const Boost = () => {
                         aria-label="Buy me a coffee"
                     >
                         <Coffee className="w-5 h-5 mr-2" />
-                        <span>Buy me a coffee</span>
+                        <span>{boostDict.buyMeCoffee}</span>
                     </Link>
                 </div>
             </div>

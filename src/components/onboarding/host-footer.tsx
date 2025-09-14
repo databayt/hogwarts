@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { HelpCircle, Bookmark } from 'lucide-react';
 import { useHostValidation } from './host-validation-context';
+import { useLocale } from '@/components/internationalization/use-locale';
 
 interface HostFooterProps {
   onBack?: () => void;
@@ -19,6 +20,7 @@ interface HostFooterProps {
   canGoBack?: boolean;
   canGoNext?: boolean;
   nextDisabled?: boolean;
+  dictionary?: any;
 }
 
 // Define the step order for the hosting flow
@@ -57,11 +59,13 @@ const HostFooter: React.FC<HostFooterProps> = ({
   nextLabel = "Next",
   canGoBack = true,
   canGoNext = true,
-  nextDisabled = false
+  nextDisabled = false,
+  dictionary
 }) => {
   const router = useRouter();
   const params = useParams();
   const pathname = usePathname();
+  const { isRTL } = useLocale();
   
   // Use validation context if available
   let contextNextDisabled = false;
@@ -174,10 +178,12 @@ const HostFooter: React.FC<HostFooterProps> = ({
     return 0; // Not started
   };
   
+  const dict = dictionary?.onboarding || {};
+
   const stepLabels = [
-    "Tell us about your place",
-    "Make it stand out", 
-    "Finish up and publish"
+    dict.tellUsAboutYourPlace || "Tell us about your place",
+    dict.makeItStandOut || "Make it stand out",
+    dict.finishUpAndPublish || "Finish up and publish"
   ];
   
   // Check if back/next are available
@@ -196,17 +202,18 @@ const HostFooter: React.FC<HostFooterProps> = ({
   });
   
   // Set the next button label based on current step
-  const actualNextLabel = currentStepSlug === 'legal' ? 'Create school' : nextLabel;
+  const actualBackLabel = backLabel || dict.back || "Back";
+  const actualNextLabel = currentStepSlug === 'legal' ? (dict.createSchool || 'Create school') : (nextLabel || dict.next || "Next");
 
   return (
     <footer className="fixed bottom-0 left-0 right-0 bg-white">
-      {/* Three separate progress bars */}
-      <div className="">
+      {/* Three separate progress bars - always LTR */}
+      <div className="" dir="ltr">
         <div className="grid grid-cols-3 gap-1 sm:gap-2 px-4 sm:px-6 md:px-12 lg:px-20">
           {stepLabels.map((label, index) => (
-            <Progress 
+            <Progress
               key={index}
-              value={getStepProgress(index + 1)} 
+              value={getStepProgress(index + 1)}
               className="h-1 w-full"
             />
           ))}
@@ -214,9 +221,9 @@ const HostFooter: React.FC<HostFooterProps> = ({
       </div>
 
       {/* All controls in one row */}
-      <div className="flex items-center justify-between px-4 sm:px-6 md:px-12 lg:px-20 py-3 sm:py-4">
-        {/* Left side - Logo, Help, Save */}
-        <div className="flex items-center">
+      <div className={`flex items-center justify-between px-4 sm:px-6 md:px-12 lg:px-20 py-3 sm:py-4 ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
+        {/* Left side - Logo, Help, Save (Right side in RTL) */}
+        <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
           <div className="relative w-5 h-5">
             <Image
               src="/logo.png"
@@ -230,7 +237,7 @@ const HostFooter: React.FC<HostFooterProps> = ({
             variant="link"
             size="icon"
             onClick={onHelp}
-            className="rounded-full ml-2 w-10 h-10 sm:w-10 sm:h-10"
+            className={`rounded-full w-10 h-10 sm:w-10 sm:h-10 ${isRTL ? 'mr-2' : 'ml-2'}`}
           >
             <HelpCircle className="h-5 w-5 sm:h-10 sm:w-10" />
           </Button>
@@ -244,16 +251,15 @@ const HostFooter: React.FC<HostFooterProps> = ({
           </Button>
         </div>
 
-        {/* Right side - Back and Next buttons */}
-        <div className="flex items-center gap-2 sm:gap-4">
+        {/* Right side - Back and Next buttons (Left side in RTL) */}
+        <div className={`flex items-center gap-2 sm:gap-4 ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
           <Button
             variant="ghost"
             onClick={handleBack}
             disabled={!canGoBackActual}
             size='sm'
-            
           >
-            {backLabel}
+            {actualBackLabel}
           </Button>
 
           <Button

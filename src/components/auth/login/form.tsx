@@ -30,11 +30,17 @@ import { FormError } from "../error/form-error";
 import { FormSuccess } from "../form-success";
 import { Social } from "../social";
 import { Suspense } from "react";
+import type { Dictionary } from "@/components/internationalization/dictionaries";
+
+interface LoginFormProps extends React.ComponentPropsWithoutRef<"div"> {
+  dictionary?: Dictionary;
+}
 
 export const LoginForm = ({
   className,
+  dictionary,
   ...props
-}: React.ComponentPropsWithoutRef<"div">) => {
+}: LoginFormProps) => {
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl");
   const tenant = searchParams.get("tenant");
@@ -126,7 +132,7 @@ export const LoginForm = ({
             <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-6">
               <div className="relative text-center muted after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-border">
                 <span className="relative z-10 bg-background px-2 text-muted-foreground">
-                  Or continue with
+                  {dictionary?.auth?.orContinueWith || "Or continue with"}
                 </span>
               </div>
               
@@ -141,7 +147,7 @@ export const LoginForm = ({
                           <Input
                             {...field}
                             disabled={isPending}
-                            placeholder="Two Factor Code"
+                            placeholder={dictionary?.auth?.twoFactorCode || "Two Factor Code"}
                           />
                         </FormControl>
                         <FormMessage />
@@ -161,7 +167,7 @@ export const LoginForm = ({
                               id="email"
                               type="email"
                               disabled={isPending}
-                              placeholder="Email"
+                              placeholder={dictionary?.auth?.email || "Email"}
                             />
                           </FormControl>
                           <FormMessage />
@@ -179,14 +185,14 @@ export const LoginForm = ({
                               id="password"
                               type="password"
                               disabled={isPending}
-                              placeholder="Password"
+                              placeholder={dictionary?.auth?.password || "Password"}
                             />
                           </FormControl>
                           <Link
                             href="/reset"
                             className="text-start hover:underline underline-offset-4"
                           >
-                            Forgot password?
+                            {dictionary?.auth?.forgotPassword || "Forgot password?"}
                           </Link>
                           <FormMessage />
                         </FormItem>
@@ -199,13 +205,13 @@ export const LoginForm = ({
                 <FormSuccess message={success} />
                 
                 <Button disabled={isPending} type="submit" className="w-full h-11">
-                  {showTwoFactor ? "Confirm" : "Login"}
+                  {showTwoFactor ? (dictionary?.auth?.confirm || "Confirm") : (dictionary?.auth?.signIn || "Login")}
                 </Button>
               </div>
               
               <div className="text-center muted">
                 <Link href="/join" className="hover:underline underline-offset-4">
-                  Don&apos;t have an account?
+                  {dictionary?.auth?.dontHaveAccount || "Don't have an account?"}
                 </Link>
               </div>
             </form>

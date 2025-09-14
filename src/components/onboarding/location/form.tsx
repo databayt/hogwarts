@@ -11,9 +11,10 @@ interface LocationFormProps {
   schoolId: string;
   initialData?: Partial<LocationFormData>;
   onSuccess?: () => void;
+  dictionary?: any;
 }
 
-export function LocationForm({ schoolId, initialData, onSuccess }: LocationFormProps) {
+export function LocationForm({ schoolId, initialData, onSuccess, dictionary }: LocationFormProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string>("");
@@ -90,9 +91,10 @@ export function LocationForm({ schoolId, initialData, onSuccess }: LocationFormP
         </div>
       )}
       
-      <MapForm 
+      <MapForm
         initialData={initialData}
         onLocationChange={setLocationData}
+        dictionary={dictionary}
       />
     </div>
   );

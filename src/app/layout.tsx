@@ -21,29 +21,7 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const session = await auth();
-  
-  return (
-    <html lang="en">
-      <body
-        className={cn(
-          "font-sans antialiased",
-          GeistSans.className,
-          GeistMono.variable
-        )}
-      >
-        <SessionProvider session={session}>
-          <NuqsAdapter>
-            <ThemeProvider>
-              <div className="layout-container">
-                <Toaster position="bottom-right" />
-                
-                {children}
-              </div>
-            </ThemeProvider>
-          </NuqsAdapter>
-        </SessionProvider>
-      </body>
-    </html>
-  );
+  // Root layout should not render html/body tags when using [lang] dynamic routes
+  // The [lang]/layout.tsx handles the html/body tags with proper locale support
+  return <>{children}</>;
 }

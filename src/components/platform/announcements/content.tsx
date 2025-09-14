@@ -1,12 +1,18 @@
 import { AnnouncementsTable } from '@/components/platform/announcements/table'
-import { announcementColumns, type AnnouncementRow } from '@/components/platform/announcements/columns'
+import { getAnnouncementColumns, type AnnouncementRow } from '@/components/platform/announcements/columns'
 import { SearchParams } from 'nuqs/server'
 import { announcementsSearchParams } from '@/components/platform/announcements/list-params'
 import { db } from '@/lib/db'
 import { getTenantContext } from '@/components/operator/lib/tenant'
 import { Shell as PageContainer } from '@/components/table/shell'
+import type { Dictionary } from '@/components/internationalization/dictionaries'
 
-export default async function AnnouncementsContent({ searchParams }: { searchParams: Promise<SearchParams> }) {
+interface AnnouncementsContentProps {
+  searchParams: Promise<SearchParams>
+  dictionary?: Dictionary['school']
+}
+
+export default async function AnnouncementsContent({ searchParams, dictionary }: AnnouncementsContentProps) {
   const sp = await announcementsSearchParams.parse(await searchParams)
   const { schoolId } = await getTenantContext()
   let data: AnnouncementRow[] = []
@@ -40,10 +46,10 @@ export default async function AnnouncementsContent({ searchParams }: { searchPar
     <PageContainer>
       <div className="flex flex-1 flex-col gap-4">
         <div>
-          <h1 className="text-xl font-semibold">Announcements</h1>
+          <h1 className="text-xl font-semibold">{dictionary?.announcements?.title || 'Announcements'}</h1>
           <p className="text-sm text-muted-foreground">Create and manage announcements for your school</p>
         </div>
-        <AnnouncementsTable data={data} columns={announcementColumns} pageCount={Math.max(1, Math.ceil(total / (sp.perPage || 20)))} />
+        <AnnouncementsTable data={data} columns={getAnnouncementColumns(dictionary?.announcements)} pageCount={Math.max(1, Math.ceil(total / (sp.perPage || 20)))} />
       </div>
     </PageContainer>
   )

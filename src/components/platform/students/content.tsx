@@ -1,18 +1,18 @@
 import { StudentsTable } from '@/components/platform/students/table'
-import { studentColumns, type StudentRow } from '@/components/platform/students/columns'
+import { getStudentColumns, type StudentRow } from '@/components/platform/students/columns'
 import { SearchParams } from 'nuqs/server'
 import { studentsSearchParams } from '@/components/platform/students/list-params'
 import { db } from '@/lib/db'
 import { getTenantContext } from '@/components/operator/lib/tenant'
-
-
+import type { Dictionary } from '@/components/internationalization/dictionaries'
 
 interface StudentsContentProps {
   searchParams: Promise<SearchParams>;
   school?: any;
+  dictionary?: Dictionary['school'];
 }
 
-export default async function StudentsContent({ searchParams, school }: StudentsContentProps) {
+export default async function StudentsContent({ searchParams, school, dictionary }: StudentsContentProps) {
   const sp = await studentsSearchParams.parse(await searchParams)
   const { schoolId } = await getTenantContext()
   
@@ -48,15 +48,17 @@ export default async function StudentsContent({ searchParams, school }: Students
     data = rows.map((s: any) => ({ id: s.id, name: [s.givenName, s.surname].filter(Boolean).join(' '), className: '-', status: s.userId ? 'active' : 'inactive', createdAt: (s.createdAt as Date).toISOString() }))
     total = count as number
   }
+  const dict = dictionary?.students || { title: 'Students' }
+
   return (
     <div className="flex flex-1 flex-col gap-4">
       <div>
         <h1 className="text-xl font-semibold">
-          {school?.name ? `${school.name} - Students` : 'Students'}
+          {school?.name ? `${school.name} - ${dict.title}` : dict.title}
         </h1>
         {/* <p className="text-sm text-muted-foreground">List and manage students (placeholder)</p> */}
       </div>
-      <StudentsTable data={data} columns={studentColumns} pageCount={Math.max(1, Math.ceil(total / (sp.perPage || 20)))} />
+      <StudentsTable data={data} columns={getStudentColumns(dictionary?.students)} pageCount={Math.max(1, Math.ceil(total / (sp.perPage || 20)))} />
     </div>
   )
 }

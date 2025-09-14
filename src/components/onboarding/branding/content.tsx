@@ -10,7 +10,12 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { COLOR_OPTIONS, RADIUS_OPTIONS, SHADOW_OPTIONS } from './constants';
 
-export default function BrandingContent() {
+interface BrandingContentProps {
+  dictionary?: any;
+}
+
+export default function BrandingContent({ dictionary }: BrandingContentProps) {
+  const dict = dictionary?.onboarding || {};
   const router = useRouter();
   const params = useParams();
   const { setCustomNavigation } = useHostValidation();
@@ -86,12 +91,12 @@ export default function BrandingContent() {
         <div className="space-y-6">
           <div className="space-y-3">
             <h3>
-              Create your school's
+              {dict.schoolBranding || "Create your school's"}
               <br />
-              brand identity
+              {dict.brandIdentity || "brand identity"}
             </h3>
             <p className="muted sm:text-base text-muted-foreground">
-              Upload your logo and customize your school's visual style.
+              {dict.brandingDescription || "Upload your logo and customize your school's visual style."}
             </p>
           </div>
 
@@ -99,7 +104,7 @@ export default function BrandingContent() {
           <div className="space-y-5">
             {/* Color Selection */}
             <div className="flex items-center gap-4">
-              <label className="muted font-medium w-24">Color</label>
+              <label className="muted font-medium w-24">{dict.color || "Color"}</label>
               <div className="flex gap-2">
                 {COLOR_OPTIONS.map((option) => (
                   <button
@@ -120,7 +125,7 @@ export default function BrandingContent() {
 
             {/* Border Radius Selection */}
             <div className="flex items-center gap-4">
-              <label className="muted font-medium w-24">Rounded</label>
+              <label className="muted font-medium w-24">{dict.rounded || "Rounded"}</label>
               <div className="flex gap-2">
                 {RADIUS_OPTIONS.map((option) => (
                   <Button
@@ -145,7 +150,7 @@ export default function BrandingContent() {
 
             {/* Shadow Selection */}
             <div className="flex items-center gap-4">
-              <label className="muted font-medium w-24">Shadow</label>
+              <label className="muted font-medium w-24">{dict.shadow || "Shadow"}</label>
               <div className="flex gap-2">
                 {SHADOW_OPTIONS.map((option) => (
                   <Button
@@ -189,9 +194,9 @@ export default function BrandingContent() {
                  
 
                   <div className="space-y-2">
-                    <p className="text-sm font-medium">Upload your school logo</p>
+                    <p className="text-sm font-medium">{dict.uploadSchoolLogo || "Upload your school logo"}</p>
                     <p className="text-xs text-muted-foreground">
-                      SVG, PNG, JPG (max. 800x800px)
+                      {dict.logoFileTypes || "SVG, PNG, JPG (max. 800x800px)"}
                     </p>
                     <div className="flex flex-col items-center gap-1">
                       <Button
@@ -212,7 +217,7 @@ export default function BrandingContent() {
                         } as React.CSSProperties}
                       >
                         <label htmlFor="logo-upload" className="cursor-pointer px-4 py-2">
-                          Choose file
+                          {dict.chooseFile || "Choose file"}
                         </label>
                       </Button>
                       <input
@@ -224,7 +229,7 @@ export default function BrandingContent() {
                       />
                       {logo && (
                         <p className="text-xs text-muted-foreground">
-                          File selected
+                          {dict.fileSelected || "File selected"}
                         </p>
                       )}
                     </div>

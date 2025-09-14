@@ -1,0 +1,755 @@
+{
+  "metadata": {
+    "title": "Hogwarts - School Management System",
+    "description": "Comprehensive school management platform for educational institutions"
+  },
+  "chatbot": {
+    "title": "Chat Assistant",
+    "startMessage": "Start a conversation...",
+    "thinking": "I'm thinking..."
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "success": "Success",
+    "cancel": "Cancel",
+    "save": "Save",
+    "edit": "Edit",
+    "delete": "Delete",
+    "confirm": "Confirm",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "home": "Home",
+    "about": "About",
+    "contact": "Contact",
+    "services": "Services",
+    "pricing": "Pricing",
+    "login": "Login",
+    "register": "Register",
+    "logout": "Logout",
+    "profile": "Profile",
+    "settings": "Settings",
+    "search": "Search",
+    "language": "Language",
+    "theme": "Theme",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System",
+    "platform": "Platform",
+    "brandName": "Hogwarts"
+  },
+  "navigation": {
+    "menu": "Menu",
+    "close": "Close",
+    "toggleMenu": "Toggle menu",
+    "features": "Features",
+    "blog": "Blog",
+    "pricing": "Pricing",
+    "documentation": "Documentation",
+    "brandName": "Hogwarts"
+  },
+  "auth": {
+    "signIn": "Login",
+    "signUp": "Sign Up",
+    "signOut": "Logout",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "forgotPassword": "Forgot Password?",
+    "resetPassword": "Reset Password",
+    "createAccount": "Create Account",
+    "alreadyHaveAccount": "Already have an account?",
+    "dontHaveAccount": "Don't have an account?",
+    "enterEmail": "Enter your email",
+    "enterPassword": "Enter your password",
+    "welcomeBack": "Welcome back",
+    "createNewAccount": "Create a new account",
+    "orContinueWith": "Or continue with",
+    "twoFactorCode": "Two Factor Code",
+    "confirm": "Confirm"
+  },
+  "marketing": {
+    "hero": {
+      "title": "Automate Education,\nelevate the curiosity.",
+      "titleMobile": "Automate\nEducation\nelevate\nthe curiosity.",
+      "subtitle": "Educational management system streamlining operations for students, educators, and school leaders. Transform your institution's efficiency today.",
+      "badge": "700+ School automated",
+      "appointment": "Get Started",
+      "services": "GitHub"
+    },
+    "features": {
+      "title": "Features",
+      "subtitle": "Everything you need to build your next project"
+    },
+    "pricing": {
+      "title": "Pricing",
+      "subtitle": "Choose the plan that works for you",
+      "monthly": "Monthly",
+      "yearly": "Yearly",
+      "free": "Free",
+      "pro": "Pro",
+      "enterprise": "Enterprise"
+    },
+    "logoCloud": {
+      "trustedBy": "Trusted by amazing\nsponsors"
+    },
+    "time": {
+      "title": "Time",
+      "subtitle": "We save the most valuable resource - your time."
+    },
+    "testimonial": {
+      "title": "Testimonials",
+      "subtitle": "Trusted by educational institutions worldwide to streamline operations and enhance learning outcomes.",
+      "items": [
+        {
+          "name": "Amira Bashir",
+          "role": "School Principal",
+          "content": "40% reduction in admin work. Teachers focus on teaching."
+        },
+        {
+          "name": "Osman Abdout",
+          "role": "District Superintendent",
+          "content": "Streamlined attendance and grades. Staff communication improved."
+        },
+        {
+          "name": "Fatima Mahdi",
+          "role": "Academic Director",
+          "content": "Automated enrollment and scheduling. Efficiency improved dramatically."
+        },
+        {
+          "name": "Ahmed Hassan",
+          "role": "University Dean",
+          "content": "Revolutionized student management. Faculty focus on research."
+        },
+        {
+          "name": "Layla Osman",
+          "role": "Education Coordinator",
+          "content": "Simplified parent-teacher communication. Highly effective for our district."
+        },
+        {
+          "name": "Mohamed Khalid",
+          "role": "School Administrator",
+          "content": "Enhanced student tracking and attendance. Essential for education."
+        }
+      ]
+    },
+    "boost": {
+      "title": "Boost",
+      "subtitle": "Thank you for the boost",
+      "becomePatron": "Become a Patron",
+      "buyMeCoffee": "Buy me a coffee"
+    },
+    "letsWorkTogether": {
+      "title": "Let's Work Together",
+      "description": "Ready to revolutionize your educational institution with advanced automation? Experience streamlined operations and enhanced learning outcomes for students and educators.",
+      "emailPlaceholder": "Email address",
+      "messagePlaceholder": "What educational processes would you like to automate?",
+      "submit": "Submit",
+      "liveChat": "Live chat"
+    },
+    "faqs": {
+      "title": "Frequently Asked Questions",
+      "titleBreak": "Frequently\nAsked\nQuestions",
+      "subtitle": "Everything you need to know about our platform and services.",
+      "openSourceTitle": "Is the educational platform really open source?",
+      "openSourceDesc": "Yes! Every component and building block is open source. We charge for crafting fully functional educational solutions and ensuring their ongoing reliability.",
+      "openSourceItems": [
+        "All educational components and templates are freely available",
+        "Contributors earn a share of the value they help create",
+        "Full transparency in development and educational processes",
+        "Community-driven innovation in education technology"
+      ],
+      "items": [
+        {
+          "question": "What services do you offer?",
+          "answer": "We automate repetitive business processes, streamline workflows, and build custom solutions that save you time and reduce manual work.",
+          "list": [
+            "Data processing and analysis automation",
+            "Workflow optimization and task automation",
+            "Custom enterprise applications and integrations"
+          ]
+        },
+        {
+          "question": "How much do you charge?",
+          "answer": "Our pricing is transparent and based on the complexity and scope of your project. We offer competitive rates and flexible payment terms."
+        },
+        {
+          "question": "How long does it take to complete a project?",
+          "answer": "Project timelines vary based on complexity. Simple automations can be completed in days, while complex enterprise solutions may take weeks or months."
+        },
+        {
+          "question": "Do you provide ongoing support?",
+          "answer": "Yes, we offer comprehensive support and maintenance packages to ensure your solutions continue to work optimally."
+        },
+        {
+          "question": "Can you work with my existing systems?",
+          "answer": "Absolutely! We specialize in integrating with existing systems and can work with your current infrastructure."
+        },
+        {
+          "question": "I'm busy with other commitments. Can I still contribute?",
+          "answer": "Perfect! Most contributors work part-time:",
+          "list": [
+            "No minimum time commitment required",
+            "Contribute when your schedule allows",
+            "Start with small tasks and grow your involvement",
+            "Earn proportional to your contribution level"
+          ]
+        },
+        {
+          "question": "How do I start contributing?",
+          "answer": "",
+          "list": [
+            "Explore the codebase at our GitHub repository",
+            "Join our community discussions to introduce yourself",
+            "Pick a first issue - we have 'good first issue' labels for newcomers",
+            "Submit a pull request - start small and build up",
+            "Earn your first revenue share as your contributions are used"
+          ]
+        },
+        {
+          "question": "How do I get started?",
+          "answer": "Contact us for a consultation where we'll discuss your specific needs, challenges, and goals. We'll recommend the best approach and provide a detailed proposal."
+        },
+        {
+          "question": "Can I use Hogwarts components in my own projects?",
+          "answer": "Yes! All components are open source and can be used in your projects according to their respective licenses. We encourage reuse and building upon our work."
+        },
+        {
+          "question": "Can I include Hogwarts projects in my portfolio?",
+          "answer": "Absolutely! Working with us provides multiple portfolio benefits:",
+          "list": [
+            "Add real-world enterprise projects to your portfolio",
+            "Showcase your contributions to open-source",
+            "Demonstrate experience with modern tech stack",
+            "Build a public contribution history on GitHub"
+          ]
+        },
+        {
+          "question": "How does the earning model work for real-world projects?",
+          "answer": "Our earning model has multiple streams:",
+          "list": [
+            "Revenue share from components used in client projects",
+            "Direct earnings from client project implementations",
+            "Ongoing maintenance and support revenue",
+            "Bonus rewards for high-impact contributions",
+            "Ownership stake in projects you help build"
+          ]
+        },
+        {
+          "question": "Still have questions?",
+          "answer": "",
+          "list": [
+            "Join our community discussions on GitHub",
+            "Join our Discord community",
+            "Contact us for a free consultation",
+            "Check our documentation",
+            "Email us at hello@hogwarts.edu"
+          ],
+          "links": [
+            {
+              "text": "Join our community discussions on GitHub",
+              "href": "https://github.com/hogwarts/discussions"
+            },
+            {
+              "text": "Join our Discord community",
+              "href": "https://discord.gg/hogwarts"
+            },
+            {
+              "text": "Check our documentation at hogwarts.edu/docs",
+              "href": "/docs"
+            },
+            {
+              "text": "Email us at hello@hogwarts.edu",
+              "href": "mailto:hello@hogwarts.edu"
+            }
+          ]
+        }
+      ]
+    },
+    "parallax": {
+      "design": "Design",
+      "automate": "Automate", 
+      "analytics": "Analytics",
+      "efficient": "Efficient"
+    },
+    "ready": {
+      "title": "Ready to begin a journey of wonder?",
+      "description": "Every great brand started with a single step. Take yours today and join hundreds of brands who have wrote their story in our magical world of design.",
+      "startJourney": "Let the journey begin",
+      "scheduleMeeting": "Schedule a Meeting"
+    },
+    "openSource": {
+      "title": "Proudly Open Source",
+      "description": "Databayt is open source and powered by open source software.",
+      "descriptionLine2": "The code is available on",
+      "github": "GitHub",
+      "contributors": "Contributors"
+    },
+    "readyToBuild": {
+      "quote": "This platform transformed how we manage client relationships. The intuitive design and powerful features helped us scale from a small agency to serving Fortune 500 companies.",
+      "author": "Ahmed Elardi",
+      "position": "CEO, Pixel Studios"
+    },
+    "footer": {
+      "product": "Product",
+      "company": "Company", 
+      "services": "Services",
+      "support": "Support",
+      "readyToBuild": "Ready to build?",
+      "getStarted": "Get started"
+    },
+    "stack": {
+      "title": "Stack",
+      "descriptionMobile": "Databayt leverages state-of-the-art technology to craft innovative applications.",
+      "description": "Databayt leverages state-of-the-art technology to craft innovative and modern applications, delivering seamless performance.",
+      "nextjs": {
+        "title": "Next.js 15",
+        "description": "App dir, Routing, Layouts, Loading UI and API routes."
+      },
+      "react": {
+        "title": "React 19", 
+        "description": "Server and Client Components.\nUse hook."
+      },
+      "database": {
+        "title": "Database",
+        "description": "ORM using Prisma and deployed on PlanetScale."
+      },
+      "components": {
+        "title": "Components",
+        "description": "UI components built using Radix UI and styled with Tailwind CSS."
+      },
+      "authentication": {
+        "title": "Authentication",
+        "description": "Secure auth using Auth.js with role-based access."
+      },
+      "subscriptions": {
+        "title": "Subscriptions",
+        "description": "Free and paid subscriptions using\nStripe."
+      }
+    },
+    "productsSection": {
+      "title": "Product",
+      "description": "Innovative automation solutions designed to save the origin of all value, time."
+    },
+    "projectsSection": {
+      "title": "Project",
+      "description": "Portfolio showcases, we've crafted for diverse industries.",
+      "tabs": {
+        "featured": "Featured",
+        "company": "Company",
+        "education": "Education",
+        "health": "Health",
+        "ecommerce": "E-commerce",
+        "states": "States"
+      },
+      "tabsMobile": {
+        "featured": "Featured",
+        "company": "Co",
+        "education": "Edu",
+        "health": "Health",
+        "ecommerce": "E-comm",
+        "states": "States"
+      }
+    },
+    "projects": {
+      "mkan": {
+        "title": "Mkan",
+        "description": "Airbnb like Real estate platform, diversity of properties and hotels",
+        "category": "Real Estate Platform"
+      },
+      "hogwarts": {
+        "title": "Hogwarts",
+        "description": "Organization automation, attendance, exams, grades and more",
+        "category": "Education System"
+      },
+      "nmbd": {
+        "title": "NMBD",
+        "description": "Community national movement for building & development",
+        "category": "Development Organization"
+      },
+      "shifa": {
+        "title": "Shifa",
+        "description": "Comprehensive healthcare management system for hospitals and clinics",
+        "category": "Healthcare"
+      },
+      "giats": {
+        "title": "Giats",
+        "description": "Say hi to Giats portfolio showcasing creative design and development work",
+        "category": "E-commerce"
+      },
+      "camille": {
+        "title": "Camille",
+        "description": "Retail e-commerce platform for modern online shopping experience",
+        "category": "E-commerce"
+      },
+      "acme": {
+        "title": "Acme",
+        "description": "Company automation. Managing projects, reports, calculations, and docs",
+        "category": "Company"
+      }
+    },
+    "featureCards": {
+      "discovery": {
+        "title": "Discovery",
+        "subtitle": "& Research"
+      },
+      "design": {
+        "title": "Design",
+        "subtitle": "& Prototyping"
+      },
+      "development": {
+        "title": "Development",
+        "subtitle": "& Testing"
+      },
+      "launch": {
+        "title": "Launch",
+        "subtitle": "& Support"
+      }
+    },
+    "content": {
+      "storyTeller": {
+        "logo": "Story TELLER",
+        "title": "AI Story Generation",
+        "description": "Transform your ideas into compelling stories with our talented storytelling team. Create engaging narratives, scripts, and content that captivates your audience.",
+        "ctaText": "Start Writing",
+        "secondaryCtaText": "Learn More"
+      },
+      "dreamMachine": {
+        "logo": "Dream MACHINE",
+        "title": "AI-Powered Video Creation",
+        "description": "Bring your ideas to life — ideate, visualize, and design unique themes with ease. Share your dreams with the world using our intuitive wizard.",
+        "ctaText": "Try Now",
+        "secondaryCtaText": "Get Expert"
+      },
+      "codebase": {
+        "logo": "CODEBASE",
+        "title": "AI Story Generation",
+        "description": "Automate the boring. at Databayt we're building codebase for business automation.",
+        "ctaText": "Codebase",
+        "secondaryCtaText": "Learn more"
+      },
+      "acme": {
+        "logo": "HOGWARTS",
+        "title": "Education Management System",
+        "description": "Education automation. managing grades, attendance, assignments, and student progress tracking.",
+        "ctaText": "Live Preview",
+        "secondaryCtaText": "Get App"
+      }
+    },
+    "about": {
+      "backLink": "back",
+      "introduction": {
+        "paragraph1": "Automate the boring. at Databayt we're building codebase for business automation, one atomic component at a time. Every line of code is open source, every contribution is valued, and every developer may shape the future of how businesses operate.",
+        "paragraph2": "We sell the origin of all value — we sell Time, the currency that drives the world — what if you could reclaim yours and focus on what truly matters? It's more than a service — it's an escape from the matrix. A restoration of time through the elimination of repetitive tasks, streamlined operations, and automated processes. Break free. Reclaim your hours.",
+        "paragraph3": "The Repository of Wonders. Think of our codebase as a living library where every contribution becomes part of something greater. From atomic components to complete templates, from blocks to micro-services to full automation solutions—we're creating the building blocks that will power tomorrow's businesses.",
+        "paragraph4": "Follow along as we figure this out together. This isn't just about building software; it's about creating a collaborative ecosystem where developers, businesses, and innovators unite to solve real problems. Every contribution you make doesn't just help one project—it becomes part of a growing foundation that serves countless businesses worldwide."
+      },
+      "whatWeDo": {
+        "title": "What We Do",
+        "development": "Development - Enterprise-grade applications and platforms",
+        "automation": "Automation - Streamlined workflows and process optimization",
+        "consulting": "Consulting - Technical expertise and implementation support", 
+        "openSource": "Open Source - Community-driven development and innovation"
+      },
+      "businessModel": {
+        "title": "Business Model",
+        "perProject": {
+          "title": "Per Project",
+          "description": "Custom solutions tailored to specific client requirements and business processes. Each project delivers unique automation systems designed to solve particular challenges and operational needs."
+        },
+        "partners": {
+          "title": "Partners", 
+          "description": "Partnership opportunities for businesses seeking to outsource technology development, access specialized talent for temporary projects and specific technical expertise."
+        },
+        "codebase": {
+          "title": "Codebase",
+          "description": "Codebase executes the majority of the task, through accumulated, reusable components. Contributors who expand this foundation earn a share of the value it generates."
+        },
+        "saas": {
+          "title": "SaaS",
+          "description": "Ready-to-deploy software products sold to multiple organizations with similar needs. act as a go-to central hub for businesses seeking automation solutions."
+        }
+      },
+      "coreValues": {
+        "title": "Core Values",
+        "transparency": {
+          "title": "Transparency",
+          "description": "Every decision, from technical architecture to business strategy, is documented and accessible to the community. We use GitHub to manage our codebase and discussions, ensuring transparency, traceability, and open collaboration. Contributions are publicly tracked, so every developer can see their impact and know the process is clear and fair. We believe this openness builds trust and enables better contributions."
+        },
+        "innovation": {
+          "title": "Innovation",
+          "description": "Our best ideas come from our diverse community of developers, business professionals, and users. We actively encourage contributions and value every perspective. We're actively building in: Business Automation, Data Analytics, AI Agents, Blockchain, and Distributed Computing."
+        },
+        "growth": {
+          "title": "Growth",
+          "description": "We balance rapid innovation with long-term sustainability, ensuring our solutions remain robust and our business model benefits all stakeholders."
+        },
+        "excellence": {
+          "title": "Excellence",
+          "description": "Every product we ship meets the highest standards of quality, security, and performance. Our reputation is built on reliable, enterprise-grade solutions."
+        }
+      }
+    },
+    "pricing": {
+      "badge": "ROI Guaranteed",
+      "title": "Simple. Transparent.",
+      "subtitle": "All components and building blocks are open source — we charge for crafting fully functional masterpieces and ensuring their ongoing reliability.",
+      "headerSection": {
+        "label": "Pricing",
+        "title": "Transform your digital presence",
+        "subtitle": "Choose the perfect plan for your business needs"
+      },
+      "plans": {
+        "hobby": {
+          "title": "Hobby",
+          "description": "Get started for free",
+          "benefits": [
+            "Up to 5 pages website",
+            "Basic responsive design",
+            "Contact form integration"
+          ]
+        },
+        "pro": {
+          "title": "Pro",
+          "description": "For growing businesses",
+          "benefits": [
+            "Up to 15 pages website",
+            "Advanced animations",
+            "SEO optimization",
+            "Custom branding"
+          ]
+        },
+        "ultra": {
+          "title": "Ultra",
+          "description": "For large organizations",
+          "benefits": [
+            "Unlimited pages and features",
+            "Custom integrations"
+          ]
+        }
+      },
+      "constants": {
+        "free": "Free",
+        "includes": "Includes",
+        "everythingInHobby": "Everything in Hobby, plus",
+        "everythingInPro": "Everything in Pro, plus",
+        "startTrial": "Start Trial",
+        "getPro": "Get Pro",
+        "getUltra": "Get Ultra",
+        "monthly": "Monthly",
+        "yearly": "Yearly (save 20%)",
+        "perMonth": "/mo",
+        "moreInfo": "More info"
+      },
+      "planNames": {
+        "hobby": "Hobby",
+        "pro": "Pro",
+        "ultra": "Ultra",
+        "enterprise": "Enterprise"
+      },
+      "enterprise": {
+        "badge": "Enterprise",
+        "title": "Need Something Bigger?",
+        "description": "For enterprises and large organizations, we offer custom solutions with dedicated teams, SLAs, and specialized support tailored to your unique requirements.",
+        "talkToSales": "Talk to Sales"
+      },
+      "comparePlans": {
+        "title": "Compare Plans",
+        "subtitle": "Find the perfect plan tailored for your business needs!",
+        "features": {
+          "websitePages": "Website pages",
+          "responsiveDesign": "Responsive design",
+          "customBranding": "Custom branding",
+          "seoOptimization": "SEO optimization",
+          "contactForms": "Contact forms",
+          "animationsEffects": "Animations & effects",
+          "contentManagement": "Content management",
+          "performanceOptimization": "Performance optimization",
+          "securityFeatures": "Security features",
+          "analyticsReporting": "Analytics & reporting",
+          "support": "Support",
+          "revisions": "Revisions",
+          "hosting": "Hosting",
+          "backupMaintenance": "Backup & maintenance",
+          "customIntegrations": "Custom integrations",
+          "trainingDocumentation": "Training & documentation",
+          "launchAssistance": "Launch assistance",
+          "performanceMonitoring": "Performance monitoring"
+        },
+        "values": {
+          "upTo5": "Up to 5",
+          "upTo15": "Up to 15",
+          "unlimited": "Unlimited",
+          "basic": "Basic",
+          "advanced": "Advanced",
+          "premium": "Premium",
+          "custom": "Custom",
+          "static": "Static",
+          "basicCms": "Basic CMS",
+          "advancedCms": "Advanced CMS",
+          "customCms": "Custom CMS",
+          "basicSsl": "Basic SSL",
+          "advancedSsl": "Advanced SSL",
+          "premiumSsl": "Premium SSL",
+          "customSecurity": "Custom Security",
+          "email": "Email",
+          "priority": "Priority",
+          "support24_7": "24/7",
+          "support24_7Manager": "24/7 + Manager",
+          "oneRound": "1 round",
+          "threeRounds": "3 rounds",
+          "shared": "Shared",
+          "vps": "VPS",
+          "dedicated": "Dedicated",
+          "monthly": "Monthly",
+          "weekly": "Weekly",
+          "daily": "Daily",
+          "realTime": "Real-time",
+          "selfService": "Self-service",
+          "guided": "Guided",
+          "fullService": "Full service",
+          "whiteGlove": "White-glove",
+          "basicGuides": "Basic guides",
+          "videoTutorials": "Video tutorials",
+          "customTraining": "Custom training"
+        },
+        "tooltips": {
+          "websitePages": "Number of website pages included in your plan.",
+          "responsiveDesign": "Mobile-friendly design optimization level.",
+          "customBranding": "Brand colors and logo available from Pro.",
+          "seoOptimization": "Search engine optimization and meta tag setup.",
+          "contactForms": "Contact form functionality and integration options.",
+          "animationsEffects": "Interactive animations and visual effects.",
+          "contentManagement": "Content management system capabilities.",
+          "performanceOptimization": "Website speed and performance optimization.",
+          "securityFeatures": "Security certificates and protection features.",
+          "analyticsReporting": "Website analytics and performance reporting.",
+          "support": "Customer support level and response time.",
+          "revisions": "Number of design revisions included.",
+          "hosting": "Website hosting infrastructure type.",
+          "backupMaintenance": "Backup frequency and maintenance schedule.",
+          "customIntegrations": "Third-party service integrations and APIs.",
+          "trainingDocumentation": "User training and documentation provided.",
+          "launchAssistance": "Website launch and deployment assistance.",
+          "performanceMonitoring": "Ongoing website performance monitoring."
+        }
+      },
+      "faqs": {
+        "title": "Frequently Asked Questions",
+        "subtitle": "Your guide to pricing and plans with Databayt.",
+        "questions": [
+          {
+            "question": "What's included in the One Project plan?",
+            "answer": "The One Project plan includes complete custom development for a single automation solution, including consultation, development, testing, and deployment."
+          },
+          {
+            "question": "How does the hourly billing work for Strategic Partner?",
+            "answer": "With Strategic Partner, you get access to our development team at $10/hour. Perfect for ongoing projects, maintenance, or when you need flexible development resources."
+          },
+          {
+            "question": "Can I switch between plans?",
+            "answer": "Yes, you can upgrade or downgrade your plan at any time. Changes will be reflected in your next billing cycle."
+          },
+          {
+            "question": "Do you offer enterprise solutions?",
+            "answer": "Absolutely! For enterprise needs, we offer custom solutions with dedicated teams, SLAs, and specialized support. Contact us for a tailored quote."
+          }
+        ]
+      }
+    },
+    "services": {
+      "title": "Service",
+      "description": "We offer comprehensive web design and branding solutions to help your business stand out in the digital landscape. From stunning websites to memorable brand identities.",
+      "design": {
+        "title": "Design",
+        "description": "Creating stunning visual designs with modern UI/UX, graphics, and layouts. We bring innovative concepts to life with creative excellence."
+      },
+      "branding": {
+        "title": "Branding",
+        "description": "Create a memorable brand identity that resonates with your audience. From logos to complete brand guidelines, we craft visual stories that build trust and recognition."
+      },
+      "creative": {
+        "title": "Creative",
+        "description": "We offer comprehensive creative services including content creation, poster design, and professional video editing. Our team specializes in bringing your vision to life."
+      },
+      "sales": {
+        "title": "Sales",
+        "description": "Effective sales strategies to increase your revenue and grow your business.",
+        "workTogether": "Let's work together",
+        "readyToTakeNext": "Ready to take your business to the next level?",
+        "collectGift": "Collect your gift"
+      }
+    }
+  },
+  "footer": {
+    "copyright": "© copyright free.",
+    "poweredBy": "Powered by",
+    "about": "ABOUT",
+    "contribute": "CONTRIBUTE",
+    "solution": "SOLUTION",
+    "support": "SUPPORT",
+    "paradigm": "Paradigm",
+    "contributors": "Contributors",
+    "careers": "Careers",
+    "investors": "Investors",
+    "documentation": "Documentation",
+    "guidelines": "Guidelines",
+    "inspiration": "Inspiration",
+    "issues": "Issues",
+    "pullRequests": "Pull Requests",
+    "codeOfConduct": "Code of Conduct",
+    "workflow": "Workflow",
+    "integration": "Integration",
+    "aiAgent": "AI Agent",
+    "features": "Features",
+    "blockchain": "Blockchain",
+    "helpCenter": "Help Center",
+    "faqs": "FAQs",
+    "contact": "Contact",
+    "sitemap": "Sitemap",
+    "terms": "Terms",
+    "privacy": "Privacy",
+    "safety": "Safety",
+    "status": "Status",
+    "brandName": "Hogwarts",
+    "newsletter": {
+      "title": "Newsletter",
+      "emailPlaceholder": "Email address",
+      "subscribe": "Subscribe"
+    },
+    "data": {
+      "product": [
+        "Web Design",
+        "Development",
+        "Branding",
+        "E-commerce",
+        "Mobile Apps",
+        "UI/UX Design",
+        "WordPress",
+        "Shopify"
+      ],
+      "company": [
+        "About",
+        "Careers",
+        "Blog",
+        "Case Studies"
+      ],
+      "services": [
+        "Startups",
+        "Agencies"
+      ],
+      "support": [
+        "Help Center",
+        "Contact",
+        "Documentation",
+        "Service Status"
+      ]
+    }
+  },
+  "errors": {
+    "notFound": "Page Not Found",
+    "serverError": "Something went wrong",
+    "unauthorized": "You are not authorized to access this page"
+  }
+}

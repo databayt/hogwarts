@@ -1,3 +1,4 @@
+import type { Dictionary } from "@/components/internationalization/dictionaries";
 import { db } from "@/lib/db";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -7,9 +8,11 @@ import { Users, FileText, Bell, Settings, TrendingUp, DollarSign, CheckCircle, A
 
 interface AdminDashboardProps {
   user: any;
+  dictionary?: Dictionary["school"];
+  user: any;
 }
 
-export async function AdminDashboard({ user }: AdminDashboardProps) {
+export async function AdminDashboard({ user, dictionary }: AdminDashboardProps) {
   // Fetch real data from database
   const [students, teachers, announcements] = await Promise.all([
     db.student.count({ where: { schoolId: user.schoolId } }),

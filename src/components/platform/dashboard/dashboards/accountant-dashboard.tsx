@@ -1,3 +1,4 @@
+import type { Dictionary } from "@/components/internationalization/dictionaries";
 import { db } from "@/lib/db";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -7,9 +8,11 @@ import { DollarSign, CreditCard, FileText, TrendingUp, AlertTriangle, Calendar, 
 
 interface AccountantDashboardProps {
   user: any;
+  dictionary?: Dictionary["school"];
+  user: any;
 }
 
-export async function AccountantDashboard({ user }: AccountantDashboardProps) {
+export async function AccountantDashboard({ user, dictionary }: AccountantDashboardProps) {
   // Fetch real data from database
   const [totalInvoices, paidInvoices, unpaidInvoices] = await Promise.all([
     db.userInvoice.count({ where: { schoolId: user.schoolId } }),
