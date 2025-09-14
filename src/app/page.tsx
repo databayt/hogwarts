@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
-import { getLocale } from '@/components/internationalization/locale';
+import { i18n } from '@/components/internationalization/config';
 
 export default async function RootPage() {
-  const locale = await getLocale();
-  redirect(`/${locale}`);
+  // Redirect to default locale
+  redirect(`/${i18n.defaultLocale}`);
 }
