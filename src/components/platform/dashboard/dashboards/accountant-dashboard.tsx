@@ -9,7 +9,6 @@ import { DollarSign, CreditCard, FileText, TrendingUp, AlertTriangle, Calendar, 
 interface AccountantDashboardProps {
   user: any;
   dictionary?: Dictionary["school"];
-  user: any;
 }
 
 export async function AccountantDashboard({ user, dictionary }: AccountantDashboardProps) {

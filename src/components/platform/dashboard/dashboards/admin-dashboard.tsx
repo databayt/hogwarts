@@ -9,7 +9,6 @@ import { Users, FileText, Bell, Settings, TrendingUp, DollarSign, CheckCircle, A
 interface AdminDashboardProps {
   user: any;
   dictionary?: Dictionary["school"];
-  user: any;
 }
 
 export async function AdminDashboard({ user, dictionary }: AdminDashboardProps) {

@@ -9,7 +9,6 @@ import { TrendingUp, AlertTriangle, Users, FileText, Calendar, CheckCircle, Awar
 interface PrincipalDashboardProps {
   user: any;
   dictionary?: Dictionary["school"];
-  user: any;
 }
 
 export async function PrincipalDashboard({ user, dictionary }: PrincipalDashboardProps) {

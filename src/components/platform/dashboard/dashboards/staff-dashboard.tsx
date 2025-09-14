@@ -9,7 +9,6 @@ import { Users, Search, FileText, Settings, Clock, AlertTriangle, CheckCircle, B
 interface StaffDashboardProps {
   user: any;
   dictionary?: Dictionary["school"];
-  user: any;
 }
 
 export async function StaffDashboard({ user, dictionary }: StaffDashboardProps) {
