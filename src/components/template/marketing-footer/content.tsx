@@ -8,7 +8,37 @@ interface MarketingFooterProps {
 }
 
 export function MarketingFooter({ dictionary }: MarketingFooterProps) {
-  const footerDict = dictionary?.footer || {};
+  const footerDict = dictionary?.footer || {
+    about: "ABOUT",
+    paradigm: "Paradigm",
+    contributors: "Contributors",
+    careers: "Careers",
+    investors: "Investors",
+    contribute: "CONTRIBUTE",
+    documentation: "Documentation",
+    guidelines: "Guidelines",
+    inspiration: "Inspiration",
+    issues: "Issues",
+    pullRequests: "Pull Requests",
+    codeOfConduct: "Code of Conduct",
+    solution: "SOLUTION",
+    workflow: "Workflow",
+    integration: "Integration",
+    aiAgent: "AI Agent",
+    features: "Features",
+    blockchain: "Blockchain",
+    support: "SUPPORT",
+    helpCenter: "Help Center",
+    faqs: "FAQs",
+    contact: "Contact",
+    sitemap: "Sitemap",
+    brandName: "Hogwarts",
+    copyright: "© copyright free.",
+    terms: "Terms",
+    privacy: "Privacy",
+    safety: "Safety",
+    status: "Status"
+  };
 
   const footerSections = [
     {
