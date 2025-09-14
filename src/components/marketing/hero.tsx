@@ -13,6 +13,7 @@ const Hero = ({ dictionary }: HeroProps) => {
   const heroDict = dictionary?.marketing?.hero || {
     title: "Automate Education,\nelevate the curiosity.",
     subtitle: "Educational management system streamlining operations for students, educators, and school leaders. Transform your institution's efficiency today.",
+    badge: "700+ School automated",
     appointment: "Get Started",
     services: "GitHub"
   }
