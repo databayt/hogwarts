@@ -203,8 +203,8 @@ Use these path aliases:
 ## School Onboarding Flow
 
 The onboarding follows this exact sequence (defined in `host-footer.tsx`):
-1. about-school → 2. title → 3. description → 4. location → 5. stand-out → 
-6. capacity → 7. branding → 8. import → 9. finish-setup → 10. join → 
+1. about-school → 2. title → 3. description → 4. location → 5. stand-out →
+6. capacity → 7. branding → 8. import → 9. finish-setup → 10. join →
 11. visibility → 12. price → 13. discount → 14. legal
 
 Navigation is handled by `HostFooter` component with context-aware validation.
@@ -232,4 +232,4 @@ Navigation is handled by `HostFooter` component with context-aware validation.
 
 - **Platform Description**: Hogwarts is a school automation platform that manages students, faculty, and academic processes with an intuitive interface
 - **Documentation**: Full documentation available at https://ed.databayt.org/docs
-- **License**: MIT License 
+- **License**: MIT License

@@ -16,6 +16,55 @@ const nextConfig: NextConfig = {
     dangerouslyAllowSVG: true,
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
+
+  // Turbopack optimization - automatically handles code splitting
+  experimental: {
+    // Optimize specific package imports for better tree-shaking
+    optimizePackageImports: [
+      '@/components/ui',
+      '@/components/atom',
+      'lucide-react',
+      'recharts',
+      'date-fns',
+      '@tanstack/react-table',
+      'zod',
+      'react-hook-form',
+      '@hookform/resolvers',
+    ],
+    // Enable partial prerendering for better performance
+    ppr: true,
+    // Turbopack specific configurations
+    turbo: {
+      resolveAlias: {
+        // Add any import aliases if needed
+      },
+    },
+  },
+
+  // Compiler options for production build
+  compiler: {
+    // Remove console.log in production (keep errors and warnings)
+    removeConsole: process.env.NODE_ENV === 'production' ? {
+      exclude: ['error', 'warn'],
+    } : false,
+  },
+
+  // Disable powered by header for security
+  poweredByHeader: false,
+
+  // Enable response compression
+  compress: true,
+
+  // Generate build ID based on git commit or timestamp
+  generateBuildId: async () => {
+    return process.env.BUILD_ID || Date.now().toString();
+  },
+
+  // Optimize production builds
+  productionBrowserSourceMaps: false,
+
+  // Strict mode for better debugging
+  reactStrictMode: true,
 };
 
 const withMDX = createMDX({

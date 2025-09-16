@@ -4,6 +4,13 @@ import { auth } from "@/auth";
 import { match } from '@formatjs/intl-localematcher';
 import Negotiator from 'negotiator';
 import { i18n, type Locale } from "@/components/internationalization/config";
+import { logger, generateRequestId } from "@/lib/logger";
+import { addSecurityHeaders } from "@/middleware/security-headers";
+
+// Helper function to apply security headers to response
+function applySecurityHeaders(response: NextResponse, request: NextRequest): NextResponse {
+  return addSecurityHeaders(request, response);
+}
 
 // Helper function to get locale from request
 function getLocale(request: NextRequest): Locale {
@@ -36,10 +43,16 @@ function stripLocaleFromPathname(pathname: string): string {
 }
 
 export async function middleware(req: NextRequest) {
+  // Generate requestId for this request
+  const requestId = generateRequestId();
+
   const url = req.nextUrl.clone();
   const host = req.headers.get("host") || "";
   const userAgent = req.headers.get("user-agent") || "";
   const referer = req.headers.get("referer") || "";
+
+  // Create base logging context
+  const baseContext = { requestId, host, pathname: url.pathname };
 
   // Ignore static files and Next internals
   if (
@@ -71,28 +84,32 @@ export async function middleware(req: NextRequest) {
   const isLoggedIn = !!session?.user;
 
   // Debug logging for subdomain handling
-  console.log('🌐 MIDDLEWARE REQUEST:', {
-    host,
-    pathname: url.pathname,
+  logger.debug('MIDDLEWARE REQUEST', {
+    ...baseContext,
     pathnameWithoutLocale,
     currentLocale,
     search: url.search,
     referer,
-    timestamp: new Date().toISOString(),
-    isBot: userAgent.includes('bot')
+    isBot: userAgent.includes('bot'),
+    userId: session?.user?.id,
+    schoolId: session?.user?.schoolId
   });
 
   // Allow auth routes to be handled normally (don't rewrite for subdomains)
   if (authRoutes.includes(pathnameWithoutLocale)) {
-    console.log('🔐 AUTH ROUTE - No rewrite:', { pathname: pathnameWithoutLocale, host });
+    logger.debug('AUTH ROUTE - No rewrite', { ...baseContext, pathname: pathnameWithoutLocale });
 
     // Add locale to auth routes if not present
     if (!pathnameHasLocale) {
       url.pathname = `/${currentLocale}${pathnameWithoutLocale}`;
-      return NextResponse.redirect(url);
+      const response = NextResponse.redirect(url);
+      response.headers.set('x-request-id', requestId);
+      return response;
     }
 
-    return NextResponse.next();
+    const response = NextResponse.next();
+    response.headers.set('x-request-id', requestId);
+    return response;
   }
 
   // Authentication protection for protected routes
@@ -102,51 +119,58 @@ export async function middleware(req: NextRequest) {
 
   // Redirect to login if accessing protected routes without authentication
   if (!isLoggedIn && !isPublicRoute && !isDocsRoute) {
-    console.log('🚫 UNAUTHORIZED ACCESS - Redirecting to login:', {
-      pathname: pathnameWithoutLocale,
-      host,
+    const callbackUrl = url.pathname + url.search;
+    logger.info('UNAUTHORIZED ACCESS - Redirecting to login', {
+      ...baseContext,
+      pathnameWithoutLocale,
       isLoggedIn,
       isPublicRoute,
-      isDocsRoute
+      isDocsRoute,
+      callbackUrl
     });
 
     const loginUrl = new URL(`/${currentLocale}/login`, req.url);
     // Preserve the full path including pathname
-    const callbackUrl = url.pathname + url.search;
     loginUrl.searchParams.set('callbackUrl', callbackUrl);
-    console.log('🔐 Setting callbackUrl:', { callbackUrl, loginUrl: loginUrl.toString() });
-    return NextResponse.redirect(loginUrl);
+    const response = NextResponse.redirect(loginUrl);
+    response.headers.set('x-request-id', requestId);
+    return response;
   }
 
   // Special handling for onboarding routes - require authentication
   if (isOnboardingRoute && !isLoggedIn) {
-    console.log('🎓 ONBOARDING ACCESS DENIED - Redirecting to login:', {
-      pathname: pathnameWithoutLocale,
-      host,
-      userId: session?.user?.id
+    const callbackUrl = url.pathname + url.search;
+    logger.info('ONBOARDING ACCESS DENIED - Redirecting to login', {
+      ...baseContext,
+      pathnameWithoutLocale,
+      userId: session?.user?.id,
+      callbackUrl
     });
 
     const loginUrl = new URL(`/${currentLocale}/login`, req.url);
     // Preserve the full onboarding path
-    const callbackUrl = url.pathname + url.search;
     loginUrl.searchParams.set('callbackUrl', callbackUrl);
     loginUrl.searchParams.set('message', 'Please sign in to continue with school setup');
-    console.log('🎓 Onboarding callbackUrl:', { callbackUrl, loginUrl: loginUrl.toString() });
-    return NextResponse.redirect(loginUrl);
+    const response = NextResponse.redirect(loginUrl);
+    response.headers.set('x-request-id', requestId);
+    return response;
   }
 
   // If user is logged in and accessing auth routes, redirect to dashboard
   if (isLoggedIn && authRoutes.includes(pathnameWithoutLocale)) {
-    console.log('🏠 ALREADY LOGGED IN - Redirecting to dashboard:', {
-      pathname: pathnameWithoutLocale,
+    logger.debug('ALREADY LOGGED IN - Redirecting to dashboard', {
+      ...baseContext,
+      pathnameWithoutLocale,
       userId: session?.user?.id
     });
-    return NextResponse.redirect(new URL(`/${currentLocale}/dashboard`, req.url));
+    const response = NextResponse.redirect(new URL(`/${currentLocale}/dashboard`, req.url));
+    response.headers.set('x-request-id', requestId);
+    return response;
   }
 
   // Case 1: Main domain (ed.databayt.org) - handle i18n for marketing pages
   if (host === "ed.databayt.org" || host === "localhost:3000" || host === "localhost") {
-    console.log('🏢 MAIN DOMAIN - Marketing routes with i18n:', { host, pathname: url.pathname, currentLocale });
+    logger.debug('MAIN DOMAIN - Marketing routes with i18n', { ...baseContext, currentLocale });
 
     // If locale is not in URL, redirect to include it
     if (!pathnameHasLocale) {
@@ -160,10 +184,13 @@ export async function middleware(req: NextRequest) {
         secure: process.env.NODE_ENV === 'production',
       });
 
+      response.headers.set('x-request-id', requestId);
       return response;
     }
 
-    return NextResponse.next();
+    const response = NextResponse.next();
+    response.headers.set('x-request-id', requestId);
+    return response;
   }
 
   // For subdomain handling, we need to handle locale + subdomain rewriting
@@ -172,13 +199,13 @@ export async function middleware(req: NextRequest) {
   // Case 2: Production subdomains (*.databayt.org)
   if (host.endsWith(".databayt.org") && !host.startsWith("ed.")) {
     subdomain = host.split(".")[0];
-    console.log('🎯 PRODUCTION TENANT:', { subdomain });
+    logger.debug('PRODUCTION TENANT', { ...baseContext, subdomain });
   }
 
   // Case 3: Vercel preview URLs (tenant---branch.vercel.app)
   else if (host.includes("---") && host.endsWith(".vercel.app")) {
     subdomain = host.split("---")[0];
-    console.log('🚀 VERCEL TENANT:', { subdomain });
+    logger.debug('VERCEL TENANT', { ...baseContext, subdomain });
   }
 
   // Case 4: localhost development with subdomain
@@ -186,14 +213,14 @@ export async function middleware(req: NextRequest) {
     const parts = host.split(".");
     if (parts.length > 1 && parts[0] !== "www" && parts[0] !== "localhost") {
       subdomain = parts[0];
-      console.log('🏠 DEVELOPMENT TENANT:', { subdomain });
+      logger.debug('DEVELOPMENT TENANT', { ...baseContext, subdomain });
     }
   }
 
   // If we have a subdomain, handle tenant routing with i18n
   if (subdomain) {
-    console.log('🎯 TENANT REWRITE WITH I18N:', {
-      originalHost: host,
+    logger.debug('TENANT REWRITE WITH I18N', {
+      ...baseContext,
       subdomain,
       originalPath: url.pathname,
       currentLocale,
@@ -212,6 +239,7 @@ export async function middleware(req: NextRequest) {
         secure: process.env.NODE_ENV === 'production',
       });
 
+      response.headers.set('x-request-id', requestId);
       return response;
     }
 
@@ -220,17 +248,20 @@ export async function middleware(req: NextRequest) {
     const pathWithoutLocale = stripLocaleFromPathname(url.pathname);
     url.pathname = `/${currentLocale}/s/${subdomain}${pathWithoutLocale}`;
 
-    console.log('🎯 FINAL REWRITE PATH:', {
+    logger.debug('FINAL REWRITE PATH', {
+      ...baseContext,
       newPath: url.pathname,
       locale: currentLocale,
       subdomain,
       pathWithoutLocale
     });
 
-    return NextResponse.rewrite(url);
+    const response = NextResponse.rewrite(url);
+    response.headers.set('x-request-id', requestId);
+    return response;
   }
 
-  console.log('✅ NO SPECIAL HANDLING - Default behavior:', { host, pathname: url.pathname });
+  logger.debug('NO SPECIAL HANDLING - Default behavior', baseContext);
 
   // For main domain without locale, add it
   if (!pathnameHasLocale) {
@@ -244,10 +275,14 @@ export async function middleware(req: NextRequest) {
       secure: process.env.NODE_ENV === 'production',
     });
 
+    // Add requestId to response headers
+    response.headers.set('x-request-id', requestId);
     return response;
   }
 
-  return NextResponse.next();
+  const response = NextResponse.next();
+  response.headers.set('x-request-id', requestId);
+  return applySecurityHeaders(response, req);
 }
 
 export const config = {

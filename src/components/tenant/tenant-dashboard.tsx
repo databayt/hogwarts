@@ -4,10 +4,10 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Building2, 
-  Users, 
-  Calendar, 
+import {
+  Building2,
+  Users,
+  Calendar,
   BookOpen,
   GraduationCap,
   Clock,
@@ -16,6 +16,8 @@ import {
   ArrowRight
 } from 'lucide-react';
 import Link from 'next/link';
+import { getCurrentTimeInTimezone } from '@/lib/timezone';
+import { getTimezoneDisplayName } from '@/components/platform/settings/validation';
 
 interface School {
   id: string;
@@ -41,6 +43,21 @@ interface TenantDashboardProps {
 }
 
 export default function TenantDashboard({ school, subdomain }: TenantDashboardProps) {
+  const [currentTime, setCurrentTime] = React.useState('');
+
+  // Update current time in school timezone
+  React.useEffect(() => {
+    const updateTime = () => {
+      const timezone = school.timezone || 'Africa/Khartoum';
+      setCurrentTime(getCurrentTimeInTimezone(timezone));
+    };
+
+    updateTime(); // Initial update
+    const interval = setInterval(updateTime, 1000); // Update every second
+
+    return () => clearInterval(interval);
+  }, [school.timezone]);
+
   const getPlanBadge = (planType?: string) => {
     if (!planType) return null;
     
@@ -175,10 +192,14 @@ export default function TenantDashboard({ school, subdomain }: TenantDashboardPr
               <Clock className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <h3>{school.timezone || 'UTC'}</h3>
-              <p className="muted">
-                School timezone
-              </p>
+              <div className="space-y-1">
+                <h3 className="text-lg font-semibold">
+                  {getTimezoneDisplayName(school.timezone || 'Africa/Khartoum')}
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Current time: <span className="font-mono">{currentTime}</span>
+                </p>
+              </div>
             </CardContent>
           </Card>
         </div>

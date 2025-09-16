@@ -9,7 +9,8 @@ model School {
   phoneNumber String?
   email       String?
   website     String?
-  timezone    String  @default("UTC")
+  timezone    String  @default("Africa/Khartoum")
+  locale      String  @default("ar")
 
   // Subscription/billing info (high-level; detailed state in Subscription)
   planType    String  @default("basic") // basic, premium, enterprise

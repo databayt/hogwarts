@@ -105,17 +105,70 @@ export function BrandingForm({ schoolId, initialData, onSuccess }: BrandingFormP
           name="logoUrl"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Logo URL (Optional)</FormLabel>
+              <FormLabel>School Logo (Optional)</FormLabel>
               <FormControl>
-                <div className="flex gap-2">
-                  <Input
-                    {...field}
-                    placeholder="https://example.com/logo.png"
-                    disabled={isPending}
-                  />
-                  <Button type="button" variant="outline" size="sm" disabled={isPending}>
-                    <Upload className="h-4 w-4" />
-                  </Button>
+                <div className="space-y-2">
+                  <div className="flex gap-2">
+                    <Input
+                      {...field}
+                      placeholder="https://example.com/logo.png"
+                      disabled={isPending}
+                    />
+                    <label htmlFor="logo-upload">
+                      <input
+                        id="logo-upload"
+                        type="file"
+                        accept="image/jpeg,image/png,image/svg+xml,image/webp"
+                        className="hidden"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+
+                          // Show uploading state
+                          setError("");
+
+                          try {
+                            const formData = new FormData();
+                            formData.append('file', file);
+                            formData.append('type', 'logo');
+
+                            const response = await fetch('/api/upload', {
+                              method: 'POST',
+                              body: formData,
+                            });
+
+                            const data = await response.json();
+
+                            if (data.success) {
+                              form.setValue('logoUrl', data.url);
+                            } else {
+                              setError(data.error || 'Failed to upload logo');
+                            }
+                          } catch (err) {
+                            setError('Failed to upload logo');
+                          }
+                        }}
+                        disabled={isPending}
+                      />
+                      <Button type="button" variant="outline" size="sm" disabled={isPending} asChild>
+                        <span>
+                          <Upload className="h-4 w-4" />
+                        </span>
+                      </Button>
+                    </label>
+                  </div>
+                  {field.value && (
+                    <div className="relative w-24 h-24 border rounded-lg overflow-hidden">
+                      <img
+                        src={field.value}
+                        alt="School logo"
+                        className="w-full h-full object-contain"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = 'none';
+                        }}
+                      />
+                    </div>
+                  )}
                 </div>
               </FormControl>
               <FormMessage />

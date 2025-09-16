@@ -15,6 +15,10 @@ export const env = createEnv({
     EMAIL_FROM: z.string().min(1).optional(),
     STRIPE_API_KEY: z.string().min(1),
     STRIPE_WEBHOOK_SECRET: z.string().min(1).optional(),
+    ENABLE_PRODUCTION_LOGS: z.string().optional(),
+    SENTRY_DSN: z.string().optional(),
+    SENTRY_ORG: z.string().optional(),
+    SENTRY_PROJECT: z.string().optional(),
   },
   client: {
     NEXT_PUBLIC_APP_URL: z.string().min(1),
@@ -26,6 +30,7 @@ export const env = createEnv({
     // Allow "Ultra" naming as a synonym for Business
     NEXT_PUBLIC_STRIPE_ULTRA_MONTHLY_PLAN_ID: z.string().min(1).optional(),
     NEXT_PUBLIC_STRIPE_ULTRA_YEARLY_PLAN_ID: z.string().min(1).optional(),
+    NEXT_PUBLIC_SENTRY_DSN: z.string().optional(),
   },
   runtimeEnv: {
     NEXTAUTH_URL: process.env.NEXTAUTH_URL,
@@ -38,6 +43,10 @@ export const env = createEnv({
     DATABASE_URL: process.env.DATABASE_URL,
     RESEND_API_KEY: process.env.RESEND_API_KEY,
     EMAIL_FROM: process.env.EMAIL_FROM,
+    ENABLE_PRODUCTION_LOGS: process.env.ENABLE_PRODUCTION_LOGS,
+    SENTRY_DSN: process.env.SENTRY_DSN,
+    SENTRY_ORG: process.env.SENTRY_ORG,
+    SENTRY_PROJECT: process.env.SENTRY_PROJECT,
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
     NEXT_PUBLIC_ROOT_DOMAIN: process.env.NEXT_PUBLIC_ROOT_DOMAIN,
     STRIPE_API_KEY: process.env.STRIPE_API_KEY,
@@ -54,6 +63,7 @@ export const env = createEnv({
       process.env.NEXT_PUBLIC_STRIPE_ULTRA_MONTHLY_PLAN_ID,
     NEXT_PUBLIC_STRIPE_ULTRA_YEARLY_PLAN_ID:
       process.env.NEXT_PUBLIC_STRIPE_ULTRA_YEARLY_PLAN_ID,
+    NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,
   },
 });
 
