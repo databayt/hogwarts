@@ -76,7 +76,7 @@ export function ParentAnnouncementsContent() {
         return <School className="w-4 h-4" />;
       case 'class':
         return <BookOpen className="w-4 h-4" />;
-      case 'parents':
+      case 'role':
         return <Users className="w-4 h-4" />;
       default:
         return <Bell className="w-4 h-4" />;
@@ -89,7 +89,7 @@ export function ParentAnnouncementsContent() {
         return <Badge className="bg-blue-100 text-blue-800">School-wide</Badge>;
       case 'class':
         return <Badge className="bg-green-100 text-green-800">Class</Badge>;
-      case 'parents':
+      case 'role':
         return <Badge className="bg-purple-100 text-purple-800">Parents</Badge>;
       default:
         return <Badge variant="outline">{scope}</Badge>;
@@ -168,7 +168,7 @@ export function ParentAnnouncementsContent() {
               <SelectItem value="all">All Types</SelectItem>
               <SelectItem value="school">School-wide</SelectItem>
               <SelectItem value="class">Class</SelectItem>
-              <SelectItem value="parents">Parents</SelectItem>
+              <SelectItem value="role">Parents</SelectItem>
             </SelectContent>
           </Select>
         </CardContent>

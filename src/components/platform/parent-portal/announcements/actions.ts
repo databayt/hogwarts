@@ -58,9 +58,13 @@ export async function getParentAnnouncements() {
         OR: [
           // School-wide announcements
           { scope: 'school' },
-          // Parent-specific announcements
-          { scope: 'parents' },
-          { role: 'PARENT' },
+          // Role-based announcements for parents
+          {
+            AND: [
+              { scope: 'role' },
+              { role: 'PARENT' }
+            ]
+          },
           // Class-specific announcements for their children
           {
             AND: [
