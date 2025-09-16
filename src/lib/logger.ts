@@ -4,7 +4,7 @@
  * Includes requestId and schoolId for traceability
  */
 
-import { randomUUID } from 'crypto';
+// Remove Node.js crypto import for Edge Runtime compatibility
 import { env } from '@/env.mjs';
 
 type LogLevel = 'debug' | 'info' | 'warn' | 'error';
@@ -169,7 +169,12 @@ class Logger {
 
 // Utility functions
 export function generateRequestId(): string {
-  return randomUUID();
+  // Use crypto.randomUUID which is available in Edge Runtime
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  // Fallback for environments without crypto
+  return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 }
 
 // Enhanced logger with request context helpers

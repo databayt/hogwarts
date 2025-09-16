@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
         // Update school logo in database
         await db.school.update({
           where: { id: session.user.schoolId },
-          data: { logo: result.url },
+          data: { logoUrl: result.url },
         });
 
         logger.info('School logo updated', {
