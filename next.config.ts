@@ -31,13 +31,12 @@ const nextConfig: NextConfig = {
       'react-hook-form',
       '@hookform/resolvers',
     ],
-    // Enable partial prerendering for better performance
-    ppr: true,
-    // Turbopack specific configurations
-    turbo: {
-      resolveAlias: {
-        // Add any import aliases if needed
-      },
+  },
+
+  // Turbopack configuration (moved from experimental as it's now stable)
+  turbopack: {
+    resolveAlias: {
+      // Add any import aliases if needed
     },
   },
 
