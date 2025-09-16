@@ -71,7 +71,7 @@ export async function ParentAttendanceContent() {
     email: sg.student.user.email,
     classes: sg.student.studentClasses.map(sc => ({
       id: sc.class.id,
-      name: `${sc.class.subject.name} - ${sc.class.name}`,
+      name: `${sc.class.subject.subjectName} - ${sc.class.name}`,
       teacher: sc.class.teacher?.user.name || 'N/A',
     })),
     attendances: sg.student.attendances.map(a => ({
@@ -79,7 +79,7 @@ export async function ParentAttendanceContent() {
       date: a.date,
       status: a.status,
       classId: a.classId,
-      className: a.class.subject.name,
+      className: a.class.subject.subjectName,
       notes: a.notes,
     })),
   }));
