@@ -50,6 +50,8 @@ export async function ParentAttendanceContent() {
                   id: true,
                   date: true,
                   status: true,
+                  classId: true,
+                  notes: true,
                   class: {
                     select: {
                       id: true,
