@@ -8,6 +8,7 @@ export interface School {
   email?: string | null;
   website?: string | null;
   timezone?: string;
+  locale?: string;
   planType?: string;
   maxStudents?: number;
   maxTeachers?: number;
