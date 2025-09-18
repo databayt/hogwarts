@@ -103,7 +103,7 @@ export async function getParentAnnouncements() {
         id: announcement.class.id,
         name: announcement.class.name,
         subject: announcement.class.subject.subjectName,
-        teacher: announcement.class.teacher?.user.name || 'N/A',
+        teacher: announcement.class.teacher?.user ? announcement.class.teacher.user.name : 'N/A',
       } : null,
       // Mark which student this announcement is relevant for
       relevantStudents: announcement.classId ? 
