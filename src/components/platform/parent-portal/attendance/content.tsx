@@ -20,7 +20,12 @@ export async function ParentAttendanceContent() {
       studentGuardians: {
         include: {
           student: {
-            include: {
+            select: {
+              id: true,
+              givenName: true,
+              middleName: true,
+              surname: true,
+              emailAddress: true,
               studentClasses: {
                 include: {
                   class: {
@@ -42,10 +47,20 @@ export async function ParentAttendanceContent() {
                   date: 'desc',
                 },
                 take: 90, // Last 90 days
-                include: {
+                select: {
+                  id: true,
+                  date: true,
+                  status: true,
                   class: {
-                    include: {
-                      subject: true,
+                    select: {
+                      id: true,
+                      name: true,
+                      subject: {
+                        select: {
+                          id: true,
+                          subjectName: true,
+                        },
+                      },
                     },
                   },
                 },
