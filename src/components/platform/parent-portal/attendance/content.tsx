@@ -25,7 +25,6 @@ export async function ParentAttendanceContent() {
               givenName: true,
               middleName: true,
               surname: true,
-              emailAddress: true,
               studentClasses: {
                 include: {
                   class: {
@@ -84,7 +83,6 @@ export async function ParentAttendanceContent() {
   const students = guardian.studentGuardians.map(sg => ({
     id: sg.student.id,
     name: `${sg.student.givenName}${sg.student.middleName ? ` ${sg.student.middleName}` : ''} ${sg.student.surname}`,
-    email: sg.student.emailAddress,
     classes: sg.student.studentClasses.map(sc => ({
       id: sc.class.id,
       name: `${sc.class.subject.subjectName} - ${sc.class.name}`,
