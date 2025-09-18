@@ -127,7 +127,7 @@ export async function getParentAnnouncements() {
       announcements: mappedAnnouncements,
       students: guardian.studentGuardians.map(sg => ({
         id: sg.student.id,
-        name: sg.student.user?.name || 'Student',
+        name: `${sg.student.givenName}${sg.student.middleName ? ` ${sg.student.middleName}` : ''} ${sg.student.surname}`,
       })),
     };
   } catch (error) {
