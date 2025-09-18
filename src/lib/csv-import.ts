@@ -115,14 +115,21 @@ class CsvImportService {
             },
           });
 
+          // Parse name into first and last name
+          const nameParts = validated.name.trim().split(/\s+/);
+          const givenName = nameParts[0] || 'Unknown';
+          const surname = nameParts.slice(1).join(' ') || 'Unknown';
+
           // Create student record
           const student = await db.student.create({
             data: {
               userId: user.id,
               schoolId,
               studentId: validated.studentId,
-              dateOfBirth: validated.dateOfBirth ? new Date(validated.dateOfBirth) : null,
-              gender: validated.gender || null,
+              givenName,
+              surname,
+              dateOfBirth: validated.dateOfBirth ? new Date(validated.dateOfBirth) : new Date('2010-01-01'), // Default date
+              gender: validated.gender || 'other',
             },
           });
 
