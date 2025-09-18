@@ -107,7 +107,7 @@ class CsvImportService {
           const defaultPassword = await hash(`student${validated.studentId}`, 10);
           const user = await db.user.create({
             data: {
-              name: validated.name,
+              username: validated.name,
               email: validated.email || `${validated.studentId}@school.local`,
               password: defaultPassword,
               role: 'STUDENT',
