@@ -3,6 +3,7 @@
 model Student {
   id             String   @id @default(cuid())
   schoolId       String
+  studentId      String?  // External student identifier
   givenName      String
   middleName     String?
   surname        String
@@ -24,6 +25,7 @@ model Student {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@unique([schoolId, studentId]) // Unique student ID per school
   @@map("students")
 }
 
