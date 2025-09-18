@@ -85,6 +85,7 @@ export async function ParentAttendanceContent() {
   const students = guardian.studentGuardians.map(sg => ({
     id: sg.student.id,
     name: `${sg.student.givenName}${sg.student.middleName ? ` ${sg.student.middleName}` : ''} ${sg.student.surname}`,
+    email: null as string | null,
     classes: sg.student.studentClasses.map(sc => ({
       id: sc.class.id,
       name: `${sc.class.subject.subjectName} - ${sc.class.name}`,
