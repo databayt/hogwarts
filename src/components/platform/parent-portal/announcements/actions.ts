@@ -79,8 +79,10 @@ export async function getParentAnnouncements() {
           include: {
             subject: true,
             teacher: {
-              include: {
-                user: true,
+              select: {
+                id: true,
+                givenName: true,
+                surname: true,
               },
             },
           },
@@ -103,7 +105,7 @@ export async function getParentAnnouncements() {
         id: announcement.class.id,
         name: announcement.class.name,
         subject: announcement.class.subject.subjectName,
-        teacher: announcement.class.teacher?.user ? announcement.class.teacher.user.name : 'N/A',
+        teacher: announcement.class.teacher ? `${announcement.class.teacher.givenName} ${announcement.class.teacher.surname}` : 'N/A',
       } : null,
       // Mark which student this announcement is relevant for
       relevantStudents: announcement.classId ? 
