@@ -21,15 +21,16 @@ export async function ParentAttendanceContent() {
         include: {
           student: {
             include: {
-              user: true,
               studentClasses: {
                 include: {
                   class: {
                     include: {
                       subject: true,
                       teacher: {
-                        include: {
-                          user: true,
+                        select: {
+                          id: true,
+                          givenName: true,
+                          surname: true,
                         },
                       },
                     },
@@ -67,12 +68,12 @@ export async function ParentAttendanceContent() {
   // Prepare data for the view
   const students = guardian.studentGuardians.map(sg => ({
     id: sg.student.id,
-    name: sg.student.user.name || 'Student',
-    email: sg.student.user.email,
+    name: `${sg.student.givenName}${sg.student.middleName ? ` ${sg.student.middleName}` : ''} ${sg.student.surname}`,
+    email: sg.student.emailAddress,
     classes: sg.student.studentClasses.map(sc => ({
       id: sc.class.id,
       name: `${sc.class.subject.subjectName} - ${sc.class.name}`,
-      teacher: sc.class.teacher?.user.name || 'N/A',
+      teacher: sc.class.teacher ? `${sc.class.teacher.givenName} ${sc.class.teacher.surname}` : 'N/A',
     })),
     attendances: sg.student.attendances.map(a => ({
       id: a.id,
