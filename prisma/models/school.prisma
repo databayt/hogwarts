@@ -10,7 +10,7 @@ model School {
   email       String?
   website     String?
   timezone    String  @default("Africa/Khartoum")
-  locale      String  @default("ar")
+  // locale      String  @default("ar") // TODO: Add migration for this field
 
   // Subscription/billing info (high-level; detailed state in Subscription)
   planType    String  @default("basic") // basic, premium, enterprise
