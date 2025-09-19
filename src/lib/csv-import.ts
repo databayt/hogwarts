@@ -187,13 +187,30 @@ class CsvImportService {
               }
             }
 
+            // Get or create a default guardian type
+            let guardianType = await db.guardianType.findFirst({
+              where: {
+                schoolId,
+                name: 'guardian',
+              },
+            });
+
+            if (!guardianType) {
+              guardianType = await db.guardianType.create({
+                data: {
+                  schoolId,
+                  name: 'guardian',
+                },
+              });
+            }
+
             // Link guardian to student
             await db.studentGuardian.create({
               data: {
                 studentId: student.id,
                 guardianId: guardian.id,
                 schoolId,
-                guardianTypeId: null, // Would need to be set based on school's guardian types
+                guardianTypeId: guardianType.id,
                 isPrimary: true,
               },
             });
