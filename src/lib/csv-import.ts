@@ -346,7 +346,7 @@ class CsvImportService {
             const department = await db.department.findFirst({
               where: {
                 schoolId,
-                name: validated.department,
+                departmentName: validated.department,
               },
             });
 
