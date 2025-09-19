@@ -153,7 +153,7 @@ class CsvImportService {
                   name: validated.guardianName,
                   email: validated.guardianEmail,
                   password: guardianPassword,
-                  role: 'PARENT',
+                  role: 'GUARDIAN',
                   schoolId,
                 },
               });
