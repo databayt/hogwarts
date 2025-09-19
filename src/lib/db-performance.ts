@@ -65,11 +65,11 @@ export function createPerformanceMonitoredPrisma(prisma: PrismaClient) {
 
   // Monitor raw queries
   if (prisma.$queryRaw) {
-    const original$queryRaw = prisma.$queryRaw;
-    prisma.$queryRaw = async function(query: any, ...args: any[]) {
+    const original$queryRaw = prisma.$queryRaw.bind(prisma);
+    (prisma as any).$queryRaw = async function(query: any, ...args: any[]) {
       return performanceMonitor.trackQuery(
         'raw_query',
-        () => original$queryRaw.call(this, query, ...args),
+        () => original$queryRaw(query, ...args),
         {
           type: 'raw_query',
           queryType: typeof query === 'string' ? 'string' : 'template',
@@ -80,11 +80,11 @@ export function createPerformanceMonitoredPrisma(prisma: PrismaClient) {
   }
 
   if (prisma.$executeRaw) {
-    const original$executeRaw = prisma.$executeRaw;
-    prisma.$executeRaw = async function(query: any, ...args: any[]) {
+    const original$executeRaw = prisma.$executeRaw.bind(prisma);
+    (prisma as any).$executeRaw = async function(query: any, ...args: any[]) {
       return performanceMonitor.trackQuery(
         'raw_execute',
-        () => original$executeRaw.call(this, query, ...args),
+        () => original$executeRaw(query, ...args),
         {
           type: 'raw_execute',
           queryType: typeof query === 'string' ? 'string' : 'template',
