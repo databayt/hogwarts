@@ -326,7 +326,6 @@ class CsvImportService {
               givenName: teacherGivenName,
               surname: teacherSurname,
               emailAddress: validated.email,
-              gender: validated.gender || null,
             },
           });
 
