@@ -304,7 +304,7 @@ class CsvImportService {
           const defaultPassword = await hash(`teacher${validated.employeeId}`, 10);
           const user = await db.user.create({
             data: {
-              name: validated.name,
+              username: validated.name,
               email: validated.email,
               password: defaultPassword,
               role: 'TEACHER',
@@ -312,13 +312,21 @@ class CsvImportService {
             },
           });
 
+          // Parse name into first and last name
+          const teacherNameParts = validated.name.trim().split(/\s+/);
+          const teacherGivenName = teacherNameParts[0] || 'Unknown';
+          const teacherSurname = teacherNameParts.slice(1).join(' ') || 'Unknown';
+
           // Create teacher record
           const teacher = await db.teacher.create({
             data: {
               userId: user.id,
               schoolId,
               employeeId: validated.employeeId,
-              qualification: validated.qualification || null,
+              givenName: teacherGivenName,
+              surname: teacherSurname,
+              emailAddress: validated.email,
+              gender: validated.gender || null,
             },
           });
 
