@@ -3,6 +3,7 @@
 model Teacher {
   id           String  @id @default(cuid())
   schoolId     String
+  employeeId   String? // External employee identifier
   givenName    String
   surname      String
   gender       String?
@@ -23,6 +24,7 @@ model Teacher {
   updatedAt DateTime @updatedAt
 
   @@unique([schoolId, emailAddress]) // Unique email per school
+  @@unique([schoolId, employeeId]) // Unique employee ID per school
   @@map("teachers")
 }
 
