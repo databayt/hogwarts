@@ -356,7 +356,6 @@ class CsvImportService {
                   teacherId: teacher.id,
                   departmentId: department.id,
                   schoolId,
-                  role: 'member',
                 },
               });
             }
