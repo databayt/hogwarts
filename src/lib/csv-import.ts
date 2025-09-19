@@ -150,7 +150,7 @@ class CsvImportService {
               const guardianPassword = await hash('parent123', 10);
               const guardianUser = await db.user.create({
                 data: {
-                  name: validated.guardianName,
+                  username: validated.guardianName,
                   email: validated.guardianEmail,
                   password: guardianPassword,
                   role: 'GUARDIAN',
@@ -158,11 +158,19 @@ class CsvImportService {
                 },
               });
 
+              // Parse guardian name into first and last name
+              const guardianNameParts = validated.guardianName.trim().split(/\s+/);
+              const guardianGivenName = guardianNameParts[0] || 'Unknown';
+              const guardianSurname = guardianNameParts.slice(1).join(' ') || 'Unknown';
+
               // Create guardian record
               guardian = await db.guardian.create({
                 data: {
                   userId: guardianUser.id,
                   schoolId,
+                  givenName: guardianGivenName,
+                  surname: guardianSurname,
+                  emailAddress: validated.guardianEmail,
                 },
               });
 
