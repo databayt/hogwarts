@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Dispatch, SetStateAction } from 'react';
 import { Modal } from '@/components/atom/modal';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -16,7 +16,7 @@ interface SuccessModalProps {
     id: string;
   };
   showModal: boolean;
-  setShowModal: (show: boolean) => void;
+  setShowModal: Dispatch<SetStateAction<boolean>>;
   onGoToDashboard: () => void;
 }
 
