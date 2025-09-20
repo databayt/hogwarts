@@ -7,6 +7,8 @@ import { ThemeProvider } from "@/components/atom/theme-provider";
 import { SessionProvider } from "next-auth/react";
 import { auth } from "@/auth";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
+import { AnalyticsProvider } from "@/components/monitoring/analytics-provider";
+import { ServiceWorkerProvider } from "@/components/providers/service-worker-provider";
 import "../globals.css";
 
 // Configure fonts
@@ -69,6 +71,8 @@ export default async function LocaleLayout({
             <ThemeProvider>
               {children}
               <Toaster />
+              <AnalyticsProvider />
+              <ServiceWorkerProvider />
             </ThemeProvider>
           </NuqsAdapter>
         </SessionProvider>

@@ -91,6 +91,11 @@ export function Modal({
           "overflow-hidden p-0 md:max-w-md md:rounded-2xl md:border",
           className,
         )}
+        onInteractOutside={(e) => {
+          if (preventDefaultClose) {
+            e.preventDefault();
+          }
+        }}
       >
         {children}
       </DialogContent>

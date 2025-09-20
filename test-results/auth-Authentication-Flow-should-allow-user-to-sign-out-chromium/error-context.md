@@ -1,0 +1,82 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e1]:
+  - generic:
+    - generic [ref=e4]:
+      - generic [ref=e5]:
+        - generic [ref=e6]:
+          - navigation [ref=e7]:
+            - button "previous" [disabled] [ref=e8]:
+              - img "previous" [ref=e9]
+            - generic [ref=e11]:
+              - generic [ref=e12]: 1/
+              - generic [ref=e13]: "1"
+            - button "next" [disabled] [ref=e14]:
+              - img "next" [ref=e15]
+          - img
+        - generic [ref=e17]:
+          - generic [ref=e18]:
+            - img [ref=e19]
+            - generic "Latest available version is detected (15.5.3)." [ref=e21]: Next.js 15.5.3
+            - generic [ref=e22]: Turbopack
+          - img
+      - dialog "Build Error" [ref=e24]:
+        - generic [ref=e27]:
+          - generic [ref=e28]:
+            - generic [ref=e29]:
+              - generic [ref=e31]: Build Error
+              - generic [ref=e32]:
+                - button "Copy Error Info" [ref=e33] [cursor=pointer]:
+                  - img [ref=e34] [cursor=pointer]
+                - button "No related documentation found" [disabled] [ref=e36]:
+                  - img [ref=e37]
+                - link "Learn more about enabling Node.js inspector for server code with Chrome DevTools" [ref=e39] [cursor=pointer]:
+                  - /url: https://nextjs.org/docs/app/building-your-application/configuring/debugging#server-side-code
+                  - img [ref=e40] [cursor=pointer]
+            - paragraph [ref=e49]: You cannot have two parallel pages that resolve to the same path. Please check /[lang]/(blocks)/leads and /[lang]/(expose).
+          - generic [ref=e51]:
+            - generic [ref=e53]:
+              - img [ref=e55]
+              - generic [ref=e57]: ./src/app/[lang]/(expose)
+              - button "Open in editor" [ref=e58] [cursor=pointer]:
+                - img [ref=e60] [cursor=pointer]
+            - generic [ref=e64]: You cannot have two parallel pages that resolve to the same path. Please check /[lang]/(blocks)/leads and /[lang]/(expose).
+        - generic [ref=e65]:
+          - generic [ref=e66]: "1"
+          - generic [ref=e67]: "2"
+    - generic [ref=e72] [cursor=pointer]:
+      - button "Open Next.js Dev Tools" [ref=e73] [cursor=pointer]:
+        - img [ref=e74] [cursor=pointer]
+      - button "Open issues overlay" [ref=e78] [cursor=pointer]:
+        - generic [ref=e79] [cursor=pointer]:
+          - generic [ref=e80] [cursor=pointer]: "0"
+          - generic [ref=e81] [cursor=pointer]: "1"
+        - generic [ref=e82] [cursor=pointer]: Issue
+  - alert [ref=e83]
+  - generic [ref=e87]:
+    - generic [ref=e90]:
+      - button "Google" [ref=e91]:
+        - img
+        - text: Google
+      - button "Facebook" [ref=e92]:
+        - img
+        - text: Facebook
+    - generic [ref=e94]:
+      - generic [ref=e96]: Or continue with
+      - generic [ref=e97]:
+        - generic [ref=e99]:
+          - paragraph [ref=e101]: Email
+          - textbox "Enter your email" [ref=e102]: test@school.edu
+        - generic [ref=e104]:
+          - generic [ref=e105]:
+            - paragraph [ref=e106]: Password
+            - link "Forgot Password?" [ref=e107] [cursor=pointer]:
+              - /url: /reset
+          - textbox "Enter your password" [active] [ref=e108]: TestPassword123!
+      - button "Login" [ref=e109]
+      - generic [ref=e110]:
+        - text: Don't have an account?
+        - link "Sign Up" [ref=e111] [cursor=pointer]:
+          - /url: /register
+```

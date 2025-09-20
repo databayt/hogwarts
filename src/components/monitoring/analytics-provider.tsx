@@ -2,18 +2,47 @@
 
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
-import { ReactNode } from 'react';
+import { useEffect } from 'react';
+import { usePathname } from 'next/navigation';
+import { monitoringService } from '@/lib/monitoring-service';
 
-interface AnalyticsProviderProps {
-  children: ReactNode;
-}
+export function AnalyticsProvider() {
+  const pathname = usePathname();
 
-export function AnalyticsProvider({ children }: AnalyticsProviderProps) {
+  useEffect(() => {
+    // Track page views
+    monitoringService.trackEvent({
+      name: 'page_view',
+      category: 'user_action',
+      data: {
+        path: pathname,
+      },
+    });
+  }, [pathname]);
+
   return (
     <>
-      {children}
-      <Analytics />
-      <SpeedInsights />
+      <Analytics
+        beforeSend={(event) => {
+          // Add custom properties to analytics events
+          if (typeof window !== 'undefined') {
+            const schoolId = (window as any).__SCHOOL_ID__;
+            if (schoolId) {
+              return {
+                ...event,
+                schoolId,
+              };
+            }
+          }
+          return event;
+        }}
+      />
+      <SpeedInsights
+        route={pathname}
+        properties={{
+          environment: process.env.NODE_ENV,
+        }}
+      />
     </>
   );
 }
