@@ -59,7 +59,7 @@ export function OptimizedImage({
         });
       },
       {
-        rootMargin: isSlowConnection() ? '50px' : '200px',
+        rootMargin: isSlowConnection ? '50px' : '200px',
         threshold: 0.01,
       }
     );
