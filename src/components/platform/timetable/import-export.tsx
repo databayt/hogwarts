@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useRef } from 'react'
-import { useToast } from '@/components/ui/use-toast'
+import { useToast } from './use-toast'
 import {
   Dialog,
   DialogContent,
