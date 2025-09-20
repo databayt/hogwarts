@@ -37,12 +37,7 @@ export function AnalyticsProvider() {
           return event;
         }}
       />
-      <SpeedInsights
-        route={pathname}
-        properties={{
-          environment: process.env.NODE_ENV,
-        }}
-      />
+      <SpeedInsights />
     </>
   );
 }
