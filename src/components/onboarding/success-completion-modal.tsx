@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect } from 'react';
+import React, { useEffect, Dispatch, SetStateAction } from 'react';
 import { Modal } from '@/components/atom/modal';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, ExternalLink, Sparkles } from 'lucide-react';
@@ -13,7 +13,7 @@ interface SuccessCompletionModalProps {
     id: string;
   };
   showModal: boolean;
-  setShowModal: (show: boolean) => void;
+  setShowModal: Dispatch<SetStateAction<boolean>>;
   onGoToDashboard: () => void;
 }
 
