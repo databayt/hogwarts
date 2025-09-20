@@ -162,11 +162,20 @@ class MonitoringService {
       }
 
       // Send to Sentry as measurement
-      if (Sentry.getActiveTransaction) {
-        const transaction = Sentry.getActiveTransaction();
-        if (transaction) {
-          transaction.setMeasurement(metric.name, metric.value, metric.unit);
+      try {
+        const client = Sentry.getClient();
+        if (client) {
+          // Log metric to Sentry via custom context
+          Sentry.setContext('performance_metric', {
+            name: metric.name,
+            value: metric.value,
+            unit: metric.unit,
+            tags: metric.tags,
+          });
         }
+      } catch (err) {
+        // Fallback: just log it
+        console.debug('Performance metric:', metric);
       }
     } catch (error) {
       logger.error('Failed to track performance metric', error as Error);

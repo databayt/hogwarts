@@ -15,7 +15,6 @@ if (SENTRY_DSN) {
       Sentry.replayIntegration({
         maskAllText: false,
         blockAllMedia: false,
-        maskTextContent: true,
       }),
     ],
 

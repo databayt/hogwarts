@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
     const session = await auth();
 
     // Only platform admins can run security scans
-    if (!session?.user?.isPlatformAdmin) {
+    if ((session?.user as any)?.role !== 'PLATFORM_ADMIN') {
       logger.warn('Unauthorized security scan attempt', {
         userId: session?.user?.id,
         action: 'security_scan_unauthorized',
