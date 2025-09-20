@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { CheckCircle, Users, GraduationCap, Calendar, ArrowRight, ExternalLink } from 'lucide-react';
 import { getSchoolOnboardingStatus } from '../legal/actions';
+import SuccessModal from './success-modal';
 
 export default function CongratulationsContent() {
   const params = useParams();
@@ -13,6 +14,7 @@ export default function CongratulationsContent() {
   const schoolId = params.id as string;
   const [schoolData, setSchoolData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   useEffect(() => {
     async function fetchSchoolData() {
@@ -25,6 +27,8 @@ export default function CongratulationsContent() {
         console.error('Error fetching school data:', error);
       } finally {
         setLoading(false);
+        // Show the success modal after data is loaded
+        setShowSuccessModal(true);
       }
     }
     fetchSchoolData();
@@ -54,7 +58,19 @@ export default function CongratulationsContent() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto py-8">
+    <>
+      {/* Success Modal */}
+      {schoolData && (
+        <SuccessModal
+          schoolData={schoolData}
+          showModal={showSuccessModal}
+          setShowModal={setShowSuccessModal}
+          onGoToDashboard={handleGoToDashboard}
+        />
+      )}
+
+      {/* Regular content as fallback or when modal is closed */}
+      <div className="max-w-4xl mx-auto py-8">
       {/* Success Header */}
       <div className="text-center mb-8">
         <div className="inline-flex items-center justify-center w-20 h-20 bg-green-100 dark:bg-green-900/20 rounded-full mb-4">
@@ -182,5 +198,6 @@ export default function CongratulationsContent() {
         </Button>
       </div>
     </div>
+    </>
   );
 }

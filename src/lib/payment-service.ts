@@ -417,7 +417,59 @@ class PaymentService {
       paymentIntentId: paymentIntent.id,
       amount: paymentIntent.amount / 100,
     });
-    // TODO: Update database, send confirmation email, etc.
+
+    try {
+      // Get school ID from payment metadata
+      const schoolId = paymentIntent.metadata?.schoolId;
+      if (!schoolId) {
+        logger.error('No schoolId in payment metadata', { paymentIntent });
+        return;
+      }
+
+      // Update payment record in database
+      await db.payment.create({
+        data: {
+          schoolId,
+          stripePaymentIntentId: paymentIntent.id,
+          amount: paymentIntent.amount / 100,
+          currency: paymentIntent.currency,
+          status: 'SUCCESS',
+          paymentDate: new Date(),
+          metadata: paymentIntent.metadata,
+        }
+      });
+
+      // Update school subscription status
+      await db.school.update({
+        where: { id: schoolId },
+        data: {
+          subscriptionStatus: 'ACTIVE',
+          lastPaymentDate: new Date(),
+          nextBillingDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+        }
+      });
+
+      // Send confirmation email
+      const school = await db.school.findUnique({
+        where: { id: schoolId },
+        include: { owner: true }
+      });
+
+      if (school?.owner?.email) {
+        await this.sendPaymentConfirmationEmail({
+          to: school.owner.email,
+          schoolName: school.name,
+          amount: paymentIntent.amount / 100,
+          currency: paymentIntent.currency,
+          invoiceUrl: paymentIntent.charges?.data[0]?.receipt_url
+        });
+      }
+
+      logger.info('Payment success handled', { schoolId, paymentIntentId: paymentIntent.id });
+    } catch (error) {
+      logger.error('Error handling payment success', { error, paymentIntent });
+      throw error;
+    }
   }
 
   private async handlePaymentFailure(paymentIntent: any): Promise<void> {
@@ -425,7 +477,68 @@ class PaymentService {
       paymentIntentId: paymentIntent.id,
       error: paymentIntent.last_payment_error?.message,
     });
-    // TODO: Notify customer, retry payment, etc.
+
+    try {
+      const schoolId = paymentIntent.metadata?.schoolId;
+      if (!schoolId) return;
+
+      // Record failed payment attempt
+      await db.payment.create({
+        data: {
+          schoolId,
+          stripePaymentIntentId: paymentIntent.id,
+          amount: paymentIntent.amount / 100,
+          currency: paymentIntent.currency,
+          status: 'FAILED',
+          paymentDate: new Date(),
+          error: paymentIntent.last_payment_error?.message,
+          metadata: paymentIntent.metadata,
+        }
+      });
+
+      // Update school status if subscription is at risk
+      const failedPayments = await db.payment.count({
+        where: {
+          schoolId,
+          status: 'FAILED',
+          paymentDate: {
+            gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) // Last 30 days
+          }
+        }
+      });
+
+      if (failedPayments >= 3) {
+        await db.school.update({
+          where: { id: schoolId },
+          data: { subscriptionStatus: 'AT_RISK' }
+        });
+      }
+
+      // Send failure notification
+      const school = await db.school.findUnique({
+        where: { id: schoolId },
+        include: { owner: true }
+      });
+
+      if (school?.owner?.email) {
+        await this.sendPaymentFailureEmail({
+          to: school.owner.email,
+          schoolName: school.name,
+          amount: paymentIntent.amount / 100,
+          currency: paymentIntent.currency,
+          error: paymentIntent.last_payment_error?.message,
+          retryUrl: `${process.env.NEXT_PUBLIC_APP_URL}/billing/retry?payment=${paymentIntent.id}`
+        });
+      }
+
+      // Schedule retry attempt (if applicable)
+      if (failedPayments < 3) {
+        await this.schedulePaymentRetry(paymentIntent, failedPayments + 1);
+      }
+
+    } catch (error) {
+      logger.error('Error handling payment failure', { error, paymentIntent });
+    }
   }
 
   private async handleSubscriptionUpdate(subscription: any): Promise<void> {
@@ -433,14 +546,79 @@ class PaymentService {
       subscriptionId: subscription.id,
       status: subscription.status,
     });
-    // TODO: Update school subscription status in database
+
+    try {
+      const schoolId = subscription.metadata?.schoolId;
+      if (!schoolId) return;
+
+      // Map Stripe status to our status
+      const statusMap: Record<string, string> = {
+        'active': 'ACTIVE',
+        'past_due': 'AT_RISK',
+        'unpaid': 'SUSPENDED',
+        'canceled': 'CANCELLED',
+        'incomplete': 'PENDING',
+        'incomplete_expired': 'EXPIRED',
+        'trialing': 'TRIAL',
+      };
+
+      const newStatus = statusMap[subscription.status] || 'PENDING';
+
+      // Update school subscription
+      await db.school.update({
+        where: { id: schoolId },
+        data: {
+          stripeSubscriptionId: subscription.id,
+          subscriptionStatus: newStatus,
+          subscriptionTier: subscription.items.data[0]?.price?.metadata?.tier || 'starter',
+          subscriptionPeriodStart: new Date(subscription.current_period_start * 1000),
+          subscriptionPeriodEnd: new Date(subscription.current_period_end * 1000),
+        }
+      });
+
+      logger.info('Subscription updated in database', { schoolId, status: newStatus });
+    } catch (error) {
+      logger.error('Error handling subscription update', { error, subscription });
+    }
   }
 
   private async handleSubscriptionCancellation(subscription: any): Promise<void> {
     logger.info('Subscription canceled', {
       subscriptionId: subscription.id,
     });
-    // TODO: Update school status, send cancellation email
+
+    try {
+      const schoolId = subscription.metadata?.schoolId;
+      if (!schoolId) return;
+
+      // Update school status
+      await db.school.update({
+        where: { id: schoolId },
+        data: {
+          subscriptionStatus: 'CANCELLED',
+          subscriptionEndDate: new Date(subscription.canceled_at * 1000),
+        }
+      });
+
+      // Send cancellation email
+      const school = await db.school.findUnique({
+        where: { id: schoolId },
+        include: { owner: true }
+      });
+
+      if (school?.owner?.email) {
+        await this.sendSubscriptionCancellationEmail({
+          to: school.owner.email,
+          schoolName: school.name,
+          endDate: new Date(subscription.current_period_end * 1000),
+          reason: subscription.cancellation_details?.reason,
+        });
+      }
+
+      logger.info('Subscription cancellation handled', { schoolId });
+    } catch (error) {
+      logger.error('Error handling subscription cancellation', { error, subscription });
+    }
   }
 
   private async handleInvoicePaid(invoice: any): Promise<void> {
@@ -448,7 +626,139 @@ class PaymentService {
       invoiceId: invoice.id,
       amount: invoice.amount_paid / 100,
     });
-    // TODO: Update payment records
+
+    try {
+      const schoolId = invoice.metadata?.schoolId || invoice.subscription_details?.metadata?.schoolId;
+      if (!schoolId) return;
+
+      // Create invoice record
+      await db.invoice.create({
+        data: {
+          schoolId,
+          stripeInvoiceId: invoice.id,
+          amount: invoice.amount_paid / 100,
+          currency: invoice.currency,
+          status: 'PAID',
+          paidAt: new Date(invoice.status_transitions.paid_at * 1000),
+          invoiceUrl: invoice.hosted_invoice_url,
+          pdfUrl: invoice.invoice_pdf,
+          metadata: invoice.metadata,
+        }
+      });
+
+      // Update school payment info
+      await db.school.update({
+        where: { id: schoolId },
+        data: {
+          lastPaymentDate: new Date(),
+          lastInvoiceAmount: invoice.amount_paid / 100,
+        }
+      });
+
+      // Send invoice receipt
+      const school = await db.school.findUnique({
+        where: { id: schoolId },
+        include: { owner: true }
+      });
+
+      if (school?.owner?.email) {
+        await this.sendInvoiceReceiptEmail({
+          to: school.owner.email,
+          schoolName: school.name,
+          amount: invoice.amount_paid / 100,
+          currency: invoice.currency,
+          invoiceUrl: invoice.hosted_invoice_url,
+          pdfUrl: invoice.invoice_pdf,
+        });
+      }
+
+      logger.info('Invoice payment recorded', { schoolId, invoiceId: invoice.id });
+    } catch (error) {
+      logger.error('Error handling invoice payment', { error, invoice });
+    }
+  }
+
+  // === EMAIL NOTIFICATION METHODS ===
+
+  private async sendPaymentConfirmationEmail(params: {
+    to: string;
+    schoolName: string;
+    amount: number;
+    currency: string;
+    invoiceUrl?: string;
+  }): Promise<void> {
+    try {
+      // Implementation would use your email service (SendGrid, SES, etc.)
+      logger.info('Sending payment confirmation email', { to: params.to });
+      // await emailService.send({...})
+    } catch (error) {
+      logger.error('Failed to send payment confirmation email', { error, params });
+    }
+  }
+
+  private async sendPaymentFailureEmail(params: {
+    to: string;
+    schoolName: string;
+    amount: number;
+    currency: string;
+    error: string;
+    retryUrl: string;
+  }): Promise<void> {
+    try {
+      logger.info('Sending payment failure email', { to: params.to });
+      // await emailService.send({...})
+    } catch (error) {
+      logger.error('Failed to send payment failure email', { error, params });
+    }
+  }
+
+  private async sendSubscriptionCancellationEmail(params: {
+    to: string;
+    schoolName: string;
+    endDate: Date;
+    reason?: string;
+  }): Promise<void> {
+    try {
+      logger.info('Sending subscription cancellation email', { to: params.to });
+      // await emailService.send({...})
+    } catch (error) {
+      logger.error('Failed to send cancellation email', { error, params });
+    }
+  }
+
+  private async sendInvoiceReceiptEmail(params: {
+    to: string;
+    schoolName: string;
+    amount: number;
+    currency: string;
+    invoiceUrl: string;
+    pdfUrl: string;
+  }): Promise<void> {
+    try {
+      logger.info('Sending invoice receipt email', { to: params.to });
+      // await emailService.send({...})
+    } catch (error) {
+      logger.error('Failed to send invoice receipt email', { error, params });
+    }
+  }
+
+  private async schedulePaymentRetry(paymentIntent: any, attemptNumber: number): Promise<void> {
+    try {
+      // Schedule retry with exponential backoff
+      const delayHours = Math.pow(2, attemptNumber) * 24; // 2 days, 4 days, 8 days
+      const retryDate = new Date(Date.now() + delayHours * 60 * 60 * 1000);
+
+      logger.info('Scheduling payment retry', {
+        paymentIntentId: paymentIntent.id,
+        attemptNumber,
+        retryDate
+      });
+
+      // In production, this would use a job queue like BullMQ or similar
+      // await jobQueue.schedule('retryPayment', { paymentIntentId: paymentIntent.id }, retryDate);
+    } catch (error) {
+      logger.error('Failed to schedule payment retry', { error, paymentIntent });
+    }
   }
 }
 
