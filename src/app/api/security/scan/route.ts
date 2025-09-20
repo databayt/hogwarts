@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
     }
 
     logger.info('Running security scan', {
-      userId: session.user.id,
+      userId: session?.user?.id,
       action: 'security_scan_initiated',
     });
 
