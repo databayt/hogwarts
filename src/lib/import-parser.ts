@@ -211,31 +211,190 @@ export async function parseCsvData(
 // === EXCEL PARSER ===
 
 export async function parseExcelData(
-  excelBuffer: ArrayBuffer,
-  dataType: 'students' | 'teachers' | 'classes'
+  excelBuffer: ArrayBuffer | Buffer,
+  dataType: 'students' | 'teachers' | 'classes',
+  sheetName?: string
 ): Promise<ImportResult> {
-  // Note: Excel parsing requires external library like xlsx or exceljs
-  // This is a placeholder implementation
-  
-  return {
-    success: false,
-    imported: 0,
-    skipped: 0,
-    errors: [{
-      row: 0,
-      column: '',
-      value: '',
-      message: 'Excel parsing requires xlsx library installation. Run: pnpm add xlsx'
-    }],
-    message: 'Excel import not yet implemented',
-  };
-  
-  // Actual implementation would be:
-  // const XLSX = await import('xlsx');
-  // const workbook = XLSX.read(excelBuffer, { type: 'array' });
-  // const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-  // const jsonData = XLSX.utils.sheet_to_json(worksheet);
-  // ... process jsonData similar to CSV
+  try {
+    // Dynamic import to avoid build issues if xlsx not installed
+    const XLSX = await import('xlsx');
+
+    // Read the workbook
+    const workbook = XLSX.read(excelBuffer, { type: 'array' });
+
+    // Get the worksheet (use first sheet if not specified)
+    const worksheetName = sheetName || workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[worksheetName];
+
+    if (!worksheet) {
+      return {
+        success: false,
+        imported: 0,
+        skipped: 0,
+        errors: [{
+          row: 0,
+          column: '',
+          value: '',
+          message: `Worksheet "${worksheetName}" not found`
+        }],
+        message: 'Invalid worksheet',
+      };
+    }
+
+    // Convert to JSON with header option
+    const jsonData = XLSX.utils.sheet_to_json(worksheet, {
+      header: 1, // Return array of arrays
+      raw: false, // Format dates as strings
+      defval: '' // Default value for empty cells
+    }) as string[][];
+
+    if (jsonData.length < 2) {
+      return {
+        success: false,
+        imported: 0,
+        skipped: 0,
+        errors: [{
+          row: 0,
+          column: '',
+          value: '',
+          message: 'Excel file is empty or contains only headers'
+        }],
+        message: 'Invalid Excel format',
+      };
+    }
+
+    // Parse headers (first row)
+    const headers = jsonData[0].map(h => String(h || ''));
+    const mappings = getColumnMappings(dataType, headers);
+
+    // Parse data rows
+    const parsedRows: ParsedRow[] = [];
+    const errors: ValidationError[] = [];
+    let imported = 0;
+    let skipped = 0;
+
+    for (let i = 1; i < jsonData.length; i++) {
+      const row = jsonData[i];
+
+      // Skip empty rows
+      if (!row || row.every(cell => !cell || String(cell).trim() === '')) {
+        skipped++;
+        continue;
+      }
+
+      const rowData: Record<string, any> = {};
+      const rowErrors: ValidationError[] = [];
+
+      // Map values to fields
+      mappings.forEach((mapping, index) => {
+        const value = row[index];
+        if (mapping && value !== undefined && value !== null) {
+          const stringValue = String(value).trim();
+          const processed = processValue(stringValue, mapping.type);
+
+          // Validate required fields
+          if (mapping.required && !processed) {
+            rowErrors.push({
+              row: i + 1,
+              column: mapping.sourceColumn,
+              value: stringValue,
+              message: `${mapping.sourceColumn} is required`
+            });
+          }
+
+          // Apply custom validation
+          if (processed && mapping.validate && !mapping.validate(processed)) {
+            rowErrors.push({
+              row: i + 1,
+              column: mapping.sourceColumn,
+              value: stringValue,
+              message: `Invalid ${mapping.type} format`
+            });
+          }
+
+          // Apply transform if provided
+          const finalValue = mapping.transform ? mapping.transform(processed) : processed;
+          rowData[mapping.targetField] = finalValue;
+        } else if (mapping && mapping.required) {
+          rowErrors.push({
+            row: i + 1,
+            column: mapping.sourceColumn,
+            value: '',
+            message: `${mapping.sourceColumn} is required`
+          });
+        }
+      });
+
+      // Validate using schema
+      const schema = getSchemaForType(dataType);
+      const validation = schema.safeParse(rowData);
+
+      if (!validation.success) {
+        validation.error.issues.forEach((err: any) => {
+          rowErrors.push({
+            row: i + 1,
+            column: err.path.join('.'),
+            value: rowData[err.path[0]],
+            message: err.message
+          });
+        });
+      }
+
+      if (rowErrors.length > 0) {
+        errors.push(...rowErrors);
+        skipped++;
+      } else {
+        parsedRows.push({
+          row: i + 1,
+          data: rowData,
+          errors: []
+        });
+        imported++;
+      }
+    }
+
+    return {
+      success: errors.length === 0,
+      imported,
+      skipped,
+      errors,
+      message: errors.length === 0
+        ? `Successfully parsed ${imported} rows from Excel`
+        : `Parsed Excel with ${errors.length} errors`,
+      data: parsedRows
+    };
+  } catch (error) {
+    logger.error('Failed to parse Excel', error as Error);
+
+    // Check if xlsx module is installed
+    if (error instanceof Error && error.message.includes("Cannot find module 'xlsx'")) {
+      return {
+        success: false,
+        imported: 0,
+        skipped: 0,
+        errors: [{
+          row: 0,
+          column: '',
+          value: '',
+          message: 'Excel parsing requires xlsx library. Installing...'
+        }],
+        message: 'xlsx library not found',
+      };
+    }
+
+    return {
+      success: false,
+      imported: 0,
+      skipped: 0,
+      errors: [{
+        row: 0,
+        column: '',
+        value: '',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      }],
+      message: 'Failed to parse Excel file',
+    };
+  }
 }
 
 // === HELPER FUNCTIONS ===
@@ -505,9 +664,113 @@ export function generateCsvTemplate(dataType: string): string {
       default: return 'Example';
     }
   });
-  
+
   return [
     headers.join(','),
     exampleRow.join(',')
   ].join('\n');
+}
+
+export async function generateExcelTemplate(dataType: string): Promise<Buffer> {
+  try {
+    const XLSX = await import('xlsx');
+
+    const config = getMappingConfig(dataType);
+    const headers = config.map(c => c.sourceColumn);
+
+    // Create example rows based on data type
+    const exampleRows = [];
+
+    switch (dataType) {
+      case 'students':
+        exampleRows.push(
+          ['John', 'Doe', 'john.doe@school.edu', '2010-01-15', '10A', 'STU001', 'Jane Doe', 'jane.doe@parent.com', '555-0123'],
+          ['Jane', 'Smith', 'jane.smith@school.edu', '2010-03-20', '10B', 'STU002', 'Bob Smith', 'bob.smith@parent.com', '555-0124']
+        );
+        break;
+      case 'teachers':
+        exampleRows.push(
+          ['Alice', 'Johnson', 'alice.johnson@school.edu', '555-0125', 'Mathematics', 'TCH001'],
+          ['Bob', 'Williams', 'bob.williams@school.edu', '555-0126', 'Science', 'TCH002']
+        );
+        break;
+      case 'classes':
+        exampleRows.push(
+          ['Math 101', 'MATH101', 'Alice Johnson', 'Room 101', '30'],
+          ['Science 101', 'SCI101', 'Bob Williams', 'Lab 1', '25']
+        );
+        break;
+    }
+
+    // Create worksheet data
+    const wsData = [headers, ...exampleRows];
+
+    // Create workbook and worksheet
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+    // Auto-size columns
+    const colWidths = headers.map((header, i) => {
+      const maxLength = Math.max(
+        header.length,
+        ...exampleRows.map(row => String(row[i] || '').length)
+      );
+      return { wch: Math.min(maxLength + 2, 30) }; // Cap at 30 chars
+    });
+    ws['!cols'] = colWidths;
+
+    // Add worksheet to workbook
+    XLSX.utils.book_append_sheet(wb, ws, dataType.charAt(0).toUpperCase() + dataType.slice(1));
+
+    // Write to buffer
+    const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+    return buffer;
+  } catch (error) {
+    logger.error('Failed to generate Excel template', error as Error);
+    throw new Error('Failed to generate Excel template');
+  }
+}
+
+// === VALIDATION HELPERS ===
+
+export function validateImportFile(
+  file: File | { name: string; size: number; type: string }
+): { valid: boolean; error?: string } {
+  const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+  const ALLOWED_TYPES = [
+    'text/csv',
+    'application/vnd.ms-excel',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+  ];
+  const ALLOWED_EXTENSIONS = ['.csv', '.xls', '.xlsx'];
+
+  // Check file size
+  if (file.size > MAX_FILE_SIZE) {
+    return {
+      valid: false,
+      error: 'File size exceeds 10MB limit'
+    };
+  }
+
+  // Check file type
+  if (!ALLOWED_TYPES.includes(file.type)) {
+    // Fallback to extension check
+    const extension = '.' + file.name.split('.').pop()?.toLowerCase();
+    if (!ALLOWED_EXTENSIONS.includes(extension)) {
+      return {
+        valid: false,
+        error: 'Invalid file type. Please upload CSV or Excel files only'
+      };
+    }
+  }
+
+  return { valid: true };
+}
+
+export function getFileType(filename: string): 'csv' | 'excel' | 'unknown' {
+  const extension = filename.split('.').pop()?.toLowerCase();
+
+  if (extension === 'csv') return 'csv';
+  if (extension === 'xls' || extension === 'xlsx') return 'excel';
+  return 'unknown';
 }

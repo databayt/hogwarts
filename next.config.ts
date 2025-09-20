@@ -1,9 +1,27 @@
 import type { NextConfig } from "next";
-import createMDX from '@next/mdx'
+import createMDX from '@next/mdx';
+import { securityHeaders } from './src/lib/security-headers';
 
 const nextConfig: NextConfig = {
   /* config options here */
   pageExtensions: ['js', 'jsx', 'mdx', 'ts', 'tsx'],
+
+  // Security headers
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: securityHeaders,
+      },
+      {
+        source: '/api/:path*',
+        headers: [
+          ...securityHeaders,
+          { key: 'Cache-Control', value: 'no-store, must-revalidate' },
+        ],
+      },
+    ];
+  },
   eslint: {
     // Skip ESLint during production builds; run `pnpm lint` separately
     ignoreDuringBuilds: true,

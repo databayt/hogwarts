@@ -87,13 +87,15 @@ async function processCsvImport(
 
     // If parsing was successful and we have data, save to database
     if (result.success && result.data) {
-      // TODO: Save parsed data to database based on dataType
-      logger.info('CSV import parsed successfully', {
+      const savedCount = await saveImportedData(schoolId, dataType, result.data);
+      logger.info('CSV import completed', {
         schoolId,
         dataType,
-        imported: result.imported,
+        parsed: result.imported,
+        saved: savedCount,
         skipped: result.skipped
       });
+      result.imported = savedCount;
     }
 
     return result;
@@ -150,13 +152,15 @@ async function processExcelImport(
 
     // If parsing was successful and we have data, save to database
     if (result.success && result.data) {
-      // TODO: Save parsed data to database based on dataType
-      logger.info('Excel import parsed successfully', {
+      const savedCount = await saveImportedData(schoolId, dataType, result.data);
+      logger.info('Excel import completed', {
         schoolId,
         dataType,
-        imported: result.imported,
+        parsed: result.imported,
+        saved: savedCount,
         skipped: result.skipped
       });
+      result.imported = savedCount;
     }
 
     return result;
@@ -189,6 +193,117 @@ async function processManualImport(
     errors: [],
     message: 'Ready to add data manually after setup',
   };
+}
+
+async function saveImportedData(
+  schoolId: string,
+  dataType: string,
+  data: { row: number; data: Record<string, any>; errors: any[] }[]
+): Promise<number> {
+  let savedCount = 0;
+
+  try {
+    await db.$transaction(async (tx) => {
+      switch (dataType) {
+        case 'students':
+          for (const item of data) {
+            try {
+              await tx.student.create({
+                data: {
+                  schoolId,
+                  firstName: item.data.firstName,
+                  lastName: item.data.lastName,
+                  email: item.data.email || null,
+                  dateOfBirth: item.data.dateOfBirth ? new Date(item.data.dateOfBirth) : null,
+                  studentId: item.data.studentId || null,
+                  guardianName: item.data.guardianName || null,
+                  guardianEmail: item.data.guardianEmail || null,
+                  guardianPhone: item.data.guardianPhone || null,
+                  // Grade/class assignment would need to be handled separately
+                },
+              });
+              savedCount++;
+            } catch (error) {
+              logger.warn('Failed to save student', {
+                row: item.row,
+                error: error instanceof Error ? error.message : 'Unknown error',
+              });
+            }
+          }
+          break;
+
+        case 'teachers':
+          for (const item of data) {
+            try {
+              // First create user account
+              const user = await tx.user.create({
+                data: {
+                  schoolId,
+                  email: item.data.email,
+                  name: `${item.data.firstName} ${item.data.lastName}`,
+                  role: 'TEACHER',
+                },
+              });
+
+              // Then create teacher profile
+              await tx.teacher.create({
+                data: {
+                  schoolId,
+                  userId: user.id,
+                  firstName: item.data.firstName,
+                  lastName: item.data.lastName,
+                  email: item.data.email,
+                  phone: item.data.phone || null,
+                  employeeId: item.data.employeeId || null,
+                  // Department assignment would need to be handled separately
+                },
+              });
+              savedCount++;
+            } catch (error) {
+              logger.warn('Failed to save teacher', {
+                row: item.row,
+                error: error instanceof Error ? error.message : 'Unknown error',
+              });
+            }
+          }
+          break;
+
+        case 'classes':
+          for (const item of data) {
+            try {
+              await tx.class.create({
+                data: {
+                  schoolId,
+                  name: item.data.name,
+                  code: item.data.code,
+                  room: item.data.room || null,
+                  capacity: item.data.capacity || 30,
+                  // Teacher assignment would need to be handled separately
+                },
+              });
+              savedCount++;
+            } catch (error) {
+              logger.warn('Failed to save class', {
+                row: item.row,
+                error: error instanceof Error ? error.message : 'Unknown error',
+              });
+            }
+          }
+          break;
+
+        default:
+          logger.warn('Unknown data type for import', { dataType });
+      }
+    });
+  } catch (error) {
+    logger.error('Failed to save imported data', error as Error, {
+      schoolId,
+      dataType,
+      recordCount: data.length,
+    });
+  }
+
+  return savedCount;
 }
 
 export async function skipDataImport(schoolId: string): Promise<ActionResponse> {

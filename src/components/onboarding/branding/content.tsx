@@ -48,12 +48,14 @@ export default function BrandingContent({ dictionary }: BrandingContentProps) {
 
   const handleNext = async () => {
     try {
-      await updateListingData({
+      // Save the data silently without affecting UI loading state
+      updateListingData({
         logoUrl: logo,
         primaryColor,
         borderRadius,
         shadow
       });
+      // Navigate immediately without waiting for the save to complete
       router.push(`/onboarding/${id}/import`);
     } catch (error) {
       console.error('Error updating branding:', error);

@@ -5,6 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { HelpCircle } from 'lucide-react';
 import { useHostValidation } from '@/components/onboarding/host-validation-context';
 import { completeOnboarding } from './actions';
+import SuccessCompletionModal from '../success-completion-modal';
 
 const LegalContent = () => {
   const router = useRouter();
@@ -13,6 +14,8 @@ const LegalContent = () => {
   const [hostingType, setHostingType] = useState<string>('private-individual');
   const [safetyFeatures, setSafetyFeatures] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [schoolData, setSchoolData] = useState<any>(null);
   const { setCustomNavigation, enableNext } = useHostValidation();
 
   console.log("🏗️ [LEGAL CONTENT] Component initialized", {
@@ -55,8 +58,10 @@ const LegalContent = () => {
             redirectUrl: result.data.redirectUrl
           });
 
-          console.log("🦭 [LEGAL CONTENT] Navigating to congratulations page:", result.data.redirectUrl);
-          router.push(result.data.redirectUrl);
+          // Store school data and show success modal instead of navigating
+          setSchoolData(result.data.school);
+          setShowSuccessModal(true);
+          setIsSubmitting(false);
         } else {
           console.error("❌ [LEGAL CONTENT] Failed to complete onboarding:", result.error);
           console.log("🔄 [LEGAL CONTENT] Setting isSubmitting back to false");
@@ -101,6 +106,19 @@ const LegalContent = () => {
     }
   }, [hostingType, isSubmitting, enableNext]);
 
+  // Handle dashboard navigation from modal
+  const handleGoToDashboard = () => {
+    if (schoolData?.domain) {
+      // Construct the subdomain URL
+      const protocol = window.location.protocol;
+      const baseDomain = window.location.hostname.replace('ed.', '');
+      const schoolUrl = `${protocol}//${schoolData.domain}.${baseDomain}/dashboard`;
+
+      // Redirect to the school's subdomain dashboard
+      window.location.href = schoolUrl;
+    }
+  };
+
   const toggleSafetyFeature = (feature: string) => {
     console.log("🔄 [LEGAL CONTENT] Toggling safety feature", {
       feature,
@@ -131,8 +149,19 @@ const LegalContent = () => {
   const isFormValid = hostingType && safetyFeatures.length >= 0; // At least hosting type selected
 
   return (
-    <div className="">
+    <>
+      {/* Success Modal */}
+      {schoolData && (
+        <SuccessCompletionModal
+          schoolData={schoolData}
+          showModal={showSuccessModal}
+          setShowModal={setShowSuccessModal}
+          onGoToDashboard={handleGoToDashboard}
+        />
+      )}
+
       <div className="">
+        <div className="">
         {/* Title at the top */}
         <div className="mb-6 sm:mb-8">
           <h1 className="text-xl sm:text-2xl lg:text-4xl font-medium text-foreground">
@@ -261,6 +290,7 @@ const LegalContent = () => {
       </div>
 
     </div>
+    </>
   );
 };
 
