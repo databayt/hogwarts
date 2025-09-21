@@ -730,12 +730,12 @@ export function TimetableContent({ dictionary }: TimetableContentProps) {
 
       {showConflicts && (
         <ConflictsDrawer
+          termId={null}
           open={showConflicts}
-          onClose={() => setShowConflicts(false)}
-          conflicts={detectConflicts(filteredSlots)}
-          onResolve={async (conflictId) => {
-            // Handle conflict resolution
-            console.log('Resolving conflict:', conflictId)
+          onOpenChange={(open) => setShowConflicts(open)}
+          onApplySuggestion={(suggestion) => {
+            // Handle suggestion application
+            console.log('Applying suggestion:', suggestion)
           }}
         />
       )}
