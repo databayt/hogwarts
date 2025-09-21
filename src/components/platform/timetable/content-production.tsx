@@ -541,7 +541,7 @@ export function TimetableContent({ dictionary }: TimetableContentProps) {
         <CardContent className="p-4">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
             <div className="flex items-center gap-2">
-              <Select value={viewType} onValueChange={setViewType}>
+              <Select value={viewType} onValueChange={(value) => setViewType(value as 'class' | 'teacher' | 'room' | 'student')}>
                 <SelectTrigger className="w-40">
                   <SelectValue />
                 </SelectTrigger>
@@ -612,7 +612,7 @@ export function TimetableContent({ dictionary }: TimetableContentProps) {
                 </Button>
               )}
 
-              <Tabs value={viewMode} onValueChange={setViewMode}>
+              <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as 'grid' | 'analytics')}>
                 <TabsList>
                   <TabsTrigger value="grid">
                     <Grid3x3 className="h-4 w-4 mr-2" />
