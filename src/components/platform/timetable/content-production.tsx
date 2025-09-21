@@ -88,7 +88,7 @@ interface TimetableContentProps {
 export function TimetableContent({ dictionary }: TimetableContentProps) {
   const { data: session } = useSession()
   const { toast } = useToast()
-  const dict = dictionary?.timetable || {}
+  const dict = (dictionary?.timetable || {}) as any
 
   // Core state
   const [isLoading, setIsLoading] = useState(true)
