@@ -343,7 +343,7 @@ export function TimetableContent({ dictionary }: TimetableContentProps) {
     const updatedSlot = {
       ...event.source.slot,
       dayOfWeek: event.target.position.day,
-      periodId: event.target.position.period
+      periodId: event.target.position.period.toString()
     }
 
     // Validate placement
