@@ -306,8 +306,7 @@ export function TimetableContent({ dictionary }: TimetableContentProps) {
     } catch (err) {
       toast({
         title: dict.saveFailed || 'Save Failed',
-        description: err instanceof Error ? err.message : 'Failed to save slot',
-        variant: 'destructive'
+        description: err instanceof Error ? err.message : 'Failed to save slot'
       })
     } finally {
       setIsSaving(false)
@@ -334,7 +333,6 @@ export function TimetableContent({ dictionary }: TimetableContentProps) {
       toast({
         title: dict.deleteFailed || 'Delete Failed',
         description: err instanceof Error ? err.message : 'Failed to delete slot',
-        variant: 'destructive'
       })
     }
   }
@@ -358,7 +356,6 @@ export function TimetableContent({ dictionary }: TimetableContentProps) {
       toast({
         title: dict.invalidPlacement || 'Invalid Placement',
         description: validation.errors.join(', '),
-        variant: 'destructive'
       })
       return
     }
@@ -388,7 +385,6 @@ export function TimetableContent({ dictionary }: TimetableContentProps) {
       toast({
         title: dict.importFailed || 'Import Failed',
         description: err instanceof Error ? err.message : 'Failed to import timetable',
-        variant: 'destructive'
       })
     }
   }
@@ -726,8 +722,7 @@ export function TimetableContent({ dictionary }: TimetableContentProps) {
               toast({
                 title: dict.saveFailed || 'Save Failed',
                 description: err instanceof Error ? err.message : 'Failed to save settings',
-                variant: 'destructive'
-              })
+                      })
             }
           }}
         />
