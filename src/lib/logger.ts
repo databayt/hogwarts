@@ -104,7 +104,7 @@ class Logger {
     }
 
     // === SENTRY INTEGRATION (Optional) ===
-    if (env.SENTRY_DSN || env.NEXT_PUBLIC_SENTRY_DSN) {
+    if (process.env.SENTRY_DSN || process.env.NEXT_PUBLIC_SENTRY_DSN) {
       try {
         // Client-side Sentry
         if (typeof window !== 'undefined' && (window as any).Sentry) {
