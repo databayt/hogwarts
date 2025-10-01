@@ -679,7 +679,7 @@ export async function generateExcelTemplate(dataType: string): Promise<Buffer> {
     const headers = config.map(c => c.sourceColumn);
 
     // Create example rows based on data type
-    const exampleRows = [];
+    const exampleRows: string[][] = [];
 
     switch (dataType) {
       case 'students':
