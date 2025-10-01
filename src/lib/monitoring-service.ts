@@ -80,10 +80,12 @@ class MonitoringService {
 
       // Send to Sentry as breadcrumb
       if (typeof window !== 'undefined' && Sentry.addBreadcrumb) {
+        // Map 'critical' to 'error' since Sentry doesn't have a 'critical' level
+        const sentryLevel = event.severity === 'critical' ? 'error' : (event.severity || 'info');
         Sentry.addBreadcrumb({
           message: event.name,
           category: event.category,
-          level: event.severity || 'info',
+          level: sentryLevel as any,
           data: event.data,
         });
       }
@@ -132,7 +134,9 @@ class MonitoringService {
           if (errorReport.context) {
             scope.setContext('additional', errorReport.context);
           }
-          scope.setLevel(errorReport.severity || 'error');
+          // Map 'critical' to 'error' since Sentry doesn't have a 'critical' level
+          const sentryLevel = errorReport.severity === 'critical' ? 'error' : (errorReport.severity || 'error');
+          scope.setLevel(sentryLevel as any);
 
           Sentry.captureException(error);
         });
