@@ -392,14 +392,36 @@ class MonitoringService {
   }
 }
 
-// Export singleton instance
-export const monitoringService = new MonitoringService();
+// Create singleton instance only on server
+const monitoringServiceInstance = typeof window === 'undefined' ? new MonitoringService() : null;
 
-// Export convenience functions
-export const trackEvent = (event: MonitoringEvent) => monitoringService.trackEvent(event);
-export const reportError = (errorReport: ErrorReport) => monitoringService.reportError(errorReport);
-export const trackPerformance = (metric: PerformanceMetric) => monitoringService.trackPerformance(metric);
-export const trackUserActivity = (activity: UserActivity) => monitoringService.trackUserActivity(activity);
+// Export the instance (will be null on client)
+export const monitoringService = monitoringServiceInstance;
+
+// Export convenience functions with client-side safety
+export const trackEvent = (event: MonitoringEvent) => {
+  if (typeof window === 'undefined' && monitoringServiceInstance) {
+    monitoringServiceInstance.trackEvent(event);
+  }
+};
+
+export const reportError = (errorReport: ErrorReport) => {
+  if (typeof window === 'undefined' && monitoringServiceInstance) {
+    monitoringServiceInstance.reportError(errorReport);
+  }
+};
+
+export const trackPerformance = (metric: PerformanceMetric) => {
+  if (typeof window === 'undefined' && monitoringServiceInstance) {
+    monitoringServiceInstance.trackPerformance(metric);
+  }
+};
+
+export const trackUserActivity = (activity: UserActivity) => {
+  if (typeof window === 'undefined' && monitoringServiceInstance) {
+    monitoringServiceInstance.trackUserActivity(activity);
+  }
+};
 export const trackApiCall = (
   method: string,
   path: string,
@@ -407,10 +429,25 @@ export const trackApiCall = (
   duration: number,
   userId?: string,
   schoolId?: string
-) => monitoringService.trackApiCall(method, path, statusCode, duration, userId, schoolId);
+) => {
+  if (typeof window === 'undefined' && monitoringServiceInstance) {
+    monitoringServiceInstance.trackApiCall(method, path, statusCode, duration, userId, schoolId);
+  }
+};
+
 export const trackBusinessMetric = (
   name: string,
   value: number,
   metadata?: Record<string, any>
-) => monitoringService.trackBusinessMetric(name, value, metadata);
-export const startTimer = (name: string) => monitoringService.startTimer(name);
+) => {
+  if (typeof window === 'undefined' && monitoringServiceInstance) {
+    monitoringServiceInstance.trackBusinessMetric(name, value, metadata);
+  }
+};
+
+export const startTimer = (name: string) => {
+  if (typeof window === 'undefined' && monitoringServiceInstance) {
+    return monitoringServiceInstance.startTimer(name);
+  }
+  return () => {}; // Return no-op function on client
+};
