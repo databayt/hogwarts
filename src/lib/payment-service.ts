@@ -437,25 +437,26 @@ class PaymentService {
         currency: paymentIntent.currency,
       });
 
-      // Update school subscription status
+      // Update school status if needed
       await db.school.update({
         where: { id: schoolId },
         data: {
-          subscriptionStatus: 'ACTIVE',
-          lastPaymentDate: new Date(),
-          nextBillingDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+          isActive: true, // Ensure school is active after payment
         }
       });
 
-      // Send confirmation email
+      // Get school details for email
       const school = await db.school.findUnique({
-        where: { id: schoolId },
-        include: { owner: true }
+        where: { id: schoolId }
       });
 
-      if (school?.owner?.email) {
+      // Send confirmation email if we have customer email from Stripe
+      const customerEmail = paymentIntent.receipt_email ||
+                           paymentIntent.charges?.data[0]?.billing_details?.email;
+
+      if (customerEmail && school) {
         await this.sendPaymentConfirmationEmail({
-          to: school.owner.email,
+          to: customerEmail,
           schoolName: school.name,
           amount: paymentIntent.amount / 100,
           currency: paymentIntent.currency,
