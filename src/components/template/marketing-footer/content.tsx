@@ -125,7 +125,7 @@ export function MarketingFooter({ dictionary }: MarketingFooterProps) {
               <Logo width={24} height={24} className="text-foreground" />
               <h6>{footerDict.brandName || "Databayt"}</h6>
             </Link>
-            <div className="flex flex-wrap items-center gap-2 text-xs rtl:text-sm text-primary/70">
+            <small className="flex flex-wrap items-center gap-2 rtl:text-sm text-primary/70">
                 <span>{footerDict.copyright || "© copyright free."}</span>
                 <span>•</span>
                 <Link href="/terms-of-use" className="hover:text-primary transition-colors">
@@ -143,7 +143,7 @@ export function MarketingFooter({ dictionary }: MarketingFooterProps) {
                 <Link href="/status" className="hover:text-primary transition-colors">
                   {footerDict.status || "Status"}
                 </Link>
-            </div>
+            </small>
           </div>
         </div>
       </div>

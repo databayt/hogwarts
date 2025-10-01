@@ -23,41 +23,41 @@ export default function StudentDashboard({ data }: StudentDashboardProps) {
 
       <div className={`grid gap-4 ${useMobileLayout ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1 md:grid-cols-3'}`}>
         <div className=" rounded-lg p-4">
-          <h4 className="text-[#39d353] mb-2">Upcoming Assignments</h4>
+          <h4 className="text-green-500 mb-2">Upcoming Assignments</h4>
           <div className="space-y-2 muted">
             <div className={cn(
               "flex justify-between p-2 rounded-md transition-all duration-200",
               getSubjectCategoryColor("Mathematics", true)
             )}>
               <span className="font-medium">Math Quiz</span>
-              <span className="text-[#ffa000]">Due: Dec 20</span>
+              <span className="text-orange-500">Due: Dec 20</span>
             </div>
             <div className={cn(
               "flex justify-between p-2 rounded-md transition-all duration-200",
               getSubjectCategoryColor("Science", true)
             )}>
               <span className="font-medium">Science Project</span>
-              <span className="text-[#f85149]">Due: Dec 18</span>
+              <span className="text-red-500">Due: Dec 18</span>
             </div>
             <div className={cn(
               "flex justify-between p-2 rounded-md transition-all duration-200",
               getSubjectCategoryColor("History", true)
             )}>
               <span className="font-medium">History Essay</span>
-              <span className="text-[#39d353]">Due: Dec 25</span>
+              <span className="text-green-500">Due: Dec 25</span>
             </div>
           </div>
         </div>
 
         <div className=" rounded-lg p-4">
-          <h4 className="text-[#1f6feb] mb-2">Current GPA</h4>
-          <h3 className="text-[#39d353]">3.8</h3>
+          <h4 className="text-blue-500 mb-2">Current GPA</h4>
+          <h3 className="text-green-500">3.8</h3>
           <p className="muted">Semester Average</p>
         </div>
 
         <div className=" rounded-lg p-4">
-          <h4 className="text-[#a259ff] mb-2">Attendance</h4>
-          <h3 className="text-[#39d353]">95%</h3>
+          <h4 className="text-purple-500 mb-2">Attendance</h4>
+          <h3 className="text-green-500">95%</h3>
           <p className="muted">This Month</p>
         </div>
       </div>
@@ -70,42 +70,42 @@ export default function StudentDashboard({ data }: StudentDashboardProps) {
             "p-3 rounded-lg transition-all duration-200",
             getSubjectCategoryColor("Mathematics", true)
           )}>
-            <div className="font-medium">Mathematics</div>
+            <h6>Mathematics</h6>
             <p className="muted">Grade: A- (90%)</p>
           </div>
           <div className={cn(
             "p-3 rounded-lg transition-all duration-200",
             getSubjectCategoryColor("Science", true)
           )}>
-            <div className="font-medium">Science</div>
+            <h6>Science</h6>
             <p className="muted">Grade: A (95%)</p>
           </div>
           <div className={cn(
             "p-3 rounded-lg transition-all duration-200",
             getSubjectCategoryColor("English", true)
           )}>
-            <div className="font-medium">English</div>
+            <h6>English</h6>
             <p className="muted">Grade: B+ (87%)</p>
           </div>
           <div className={cn(
             "p-3 rounded-lg transition-all duration-200",
             getSubjectCategoryColor("History", true)
           )}>
-            <div className="font-medium">History</div>
+            <h6>History</h6>
             <p className="muted">Grade: A- (91%)</p>
           </div>
           <div className={cn(
             "p-3 rounded-lg transition-all duration-200",
             getSubjectCategoryColor("Art", true)
           )}>
-            <div className="font-medium">Art</div>
+            <h6>Art</h6>
             <p className="muted">Grade: A (96%)</p>
           </div>
           <div className={cn(
             "p-3 rounded-lg transition-all duration-200",
             getSubjectCategoryColor("Physical Education", true)
           )}>
-            <div className="font-medium">Physical Education</div>
+            <h6>Physical Education</h6>
             <p className="muted">Grade: A+ (98%)</p>
           </div>
         </div>

@@ -274,7 +274,7 @@ export function TimetableGridEnhanced({
         position: { day: item.slot.dayOfWeek, period: item.slot.periodId }
       },
       target: {
-        position: { day, period: periodId },
+        position: { day, period: parseInt(periodId) },
         classId: viewType === 'class' ? viewId : undefined
       },
       type: 'move'

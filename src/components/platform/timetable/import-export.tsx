@@ -126,8 +126,7 @@ export function ImportExportDialog({
     } catch (error) {
       toast({
         title: 'Export Failed',
-        description: error instanceof Error ? error.message : 'Failed to export timetable',
-        variant: 'destructive'
+        description: error instanceof Error ? error.message : 'Failed to export timetable'
       })
     } finally {
       setIsProcessing(false)
@@ -335,8 +334,7 @@ X-WR-TIMEZONE:UTC
     } catch (error) {
       toast({
         title: 'Preview Failed',
-        description: 'Failed to preview import file',
-        variant: 'destructive'
+        description: 'Failed to preview import file'
       })
     } finally {
       setIsProcessing(false)
@@ -389,8 +387,7 @@ X-WR-TIMEZONE:UTC
     } catch (error) {
       toast({
         title: 'Import Failed',
-        description: error instanceof Error ? error.message : 'Failed to import timetable',
-        variant: 'destructive'
+        description: error instanceof Error ? error.message : 'Failed to import timetable'
       })
     } finally {
       setIsProcessing(false)
@@ -483,7 +480,7 @@ X-WR-TIMEZONE:UTC
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Export Format</Label>
-                  <Select value={exportFormat} onValueChange={setExportFormat}>
+                  <Select value={exportFormat} onValueChange={(value) => setExportFormat(value as TimetableExportOptions['format'])}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -524,7 +521,7 @@ X-WR-TIMEZONE:UTC
 
                 <div className="space-y-2">
                   <Label>View Type</Label>
-                  <Select value={exportViewType} onValueChange={setExportViewType}>
+                  <Select value={exportViewType} onValueChange={(value) => setExportViewType(value as TimetableExportOptions['viewType'])}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -571,7 +568,7 @@ X-WR-TIMEZONE:UTC
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label>Import Format</Label>
-                  <Select value={importFormat} onValueChange={setImportFormat}>
+                  <Select value={importFormat} onValueChange={(value) => setImportFormat(value as 'excel' | 'csv' | 'json')}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>

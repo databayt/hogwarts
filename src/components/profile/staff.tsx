@@ -23,32 +23,32 @@ export default function StaffDashboard({ data }: StaffDashboardProps) {
 
       <div className={`grid gap-4 ${useMobileLayout ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1 md:grid-cols-3'}`}>
         <div className=" rounded-lg p-4">
-          <h4 className="text-[#39d353] mb-2">Department Overview</h4>
+          <h4 className="text-green-500 mb-2">Department Overview</h4>
           <div className="space-y-2 muted">
             <div className="flex justify-between">
               <span>Total Students</span>
-              <span className="text-[#1f6feb]">1,247</span>
+              <span className="text-blue-500">1,247</span>
             </div>
             <div className="flex justify-between">
               <span>Total Teachers</span>
-              <span className="text-[#1f6feb]">89</span>
+              <span className="text-blue-500">89</span>
             </div>
             <div className="flex justify-between">
               <span>Total Classes</span>
-              <span className="text-[#1f6feb]">156</span>
+              <span className="text-blue-500">156</span>
             </div>
           </div>
         </div>
 
         <div className=" rounded-lg p-4">
-          <h4 className="text-[#ffa000] mb-2">Pending Requests</h4>
-          <h3 className="text-[#f85149]">12</h3>
+          <h4 className="text-orange-500 mb-2">Pending Requests</h4>
+          <h3 className="text-red-500">12</h3>
           <p className="muted">Administrative Tasks</p>
         </div>
 
         <div className=" rounded-lg p-4">
-          <h4 className="text-[#a259ff] mb-2">Attendance Rate</h4>
-          <h3 className="text-[#39d353]">94.2%</h3>
+          <h4 className="text-purple-500 mb-2">Attendance Rate</h4>
+          <h3 className="text-green-500">94.2%</h3>
           <p className="muted">School Average</p>
         </div>
       </div>

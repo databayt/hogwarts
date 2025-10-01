@@ -3,7 +3,7 @@
  * Manages automated backups, retention policies, and restore procedures
  */
 
-import { NeonClient } from '@neondatabase/api-client';
+import { createApiClient } from '@neondatabase/api-client';
 import { db } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { performanceMonitor } from '@/lib/performance-monitor';
@@ -148,7 +148,10 @@ class BackupService {
     }
 
     try {
-      const neonClient = new NeonClient({ apiKey });
+      const neonClient = createApiClient({
+        apiKey,
+        baseUrl: 'https://api.neon.tech/api/v2'
+      });
 
       // Create a point-in-time branch for backup
       const branch = await neonClient.branch.create(projectId, {
@@ -328,7 +331,10 @@ class BackupService {
       const projectId = process.env.NEON_PROJECT_ID;
 
       if (apiKey && projectId) {
-        const neonClient = new NeonClient({ apiKey });
+        const neonClient = createApiClient({
+        apiKey,
+        baseUrl: 'https://api.neon.tech/api/v2'
+      });
 
         // List all branches
         const branches = await neonClient.branch.list(projectId);
@@ -427,7 +433,10 @@ class BackupService {
       const projectId = process.env.NEON_PROJECT_ID;
 
       if (apiKey && projectId) {
-        const neonClient = new NeonClient({ apiKey });
+        const neonClient = createApiClient({
+        apiKey,
+        baseUrl: 'https://api.neon.tech/api/v2'
+      });
 
         // Find the backup branch
         const branches = await neonClient.branch.list(projectId);
@@ -609,7 +618,10 @@ class BackupService {
       const projectId = process.env.NEON_PROJECT_ID;
 
       if (apiKey && projectId) {
-        const neonClient = new NeonClient({ apiKey });
+        const neonClient = createApiClient({
+        apiKey,
+        baseUrl: 'https://api.neon.tech/api/v2'
+      });
         const branches = await neonClient.branch.list(projectId);
 
         const backupBranches = branches
