@@ -546,16 +546,23 @@ class PaymentService {
 
       const newStatus = statusMap[subscription.status] || 'PENDING';
 
-      // Update school subscription
+      // Update school subscription status
+      // Only update fields that exist in the School model
       await db.school.update({
         where: { id: schoolId },
         data: {
-          stripeSubscriptionId: subscription.id,
-          subscriptionStatus: newStatus,
-          subscriptionTier: subscription.items.data[0]?.price?.metadata?.tier || 'starter',
-          subscriptionPeriodStart: new Date(subscription.current_period_start * 1000),
-          subscriptionPeriodEnd: new Date(subscription.current_period_end * 1000),
+          isActive: newStatus === 'ACTIVE',
+          planType: subscription.items.data[0]?.price?.metadata?.tier || 'basic',
         }
+      });
+
+      // Log full subscription details since we can't store them in the database
+      logger.info('Subscription details from Stripe', {
+        schoolId,
+        subscriptionId: subscription.id,
+        status: newStatus,
+        periodStart: new Date(subscription.current_period_start * 1000),
+        periodEnd: new Date(subscription.current_period_end * 1000),
       });
 
       logger.info('Subscription updated in database', { schoolId, status: newStatus });
@@ -577,20 +584,28 @@ class PaymentService {
       await db.school.update({
         where: { id: schoolId },
         data: {
-          subscriptionStatus: 'CANCELLED',
-          subscriptionEndDate: new Date(subscription.canceled_at * 1000),
+          isActive: false, // Deactivate school when subscription is cancelled
         }
+      });
+
+      // Log cancellation details
+      logger.info('Subscription cancellation details', {
+        schoolId,
+        subscriptionId: subscription.id,
+        cancelledAt: new Date(subscription.canceled_at * 1000),
       });
 
       // Send cancellation email
       const school = await db.school.findUnique({
-        where: { id: schoolId },
-        include: { owner: true }
+        where: { id: schoolId }
       });
 
-      if (school?.owner?.email) {
+      // Get customer email from subscription
+      const customerEmail = subscription.customer_email;
+
+      if (customerEmail && school) {
         await this.sendSubscriptionCancellationEmail({
-          to: school.owner.email,
+          to: customerEmail,
           schoolName: school.name,
           endDate: new Date(subscription.current_period_end * 1000),
           reason: subscription.cancellation_details?.reason,
