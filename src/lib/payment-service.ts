@@ -5,6 +5,7 @@
  */
 
 import { logger } from '@/lib/logger';
+import { db } from '@/lib/db';
 
 // === TYPE DEFINITIONS ===
 
