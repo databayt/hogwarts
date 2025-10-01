@@ -50,17 +50,20 @@ class MonitoringService {
   private initialize() {
     if (this.isInitialized) return;
 
-    // Start metrics flush interval (every 30 seconds)
-    this.flushInterval = setInterval(() => {
-      this.flushMetrics();
-    }, 30000);
+    // Only initialize on server side
+    if (typeof window === 'undefined') {
+      // Start metrics flush interval (every 30 seconds)
+      this.flushInterval = setInterval(() => {
+        this.flushMetrics();
+      }, 30000);
+
+      logger.info('Monitoring service initialized', {
+        action: 'monitoring_initialized',
+        sentryEnabled: !!process.env.NEXT_PUBLIC_SENTRY_DSN,
+      });
+    }
 
     this.isInitialized = true;
-
-    logger.info('Monitoring service initialized', {
-      action: 'monitoring_initialized',
-      sentryEnabled: !!process.env.NEXT_PUBLIC_SENTRY_DSN,
-    });
   }
 
   /**

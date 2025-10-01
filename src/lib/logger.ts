@@ -4,8 +4,7 @@
  * Includes requestId and schoolId for traceability
  */
 
-// Remove Node.js crypto import for Edge Runtime compatibility
-import { env } from '@/env.mjs';
+// Note: env import removed to prevent client-side access to server env vars
 
 type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 
