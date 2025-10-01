@@ -515,9 +515,8 @@ class PaymentService {
       }
 
       // Schedule retry attempt (if applicable)
-      if (failedPayments < 3) {
-        await this.schedulePaymentRetry(paymentIntent, failedPayments + 1);
-      }
+      // Since we don't track failed payments locally, we rely on Stripe's retry logic
+      // Stripe will automatically retry failed payments based on the subscription settings
 
     } catch (error) {
       logger.error('Error handling payment failure', { error, paymentIntent });
