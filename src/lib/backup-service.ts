@@ -520,7 +520,7 @@ class BackupService {
         await tx.class.deleteMany();
         await tx.teacher.deleteMany();
         await tx.student.deleteMany();
-        await tx.user.deleteMany({ where: { isPlatformAdmin: false } });
+        await tx.user.deleteMany({ where: { role: { not: 'DEVELOPER' } } });
         await tx.school.deleteMany();
 
         // Restore data
