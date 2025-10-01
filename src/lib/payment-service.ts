@@ -481,47 +481,31 @@ class PaymentService {
       const schoolId = paymentIntent.metadata?.schoolId;
       if (!schoolId) return;
 
-      // Record failed payment attempt
-      await db.payment.create({
-        data: {
-          schoolId,
-          stripePaymentIntentId: paymentIntent.id,
-          amount: paymentIntent.amount / 100,
-          currency: paymentIntent.currency,
-          status: 'FAILED',
-          paymentDate: new Date(),
-          error: paymentIntent.last_payment_error?.message,
-          metadata: paymentIntent.metadata,
-        }
+      // Log failed payment attempt
+      logger.error('Payment failed', {
+        schoolId,
+        paymentIntentId: paymentIntent.id,
+        amount: paymentIntent.amount / 100,
+        currency: paymentIntent.currency,
+        error: paymentIntent.last_payment_error?.message,
       });
 
-      // Update school status if subscription is at risk
-      const failedPayments = await db.payment.count({
-        where: {
-          schoolId,
-          status: 'FAILED',
-          paymentDate: {
-            gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) // Last 30 days
-          }
-        }
-      });
-
-      if (failedPayments >= 3) {
-        await db.school.update({
-          where: { id: schoolId },
-          data: { subscriptionStatus: 'AT_RISK' }
-        });
-      }
+      // Since we don't have a payment model, we can't count failed payments
+      // Just log the failure for now
+      // TODO: Implement failed payment tracking via Stripe webhooks
 
       // Send failure notification
       const school = await db.school.findUnique({
-        where: { id: schoolId },
-        include: { owner: true }
+        where: { id: schoolId }
       });
 
-      if (school?.owner?.email) {
+      // Get customer email from Stripe
+      const customerEmail = paymentIntent.receipt_email ||
+                           paymentIntent.charges?.data[0]?.billing_details?.email;
+
+      if (customerEmail && school) {
         await this.sendPaymentFailureEmail({
-          to: school.owner.email,
+          to: customerEmail,
           schoolName: school.name,
           amount: paymentIntent.amount / 100,
           currency: paymentIntent.currency,
