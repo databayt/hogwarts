@@ -135,7 +135,7 @@ export function AttendanceView({ students }: AttendanceViewProps) {
   if (!student) {
     return (
       <div className="text-center py-12">
-        <p className="text-muted-foreground">No students found.</p>
+        <p className="muted">No students found.</p>
       </div>
     );
   }
@@ -206,9 +206,9 @@ export function AttendanceView({ students }: AttendanceViewProps) {
             )}
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.attendanceRate.toFixed(1)}%</div>
+            <h3>{stats.attendanceRate.toFixed(1)}%</h3>
             <Progress value={stats.attendanceRate} className="mt-2" />
-            <p className="text-xs text-muted-foreground mt-2">
+            <p className="muted mt-2">
               {stats.present} of {stats.total} classes attended
             </p>
           </CardContent>
@@ -220,8 +220,8 @@ export function AttendanceView({ students }: AttendanceViewProps) {
             <CheckCircle className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.present}</div>
-            <p className="text-xs text-muted-foreground">classes attended</p>
+            <h3>{stats.present}</h3>
+            <p className="muted">classes attended</p>
           </CardContent>
         </Card>
 
@@ -231,8 +231,8 @@ export function AttendanceView({ students }: AttendanceViewProps) {
             <XCircle className="h-4 w-4 text-red-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.absent}</div>
-            <p className="text-xs text-muted-foreground">classes missed</p>
+            <h3>{stats.absent}</h3>
+            <p className="muted">classes missed</p>
           </CardContent>
         </Card>
 
@@ -242,8 +242,8 @@ export function AttendanceView({ students }: AttendanceViewProps) {
             <Clock className="h-4 w-4 text-yellow-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.late}</div>
-            <p className="text-xs text-muted-foreground">late arrivals</p>
+            <h3>{stats.late}</h3>
+            <p className="muted">late arrivals</p>
           </CardContent>
         </Card>
       </div>
@@ -266,15 +266,15 @@ export function AttendanceView({ students }: AttendanceViewProps) {
             <CardContent>
               <div className="space-y-2">
                 {filteredAttendances.length === 0 ? (
-                  <p className="text-muted-foreground text-center py-4">No attendance records found.</p>
+                  <p className="muted text-center py-4">No attendance records found.</p>
                 ) : (
                   filteredAttendances.map(attendance => (
                     <div key={attendance.id} className="flex items-center justify-between p-3 border rounded-lg">
                       <div className="flex items-center gap-3">
                         {getStatusIcon(attendance.status)}
                         <div>
-                          <p className="font-medium">{attendance.className}</p>
-                          <p className="text-sm text-muted-foreground">
+                          <h6>{attendance.className}</h6>
+                          <p className="muted">
                             {format(new Date(attendance.date), 'PPP')}
                           </p>
                         </div>
@@ -306,9 +306,9 @@ export function AttendanceView({ students }: AttendanceViewProps) {
             <CardContent>
               <div className="grid grid-cols-7 gap-2">
                 {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-                  <div key={day} className="text-center text-sm font-medium text-muted-foreground py-2">
+                  <h6 key={day} className="text-center text-muted-foreground py-2">
                     {day}
-                  </div>
+                  </h6>
                 ))}
                 {/* Simple calendar grid - would need more implementation for full calendar */}
                 {Array.from({ length: 35 }, (_, i) => {
@@ -330,11 +330,11 @@ export function AttendanceView({ students }: AttendanceViewProps) {
                         hasLate && !hasAbsent && !hasPresent && "bg-yellow-50 border-yellow-200"
                       )}
                     >
-                      <div className="font-medium">{format(date, 'd')}</div>
+                      <h6>{format(date, 'd')}</h6>
                       {dayAttendances.length > 0 && (
-                        <div className="mt-1">
+                        <small className="mt-1">
                           {dayAttendances.length} class{dayAttendances.length > 1 ? 'es' : ''}
-                        </div>
+                        </small>
                       )}
                     </div>
                   );

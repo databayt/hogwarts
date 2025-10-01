@@ -197,7 +197,7 @@ export function CsvImportComponent() {
             {/* Errors */}
             {result.errors.length > 0 && (
               <div className="space-y-2">
-                <h4 className="font-medium">Errors:</h4>
+                <h4>Errors:</h4>
                 <div className="max-h-60 overflow-y-auto space-y-2">
                   {result.errors.map((error, index) => (
                     <Alert key={index} variant="destructive">

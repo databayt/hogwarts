@@ -128,7 +128,7 @@ export function ParentAnnouncementsContent() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="text-muted-foreground">Loading announcements...</div>
+        <p className="muted">Loading announcements...</p>
       </div>
     );
   }
@@ -188,9 +188,9 @@ export function ParentAnnouncementsContent() {
             .sort(([a], [b]) => b.localeCompare(a))
             .map(([date, dateAnnouncements]) => (
               <div key={date} className="space-y-4">
-                <h3 className="text-lg font-semibold text-muted-foreground">
+                <h5 className="text-muted-foreground">
                   {format(new Date(date), 'EEEE, MMMM d, yyyy')}
-                </h3>
+                </h5>
                 <div className="space-y-3">
                   {dateAnnouncements.map(announcement => (
                     <Card key={announcement.id} className="overflow-hidden">
@@ -209,16 +209,16 @@ export function ParentAnnouncementsContent() {
                                 <CardDescription className="flex items-center gap-2">
                                   {getScopeBadge(announcement.scope)}
                                   {announcement.class && (
-                                    <span className="text-sm">
+                                    <p>
                                       {announcement.class.subject} - {announcement.class.name}
                                       <span className="text-muted-foreground ml-2">
                                         by {announcement.class.teacher}
                                       </span>
-                                    </span>
+                                    </p>
                                   )}
-                                  <span className="text-xs text-muted-foreground ml-auto">
+                                  <small className="muted ml-auto">
                                     {format(new Date(announcement.createdAt), 'h:mm a')}
-                                  </span>
+                                  </small>
                                 </CardDescription>
                               </div>
                               <ChevronDown
@@ -237,7 +237,7 @@ export function ParentAnnouncementsContent() {
                             </div>
                             {students.length > 1 && (
                               <div className="mt-4 pt-4 border-t">
-                                <p className="text-sm text-muted-foreground">
+                                <p className="muted">
                                   Relevant for:
                                   {students
                                     .filter(s => announcement.relevantStudents.includes(s.id))

@@ -187,7 +187,7 @@ export async function ParentDashboard({ user, dictionary }: ParentDashboardProps
             {children.map((child) => (
               <div key={child.id} className="p-4 border rounded-lg">
                 <div className="flex items-center justify-between mb-3">
-                  <h4 className="font-medium">{child.name}</h4>
+                  <h4>{child.name}</h4>
                   <Badge variant="outline">{child.recentActivity}</Badge>
                 </div>
                 <div className="grid grid-cols-2 gap-4">

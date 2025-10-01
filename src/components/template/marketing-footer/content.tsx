@@ -99,7 +99,7 @@ export function MarketingFooter({ dictionary }: MarketingFooterProps) {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 lg:gap-20 lg:flex  lg:items-start px-0 text-center lg:text-start">
               {footerSections.map((section) => (
                 <div key={section.title} className="w-full lg:flex-1">
-                  <h3 className="muted mb-4 rtl:text-base">{section.title}</h3>
+                  <p className="muted mb-4 rtl:text-base">{section.title}</p>
                   <ul className="space-y-2">
                     {section.links.map((link) => (
                       <li key={link.href}>
@@ -123,7 +123,7 @@ export function MarketingFooter({ dictionary }: MarketingFooterProps) {
           <div className="flex flex-col lg:flex-row items-start lg:items-center gap-4 lg:gap-10">
             <Link href="/" className="flex items-center gap-2">
               <Logo width={24} height={24} className="text-foreground" />
-              <h1 className="text-base font-semibold">{footerDict.brandName || "Databayt"}</h1>
+              <h6>{footerDict.brandName || "Databayt"}</h6>
             </Link>
             <div className="flex flex-wrap items-center gap-2 text-xs rtl:text-sm text-primary/70">
                 <span>{footerDict.copyright || "© copyright free."}</span>

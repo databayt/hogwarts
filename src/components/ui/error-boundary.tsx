@@ -63,8 +63,8 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
         <div className="flex min-h-[400px] flex-col items-center justify-center p-8 text-center">
           <div className="max-w-md mx-auto">
             <div className="text-6xl mb-4">⚠️</div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Something went wrong</h2>
-            <p className="text-gray-600 mb-6">
+            <h2 className="mb-4">Something went wrong</h2>
+            <p className="text-muted-foreground mb-6">
               We're sorry, but an unexpected error occurred. Our team has been notified.
             </p>
             <div className="space-y-2">

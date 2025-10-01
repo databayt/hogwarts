@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm add:*)",
+      "Bash(pnpm list:*)",
+      "Bash(mkdir:*)",
+      "Bash(pnpm prisma generate:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

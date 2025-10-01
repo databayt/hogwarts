@@ -325,21 +325,21 @@ export async function AdminDashboard({ user, dictionary }: AdminDashboardProps) 
         <CardContent>
           <div className="grid gap-6 md:grid-cols-3">
             <div className="text-center">
-              <h4 className="font-medium mb-2">Student-Teacher Ratio</h4>
+              <h4 className="mb-2">Student-Teacher Ratio</h4>
               <div className="text-2xl font-bold text-blue-600">
                 {teachers > 0 ? (students / teachers).toFixed(1) : 0}:1
               </div>
               <p className="text-xs text-muted-foreground">Current ratio</p>
             </div>
             <div className="text-center">
-              <h4 className="font-medium mb-2">Budget Utilization</h4>
+              <h4 className="mb-2">Budget Utilization</h4>
               <div className="text-2xl font-bold text-green-600">
                 {mockFinancialSummary.budgetUtilization}%
               </div>
               <p className="text-xs text-muted-foreground">Of allocated budget</p>
             </div>
             <div className="text-center">
-              <h4 className="font-medium mb-2">Performance Trend</h4>
+              <h4 className="mb-2">Performance Trend</h4>
               <div className="text-2xl font-bold text-purple-600">
                 {mockAcademicPerformance.improvement}
               </div>

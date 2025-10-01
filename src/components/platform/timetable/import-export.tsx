@@ -461,9 +461,9 @@ X-WR-TIMEZONE:UTC
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
         <DialogContent className="max-w-3xl">
           <DialogHeader>
-            <DialogTitle>Import/Export Timetable</DialogTitle>
+            <DialogTitle><h4>Import/Export Timetable</h4></DialogTitle>
             <DialogDescription>
-              Import timetable data from a file or export the current timetable
+              <p className="muted">Import timetable data from a file or export the current timetable</p>
             </DialogDescription>
           </DialogHeader>
 
@@ -560,8 +560,8 @@ X-WR-TIMEZONE:UTC
               {isProcessing && (
                 <div className="space-y-2">
                   <Progress value={progress} className="w-full" />
-                  <p className="text-sm text-muted-foreground text-center">
-                    Exporting... {progress}%
+                  <p className="muted text-center">
+                    <small>Exporting... {progress}%</small>
                   </p>
                 </div>
               )}
@@ -630,8 +630,8 @@ X-WR-TIMEZONE:UTC
                   <div className="space-y-2">
                     <Label>Preview (first 5 rows)</Label>
                     <div className="border rounded-lg p-2 max-h-40 overflow-auto">
-                      <pre className="text-xs">
-                        {JSON.stringify(importPreview, null, 2)}
+                      <pre>
+                        <small>{JSON.stringify(importPreview, null, 2)}</small>
                       </pre>
                     </div>
                   </div>
@@ -640,8 +640,8 @@ X-WR-TIMEZONE:UTC
                 {isProcessing && (
                   <div className="space-y-2">
                     <Progress value={progress} className="w-full" />
-                    <p className="text-sm text-muted-foreground text-center">
-                      Processing... {progress}%
+                    <p className="muted text-center">
+                      <small>Processing... {progress}%</small>
                     </p>
                   </div>
                 )}

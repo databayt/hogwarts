@@ -79,7 +79,7 @@ export default function CongratulationsContent() {
         <h1 className="text-4xl font-bold mb-3">
           Congratulations! 🎉
         </h1>
-        <p className="text-xl text-muted-foreground">
+        <p className="lead text-muted-foreground">
           {schoolData?.name || 'Your school'} is now set up and ready to go!
         </p>
       </div>
@@ -89,10 +89,10 @@ export default function CongratulationsContent() {
         <Card className="p-6 mb-8 bg-primary/5 border-primary/20">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-muted-foreground mb-1">Your school's URL:</p>
-              <p className="text-lg font-semibold">
+              <p className="muted mb-1">Your school's URL:</p>
+              <h5>
                 {schoolData.domain}.databayt.org
-              </p>
+              </h5>
             </div>
             <Button
               onClick={handleGoToDashboard}
@@ -108,7 +108,7 @@ export default function CongratulationsContent() {
 
       {/* Next Steps */}
       <div className="mb-8">
-        <h2 className="text-2xl font-semibold mb-4">What's Next?</h2>
+        <h3 className="mb-4">What's Next?</h3>
         <div className="grid gap-4 md:grid-cols-2">
           <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer" onClick={handleGoToDashboard}>
             <div className="flex items-start gap-4">
@@ -116,8 +116,8 @@ export default function CongratulationsContent() {
                 <Users className="w-6 h-6 text-blue-600 dark:text-blue-400" />
               </div>
               <div>
-                <h3 className="font-semibold mb-1">Invite Your Team</h3>
-                <p className="text-sm text-muted-foreground">
+                <h6 className="mb-1">Invite Your Team</h6>
+                <p className="muted">
                   Add teachers, staff, and administrators to your school
                 </p>
               </div>
@@ -130,8 +130,8 @@ export default function CongratulationsContent() {
                 <GraduationCap className="w-6 h-6 text-purple-600 dark:text-purple-400" />
               </div>
               <div>
-                <h3 className="font-semibold mb-1">Add Students</h3>
-                <p className="text-sm text-muted-foreground">
+                <h6 className="mb-1">Add Students</h6>
+                <p className="muted">
                   Import student data or add them individually
                 </p>
               </div>
@@ -144,8 +144,8 @@ export default function CongratulationsContent() {
                 <Calendar className="w-6 h-6 text-green-600 dark:text-green-400" />
               </div>
               <div>
-                <h3 className="font-semibold mb-1">Set Up Classes</h3>
-                <p className="text-sm text-muted-foreground">
+                <h6 className="mb-1">Set Up Classes</h6>
+                <p className="muted">
                   Create class schedules and assign teachers
                 </p>
               </div>
@@ -158,8 +158,8 @@ export default function CongratulationsContent() {
                 <ArrowRight className="w-6 h-6 text-orange-600 dark:text-orange-400" />
               </div>
               <div>
-                <h3 className="font-semibold mb-1">Configure Settings</h3>
-                <p className="text-sm text-muted-foreground">
+                <h6 className="mb-1">Configure Settings</h6>
+                <p className="muted">
                   Customize your school's preferences and policies
                 </p>
               </div>
@@ -170,12 +170,12 @@ export default function CongratulationsContent() {
 
       {/* Quick Tips */}
       <Card className="p-6 bg-muted/50">
-        <h3 className="font-semibold mb-3">💡 Quick Tips</h3>
-        <ul className="space-y-2 text-sm text-muted-foreground">
-          <li>• Your school portal is now live at <span className="font-medium">{schoolData?.domain}.databayt.org</span></li>
-          <li>• Share this URL with your staff and parents for easy access</li>
-          <li>• Check out the Help Center for guides and tutorials</li>
-          <li>• Contact support if you need any assistance getting started</li>
+        <h6 className="mb-3">💡 Quick Tips</h6>
+        <ul className="space-y-2">
+          <small className="block text-muted-foreground">• Your school portal is now live at <span className="font-medium">{schoolData?.domain}.databayt.org</span></small>
+          <small className="block text-muted-foreground">• Share this URL with your staff and parents for easy access</small>
+          <small className="block text-muted-foreground">• Check out the Help Center for guides and tutorials</small>
+          <small className="block text-muted-foreground">• Contact support if you need any assistance getting started</small>
         </ul>
       </Card>
 

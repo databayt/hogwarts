@@ -20,17 +20,36 @@ pnpm prisma migrate dev # Run database migrations
 # Testing specific files
 pnpm test src/components/platform/operator/**/*.test.tsx
 pnpm test path/to/specific/test.tsx  # Run specific test file
+
+# E2E Testing
+pnpm test:e2e           # Run Playwright E2E tests
+pnpm test:e2e:ui        # Run E2E tests with UI
+pnpm test:e2e:debug     # Debug E2E tests
+pnpm test:e2e:report    # Show E2E test report
 ```
 
 ## Architecture Overview
 
 ### Tech Stack
-- **Framework**: Next.js 15 (App Router) with React 19
-- **Styling**: Tailwind CSS 4 with shadcn/ui components
-- **Database**: PostgreSQL (Neon) with Prisma ORM
-- **Auth**: NextAuth v5 (Auth.js) with JWT strategy
+- **Framework**: Next.js 15.4.4 (App Router) with React 19.1.0
+- **Styling**: Tailwind CSS 4 with shadcn/ui components (New York style)
+- **Database**: PostgreSQL (Neon) with Prisma ORM 6.13.0
+- **Auth**: NextAuth v5 (Auth.js 5.0.0-beta.29) with JWT strategy
 - **State**: Server actions, SWR for client-side fetching
-- **Forms**: react-hook-form with Zod validation
+- **Forms**: react-hook-form 7.61.1 with Zod 4.0.14 validation
+- **Testing**: Vitest 2.0.6 + React Testing Library + Playwright 1.55.0
+- **Package Manager**: pnpm 9.x (required for Vercel deployments)
+
+### Key Libraries & Tools
+- **UI Components**: Radix UI primitives + shadcn/ui
+- **Data Tables**: @tanstack/react-table 8.21.3
+- **Drag & Drop**: @dnd-kit 6.3.1 and react-dnd 16.0.1
+- **Charts**: Recharts 2.15.4
+- **Date Handling**: date-fns 4.1.0
+- **Email**: Resend 4.7.0 with @react-email/components
+- **Monitoring**: Sentry 10.12.0 + Vercel Analytics
+- **Payments**: Stripe 18.4.0
+- **i18n**: Custom implementation with @formatjs/intl-localematcher
 
 ### Directory Structure Pattern
 
@@ -123,8 +142,16 @@ const form = useForm({ resolver: zodResolver(itemSchema) })
 ### Prisma Models
 
 Models are split across files in `prisma/models/*.prisma`:
-- Auth models: User, Account, Session
-- School models include required `schoolId` field
+- **auth.prisma**: User, Account, Session, VerificationToken
+- **school.prisma**: School, SchoolYear, Period, Term, YearLevel
+- **staff.prisma**: Teacher, Department, TeacherDepartment
+- **students.prisma**: Student, Guardian, StudentGuardian, StudentYearLevel
+- **subjects.prisma**: Subject, Class, StudentClass, ScoreRange
+- **classrooms.prisma**: Classroom, ClassroomType
+- **assessments.prisma**: Assignment, AssignmentSubmission
+- **attendance.prisma**: Attendance records
+- **announcements.prisma**: Announcement system
+- All business models include required `schoolId` field for multi-tenancy
 - Relations use `@@index` for performance
 
 ### Authentication Flow
@@ -134,6 +161,16 @@ NextAuth v5 configuration:
 - Extended session includes: schoolId, role, isPlatformAdmin
 - Callbacks in `src/auth.config.ts` handle JWT/session shape
 - Middleware (`src/middleware.ts`) enforces auth on protected routes
+
+User roles (8 total):
+- **DEVELOPER**: Platform admin (no schoolId, access all schools)
+- **ADMIN**: School administrator
+- **TEACHER**: Teaching staff
+- **STUDENT**: Enrolled students
+- **GUARDIAN**: Student parents/guardians
+- **ACCOUNTANT**: School finance staff
+- **STAFF**: General school staff
+- **USER**: Default role for new users
 
 ### Testing
 
@@ -148,6 +185,7 @@ Use these path aliases:
 - `@/components/*` - Component imports
 - `@/lib/*` - Utilities and helpers
 - `@/app/*` - App directory imports
+- `@/hooks/*` - Custom React hooks
 
 ### Development Guidelines
 
@@ -161,6 +199,7 @@ Use these path aliases:
 8. **Co-locate validation** - keep validation.ts with form.tsx
 9. **Build bottom-up** - UI → Atoms → Templates → Blocks → Micro → Apps
 10. **Keep actions small and pure** - isolate DB code and schema definitions
+11. **Follow typography pattern** - use semantic HTML, never hardcode text-*/font-* classes
 
 ### Additional Architecture Details
 
@@ -193,6 +232,17 @@ Use these path aliases:
 - Every read/write operation includes `{ schoolId }` from session/subdomain
 - Log `requestId` and `schoolId` for traceability
 
+## Internationalization (i18n)
+
+The platform supports full multi-language with RTL/LTR:
+- **Languages**: Arabic (RTL) and English (LTR)
+- **Routing**: `[lang]` dynamic segment (e.g., `/en/dashboard`, `/ar/dashboard`)
+- **Fonts**: Rubik (Arabic), Inter (English)
+- **Translation Keys**: 800+ keys covering all features
+- **Dictionary Files**: `src/components/internationalization/dictionaries.ts`
+- **Config**: `src/components/internationalization/config.ts`
+- **Language Switcher**: `src/components/internationalization/language-switcher.tsx`
+
 ## Environment & Deployment
 
 - **Production**: https://ed.databayt.org (main domain)
@@ -216,6 +266,37 @@ Navigation is handled by `HostFooter` component with context-aware validation.
 - Login flow: Stores intended destination before OAuth redirect
 - Logout: Redirects to home page (`/`) not dashboard
 
+## Typography System
+
+The project follows a strict typography pattern for consistency and maintainability:
+
+### Typography Rules
+- **Never use hardcoded typography**: No `text-*` or `font-*` classes directly
+- **Use semantic HTML**: h1-h6 for headings, p for paragraphs, small for fine print
+- **Theme-aware colors**: Use `text-foreground` for headings, `text-muted-foreground` for secondary text
+- **Typography scale**: Defined in `src/styles/typography.css`
+- **Documentation**: Full guide at `src/app/[lang]/docs/typography/page.mdx`
+
+### Typography Mapping
+| Hardcoded Classes | Semantic Element |
+|-------------------|------------------|
+| `text-3xl font-bold` | `<h2>` |
+| `text-2xl font-semibold` | `<h3>` |
+| `text-xl font-semibold` | `<h4>` |
+| `text-lg font-semibold` | `<h5>` |
+| `text-base font-semibold` | `<h6>` |
+| `text-sm text-muted-foreground` | `<p className="muted">` |
+| `text-xl` | `<p className="lead">` |
+| `text-xs` | `<small>` |
+
+### Typography Refactoring Agent
+Use the `typography-refactor` agent to automatically convert hardcoded typography to semantic HTML.
+
+### Typography Validation
+- **Test files**: `src/lib/typography-validator.test.ts`
+- **Validator**: `src/lib/typography-validator.ts`
+- Validates semantic HTML usage, theme colors, RTL support, and accessibility
+
 ## Common Gotchas
 
 1. **Vercel Build Failures**: Run `pnpm install` locally to update lockfile before pushing
@@ -223,13 +304,29 @@ Navigation is handled by `HostFooter` component with context-aware validation.
 3. **Location Form**: Uses simplified inputs (no Mapbox), stores concatenated address string
 4. **Capacity Form**: Auto-saves on change, no explicit submit button
 5. **Price Page**: Uses empty title/subtitle to maintain two-column layout consistency
+6. **TypeScript Errors**: Prisma client may need regeneration: `pnpm prisma generate`
+7. **Multi-Tenant Queries**: Always include schoolId - missing it breaks tenant isolation
+8. **Typography Violations**: Never use `<div>` for text content - use semantic HTML
 
 ## Git Workflow
 
 **IMPORTANT**: Always automatically push changes to GitHub after making code modifications. Use `git push` to ensure all changes are synced to the remote repository.
+
+## Performance Optimizations
+
+The codebase includes several performance optimizations:
+- **Turbopack**: Enabled for faster development and production builds
+- **Code Splitting**: Automatic with Next.js 15 App Router
+- **Image Optimization**: Next/Image with WebP/AVIF formats
+- **Bundle Optimization**: `optimizePackageImports` configured in next.config.ts
+- **Console Removal**: Production builds remove console.log (keep error/warn)
+- **Service Worker**: Offline support and caching strategies
+- **Database Indexes**: All foreign keys and frequently queried fields indexed
 
 ## Key Project Information
 
 - **Platform Description**: Hogwarts is a school automation platform that manages students, faculty, and academic processes with an intuitive interface
 - **Documentation**: Full documentation available at https://ed.databayt.org/docs
 - **License**: MIT License
+- **Test Coverage**: 174+ test files with 419+ test cases
+- **MVP Status**: 100% complete, production-ready

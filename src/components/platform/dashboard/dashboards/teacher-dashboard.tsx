@@ -347,7 +347,7 @@ export async function TeacherDashboard({ user, dictionary }: TeacherDashboardPro
           <div className="grid gap-4 md:grid-cols-5">
             {["Mon", "Tue", "Wed", "Thu", "Fri"].map((day, index) => (
               <div key={day} className="text-center">
-                <h4 className="font-medium mb-2">{day}</h4>
+                <h4 className="mb-2">{day}</h4>
                 <div className="space-y-2">
                   {todaysClasses.slice(0, 2).map((cls, clsIndex) => (
                     <div key={clsIndex} className="p-2 bg-muted rounded text-xs">

@@ -92,40 +92,40 @@ export default function SuccessCompletionModal({
         </div>
 
         {/* Success Message */}
-        <h2 className="text-3xl font-bold mb-3 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+        <h2 className="mb-3 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
           Congratulations!
         </h2>
 
-        <p className="text-lg text-muted-foreground mb-2">
+        <p className="lead mb-2 text-muted-foreground">
           {schoolData.name}
         </p>
 
-        <p className="text-base text-muted-foreground mb-6">
+        <p className="mb-6 text-muted-foreground">
           Your school has been successfully created and is ready to use!
         </p>
 
         {/* School URL */}
         <div className="bg-primary/10 border border-primary/20 rounded-lg p-4 mb-6">
-          <p className="text-sm text-muted-foreground mb-1">Your school's portal:</p>
-          <p className="text-lg font-semibold text-primary">
+          <p className="muted mb-1">Your school's portal:</p>
+          <h5 className="text-primary">
             {schoolData.domain}.databayt.org
-          </p>
+          </h5>
         </div>
 
         {/* Action Button */}
         <Button
           size="lg"
           onClick={onGoToDashboard}
-          className="w-full gap-2 text-base py-6"
+          className="w-full gap-2 py-6"
         >
           Go to Dashboard
           <ExternalLink className="w-4 h-4" />
         </Button>
 
         {/* Help Text */}
-        <p className="text-xs text-muted-foreground mt-4">
+        <small className="block text-muted-foreground mt-4">
           You can now invite teachers, add students, and set up classes from your dashboard
-        </p>
+        </small>
       </div>
     </Modal>
   );

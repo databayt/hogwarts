@@ -116,8 +116,8 @@ export default function TenantDashboard({ school, subdomain }: TenantDashboardPr
                 <Building2 className="w-6 h-6 text-primary" />
               </div>
               <div>
-                <h4 className="text-gray-900">{school.name}</h4>
-                <p className="muted text-gray-500">Dashboard</p>
+                <h4>{school.name}</h4>
+                <p className="muted">Dashboard</p>
               </div>
             </div>
             
@@ -137,10 +137,10 @@ export default function TenantDashboard({ school, subdomain }: TenantDashboardPr
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Welcome Section */}
         <div className="mb-8">
-          <h2 className="text-gray-900 mb-2">
+          <h2 className="mb-2">
             Welcome back to {school.name}
           </h2>
-          <p className="text-gray-600">
+          <p className="text-muted-foreground">
             Manage your school operations, students, and classes from your dashboard.
           </p>
         </div>
@@ -193,7 +193,7 @@ export default function TenantDashboard({ school, subdomain }: TenantDashboardPr
             </CardHeader>
             <CardContent>
               <div className="space-y-1">
-                <h3 className="text-lg font-semibold">
+                <h3>
                   {getTimezoneDisplayName(school.timezone || 'Africa/Khartoum')}
                 </h3>
                 <p className="text-sm text-muted-foreground">
@@ -206,7 +206,7 @@ export default function TenantDashboard({ school, subdomain }: TenantDashboardPr
 
         {/* Quick Actions */}
         <div className="mb-8">
-          <h3 className="text-gray-900 mb-4">Quick Actions</h3>
+          <h3 className="mb-4">Quick Actions</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {quickActions.map((action, index) => (
               <Card key={index} className="hover:shadow-md transition-shadow cursor-pointer">
@@ -232,12 +232,12 @@ export default function TenantDashboard({ school, subdomain }: TenantDashboardPr
 
         {/* Recent Activity */}
         <div className="mb-8">
-          <h3 className="text-gray-900 mb-4">Recent Activity</h3>
+          <h3 className="mb-4">Recent Activity</h3>
           <Card>
             <CardContent className="pt-6">
-              <div className="text-center text-gray-500 py-8">
-                <BookOpen className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                <h5 className="text-gray-500">No recent activity</h5>
+              <div className="text-center text-muted-foreground py-8">
+                <BookOpen className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+                <h5>No recent activity</h5>
                 <p className="muted">Start by adding students and creating classes</p>
               </div>
             </CardContent>
@@ -246,7 +246,7 @@ export default function TenantDashboard({ school, subdomain }: TenantDashboardPr
 
         {/* School Info */}
         <div className="mb-8">
-          <h3 className="text-gray-900 mb-4">School Information</h3>
+          <h3 className="mb-4">School Information</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Card>
               <CardHeader>
@@ -254,15 +254,15 @@ export default function TenantDashboard({ school, subdomain }: TenantDashboardPr
               </CardHeader>
               <CardContent className="space-y-3">
                 <div>
-                  <label className="muted text-gray-500">School Name</label>
-                  <p className="text-gray-900">{school.name}</p>
+                  <label className="muted">School Name</label>
+                  <p>{school.name}</p>
                 </div>
                 <div>
-                  <label className="muted text-gray-500">Subdomain</label>
-                  <p className="text-gray-900">{subdomain}.databayt.org</p>
+                  <label className="muted">Subdomain</label>
+                  <p>{subdomain}.databayt.org</p>
                 </div>
                 <div>
-                  <label className="muted text-gray-500">Plan</label>
+                  <label className="muted">Plan</label>
                   <div className="mt-1">
                     {getPlanBadge(school.planType)}
                   </div>
@@ -277,24 +277,24 @@ export default function TenantDashboard({ school, subdomain }: TenantDashboardPr
               <CardContent className="space-y-3">
                 {school.email && (
                   <div>
-                    <label className="muted text-gray-500">Email</label>
-                    <p className="text-gray-900">{school.email}</p>
+                    <label className="muted">Email</label>
+                    <p>{school.email}</p>
                   </div>
                 )}
                 {school.phoneNumber && (
                   <div>
-                    <label className="muted text-gray-500">Phone</label>
-                    <p className="text-gray-900">{school.phoneNumber}</p>
+                    <label className="muted">Phone</label>
+                    <p>{school.phoneNumber}</p>
                   </div>
                 )}
                 {school.address && (
                   <div>
-                    <label className="muted text-gray-500">Address</label>
-                    <p className="text-gray-900">{school.address}</p>
+                    <label className="muted">Address</label>
+                    <p>{school.address}</p>
                   </div>
                 )}
                 {!school.email && !school.phoneNumber && !school.address && (
-                  <p className="muted text-gray-500">No contact information added yet</p>
+                  <p className="muted">No contact information added yet</p>
                 )}
               </CardContent>
             </Card>
@@ -303,7 +303,7 @@ export default function TenantDashboard({ school, subdomain }: TenantDashboardPr
 
         {/* Navigation Links */}
         <div className="mb-8">
-          <h3 className="text-gray-900 mb-4">Quick Navigation</h3>
+          <h3 className="mb-4">Quick Navigation</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Button variant="outline" className="h-auto p-4 justify-start" asChild>
               <Link href="/students">

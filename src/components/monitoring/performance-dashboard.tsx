@@ -88,7 +88,7 @@ export function PerformanceDashboard() {
   return (
     <div className="p-6 max-w-6xl mx-auto">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 mb-4">Performance Dashboard</h1>
+        <h1 className="mb-4">Performance Dashboard</h1>
 
         <div className="flex items-center gap-4 mb-4">
           <div className="flex items-center gap-2">
@@ -135,25 +135,25 @@ export function PerformanceDashboard() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div className="bg-white p-4 rounded-lg border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Total Metrics</h3>
+          <h3 className="mb-2">Total Metrics</h3>
           <p className="text-3xl font-bold text-blue-600">
             {summary.metrics.length}
           </p>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-muted-foreground">
             in last {timeWindows.find(w => w.value === selectedTimeWindow)?.label}
           </p>
         </div>
 
         <div className="bg-white p-4 rounded-lg border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Metric Types</h3>
+          <h3 className="mb-2">Metric Types</h3>
           <p className="text-3xl font-bold text-green-600">
             {Object.keys(summary.averages).length}
           </p>
-          <p className="text-sm text-gray-500">unique operations tracked</p>
+          <p className="text-sm text-muted-foreground">unique operations tracked</p>
         </div>
 
         <div className="bg-white p-4 rounded-lg border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Avg Response Time</h3>
+          <h3 className="mb-2">Avg Response Time</h3>
           <p className="text-3xl font-bold text-purple-600">
             {Object.values(summary.averages).length > 0
               ? formatValue(
@@ -162,13 +162,13 @@ export function PerformanceDashboard() {
                 )
               : '0ms'}
           </p>
-          <p className="text-sm text-gray-500">across all operations</p>
+          <p className="text-sm text-muted-foreground">across all operations</p>
         </div>
       </div>
 
       <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">Performance Averages</h2>
+          <h2>Performance Averages</h2>
         </div>
 
         <div className="overflow-x-auto">
@@ -223,7 +223,7 @@ export function PerformanceDashboard() {
 
       <div className="mt-8 bg-white rounded-lg border border-gray-200 overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">Recent Metrics</h2>
+          <h2>Recent Metrics</h2>
         </div>
 
         <div className="overflow-x-auto max-h-96 overflow-y-auto">

@@ -164,9 +164,9 @@ const LegalContent = () => {
         <div className="">
         {/* Title at the top */}
         <div className="mb-6 sm:mb-8">
-          <h1 className="text-xl sm:text-2xl lg:text-4xl font-medium text-foreground">
+          <h2 className="text-xl sm:text-2xl lg:text-4xl font-medium text-foreground">
             Share safety details
-          </h1>
+          </h2>
         </div>
 
         {/* Two sections side by side */}
@@ -174,9 +174,9 @@ const LegalContent = () => {
           {/* Left column - Hosting type */}
           <div className="lg:col-span-2">
             <div className="flex items-center space-x-2 mb-3 sm:mb-4">
-              <h2 className="text-base sm:text-lg font-medium text-foreground">
+              <h5 className="text-foreground">
                 What is your school's operational status?
-              </h2>
+              </h5>
               <HelpCircle size={16} className="text-muted-foreground sm:w-4.5 sm:h-4.5" />
             </div>
             
@@ -205,9 +205,9 @@ const LegalContent = () => {
                     <div className="w-1.5 h-1.5 rounded-full bg-background"></div>
                   )}
                 </div>
-                <span className="text-sm text-foreground">Existing school with valid licenses</span>
+                <small className="text-foreground">Existing school with valid licenses</small>
               </label>
-              
+
               <label className="flex items-center space-x-2 cursor-pointer">
                 <input
                   type="radio"
@@ -232,7 +232,7 @@ const LegalContent = () => {
                     <div className="w-1.5 h-1.5 rounded-full bg-background"></div>
                   )}
                 </div>
-                <span className="text-sm text-foreground">New school seeking registration</span>
+                <small className="text-foreground">New school seeking registration</small>
               </label>
             </div>
           </div>
@@ -242,16 +242,16 @@ const LegalContent = () => {
             {/* Safety Features */}
             <div>
               <div className="flex items-center space-x-2 mb-3">
-                <h2 className="text-base sm:text-lg font-medium text-foreground">
+                <h5 className="text-foreground">
                   Does your school have any of these?
-                </h2>
+                </h5>
                 <HelpCircle size={16} className="text-muted-foreground sm:w-4.5 sm:h-4.5" />
               </div>
-              
+
               <div className="space-y-2">
                 {safetyOptions.map((option) => (
                   <label key={option} className="flex items-center justify-between cursor-pointer">
-                    <span className="text-sm text-foreground">{option}</span>
+                    <small className="text-foreground">{option}</small>
                     <input
                       type="checkbox"
                       checked={safetyFeatures.includes(option)}
@@ -278,12 +278,12 @@ const LegalContent = () => {
 
             {/* Important Information */}
             <div className="space-y-3">
-              <h3 className="text-sm sm:text-base font-medium text-foreground">
+              <h6 className="text-foreground">
                 Important things to know
-              </h3>
-              <p className="text-xs text-muted-foreground leading-relaxed">
+              </h6>
+              <small className="block text-muted-foreground leading-relaxed">
                 Be sure to comply with your <span className="underline">local education laws</span> and review our <span className="underline">school registration guidelines</span> and <span className="underline">fee structure</span>.
-              </p>
+              </small>
             </div>
           </div>
         </div>

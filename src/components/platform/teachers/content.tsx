@@ -55,7 +55,7 @@ export default async function TeachersContent({ searchParams, dictionary }: Teac
     <PageContainer>
       <div className="flex flex-1 flex-col gap-4">
         <div>
-          <h1 className="text-xl font-semibold">{dictionary?.teachers?.title || 'Teachers'}</h1>
+          <h1>{dictionary?.teachers?.title || 'Teachers'}</h1>
           {/* <p className="text-sm text-muted-foreground">List and manage teachers (placeholder)</p> */}
         </div>
         <TeachersTable data={data} columns={getTeacherColumns(dictionary?.teachers)} pageCount={Math.max(1, Math.ceil(total / (sp.perPage || 20)))} />

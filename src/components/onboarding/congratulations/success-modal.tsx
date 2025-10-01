@@ -145,10 +145,10 @@ export default function SuccessModal({
                   <Trophy className="w-8 h-8 text-yellow-500" />
                   <Sparkles className="w-6 h-6 text-yellow-500" />
                 </div>
-                <p className="text-2xl md:text-3xl text-muted-foreground mb-2">
+                <h2 className="text-muted-foreground mb-2">
                   {schoolData.name}
-                </p>
-                <p className="text-lg md:text-xl text-muted-foreground">
+                </h2>
+                <p className="lead text-muted-foreground md:text-xl">
                   Your school is now live and ready to transform education!
                 </p>
               </motion.div>
@@ -161,11 +161,11 @@ export default function SuccessModal({
               >
                 <div className="flex items-center gap-3 mb-2">
                   <School className="w-5 h-5 text-primary" />
-                  <p className="text-sm text-muted-foreground">Your school's portal:</p>
+                  <p className="muted">Your school's portal:</p>
                 </div>
-                <p className="text-2xl font-bold text-primary">
+                <h3 className="text-primary">
                   {schoolData.domain}.databayt.org
-                </p>
+                </h3>
               </motion.div>
             </motion.div>
           ) : (
@@ -182,7 +182,7 @@ export default function SuccessModal({
                 <h2 className="text-4xl md:text-5xl font-bold mb-4">
                   Let's Get Started!
                 </h2>
-                <p className="text-xl text-muted-foreground">
+                <p className="lead text-muted-foreground">
                   Your next steps to set up {schoolData.name}
                 </p>
               </div>
@@ -216,7 +216,7 @@ export default function SuccessModal({
                           )} />
                         </div>
                         <div className="flex-1">
-                          <h3 className="text-xl font-semibold mb-2">{card.title}</h3>
+                          <h4 className="mb-2">{card.title}</h4>
                           <p className="text-muted-foreground">
                             {card.description}
                           </p>
@@ -237,14 +237,14 @@ export default function SuccessModal({
                   variant="outline"
                   size="lg"
                   onClick={() => setShowModal(false)}
-                  className="text-lg px-8 py-6"
+                  className="px-8 py-6"
                 >
                   Continue Setup Later
                 </Button>
                 <Button
                   size="lg"
                   onClick={onGoToDashboard}
-                  className="text-lg px-8 py-6 gap-2 bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90"
+                  className="px-8 py-6 gap-2 bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90"
                 >
                   Go to School Dashboard
                   <ExternalLink className="w-5 h-5" />

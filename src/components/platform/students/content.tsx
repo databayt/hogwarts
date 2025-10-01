@@ -53,7 +53,7 @@ export default async function StudentsContent({ searchParams, school, dictionary
   return (
     <div className="flex flex-1 flex-col gap-4">
       <div>
-        <h1 className="text-xl font-semibold">
+        <h1>
           {school?.name ? `${school.name} - ${dict.title}` : dict.title}
         </h1>
         {/* <p className="text-sm text-muted-foreground">List and manage students (placeholder)</p> */}

@@ -56,8 +56,8 @@ export function SettingsContent() {
   return (
     <div className="rounded-lg border bg-card p-6 space-y-6">
       <div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-1">School Settings</h3>
-        <p className="text-sm text-gray-600">Configure your school's basic information and preferences</p>
+        <h3 className="mb-1">School Settings</h3>
+        <p className="text-sm text-muted-foreground">Configure your school's basic information and preferences</p>
       </div>
 
       <div className="grid gap-6">
@@ -97,7 +97,7 @@ export function SettingsContent() {
             </SelectContent>
           </Select>
           {currentTime && (
-            <p className="text-xs text-gray-600">
+            <p className="text-xs text-muted-foreground">
               Current time in {getTimezoneDisplayName(timezone)}: <span className="font-mono">{currentTime}</span>
             </p>
           )}
@@ -132,7 +132,7 @@ export function SettingsContent() {
             onChange={(e) => setLogoUrl(e.target.value)}
           />
           {logoUrl && (
-            <p className="text-xs text-gray-600">
+            <p className="text-xs text-muted-foreground">
               Preview: <a href={logoUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
                 {logoUrl}
               </a>

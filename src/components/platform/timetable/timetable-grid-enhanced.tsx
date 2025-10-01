@@ -113,9 +113,9 @@ const DraggableSlot: React.FC<{
       }}
     >
       <div className="flex justify-between items-start mb-1">
-        <span className="font-semibold text-sm truncate" style={{ color: displayInfo.color }}>
+        <h6 className="truncate" style={{ color: displayInfo.color }}>
           {displayInfo.subject}
-        </span>
+        </h6>
         {editable && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -147,15 +147,15 @@ const DraggableSlot: React.FC<{
       </div>
 
       <div className="space-y-1">
-        <div className="flex items-center text-xs text-muted-foreground">
+        <p className="flex items-center muted">
           <User className="mr-1 h-3 w-3" />
-          <span className="truncate">{displayInfo.teacher}</span>
-        </div>
+          <small className="truncate">{displayInfo.teacher}</small>
+        </p>
         {slot.classroomId && (
-          <div className="flex items-center text-xs text-muted-foreground">
+          <p className="flex items-center muted">
             <MapPin className="mr-1 h-3 w-3" />
-            <span className="truncate">{slot.classroomId}</span>
-          </div>
+            <small className="truncate">{slot.classroomId}</small>
+          </p>
         )}
       </div>
 
@@ -194,8 +194,8 @@ const DroppableCell: React.FC<{
 
   if (isBreak) {
     return (
-      <td className="bg-gray-50 dark:bg-gray-800 text-center text-sm text-muted-foreground">
-        Break
+      <td className="bg-gray-50 dark:bg-gray-800 text-center">
+        <p className="muted">Break</p>
       </td>
     )
   }
@@ -314,9 +314,9 @@ export function TimetableGridEnhanced({
           <div className="mb-4 p-3 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg">
             <div className="flex items-center gap-2">
               <AlertCircle className="h-5 w-5 text-orange-600 dark:text-orange-400" />
-              <span className="font-medium text-orange-900 dark:text-orange-100">
+              <h6 className="text-orange-900 dark:text-orange-100">
                 {conflicts.length} conflict{conflicts.length > 1 ? 's' : ''} detected
-              </span>
+              </h6>
             </div>
           </div>
         )}
@@ -324,14 +324,16 @@ export function TimetableGridEnhanced({
         <table className="w-full border-collapse bg-white dark:bg-gray-900 rounded-lg overflow-hidden shadow-sm">
           <thead>
             <tr className="bg-gray-50 dark:bg-gray-800">
-              <th className="border-r border-b p-3 text-left font-medium text-sm"
+              <th className="border-r border-b p-3 text-left"
                   style={{ width: `${GRID_SETTINGS.TIME_COLUMN_WIDTH}px` }}>
-                <Clock className="inline mr-2 h-4 w-4" />
-                {dictionary.time || 'Time'}
+                <h6 className="inline-flex items-center">
+                  <Clock className="mr-2 h-4 w-4" />
+                  {dictionary.time || 'Time'}
+                </h6>
               </th>
               {workingDays.map(day => (
-                <th key={day} className="border-r border-b p-3 text-center font-medium text-sm">
-                  {getDayName(day, isMobile)}
+                <th key={day} className="border-r border-b p-3 text-center">
+                  <h6>{getDayName(day, isMobile)}</h6>
                 </th>
               ))}
             </tr>
@@ -340,10 +342,10 @@ export function TimetableGridEnhanced({
             {periods.map(period => (
               <tr key={period.id}>
                 <td className="border-r border-b p-3 bg-gray-50 dark:bg-gray-800">
-                  <div className="font-medium text-sm">{period.name}</div>
-                  <div className="text-xs text-muted-foreground">
-                    {formatPeriodTime(period.startTime, period.endTime)}
-                  </div>
+                  <h6>{period.name}</h6>
+                  <p className="muted">
+                    <small>{formatPeriodTime(period.startTime, period.endTime)}</small>
+                  </p>
                 </td>
                 {workingDays.map(day => {
                   const slot = getSlotForCell(day, period.id)
@@ -376,9 +378,11 @@ export function TimetableGridEnhanced({
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Timetable Slot</DialogTitle>
+            <DialogTitle>
+              <h4>Delete Timetable Slot</h4>
+            </DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete this slot? This action cannot be undone.
+              <p className="muted">Are you sure you want to delete this slot? This action cannot be undone.</p>
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

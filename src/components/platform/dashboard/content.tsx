@@ -87,9 +87,9 @@ function DefaultDashboard({ user, dictionary }: { user: ExtendedUser, dictionary
   return (
     <div className="grid gap-6">
       <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
-        <h3 className="text-lg font-semibold mb-4">Dashboard Coming Soon</h3>
+        <h3 className="mb-4">Dashboard Coming Soon</h3>
         <p className="text-muted-foreground">
-          We're working on a personalized dashboard for your role ({user.role || 'Unknown'}). 
+          We're working on a personalized dashboard for your role ({user.role || 'Unknown'}).
           Check back soon for updates!
         </p>
         <CookieDebug />

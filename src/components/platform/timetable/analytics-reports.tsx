@@ -214,13 +214,13 @@ export function AnalyticsReports({
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Slots</CardTitle>
+            <CardTitle><h6>Total Slots</h6></CardTitle>
             <BarChart3 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{analytics.totalSlots}</div>
-            <p className="text-xs text-muted-foreground">
-              Across {workingDays.length} working days
+            <h3 className="text-foreground">{analytics.totalSlots}</h3>
+            <p className="muted">
+              <small>Across {workingDays.length} working days</small>
             </p>
             <Progress value={analytics.utilizationRate} className="mt-2" />
           </CardContent>
@@ -228,13 +228,13 @@ export function AnalyticsReports({
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Utilization Rate</CardTitle>
+            <CardTitle><h6>Utilization Rate</h6></CardTitle>
             <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{analytics.utilizationRate}%</div>
-            <p className="text-xs text-muted-foreground">
-              Room and teacher efficiency
+            <h3 className="text-foreground">{analytics.utilizationRate}%</h3>
+            <p className="muted">
+              <small>Room and teacher efficiency</small>
             </p>
             <Badge
               variant={analytics.utilizationRate > 80 ? 'default' : analytics.utilizationRate > 60 ? 'secondary' : 'destructive'}
@@ -247,13 +247,13 @@ export function AnalyticsReports({
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Conflicts</CardTitle>
+            <CardTitle><h6>Active Conflicts</h6></CardTitle>
             <AlertTriangle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{conflicts.length}</div>
-            <p className="text-xs text-muted-foreground">
-              Scheduling conflicts detected
+            <h3 className="text-foreground">{conflicts.length}</h3>
+            <p className="muted">
+              <small>Scheduling conflicts detected</small>
             </p>
             {conflicts.length > 0 && (
               <Button size="sm" variant="destructive" className="mt-2 h-7">
@@ -265,18 +265,18 @@ export function AnalyticsReports({
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Avg Workload</CardTitle>
+            <CardTitle><h6>Avg Workload</h6></CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <h3 className="text-foreground">
               {Math.round(
                 analytics.teacherWorkload.reduce((sum, t) => sum + t.hoursPerWeek, 0) /
                 analytics.teacherWorkload.length
               )}h/week
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Per teacher average
+            </h3>
+            <p className="muted">
+              <small>Per teacher average</small>
             </p>
           </CardContent>
         </Card>
@@ -293,9 +293,9 @@ export function AnalyticsReports({
         <TabsContent value="utilization" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Room Utilization Analysis</CardTitle>
+              <CardTitle><h4>Room Utilization Analysis</h4></CardTitle>
               <CardDescription>
-                Percentage of time each room is occupied
+                <p className="muted">Percentage of time each room is occupied</p>
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -314,7 +314,7 @@ export function AnalyticsReports({
           <div className="grid gap-4 md:grid-cols-2">
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Top Utilized Rooms</CardTitle>
+                <CardTitle><h5>Top Utilized Rooms</h5></CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
@@ -325,13 +325,13 @@ export function AnalyticsReports({
                       <div key={room.roomId} className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <MapPin className="h-4 w-4" />
-                          <span className="text-sm font-medium">{room.name}</span>
+                          <h6>{room.name}</h6>
                         </div>
                         <div className="flex items-center gap-2">
                           <Progress value={room.utilizationPercent} className="w-20" />
-                          <span className="text-sm text-muted-foreground">
-                            {room.utilizationPercent}%
-                          </span>
+                          <p className="muted">
+                            <small>{room.utilizationPercent}%</small>
+                          </p>
                         </div>
                       </div>
                     ))}
@@ -341,7 +341,7 @@ export function AnalyticsReports({
 
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Day Distribution</CardTitle>
+                <CardTitle><h5>Day Distribution</h5></CardTitle>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={200}>
@@ -361,9 +361,9 @@ export function AnalyticsReports({
         <TabsContent value="workload" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Teacher Workload Distribution</CardTitle>
+              <CardTitle><h4>Teacher Workload Distribution</h4></CardTitle>
               <CardDescription>
-                Weekly hours per teacher vs recommended limits
+                <p className="muted">Weekly hours per teacher vs recommended limits</p>
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -389,8 +389,8 @@ export function AnalyticsReports({
                 <Card key={teacher.teacherId}>
                   <CardHeader className="pb-3">
                     <div className="flex items-center justify-between">
-                      <CardTitle className="text-sm font-medium">
-                        {teacher.name}
+                      <CardTitle>
+                        <h6>{teacher.name}</h6>
                       </CardTitle>
                       <Badge
                         variant={
@@ -408,9 +408,9 @@ export function AnalyticsReports({
                       value={(teacher.hoursPerWeek / WORKLOAD_LIMITS.TEACHER_MAX_HOURS_PER_WEEK) * 100}
                       className="mb-2"
                     />
-                    <div className="text-xs text-muted-foreground">
-                      {teacher.classes.length} classes, {teacher.subjects.length} subjects
-                    </div>
+                    <p className="muted">
+                      <small>{teacher.classes.length} classes, {teacher.subjects.length} subjects</small>
+                    </p>
                   </CardContent>
                 </Card>
               ))}
@@ -421,9 +421,9 @@ export function AnalyticsReports({
           <div className="grid gap-4 md:grid-cols-2">
             <Card>
               <CardHeader>
-                <CardTitle>Subject Hours Distribution</CardTitle>
+                <CardTitle><h4>Subject Hours Distribution</h4></CardTitle>
                 <CardDescription>
-                  Total hours allocated per subject
+                  <p className="muted">Total hours allocated per subject</p>
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -454,9 +454,9 @@ export function AnalyticsReports({
 
             <Card>
               <CardHeader>
-                <CardTitle>Subject Coverage</CardTitle>
+                <CardTitle><h4>Subject Coverage</h4></CardTitle>
                 <CardDescription>
-                  Classes covered by each subject
+                  <p className="muted">Classes covered by each subject</p>
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -473,13 +473,13 @@ export function AnalyticsReports({
                               backgroundColor: SUBJECT_COLORS[subject.name as keyof typeof SUBJECT_COLORS] || SUBJECT_COLORS.default
                             }}
                           />
-                          <span className="text-sm">{subject.name}</span>
+                          <p>{subject.name}</p>
                         </div>
                         <div className="flex items-center gap-2">
                           <Badge variant="outline">{subject.totalHours}h</Badge>
-                          <span className="text-xs text-muted-foreground">
-                            {subject.classes.length} classes
-                          </span>
+                          <p className="muted">
+                            <small>{subject.classes.length} classes</small>
+                          </p>
                         </div>
                       </div>
                     ))}
@@ -494,9 +494,11 @@ export function AnalyticsReports({
       {analytics.suggestions.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Target className="h-5 w-5" />
-              Optimization Suggestions
+            <CardTitle>
+              <h5 className="flex items-center gap-2">
+                <Target className="h-5 w-5" />
+                Optimization Suggestions
+              </h5>
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -504,7 +506,7 @@ export function AnalyticsReports({
               {analytics.suggestions.map((suggestion, index) => (
                 <li key={index} className="flex items-start gap-2">
                   <span className="text-primary">•</span>
-                  <span className="text-sm">{suggestion}</span>
+                  <p>{suggestion}</p>
                 </li>
               ))}
             </ul>

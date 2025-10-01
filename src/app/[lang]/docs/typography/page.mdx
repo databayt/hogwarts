@@ -2,13 +2,15 @@
 
 Our typography system is built on a foundation of preconfigured styles that ensure consistency across the application. This system eliminates the need for hardcoded font sizes and weights, making our codebase more maintainable and visually cohesive.
 
-## Core Principles
+## 🎯 Core Principles
 
 - **No hardcoded typography**: Never use `text-*` or `font-*` classes directly
 - **Map to closest semantic element**: Find the nearest matching typography configuration
 - **Semantic HTML**: Use appropriate heading tags (h1-h6) for structure
 - **Consistent sizing**: Predefined scale from h1 (largest) to h6 (smallest)
 - **Maintainable**: Centralized typography definitions in `src/styles/typography.css`
+- **RTL Support**: Full support for Arabic text direction
+- **Theme Aware**: Uses theme colors (text-foreground, text-muted-foreground)
 
 ## Critical Rules
 
@@ -39,6 +41,8 @@ Our typography system is built on a foundation of preconfigured styles that ensu
 3. **Maintainability**: Easier to style and modify
 4. **Consistency**: Follows web standards
 5. **Performance**: Better CSS specificity management
+6. **RTL Support**: Proper text flow for Arabic locale
+7. **Theme Integration**: Automatic dark/light mode support
 
 ### Quick Decision Guide
 - **Is it a title/heading?** → Use `h1`, `h2`, `h3`, `h4`, `h5`, `h6`
@@ -82,17 +86,19 @@ Our typography system is built on a foundation of preconfigured styles that ensu
 
 ## Typography Scale
 
-| Element | Font Size | Font Weight | Use Case |
-|---------|-----------|-------------|----------|
-| `h1` | `text-4xl` → `lg:text-5xl` | `font-extrabold` | Main page titles, hero sections |
-| `h2` | `text-3xl` | `font-bold` | Section headings, major content areas |
-| `h3` | `text-2xl` | `font-semibold` | Subsection titles, card headers |
-| `h4` | `text-xl` | `font-semibold` | Group titles, form sections |
-| `h5` | `text-lg` | `font-semibold` | Small headings, list titles |
-| `h6` | `text-base` | `font-semibold` | Smallest headings, micro titles |
-| `p` | Default | Default | Body text, descriptions |
-| `.lead` | `text-xl` | Default | Introductory text, summaries |
-| `.muted` | `text-sm` | Default | Secondary information, captions |
+| Element | Font Size | Font Weight | Use Case | Theme Colors |
+|---------|-----------|-------------|----------|--------------|
+| `h1` | `text-4xl` → `lg:text-5xl` | `font-extrabold` | Main page titles, hero sections | `text-foreground` |
+| `h2` | `text-3xl` | `font-bold` | Section headings, major content areas | `text-foreground` |
+| `h3` | `text-2xl` | `font-semibold` | Subsection titles, card headers | `text-foreground` |
+| `h4` | `text-xl` | `font-semibold` | Group titles, form sections | `text-foreground` |
+| `h5` | `text-lg` | `font-semibold` | Small headings, list titles | `text-foreground` |
+| `h6` | `text-base` | `font-semibold` | Smallest headings, micro titles | `text-foreground` |
+| `p` | Default | Default | Body text, descriptions | `text-muted-foreground` |
+| `.lead` | `text-xl` | Default | Introductory text, summaries | `text-muted-foreground` |
+| `.muted` | `text-sm` | Default | Secondary information, captions | `text-muted-foreground` |
+| `small` | `text-sm` | `font-medium` | Timestamps, metadata, fine print | `text-muted-foreground` |
+| `code` | `text-sm` | `font-semibold` | Inline code snippets | Themed background |
 
 ## Implementation Examples
 
@@ -490,11 +496,18 @@ export function MyComponent() {
 - **Scalability**: Easy to add new typography variants
 - **Team Collaboration**: Clear rules for all developers
 
-## File Location
+## File Locations
 
-Typography styles are defined in: `src/styles/typography.css`
+### Core Typography Files
+- **Typography Styles**: `src/styles/typography.css` - Base typography definitions
+- **Global Import**: `src/app/globals.css` - Imports typography globally
+- **Typography Agent**: `.claude/agents/typography.md` - Automated refactoring specifications
+- **Documentation**: `src/app/[lang]/docs/typography/page.mdx` - This documentation
 
-This file is imported globally and provides the foundation for all typography across the application.
+### Key Project Files
+- **Theme Colors**: Defined in Tailwind config and CSS variables
+- **Font Configuration**: `src/app/[lang]/layout.tsx` - Font family setup
+- **i18n Config**: `src/components/internationalization/config.ts` - Language settings
 
 ## Quick Reference
 
@@ -511,6 +524,49 @@ This file is imported globally and provides the foundation for all typography ac
 | Small text | `<p className="muted">` | Captions, secondary info |
 | Code | `<code>` | Inline code snippets |
 | Captions | `<small>` | Fine print, metadata |
+
+## Theme and Internationalization Support
+
+### Theme Colors
+Our typography system uses theme-aware colors that automatically adapt to light/dark mode:
+
+- **`text-foreground`**: Primary text color (headings, important text)
+- **`text-muted-foreground`**: Secondary text color (descriptions, hints)
+- **`hover:text-foreground/80`**: Hover state for links
+- **`bg-muted`**: Background for inline code blocks
+
+### RTL Support for Arabic
+The typography system fully supports RTL text direction:
+
+```tsx
+// Automatically adapts based on locale
+<html dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+  <body className={lang === 'ar' ? rubik.className : inter.className}>
+```
+
+### Font Families
+- **Arabic**: Rubik font family (optimized for RTL)
+- **English**: Inter font family (optimized for LTR)
+
+## Automated Refactoring with Typography Agent
+
+We have a specialized agent that can automatically refactor hardcoded typography to semantic HTML:
+
+### How to Use the Typography Agent
+1. Identify files with typography violations
+2. Request: "Use the typography agent to refactor [file/component]"
+3. The agent will:
+   - Scan for all hardcoded `text-*` and `font-*` classes
+   - Map them to appropriate semantic elements
+   - Preserve all other styling
+   - Ensure visual consistency
+
+### Agent Capabilities
+- **Automatic Detection**: Finds all typography violations
+- **Smart Mapping**: Uses the closest semantic match
+- **Theme Integration**: Applies proper theme colors
+- **RTL Awareness**: Maintains proper text direction
+- **Preservation**: Keeps all layout and spacing classes
 
 ## Troubleshooting & Best Practices
 

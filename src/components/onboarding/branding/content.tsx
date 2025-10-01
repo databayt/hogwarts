@@ -106,7 +106,7 @@ export default function BrandingContent({ dictionary }: BrandingContentProps) {
           <div className="space-y-5">
             {/* Color Selection */}
             <div className="flex items-center gap-4">
-              <label className="muted font-medium w-24">{dict.color || "Color"}</label>
+              <label className="font-medium w-24"><small>{dict.color || "Color"}</small></label>
               <div className="flex gap-2">
                 {COLOR_OPTIONS.map((option) => (
                   <button
@@ -127,7 +127,7 @@ export default function BrandingContent({ dictionary }: BrandingContentProps) {
 
             {/* Border Radius Selection */}
             <div className="flex items-center gap-4">
-              <label className="muted font-medium w-24">{dict.rounded || "Rounded"}</label>
+              <label className="font-medium w-24"><small>{dict.rounded || "Rounded"}</small></label>
               <div className="flex gap-2">
                 {RADIUS_OPTIONS.map((option) => (
                   <Button
@@ -152,7 +152,7 @@ export default function BrandingContent({ dictionary }: BrandingContentProps) {
 
             {/* Shadow Selection */}
             <div className="flex items-center gap-4">
-              <label className="muted font-medium w-24">{dict.shadow || "Shadow"}</label>
+              <label className="font-medium w-24"><small>{dict.shadow || "Shadow"}</small></label>
               <div className="flex gap-2">
                 {SHADOW_OPTIONS.map((option) => (
                   <Button
@@ -193,13 +193,13 @@ export default function BrandingContent({ dictionary }: BrandingContentProps) {
                 }
               )}>
                 <div className="space-y-4">
-                 
+
 
                   <div className="space-y-2">
-                    <p className="text-sm font-medium">{dict.uploadSchoolLogo || "Upload your school logo"}</p>
-                    <p className="text-xs text-muted-foreground">
+                    <h6>{dict.uploadSchoolLogo || "Upload your school logo"}</h6>
+                    <small className="block text-muted-foreground">
                       {dict.logoFileTypes || "SVG, PNG, JPG (max. 800x800px)"}
-                    </p>
+                    </small>
                     <div className="flex flex-col items-center gap-1">
                       <Button
                         asChild
@@ -230,9 +230,9 @@ export default function BrandingContent({ dictionary }: BrandingContentProps) {
                         className="hidden"
                       />
                       {logo && (
-                        <p className="text-xs text-muted-foreground">
+                        <small className="text-muted-foreground">
                           {dict.fileSelected || "File selected"}
-                        </p>
+                        </small>
                       )}
                     </div>
                   </div>

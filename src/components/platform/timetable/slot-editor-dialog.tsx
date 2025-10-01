@@ -230,10 +230,10 @@ export function SlotEditorDialog({
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {slot ? dictionary.editSlot || 'Edit Timetable Slot' : dictionary.addSlot || 'Add Timetable Slot'}
+            <h4>{slot ? dictionary.editSlot || 'Edit Timetable Slot' : dictionary.addSlot || 'Add Timetable Slot'}</h4>
           </DialogTitle>
           <DialogDescription>
-            {dictionary.slotDescription || 'Configure the timetable slot details'}
+            <p className="muted">{dictionary.slotDescription || 'Configure the timetable slot details'}</p>
           </DialogDescription>
         </DialogHeader>
 
@@ -242,11 +242,13 @@ export function SlotEditorDialog({
             {validationErrors.length > 0 && (
               <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
-                <AlertTitle>Validation Error</AlertTitle>
+                <AlertTitle>
+                  <h5>Validation Error</h5>
+                </AlertTitle>
                 <AlertDescription>
                   <ul className="list-disc pl-5">
                     {validationErrors.map((error, i) => (
-                      <li key={i}>{error}</li>
+                      <li key={i}><p className="muted">{error}</p></li>
                     ))}
                   </ul>
                 </AlertDescription>
@@ -313,9 +315,9 @@ export function SlotEditorDialog({
                               <SelectItem key={period.id} value={period.id}>
                                 <div className="flex justify-between w-full">
                                   <span>{period.name}</span>
-                                  <span className="text-muted-foreground ml-2">
+                                  <small className="text-muted-foreground ml-2">
                                     {period.startTime} - {period.endTime}
-                                  </span>
+                                  </small>
                                 </div>
                               </SelectItem>
                             ))}
@@ -428,10 +430,10 @@ export function SlotEditorDialog({
                                   </AvatarFallback>
                                 </Avatar>
                                 <div>
-                                  <div>{teacher.firstName} {teacher.lastName}</div>
-                                  <div className="text-xs text-muted-foreground">
-                                    {teacher.department}
-                                  </div>
+                                  <p>{teacher.firstName} {teacher.lastName}</p>
+                                  <p className="muted">
+                                    <small>{teacher.department}</small>
+                                  </p>
                                 </div>
                               </div>
                             </SelectItem>
@@ -488,10 +490,10 @@ export function SlotEditorDialog({
               <TabsContent value="options" className="space-y-4">
                 <div className="flex items-center justify-between rounded-lg border p-3">
                   <div className="space-y-0.5">
-                    <div className="text-sm font-medium">Substitute Teacher</div>
-                    <div className="text-xs text-muted-foreground">
-                      Assign a substitute teacher for this slot
-                    </div>
+                    <h6>Substitute Teacher</h6>
+                    <p className="muted">
+                      <small>Assign a substitute teacher for this slot</small>
+                    </p>
                   </div>
                   <Switch
                     checked={showSubstitute}

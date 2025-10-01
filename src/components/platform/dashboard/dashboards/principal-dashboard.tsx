@@ -380,7 +380,7 @@ export async function PrincipalDashboard({ user, dictionary }: PrincipalDashboar
           <div className="grid gap-6 md:grid-cols-2">
             {/* Monthly Highlights */}
             <div>
-              <h4 className="font-medium mb-3">Monthly Highlights</h4>
+              <h4 className="mb-3">Monthly Highlights</h4>
               <div className="space-y-3">
                 {mockMonthlyHighlights.map((highlight, index) => (
                   <div key={index} className="p-3 border rounded-lg">
@@ -398,7 +398,7 @@ export async function PrincipalDashboard({ user, dictionary }: PrincipalDashboar
 
             {/* Goal Progress */}
             <div>
-              <h4 className="font-medium mb-3">Goal Progress</h4>
+              <h4 className="mb-3">Goal Progress</h4>
               <div className="space-y-3">
                 {mockGoalProgress.map((goal, index) => (
                   <div key={index} className="p-3 border rounded-lg">

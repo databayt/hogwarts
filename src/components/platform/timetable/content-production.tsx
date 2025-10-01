@@ -460,8 +460,8 @@ export function TimetableContent({ dictionary }: TimetableContentProps) {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold">{dict.title || 'Timetable'}</h1>
-          <p className="text-muted-foreground">
+          <h2 className="text-foreground">{dict.title || 'Timetable'}</h2>
+          <p className="muted">
             {dict.subtitle || 'Manage class schedules and assignments'}
           </p>
         </div>

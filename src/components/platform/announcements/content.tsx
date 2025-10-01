@@ -46,7 +46,7 @@ export default async function AnnouncementsContent({ searchParams, dictionary }:
     <PageContainer>
       <div className="flex flex-1 flex-col gap-4">
         <div>
-          <h1 className="text-xl font-semibold">{dictionary?.announcements?.title || 'Announcements'}</h1>
+          <h1>{dictionary?.announcements?.title || 'Announcements'}</h1>
           <p className="text-sm text-muted-foreground">Create and manage announcements for your school</p>
         </div>
         <AnnouncementsTable data={data} columns={getAnnouncementColumns(dictionary?.announcements)} pageCount={Math.max(1, Math.ceil(total / (sp.perPage || 20)))} />

@@ -28,7 +28,7 @@ const Hero = ({ dictionary }: HeroProps) => {
           >
             {heroDict.badge || "700+ School automated"}
           </Link>
-          <h1 className="font-heading font-extrabold text-3xl sm:text-5xl md:text-6xl lg:text-[90px] whitespace-pre-line">
+          <h1 className="font-heading whitespace-pre-line">
             {heroDict.title}
           </h1>
           <p className="max-w-[48rem] leading-normal text-muted-foreground sm:text-xl sm:leading-8">
