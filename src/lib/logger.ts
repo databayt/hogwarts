@@ -50,7 +50,7 @@ class Logger {
       console.info(this.formatMessage('info', message, context));
     }
     // In production, you might want to send this to a logging service
-    if (this.isProduction && env.ENABLE_PRODUCTION_LOGS === 'true') {
+    if (this.isProduction && process.env.ENABLE_PRODUCTION_LOGS === 'true') {
       // Send to logging service (e.g., Sentry, LogRocket, etc.)
       this.sendToLoggingService('info', message, context);
     }
