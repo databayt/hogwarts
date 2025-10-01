@@ -427,17 +427,14 @@ class PaymentService {
         return;
       }
 
-      // Update payment record in database
-      await db.payment.create({
-        data: {
-          schoolId,
-          stripePaymentIntentId: paymentIntent.id,
-          amount: paymentIntent.amount / 100,
-          currency: paymentIntent.currency,
-          status: 'SUCCESS',
-          paymentDate: new Date(),
-          metadata: paymentIntent.metadata,
-        }
+      // Payment records are tracked in Stripe
+      // No local payment model exists in the database
+      // TODO: Add payment model if local payment history is needed
+      logger.info('Payment succeeded', {
+        schoolId,
+        paymentIntentId: paymentIntent.id,
+        amount: paymentIntent.amount / 100,
+        currency: paymentIntent.currency,
       });
 
       // Update school subscription status
