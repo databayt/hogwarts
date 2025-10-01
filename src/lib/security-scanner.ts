@@ -82,7 +82,7 @@ class SecurityScanner {
   private async testAuthenticationSecurity() {
     // Check for secure session configuration
     const hasSecureSession = process.env.NODE_ENV === 'production' ?
-      process.env.AUTH_SECRET && process.env.AUTH_SECRET.length >= 32 :
+      Boolean(process.env.AUTH_SECRET && process.env.AUTH_SECRET.length >= 32) :
       true;
 
     this.results.push({
