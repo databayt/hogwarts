@@ -4,20 +4,20 @@ import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
-import { monitoringService } from '@/lib/monitoring-service';
 
 export function AnalyticsProvider() {
   const pathname = usePathname();
 
   useEffect(() => {
-    // Track page views
-    monitoringService.trackEvent({
-      name: 'page_view',
-      category: 'user_action',
-      data: {
+    // Track page views using Vercel Analytics instead of monitoring service
+    // The monitoring service is server-side only
+    if (typeof window !== 'undefined' && (window as any).va) {
+      (window as any).va('event', {
+        name: 'page_view',
+        category: 'user_action',
         path: pathname,
-      },
-    });
+      });
+    }
   }, [pathname]);
 
   return (
