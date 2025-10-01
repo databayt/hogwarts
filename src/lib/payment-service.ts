@@ -628,39 +628,49 @@ class PaymentService {
       const schoolId = invoice.metadata?.schoolId || invoice.subscription_details?.metadata?.schoolId;
       if (!schoolId) return;
 
-      // Create invoice record
+      // Create invoice record with correct field names
       await db.invoice.create({
         data: {
           schoolId,
           stripeInvoiceId: invoice.id,
-          amount: invoice.amount_paid / 100,
+          amountDue: Math.round(invoice.amount_due / 100),
+          amountPaid: Math.round(invoice.amount_paid / 100),
           currency: invoice.currency,
-          status: 'PAID',
-          paidAt: new Date(invoice.status_transitions.paid_at * 1000),
-          invoiceUrl: invoice.hosted_invoice_url,
-          pdfUrl: invoice.invoice_pdf,
-          metadata: invoice.metadata,
+          status: invoice.status || 'paid',
+          periodStart: new Date(invoice.period_start * 1000),
+          periodEnd: new Date(invoice.period_end * 1000),
         }
       });
 
-      // Update school payment info
+      // Log additional invoice details that can't be stored
+      logger.info('Invoice details from Stripe', {
+        schoolId,
+        invoiceId: invoice.id,
+        invoiceUrl: invoice.hosted_invoice_url,
+        pdfUrl: invoice.invoice_pdf,
+        paidAt: invoice.status_transitions?.paid_at ? new Date(invoice.status_transitions.paid_at * 1000) : null,
+      });
+
+      // School model doesn't have payment tracking fields
+      // Just ensure school is active after successful payment
       await db.school.update({
         where: { id: schoolId },
         data: {
-          lastPaymentDate: new Date(),
-          lastInvoiceAmount: invoice.amount_paid / 100,
+          isActive: true,
         }
       });
 
       // Send invoice receipt
       const school = await db.school.findUnique({
-        where: { id: schoolId },
-        include: { owner: true }
+        where: { id: schoolId }
       });
 
-      if (school?.owner?.email) {
+      // Get customer email from invoice
+      const customerEmail = invoice.customer_email;
+
+      if (customerEmail && school) {
         await this.sendInvoiceReceiptEmail({
-          to: school.owner.email,
+          to: customerEmail,
           schoolName: school.name,
           amount: invoice.amount_paid / 100,
           currency: invoice.currency,
