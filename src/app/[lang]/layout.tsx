@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Rubik } from "next/font/google";
+import { Inter, Tajawal } from "next/font/google";
 import { type Locale, localeConfig, i18n } from "@/components/internationalization/config";
 import { getDictionary } from "@/components/internationalization/dictionaries";
 import { Toaster } from "@/components/ui/sonner";
@@ -18,9 +18,10 @@ const inter = Inter({
   display: 'swap'
 });
 
-const rubik = Rubik({
+const tajawal = Tajawal({
   subsets: ['arabic', 'latin'],
-  variable: '--font-rubik',
+  variable: '--font-tajawal',
+  weight: ['200', '300', '400', '500', '700', '800', '900'],
   display: 'swap'
 });
 
@@ -64,7 +65,7 @@ export default async function LocaleLayout({
   return (
     <html lang={lang} dir={config.dir} suppressHydrationWarning>
       <body
-        className={`${isRTL ? rubik.className : inter.className} ${inter.variable} ${rubik.variable} antialiased`}
+        className={`${isRTL ? tajawal.className : inter.className} ${inter.variable} ${tajawal.variable} antialiased`}
       >
         <SessionProvider session={session}>
           <NuqsAdapter>
