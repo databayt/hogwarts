@@ -5,7 +5,8 @@
       "Bash(pnpm dev:*)",
       "WebFetch(domain:github.com)",
       "Bash(pnpm build:*)",
-      "Bash(pnpm lint:*)"
+      "Bash(pnpm lint:*)",
+      "Bash(git push:*)"
     ],
     "deny": [],
     "ask": []
