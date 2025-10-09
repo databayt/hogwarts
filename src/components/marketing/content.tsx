@@ -28,7 +28,7 @@ export default function HomeContent({ dictionary }: HomeContentProps) {
       <OpenSource />
       <Codebase /> */}
       <Time dictionary={dictionary} />
-      <Wizard />
+      {/* <Wizard /> */}
       <Testimonial dictionary={dictionary} />
       <LogoCloud dictionary={dictionary} />
       <FAQs dictionary={dictionary} />
