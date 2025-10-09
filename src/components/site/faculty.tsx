@@ -71,7 +71,7 @@ export function Faculty() {
 
   return (
     <section className="py-14 bg-muted full-bleed">
-      <div className="container-responsive">
+      <div className="container">
         <SectionHeading title="Faculty" description="Meet the wizards who make learning magical" />
 
         {/* Faculty Stats */}

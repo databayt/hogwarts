@@ -92,7 +92,7 @@ export function Features() {
 
         {/* Stats Section */}
         <div className="bg-gradient-to-r from-purple-600 to-blue-600 p-8 md:p-12 text-white full-bleed">
-          <div className="text-center pb-12 container-responsive">
+          <div className="text-center pb-12 container">
             <h2 className="mb-4">
               Numbers
             </h2>

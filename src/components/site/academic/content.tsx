@@ -163,7 +163,7 @@ export default function AcademicContent({ school }: AcademicContentProps) {
 
       {/* Stats Section */}
       <section className="bg-gradient-to-r from-blue-600 to-purple-600 p-8 md:p-12 text-white full-bleed">
-        <div className="text-center pb-12 container-responsive">
+        <div className="text-center pb-12 container">
           <h2 className="mb-4 text-3xl md:text-4xl font-bold">
             Academic Excellence
           </h2>

@@ -13,7 +13,7 @@ export default async function MarketingHeader({ dictionary }: MarketingHeaderPro
   const session = await auth();
     return (
       <header className="full-bleed sticky top-0 z-40 border-b border-dashed border-muted bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container-responsive">
+        <div className="inner-contained">
           <div className="flex h-14 items-center justify-between">
             {/* Left side - Logo and Nav */}
             <MainNav items={marketingConfig.mainNav} dictionary={dictionary} />

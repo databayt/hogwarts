@@ -7,12 +7,8 @@ import { RightActions } from './right-actions'
 export default async function SiteHeader() {
   const session = await auth();
     return (
-      <header className="sticky top-0 z-80 border-b border-dashed border-muted bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60" style={{
-        width: '100vw',
-        marginLeft: 'calc(-50vw + 50%)',
-        marginRight: 'calc(-50vw + 50%)'
-      }}>
-        <div className="container-responsive">
+      <header className="full-bleed sticky top-0 z-80 border-b border-dashed border-muted bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="inner-contained">
           <div className="flex h-14 items-center justify-between">
             {/* Left side - Logo and Nav */}
             <MainNav items={marketingConfig.mainNav} />
