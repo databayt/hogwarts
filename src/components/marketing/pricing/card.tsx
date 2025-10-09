@@ -67,8 +67,8 @@ export function PricingCard({ offer, isYearly, userId, subscriptionPlan, userRol
         </Link>
       )}
       {(!userId || !subscriptionPlan) && isPro && (
-        <a href="#more-info" className="ml-3 text-sm text-muted-foreground">
-          More info ↗
+        <a href="#more-info" className="ml-3">
+          <small className="muted">More info ↗</small>
         </a>
       )}
     </>

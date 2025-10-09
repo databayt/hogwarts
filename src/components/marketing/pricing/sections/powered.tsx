@@ -137,7 +137,7 @@ const logos = [
         >
           <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
         </svg>
-        <span className="text-2xl font-bold tracking-tight">Auth.js</span>
+        <h3 className="tracking-tight">Auth.js</h3>
       </div>
     ),
   },
@@ -242,9 +242,9 @@ export default function Powered() {
   return (
     <section className="py-14 text-muted-foreground">
       <MaxWidthWrapper>
-        <h2 className="text-center text-sm font-semibold uppercase">
-          Powered by
-        </h2>
+        <div className="text-center uppercase">
+          <small className="font-semibold">Powered by</small>
+        </div>
 
         <div className="mt-10 grid grid-cols-2 place-items-center gap-8 md:grid-cols-4">
           {logos.slice(0, 4).map((logo) => (
