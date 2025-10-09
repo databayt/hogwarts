@@ -37,9 +37,9 @@ export default function AllFeatures() {
               <h4 className="text-foreground">
                 {feature.title}
               </h4>
-              <p className="text-sm text-muted-foreground font-light">
+              <small className="muted font-light">
                 {feature.description}
-              </p>
+              </small>
             </div>
           </div>
         </Link>

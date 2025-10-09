@@ -118,8 +118,8 @@ export function TenantsContent() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Tenant Management</h1>
-          <p className="text-muted-foreground">
+          <h1>Tenant Management</h1>
+          <p className="muted">
             Manage school subdomains and tenant settings
           </p>
         </div>
@@ -133,33 +133,33 @@ export function TenantsContent() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Tenants</CardTitle>
+            <CardTitle><small>Total Tenants</small></CardTitle>
             <Building2 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{tenants.length}</div>
+            <h3>{tenants.length}</h3>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Tenants</CardTitle>
+            <CardTitle><small>Active Tenants</small></CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <h3>
               {tenants.filter(t => t.isActive).length}
-            </div>
+            </h3>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Inactive Tenants</CardTitle>
+            <CardTitle><small>Inactive Tenants</small></CardTitle>
             <AlertCircle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <h3>
               {tenants.filter(t => !t.isActive).length}
-            </div>
+            </h3>
           </CardContent>
         </Card>
       </div>
@@ -174,7 +174,7 @@ export function TenantsContent() {
             <div className="text-center py-8 text-muted-foreground">
               <Globe className="h-12 w-12 mx-auto mb-4 opacity-50" />
               <p>No tenants found</p>
-              <p className="text-sm">Schools will appear here once they complete onboarding</p>
+              <p className="muted">Schools will appear here once they complete onboarding</p>
             </div>
           ) : (
             <div className="space-y-4">
@@ -189,11 +189,11 @@ export function TenantsContent() {
                       <Globe className="w-5 h-5 text-primary" />
                     </div>
                     <div>
-                      <h3 className="font-medium">{tenant.name}</h3>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <h4>{tenant.name}</h4>
+                      <p className="muted flex items-center gap-2">
                         <span className="font-mono">{tenant.domain}.databayt.org</span>
                         {getStatusBadge(tenant.isActive)}
-                      </div>
+                      </p>
                     </div>
                   </div>
 

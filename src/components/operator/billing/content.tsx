@@ -39,8 +39,8 @@ export function BillingContent() {
       <PageContainer>
         <div className="flex flex-1 flex-col gap-4">
           <div>
-            <h1 className="text-xl font-semibold">Billing</h1>
-            <p className="text-sm text-muted-foreground">Invoices and receipts</p>
+            <h2>Billing</h2>
+            <p className="muted">Invoices and receipts</p>
           </div>
           <DataTableSkeleton columnCount={invoiceColumns.length} />
         </div>
@@ -53,8 +53,8 @@ export function BillingContent() {
       <PageContainer>
         <div className="flex flex-1 flex-col gap-4">
           <div>
-            <h1 className="text-xl font-semibold">Billing</h1>
-            <p className="text-sm text-muted-foreground">Invoices and receipts</p>
+            <h2>Billing</h2>
+            <p className="muted">Invoices and receipts</p>
           </div>
           <EmptyState title="Error loading billing data" description="Please try again later." />
         </div>
@@ -68,8 +68,8 @@ export function BillingContent() {
     <PageContainer>
       <div className="flex flex-1 flex-col gap-4">
         <div>
-          <h1 className="text-xl font-semibold">Billing</h1>
-          <p className="text-sm text-muted-foreground">Invoices and receipts</p>
+          <h2>Billing</h2>
+          <p className="muted">Invoices and receipts</p>
         </div>
         {rows && rows.length > 0 ? (
           <InvoicesTable data={rows} columns={invoiceColumns} pageCount={pageCount} />

@@ -72,11 +72,11 @@ export default function Testimonial({ dictionary }: TestimonialProps) {
                     <div key={index} className="relative overflow-hidden rounded-lg border bg-background p-2">
                         <div className="flex h-[150px] flex-col justify-between rounded-md p-6">
                             <div className="space-y-2">
-                                <p className="text-sm text-muted-foreground">
+                                <small className="muted">
                                     {testimonial.content}
-                                </p>
+                                </small>
                             </div>
-                            
+
                             <div className="flex items-center gap-3 py-4">
                                 <Image
                                     src={testimonial.avatar}
@@ -87,9 +87,9 @@ export default function Testimonial({ dictionary }: TestimonialProps) {
                                 />
                                 <div className="flex flex-col">
                                     <strong className="font-medium">{testimonial.name}</strong>
-                                    <p className="text-sm text-muted-foreground">
+                                    <small className="muted">
                                         {testimonial.role}
-                                    </p>
+                                    </small>
                                 </div>
                             </div>
                         </div>

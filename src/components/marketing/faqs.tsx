@@ -138,18 +138,18 @@ export default function FAQs({ dictionary }: FAQsProps) {
       <div className="container mx-auto px-4">
         <div className="grid gap-y-12 lg:grid-cols-[1fr_2fr] lg:gap-x-12">
           <div className="text-center lg:text-start">
-            <h2 className="mb-4 text-3xl font-semibold md:text-4xl whitespace-pre-line">
+            <h2 className="mb-4 font-semibold whitespace-pre-line">
               {faqsDict.titleBreak || faqsDict.title}
             </h2>
-            <p className="text-muted-foreground">{faqsDict.subtitle}</p>
+            <p className="muted">{faqsDict.subtitle}</p>
           </div>
           <div className="divide-y divide-dashed sm:mx-auto sm:max-w-xl lg:mx-0 lg:ms-auto">
             <div className="pb-6">
               <h3 className="font-medium text-start">{faqsDict.openSourceTitle}</h3>
-              <p className="text-muted-foreground my-4 text-start">{faqsDict.openSourceDesc}</p>
+              <p className="muted my-4 text-start">{faqsDict.openSourceDesc}</p>
               <ul className="list-outside list-disc space-y-2 ps-4">
                 {faqsDict.openSourceItems?.map((item, index) => (
-                  <li key={index} className="text-muted-foreground">{item}</li>
+                  <li key={index} className="muted">{item}</li>
                 ))}
               </ul>
             </div>
@@ -157,18 +157,18 @@ export default function FAQs({ dictionary }: FAQsProps) {
               <Accordion type="single" collapsible defaultValue="item-1">
                 {items.map((item, index) => (
                   <AccordionItem key={index} value={`item-${index + 1}`}>
-                    <AccordionTrigger className="text-base font-medium text-start">
+                    <AccordionTrigger className="font-medium text-start">
                       {item.question}
                     </AccordionTrigger>
                     <AccordionContent className="text-start">
                       {item.answer && (
-                        <p className="text-muted-foreground mb-4">{item.answer}</p>
+                        <p className="muted mb-4">{item.answer}</p>
                       )}
                       {item.list && (
                         <ul className="list-outside list-disc space-y-2 ps-4">
                           {item.links ? (
                             item.links.map((link, linkIndex) => (
-                              <li key={linkIndex} className="text-muted-foreground">
+                              <li key={linkIndex} className="muted">
                                 <Link
                                   href={link.href}
                                   target={link.href.startsWith('http') ? "_blank" : undefined}
@@ -181,7 +181,7 @@ export default function FAQs({ dictionary }: FAQsProps) {
                             ))
                           ) : (
                             item.list.map((listItem, listIndex) => (
-                              <li key={listIndex} className="text-muted-foreground">{listItem}</li>
+                              <li key={listIndex} className="muted">{listItem}</li>
                             ))
                           )}
                         </ul>

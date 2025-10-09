@@ -31,7 +31,7 @@ export default function AppSidebar({ ...props }: React.ComponentProps<typeof Sid
           <SidebarMenuItem>
             <SidebarMenuButton asChild className="data-[slot=sidebar-menu-button]:!p-1.5">
               <a href="#">
-                <span className="text-base font-semibold">Hogwarts Admin</span>
+                <h6>Hogwarts Admin</h6>
               </a>
             </SidebarMenuButton>
           </SidebarMenuItem>

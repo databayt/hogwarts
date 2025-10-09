@@ -23,15 +23,15 @@ const Hero = ({ dictionary }: HeroProps) => {
         <div className="flex flex-col items-center gap-4 text-center">
           <Link
             href={siteConfig.links.twitter}
-            className="rounded-2xl bg-muted px-4 py-1.5 text-sm"
+            className="rounded-2xl bg-muted px-4 py-1.5"
             target="_blank"
           >
-            {heroDict.badge || "700+ School automated"}
+            <small>{heroDict.badge || "700+ School automated"}</small>
           </Link>
           <h1 className="font-heading whitespace-pre-line">
             {heroDict.title}
           </h1>
-          <p className="max-w-[48rem] leading-normal text-muted-foreground sm:text-xl sm:leading-8">
+          <p className="max-w-[48rem] leading-normal muted">
             {heroDict.subtitle}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 sm:space-x-4 w-full sm:w-auto px-4 sm:px-0 max-w-[300px] sm:max-w-none mx-auto">
