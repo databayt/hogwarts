@@ -36,6 +36,23 @@ Requirements and roadmap alignment extracted from:
 
 Status legend: [x] done, [~] in progress, [ ] todo
 
+### ✅ What's Working Well
+- [x] Server Actions with proper "use server" directive
+- [x] Validation using Zod schemas
+- [x] Basic test coverage for critical features
+- [x] RBAC enforcement with requireOperator()
+- [x] Audit logging for all operator actions
+- [x] Impersonation with proper session management
+
+### ⚠️ Architecture Compliance Issues
+- **Mirror Pattern**: Currently at wrong path (`src/components/operator/` should be `src/components/platform/operator/`)
+- **Typography**: 30+ violations using hardcoded text-* classes instead of semantic HTML
+- **Standardization**: Missing required files (type.ts, form.tsx, constant.ts, etc.)
+- **Component Hierarchy**: Not following UI → Atoms → Features pattern
+- **TypeScript**: Extensive `any` usage (30+ instances), Prisma types bypassed with `(db as any)`
+- **Performance**: Client-side data fetching instead of server components
+
+### Component Implementation Status
 - Shell & navigation
   - [x] App layout and sidebar (`layout.tsx`, `app-sidebar.tsx`)
   - [x] Top-level nav and breadcrumbs (`nav-main.tsx`, `breadcrumbs.tsx`)
@@ -49,14 +66,14 @@ Status legend: [x] done, [~] in progress, [ ] todo
   - [x] File uploader building block (`file-uploader.tsx`)
   - [x] Form skeletons (`form-card-skeleton.tsx`)
 - Feature scaffolds (routes + component folders)
-  - [~] Tenants (`/operator/tenants`)
-  - [~] Domains (`/operator/domains`)
-  - [~] Billing (`/operator/billing`)
-  - [~] Observability (`/operator/observability`)
-  - [~] Overview (`/operator/overview`)
-  - [~] Products (`/operator/product`) — naming may be adjusted to `products` for consistency
-  - [~] Profile (`/operator/profile`)
-  - [~] Kanban demo (`/operator/kanban`)
+  - [~] Tenants (`/operator/tenants`) - Missing standardized files
+  - [~] Domains (`/operator/domains`) - Missing standardized files
+  - [~] Billing (`/operator/billing`) - Missing standardized files
+  - [~] Observability (`/operator/observability`) - Missing standardized files
+  - [~] Overview (`/operator/overview`) - Performance issues
+  - [~] Products (`/operator/product`) - Needs renaming to `products`
+  - [~] Profile (`/operator/profile`) - Incomplete
+  - [~] Kanban demo (`/operator/kanban`) - Demo status
 
 Notes:
 - Server Actions folder exists: `src/app/(platform)/operator/actions/*` (to be filled with typed actions using Zod + "use server").

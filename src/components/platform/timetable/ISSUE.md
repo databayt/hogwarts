@@ -2,6 +2,35 @@
 
 Track the concrete tasks to ship the Timetable feature. Follow our multi-tenant and shadcn/ui rules. Use `pnpm` for all commands.
 
+## Critical Issues from Code Review (Priority 0) 🔴
+
+### TypeScript Violations - MUST FIX
+- [ ] **utils.ts:125** - Remove `any` type in CSV parsing
+- [ ] **utils.ts:283** - Fix `any` type for timetable data
+- [ ] **utils.ts:299** - Replace `any` with proper types
+- [ ] Add proper type guards for all external data
+- [ ] Create TypeScript interfaces for CSV imports
+- [ ] Fix unsafe type assertions
+
+### Typography Violations
+- [ ] Replace all hardcoded text-* classes with semantic HTML
+- [ ] Use typography system from globals.css
+- [ ] Ensure all text follows semantic HTML patterns
+
+### Performance Issues
+- [ ] Add React.memo to TimetableCell component
+- [ ] Implement virtual scrolling for large timetables
+- [ ] Optimize conflict detection algorithm
+- [ ] Cache frequently accessed timetable data
+- [ ] Add pagination for teacher/class lists
+
+### Accessibility Requirements
+- [ ] Implement ARIA grid pattern for timetable
+- [ ] Add keyboard navigation (arrow keys)
+- [ ] Add focus management for cells
+- [ ] Create screen reader announcements
+- [ ] Add skip navigation links
+
 ## Database & Migrations
 - [x] Add `Timetable` model scoped by `schoolId` with uniqueness for teacher/room/class collisions
   - [x] Fields: `id, schoolId, termId, dayOfWeek, periodId, classId, teacherId, classroomId, weekOffset?`

@@ -65,7 +65,7 @@ export default async function LocaleLayout({
   return (
     <html lang={lang} dir={config.dir} suppressHydrationWarning>
       <body
-        className={`${isRTL ? tajawal.className : inter.className} ${inter.variable} ${tajawal.variable} antialiased`}
+        className={`${isRTL ? tajawal.className : inter.className} ${inter.variable} ${tajawal.variable} antialiased layout-container`}
       >
         <SessionProvider session={session}>
           <NuqsAdapter>

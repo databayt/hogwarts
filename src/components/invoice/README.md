@@ -1,6 +1,7 @@
-# Invoice Component
+# Invoice Components
 
-This component provides a complete invoice management system with search, filtering, and CRUD operations.
+## Overview
+The invoice components provide a comprehensive invoicing and billing management system for the Hogwarts platform. This module handles invoice creation, management, payment tracking, and financial reporting with multi-tenant support.
 
 ## Features
 
@@ -84,3 +85,180 @@ This component integrates with:
 - Toast notifications (`@/components/atom/toast`)
 - Authentication system (`@/auth`)
 - Database layer (Prisma with Neon Postgres)
+
+## Architecture Status
+
+### Current Structure
+```
+src/components/invoice/
+├── dashboard/         # Invoice dashboard views
+├── invoice/           # Invoice management features
+├── onboarding/        # Invoice setup wizard
+├── settings/          # Invoice settings
+├── steps/             # Multi-step form components
+├── actions/           # Server actions (legacy)
+├── _component/        # Legacy components
+├── actions.ts         # Main server actions
+├── columns.tsx        # Table column definitions
+├── content.tsx        # Main content component
+├── form.tsx           # Invoice form components
+├── table.tsx          # Data table implementation
+├── types.ts           # TypeScript definitions
+└── validation.ts      # Zod schemas
+```
+
+### Compliance Status
+- ✅ **Server Actions**: Properly implemented with validation
+- ✅ **Multi-tenant**: SchoolId scoping implemented
+- ✅ **TypeScript**: Good type coverage
+- ⚠️ **File Organization**: Mixed patterns and legacy folders
+- ❌ **Standardization**: Inconsistent file structure
+- ❌ **Testing**: No test coverage
+
+## Critical Issues Found
+
+### Code Organization Issues
+- **Legacy folders**: `_component/` and `actions/` folders need cleanup
+- **Duplicate logic**: Multiple invoice creation implementations
+- **Mixed patterns**: Inconsistent between old and new approaches
+- **File naming**: Not following kebab-case convention
+
+### TypeScript Issues
+- Some `any` type usage in actions
+- Missing proper error types
+- Incomplete type definitions for complex objects
+
+### Performance Concerns
+- Client-side filtering in some components
+- Missing pagination optimization
+- No caching strategy for frequently accessed data
+
+## Technology Stack
+- **Framework**: Next.js 15.4.4 App Router
+- **UI**: ShadCN UI + Custom components
+- **Forms**: React Hook Form + Zod
+- **Tables**: @tanstack/react-table
+- **Database**: Prisma ORM
+- **Styling**: Tailwind CSS v4
+
+## Development Guidelines
+
+### Server Actions Pattern
+```typescript
+"use server"
+
+import { auth } from "@/auth"
+import { invoiceSchema } from "./validation"
+
+export async function createInvoice(data: FormData) {
+  const session = await auth()
+  const schoolId = session?.user?.schoolId
+
+  // Validate with Zod
+  const validated = invoiceSchema.parse(Object.fromEntries(data))
+
+  // Create with schoolId scope
+  const invoice = await db.invoice.create({
+    data: { ...validated, schoolId }
+  })
+
+  revalidatePath("/invoices")
+  return { success: true, data: invoice }
+}
+```
+
+### Form Implementation
+```typescript
+"use client"
+
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { invoiceSchema } from "./validation"
+
+export function InvoiceForm() {
+  const form = useForm({
+    resolver: zodResolver(invoiceSchema),
+    defaultValues: {
+      // Invoice defaults
+    }
+  })
+
+  return (
+    <Form {...form}>
+      {/* Form fields */}
+    </Form>
+  )
+}
+```
+
+### Multi-step Forms
+The invoice module uses a multi-step form pattern:
+1. Basic Information
+2. Client & Items
+3. Review & Submit
+
+Each step validates independently before proceeding.
+
+## Required Improvements
+
+### Immediate Actions
+1. Clean up legacy folders (`_component/`, `actions/`)
+2. Standardize file naming to kebab-case
+3. Consolidate duplicate implementations
+4. Add comprehensive TypeScript types
+5. Implement proper error handling
+
+### Performance Optimizations
+1. Move filtering to server-side
+2. Implement data caching
+3. Add optimistic UI updates
+4. Optimize bundle size
+
+### Testing Requirements
+1. Unit tests for calculations
+2. Integration tests for workflows
+3. E2E tests for invoice creation
+4. Validation tests for forms
+
+## API Endpoints
+
+### Server Actions
+- `getInvoicesWithFilters` - Fetch with search/filter
+- `createInvoice` - Create new invoice
+- `updateInvoice` - Update existing invoice
+- `deleteInvoice` - Delete invoice
+- `sendInvoiceEmail` - Email invoice to client
+- `updateInvoiceStatus` - Update payment status
+
+## Database Schema
+
+```prisma
+model Invoice {
+  id           String   @id @default(cuid())
+  schoolId     String
+  number       String
+  clientName   String
+  clientEmail  String?
+  items        Json
+  total        Decimal
+  status       InvoiceStatus
+  dueDate      DateTime
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([schoolId])
+  @@unique([schoolId, number])
+}
+```
+
+## Related Documentation
+- [CLAUDE.md](../../../CLAUDE.md) - Architecture guidelines
+- [Platform README](../platform/README.md)
+- [Table Components](../table/README.md)
+- [Form Patterns](../../docs/forms.md)
+
+## Maintainers
+Finance and billing team responsible for invoice features.
+
+## License
+MIT
