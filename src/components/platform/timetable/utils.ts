@@ -278,11 +278,18 @@ export function exportToCSV(
   return rows.map(row => row.join(',')).join('\n')
 }
 
-export function parseCSVImport(csvContent: string): {
+// Type-safe CSV row interface
+interface CSVRow {
+  [key: string]: string
+}
+
+export interface CSVImportResult {
   valid: boolean
-  data?: any[]
+  data?: CSVRow[]
   errors?: string[]
-} {
+}
+
+export function parseCSVImport(csvContent: string): CSVImportResult {
   try {
     const lines = csvContent.trim().split('\n')
     if (lines.length < 2) {
@@ -290,13 +297,13 @@ export function parseCSVImport(csvContent: string): {
     }
 
     const headers = lines[0].split(',').map(h => h.trim())
-    const data = lines.slice(1).map((line, index) => {
+    const data: CSVRow[] = lines.slice(1).map((line, index) => {
       const values = line.split(',').map(v => v.trim())
       if (values.length !== headers.length) {
         throw new Error(`Row ${index + 2} has incorrect number of columns`)
       }
 
-      const row: any = {}
+      const row: CSVRow = {}
       headers.forEach((header, i) => {
         row[header] = values[i]
       })

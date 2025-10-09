@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { useEffect, useState } from "react";
-import { createInvoice, updateInvoice, getInvoiceById } from "@/components/invoice/actions/invoice";
+import { createInvoice, updateInvoice, getInvoiceById } from "@/components/invoice/actions";
 import { InvoiceSchemaZod } from "./validation";
 import { Form } from "@/components/ui/form";
 import { useModal } from "@/components/atom/modal/context";
