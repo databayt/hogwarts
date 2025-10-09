@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Bell, Mail } from "lucide-react";
 import { useBreadcrumbs } from "@/components/operator/hooks/use-breadcrumbs";
+import { LanguageSwitcher } from "@/components/internationalization/language-switcher";
 
 export default function SaasHeader() {
   const breadcrumbItems = useBreadcrumbs();
@@ -59,6 +60,7 @@ export default function SaasHeader() {
             <Mail className="h-4 w-4" />
             <span className="sr-only">Messages</span>
           </Button>
+          <LanguageSwitcher className="size-7" />
           <ModeSwitcher />
           <UserButton />
         </div>

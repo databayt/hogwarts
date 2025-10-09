@@ -33,7 +33,7 @@ pnpm test:e2e:report    # Show E2E test report
 ### Tech Stack
 - **Framework**: Next.js 15.4.4 (App Router) with React 19.1.0
 - **Styling**: Tailwind CSS 4 with shadcn/ui components (New York style)
-- **Database**: PostgreSQL (Neon) with Prisma ORM 6.13.0
+- **Database**: PostgreSQL (Neon) with Prisma ORM 6.14.0
 - **Auth**: NextAuth v5 (Auth.js 5.0.0-beta.29) with JWT strategy
 - **State**: Server actions, SWR for client-side fetching
 - **Forms**: react-hook-form 7.61.1 with Zod 4.0.14 validation
@@ -81,10 +81,14 @@ Build components from bottom up:
 ### Multi-Tenant Architecture
 
 **Critical**: Every database operation MUST be scoped by `schoolId`:
+- **Subdomain Routing**: `school.databayt.org` → `/s/[subdomain]/(platform)/...`
+- **Tenant Context**: Use `getTenantContext()` from `src/lib/tenant-context.ts`
 - All business tables include `schoolId` field
 - Queries must include `{ where: { schoolId } }`
-- Subdomain determines tenant context
+- Subdomain determines tenant context via middleware rewriting
 - Session includes schoolId via Auth.js callbacks
+- **Cookie Domain**: `.databayt.org` for cross-subdomain authentication
+- **User Scoping**: `@@unique([email, schoolId])` allows same email across schools
 
 ### Server Actions Pattern
 
@@ -135,14 +139,18 @@ const form = useForm({ resolver: zodResolver(itemSchema) })
 
 ### Key Utilities
 
-- **cn()** (`src/lib/utils.ts`) - Merge Tailwind classes
-- **auth()** (`src/auth.ts`) - Get session with extended user data
-- **db** (`src/lib/db.ts`) - Prisma client instance
+- **cn()** (`src/lib/utils.ts`) - Merge Tailwind classes with clsx and tailwind-merge
+- **auth()** (`src/auth.ts`) - Get session with extended user data (867 lines!)
+- **db** (`src/lib/db.ts`) - Prisma client singleton with global caching
+- **getTenantContext()** (`src/lib/tenant-context.ts`) - Get current school context
+- **env** (`src/env.mjs`) - Type-safe environment variables with @t3-oss/env-nextjs
+- **formatBytes()**, **nFormatter()** (`src/lib/utils.ts`) - Number/byte formatting
+- **routes.ts** (`src/routes.ts`) - Route protection definitions
 
 ### Prisma Models
 
-Models are split across files in `prisma/models/*.prisma`:
-- **auth.prisma**: User, Account, Session, VerificationToken
+Models are split across 19 files in `prisma/models/*.prisma`:
+- **auth.prisma**: User, Account, Session, VerificationToken, TwoFactorToken
 - **school.prisma**: School, SchoolYear, Period, Term, YearLevel
 - **staff.prisma**: Teacher, Department, TeacherDepartment
 - **students.prisma**: Student, Guardian, StudentGuardian, StudentYearLevel
@@ -151,16 +159,25 @@ Models are split across files in `prisma/models/*.prisma`:
 - **assessments.prisma**: Assignment, AssignmentSubmission
 - **attendance.prisma**: Attendance records
 - **announcements.prisma**: Announcement system
+- **timetable.prisma**: Timetable, SchoolWeekConfig
+- **branding.prisma**: SchoolBranding
+- **subscription.prisma**: SubscriptionTier, Subscription, Discount
+- **invoice.prisma**: UserInvoice, Invoice
+- **legal.prisma**: LegalDocument, LegalConsent
 - All business models include required `schoolId` field for multi-tenancy
 - Relations use `@@index` for performance
+- Unique constraints scoped by `schoolId` for tenant isolation
 
 ### Authentication Flow
 
 NextAuth v5 configuration:
-- JWT strategy with 24-hour sessions
+- JWT strategy with 24-hour sessions (5-minute update age in production)
 - Extended session includes: schoolId, role, isPlatformAdmin
 - Callbacks in `src/auth.config.ts` handle JWT/session shape
 - Middleware (`src/middleware.ts`) enforces auth on protected routes
+- **OAuth Providers**: Google, Facebook, Credentials (bcrypt)
+- **Complex OAuth Redirect Logic**: 400+ lines in `auth.ts` for callback preservation
+- **Cookie Configuration**: Cross-subdomain support with `.databayt.org` domain
 
 User roles (8 total):
 - **DEVELOPER**: Platform admin (no schoolId, access all schools)
@@ -235,13 +252,14 @@ Use these path aliases:
 ## Internationalization (i18n)
 
 The platform supports full multi-language with RTL/LTR:
-- **Languages**: Arabic (RTL) and English (LTR)
+- **Languages**: Arabic (RTL, default) and English (LTR)
 - **Routing**: `[lang]` dynamic segment (e.g., `/en/dashboard`, `/ar/dashboard`)
-- **Fonts**: Rubik (Arabic), Inter (English)
+- **Fonts**: Tajawal (Arabic), Inter (English)
 - **Translation Keys**: 800+ keys covering all features
 - **Dictionary Files**: `src/components/internationalization/dictionaries.ts`
 - **Config**: `src/components/internationalization/config.ts`
 - **Language Switcher**: `src/components/internationalization/language-switcher.tsx`
+- **Locale Detection**: Cookie → Accept-Language header → default (ar)
 
 ## Environment & Deployment
 
@@ -323,10 +341,20 @@ The codebase includes several performance optimizations:
 - **Service Worker**: Offline support and caching strategies
 - **Database Indexes**: All foreign keys and frequently queried fields indexed
 
+## Middleware Features
+
+The middleware (`src/middleware.ts`) handles:
+- **i18n Locale Detection**: Arabic (default) or English based on cookie/headers
+- **Subdomain Rewriting**: Maps subdomains to `/[lang]/s/[subdomain]/...` routes
+- **Auth Protection**: Enforces authentication for private routes
+- **Request ID Generation**: Adds unique ID for traceability
+- **Security Headers**: Injects CSP, HSTS, X-Frame-Options
+- **Route Matching**: Uses exported config for path patterns
+
 ## Key Project Information
 
 - **Platform Description**: Hogwarts is a school automation platform that manages students, faculty, and academic processes with an intuitive interface
 - **Documentation**: Full documentation available at https://ed.databayt.org/docs
 - **License**: MIT License
-- **Test Coverage**: 174+ test files with 419+ test cases
+- **Test Coverage**: 234 test files across all features
 - **MVP Status**: 100% complete, production-ready

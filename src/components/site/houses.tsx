@@ -52,7 +52,7 @@ export function Houses() {
   return (
     <div className="full-bleed bg-muted">
       <section className="py-14">
-        <div className="container-responsive">
+        <div className="container">
           <SectionHeading title="Houses" description="Find where your passion belongs." />
           
 

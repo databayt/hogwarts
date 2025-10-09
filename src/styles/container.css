@@ -1,119 +1,97 @@
-/* Container Styles - Responsive & Reusable */
+/*
+ * Optimized Container System
+ *
+ * Usage Examples:
+ *
+ * 1. Standard container with max-width:
+ *    <div className="container">Content</div>
+ *
+ * 2. Full-width section with aligned content:
+ *    <section className="full-bleed bg-blue-500">
+ *      <div className="inner-contained">
+ *        Aligned content with full-width background
+ *      </div>
+ *    </section>
+ *
+ * 3. Full-width section with simple padding:
+ *    <section className="full-bleed bg-gray-100">
+ *      <div className="inner">
+ *        Content with page padding, no max-width
+ *      </div>
+ *    </section>
+ *
+ * 4. Container variants:
+ *    <div className="container container-narrow">Narrow content</div>
+ *    <div className="container container-wide">Wide content</div>
+ *
+ * 5. Section with vertical spacing:
+ *    <section className="section">Content with vertical padding</section>
+ *
+ * 6. Breakout from parent padding:
+ *    <div className="breakout">Full-width in padded parent</div>
+ */
 
 @layer components {
-  /* Main layout container - use once in layout for global padding control */
-  .layout-container {
-    @apply w-full;
-    padding-left: 0.75rem !important; /* px-3 = 12px */
-    padding-right: 0.75rem !important;
+  /* CSS Custom Properties for consistent spacing */
+  :root {
+    --container-px: 0.75rem; /* 12px mobile */
+    --container-max: 80rem; /* 1280px default max-width */
   }
 
   @media (min-width: 640px) {
-    .layout-container {
-      padding-left: 2.5rem !important; /* sm:px-4 = 16px */
-      padding-right: 2.5rem !important;
+    :root {
+      --container-px: 2.5rem; /* 40px */
     }
   }
 
   @media (min-width: 768px) {
-    .layout-container {
-      padding-left: 1.5rem !important; /* md:px-6 = 24px */
-      padding-right: 1.5rem !important;
+    :root {
+      --container-px: 1.5rem; /* 24px */
     }
   }
 
   @media (min-width: 1024px) {
-    .layout-container {
-      padding-left: 2rem !important; /* lg:px-8 = 32px */
-      padding-right: 2rem !important;
+    :root {
+      --container-px: 2rem; /* 32px */
     }
   }
 
   @media (min-width: 1280px) {
-    .layout-container {
-      padding-left: 2.5rem !important; /* xl:px-10 = 40px */
-      padding-right: 2.5rem !important;
+    :root {
+      --container-px: 2.5rem; /* 40px */
     }
   }
 
-  /* Centered container with max-width for content sections */
-  .container-centered {
-    @apply w-full mx-auto px-3 sm:px-4 md:px-6 lg:px-8 xl:px-10;
-    max-width: 1280px; /* xl breakpoint */
+  /* Global layout container - Applied to body */
+  .layout-container {
+    @apply w-full;
+    padding-left: var(--container-px) !important;
+    padding-right: var(--container-px) !important;
   }
 
-  /* Main container with responsive padding */
-  .container-responsive {
-    @apply w-full mx-auto px-3 sm:px-4 md:px-6 lg:px-8;
-    max-width: 1280px; /* xl breakpoint */
+  /* Standard container with max-width constraint */
+  .container {
+    @apply w-full mx-auto;
+    padding-left: var(--container-px);
+    padding-right: var(--container-px);
+    max-width: var(--container-max);
   }
 
-  /* Container with extra large max-width */
-  .container-xl {
-    @apply w-full mx-auto px-4 sm:px-6 lg:px-8 xl:px-12;
-    max-width: 1440px;
-  }
-
-  /* Container with full width but responsive padding */
-  .container-full {
-    @apply w-full px-4 sm:px-6 lg:px-8;
-  }
-
-  /* Section container with vertical spacing */
-  .section-container {
-    @apply w-full mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20;
-    max-width: 1280px;
-  }
-
-  /* Narrow container for content-focused sections */
+  /* Container variants */
   .container-narrow {
-    @apply w-full mx-auto px-4 sm:px-6 lg:px-8;
-    max-width: 768px; /* md breakpoint */
+    --container-max: 48rem; /* 768px */
   }
 
-  /* Wide container for hero sections */
   .container-wide {
-    @apply w-full mx-auto px-4 sm:px-6 lg:px-8 xl:px-16;
-    max-width: 1536px; /* 2xl breakpoint */
+    --container-max: 96rem; /* 1536px */
   }
 
-  /* Grid container with responsive gaps */
-  .grid-container {
-    @apply w-full mx-auto px-4 sm:px-6 lg:px-8;
-    max-width: 1280px;
+  /* Section with vertical spacing */
+  .section {
+    @apply py-12 sm:py-16 lg:py-20;
   }
 
-  /* Responsive padding utilities */
-  .padding-responsive {
-    @apply px-3 sm:px-4 md:px-6 lg:px-8;
-  }
-
-  .padding-responsive-y {
-    @apply py-6 sm:py-8 md:py-10 lg:py-12;
-  }
-
-  .padding-responsive-large {
-    @apply px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12;
-  }
-
-  .padding-responsive-small {
-    @apply px-2 sm:px-3 md:px-4 lg:px-5;
-  }
-
-  /* Margin utilities */
-  .margin-responsive-y {
-    @apply my-8 sm:my-12 lg:my-16;
-  }
-
-  .margin-responsive-top {
-    @apply mt-8 sm:mt-12 lg:mt-16;
-  }
-
-  .margin-responsive-bottom {
-    @apply mb-8 sm:mb-12 lg:mb-16;
-  }
-
-  /* Full bleed utility - breaks out of any container */
+  /* Full-bleed with smart inner content alignment */
   .full-bleed {
     width: 100vw;
     position: relative;
@@ -121,4 +99,37 @@
     transform: translateX(-50%);
     max-width: none;
   }
-} 
+
+  /* Inner content that aligns with page padding inside full-bleed */
+  .full-bleed > .inner,
+  .full-bleed-inner {
+    padding-left: var(--container-px);
+    padding-right: var(--container-px);
+  }
+
+  /* Full-bleed with centered max-width inner content */
+  .full-bleed > .inner-contained,
+  .full-bleed-contained {
+    @apply mx-auto;
+    padding-left: var(--container-px);
+    padding-right: var(--container-px);
+    max-width: var(--container-max);
+  }
+
+  /* Utility to negate parent padding (for nested full-width elements) */
+  .breakout {
+    margin-left: calc(-1 * var(--container-px));
+    margin-right: calc(-1 * var(--container-px));
+  }
+
+  /* Simple spacing utilities using the same values */
+  .px-container {
+    padding-left: var(--container-px);
+    padding-right: var(--container-px);
+  }
+
+  .mx-container {
+    margin-left: var(--container-px);
+    margin-right: var(--container-px);
+  }
+}
