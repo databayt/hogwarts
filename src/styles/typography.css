@@ -87,7 +87,7 @@
   /* Header navigation links */
   header a[href],
   header a[href]:visited {
-    @apply text-base font-medium transition-colors;
+    @apply text-sm font-medium transition-colors;
   }
 
   /* Header navigation active state */
