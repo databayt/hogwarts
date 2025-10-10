@@ -224,7 +224,7 @@ export function getPricingTier(studentCount: number): "starter" | "professional"
 /**
  * Calculate estimated monthly cost
  */
-export function estimateMonthly Cost(
+export function estimateMonthlyCost(
   studentCount: number,
   teacherCount: number,
   pricePerStudent = 1,
