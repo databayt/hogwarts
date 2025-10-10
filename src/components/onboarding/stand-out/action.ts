@@ -2,13 +2,13 @@
 
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
-import { 
+import {
   requireSchoolOwnership,
   createActionResponse,
-  type ActionResponse 
+  type ActionResponse
 } from "@/lib/auth-security";
 import { standOutValidation } from './validation';
-import type { StandOutFormData } from './type';
+import type { StandOutFormData } from './types';
 
 export async function updateStandOutFeatures(
   schoolId: string, 

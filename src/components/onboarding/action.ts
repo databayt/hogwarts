@@ -3,16 +3,16 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { 
-  getAuthContext, 
+import {
+  getAuthContext,
   requireSchoolAccess,
   requireSchoolOwnership,
   requireRole,
   createActionResponse,
   createTenantSafeWhere,
-  type ActionResponse 
+  type ActionResponse
 } from "@/lib/auth-security";
-import type { OnboardingSchoolData, OnboardingStep } from './type';
+import type { OnboardingSchoolData, OnboardingStep } from './types';
 import { onboardingValidation } from './validation';
 
 // Legacy interface for backward compatibility

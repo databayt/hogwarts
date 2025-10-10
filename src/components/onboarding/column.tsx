@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { MoreHorizontal, Eye, Edit, Trash2, Copy } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import type { OnboardingSchoolData } from './type';
+import type { OnboardingSchoolData } from './types';
 import { formatCurrency } from './util';
 
 // Column definitions for school data tables (for admin/management views)

@@ -6,7 +6,7 @@
 
 import { LogCard, MetricCard, HealthStatusCard } from "./card";
 import { Activity, AlertTriangle, Clock } from "lucide-react";
-import type { UnifiedLog, MetricValue } from "./type";
+import type { UnifiedLog, MetricValue } from "./types";
 import { formatRelativeTime } from "./util";
 
 interface FeaturedLogsProps {

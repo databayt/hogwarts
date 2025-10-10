@@ -1,4 +1,4 @@
-import type { SetupStepStatus } from './type';
+import type { SetupStepStatus } from './types';
 
 export const FINISH_SETUP_CONSTANTS = {
   STEP_NAME: 'finish-setup',

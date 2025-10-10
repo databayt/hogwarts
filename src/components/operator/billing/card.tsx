@@ -11,7 +11,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { FileText, Calendar, DollarSign, AlertCircle, CheckCircle2 } from "lucide-react";
-import type { InvoiceWithSchool, ReceiptWithInvoice, InvoiceStatus, ReceiptStatus } from "./type";
+import type { InvoiceWithSchool, ReceiptWithInvoice, InvoiceStatus, ReceiptStatus } from "./types";
 import {
   formatCurrency,
   getInvoiceStatusLabel,

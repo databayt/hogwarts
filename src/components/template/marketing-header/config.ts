@@ -1,4 +1,4 @@
-import { SiteConfig } from "./type"
+import { SiteConfig } from "./types"
 
 export const siteConfig: SiteConfig = {
   name: "Hogwarts",
@@ -12,7 +12,7 @@ export const siteConfig: SiteConfig = {
   },
 }
 
-import { DocsConfig } from "./type"
+import { DocsConfig } from "./types"
 
 export const docsConfig: DocsConfig = {
   mainNav: [
@@ -149,7 +149,7 @@ export const docsConfig: DocsConfig = {
   ],
 }
 
-import { MarketingConfig } from "./type"
+import { MarketingConfig } from "./types"
 
 export const marketingConfig: MarketingConfig = {
   mainNav: [

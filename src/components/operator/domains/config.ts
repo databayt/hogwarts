@@ -4,7 +4,7 @@
  * Static configuration data, enums, and lookup tables for domain management.
  */
 
-import type { DomainStatus } from "./type";
+import type { DomainStatus } from "./types";
 
 /**
  * Available domain statuses

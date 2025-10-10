@@ -8,7 +8,7 @@
 
 import { InvoiceCard, InvoiceStatsCard, BillingSummaryCard, InvoiceHealthCard } from "./card";
 import { FileText, DollarSign, AlertTriangle, TrendingUp, Clock } from "lucide-react";
-import type { InvoiceWithSchool, InvoiceStatus } from "./type";
+import type { InvoiceWithSchool, InvoiceStatus } from "./types";
 import { isInvoiceOverdue, formatCurrency, getDaysUntilDue } from "./util";
 
 interface FeaturedInvoicesProps {

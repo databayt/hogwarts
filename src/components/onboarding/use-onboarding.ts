@@ -2,13 +2,13 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import type { 
-  OnboardingSchoolData, 
-  OnboardingStep, 
+import type {
+  OnboardingSchoolData,
+  OnboardingStep,
   OnboardingProgress,
   OnboardingFormState,
   SchoolWithStatus
-} from './type';
+} from './types';
 import { 
   getListing, 
   updateListing, 

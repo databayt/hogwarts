@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Globe, Check, X, AlertCircle, Clock, ExternalLink } from "lucide-react";
-import type { DomainRequestWithSchool, DomainStatus, DNSRecord } from "./type";
+import type { DomainRequestWithSchool, DomainStatus, DNSRecord } from "./types";
 import {
   getDomainStatusLabel,
   formatDomainStatus,

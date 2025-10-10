@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, Grid3x3, List, SlidersHorizontal, FileText } from "lucide-react";
-import type { InvoiceWithSchool, InvoiceFilters, InvoiceStatus } from "./type";
+import type { InvoiceWithSchool, InvoiceFilters, InvoiceStatus } from "./types";
 import { INVOICE_STATUSES } from "./config";
 import { sortInvoices } from "./util";
 

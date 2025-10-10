@@ -10,7 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Search, Filter, Download, Plus } from 'lucide-react';
 import { SchoolCard } from './card';
 import { useUserSchools } from './use-onboarding';
-import type { OnboardingSchoolData } from './type';
+import type { OnboardingSchoolData } from './types';
 import { exportSchoolsToCSV } from './column';
 import { SCHOOL_CATEGORIES } from "./config";
 

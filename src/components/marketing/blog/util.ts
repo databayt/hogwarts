@@ -4,7 +4,7 @@
  * Helper functions for blog post management and display.
  */
 
-import type { BlogPost, BlogPostListItem, BlogCategory, BlogFilters } from "./type";
+import type { BlogPost, BlogPostListItem, BlogCategory, BlogFilters } from "./types";
 import { WORDS_PER_MINUTE, MAX_EXCERPT_LENGTH, BLOG_CATEGORY_INFO } from "./config";
 
 /**

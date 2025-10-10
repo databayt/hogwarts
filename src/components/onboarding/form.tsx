@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Loader2 } from 'lucide-react';
-import type { OnboardingSchoolData, OnboardingStep } from './type';
+import type { OnboardingSchoolData, OnboardingStep } from './types';
 import { onboardingValidation, titleStepValidation, descriptionStepValidation, locationStepValidation, capacityStepValidation, priceStepValidation } from './validation';
 import { SCHOOL_TYPES, SCHOOL_CATEGORIES, CURRENCIES, PAYMENT_SCHEDULES } from "./config";
 

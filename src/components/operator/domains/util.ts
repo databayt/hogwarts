@@ -4,7 +4,7 @@
  * Helper functions for domain validation, DNS management, and status handling.
  */
 
-import type { DomainStatus, DNSRecord, DomainValidationResult } from "./type";
+import type { DomainStatus, DNSRecord, DomainValidationResult } from "./types";
 import {
   DOMAIN_STATUS_LABELS,
   VALIDATION_RULES,

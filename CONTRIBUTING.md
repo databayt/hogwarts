@@ -78,9 +78,9 @@ For deeper feature directories (e.g., under `src/components/platform/dashboard`)
 | ----------------------- | ------------------------------------------------------------------- |
 | `content.tsx`           | Compose feature/page UI: headings, sections, layout orchestration. |
 | `action.ts`             | Server actions & API calls: validate, scope tenant, mutate.        |
-| `constant.ts`           | Enums, option lists, labels, defaults for the feature.             |
+| `config.ts`             | Enums, option lists, labels, defaults for the feature.             |
 | `validation.ts`         | Zod schemas & refinements; parse and infer types.                  |
-| `type.ts`               | Domain and UI types; generic helpers for forms/tables.             |
+| `types.ts`              | Domain and UI types; generic helpers for forms/tables.             |
 | `form.tsx`              | Typed forms (RHF) with resolvers and submit handling.              |
 | `card.tsx`              | Card components for KPIs, summaries, quick actions.                |
 | `all.tsx`               | List view with table, filters, pagination.                         |

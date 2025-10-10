@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Globe, CheckCircle, AlertCircle } from 'lucide-react';
 import { SUBDOMAIN_CONSTANTS } from "./config";
-import type { SubdomainData } from './type';
+import type { SubdomainData } from './types';
 
 interface SubdomainCardProps {
   data?: SubdomainData;

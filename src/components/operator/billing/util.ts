@@ -4,7 +4,7 @@
  * Helper functions for invoice and receipt data manipulation, formatting, and validation.
  */
 
-import type { InvoiceStatus, ReceiptStatus, BillingPeriod } from "./type";
+import type { InvoiceStatus, ReceiptStatus, BillingPeriod } from "./types";
 import {
   INVOICE_STATUS_LABELS,
   RECEIPT_STATUS_LABELS,

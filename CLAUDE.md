@@ -64,7 +64,7 @@ src/
     content.tsx         # Main UI composition
     actions.ts          # Server actions ("use server")
     validation.ts       # Zod schemas
-    type.ts            # TypeScript types
+    types.ts           # TypeScript types
     form.tsx           # Form components
     column.tsx         # Data table columns
     use-<feature>.ts   # Client hooks
@@ -229,7 +229,7 @@ Use these path aliases:
 6. **Apps** - Compose several Micro features
 
 **Standardized Files per Feature**:
-- `type.ts` - Shared TypeScript types
+- `types.ts` - Shared TypeScript types
 - `use-<feature>.ts` - Custom React hooks
 - `column.tsx` - Data table columns (typed by model)
 - `validation.ts` - Zod schemas (infer types)

@@ -4,7 +4,7 @@
  * Static configuration for blog categories, authors, and settings.
  */
 
-import type { BlogCategory, BlogCategoryInfo } from "./type";
+import type { BlogCategory, BlogCategoryInfo } from "./types";
 
 /**
  * Available blog categories

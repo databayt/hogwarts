@@ -4,7 +4,7 @@
  * Static configuration data, enums, and lookup tables for tenant management.
  */
 
-import type { PlanType, TenantStatus } from "./type";
+import type { PlanType, TenantStatus } from "./types";
 
 /**
  * Available subscription plans

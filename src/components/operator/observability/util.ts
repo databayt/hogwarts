@@ -4,7 +4,7 @@
  * Helper functions for log processing, metrics calculation, and monitoring utilities.
  */
 
-import type { LogLevel, UnifiedLog, LogActionCategory, MetricValue } from "./type";
+import type { LogLevel, UnifiedLog, LogActionCategory, MetricValue } from "./types";
 import {
   LOG_LEVEL_LABELS,
   ACTION_CATEGORY_LABELS,

@@ -1,4 +1,4 @@
-import type { StandOutFeature } from './type';
+import type { StandOutFeature } from './types';
 
 export const STAND_OUT_CONSTANTS = {
   STEP_NAME: 'stand-out',

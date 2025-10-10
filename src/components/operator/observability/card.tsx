@@ -7,7 +7,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Activity, AlertCircle, Clock, TrendingUp, TrendingDown, Minus } from "lucide-react";
-import type { UnifiedLog, LogLevel, MetricValue } from "./type";
+import type { UnifiedLog, LogLevel, MetricValue } from "./types";
 import { formatTimestamp, formatRelativeTime, getActionCategory, formatPercentage } from "./util";
 import { LOG_LEVEL_VARIANTS, ACTION_CATEGORY_LABELS } from "./config";
 

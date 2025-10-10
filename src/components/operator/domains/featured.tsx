@@ -8,7 +8,7 @@
 
 import { DomainCard, DomainStatsCard } from "./card";
 import { Globe, CheckCircle, Clock, XCircle, AlertTriangle } from "lucide-react";
-import type { DomainRequestWithSchool, DomainStatus } from "./type";
+import type { DomainRequestWithSchool, DomainStatus } from "./types";
 import { isPendingApproval, isVerified, isRejected, formatTimeSince, normalizeDomain } from "./util";
 
 interface FeaturedDomainsProps {

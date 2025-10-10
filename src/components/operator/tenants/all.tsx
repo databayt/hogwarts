@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, Grid3x3, List, SlidersHorizontal } from "lucide-react";
-import type { Tenant, TenantMetrics, TenantFilters } from "./type";
+import type { Tenant, TenantMetrics, TenantFilters } from "./types";
 import { PLAN_TYPES, TENANT_STATUSES } from "./config";
 import { sortTenants, getTenantStatus } from "./util";
 

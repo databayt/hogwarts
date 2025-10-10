@@ -4,7 +4,7 @@
  * Helper functions for feature management and display.
  */
 
-import type { Feature, FeatureCategory, FeatureComparison } from "./type";
+import type { Feature, FeatureCategory, FeatureComparison } from "./types";
 
 /**
  * Filter features by category

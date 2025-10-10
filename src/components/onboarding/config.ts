@@ -1,4 +1,4 @@
-import type { OnboardingStep, OnboardingStepGroup, StepConfig, SchoolTemplate } from './type';
+import type { OnboardingStep, OnboardingStepGroup, StepConfig, SchoolTemplate } from './types';
 
 // Onboarding step configuration
 export const ONBOARDING_STEPS: Record<OnboardingStep, StepConfig> = {

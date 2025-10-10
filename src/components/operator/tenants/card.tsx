@@ -11,7 +11,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Building2, Calendar, Globe, Users } from "lucide-react";
-import type { Tenant, TenantMetrics, TenantBilling } from "./type";
+import type { Tenant, TenantMetrics, TenantBilling } from "./types";
 import { formatTenantUrl, getPlanTypeLabel, formatDate, formatTrialStatus, getTenantStatus } from "./util";
 import { TENANT_STATUS_VARIANTS } from "./config";
 

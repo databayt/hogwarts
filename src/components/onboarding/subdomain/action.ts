@@ -2,13 +2,13 @@
 
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
-import { 
+import {
   requireSchoolOwnership,
   createActionResponse,
-  type ActionResponse 
+  type ActionResponse
 } from "@/lib/auth-security";
 import { subdomainValidation } from './validation';
-import type { SubdomainFormData } from './type';
+import type { SubdomainFormData } from './types';
 
 export async function updateSchoolSubdomain(
   schoolId: string, 

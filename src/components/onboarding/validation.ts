@@ -1,13 +1,13 @@
 import { z } from "zod";
-import type { 
-  OnboardingStep, 
-  SchoolType, 
-  SchoolCategory, 
-  Currency, 
+import type {
+  OnboardingStep,
+  SchoolType,
+  SchoolCategory,
+  Currency,
   PaymentSchedule,
   BorderRadius,
-  ShadowSize 
-} from "./type";
+  ShadowSize
+} from "./types";
 
 // Base validation schemas
 export const schoolTypeSchema = z.enum(['primary', 'secondary', 'both']);

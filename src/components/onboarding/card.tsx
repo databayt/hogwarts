@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { CalendarDays, MapPin, Users, GraduationCap, DollarSign, Building } from 'lucide-react';
-import type { OnboardingSchoolData, OnboardingProgress, OnboardingStep } from './type';
+import type { OnboardingSchoolData, OnboardingProgress, OnboardingStep } from './types';
 import { formatCurrency, formatCapacity, formatSchoolType } from './util';
 import { STEP_GROUPS, ONBOARDING_STEPS } from "./config";
 

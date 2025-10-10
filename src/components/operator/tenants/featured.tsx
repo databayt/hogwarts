@@ -8,7 +8,7 @@
 
 import { TenantCard, TenantStatsCard, TenantBillingCard } from "./card";
 import { Building2, Users, TrendingUp, AlertCircle } from "lucide-react";
-import type { Tenant, TenantMetrics, TenantBilling } from "./type";
+import type { Tenant, TenantMetrics, TenantBilling } from "./types";
 import { getTenantHealth, isTenantOnTrial, getTrialDaysRemaining } from "./util";
 
 interface FeaturedTenantsProps {

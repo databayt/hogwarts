@@ -1,4 +1,4 @@
-import type { OnboardingStep, OnboardingSchoolData, OnboardingProgress } from './type';
+import type { OnboardingStep, OnboardingSchoolData, OnboardingProgress } from './types';
 import { ONBOARDING_STEPS, STEP_ORDER, REQUIRED_STEPS } from "./config";
 
 /**

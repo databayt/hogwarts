@@ -6,12 +6,12 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
-import { 
-  Building, 
-  MapPin, 
-  Users, 
-  GraduationCap, 
-  DollarSign, 
+import {
+  Building,
+  MapPin,
+  Users,
+  GraduationCap,
+  DollarSign,
   Calendar,
   Globe,
   Mail,
@@ -21,7 +21,7 @@ import {
   CheckCircle,
   Clock
 } from 'lucide-react';
-import type { OnboardingSchoolData, OnboardingProgress } from './type';
+import type { OnboardingSchoolData, OnboardingProgress } from './types';
 import { formatCurrency, formatCapacity, formatSchoolType } from './util';
 
 interface SchoolDetailProps {

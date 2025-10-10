@@ -4,7 +4,7 @@
  * Static configuration data, enums, and lookup tables for billing management.
  */
 
-import type { InvoiceStatus, ReceiptStatus } from "./type";
+import type { InvoiceStatus, ReceiptStatus } from "./types";
 
 /**
  * Available invoice statuses

@@ -13,7 +13,7 @@ import { subdomainValidation } from './validation';
 import { SUBDOMAIN_CONSTANTS, SUBDOMAIN_RULES, VALIDATION_MESSAGES } from "./config";
 import { checkSubdomainAvailability, generateSubdomainSuggestions } from './action';
 import { SubdomainCard } from './card';
-import type { SubdomainFormData } from './type';
+import type { SubdomainFormData } from './types';
 
 interface SubdomainFormProps {
   schoolId: string;

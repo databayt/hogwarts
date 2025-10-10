@@ -4,7 +4,7 @@
  * Helper functions for tenant data manipulation, formatting, and validation.
  */
 
-import type { PlanType, TenantStatus, TenantMetrics, TenantBilling } from "./type";
+import type { PlanType, TenantStatus, TenantMetrics, TenantBilling } from "./types";
 import { PLAN_TYPE_LABELS, TENANT_STATUS_LABELS, PLAN_LIMITS, VALIDATION_RULES } from "./config";
 
 /**

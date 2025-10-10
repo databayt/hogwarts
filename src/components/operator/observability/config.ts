@@ -4,7 +4,7 @@
  * Static configuration data for logs, metrics, and monitoring.
  */
 
-import type { LogLevel, LogActionCategory } from "./type";
+import type { LogLevel, LogActionCategory } from "./types";
 
 /**
  * Available log levels
