@@ -20,11 +20,11 @@ import {
 import Image from "next/image";
 import type { School } from '../types';
 
-interface AcademicContentProps {
+interface Props {
   school: School;
 }
 
-export default function AcademicContent({ school }: AcademicContentProps) {
+export default function AcademicContent({ school }: Props) {
   const academicPrograms = [
     {
       icon: <BookOpen className="w-8 h-8" />,

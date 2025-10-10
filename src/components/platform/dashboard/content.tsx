@@ -20,12 +20,12 @@ type ExtendedUser = {
   schoolId?: string | null;
 };
 
-interface DashboardContentProps {
+interface Props {
   school?: School; // Make school prop optional
   dictionary?: Dictionary['school']; // Add dictionary prop
 }
 
-export default async function DashboardContent({ school, dictionary }: DashboardContentProps = {}) {
+export default async function DashboardContent({ school, dictionary }: Props = {}) {
   // Debug logging
   console.log('DashboardContent - school prop:', school);
   

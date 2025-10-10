@@ -3,11 +3,11 @@ import { LoginForm } from "@/components/auth/login/form";
 import { getDictionary } from "@/components/internationalization/dictionaries";
 import { type Locale } from "@/components/internationalization/config";
 
-interface LoginPageProps {
+interface Props {
   params: Promise<{ lang: Locale }>
 }
 
-const LoginPage = async ({ params }: LoginPageProps) => {
+const LoginPage = async ({ params }: Props) => {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
 

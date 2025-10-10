@@ -7,12 +7,12 @@ import { getTenantContext } from '@/components/operator/lib/tenant'
 import { Shell as PageContainer } from '@/components/table/shell'
 import type { Dictionary } from '@/components/internationalization/dictionaries'
 
-interface TeachersContentProps {
+interface Props {
   searchParams: Promise<SearchParams>
   dictionary?: Dictionary['school']
 }
 
-export default async function TeachersContent({ searchParams, dictionary }: TeachersContentProps) {
+export default async function TeachersContent({ searchParams, dictionary }: Props) {
   const sp = await teachersSearchParams.parse(await searchParams)
   const { schoolId } = await getTenantContext()
   let data: TeacherRow[] = []

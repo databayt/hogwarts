@@ -10,12 +10,12 @@ import ParentDashboard from "./parent"
 import ActivityGraph from "./activity-graph"
 import ActivityOverview from "./activity-overview"
 
-interface ProfileContentProps {
+interface Props {
   role: "student" | "teacher" | "staff" | "parent"
   data: any
 }
 
-export default function ProfileContent({ role, data }: ProfileContentProps) {
+export default function ProfileContent({ role, data }: Props) {
   const { state, open, openMobile, isMobile } = useSidebar();
   
   // Determine if we should use mobile layout

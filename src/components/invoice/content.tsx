@@ -19,11 +19,11 @@ type ExtendedSession = {
   user: ExtendedUser;
 };
 
-interface InvoiceContentProps {
+interface Props {
   searchParams: Promise<SearchParams>
 }
 
-export async function InvoiceContent({ searchParams }: InvoiceContentProps) {
+export async function InvoiceContent({ searchParams }: Props) {
   const session = await auth() as ExtendedSession | null
   
   if (!session?.user?.id) {

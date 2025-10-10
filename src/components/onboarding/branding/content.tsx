@@ -10,11 +10,11 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { COLOR_OPTIONS, RADIUS_OPTIONS, SHADOW_OPTIONS } from "./config";
 
-interface BrandingContentProps {
+interface Props {
   dictionary?: any;
 }
 
-export default function BrandingContent({ dictionary }: BrandingContentProps) {
+export default function BrandingContent({ dictionary }: Props) {
   const dict = dictionary?.onboarding || {};
   const router = useRouter();
   const params = useParams();

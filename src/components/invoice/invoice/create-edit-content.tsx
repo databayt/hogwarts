@@ -2,7 +2,7 @@
 
 import { InvoiceCreateForm } from "@/components/invoice/form";
 
-interface CreateEditInvoiceModalContentProps {
+interface Props {
   invoiceId?: string;
   defaults?: {
     firstName?: string | null;
@@ -15,7 +15,7 @@ interface CreateEditInvoiceModalContentProps {
 export default function CreateEditInvoiceModalContent({
   invoiceId,
   defaults,
-}: CreateEditInvoiceModalContentProps) {
+}: Props) {
   return (
     <div className="p-2 sm:p-4 h-full">
       <InvoiceCreateForm

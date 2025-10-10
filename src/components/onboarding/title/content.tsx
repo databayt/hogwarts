@@ -14,11 +14,11 @@ import { Globe } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useLocale } from '@/components/internationalization/use-locale';
 
-interface TitleContentProps {
+interface Props {
   dictionary?: any;
 }
 
-export default function TitleContent({ dictionary }: TitleContentProps) {
+export default function TitleContent({ dictionary }: Props) {
   const params = useParams();
   const router = useRouter();
   const schoolId = params.id as string;

@@ -6,13 +6,13 @@ import { db } from '@/lib/db'
 import { getTenantContext } from '@/components/operator/lib/tenant'
 import type { Dictionary } from '@/components/internationalization/dictionaries'
 
-interface StudentsContentProps {
+interface Props {
   searchParams: Promise<SearchParams>;
   school?: any;
   dictionary?: Dictionary['school'];
 }
 
-export default async function StudentsContent({ searchParams, school, dictionary }: StudentsContentProps) {
+export default async function StudentsContent({ searchParams, school, dictionary }: Props) {
   const sp = await studentsSearchParams.parse(await searchParams)
   const { schoolId } = await getTenantContext()
   

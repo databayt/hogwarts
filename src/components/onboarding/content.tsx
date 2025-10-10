@@ -9,11 +9,11 @@ import { getUserSchools, initializeSchoolSetup } from './actions';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { Dictionary } from '@/components/internationalization/dictionaries';
 
-interface OnboardingContentProps {
+interface Props {
   dictionary?: Dictionary['school'];
 }
 
-export default function OnboardingContent({ dictionary }: OnboardingContentProps) {
+export default function OnboardingContent({ dictionary }: Props) {
   const router = useRouter();
   const user = useCurrentUser();
   const [isCreating, setIsCreating] = React.useState(false);

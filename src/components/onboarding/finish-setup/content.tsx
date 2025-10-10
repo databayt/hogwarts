@@ -6,11 +6,11 @@ import { useHostValidation } from '@/components/onboarding/host-validation-conte
 import HostStepHeader from '@/components/onboarding/step-header';
 import { Button } from '@/components/ui/button';
 
-interface FinishSetupContentProps {
+interface Props {
   dictionary?: any;
 }
 
-export default function FinishSetupContent({ dictionary }: FinishSetupContentProps) {
+export default function FinishSetupContent({ dictionary }: Props) {
   const dict = dictionary?.onboarding || {};
   const router = useRouter();
   const videoRef = useRef<HTMLVideoElement>(null);

@@ -7,11 +7,11 @@ export const metadata = {
   description: "Operator dashboard overview"
 };
 
-interface DashboardPageProps {
+interface Props {
   params: Promise<{ lang: Locale }>
 }
 
-export default async function Dashboard({ params }: DashboardPageProps) {
+export default async function Dashboard({ params }: Props) {
   const { lang } = await params;
   const dictionary = await getDictionary(lang);
 

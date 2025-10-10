@@ -7,11 +7,11 @@ export const metadata = {
   description: "Set your school name to get started with the onboarding process.",
 };
 
-interface TitlePageProps {
+interface Props {
   params: Promise<{ lang: Locale }>
 }
 
-export default async function Title({ params }: TitlePageProps) {
+export default async function Title({ params }: Props) {
   const { lang } = await params;
   const dictionary = await getDictionary(lang);
   return <TitleContent dictionary={dictionary.school} />;

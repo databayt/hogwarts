@@ -4,11 +4,11 @@ import React from 'react';
 import HostStepHeader from '@/components/onboarding/step-header';
 import { useHostValidation } from '@/components/onboarding/host-validation-context';
 
-interface StandOutContentProps {
+interface Props {
   dictionary?: any;
 }
 
-export default function StandOutContent({ dictionary }: StandOutContentProps) {
+export default function StandOutContent({ dictionary }: Props) {
   const dict = dictionary?.onboarding || {};
   const videoRef = React.useRef<HTMLVideoElement>(null);
   const { enableNext } = useHostValidation();

@@ -14,11 +14,11 @@ import type { Dictionary } from '@/components/internationalization/dictionaries'
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
-interface AttendanceContentProps {
+interface Props {
   dictionary?: Dictionary['school']
 }
 
-export function AttendanceContent({ dictionary }: AttendanceContentProps) {
+export function AttendanceContent({ dictionary }: Props) {
   const [submitting, setSubmitting] = React.useState(false)
   const [classId, setClassId] = React.useState('')
   const [date, setDate] = React.useState(new Date().toISOString().slice(0, 10))

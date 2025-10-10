@@ -6,11 +6,11 @@ export const metadata = {
   title: "Pricing",
 }
 
-interface PricingPageProps {
+interface Props {
   params: Promise<{ lang: Locale }>
 }
 
-export default async function Pricing({ params }: PricingPageProps) {
+export default async function Pricing({ params }: Props) {
   const { lang } = await params;
   const dictionary = await getDictionary(lang);
 

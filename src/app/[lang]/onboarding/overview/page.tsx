@@ -3,11 +3,11 @@ import { getDictionary } from '@/components/internationalization/dictionaries';
 import { type Locale } from '@/components/internationalization/config';
 import  StepsOverviewClient  from '@/components/onboarding/overview/steps-overview-client';
 
-interface OverviewPageProps {
+interface Props {
   params: Promise<{ lang: Locale }>
 }
 
-const OverviewPage = async ({ params }: OverviewPageProps) => {
+const OverviewPage = async ({ params }: Props) => {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
 

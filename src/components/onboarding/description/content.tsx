@@ -7,11 +7,11 @@ import { useDescription } from './use-description';
 import { DescriptionForm } from './form';
 import { Skeleton } from '@/components/ui/skeleton';
 
-interface DescriptionContentProps {
+interface Props {
   dictionary?: any;
 }
 
-export default function DescriptionContent({ dictionary }: DescriptionContentProps) {
+export default function DescriptionContent({ dictionary }: Props) {
   const params = useParams();
   const router = useRouter();
   const schoolId = params.id as string;

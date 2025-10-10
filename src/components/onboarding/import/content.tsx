@@ -5,11 +5,11 @@ import { Upload, FileText, X } from 'lucide-react';
 import { useHostValidation } from '@/components/onboarding/host-validation-context';
 import { Button } from '@/components/ui/button';
 
-interface ImportContentProps {
+interface Props {
   dictionary?: any;
 }
 
-export default function ImportContent({ dictionary }: ImportContentProps) {
+export default function ImportContent({ dictionary }: Props) {
   const dict = dictionary?.onboarding || {};
   const { enableNext } = useHostValidation();
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);

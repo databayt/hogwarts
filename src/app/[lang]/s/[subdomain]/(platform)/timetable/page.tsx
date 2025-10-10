@@ -4,11 +4,11 @@ import { type Locale } from '@/components/internationalization/config'
 
 export const metadata = { title: 'Dashboard: Timetable' }
 
-interface TimetablePageProps {
+interface Props {
   params: Promise<{ lang: Locale }>
 }
 
-export default async function Page({ params }: TimetablePageProps) {
+export default async function Page({ params }: Props) {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
   return <TimetableContent dictionary={dictionary.school} />

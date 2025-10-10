@@ -22,11 +22,11 @@ import {
 import Image from "next/image";
 import type { School } from '../types';
 
-interface AdmissionContentProps {
+interface Props {
   school: School;
 }
 
-export default function AdmissionContent({ school }: AdmissionContentProps) {
+export default function AdmissionContent({ school }: Props) {
   const admissionSteps = [
     {
       title: "Submit Application",

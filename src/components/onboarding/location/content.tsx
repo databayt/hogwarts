@@ -9,11 +9,11 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
-interface LocationContentProps {
+interface Props {
   dictionary?: any;
 }
 
-export default function LocationContent({ dictionary }: LocationContentProps) {
+export default function LocationContent({ dictionary }: Props) {
   const dict = dictionary?.onboarding || {};
   const params = useParams();
   const schoolId = params.id as string;

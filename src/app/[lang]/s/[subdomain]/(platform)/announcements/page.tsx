@@ -5,12 +5,12 @@ import { type Locale } from '@/components/internationalization/config'
 
 export const metadata = { title: 'Dashboard: Announcements' }
 
-interface AnnouncementsPageProps {
+interface Props {
   params: Promise<{ lang: Locale }>
   searchParams: Promise<SearchParams>
 }
 
-export default async function Page({ params, searchParams }: AnnouncementsPageProps) {
+export default async function Page({ params, searchParams }: Props) {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
   return <AnnouncementsContent searchParams={searchParams} dictionary={dictionary.school} />

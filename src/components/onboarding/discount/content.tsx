@@ -8,11 +8,11 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { useHostValidation } from '@/components/onboarding/host-validation-context';
 
-interface DiscountPageProps {
+interface Props {
   params: Promise<{ id: string }>;
 }
 
-const DiscountPage = ({ params }: DiscountPageProps) => {
+const DiscountPage = ({ params }: Props) => {
   const router = useRouter();
   const [id, setId] = React.useState<string>('');
   const [selectedDiscounts, setSelectedDiscounts] = useState<string[]>([

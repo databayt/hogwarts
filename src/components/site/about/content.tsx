@@ -1,11 +1,11 @@
 import { StickyScroll } from "@/components/atom/sticky-scroll";
 import type { School } from '../types';
 
-interface AboutContentProps {
+interface Props {
   school: School;
 }
 
-export default function AboutContent({ school }: AboutContentProps) {
+export default function AboutContent({ school }: Props) {
   // For now, we'll keep the content static
   // Later, you can use the school data to make it dynamic
   return (

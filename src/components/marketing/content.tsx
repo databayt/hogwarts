@@ -14,11 +14,11 @@ import LogoCloud from "./logo-cloud";
 // import { Gallery } from "@/components/landing/gallery";
 import type { Dictionary } from '@/components/internationalization/dictionaries';
 
-interface HomeContentProps {
+interface Props {
   dictionary?: Dictionary
 }
 
-export default function HomeContent({ dictionary }: HomeContentProps) {
+export default function HomeContent({ dictionary }: Props) {
   return (
     <main className="flex min-h-screen flex-col">
       <Hero dictionary={dictionary} />

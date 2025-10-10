@@ -7,11 +7,11 @@ import { useCapacity } from './use-capacity';
 import { CapacityForm } from './form';
 import { Skeleton } from '@/components/ui/skeleton';
 
-interface CapacityContentProps {
+interface Props {
   dictionary?: any;
 }
 
-export default function CapacityContent({ dictionary }: CapacityContentProps) {
+export default function CapacityContent({ dictionary }: Props) {
   const dict = dictionary?.onboarding || {};
   const params = useParams();
   const schoolId = params.id as string;

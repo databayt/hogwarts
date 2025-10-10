@@ -81,11 +81,11 @@ import { DEFAULT_SETTINGS, VIEW_MODES, QUICK_ACTIONS } from "./config"
 
 import type { Dictionary } from '@/components/internationalization/dictionaries'
 
-interface TimetableContentProps {
+interface Props {
   dictionary?: Dictionary['school']
 }
 
-export function TimetableContent({ dictionary }: TimetableContentProps) {
+export function TimetableContent({ dictionary }: Props) {
   const { data: session } = useSession()
   const { toast } = useToast()
   const dict = (dictionary?.timetable || {}) as any

@@ -3,11 +3,11 @@
 import { Shell as PageContainer } from "@/components/table/shell";
 import { EmptyState } from "@/components/operator/common/empty-state";
 
-interface ProductDetailContentProps {
+interface Props {
   productId: string;
 }
 
-export function ProductDetailContent({ productId }: ProductDetailContentProps) {
+export function ProductDetailContent({ productId }: Props) {
   return (
     <PageContainer>
       <div className='flex-1 space-y-4'>

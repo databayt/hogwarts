@@ -69,11 +69,11 @@ function generatePeriods(timetableData: any, classConfig: any) {
 
 import type { Dictionary } from '@/components/internationalization/dictionaries'
 
-interface TimetableContentProps {
+interface Props {
   dictionary?: Dictionary['school']
 }
 
-export function TimetableContent({ dictionary }: TimetableContentProps) {
+export function TimetableContent({ dictionary }: Props) {
   const { 
     isNextWeek, 
     isWeekChangeLoading,
