@@ -12,13 +12,16 @@ import Boost from "./boost";
 import FAQs from "./faqs";
 import LogoCloud from "./logo-cloud";
 // import { Gallery } from "@/components/landing/gallery";
-import type { Dictionary } from '@/components/internationalization/dictionaries';
+import type { getDictionary } from '@/components/internationalization/dictionaries';
+import type { Locale } from '@/components/internationalization/config';
 
 interface Props {
-  dictionary?: Dictionary
+  dictionary: Awaited<ReturnType<typeof getDictionary>>;
+  lang: Locale;
 }
 
-export default function HomeContent({ dictionary }: Props) {
+export default function HomeContent(props: Props) {
+  const { dictionary } = props;
   return (
     <main className="flex min-h-screen flex-col">
       <Hero dictionary={dictionary} />

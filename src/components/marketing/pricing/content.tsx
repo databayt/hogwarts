@@ -11,10 +11,15 @@ import EnterpriseSection from "./enterprise-section";
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import PricingLoaderOverlay from "./loader-overlay";
+import type { getDictionary } from "@/components/internationalization/dictionaries";
+import type { Locale } from "@/components/internationalization/config";
 
+interface Props {
+  dictionary: Awaited<ReturnType<typeof getDictionary>>;
+  lang: Locale;
+}
 
-
-export default async function PricingContent() {
+export default async function PricingContent(props: Props) {
   const user = await currentUser();
 
   let subscriptionPlan;

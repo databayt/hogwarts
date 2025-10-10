@@ -3,8 +3,15 @@ import { features } from "./config"
 import PageHeader from "@/components/atom/page-header"
 import { Search } from "lucide-react"
 import { Input } from "@/components/ui/input"
+import type { getDictionary } from "@/components/internationalization/dictionaries";
+import type { Locale } from "@/components/internationalization/config";
 
-export default function AllFeatures() {
+interface Props {
+  dictionary: Awaited<ReturnType<typeof getDictionary>>;
+  lang: Locale;
+}
+
+export default function AllFeatures(props: Props) {
   return (
     <div>
         <div className="flex flex-col items-center space-y-8 mt-8">

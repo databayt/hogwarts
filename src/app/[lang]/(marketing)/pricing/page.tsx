@@ -14,5 +14,5 @@ export default async function Pricing({ params }: Props) {
   const { lang } = await params;
   const dictionary = await getDictionary(lang);
 
-  return <PricingContent />;
+  return <PricingContent dictionary={dictionary} lang={lang} />;
 }
