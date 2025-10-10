@@ -128,7 +128,7 @@ export function AllInvoices({
 
           <Select
             value={filters.status}
-            onValueChange={(value) => setFilters({ ...filters, status: value })}
+            onValueChange={(value) => setFilters({ ...filters, status: value as "" | InvoiceStatus })}
           >
             <SelectTrigger>
               <SelectValue placeholder="All statuses" />

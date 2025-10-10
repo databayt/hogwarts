@@ -135,7 +135,7 @@ export function AllDomains({
 
           <Select
             value={filters.status}
-            onValueChange={(value) => setFilters({ ...filters, status: value })}
+            onValueChange={(value) => setFilters({ ...filters, status: value as "" | DomainStatus })}
           >
             <SelectTrigger>
               <SelectValue placeholder="All statuses" />

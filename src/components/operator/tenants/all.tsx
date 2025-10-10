@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, Grid3x3, List, SlidersHorizontal } from "lucide-react";
-import type { Tenant, TenantMetrics, TenantFilters } from "./types";
+import type { Tenant, TenantMetrics, TenantFilters, PlanType, TenantStatus } from "./types";
 import { PLAN_TYPES, TENANT_STATUSES } from "./config";
 import { sortTenants, getTenantStatus } from "./util";
 
@@ -116,7 +116,7 @@ export function AllTenants({
 
           <Select
             value={filters.planType}
-            onValueChange={(value) => setFilters({ ...filters, planType: value })}
+            onValueChange={(value) => setFilters({ ...filters, planType: value as "" | PlanType })}
           >
             <SelectTrigger>
               <SelectValue placeholder="All plans" />
@@ -133,7 +133,7 @@ export function AllTenants({
 
           <Select
             value={filters.status}
-            onValueChange={(value) => setFilters({ ...filters, status: value })}
+            onValueChange={(value) => setFilters({ ...filters, status: value as "" | TenantStatus })}
           >
             <SelectTrigger>
               <SelectValue placeholder="All statuses" />
