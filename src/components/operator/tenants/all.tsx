@@ -61,7 +61,8 @@ export function AllTenants({
 
     // Status filter
     if (filters.status) {
-      const tenantStatus = getTenantStatus(tenant.isActive, tenant.trialEndsAt);
+      // Note: School model doesn't include trialEndsAt - would need to join with Subscription
+      const tenantStatus = getTenantStatus(tenant.isActive, null);
       if (tenantStatus !== filters.status) {
         return false;
       }
