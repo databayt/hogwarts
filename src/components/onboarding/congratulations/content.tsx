@@ -1,17 +1,25 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { CheckCircle, Users, GraduationCap, Calendar, ArrowRight, ExternalLink } from 'lucide-react';
 import { getSchoolOnboardingStatus } from '../legal/actions';
 import SuccessModal from './success-modal';
+import type { getDictionary } from "@/components/internationalization/dictionaries";
+import type { Locale } from "@/components/internationalization/config";
 
-export default function CongratulationsContent() {
-  const params = useParams();
+interface Props {
+  dictionary: Awaited<ReturnType<typeof getDictionary>>;
+  lang: Locale;
+  id: string;
+}
+
+export default function CongratulationsContent(props: Props) {
+  const { dictionary, lang, id } = props;
   const router = useRouter();
-  const schoolId = params.id as string;
+  const schoolId = id;
   const [schoolData, setSchoolData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [showSuccessModal, setShowSuccessModal] = useState(false);

@@ -1,17 +1,24 @@
 "use client";
 
 import { useState, useRef, useEffect } from 'react';
-import { useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { ChevronDown, DollarSign, Edit2 } from 'lucide-react';
 import { useHostValidation } from '@/components/onboarding/host-validation-context';
+import type { getDictionary } from "@/components/internationalization/dictionaries";
+import type { Locale } from "@/components/internationalization/config";
 
-export default function PriceContent() {
-  const params = useParams();
+interface Props {
+  dictionary: Awaited<ReturnType<typeof getDictionary>>;
+  lang: Locale;
+  id: string;
+}
+
+export default function PriceContent(props: Props) {
+  const { dictionary, lang, id } = props;
   const [price, setPrice] = useState<number>(158);
   const [isFocused, setIsFocused] = useState<boolean>(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const schoolId = params?.id as string;
+  const schoolId = id;
   const { enableNext } = useHostValidation();
 
   // Enable next button since we have a default price

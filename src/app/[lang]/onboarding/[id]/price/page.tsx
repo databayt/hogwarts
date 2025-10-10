@@ -1,12 +1,21 @@
 import { HostStepLayout } from '@/components/onboarding';
 import PriceContent from '@/components/onboarding/price/content';
+import { getDictionary } from "@/components/internationalization/dictionaries";
+import { type Locale } from "@/components/internationalization/config";
 
 export const metadata = {
   title: "Price | Onboarding",
   description: "Set your school's pricing.",
 };
 
-export default function Price() {
+interface Props {
+  params: Promise<{ lang: Locale; id: string }>;
+}
+
+export default async function Price({ params }: Props) {
+  const { lang, id } = await params;
+  const dictionary = await getDictionary(lang);
+
   return (
     <HostStepLayout
       title={
@@ -22,7 +31,7 @@ export default function Price() {
         </div>
       }
     >
-      <PriceContent />
+      <PriceContent dictionary={dictionary} lang={lang} id={id} />
     </HostStepLayout>
   );
 } 

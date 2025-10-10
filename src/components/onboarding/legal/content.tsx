@@ -1,16 +1,24 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { HelpCircle } from 'lucide-react';
 import { useHostValidation } from '@/components/onboarding/host-validation-context';
 import { completeOnboarding } from './actions';
 import SuccessCompletionModal from '../success-completion-modal';
+import type { getDictionary } from "@/components/internationalization/dictionaries";
+import type { Locale } from "@/components/internationalization/config";
 
-const LegalContent = () => {
+interface Props {
+  dictionary: Awaited<ReturnType<typeof getDictionary>>;
+  lang: Locale;
+  id: string;
+}
+
+const LegalContent = (props: Props) => {
+  const { dictionary, lang, id } = props;
   const router = useRouter();
-  const params = useParams();
-  const schoolId = params.id as string;
+  const schoolId = id;
   const [hostingType, setHostingType] = useState<string>('private-individual');
   const [safetyFeatures, setSafetyFeatures] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);

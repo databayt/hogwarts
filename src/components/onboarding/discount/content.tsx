@@ -7,26 +7,24 @@ import { Card } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { useHostValidation } from '@/components/onboarding/host-validation-context';
+import type { getDictionary } from "@/components/internationalization/dictionaries";
+import type { Locale } from "@/components/internationalization/config";
 
 interface Props {
-  params: Promise<{ id: string }>;
+  dictionary: Awaited<ReturnType<typeof getDictionary>>;
+  lang: Locale;
+  id: string;
 }
 
-const DiscountPage = ({ params }: Props) => {
+const DiscountPage = (props: Props) => {
+  const { dictionary, lang, id } = props;
   const router = useRouter();
-  const [id, setId] = React.useState<string>('');
   const [selectedDiscounts, setSelectedDiscounts] = useState<string[]>([
     'new-listing',
     'last-minute',
     'weekly'
   ]);
   const { enableNext } = useHostValidation();
-
-  React.useEffect(() => {
-    params.then((resolvedParams) => {
-      setId(resolvedParams.id);
-    });
-  }, [params]);
 
   // Enable next button since discounts are optional
   React.useEffect(() => {

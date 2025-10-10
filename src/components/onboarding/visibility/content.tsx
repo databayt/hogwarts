@@ -2,20 +2,19 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import type { getDictionary } from "@/components/internationalization/dictionaries";
+import type { Locale } from "@/components/internationalization/config";
 
-interface VisibilityProps {
-  params: Promise<{ id: string }>;
+interface Props {
+  dictionary: Awaited<ReturnType<typeof getDictionary>>;
+  lang: Locale;
+  id: string;
 }
-const VisibilityContent = ({ params }: VisibilityProps) => {
-  const router = useRouter();
-  const [id, setId] = React.useState<string>('');
-  const [selectedOption, setSelectedOption] = useState<string>('full-transparency');
 
-  React.useEffect(() => {
-    params.then((resolvedParams) => {
-      setId(resolvedParams.id);
-    });
-  }, [params]);
+const VisibilityContent = (props: Props) => {
+  const { dictionary, lang, id } = props;
+  const router = useRouter();
+  const [selectedOption, setSelectedOption] = useState<string>('full-transparency');
 
 
   const guestOptions = [

@@ -2,21 +2,20 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import type { getDictionary } from "@/components/internationalization/dictionaries";
+import type { Locale } from "@/components/internationalization/config";
 // import { CalendarCheckmark, LightningBoltIcon } from '@/components/atom/airbnb-icons';
 
-interface JoinProps {
-  params: Promise<{ id: string }>;
+interface Props {
+  dictionary: Awaited<ReturnType<typeof getDictionary>>;
+  lang: Locale;
+  id: string;
 }
-const JoinContent = ({ params }: JoinProps) => {
-  const router = useRouter();
-  const [id, setId] = React.useState<string>('');
-  const [selectedOption, setSelectedOption] = useState<string>('invite-with-codes');
 
-  React.useEffect(() => {
-    params.then((resolvedParams) => {
-      setId(resolvedParams.id);
-    });
-  }, [params]);
+const JoinContent = (props: Props) => {
+  const { dictionary, lang, id } = props;
+  const router = useRouter();
+  const [selectedOption, setSelectedOption] = useState<string>('invite-with-codes');
 
 
   const bookingOptions = [

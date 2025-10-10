@@ -11,8 +11,17 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle, XCircle, RefreshCw, Globe } from 'lucide-react';
 import { toast } from 'sonner';
+import type { getDictionary } from "@/components/internationalization/dictionaries";
+import type { Locale } from "@/components/internationalization/config";
 
-export default function SubdomainContent() {
+interface Props {
+  dictionary: Awaited<ReturnType<typeof getDictionary>>;
+  lang: Locale;
+  id: string;
+}
+
+export default function SubdomainContent(props: Props) {
+  const { dictionary, lang, id } = props;
   const { enableNext, disableNext } = useHostValidation();
   const { listing, updateListingData } = useListing();
   const [subdomain, setSubdomain] = useState<string>('');
