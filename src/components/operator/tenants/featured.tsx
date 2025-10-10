@@ -110,7 +110,7 @@ export function TenantsRequiringAttention({
   // Filter tenants that need attention
   const attentionTenants = tenants.filter((tenant) => {
     const tenantBilling = billing?.[tenant.id];
-    const health = getTenantHealth(tenant.isActive, tenantBilling);
+    const health = getTenantHealth(tenant.isActive, tenantBilling ?? null);
     const trialEndingSoon = tenantBilling?.trialEndsAt
       ? isTenantOnTrial(tenantBilling.trialEndsAt) && getTrialDaysRemaining(tenantBilling.trialEndsAt) <= 3
       : false;
@@ -143,7 +143,7 @@ export function TenantsRequiringAttention({
       <div className="space-y-3">
         {attentionTenants.map((tenant) => {
           const tenantBilling = billing?.[tenant.id];
-          const health = getTenantHealth(tenant.isActive, tenantBilling);
+          const health = getTenantHealth(tenant.isActive, tenantBilling ?? null);
           const trialDays = tenantBilling?.trialEndsAt ? getTrialDaysRemaining(tenantBilling.trialEndsAt) : 0;
 
           return (
