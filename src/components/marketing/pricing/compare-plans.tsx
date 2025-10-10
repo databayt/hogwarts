@@ -1,7 +1,7 @@
 import { PlansRow } from "@/components/marketing/pricing/types";
 import { CircleCheck, Info } from "lucide-react";
 
-import { comparePlans, plansColumns } from "@/components/marketing/pricing/constants";
+import { comparePlans, plansColumns } from "@/components/marketing/pricing/config";
 import {
   Popover,
   PopoverContent,

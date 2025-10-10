@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 import { TeacherFormStepProps } from "./types";
-import { GENDER_OPTIONS } from "./constants";
+import { GENDER_OPTIONS } from "./config";
 
 export function InformationStep({ form, isView }: TeacherFormStepProps) {
   return (

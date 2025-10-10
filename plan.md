@@ -397,7 +397,7 @@ src/
 │       ├── types.ts        # TypeScript types
 │       ├── form.tsx        # Form components
 │       ├── content.tsx     # Main components
-│       ├── constants.ts    # Constants
+│       ├── config.ts       # Constants
 │       └── hooks.ts        # Custom hooks
 ```
 

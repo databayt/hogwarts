@@ -11,7 +11,7 @@ import {
   COMMON_ACTIONS,
   PERFORMANCE_THRESHOLDS,
   DATE_RANGE_PRESETS,
-} from "./constant";
+} from "./config";
 
 /**
  * Get log level label

@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 import { UserSubscriptionPlan } from "@/components/marketing/pricing/types";
-import { pricingData } from "./constants";
+import { pricingData } from "./config";
 import { BillingToggle } from "./billing-toggle";
 import { HeaderSection } from "@/components/atom/header-section";
 import MaxWidthWrapper from "@/components/marketing/pricing/shared/max-width-wrapper";

@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { KpiCard } from "@/components/operator/dashboard/card";
-import { KPI_SUPPORTING } from "@/components/operator/dashboard/constants";
+import { KPI_SUPPORTING } from "@/components/operator/dashboard/config";
 import { useSearchParams } from "next/navigation";
 
 type Totals = {

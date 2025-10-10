@@ -47,7 +47,7 @@ Status legend: [x] done, [~] in progress, [ ] todo
 ### ⚠️ Architecture Compliance Issues
 - **Mirror Pattern**: Currently at wrong path (`src/components/operator/` should be `src/components/platform/operator/`)
 - **Typography**: 30+ violations using hardcoded text-* classes instead of semantic HTML
-- **Standardization**: Missing required files (type.ts, form.tsx, constant.ts, etc.)
+- **Standardization**: Missing required files (type.ts, form.tsx, config.ts, etc.)
 - **Component Hierarchy**: Not following UI → Atoms → Features pattern
 - **TypeScript**: Extensive `any` usage (30+ instances), Prisma types bypassed with `(db as any)`
 - **Performance**: Client-side data fetching instead of server components

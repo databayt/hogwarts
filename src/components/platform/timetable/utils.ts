@@ -1,5 +1,5 @@
 import { TimetableSlot, TimetableConflict, TeacherInfo, Period, SubjectInfo } from './types'
-import { SUBJECT_COLORS, WORKLOAD_LIMITS } from './constants'
+import { SUBJECT_COLORS, WORKLOAD_LIMITS } from "./config"
 
 export function getSubjectColor(subject: string): string {
   return SUBJECT_COLORS[subject as keyof typeof SUBJECT_COLORS] || SUBJECT_COLORS.default

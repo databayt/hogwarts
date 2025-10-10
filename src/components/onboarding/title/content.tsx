@@ -7,7 +7,7 @@ import { useListing } from '@/components/onboarding/use-listing';
 import { useTitle } from './use-title';
 import { TitleForm, type TitleFormRef } from './form';
 import { TitleCard } from './card';
-import { FORM_LIMITS } from '@/components/onboarding/constants.client';
+import { FORM_LIMITS } from '@/components/onboarding/config.client';
 import { generateSubdomain } from '@/lib/subdomain';
 import { Badge } from '@/components/ui/badge';
 import { Globe } from 'lucide-react';

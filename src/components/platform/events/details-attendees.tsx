@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { EventFormStepProps } from "./types";
-import { TARGET_AUDIENCES } from "./constants";
+import { TARGET_AUDIENCES } from "./config";
 
 export function DetailsAttendeesStep({ form, isView }: EventFormStepProps) {
   return (

@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { FORM_LIMITS, ERROR_MESSAGES } from '../constants.client'
+import { FORM_LIMITS, ERROR_MESSAGES } from '../config.client'
 
 export const titleSchema = z.object({
   title: z.string()

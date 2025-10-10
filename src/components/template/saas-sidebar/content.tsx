@@ -14,7 +14,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { platformNav } from "./constant";
+import { platformNav } from "./config";
 import { Icons } from "@/components/template/platform-sidebar/icons";
 
 export default function SaasSidebar() {

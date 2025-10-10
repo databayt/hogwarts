@@ -4,7 +4,7 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Globe, CheckCircle, AlertCircle } from 'lucide-react';
-import { SUBDOMAIN_CONSTANTS } from './constant';
+import { SUBDOMAIN_CONSTANTS } from "./config";
 import type { SubdomainData } from './type';
 
 interface SubdomainCardProps {

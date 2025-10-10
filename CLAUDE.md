@@ -240,7 +240,7 @@ Use these path aliases:
 - `all.tsx` - All/list views
 - `featured.tsx` - Featured list components
 - `detail.tsx` - Detail view components
-- `constant.ts` - Arrays, enums, static data
+- `config.ts` - Arrays, enums, static data
 - `util.ts` - Utility functions
 
 **Multi-Tenant Guardrails**:

@@ -1,5 +1,5 @@
 // import Link from "next/link"
-// import { features } from "./constants"
+// import { features } from "./config"
 
 // export default function AllFeatures() {
 //   return (

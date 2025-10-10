@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Upload, FileSpreadsheet, Edit, Info, Download } from 'lucide-react';
 import { importSchema } from './validation';
-import { IMPORT_TYPES, SUPPORTED_FORMATS } from './constants';
+import { IMPORT_TYPES, SUPPORTED_FORMATS } from "./config";
 import { ImportCard } from './card';
 import type { ImportFormData } from './validation';
 

@@ -20,7 +20,7 @@ import {
   detectConflicts,
   getSlotDisplayInfo
 } from './utils'
-import { DAYS_OF_WEEK, GRID_SETTINGS } from './constants'
+import { DAYS_OF_WEEK, GRID_SETTINGS } from "./config"
 import {
   Tooltip,
   TooltipContent,

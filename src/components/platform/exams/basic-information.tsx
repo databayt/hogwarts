@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { ExamFormStepProps } from "./types";
-import { EXAM_TYPES } from "./constants";
+import { EXAM_TYPES } from "./config";
 
 export function BasicInformationStep({ form, isView }: ExamFormStepProps) {
   return (

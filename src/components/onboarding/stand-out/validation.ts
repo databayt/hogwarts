@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { STAND_OUT_CONSTANTS } from './constant';
+import { STAND_OUT_CONSTANTS } from "./config";
 
 export const standOutValidation = z.object({
   description: z

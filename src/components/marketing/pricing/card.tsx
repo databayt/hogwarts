@@ -8,7 +8,7 @@ import { BillingFormButton } from "@/components/marketing/pricing/forms/billing-
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { getCtaLabel, getIncludesHeading, getPriceDisplay, getYearlyTotal, isStarterTitle, isProTitle } from "./constants";
+import { getCtaLabel, getIncludesHeading, getPriceDisplay, getYearlyTotal, isStarterTitle, isProTitle } from "./config";
 import { Separator } from "@/components/ui/separator";
 
 interface PricingCardProps {

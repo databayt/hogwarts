@@ -90,7 +90,7 @@ This plan outlines the steps required to refactor the `host` feature to fully co
 
 ## Phase 6: Constants & Configuration
 
-### 6.1 Refactor `constants.ts`
+### 6.1 Refactor `config.ts`
 - Organize by category
 - Add TypeScript enums
 - Remove hardcoded values

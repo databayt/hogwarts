@@ -5,7 +5,7 @@ import { Progress } from "@/components/ui/progress";
 import { type UseFormReturn } from "react-hook-form";
 import { z } from "zod";
 import { InvoiceSchemaZod } from "./validation";
-import { STEPS, STEP_FIELDS, TOTAL_FIELDS } from "./constants";
+import { STEPS, STEP_FIELDS, TOTAL_FIELDS } from "./config";
 
 interface FooterProps {
   currentStep: number;

@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable } from "./data-table";
 import { ColumnDef } from "@tanstack/react-table";
 import type { UserInvoice } from "@prisma/client";
-import { STATS_CARD_DEFS } from "./constants";
+import { STATS_CARD_DEFS } from "./config";
 
 interface StatCardProps {
   title: string;

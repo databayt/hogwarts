@@ -30,7 +30,7 @@ For each feature folder (features, pricing, blog):
 - [ ] Create `type.ts` - Shared TypeScript interfaces
 - [ ] Create `validation.ts` - Zod schemas for forms
 - [ ] Create `actions.ts` - Server actions
-- [ ] Create `constant.ts` - Static marketing data
+- [ ] Create `config.ts` - Static marketing data
 - [ ] Create `hooks.ts` - Custom React hooks
 - [ ] Create `utils.ts` - Utility functions
 

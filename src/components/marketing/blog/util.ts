@@ -5,7 +5,7 @@
  */
 
 import type { BlogPost, BlogPostListItem, BlogCategory, BlogFilters } from "./type";
-import { WORDS_PER_MINUTE, MAX_EXCERPT_LENGTH, BLOG_CATEGORY_INFO } from "./constant";
+import { WORDS_PER_MINUTE, MAX_EXCERPT_LENGTH, BLOG_CATEGORY_INFO } from "./config";
 
 /**
  * Calculate reading time

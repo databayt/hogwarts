@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { FINISH_SETUP_CONSTANTS } from './constant';
+import { FINISH_SETUP_CONSTANTS } from "./config";
 
 export const finishSetupValidation = z.object({
   isComplete: z.boolean(),

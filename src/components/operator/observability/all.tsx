@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, Download, FileText } from "lucide-react";
 import type { UnifiedLog } from "./type";
-import { LOG_LEVELS } from "./constant";
+import { LOG_LEVELS } from "./config";
 import { sortLogs, exportLogsToCSV } from "./util";
 
 interface AllLogsProps {

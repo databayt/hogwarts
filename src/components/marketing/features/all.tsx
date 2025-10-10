@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { features } from "./constants"
+import { features } from "./config"
 import PageHeader from "@/components/atom/page-header"
 import { Search } from "lucide-react"
 import { Input } from "@/components/ui/input"

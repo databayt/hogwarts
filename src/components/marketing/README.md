@@ -16,7 +16,7 @@ src/components/marketing/
 ├── faqs.tsx           # FAQ section
 ├── testimonial.tsx    # Customer testimonials
 ├── logo-cloud.tsx     # Partner logos
-├── constants.ts       # Static content
+├── config.ts       # Static content
 └── content.tsx        # Main marketing page
 ```
 

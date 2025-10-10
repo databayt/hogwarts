@@ -10,7 +10,7 @@ The component follows the standardized file pattern:
 - `actions.ts` - Server actions for CRUD operations
 - `validation.ts` - Zod schemas for form validation
 - `types.ts` - TypeScript type definitions
-- `constants.ts` - Constants and configuration
+- `config.ts` - Constants and configuration
 - `form.tsx` - Single-step form for creating/editing subjects
 - `information.tsx` - Form step for basic information
 - `footer.tsx` - Form footer with navigation and progress

@@ -14,7 +14,7 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 
 import { StudentFormStepProps } from "./types";
-import { GENDER_OPTIONS } from "./constants";
+import { GENDER_OPTIONS } from "./config";
 
 export function InformationStep({ form, isView }: StudentFormStepProps) {
   return (

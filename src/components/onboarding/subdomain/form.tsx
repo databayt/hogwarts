@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
 import { CheckCircle, AlertCircle, RefreshCw, Lightbulb } from 'lucide-react';
 import { subdomainValidation } from './validation';
-import { SUBDOMAIN_CONSTANTS, SUBDOMAIN_RULES, VALIDATION_MESSAGES } from './constant';
+import { SUBDOMAIN_CONSTANTS, SUBDOMAIN_RULES, VALIDATION_MESSAGES } from "./config";
 import { checkSubdomainAvailability, generateSubdomainSuggestions } from './action';
 import { SubdomainCard } from './card';
 import type { SubdomainFormData } from './type';

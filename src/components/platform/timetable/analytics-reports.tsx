@@ -54,7 +54,7 @@ import {
   detectConflicts,
   getDayName
 } from './utils'
-import { SUBJECT_COLORS, WORKLOAD_LIMITS } from './constants'
+import { SUBJECT_COLORS, WORKLOAD_LIMITS } from "./config"
 import {
   Users,
   BookOpen,

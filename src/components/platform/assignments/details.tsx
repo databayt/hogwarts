@@ -15,7 +15,7 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 
 import { AssignmentFormStepProps } from "./types";
-import { ASSIGNMENT_TYPES } from "./constants";
+import { ASSIGNMENT_TYPES } from "./config";
 
 export function DetailsStep({ form, isView }: AssignmentFormStepProps) {
   return (

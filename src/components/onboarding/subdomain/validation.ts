@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { SUBDOMAIN_CONSTANTS, RESERVED_SUBDOMAINS } from './constant';
+import { SUBDOMAIN_CONSTANTS, RESERVED_SUBDOMAINS } from "./config";
 
 const subdomainRegex = /^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9]$/;
 

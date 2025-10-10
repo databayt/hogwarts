@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, Grid3x3, List, SlidersHorizontal, Globe } from "lucide-react";
 import type { DomainRequestWithSchool, DomainFilters, DomainStatus } from "./type";
-import { DOMAIN_STATUSES } from "./constant";
+import { DOMAIN_STATUSES } from "./config";
 import { sortDomains } from "./util";
 
 interface AllDomainsProps {

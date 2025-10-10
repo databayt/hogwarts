@@ -16,7 +16,7 @@ interface FooterProps {
   form: UseFormReturn<z.infer<typeof examCreateSchema>>;
 }
 
-import { STEPS, STEP_FIELDS, TOTAL_FIELDS } from "./constants";
+import { STEPS, STEP_FIELDS, TOTAL_FIELDS } from "./config";
 
 export function ExamFormFooter({ currentStep, isView, currentId, onBack, onNext, onSaveCurrentStep, form }: FooterProps) {
   // Calculate progress based on filled fields

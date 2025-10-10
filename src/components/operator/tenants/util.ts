@@ -5,7 +5,7 @@
  */
 
 import type { PlanType, TenantStatus, TenantMetrics, TenantBilling } from "./type";
-import { PLAN_TYPE_LABELS, TENANT_STATUS_LABELS, PLAN_LIMITS, VALIDATION_RULES } from "./constant";
+import { PLAN_TYPE_LABELS, TENANT_STATUS_LABELS, PLAN_LIMITS, VALIDATION_RULES } from "./config";
 
 /**
  * Format tenant domain as full URL

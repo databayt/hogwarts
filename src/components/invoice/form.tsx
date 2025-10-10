@@ -13,7 +13,7 @@ import { BasicInformationStep } from "./steps/basic-information";
 import { ClientItemsStep } from "./steps/client-items";
 import { ReviewSubmitStep } from "./steps/review-submit";
 import { InvoiceFormFooter } from "./footer";
-import { STEPS, STEP_FIELDS } from "./constants";
+import { STEPS, STEP_FIELDS } from "./config";
 import { ErrorToast, SuccessToast } from "@/components/atom/toast";
 
 interface InvoiceFormProps {

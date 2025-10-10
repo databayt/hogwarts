@@ -12,7 +12,7 @@ import { SchoolCard } from './card';
 import { useUserSchools } from './use-onboarding';
 import type { OnboardingSchoolData } from './type';
 import { exportSchoolsToCSV } from './column';
-import { SCHOOL_CATEGORIES } from './constant';
+import { SCHOOL_CATEGORIES } from "./config";
 
 interface AllSchoolsProps {
   onSchoolClick?: (school: OnboardingSchoolData) => void;

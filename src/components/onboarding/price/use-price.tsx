@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { schoolPriceSchema, SchoolPriceFormData } from './validation'
 import { useListing, useHostNavigation } from '../use-listing'
-import { STEP_NAVIGATION } from '../constants.client'
+import { STEP_NAVIGATION } from '../config.client'
 
 export function usePrice() {
   const { listing, updateListingData, isLoading, error } = useListing()

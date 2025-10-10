@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { titleSchema, type TitleFormData } from "./validation";
 import { updateSchoolTitle } from "./actions";
-import { FORM_LIMITS } from "../constants.client";
+import { FORM_LIMITS } from "../config.client";
 import { generateSubdomain } from "@/lib/subdomain";
 import { useLocale } from '@/components/internationalization/use-locale';
 

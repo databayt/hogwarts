@@ -10,7 +10,7 @@ import { useEffect, useState } from "react";
 import { getClassesForSelection } from "@/components/platform/attendance/actions";
 
 import { AnnouncementFormStepProps } from "./types";
-import { SCOPE_OPTIONS, ROLE_OPTIONS } from "./constants";
+import { SCOPE_OPTIONS, ROLE_OPTIONS } from "./config";
 
 export function ScopeStep({ form, isView }: AnnouncementFormStepProps) {
   const [classes, setClasses] = useState<Array<{ id: string; name: string }>>([]);

@@ -1,6 +1,6 @@
 import React from 'react'
 import { MainNav } from './main-nav'
-import { marketingConfig } from './constant'
+import { marketingConfig } from "./config"
 import { auth } from "@/auth"
 import { RightActions } from './right-actions'
 import type { Dictionary } from '@/components/internationalization/dictionaries'

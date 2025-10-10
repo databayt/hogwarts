@@ -1,4 +1,4 @@
-import { siteConfig } from './constants'
+import { siteConfig } from "./config"
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
 import React from 'react'

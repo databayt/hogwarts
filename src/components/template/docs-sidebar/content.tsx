@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/sidebar"
 
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { docsConfig } from "@/components/template/docs-sidebar/constant"
+import { docsConfig } from "@/components/template/docs-sidebar/config"
 
 // Flatten the sidebar navigation to a single list
 function flattenSidebarNav(items: typeof docsConfig.sidebarNav) {

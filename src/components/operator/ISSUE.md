@@ -36,7 +36,7 @@ For each feature (tenants, billing, domains, observability, kanban, products):
 - [ ] Create `type.ts` - Shared TypeScript types
 - [ ] Create `form.tsx` - Form components for data entry
 - [ ] Create `util.ts` - Feature-specific utilities
-- [ ] Create `constant.ts` - Arrays, enums, static data
+- [ ] Create `config.ts` - Arrays, enums, static data
 - [ ] Create `card.tsx` - Card components
 - [ ] Create `all.tsx` - All/list views
 - [ ] Create `featured.tsx` - Featured list components

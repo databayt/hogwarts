@@ -13,7 +13,7 @@ import {
   ERROR_MESSAGES,
   DNS_PROPAGATION_TIME,
   ALLOWED_STATUS_TRANSITIONS,
-} from "./constant";
+} from "./config";
 
 /**
  * Get domain status label

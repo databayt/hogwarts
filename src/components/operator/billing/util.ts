@@ -15,7 +15,7 @@ import {
   GRACE_PERIOD_DAYS,
   ALLOWED_RECEIPT_FILE_TYPES,
   MAX_RECEIPT_FILE_SIZE,
-} from "./constant";
+} from "./config";
 
 /**
  * Format currency amount from cents

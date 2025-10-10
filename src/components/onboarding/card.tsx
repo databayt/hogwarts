@@ -8,7 +8,7 @@ import { Progress } from '@/components/ui/progress';
 import { CalendarDays, MapPin, Users, GraduationCap, DollarSign, Building } from 'lucide-react';
 import type { OnboardingSchoolData, OnboardingProgress, OnboardingStep } from './type';
 import { formatCurrency, formatCapacity, formatSchoolType } from './util';
-import { STEP_GROUPS, ONBOARDING_STEPS } from './constant';
+import { STEP_GROUPS, ONBOARDING_STEPS } from "./config";
 
 interface SchoolCardProps {
   school: OnboardingSchoolData;

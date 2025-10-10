@@ -14,8 +14,8 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { platformNav } from "@/components/template/platform-sidebar/constant";
-import type { Role } from "@/components/template/platform-sidebar/constant";
+import { platformNav } from "@/components/template/platform-sidebar/config";
+import type { Role } from "@/components/template/platform-sidebar/config";
 import { Icons } from "@/components/template/platform-sidebar/icons";
 import { useCurrentRole } from "@/components/auth/use-current-role";
 import type { School } from "@/components/site/types";

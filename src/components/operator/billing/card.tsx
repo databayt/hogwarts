@@ -21,7 +21,7 @@ import {
   isInvoiceOverdue,
   getInvoiceHealth,
 } from "./util";
-import { INVOICE_STATUS_VARIANTS, RECEIPT_STATUS_VARIANTS } from "./constant";
+import { INVOICE_STATUS_VARIANTS, RECEIPT_STATUS_VARIANTS } from "./config";
 
 interface InvoiceCardProps {
   invoice: InvoiceWithSchool;

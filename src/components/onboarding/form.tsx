@@ -13,7 +13,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Loader2 } from 'lucide-react';
 import type { OnboardingSchoolData, OnboardingStep } from './type';
 import { onboardingValidation, titleStepValidation, descriptionStepValidation, locationStepValidation, capacityStepValidation, priceStepValidation } from './validation';
-import { SCHOOL_TYPES, SCHOOL_CATEGORIES, CURRENCIES, PAYMENT_SCHEDULES } from './constant';
+import { SCHOOL_TYPES, SCHOOL_CATEGORIES, CURRENCIES, PAYMENT_SCHEDULES } from "./config";
 
 interface OnboardingFormProps {
   step: OnboardingStep;

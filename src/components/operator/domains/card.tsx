@@ -18,7 +18,7 @@ import {
   getDomainHealth,
   formatTimeSince,
 } from "./util";
-import { DOMAIN_STATUS_VARIANTS } from "./constant";
+import { DOMAIN_STATUS_VARIANTS } from "./config";
 
 interface DomainCardProps {
   domain: DomainRequestWithSchool;

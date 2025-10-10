@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { EventFormStepProps } from "./types";
-import { EVENT_TYPES } from "./constants";
+import { EVENT_TYPES } from "./config";
 
 export function BasicInformationStep({ form, isView }: EventFormStepProps) {
   return (

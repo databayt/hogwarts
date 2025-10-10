@@ -9,7 +9,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
 import { RecentInvoicesCard, StatsCards } from "./card";
 
-import { chartConfig } from "./constants";
+import { chartConfig } from "./config";
 import { DashboardHeader } from "./header";
 
 export function DashboardContent() {

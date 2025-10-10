@@ -7,7 +7,7 @@ import { FormControl, FormField, FormItem, FormMessage } from "@/components/ui/f
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { EventFormStepProps } from "./types";
-import { TIME_SLOTS } from "./constants";
+import { TIME_SLOTS } from "./config";
 
 export function ScheduleLocationStep({ form, isView }: EventFormStepProps) {
   return (

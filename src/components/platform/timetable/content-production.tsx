@@ -77,7 +77,7 @@ import {
   findAvailableSlots,
   getDayName
 } from './utils'
-import { DEFAULT_SETTINGS, VIEW_MODES, QUICK_ACTIONS } from './constants'
+import { DEFAULT_SETTINGS, VIEW_MODES, QUICK_ACTIONS } from "./config"
 
 import type { Dictionary } from '@/components/internationalization/dictionaries'
 

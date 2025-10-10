@@ -8,7 +8,7 @@ import { useListing } from '@/components/onboarding/use-listing';
 import { useHostValidation } from '@/components/onboarding/host-validation-context';
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { COLOR_OPTIONS, RADIUS_OPTIONS, SHADOW_OPTIONS } from './constants';
+import { COLOR_OPTIONS, RADIUS_OPTIONS, SHADOW_OPTIONS } from "./config";
 
 interface BrandingContentProps {
   dictionary?: any;

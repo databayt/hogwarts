@@ -14,7 +14,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { dashboardNav } from "@/components/template/dashboard-sidebar/constant";
+import { dashboardNav } from "@/components/template/dashboard-sidebar/config";
 import { Icons } from "@/components/template/dashboard-sidebar/icons";
 
 export default function DashboardSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {

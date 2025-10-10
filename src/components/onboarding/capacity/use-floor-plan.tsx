@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { floorPlanSchema, FloorPlanFormData } from '../floor-plan/validation'
 import { useListing, useHostNavigation } from '../use-listing'
-import { STEP_NAVIGATION } from '../constants'
+import { STEP_NAVIGATION } from "../config"
 
 export function useFloorPlan() {
   const { listing, updateListingData, isLoading, error } = useListing()

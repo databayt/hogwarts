@@ -34,7 +34,7 @@ src/
 │
 └── components/onboarding/
     ├── actions.ts                  # Server actions (CRUD)
-    ├── constants.ts                # Step configurations
+    ├── config.ts                # Step configurations
     ├── types.ts                    # TypeScript definitions
     ├── use-listing.tsx             # Context & state management
     ├── use-onboarding.ts           # Navigation & validation
@@ -46,7 +46,7 @@ src/
         ├── form.tsx                # Form implementation
         ├── action.ts               # Server actions
         ├── validation.ts           # Zod schemas
-        ├── constant.ts             # Step constants
+        ├── config.ts             # Step constants
         └── type.ts                 # Step types
 ```
 

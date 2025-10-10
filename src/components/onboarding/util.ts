@@ -1,5 +1,5 @@
 import type { OnboardingStep, OnboardingSchoolData, OnboardingProgress } from './type';
-import { ONBOARDING_STEPS, STEP_ORDER, REQUIRED_STEPS } from './constant';
+import { ONBOARDING_STEPS, STEP_ORDER, REQUIRED_STEPS } from "./config";
 
 /**
  * Utility functions for onboarding flow management

@@ -21,7 +21,7 @@ Status legend: [x] done, [~] in progress, [ ] todo
 ## Standardization Issues (Priority 2) ⚠️
 
 ### Missing Required Files
-- [ ] Create `constant.ts` for invoice statuses and enums
+- [ ] Create `config.ts` for invoice statuses and enums
 - [ ] Create `hooks.ts` for custom React hooks
 - [ ] Create `utils.ts` for calculation utilities
 - [ ] Reorganize `steps/` into proper structure

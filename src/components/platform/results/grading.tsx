@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useEffect } from "react";
 
 import { ResultFormStepProps } from "./types";
-import { GRADE_OPTIONS } from "./constants";
+import { GRADE_OPTIONS } from "./config";
 
 export function GradingStep({ form, isView }: ResultFormStepProps) {
   const score = form.watch("score");

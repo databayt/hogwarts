@@ -2,7 +2,7 @@ import * as React from "react"
 import Link from "next/link"
 
 import { MainNavItem } from "./type"
-import { siteConfig } from "./constant"
+import { siteConfig } from "./config"
 import { cn } from "@/lib/utils"
 import { useLockBody } from "./use-lock-body"
 import { Icons } from "./icons"

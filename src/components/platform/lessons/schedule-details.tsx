@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 import { LessonFormStepProps } from "./types";
-import { TIME_SLOTS } from "./constants";
+import { TIME_SLOTS } from "./config";
 
 export function ScheduleDetailsStep({ form, isView }: LessonFormStepProps) {
   return (

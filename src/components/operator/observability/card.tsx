@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Activity, AlertCircle, Clock, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import type { UnifiedLog, LogLevel, MetricValue } from "./type";
 import { formatTimestamp, formatRelativeTime, getActionCategory, formatPercentage } from "./util";
-import { LOG_LEVEL_VARIANTS, ACTION_CATEGORY_LABELS } from "./constant";
+import { LOG_LEVEL_VARIANTS, ACTION_CATEGORY_LABELS } from "./config";
 
 /**
  * Log entry card

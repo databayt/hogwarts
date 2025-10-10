@@ -17,7 +17,7 @@ import {
   getUserSchools 
 } from './actions';
 import { validateStep } from './validation';
-import { ONBOARDING_STEPS, STEP_ORDER } from './constant';
+import { ONBOARDING_STEPS, STEP_ORDER } from "./config";
 
 // Main onboarding hook
 export function useOnboarding(schoolId?: string) {
