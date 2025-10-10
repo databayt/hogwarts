@@ -4,11 +4,11 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { floorPlanSchema, FloorPlanFormData } from '../floor-plan/validation'
 import { useListing, useHostNavigation } from '../use-listing'
-import { STEP_NAVIGATION } from "../config"
+import { STEP_NAVIGATION } from "../config.client"
 
 export function useFloorPlan() {
   const { listing, updateListingData, isLoading, error } = useListing()
-  const { goToNextStep, goToPreviousStep } = useHostNavigation('floor-plan')
+  const { goToNextStep, goToPreviousStep } = useHostNavigation('capacity')
 
   const form = useForm<FloorPlanFormData>({
     resolver: zodResolver(floorPlanSchema),
@@ -32,7 +32,7 @@ export function useFloorPlan() {
       })
 
       // Navigate to next step
-      const nextStep = STEP_NAVIGATION['floor-plan'].next
+      const nextStep = STEP_NAVIGATION['capacity'].next
       if (nextStep) {
         goToNextStep(nextStep)
       }
@@ -42,7 +42,7 @@ export function useFloorPlan() {
   }
 
   const onBack = () => {
-    const previousStep = STEP_NAVIGATION['floor-plan'].previous
+    const previousStep = STEP_NAVIGATION['capacity'].previous
     if (previousStep) {
       goToPreviousStep(previousStep)
     }

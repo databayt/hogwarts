@@ -40,7 +40,7 @@ export async function submitContactForm(data: z.infer<typeof contactFormSchema>)
     return { success: true, message: "Thank you for contacting us! We'll get back to you soon." };
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return { success: false, error: error.errors[0].message };
+      return { success: false, error: error.issues[0].message };
     }
     return { success: false, error: "Failed to submit form. Please try again." };
   }
@@ -54,20 +54,22 @@ export async function subscribeToNewsletter(data: z.infer<typeof newsletterSchem
     const validated = newsletterSchema.parse(data);
 
     // TODO: Add to email marketing platform (e.g., Mailchimp, ConvertKit)
-    // For now, save to database
-    await db.newsletter.create({
-      data: {
-        email: validated.email,
-        firstName: validated.firstName,
-        lastName: validated.lastName,
-        subscribedAt: new Date(),
-      },
-    });
+    // TODO: Add Newsletter model to Prisma schema
+    // await db.newsletter.create({
+    //   data: {
+    //     email: validated.email,
+    //     firstName: validated.firstName,
+    //     lastName: validated.lastName,
+    //     subscribedAt: new Date(),
+    //   },
+    // });
+
+    console.log("Newsletter subscription:", validated);
 
     return { success: true, message: "Successfully subscribed to newsletter!" };
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return { success: false, error: error.errors[0].message };
+      return { success: false, error: error.issues[0].message };
     }
     return { success: false, error: "Subscription failed. Please try again." };
   }
@@ -80,29 +82,31 @@ export async function requestDemo(data: z.infer<typeof demoRequestSchema>) {
   try {
     const validated = demoRequestSchema.parse(data);
 
-    // Save demo request to database
-    await db.demoRequest.create({
-      data: {
-        schoolName: validated.schoolName,
-        contactName: validated.contactName,
-        email: validated.email,
-        phone: validated.phone,
-        numberOfStudents: validated.numberOfStudents,
-        numberOfTeachers: validated.numberOfTeachers,
-        preferredDate: validated.preferredDate,
-        notes: validated.notes,
-        status: "pending",
-        createdAt: new Date(),
-      },
-    });
+    // TODO: Add DemoRequest model to Prisma schema
+    // await db.demoRequest.create({
+    //   data: {
+    //     schoolName: validated.schoolName,
+    //     contactName: validated.contactName,
+    //     email: validated.email,
+    //     phone: validated.phone,
+    //     numberOfStudents: validated.numberOfStudents,
+    //     numberOfTeachers: validated.numberOfTeachers,
+    //     preferredDate: validated.preferredDate,
+    //     notes: validated.notes,
+    //     status: "pending",
+    //     createdAt: new Date(),
+    //   },
+    // });
 
     // TODO: Send confirmation email to requester
     // TODO: Notify sales team
 
+    console.log("Demo request:", validated);
+
     return { success: true, message: "Demo request submitted! Our team will contact you soon." };
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return { success: false, error: error.errors[0].message };
+      return { success: false, error: error.issues[0].message };
     }
     return { success: false, error: "Failed to submit demo request. Please try again." };
   }
@@ -131,7 +135,8 @@ export async function startFreeTrial(data: z.infer<typeof trialSignupSchema>) {
         domain: validated.subdomain,
         planType: "trial",
         isActive: true,
-        trialEndsAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 14 days trial
+        // TODO: Add trialEndsAt field to School model in Prisma schema
+        // trialEndsAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 14 days trial
       },
     });
 
@@ -147,7 +152,7 @@ export async function startFreeTrial(data: z.infer<typeof trialSignupSchema>) {
     };
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return { success: false, error: error.errors[0].message };
+      return { success: false, error: error.issues[0].message };
     }
     return { success: false, error: "Failed to start trial. Please try again." };
   }
@@ -160,21 +165,24 @@ export async function captureLead(data: z.infer<typeof leadCaptureSchema>) {
   try {
     const validated = leadCaptureSchema.parse(data);
 
-    await db.lead.create({
-      data: {
-        email: validated.email,
-        source: validated.source || "other",
-        utmSource: validated.utmSource,
-        utmMedium: validated.utmMedium,
-        utmCampaign: validated.utmCampaign,
-        capturedAt: new Date(),
-      },
-    });
+    // TODO: Add Lead model to Prisma schema
+    // await db.lead.create({
+    //   data: {
+    //     email: validated.email,
+    //     source: validated.source || "other",
+    //     utmSource: validated.utmSource,
+    //     utmMedium: validated.utmMedium,
+    //     utmCampaign: validated.utmCampaign,
+    //     capturedAt: new Date(),
+    //   },
+    // });
+
+    console.log("Lead captured:", validated);
 
     return { success: true, message: "Thank you for your interest!" };
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return { success: false, error: error.errors[0].message };
+      return { success: false, error: error.issues[0].message };
     }
     return { success: false, error: "Failed to capture lead." };
   }
@@ -187,21 +195,24 @@ export async function submitFeedback(data: z.infer<typeof feedbackSchema>) {
   try {
     const validated = feedbackSchema.parse(data);
 
-    await db.feedback.create({
-      data: {
-        email: validated.email,
-        rating: validated.rating,
-        category: validated.category,
-        message: validated.message,
-        canContact: validated.canContact,
-        createdAt: new Date(),
-      },
-    });
+    // TODO: Add Feedback model to Prisma schema
+    // await db.feedback.create({
+    //   data: {
+    //     email: validated.email,
+    //     rating: validated.rating,
+    //     category: validated.category,
+    //     message: validated.message,
+    //     canContact: validated.canContact,
+    //     createdAt: new Date(),
+    //   },
+    // });
+
+    console.log("Feedback submitted:", validated);
 
     return { success: true, message: "Thank you for your feedback!" };
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return { success: false, error: error.errors[0].message };
+      return { success: false, error: error.issues[0].message };
     }
     return { success: false, error: "Failed to submit feedback." };
   }
@@ -214,20 +225,23 @@ export async function joinWaitlist(data: z.infer<typeof waitlistSchema>) {
   try {
     const validated = waitlistSchema.parse(data);
 
-    await db.waitlist.create({
-      data: {
-        email: validated.email,
-        schoolType: validated.schoolType,
-        region: validated.region,
-        estimatedStudents: validated.estimatedStudents,
-        joinedAt: new Date(),
-      },
-    });
+    // TODO: Add Waitlist model to Prisma schema
+    // await db.waitlist.create({
+    //   data: {
+    //     email: validated.email,
+    //     schoolType: validated.schoolType,
+    //     region: validated.region,
+    //     estimatedStudents: validated.estimatedStudents,
+    //     joinedAt: new Date(),
+    //   },
+    // });
+
+    console.log("Waitlist joined:", validated);
 
     return { success: true, message: "You've been added to the waitlist!" };
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return { success: false, error: error.errors[0].message };
+      return { success: false, error: error.issues[0].message };
     }
     return { success: false, error: "Failed to join waitlist." };
   }
