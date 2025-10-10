@@ -213,9 +213,11 @@ export function sortDomains<
     let aVal = a[field];
     let bVal = b[field];
 
+    // Handle date fields separately
     if (field === "createdAt" || field === "verifiedAt") {
-      aVal = aVal ? (typeof aVal === "string" ? new Date(aVal).getTime() : aVal.getTime()) : 0;
-      bVal = bVal ? (typeof bVal === "string" ? new Date(bVal).getTime() : bVal.getTime()) : 0;
+      const aTime = aVal ? (typeof aVal === "string" ? new Date(aVal).getTime() : (aVal as Date).getTime()) : 0;
+      const bTime = bVal ? (typeof bVal === "string" ? new Date(bVal).getTime() : (bVal as Date).getTime()) : 0;
+      return direction === "asc" ? aTime - bTime : bTime - aTime;
     }
 
     if (aVal === undefined || aVal === null) return 1;

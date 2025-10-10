@@ -178,9 +178,11 @@ export function sortTenants<T extends { name?: string; domain?: string; createdA
     let aVal = a[field];
     let bVal = b[field];
 
+    // Handle date fields separately
     if (field === "createdAt") {
-      aVal = typeof aVal === "string" ? new Date(aVal).getTime() : (aVal as Date)?.getTime() || 0;
-      bVal = typeof bVal === "string" ? new Date(bVal).getTime() : (bVal as Date)?.getTime() || 0;
+      const aTime = typeof aVal === "string" ? new Date(aVal).getTime() : (aVal as Date)?.getTime() || 0;
+      const bTime = typeof bVal === "string" ? new Date(bVal).getTime() : (bVal as Date)?.getTime() || 0;
+      return direction === "asc" ? aTime - bTime : bTime - aTime;
     }
 
     if (aVal === undefined || aVal === null) return 1;
