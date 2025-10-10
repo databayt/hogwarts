@@ -84,7 +84,7 @@ export function MarketingFooter({ dictionary }: MarketingFooterProps) {
 
   return (
     <footer className="bg-muted full-bleed min-h-[calc(100vh-3.5rem)] flex flex-col">
-      <div className="w-full px-1 sm:px-2 lg:px-8 pt-6 pb-3 flex-1 flex flex-col">
+      <div className="mx-auto max-w-[80rem] px-6 sm:px-8 lg:px-12 pt-6 pb-3 flex-1 flex flex-col">
         {/* Newsletter and Links Section */}
         <div className="flex flex-col lg:flex-row gap-8 lg:gap-0 mb-auto flex-1">
           {/* Newsletter Section */}
@@ -95,8 +95,8 @@ export function MarketingFooter({ dictionary }: MarketingFooterProps) {
           </div>
 
           {/* Links Section */}
-          <div className="w-full ps-20">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 lg:gap-20 lg:flex  lg:items-start px-0 text-center lg:text-start">
+          <div className="w-full lg:ps-20">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 lg:gap-20 lg:flex lg:items-start text-center lg:text-start">
               {footerSections.map((section) => (
                 <div key={section.title} className="w-full lg:flex-1">
                   <p className="muted mb-4 rtl:text-base">{section.title}</p>
