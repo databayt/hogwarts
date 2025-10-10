@@ -1,17 +1,22 @@
-import { auth } from "@/auth"
-import InvoiceClientPage from "@/components/invoice/invoice/InvoiceClientPage"
-import { Suspense } from "react"
-import Loading from "@/components/invoice/Loading"
+import { auth } from "@/auth";
+import InvoiceClientPage from "@/components/invoice/invoice/InvoiceClientPage";
+import { Suspense } from "react";
+import Loading from "@/components/invoice/Loading";
+import { type Locale } from "@/components/internationalization/config";
+import { type getDictionary } from "@/components/internationalization/dictionaries";
 
-export async function InvoiceContent() {
-  const session = await auth()
-  return (
-    <Suspense fallback={<Loading />}> 
-      <InvoiceClientPage userId={session?.user.id} currency={undefined} />
-    </Suspense>
-  )
+interface InvoiceContentProps {
+  dictionary: Awaited<ReturnType<typeof getDictionary>>;
+  lang: Locale;
 }
 
-export default InvoiceContent
+export async function InvoiceContent({ dictionary, lang }: InvoiceContentProps) {
+  const session = await auth();
+  return (
+    <Suspense fallback={<Loading />}>
+      <InvoiceClientPage userId={session?.user.id} currency={undefined} dictionary={dictionary} lang={lang} />
+    </Suspense>
+  );
+}
 
-
+export default InvoiceContent;

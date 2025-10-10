@@ -1,6 +1,12 @@
 import { redirect } from "next/navigation";
+import { type Locale } from "@/components/internationalization/config";
 
-export default function Staff() {
+interface Props {
+  params: Promise<{ lang: Locale; subdomain: string }>
+}
+
+export default async function Staff({ params }: Props) {
+  const { lang } = await params;
   // Redirect to dashboard or show staff list
-  redirect("/dashboard");
+  redirect(`/${lang}/dashboard`);
 }

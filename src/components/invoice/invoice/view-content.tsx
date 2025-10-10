@@ -4,12 +4,15 @@ import { useEffect, useState } from "react";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
+import type { Locale } from "@/components/internationalization/config";
 
 interface InvoiceViewProps {
   invoiceId: string;
+  dictionary?: any;
+  lang?: Locale;
 }
 
-export default function ViewInvoiceModalContent({ invoiceId }: InvoiceViewProps) {
+export default function ViewInvoiceModalContent({ invoiceId, dictionary, lang }: InvoiceViewProps) {
   const [invoice, setInvoice] = useState<any | null>(null);
 
   useEffect(() => {

@@ -23,13 +23,16 @@ import { Badge } from "@/components/ui/badge";
 import { useModal } from "@/components/atom/modal/context";
 import Modal from "@/components/atom/modal/modal";
 import CreateEditInvoiceModalContent from "@/components/invoice/invoice/create-edit-content";
+import type { Locale } from "@/components/internationalization/config";
 
 interface IInvoiceClientPage {
   currency: string | undefined;
   userId: string | undefined;
+  dictionary: any;
+  lang: Locale;
 }
 
-export default function InvoiceClientPage({ userId, currency = "USD" }: IInvoiceClientPage) {
+export default function InvoiceClientPage({ userId, currency = "USD", dictionary, lang }: IInvoiceClientPage) {
   const [data, setData] = useState<Invoice[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [page, setPage] = useState<number>(1);
@@ -133,7 +136,7 @@ export default function InvoiceClientPage({ userId, currency = "USD" }: IInvoice
       {isLoading ? <Loading /> : <DataTable table={table} />}
 
       {/* Non-route modal for creating an invoice */}
-      <Modal content={<CreateEditInvoiceModalContent defaults={{ currency }} />} />
+      <Modal content={<CreateEditInvoiceModalContent defaults={{ currency }} dictionary={dictionary} lang={lang} />} />
     </div>
   );
 }

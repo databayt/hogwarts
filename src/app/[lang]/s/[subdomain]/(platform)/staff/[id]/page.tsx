@@ -2,12 +2,19 @@ import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { getTenantContext } from "@/components/operator/lib/tenant";
 import ProfileContent from "@/components/profile/content";
+import { getDictionary } from "@/components/internationalization/dictionaries";
+import { type Locale } from "@/components/internationalization/config";
 
-export default async function StaffDetail({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+interface Props {
+  params: Promise<{ lang: Locale; subdomain: string; id: string }>
+}
+
+export default async function StaffDetail({ params }: Props) {
+  const { lang, id } = await params;
+  const dictionary = await getDictionary(lang);
   const { schoolId } = await getTenantContext();
   if (!schoolId) return notFound();
-  
+
   // Try to find as teacher first
   let staff = await (db as any).teacher?.findFirst({
     where: { id, schoolId },
@@ -36,10 +43,10 @@ export default async function StaffDetail({ params }: { params: Promise<{ id: st
       updatedAt: new Date(),
     };
   }
-  
+
   if (!staff) return notFound();
 
-  return <ProfileContent role="staff" data={staff} />;
+  return <ProfileContent role="staff" data={staff} dictionary={dictionary} lang={lang} />;
 }
 
 export const metadata = { title: "Dashboard: Staff" };

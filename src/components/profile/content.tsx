@@ -9,13 +9,16 @@ import StaffDashboard from "./staff"
 import ParentDashboard from "./parent"
 import ActivityGraph from "./activity-graph"
 import ActivityOverview from "./activity-overview"
+import type { Locale } from "@/components/internationalization/config";
 
 interface Props {
   role: "student" | "teacher" | "staff" | "parent"
   data: any
+  dictionary?: any
+  lang?: Locale
 }
 
-export default function ProfileContent({ role, data }: Props) {
+export default function ProfileContent({ role, data, dictionary, lang }: Props) {
   const { state, open, openMobile, isMobile } = useSidebar();
   
   // Determine if we should use mobile layout
