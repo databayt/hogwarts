@@ -290,9 +290,11 @@ export function sortLogs(
     let aVal = a[field];
     let bVal = b[field];
 
+    // Handle date fields separately
     if (field === "createdAt") {
-      aVal = new Date(a.createdAt).getTime();
-      bVal = new Date(b.createdAt).getTime();
+      const aTime = new Date(a.createdAt).getTime();
+      const bTime = new Date(b.createdAt).getTime();
+      return direction === "asc" ? aTime - bTime : bTime - aTime;
     }
 
     if (aVal === undefined || aVal === null) return 1;
