@@ -6,7 +6,7 @@ export const metadata = {
   description: "Set your school's pricing.",
 };
 
-export default function PricePage() {
+export default function Price() {
   return (
     <HostStepLayout
       title={

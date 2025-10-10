@@ -16,7 +16,7 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
-export default function PaidInvoicePage() {
+export default function PaidInvoice() {
   const [data, setData] = useState<Invoice>();
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const { invoiceId } = useParams();

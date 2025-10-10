@@ -12,7 +12,7 @@ function assertNonEmpty(value: string | null | undefined): asserts value is stri
   if (!value) throw new Error("Missing required parameter");
 }
 
-export default async function CheckoutPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+export default async function Checkout({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const session = await auth();
   if (!session?.user) {
     redirect("/login");

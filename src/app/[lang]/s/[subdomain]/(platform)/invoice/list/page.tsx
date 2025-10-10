@@ -1,10 +1,10 @@
 import { InvoiceContent } from "@/components/invoice/content";
 import { SearchParams } from 'nuqs/server';
 
-interface InvoicePageProps {
+interface Props {
   searchParams: Promise<SearchParams>
 }
 
-export default async function InvoicePage({ searchParams }: InvoicePageProps) {
+export default async function List({ searchParams }: Props) {
   return <InvoiceContent searchParams={searchParams} />;
 }

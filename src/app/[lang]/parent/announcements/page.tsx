@@ -6,6 +6,6 @@ export const metadata: Metadata = {
   description: 'View school and class announcements for your children',
 };
 
-export default function ParentAnnouncementsPage() {
+export default function ParentAnnouncements() {
   return <ParentAnnouncementsContent />;
 }

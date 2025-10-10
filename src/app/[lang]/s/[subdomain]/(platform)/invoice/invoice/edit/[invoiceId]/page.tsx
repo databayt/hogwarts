@@ -1,7 +1,7 @@
 import RouteModal from "@/components/atom/modal/route-modal";
 import CreateEditInvoiceModalContent from "@/components/invoice/invoice/create-edit-content";
 
-export default async function EditInvoicePage({ params }: { params: Promise<{ invoiceId: string }> }) {
+export default async function EditInvoice({ params }: { params: Promise<{ invoiceId: string }> }) {
   const resolvedParams = await params;
   return (
     <RouteModal

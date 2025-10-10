@@ -11,7 +11,7 @@ export const metadata = constructMetadata({
   description: "Check and manage your latest orders.",
 });
 
-export default async function OrdersPage() {
+export default async function Orders() {
   // const user = await currentUser();
   // if (!user || user.role !== "ADMIN") redirect("/login");
 

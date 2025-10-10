@@ -6,6 +6,6 @@ export const metadata: Metadata = {
   description: 'Bulk import students and teachers from CSV files',
 };
 
-export default function ImportPage() {
+export default function Import() {
   return <CsvImportComponent />;
 }

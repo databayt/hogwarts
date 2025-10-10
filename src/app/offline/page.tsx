@@ -1,5 +1,5 @@
 import { OfflineContent } from '@/components/offline/content';
 
-export default function OfflinePage() {
+export default function Offline() {
   return <OfflineContent />;
 }

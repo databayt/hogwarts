@@ -7,11 +7,11 @@ export const metadata = {
   description: "Create and manage your school in our multi-tenant platform. Start with templates or build from scratch.",
 };
 
-interface OnboardingPageProps {
+interface Props {
   params: Promise<{ lang: Locale }>
 }
 
-export default async function OnboardingPage({ params }: OnboardingPageProps) {
+export default async function Onboarding({ params }: Props) {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
   return <OnboardingContent dictionary={dictionary.school} />;

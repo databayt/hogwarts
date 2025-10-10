@@ -10,7 +10,7 @@ export const metadata = constructMetadata({
   description: "Admin page for only admin management.",
 });
 
-export default async function AdminPage() {
+export default async function Admin() {
   const user = await currentUser();
   if (!user || user.role !== "ADMIN") redirect("/login");
 

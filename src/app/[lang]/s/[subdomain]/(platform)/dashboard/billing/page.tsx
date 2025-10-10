@@ -22,7 +22,7 @@ export const metadata = constructMetadata({
   description: "Manage billing and your subscription plan.",
 });
 
-export default async function BillingPage() {
+export default async function Billing() {
   const user = await currentUser() as ExtendedUser | null;
 
   if (!user || !user.id) {

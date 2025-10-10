@@ -4,11 +4,11 @@ import { notFound } from "next/navigation";
 import { getDictionary } from "@/components/internationalization/dictionaries";
 import { type Locale } from "@/components/internationalization/config";
 
-interface DashboardPageProps {
+interface Props {
   params: Promise<{ subdomain: string; lang: Locale }>;
 }
 
-export default async function DashboardPage({ params }: DashboardPageProps) {
+export default async function Dashboard({ params }: Props) {
   const { subdomain, lang } = await params;
   const dictionary = await getDictionary(lang);
   console.log('DashboardPage - params:', { subdomain });

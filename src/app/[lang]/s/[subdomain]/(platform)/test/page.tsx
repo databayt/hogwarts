@@ -1,10 +1,10 @@
 import { getSchoolBySubdomain } from "@/lib/subdomain-actions";
 
-interface TestPageProps {
+interface Props {
   params: Promise<{ subdomain: string }>;
 }
 
-export default async function TestPage({ params }: TestPageProps) {
+export default async function Test({ params }: Props) {
   const { subdomain } = await params;
   
   try {

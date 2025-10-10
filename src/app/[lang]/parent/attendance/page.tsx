@@ -6,6 +6,6 @@ export const metadata: Metadata = {
   description: 'View your children attendance records',
 };
 
-export default function ParentAttendancePage() {
+export default function ParentAttendance() {
   return <ParentAttendanceContent />;
 }

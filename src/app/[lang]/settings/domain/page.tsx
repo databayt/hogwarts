@@ -6,6 +6,6 @@ export const metadata: Metadata = {
   description: 'Manage your school custom domain',
 };
 
-export default function DomainSettingsPage() {
+export default function DomainSettings() {
   return <DomainRequestContent />;
 }

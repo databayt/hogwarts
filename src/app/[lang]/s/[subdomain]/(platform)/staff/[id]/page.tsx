@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { getTenantContext } from "@/components/operator/lib/tenant";
 import ProfileContent from "@/components/profile/content";
 
-export default async function StaffDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function StaffDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const { schoolId } = await getTenantContext();
   if (!schoolId) return notFound();

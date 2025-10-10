@@ -1,5 +1,5 @@
 import CongratulationsContent from '@/components/onboarding/congratulations/content';
 
-export default function CongratulationsPage() {
+export default function Congratulations() {
   return <CongratulationsContent />;
 }
