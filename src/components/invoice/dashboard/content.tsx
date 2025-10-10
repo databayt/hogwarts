@@ -11,8 +11,15 @@ import { RecentInvoicesCard, StatsCards } from "./card";
 
 import { chartConfig } from "./config";
 import { DashboardHeader } from "./header";
+import { type Locale } from '@/components/internationalization/config'
+import { type Dictionary } from '@/components/internationalization/dictionaries'
 
-export function DashboardContent() {
+interface Props {
+  dictionary: Dictionary
+  lang: Locale
+}
+
+export function DashboardContent({ dictionary, lang }: Props) {
   const [data, setData] = useState({
     totalRevenue: "$0",
     totalInvoice: 0,

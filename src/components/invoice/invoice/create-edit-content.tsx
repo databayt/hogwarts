@@ -1,6 +1,8 @@
 "use client";
 
 import { InvoiceCreateForm } from "@/components/invoice/form";
+import { type Locale } from '@/components/internationalization/config'
+import { type Dictionary } from '@/components/internationalization/dictionaries'
 
 interface Props {
   invoiceId?: string;
@@ -10,11 +12,15 @@ interface Props {
     email?: string | null;
     currency?: string | null;
   };
+  dictionary: Dictionary
+  lang: Locale
 }
 
 export default function CreateEditInvoiceModalContent({
   invoiceId,
   defaults,
+  dictionary,
+  lang,
 }: Props) {
   return (
     <div className="p-2 sm:p-4 h-full">

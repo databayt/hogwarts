@@ -3,11 +3,21 @@ import { SearchParams } from 'nuqs/server'
 import { Shell as PageContainer } from '@/components/table/shell'
 import Link from 'next/link'
 import { AttendanceReportExportButton } from '@/components/platform/attendance/reports/export-button'
+import { getDictionary } from '@/components/internationalization/dictionaries'
+import { type Locale } from '@/components/internationalization/config'
 
 export const metadata = { title: 'Dashboard: Attendance Reports' }
 
-export default async function Page({ searchParams }: { searchParams: Promise<SearchParams> }) {
+interface Props {
+  params: Promise<{ lang: Locale; subdomain: string }>
+  searchParams: Promise<SearchParams>
+}
+
+export default async function Page({ params, searchParams }: Props) {
+  const { lang } = await params
+  const dictionary = await getDictionary(lang)
   const sp = await attendanceReportParams.parse(await searchParams)
+
   return (
     <PageContainer>
       <div className="flex flex-1 flex-col gap-4">

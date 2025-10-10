@@ -15,8 +15,15 @@ import {
   getCurrentTimeInTimezone,
   type SupportedTimezone
 } from './validation';
+import { type Locale } from '@/components/internationalization/config'
+import { type Dictionary } from '@/components/internationalization/dictionaries'
 
-export function SettingsContent() {
+interface Props {
+  dictionary: Dictionary
+  lang: Locale
+}
+
+export function SettingsContent({ dictionary, lang }: Props) {
   const { school } = useSchool()
   const [name, setName] = React.useState(school.name || '')
   const [timezone, setTimezone] = React.useState<SupportedTimezone>(

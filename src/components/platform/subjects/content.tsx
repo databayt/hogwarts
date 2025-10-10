@@ -5,8 +5,16 @@ import { subjectsSearchParams } from '@/components/platform/subjects/list-params
 import { db } from '@/lib/db'
 import { getTenantContext } from '@/components/operator/lib/tenant'
 import { Shell as PageContainer } from '@/components/table/shell'
+import { type Locale } from '@/components/internationalization/config'
+import { type Dictionary } from '@/components/internationalization/dictionaries'
 
-export default async function SubjectsContent({ searchParams }: { searchParams: Promise<SearchParams> }) {
+interface Props {
+  searchParams: Promise<SearchParams>
+  dictionary: Dictionary
+  lang: Locale
+}
+
+export default async function SubjectsContent({ searchParams, dictionary, lang }: Props) {
   const sp = await subjectsSearchParams.parse(await searchParams)
   const { schoolId } = await getTenantContext()
   let data: SubjectRow[] = []

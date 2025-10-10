@@ -5,8 +5,15 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { updateProfile } from '@/components/platform/profile/actions'
 import { SuccessToast, ErrorToast } from '@/components/atom/toast'
+import { type Locale } from '@/components/internationalization/config'
+import { type Dictionary } from '@/components/internationalization/dictionaries'
 
-export function ProfileContent() {
+interface Props {
+  dictionary: Dictionary
+  lang: Locale
+}
+
+export function ProfileContent({ dictionary, lang }: Props) {
   const [displayName, setDisplayName] = React.useState('')
   const [avatarUrl, setAvatarUrl] = React.useState('')
   const [locale, setLocale] = React.useState<'ar' | 'en'>('ar')

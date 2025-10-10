@@ -12,13 +12,20 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { SuccessToast, ErrorToast } from "@/components/atom/toast";
+import { type Locale } from '@/components/internationalization/config'
+import { type Dictionary } from '@/components/internationalization/dictionaries'
 
 type TSignatureData = {
   name: string;
   image: string;
 };
 
-export function SettingsContent() {
+interface Props {
+  dictionary: Dictionary
+  lang: Locale
+}
+
+export function SettingsContent({ dictionary, lang }: Props) {
   const [logo, setLogo] = useState<string>();
   const [signatureData, setSignatureData] = useState<TSignatureData>({
     name: "",

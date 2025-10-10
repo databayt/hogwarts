@@ -5,8 +5,16 @@ import { classesSearchParams } from '@/components/platform/classes/list-params'
 import { db } from '@/lib/db'
 import { getTenantContext } from '@/components/operator/lib/tenant'
 import { Shell as PageContainer } from '@/components/table/shell'
+import { type Locale } from '@/components/internationalization/config'
+import { type Dictionary } from '@/components/internationalization/dictionaries'
 
-export default async function ClassesContent({ searchParams }: { searchParams: Promise<SearchParams> }) {
+interface Props {
+  searchParams: Promise<SearchParams>
+  dictionary: Dictionary
+  lang: Locale
+}
+
+export default async function ClassesContent({ searchParams, dictionary, lang }: Props) {
   const sp = await classesSearchParams.parse(await searchParams)
   const { schoolId } = await getTenantContext()
   let data: ClassRow[] = []
