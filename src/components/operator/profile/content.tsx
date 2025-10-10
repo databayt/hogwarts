@@ -2,8 +2,15 @@
 
 import { Shell as PageContainer } from "@/components/table/shell";
 import { EmptyState } from "@/components/operator/common/empty-state";
+import type { getDictionary } from "@/components/internationalization/dictionaries";
+import type { Locale } from "@/components/internationalization/config";
 
-export function ProfileContent() {
+interface Props {
+  dictionary: Awaited<ReturnType<typeof getDictionary>>;
+  lang: Locale;
+}
+
+export function ProfileContent(props: Props) {
   return (
     <PageContainer>
       <div className="flex flex-1 flex-col gap-4">

@@ -6,18 +6,20 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { 
-  Globe, 
-  Edit, 
-  Check, 
-  X, 
-  RefreshCw, 
+import {
+  Globe,
+  Edit,
+  Check,
+  X,
+  RefreshCw,
   AlertCircle,
   Building2,
   Users,
   Calendar
 } from 'lucide-react';
 import { toast } from 'sonner';
+import type { getDictionary } from "@/components/internationalization/dictionaries";
+import type { Locale } from "@/components/internationalization/config";
 
 interface Tenant {
   id: string;
@@ -26,7 +28,12 @@ interface Tenant {
   isActive: boolean;
 }
 
-export function TenantsContent() {
+interface Props {
+  dictionary: Awaited<ReturnType<typeof getDictionary>>;
+  lang: Locale;
+}
+
+export function TenantsContent(props: Props) {
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);

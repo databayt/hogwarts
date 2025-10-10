@@ -11,8 +11,15 @@ import { approveDomainRequest } from "@/components/operator/actions/domains/appr
 import { rejectDomainRequest } from "@/components/operator/actions/domains/reject";
 import { verifyDomainRequest } from "@/components/operator/actions/domains/verify";
 import { useState, useEffect } from "react";
+import type { getDictionary } from "@/components/internationalization/dictionaries";
+import type { Locale } from "@/components/internationalization/config";
 
-export function DomainsContent() {
+interface Props {
+  dictionary: Awaited<ReturnType<typeof getDictionary>>;
+  lang: Locale;
+}
+
+export function DomainsContent(props: Props) {
   const [data, setData] = useState<{ rows: DomainRow[]; pageCount: number } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);

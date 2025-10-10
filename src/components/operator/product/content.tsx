@@ -6,8 +6,15 @@ import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { IconPlus } from '@tabler/icons-react';
 import Link from 'next/link';
+import type { getDictionary } from "@/components/internationalization/dictionaries";
+import type { Locale } from "@/components/internationalization/config";
 
-export function ProductContent() {
+interface Props {
+  dictionary: Awaited<ReturnType<typeof getDictionary>>;
+  lang: Locale;
+}
+
+export function ProductContent(props: Props) {
   return (
     <PageContainer>
       <div className='flex flex-1 flex-col space-y-4'>

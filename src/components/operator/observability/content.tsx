@@ -6,8 +6,15 @@ import { auditColumns, type AuditRow } from "./logs-table/columns";
 import { DataTableSkeleton } from "@/components/table/data-table/data-table-skeleton";
 import { EmptyState } from "@/components/operator/common/empty-state";
 import { useState, useEffect } from "react";
+import type { getDictionary } from "@/components/internationalization/dictionaries";
+import type { Locale } from "@/components/internationalization/config";
 
-export function ObservabilityContent() {
+interface Props {
+  dictionary: Awaited<ReturnType<typeof getDictionary>>;
+  lang: Locale;
+}
+
+export function ObservabilityContent(props: Props) {
   const [data, setData] = useState<{ rows: AuditRow[] } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);

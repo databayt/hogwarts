@@ -6,8 +6,15 @@ import { invoiceColumns, type InvoiceRow } from "./columns";
 import { DataTableSkeleton } from "@/components/table/data-table/data-table-skeleton";
 import { EmptyState } from "@/components/operator/common/empty-state";
 import { useState, useEffect } from "react";
+import type { getDictionary } from "@/components/internationalization/dictionaries";
+import type { Locale } from "@/components/internationalization/config";
 
-export function BillingContent() {
+interface Props {
+  dictionary: Awaited<ReturnType<typeof getDictionary>>;
+  lang: Locale;
+}
+
+export function BillingContent(props: Props) {
   const [data, setData] = useState<{ rows: InvoiceRow[]; pageCount: number } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);

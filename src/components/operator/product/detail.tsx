@@ -2,12 +2,16 @@
 
 import { Shell as PageContainer } from "@/components/table/shell";
 import { EmptyState } from "@/components/operator/common/empty-state";
+import type { getDictionary } from "@/components/internationalization/dictionaries";
+import type { Locale } from "@/components/internationalization/config";
 
 interface Props {
+  dictionary: Awaited<ReturnType<typeof getDictionary>>;
+  lang: Locale;
   productId: string;
 }
 
-export function ProductDetailContent({ productId }: Props) {
+export function ProductDetailContent({ dictionary, lang, productId }: Props) {
   return (
     <PageContainer>
       <div className='flex-1 space-y-4'>

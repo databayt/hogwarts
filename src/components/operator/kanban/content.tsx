@@ -3,8 +3,15 @@
 import { Shell as PageContainer } from '@/components/table/shell';
 import { KanbanBoard } from './components/kanban-board';
 import NewTaskDialog from './components/new-task-dialog';
+import type { getDictionary } from "@/components/internationalization/dictionaries";
+import type { Locale } from "@/components/internationalization/config";
 
-export function KanbanContent() {
+interface Props {
+  dictionary: Awaited<ReturnType<typeof getDictionary>>;
+  lang: Locale;
+}
+
+export function KanbanContent(props: Props) {
   return (
     <PageContainer>
       <div className='space-y-4'>
