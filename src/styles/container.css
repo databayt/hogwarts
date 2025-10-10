@@ -93,10 +93,9 @@
 
   /* Full-bleed with smart inner content alignment */
   .full-bleed {
-    width: 100vw;
-    position: relative;
-    left: 50%;
-    transform: translateX(-50%);
+    width: 100%;
+    margin-left: calc(-50vw + 50%);
+    margin-right: calc(-50vw + 50%);
     max-width: none;
   }
 
