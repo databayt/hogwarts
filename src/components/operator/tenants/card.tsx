@@ -27,7 +27,8 @@ interface TenantCardProps {
  * Basic tenant card with essential information
  */
 export function TenantCard({ tenant, metrics, showActions = false, onViewDetails }: TenantCardProps) {
-  const status = getTenantStatus(tenant.isActive, tenant.trialEndsAt);
+  // Note: School model doesn't include trialEndsAt - would need to join with Subscription
+  const status = getTenantStatus(tenant.isActive, null);
 
   return (
     <Card className="hover:shadow-md transition-shadow">
@@ -85,7 +86,8 @@ export function TenantCard({ tenant, metrics, showActions = false, onViewDetails
  * Compact tenant card for list views
  */
 export function TenantCompactCard({ tenant }: { tenant: Tenant }) {
-  const status = getTenantStatus(tenant.isActive, tenant.trialEndsAt);
+  // Note: School model doesn't include trialEndsAt - would need to join with Subscription
+  const status = getTenantStatus(tenant.isActive, null);
 
   return (
     <Card className="flex items-center justify-between p-4">
@@ -126,10 +128,10 @@ export function TenantBillingCard({ tenant, billing }: { tenant: Tenant; billing
             <div className="font-medium">{formatDate(billing.nextInvoiceDate)}</div>
           </div>
         </div>
-        {tenant.trialEndsAt && (
+        {billing.trialEndsAt && (
           <div className="rounded-md bg-muted p-3">
             <small className="muted">Trial Status</small>
-            <div className="font-medium">{formatTrialStatus(tenant.trialEndsAt)}</div>
+            <div className="font-medium">{formatTrialStatus(billing.trialEndsAt)}</div>
           </div>
         )}
       </CardContent>
