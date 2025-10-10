@@ -2,8 +2,15 @@
 
 import { WifiOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { type Locale } from '@/components/internationalization/config';
+import { type Dictionary } from '@/components/internationalization/dictionaries';
 
-export function OfflineContent() {
+interface OfflineContentProps {
+  dictionary: Dictionary;
+  lang: Locale;
+}
+
+export function OfflineContent({ dictionary, lang }: OfflineContentProps) {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
       <div className="text-center space-y-6 px-4 max-w-md">

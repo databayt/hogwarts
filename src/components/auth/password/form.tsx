@@ -14,7 +14,7 @@ import {
   FormControl,
   FormField,
   FormItem,
-  FormMessage,  
+  FormMessage,
 } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import {
@@ -26,11 +26,16 @@ import { NewPasswordSchema } from "../validation";
 import { newPassword } from "./action";
 import { FormError } from "../error/form-error";
 import { FormSuccess } from "../form-success";
+import type { getDictionary } from "@/components/internationalization/dictionaries";
+import type { Locale } from "@/components/internationalization/config";
 
-export const NewPasswordForm = ({
-  className,
-  ...props
-}: React.ComponentPropsWithoutRef<"div">) => {
+interface Props extends React.ComponentPropsWithoutRef<"div"> {
+  dictionary: Awaited<ReturnType<typeof getDictionary>>;
+  lang: Locale;
+}
+
+export const NewPasswordForm = (props: Props) => {
+  const { dictionary, lang, className, ...rest } = props;
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
 
@@ -59,7 +64,7 @@ export const NewPasswordForm = ({
   };
 
   return (
-    <div className={cn("flex flex-col gap-6 min-w-[200px] md:min-w-[350px]", className)} {...props}>
+    <div className={cn("flex flex-col gap-6 min-w-[200px] md:min-w-[350px]", className)} {...rest}>
       <Card className="border-none shadow-none bg-background">
         <CardHeader className="text-center">
           <h4>Enter a new password</h4>

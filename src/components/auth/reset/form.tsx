@@ -13,7 +13,7 @@ import {
   FormControl,
   FormField,
   FormItem,
-  FormMessage,  
+  FormMessage,
 } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,11 +25,16 @@ import { ResetSchema } from "../validation";
 import { reset } from "./action";
 import { FormError } from "../error/form-error";
 import { FormSuccess } from "../form-success";
+import type { getDictionary } from "@/components/internationalization/dictionaries";
+import type { Locale } from "@/components/internationalization/config";
 
-export const ResetForm = ({
-  className,
-  ...props
-}: React.ComponentPropsWithoutRef<"div">) => {
+interface Props extends React.ComponentPropsWithoutRef<"div"> {
+  dictionary: Awaited<ReturnType<typeof getDictionary>>;
+  lang: Locale;
+}
+
+export const ResetForm = (props: Props) => {
+  const { dictionary, lang, className, ...rest } = props;
   const [error, setError] = useState<string | undefined>("");
   const [success, setSuccess] = useState<string | undefined>("");
   const [isPending, startTransition] = useTransition();
@@ -55,7 +60,7 @@ export const ResetForm = ({
   };
 
   return (
-    <div className={cn("flex flex-col gap-6 min-w-[200px] md:min-w-[350px]", className)} {...props}>
+    <div className={cn("flex flex-col gap-6 min-w-[200px] md:min-w-[350px]", className)} {...rest}>
       <Card className="border-none shadow-none bg-background">
         <CardHeader className="text-center" />
         <CardContent>

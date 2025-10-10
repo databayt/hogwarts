@@ -8,6 +8,8 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { DashboardHeader } from "@/components/platform/dashboard/header";
 import { BillingInfo } from "@/components/marketing/pricing/billing-info";
 import { Icons } from "@/components/marketing/pricing/shared/icons";
+import { getDictionary } from "@/components/internationalization/dictionaries";
+import { type Locale } from "@/components/internationalization/config";
 
 // Extended user type that includes the properties added by our auth callbacks
 type ExtendedUser = {
@@ -22,7 +24,14 @@ export const metadata = constructMetadata({
   description: "Manage billing and your subscription plan.",
 });
 
-export default async function Billing() {
+interface Props {
+  params: Promise<{ lang: Locale; subdomain: string }>;
+}
+
+export default async function Billing({ params }: Props) {
+  const { lang } = await params;
+  const dictionary = await getDictionary(lang);
+
   const user = await currentUser() as ExtendedUser | null;
 
   if (!user || !user.id) {

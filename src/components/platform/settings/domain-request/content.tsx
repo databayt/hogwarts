@@ -1,8 +1,15 @@
 import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { DomainRequestForm } from './form';
+import { type Locale } from '@/components/internationalization/config';
+import { type Dictionary } from '@/components/internationalization/dictionaries';
 
-export async function DomainRequestContent() {
+interface DomainRequestContentProps {
+  dictionary: Dictionary;
+  lang: Locale;
+}
+
+export async function DomainRequestContent({ dictionary, lang }: DomainRequestContentProps) {
   const session = await auth();
   
   if (!session?.user?.schoolId) {
@@ -29,6 +36,8 @@ export async function DomainRequestContent() {
     <DomainRequestForm
       currentDomain={school?.domain}
       existingRequests={domainRequests}
+      dictionary={dictionary}
+      lang={lang}
     />
   );
 }

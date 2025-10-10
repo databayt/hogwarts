@@ -1,4 +1,3 @@
-import { constructMetadata } from "@/components/marketing/pricing/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AreaChartStacked } from "@/components/platform/dashboard/charts/area-chart-stacked";
 import { BarChartMixed } from "@/components/platform/dashboard/charts/bar-chart-mixed";
@@ -10,13 +9,15 @@ import { RadialShapeChart } from "@/components/platform/dashboard/charts/radial-
 import { RadialStackedChart } from "@/components/platform/dashboard/charts/radial-stacked-chart";
 import { RadialTextChart } from "@/components/platform/dashboard/charts/radial-text-chart";
 import { DashboardHeader } from "@/components/platform/dashboard/header";
+import { type Locale } from "@/components/internationalization/config";
+import { type getDictionary } from "@/components/internationalization/dictionaries";
 
-export const metadata = constructMetadata({
-  title: "Charts – SaaS Starter",
-  description: "List of charts by shadcn-ui",
-});
+interface ChartsContentProps {
+  dictionary: Awaited<ReturnType<typeof getDictionary>>;
+  lang: Locale;
+}
 
-export default function ChartsContent() {
+export default function ChartsContent({ dictionary, lang }: ChartsContentProps) {
   return (
     <>
       <DashboardHeader heading="Charts" text="List of charts by shadcn-ui." />

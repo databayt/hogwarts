@@ -8,6 +8,8 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { type Locale } from "@/components/internationalization/config";
+import { type Dictionary } from "@/components/internationalization/dictionaries";
 
 interface ImportResult {
   success: boolean;
@@ -20,7 +22,12 @@ interface ImportResult {
   }>;
 }
 
-export function CsvImportComponent() {
+interface CsvImportComponentProps {
+  dictionary: Dictionary;
+  lang: Locale;
+}
+
+export function CsvImportComponent({ dictionary, lang }: CsvImportComponentProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [studentResult, setStudentResult] = useState<ImportResult | null>(null);
   const [teacherResult, setTeacherResult] = useState<ImportResult | null>(null);

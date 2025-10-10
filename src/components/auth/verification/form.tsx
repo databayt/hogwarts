@@ -13,11 +13,16 @@ import {
 import { FormSuccess } from "../form-success";
 import { FormError } from "../error/form-error";
 import { newVerification } from "./action";
+import type { getDictionary } from "@/components/internationalization/dictionaries";
+import type { Locale } from "@/components/internationalization/config";
 
-export const NewVerificationForm = ({
-  className,
-  ...props
-}: React.ComponentPropsWithoutRef<"div">) => {
+interface Props extends React.ComponentPropsWithoutRef<"div"> {
+  dictionary: Awaited<ReturnType<typeof getDictionary>>;
+  lang: Locale;
+}
+
+export const NewVerificationForm = (props: Props) => {
+  const { dictionary, lang, className, ...rest } = props;
   const [error, setError] = useState<string | undefined>();
   const [success, setSuccess] = useState<string | undefined>();
 
@@ -49,7 +54,7 @@ export const NewVerificationForm = ({
   }, [token, onSubmit]);
 
   return (
-    <div className={cn("flex flex-col gap-6 min-w-[200px] md:min-w-[350px]", className)} {...props}>
+    <div className={cn("flex flex-col gap-6 min-w-[200px] md:min-w-[350px]", className)} {...rest}>
       <Card className="border-none shadow-none bg-background">
         <CardHeader className="text-center">
           <h4>Confirming your verification</h4>

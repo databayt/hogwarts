@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { CheckoutLauncher } from "@/components/marketing/pricing/CheckoutLauncher";
+import { getDictionary } from "@/components/internationalization/dictionaries";
+import { type Locale } from "@/components/internationalization/config";
 
 function getSearchParam(searchParams: Record<string, string | string[] | undefined>, key: string): string | null {
   const v = searchParams[key];
@@ -12,7 +14,15 @@ function assertNonEmpty(value: string | null | undefined): asserts value is stri
   if (!value) throw new Error("Missing required parameter");
 }
 
-export default async function Checkout({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+interface Props {
+  params: Promise<{ lang: Locale; subdomain: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}
+
+export default async function Checkout({ params, searchParams }: Props) {
+  const { lang } = await params;
+  const dictionary = await getDictionary(lang);
+
   const session = await auth();
   if (!session?.user) {
     redirect("/login");
@@ -24,4 +34,3 @@ export default async function Checkout({ searchParams }: { searchParams: Promise
 
   return <CheckoutLauncher price={price} />;
 }
-

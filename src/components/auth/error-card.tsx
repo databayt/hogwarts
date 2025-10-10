@@ -3,8 +3,16 @@ import { ExclamationTriangleIcon } from "@radix-ui/react-icons";
 import { useSearchParams } from "next/navigation";
 
 import { CardWrapper } from "@/components/auth/card-wrapper";
+import type { getDictionary } from "@/components/internationalization/dictionaries";
+import type { Locale } from "@/components/internationalization/config";
 
-export const ErrorCard = () => {
+interface Props {
+  dictionary: Awaited<ReturnType<typeof getDictionary>>;
+  lang: Locale;
+}
+
+export const ErrorCard = (props: Props) => {
+  const { dictionary, lang } = props;
   const searchParams = useSearchParams();
   const error = searchParams.get("error");
   

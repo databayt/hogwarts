@@ -11,6 +11,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { createDomainRequest, cancelDomainRequest } from "./actions";
 import { formatDistanceToNow } from "date-fns";
+import { type Locale } from "@/components/internationalization/config";
+import { type Dictionary } from "@/components/internationalization/dictionaries";
 
 interface DomainRequestFormProps {
   currentDomain?: string;
@@ -22,9 +24,11 @@ interface DomainRequestFormProps {
     createdAt: Date;
     verifiedAt?: Date | null;
   }>;
+  dictionary: Dictionary;
+  lang: Locale;
 }
 
-export function DomainRequestForm({ currentDomain, existingRequests = [] }: DomainRequestFormProps) {
+export function DomainRequestForm({ currentDomain, existingRequests = [], dictionary, lang }: DomainRequestFormProps) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string>("");
   const [success, setSuccess] = useState<string>("");
