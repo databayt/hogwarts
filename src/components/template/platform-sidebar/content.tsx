@@ -57,7 +57,8 @@ export default function PlatformSidebar({ school, ...props }: PlatformSidebarPro
           <SidebarGroup className="p-2">
             <SidebarMenu className="space-y-1">
               {platformNav
-                .filter((item) => (currentRole ? item.roles.includes(currentRole) : false))
+                // TODO: Re-enable role-based filtering when needed
+                // .filter((item) => (currentRole ? item.roles.includes(currentRole) : false))
                 .map((item) => {
                 const isActive = pathname === item.href || pathname?.startsWith(item.href + "/");
                 return (
