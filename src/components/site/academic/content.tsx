@@ -5,12 +5,12 @@ import { Button } from "@/components/ui/button";
 import { AnimatedButton } from "@/components/atom/animated-button";
 import SectionHeading from "@/components/atom/section-heading";
 import { Badge } from "@/components/ui/badge";
-import { 
-  BookOpen, 
-  GraduationCap, 
-  Lightbulb, 
-  Trophy, 
-  Users, 
+import {
+  BookOpen,
+  GraduationCap,
+  Lightbulb,
+  Trophy,
+  Users,
   Star,
   Globe,
   Zap,
@@ -19,12 +19,16 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import type { School } from '../types';
+import type { Dictionary } from "@/components/internationalization/dictionaries";
+import type { Locale } from "@/components/internationalization/config";
 
 interface Props {
   school: School;
+  dictionary: Dictionary;
+  lang: Locale;
 }
 
-export default function AcademicContent({ school }: Props) {
+export default function AcademicContent({ school, dictionary, lang }: Props) {
   const academicPrograms = [
     {
       icon: <BookOpen className="w-8 h-8" />,

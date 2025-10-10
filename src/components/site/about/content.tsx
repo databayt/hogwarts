@@ -1,11 +1,15 @@
 import { StickyScroll } from "@/components/atom/sticky-scroll";
 import type { School } from '../types';
+import type { Dictionary } from "@/components/internationalization/dictionaries";
+import type { Locale } from "@/components/internationalization/config";
 
 interface Props {
   school: School;
+  dictionary: Dictionary;
+  lang: Locale;
 }
 
-export default function AboutContent({ school }: Props) {
+export default function AboutContent({ school, dictionary, lang }: Props) {
   // For now, we'll keep the content static
   // Later, you can use the school data to make it dynamic
   return (

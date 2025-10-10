@@ -4,9 +4,11 @@ import { getSchoolBySubdomain } from '@/lib/subdomain-actions';
 import AboutContent from "@/components/site/about/content";
 import { getCurrentDomain } from '@/components/site/utils';
 import { generateSchoolMetadata, generateDefaultMetadata } from '@/components/site/metadata';
+import { getDictionary } from "@/components/internationalization/dictionaries";
+import { type Locale } from "@/components/internationalization/config";
 
 interface AboutProps {
-  params: Promise<{ subdomain: string }>;
+  params: Promise<{ lang: Locale; subdomain: string }>;
 }
 
 export async function generateMetadata({ params }: AboutProps): Promise<Metadata> {
@@ -26,7 +28,8 @@ export async function generateMetadata({ params }: AboutProps): Promise<Metadata
 }
 
 export default async function About({ params }: AboutProps) {
-  const { subdomain } = await params;
+  const { lang, subdomain } = await params;
+  const dictionary = await getDictionary(lang);
   const result = await getSchoolBySubdomain(subdomain);
 
   if (!result.success || !result.data) {
@@ -37,7 +40,7 @@ export default async function About({ params }: AboutProps) {
 
   return (
     <div className="school-content" data-school-id={school.id} data-subdomain={subdomain}>
-      <AboutContent school={school} />
+      <AboutContent school={school} dictionary={dictionary} lang={lang} />
     </div>
   );
 }

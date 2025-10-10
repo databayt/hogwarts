@@ -14,6 +14,8 @@ import EventCard from "./event";
 import { BackgroundGradientAnimationDemo } from "./ready";
 import { NewComers } from "./new-comers";
 import { CTA } from "./admission-process";
+import type { Dictionary } from "@/components/internationalization/dictionaries";
+import type { Locale } from "@/components/internationalization/config";
 
 interface School {
   id: string;
@@ -35,9 +37,11 @@ interface School {
 
 interface SiteProps {
   school: School; // Required - we always pass school data now
+  dictionary: Dictionary;
+  lang: Locale;
 }
 
-export default function SiteContent({ school }: SiteProps) {
+export default function SiteContent({ school, dictionary, lang }: SiteProps) {
   // For now, we'll just render static content
   // Later, you can use this data to make components dynamic
 
