@@ -417,9 +417,9 @@ export async function getStudentDashboardData() {
       schoolId,
       isPublished: true,
       OR: [
-        { scope: "SCHOOL" },
+        { scope: "school" },
         {
-          scope: "CLASS",
+          scope: "class",
           targetClasses: {
             some: {
               id: {
@@ -652,9 +652,9 @@ export async function getParentDashboardData() {
       schoolId,
       isPublished: true,
       OR: [
-        { scope: "SCHOOL" },
+        { scope: "school" },
         {
-          scope: "CLASS",
+          scope: "class",
           targetClasses: {
             some: {
               id: {
