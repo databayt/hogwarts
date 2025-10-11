@@ -2,22 +2,11 @@
 
 import { auth } from "@/auth";
 import { getTenantContext } from "@/lib/tenant-context";
-import arcjet, { fixedWindow } from "@/lib/arcjet";
 import { db } from "@/lib/db";
 import { stripe } from "@/lib/stripe";
-import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { request } from "@arcjet/next";
 import slugify from "slugify";
 import type { CreateCourseData } from "../../types";
-
-const aj = arcjet.withRule(
-  fixedWindow({
-    mode: "LIVE",
-    window: "1m",
-    max: 5, // 5 course creations per minute
-  })
-);
 
 export async function createCourseAction(
   subdomain: string,
@@ -46,19 +35,6 @@ export async function createCourseAction(
   }
 
   try {
-    // Rate limiting
-    const req = await request();
-    const decision = await aj.protect(req, {
-      fingerprint: session.user.id,
-    });
-
-    if (decision.isDenied()) {
-      if (decision.reason.isRateLimit()) {
-        throw new Error("Rate limit exceeded. Please try again later.");
-      }
-      throw new Error("Request blocked. Please contact support if this persists.");
-    }
-
     // Parse form data
     const title = formData.get("title") as string;
     const description = formData.get("description") as string | null;

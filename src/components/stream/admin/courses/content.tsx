@@ -1,60 +1,46 @@
-import { adminGetCourses } from "@/app/data/admin/admin-get-courses";
-import { buttonVariants } from "@/components/ui/button";
+"use client";
+
+import { Button, buttonVariants } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { BookOpen, PlusIcon } from "lucide-react";
 import Link from "next/link";
-import {
-  AdminCourseCard,
-  AdminCourseCardSkeleton,
-} from "@/app/admin/courses/_components/AdminCourseCard";
-import { EmptyState } from "@/components/general/EmptyState";
-import { Suspense } from "react";
 
 export default function AdminCoursesContent() {
   return (
-    <>
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Your Courses</h1>
+        <h2>Your Courses</h2>
 
-        <Link className={buttonVariants()} href="/admin/courses/create">
+        <Link className={buttonVariants()} href="/stream/admin/courses/create">
+          <PlusIcon className="mr-2 size-4" />
           Create Course
         </Link>
       </div>
 
-      <Suspense fallback={<AdminCourseCardSkeletonLayout />}>
-        <RenderCourses />
-      </Suspense>
-    </>
-  );
-}
+      {/* Empty State - Will be replaced with real courses list */}
+      <Card>
+        <CardContent className="py-10">
+          <div className="text-center">
+            <BookOpen className="mx-auto size-12 text-muted-foreground mb-4" />
+            <h3>No courses yet</h3>
+            <p className="muted mb-4">
+              Create your first course to get started with Stream LMS
+            </p>
+            <Link
+              className={buttonVariants()}
+              href="/stream/admin/courses/create"
+            >
+              <PlusIcon className="mr-2 size-4" />
+              Create Your First Course
+            </Link>
+          </div>
+        </CardContent>
+      </Card>
 
-async function RenderCourses() {
-  const data = await adminGetCourses();
-
-  return (
-    <>
-      {data.length === 0 ? (
-        <EmptyState
-          title="No courses found"
-          description="Create a new course to get started"
-          buttonText="Create Course"
-          href="/admin/courses/create"
-        />
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 lg:grid-cols-2 gap-7">
-          {data.map((course) => (
-            <AdminCourseCard key={course.id} data={course} />
-          ))}
-        </div>
-      )}
-    </>
-  );
-}
-
-function AdminCourseCardSkeletonLayout() {
-  return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 lg:grid-cols-2 gap-7">
-      {Array.from({ length: 4 }).map((_, index) => (
-        <AdminCourseCardSkeleton key={index} />
-      ))}
+      {/* Course Grid - Placeholder for future implementation */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* Course cards will be displayed here */}
+      </div>
     </div>
   );
 }
