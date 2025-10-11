@@ -16,11 +16,13 @@ interface UploaderProps {
 export function Uploader({ fileTypeAccepted = "image", onChange, value }: UploaderProps) {
   const [files, setFiles] = useState<File[]>([]);
 
-  const accept = {
-    image: { "image/*": [] },
-    video: { "video/*": [] },
-    document: { "application/pdf": [] },
-  }[fileTypeAccepted];
+  const acceptMap = {
+    image: { "image/*": [] as readonly string[] },
+    video: { "video/*": [] as readonly string[] },
+    document: { "application/pdf": [] as readonly string[] },
+  };
+
+  const accept = acceptMap[fileTypeAccepted];
 
   const handleUpload = async (uploadedFiles: File[]) => {
     // TODO: Implement actual file upload to storage service
