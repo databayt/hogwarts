@@ -121,7 +121,7 @@ export async function getTeacherDashboardData() {
         studentClasses: {
           every: {
             student: {
-              attendance: {
+              attendances: {
                 some: {
                   date: {
                     gte: today,
