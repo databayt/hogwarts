@@ -613,7 +613,7 @@ export async function getParentDashboardData() {
         },
         select: {
           status: true,
-          grade: true,
+          score: true,
         },
       },
     },
@@ -680,7 +680,7 @@ export async function getParentDashboardData() {
       className: assignment.class.name,
       dueDate: assignment.dueDate.toISOString(),
       status: assignment.submissions[0]?.status || "NOT_SUBMITTED",
-      grade: assignment.submissions[0]?.grade ? Number(assignment.submissions[0].grade) : null,
+      score: assignment.submissions[0]?.score ? Number(assignment.submissions[0].score) : null,
     })),
     attendanceSummary: {
       totalDays,
