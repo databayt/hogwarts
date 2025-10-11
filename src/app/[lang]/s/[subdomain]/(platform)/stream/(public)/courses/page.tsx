@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function StreamCoursesPage({ params, searchParams }: Props) {
   const { lang, subdomain } = await params;
   const dictionary = await getDictionary(lang);
-  const { schoolId } = await getTenantContext(subdomain);
+  const { schoolId } = await getTenantContext();
   const search = await searchParams;
 
   return (

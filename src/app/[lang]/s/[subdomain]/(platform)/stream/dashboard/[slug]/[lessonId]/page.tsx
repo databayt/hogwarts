@@ -23,7 +23,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function StreamLessonPage({ params }: Props) {
   const { lang, subdomain, slug, lessonId } = await params;
   const dictionary = await getDictionary(lang);
-  const { schoolId } = await getTenantContext(subdomain);
+  const { schoolId } = await getTenantContext();
   const session = await auth();
 
   if (!session?.user) {
