@@ -33,7 +33,7 @@ export async function ensureOnboardingAccess(requestedSchoolId?: string) {
       isNew,
       schoolName: school.name,
       requestedSchoolId,
-      sessionSchoolId: (session.user as any).schoolId,
+      sessionSchoolId: session.user.schoolId,
     });
 
     // If the school ID doesn't match what was requested, redirect to correct URL

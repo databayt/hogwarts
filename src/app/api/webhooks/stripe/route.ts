@@ -79,7 +79,23 @@ export async function POST(req: Request) {
   }
 
   if ((event as {type: string})?.type === "invoice.payment_succeeded") {
-    const eventData = event as {data: {object: {billing_reason?: string; subscription?: string; id?: string; amount_due?: number; amount_paid?: number; currency?: string; status?: string; lines?: {data?: Array<{period?: {start?: number; end?: number}}}>; period_start?: number; period_end?: number}}};
+    interface InvoiceEventData {
+      data: {
+        object: {
+          billing_reason?: string;
+          subscription?: string;
+          id?: string;
+          amount_due?: number;
+          amount_paid?: number;
+          currency?: string;
+          status?: string;
+          lines?: {data?: Array<{period?: {start?: number; end?: number}}>};
+          period_start?: number;
+          period_end?: number;
+        };
+      };
+    }
+    const eventData = event as InvoiceEventData;
     const session = eventData.data.object;
 
     // If the billing reason is not subscription_create, it means the customer has updated their subscription.

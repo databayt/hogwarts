@@ -21,7 +21,7 @@ export default async function Price({ params }: Props) {
       title={
         <div className="space-y-3 sm:space-y-4">
           <h3>
-            Set your school's
+            Set your school&apos;s
             <br />
             tuition fees
           </h3>

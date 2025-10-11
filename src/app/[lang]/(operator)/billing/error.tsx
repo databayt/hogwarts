@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertCircle, RefreshCw, Receipt } from "lucide-react";
+import { RefreshCw, Receipt } from "lucide-react";
 
 export default function BillingError({
   error,

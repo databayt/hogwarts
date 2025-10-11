@@ -26,7 +26,7 @@ export default function DashboardError({
           </div>
           <CardTitle>Dashboard Error</CardTitle>
           <CardDescription>
-            We couldn't load the dashboard data. Please try refreshing the page.
+            We couldn&apos;t load the dashboard data. Please try refreshing the page.
           </CardDescription>
         </CardHeader>
         <CardContent>

@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requireOperator } from "@/components/operator/lib/operator-auth";
-import type { Prisma } from "@prisma/client";
 
 export async function GET(
   _req: Request,
