@@ -46,13 +46,15 @@ export function formatZodError(error: ZodError): ValidationResult {
         }
         break;
 
-      case "invalid_string":
-        if (issue.validation === "email") {
-          message = `${field} must be a valid email address`;
-          suggestion = `Example: student@example.com`;
-        } else if (issue.validation === "url") {
-          message = `${field} must be a valid URL`;
-          suggestion = `Example: https://example.com`;
+      case "invalid_format":
+        if ("validation" in issue) {
+          if (issue.validation === "email") {
+            message = `${field} must be a valid email address`;
+            suggestion = `Example: student@example.com`;
+          } else if (issue.validation === "url") {
+            message = `${field} must be a valid URL`;
+            suggestion = `Example: https://example.com`;
+          }
         }
         break;
 
