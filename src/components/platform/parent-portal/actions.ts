@@ -178,9 +178,9 @@ export async function getChildAssignments(input: { studentId: string }) {
       description: assignment.description,
       className: assignment.class.name,
       subjectName: assignment.class.subject.subjectName,
-      assignedDate: assignment.assignedDate.toISOString(),
+      publishDate: assignment.publishDate?.toISOString() || null,
       dueDate: assignment.dueDate.toISOString(),
-      totalPoints: assignment.totalPoints,
+      totalPoints: Number(assignment.totalPoints),
       submission: assignment.submissions[0]
         ? {
             id: assignment.submissions[0].id,
