@@ -1,10 +1,22 @@
 import type { Dictionary } from "@/components/internationalization/dictionaries";
-import { db } from "@/lib/db";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { TrendingUp, AlertTriangle, Users, FileText, Calendar, CheckCircle, Award, BarChart3 } from "lucide-react";
+import {
+  TrendingUp,
+  AlertTriangle,
+  Users,
+  FileText,
+  Calendar,
+  CheckCircle,
+  Award,
+  BarChart3,
+  DollarSign,
+  Target
+} from "lucide-react";
+import { getPrincipalDashboardData } from "../actions/principal";
+import { DashboardSectionError } from "../error-boundary";
 
 interface PrincipalDashboardProps {
   user: any;
@@ -12,88 +24,34 @@ interface PrincipalDashboardProps {
 }
 
 export async function PrincipalDashboard({ user, dictionary }: PrincipalDashboardProps) {
-  // Fetch real data from database
-  const [students, teachers, announcements] = await Promise.all([
-    db.student.count({ where: { schoolId: user.schoolId } }),
-    db.teacher.count({ where: { schoolId: user.schoolId } }),
-    db.announcement.count({ where: { schoolId: user.schoolId, published: true } })
-  ]);
+  // Fetch all real data from server actions
+  let dashboardData;
 
-  // Mock data for unimplemented features
-  const mockSchoolPerformanceScorecard = {
-    academic: 85.2,
-    attendance: 94.1,
-    discipline: 78.5,
-    parentSatisfaction: 91.3,
-    overall: 87.3
-  };
+  try {
+    dashboardData = await getPrincipalDashboardData();
+  } catch (error) {
+    console.error("Error fetching principal dashboard data:", error);
+    return (
+      <DashboardSectionError
+        title="Dashboard Unavailable"
+        message="Unable to load dashboard data. Please try again later."
+      />
+    );
+  }
 
-  const mockCriticalAlerts = [
-    { type: "Low Attendance", message: "Grade 10 attendance below 85%", severity: "high", action: "Review with teachers" },
-    { type: "Budget Alert", message: "Q4 budget utilization at 92%", severity: "medium", action: "Monitor spending" },
-    { type: "Staff Shortage", message: "Math department needs 2 teachers", severity: "high", action: "Accelerate hiring" }
-  ];
-
-  const mockTodaysPriorities = [
-    { priority: "Staff Meeting", time: "9:00 AM", status: "scheduled" },
-    { priority: "Board Report Review", time: "2:00 PM", status: "pending" },
-    { priority: "Parent Conference", time: "4:00 PM", status: "confirmed" }
-  ];
-
-  const mockAcademicPerformanceTrends = [
-    { subject: "Mathematics", trend: "up", improvement: "+5.2%", currentAvg: 78.5 },
-    { subject: "Science", trend: "stable", improvement: "+0.8%", currentAvg: 82.1 },
-    { subject: "English", trend: "up", improvement: "+3.1%", currentAvg: 79.8 },
-    { subject: "History", trend: "down", improvement: "-1.2%", currentAvg: 75.3 }
-  ];
-
-  const mockDisciplinarySummary = {
-    totalIncidents: 23,
-    resolved: 18,
-    pending: 5,
-    trend: "decreasing",
-    topIssues: ["Late to class", "Missing homework", "Classroom disruption"]
-  };
-
-  const mockStaffEvaluationsDue = [
-    { teacher: "Sarah Johnson", department: "Mathematics", dueDate: "2024-01-15", status: "pending" },
-    { teacher: "Mike Brown", department: "Science", dueDate: "2024-01-20", status: "in-progress" },
-    { teacher: "Lisa Davis", department: "English", dueDate: "2024-01-25", status: "pending" }
-  ];
-
-  const mockBudgetStatus = {
-    allocated: 2500000,
-    spent: 1875000,
-    remaining: 625000,
-    utilization: 75.0,
-    projections: "On track"
-  };
-
-  const mockParentFeedback = {
-    satisfaction: 91.3,
-    communication: 88.7,
-    academicQuality: 89.2,
-    facilities: 85.8,
-    overall: 88.8
-  };
-
-  const mockMonthlyHighlights = [
-    { highlight: "Academic Excellence Award", description: "School ranked #1 in district", impact: "high" },
-    { highlight: "New STEM Lab", description: "State-of-the-art facilities opened", impact: "high" },
-    { highlight: "Community Outreach", description: "500+ hours of community service", impact: "medium" }
-  ];
-
-  const mockGoalProgress = [
-    { goal: "Improve Math Scores", target: "85%", current: "78.5%", progress: 78.5 },
-    { goal: "Reduce Absenteeism", target: "5%", current: "8.2%", progress: 61.0 },
-    { goal: "Parent Engagement", target: "90%", current: "88.8%", progress: 98.7 }
-  ];
-
-  const mockUpcomingBoardMeetings = [
-    { date: "2024-01-20", topic: "Q4 Financial Review", attendees: 8, status: "confirmed" },
-    { date: "2024-02-15", topic: "Strategic Planning", attendees: 10, status: "tentative" },
-    { date: "2024-03-10", topic: "Annual Budget Approval", attendees: 12, status: "confirmed" }
-  ];
+  const {
+    performanceScorecard,
+    criticalAlerts,
+    todaysPriorities,
+    academicTrends,
+    disciplinarySummary,
+    staffEvaluations,
+    budgetStatus,
+    parentFeedback,
+    goalProgress,
+    boardMeetings,
+    monthlyHighlights,
+  } = dashboardData;
 
   return (
     <div className="space-y-6">
@@ -105,7 +63,7 @@ export async function PrincipalDashboard({ user, dictionary }: PrincipalDashboar
             <Award className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{mockSchoolPerformanceScorecard.overall}</div>
+            <div className="text-2xl font-bold">{performanceScorecard.overall}</div>
             <p className="text-xs text-muted-foreground">Performance score</p>
           </CardContent>
         </Card>
@@ -116,7 +74,7 @@ export async function PrincipalDashboard({ user, dictionary }: PrincipalDashboar
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{mockSchoolPerformanceScorecard.academic}</div>
+            <div className="text-2xl font-bold">{performanceScorecard.academic}</div>
             <p className="text-xs text-muted-foreground">Academic performance</p>
           </CardContent>
         </Card>
@@ -127,7 +85,7 @@ export async function PrincipalDashboard({ user, dictionary }: PrincipalDashboar
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{mockSchoolPerformanceScorecard.attendance}%</div>
+            <div className="text-2xl font-bold">{performanceScorecard.attendance}%</div>
             <p className="text-xs text-muted-foreground">Student attendance</p>
           </CardContent>
         </Card>
@@ -138,7 +96,7 @@ export async function PrincipalDashboard({ user, dictionary }: PrincipalDashboar
             <CheckCircle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{mockSchoolPerformanceScorecard.discipline}</div>
+            <div className="text-2xl font-bold">{performanceScorecard.discipline}</div>
             <p className="text-xs text-muted-foreground">Discipline score</p>
           </CardContent>
         </Card>
@@ -149,44 +107,52 @@ export async function PrincipalDashboard({ user, dictionary }: PrincipalDashboar
             <Award className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{mockSchoolPerformanceScorecard.parentSatisfaction}%</div>
+            <div className="text-2xl font-bold">{performanceScorecard.parentSatisfaction}%</div>
             <p className="text-xs text-muted-foreground">Parent satisfaction</p>
           </CardContent>
         </Card>
       </div>
 
       {/* Critical Alerts */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <AlertTriangle className="h-5 w-5 text-red-500" />
-            <span>Critical Alerts</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {mockCriticalAlerts.map((alert, index) => (
-              <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
-                <div className="flex items-center space-x-3">
-                  <AlertTriangle className={`h-5 w-5 ${
-                    alert.severity === "high" ? "text-red-500" : "text-yellow-500"
-                  }`} />
-                  <div>
-                    <p className="font-medium">{alert.type}</p>
-                    <p className="text-sm text-muted-foreground">{alert.message}</p>
+      {criticalAlerts.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <AlertTriangle className="h-5 w-5 text-red-500" />
+              <span>Critical Alerts</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {criticalAlerts.map((alert, index) => (
+                <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div className="flex items-center space-x-3">
+                    <AlertTriangle className={`h-5 w-5 ${
+                      alert.severity === "critical" || alert.severity === "high"
+                        ? "text-red-500"
+                        : "text-yellow-500"
+                    }`} />
+                    <div>
+                      <p className="font-medium">{alert.type}</p>
+                      <p className="text-sm text-muted-foreground">{alert.message}</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <Badge variant={
+                      alert.severity === "critical" || alert.severity === "high"
+                        ? "destructive"
+                        : "secondary"
+                    }>
+                      {alert.severity}
+                    </Badge>
+                    <p className="text-xs text-muted-foreground mt-1">{alert.action}</p>
                   </div>
                 </div>
-                <div className="text-right">
-                  <Badge variant={alert.severity === "high" ? "destructive" : "secondary"}>
-                    {alert.severity}
-                  </Badge>
-                  <p className="text-xs text-muted-foreground mt-1">{alert.action}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Quick Actions */}
       <Card>
@@ -223,17 +189,23 @@ export async function PrincipalDashboard({ user, dictionary }: PrincipalDashboar
             <CardTitle>Today's Priorities</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {mockTodaysPriorities.map((priority, index) => (
-              <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
-                <div>
-                  <p className="font-medium">{priority.priority}</p>
-                  <p className="text-sm text-muted-foreground">{priority.time}</p>
+            {todaysPriorities.length > 0 ? (
+              todaysPriorities.map((priority, index) => (
+                <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div>
+                    <p className="font-medium">{priority.priority}</p>
+                    <p className="text-sm text-muted-foreground">{priority.time}</p>
+                  </div>
+                  <Badge variant={priority.status === "confirmed" ? "default" : "secondary"}>
+                    {priority.status}
+                  </Badge>
                 </div>
-                <Badge variant={priority.status === "confirmed" ? "default" : "secondary"}>
-                  {priority.status}
-                </Badge>
-              </div>
-            ))}
+              ))
+            ) : (
+              <p className="text-sm text-muted-foreground text-center py-4">
+                No priorities scheduled for today
+              </p>
+            )}
           </CardContent>
         </Card>
 
@@ -243,19 +215,29 @@ export async function PrincipalDashboard({ user, dictionary }: PrincipalDashboar
             <CardTitle>Academic Performance Trends</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {mockAcademicPerformanceTrends.map((subject, index) => (
-              <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
-                <div>
-                  <p className="font-medium">{subject.subject}</p>
-                  <p className="text-sm text-muted-foreground">Current: {subject.currentAvg}%</p>
+            {academicTrends.length > 0 ? (
+              academicTrends.map((subject, index) => (
+                <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div>
+                    <p className="font-medium">{subject.subject}</p>
+                    <p className="text-sm text-muted-foreground">Current: {subject.currentAvg}%</p>
+                  </div>
+                  <div className="text-right">
+                    <Badge variant={
+                      subject.trend === "up" ? "default" :
+                      subject.trend === "down" ? "destructive" : "secondary"
+                    }>
+                      {subject.trend === "up" ? "↗" :
+                       subject.trend === "down" ? "↘" : "→"} {subject.improvement}
+                    </Badge>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <Badge variant={subject.trend === "up" ? "default" : subject.trend === "down" ? "destructive" : "secondary"}>
-                    {subject.trend === "up" ? "↗" : subject.trend === "down" ? "↘" : "→"} {subject.improvement}
-                  </Badge>
-                </div>
-              </div>
-            ))}
+              ))
+            ) : (
+              <p className="text-sm text-muted-foreground text-center py-4">
+                No academic data available
+              </p>
+            )}
           </CardContent>
         </Card>
 
@@ -267,28 +249,30 @@ export async function PrincipalDashboard({ user, dictionary }: PrincipalDashboar
           <CardContent className="space-y-4">
             <div className="grid grid-cols-3 gap-4 text-center">
               <div>
-                <div className="text-2xl font-bold">{mockDisciplinarySummary.totalIncidents}</div>
+                <div className="text-2xl font-bold">{disciplinarySummary.totalIncidents}</div>
                 <p className="text-xs text-muted-foreground">Total Incidents</p>
               </div>
               <div>
-                <div className="text-2xl font-bold text-green-600">{mockDisciplinarySummary.resolved}</div>
+                <div className="text-2xl font-bold text-green-600">{disciplinarySummary.resolved}</div>
                 <p className="text-xs text-muted-foreground">Resolved</p>
               </div>
               <div>
-                <div className="text-2xl font-bold text-yellow-600">{mockDisciplinarySummary.pending}</div>
+                <div className="text-2xl font-bold text-yellow-600">{disciplinarySummary.pending}</div>
                 <p className="text-xs text-muted-foreground">Pending</p>
               </div>
             </div>
-            <div className="pt-2 border-t">
-              <p className="text-sm text-muted-foreground mb-2">Top Issues:</p>
-              <div className="space-y-1">
-                {mockDisciplinarySummary.topIssues.map((issue, index) => (
-                  <Badge key={index} variant="outline" className="mr-1">
-                    {issue}
-                  </Badge>
-                ))}
+            {disciplinarySummary.topIssues.length > 0 && (
+              <div className="pt-2 border-t">
+                <p className="text-sm text-muted-foreground mb-2">Top Issues:</p>
+                <div className="space-y-1">
+                  {disciplinarySummary.topIssues.map((issue, index) => (
+                    <Badge key={index} variant="outline" className="mr-1">
+                      {issue}
+                    </Badge>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
           </CardContent>
         </Card>
 
@@ -298,22 +282,28 @@ export async function PrincipalDashboard({ user, dictionary }: PrincipalDashboar
             <CardTitle>Staff Evaluations Due</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {mockStaffEvaluationsDue.map((evaluation, index) => (
-              <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
-                <div>
-                  <p className="font-medium">{evaluation.teacher}</p>
-                  <p className="text-sm text-muted-foreground">{evaluation.department}</p>
+            {staffEvaluations.length > 0 ? (
+              staffEvaluations.map((evaluation, index) => (
+                <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div>
+                    <p className="font-medium">{evaluation.teacher}</p>
+                    <p className="text-sm text-muted-foreground">{evaluation.department}</p>
+                  </div>
+                  <div className="text-right">
+                    <Badge variant={evaluation.status === "in-progress" ? "default" : "secondary"}>
+                      {evaluation.status}
+                    </Badge>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Due: {new Date(evaluation.dueDate).toLocaleDateString()}
+                    </p>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <Badge variant={evaluation.status === "in-progress" ? "default" : "secondary"}>
-                    {evaluation.status}
-                  </Badge>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Due: {new Date(evaluation.dueDate).toLocaleDateString()}
-                  </p>
-                </div>
-              </div>
-            ))}
+              ))
+            ) : (
+              <p className="text-sm text-muted-foreground text-center py-4">
+                No evaluations due
+              </p>
+            )}
           </CardContent>
         </Card>
 
@@ -325,24 +315,24 @@ export async function PrincipalDashboard({ user, dictionary }: PrincipalDashboar
           <CardContent className="space-y-4">
             <div className="flex justify-between items-center">
               <span className="text-sm text-muted-foreground">Allocated</span>
-              <span className="font-medium">${(mockBudgetStatus.allocated / 1000000).toFixed(1)}M</span>
+              <span className="font-medium">${(budgetStatus.allocated / 1000000).toFixed(1)}M</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-muted-foreground">Spent</span>
-              <span className="font-medium text-red-600">${(mockBudgetStatus.spent / 1000000).toFixed(1)}M</span>
+              <span className="font-medium text-red-600">${(budgetStatus.spent / 1000000).toFixed(1)}M</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-muted-foreground">Remaining</span>
-              <span className="font-medium text-green-600">${(mockBudgetStatus.remaining / 1000).toFixed(0)}K</span>
+              <span className="font-medium text-green-600">${(budgetStatus.remaining / 1000).toFixed(0)}K</span>
             </div>
             <div className="pt-2 border-t">
               <div className="flex justify-between items-center mb-2">
                 <span className="text-sm text-muted-foreground">Utilization</span>
-                <span className="font-medium">{mockBudgetStatus.utilization}%</span>
+                <span className="font-medium">{budgetStatus.utilization.toFixed(1)}%</span>
               </div>
-              <Progress value={mockBudgetStatus.utilization} className="mt-2" />
+              <Progress value={budgetStatus.utilization} className="mt-2" />
               <p className="text-xs text-muted-foreground mt-2 text-center">
-                Status: {mockBudgetStatus.projections}
+                Status: {budgetStatus.projections}
               </p>
             </div>
           </CardContent>
@@ -354,17 +344,36 @@ export async function PrincipalDashboard({ user, dictionary }: PrincipalDashboar
             <CardTitle>Parent Feedback</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {Object.entries(mockParentFeedback).filter(([key]) => key !== 'overall').map(([category, score]) => (
-              <div key={category} className="flex items-center justify-between p-2 border rounded">
-                <span className="text-sm capitalize">{category.replace(/([A-Z])/g, ' $1').trim()}</span>
-                <div className="flex items-center space-x-2">
-                  <Progress value={score} className="w-20" />
-                  <span className="text-sm font-medium">{score}%</span>
-                </div>
+            <div className="flex items-center justify-between p-2 border rounded">
+              <span className="text-sm">Satisfaction</span>
+              <div className="flex items-center space-x-2">
+                <Progress value={parentFeedback.satisfaction} className="w-20" />
+                <span className="text-sm font-medium">{parentFeedback.satisfaction.toFixed(1)}%</span>
               </div>
-            ))}
+            </div>
+            <div className="flex items-center justify-between p-2 border rounded">
+              <span className="text-sm">Communication</span>
+              <div className="flex items-center space-x-2">
+                <Progress value={parentFeedback.communication} className="w-20" />
+                <span className="text-sm font-medium">{parentFeedback.communication.toFixed(1)}%</span>
+              </div>
+            </div>
+            <div className="flex items-center justify-between p-2 border rounded">
+              <span className="text-sm">Academic Quality</span>
+              <div className="flex items-center space-x-2">
+                <Progress value={parentFeedback.academicQuality} className="w-20" />
+                <span className="text-sm font-medium">{parentFeedback.academicQuality.toFixed(1)}%</span>
+              </div>
+            </div>
+            <div className="flex items-center justify-between p-2 border rounded">
+              <span className="text-sm">Facilities</span>
+              <div className="flex items-center space-x-2">
+                <Progress value={parentFeedback.facilities} className="w-20" />
+                <span className="text-sm font-medium">{parentFeedback.facilities.toFixed(1)}%</span>
+              </div>
+            </div>
             <div className="pt-2 border-t text-center">
-              <div className="text-lg font-bold text-blue-600">{mockParentFeedback.overall}%</div>
+              <div className="text-lg font-bold text-blue-600">{parentFeedback.overall.toFixed(1)}%</div>
               <p className="text-xs text-muted-foreground">Overall Satisfaction</p>
             </div>
           </CardContent>
@@ -382,17 +391,21 @@ export async function PrincipalDashboard({ user, dictionary }: PrincipalDashboar
             <div>
               <h4 className="mb-3">Monthly Highlights</h4>
               <div className="space-y-3">
-                {mockMonthlyHighlights.map((highlight, index) => (
-                  <div key={index} className="p-3 border rounded-lg">
-                    <div className="flex items-center space-x-2 mb-2">
-                      <Badge variant={highlight.impact === "high" ? "default" : "secondary"}>
-                        {highlight.impact}
-                      </Badge>
+                {monthlyHighlights.length > 0 ? (
+                  monthlyHighlights.map((highlight, index) => (
+                    <div key={index} className="p-3 border rounded-lg">
+                      <div className="flex items-center space-x-2 mb-2">
+                        <Badge variant={highlight.impact === "high" ? "default" : "secondary"}>
+                          {highlight.impact}
+                        </Badge>
+                      </div>
+                      <p className="font-medium">{highlight.highlight}</p>
+                      <p className="text-sm text-muted-foreground">{highlight.description}</p>
                     </div>
-                    <p className="font-medium">{highlight.highlight}</p>
-                    <p className="text-sm text-muted-foreground">{highlight.description}</p>
-                  </div>
-                ))}
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground">No highlights this month</p>
+                )}
               </div>
             </div>
 
@@ -400,14 +413,14 @@ export async function PrincipalDashboard({ user, dictionary }: PrincipalDashboar
             <div>
               <h4 className="mb-3">Goal Progress</h4>
               <div className="space-y-3">
-                {mockGoalProgress.map((goal, index) => (
+                {goalProgress.map((goal, index) => (
                   <div key={index} className="p-3 border rounded-lg">
                     <p className="font-medium mb-2">{goal.goal}</p>
                     <div className="flex justify-between items-center mb-2">
                       <span className="text-sm text-muted-foreground">Target: {goal.target}</span>
                       <span className="text-sm font-medium">Current: {goal.current}</span>
                     </div>
-                    <Progress value={goal.progress} className="mt-2" />
+                    <Progress value={Math.min(100, goal.progress)} className="mt-2" />
                   </div>
                 ))}
               </div>
@@ -423,7 +436,7 @@ export async function PrincipalDashboard({ user, dictionary }: PrincipalDashboar
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {mockUpcomingBoardMeetings.map((meeting, index) => (
+            {boardMeetings.map((meeting, index) => (
               <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
                 <div>
                   <p className="font-medium">{meeting.topic}</p>
@@ -441,6 +454,43 @@ export async function PrincipalDashboard({ user, dictionary }: PrincipalDashboar
                 </div>
               </div>
             ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Financial Health Indicator */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <DollarSign className="h-5 w-5" />
+            <span>Financial Health</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 md:grid-cols-3">
+            <div className="text-center">
+              <p className="text-sm text-muted-foreground mb-2">Collection Rate</p>
+              <div className="text-2xl font-bold text-green-600">
+                {performanceScorecard.financialHealth?.toFixed(1) || "85"}%
+              </div>
+            </div>
+            <div className="text-center">
+              <p className="text-sm text-muted-foreground mb-2">Budget Status</p>
+              <Badge variant={
+                budgetStatus.utilization > 90 ? "destructive" :
+                budgetStatus.utilization > 75 ? "secondary" : "default"
+              } className="text-lg px-4 py-1">
+                {budgetStatus.projections}
+              </Badge>
+            </div>
+            <div className="text-center">
+              <p className="text-sm text-muted-foreground mb-2">Year to Date</p>
+              <div className="text-2xl font-bold">
+                ${(budgetStatus.yearToDate?.spent || 0) > 1000000
+                  ? `${(budgetStatus.yearToDate.spent / 1000000).toFixed(1)}M`
+                  : `${(budgetStatus.yearToDate?.spent || 0 / 1000).toFixed(0)}K`}
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>
