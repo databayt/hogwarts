@@ -5,7 +5,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { BookOpen, Users, DollarSign, TrendingUp } from "lucide-react";
 import Link from "next/link";
 
-export default function AdminDashboardContent() {
+export function StreamAdminDashboardContent() {
   return (
     <div className="space-y-6">
       <div>

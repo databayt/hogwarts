@@ -11,7 +11,7 @@ interface Props {
   slug: string;
 }
 
-export default function CourseDetailContent({ slug }: Props) {
+export function StreamCourseDetailContent({ slug }: Props) {
   return (
     <div className="container mx-auto py-6">
       <Card>

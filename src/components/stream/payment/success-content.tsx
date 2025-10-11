@@ -7,8 +7,8 @@ import { ArrowLeft, CheckIcon } from "lucide-react";
 import Link from "next/link";
 import { useEffect } from "react";
 
-export default function PaymentSuccessContent() {
-  const { triggerConfetti } = useConfetti();
+export function StreamPaymentSuccessContent() {
+  const triggerConfetti = useConfetti();
 
   useEffect(() => {
     triggerConfetti();

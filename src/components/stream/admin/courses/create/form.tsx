@@ -30,7 +30,7 @@ import { useConfetti } from "@/hooks/use-confetti";
 import { createCourseSchema, type CreateCourseInput } from "./validation";
 import { createCourseAction } from "./actions";
 
-export default function CourseCreateForm() {
+export function StreamCourseCreateForm() {
   const [pending, startTransition] = useTransition();
   const router = useRouter();
   const { subdomain } = useParams<{ subdomain: string }>();

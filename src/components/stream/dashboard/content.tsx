@@ -5,7 +5,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { BookOpen, GraduationCap } from "lucide-react";
 import Link from "next/link";
 
-export default function DashboardContent() {
+export function StreamDashboardContent() {
   return (
     <div className="space-y-8">
       {/* Enrolled Courses Section */}

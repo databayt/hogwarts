@@ -9,7 +9,7 @@ import {
 import { ArrowLeft, ShieldX } from "lucide-react";
 import Link from "next/link";
 
-export default function NotAdminContent() {
+export function StreamNotAdminContent() {
   return (
     <div className="min-h-screen flex items-center justify-center">
       <Card className="max-w-md w-full">
