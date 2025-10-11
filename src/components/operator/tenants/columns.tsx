@@ -17,9 +17,11 @@ import { SuccessToast, ErrorToast } from "@/components/atom/toast";
 export type TenantRow = {
   id: string;
   name: string;
-  domain: string;
+  subdomain: string;
   isActive: boolean;
-  planType: string;
+  planType: "TRIAL" | "BASIC" | "PREMIUM" | "ENTERPRISE";
+  studentCount: number;
+  teacherCount: number;
   createdAt: string;
   trialEndsAt?: string | null;
 };
@@ -33,26 +35,56 @@ export const tenantColumns: ColumnDef<TenantRow>[] = [
     meta: { label: "Name", variant: "text", placeholder: "Search name" },
   },
   {
-    accessorKey: "domain",
+    accessorKey: "subdomain",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Domain" />
+      <DataTableColumnHeader column={column} title="Subdomain" />
     ),
-    meta: { label: "Domain", variant: "text", placeholder: "Search domain" },
+    cell: ({ getValue }) => (
+      <span className="text-sm font-mono">{getValue<string>()}.databayt.org</span>
+    ),
+    meta: { label: "Subdomain", variant: "text", placeholder: "Search subdomain" },
   },
   {
     accessorKey: "planType",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Plan" />
     ),
+    cell: ({ getValue }) => {
+      const plan = getValue<string>();
+      return (
+        <span className={`text-xs font-medium px-2 py-1 rounded ${
+          plan === "ENTERPRISE" ? "bg-purple-100 text-purple-800" :
+          plan === "PREMIUM" ? "bg-blue-100 text-blue-800" :
+          plan === "BASIC" ? "bg-gray-100 text-gray-800" :
+          "bg-yellow-100 text-yellow-800"
+        }`}>
+          {plan}
+        </span>
+      );
+    },
     meta: {
       label: "Plan",
       variant: "select",
       placeholder: "Plan type",
       options: [
-        { label: "Basic", value: "basic" },
-        { label: "Pro", value: "pro" },
-        { label: "Enterprise", value: "enterprise" },
+        { label: "Trial", value: "TRIAL" },
+        { label: "Basic", value: "BASIC" },
+        { label: "Premium", value: "PREMIUM" },
+        { label: "Enterprise", value: "ENTERPRISE" },
       ],
+    },
+  },
+  {
+    id: "users",
+    header: "Users",
+    cell: ({ row }) => {
+      const tenant = row.original;
+      return (
+        <div className="text-sm">
+          <div>{tenant.studentCount.toLocaleString()} students</div>
+          <div className="text-muted-foreground">{tenant.teacherCount.toLocaleString()} teachers</div>
+        </div>
+      );
     },
   },
   {
@@ -159,7 +191,7 @@ export const tenantColumns: ColumnDef<TenantRow>[] = [
                 <TenantDetail
                   tenantId={tenant.id}
                   name={tenant.name}
-                  domain={tenant.domain}
+                  domain={tenant.subdomain}
                   planType={tenant.planType}
                   isActive={tenant.isActive}
                 />

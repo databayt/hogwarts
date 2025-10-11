@@ -1,59 +1,119 @@
 import { describe, it, expect, vi } from 'vitest'
-import * as toggle from '@/app/(platform)/operator/actions/tenants/toggle-active'
-import * as changePlan from '@/app/(platform)/operator/actions/tenants/change-plan'
-import * as endTrial from '@/app/(platform)/operator/actions/tenants/end-trial'
-import * as startImp from '@/app/(platform)/operator/actions/impersonation/start'
-import * as stopImp from '@/app/(platform)/operator/actions/impersonation/stop'
 import * as tenants from '../actions'
 
-describe('tenants/actions.ts', () => {
-  it('tenantToggleActive validates and delegates', async () => {
-    const spy = vi.spyOn(toggle, 'toggleTenantActive').mockResolvedValue(undefined as any)
-    await expect(tenants.tenantToggleActive({ tenantId: 't1', reason: 'r' })).resolves.toEqual({ success: true })
-    expect(spy).toHaveBeenCalledWith('t1', 'r')
-  })
-
-  it('tenantChangePlan validates and delegates', async () => {
-    const spy = vi.spyOn(changePlan, 'changeTenantPlan').mockResolvedValue(undefined as any)
-    await expect(tenants.tenantChangePlan({ tenantId: 't1', planType: 'basic' })).resolves.toEqual({ success: true })
-    expect(spy).toHaveBeenCalled()
-  })
-
-  it('tenantEndTrial validates and delegates', async () => {
-    const spy = vi.spyOn(endTrial, 'endTenantTrial').mockResolvedValue(undefined as any)
-    await expect(tenants.tenantEndTrial({ tenantId: 't1' })).resolves.toEqual({ success: true })
-    expect(spy).toHaveBeenCalled()
-  })
-
-  it('tenantStartImpersonation validates and delegates', async () => {
-    const spy = vi.spyOn(startImp, 'startImpersonation').mockResolvedValue(undefined as any)
-    await expect(tenants.tenantStartImpersonation({ tenantId: 't1', reason: 'r' })).resolves.toEqual({ success: true })
-    expect(spy).toHaveBeenCalledWith('t1', 'r')
-  })
-
-  it('tenantStopImpersonation validates and delegates', async () => {
-    const spy = vi.spyOn(stopImp, 'stopImpersonation').mockResolvedValue(undefined as any)
-    await expect(tenants.tenantStopImpersonation({ reason: 'r' })).resolves.toEqual({ success: true })
-    expect(spy).toHaveBeenCalledWith('r')
-  })
+vi.mock('@/lib/db', () => {
+  return {
+    db: {
+      school: {
+        findUnique: vi.fn().mockResolvedValue({
+          id: 's1',
+          name: 'Test School',
+          subdomain: 'test',
+          isActive: true,
+          planType: 'TRIAL'
+        }),
+        update: vi.fn().mockResolvedValue({
+          id: 's1',
+          name: 'Test School',
+          subdomain: 'test',
+          isActive: false,
+          planType: 'BASIC'
+        })
+      },
+      subscriptionHistory: {
+        create: vi.fn().mockResolvedValue({ id: 'sh1' })
+      },
+      $transaction: vi.fn().mockImplementation((fn) => fn({
+        school: {
+          update: vi.fn().mockResolvedValue({
+            id: 's1',
+            planType: 'PREMIUM'
+          })
+        },
+        subscriptionHistory: {
+          create: vi.fn().mockResolvedValue({ id: 'sh1' })
+        }
+      }))
+    }
+  }
 })
 
+vi.mock('@/components/operator/lib/operator-auth', () => ({
+  requireOperator: vi.fn().mockResolvedValue({ userId: 'u1' }),
+  requireNotImpersonating: vi.fn().mockResolvedValue(undefined),
+  logOperatorAudit: vi.fn().mockResolvedValue(undefined),
+}))
 
+vi.mock('next/headers', () => ({
+  cookies: vi.fn().mockResolvedValue({
+    set: vi.fn(),
+    get: vi.fn(),
+    delete: vi.fn()
+  })
+}))
 
+describe('tenants/actions.ts', () => {
+  it('tenantToggleActive toggles tenant active status', async () => {
+    const result = await tenants.tenantToggleActive({
+      tenantId: 's1',
+      reason: 'Test toggle'
+    })
+    expect(result).toEqual({
+      success: true,
+      data: expect.objectContaining({
+        id: 's1',
+        isActive: false
+      })
+    })
+  })
 
+  it('tenantChangePlan changes tenant plan', async () => {
+    const result = await tenants.tenantChangePlan({
+      tenantId: 's1',
+      planType: 'PREMIUM',
+      reason: 'Upgrade'
+    })
+    expect(result).toEqual({
+      success: true,
+      data: expect.objectContaining({
+        id: 's1',
+        planType: 'PREMIUM'
+      })
+    })
+  })
 
+  it('tenantEndTrial ends tenant trial', async () => {
+    const result = await tenants.tenantEndTrial({
+      tenantId: 's1',
+      reason: 'Trial expired'
+    })
+    expect(result).toEqual({
+      success: true,
+      data: expect.objectContaining({
+        id: 's1',
+        planType: 'BASIC'
+      })
+    })
+  })
 
+  it('tenantStartImpersonation starts impersonation', async () => {
+    const result = await tenants.tenantStartImpersonation({
+      tenantId: 's1',
+      reason: 'Support request'
+    })
+    expect(result).toEqual({
+      success: true,
+      data: { success: true }
+    })
+  })
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+  it('tenantStopImpersonation stops impersonation', async () => {
+    const result = await tenants.tenantStopImpersonation({
+      reason: 'Support complete'
+    })
+    expect(result).toEqual({
+      success: true,
+      data: { success: true }
+    })
+  })
+})

@@ -75,6 +75,12 @@ model School {
   examResults           ExamResult[]
   gradeBoundaries       GradeBoundary[]
 
+  // Stream (LMS) relations
+  streamCourses         StreamCourse[]
+  streamCategories      StreamCategory[]
+  streamEnrollments     StreamEnrollment[]
+  streamCertificates    StreamCertificate[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

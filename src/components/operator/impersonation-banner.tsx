@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { stopImpersonation } from "@/components/operator/actions/impersonation/stop";
+import { tenantStopImpersonation } from "@/components/operator/tenants/actions";
 import { SuccessToast, ErrorToast } from "@/components/atom/toast";
 
 export default function ImpersonationBanner() {
@@ -43,9 +43,14 @@ export default function ImpersonationBanner() {
         className="text-xs underline"
         onClick={async () => {
           try {
-            await stopImpersonation("manual stop via banner");
-            SuccessToast();
-            setSchoolId(null);
+            const result = await tenantStopImpersonation({ reason: "manual stop via banner" });
+            if (result.success) {
+              SuccessToast();
+              setSchoolId(null);
+              window.location.reload(); // Reload to clear impersonation state
+            } else {
+              ErrorToast(result.error.message);
+            }
           } catch (e) {
             ErrorToast(e instanceof Error ? e.message : "Failed to stop impersonation");
           }

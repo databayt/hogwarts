@@ -4,11 +4,13 @@ import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Card } from "@/components/ui/card";
-import { startImpersonation } from "@/components/operator/actions/impersonation/start";
-import { stopImpersonation } from "@/components/operator/actions/impersonation/stop";
-import { toggleTenantActive } from "@/components/operator/actions/tenants/toggle-active";
-// change plan action not present; remove import and button for now or implement
-import { endTenantTrial } from "@/components/operator/actions/tenants/end-trial";
+import {
+  tenantStartImpersonation,
+  tenantStopImpersonation,
+  tenantToggleActive,
+  tenantEndTrial,
+  tenantChangePlan
+} from "@/components/operator/tenants/actions";
 import { SuccessToast, ErrorToast } from "@/components/atom/toast";
 
 type TenantDetailProps = {
@@ -49,8 +51,12 @@ export function TenantDetail({ tenantId, name, domain, planType, isActive }: Ten
   const onImpersonate = async () => {
     const reason = prompt(`Reason to impersonate ${name}?`) || "";
     try {
-      await startImpersonation(tenantId, reason);
-      SuccessToast();
+      const result = await tenantStartImpersonation({ tenantId, reason });
+      if (result.success) {
+        SuccessToast();
+      } else {
+        ErrorToast(result.error.message);
+      }
     } catch (e) {
       ErrorToast(e instanceof Error ? e.message : "Failed to impersonate");
     }
@@ -58,8 +64,12 @@ export function TenantDetail({ tenantId, name, domain, planType, isActive }: Ten
   const onStopImpersonate = async () => {
     const reason = prompt("Reason to stop impersonation?") || "";
     try {
-      await stopImpersonation(reason);
-      SuccessToast();
+      const result = await tenantStopImpersonation({ reason });
+      if (result.success) {
+        SuccessToast();
+      } else {
+        ErrorToast(result.error.message);
+      }
     } catch (e) {
       ErrorToast(e instanceof Error ? e.message : "Failed to stop impersonation");
     }
@@ -67,27 +77,39 @@ export function TenantDetail({ tenantId, name, domain, planType, isActive }: Ten
   const onToggleActive = async () => {
     const reason = prompt(`Reason to ${isActive ? "suspend" : "activate"} ${name}?`) || "";
     try {
-      await toggleTenantActive(tenantId, reason);
-      SuccessToast();
+      const result = await tenantToggleActive({ tenantId, reason });
+      if (result.success) {
+        SuccessToast();
+      } else {
+        ErrorToast(result.error.message);
+      }
     } catch (e) {
       ErrorToast(e instanceof Error ? e.message : "Failed to toggle status");
     }
   };
-  // const onChangePlan = async () => {
-  //   const next = prompt("New plan (basic/pro/enterprise)?", planType) || planType;
-  //   const reason = prompt("Reason to change plan?") || "";
-  //   try {
-  //     await changeTenantPlan({ tenantId, planType: next, reason });
-  //     SuccessToast();
-  //   } catch (e) {
-  //     ErrorToast(e instanceof Error ? e.message : "Failed to change plan");
-  //   }
-  // };
+  const onChangePlan = async () => {
+    const next = prompt("New plan (TRIAL/BASIC/PREMIUM/ENTERPRISE)?", planType) || planType;
+    const reason = prompt("Reason to change plan?") || "";
+    try {
+      const result = await tenantChangePlan({ tenantId, planType: next as any, reason });
+      if (result.success) {
+        SuccessToast();
+      } else {
+        ErrorToast(result.error.message);
+      }
+    } catch (e) {
+      ErrorToast(e instanceof Error ? e.message : "Failed to change plan");
+    }
+  };
   const onEndTrial = async () => {
     const reason = prompt("Reason to end trial?") || "";
     try {
-      await endTenantTrial({ tenantId, reason });
-      SuccessToast();
+      const result = await tenantEndTrial({ tenantId, reason });
+      if (result.success) {
+        SuccessToast();
+      } else {
+        ErrorToast(result.error.message);
+      }
     } catch (e) {
       ErrorToast(e instanceof Error ? e.message : "Failed to end trial");
     }
@@ -189,7 +211,7 @@ export function TenantDetail({ tenantId, name, domain, planType, isActive }: Ten
             <Button size="sm" onClick={onImpersonate}>Start impersonation</Button>
             <Button size="sm" variant="outline" onClick={onStopImpersonate}>Stop impersonation</Button>
             <Button size="sm" variant="secondary" onClick={onToggleActive}>{isActive ? "Suspend" : "Activate"}</Button>
-            {/* <Button size="sm" variant="outline" onClick={onChangePlan}>Change plan</Button> */}
+            <Button size="sm" variant="outline" onClick={onChangePlan}>Change plan</Button>
             <Button size="sm" variant="outline" onClick={onEndTrial}>End trial</Button>
           </div>
         </div>

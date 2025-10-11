@@ -4,7 +4,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { DataTableColumnHeader } from "@/components/table/data-table/data-table-column-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { reviewReceipt } from "@/components/operator/actions/billing/receipts/review";
+import { receiptReview } from "@/components/operator/billing/actions";
 import { SuccessToast, ErrorToast } from "@/components/atom/toast";
 
 export type ReceiptRow = {
@@ -79,8 +79,12 @@ export const receiptColumns: ColumnDef<ReceiptRow>[] = [
             onClick={async () => {
               try {
                 const reason = prompt("Approval notes (optional)") || undefined;
-                await reviewReceipt({ id: r.id, decision: "approved", reason });
-                SuccessToast();
+                const result = await receiptReview({ id: r.id, decision: "approved", reason });
+                if (result.success) {
+                  SuccessToast();
+                } else {
+                  ErrorToast(result.error.message);
+                }
               } catch (e) {
                 ErrorToast(e instanceof Error ? e.message : "Approve failed");
               }
@@ -94,8 +98,12 @@ export const receiptColumns: ColumnDef<ReceiptRow>[] = [
             onClick={async () => {
               try {
                 const reason = prompt("Rejection notes (optional)") || undefined;
-                await reviewReceipt({ id: r.id, decision: "rejected", reason });
-                SuccessToast();
+                const result = await receiptReview({ id: r.id, decision: "rejected", reason });
+                if (result.success) {
+                  SuccessToast();
+                } else {
+                  ErrorToast(result.error.message);
+                }
               } catch (e) {
                 ErrorToast(e instanceof Error ? e.message : "Reject failed");
               }

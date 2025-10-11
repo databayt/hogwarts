@@ -1,0 +1,153 @@
+{
+  "stream": {
+    "title": "Stream LMS",
+    "description": "Learning Management System",
+    "home": {
+      "badge": "The Future of Online Education",
+      "title": "Elevate your Learning Experience",
+      "description": "Discover a new way to learn with our modern, interactive learning management system. Access high-quality courses anytime, anywhere.",
+      "exploreCourses": "Explore Courses",
+      "signIn": "Sign in",
+      "features": [
+        {
+          "title": "Comprehensive Courses",
+          "description": "Access a wide range of carefully curated courses designed by industry experts.",
+          "icon": "📚"
+        },
+        {
+          "title": "Interactive Learning",
+          "description": "Engage with interactive content, quizzes, and assignments to enhance your learning experience.",
+          "icon": "🎮"
+        },
+        {
+          "title": "Progress Tracking",
+          "description": "Monitor your progress and achievements with detailed analytics and personalized dashboards.",
+          "icon": "📊"
+        },
+        {
+          "title": "Community Support",
+          "description": "Join a vibrant community of learners and instructors to collaborate and share knowledge.",
+          "icon": "👥"
+        }
+      ]
+    },
+    "courses": {
+      "title": "All Courses",
+      "description": "Browse our comprehensive course catalog",
+      "searchPlaceholder": "Search courses...",
+      "filterByCategory": "Filter by category",
+      "allCategories": "All Categories",
+      "noCourses": "No courses found",
+      "noCoursesDescription": "Try adjusting your search or check back later for new courses.",
+      "price": "Price",
+      "free": "Free",
+      "enrolled": "Enrolled",
+      "enroll": "Enroll Now",
+      "viewDetails": "View Details"
+    },
+    "course": {
+      "title": "Course Details",
+      "description": "Course information and enrollment",
+      "aboutCourse": "About this course",
+      "whatYouWillLearn": "What you'll learn",
+      "courseContent": "Course content",
+      "instructor": "Instructor",
+      "enrollNow": "Enroll Now",
+      "startLearning": "Start Learning",
+      "continueWatching": "Continue Watching",
+      "chapters": "chapters",
+      "lessons": "lessons",
+      "duration": "duration",
+      "students": "students enrolled"
+    },
+    "dashboard": {
+      "title": "My Learning Dashboard",
+      "description": "Track your learning progress",
+      "welcome": "Welcome back",
+      "enrolledCourses": "Enrolled Courses",
+      "inProgress": "In Progress",
+      "completed": "Completed",
+      "continueLesson": "Continue Lesson",
+      "viewCertificate": "View Certificate",
+      "noCourses": "You haven't enrolled in any courses yet",
+      "exploreNow": "Explore Courses",
+      "progress": "Progress",
+      "completionRate": "completion"
+    },
+    "admin": {
+      "title": "Stream Admin Dashboard",
+      "description": "Manage courses and track enrollments",
+      "overview": "Overview",
+      "totalCourses": "Total Courses",
+      "totalEnrollments": "Total Enrollments",
+      "totalRevenue": "Total Revenue",
+      "recentEnrollments": "Recent Enrollments",
+      "manageCourses": "Manage Courses",
+      "createCourse": {
+        "title": "Create New Course",
+        "description": "Create a new course for your students",
+        "courseTitleLabel": "Course Title",
+        "courseTitlePlaceholder": "e.g., Introduction to Web Development",
+        "descriptionLabel": "Description",
+        "descriptionPlaceholder": "Provide a brief description of your course",
+        "categoryLabel": "Category",
+        "selectCategory": "Select a category",
+        "priceLabel": "Price (USD)",
+        "pricePlaceholder": "0.00",
+        "freeOption": "Make this course free",
+        "submit": "Create Course",
+        "creating": "Creating...",
+        "success": "Course created successfully!",
+        "error": "Failed to create course"
+      },
+      "editCourse": {
+        "title": "Edit Course",
+        "description": "Update course information",
+        "save": "Save Changes",
+        "publish": "Publish Course",
+        "unpublish": "Unpublish Course",
+        "delete": "Delete Course",
+        "addChapter": "Add Chapter",
+        "addLesson": "Add Lesson",
+        "reorderHint": "Drag to reorder",
+        "saving": "Saving..."
+      }
+    },
+    "notAdmin": {
+      "title": "Access Restricted",
+      "description": "You do not have permission to access this area",
+      "message": "Admin access required",
+      "detail": "You need administrator or teacher privileges to access this area.",
+      "goBack": "Go Back",
+      "goToDashboard": "Go to Dashboard"
+    },
+    "payment": {
+      "success": {
+        "title": "Payment Successful",
+        "description": "Your enrollment payment was successful",
+        "message": "Thank you for your enrollment!",
+        "detail": "You now have access to the course. You can start learning immediately.",
+        "goToCourse": "Go to Course",
+        "viewDashboard": "View Dashboard"
+      },
+      "cancel": {
+        "title": "Payment Cancelled",
+        "description": "Your payment was cancelled",
+        "message": "Payment cancelled",
+        "detail": "Your enrollment was not completed. You can try again anytime.",
+        "tryAgain": "Try Again",
+        "browseCourses": "Browse Courses"
+      }
+    },
+    "lesson": {
+      "markComplete": "Mark as Complete",
+      "completed": "Completed",
+      "nextLesson": "Next Lesson",
+      "previousLesson": "Previous Lesson",
+      "downloadAttachments": "Download Attachments",
+      "transcript": "Transcript",
+      "notes": "Notes",
+      "discussion": "Discussion"
+    }
+  }
+}

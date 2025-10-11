@@ -1,88 +1,209 @@
-"use client";
-
 import { Shell as PageContainer } from "@/components/table/shell";
 import { InvoicesTable } from "./table";
 import { invoiceColumns, type InvoiceRow } from "./columns";
-import { DataTableSkeleton } from "@/components/table/data-table/data-table-skeleton";
 import { EmptyState } from "@/components/operator/common/empty-state";
-import { useState, useEffect } from "react";
+import { db } from "@/lib/db";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import type { getDictionary } from "@/components/internationalization/dictionaries";
 import type { Locale } from "@/components/internationalization/config";
 
 interface Props {
-  dictionary: Awaited<ReturnType<typeof getDictionary>>;
+  dictionary: any; // TODO: Add proper operator dictionary types
   lang: Locale;
+  searchParams?: {
+    page?: string;
+    limit?: string;
+    status?: string;
+    search?: string;
+  };
 }
 
-export function BillingContent(props: Props) {
-  const [data, setData] = useState<{ rows: InvoiceRow[]; pageCount: number } | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+async function getInvoices(searchParams: Props["searchParams"]) {
+  const page = Number(searchParams?.page) || 1;
+  const limit = Number(searchParams?.limit) || 10;
+  const offset = (page - 1) * limit;
 
-  useEffect(() => {
-    // For now, use sample data to show the working table structure
-    // This can be replaced with actual API call when the endpoint is ready
-    const sampleData = {
-      rows: [
-        {
-          id: "1",
-          number: "INV-001",
-          tenantName: "Sample School",
-          period: "2024-01-01 - 2024-01-31",
-          amount: 99.99,
-          status: "open",
-          createdAt: new Date().toISOString()
+  const where = {
+    ...(searchParams?.status && searchParams.status !== "all"
+      ? { status: searchParams.status }
+      : {}),
+    ...(searchParams?.search
+      ? {
+          OR: [
+            { stripeInvoiceId: { contains: searchParams.search, mode: "insensitive" as const } },
+            { school: { name: { contains: searchParams.search, mode: "insensitive" as const } } }
+          ]
         }
-      ],
-      pageCount: 1
-    };
-    
-    setData(sampleData);
-    setIsLoading(false);
-  }, []);
+      : {})
+  };
 
-  if (isLoading) {
-    return (
-      <PageContainer>
-        <div className="flex flex-1 flex-col gap-4">
-          <div>
-            <h2>Billing</h2>
-            <p className="muted">Invoices and receipts</p>
-          </div>
-          <DataTableSkeleton columnCount={invoiceColumns.length} />
-        </div>
-      </PageContainer>
-    );
-  }
+  const [invoices, total] = await Promise.all([
+    db.invoice.findMany({
+      where,
+      include: {
+        school: {
+          select: {
+            id: true,
+            name: true
+          }
+        },
+        receipts: {
+          select: {
+            id: true,
+            status: true
+          }
+        }
+      },
+      orderBy: { createdAt: "desc" },
+      skip: offset,
+      take: limit
+    }),
+    db.invoice.count({ where })
+  ]);
 
-  if (error) {
-    return (
-      <PageContainer>
-        <div className="flex flex-1 flex-col gap-4">
-          <div>
-            <h2>Billing</h2>
-            <p className="muted">Invoices and receipts</p>
-          </div>
-          <EmptyState title="Error loading billing data" description="Please try again later." />
-        </div>
-      </PageContainer>
-    );
-  }
+  const rows: InvoiceRow[] = invoices.map(invoice => ({
+    id: invoice.id,
+    number: invoice.stripeInvoiceId, // Use stripe invoice ID as the number
+    tenantName: invoice.school.name,
+    period: `${invoice.periodStart?.toLocaleDateString()} - ${invoice.periodEnd?.toLocaleDateString()}`,
+    amount: invoice.amountDue, // Already in cents, convert in display
+    status: invoice.status as "open" | "paid" | "void" | "uncollectible",
+    createdAt: invoice.createdAt.toISOString()
+  }));
 
-  const { rows, pageCount } = data || { rows: [], pageCount: 0 };
+  return {
+    rows,
+    pageCount: Math.ceil(total / limit)
+  };
+}
+
+async function getBillingStats() {
+  const [
+    totalInvoices,
+    paidInvoices,
+    openInvoices,
+    totalRevenue,
+    pendingReceipts
+  ] = await Promise.all([
+    db.invoice.count(),
+    db.invoice.count({ where: { status: "paid" } }),
+    db.invoice.count({ where: { status: "open" } }),
+    db.invoice.aggregate({
+      where: { status: "paid" },
+      _sum: { amountPaid: true }
+    }),
+    db.receipt.count({ where: { status: "pending" } })
+  ]);
+
+  return {
+    totalInvoices,
+    paidInvoices,
+    openInvoices,
+    totalRevenue: (totalRevenue._sum?.amountPaid || 0) / 100,
+    pendingReceipts,
+    paymentRate: totalInvoices > 0 ? Math.round((paidInvoices / totalInvoices) * 100) : 0
+  };
+}
+
+export async function BillingContent({ dictionary, lang, searchParams }: Props) {
+  const [invoiceData, stats] = await Promise.all([
+    getInvoices(searchParams),
+    getBillingStats()
+  ]);
 
   return (
     <PageContainer>
-      <div className="flex flex-1 flex-col gap-4">
+      <div className="flex flex-1 flex-col gap-6">
         <div>
-          <h2>Billing</h2>
-          <p className="muted">Invoices and receipts</p>
+          <h2>{dictionary?.title || "Billing"}</h2>
+          <p className="muted">{dictionary?.description || "Manage invoices and receipts"}</p>
         </div>
-        {rows && rows.length > 0 ? (
-          <InvoicesTable data={rows} columns={invoiceColumns} pageCount={pageCount} />
-        ) : (
-          <EmptyState title="No invoices" description="Invoices will appear as billing runs." />
-        )}
+
+        {/* Stats Cards */}
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">${stats.totalRevenue.toLocaleString()}</div>
+              <p className="text-xs text-muted-foreground">
+                From {stats.paidInvoices} paid invoices
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Payment Rate</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.paymentRate}%</div>
+              <p className="text-xs text-muted-foreground">
+                {stats.paidInvoices} of {stats.totalInvoices} invoices
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Open Invoices</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.openInvoices}</div>
+              <p className="text-xs text-muted-foreground">
+                Awaiting payment
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Pending Receipts</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.pendingReceipts}</div>
+              <p className="text-xs text-muted-foreground">
+                Awaiting review
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Tabs for Invoices and Receipts */}
+        <Tabs defaultValue="invoices" className="space-y-4">
+          <TabsList>
+            <TabsTrigger value="invoices">
+              {dictionary?.tabs?.invoices || "Invoices"}
+            </TabsTrigger>
+            <TabsTrigger value="receipts">
+              {dictionary?.tabs?.receipts || "Receipts"}
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="invoices" className="space-y-4">
+            {invoiceData.rows.length > 0 ? (
+              <InvoicesTable
+                data={invoiceData.rows}
+                columns={invoiceColumns}
+                pageCount={invoiceData.pageCount}
+              />
+            ) : (
+              <EmptyState
+                title="No invoices"
+                description="Invoices will appear as billing cycles complete."
+              />
+            )}
+          </TabsContent>
+
+          <TabsContent value="receipts" className="space-y-4">
+            <EmptyState
+              title="Receipts"
+              description="Manual payment receipts will appear here for review."
+            />
+          </TabsContent>
+        </Tabs>
       </div>
     </PageContainer>
   );

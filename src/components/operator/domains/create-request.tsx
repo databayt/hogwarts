@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
-import { createDomainRequest } from "@/components/operator/actions/domains/create";
+import { domainCreate } from "@/components/operator/domains/actions";
 import { SuccessToast, ErrorToast } from "@/components/atom/toast";
 
 const schema = z.object({
@@ -31,10 +31,14 @@ export function CreateDomainRequest({ tenants }: Props) {
     if (!parsed.success) return;
     setSubmitting(true);
     try {
-      await createDomainRequest(parsed.data);
-      SuccessToast();
-      setDomain("");
-      setNotes("");
+      const result = await domainCreate(parsed.data);
+      if (result.success) {
+        SuccessToast();
+        setDomain("");
+        setNotes("");
+      } else {
+        ErrorToast(result.error.message);
+      }
     } catch (e) {
       ErrorToast(e instanceof Error ? e.message : "Failed to create request");
     } finally {

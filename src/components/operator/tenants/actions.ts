@@ -1,42 +1,284 @@
 "use server";
 
 import { z } from "zod";
-import { toggleTenantActive } from "@/components/operator/actions/tenants/toggle-active";
-import { changeTenantPlan } from "@/components/operator/actions/tenants/change-plan";
-import { endTenantTrial } from "@/components/operator/actions/tenants/end-trial";
-import { startImpersonation } from "@/components/operator/actions/impersonation/start";
-import { stopImpersonation } from "@/components/operator/actions/impersonation/stop";
+import { revalidatePath } from "next/cache";
+import { cookies } from "next/headers";
+import { db } from "@/lib/db";
+import { requireOperator, requireNotImpersonating, logOperatorAudit } from "@/components/operator/lib/operator-auth";
+import type { School } from "@prisma/client";
 
-const idSchema = z.object({ tenantId: z.string().min(1), reason: z.string().optional() });
+// ============= Type Definitions =============
 
-export async function tenantToggleActive(input: z.infer<typeof idSchema>) {
-  const { tenantId, reason } = idSchema.parse(input);
-  await toggleTenantActive(tenantId, reason);
-  return { success: true as const };
+type ActionResult<T> =
+  | { success: true; data: T }
+  | { success: false; error: Error };
+
+// ============= Validation Schemas =============
+
+const toggleActiveSchema = z.object({
+  tenantId: z.string().min(1),
+  reason: z.string().optional()
+});
+
+const changePlanSchema = z.object({
+  tenantId: z.string().min(1),
+  planType: z.enum(["TRIAL", "BASIC", "PREMIUM", "ENTERPRISE"]),
+  reason: z.string().optional()
+});
+
+const endTrialSchema = z.object({
+  tenantId: z.string().min(1),
+  reason: z.string().optional()
+});
+
+const impersonationSchema = z.object({
+  tenantId: z.string().min(1),
+  reason: z.string().optional()
+});
+
+// ============= Tenant Actions =============
+
+/**
+ * Toggle tenant active status
+ */
+export async function tenantToggleActive(
+  input: { tenantId: string; reason?: string }
+): Promise<ActionResult<School>> {
+  try {
+    const operator = await requireOperator();
+    await requireNotImpersonating();
+
+    const validated = toggleActiveSchema.parse(input);
+
+    // Get current status
+    const school = await db.school.findUnique({
+      where: { id: validated.tenantId }
+    });
+
+    if (!school) {
+      return {
+        success: false,
+        error: new Error("School not found")
+      };
+    }
+
+    // Toggle the status
+    const updatedSchool = await db.school.update({
+      where: { id: validated.tenantId },
+      data: {
+        isActive: !school.isActive,
+        updatedAt: new Date()
+      }
+    });
+
+    await logOperatorAudit({
+      userId: operator.userId,
+      schoolId: validated.tenantId,
+      action: updatedSchool.isActive ? "TENANT_ACTIVATED" : "TENANT_DEACTIVATED",
+      reason: validated.reason
+    });
+
+    revalidatePath("/operator/tenants");
+    revalidatePath(`/operator/tenants/${validated.tenantId}`);
+
+    return { success: true, data: updatedSchool };
+  } catch (error) {
+    console.error("Failed to toggle tenant active status:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error : new Error("Failed to toggle tenant status")
+    };
+  }
 }
 
-const planSchema = z.object({ tenantId: z.string().min(1), planType: z.string().min(1), reason: z.string().optional() });
-export async function tenantChangePlan(input: z.infer<typeof planSchema>) {
-  await changeTenantPlan(planSchema.parse(input));
-  return { success: true as const };
+/**
+ * Change tenant subscription plan
+ */
+export async function tenantChangePlan(
+  input: { tenantId: string; planType: string; reason?: string }
+): Promise<ActionResult<School>> {
+  try {
+    const operator = await requireOperator();
+    await requireNotImpersonating();
+
+    const validated = changePlanSchema.parse(input);
+
+    const school = await db.$transaction(async (tx) => {
+      // Update school plan
+      const updatedSchool = await tx.school.update({
+        where: { id: validated.tenantId },
+        data: {
+          planType: validated.planType,
+          updatedAt: new Date()
+        }
+      });
+
+      // Create subscription history entry
+      await tx.subscriptionHistory.create({
+        data: {
+          schoolId: validated.tenantId,
+          planType: validated.planType,
+          changedBy: operator.userId,
+          reason: validated.reason,
+          changedAt: new Date()
+        }
+      });
+
+      return updatedSchool;
+    });
+
+    await logOperatorAudit({
+      userId: operator.userId,
+      schoolId: validated.tenantId,
+      action: `TENANT_PLAN_CHANGED_TO_${validated.planType}`,
+      reason: validated.reason
+    });
+
+    revalidatePath("/operator/tenants");
+    revalidatePath(`/operator/tenants/${validated.tenantId}`);
+
+    return { success: true, data: school };
+  } catch (error) {
+    console.error("Failed to change tenant plan:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error : new Error("Failed to change tenant plan")
+    };
+  }
 }
 
-export async function tenantEndTrial(input: z.infer<typeof idSchema>) {
-  const { tenantId, reason } = idSchema.parse(input);
-  await endTenantTrial({ tenantId, reason });
-  return { success: true as const };
+/**
+ * End tenant trial period
+ */
+export async function tenantEndTrial(
+  input: { tenantId: string; reason?: string }
+): Promise<ActionResult<School>> {
+  try {
+    const operator = await requireOperator();
+    await requireNotImpersonating();
+
+    const validated = endTrialSchema.parse(input);
+
+    const school = await db.school.update({
+      where: { id: validated.tenantId },
+      data: {
+        planType: "BASIC",
+        trialEndsAt: new Date(), // End trial immediately
+        updatedAt: new Date()
+      }
+    });
+
+    await logOperatorAudit({
+      userId: operator.userId,
+      schoolId: validated.tenantId,
+      action: "TENANT_TRIAL_ENDED",
+      reason: validated.reason
+    });
+
+    revalidatePath("/operator/tenants");
+    revalidatePath(`/operator/tenants/${validated.tenantId}`);
+
+    return { success: true, data: school };
+  } catch (error) {
+    console.error("Failed to end tenant trial:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error : new Error("Failed to end trial")
+    };
+  }
 }
 
-export async function tenantStartImpersonation(input: { tenantId: string; reason?: string }) {
-  const parsed = z.object({ tenantId: z.string().min(1), reason: z.string().optional() }).parse(input);
-  await startImpersonation(parsed.tenantId, parsed.reason);
-  return { success: true as const };
+/**
+ * Start impersonation session for a tenant
+ */
+export async function tenantStartImpersonation(
+  input: { tenantId: string; reason?: string }
+): Promise<ActionResult<{ success: boolean }>> {
+  try {
+    const operator = await requireOperator();
+    await requireNotImpersonating();
+
+    const validated = impersonationSchema.parse(input);
+
+    // Verify school exists
+    const school = await db.school.findUnique({
+      where: { id: validated.tenantId }
+    });
+
+    if (!school) {
+      return {
+        success: false,
+        error: new Error("School not found")
+      };
+    }
+
+    // Set impersonation cookie
+    const cookieStore = await cookies();
+    cookieStore.set("impersonate_schoolId", validated.tenantId, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 60 * 60, // 1 hour
+      path: "/"
+    });
+
+    await logOperatorAudit({
+      userId: operator.userId,
+      schoolId: validated.tenantId,
+      action: "IMPERSONATION_STARTED",
+      reason: validated.reason,
+      metadata: {
+        expiresAt: new Date(Date.now() + 60 * 60 * 1000).toISOString()
+      }
+    });
+
+    revalidatePath("/");
+
+    return { success: true, data: { success: true } };
+  } catch (error) {
+    console.error("Failed to start impersonation:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error : new Error("Failed to start impersonation")
+    };
+  }
 }
 
-export async function tenantStopImpersonation(input?: { reason?: string }) {
-  const parsed = z.object({ reason: z.string().optional() }).parse(input ?? {});
-  await stopImpersonation(parsed.reason);
-  return { success: true as const };
+/**
+ * Stop current impersonation session
+ */
+export async function tenantStopImpersonation(
+  input?: { reason?: string }
+): Promise<ActionResult<{ success: boolean }>> {
+  try {
+    const operator = await requireOperator();
+
+    // Get current impersonation school ID before clearing
+    const cookieStore = await cookies();
+    const schoolId = cookieStore.get("impersonate_schoolId")?.value;
+
+    // Clear impersonation cookie
+    cookieStore.delete("impersonate_schoolId");
+
+    if (schoolId) {
+      await logOperatorAudit({
+        userId: operator.userId,
+        schoolId,
+        action: "IMPERSONATION_STOPPED",
+        reason: input?.reason
+      });
+    }
+
+    revalidatePath("/");
+
+    return { success: true, data: { success: true } };
+  } catch (error) {
+    console.error("Failed to stop impersonation:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error : new Error("Failed to stop impersonation")
+    };
+  }
 }
 
 

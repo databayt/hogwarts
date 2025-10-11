@@ -14,7 +14,7 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
     generateSessionToken: () => {
       const token = `session_${Date.now()}`;
       if (process.env.NODE_ENV === 'development') {
-        console.log('🔑 Generated session token:', token);
+        log('🔑 Generated session token:', token);
       }
       return token;
     },
@@ -27,13 +27,15 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
   debug: process.env.NODE_ENV === "development",
   events: {
     async signIn({ user, account, isNewUser }) {
-      console.log('🎉 SIGN IN EVENT:', {
-        userId: user.id,
-        email: user.email,
-        provider: account?.provider,
-        isNewUser,
-        timestamp: new Date().toISOString()
-      });
+      if (process.env.NODE_ENV === 'development') {
+        log('🎉 SIGN IN EVENT:', {
+          userId: user.id,
+          email: user.email,
+          provider: account?.provider,
+          isNewUser,
+          timestamp: new Date().toISOString()
+        });
+      }
     },
   },
   cookies: {
@@ -104,7 +106,7 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
     async jwt({ token, user, account, trigger }) {
       // Only log in development
       if (process.env.NODE_ENV === 'development') {
-        console.log('🔐 [DEBUG] JWT CALLBACK START:', { 
+        log('🔐 [DEBUG] JWT CALLBACK START:', { 
           trigger, 
           hasUser: !!user, 
           hasAccount: !!account,
@@ -113,37 +115,47 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
       }
       
       if (user) {
-        console.log('👤 [DEBUG] User data received:', { 
-          id: user.id, 
-          email: user.email,
-          hasRole: 'role' in user,
-          hasSchoolId: 'schoolId' in user,
-          userKeys: Object.keys(user),
-          userRole: (user as any).role,
-          userSchoolId: (user as any).schoolId
-        });
-        
+        if (process.env.NODE_ENV === 'development') {
+          log('👤 [DEBUG] User data received:', {
+            id: user.id,
+            email: user.email,
+            hasRole: 'role' in user,
+            hasSchoolId: 'schoolId' in user,
+            userKeys: Object.keys(user),
+            userRole: (user as any).role,
+            userSchoolId: (user as any).schoolId
+          });
+        }
+
         token.id = user.id
         // Only set role and schoolId if they exist on the user object
         if ('role' in user) {
           token.role = (user as any).role
-          console.log('🎭 [DEBUG] Role set in token:', token.role);
+          if (process.env.NODE_ENV === 'development') {
+            log('🎭 [DEBUG] Role set in token:', token.role);
+          }
         }
         if ('schoolId' in user) {
           token.schoolId = (user as any).schoolId
-          console.log('🏫 [DEBUG] SchoolId set in token:', token.schoolId);
+          if (process.env.NODE_ENV === 'development') {
+            log('🏫 [DEBUG] SchoolId set in token:', token.schoolId);
+          }
         }
-        
+
         // Ensure we have a proper session token
         if (account) {
           token.provider = account.provider
           token.providerAccountId = account.providerAccountId
-          console.log('🔗 [DEBUG] Account linked:', { provider: account.provider, id: account.providerAccountId });
+          if (process.env.NODE_ENV === 'development') {
+            log('🔗 [DEBUG] Account linked:', { provider: account.provider, id: account.providerAccountId });
+          }
         }
-        
+
         // Force session update after OAuth
         if (trigger === 'signIn') {
-          console.log('🔄 [DEBUG] Forcing session update after signIn');
+          if (process.env.NODE_ENV === 'development') {
+            log('🔄 [DEBUG] Forcing session update after signIn');
+          }
           token.iat = Math.floor(Date.now() / 1000);
           token.exp = Math.floor(Date.now() / 1000) + (24 * 60 * 60); // 24 hours
           // Force session refresh by updating token
@@ -154,29 +166,31 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
           token.hash = `hash_${Date.now()}`;
         }
       }
-      
+
       // Debug JWT state
-      console.log('🔐 [DEBUG] JWT CALLBACK END:', {
-        tokenId: token?.id,
-        hasRole: !!token?.role,
-        hasSchoolId: !!token?.schoolId,
-        tokenRole: token?.role,
-        tokenSchoolId: token?.schoolId,
-        provider: token?.provider,
-        iat: token?.iat,
-        exp: token?.exp,
-        sub: token?.sub,
-        sessionToken: token?.sessionToken,
-        updatedAt: token?.updatedAt,
-        hash: token?.hash
-      });
+      if (process.env.NODE_ENV === 'development') {
+        log('🔐 [DEBUG] JWT CALLBACK END:', {
+          tokenId: token?.id,
+          hasRole: !!token?.role,
+          hasSchoolId: !!token?.schoolId,
+          tokenRole: token?.role,
+          tokenSchoolId: token?.schoolId,
+          provider: token?.provider,
+          iat: token?.iat,
+          exp: token?.exp,
+          sub: token?.sub,
+          sessionToken: token?.sessionToken,
+          updatedAt: token?.updatedAt,
+          hash: token?.hash
+        });
+      }
       
       return token
     },
     async session({ session, token, user, trigger }) {
       // Only log in development
       if (process.env.NODE_ENV === 'development') {
-        console.log('📋 [DEBUG] SESSION CALLBACK START:', { 
+        log('📋 [DEBUG] SESSION CALLBACK START:', { 
           trigger,
           hasToken: !!token, 
           hasUser: !!user,
@@ -187,68 +201,87 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
       }
       
       if (token) {
-        console.log('🔑 [DEBUG] Token data available:', {
-          tokenId: token.id,
-          tokenRole: token.role,
-          tokenSchoolId: token.schoolId,
-          tokenUpdatedAt: token.updatedAt,
-          tokenHash: token.hash
-        });
-        
+        if (process.env.NODE_ENV === 'development') {
+          log('🔑 [DEBUG] Token data available:', {
+            tokenId: token.id,
+            tokenRole: token.role,
+            tokenSchoolId: token.schoolId,
+            tokenUpdatedAt: token.updatedAt,
+            tokenHash: token.hash
+          });
+        }
+
         // Always ensure we have the latest token data
         session.user.id = token.id as string
-        
+
         // Apply role and schoolId from token
         if (token.role) {
           (session.user as any).role = token.role
-          console.log('🎭 [DEBUG] Role applied to session:', token.role);
+          if (process.env.NODE_ENV === 'development') {
+            log('🎭 [DEBUG] Role applied to session:', token.role);
+          }
         }
         if (token.schoolId) {
           (session.user as any).schoolId = token.schoolId
-          console.log('🏫 [DEBUG] SchoolId applied to session:', token.schoolId);
+          if (process.env.NODE_ENV === 'development') {
+            log('🏫 [DEBUG] SchoolId applied to session:', token.schoolId);
+          }
         }
-        
+
         // Force session update if token has been updated
         if (token.updatedAt) {
-          console.log('🔄 [DEBUG] Token updated, forcing session refresh');
+          if (process.env.NODE_ENV === 'development') {
+            log('🔄 [DEBUG] Token updated, forcing session refresh');
+          }
           (session as any).updatedAt = token.updatedAt;
         }
-        
+
         // Force session refresh if token hash changed
         if (token.hash) {
-          console.log('🔄 [DEBUG] Token hash changed, forcing session refresh');
+          if (process.env.NODE_ENV === 'development') {
+            log('🔄 [DEBUG] Token hash changed, forcing session refresh');
+          }
           (session as any).hash = token.hash;
         }
-        
-        console.log('✅ [DEBUG] Token data applied to session:', {
-          id: token.id,
-          role: token.role,
-          schoolId: token.schoolId
-        });
+
+        if (process.env.NODE_ENV === 'development') {
+          log('✅ [DEBUG] Token data applied to session:', {
+            id: token.id,
+            role: token.role,
+            schoolId: token.schoolId
+          });
+        }
       } else {
-        console.log('⚠️ [DEBUG] No token available in session callback');
+        if (process.env.NODE_ENV === 'development') {
+          log('⚠️ [DEBUG] No token available in session callback');
+        }
       }
-      
+
       // Debug session state
-      console.log('📋 [DEBUG] SESSION CALLBACK END:', {
-        sessionId: session.user?.id,
-        hasRole: !!(session.user as any)?.role,
-        hasSchoolId: !!(session.user as any)?.schoolId,
-        tokenId: token?.id,
-        sessionToken: token?.sessionToken,
-        iat: token?.iat,
-        exp: token?.exp,
-        email: session.user?.email,
-        timestamp: new Date().toISOString()
-      });
+      if (process.env.NODE_ENV === 'development') {
+        log('📋 [DEBUG] SESSION CALLBACK END:', {
+          sessionId: session.user?.id,
+          hasRole: !!(session.user as any)?.role,
+          hasSchoolId: !!(session.user as any)?.schoolId,
+          tokenId: token?.id,
+          sessionToken: token?.sessionToken,
+          iat: token?.iat,
+          exp: token?.exp,
+          email: session.user?.email,
+          timestamp: new Date().toISOString()
+        });
+      }
       
       return session
     },
     async redirect({ url, baseUrl }) {
-      console.log('=====================================');
-      console.log('🔄 REDIRECT CALLBACK START');
-      console.log('=====================================');
-      console.log('📍 Input Parameters:', {
+      const isDev = process.env.NODE_ENV === 'development';
+      const log = isDev ? log : () => {};
+
+      log('=====================================');
+      log('🔄 REDIRECT CALLBACK START');
+      log('=====================================');
+      log('📍 Input Parameters:', {
         url,
         baseUrl,
         urlLength: url?.length,
@@ -261,16 +294,16 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
       
       // Check if we're coming from an OAuth callback
       if (url.includes('/api/auth/callback/')) {
-        console.log('🔐 OAuth callback detected - checking for stored callback URL');
+        log('🔐 OAuth callback detected - checking for stored callback URL');
         // The callback URL should have been stored before OAuth redirect
         // We'll check for it in multiple places below
       }
-      
+
       // Check if this is an OAuth callback
       const isOAuthCallback = url.includes('/api/auth/callback/');
       if (isOAuthCallback) {
         const provider = url.match(/callback\/(\w+)/)?.[1];
-        console.log('🔐 OAUTH CALLBACK DETECTED:', {
+        log('🔐 OAUTH CALLBACK DETECTED:', {
           provider,
           url,
           urlLength: url.length,
@@ -280,10 +313,10 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
           queryContent: url.includes('?') ? url.split('?')[1]?.split('#')[0] : null,
           timestamp: new Date().toISOString()
         });
-        
+
         // Log request headers if available (for debugging)
         if (typeof process !== 'undefined' && process.env) {
-          console.log('🌍 Environment:', {
+          log('🌍 Environment:', {
             NODE_ENV: process.env.NODE_ENV,
             NEXTAUTH_URL: process.env.NEXTAUTH_URL
           });
@@ -292,24 +325,24 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
       
       // Handle Facebook redirect with #_=_ hash FIRST - clean it completely
       if (url.includes('#_=_')) {
-        console.log('📘 Facebook redirect detected, cleaning hash');
-        console.log('Original URL with hash:', url);
+        log('📘 Facebook redirect detected, cleaning hash');
+        log('Original URL with hash:', url);
         
         // Clean the Facebook hash and redirect appropriately
         const cleanUrl = url.replace(/#.*$/, '');
-        console.log('🎯 Cleaned Facebook URL:', cleanUrl);
+        log('🎯 Cleaned Facebook URL:', cleanUrl);
         
         // Check if the cleaned URL has callback parameters
         try {
           const cleanUrlObj = new URL(cleanUrl, baseUrl);
-          console.log('📘 Facebook cleaned URL analysis:', {
+          log('📘 Facebook cleaned URL analysis:', {
             pathname: cleanUrlObj.pathname,
             search: cleanUrlObj.search,
             searchParams: Array.from(cleanUrlObj.searchParams.entries()),
             hasCallbackUrl: cleanUrlObj.searchParams.has('callbackUrl')
           });
         } catch (e) {
-          console.log('Error parsing cleaned URL:', e);
+          log('Error parsing cleaned URL:', e);
         }
         
         // Continue with the cleaned URL
@@ -317,22 +350,22 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
       }
 
       // PRIORITY: Check for callbackUrl parameter first (from login redirect)
-      console.log('\n🎯 CHECKING FOR CALLBACK URL...');
+      log('\n🎯 CHECKING FOR CALLBACK URL...');
       let callbackUrl: string | null = intendedCallbackUrl;
       
       // First check if this is coming back from OAuth and we had a stored callback
       const isReturningFromOAuth = url.includes('/api/auth/callback/');
-      console.log('🔐 OAuth return check:', { isReturningFromOAuth, url });
+      log('🔐 OAuth return check:', { isReturningFromOAuth, url });
       
       // Method 0: Check server-side cookies using Next.js cookies helper
       if (!callbackUrl) {
         try {
-          console.log('🔍 Method 0 - Checking server-side cookies...');
+          log('🔍 Method 0 - Checking server-side cookies...');
           const cookieStore = await cookies();
           
           // List ALL server-side cookies for debugging
           const allCookies = cookieStore.getAll();
-          console.log('🍪 ALL SERVER-SIDE COOKIES:', {
+          log('🍪 ALL SERVER-SIDE COOKIES:', {
             count: allCookies.length,
             cookies: allCookies.map(c => ({ name: c.name, value: c.value?.substring(0, 50) + '...' }))
           });
@@ -340,29 +373,29 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
           const oauthCallbackCookie = cookieStore.get('oauth_callback_intended');
           if (oauthCallbackCookie) {
             callbackUrl = oauthCallbackCookie.value;
-            console.log('✅ Method 0 - Server-side cookie FOUND:', {
+            log('✅ Method 0 - Server-side cookie FOUND:', {
               callbackUrl,
               cookieName: 'oauth_callback_intended',
               fullValue: oauthCallbackCookie.value
             });
             // Clear the cookie after use
             cookieStore.delete('oauth_callback_intended');
-            console.log('🗑️ Deleted oauth_callback_intended cookie');
+            log('🗑️ Deleted oauth_callback_intended cookie');
           } else {
-            console.log('❌ Method 0 - No oauth_callback_intended cookie found');
+            log('❌ Method 0 - No oauth_callback_intended cookie found');
             // Check if any cookies start with oauth
             const oauthRelatedCookies = allCookies.filter(c => c.name.toLowerCase().includes('oauth') || c.name.toLowerCase().includes('callback'));
-            console.log('🔍 OAuth-related cookies found:', oauthRelatedCookies.length > 0 ? oauthRelatedCookies : 'NONE');
+            log('🔍 OAuth-related cookies found:', oauthRelatedCookies.length > 0 ? oauthRelatedCookies : 'NONE');
           }
         } catch (error) {
-          console.log('⚠️ Could not check server-side cookies:', error);
+          log('⚠️ Could not check server-side cookies:', error);
         }
       }
       
       try {
         // Method 1: Parse as URL and check searchParams
         const urlObj = new URL(url, baseUrl);
-        console.log('📊 URL Object Analysis:', {
+        log('📊 URL Object Analysis:', {
           href: urlObj.href,
           pathname: urlObj.pathname,
           search: urlObj.search,
@@ -373,7 +406,7 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
         if (!callbackUrl) {
           callbackUrl = urlObj.searchParams.get('callbackUrl') || urlObj.searchParams.get('redirect');
         }
-        console.log('🔍 Method 1 - URL searchParams:', { 
+        log('🔍 Method 1 - URL searchParams:', { 
           callbackUrl, 
           hasCallbackParam: urlObj.searchParams.has('callbackUrl'),
           hasRedirectParam: urlObj.searchParams.has('redirect'),
@@ -386,7 +419,7 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
           const match = url.match(/callbackUrl=([^&]+)/);
           if (match) {
             callbackUrl = decodeURIComponent(match[1]);
-            console.log('🔍 Method 2 - URL regex match:', { callbackUrl, match: match[1] });
+            log('🔍 Method 2 - URL regex match:', { callbackUrl, match: match[1] });
           }
         }
         
@@ -397,10 +430,10 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
             const baseCallbackUrl = baseUrlObj.searchParams.get('callbackUrl');
             if (baseCallbackUrl) {
               callbackUrl = baseCallbackUrl;
-              console.log('🔍 Method 3 - baseUrl searchParams:', { callbackUrl });
+              log('🔍 Method 3 - baseUrl searchParams:', { callbackUrl });
             }
           } catch (error) {
-            console.log('❌ Error parsing baseUrl for callback:', error);
+            log('❌ Error parsing baseUrl for callback:', error);
           }
         }
         
@@ -413,7 +446,7 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
             const callbackCookie = cookies.find(cookie => cookie.trim().startsWith('authjs.callback-url='));
             if (callbackCookie) {
               callbackUrl = decodeURIComponent(callbackCookie.split('=')[1]);
-              console.log('🔍 Method 4a - NextAuth cookie callback:', { callbackUrl });
+              log('🔍 Method 4a - NextAuth cookie callback:', { callbackUrl });
             }
             
             // Check for our custom OAuth callback cookie
@@ -421,13 +454,13 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
               const oauthCookie = cookies.find(cookie => cookie.trim().startsWith('oauth_callback_intended='));
               if (oauthCookie) {
                 callbackUrl = decodeURIComponent(oauthCookie.split('=')[1]);
-                console.log('🔍 Method 4b - OAuth intended cookie callback:', { callbackUrl });
+                log('🔍 Method 4b - OAuth intended cookie callback:', { callbackUrl });
                 // Clear the cookie after use
                 document.cookie = 'oauth_callback_intended=; path=/; max-age=0';
               }
             }
           } catch (error) {
-            console.log('❌ Error reading callback from cookies:', error);
+            log('❌ Error reading callback from cookies:', error);
           }
         }
         
@@ -436,7 +469,7 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
           try {
             const intendedCallback = window.sessionStorage.getItem('oauth_callback_intended');
             const allStorageKeys = Object.keys(window.sessionStorage);
-            console.log('💾 Session Storage Check:', {
+            log('💾 Session Storage Check:', {
               intendedCallback,
               hasIntendedCallback: !!intendedCallback,
               allKeys: allStorageKeys,
@@ -447,24 +480,24 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
             });
             if (intendedCallback) {
               callbackUrl = intendedCallback;
-              console.log('🔍 Method 5 - session storage intended callback:', { callbackUrl });
+              log('🔍 Method 5 - session storage intended callback:', { callbackUrl });
               // Clear it after use
               window.sessionStorage.removeItem('oauth_callback_intended');
             }
           } catch (error) {
-            console.log('❌ Error reading intended callback from session storage:', error);
+            log('❌ Error reading intended callback from session storage:', error);
           }
         }
         
-        console.log('\n📋 CALLBACK URL RESOLUTION SUMMARY:', {
+        log('\n📋 CALLBACK URL RESOLUTION SUMMARY:', {
           found: !!callbackUrl,
           value: callbackUrl,
           type: typeof callbackUrl
         });
         
         if (callbackUrl) {
-          console.log('\n✅ CALLBACK URL FOUND!');
-          console.log('🎯 Attempting redirect to:', callbackUrl);
+          log('\n✅ CALLBACK URL FOUND!');
+          log('🎯 Attempting redirect to:', callbackUrl);
           // Validate callback URL is from same origin for security
           try {
             const callbackUrlObj = new URL(callbackUrl, baseUrl);
@@ -473,54 +506,54 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
             // Check if it's a relative URL or same origin
             if (callbackUrl.startsWith('/') || 
                 callbackUrlObj.origin === baseUrlObj.origin) {
-              console.log('✅ CALLBACK URL VALIDATED - Redirecting:', callbackUrl);
+              log('✅ CALLBACK URL VALIDATED - Redirecting:', callbackUrl);
               
               // If it's a relative URL, make it absolute with the current baseUrl
               if (callbackUrl.startsWith('/')) {
                 const absoluteUrl = `${baseUrl}${callbackUrl}`;
-                console.log('✅ RETURNING CALLBACK URL (relative->absolute):', {
+                log('✅ RETURNING CALLBACK URL (relative->absolute):', {
                   original: callbackUrl,
                   absolute: absoluteUrl
                 });
-                console.log('=====================================');
-                console.log('🔄 REDIRECT CALLBACK END');
-                console.log('=====================================\n');
+                log('=====================================');
+                log('🔄 REDIRECT CALLBACK END');
+                log('=====================================\n');
                 return absoluteUrl;
               }
-              console.log('✅ RETURNING CALLBACK URL (absolute):', callbackUrl);
-              console.log('=====================================');
-              console.log('🔄 REDIRECT CALLBACK END');
-              console.log('=====================================\n');
+              log('✅ RETURNING CALLBACK URL (absolute):', callbackUrl);
+              log('=====================================');
+              log('🔄 REDIRECT CALLBACK END');
+              log('=====================================\n');
               return callbackUrl;
             } else {
-              console.log('⚠️ SECURITY: Callback URL origin mismatch, ignoring:', { 
+              log('⚠️ SECURITY: Callback URL origin mismatch, ignoring:', { 
                 callbackOrigin: callbackUrlObj.origin, 
                 baseOrigin: baseUrlObj.origin,
                 callbackPath: callbackUrlObj.pathname
               });
             }
           } catch (error) {
-            console.log('❌ Error validating callback URL:', error);
+            log('❌ Error validating callback URL:', error);
             // If it's a relative path, still try to use it
             if (callbackUrl.startsWith('/')) {
               const absoluteUrl = `${baseUrl}${callbackUrl}`;
-              console.log('📍 Using relative callback URL (fallback):', {
+              log('📍 Using relative callback URL (fallback):', {
                 original: callbackUrl,
                 absolute: absoluteUrl
               });
-              console.log('=====================================');
-              console.log('🔄 REDIRECT CALLBACK END');
-              console.log('=====================================\n');
+              log('=====================================');
+              log('🔄 REDIRECT CALLBACK END');
+              log('=====================================\n');
               return absoluteUrl;
             }
           }
         }
       } catch (error) {
-        console.log('❌ Error parsing callback URL:', error);
+        log('❌ Error parsing callback URL:', error);
       }
       
       // Debug: Log the exact URL and baseUrl we're working with
-      console.log('🔍 RAW URL ANALYSIS:', {
+      log('🔍 RAW URL ANALYSIS:', {
         originalUrl: url,
         baseUrl: baseUrl,
         hasHash: url.includes('#'),
@@ -541,7 +574,7 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
           originalHost = baseUrlObj.host;
         }
         
-        console.log('🔍 Host detection:', { originalHost, url, baseUrl });
+        log('🔍 Host detection:', { originalHost, url, baseUrl });
         
         // Enhanced subdomain detection for both production and development
         let detectedSubdomain = null;
@@ -549,7 +582,7 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
         // Production subdomain detection - EXCLUDE ed.databayt.org as main domain
         if (originalHost.endsWith('.databayt.org') && originalHost !== 'ed.databayt.org') {
           detectedSubdomain = originalHost.split('.')[0];
-          console.log('🎯 PRODUCTION SUBDOMAIN DETECTED:', { 
+          log('🎯 PRODUCTION SUBDOMAIN DETECTED:', { 
             host: originalHost, 
             subdomain: detectedSubdomain 
           });
@@ -557,7 +590,7 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
         // Development subdomain detection  
         else if (originalHost.includes('.localhost') && originalHost !== 'localhost:3000' && originalHost !== 'localhost') {
           detectedSubdomain = originalHost.split('.')[0];
-          console.log('🎯 DEVELOPMENT SUBDOMAIN DETECTED:', { 
+          log('🎯 DEVELOPMENT SUBDOMAIN DETECTED:', { 
             host: originalHost, 
             subdomain: detectedSubdomain 
           });
@@ -565,7 +598,7 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
         
         // Debug: Log what we're NOT detecting as subdomain
         if (originalHost.endsWith('.databayt.org') && originalHost === 'ed.databayt.org') {
-          console.log('🏢 MAIN DOMAIN IDENTIFIED (not subdomain):', { 
+          log('🏢 MAIN DOMAIN IDENTIFIED (not subdomain):', { 
             host: originalHost,
             reason: 'explicitly excluded from subdomain detection'
           });
@@ -577,7 +610,7 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
             ? `https://${detectedSubdomain}.databayt.org/dashboard`
             : `http://${detectedSubdomain}.localhost:3000/dashboard`;
           
-          console.log('🚀 DIRECT SUBDOMAIN REDIRECT:', { 
+          log('🚀 DIRECT SUBDOMAIN REDIRECT:', { 
             subdomain: detectedSubdomain,
             redirectUrl: tenantDashboardUrl,
             environment: process.env.NODE_ENV,
@@ -590,7 +623,7 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
         // If we're on the main domain (ed.databayt.org), check for callback URL first
         if (originalHost === 'ed.databayt.org') {
           // Don't immediately redirect to dashboard - check if we have a callback URL
-          console.log('🏢 MAIN DOMAIN DETECTED:', { 
+          log('🏢 MAIN DOMAIN DETECTED:', { 
             host: originalHost,
             hasCallbackUrl: !!callbackUrl,
             callbackUrl,
@@ -600,7 +633,7 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
           
           // If we have a callback URL, use it
           if (callbackUrl) {
-            console.log('✅ Using callback URL on main domain:', callbackUrl);
+            log('✅ Using callback URL on main domain:', callbackUrl);
             // Continue to validate and use the callback URL below
           } else {
             // Only default to dashboard if no callback URL
@@ -608,7 +641,7 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
               ? 'https://ed.databayt.org/dashboard'
               : 'http://localhost:3000/dashboard';
             
-            console.log('🏢 MAIN DOMAIN DEFAULT REDIRECT (no callback):', { 
+            log('🏢 MAIN DOMAIN DEFAULT REDIRECT (no callback):', { 
               host: originalHost,
               redirectUrl: mainDomainDashboard
             });
@@ -619,7 +652,7 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
         
         // Additional safety check: if host contains 'ed.databayt.org' in any form, treat as main domain
         if (originalHost.includes('ed.databayt.org')) {
-          console.log('🏢 MAIN DOMAIN SAFETY CHECK:', { 
+          log('🏢 MAIN DOMAIN SAFETY CHECK:', { 
             host: originalHost,
             hasCallbackUrl: !!callbackUrl,
             callbackUrl,
@@ -629,14 +662,14 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
           
           // If we have a callback URL, use it
           if (callbackUrl) {
-            console.log('✅ Using callback URL on main domain (safety check):', callbackUrl);
+            log('✅ Using callback URL on main domain (safety check):', callbackUrl);
             // Continue to validate and use the callback URL below
           } else {
             const mainDomainDashboard = process.env.NODE_ENV === "production"
               ? 'https://ed.databayt.org/dashboard'
               : 'http://localhost:3000/dashboard';
             
-            console.log('🏢 MAIN DOMAIN SAFETY REDIRECT (no callback):', { 
+            log('🏢 MAIN DOMAIN SAFETY REDIRECT (no callback):', { 
               host: originalHost,
               redirectUrl: mainDomainDashboard
             });
@@ -645,7 +678,7 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
           }
         }
       } catch (error) {
-        console.log('❌ Error parsing URLs:', error);
+        log('❌ Error parsing URLs:', error);
         // Fall back to baseUrl parsing
         const baseUrlObj = new URL(baseUrl);
         originalHost = baseUrlObj.host;
@@ -656,15 +689,15 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
         try {
           const baseUrlObj = new URL(baseUrl);
           originalHost = baseUrlObj.host;
-          console.log('🔄 Fallback host detection:', { originalHost, baseUrl });
+          log('🔄 Fallback host detection:', { originalHost, baseUrl });
         } catch (error) {
-          console.log('❌ Error in fallback host detection:', error);
+          log('❌ Error in fallback host detection:', error);
         }
       }
       
       // Final check: if we're on ed.databayt.org, check callback URL first
       if (originalHost === 'ed.databayt.org') {
-        console.log('🏢 FINAL MAIN DOMAIN CHECK:', { 
+        log('🏢 FINAL MAIN DOMAIN CHECK:', { 
           host: originalHost,
           hasCallbackUrl: !!callbackUrl,
           callbackUrl,
@@ -673,14 +706,14 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
         });
         
         if (callbackUrl) {
-          console.log('✅ Using callback URL on main domain (final check):', callbackUrl);
+          log('✅ Using callback URL on main domain (final check):', callbackUrl);
           // Continue to validate and use the callback URL below
         } else {
           const mainDomainDashboard = process.env.NODE_ENV === "production"
             ? 'https://ed.databayt.org/dashboard'
             : 'http://localhost:3000/dashboard';
           
-          console.log('🏢 FINAL MAIN DOMAIN REDIRECT (no callback):', { 
+          log('🏢 FINAL MAIN DOMAIN REDIRECT (no callback):', { 
             host: originalHost,
             redirectUrl: mainDomainDashboard
           });
@@ -696,9 +729,9 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
       try {
         const urlObj = new URL(url, baseUrl);
         tenant = urlObj.searchParams.get('tenant');
-        console.log('🔍 Tenant from URL params:', { tenant, url: urlObj.href });
+        log('🔍 Tenant from URL params:', { tenant, url: urlObj.href });
       } catch (error) {
-        console.log('❌ Error parsing URL for tenant:', error);
+        log('❌ Error parsing URL for tenant:', error);
       }
       
       // Method 2: Check if URL contains tenant info in path
@@ -706,7 +739,7 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
         const urlMatch = url.match(/tenant=([^&]+)/);
         if (urlMatch) {
           tenant = urlMatch[1];
-          console.log('🔍 Tenant from URL regex match:', tenant);
+          log('🔍 Tenant from URL regex match:', tenant);
         }
       }
       
@@ -716,10 +749,10 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
           const baseUrlObj = new URL(baseUrl);
           tenant = baseUrlObj.searchParams.get('tenant');
           if (tenant) {
-            console.log('🔍 Tenant from baseUrl params:', { tenant, baseUrl });
+            log('🔍 Tenant from baseUrl params:', { tenant, baseUrl });
           }
         } catch (error) {
-          console.log('❌ Error parsing baseUrl for tenant:', error);
+          log('❌ Error parsing baseUrl for tenant:', error);
         }
       }
       
@@ -730,12 +763,12 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
           const sessionTenant = window.sessionStorage?.getItem('oauth_tenant');
           if (sessionTenant) {
             tenant = sessionTenant;
-            console.log('🔍 Tenant from session storage:', { tenant });
+            log('🔍 Tenant from session storage:', { tenant });
             // Clear it after use
             window.sessionStorage.removeItem('oauth_tenant');
           }
         } catch (error) {
-          console.log('❌ Error accessing session storage:', error);
+          log('❌ Error accessing session storage:', error);
         }
       }
       
@@ -744,30 +777,30 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
         const tenantUrl = process.env.NODE_ENV === "production" 
           ? `https://${tenant}.databayt.org/dashboard`
           : `http://${tenant}.localhost:3000/dashboard`;
-        console.log('🔄 Redirecting to tenant via parameter:', { tenant, tenantUrl, originalUrl: url });
+        log('🔄 Redirecting to tenant via parameter:', { tenant, tenantUrl, originalUrl: url });
         return tenantUrl;
       }
       
-      console.log('⚠️ No tenant parameter found in:', { url, baseUrl });
+      log('⚠️ No tenant parameter found in:', { url, baseUrl });
       
       // Handle OAuth callback completion
       if (url.includes('/api/auth/callback/')) {
-        console.log('🔄 OAuth callback detected, processing redirect');
+        log('🔄 OAuth callback detected, processing redirect');
         // Let the default behavior handle the redirect
         // The middleware will handle subdomain routing
       }
 
       // Log all redirect attempts for debugging
-      console.log('🔄 Processing redirect:', { url, baseUrl });
+      log('🔄 Processing redirect:', { url, baseUrl });
       
       // Check if this is an error
       if (url.includes('/error')) {
-        console.log('❌ Error page detected, investigating...');
+        log('❌ Error page detected, investigating...');
       }
 
       // Final redirect decision
-      console.log('\n🎯 FINAL REDIRECT DECISION');
-      console.log('Current state:', {
+      log('\n🎯 FINAL REDIRECT DECISION');
+      log('Current state:', {
         hasCallbackUrl: !!callbackUrl,
         callbackUrl,
         url,
@@ -781,51 +814,51 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
         // Special case: if URL is exactly "/" (home page), respect it (for logout)
         if (url === "/") {
           const homeUrl = baseUrl; // Just the base URL without any path
-          console.log('🏠 Redirecting to home page (logout):', {
+          log('🏠 Redirecting to home page (logout):', {
             reason: 'URL is exactly /',
             originalUrl: url,
             finalUrl: homeUrl
           });
-          console.log('=====================================');
-          console.log('🔄 REDIRECT CALLBACK END');
-          console.log('=====================================\n');
+          log('=====================================');
+          log('🔄 REDIRECT CALLBACK END');
+          log('=====================================\n');
           return homeUrl;
         }
         
         const finalUrl = `${baseUrl}/dashboard`;
-        console.log('📍 Relative URL - defaulting to dashboard:', {
+        log('📍 Relative URL - defaulting to dashboard:', {
           reason: 'URL starts with /',
           originalUrl: url,
           finalUrl
         });
-        console.log('=====================================');
-        console.log('🔄 REDIRECT CALLBACK END');
-        console.log('=====================================\n');
+        log('=====================================');
+        log('🔄 REDIRECT CALLBACK END');
+        log('=====================================\n');
         return finalUrl;
       }
       else if (new URL(url).origin === baseUrl) {
         // If it's the same origin, redirect to dashboard
         const dashboardUrl = `${baseUrl}/dashboard`;
-        console.log('📍 Same origin - defaulting to dashboard:', {
+        log('📍 Same origin - defaulting to dashboard:', {
           reason: 'Same origin as baseUrl',
           originalUrl: url,
           finalUrl: dashboardUrl
         });
-        console.log('=====================================');
-        console.log('🔄 REDIRECT CALLBACK END');
-        console.log('=====================================\n');
+        log('=====================================');
+        log('🔄 REDIRECT CALLBACK END');
+        log('=====================================\n');
         return dashboardUrl;
       }
       
       const externalDashboard = `${baseUrl}/dashboard`;
-      console.log('📍 External URL - defaulting to dashboard:', {
+      log('📍 External URL - defaulting to dashboard:', {
         reason: 'External URL',
         originalUrl: url,
         finalUrl: externalDashboard
       });
-      console.log('=====================================');
-      console.log('🔄 REDIRECT CALLBACK END');
-      console.log('=====================================\n');
+      log('=====================================');
+      log('🔄 REDIRECT CALLBACK END');
+      log('=====================================\n');
       return externalDashboard
     },
   },
@@ -833,35 +866,39 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
 })
 
 // Debug logging for NextAuth initialization
-console.log('NextAuth initialization - Environment check:', {
-  NEXTAUTH_URL: process.env.NEXTAUTH_URL,
-  AUTH_SECRET: !!process.env.AUTH_SECRET,
-  GOOGLE_CLIENT_ID: !!process.env.GOOGLE_CLIENT_ID,
-  GOOGLE_CLIENT_SECRET: !!process.env.GOOGLE_CLIENT_SECRET,
-  FACEBOOK_CLIENT_ID: !!process.env.FACEBOOK_CLIENT_ID,
-  FACEBOOK_CLIENT_SECRET: !!process.env.FACEBOOK_CLIENT_SECRET,
-  NODE_ENV: process.env.NODE_ENV,
-});
+if (process.env.NODE_ENV === 'development') {
+  console.log('NextAuth initialization - Environment check:', {
+    NEXTAUTH_URL: process.env.NEXTAUTH_URL,
+    AUTH_SECRET: !!process.env.AUTH_SECRET,
+    GOOGLE_CLIENT_ID: !!process.env.GOOGLE_CLIENT_ID,
+    GOOGLE_CLIENT_SECRET: !!process.env.GOOGLE_CLIENT_SECRET,
+    FACEBOOK_CLIENT_ID: !!process.env.FACEBOOK_CLIENT_ID,
+    FACEBOOK_CLIENT_SECRET: !!process.env.FACEBOOK_CLIENT_SECRET,
+    NODE_ENV: process.env.NODE_ENV,
+  });
+}
 
 // Debug cookie configuration
 const cookieDomain = process.env.NODE_ENV === "production" ? '.databayt.org' : undefined;
-console.log('🍪 Cookie configuration:', {
-  environment: process.env.NODE_ENV,
-  cookieDomain,
-  pkceCodeVerifier: {
-    name: 'authjs.pkce.code_verifier',
-    options: { sameSite: 'lax', secure: process.env.NODE_ENV === "production", httpOnly: true, maxAge: 900, domain: cookieDomain }
-  },
-  sessionToken: {
-    name: 'authjs.session-token',
-    options: { sameSite: 'lax', secure: process.env.NODE_ENV === "production", httpOnly: true, domain: cookieDomain }
-  },
-  callbackUrl: {
-    name: 'authjs.callback-url',
-    options: { sameSite: 'lax', secure: process.env.NODE_ENV === "production", domain: cookieDomain }
-  },
-  csrfToken: {
-    name: 'authjs.csrf-token',
-    options: { sameSite: 'lax', secure: process.env.NODE_ENV === "production", httpOnly: true, domain: cookieDomain }
-  }
-});
+if (process.env.NODE_ENV === 'development') {
+  console.log('🍪 Cookie configuration:', {
+    environment: process.env.NODE_ENV,
+    cookieDomain,
+    pkceCodeVerifier: {
+      name: 'authjs.pkce.code_verifier',
+      options: { sameSite: 'lax', secure: process.env.NODE_ENV === "production", httpOnly: true, maxAge: 900, domain: cookieDomain }
+    },
+    sessionToken: {
+      name: 'authjs.session-token',
+      options: { sameSite: 'lax', secure: process.env.NODE_ENV === "production", httpOnly: true, domain: cookieDomain }
+    },
+    callbackUrl: {
+      name: 'authjs.callback-url',
+      options: { sameSite: 'lax', secure: process.env.NODE_ENV === "production", domain: cookieDomain }
+    },
+    csrfToken: {
+      name: 'authjs.csrf-token',
+      options: { sameSite: 'lax', secure: process.env.NODE_ENV === "production", httpOnly: true, domain: cookieDomain }
+    }
+  });
+}

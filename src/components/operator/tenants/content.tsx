@@ -1,257 +1,340 @@
-"use client";
-
-import React, { useState, useEffect } from 'react';
-import { getAllSubdomains, updateSubdomain } from '@/lib/subdomain-actions';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Shell as PageContainer } from "@/components/table/shell";
+import { TenantsTable } from "./table";
+import { tenantColumns, type TenantRow } from "./columns";
+import { EmptyState } from "@/components/operator/common/empty-state";
+import { db } from "@/lib/db";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import {
-  Globe,
-  Edit,
-  Check,
-  X,
-  RefreshCw,
-  AlertCircle,
   Building2,
   Users,
-  Calendar
-} from 'lucide-react';
-import { toast } from 'sonner';
+  AlertCircle,
+  Package,
+  TrendingUp,
+  DollarSign
+} from "lucide-react";
+import Link from "next/link";
 import type { getDictionary } from "@/components/internationalization/dictionaries";
 import type { Locale } from "@/components/internationalization/config";
 
-interface Tenant {
-  id: string;
-  name: string;
-  domain: string;
-  isActive: boolean;
-}
-
 interface Props {
-  dictionary: Awaited<ReturnType<typeof getDictionary>>;
+  dictionary: any; // TODO: Add proper operator dictionary types
   lang: Locale;
+  searchParams?: {
+    page?: string;
+    limit?: string;
+    status?: string;
+    plan?: string;
+    search?: string;
+  };
 }
 
-export function TenantsContent(props: Props) {
-  const [tenants, setTenants] = useState<Tenant[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editValue, setEditValue] = useState('');
-  const [isSaving, setIsSaving] = useState(false);
+async function getTenants(searchParams: Props["searchParams"]) {
+  const page = Number(searchParams?.page) || 1;
+  const limit = Number(searchParams?.limit) || 10;
+  const offset = (page - 1) * limit;
 
-  // Load tenants on component mount
-  useEffect(() => {
-    loadTenants();
-  }, []);
+  const where = {
+    ...(searchParams?.status && searchParams.status !== "all"
+      ? { isActive: searchParams.status === "active" }
+      : {}),
+    ...(searchParams?.plan && searchParams.plan !== "all"
+      ? { planType: searchParams.plan }
+      : {}),
+    ...(searchParams?.search
+      ? {
+          OR: [
+            { name: { contains: searchParams.search, mode: "insensitive" as const } },
+            { subdomain: { contains: searchParams.search, mode: "insensitive" as const } }
+          ]
+        }
+      : {})
+  };
 
-  const loadTenants = async () => {
-    setIsLoading(true);
-    try {
-      const result = await getAllSubdomains();
-      if (result.success && result.data) {
-        setTenants(result.data);
-      } else {
-        toast.error(result.error || 'Failed to load tenants');
+  const [tenants, total] = await Promise.all([
+    db.school.findMany({
+      where,
+      select: {
+        id: true,
+        name: true,
+        subdomain: true,
+        isActive: true,
+        planType: true,
+        createdAt: true,
+        trialEndsAt: true,
+        _count: {
+          select: {
+            students: true,
+            teachers: true
+          }
+        }
+      },
+      orderBy: { createdAt: "desc" },
+      skip: offset,
+      take: limit
+    }),
+    db.school.count({ where })
+  ]);
+
+  const rows: TenantRow[] = tenants.map(tenant => ({
+    id: tenant.id,
+    name: tenant.name,
+    subdomain: tenant.subdomain,
+    isActive: tenant.isActive,
+    planType: tenant.planType as "TRIAL" | "BASIC" | "PREMIUM" | "ENTERPRISE",
+    studentCount: tenant._count.students,
+    teacherCount: tenant._count.teachers,
+    createdAt: tenant.createdAt.toISOString(),
+    trialEndsAt: tenant.trialEndsAt?.toISOString()
+  }));
+
+  return {
+    rows,
+    pageCount: Math.ceil(total / limit)
+  };
+}
+
+async function getTenantStats() {
+  const [
+    totalTenants,
+    activeTenants,
+    inactiveTenants,
+    trialTenants,
+    basicTenants,
+    premiumTenants,
+    enterpriseTenants,
+    totalStudents,
+    totalTeachers
+  ] = await Promise.all([
+    db.school.count(),
+    db.school.count({ where: { isActive: true } }),
+    db.school.count({ where: { isActive: false } }),
+    db.school.count({ where: { planType: "TRIAL" } }),
+    db.school.count({ where: { planType: "BASIC" } }),
+    db.school.count({ where: { planType: "PREMIUM" } }),
+    db.school.count({ where: { planType: "ENTERPRISE" } }),
+    db.student.count(),
+    db.teacher.count()
+  ]);
+
+  const recentSignups = await db.school.count({
+    where: {
+      createdAt: {
+        gte: new Date(new Date().setDate(new Date().getDate() - 30))
       }
-    } catch (error) {
-      console.error('Error loading tenants:', error);
-      toast.error('Failed to load tenants');
-    } finally {
-      setIsLoading(false);
     }
+  });
+
+  return {
+    totalTenants,
+    activeTenants,
+    inactiveTenants,
+    trialTenants,
+    basicTenants,
+    premiumTenants,
+    enterpriseTenants,
+    totalStudents,
+    totalTeachers,
+    recentSignups,
+    activeRate: totalTenants > 0 ? Math.round((activeTenants / totalTenants) * 100) : 0,
+    growthRate: totalTenants > 0 ? Math.round((recentSignups / totalTenants) * 100) : 0
   };
+}
 
-  const handleEdit = (tenant: Tenant) => {
-    setEditingId(tenant.id);
-    setEditValue(tenant.domain);
-  };
-
-  const handleCancel = () => {
-    setEditingId(null);
-    setEditValue('');
-  };
-
-  const handleSave = async (tenantId: string) => {
-    if (!editValue.trim()) {
-      toast.error('Subdomain cannot be empty');
-      return;
-    }
-
-    setIsSaving(true);
-    try {
-      const result = await updateSubdomain(tenantId, editValue);
-      if (result.success) {
-        toast.success('Subdomain updated successfully');
-        setEditingId(null);
-        setEditValue('');
-        loadTenants(); // Refresh the list
-      } else {
-        toast.error(result.error || 'Failed to update subdomain');
-      }
-    } catch (error) {
-      console.error('Error updating subdomain:', error);
-      toast.error('Failed to update subdomain');
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const getStatusBadge = (isActive: boolean) => {
-    return isActive ? (
-      <Badge variant="default" className="bg-green-100 text-green-800">
-        Active
-      </Badge>
-    ) : (
-      <Badge variant="secondary" className="bg-gray-100 text-gray-800">
-        Inactive
-      </Badge>
-    );
-  };
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="flex items-center gap-2">
-          <RefreshCw className="w-4 h-4 animate-spin" />
-          <span>Loading tenants...</span>
-        </div>
-      </div>
-    );
-  }
+export async function TenantsContent({ dictionary, lang, searchParams }: Props) {
+  const [tenantData, stats] = await Promise.all([
+    getTenants(searchParams),
+    getTenantStats()
+  ]);
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+    <PageContainer>
+      <div className="flex flex-1 flex-col gap-6">
         <div>
-          <h1>Tenant Management</h1>
-          <p className="muted">
-            Manage school subdomains and tenant settings
-          </p>
+          <h2>{dictionary?.title || "Tenants"}</h2>
+          <p className="muted">{dictionary?.description || "Manage school tenants and subscriptions"}</p>
         </div>
-        <Button onClick={loadTenants} variant="outline">
-          <RefreshCw className="w-4 h-4 mr-2" />
-          Refresh
-        </Button>
-      </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle><small>Total Tenants</small></CardTitle>
-            <Building2 className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <h3>{tenants.length}</h3>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle><small>Active Tenants</small></CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <h3>
-              {tenants.filter(t => t.isActive).length}
-            </h3>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle><small>Inactive Tenants</small></CardTitle>
-            <AlertCircle className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <h3>
-              {tenants.filter(t => !t.isActive).length}
-            </h3>
-          </CardContent>
-        </Card>
-      </div>
+        {/* Stats Cards */}
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Schools</CardTitle>
+              <Building2 className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.totalTenants}</div>
+              <p className="text-xs text-muted-foreground">
+                {stats.activeTenants} active
+              </p>
+            </CardContent>
+          </Card>
 
-      {/* Tenants List */}
-      <Card>
-        <CardHeader>
-          <CardTitle>School Subdomains</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {tenants.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <Globe className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>No tenants found</p>
-              <p className="muted">Schools will appear here once they complete onboarding</p>
-            </div>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Active Rate</CardTitle>
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.activeRate}%</div>
+              <p className="text-xs text-muted-foreground">
+                {stats.activeTenants} of {stats.totalTenants}
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Students</CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.totalStudents.toLocaleString()}</div>
+              <p className="text-xs text-muted-foreground">
+                Across all schools
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Teachers</CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.totalTeachers.toLocaleString()}</div>
+              <p className="text-xs text-muted-foreground">
+                Across all schools
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Growth Rate</CardTitle>
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">+{stats.growthRate}%</div>
+              <p className="text-xs text-muted-foreground">
+                {stats.recentSignups} new this month
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Plan Distribution */}
+        <div className="grid gap-4 md:grid-cols-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Trial</CardTitle>
+              <Badge variant="secondary">Free</Badge>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.trialTenants}</div>
+              <p className="text-xs text-muted-foreground">
+                Schools on trial
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Basic</CardTitle>
+              <Badge variant="default">$99/mo</Badge>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.basicTenants}</div>
+              <p className="text-xs text-muted-foreground">
+                Basic plan schools
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Premium</CardTitle>
+              <Badge variant="default">$299/mo</Badge>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.premiumTenants}</div>
+              <p className="text-xs text-muted-foreground">
+                Premium plan schools
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Enterprise</CardTitle>
+              <Badge variant="default">Custom</Badge>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.enterpriseTenants}</div>
+              <p className="text-xs text-muted-foreground">
+                Enterprise schools
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Tenants Table */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-medium">
+              {dictionary?.table?.title || "Schools"}
+            </h3>
+            {stats.inactiveTenants > 0 && (
+              <Badge variant="outline" className="text-yellow-600">
+                {stats.inactiveTenants} inactive
+              </Badge>
+            )}
+          </div>
+
+          {tenantData.rows.length > 0 ? (
+            <TenantsTable
+              data={tenantData.rows}
+              columns={tenantColumns}
+              pageCount={tenantData.pageCount}
+            />
           ) : (
-            <div className="space-y-4">
-              {tenants.map((tenant) => (
-                <div
-                  key={tenant.id}
-                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
-                >
-                  {/* School Info */}
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
-                      <Globe className="w-5 h-5 text-primary" />
-                    </div>
-                    <div>
-                      <h4>{tenant.name}</h4>
-                      <p className="muted flex items-center gap-2">
-                        <span className="font-mono">{tenant.domain}.databayt.org</span>
-                        {getStatusBadge(tenant.isActive)}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex items-center gap-2">
-                    {editingId === tenant.id ? (
-                      <>
-                        <Input
-                          value={editValue}
-                          onChange={(e) => setEditValue(e.target.value)}
-                          className="w-48"
-                          placeholder="Enter new subdomain"
-                        />
-                        <Button
-                          size="sm"
-                          onClick={() => handleSave(tenant.id)}
-                          disabled={isSaving}
-                        >
-                          {isSaving ? (
-                            <RefreshCw className="w-4 h-4 animate-spin" />
-                          ) : (
-                            <Check className="w-4 h-4" />
-                          )}
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={handleCancel}
-                        >
-                          <X className="w-4 h-4" />
-                        </Button>
-                      </>
-                    ) : (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleEdit(tenant)}
-                      >
-                        <Edit className="w-4 h-4 mr-2" />
-                        Edit
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
+            <EmptyState
+              title="No schools found"
+              description="Schools will appear here once they complete onboarding."
+            />
           )}
-        </CardContent>
-      </Card>
-    </div>
+        </div>
+
+        {/* Trial Expiration Alert */}
+        {stats.trialTenants > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Trial Management</CardTitle>
+              <CardDescription>
+                {stats.trialTenants} schools are currently on trial plans
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-sm space-y-2">
+                <p>Monitor trial expirations and convert schools to paid plans:</p>
+                <ul className="list-disc list-inside space-y-1 text-muted-foreground">
+                  <li>Schools with expiring trials need follow-up</li>
+                  <li>Offer upgrade incentives before trial ends</li>
+                  <li>Track conversion rates from trial to paid</li>
+                </ul>
+                <div className="pt-2">
+                  <Link href={`/${lang}/operator/tenants?plan=TRIAL`}>
+                    <Button variant="outline" size="sm">
+                      View Trial Schools
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    </PageContainer>
   );
 }
-
-

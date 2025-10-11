@@ -6,8 +6,14 @@ import { BarGraph } from "@/components/operator/dashboard/bar-graph";
 import { AreaGraph } from "@/components/operator/dashboard/area-graph";
 import { PieGraph } from "@/components/operator/dashboard/pie-graph";
 import { RecentSales } from "@/components/operator/dashboard/recent-sales";
+import { type Locale } from "@/components/internationalization/config";
 
-export async function DashboardContent() {
+interface DashboardContentProps {
+  dictionary: any; // TODO: Add proper type for dictionary
+  lang: Locale;
+}
+
+export async function DashboardContent({ dictionary, lang }: DashboardContentProps) {
   const [totalSchools, activeSchools, totalUsers, totalStudents] = await Promise.all([
     db.school.count(),
     db.school.count({ where: { isActive: true } }),

@@ -1,0 +1,178 @@
+// Stream (LMS) Module Models
+// All models include schoolId for multi-tenant support
+
+model StreamCourse {
+  id          String   @id @default(cuid())
+  schoolId    String   // Multi-tenant support
+  title       String
+  slug        String
+  description String?  @db.Text
+  imageUrl    String?
+  price       Float?
+  isPublished Boolean  @default(false)
+
+  categoryId  String?
+  category    StreamCategory? @relation(fields: [categoryId], references: [id])
+
+  userId      String
+  user        User     @relation("UserCourses", fields: [userId], references: [id])
+
+  chapters    StreamChapter[]
+  enrollments StreamEnrollment[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  school      School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  @@unique([slug, schoolId]) // Unique slug per school
+  @@index([schoolId])
+  @@index([categoryId])
+  @@index([userId])
+  @@map("stream_course")
+}
+
+model StreamCategory {
+  id       String   @id @default(cuid())
+  schoolId String   // Multi-tenant support
+  name     String
+
+  courses  StreamCourse[]
+
+  school   School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  @@unique([name, schoolId]) // Unique category name per school
+  @@index([schoolId])
+  @@map("stream_category")
+}
+
+model StreamChapter {
+  id          String   @id @default(cuid())
+  title       String
+  description String?  @db.Text
+  videoUrl    String?  @db.Text
+  position    Int
+  isPublished Boolean  @default(false)
+  isFree      Boolean  @default(false)
+
+  courseId    String
+  course      StreamCourse @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  lessons     StreamLesson[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([courseId])
+  @@map("stream_chapter")
+}
+
+model StreamLesson {
+  id          String   @id @default(cuid())
+  title       String
+  description String?  @db.Text
+  videoUrl    String?  @db.Text
+  position    Int
+  isPublished Boolean  @default(false)
+  isFree      Boolean  @default(false)
+  duration    Int?     // Duration in minutes
+
+  chapterId   String
+  chapter     StreamChapter @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+
+  progress    StreamLessonProgress[]
+  attachments StreamAttachment[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([chapterId])
+  @@map("stream_lesson")
+}
+
+model StreamAttachment {
+  id       String   @id @default(cuid())
+  name     String
+  url      String   @db.Text
+
+  lessonId String
+  lesson   StreamLesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([lessonId])
+  @@map("stream_attachment")
+}
+
+model StreamEnrollment {
+  id        String   @id @default(cuid())
+  schoolId  String   // Multi-tenant support
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  courseId  String
+  course    StreamCourse @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  stripeCustomerId       String?
+  stripeCheckoutSessionId String?  @unique
+  stripePriceId          String?
+
+  isActive  Boolean  @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  school    School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId, schoolId]) // One enrollment per user per course per school
+  @@index([schoolId])
+  @@index([userId])
+  @@index([courseId])
+  @@map("stream_enrollment")
+}
+
+model StreamLessonProgress {
+  id        String   @id @default(cuid())
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  lessonId  String
+  lesson    StreamLesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  isCompleted Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, lessonId])
+  @@index([userId])
+  @@index([lessonId])
+  @@map("stream_lesson_progress")
+}
+
+// Add this model to track course completion certificates
+model StreamCertificate {
+  id           String   @id @default(cuid())
+  schoolId     String   // Multi-tenant support
+
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  courseId     String
+  courseTitle  String   // Snapshot of course title at completion
+
+  certificateNumber String @unique
+  completedAt  DateTime
+  issuedAt     DateTime @default(now())
+
+  school       School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId, schoolId])
+  @@index([schoolId])
+  @@index([userId])
+  @@index([courseId])
+  @@map("stream_certificate")
+}

@@ -4,7 +4,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { DataTableColumnHeader } from "@/components/table/data-table/data-table-column-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { updateInvoiceStatus } from "@/components/operator/actions/billing/invoices/update-status";
+import { invoiceUpdateStatus } from "@/components/operator/billing/actions";
 import { SuccessToast, ErrorToast } from "@/components/atom/toast";
 
 export type InvoiceRow = {
@@ -78,10 +78,28 @@ export const invoiceColumns: ColumnDef<InvoiceRow>[] = [
       return (
         <div className="flex gap-2">
           <Button size="sm" variant="outline" onClick={async () => {
-            try { await updateInvoiceStatus({ id: inv.id, status: "paid" }); SuccessToast(); } catch (e) { ErrorToast(e instanceof Error ? e.message : "Failed"); }
+            try {
+              const result = await invoiceUpdateStatus({ id: inv.id, status: "paid" });
+              if (result.success) {
+                SuccessToast();
+              } else {
+                ErrorToast(result.error.message);
+              }
+            } catch (e) {
+              ErrorToast(e instanceof Error ? e.message : "Failed");
+            }
           }}>Mark paid</Button>
           <Button size="sm" variant="outline" onClick={async () => {
-            try { await updateInvoiceStatus({ id: inv.id, status: "void" }); SuccessToast(); } catch (e) { ErrorToast(e instanceof Error ? e.message : "Failed"); }
+            try {
+              const result = await invoiceUpdateStatus({ id: inv.id, status: "void" });
+              if (result.success) {
+                SuccessToast();
+              } else {
+                ErrorToast(result.error.message);
+              }
+            } catch (e) {
+              ErrorToast(e instanceof Error ? e.message : "Failed");
+            }
           }}>Void</Button>
         </div>
       );

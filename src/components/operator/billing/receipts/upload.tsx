@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { createReceipt } from "@/components/operator/actions/billing/receipts/create";
+import { receiptCreate } from "@/components/operator/billing/actions";
 import { SuccessToast, ErrorToast } from "@/components/atom/toast";
 
 type Props = {
@@ -30,10 +30,14 @@ export function ReceiptUpload({ tenants, invoices }: Props) {
     if (!file) return ErrorToast("Select a file");
     setSubmitting(true);
     try {
-      await createReceipt({ invoiceId, schoolId, filename: file.name, amount });
-      SuccessToast();
-      setFile(null);
-      setAmount(0);
+      const result = await receiptCreate({ invoiceId, schoolId, filename: file.name, amount });
+      if (result.success) {
+        SuccessToast();
+        setFile(null);
+        setAmount(0);
+      } else {
+        ErrorToast(result.error.message);
+      }
     } catch (e) {
       ErrorToast(e instanceof Error ? e.message : "Failed to create receipt");
     } finally {

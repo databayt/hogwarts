@@ -15,5 +15,10 @@ export default async function Dashboard({ params }: Props) {
   const { lang } = await params;
   const dictionary = await getDictionary(lang);
 
-  return <DashboardContent />;
+  // The operator dashboard doesn't have dictionary support yet
+  // Pass an empty object for now
+  return <DashboardContent
+    dictionary={{}}
+    lang={lang}
+  />;
 }

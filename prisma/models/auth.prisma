@@ -46,6 +46,12 @@ model User {
   legalConsents        LegalConsent[]
   complianceLogs       ComplianceLog[]
 
+  // Stream (LMS) relations
+  streamCourses        StreamCourse[]        @relation("UserCourses")
+  streamEnrollments    StreamEnrollment[]
+  streamLessonProgress StreamLessonProgress[]
+  streamCertificates   StreamCertificate[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

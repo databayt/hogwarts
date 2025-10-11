@@ -12,23 +12,30 @@ const schoolDictionaries = {
   "ar": () => import("./school-ar.json").then((module) => module.default),
 } as const;
 
+const streamDictionaries = {
+  "en": () => import("./stream-en.json").then((module) => module.default),
+  "ar": () => import("./stream-ar.json").then((module) => module.default),
+} as const;
+
 export const getDictionary = async (locale: Locale) => {
   try {
-    // Load both general and school dictionaries
-    const [general, school] = await Promise.all([
+    // Load all dictionaries
+    const [general, school, stream] = await Promise.all([
       generalDictionaries[locale]?.() ?? generalDictionaries["en"](),
-      schoolDictionaries[locale]?.() ?? schoolDictionaries["en"]()
+      schoolDictionaries[locale]?.() ?? schoolDictionaries["en"](),
+      streamDictionaries[locale]?.() ?? streamDictionaries["en"]()
     ]);
 
     // Merge dictionaries
-    return { ...general, ...school };
+    return { ...general, ...school, ...stream };
   } catch (error) {
     console.warn(`Failed to load dictionary for locale: ${locale}. Falling back to en.`);
-    const [general, school] = await Promise.all([
+    const [general, school, stream] = await Promise.all([
       generalDictionaries["en"](),
-      schoolDictionaries["en"]()
+      schoolDictionaries["en"](),
+      streamDictionaries["en"]()
     ]);
-    return { ...general, ...school };
+    return { ...general, ...school, ...stream };
   }
 };
 
