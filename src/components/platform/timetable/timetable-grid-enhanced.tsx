@@ -273,7 +273,7 @@ export function TimetableGridEnhanced({
     const event: DragDropEvent = {
       source: {
         slot: item.slot,
-        position: { day: item.slot.dayOfWeek, period: item.slot.periodId }
+        position: { day: item.slot.dayOfWeek, period: parseInt(item.slot.periodId) }
       },
       target: {
         position: { day, period: parseInt(periodId) },
