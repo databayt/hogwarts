@@ -213,28 +213,28 @@ export async function AdminDashboard({ user, dictionary }: Props) {
             <div className="flex items-center justify-between p-2 border rounded">
               <span className="text-sm">Excellent</span>
               <div className="flex items-center space-x-2">
-                <Progress value={(mockStaffPerformance.excellent / teachers) * 100} className="w-20" />
+                <Progress value={(mockStaffPerformance.excellent / staff.total) * 100} className="w-20" />
                 <span className="text-sm font-medium">{mockStaffPerformance.excellent}</span>
               </div>
             </div>
             <div className="flex items-center justify-between p-2 border rounded">
               <span className="text-sm">Good</span>
               <div className="flex items-center space-x-2">
-                <Progress value={(mockStaffPerformance.good / teachers) * 100} className="w-20" />
+                <Progress value={(mockStaffPerformance.good / staff.total) * 100} className="w-20" />
                 <span className="text-sm font-medium">{mockStaffPerformance.good}</span>
               </div>
             </div>
             <div className="flex items-center justify-between p-2 border rounded">
               <span className="text-sm">Satisfactory</span>
               <div className="flex items-center space-x-2">
-                <Progress value={(mockStaffPerformance.satisfactory / teachers) * 100} className="w-20" />
+                <Progress value={(mockStaffPerformance.satisfactory / staff.total) * 100} className="w-20" />
                 <span className="text-sm font-medium">{mockStaffPerformance.satisfactory}</span>
               </div>
             </div>
             <div className="flex items-center justify-between p-2 border rounded">
               <span className="text-sm">Needs Improvement</span>
               <div className="flex items-center space-x-2">
-                <Progress value={(mockStaffPerformance.needsImprovement / teachers) * 100} className="w-20" />
+                <Progress value={(mockStaffPerformance.needsImprovement / staff.total) * 100} className="w-20" />
                 <span className="text-sm font-medium">{mockStaffPerformance.needsImprovement}</span>
               </div>
             </div>
