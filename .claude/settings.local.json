@@ -8,7 +8,8 @@
       "Bash(pnpm lint:*)",
       "Bash(git push:*)",
       "Bash(find:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(tree:*)"
     ],
     "deny": [],
     "ask": []
