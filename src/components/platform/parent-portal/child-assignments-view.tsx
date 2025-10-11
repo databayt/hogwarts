@@ -38,10 +38,12 @@ export async function ChildAssignmentsView({ studentId }: Props) {
         return <Badge variant="default">Submitted</Badge>;
       case "GRADED":
         return <Badge variant="default" className="bg-green-600">Graded</Badge>;
-      case "LATE":
+      case "LATE_SUBMITTED":
         return <Badge variant="destructive">Late</Badge>;
       case "DRAFT":
         return <Badge variant="outline">Draft</Badge>;
+      case "RETURNED":
+        return <Badge variant="default">Returned</Badge>;
       default:
         return <Badge variant="outline">{assignment.submission.status}</Badge>;
     }
@@ -81,7 +83,7 @@ export async function ChildAssignmentsView({ studentId }: Props) {
                 <TableBody>
                   {assignments.map((assignment) => {
                     const dueDate = new Date(assignment.dueDate);
-                    const assignedDate = new Date(assignment.assignedDate);
+                    const publishDate = assignment.publishDate ? new Date(assignment.publishDate) : null;
                     const now = new Date();
                     const isOverdue = !assignment.submission && dueDate < now;
 
@@ -100,7 +102,7 @@ export async function ChildAssignmentsView({ studentId }: Props) {
                         <TableCell>{assignment.subjectName}</TableCell>
                         <TableCell>{assignment.className}</TableCell>
                         <TableCell>
-                          {assignedDate.toLocaleDateString()}
+                          {publishDate?.toLocaleDateString() || "-"}
                         </TableCell>
                         <TableCell>
                           <span className={isOverdue ? "text-destructive font-medium" : ""}>
@@ -113,10 +115,10 @@ export async function ChildAssignmentsView({ studentId }: Props) {
                           </span>
                         </TableCell>
                         <TableCell>
-                          {assignment.submission?.grade !== null &&
-                          assignment.submission?.grade !== undefined ? (
+                          {assignment.submission?.score !== null &&
+                          assignment.submission?.score !== undefined ? (
                             <span className="font-medium">
-                              {assignment.submission.grade}/{assignment.totalPoints}
+                              {assignment.submission.score}/{assignment.totalPoints}
                             </span>
                           ) : (
                             <span className="text-muted-foreground">-</span>
