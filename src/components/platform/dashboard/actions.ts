@@ -420,12 +420,8 @@ export async function getStudentDashboardData() {
         { scope: "school" },
         {
           scope: "class",
-          targetClasses: {
-            some: {
-              id: {
-                in: classIds,
-              },
-            },
+          classId: {
+            in: classIds,
           },
         },
       ],
@@ -655,12 +651,8 @@ export async function getParentDashboardData() {
         { scope: "school" },
         {
           scope: "class",
-          targetClasses: {
-            some: {
-              id: {
-                in: classIds,
-              },
-            },
+          classId: {
+            in: classIds,
           },
         },
       ],
