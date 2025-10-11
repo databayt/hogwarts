@@ -415,7 +415,7 @@ export async function getStudentDashboardData() {
   const announcements = await db.announcement.findMany({
     where: {
       schoolId,
-      isPublished: true,
+      published: true,
       OR: [
         { scope: "school" },
         {
@@ -646,7 +646,7 @@ export async function getParentDashboardData() {
   const announcements = await db.announcement.findMany({
     where: {
       schoolId,
-      isPublished: true,
+      published: true,
       OR: [
         { scope: "school" },
         {
