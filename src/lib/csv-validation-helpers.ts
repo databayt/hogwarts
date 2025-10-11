@@ -59,22 +59,24 @@ export function formatZodError(error: ZodError): ValidationResult {
         break;
 
       case "too_small":
-        if (issue.type === "string") {
+        if ("type" in issue && issue.type === "string" && "minimum" in issue) {
           message = `${field} must be at least ${issue.minimum} characters`;
           suggestion = `Current length: ${receivedValue?.length || 0}`;
         }
         break;
 
       case "too_big":
-        if (issue.type === "string") {
+        if ("type" in issue && issue.type === "string" && "maximum" in issue) {
           message = `${field} must be at most ${issue.maximum} characters`;
           suggestion = `Current length: ${receivedValue?.length || 0}`;
         }
         break;
 
-      case "invalid_enum_value":
-        message = `${field} must be one of: ${issue.options.join(", ")}`;
-        suggestion = `Received: ${receivedValue}`;
+      case "invalid_union":
+        if ("unionErrors" in issue && Array.isArray(issue.unionErrors)) {
+          message = `${field} does not match any of the expected formats`;
+          suggestion = `Please check the value format`;
+        }
         break;
 
       default:
