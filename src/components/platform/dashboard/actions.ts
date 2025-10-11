@@ -62,7 +62,7 @@ export async function getTeacherDashboardData() {
       },
       classroom: {
         select: {
-          roomNumber: true,
+          roomName: true,
         },
       },
       period: {
@@ -235,7 +235,7 @@ export async function getTeacherDashboardData() {
       id: entry.id,
       name: entry.class.name,
       time: `${new Date(entry.period.startTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} - ${new Date(entry.period.endTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`,
-      room: entry.classroom?.roomNumber || "TBA",
+      room: entry.classroom?.roomName || "TBA",
       students: entry.class._count.studentClasses,
     })),
     pendingGrading: pendingGradingCount,
@@ -331,7 +331,7 @@ export async function getStudentDashboardData() {
       },
       classroom: {
         select: {
-          roomNumber: true,
+          roomName: true,
         },
       },
       period: {
@@ -460,7 +460,7 @@ export async function getStudentDashboardData() {
       subject: entry.class.subject.subjectName,
       className: entry.class.name,
       teacher: `${entry.class.teacher.givenName} ${entry.class.teacher.surname}`,
-      room: entry.classroom?.roomNumber || "TBA",
+      room: entry.classroom?.roomName || "TBA",
       startTime: entry.period.startTime.toISOString(),
       endTime: entry.period.endTime.toISOString(),
     })),
