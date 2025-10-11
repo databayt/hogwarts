@@ -149,11 +149,11 @@ export async function getExams(input: Partial<z.infer<typeof getExamsSchema>>) {
     }),
     db.exam.count({ where }),
   ]);
-  const mapped = (rows as Array<Record<string, unknown>>).map((e) => ({
+  const mapped = rows.map((e) => ({
     id: e.id as string,
     title: e.title as string,
-    className: e.class?.name || "Unknown",
-    subjectName: e.subject?.subjectName || "Unknown",
+    className: (e.class as any)?.name || "Unknown",
+    subjectName: (e.subject as any)?.subjectName || "Unknown",
     examDate: (e.examDate as Date).toISOString(),
     startTime: e.startTime as string,
     endTime: e.endTime as string,
