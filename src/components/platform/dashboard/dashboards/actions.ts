@@ -19,7 +19,7 @@ export async function getEnrollmentMetrics() {
   const firstOfMonth = startOfMonth(now);
   const lastOfMonth = endOfMonth(now);
 
-  const [total, newThisMonth, active, inactive, graduated] = await Promise.all([
+  const [total, newThisMonth] = await Promise.all([
     // Total students
     db.student.count({ where: { schoolId } }),
 
@@ -30,29 +30,14 @@ export async function getEnrollmentMetrics() {
         createdAt: { gte: firstOfMonth, lte: lastOfMonth },
       },
     }),
-
-    // Active students
-    db.student.count({
-      where: { schoolId, status: "ACTIVE" },
-    }),
-
-    // Inactive students
-    db.student.count({
-      where: { schoolId, status: "INACTIVE" },
-    }),
-
-    // Graduated students
-    db.student.count({
-      where: { schoolId, status: "GRADUATED" },
-    }),
   ]);
 
   return {
     total,
     newThisMonth,
-    active,
-    inactive,
-    graduated,
+    active: total, // TODO: Implement when status field is added to Student model
+    inactive: 0, // TODO: Implement when status field is added to Student model
+    graduated: 0, // TODO: Implement when status field is added to Student model
     transferIn: 0, // TODO: Implement when transfer tracking is added
     transferOut: 0, // TODO: Implement when transfer tracking is added
   };
@@ -77,7 +62,7 @@ export async function getAttendanceMetrics() {
       },
       _count: true,
     }),
-    db.student.count({ where: { schoolId, status: "ACTIVE" } }),
+    db.student.count({ where: { schoolId } }),
   ]);
 
   const presentCount = todayAttendance.find((a) => a.status === "PRESENT")?._count || 0;
@@ -175,7 +160,7 @@ export async function getClassesMetrics() {
   const [totalClasses, activeClasses, students, teachers] = await Promise.all([
     db.class.count({ where: { schoolId } }),
     db.class.count({ where: { schoolId } }), // TODO: Add status field to filter active
-    db.student.count({ where: { schoolId, status: "ACTIVE" } }),
+    db.student.count({ where: { schoolId } }),
     db.teacher.count({ where: { schoolId } }),
   ]);
 
