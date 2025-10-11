@@ -3,7 +3,7 @@ import { getStudentColumns, type StudentRow } from '@/components/platform/studen
 import { SearchParams } from 'nuqs/server'
 import { studentsSearchParams } from '@/components/platform/students/list-params'
 import { db } from '@/lib/db'
-import { getTenantContext } from '@/components/operator/lib/tenant'
+import { getTenantContext } from '@/lib/tenant-context'
 import type { Dictionary } from '@/components/internationalization/dictionaries'
 
 interface Props {

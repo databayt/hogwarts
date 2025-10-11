@@ -3,7 +3,7 @@ import { getTeacherColumns, type TeacherRow } from '@/components/platform/teache
 import { SearchParams } from 'nuqs/server'
 import { teachersSearchParams } from '@/components/platform/teachers/list-params'
 import { db } from '@/lib/db'
-import { getTenantContext } from '@/components/operator/lib/tenant'
+import { getTenantContext } from '@/lib/tenant-context'
 import { Shell as PageContainer } from '@/components/table/shell'
 import type { Dictionary } from '@/components/internationalization/dictionaries'
 

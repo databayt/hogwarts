@@ -3,7 +3,7 @@ import { getAnnouncementColumns, type AnnouncementRow } from '@/components/platf
 import { SearchParams } from 'nuqs/server'
 import { announcementsSearchParams } from '@/components/platform/announcements/list-params'
 import { db } from '@/lib/db'
-import { getTenantContext } from '@/components/operator/lib/tenant'
+import { getTenantContext } from '@/lib/tenant-context'
 import { Shell as PageContainer } from '@/components/table/shell'
 import type { Dictionary } from '@/components/internationalization/dictionaries'
 

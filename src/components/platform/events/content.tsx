@@ -3,7 +3,7 @@ import { eventColumns, type EventRow } from '@/components/platform/events/column
 import { SearchParams } from 'nuqs/server'
 import { eventsSearchParams } from '@/components/platform/events/list-params'
 import { db } from '@/lib/db'
-import { getTenantContext } from '@/components/operator/lib/tenant'
+import { getTenantContext } from '@/lib/tenant-context'
 import { Shell as PageContainer } from '@/components/table/shell'
 import { type Locale } from '@/components/internationalization/config'
 import { type Dictionary } from '@/components/internationalization/dictionaries'

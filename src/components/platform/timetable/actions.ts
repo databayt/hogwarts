@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from '@/lib/db'
-import { getTenantContext } from '@/components/operator/lib/tenant'
+import { getTenantContext } from '@/lib/tenant-context'
 
 type Conflict = {
   type: 'TEACHER' | 'ROOM'

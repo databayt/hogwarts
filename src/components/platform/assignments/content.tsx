@@ -3,7 +3,7 @@ import { assignmentColumns, type AssignmentRow } from '@/components/platform/ass
 import { SearchParams } from 'nuqs/server'
 import { assignmentsSearchParams } from '@/components/platform/assignments/list-params'
 import { db } from '@/lib/db'
-import { getTenantContext } from '@/components/operator/lib/tenant'
+import { getTenantContext } from '@/lib/tenant-context'
 import { Shell as PageContainer } from '@/components/table/shell'
 import { type Locale } from '@/components/internationalization/config'
 import { type Dictionary } from '@/components/internationalization/dictionaries'

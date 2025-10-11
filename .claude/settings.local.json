@@ -7,7 +7,8 @@
       "Bash(pnpm build:*)",
       "Bash(pnpm lint:*)",
       "Bash(git push:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(ls:*)"
     ],
     "deny": [],
     "ask": []

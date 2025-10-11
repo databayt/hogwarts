@@ -3,7 +3,7 @@
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
-import { getTenantContext } from "@/components/operator/lib/tenant";
+import { getTenantContext } from "@/lib/tenant-context";
 import { studentCreateSchema, studentUpdateSchema, getStudentsSchema } from "@/components/platform/students/validation";
 import { arrayToCSV } from "@/lib/csv-export";
 

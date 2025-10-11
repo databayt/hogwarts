@@ -30,16 +30,6 @@ const ALL_ROLES: Role[] = [
 ];
 
 export const platformNav: PlatformNavItem[] = [
-  // Developer (operator) – developer only
-  { title: "Overview", href: "/operator/overview", icon: "box", roles: ["DEVELOPER"] },
-  { title: "Kanban", href: "/operator/kanban", icon: "checkCircle", roles: ["DEVELOPER"] },
-  { title: "Products", href: "/operator/product", icon: "file", roles: ["DEVELOPER"] },
-  { title: "Domains", href: "/operator/domains", icon: "browser", roles: ["DEVELOPER"] },
-  { title: "Billing", href: "/operator/billing", icon: "pieChart", roles: ["DEVELOPER"] },
-  { title: "Observability", href: "/operator/observability", icon: "barChart", roles: ["DEVELOPER"] },
-  { title: "Tenants", href: "/operator/tenants", icon: "envelope", roles: ["DEVELOPER"] },
-  { title: "Dev Profile", href: "/operator/profile", icon: "cog", roles: ["DEVELOPER"] },
-
   // Admin dashboard – admin only
   { title: "Overview", href: "/dashboard", icon: "pieChart", roles: ["ADMIN"] },
   { title: "Admin", href: "/dashboard/admin", icon: "admin", roles: ["ADMIN"], className: "-ml-[1.5px] h-4.5 w-4.5" },
