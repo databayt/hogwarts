@@ -1,7 +1,7 @@
 "use server"
 
 import { db } from "@/lib/db";
-import { getTenantContext } from "@/lib/tenant-context";
+import { getTenantContext } from "@/components/operator/lib/tenant";
 import { subDays, startOfMonth, endOfMonth } from "date-fns";
 
 /**
