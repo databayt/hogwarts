@@ -245,7 +245,7 @@ export async function getChildTimetable(input: { studentId: string }) {
           },
           classroom: {
             select: {
-              roomNumber: true,
+              roomName: true,
             },
           },
         },
@@ -271,7 +271,7 @@ export async function getChildTimetable(input: { studentId: string }) {
       className: entry.class.name,
       subjectName: entry.class.subject.subjectName,
       teacherName: `${entry.class.teacher.givenName} ${entry.class.teacher.surname}`,
-      roomNumber: entry.class.classroom.roomNumber,
+      roomName: entry.class.classroom?.roomName || "TBA",
     })),
   };
 }
