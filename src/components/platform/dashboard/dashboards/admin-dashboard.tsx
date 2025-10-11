@@ -185,20 +185,20 @@ export async function AdminDashboard({ user, dictionary }: Props) {
           <CardContent className="space-y-4">
             <div className="flex justify-between items-center">
               <span className="text-sm text-muted-foreground">Average GPA</span>
-              <span className="font-medium">{mockAcademicPerformance.averageGPA}</span>
+              <span className="font-medium">{academicPerformance.averageGPA}</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-muted-foreground">Pass Rate</span>
-              <span className="font-medium text-green-600">{mockAcademicPerformance.passRate}%</span>
+              <span className="font-medium text-green-600">{academicPerformance.passRate}%</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-muted-foreground">Improvement</span>
-              <span className="font-medium text-green-600">{mockAcademicPerformance.improvement}</span>
+              <span className="font-medium text-green-600">{academicPerformance.improvement}</span>
             </div>
             <div className="pt-2 border-t">
               <div className="flex justify-between items-center">
                 <span className="text-sm text-muted-foreground">Top Performers</span>
-                <span className="font-medium">{mockAcademicPerformance.topPerformers} students</span>
+                <span className="font-medium">{academicPerformance.topPerformers} students</span>
               </div>
             </div>
           </CardContent>
