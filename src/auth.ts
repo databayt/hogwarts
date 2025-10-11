@@ -880,25 +880,26 @@ if (process.env.NODE_ENV === 'development') {
 
 // Debug cookie configuration
 const cookieDomain = process.env.NODE_ENV === "production" ? '.databayt.org' : undefined;
+const isProduction = process.env.NODE_ENV === "production";
 if (process.env.NODE_ENV === 'development') {
   console.log('🍪 Cookie configuration:', {
     environment: process.env.NODE_ENV,
     cookieDomain,
     pkceCodeVerifier: {
       name: 'authjs.pkce.code_verifier',
-      options: { sameSite: 'lax', secure: process.env.NODE_ENV === "production", httpOnly: true, maxAge: 900, domain: cookieDomain }
+      options: { sameSite: 'lax', secure: isProduction, httpOnly: true, maxAge: 900, domain: cookieDomain }
     },
     sessionToken: {
       name: 'authjs.session-token',
-      options: { sameSite: 'lax', secure: process.env.NODE_ENV === "production", httpOnly: true, domain: cookieDomain }
+      options: { sameSite: 'lax', secure: isProduction, httpOnly: true, domain: cookieDomain }
     },
     callbackUrl: {
       name: 'authjs.callback-url',
-      options: { sameSite: 'lax', secure: process.env.NODE_ENV === "production", domain: cookieDomain }
+      options: { sameSite: 'lax', secure: isProduction, domain: cookieDomain }
     },
     csrfToken: {
       name: 'authjs.csrf-token',
-      options: { sameSite: 'lax', secure: process.env.NODE_ENV === "production", httpOnly: true, domain: cookieDomain }
+      options: { sameSite: 'lax', secure: isProduction, httpOnly: true, domain: cookieDomain }
     }
   });
 }
