@@ -26,15 +26,10 @@ interface Props {
 }
 
 export default async function DashboardContent({ school, dictionary }: Props = {}) {
-  // Debug logging
-  console.log('DashboardContent - school prop:', school);
-  
   const user = await currentUser() as ExtendedUser | null;
-  console.log('DashboardContent - user:', user);
 
   // If no user, show login component
   if (!user) {
-    console.log('DashboardContent - no user found, showing login');
     return (
       <TenantLoginRedirect 
         subdomain={school?.domain || 'unknown'} 
