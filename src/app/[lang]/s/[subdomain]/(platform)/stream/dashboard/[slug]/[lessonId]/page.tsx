@@ -15,8 +15,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const dictionary = await getDictionary(lang);
 
   return {
-    title: dictionary.stream?.lesson?.title || "Lesson",
-    description: dictionary.stream?.lesson?.description || "Course lesson content",
+    title: "Lesson",
+    description: "Course lesson content",
   };
 }
 

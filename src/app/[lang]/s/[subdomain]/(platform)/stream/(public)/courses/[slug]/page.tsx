@@ -14,8 +14,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   // TODO: Fetch course title from database using slug for better SEO
   return {
-    title: `${slug} - ${dictionary.stream?.course?.title || "Course Details"}`,
-    description: dictionary.stream?.course?.description || "Course details and enrollment",
+    title: `${slug} - Course Details`,
+    description: "Course details and enrollment",
   };
 }
 
