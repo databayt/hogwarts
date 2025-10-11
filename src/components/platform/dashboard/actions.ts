@@ -39,14 +39,12 @@ export async function getTeacherDashboardData() {
 
   // Get day of week (0 = Sunday, 1 = Monday, etc.)
   const dayOfWeek = today.getDay();
-  const dayNames = ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"];
-  const todayDayName = dayNames[dayOfWeek];
 
   // Fetch today's classes from timetable
   const todaysClasses = await db.timetable.findMany({
     where: {
       schoolId,
-      dayOfWeek: todayDayName,
+      dayOfWeek: dayOfWeek,
       class: {
         teacherId: teacher.id,
       },
@@ -289,10 +287,8 @@ export async function getStudentDashboardData() {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  // Get day of week
+  // Get day of week (0 = Sunday, 1 = Monday, etc.)
   const dayOfWeek = today.getDay();
-  const dayNames = ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"];
-  const todayDayName = dayNames[dayOfWeek];
 
   // Get student's classes
   const studentClasses = await db.studentClass.findMany({
@@ -311,7 +307,7 @@ export async function getStudentDashboardData() {
   const todaysTimetable = await db.timetable.findMany({
     where: {
       schoolId,
-      dayOfWeek: todayDayName,
+      dayOfWeek: dayOfWeek,
       classId: {
         in: classIds,
       },
