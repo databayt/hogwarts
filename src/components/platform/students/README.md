@@ -1,3 +1,219 @@
+## Students — Student Information Management
+
+**Admin Control Center for Student Records**
+
+The Students feature empowers school administrators to manage the complete student lifecycle from enrollment to graduation with comprehensive record-keeping, bulk operations, and class assignments.
+
+### What Admins Can Do
+
+**Core Capabilities:**
+- 👨‍🎓 Add students individually or bulk import via CSV
+- 📋 View and manage complete student roster with advanced filters
+- 🔍 Search by name, status, class, enrollment date
+- 📝 Update student information (contact, guardian, class assignment)
+- 👪 Link students to guardian/parent accounts
+- 📊 Track enrollment status (active, inactive, graduated, transferred)
+- 📁 Export student data to CSV for reporting
+- 🔄 Batch operations for class assignments and status updates
+- 📚 View academic history and class enrollment
+
+### What Teachers Can View
+- ✅ See students enrolled in their classes
+- ✅ Access student contact information
+- ✅ View guardian details for communication
+- ❌ Cannot modify student records (read-only access)
+
+### What Students Can View
+- ✅ View their own profile information
+- ✅ See their class enrollment
+- ✅ Access their academic schedule
+- ❌ Cannot view other students' information
+
+### What Parents Can View
+- ✅ View their child's profile
+- ✅ See class assignments and teachers
+- ✅ Access academic performance
+- ✅ Update emergency contact information
+- ❌ Cannot view other students
+
+### Current Implementation Status
+**Production-Ready MVP ✅**
+
+**Completed:**
+- ✅ CRUD operations with validation
+- ✅ CSV bulk import with error reporting
+- ✅ Class enrollment management (many-to-many)
+- ✅ Guardian relationships linking
+- ✅ Search and filtering (name, status, class)
+- ✅ Export to CSV
+- ✅ Multi-tenant isolation (schoolId scoping)
+- ✅ Server-side pagination and sorting
+- ✅ Modal-based create/edit forms
+
+**In Progress:**
+- 🚧 Academic history tracking
+- 🚧 Photo upload and management
+- 🚧 Document attachments (birth certificate, etc.)
+
+**Planned:**
+- ⏸️ Transfer between schools
+- ⏸️ Health records integration
+- ⏸️ Attendance summary per student
+- ⏸️ Grade progression tracking
+
+---
+
+## Admin Workflows
+
+### 1. Add a Single Student
+**Prerequisites:** School year and classes already configured
+
+1. Navigate to `/students`
+2. Click "Create" button in toolbar
+3. Fill in student information form:
+   - **Personal Info**: Given name, surname, date of birth, gender
+   - **Contact**: Email, phone number
+   - **Enrollment**: Enrollment date, status (active/inactive)
+   - **Class Assignment**: Select class from dropdown
+4. Click "Save"
+5. System validates and creates student record
+6. Success toast appears, table refreshes automatically
+
+### 2. Bulk Import Students via CSV
+**Prerequisites:** CSV file with proper column format
+
+1. Navigate to `/import`
+2. Download CSV template
+3. Fill template with student data:
+   - Columns: `givenName`, `surname`, `dateOfBirth`, `gender`, `email`, `phone`, `enrollmentDate`, `status`, `className`
+4. Upload completed CSV file
+5. System validates each row:
+   - Checks required fields
+   - Validates date formats
+   - Ensures unique email per tenant
+6. Review error report if validation fails
+7. Click "Import" to confirm
+8. System creates all valid students
+9. Summary shows: X created, Y errors
+
+### 3. Search and Filter Students
+**Quick Search:**
+1. Use search box in toolbar
+2. Type student name (partial match)
+3. Results update as you type
+
+**Advanced Filtering:**
+1. Click "Status" dropdown → Select active/inactive/graduated
+2. Click "Class" dropdown → Select specific class
+3. Click "View" → Toggle column visibility
+4. Filters combine (AND logic)
+5. URL updates with filter state (shareable link)
+
+### 4. Update Student Information
+**Method A: Edit via Modal**
+1. Find student in table
+2. Click row actions (three dots)
+3. Select "Edit"
+4. Modal opens with pre-filled form
+5. Update fields as needed
+6. Click "Save"
+7. System validates and updates record
+
+**Method B: Detail Page**
+1. Click "View" on student row
+2. Navigate to `/students/[id]`
+3. Click "Edit" button
+4. Update information
+5. Click "Save"
+
+### 5. Link Student to Guardian
+**Prerequisites:** Parent/guardian account already created
+
+1. Open student detail page (`/students/[id]`)
+2. Scroll to "Guardians" section
+3. Click "Add Guardian"
+4. Select guardian from dropdown (or create new)
+5. Specify relationship (mother, father, legal guardian, other)
+6. Click "Link"
+7. Guardian gains access to student information via parent portal
+
+### 6. Manage Class Enrollment
+**Assign to Class:**
+1. Open student detail or edit modal
+2. Select class from "Class Assignment" dropdown
+3. Save changes
+4. Student appears in class roster
+5. Teachers of that class gain view access
+
+**Bulk Class Assignment:**
+1. Select multiple students via checkboxes
+2. Click "Bulk Actions" → "Assign to Class"
+3. Choose target class
+4. Confirm assignment
+5. All selected students enrolled in class
+
+### 7. Export Student Data
+1. Apply desired filters (status, class, date range)
+2. Click "Export" button
+3. Select export format (CSV)
+4. Choose columns to include
+5. Download file
+6. Use for reporting, backups, or external systems
+
+### 8. Track Student Status Changes
+**Status Options:**
+- **Active**: Currently enrolled and attending
+- **Inactive**: Temporarily not attending (leave, suspension)
+- **Graduated**: Completed all grade levels
+- **Transferred**: Moved to another school
+- **Withdrawn**: Left school without completion
+
+**Change Status:**
+1. Edit student record
+2. Update "Status" field
+3. Add status change notes
+4. Save
+5. System logs status change with timestamp
+6. Historical record preserved
+
+---
+
+## Integration with Other Features
+
+### Links to Classes
+- Student enrollment creates `StudentClass` relationship
+- Teachers see student roster in their classes
+- Class capacity limits enforced during enrollment
+- Class schedule visible to enrolled students
+
+### Links to Parents
+- Guardian relationships via `StudentGuardian` model
+- Parents access child's information via parent portal
+- Emergency contact information available to staff
+- Communication logs tracked per guardian
+
+### Links to Attendance
+- Attendance records reference student ID
+- Daily/period-by-period tracking
+- Absence summaries calculated per student
+- Alerts for excessive absences
+
+### Links to Results
+- Student ID links to exam scores and assignments
+- Gradebook shows performance across all subjects
+- GPA calculated per student per term
+- Report cards generated with student details
+
+### Links to Timetable
+- Students see their class timetable
+- Schedule shows which teachers they have
+- Period-by-period schedule for the week
+- Links to lesson plans and materials
+
+---
+
+## Technical Implementation
+
 ### Students block
 
 Typed, multi-tenant Students listing with server-driven pagination/sort/filter and a modal create form. Mirrors the route at `src/app/(platform)/students/page.tsx` per the mirror pattern.
@@ -102,7 +318,81 @@ To add a new filter:
 2) Add a key to `studentsSearchParams` in `list-params.ts`.
 3) Map the key in the Prisma `where` clause in `content.tsx`.
 
+---
+
+## Technology Stack & Dependencies
+
+This feature is built with the following technologies (see [Platform README](../README.md) for complete stack details):
+
+### Core Framework
+- **Next.js 15.4+** - App Router with Server Components ([Docs](https://nextjs.org/docs))
+- **React 19+** - Server Actions, new hooks (`useActionState`, `useFormStatus`) ([Docs](https://react.dev))
+- **TypeScript** - Strict mode for type safety
+
+### Database & ORM
+- **Neon PostgreSQL** - Serverless database with autoscaling ([Docs](https://neon.tech/docs/introduction))
+- **Prisma ORM 6.14+** - Type-safe queries and migrations ([Docs](https://www.prisma.io/docs))
+  ```prisma
+  model Student {
+    id               String   @id @default(cuid())
+    schoolId         String
+    givenName        String
+    surname          String
+    dateOfBirth      DateTime?
+    gender           Gender?
+    email            String?
+    status           StudentStatus @default(ACTIVE)
+
+    @@unique([email, schoolId])
+    @@index([schoolId, createdAt])
+  }
+  ```
+
+### Forms & Validation
+- **React Hook Form 7.61+** - Performant form state management ([Docs](https://react-hook-form.com))
+- **Zod 4.0+** - Runtime schema validation (client + server) ([Docs](https://zod.dev))
+  ```typescript
+  export const studentCreateSchema = z.object({
+    givenName: z.string().min(1),
+    surname: z.string().min(1),
+    dateOfBirth: z.string().optional(),
+    gender: z.enum(["MALE", "FEMALE"]),
+  })
+  ```
+
+### UI Components
+- **shadcn/ui** - Accessible components built on Radix UI ([Docs](https://ui.shadcn.com/docs))
+- **TanStack Table 8.21+** - Headless table with sorting/filtering ([Docs](https://tanstack.com/table))
+- **Tailwind CSS 4** - Utility-first styling ([Docs](https://tailwindcss.com/docs))
+
+### Data Management
+- **nuqs** - Type-safe URL search params synchronization
+- **SWR** (future) - Client-side data fetching and caching
+
+### Server Actions Pattern
+```typescript
+"use server"
+export async function createStudent(input: FormData) {
+  const { schoolId } = await getTenantContext()
+  const validated = studentCreateSchema.parse(input)
+  await db.student.create({ data: { ...validated, schoolId } })
+  revalidatePath('/students')
+  return { success: true }
+}
+```
+
+### Key Features
+- **Multi-Tenant Isolation**: All queries scoped by `schoolId`
+- **Type Safety**: End-to-end TypeScript with Prisma + Zod inference
+- **Server-Side Operations**: Mutations via Next.js Server Actions
+- **URL State Management**: Filters and pagination synced to URL
+- **Accessibility**: ARIA labels, keyboard navigation, semantic HTML
+
+For complete technology documentation, see [Platform Technology Stack](../README.md#technology-stack--documentation).
+
+---
+
 ### Route usage
-`src/app/(platform)/students/page.tsx` simply re-exports `default` from `content.tsx`, matching the project’s mirror pattern.
+`src/app/(platform)/students/page.tsx` simply re-exports `default` from `content.tsx`, matching the project's mirror pattern.
 
 

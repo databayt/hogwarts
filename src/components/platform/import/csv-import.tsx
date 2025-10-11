@@ -19,6 +19,11 @@ interface ImportResult {
     row: number;
     error: string;
     data?: any;
+    details?: string; // Enhanced error details with suggestions
+  }>;
+  warnings?: Array<{
+    row: number;
+    warning: string;
   }>;
 }
 
@@ -204,13 +209,39 @@ export function CsvImportComponent({ dictionary, lang }: CsvImportComponentProps
             {/* Errors */}
             {result.errors.length > 0 && (
               <div className="space-y-2">
-                <h4>Errors:</h4>
-                <div className="max-h-60 overflow-y-auto space-y-2">
+                <h4 className="font-semibold">Errors ({result.errors.length}):</h4>
+                <div className="max-h-96 overflow-y-auto space-y-3">
                   {result.errors.map((error, index) => (
                     <Alert key={index} variant="destructive">
                       <AlertCircle className="h-4 w-4" />
                       <AlertDescription>
-                        <span className="font-medium">Row {error.row}:</span> {error.error}
+                        <div className="space-y-1">
+                          <p>
+                            <span className="font-medium">Row {error.row}:</span> {error.error}
+                          </p>
+                          {error.details && (
+                            <pre className="mt-2 text-xs bg-destructive/10 p-2 rounded border border-destructive/20 whitespace-pre-wrap">
+                              {error.details}
+                            </pre>
+                          )}
+                        </div>
+                      </AlertDescription>
+                    </Alert>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Warnings */}
+            {result.warnings && result.warnings.length > 0 && (
+              <div className="space-y-2">
+                <h4 className="font-semibold">Warnings ({result.warnings.length}):</h4>
+                <div className="max-h-60 overflow-y-auto space-y-2">
+                  {result.warnings.map((warning, index) => (
+                    <Alert key={index} variant="default" className="border-yellow-500 bg-yellow-50">
+                      <AlertCircle className="h-4 w-4 text-yellow-600" />
+                      <AlertDescription className="text-yellow-800">
+                        <span className="font-medium">Row {warning.row}:</span> {warning.warning}
                       </AlertDescription>
                     </Alert>
                   ))}

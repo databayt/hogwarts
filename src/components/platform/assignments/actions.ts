@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { getTenantContext } from "@/components/operator/lib/tenant";
 import { assignmentCreateSchema, assignmentUpdateSchema, getAssignmentsSchema } from "@/components/platform/assignments/validation";
+import { arrayToCSV } from "@/lib/csv-export";
 
 export async function createAssignment(input: z.infer<typeof assignmentCreateSchema>) {
   const { schoolId } = await getTenantContext();
@@ -132,4 +133,82 @@ export async function getAssignments(input: Partial<z.infer<typeof getAssignment
     createdAt: (a.createdAt as Date).toISOString(),
   }));
   return { rows: mapped, total: count as number };
+}
+
+/**
+ * Export assignments to CSV format
+ */
+export async function getAssignmentsCSV(input?: Partial<z.infer<typeof getAssignmentsSchema>>) {
+  const { schoolId } = await getTenantContext();
+  if (!schoolId) throw new Error("Missing school context");
+
+  const sp = getAssignmentsSchema.parse(input ?? {});
+  if (!(db as any).assignment) return "";
+
+  // Build where clause with filters
+  const where: any = {
+    schoolId,
+    ...(sp.title ? { title: { contains: sp.title, mode: "insensitive" } } : {}),
+    ...(sp.type ? { type: sp.type } : {}),
+    ...(sp.classId ? { classId: sp.classId } : {}),
+  };
+
+  // Fetch ALL assignments matching filters (no pagination for export)
+  const assignments = await (db as any).assignment.findMany({
+    where,
+    include: {
+      class: {
+        select: {
+          name: true,
+          subject: {
+            select: {
+              subjectName: true,
+            },
+          },
+        },
+      },
+      _count: {
+        select: {
+          assignmentSubmissions: true,
+        },
+      },
+    },
+    orderBy: [{ dueDate: "asc" }],
+  });
+
+  // Transform data for CSV export
+  const exportData = assignments.map((assignment: any) => ({
+    assignmentId: assignment.id,
+    title: assignment.title || "",
+    description: assignment.description || "",
+    class: assignment.class?.name || "",
+    subject: assignment.class?.subject?.subjectName || "",
+    type: assignment.type || "",
+    totalPoints: assignment.totalPoints || 0,
+    weight: assignment.weight || 0,
+    dueDate: assignment.dueDate
+      ? new Date(assignment.dueDate).toISOString().split("T")[0]
+      : "",
+    status: assignment.status || "",
+    submissions: assignment._count.assignmentSubmissions,
+    createdAt: new Date(assignment.createdAt).toISOString().split("T")[0],
+  }));
+
+  // Define CSV columns
+  const columns = [
+    { key: "assignmentId", label: "Assignment ID" },
+    { key: "title", label: "Title" },
+    { key: "description", label: "Description" },
+    { key: "class", label: "Class" },
+    { key: "subject", label: "Subject" },
+    { key: "type", label: "Type" },
+    { key: "totalPoints", label: "Total Points" },
+    { key: "weight", label: "Weight (%)" },
+    { key: "dueDate", label: "Due Date" },
+    { key: "status", label: "Status" },
+    { key: "submissions", label: "Submissions Count" },
+    { key: "createdAt", label: "Created Date" },
+  ];
+
+  return arrayToCSV(exportData, { columns });
 }

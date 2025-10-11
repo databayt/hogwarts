@@ -11,7 +11,9 @@ import {
   DragDropEvent,
   TeacherInfo,
   SubjectInfo,
-  ClassroomInfo
+  ClassroomInfo,
+  TimetableDictionary,
+  DragItem
 } from './types'
 import {
   getSubjectColor,
@@ -75,7 +77,7 @@ interface TimetableGridEnhancedProps {
   onSlotMove?: (event: DragDropEvent) => void
   onSlotCopy?: (slot: TimetableSlot, targetPosition: { day: number; period: string }) => void
   onEmptyCellClick?: (day: number, periodId: string) => void
-  dictionary?: any
+  dictionary?: TimetableDictionary
 }
 
 const DraggableSlot: React.FC<{
@@ -160,8 +162,8 @@ const DraggableSlot: React.FC<{
       </div>
 
       {displayInfo.isSubstitute && (
-        <Badge variant="outline" className="absolute top-1 right-1 text-xs">
-          Sub
+        <Badge variant="outline" className="absolute top-1 right-1">
+          <small>Sub</small>
         </Badge>
       )}
     </div>
@@ -173,7 +175,7 @@ const DroppableCell: React.FC<{
   periodId: string
   slot?: TimetableSlot | null
   displayInfo?: ReturnType<typeof getSlotDisplayInfo>
-  onDrop: (item: any, day: number, periodId: string) => void
+  onDrop: (item: DragItem, day: number, periodId: string) => void
   onClick?: () => void
   onEdit?: () => void
   onDelete?: () => void
@@ -182,7 +184,7 @@ const DroppableCell: React.FC<{
 }> = ({ day, periodId, slot, displayInfo, onDrop, onClick, onEdit, onDelete, editable, isBreak }) => {
   const [{ isOver, canDrop }, drop] = useDrop(() => ({
     accept: 'slot',
-    drop: (item: any) => onDrop(item, day, periodId),
+    drop: (item: DragItem) => onDrop(item, day, periodId),
     collect: (monitor) => ({
       isOver: monitor.isOver(),
       canDrop: monitor.canDrop(),
@@ -265,7 +267,7 @@ export function TimetableGridEnhanced({
     }
   }, [slots, showConflicts])
 
-  const handleDrop = useCallback((item: any, day: number, periodId: string) => {
+  const handleDrop = useCallback((item: DragItem, day: number, periodId: string) => {
     if (!onSlotMove) return
 
     const event: DragDropEvent = {

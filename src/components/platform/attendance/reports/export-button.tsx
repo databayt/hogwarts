@@ -1,8 +1,10 @@
 "use client";
 
 import * as React from "react";
+import { Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getAttendanceReportCsv } from "@/components/platform/attendance/actions";
+import { generateCSVFilename } from "@/lib/csv-export";
 
 type Filters = { classId?: string; studentId?: string; status?: string; from?: string; to?: string };
 
@@ -16,7 +18,7 @@ export function AttendanceReportExportButton({ filters }: { filters: Filters }) 
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = "attendance.csv";
+      a.download = generateCSVFilename("attendance-report");
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -27,6 +29,7 @@ export function AttendanceReportExportButton({ filters }: { filters: Filters }) 
   };
   return (
     <Button size="sm" variant="outline" onClick={onDownload} disabled={downloading}>
+      <Download className="mr-2 h-4 w-4" />
       {downloading ? "Exporting..." : "Export CSV"}
     </Button>
   );

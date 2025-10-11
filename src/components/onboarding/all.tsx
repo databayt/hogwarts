@@ -32,7 +32,7 @@ export default function AllSchools({
 
   // Filter and sort schools
   const filteredAndSortedSchools = useMemo(() => {
-    let filtered = schools.filter(school => {
+    const filtered = schools.filter(school => {
       const matchesSearch = !searchQuery || 
         school.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         school.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||

@@ -9,6 +9,7 @@ model Subject {
   school     School     @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   department Department @relation(fields: [departmentId], references: [id])
   classes    Class[]
+  exams      Exam[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -41,6 +42,7 @@ model Class {
   attendances    Attendance[]
   announcements  Announcement[]
   timetables     Timetable[]
+  exams          Exam[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

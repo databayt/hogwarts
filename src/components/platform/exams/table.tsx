@@ -10,6 +10,7 @@ import { Plus } from "lucide-react";
 import { useModal } from "@/components/atom/modal/context";
 import Modal from "@/components/atom/modal/modal";
 import { ExamCreateForm } from "@/components/platform/exams/form";
+import { ExportButton } from "./export-button";
 
 export function ExamsTable({ data, columns, pageCount }: { data: ExamRow[]; columns: ColumnDef<ExamRow, unknown>[]; pageCount: number }) {
   const { table } = useDataTable<ExamRow>({ data, columns, pageCount });
@@ -18,17 +19,20 @@ export function ExamsTable({ data, columns, pageCount }: { data: ExamRow[]; colu
   return (
     <DataTable table={table}>
       <DataTableToolbar table={table}>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="h-8 w-8 p-0 rounded-full"
-          onClick={() => openModal()}
-          aria-label="Create"
-          title="Create"
-        >
-          <Plus className="h-4 w-4" />
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-8 w-8 p-0 rounded-full"
+            onClick={() => openModal()}
+            aria-label="Create"
+            title="Create"
+          >
+            <Plus className="h-4 w-4" />
+          </Button>
+          <ExportButton />
+        </div>
       </DataTableToolbar>
       <Modal content={<ExamCreateForm />} />
     </DataTable>

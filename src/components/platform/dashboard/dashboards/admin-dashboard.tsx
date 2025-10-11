@@ -1,82 +1,65 @@
 import type { Dictionary } from "@/components/internationalization/dictionaries";
-import { db } from "@/lib/db";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Users, FileText, Bell, Settings, TrendingUp, DollarSign, CheckCircle, AlertTriangle } from "lucide-react";
+import { Users, FileText, Bell, CheckCircle, AlertTriangle, TrendingUp } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
+import { getDashboardSummary } from "./actions";
 
-interface AdminDashboardProps {
+interface Props {
   user: any;
   dictionary?: Dictionary["school"];
 }
 
-export async function AdminDashboard({ user, dictionary }: AdminDashboardProps) {
-  // Fetch real data from database
-  const [students, teachers, announcements] = await Promise.all([
-    db.student.count({ where: { schoolId: user.schoolId } }),
-    db.teacher.count({ where: { schoolId: user.schoolId } }),
-    db.announcement.count({ where: { schoolId: user.schoolId, published: true } })
-  ]);
+export async function AdminDashboard({ user, dictionary }: Props) {
+  // Fetch real data from server actions
+  const dashboardData = await getDashboardSummary();
 
-  // Mock data for unimplemented features
-  const mockEnrollmentData = {
-    total: students,
-    newThisMonth: 12,
-    graduated: 8,
-    transferIn: 5,
-    transferOut: 3
-  };
+  // Destructure real data
+  const {
+    enrollment,
+    attendance,
+    staff,
+    academicPerformance,
+    announcements,
+    classes,
+    activities,
+  } = dashboardData;
 
-  const mockAttendanceRate = 94.2;
-  const mockStaffPresence = 87.5;
-
+  // Mock data for features not yet implemented (Financial, Compliance, etc.)
   const mockFinancialSummary = {
     totalRevenue: 1250000,
     expenses: 980000,
     profit: 270000,
     outstandingFees: 45000,
-    budgetUtilization: 78.4
-  };
-
-  const mockAcademicPerformance = {
-    averageGPA: 3.4,
-    passRate: 92.8,
-    improvement: "+2.3%",
-    topPerformers: 45
+    budgetUtilization: 78.4,
   };
 
   const mockStaffPerformance = {
     excellent: 28,
     good: 42,
     satisfactory: 15,
-    needsImprovement: 5
+    needsImprovement: 5,
   };
 
   const mockComplianceStatus = {
     academic: "Compliant",
     financial: "Compliant",
     safety: "Pending Review",
-    accreditation: "Compliant"
+    accreditation: "Compliant",
   };
-
-  const mockRecentActivities = [
-    { action: "New student enrolled", user: "Admin", timestamp: "1 hour ago", type: "enrollment" },
-    { action: "Teacher evaluation completed", user: "HR", timestamp: "3 hours ago", type: "evaluation" },
-    { action: "Budget report generated", user: "Finance", timestamp: "5 hours ago", type: "finance" },
-    { action: "Safety inspection scheduled", user: "Facilities", timestamp: "1 day ago", type: "safety" }
-  ];
 
   const mockPendingRequests = [
     { type: "Teacher Leave", requester: "Sarah Johnson", urgency: "medium", daysOpen: 2 },
     { type: "Budget Approval", requester: "Math Department", urgency: "high", daysOpen: 1 },
-    { type: "Student Transfer", requester: "Parent", urgency: "low", daysOpen: 5 }
+    { type: "Student Transfer", requester: "Parent", urgency: "low", daysOpen: 5 },
   ];
 
   const mockSystemAlerts = [
     { type: "Database Backup", message: "Scheduled backup completed successfully", severity: "info" },
     { type: "System Update", message: "New features available in next update", severity: "info" },
-    { type: "Security Alert", message: "Multiple login attempts detected", severity: "warning" }
+    { type: "Security Alert", message: "Multiple login attempts detected", severity: "warning" },
   ];
 
   return (
@@ -89,9 +72,9 @@ export async function AdminDashboard({ user, dictionary }: AdminDashboardProps) 
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{mockEnrollmentData.total}</div>
+            <div className="text-2xl font-bold">{enrollment.total}</div>
             <p className="text-xs text-muted-foreground">
-              +{mockEnrollmentData.newThisMonth} this month
+              +{enrollment.newThisMonth} this month
             </p>
           </CardContent>
         </Card>
@@ -102,21 +85,24 @@ export async function AdminDashboard({ user, dictionary }: AdminDashboardProps) 
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{mockAttendanceRate}%</div>
-            <p className="text-xs text-muted-foreground">Student attendance</p>
-            <Progress value={mockAttendanceRate} className="mt-2" />
+            <div className="text-2xl font-bold">{attendance.attendanceRate}%</div>
+            <p className="text-xs text-muted-foreground">
+              {attendance.present} present, {attendance.absent} absent
+            </p>
+            <Progress value={attendance.attendanceRate} className="mt-2" />
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Staff Presence</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Active Classes</CardTitle>
+            <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{mockStaffPresence}%</div>
-            <p className="text-xs text-muted-foreground">Today's attendance</p>
-            <Progress value={mockStaffPresence} className="mt-2" />
+            <div className="text-2xl font-bold">{classes.total}</div>
+            <p className="text-xs text-muted-foreground">
+              {announcements.published} announcements
+            </p>
           </CardContent>
         </Card>
 
@@ -126,8 +112,10 @@ export async function AdminDashboard({ user, dictionary }: AdminDashboardProps) 
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{teachers}</div>
-            <p className="text-xs text-muted-foreground">Teachers & staff</p>
+            <div className="text-2xl font-bold">{staff.total}</div>
+            <p className="text-xs text-muted-foreground">
+              {staff.departments} departments
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -276,18 +264,24 @@ export async function AdminDashboard({ user, dictionary }: AdminDashboardProps) 
             <CardTitle>Recent Activities</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {mockRecentActivities.map((activity, index) => (
-              <div key={index} className="p-3 border rounded-lg">
-                <p className="font-medium">{activity.action}</p>
-                <div className="flex items-center justify-between mt-2">
-                  <p className="text-sm text-muted-foreground">by {activity.user}</p>
-                  <div className="flex items-center space-x-2">
-                    <Badge variant="outline" className="text-xs capitalize">{activity.type}</Badge>
-                    <p className="text-xs text-muted-foreground">{activity.timestamp}</p>
+            {activities.length > 0 ? (
+              activities.slice(0, 4).map((activity, index) => (
+                <div key={index} className="p-3 border rounded-lg">
+                  <p className="font-medium">{activity.action}</p>
+                  <div className="flex items-center justify-between mt-2">
+                    <p className="text-sm text-muted-foreground">by {activity.user}</p>
+                    <div className="flex items-center space-x-2">
+                      <Badge variant="outline" className="text-xs capitalize">{activity.type}</Badge>
+                      <p className="text-xs text-muted-foreground">
+                        {formatDistanceToNow(activity.timestamp, { addSuffix: true })}
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))
+            ) : (
+              <p className="text-sm text-muted-foreground">No recent activities</p>
+            )}
           </CardContent>
         </Card>
 
@@ -327,23 +321,29 @@ export async function AdminDashboard({ user, dictionary }: AdminDashboardProps) 
             <div className="text-center">
               <h4 className="mb-2">Student-Teacher Ratio</h4>
               <div className="text-2xl font-bold text-blue-600">
-                {teachers > 0 ? (students / teachers).toFixed(1) : 0}:1
+                {classes.studentTeacherRatio}:1
               </div>
-              <p className="text-xs text-muted-foreground">Current ratio</p>
+              <p className="text-xs text-muted-foreground">
+                {enrollment.active} students / {staff.total} teachers
+              </p>
             </div>
             <div className="text-center">
-              <h4 className="mb-2">Budget Utilization</h4>
+              <h4 className="mb-2">Exams & Assignments</h4>
               <div className="text-2xl font-bold text-green-600">
-                {mockFinancialSummary.budgetUtilization}%
+                {(academicPerformance.totalExams || 0) + (academicPerformance.totalAssignments || 0)}
               </div>
-              <p className="text-xs text-muted-foreground">Of allocated budget</p>
+              <p className="text-xs text-muted-foreground">
+                {academicPerformance.totalExams} exams, {academicPerformance.totalAssignments} assignments
+              </p>
             </div>
             <div className="text-center">
-              <h4 className="mb-2">Performance Trend</h4>
+              <h4 className="mb-2">Recent Announcements</h4>
               <div className="text-2xl font-bold text-purple-600">
-                {mockAcademicPerformance.improvement}
+                {announcements.recentCount}
               </div>
-              <p className="text-xs text-muted-foreground">Academic improvement</p>
+              <p className="text-xs text-muted-foreground">
+                In the last 7 days
+              </p>
             </div>
           </div>
         </CardContent>

@@ -72,7 +72,7 @@ export async function getSchoolLocation(schoolId: string): Promise<ActionRespons
     }
 
     // Parse the concatenated address string
-    let parsedAddress = {
+    const parsedAddress = {
       address: "",
       city: "",
       state: "",

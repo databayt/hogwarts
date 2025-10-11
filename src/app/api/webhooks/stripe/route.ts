@@ -101,7 +101,7 @@ export async function POST(req: Request) {
         select: { id: true, schoolId: true },
       });
 
-      let user = existingUser;
+      const user = existingUser;
       if (existingUser?.id) {
         await db.user.update({
           where: { id: existingUser.id },

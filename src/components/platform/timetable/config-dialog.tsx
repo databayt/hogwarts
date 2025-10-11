@@ -266,17 +266,17 @@ export function ConfigDialog({ open, onOpenChange, classConfig, onConfigChange, 
               
               <CommandList>
                 {error ? (
-                  <div className="py-6 text-center text-sm text-neutral-500 dark:text-neutral-400">
+                  <p className="py-6 text-center muted dark:text-neutral-400">
                     {error}
-                  </div>
+                  </p>
                 ) : searchValue.length <= 1 ? (
-                  <CommandEmpty className="py-6 text-center text-sm dark:text-neutral-400">
+                  <CommandEmpty className="py-6 text-center muted dark:text-neutral-400">
                     학교 이름을 입력하세요
                   </CommandEmpty>
                  ) : isLoading ? (
-                  <div className="py-6 text-center text-sm dark:text-neutral-400">Searching...</div>
+                  <p className="py-6 text-center muted dark:text-neutral-400">Searching...</p>
                 ) : schools.length === 0 ? (
-                  <div className="py-6 text-center text-sm dark:text-neutral-400">No results</div>
+                  <p className="py-6 text-center muted dark:text-neutral-400">No results</p>
                 ) : (
                   <CommandGroup>
                     {schools.map((school) => (
@@ -292,9 +292,9 @@ export function ConfigDialog({ open, onOpenChange, classConfig, onConfigChange, 
                             )}
                           />
                           {school.SCHUL_NM}
-                          <span className="ml-2 text-sm text-neutral-500 dark:text-neutral-400">
+                          <small className="ml-2 text-neutral-500 dark:text-neutral-400">
                             ({school.ATPT_OFCDC_SC_NM})
-                          </span>
+                          </small>
                         </CommandItem>
                     ))}
                   </CommandGroup>
@@ -304,7 +304,7 @@ export function ConfigDialog({ open, onOpenChange, classConfig, onConfigChange, 
           </PopoverContent>
         </Popover>
         {error && (
-          <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-1">
+          <p className="muted dark:text-neutral-400 mt-1">
             {error}
           </p>
         )}

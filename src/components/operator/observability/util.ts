@@ -287,8 +287,8 @@ export function sortLogs(
   direction: "asc" | "desc" = "desc"
 ): UnifiedLog[] {
   return [...logs].sort((a, b) => {
-    let aVal = a[field];
-    let bVal = b[field];
+    const aVal = a[field];
+    const bVal = b[field];
 
     // Handle date fields separately
     if (field === "createdAt") {

@@ -1,0 +1,88 @@
+// Examination Models
+
+enum ExamType {
+  MIDTERM
+  FINAL
+  QUIZ
+  TEST
+  PRACTICAL
+}
+
+enum ExamStatus {
+  PLANNED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+model Exam {
+  id           String     @id @default(cuid())
+  schoolId     String
+  title        String
+  description  String?    @db.Text
+  classId      String
+  subjectId    String
+  examDate     DateTime
+  startTime    String     // Format: "HH:MM" (e.g., "09:00")
+  endTime      String     // Format: "HH:MM" (e.g., "11:00")
+  duration     Int        // Duration in minutes
+  totalMarks   Int
+  passingMarks Int
+  examType     ExamType
+  instructions String?    @db.Text
+  status       ExamStatus @default(PLANNED)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  school  School       @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  class   Class        @relation(fields: [classId], references: [id], onDelete: Cascade)
+  subject Subject      @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  results ExamResult[]
+
+  @@index([schoolId, examDate])
+  @@index([schoolId, classId])
+  @@index([schoolId, subjectId])
+  @@index([schoolId, status])
+  @@map("exams")
+}
+
+model ExamResult {
+  id            String   @id @default(cuid())
+  schoolId      String
+  examId        String
+  studentId     String
+  marksObtained Int
+  totalMarks    Int
+  percentage    Float
+  grade         String?
+  remarks       String?  @db.Text
+  isAbsent      Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  school  School  @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  exam    Exam    @relation(fields: [examId], references: [id], onDelete: Cascade)
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([examId, studentId])
+  @@index([schoolId, examId])
+  @@index([schoolId, studentId])
+  @@map("exam_results")
+}
+
+model GradeBoundary {
+  id         String  @id @default(cuid())
+  schoolId   String
+  grade      String  // A+, A, B+, B, C+, C, D, F
+  minScore   Decimal @db.Decimal(5, 2)
+  maxScore   Decimal @db.Decimal(5, 2)
+  gpaValue   Decimal @db.Decimal(3, 2) // GPA equivalent (e.g., 4.0, 3.7)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  @@unique([schoolId, grade])
+  @@index([schoolId, minScore, maxScore])
+  @@map("grade_boundaries")
+}

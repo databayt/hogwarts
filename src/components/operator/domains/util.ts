@@ -210,8 +210,8 @@ export function sortDomains<
   direction: "asc" | "desc" = "asc"
 ): T[] {
   return [...domains].sort((a, b) => {
-    let aVal = a[field];
-    let bVal = b[field];
+    const aVal = a[field];
+    const bVal = b[field];
 
     // Handle date fields separately
     if (field === "createdAt" || field === "verifiedAt") {

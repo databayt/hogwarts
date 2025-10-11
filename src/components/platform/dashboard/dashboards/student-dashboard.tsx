@@ -1,106 +1,75 @@
-import { db } from "@/lib/db";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Calendar, Clock, BookOpen, Award, AlertCircle, MessageSquare, FileText, CalendarDays } from "lucide-react";
+import {
+  Calendar,
+  Clock,
+  BookOpen,
+  Award,
+  FileText,
+  CalendarDays,
+  MessageSquare,
+} from "lucide-react";
 import type { Dictionary } from "@/components/internationalization/dictionaries";
+import { getStudentDashboardData } from "../actions";
 
 interface StudentDashboardProps {
-  user: any;
-  dictionary?: Dictionary['school'];
+  user: {
+    id: string;
+    email?: string | null;
+    role?: string;
+    schoolId?: string | null;
+  };
+  dictionary?: Dictionary["school"];
 }
 
-export async function StudentDashboard({ user, dictionary }: StudentDashboardProps) {
-  // Fetch real data from database
-  const student = await db.student.findFirst({
-    where: { userId: user.id, schoolId: user.schoolId },
-    include: {
-      attendances: {
-        where: {
-          date: {
-            gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1)
-          }
-        },
-        take: 30
-      },
-      submissions: {
-        include: {
-          assignment: true
-        },
-        where: {
-          assignment: {
-            dueDate: {
-              gte: new Date()
-            }
-          }
-        },
-        take: 5
-      }
-    }
-  });
-
-  // Calculate attendance percentage
-  const totalDays = student?.attendances.length || 0;
-  const presentDays = student?.attendances.filter(a => a.status === "PRESENT").length || 0;
-  const attendancePercentage = totalDays > 0 ? (presentDays / totalDays) * 100 : 0;
+export async function StudentDashboard({
+  user,
+  dictionary,
+}: StudentDashboardProps) {
+  // Fetch real data from server action
+  const data = await getStudentDashboardData();
 
   // Get dashboard dictionary with fallbacks
   const dashDict = {
     stats: {
-      gpa: "Current GPA",
       attendance: "Attendance",
       assignments: "Upcoming Assignments",
-      balance: "Fee Balance"
+      averageGrade: "Average Grade",
+      announcements: "Announcements",
     },
     quickActions: {
       title: "Quick Actions",
       submitAssignment: "Submit Assignment",
       checkGrades: "Check Grades",
       viewTimetable: "View Timetable",
-      messages: "Messages"
+      messages: "Messages",
     },
     sections: {
       upcomingAssignments: "Upcoming Assignments",
       recentGrades: "Recent Grades",
-      upcomingExams: "Upcoming Exams",
-      libraryBooks: "Library Books",
       announcements: "School Announcements",
-      todaySchedule: "Today's Schedule"
+      todaySchedule: "Today's Schedule",
     },
     labels: {
-      outOf: "Out of 4.0 scale",
       daysPresent: "days present",
       dueThisWeek: "Due this week",
-      outstanding: "Outstanding amount",
       noAssignments: "No upcoming assignments",
       noGrades: "No recent grades",
+      noClasses: "No classes scheduled for today",
+      noAnnouncements: "No announcements",
       due: "Due",
-      overdue: "Overdue",
-      dueSoon: "Due Soon",
       room: "Room",
-      lab: "Lab"
-    }
+      grade: "Grade",
+    },
   };
 
-  // Mock data for unimplemented features
-  const mockGPA = 3.8;
-  const mockUpcomingExams = [
-    { subject: "Mathematics", date: "2024-01-15", type: "Midterm" },
-    { subject: "Science", date: "2024-01-20", type: "Quiz" },
-    { subject: "History", date: "2024-01-25", type: "Final" }
-  ];
-
-  const mockLibraryBooks = [
-    { title: "The Great Gatsby", dueDate: "2024-01-10", overdue: true },
-    { title: "To Kill a Mockingbird", dueDate: "2024-01-20", overdue: false }
-  ];
-
-  const mockFeeBalance = 150.00;
-  const mockAnnouncements = [
-    { title: "School Assembly Tomorrow", date: "2024-01-08" },
-    { title: "Sports Day Registration", date: "2024-01-07" }
-  ];
+  const averageGrade =
+    data.recentGrades.length > 0
+      ? data.recentGrades.reduce((sum, g) => sum + g.percentage, 0) /
+        data.recentGrades.length
+      : 0;
 
   return (
     <div className="space-y-6">
@@ -108,46 +77,65 @@ export async function StudentDashboard({ user, dictionary }: StudentDashboardPro
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{dashDict.stats.gpa}</CardTitle>
-            <Award className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{mockGPA}</div>
-            <p className="text-xs text-muted-foreground">{dashDict.labels.outOf}</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{dashDict.stats.attendance}</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {dashDict.stats.attendance}
+            </CardTitle>
             <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{attendancePercentage.toFixed(1)}%</div>
-            <p className="text-xs text-muted-foreground">{presentDays}/{totalDays} {dashDict.labels.daysPresent}</p>
-            <Progress value={attendancePercentage} className="mt-2" />
+            <div className="text-2xl font-bold">
+              {data.attendanceSummary.percentage.toFixed(1)}%
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {data.attendanceSummary.presentDays}/{data.attendanceSummary.totalDays}{" "}
+              {dashDict.labels.daysPresent}
+            </p>
+            <Progress value={data.attendanceSummary.percentage} className="mt-2" />
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{dashDict.stats.assignments}</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {dashDict.stats.assignments}
+            </CardTitle>
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{student?.submissions.length || 0}</div>
-            <p className="text-xs text-muted-foreground">{dashDict.labels.dueThisWeek}</p>
+            <div className="text-2xl font-bold">
+              {data.upcomingAssignments.length}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {dashDict.labels.dueThisWeek}
+            </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{dashDict.stats.balance}</CardTitle>
-            <AlertCircle className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">
+              {dashDict.stats.averageGrade}
+            </CardTitle>
+            <Award className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${mockFeeBalance}</div>
-            <p className="text-xs text-muted-foreground">{dashDict.labels.outstanding}</p>
+            <div className="text-2xl font-bold">{averageGrade.toFixed(1)}%</div>
+            <p className="text-xs text-muted-foreground">
+              Based on recent exams
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              {dashDict.stats.announcements}
+            </CardTitle>
+            <MessageSquare className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{data.announcements.length}</div>
+            <p className="text-xs text-muted-foreground">Unread messages</p>
           </CardContent>
         </Card>
       </div>
@@ -181,28 +169,82 @@ export async function StudentDashboard({ user, dictionary }: StudentDashboardPro
 
       {/* Main Content Grid */}
       <div className="grid gap-6 md:grid-cols-2">
+        {/* Today's Schedule */}
+        <Card>
+          <CardHeader>
+            <CardTitle>{dashDict.sections.todaySchedule}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {data.todaysTimetable.length > 0 ? (
+              data.todaysTimetable.map((entry) => (
+                <div
+                  key={entry.id}
+                  className="flex items-center justify-between p-3 border rounded-lg"
+                >
+                  <div className="flex items-center space-x-3">
+                    <Clock className="h-4 w-4 text-muted-foreground" />
+                    <div>
+                      <p className="font-medium">{entry.subject}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {dashDict.labels.room} {entry.room} • {entry.teacher}
+                      </p>
+                    </div>
+                  </div>
+                  <Badge>
+                    {new Date(entry.startTime).toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </Badge>
+                </div>
+              ))
+            ) : (
+              <p className="text-muted-foreground text-center py-4">
+                {dashDict.labels.noClasses}
+              </p>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Upcoming Assignments */}
         <Card>
           <CardHeader>
             <CardTitle>{dashDict.sections.upcomingAssignments}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {student?.submissions.length ? (
-              student.submissions.map((submission: any) => (
-                <div key={submission.id} className="flex items-center justify-between p-3 border rounded-lg">
+            {data.upcomingAssignments.length > 0 ? (
+              data.upcomingAssignments.map((assignment) => (
+                <div
+                  key={assignment.id}
+                  className="flex items-center justify-between p-3 border rounded-lg"
+                >
                   <div>
-                    <p className="font-medium">{submission.assignment.title}</p>
+                    <p className="font-medium">{assignment.title}</p>
                     <p className="text-sm text-muted-foreground">
-                      {dashDict.labels.due}: {new Date(submission.assignment.dueDate).toLocaleDateString()}
+                      {assignment.subject} • {assignment.className}
                     </p>
                   </div>
-                  <Badge variant={submission.status === "SUBMITTED" ? "default" : "secondary"}>
-                    {submission.status}
-                  </Badge>
+                  <div className="text-right">
+                    <Badge
+                      variant={
+                        assignment.status === "NOT_SUBMITTED"
+                          ? "destructive"
+                          : "default"
+                      }
+                    >
+                      {assignment.status === "NOT_SUBMITTED" ? "Pending" : assignment.status}
+                    </Badge>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {dashDict.labels.due}:{" "}
+                      {new Date(assignment.dueDate).toLocaleDateString()}
+                    </p>
+                  </div>
                 </div>
               ))
             ) : (
-              <p className="text-muted-foreground text-center py-4">{dashDict.labels.noAssignments}</p>
+              <p className="text-muted-foreground text-center py-4">
+                {dashDict.labels.noAssignments}
+              </p>
             )}
           </CardContent>
         </Card>
@@ -213,66 +255,31 @@ export async function StudentDashboard({ user, dictionary }: StudentDashboardPro
             <CardTitle>{dashDict.sections.recentGrades}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {student?.submissions.filter((s: any) => s.score)?.slice(0, 3).map((submission: any) => (
-              <div key={submission.id} className="flex items-center justify-between p-3 border rounded-lg">
-                <div>
-                  <p className="font-medium">{submission.assignment.title}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {submission.assignment.type}
-                  </p>
+            {data.recentGrades.length > 0 ? (
+              data.recentGrades.map((grade) => (
+                <div
+                  key={grade.id}
+                  className="flex items-center justify-between p-3 border rounded-lg"
+                >
+                  <div>
+                    <p className="font-medium">{grade.examTitle}</p>
+                    <p className="text-sm text-muted-foreground">{grade.subject}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-bold">
+                      {grade.marksObtained}/{grade.totalMarks}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {grade.percentage.toFixed(1)}% {grade.grade ? `• ${grade.grade}` : ""}
+                    </p>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <p className="font-bold">{submission.score}/{submission.assignment.totalPoints}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {((submission.score / submission.assignment.totalPoints) * 100).toFixed(1)}%
-                  </p>
-                </div>
-              </div>
-            )) || (
-              <p className="text-muted-foreground text-center py-4">{dashDict.labels.noGrades}</p>
+              ))
+            ) : (
+              <p className="text-muted-foreground text-center py-4">
+                {dashDict.labels.noGrades}
+              </p>
             )}
-          </CardContent>
-        </Card>
-
-        {/* Upcoming Exams */}
-        <Card>
-          <CardHeader>
-            <CardTitle>{dashDict.sections.upcomingExams}</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {mockUpcomingExams.map((exam, index) => (
-              <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
-                <div>
-                  <p className="font-medium">{exam.subject}</p>
-                  <p className="text-sm text-muted-foreground">{exam.type}</p>
-                </div>
-                <Badge variant="outline">
-                  {new Date(exam.date).toLocaleDateString()}
-                </Badge>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-
-        {/* Library Books */}
-        <Card>
-          <CardHeader>
-            <CardTitle>{dashDict.sections.libraryBooks}</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {mockLibraryBooks.map((book, index) => (
-              <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
-                <div>
-                  <p className="font-medium">{book.title}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {dashDict.labels.due}: {new Date(book.dueDate).toLocaleDateString()}
-                  </p>
-                </div>
-                <Badge variant={book.overdue ? "destructive" : "default"}>
-                  {book.overdue ? dashDict.labels.overdue : dashDict.labels.dueSoon}
-                </Badge>
-              </div>
-            ))}
           </CardContent>
         </Card>
 
@@ -282,45 +289,36 @@ export async function StudentDashboard({ user, dictionary }: StudentDashboardPro
             <CardTitle>{dashDict.sections.announcements}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {mockAnnouncements.map((announcement, index) => (
-              <div key={index} className="p-3 border rounded-lg">
-                <p className="font-medium">{announcement.title}</p>
-                <p className="text-sm text-muted-foreground">
-                  {new Date(announcement.date).toLocaleDateString()}
-                </p>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-
-        {/* Today's Schedule */}
-        <Card>
-          <CardHeader>
-            <CardTitle>{dashDict.sections.todaySchedule}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between p-3 border rounded-lg">
-                <div className="flex items-center space-x-3">
-                  <Clock className="h-4 w-4 text-muted-foreground" />
-                  <div>
-                    <p className="font-medium">Mathematics</p>
-                    <p className="text-sm text-muted-foreground">{dashDict.labels.room} 101</p>
+            {data.announcements.length > 0 ? (
+              data.announcements.map((announcement) => (
+                <div key={announcement.id} className="p-3 border rounded-lg">
+                  <div className="flex items-center justify-between mb-1">
+                    <p className="font-medium">{announcement.title}</p>
+                    <Badge
+                      variant={
+                        announcement.priority === "HIGH"
+                          ? "destructive"
+                          : announcement.priority === "MEDIUM"
+                            ? "default"
+                            : "secondary"
+                      }
+                    >
+                      {announcement.priority}
+                    </Badge>
                   </div>
+                  <p className="text-sm text-muted-foreground line-clamp-2">
+                    {announcement.content}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {new Date(announcement.createdAt).toLocaleDateString()}
+                  </p>
                 </div>
-                <Badge>9:00 AM</Badge>
-              </div>
-              <div className="flex items-center justify-between p-3 border rounded-lg">
-                <div className="flex items-center space-x-3">
-                  <BookOpen className="h-4 w-4 text-muted-foreground" />
-                  <div>
-                    <p className="font-medium">Science</p>
-                    <p className="text-sm text-muted-foreground">{dashDict.labels.lab} 2</p>
-                  </div>
-                </div>
-                <Badge>10:30 AM</Badge>
-              </div>
-            </div>
+              ))
+            ) : (
+              <p className="text-muted-foreground text-center py-4">
+                {dashDict.labels.noAnnouncements}
+              </p>
+            )}
           </CardContent>
         </Card>
       </div>

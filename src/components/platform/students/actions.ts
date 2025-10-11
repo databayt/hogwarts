@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { getTenantContext } from "@/components/operator/lib/tenant";
 import { studentCreateSchema, studentUpdateSchema, getStudentsSchema } from "@/components/platform/students/validation";
+import { arrayToCSV } from "@/lib/csv-export";
 
 export async function createStudent(input: z.infer<typeof studentCreateSchema>) {
   const { schoolId } = await getTenantContext();
@@ -157,4 +158,101 @@ export async function getStudents(input: Partial<z.infer<typeof getStudentsSchem
     createdAt: (s.createdAt as Date).toISOString(),
   }));
   return { rows: mapped, total: count as number };
+}
+
+/**
+ * Export students to CSV format
+ */
+export async function getStudentsCSV(input?: Partial<z.infer<typeof getStudentsSchema>>) {
+  const { schoolId } = await getTenantContext();
+  if (!schoolId) throw new Error("Missing school context");
+
+  const sp = getStudentsSchema.parse(input ?? {});
+  if (!(db as any).student) return "";
+
+  // Build where clause with filters
+  const where: any = {
+    schoolId,
+    ...(sp.name
+      ? {
+          OR: [
+            { givenName: { contains: sp.name, mode: "insensitive" } },
+            { surname: { contains: sp.name, mode: "insensitive" } },
+          ],
+        }
+      : {}),
+    ...(sp.status
+      ? sp.status === "active"
+        ? { NOT: { userId: null } }
+        : sp.status === "inactive"
+          ? { userId: null }
+          : {}
+      : {}),
+  };
+
+  // Fetch ALL students matching filters (no pagination for export)
+  const students = await (db as any).student.findMany({
+    where,
+    include: {
+      user: {
+        select: {
+          email: true,
+        },
+      },
+      studentClasses: {
+        include: {
+          class: {
+            select: {
+              name: true,
+            },
+          },
+        },
+        take: 1, // Get primary class
+      },
+    },
+    orderBy: [{ givenName: "asc" }, { surname: "asc" }],
+  });
+
+  // Transform data for CSV export
+  const exportData = students.map((student: any) => ({
+    studentId: student.id,
+    givenName: student.givenName || "",
+    middleName: student.middleName || "",
+    surname: student.surname || "",
+    fullName: [student.givenName, student.middleName, student.surname]
+      .filter(Boolean)
+      .join(" "),
+    dateOfBirth: student.dateOfBirth
+      ? new Date(student.dateOfBirth).toISOString().split("T")[0]
+      : "",
+    gender: student.gender || "",
+    email: student.user?.email || "",
+    enrollmentDate: student.enrollmentDate
+      ? new Date(student.enrollmentDate).toISOString().split("T")[0]
+      : "",
+    status: student.userId ? "Active" : "Inactive",
+    className:
+      student.studentClasses && student.studentClasses.length > 0
+        ? student.studentClasses[0].class.name
+        : "",
+    createdAt: new Date(student.createdAt).toISOString().split("T")[0],
+  }));
+
+  // Define CSV columns
+  const columns = [
+    { key: "studentId", label: "Student ID" },
+    { key: "givenName", label: "First Name" },
+    { key: "middleName", label: "Middle Name" },
+    { key: "surname", label: "Last Name" },
+    { key: "fullName", label: "Full Name" },
+    { key: "dateOfBirth", label: "Date of Birth" },
+    { key: "gender", label: "Gender" },
+    { key: "email", label: "Email" },
+    { key: "enrollmentDate", label: "Enrollment Date" },
+    { key: "status", label: "Status" },
+    { key: "className", label: "Class" },
+    { key: "createdAt", label: "Created Date" },
+  ];
+
+  return arrayToCSV(exportData, { columns });
 }

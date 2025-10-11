@@ -212,3 +212,51 @@ export interface AccessLevel {
     receiveNotifications: boolean
   }
 }
+
+// API response types
+export interface TermsApiResponse {
+  terms?: Array<{ id: string; label: string }>
+}
+
+export interface ClassesApiResponse {
+  classes?: Array<{ id: string; label: string }>
+}
+
+export interface TeachersApiResponse {
+  teachers?: Array<{ id: string; label: string }>
+}
+
+export interface ConflictsApiResponse {
+  conflicts?: TimetableConflict[]
+}
+
+// Legacy timetable data type (for backward compatibility)
+export interface LegacyTimetableCell {
+  period: number
+  subject: string
+  teacher: string
+  replaced: boolean
+  original: {
+    period: number
+    subject: string
+    teacher: string
+  } | null
+}
+
+export interface LegacyTimetableData {
+  days?: number[]
+  day_time: string[]
+  timetable: LegacyTimetableCell[][]
+  update_date: string
+}
+
+// Dictionary type for i18n
+export interface TimetableDictionary {
+  time?: string
+  [key: string]: string | undefined
+}
+
+// DnD item types
+export interface DragItem {
+  slot: TimetableSlot
+}

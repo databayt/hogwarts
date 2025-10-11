@@ -150,8 +150,8 @@ export function SlotEditor({ open, onOpenChange, termId, initialDayOfWeek, initi
         </div>
         {suggestions.length > 0 && (
           <div className="mt-4">
-            <div className="text-sm mb-2">Suggested free slots</div>
-            <ul className="list-disc pl-5 text-sm max-h-40 overflow-auto">
+            <p className="muted mb-2">Suggested free slots</p>
+            <ul className="list-disc pl-5 muted max-h-40 overflow-auto">
               {suggestions.map((s, idx) => (
                 <li key={`${s.dayOfWeek}:${s.periodId}:${idx}`}>Day {s.dayOfWeek} — {s.periodName}</li>
               ))}

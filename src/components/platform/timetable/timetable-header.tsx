@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils"
 import { ScheduleSettingsDialog } from "@/components/platform/timetable/schedule-settings-dialog"
 import { SlotEditor } from "@/components/platform/timetable/slot-editor"
 import { ConflictsDrawer } from "@/components/platform/timetable/conflicts-drawer"
+import type { TermsApiResponse, ClassesApiResponse, TeachersApiResponse, ConflictsApiResponse } from "./types"
 
 interface TimetableHeaderProps {
   schoolYear: number
@@ -43,7 +44,7 @@ export function TimetableHeader({
   const [openConflicts, setOpenConflicts] = useState(false)
   const [applyTarget, setApplyTarget] = useState<{ dayOfWeek?: number; periodId?: string }>({})
 
-  async function safeFetchJson<T = any>(input: RequestInfo | URL): Promise<T | null> {
+  async function safeFetchJson<T = unknown>(input: RequestInfo | URL): Promise<T | null> {
     try {
       const res = await fetch(input)
       if (!res.ok) return null
@@ -55,9 +56,7 @@ export function TimetableHeader({
 
   useEffect(() => {
     ;(async () => {
-      const data = await safeFetchJson<{ terms?: Array<{ id: string; label: string }> }>(
-        '/api/terms'
-      )
+      const data = await safeFetchJson<TermsApiResponse>('/api/terms')
       const nextTerms = data?.terms ?? []
       setTerms(nextTerms)
       if (!termId && nextTerms[0]) setTermId(nextTerms[0].id)
@@ -68,12 +67,8 @@ export function TimetableHeader({
     ;(async () => {
       if (!termId) return
       const [cData, tData] = await Promise.all([
-        safeFetchJson<{ classes?: Array<{ id: string; label: string }> }>(
-          `/api/classes?termId=${termId}`
-        ),
-        safeFetchJson<{ teachers?: Array<{ id: string; label: string }> }>(
-          `/api/teachers?termId=${termId}`
-        ),
+        safeFetchJson<ClassesApiResponse>(`/api/classes?termId=${termId}`),
+        safeFetchJson<TeachersApiResponse>(`/api/teachers?termId=${termId}`),
       ])
       const nextClasses = cData?.classes ?? []
       const nextTeachers = tData?.teachers ?? []
@@ -96,19 +91,19 @@ export function TimetableHeader({
       } catch {
         // ignore
       }
-      const cd = await safeFetchJson<{ conflicts?: any[] }>(`/api/timetable/conflicts?termId=${termId}`)
+      const cd = await safeFetchJson<ConflictsApiResponse>(`/api/timetable/conflicts?termId=${termId}`)
       setConflicts(cd?.conflicts ? cd.conflicts.length : 0)
     })()
   }, [termId, viewMode, selectedClass, selectedTeacher, isNextWeek, loadWeekly])
 
   return (
     <div className="mb-2 print:mb-8">
-      <p className=" print:text-lg text-lg ">
+      <p className="lead print:text-lg">
         {schoolYear} School Year · {school}
       </p>
-      <h1 className="text-3xl font-bold print:text-4xl mb-4">
+      <h2 className="print:text-4xl mb-4">
         Grade {grade}, Class {classNumber} · Timetable
-      </h1>
+      </h2>
       <div className="flex flex-wrap gap-2 mb-4 print:hidden items-center">
         <Select value={termId} onValueChange={setTermId}>
           <SelectTrigger className="w-[140px]"><SelectValue placeholder="Term" /></SelectTrigger>
@@ -188,23 +183,23 @@ export function TimetableHeader({
         </Button>
         {conflicts != null && (
           <button
-            className={cn("text-sm underline-offset-2", conflicts > 0 ? "text-red-600 underline" : "text-neutral-500")}
+            className={cn("muted underline-offset-2", conflicts > 0 ? "text-red-600 underline" : "")}
             onClick={() => setOpenConflicts(true)}
           >
-            {conflicts} conflict(s)
+            <small>{conflicts} conflict(s)</small>
           </button>
         )}
 
         {/* Timetable Options Indicators */}
         <div className="flex items-center gap-2 ml-4">
           {useTimetableStore.getState().classConfig?.showAllSubjects && (
-            <div className="px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full">
-              All Subjects
+            <div className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full">
+              <small>All Subjects</small>
             </div>
           )}
           {useTimetableStore.getState().classConfig?.displayFallbackData && (
-            <div className="px-2 py-1 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-full">
-              Fallback Data
+            <div className="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-full">
+              <small>Fallback Data</small>
             </div>
           )}
         </div>

@@ -60,9 +60,9 @@ export function TimetableCell({
       onDoubleClick={handleDoubleClick}
       title={onSubjectChange ? "Double-click to edit subject" : ""}
       >
-        <span className="h-14 xs:h-18 sm:h-23 font-medium text-neutral-800 dark:text-neutral-200 text-center print:text-base print:font-semibold">
+        <h6 className="h-14 xs:h-18 sm:h-23 text-neutral-800 dark:text-neutral-200 text-center print:text-base print:font-semibold">
           {subject}
-        </span>
+        </h6>
       </div>
     )
   }
@@ -86,25 +86,27 @@ export function TimetableCell({
           initialInfo={info}
         >
           <div className="w-full h-14 xs:h-18 sm:h-23 flex flex-col items-center justify-center overflow-hidden">
-            <span className={cn(
-              "font-semibold text-sm xs:text-base sm:text-lg text-center print:text-lg print:font-semibold xs:line-clamp-1 print:text-black",
-              isReplaced 
-                ? "text-red-600 dark:text-red-400" 
+            <h6 className={cn(
+              "xs:text-base sm:text-lg text-center print:text-lg print:font-semibold xs:line-clamp-1 print:text-black",
+              isReplaced
+                ? "text-red-600 dark:text-red-400"
                 : "text-neutral-800 dark:text-neutral-200"
             )}>
               {subject}
-            </span>
-      
+            </h6>
+
             {isReplaced && originalSubject && (
-              <span className="text-xs text-red-500 dark:text-red-400 -mt-1 line-clamp-1">
-                (Replaced: {originalSubject})
-              </span>
+              <p className="text-red-500 dark:text-red-400 -mt-1 line-clamp-1">
+                <small>(Replaced: {originalSubject})</small>
+              </p>
             )}
 
             {info && (
-              <span className="text-xs xs:text-sm sm:text-base text-neutral-600 dark:text-neutral-400 font-medium print:text-base print:mt-0 line-clamp-1">
-                {info.length > 4 ? `${info.slice(0, 4)}...` : info}
-              </span>
+              <p className="text-neutral-600 dark:text-neutral-400 print:text-base print:mt-0 line-clamp-1">
+                <small className="xs:text-sm sm:text-base">
+                  {info.length > 4 ? `${info.slice(0, 4)}...` : info}
+                </small>
+              </p>
             )}
           </div>
         </TeacherInfoPopup>

@@ -85,7 +85,7 @@ export function TeacherInfoPopup({ subject, onSave, initialInfo = "", children }
         )}
       />
       {error && (
-        <p className="text-sm text-red-500 dark:text-red-400">{error}</p>
+        <p className="muted text-red-500 dark:text-red-400">{error}</p>
       )}
     </div>
   )
@@ -93,8 +93,8 @@ export function TeacherInfoPopup({ subject, onSave, initialInfo = "", children }
   const content = (
     <>
       <div className="space-y-2">
-        <h4 className="font-medium leading-none dark:text-neutral-100">Edit teacher info</h4>
-        <p className="text-sm text-muted-foreground dark:text-neutral-400">
+        <h4 className="dark:text-neutral-100">Edit teacher info</h4>
+        <p className="muted dark:text-neutral-400">
           Enter info for {subject}. It will be stored in your browser.
         </p>
       </div>

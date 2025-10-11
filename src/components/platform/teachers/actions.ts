@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { getTenantContext } from "@/components/operator/lib/tenant";
 import { teacherCreateSchema, teacherUpdateSchema, getTeachersSchema } from "@/components/platform/teachers/validation";
+import { arrayToCSV } from "@/lib/csv-export";
 
 export async function createTeacher(input: z.infer<typeof teacherCreateSchema>) {
   const { schoolId } = await getTenantContext();
@@ -115,4 +116,110 @@ export async function getTeachers(input: Partial<z.infer<typeof getTeachersSchem
     createdAt: (t.createdAt as Date).toISOString(),
   }));
   return { rows: mapped, total: count as number };
+}
+
+/**
+ * Export teachers to CSV format
+ */
+export async function getTeachersCSV(input?: Partial<z.infer<typeof getTeachersSchema>>) {
+  const { schoolId } = await getTenantContext();
+  if (!schoolId) throw new Error("Missing school context");
+
+  const sp = getTeachersSchema.parse(input ?? {});
+  if (!(db as any).teacher) return "";
+
+  // Build where clause with filters
+  const where: any = {
+    schoolId,
+    ...(sp.name
+      ? {
+          OR: [
+            { givenName: { contains: sp.name, mode: "insensitive" } },
+            { surname: { contains: sp.name, mode: "insensitive" } },
+          ],
+        }
+      : {}),
+    ...(sp.emailAddress
+      ? { emailAddress: { contains: sp.emailAddress, mode: "insensitive" } }
+      : {}),
+    ...(sp.status
+      ? sp.status === "active"
+        ? { NOT: { userId: null } }
+        : sp.status === "inactive"
+          ? { userId: null }
+          : {}
+        : {}),
+  };
+
+  // Fetch ALL teachers matching filters (no pagination for export)
+  const teachers = await (db as any).teacher.findMany({
+    where,
+    include: {
+      user: {
+        select: {
+          email: true,
+        },
+      },
+      teacherDepartments: {
+        include: {
+          department: {
+            select: {
+              departmentName: true,
+            },
+          },
+        },
+        take: 1, // Get primary department
+      },
+      teacherPhoneNumbers: {
+        where: {
+          isPrimary: true,
+        },
+        select: {
+          phoneNumber: true,
+        },
+        take: 1,
+      },
+    },
+    orderBy: [{ givenName: "asc" }, { surname: "asc" }],
+  });
+
+  // Transform data for CSV export
+  const exportData = teachers.map((teacher: any) => ({
+    teacherId: teacher.id,
+    employeeId: teacher.employeeId || "",
+    givenName: teacher.givenName || "",
+    surname: teacher.surname || "",
+    fullName: [teacher.givenName, teacher.surname].filter(Boolean).join(" "),
+    gender: teacher.gender || "",
+    email: teacher.emailAddress || "",
+    userEmail: teacher.user?.email || "",
+    phone:
+      teacher.teacherPhoneNumbers && teacher.teacherPhoneNumbers.length > 0
+        ? teacher.teacherPhoneNumbers[0].phoneNumber
+        : "",
+    department:
+      teacher.teacherDepartments && teacher.teacherDepartments.length > 0
+        ? teacher.teacherDepartments[0].department.departmentName
+        : "",
+    status: teacher.userId ? "Active" : "Inactive",
+    createdAt: new Date(teacher.createdAt).toISOString().split("T")[0],
+  }));
+
+  // Define CSV columns
+  const columns = [
+    { key: "teacherId", label: "Teacher ID" },
+    { key: "employeeId", label: "Employee ID" },
+    { key: "givenName", label: "First Name" },
+    { key: "surname", label: "Last Name" },
+    { key: "fullName", label: "Full Name" },
+    { key: "gender", label: "Gender" },
+    { key: "email", label: "Primary Email" },
+    { key: "userEmail", label: "User Account Email" },
+    { key: "phone", label: "Phone" },
+    { key: "department", label: "Department" },
+    { key: "status", label: "Status" },
+    { key: "createdAt", label: "Created Date" },
+  ];
+
+  return arrayToCSV(exportData, { columns });
 }

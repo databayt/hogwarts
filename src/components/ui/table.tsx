@@ -5,16 +5,55 @@ import * as React from "react"
 import { cn } from "@/lib/utils"
 
 function Table({ className, ...props }: React.ComponentProps<"table">) {
+  const containerRef = React.useRef<HTMLDivElement>(null)
+  const [showLeftShadow, setShowLeftShadow] = React.useState(false)
+  const [showRightShadow, setShowRightShadow] = React.useState(false)
+
+  React.useEffect(() => {
+    const container = containerRef.current
+    if (!container) return
+
+    const handleScroll = () => {
+      const { scrollLeft, scrollWidth, clientWidth } = container
+      setShowLeftShadow(scrollLeft > 0)
+      setShowRightShadow(scrollLeft < scrollWidth - clientWidth - 1)
+    }
+
+    // Check on mount and after potential content changes
+    handleScroll()
+    const observer = new ResizeObserver(handleScroll)
+    observer.observe(container)
+
+    container.addEventListener('scroll', handleScroll)
+    return () => {
+      container.removeEventListener('scroll', handleScroll)
+      observer.disconnect()
+    }
+  }, [])
+
   return (
-    <div
-      data-slot="table-container"
-      className="relative w-full overflow-x-auto "
-    >
-      <table
-        data-slot="table"
-        className={cn("w-full caption-bottom text-sm", className)}
-        {...props}
-      />
+    <div className="relative w-full">
+      {/* Left scroll indicator */}
+      {showLeftShadow && (
+        <div className="pointer-events-none absolute left-0 top-0 z-10 h-full w-8 bg-gradient-to-r from-background to-transparent" />
+      )}
+
+      {/* Right scroll indicator */}
+      {showRightShadow && (
+        <div className="pointer-events-none absolute right-0 top-0 z-10 h-full w-8 bg-gradient-to-l from-background to-transparent" />
+      )}
+
+      <div
+        ref={containerRef}
+        data-slot="table-container"
+        className="relative w-full overflow-x-auto"
+      >
+        <table
+          data-slot="table"
+          className={cn("w-full caption-bottom text-sm", className)}
+          {...props}
+        />
+      </div>
     </div>
   )
 }

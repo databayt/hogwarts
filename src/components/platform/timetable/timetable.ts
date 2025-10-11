@@ -2,9 +2,10 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { getCookie, setCookie } from 'cookies-next'
 import config from './config.json'
+import type { TermsApiResponse, LegacyTimetableData } from './types'
 
 const API_URL = config.isDev ? config.development.apiUrl : config.production.apiUrl
-const USE_LOCAL_JSON = Boolean((config as any).useLocalJson)
+const USE_LOCAL_JSON = Boolean((config as { useLocalJson?: boolean }).useLocalJson)
 
 const DEFAULT_CONFIG: ClassConfig = {
   school: "Mokun Middle School",
@@ -53,38 +54,25 @@ interface ClassConfig {
   displayFallbackData: boolean
 }
 
-interface TimetableData {
-  days?: number[]
-  day_time: string[]
-  timetable: Array<Array<{
-    period: number
-    subject: string
-    teacher: string
-    replaced: boolean
-    original: {
-      period: number
-      subject: string
-      teacher: string
-    } | null
-  }>>
-  update_date: string
-}
+// Use the type from types.ts
+type TimetableData = LegacyTimetableData
 
-export const useTimetableStore = create<TimetableState>()((set, get) => ({
-  // Safe JSON fetch helper to avoid Unexpected end of JSON
-  _safeFetchJson: async (input: RequestInfo | URL) => {
+// Safe JSON fetch helper to avoid Unexpected end of JSON
+async function safeFetchJson<T = unknown>(input: RequestInfo | URL): Promise<T | null> {
+  try {
+    const res = await fetch(input)
+    if (!res.ok) return null
     try {
-      const res = await fetch(input)
-      if (!res.ok) return null
-      try {
-        return await res.json()
-      } catch {
-        return null
-      }
+      return await res.json() as T
     } catch {
       return null
     }
-  },
+  } catch {
+    return null
+  }
+}
+
+export const useTimetableStore = create<TimetableState>()((set, get) => ({
   // Initialize with default values
   classConfig: DEFAULT_CONFIG,
   teacherInfo: {}, // Only store user overrides
@@ -114,14 +102,14 @@ export const useTimetableStore = create<TimetableState>()((set, get) => ({
 
     try {
       // Fetch initial term, then schedule config and timetable from internal API
-      const termsData = await (get() as any)._safeFetchJson(`/api/terms`)
+      const termsData = await safeFetchJson<TermsApiResponse>(`/api/terms`)
       const termId: string | undefined = termsData?.terms?.[0]?.id
       let data = termId
-        ? await (get() as any)._safeFetchJson(`/api/timetable?termId=${termId}&weekOffset=0`)
+        ? await safeFetchJson<TimetableData>(`/api/timetable?termId=${termId}&weekOffset=0`)
         : null
       if (!data && USE_LOCAL_JSON) {
         // Fallback to static demo JSON for local dev
-        data = await (get() as any)._safeFetchJson(`/timetable/timetable.json`)
+        data = await safeFetchJson<TimetableData>(`/timetable/timetable.json`)
       }
       if (!data) throw new Error('No term found')
       set({ 
@@ -166,13 +154,13 @@ export const useTimetableStore = create<TimetableState>()((set, get) => ({
     set({ isWeekChangeLoading: true })
     try {
       // Use selected term (first term for now)
-      const termsData = await (get() as any)._safeFetchJson(`/api/terms`)
+      const termsData = await safeFetchJson<TermsApiResponse>(`/api/terms`)
       const termId: string | undefined = termsData?.terms?.[0]?.id
       let data = termId
-        ? await (get() as any)._safeFetchJson(`/api/timetable?termId=${termId}&weekOffset=${isNext ? '1' : '0'}`)
+        ? await safeFetchJson<TimetableData>(`/api/timetable?termId=${termId}&weekOffset=${isNext ? '1' : '0'}`)
         : null
       if (!data && USE_LOCAL_JSON) {
-        data = await (get() as any)._safeFetchJson(`/timetable/timetable${isNext ? '-next' : ''}.json`)
+        data = await safeFetchJson<TimetableData>(`/timetable/timetable${isNext ? '-next' : ''}.json`)
       }
       if (!data) throw new Error('No term found')
       
@@ -276,15 +264,15 @@ export const useTimetableStore = create<TimetableState>()((set, get) => ({
   fetchTimetable: async (config?: ClassConfig) => {
     const currentConfig = config || get().classConfig
     set({ isLoading: true, error: null })
-    
+
     try {
-      const termsData = await (get() as any)._safeFetchJson(`/api/terms`)
+      const termsData = await safeFetchJson<TermsApiResponse>(`/api/terms`)
       const termId: string | undefined = termsData?.terms?.[0]?.id
       let data = termId
-        ? await (get() as any)._safeFetchJson(`/api/timetable?termId=${termId}&weekOffset=${get().isNextWeek ? '1' : '0'}`)
+        ? await safeFetchJson<TimetableData>(`/api/timetable?termId=${termId}&weekOffset=${get().isNextWeek ? '1' : '0'}`)
         : null
       if (!data && USE_LOCAL_JSON) {
-        data = await (get() as any)._safeFetchJson(`/timetable/timetable${get().isNextWeek ? '-next' : ''}.json`)
+        data = await safeFetchJson<TimetableData>(`/timetable/timetable${get().isNextWeek ? '-next' : ''}.json`)
       }
       if (!data) throw new Error('No term found')
       set({ timetableData: data })
@@ -306,7 +294,7 @@ export const useTimetableStore = create<TimetableState>()((set, get) => ({
       const params = new URLSearchParams({ termId, weekOffset: String(weekOffset) })
       if (classId) params.set('classId', classId)
       if (teacherId) params.set('teacherId', teacherId)
-      const data = await (get() as any)._safeFetchJson(`/api/timetable?${params.toString()}`)
+      const data = await safeFetchJson<TimetableData>(`/api/timetable?${params.toString()}`)
       if (!data) throw new Error('Empty response')
       set({ timetableData: data })
     } catch (err) {

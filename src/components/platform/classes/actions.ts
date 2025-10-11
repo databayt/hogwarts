@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { getTenantContext } from "@/components/operator/lib/tenant";
 import { classCreateSchema, classUpdateSchema, getClassesSchema } from "@/components/platform/classes/validation";
+import { arrayToCSV } from "@/lib/csv-export";
 
 export async function createClass(input: z.infer<typeof classCreateSchema>) {
   const { schoolId } = await getTenantContext();
@@ -141,4 +142,89 @@ export async function getClasses(input: Partial<z.infer<typeof getClassesSchema>
     createdAt: (c.createdAt as Date).toISOString(),
   }));
   return { rows: mapped, total: count as number };
+}
+
+/**
+ * Export classes to CSV format
+ */
+export async function getClassesCSV(input?: Partial<z.infer<typeof getClassesSchema>>) {
+  const { schoolId } = await getTenantContext();
+  if (!schoolId) throw new Error("Missing school context");
+
+  const sp = getClassesSchema.parse(input ?? {});
+  if (!(db as any).class) return "";
+
+  // Build where clause with filters
+  const where: any = {
+    schoolId,
+    ...(sp.name ? { name: { contains: sp.name, mode: "insensitive" } } : {}),
+    ...(sp.subjectId ? { subjectId: sp.subjectId } : {}),
+    ...(sp.teacherId ? { teacherId: sp.teacherId } : {}),
+    ...(sp.termId ? { termId: sp.termId } : {}),
+  };
+
+  // Fetch ALL classes matching filters (no pagination for export)
+  const classes = await (db as any).class.findMany({
+    where,
+    include: {
+      subject: {
+        select: {
+          subjectName: true,
+        },
+      },
+      teacher: {
+        select: {
+          givenName: true,
+          surname: true,
+        },
+      },
+      term: {
+        select: {
+          termName: true,
+        },
+      },
+      classroom: {
+        select: {
+          roomNumber: true,
+          capacity: true,
+        },
+      },
+      _count: {
+        select: {
+          studentClasses: true,
+        },
+      },
+    },
+    orderBy: [{ name: "asc" }],
+  });
+
+  // Transform data for CSV export
+  const exportData = classes.map((classItem: any) => ({
+    classId: classItem.id,
+    name: classItem.name || "",
+    subject: classItem.subject?.subjectName || "",
+    teacher: classItem.teacher
+      ? `${classItem.teacher.givenName} ${classItem.teacher.surname}`
+      : "",
+    term: classItem.term?.termName || "",
+    classroom: classItem.classroom?.roomNumber || "",
+    capacity: classItem.classroom?.capacity || "",
+    enrolledStudents: classItem._count.studentClasses,
+    createdAt: new Date(classItem.createdAt).toISOString().split("T")[0],
+  }));
+
+  // Define CSV columns
+  const columns = [
+    { key: "classId", label: "Class ID" },
+    { key: "name", label: "Class Name" },
+    { key: "subject", label: "Subject" },
+    { key: "teacher", label: "Teacher" },
+    { key: "term", label: "Term" },
+    { key: "classroom", label: "Classroom" },
+    { key: "capacity", label: "Room Capacity" },
+    { key: "enrolledStudents", label: "Enrolled Students" },
+    { key: "createdAt", label: "Created Date" },
+  ];
+
+  return arrayToCSV(exportData, { columns });
 }

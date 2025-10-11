@@ -257,7 +257,7 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
       
       // Try to get callback URL from the original request if possible
       // This is a workaround for NextAuth not properly passing callbackUrl through OAuth
-      let intendedCallbackUrl: string | null = null;
+      const intendedCallbackUrl: string | null = null;
       
       // Check if we're coming from an OAuth callback
       if (url.includes('/api/auth/callback/')) {

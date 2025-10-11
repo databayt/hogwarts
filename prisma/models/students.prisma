@@ -17,6 +17,7 @@ model Student {
   studentGuardians  StudentGuardian[]
   attendances       Attendance[]
   submissions       AssignmentSubmission[]
+  examResults       ExamResult[]
 
   // Auth relationship
   userId String? @unique

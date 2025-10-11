@@ -3,6 +3,7 @@
 import { Clock } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { TimetableCell } from "./timetable-cell"
+import type { LegacyTimetableData } from "./types"
 
 const DAY_LABELS = ["Sun","Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 
@@ -12,7 +13,7 @@ interface TimetableGridProps {
     time: string
     subjects: string[]
   }>
-  timetableData: any // Replace with proper type
+  timetableData: LegacyTimetableData | null
   onTeacherInfoSave: (subject: string, info: string) => void
   getTeacherInfo: (subject: string) => string | undefined
   onSubjectChange?: (dayIndex: number, periodIdx: number, newSubject: string) => void
@@ -61,19 +62,19 @@ export function TimetableGrid({
     <div className="min-w-full">
       {/* Header */}
       <div className={cn('grid bg-muted border-neutral-200 dark:border-neutral-700', gridColsClass)}>
-        <div className="py-3 px-2 font-medium text-neutral-500 dark:text-neutral-400 flex flex-col items-center justify-center border-r border-neutral-200 dark:border-neutral-700 print:py-3">
+        <div className="py-3 px-2 text-neutral-500 dark:text-neutral-400 flex flex-col items-center justify-center border-r border-neutral-200 dark:border-neutral-700 print:py-3">
           <Clock className="w-4 h-4 print:w-5 print:h-5" />
         </div>
         {labels.map((day, index) => (
           <div
             key={day}
             className={cn(
-              "text-sm sm:text-base py-2 px-4 font-medium text-center text-neutral-700 dark:text-neutral-300",
+              "py-2 px-4 text-center text-neutral-700 dark:text-neutral-300",
               index < labels.length - 1 ? "border-r border-neutral-200 dark:border-neutral-700" : "",
               "print:text-base print:font-semibold print:py-3"
             )}
           >
-            {day}
+            <h6 className="sm:text-base">{day}</h6>
           </div>
         ))}
       </div>
@@ -83,13 +84,13 @@ export function TimetableGrid({
         {periods.map((period) => (
           <div key={period.id} className={cn('grid avoid-break', gridColsClass)}>
             <div className="py-3 sm:py-5 bg-muted flex flex-col justify-center items-center border-t border-r border-neutral-200 dark:border-neutral-700 print:py-4">
-              <span className="text-sm sm:text-base font-medium text-neutral-700 dark:text-neutral-300 print:text-base print:font-semibold">
+              <h6 className="sm:text-base text-neutral-700 dark:text-neutral-300 print:text-base print:font-semibold">
                 {period.id === "Lunch" ? "Lunch" : `Period ${period.id}`}
-              </span>
+              </h6>
               {period.id !== "Lunch" ? (
-                <span className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 print:text-sm">
-                  ({period.time})
-                </span>
+                <p className="muted print:text-sm">
+                  <small className="sm:text-sm">({period.time})</small>
+                </p>
               ) : null}
             </div>
 
@@ -113,9 +114,9 @@ export function TimetableGrid({
               })
             ) : (
               <div className={cn("bg-neutral-100 dark:bg-neutral-800 print:py-4 flex items-center justify-center border-t border-neutral-200 dark:border-neutral-700", lunchColSpan)}>
-                <span className="font-medium text-neutral-700 dark:text-neutral-300 print:text-base print:font-semibold">
+                <h6 className="text-neutral-700 dark:text-neutral-300 print:text-base print:font-semibold">
                   Lunch
-                </span>
+                </h6>
               </div>
             )}
           </div>

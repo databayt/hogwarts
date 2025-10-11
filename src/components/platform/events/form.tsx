@@ -147,9 +147,9 @@ export function EventCreateForm() {
     <div className="flex h-full flex-col">
       <Form {...form}>
         <form className="flex flex-col h-full" onSubmit={(e) => e.preventDefault()}>
-          <div className="flex-grow flex gap-6">
+          <div className="flex-grow flex flex-col md:flex-row gap-6">
             {/* Title Section */}
-            <div className="w-1/3">
+            <div className="md:w-1/3">
               <h2 className="text-2xl font-semibold">
                 {isView ? "View Event" : currentId ? "Edit Event" : "Create Event"}
               </h2>

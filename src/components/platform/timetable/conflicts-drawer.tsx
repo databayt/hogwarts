@@ -56,9 +56,9 @@ export function ConflictsDrawer({ termId, open, onOpenChange, onApplySuggestion 
         </DrawerHeader>
         <div className="px-4 pb-6 overflow-auto h-full">
           {loading ? (
-            <div className="text-sm text-neutral-500">Loading…</div>
+            <p className="muted">Loading…</p>
           ) : conflicts.length === 0 ? (
-            <div className="text-sm text-neutral-500">No conflicts</div>
+            <p className="muted">No conflicts</p>
           ) : (
             <ul className="space-y-4">
               {conflicts.map((c, idx) => {
@@ -66,17 +66,17 @@ export function ConflictsDrawer({ termId, open, onOpenChange, onApplySuggestion 
                 const sug = suggestions[key] || []
                 return (
                   <li key={key} className="border rounded-md p-3">
-                    <div className="text-sm font-medium mb-1">
+                    <h6 className="mb-1">
                       {c.type === 'TEACHER' ? 'Teacher' : 'Room'}: {c.teacher?.name || c.room?.name || ''}
-                    </div>
-                    <div className="text-sm mb-2">{c.classA.name} vs {c.classB.name}</div>
+                    </h6>
+                    <p className="muted mb-2">{c.classA.name} vs {c.classB.name}</p>
                     <div className="flex gap-2 mb-2">
                       <Button variant="outline" size="sm" onClick={() => loadSuggestions(key, c.teacher?.id || undefined, undefined)}>Suggest for teacher</Button>
                       <Button variant="outline" size="sm" onClick={() => loadSuggestions(key, undefined, c.room?.id || undefined)}>Suggest for room</Button>
                     </div>
                     {sug.length > 0 && (
-                      <div className="text-xs">
-                        <div className="mb-1">Suggestions:</div>
+                      <div>
+                        <p className="mb-1"><small>Suggestions:</small></p>
                         <ul className="list-disc pl-5 space-y-1 max-h-28 overflow-auto">
                           {sug.map((s) => (
                             <li key={`${s.dayOfWeek}:${s.periodId}`} className="flex items-center justify-between">

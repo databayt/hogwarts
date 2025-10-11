@@ -4,10 +4,18 @@
  */
 
 import { parse } from 'csv-parse/sync';
-import { z } from 'zod';
+import { z, ZodError } from 'zod';
 import { logger } from '@/lib/logger';
 import { db } from '@/lib/db';
 import { hash } from 'bcryptjs';
+import {
+  formatZodError,
+  validateDateFormat,
+  validatePhoneFormat,
+  validateGuardianInfo,
+  formatDuplicateError,
+  createRowErrorMessage,
+} from './csv-validation-helpers';
 
 // Validation schemas for CSV data
 const studentCsvSchema = z.object({
@@ -40,6 +48,11 @@ export interface ImportResult {
     row: number;
     error: string;
     data?: any;
+    details?: string; // Enhanced error details with suggestions
+  }>;
+  warnings?: Array<{
+    row: number;
+    warning: string;
   }>;
 }
 
@@ -75,16 +88,59 @@ class CsvImportService {
       imported: 0,
       failed: 0,
       errors: [],
+      warnings: [],
     };
 
     try {
       const rows = this.parseCSV(csvContent);
-      
+
       for (let i = 0; i < rows.length; i++) {
         const rowNumber = i + 2; // Account for header row
         try {
+          // Validate with Zod schema
           const validated = studentCsvSchema.parse(rows[i]);
-          
+
+          // Additional field-level validations
+          const validationErrors = [];
+
+          // Validate date of birth format
+          if (validated.dateOfBirth) {
+            const dateValidation = validateDateFormat(validated.dateOfBirth, 'dateOfBirth');
+            if (!dateValidation.isValid) {
+              validationErrors.push(...dateValidation.errors);
+            }
+          }
+
+          // Validate guardian phone format
+          if (validated.guardianPhone) {
+            const phoneValidation = validatePhoneFormat(validated.guardianPhone, 'guardianPhone');
+            if (!phoneValidation.isValid) {
+              validationErrors.push(...phoneValidation.errors);
+            }
+          }
+
+          // Validate guardian information completeness
+          const guardianValidation = validateGuardianInfo({
+            guardianName: validated.guardianName,
+            guardianEmail: validated.guardianEmail,
+            guardianPhone: validated.guardianPhone,
+          });
+          if (!guardianValidation.isValid) {
+            validationErrors.push(...guardianValidation.errors);
+          }
+
+          // If there are validation errors, add them to result
+          if (validationErrors.length > 0) {
+            result.errors.push({
+              row: rowNumber,
+              error: 'Validation failed',
+              details: createRowErrorMessage(rowNumber, validationErrors),
+              data: rows[i],
+            });
+            result.failed++;
+            continue;
+          }
+
           // Check if student already exists
           const existingStudent = await db.student.findFirst({
             where: {
@@ -96,7 +152,8 @@ class CsvImportService {
           if (existingStudent) {
             result.errors.push({
               row: rowNumber,
-              error: `Student ID ${validated.studentId} already exists`,
+              error: formatDuplicateError('studentId', validated.studentId, 'student'),
+              details: `This student ID is already registered in the system. Please use a unique student ID.`,
               data: validated,
             });
             result.failed++;
@@ -225,11 +282,23 @@ class CsvImportService {
             row: rowNumber,
           });
         } catch (error) {
-          result.errors.push({
-            row: rowNumber,
-            error: error instanceof Error ? error.message : 'Unknown error',
-            data: rows[i],
-          });
+          // Enhanced error handling with Zod errors
+          if (error instanceof ZodError) {
+            const formattedError = formatZodError(error);
+            result.errors.push({
+              row: rowNumber,
+              error: 'Schema validation failed',
+              details: formattedError.formattedMessage,
+              data: rows[i],
+            });
+          } else {
+            result.errors.push({
+              row: rowNumber,
+              error: error instanceof Error ? error.message : 'Unknown error',
+              details: error instanceof Error ? error.stack : undefined,
+              data: rows[i],
+            });
+          }
           result.failed++;
         }
       }
@@ -254,16 +323,41 @@ class CsvImportService {
       imported: 0,
       failed: 0,
       errors: [],
+      warnings: [],
     };
 
     try {
       const rows = this.parseCSV(csvContent);
-      
+
       for (let i = 0; i < rows.length; i++) {
         const rowNumber = i + 2;
         try {
+          // Validate with Zod schema
           const validated = teacherCsvSchema.parse(rows[i]);
-          
+
+          // Additional field-level validations
+          const validationErrors = [];
+
+          // Validate phone number format
+          if (validated.phoneNumber) {
+            const phoneValidation = validatePhoneFormat(validated.phoneNumber, 'phoneNumber');
+            if (!phoneValidation.isValid) {
+              validationErrors.push(...phoneValidation.errors);
+            }
+          }
+
+          // If there are validation errors, add them to result
+          if (validationErrors.length > 0) {
+            result.errors.push({
+              row: rowNumber,
+              error: 'Validation failed',
+              details: createRowErrorMessage(rowNumber, validationErrors),
+              data: rows[i],
+            });
+            result.failed++;
+            continue;
+          }
+
           // Check if teacher already exists
           const existingTeacher = await db.teacher.findFirst({
             where: {
@@ -275,7 +369,8 @@ class CsvImportService {
           if (existingTeacher) {
             result.errors.push({
               row: rowNumber,
-              error: `Employee ID ${validated.employeeId} already exists`,
+              error: formatDuplicateError('employeeId', validated.employeeId, 'teacher'),
+              details: `This employee ID is already registered in the system. Please use a unique employee ID.`,
               data: validated,
             });
             result.failed++;
@@ -293,7 +388,8 @@ class CsvImportService {
           if (existingUser) {
             result.errors.push({
               row: rowNumber,
-              error: `Email ${validated.email} already exists`,
+              error: formatDuplicateError('email', validated.email, 'user'),
+              details: `This email address is already registered in the system. Each teacher must have a unique email address.`,
               data: validated,
             });
             result.failed++;
@@ -370,11 +466,23 @@ class CsvImportService {
             row: rowNumber,
           });
         } catch (error) {
-          result.errors.push({
-            row: rowNumber,
-            error: error instanceof Error ? error.message : 'Unknown error',
-            data: rows[i],
-          });
+          // Enhanced error handling with Zod errors
+          if (error instanceof ZodError) {
+            const formattedError = formatZodError(error);
+            result.errors.push({
+              row: rowNumber,
+              error: 'Schema validation failed',
+              details: formattedError.formattedMessage,
+              data: rows[i],
+            });
+          } else {
+            result.errors.push({
+              row: rowNumber,
+              error: error instanceof Error ? error.message : 'Unknown error',
+              details: error instanceof Error ? error.stack : undefined,
+              data: rows[i],
+            });
+          }
           result.failed++;
         }
       }

@@ -1,30 +1,177 @@
-## Timetable — Implementation Plan (MVP → Production)
+## Timetable — Admin School Schedule Management
 
-This document outlines how to finish and ship the Timetable feature following our multi‑tenant rules, shadcn/ui conventions, and server actions patterns.
+**Admin Control Center for Weekly Schedule Building**
 
-### Current State (as of this branch)
-- UI (client):
-  - `content.tsx` renders header, grid, config dialog, print styles.
-  - `timetable.ts` uses a Zustand store, cookies for user overrides and selected class config.
-  - `config.json` toggles dev/prod API and `useLocalJson`; grid renders from a JSON shape `{ day_time, timetable, update_date }`.
-  - Teacher info overrides are stored in cookies per subject and masked to 4 chars in cells.
-  - Print styles ready in `print.css`.
-- Server actions:
-  - `detectTimetableConflicts` (teacher/room) using `Class`, `Period`, `Teacher`, `Classroom`.
-  - `getTermsForSelection` to list terms for the current tenant.
-- Prisma (relevant models):
-  - `School`, `SchoolYear`, `Term`, `Period` (time-of-day only), `Department`, `Subject`, `Teacher`, `Classroom`, `Class`, and enrollments.
-- Gaps:
-  - No weekly day-of-week placement in DB; `Class` holds subject/teacher/period ranges but not day-of-week or per-slot rows.
-  - UI fetches JSON (local or external API); no internal API/server action that produces the UI JSON shape.
-  - Teacher info overrides are client-only (OK for MVP) but not persisted server-side.
+The Timetable feature empowers school administrators to create, manage, and print weekly schedules for classes and teachers with intelligent conflict detection and flexible configuration.
 
-### Goal
-- Deliver a weekly timetable per class and teacher with conflict detection and basic admin management, fully tenant-scoped by `schoolId`.
-- Support flexible school schedules (custom work days/weekends and lunch break positions per school/grade/class).
-- Provide high-quality A4 printouts.
+### What Admins Can Do
+
+**Core Capabilities:**
+- 📅 Build weekly schedules with drag-and-drop or click-to-assign
+- 🔧 Configure flexible working days (Sun-Thu, Mon-Fri, custom weekends)
+- 🍽️ Set lunch break positions (after period 2, 3, or 4)
+- ⚠️ Detect scheduling conflicts (teacher double-booking, room conflicts, class overlaps)
+- 👁️ View schedules by class OR by teacher
+- 🖨️ Print A4-ready schedules for distribution
+- 📊 Manage multiple terms with independent schedules
+- 🔄 Swap slots and resolve conflicts with suggestions
+
+### What Teachers Can Do
+- ✅ View their personal teaching schedule
+- ✅ See which classes they teach and when
+- ✅ Print their weekly timetable
+- ❌ Cannot modify the timetable (admin-only)
+
+### What Students Can View
+- ✅ See their class timetable
+- ✅ Know when and where each subject takes place
+- ❌ Cannot modify or view other classes
+
+### Current Implementation Status
+**Production-Ready MVP ✅**
+
+**Completed:**
+- ✅ Weekly schedule builder UI with visual grid
+- ✅ Flexible working days configuration (supports Sun-Thu, Mon-Fri, custom)
+- ✅ Lunch break positioning (configurable per school/term)
+- ✅ Conflict detection engine (teacher/room/class double-booking)
+- ✅ Class view and teacher view switching
+- ✅ A4 print-ready output with proper styling
+- ✅ Term-based schedules (different schedule per term)
+- ✅ Multi-tenant isolation (schoolId scoping)
+- ✅ Slot editor with suggestions for free periods
+- ✅ Server actions with proper validation
+
+**In Progress:**
+- 🚧 Drag-and-drop slot editor (currently click-based)
+- 🚧 Mobile-optimized view
+- 🚧 Typography consistency (remove hardcoded text-* classes)
+- 🚧 Accessibility improvements (ARIA grid pattern)
+
+**Planned:**
+- ⏸️ Recurring event exceptions (holidays, special schedules)
+- ⏸️ Teacher preference tracking
+- ⏸️ Automated scheduling AI suggestions
 
 ---
+
+## Admin Workflows
+
+### 1. Initial Timetable Setup
+**Prerequisites:** Classes, teachers, subjects, and periods already configured
+
+1. Navigate to `/timetable`
+2. Select academic term (e.g., Fall 2024)
+3. Click "Schedule Settings"
+   - Set working days (e.g., Sunday-Thursday for Arabic schools, Monday-Friday for others)
+   - Set lunch break position (after period 2, 3, or 4)
+   - Save configuration
+4. Select grade/class to schedule (e.g., Grade 1A)
+5. View empty timetable grid with configured days and periods
+
+### 2. Assign Classes to Time Slots
+**Two Methods:**
+
+**Method A: Click-Based (Current)**
+1. Click on an empty cell in the timetable grid
+2. Slot editor dialog opens
+3. Select:
+   - Subject (e.g., Mathematics)
+   - Teacher (e.g., Ahmed Hassan)
+   - Classroom (e.g., Room 101)
+4. Click "Save"
+5. System validates and checks for conflicts
+6. Slot appears in grid with subject and teacher name
+
+**Method B: Drag-and-Drop (Planned)**
+1. Drag subject card from sidebar
+2. Drop onto time slot
+3. Auto-assigns default teacher and room
+4. Edit details if needed
+
+### 3. Resolve Scheduling Conflicts
+1. System detects conflicts automatically:
+   - **Teacher Conflict:** Same teacher in two classes at once
+   - **Room Conflict:** Same room booked twice
+   - **Class Conflict:** Class scheduled in multiple places
+2. Conflicts badge appears in header (e.g., "3 Conflicts")
+3. Click "View Conflicts" button
+4. Conflicts drawer shows:
+   - Type (Teacher/Room/Class)
+   - Affected classes
+   - Suggested solutions
+5. Click "Resolve" on a conflict:
+   - Shows free time slots for teacher/room
+   - Click suggestion to auto-swap
+6. Re-check conflicts until zero
+
+### 4. Switch Between Views
+**Class View (Default):**
+- Shows what one class has throughout the week
+- Select class from dropdown (Grade 1A, 1B, 2A, etc.)
+- See all subjects this class takes
+
+**Teacher View:**
+- Shows what one teacher teaches throughout the week
+- Select teacher from dropdown
+- See all classes they teach
+
+### 5. Print Timetables
+1. Ensure timetable is complete and conflict-free
+2. Click "Print" button
+3. Browser print dialog opens
+4. Select:
+   - Portrait or Landscape
+   - A4 paper size
+5. Print preview shows:
+   - School name and logo
+   - Term and class/teacher name
+   - Clean grid with subjects and times
+6. Print or save as PDF
+
+### 6. Manage Multiple Terms
+Each term can have a different timetable:
+1. Term 1 (Fall): Full schedule with all subjects
+2. Term 2 (Spring): Adjusted for exam periods
+3. Term 3 (Summer): Short schedule
+
+Switch terms using term selector dropdown.
+
+### 7. Copy Schedule from Previous Term
+**Planned Feature:**
+1. Click "Copy from Term"
+2. Select source term
+3. System duplicates all slots
+4. Review and adjust as needed
+5. Save new term's schedule
+
+---
+
+## Integration with Other Features
+
+### Links to Classes
+- Timetable slots reference Class entities
+- Clicking a slot can navigate to class details
+- Shows enrolled students and teacher assignment
+
+### Links to Teachers
+- Teacher view shows their full teaching load
+- Helps balance workload across staff
+- Identifies free periods for meetings
+
+### Links to Attendance
+- Attendance module uses timetable to show period-by-period roster
+- Knows which class is active at current time
+- Auto-suggests class for attendance marking
+
+### Links to Lessons
+- Lesson plans can be linked to timetable slots
+- Teachers see what to prepare for each period
+- Students see lesson materials for upcoming classes
+
+---
+
+## Technical Implementation
 
 ## Data Model
 
@@ -156,3 +303,51 @@ All actions:
 - Persist teacher display name overrides to user profile preferences.
 - Exception engine for temporary changes/holidays.
 - Attach `yearLevelId` to `Class` for robust grade grouping.
+
+---
+
+## Technology Stack & Dependencies
+
+This feature is built with the following technologies (see [Platform README](../README.md) for complete stack details):
+
+### Core Framework
+- **Next.js 15.4+** - App Router with Server Components ([Docs](https://nextjs.org/docs))
+- **React 19+** - Server Actions, new hooks (`useActionState`, `useFormStatus`) ([Docs](https://react.dev))
+- **TypeScript** - Strict mode for type safety
+
+### Database & ORM
+- **Neon PostgreSQL** - Serverless database with autoscaling ([Docs](https://neon.tech/docs/introduction))
+- **Prisma ORM 6.14+** - Type-safe queries and migrations ([Docs](https://www.prisma.io/docs))
+
+### Forms & Validation
+- **React Hook Form 7.61+** - Performant form state management ([Docs](https://react-hook-form.com))
+- **Zod 4.0+** - Runtime schema validation (client + server) ([Docs](https://zod.dev))
+
+### UI Components
+- **shadcn/ui** - Accessible components built on Radix UI ([Docs](https://ui.shadcn.com/docs))
+- **TanStack Table 8.21+** - Headless table with sorting/filtering ([Docs](https://tanstack.com/table))
+- **Tailwind CSS 4** - Utility-first styling ([Docs](https://tailwindcss.com/docs))
+
+### Server Actions Pattern
+All mutations follow the standard server action pattern:
+```typescript
+"use server"
+export async function performAction(input: FormData) {
+  const { schoolId } = await getTenantContext()
+  const validated = schema.parse(input)
+  await db.model.create({ data: { ...validated, schoolId } })
+  revalidatePath('/feature-path')
+  return { success: true }
+}
+```
+
+### Key Features
+- **Multi-Tenant Isolation**: All queries scoped by `schoolId`
+- **Type Safety**: End-to-end TypeScript with Prisma + Zod inference
+- **Server-Side Operations**: Mutations via Next.js Server Actions
+- **URL State Management**: Filters and pagination synced to URL (where applicable)
+- **Accessibility**: ARIA labels, keyboard navigation, semantic HTML
+
+For complete technology documentation, see [Platform Technology Stack](../README.md#technology-stack--documentation).
+
+---

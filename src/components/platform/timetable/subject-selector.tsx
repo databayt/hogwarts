@@ -105,7 +105,7 @@ export function SubjectSelector({
           </div>
 
           {showAllSubjects && (
-            <div className="text-sm text-neutral-500 dark:text-neutral-400">
+            <div className="muted dark:text-neutral-400">
               <p>• All subjects are shown in the dropdown</p>
               <p>• You can also enter a custom subject name</p>
             </div>

@@ -121,9 +121,9 @@ export function AssignmentCreateForm() {
     <div className="flex h-full flex-col">
       <Form {...form}>
         <form className="flex flex-col h-full" onSubmit={(e) => e.preventDefault()}>
-          <div className="flex-grow flex gap-6">
+          <div className="flex-grow flex flex-col md:flex-row gap-6">
             {/* Title Section */}
-            <div className="w-1/3">
+            <div className="md:w-1/3">
               <h2 className="text-2xl font-semibold">{isView ? "View Assignment" : currentId ? "Edit Assignment" : "Create Assignment"}</h2>
               <p className="text-sm text-muted-foreground mt-2">{isView ? "View assignment details" : currentId ? "Update assignment details" : "Create a new assignment for your class"}</p>
             </div>

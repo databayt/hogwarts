@@ -1,0 +1,62 @@
+{
+  "mcpServers": {
+    "vercel": {
+      "type": "http",
+      "url": "https://mcp.vercel.com/",
+      "description": "Manage deployments, analyze logs, monitor performance"
+    },
+    "sentry": {
+      "type": "http",
+      "url": "https://mcp.sentry.dev/mcp",
+      "description": "Monitor errors, debug production issues"
+    },
+    "figma": {
+      "type": "http",
+      "url": "http://127.0.0.1:3845/mcp",
+      "description": "Access designs, export assets (requires Figma Desktop)"
+    },
+    "linear": {
+      "type": "sse",
+      "url": "https://mcp.linear.app/sse",
+      "description": "Issue tracking and project management"
+    },
+    "github": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_PERSONAL_ACCESS_TOKEN}"
+      },
+      "description": "GitHub repositories, issues, and pull requests"
+    },
+    "browser": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@executeautomation/playwright-mcp-server"],
+      "description": "Browser automation and web scraping"
+    },
+    "stripe": {
+      "type": "http",
+      "url": "https://mcp.stripe.com",
+      "description": "Payment processing, subscription management"
+    },
+    "postgres-dev": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@bytebase/dbhub"],
+      "env": {
+        "DATABASE_URL": "${DATABASE_URL}"
+      },
+      "description": "Development database queries and management"
+    },
+    "ref": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "ref-tools-mcp@latest"],
+      "env": {
+        "REF_API_KEY": "${REF_API_KEY}"
+      },
+      "description": "Search documentation, prevent hallucinations with curated technical docs"
+    }
+  }
+}

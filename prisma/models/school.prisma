@@ -70,6 +70,10 @@ model School {
   appliedDiscounts      AppliedDiscount[]
   // Branding and visibility
   branding              SchoolBranding?
+  // Examination relations
+  exams                 Exam[]
+  examResults           ExamResult[]
+  gradeBoundaries       GradeBoundary[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
