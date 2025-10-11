@@ -1,74 +1,62 @@
-import { EmptyState } from "@/components/general/EmptyState";
-import { PublicCourseCard } from "@/app/(public)/_components/PublicCourseCard";
-import { CourseProgressCard } from "@/app/dashboard/_components/CourseProgressCard";
-import { getAllCourses } from "@/app/data/course/get-all-courses";
-import { getEnrolledCourses } from "@/app/data/user/get-enrolled-courses";
+"use client";
 
-export default async function DashboardContent() {
-  const [courses, enrolledCourses] = await Promise.all([
-    getAllCourses(),
-    getEnrolledCourses(),
-  ]);
+import { Card, CardContent } from "@/components/ui/card";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { BookOpen, GraduationCap } from "lucide-react";
+import Link from "next/link";
 
+export default function DashboardContent() {
   return (
-    <>
-      <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold">Enrolled Courses</h1>
-        <p className="text-muted-foreground">
-          Here you can see all the courses you have access to
-        </p>
+    <div className="space-y-8">
+      {/* Enrolled Courses Section */}
+      <div>
+        <div className="flex flex-col gap-2 mb-6">
+          <h2>Enrolled Courses</h2>
+          <p className="muted">
+            Here you can see all the courses you have access to
+          </p>
+        </div>
+
+        <Card>
+          <CardContent className="py-10">
+            <div className="text-center">
+              <GraduationCap className="mx-auto size-16 text-muted-foreground mb-4" />
+              <h3>No Courses Enrolled</h3>
+              <p className="muted mb-6">
+                You haven't enrolled in any courses yet.
+              </p>
+              <Link
+                className={buttonVariants()}
+                href="/stream/courses"
+              >
+                Browse Courses
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
-      {enrolledCourses.length === 0 ? (
-        <EmptyState
-          title="No courses purchased"
-          description="You haven't purchased any courses yet."
-          buttonText="Browse Courses"
-          href="/courses"
-        />
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {enrolledCourses.map((course) => (
-            <CourseProgressCard key={course.Course.id} data={course} />
-          ))}
-        </div>
-      )}
-
-      <section className="mt-10">
-        <div className="flex flex-col gap-2 mb-5">
-          <h1 className="text-3xl font-bold">Available Courses</h1>
-          <p className="text-muted-foreground">
+      {/* Available Courses Section */}
+      <div>
+        <div className="flex flex-col gap-2 mb-6">
+          <h2>Available Courses</h2>
+          <p className="muted">
             Here you can see all the courses you can purchase
           </p>
         </div>
 
-        {courses.filter(
-          (course) =>
-            !enrolledCourses.some(
-              ({ Course: enrolled }) => enrolled.id === course.id
-            )
-        ).length === 0 ? (
-          <EmptyState
-            title="No courses available"
-            description="You have already purchased all available courses."
-            buttonText="Browse Courses"
-            href="/courses"
-          />
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {courses
-              .filter(
-                (course) =>
-                  !enrolledCourses.some(
-                    ({ Course: enrolled }) => enrolled.id === course.id
-                  )
-              )
-              .map((course) => (
-                <PublicCourseCard key={course.id} data={course} />
-              ))}
-          </div>
-        )}
-      </section>
-    </>
+        <Card>
+          <CardContent className="py-10">
+            <div className="text-center">
+              <BookOpen className="mx-auto size-16 text-muted-foreground mb-4" />
+              <h3>No Courses Available</h3>
+              <p className="muted mb-6">
+                There are currently no courses available. Check back soon!
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
   );
 }
