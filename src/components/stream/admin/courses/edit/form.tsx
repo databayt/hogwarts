@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { updateCourseSchema, type UpdateCourseInput } from "../../create/validation";
+import { updateCourseSchema, type UpdateCourseInput } from "../create/validation";
 import { Loader2, SaveIcon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";

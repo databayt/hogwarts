@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { createLessonSchema, type CreateLessonInput } from "../../create/validation";
+import { createLessonSchema, type CreateLessonInput } from "../create/validation";
 import { ArrowLeft, Loader2, SaveIcon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
