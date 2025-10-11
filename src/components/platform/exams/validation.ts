@@ -11,7 +11,7 @@ export const examBaseSchema = z.object({
   duration: z.number().min(1, "Duration must be at least 1 minute").max(480, "Duration cannot exceed 8 hours"),
   totalMarks: z.number().min(1, "Total marks must be at least 1").max(1000, "Total marks cannot exceed 1000"),
   passingMarks: z.number().min(1, "Passing marks must be at least 1"),
-  examType: z.enum(["MIDTERM", "FINAL", "QUIZ", "ASSIGNMENT", "PROJECT"]),
+  examType: z.enum(["MIDTERM", "FINAL", "QUIZ", "TEST", "PRACTICAL"]),
   instructions: z.string().optional(),
 }).superRefine((val, ctx) => {
   // Ensure end time is after start time
