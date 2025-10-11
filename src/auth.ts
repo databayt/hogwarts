@@ -14,7 +14,7 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
     generateSessionToken: () => {
       const token = `session_${Date.now()}`;
       if (process.env.NODE_ENV === 'development') {
-        log('🔑 Generated session token:', token);
+        console.log('🔑 Generated session token:', token);
       }
       return token;
     },
@@ -28,7 +28,7 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
   events: {
     async signIn({ user, account, isNewUser }) {
       if (process.env.NODE_ENV === 'development') {
-        log('🎉 SIGN IN EVENT:', {
+        console.log('🎉 SIGN IN EVENT:', {
           userId: user.id,
           email: user.email,
           provider: account?.provider,
@@ -106,7 +106,7 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
     async jwt({ token, user, account, trigger }) {
       // Only log in development
       if (process.env.NODE_ENV === 'development') {
-        log('🔐 [DEBUG] JWT CALLBACK START:', { 
+        console.log('🔐 [DEBUG] JWT CALLBACK START:', { 
           trigger, 
           hasUser: !!user, 
           hasAccount: !!account,
@@ -116,7 +116,7 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
       
       if (user) {
         if (process.env.NODE_ENV === 'development') {
-          log('👤 [DEBUG] User data received:', {
+          console.log('👤 [DEBUG] User data received:', {
             id: user.id,
             email: user.email,
             hasRole: 'role' in user,
@@ -132,13 +132,13 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
         if ('role' in user) {
           token.role = (user as any).role
           if (process.env.NODE_ENV === 'development') {
-            log('🎭 [DEBUG] Role set in token:', token.role);
+            console.log('🎭 [DEBUG] Role set in token:', token.role);
           }
         }
         if ('schoolId' in user) {
           token.schoolId = (user as any).schoolId
           if (process.env.NODE_ENV === 'development') {
-            log('🏫 [DEBUG] SchoolId set in token:', token.schoolId);
+            console.log('🏫 [DEBUG] SchoolId set in token:', token.schoolId);
           }
         }
 
@@ -147,14 +147,14 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
           token.provider = account.provider
           token.providerAccountId = account.providerAccountId
           if (process.env.NODE_ENV === 'development') {
-            log('🔗 [DEBUG] Account linked:', { provider: account.provider, id: account.providerAccountId });
+            console.log('🔗 [DEBUG] Account linked:', { provider: account.provider, id: account.providerAccountId });
           }
         }
 
         // Force session update after OAuth
         if (trigger === 'signIn') {
           if (process.env.NODE_ENV === 'development') {
-            log('🔄 [DEBUG] Forcing session update after signIn');
+            console.log('🔄 [DEBUG] Forcing session update after signIn');
           }
           token.iat = Math.floor(Date.now() / 1000);
           token.exp = Math.floor(Date.now() / 1000) + (24 * 60 * 60); // 24 hours
@@ -169,7 +169,7 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
 
       // Debug JWT state
       if (process.env.NODE_ENV === 'development') {
-        log('🔐 [DEBUG] JWT CALLBACK END:', {
+        console.log('🔐 [DEBUG] JWT CALLBACK END:', {
           tokenId: token?.id,
           hasRole: !!token?.role,
           hasSchoolId: !!token?.schoolId,
@@ -190,7 +190,7 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
     async session({ session, token, user, trigger }) {
       // Only log in development
       if (process.env.NODE_ENV === 'development') {
-        log('📋 [DEBUG] SESSION CALLBACK START:', { 
+        console.log('📋 [DEBUG] SESSION CALLBACK START:', { 
           trigger,
           hasToken: !!token, 
           hasUser: !!user,
@@ -202,7 +202,7 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
       
       if (token) {
         if (process.env.NODE_ENV === 'development') {
-          log('🔑 [DEBUG] Token data available:', {
+          console.log('🔑 [DEBUG] Token data available:', {
             tokenId: token.id,
             tokenRole: token.role,
             tokenSchoolId: token.schoolId,
@@ -218,20 +218,20 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
         if (token.role) {
           (session.user as any).role = token.role
           if (process.env.NODE_ENV === 'development') {
-            log('🎭 [DEBUG] Role applied to session:', token.role);
+            console.log('🎭 [DEBUG] Role applied to session:', token.role);
           }
         }
         if (token.schoolId) {
           (session.user as any).schoolId = token.schoolId
           if (process.env.NODE_ENV === 'development') {
-            log('🏫 [DEBUG] SchoolId applied to session:', token.schoolId);
+            console.log('🏫 [DEBUG] SchoolId applied to session:', token.schoolId);
           }
         }
 
         // Force session update if token has been updated
         if (token.updatedAt) {
           if (process.env.NODE_ENV === 'development') {
-            log('🔄 [DEBUG] Token updated, forcing session refresh');
+            console.log('🔄 [DEBUG] Token updated, forcing session refresh');
           }
           (session as any).updatedAt = token.updatedAt;
         }
@@ -239,13 +239,13 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
         // Force session refresh if token hash changed
         if (token.hash) {
           if (process.env.NODE_ENV === 'development') {
-            log('🔄 [DEBUG] Token hash changed, forcing session refresh');
+            console.log('🔄 [DEBUG] Token hash changed, forcing session refresh');
           }
           (session as any).hash = token.hash;
         }
 
         if (process.env.NODE_ENV === 'development') {
-          log('✅ [DEBUG] Token data applied to session:', {
+          console.log('✅ [DEBUG] Token data applied to session:', {
             id: token.id,
             role: token.role,
             schoolId: token.schoolId
@@ -253,13 +253,13 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
         }
       } else {
         if (process.env.NODE_ENV === 'development') {
-          log('⚠️ [DEBUG] No token available in session callback');
+          console.log('⚠️ [DEBUG] No token available in session callback');
         }
       }
 
       // Debug session state
       if (process.env.NODE_ENV === 'development') {
-        log('📋 [DEBUG] SESSION CALLBACK END:', {
+        console.log('📋 [DEBUG] SESSION CALLBACK END:', {
           sessionId: session.user?.id,
           hasRole: !!(session.user as any)?.role,
           hasSchoolId: !!(session.user as any)?.schoolId,
@@ -276,7 +276,7 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
     },
     async redirect({ url, baseUrl }) {
       const isDev = process.env.NODE_ENV === 'development';
-      const log = isDev ? log : () => {};
+      const log = isDev ? console.log : () => {};
 
       log('=====================================');
       log('🔄 REDIRECT CALLBACK START');
