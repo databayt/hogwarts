@@ -8,7 +8,13 @@ interface SystemMetrics {
   environment: string;
   system: {
     uptime: number;
-    memory: any;
+    memory: {
+      heapUsed: number;
+      heapTotal: number;
+      external: number;
+      rss: number;
+      heapUsagePercent: number;
+    };
     platform: string;
     nodeVersion: string;
   };

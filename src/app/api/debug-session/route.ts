@@ -1,10 +1,9 @@
-import { NextResponse } from 'next/server';
 import { NextRequest } from 'next/server';
 import { auth } from '@/auth';
 import { secureDebugEndpoint, createDebugResponse, sanitizeDebugData } from '@/lib/debug-security';
 
 export async function GET(request: NextRequest) {
-  return secureDebugEndpoint(request, async (req) => {
+  return secureDebugEndpoint(request, async () => {
   const host = request.headers.get('host') || '';
   const url = new URL(request.url);
   
@@ -90,7 +89,7 @@ export async function GET(request: NextRequest) {
       userId: session?.user?.id || null,
       email: session?.user?.email || null,
       role: session?.user?.role || null,
-      schoolId: (session?.user as any)?.schoolId || null,
+      schoolId: session?.user?.schoolId || null,
       error: sessionError
     },
     environment: {

@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { secureDebugEndpoint, createDebugResponse } from '@/lib/debug-security';
 
 export async function GET(request: NextRequest) {
-  return secureDebugEndpoint(request, async (req) => {
+  return secureDebugEndpoint(request, async () => {
   try {
     const url = request.url;
     const host = request.headers.get('host') || '';

@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
     console.log("🔍 [API] Validating school access:", {
       userId,
       requestedSchoolId,
-      sessionSchoolId: (session.user as any).schoolId,
+      sessionSchoolId: session.user.schoolId,
     });
 
     // Get or create school for onboarding

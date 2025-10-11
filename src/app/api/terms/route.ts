@@ -1,6 +1,5 @@
 import { getTermsForSelection } from "@/components/platform/timetable/actions"
 import { db } from "@/lib/db"
-import { createErrorResponse } from "@/lib/auth-security"
 
 export const dynamic = "force-dynamic"
 
@@ -8,7 +7,7 @@ export async function GET(request: Request) {
   try {
     const data = await getTermsForSelection()
     return new Response(JSON.stringify(data), { status: 200, headers: { "content-type": "application/json" } })
-  } catch (e) {
+  } catch {
     // Public fallback: allow fetching by domain when tenant context is missing
     try {
       const url = new URL(request.url)

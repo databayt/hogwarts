@@ -3,12 +3,12 @@ import { auth } from '@/auth';
 import { runSecurityScan } from '@/lib/security-scanner';
 import { logger } from '@/lib/logger';
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const session = await auth();
 
     // Only platform admins can run security scans
-    if ((session?.user as any)?.role !== 'PLATFORM_ADMIN') {
+    if (session?.user?.role !== 'PLATFORM_ADMIN') {
       logger.warn('Unauthorized security scan attempt', {
         userId: session?.user?.id,
         action: 'security_scan_unauthorized',

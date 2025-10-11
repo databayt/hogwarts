@@ -56,7 +56,7 @@ function extractSubdomain(request: NextRequest): string | null {
 }
 
 export async function GET(request: NextRequest) {
-  return secureDebugEndpoint(request, async (req) => {
+  return secureDebugEndpoint(request, async () => {
     const host = request.headers.get('host') || 'unknown'
     const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN
     const subdomain = extractSubdomain(request)

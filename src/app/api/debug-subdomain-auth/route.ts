@@ -1,9 +1,8 @@
-import { NextResponse } from 'next/server';
 import { NextRequest } from 'next/server';
 import { secureDebugEndpoint, createDebugResponse, getSafeEnvVars } from '@/lib/debug-security';
 
 export async function GET(request: NextRequest) {
-  return secureDebugEndpoint(request, async (req) => {
+  return secureDebugEndpoint(request, async () => {
   const host = request.headers.get('host') || '';
   const userAgent = request.headers.get('user-agent') || '';
   const referer = request.headers.get('referer') || '';

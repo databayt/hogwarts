@@ -9,7 +9,7 @@ export async function POST(req: Request) {
   const headerList = await headers();
   const signature = headerList.get("Stripe-Signature") as string;
 
-  let event: any;
+  let event: unknown;
 
   try {
     event = stripe.webhooks.constructEvent(
@@ -17,12 +17,14 @@ export async function POST(req: Request) {
       signature,
       process.env.STRIPE_WEBHOOK_SECRET as string,
     );
-  } catch (error: any) {
-    return new Response(`Webhook Error: ${String(error?.message || error)}`, { status: 400 });
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    return new Response(`Webhook Error: ${errorMessage}`, { status: 400 });
   }
 
-  if (event.type === "checkout.session.completed") {
-    const session = event.data.object as any;
+  if ((event as {type: string})?.type === "checkout.session.completed") {
+    const eventData = event as {data: {object: {metadata?: {userId?: string}; subscription?: string}}};
+    const session = eventData.data.object;
 
     // Retrieve the subscription details from Stripe (cast to lightweight shape to avoid type deps)
     const subscriptionRes = await stripe.subscriptions.retrieve(
@@ -76,8 +78,9 @@ export async function POST(req: Request) {
     }
   }
 
-  if (event.type === "invoice.payment_succeeded") {
-    const session = event.data.object as any;
+  if ((event as {type: string})?.type === "invoice.payment_succeeded") {
+    const eventData = event as {data: {object: {billing_reason?: string; subscription?: string; id?: string; amount_due?: number; amount_paid?: number; currency?: string; status?: string; lines?: {data?: Array<{period?: {start?: number; end?: number}}}>; period_start?: number; period_end?: number}}};
+    const session = eventData.data.object;
 
     // If the billing reason is not subscription_create, it means the customer has updated their subscription.
     // If it is subscription_create, we don't need to update the subscription id and it will handle by the checkout.session.completed event.

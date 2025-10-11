@@ -18,7 +18,7 @@ interface HealthCheck {
 interface HealthCheckResult {
   status: 'pass' | 'fail' | 'warn';
   responseTime?: number;
-  details?: any;
+  details?: Record<string, unknown>;
   error?: string;
 }
 
