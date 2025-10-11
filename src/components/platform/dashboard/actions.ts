@@ -481,9 +481,8 @@ export async function getStudentDashboardData() {
     announcements: announcements.map((announcement) => ({
       id: announcement.id,
       title: announcement.title,
-      content: announcement.content,
+      body: announcement.body,
       createdAt: announcement.createdAt.toISOString(),
-      priority: announcement.priority,
     })),
     attendanceSummary: {
       totalDays,
@@ -691,9 +690,8 @@ export async function getParentDashboardData() {
     announcements: announcements.map((announcement) => ({
       id: announcement.id,
       title: announcement.title,
-      content: announcement.content,
+      body: announcement.body,
       createdAt: announcement.createdAt.toISOString(),
-      priority: announcement.priority,
     })),
   };
 }
