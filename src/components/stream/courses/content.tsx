@@ -5,7 +5,14 @@ import { Button } from "@/components/ui/button";
 import { BookOpen } from "lucide-react";
 import Link from "next/link";
 
-export function StreamCoursesContent() {
+interface Props {
+  dictionary: any;
+  lang: string;
+  schoolId: string | null;
+  searchParams?: { category?: string; search?: string };
+}
+
+export function StreamCoursesContent({ dictionary, lang, schoolId, searchParams }: Props) {
   return (
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex flex-col space-y-2">

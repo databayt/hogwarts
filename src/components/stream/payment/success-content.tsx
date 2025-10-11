@@ -7,7 +7,14 @@ import { ArrowLeft, CheckIcon } from "lucide-react";
 import Link from "next/link";
 import { useEffect } from "react";
 
-export function StreamPaymentSuccessContent() {
+interface Props {
+  dictionary: any;
+  lang: string;
+  schoolId: string | null;
+  sessionId?: string;
+}
+
+export function StreamPaymentSuccessContent({ dictionary, lang, schoolId, sessionId }: Props) {
   const triggerConfetti = useConfetti();
 
   useEffect(() => {

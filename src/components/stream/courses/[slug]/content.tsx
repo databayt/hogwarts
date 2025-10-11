@@ -8,10 +8,13 @@ import { BookOpen, Clock, BarChart3 } from "lucide-react";
 import Link from "next/link";
 
 interface Props {
+  dictionary: any;
+  lang: string;
+  schoolId: string | null;
   slug: string;
 }
 
-export function StreamCourseDetailContent({ slug }: Props) {
+export function StreamCourseDetailContent({ dictionary, lang, schoolId, slug }: Props) {
   return (
     <div className="container mx-auto py-6">
       <Card>

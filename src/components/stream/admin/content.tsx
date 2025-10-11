@@ -5,7 +5,15 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { BookOpen, Users, DollarSign, TrendingUp } from "lucide-react";
 import Link from "next/link";
 
-export function StreamAdminDashboardContent() {
+interface Props {
+  dictionary: any;
+  lang: string;
+  schoolId: string | null;
+  userId: string;
+  userRole: string;
+}
+
+export function StreamAdminDashboardContent({ dictionary, lang, schoolId, userId, userRole }: Props) {
   return (
     <div className="space-y-6">
       <div>

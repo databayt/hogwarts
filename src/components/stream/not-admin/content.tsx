@@ -9,7 +9,13 @@ import {
 import { ArrowLeft, ShieldX } from "lucide-react";
 import Link from "next/link";
 
-export function StreamNotAdminContent() {
+interface Props {
+  dictionary: any;
+  lang: string;
+  subdomain: string;
+}
+
+export function StreamNotAdminContent({ dictionary, lang, subdomain }: Props) {
   return (
     <div className="min-h-screen flex items-center justify-center">
       <Card className="max-w-md w-full">

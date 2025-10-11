@@ -5,7 +5,14 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { BookOpen, GraduationCap } from "lucide-react";
 import Link from "next/link";
 
-export function StreamDashboardContent() {
+interface Props {
+  dictionary: any;
+  lang: string;
+  schoolId: string | null;
+  userId: string;
+}
+
+export function StreamDashboardContent({ dictionary, lang, schoolId, userId }: Props) {
   return (
     <div className="space-y-8">
       {/* Enrolled Courses Section */}
