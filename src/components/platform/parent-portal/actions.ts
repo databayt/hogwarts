@@ -163,7 +163,7 @@ export async function getChildAssignments(input: { studentId: string }) {
           id: true,
           submittedAt: true,
           status: true,
-          grade: true,
+          score: true,
         },
       },
     },
@@ -186,7 +186,7 @@ export async function getChildAssignments(input: { studentId: string }) {
             id: assignment.submissions[0].id,
             submittedAt: assignment.submissions[0].submittedAt?.toISOString(),
             status: assignment.submissions[0].status,
-            grade: assignment.submissions[0].grade ? Number(assignment.submissions[0].grade) : null,
+            score: assignment.submissions[0].score ? Number(assignment.submissions[0].score) : null,
           }
         : null,
     })),
