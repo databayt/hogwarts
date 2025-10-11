@@ -35,12 +35,14 @@ export function formatZodError(error: ZodError): ValidationResult {
     // Enhance error messages based on issue type
     switch (issue.code) {
       case "invalid_type":
-        if (issue.expected === "string" && issue.received === "undefined") {
-          message = `${field} is required but was not provided`;
-          suggestion = `Please ensure the ${field} column exists and has a value`;
-        } else {
-          message = `${field} expected ${issue.expected}, received ${issue.received}`;
-          suggestion = `Please check the data type for ${field}`;
+        if ("received" in issue && "expected" in issue) {
+          if (issue.expected === "string" && issue.received === "undefined") {
+            message = `${field} is required but was not provided`;
+            suggestion = `Please ensure the ${field} column exists and has a value`;
+          } else {
+            message = `${field} expected ${issue.expected}, received ${issue.received}`;
+            suggestion = `Please check the data type for ${field}`;
+          }
         }
         break;
 
