@@ -484,22 +484,22 @@ export async function getExamsCSV(input?: Partial<z.infer<typeof getExamsSchema>
 
   // Define CSV columns
   const columns = [
-    { key: "examId", label: "Exam ID" },
-    { key: "title", label: "Title" },
-    { key: "description", label: "Description" },
-    { key: "class", label: "Class" },
-    { key: "subject", label: "Subject" },
-    { key: "examDate", label: "Exam Date" },
-    { key: "startTime", label: "Start Time" },
-    { key: "endTime", label: "End Time" },
-    { key: "duration", label: "Duration (min)" },
-    { key: "totalMarks", label: "Total Marks" },
-    { key: "passingMarks", label: "Passing Marks" },
-    { key: "examType", label: "Exam Type" },
-    { key: "status", label: "Status" },
-    { key: "resultsEntered", label: "Results Entered" },
-    { key: "createdAt", label: "Created Date" },
-  ];
+    { key: "examId" as const, label: "Exam ID" },
+    { key: "title" as const, label: "Title" },
+    { key: "description" as const, label: "Description" },
+    { key: "class" as const, label: "Class" },
+    { key: "subject" as const, label: "Subject" },
+    { key: "examDate" as const, label: "Exam Date" },
+    { key: "startTime" as const, label: "Start Time" },
+    { key: "endTime" as const, label: "End Time" },
+    { key: "duration" as const, label: "Duration (min)" },
+    { key: "totalMarks" as const, label: "Total Marks" },
+    { key: "passingMarks" as const, label: "Passing Marks" },
+    { key: "examType" as const, label: "Exam Type" },
+    { key: "status" as const, label: "Status" },
+    { key: "resultsEntered" as const, label: "Results Entered" },
+    { key: "createdAt" as const, label: "Created Date" },
+  ] as const;
 
-  return arrayToCSV(exportData, { columns });
+  return arrayToCSV(exportData, { columns: columns as any });
 }
