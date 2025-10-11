@@ -292,22 +292,11 @@ export async function StudentDashboard({
             {data.announcements.length > 0 ? (
               data.announcements.map((announcement) => (
                 <div key={announcement.id} className="p-3 border rounded-lg">
-                  <div className="flex items-center justify-between mb-1">
+                  <div className="mb-1">
                     <p className="font-medium">{announcement.title}</p>
-                    <Badge
-                      variant={
-                        announcement.priority === "HIGH"
-                          ? "destructive"
-                          : announcement.priority === "MEDIUM"
-                            ? "default"
-                            : "secondary"
-                      }
-                    >
-                      {announcement.priority}
-                    </Badge>
                   </div>
                   <p className="text-sm text-muted-foreground line-clamp-2">
-                    {announcement.content}
+                    {announcement.body}
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
                     {new Date(announcement.createdAt).toLocaleDateString()}
