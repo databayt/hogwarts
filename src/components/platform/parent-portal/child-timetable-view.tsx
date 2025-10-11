@@ -20,6 +20,17 @@ interface Props {
   studentId: string;
 }
 
+// Map numeric dayOfWeek (0=Sunday, 1=Monday, etc.) to day names
+const DAY_MAP: Record<number, string> = {
+  0: "SUNDAY",
+  1: "MONDAY",
+  2: "TUESDAY",
+  3: "WEDNESDAY",
+  4: "THURSDAY",
+  5: "FRIDAY",
+  6: "SATURDAY",
+};
+
 const DAYS_ORDER = [
   "MONDAY",
   "TUESDAY",
@@ -47,7 +58,7 @@ export async function ChildTimetableView({ studentId }: Props) {
   const timetableByDay = DAYS_ORDER.reduce(
     (acc, day) => {
       acc[day] = timetable
-        .filter((entry) => entry.dayOfWeek === day)
+        .filter((entry) => DAY_MAP[entry.dayOfWeek] === day)
         .sort((a, b) => {
           const timeA = new Date(a.startTime).getTime();
           const timeB = new Date(b.startTime).getTime();
@@ -123,7 +134,7 @@ export async function ChildTimetableView({ studentId }: Props) {
                               <TableCell>{entry.className}</TableCell>
                               <TableCell>{entry.teacherName}</TableCell>
                               <TableCell>
-                                <Badge variant="outline">{entry.roomNumber}</Badge>
+                                <Badge variant="outline">{entry.roomName}</Badge>
                               </TableCell>
                             </TableRow>
                           ))}
