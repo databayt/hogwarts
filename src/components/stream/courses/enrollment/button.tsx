@@ -12,20 +12,16 @@ export function EnrollmentButton({ courseId }: { courseId: string }) {
 
   function onSubmit() {
     startTransition(async () => {
-      const { data: result, error } = await tryCatch(
+      const { error } = await tryCatch(
         enrollInCourseAction(courseId)
       );
 
       if (error) {
-        toast.error("An unexpected error occurred. Please try again.");
+        toast.error(error.message || "An unexpected error occurred. Please try again.");
         return;
       }
 
-      if (result.status === "success") {
-        toast.success(result.message);
-      } else if (result.status === "error") {
-        toast.error(result.message);
-      }
+      // If no error, redirect() was called and user will be redirected
     });
   }
 
