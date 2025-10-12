@@ -15,14 +15,16 @@ const Time = ({ dictionary }: TimeProps) => {
         <section className='full-bleed section bg-black dark:invert text-background'>
             <div className='inner-contained flex justify-between items-center'>
                 <div className='flex flex-col items-start justify-start'>
-                    <h2 className="pb-7 dark:invert">
+                    <h4 className="pb-7 dark:invert">
                         {timeDict.title}
-                    </h2>
-                    <p className="lead max-w-[70%] md:max-w-[100%] -mt-4 pb-7 dark:invert">
+                    </h4>
+                    <p className="text-2xl text-background max-w-[70%] md:max-w-[100%] -mt-4 pb-7 dark:invert">
                         {timeDict.subtitle}
                     </p>
                 </div>
-                <Clock />
+                <div className="scale-[2]">
+                    <Clock />
+                </div>
             </div>
         </section>
     )
