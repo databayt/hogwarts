@@ -2,28 +2,18 @@
 
 import { auth } from "@/auth";
 import { getTenantContext } from "@/lib/tenant-context";
-import arcjet, { fixedWindow } from "@/lib/arcjet";
 import { db } from "@/lib/db";
 import { env } from "@/lib/env";
 import { stripe } from "@/lib/stripe";
-import { request } from "@arcjet/next";
 import { redirect } from "next/navigation";
 import Stripe from "stripe";
-
-const aj = arcjet.withRule(
-  fixedWindow({
-    mode: "LIVE",
-    window: "1m",
-    max: 10, // 10 enrollment attempts per minute
-  })
-);
 
 export async function enrollInCourseAction(
   subdomain: string,
   courseId: string
 ) {
   const session = await auth();
-  const { schoolId } = await getTenantContext(subdomain);
+  const { schoolId } = await getTenantContext();
 
   if (!session?.user) {
     throw new Error("Authentication required");
@@ -36,16 +26,6 @@ export async function enrollInCourseAction(
   let checkoutUrl: string;
 
   try {
-    // Rate limiting
-    const req = await request();
-    const decision = await aj.protect(req, {
-      fingerprint: session.user.id,
-    });
-
-    if (decision.isDenied()) {
-      throw new Error("Rate limit exceeded. Please try again later.");
-    }
-
     // Find course WITH schoolId scope
     const course = await db.streamCourse.findFirst({
       where: {
@@ -227,7 +207,7 @@ export async function checkEnrollmentStatus(
   courseId: string
 ) {
   const session = await auth();
-  const { schoolId } = await getTenantContext(subdomain);
+  const { schoolId } = await getTenantContext();
 
   if (!session?.user || !schoolId) {
     return { enrolled: false };
