@@ -9,18 +9,18 @@ interface TimeProps {
 const Time = ({ dictionary }: TimeProps) => {
     const timeDict = dictionary?.marketing?.time || {
         title: "Time",
-        subtitle: "We save the most valuable resource - your time."
+        subtitle: "We save the origin of value"
     }
     return (
         <section className='full-bleed section bg-black dark:invert text-background'>
             <div className='inner-contained flex justify-between items-center'>
                 <div className='flex flex-col items-start justify-start'>
-                    <h2 className="font-heading pb-7 dark:invert">
+                    <h2 className="pb-7 dark:invert">
                         {timeDict.title}
                     </h2>
-                    <h3 className="max-w-[70%] md:max-w-[100%] font-heading -mt-4 pb-7 dark:invert">
+                    <p className="lead max-w-[70%] md:max-w-[100%] -mt-4 pb-7 dark:invert">
                         {timeDict.subtitle}
-                    </h3>
+                    </p>
                 </div>
                 <Clock />
             </div>

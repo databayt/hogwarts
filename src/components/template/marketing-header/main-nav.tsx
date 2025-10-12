@@ -23,7 +23,7 @@ export function MainNav({ items, children, dictionary }: MainNavProps) {
 
   return (
     <div className="flex gap-6 md:gap-10">
-      <Link href="/" className="hidden items-center gap-2 md:flex font-bold hover:opacity-100">
+      <Link href="/" className="hidden items-center gap-2 md:flex font-bold opacity-100 hover:opacity-100">
         <Image src="/logo.png" alt="Hogwarts Logo" width={20} height={20} className="dark:invert" />
         <span className="hidden sm:inline-block">
           {dictionary?.navigation?.brandName || siteConfig.name}
