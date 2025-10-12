@@ -33,7 +33,7 @@ export function CreateDomainRequest({ tenants }: Props) {
     try {
       const result = await domainCreate(parsed.data);
       if (result.success) {
-        SuccessToast();
+        SuccessToast("Domain request created successfully");
         setDomain("");
         setNotes("");
       } else {

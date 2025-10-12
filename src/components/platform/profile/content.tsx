@@ -23,7 +23,7 @@ export function ProfileContent({ dictionary, lang }: Props) {
     setSubmitting(true)
     try {
       await updateProfile({ displayName, avatarUrl, locale })
-      SuccessToast()
+      SuccessToast("Profile updated successfully")
     } catch (e) {
       ErrorToast(e instanceof Error ? e.message : 'Failed')
     } finally {

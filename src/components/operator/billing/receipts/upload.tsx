@@ -32,7 +32,7 @@ export function ReceiptUpload({ tenants, invoices }: Props) {
     try {
       const result = await receiptCreate({ invoiceId, schoolId, filename: file.name, amount });
       if (result.success) {
-        SuccessToast();
+        SuccessToast("Receipt created successfully");
         setFile(null);
         setAmount(0);
       } else {

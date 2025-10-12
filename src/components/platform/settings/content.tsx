@@ -52,7 +52,7 @@ export function SettingsContent({ dictionary, lang }: Props) {
     setSubmitting(true)
     try {
       await updateSchoolSettings({ name, timezone, locale, logoUrl })
-      SuccessToast()
+      SuccessToast("Settings updated successfully")
     } catch (e) {
       ErrorToast(e instanceof Error ? e.message : 'Failed to update settings')
     } finally {

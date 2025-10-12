@@ -51,7 +51,7 @@ export function AttendanceContent({ dictionary }: Props) {
       await markAttendance({ classId, date: new Date(date).toISOString(), records })
       setChanged({})
       await load()
-      SuccessToast()
+      SuccessToast("Attendance saved successfully")
     } catch (e) {
       ErrorToast(e instanceof Error ? e.message : 'Failed')
     } finally {

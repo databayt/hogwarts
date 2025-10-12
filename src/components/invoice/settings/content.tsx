@@ -111,7 +111,7 @@ export function SettingsContent({ dictionary, lang }: Props) {
         })
 
         if(response.status === 200){
-            SuccessToast();
+            SuccessToast("Settings saved successfully");
             fetchData();
         }
     } catch (error) {

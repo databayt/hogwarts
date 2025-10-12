@@ -81,7 +81,7 @@ export const receiptColumns: ColumnDef<ReceiptRow>[] = [
                 const reason = prompt("Approval notes (optional)") || undefined;
                 const result = await receiptReview({ id: r.id, decision: "approved", reason });
                 if (result.success) {
-                  SuccessToast();
+                  SuccessToast("Receipt approved successfully");
                 } else {
                   ErrorToast(result.error.message);
                 }
@@ -100,7 +100,7 @@ export const receiptColumns: ColumnDef<ReceiptRow>[] = [
                 const reason = prompt("Rejection notes (optional)") || undefined;
                 const result = await receiptReview({ id: r.id, decision: "rejected", reason });
                 if (result.success) {
-                  SuccessToast();
+                  SuccessToast("Receipt rejected successfully");
                 } else {
                   ErrorToast(result.error.message);
                 }

@@ -167,7 +167,7 @@ export function InvoiceCreateForm({
         : await createInvoice(values);
 
       if (response.success) {
-        SuccessToast();
+        SuccessToast("Invoice saved successfully");
         closeModal();
         router.refresh();
       } else {

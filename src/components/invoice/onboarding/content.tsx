@@ -28,7 +28,7 @@ export function OnboardingContent() {
       const res = await import("@/components/invoice/actions")
       const response = await res.updateUser(data)
       if (response.success) {
-        SuccessToast()
+        SuccessToast("Onboarding completed successfully")
         router.push("/dashboard")
       } else {
         ErrorToast(response.error || "Failed to update profile")

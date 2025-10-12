@@ -53,7 +53,7 @@ export function TenantDetail({ tenantId, name, domain, planType, isActive }: Ten
     try {
       const result = await tenantStartImpersonation({ tenantId, reason });
       if (result.success) {
-        SuccessToast();
+        SuccessToast("Impersonation started successfully");
       } else {
         ErrorToast(result.error.message);
       }
@@ -66,7 +66,7 @@ export function TenantDetail({ tenantId, name, domain, planType, isActive }: Ten
     try {
       const result = await tenantStopImpersonation({ reason });
       if (result.success) {
-        SuccessToast();
+        SuccessToast("Impersonation stopped successfully");
       } else {
         ErrorToast(result.error.message);
       }
@@ -79,7 +79,7 @@ export function TenantDetail({ tenantId, name, domain, planType, isActive }: Ten
     try {
       const result = await tenantToggleActive({ tenantId, reason });
       if (result.success) {
-        SuccessToast();
+        SuccessToast("Status toggled successfully");
       } else {
         ErrorToast(result.error.message);
       }
@@ -93,7 +93,7 @@ export function TenantDetail({ tenantId, name, domain, planType, isActive }: Ten
     try {
       const result = await tenantChangePlan({ tenantId, planType: next as any, reason });
       if (result.success) {
-        SuccessToast();
+        SuccessToast("Plan changed successfully");
       } else {
         ErrorToast(result.error.message);
       }
@@ -106,7 +106,7 @@ export function TenantDetail({ tenantId, name, domain, planType, isActive }: Ten
     try {
       const result = await tenantEndTrial({ tenantId, reason });
       if (result.success) {
-        SuccessToast();
+        SuccessToast("Trial ended successfully");
       } else {
         ErrorToast(result.error.message);
       }

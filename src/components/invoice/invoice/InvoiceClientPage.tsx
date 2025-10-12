@@ -71,7 +71,7 @@ export default function InvoiceClientPage({ userId, currency = "USD", dictionary
   const handleSendEmail = async (invoiceId: string, subject: string) => {
     try {
       const response = await sendInvoiceEmail(invoiceId, subject);
-      if (response.success) SuccessToast();
+      if (response.success) SuccessToast("Invoice email sent successfully");
       else ErrorToast(response.error || "Failed to send email");
     } catch (error) {
       ErrorToast("Failed to send email");

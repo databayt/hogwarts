@@ -148,7 +148,7 @@ export const tenantColumns: ColumnDef<TenantRow>[] = [
             body: (() => { const fd = new FormData(); fd.set("reason", reason); return fd; })(),
           });
           if (!res.ok) throw new Error("Failed to start impersonation");
-          SuccessToast();
+          SuccessToast("Impersonation started successfully");
         } catch (e) {
           ErrorToast(e instanceof Error ? e.message : "Failed to start impersonation");
         }
@@ -161,7 +161,7 @@ export const tenantColumns: ColumnDef<TenantRow>[] = [
             body: (() => { const fd = new FormData(); fd.set("reason", reason); return fd; })(),
           });
           if (!res.ok) throw new Error("Failed to toggle status");
-          SuccessToast();
+          SuccessToast("Status toggled successfully");
         } catch (e) {
           ErrorToast(e instanceof Error ? e.message : "Failed to toggle status");
         }

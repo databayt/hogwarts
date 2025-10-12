@@ -81,7 +81,7 @@ export const invoiceColumns: ColumnDef<InvoiceRow>[] = [
             try {
               const result = await invoiceUpdateStatus({ id: inv.id, status: "paid" });
               if (result.success) {
-                SuccessToast();
+                SuccessToast("Invoice marked as paid");
               } else {
                 ErrorToast(result.error.message);
               }
@@ -93,7 +93,7 @@ export const invoiceColumns: ColumnDef<InvoiceRow>[] = [
             try {
               const result = await invoiceUpdateStatus({ id: inv.id, status: "void" });
               if (result.success) {
-                SuccessToast();
+                SuccessToast("Invoice voided successfully");
               } else {
                 ErrorToast(result.error.message);
               }
