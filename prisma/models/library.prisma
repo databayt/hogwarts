@@ -1,0 +1,91 @@
+// Library Management System Models
+// This file should be placed in prisma/models/ directory of your main project
+// Make sure to run: prisma generate && prisma db push after adding this file
+
+// Enums for Library System
+enum BorrowStatus {
+  BORROWED
+  RETURNED
+  OVERDUE
+}
+
+enum LibraryUserStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+// Book Model - Core library resource
+model Book {
+  id               String          @id @default(cuid())
+  title            String
+  author           String
+  genre            String
+  rating           Int             @default(0)
+  coverUrl         String
+  coverColor       String          @default("#000000")
+  description      String          @db.Text
+  totalCopies      Int             @default(1)
+  availableCopies  Int             @default(1)
+  videoUrl         String?
+  summary          String          @db.Text
+
+  // Multi-tenant support
+  schoolId         String
+  school           School          @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  // Relations
+  borrowRecords    BorrowRecord[]
+
+  // Timestamps
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  @@index([schoolId])
+  @@index([schoolId, title])
+  @@map("books")
+}
+
+// Borrow Record Model - Tracks book borrowing
+model BorrowRecord {
+  id               String          @id @default(cuid())
+
+  // Relations
+  userId           String
+  user             User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  bookId           String
+  book             Book            @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  // Multi-tenant support
+  schoolId         String
+  school           School          @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  // Borrow details
+  borrowDate       DateTime        @default(now())
+  dueDate          DateTime
+  returnDate       DateTime?
+  status           BorrowStatus    @default(BORROWED)
+
+  // Timestamps
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  @@index([userId, schoolId])
+  @@index([bookId, schoolId])
+  @@index([schoolId, status])
+  @@map("borrow_records")
+}
+
+// Note: User and School models are defined in auth.prisma and school.prisma
+// We only need to add the library-specific relations there
+// The fields below should be added manually to the existing User model in auth.prisma:
+// universityId     Int?            @unique
+// universityCard   String?
+// libraryStatus    LibraryUserStatus? @default(PENDING)
+// lastActivityDate DateTime?
+// borrowRecords    BorrowRecord[]
+
+// The fields below should be added manually to the existing School model in school.prisma:
+// books            Book[]
+// borrowRecords    BorrowRecord[]

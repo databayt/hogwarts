@@ -85,6 +85,10 @@ model School {
   streamEnrollments     StreamEnrollment[]
   streamCertificates    StreamCertificate[]
 
+  // Library relations
+  books            Book[]
+  borrowRecords    BorrowRecord[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
