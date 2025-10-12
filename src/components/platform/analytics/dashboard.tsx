@@ -6,7 +6,8 @@ import { format, startOfMonth, endOfMonth, subMonths, addMonths } from 'date-fns
 import {
   TrendingUp, TrendingDown, Users, GraduationCap, DollarSign,
   Calendar, Award, BookOpen, School, Activity, Target, AlertTriangle,
-  Download, Filter, ChevronUp, ChevronDown, BarChart3, PieChart as PieChartIcon
+  Download, Filter, ChevronUp, ChevronDown, BarChart3, PieChart as PieChartIcon,
+  Star
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
