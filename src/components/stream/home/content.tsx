@@ -6,13 +6,19 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 import type { StreamContentProps } from "../types";
 
+type Feature = {
+  title: string;
+  description: string;
+  icon: string;
+};
+
 export function StreamHomeContent({
   dictionary,
   lang,
   schoolId
 }: StreamContentProps) {
   // Get features from dictionary or use defaults
-  const features = dictionary?.home?.features || [
+  const features: Feature[] = dictionary?.home?.features || [
     {
       title: "Comprehensive Courses",
       description: "Access a wide range of carefully curated courses designed by industry experts.",
