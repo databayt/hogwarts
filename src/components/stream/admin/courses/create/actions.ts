@@ -6,7 +6,7 @@ import { db } from "@/lib/db";
 import { stripe } from "@/lib/stripe";
 import { revalidatePath } from "next/cache";
 import slugify from "slugify";
-import type { CreateCourseData } from "../../types";
+import type { CreateCourseData } from "../../../types";
 
 export async function createCourseAction(
   subdomain: string,
