@@ -7,8 +7,8 @@ export default async function LibraryAdminBooksNewContent() {
   if (!schoolId) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh]">
-        <h2 className="text-2xl font-semibold mb-4">School context not found</h2>
-        <p className="text-muted-foreground">
+        <h2 className="mb-4">School context not found</h2>
+        <p className="muted">
           Unable to create book. Please contact support.
         </p>
       </div>

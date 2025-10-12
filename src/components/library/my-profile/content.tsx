@@ -14,8 +14,8 @@ export default async function LibraryMyProfileContent({ userId }: Props) {
   if (!schoolId) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh]">
-        <h2 className="text-2xl font-semibold mb-4">School context not found</h2>
-        <p className="text-muted-foreground">
+        <h2 className="mb-4">School context not found</h2>
+        <p className="muted">
           Unable to load profile. Please contact support.
         </p>
       </div>
@@ -56,7 +56,7 @@ export default async function LibraryMyProfileContent({ userId }: Props) {
         </h2>
 
         {activeBorrows.length === 0 ? (
-          <p className="text-muted-foreground">
+          <p className="muted">
             You haven't borrowed any books yet
           </p>
         ) : (
@@ -74,25 +74,25 @@ export default async function LibraryMyProfileContent({ userId }: Props) {
                 </div>
 
                 <div className="library-profile-card-content">
-                  <h3 className="font-semibold">{record.book.title}</h3>
-                  <p className="text-sm text-muted-foreground">
+                  <h5>{record.book.title}</h5>
+                  <p className="muted">
                     by {record.book.author}
                   </p>
 
                   <div className="library-profile-card-meta">
-                    <p className="text-sm">
-                      <span className="font-medium">Borrowed:</span>{" "}
+                    <small>
+                      <strong>Borrowed:</strong>{" "}
                       {new Date(record.borrowDate).toLocaleDateString()}
-                    </p>
-                    <p className="text-sm">
-                      <span className="font-medium">Due:</span>{" "}
+                    </small>
+                    <small>
+                      <strong>Due:</strong>{" "}
                       {new Date(record.dueDate).toLocaleDateString()}
-                    </p>
+                    </small>
 
                     {new Date(record.dueDate) < new Date() && (
-                      <p className="text-sm text-red-600 font-medium">
+                      <small className="text-destructive">
                         Overdue!
-                      </p>
+                      </small>
                     )}
                   </div>
 
@@ -115,7 +115,7 @@ export default async function LibraryMyProfileContent({ userId }: Props) {
         </h2>
 
         {borrowHistory.length === 0 ? (
-          <p className="text-muted-foreground">No borrow history yet</p>
+          <p className="muted">No borrow history yet</p>
         ) : (
           <div className="library-profile-history">
             {borrowHistory.map((record) => (
@@ -131,18 +131,18 @@ export default async function LibraryMyProfileContent({ userId }: Props) {
                 </div>
 
                 <div className="library-profile-history-content">
-                  <h4 className="font-semibold">{record.book.title}</h4>
-                  <p className="text-sm text-muted-foreground">
+                  <h6>{record.book.title}</h6>
+                  <p className="muted">
                     by {record.book.author}
                   </p>
 
                   <div className="library-profile-history-dates">
-                    <p className="text-xs text-muted-foreground">
+                    <small className="muted">
                       Borrowed: {new Date(record.borrowDate).toLocaleDateString()}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
+                    </small>
+                    <small className="muted">
                       Returned: {record.returnDate ? new Date(record.returnDate).toLocaleDateString() : "N/A"}
-                    </p>
+                    </small>
                   </div>
                 </div>
 

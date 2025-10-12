@@ -9,8 +9,8 @@ export default async function LibraryAdminContent() {
   if (!schoolId) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh]">
-        <h2 className="text-2xl font-semibold mb-4">School context not found</h2>
-        <p className="text-muted-foreground">
+        <h2 className="mb-4">School context not found</h2>
+        <p className="muted">
           Unable to load admin dashboard. Please contact support.
         </p>
       </div>
@@ -61,13 +61,13 @@ export default async function LibraryAdminContent() {
 
         <div className="library-admin-stat-card">
           <h3 className="library-admin-stat-label">Overdue Books</h3>
-          <p className="library-admin-stat-value text-red-600">{overdueBooks}</p>
+          <p className="library-admin-stat-value text-destructive">{overdueBooks}</p>
         </div>
       </div>
 
       {/* Quick Actions */}
       <div className="library-admin-actions">
-        <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
+        <h4 className="mb-4">Quick Actions</h4>
         <div className="library-admin-actions-grid">
           <Button asChild variant="outline" className="w-full">
             <Link href="/library/admin/books">View All Books</Link>

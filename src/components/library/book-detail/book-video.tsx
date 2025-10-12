@@ -8,7 +8,7 @@ interface Props {
 export default function BookVideo({ videoUrl, title }: Props) {
   return (
     <div className="book-video-container">
-      <h2 className="text-2xl font-semibold mb-4">Book Preview</h2>
+      <h3 className="mb-4">Book Preview</h3>
       <div className="book-video-wrapper">
         <iframe
           src={videoUrl}

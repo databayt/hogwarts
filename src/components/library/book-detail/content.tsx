@@ -63,8 +63,8 @@ export default async function LibraryBookDetailContent({ bookId, userId }: Props
           </div>
 
           <div className="book-detail-availability">
-            <p className="text-sm font-medium">Availability</p>
-            <p className="text-lg">
+            <h6>Availability</h6>
+            <p className="lead">
               {book.availableCopies} of {book.totalCopies} copies available
             </p>
           </div>
@@ -81,14 +81,14 @@ export default async function LibraryBookDetailContent({ bookId, userId }: Props
 
           {/* Description */}
           <div className="book-detail-description">
-            <h2 className="text-xl font-semibold mb-2">Description</h2>
-            <p className="text-muted-foreground">{book.description}</p>
+            <h4 className="mb-2">Description</h4>
+            <p className="muted">{book.description}</p>
           </div>
 
           {/* Summary */}
           <div className="book-detail-summary">
-            <h2 className="text-xl font-semibold mb-2">Summary</h2>
-            <p className="text-muted-foreground">{book.summary}</p>
+            <h4 className="mb-2">Summary</h4>
+            <p className="muted">{book.summary}</p>
           </div>
         </div>
       </div>

@@ -13,8 +13,8 @@ export default async function LibraryContent({ userId }: Props) {
   if (!schoolId) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh]">
-        <h2 className="text-2xl font-semibold mb-4">School context not found</h2>
-        <p className="text-muted-foreground">
+        <h2 className="mb-4">School context not found</h2>
+        <p className="muted">
           Unable to load library. Please contact support.
         </p>
       </div>
@@ -34,8 +34,8 @@ export default async function LibraryContent({ userId }: Props) {
   if (latestBooks.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh]">
-        <h2 className="text-2xl font-semibold mb-4">No books available</h2>
-        <p className="text-muted-foreground">
+        <h2 className="mb-4">No books available</h2>
+        <p className="muted">
           Check back later or contact your library administrator
         </p>
       </div>

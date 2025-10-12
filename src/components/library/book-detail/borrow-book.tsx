@@ -76,7 +76,7 @@ export default function BorrowBook({
   if (hasBorrowedBook) {
     return (
       <div className="borrow-book-section">
-        <p className="text-sm text-green-600 mb-2">
+        <p className="muted mb-2 text-emerald-600">
           You have borrowed this book
         </p>
         <Button

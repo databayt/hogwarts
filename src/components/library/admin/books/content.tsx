@@ -10,8 +10,8 @@ export default async function LibraryAdminBooksContent() {
   if (!schoolId) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh]">
-        <h2 className="text-2xl font-semibold mb-4">School context not found</h2>
-        <p className="text-muted-foreground">
+        <h2 className="mb-4">School context not found</h2>
+        <p className="muted">
           Unable to load books. Please contact support.
         </p>
       </div>
@@ -56,7 +56,7 @@ export default async function LibraryAdminBooksContent() {
             <tbody>
               {books.map((book) => (
                 <tr key={book.id}>
-                  <td className="font-medium">{book.title}</td>
+                  <td><strong>{book.title}</strong></td>
                   <td>{book.author}</td>
                   <td>{book.genre}</td>
                   <td>{book.totalCopies}</td>
