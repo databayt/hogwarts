@@ -110,7 +110,7 @@ interface FeePayment {
     dueDate: Date;
     status: 'pending' | 'paid';
   }[];
-  late Fee?: number;
+  lateFee?: number;
   notes?: string;
 }
 
