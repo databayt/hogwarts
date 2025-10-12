@@ -61,7 +61,7 @@ export async function enrollInCourseAction(
     } else {
       const customer = await stripe.customers.create({
         email: session.user.email || undefined,
-        name: session.user.username || undefined,
+        name: session.user.name || undefined,
         metadata: {
           userId: session.user.id,
           schoolId, // Add school context to Stripe
