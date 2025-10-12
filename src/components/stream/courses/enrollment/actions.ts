@@ -3,7 +3,7 @@
 import { auth } from "@/auth";
 import { getTenantContext } from "@/lib/tenant-context";
 import { db } from "@/lib/db";
-import { env } from "@/lib/env";
+import { env } from "@/env";
 import { stripe } from "@/lib/stripe";
 import { redirect } from "next/navigation";
 import Stripe from "stripe";
@@ -157,8 +157,8 @@ export async function enrollInCourseAction(
           },
         ],
         mode: "payment",
-        success_url: `${env.BETTER_AUTH_URL}/${session.user.locale || 'en'}/s/${subdomain}/stream/payment/success?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${env.BETTER_AUTH_URL}/${session.user.locale || 'en'}/s/${subdomain}/stream/payment/cancel`,
+        success_url: `${env.NEXT_PUBLIC_APP_URL}/${session.user.locale || 'en'}/s/${subdomain}/stream/payment/success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${env.NEXT_PUBLIC_APP_URL}/${session.user.locale || 'en'}/s/${subdomain}/stream/payment/cancel`,
         metadata: {
           userId: session.user.id,
           courseId: course.id,
