@@ -196,7 +196,7 @@ export async function PrincipalDashboard({ user, dictionary }: PrincipalDashboar
                     <p className="font-medium">{priority.priority}</p>
                     <p className="text-sm text-muted-foreground">{priority.time}</p>
                   </div>
-                  <Badge variant={priority.status === "confirmed" ? "default" : "secondary"}>
+                  <Badge variant={priority.status === "scheduled" ? "default" : "secondary"}>
                     {priority.status}
                   </Badge>
                 </div>
