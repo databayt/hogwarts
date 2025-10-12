@@ -45,7 +45,7 @@ export default function ImpersonationBanner() {
           try {
             const result = await tenantStopImpersonation({ reason: "manual stop via banner" });
             if (result.success) {
-              SuccessToast();
+              SuccessToast("Impersonation stopped successfully");
               setSchoolId(null);
               window.location.reload(); // Reload to clear impersonation state
             } else {
