@@ -192,14 +192,14 @@ export async function getExamWithStudents(input: { examId: string }) {
           },
         },
       },
-      results: true,
+      examResults: true,
     },
   });
 
   if (!exam) return { exam: null, students: [] };
 
   const students = exam.class.studentClasses.map((sc) => {
-    const result = exam.results.find((r) => r.studentId === sc.student.id);
+    const result = exam.examResults.find((r) => r.studentId === sc.student.id);
     return {
       id: sc.student.id,
       studentId: sc.student.studentId,
