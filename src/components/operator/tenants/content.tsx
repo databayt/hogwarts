@@ -46,7 +46,7 @@ async function getTenants(searchParams: Props["searchParams"]) {
       ? {
           OR: [
             { name: { contains: searchParams.search, mode: "insensitive" as const } },
-            { subdomain: { contains: searchParams.search, mode: "insensitive" as const } }
+            { domain: { contains: searchParams.search, mode: "insensitive" as const } }
           ]
         }
       : {})
@@ -58,11 +58,10 @@ async function getTenants(searchParams: Props["searchParams"]) {
       select: {
         id: true,
         name: true,
-        subdomain: true,
+        domain: true,
         isActive: true,
         planType: true,
         createdAt: true,
-        trialEndsAt: true,
         _count: {
           select: {
             students: true,
@@ -80,13 +79,13 @@ async function getTenants(searchParams: Props["searchParams"]) {
   const rows: TenantRow[] = tenants.map(tenant => ({
     id: tenant.id,
     name: tenant.name,
-    subdomain: tenant.subdomain,
+    subdomain: tenant.domain,
     isActive: tenant.isActive,
     planType: tenant.planType as "TRIAL" | "BASIC" | "PREMIUM" | "ENTERPRISE",
     studentCount: tenant._count.students,
     teacherCount: tenant._count.teachers,
     createdAt: tenant.createdAt.toISOString(),
-    trialEndsAt: tenant.trialEndsAt?.toISOString()
+    trialEndsAt: undefined
   }));
 
   return {
