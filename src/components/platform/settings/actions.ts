@@ -99,7 +99,7 @@ export async function getSchoolUsers() {
       },
       select: {
         id: true,
-        name: true,
+        username: true,
         email: true,
         role: true,
         image: true,
@@ -137,7 +137,7 @@ export async function createUser(formData: FormData) {
     }
 
     const data = {
-      name: formData.get("name") as string,
+      username: formData.get("username") as string,
       email: formData.get("email") as string,
       role: formData.get("role") as UserRole,
     };
@@ -157,7 +157,7 @@ export async function createUser(formData: FormData) {
     // Create user
     await db.user.create({
       data: {
-        name: data.name,
+        username: data.username,
         email: data.email,
         role: data.role,
         schoolId: schoolId || undefined,
