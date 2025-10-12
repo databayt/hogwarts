@@ -231,13 +231,13 @@ async function notifyCriticalAlert(alert: EmergencyAlert) {
     select: {
       id: true,
       email: true,
-      name: true,
+      username: true,
     }
   });
 
   // Mock notification sending
   for (const admin of admins) {
-    console.log(`Notifying admin ${admin.name} (${admin.email}) about critical alert: ${alert.title}`);
+    console.log(`Notifying admin ${admin.username || admin.email} (${admin.email}) about critical alert: ${alert.title}`);
   }
 }
 
