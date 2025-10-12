@@ -494,6 +494,7 @@
       "admin": {
         "title": "إدارة المكتبة",
         "dashboard": "لوحة تحكم إدارة المكتبة",
+        "manageBooks": "إدارة الكتب",
         "addBook": "إضافة كتاب جديد",
         "allBooks": "جميع الكتب",
         "createNewBook": "إنشاء كتاب جديد",

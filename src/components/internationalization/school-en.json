@@ -493,6 +493,7 @@
       "admin": {
         "title": "Library Admin",
         "dashboard": "Library Admin Dashboard",
+        "manageBooks": "Manage Books",
         "addBook": "Add New Book",
         "allBooks": "All Books",
         "createNewBook": "Create a New Book",
