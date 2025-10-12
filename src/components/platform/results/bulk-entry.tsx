@@ -307,7 +307,7 @@ export function BulkGradeEntry({
                           onChange={(e) => updateEntry(student.id, 'score', e.target.value)}
                           className={cn(
                             "w-24",
-                            entry?.score !== '' && entry?.score > maxScore && "border-red-500"
+                            typeof entry?.score === 'number' && entry.score > maxScore && "border-red-500"
                           )}
                           placeholder="0"
                         />
