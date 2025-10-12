@@ -173,9 +173,6 @@ export async function getTeacherDashboardData() {
       exams: {
         include: {
           results: {
-            where: {
-              isAbsent: false,
-            },
             select: {
               percentage: true,
             },
