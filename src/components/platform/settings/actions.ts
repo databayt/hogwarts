@@ -105,7 +105,7 @@ export async function getSchoolUsers() {
         image: true,
         createdAt: true,
         emailVerified: true,
-        twoFactorEnabled: true,
+        isTwoFactorEnabled: true,
       },
       orderBy: {
         createdAt: "desc",
