@@ -57,7 +57,7 @@ export const createLessonSchema = z.object({
     .max(600, "Duration must be less than 10 hours")
     .optional()
     .nullable(),
-  isFree: z.boolean().default(false),
+  isFree: z.boolean(),
 });
 
 export const createCategorySchema = z.object({
