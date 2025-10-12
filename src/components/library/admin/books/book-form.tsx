@@ -194,7 +194,7 @@ export default function BookForm({ type = "create", bookData, schoolId }: Props)
                 <FileUpload
                   value={field.value}
                   onChange={field.onChange}
-                  accept="image/*"
+                  accept="image"
                   placeholder="Upload book cover"
                 />
               </FormControl>
@@ -230,7 +230,7 @@ export default function BookForm({ type = "create", bookData, schoolId }: Props)
                 <FileUpload
                   value={field.value || ""}
                   onChange={field.onChange}
-                  accept="video/*"
+                  accept="video"
                   placeholder="Upload book trailer"
                 />
               </FormControl>
