@@ -44,6 +44,18 @@ export const ErrorToast = (message: string) => {
     });
 };
 
+export const InfoToast = (message: string) => {
+    toast.info(message, {
+        style: {
+            background: 'rgb(59 130 246)',
+            color: 'white',
+            border: 'none',
+            width: '220px',
+            maxWidth: '220px'
+        }
+    });
+};
+
 export const DeleteToast = (message: string = "Deleted") => {
     toast(message, {
         style: {

@@ -103,28 +103,13 @@ export async function tenantChangePlan(
 
     const validated = changePlanSchema.parse(input);
 
-    const school = await db.$transaction(async (tx) => {
-      // Update school plan
-      const updatedSchool = await tx.school.update({
-        where: { id: validated.tenantId },
-        data: {
-          planType: validated.planType,
-          updatedAt: new Date()
-        }
-      });
-
-      // Create subscription history entry
-      await tx.subscriptionHistory.create({
-        data: {
-          schoolId: validated.tenantId,
-          planType: validated.planType,
-          changedBy: operator.userId,
-          reason: validated.reason,
-          changedAt: new Date()
-        }
-      });
-
-      return updatedSchool;
+    // Update school plan
+    const school = await db.school.update({
+      where: { id: validated.tenantId },
+      data: {
+        planType: validated.planType,
+        updatedAt: new Date()
+      }
     });
 
     await logOperatorAudit({
