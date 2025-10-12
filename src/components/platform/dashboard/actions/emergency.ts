@@ -53,7 +53,6 @@ export async function getActiveAlerts(): Promise<EmergencyAlert[]> {
     db.announcement.count({
       where: {
         schoolId,
-        priority: "urgent",
         published: true,
         createdAt: { gte: subHours(now, 24) }
       }
