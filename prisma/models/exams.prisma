@@ -34,10 +34,11 @@ model Exam {
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
 
-  school  School       @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  class   Class        @relation(fields: [classId], references: [id], onDelete: Cascade)
-  subject Subject      @relation(fields: [subjectId], references: [id], onDelete: Cascade)
-  results ExamResult[]
+  school      School       @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  class       Class        @relation(fields: [classId], references: [id], onDelete: Cascade)
+  subject     Subject      @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  examResults ExamResult[]
+  results     Result[]
 
   @@index([schoolId, examDate])
   @@index([schoolId, classId])

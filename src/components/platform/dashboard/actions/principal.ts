@@ -147,7 +147,13 @@ export async function getCriticalAlerts() {
     getFinancialSummary(),
   ]);
 
-  const alerts = [];
+  const alerts: Array<{
+    type: string;
+    message: string;
+    severity: string;
+    action: string;
+    timestamp: Date;
+  }> = [];
 
   // Add emergency alerts
   emergencyAlerts
@@ -195,7 +201,12 @@ export async function getTodaysPriorities() {
   const { schoolId } = await getTenantContext();
   if (!schoolId) throw new Error("Missing school context");
 
-  const priorities = [];
+  const priorities: Array<{
+    priority: string;
+    time: string;
+    status: "scheduled" | "pending" | "completed";
+    type: string;
+  }> = [];
 
   // Get scheduled meetings (would query calendar/meeting table)
   priorities.push({
@@ -486,7 +497,11 @@ export async function getMonthlyHighlights() {
   const { schoolId } = await getTenantContext();
   if (!schoolId) throw new Error("Missing school context");
 
-  const highlights = [];
+  const highlights: Array<{
+    highlight: string;
+    description: string;
+    impact: "high" | "medium" | "low";
+  }> = [];
 
   // Check for achievements
   const topExamResults = await db.examResult.findMany({
@@ -526,7 +541,6 @@ export async function getMonthlyHighlights() {
   const recentAnnouncements = await db.announcement.count({
     where: {
       schoolId,
-      priority: "urgent",
       createdAt: { gte: startOfMonth(new Date()) },
     },
   });

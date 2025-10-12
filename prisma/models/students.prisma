@@ -18,6 +18,8 @@ model Student {
   attendances       Attendance[]
   submissions       AssignmentSubmission[]
   examResults       ExamResult[]
+  results           Result[]
+  reportCards       ReportCard[]
 
   // Auth relationship
   userId String? @unique

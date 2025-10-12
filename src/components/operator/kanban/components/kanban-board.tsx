@@ -72,10 +72,22 @@ export function KanbanBoard() {
   useEffect(() => {
     useTaskStore.persist.rehydrate();
   }, []);
+
+  // Memoize tasks grouped by status to avoid filtering on every render
+  const tasksByStatus = useMemo(() => {
+    return tasks.reduce((acc, task) => {
+      if (!acc[task.status]) {
+        acc[task.status] = [];
+      }
+      acc[task.status].push(task);
+      return acc;
+    }, {} as Record<ColumnId, Task[]>);
+  }, [tasks]);
+
   if (!isMounted) return;
 
   function getDraggingTaskData(taskId: UniqueIdentifier, columnId: ColumnId) {
-    const tasksInColumn = tasks.filter((task) => task.status === columnId);
+    const tasksInColumn = tasksByStatus[columnId] || [];
     const taskPosition = tasksInColumn.findIndex((task) => task.id === taskId);
     const column = columns.find((col) => col.id === columnId);
     return {
@@ -194,7 +206,7 @@ export function KanbanBoard() {
             <Fragment key={col.id}>
               <BoardColumn
                 column={col}
-                tasks={tasks.filter((task) => task.status === col.id)}
+                tasks={tasksByStatus[col.id] || []}
               />
               {index === columns?.length - 1 && (
                 <div className='w-[300px]'>
@@ -207,14 +219,14 @@ export function KanbanBoard() {
         </SortableContext>
       </BoardContainer>
 
-      {'document' in window &&
+      {isMounted &&
         createPortal(
           <DragOverlay>
             {activeColumn && (
               <BoardColumn
                 isOverlay
                 column={activeColumn}
-                tasks={tasks.filter((task) => task.status === activeColumn.id)}
+                tasks={tasksByStatus[activeColumn.id] || []}
               />
             )}
             {activeTask && <TaskCard task={activeTask} isOverlay />}

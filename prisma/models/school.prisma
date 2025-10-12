@@ -74,6 +74,10 @@ model School {
   exams                 Exam[]
   examResults           ExamResult[]
   gradeBoundaries       GradeBoundary[]
+  // Gradebook relations
+  results               Result[]
+  reportCards           ReportCard[]
+  reportCardGrades      ReportCardGrade[]
 
   // Stream (LMS) relations
   streamCourses         StreamCourse[]
@@ -180,6 +184,7 @@ model Term {
   classes    Class[]
   timetables Timetable[]
   schoolWeekConfigs SchoolWeekConfig[]
+  reportCards ReportCard[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -196,6 +201,7 @@ model YearLevel {
 
   school            School             @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   studentYearLevels StudentYearLevel[]
+  reportCards       ReportCard[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
