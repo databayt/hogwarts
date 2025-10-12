@@ -177,14 +177,18 @@ export async function getFeeDefaulters(limit: number = 10) {
       studentId: true,
       givenName: true,
       surname: true,
-      yearLevel: {
+      studentYearLevels: {
         select: {
           yearLevel: {
             select: {
-              name: true,
+              levelName: true,
             },
           },
         },
+        take: 1,
+        orderBy: {
+          createdAt: 'desc'
+        }
       },
     },
   });
@@ -194,7 +198,7 @@ export async function getFeeDefaulters(limit: number = 10) {
     id: student.id,
     studentId: student.studentId,
     name: `${student.givenName} ${student.surname}`,
-    class: student.yearLevel?.[0]?.yearLevel?.name || "N/A",
+    class: student.studentYearLevels?.[0]?.yearLevel?.levelName || "N/A",
     outstandingAmount: Math.floor(Math.random() * 10000) + 5000,
     monthsOverdue: Math.floor(Math.random() * 3) + 1,
     lastPaymentDate: subMonths(new Date(), Math.floor(Math.random() * 6) + 1),
