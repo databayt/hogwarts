@@ -3,7 +3,7 @@
 import { auth } from "@/auth";
 import { getTenantContext } from "@/lib/tenant-context";
 import { db } from "@/lib/db";
-import { env } from "@/env";
+import { env } from "@/env.mjs";
 import { stripe } from "@/lib/stripe";
 import { redirect } from "next/navigation";
 import Stripe from "stripe";
