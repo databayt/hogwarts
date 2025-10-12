@@ -37,7 +37,7 @@ export default function UserEditProfile({ firstName, lastName, currency, email }
       const mod = await import("@/components/invoice/actions")
       const res = await mod.updateUser(data)
       if (res.success) {
-        SuccessToast()
+        SuccessToast("Profile updated successfully")
       } else {
         ErrorToast(res.error || "Failed to update profile")
       }
