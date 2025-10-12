@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { useState, useMemo, useCallback, useEffect } from 'react';
-import { format, formatDistanceToNow, isToday, isYesterday, startOfDay, differenceInDays } from 'date-fns';
+import { format, formatDistanceToNow, isToday, isYesterday, startOfDay, differenceInDays, isPast } from 'date-fns';
 import {
   Bell, BellOff, Check, CheckCheck, X, Archive, Star, Trash2,
   MessageSquare, Calendar, DollarSign, Award, AlertTriangle,
