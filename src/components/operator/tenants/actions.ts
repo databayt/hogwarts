@@ -210,10 +210,7 @@ export async function tenantStartImpersonation(
       userId: operator.userId,
       schoolId: validated.tenantId,
       action: "IMPERSONATION_STARTED",
-      reason: validated.reason,
-      metadata: {
-        expiresAt: new Date(Date.now() + 60 * 60 * 1000).toISOString()
-      }
+      reason: validated.reason
     });
 
     revalidatePath("/");
