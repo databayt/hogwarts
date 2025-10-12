@@ -13,7 +13,7 @@ export async function createCourseAction(
   formData: FormData
 ) {
   const session = await auth();
-  const { schoolId } = await getTenantContext(subdomain);
+  const { schoolId } = await getTenantContext();
 
   // Check authentication
   if (!session?.user) {
@@ -115,7 +115,7 @@ export async function createCategoryAction(
   name: string
 ) {
   const session = await auth();
-  const { schoolId } = await getTenantContext(subdomain);
+  const { schoolId } = await getTenantContext();
 
   if (!session?.user) {
     throw new Error("Unauthorized");
