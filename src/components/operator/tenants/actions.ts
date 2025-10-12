@@ -148,7 +148,6 @@ export async function tenantEndTrial(
       where: { id: validated.tenantId },
       data: {
         planType: "BASIC",
-        trialEndsAt: new Date(), // End trial immediately
         updatedAt: new Date()
       }
     });
