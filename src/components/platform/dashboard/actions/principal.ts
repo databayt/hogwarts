@@ -343,10 +343,18 @@ export async function getStaffEvaluationsDue() {
       id: true,
       givenName: true,
       surname: true,
-      department: {
-        select: {
-          name: true,
+      teacherDepartments: {
+        where: {
+          isPrimary: true,
         },
+        select: {
+          department: {
+            select: {
+              name: true,
+            },
+          },
+        },
+        take: 1,
       },
     },
   });
@@ -354,7 +362,7 @@ export async function getStaffEvaluationsDue() {
   // In production, would check actual evaluation records
   return teachers.map((teacher, index) => ({
     teacher: `${teacher.givenName} ${teacher.surname}`,
-    department: teacher.department?.name || "General",
+    department: teacher.teacherDepartments[0]?.department?.name || "General",
     dueDate: new Date(Date.now() + (index + 1) * 5 * 24 * 60 * 60 * 1000).toISOString(),
     status: index === 1 ? "in-progress" as const : "pending" as const,
     lastEvaluation: subMonths(new Date(), 6 + index),
