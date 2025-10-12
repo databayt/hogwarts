@@ -6,14 +6,17 @@ import { db } from "@/lib/db";
 import { env } from "@/env.mjs";
 import { stripe } from "@/lib/stripe";
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import Stripe from "stripe";
+import { i18n } from "@/components/internationalization/config";
 
-export async function enrollInCourseAction(
-  subdomain: string,
-  courseId: string
-) {
+export async function enrollInCourseAction(courseId: string) {
   const session = await auth();
   const { schoolId } = await getTenantContext();
+  const headersList = await headers();
+  const host = headersList.get("host") || "";
+  const subdomain = host.split(".")[0];
+  const locale = i18n.defaultLocale;
 
   if (!session?.user) {
     throw new Error("Authentication required");
@@ -157,8 +160,8 @@ export async function enrollInCourseAction(
           },
         ],
         mode: "payment",
-        success_url: `${env.NEXT_PUBLIC_APP_URL}/${session.user.locale || 'en'}/s/${subdomain}/stream/payment/success?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${env.NEXT_PUBLIC_APP_URL}/${session.user.locale || 'en'}/s/${subdomain}/stream/payment/cancel`,
+        success_url: `${env.NEXT_PUBLIC_APP_URL}/${locale}/s/${subdomain}/stream/payment/success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${env.NEXT_PUBLIC_APP_URL}/${locale}/s/${subdomain}/stream/payment/cancel`,
         metadata: {
           userId: session.user.id,
           courseId: course.id,
@@ -187,7 +190,7 @@ export async function enrollInCourseAction(
       checkoutUrl = result.checkoutUrl;
     } else {
       // Free course - redirect to course page
-      redirect(`/${session.user.locale || 'en'}/s/${subdomain}/stream/dashboard/${course.slug}`);
+      redirect(`/${locale}/s/${subdomain}/stream/dashboard/${course.slug}`);
     }
   } catch (error) {
     console.error("Enrollment error:", error);
@@ -202,10 +205,7 @@ export async function enrollInCourseAction(
   redirect(checkoutUrl);
 }
 
-export async function checkEnrollmentStatus(
-  subdomain: string,
-  courseId: string
-) {
+export async function checkEnrollmentStatus(courseId: string) {
   const session = await auth();
   const { schoolId } = await getTenantContext();
 
