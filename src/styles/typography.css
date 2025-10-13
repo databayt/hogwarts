@@ -1,12 +1,12 @@
-/* Typography System - Inspired by shadcn/ui */
+/* Typography System - Matches shadcn/ui */
 @layer base {
-  /* Headings */
+  /* ===== BASE HEADINGS ===== */
   h1 {
-    @apply scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl;
+    @apply scroll-m-20 text-4xl font-extrabold tracking-tight text-balance lg:text-5xl;
   }
 
   h2 {
-    @apply scroll-m-20  text-3xl font-bold tracking-tight first:mt-0;
+    @apply scroll-m-20 text-3xl font-semibold tracking-tight first:mt-0;
   }
 
   h3 {
@@ -25,31 +25,62 @@
     @apply scroll-m-20 text-base font-semibold tracking-tight;
   }
 
-  /* Paragraph */
+  /* ===== PARAGRAPH ===== */
   p {
-    @apply leading-6 text-muted-foreground;
+    @apply leading-7 [&:not(:first-child)]:mt-6;
   }
 
-  /* Blockquote */
-  /* blockquote {
+  /* ===== BLOCKQUOTE ===== */
+  blockquote {
     @apply mt-6 border-l-2 pl-6 italic;
-  } */
+  }
 
-  /* Lists */
-  /* ul {
+  /* ===== LISTS ===== */
+  ul {
     @apply my-6 ml-6 list-disc [&>li]:mt-2;
-  } */
+  }
 
   ol {
     @apply my-6 ml-6 list-decimal [&>li]:mt-2;
   }
 
-  /* Inline code */
+  /* ===== INLINE CODE ===== */
   code {
     @apply relative rounded bg-muted px-[0.3rem] py-[0.2rem] font-mono text-sm font-semibold;
   }
 
-  /* Tables */
+  /* ===== SMALL TEXT ===== */
+  small {
+    @apply text-sm font-medium leading-none;
+  }
+
+  /* ===== UTILITY CLASSES ===== */
+  /* Lead text - large intro paragraphs */
+  .lead {
+    @apply text-xl text-muted-foreground;
+  }
+
+  /* Large text */
+  .large {
+    @apply text-lg font-semibold;
+  }
+
+  /* Muted text */
+  .muted {
+    @apply text-sm text-muted-foreground;
+  }
+
+  /* Bordered heading (commonly used with h2) */
+  .bordered {
+    @apply border-b pb-2;
+  }
+
+  /* Gradient text effect */
+  .gradient {
+    @apply bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent;
+  }
+
+  /* ===== TABLES ===== */
   table {
     @apply w-full;
   }
@@ -74,47 +105,27 @@
     @apply p-4 align-middle [&:has([role=checkbox])]:pr-0;
   }
 
-  /* Links - Base styling for all links */
+  /* ===== LINKS ===== */
   a {
     @apply text-base font-medium text-primary hover:text-primary/80;
   }
 
-  /* Next.js Link component styling */
   a[href] {
     @apply text-base font-medium text-primary hover:text-primary/80 transition-colors;
   }
 
-  /* Header navigation links */
+  /* ===== HEADER NAVIGATION LINKS ===== */
   header a[href],
   header a[href]:visited {
     @apply text-sm font-medium transition-colors;
   }
 
-  /* Header navigation active state */
   header a[href].active,
   header a[href][aria-current="page"] {
     @apply text-foreground;
   }
 
-  /* Header navigation inactive state */
   header a[href]:not(.active):not([aria-current="page"]) {
     @apply text-foreground/60 hover:text-foreground/80;
   }
-
-  /* Small text */
-  small {
-    @apply text-sm font-medium leading-none;
-  }
-
-  /* Large text */
-  .lead {
-    @apply text-xl text-muted-foreground;
-  }
-
-  /* Muted text */
-  .muted {
-    @apply text-sm text-muted-foreground;
-
-  }
-
 } 

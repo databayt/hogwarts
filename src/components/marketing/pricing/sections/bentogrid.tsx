@@ -26,7 +26,7 @@ export default function BentoGrid() {
                   100%
                 </span>
               </div>
-              <h2 className="mt-6 text-center font-heading">
+              <h2 className="mt-6 text-center">
                 Customizable
               </h2>
             </div>
@@ -186,9 +186,9 @@ export default function BentoGrid() {
                 </svg>
               </div>
               <div className="relative z-10 mt-8 space-y-1.5 text-center">
-                <h2 className="text-lg font-medium text-foreground">
+                <h4 className="text-foreground">
                   Faster than light
-                </h2>
+                </h4>
                 <p className="text-muted-foreground">
                   Provident fugit vero voluptate. magnam magni doloribus dolores
                   voluptates inventore nisi.

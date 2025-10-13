@@ -138,14 +138,14 @@ export default function FAQs({ dictionary }: FAQsProps) {
       <div className="container mx-auto px-4">
         <div className="grid gap-y-12 lg:grid-cols-[1fr_2fr] lg:gap-x-12">
           <div className="text-center lg:text-start">
-            <h2 className="mb-4 font-semibold whitespace-pre-line">
+            <h2 className="mb-4 whitespace-pre-line">
               {faqsDict.titleBreak || faqsDict.title}
             </h2>
             <p className="muted">{faqsDict.subtitle}</p>
           </div>
           <div className="divide-y divide-dashed sm:mx-auto sm:max-w-xl lg:mx-0 lg:ms-auto">
             <div className="pb-6">
-              <h3 className="font-medium text-start">{faqsDict.openSourceTitle}</h3>
+              <h3 className="text-start">{faqsDict.openSourceTitle}</h3>
               <p className="muted my-4 text-start">{faqsDict.openSourceDesc}</p>
               <ul className="list-outside list-disc space-y-2 ps-4">
                 {faqsDict.openSourceItems?.map((item, index) => (
@@ -157,7 +157,7 @@ export default function FAQs({ dictionary }: FAQsProps) {
               <Accordion type="single" collapsible defaultValue="item-1">
                 {items.map((item, index) => (
                   <AccordionItem key={index} value={`item-${index + 1}`}>
-                    <AccordionTrigger className="font-medium text-start">
+                    <AccordionTrigger className="text-start">
                       {item.question}
                     </AccordionTrigger>
                     <AccordionContent className="text-start">

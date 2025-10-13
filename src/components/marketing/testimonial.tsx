@@ -86,7 +86,7 @@ export default function Testimonial({ dictionary }: TestimonialProps) {
                                     className="rounded-full aspect-square object-cover"
                                 />
                                 <div className="flex flex-col">
-                                    <strong className="font-medium">{testimonial.name}</strong>
+                                    <strong>{testimonial.name}</strong>
                                     <small className="muted">
                                         {testimonial.role}
                                     </small>
