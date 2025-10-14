@@ -40,8 +40,8 @@ export async function reviewReceipt(data: z.infer<typeof reviewReceiptSchema>) {
         where: { id: receipt.invoiceId },
         data: {
           status: "paid",
-          paidAt: new Date(),
           amountPaid: receipt.amount,
+          updatedAt: new Date(), // Track when payment was processed
         },
       });
     }
