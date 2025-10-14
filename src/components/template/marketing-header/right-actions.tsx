@@ -36,7 +36,7 @@ export function RightActions({ isAuthenticated, dictionary }: RightActionsProps)
           {dictionary?.auth?.signIn || 'Login'}
         </Link>
       )}
-      <LanguageSwitcher variant="dropdown" />
+      <LanguageSwitcher variant="toggle" />
       <ModeSwitcher />
     </div>
   );

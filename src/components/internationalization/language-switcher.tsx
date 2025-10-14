@@ -10,12 +10,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { Globe } from "lucide-react";
+import { Languages } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface LanguageSwitcherProps {
   className?: string;
-  variant?: "dropdown" | "inline";
+  variant?: "dropdown" | "inline" | "toggle";
 }
 
 export function LanguageSwitcher({
@@ -24,6 +24,26 @@ export function LanguageSwitcher({
 }: LanguageSwitcherProps) {
   const getSwitchLocaleHref = useSwitchLocaleHref();
   const { locale: currentLocale, isRTL } = useLocale();
+
+  // Toggle variant - simple button that switches to the other language
+  if (variant === "toggle") {
+    // Find the next locale (not the current one)
+    const nextLocale = i18n.locales.find(locale => locale !== currentLocale) || i18n.locales[0];
+
+    return (
+      <Button
+        variant="ghost"
+        size="icon"
+        className={cn("h-9 w-9", className)}
+        asChild
+      >
+        <Link href={getSwitchLocaleHref(nextLocale)}>
+          <Languages className="h-4 w-4" />
+          <span className="sr-only">Switch language</span>
+        </Link>
+      </Button>
+    );
+  }
 
   if (variant === "inline") {
     return (
@@ -60,7 +80,7 @@ export function LanguageSwitcher({
           size="icon"
           className={cn("h-9 w-9", className)}
         >
-          <Globe className="h-4 w-4" />
+          <Languages className="h-4 w-4" />
           <span className="sr-only">Switch language</span>
         </Button>
       </DropdownMenuTrigger>

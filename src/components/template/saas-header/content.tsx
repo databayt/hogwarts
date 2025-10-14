@@ -60,7 +60,7 @@ export default function SaasHeader() {
             <Mail className="h-4 w-4" />
             <span className="sr-only">Messages</span>
           </Button>
-          <LanguageSwitcher className="size-7" />
+          <LanguageSwitcher variant="toggle" className="size-7" />
           <ModeSwitcher />
           <UserButton />
         </div>
