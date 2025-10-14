@@ -1,235 +1,553 @@
-## Operator Block — Backlog and Acceptance Criteria
+## Operator Block — Production-Ready Roadmap
 
-This is the canonical backlog to bring the Operator block to "ready" for MVP per docs. Use small, typed, composable edits following shadcn/ui and mirror patterns. All queries/mutations must include `schoolId`.
+This roadmap outlines the path to a world-class SaaS operator dashboard for school management systems. All tasks leverage existing, battle-tested components from the platform system.
 
-Status legend: [x] done, [~] in progress, [ ] todo
-
-## Critical Architecture Issues (Priority 1) 🔴
-
-### Mirror Pattern Violation
-- [ ] **CRITICAL**: Move `src/components/operator/` to `src/components/platform/operator/`
-- [ ] Update all imports in app directory from `/operator/` to `/platform/operator/`
-- [ ] Update documentation to reflect correct paths
-- [ ] Ensure route mirrors component path correctly
-
-### Typography System Violations (30+ instances)
-- [ ] Replace all hardcoded text-* classes with semantic HTML
-  - [ ] `tenants/content.tsx`: Lines 121, 136, 140, 145, 149, 156, 160, 177, 192-193
-  - [ ] `billing/content.tsx`: Lines 42-43, 56-57, 71-72
-  - [ ] `app-sidebar.tsx`: Line 34
-  - [ ] `product/detail.tsx`: Lines 15-16
-  - [ ] All other instances across codebase
-- [ ] Use typography system from `src/styles/typography.css`
-- [ ] Add typography validation to CI pipeline
-- [ ] Run typography-refactor agent on all affected files
-
-### TypeScript Type Safety Violations
-- [ ] Fix all `any` type usage (30+ instances found)
-- [ ] Replace `(db as any)` with properly typed Prisma client
-- [ ] Add proper type definitions for all interfaces
-- [ ] Enable ESLint rule: `"@typescript-eslint/no-explicit-any": "error"`
-
-## Standardization Issues (Priority 2) ⚠️
-
-### Missing Required Files Per Feature
-For each feature (tenants, billing, domains, observability, kanban, products):
-- [ ] Create `type.ts` - Shared TypeScript types
-- [ ] Create `form.tsx` - Form components for data entry
-- [ ] Create `util.ts` - Feature-specific utilities
-- [ ] Create `config.ts` - Arrays, enums, static data
-- [ ] Create `card.tsx` - Card components
-- [ ] Create `all.tsx` - All/list views
-- [ ] Create `featured.tsx` - Featured list components
-
-### Component Hierarchy Issues
-- [ ] Create atomic components in `src/components/atom/`
-- [ ] Refactor direct UI usage to use intermediate abstractions
-- [ ] Implement proper progression: UI → Atoms → Templates → Features
-- [ ] Create reusable empty state component
-- [ ] Standardize loading patterns across features
-
-## Performance Issues (Priority 3) 🚀
-
-### Client-Side Data Fetching
-- [ ] Convert `tenants/content.tsx` to use server-side data fetching
-- [ ] Remove `useEffect` for data loading in favor of server components
-- [ ] Add proper loading.tsx files for each route
-- [ ] Implement suspense boundaries for async operations
-
-### Missing Optimizations
-- [ ] Add React.memo for expensive components
-- [ ] Implement lazy loading for heavy features
-- [ ] Add code splitting for large modules
-- [ ] Optimize bundle size with dynamic imports
-
-## Testing Gaps (Priority 4) 🧪
-
-### Missing Test Coverage
-- [ ] Add `content.test.tsx` for all content components
-- [ ] Create UI interaction tests with React Testing Library
-- [ ] Add typography validation tests
-- [ ] Implement accessibility tests with @testing-library
-- [ ] Add performance tests for data-heavy components
-- [ ] Create integration tests for multi-tenant safety
-
-## React Best Practices (Priority 5) ⚛️
-
-### Component Issues
-- [ ] Split large components (300+ lines) into smaller units
-- [ ] Fix hydration mismatch risks from client-side checks
-- [ ] Implement proper error boundaries
-- [ ] Add comprehensive loading states
-- [ ] Fix missing key props in list iterations
-
-### State Management
-- [ ] Remove unnecessary client-side state
-- [ ] Use server actions for all mutations
-- [ ] Implement optimistic UI updates where appropriate
-- [ ] Add proper error handling for async operations
-
-## UI/UX Issues (Priority 6) 🎨
-
-### Accessibility
-- [ ] Add ARIA labels on all interactive elements
-- [ ] Implement proper focus management for modals/drawers
-- [ ] Ensure keyboard navigation for all features
-- [ ] Add sr-only labels for icon-only buttons
-- [ ] Test with screen readers
-
-### Dark Mode & Theming
-- [ ] Ensure all components use theme variables
-- [ ] Fix any hardcoded colors
-- [ ] Test dark mode across all features
-- [ ] Implement proper theme switching
-
-### RTL Support
-- [ ] Use CSS logical properties instead of directional
-- [ ] Remove hardcoded dir attributes
-- [ ] Test all components in Arabic locale
-- [ ] Fix any RTL layout issues
+**Status Legend:** [x] done, [~] in progress, [ ] todo
+**Priority:** P0 (critical), P1 (high value), P2 (nice-to-have)
 
 ---
 
-## Original Backlog (Continue Implementation)
+## ✅ Production-Ready Core Features
 
-### 1) Tenants — List, Filters, Detail
+### Tenants Management
+- [x] Server-rendered table with pagination, sorting, filtering
+- [x] Comprehensive stats dashboard (9 cards): total, active, students, teachers, growth
+- [x] Plan distribution breakdown (trial, basic, premium, enterprise)
+- [x] Trial management alerts and filtering
+- [x] Tenant detail drawer with full metrics
+- [x] Impersonation with audit trail
+- [x] Plan changes, suspend/activate actions
+- [x] Server actions with Zod validation
+- [x] 4 API endpoints (summary, billing, invoices, info)
 
-- [~] Implement tenants data table with server-driven pagination, sorting, filtering
-  - [x] Columns: name, domain, planType, isActive
-  - [x] URL state via `nuqs` (page, perPage, sort, column filters)
-  - [x] Server maps filters to Prisma `where`; sorting to `orderBy`
-  - [x] Add `createdAt`, `trialEndsAt` to columns and sort options (createdAt sortable; trialEndsAt display)
-  - [x] Ensure `pageCount` from server drives pagination
-  - [x] Add search box that targets name/domain (hooked into global `search` param)
-  - Acceptance: p95 < 2s; URL state persists; `schoolId` scoping enforced in all queries
-- [~] Tenant detail drawer/page
-  - Overview: plan, usage, domain(s), owner(s)
-  - [x] Actions: start/stop impersonation, toggle active (suspend/activate), change plan, end trial
-  - [x] Overview with owners and usage metrics (students, teachers, classes)
-  - [x] Billing snapshot (plan, outstanding, trial, next invoice)
-  - [x] Recent invoices list (last 10)
-  - Acceptance: actions are server-validated (Zod), audit entries created
+### Billing & Invoices
+- [x] Invoice table with server pagination
+- [x] Billing stats (4 cards): revenue, payment rate, open invoices, pending receipts
+- [x] Invoice filtering by status and search
+- [x] Server-side data fetching with proper error handling
+- [x] Stripe invoice integration (stripeInvoiceId)
 
-### 2) Domains — Subdomains and Custom Domains
+### Domains Management
+- [x] Domain requests table with pagination
+- [x] Stats cards (5 cards): total, pending, approved, verified, approval rate
+- [x] Approval/reject workflow
+- [x] DNS configuration guidance
+- [x] Status badges and alerts
 
-- [~] Domains list table
-  - [x] Server fetch from `DomainRequest` with tenant name
-  - [x] Actions: approve, reject, verify (server actions wired, audit logged)
-  - [x] Add pagination and filters; show createdAt and status badges
-  - Acceptance: server is source of truth; verification status reflects backend
-- [x] Custom domain request flow
-  - [x] Form: hostname, tenant selection, notes
-  - [x] Server Action: persist request with `schoolId` and audit
-  - Acceptance: success path revalidates domains list; validation via Zod
+### Observability
+- [x] Audit logs table with filtering
+- [x] Provider abstraction (DB + HTTP)
+- [x] Filters: action, level, IP, date range, request ID
+- [x] Empty states and loading skeletons
 
-### 3) Billing — Plans, Invoices, Manual Receipts
+### Dashboard
+- [x] Metrics cards with real-time deltas
+- [x] Period switcher (7d/30d/90d)
+- [x] Server-side metrics calculation
+- [x] Loading states and error boundaries
 
-- [ ] Billing overview per tenant
-  - Shows plan, trial countdown, next invoice date, outstanding balance
-  - [x] Snapshot in tenant detail (read-only)
-  - Acceptance: matches data model and handles trial/grace states
-- [~] Invoices table
-  - [x] Table uses reusable Data Table block with URL state and pageCount
-  - [x] Columns: number, school, period, amount, status, createdAt (badges for status)
-  - [x] Filters: number, school, status via toolbar; CSV export
-  - [x] Actions: mark paid, void (with toasts)
-  - Acceptance: server paginated; zero-state friendly; toasts on actions
-- [~] Manual receipt upload workflow
-  - [x] Uses `file-uploader.tsx`; associates receipt to invoice/tenant
-  - [x] Review action: approve/reject with notes; audit logged
-  - [x] Toaster on success/error for review actions
-  - Acceptance: happy/sad paths handled; file types validated client+server
-
-### 4) Observability — Logs and Metrics
-
-- [~] Logs view
-  - [x] Audit log table wired with reusable Data Table, filters, empty state, skeleton
-  - [x] Server pagination and basic action filter
-  - [x] Date range and IP filters; shape includes IP
-  - [x] Provider abstraction; added Level and Request ID filters (DB fallback has nulls)
-  - [x] External HTTP provider integration via `LOG_API_URL` + `LOG_API_TOKEN`
-  - Acceptance: p95 < 2s with server pagination
-- [ ] Metrics snapshot
-  - Cards: active schools, attendance submissions/day, announcements/day
-  - Acceptance: zero-state friendly; loading skeletons applied
-
-### 5) Overview — Metrics Cards
-
-- [~] Founder dashboard metrics
-  - [x] Total Schools, Active Schools, Total Users, Total Students cards
-  - [x] Add route-level loading skeleton and error boundary
-  - [x] Wire real trend deltas (+/-) for 7d via `/operator/overview/metrics`
-  - [x] Add period switcher (7d/30d/90d) UI
-  - [x] Wire switcher to metrics endpoint and card deltas
-  - Acceptance: lightweight queries, resilient UI
-
-### 6) Impersonation — Safe Operator Tools
-
-- [x] Start/stop impersonation actions
-  - Banner (`impersonation-banner.tsx`) reflects state; stop is one click
-  - Acceptance: RBAC enforced; audit log created with actor and target `schoolId`
-
-<!-- ### 6) i18n (ar/en) and RTL
-
-- [ ] Extract visible UI strings to i18n files for Operator pages
-  - Acceptance: Arabic and English switch; RTL respected in layout and tables -->
-
-### 7) Accessibility & UX Polish
-
-- [ ] Keyboard nav, focus states, aria labels for interactive elements
-  - [x] Loading skeletons for data tables (tenants, domains, invoices)
-  - [x] Explicit empty states for all tables (tenants, domains, invoices, receipts)
-  - Acceptance: meets WCAG AA basics; tab order logical
-
-### 8) Server Actions & Validation
-
-- [x] Add `actions.ts` per feature folder with Zod parsing and typed returns
-  - [x] Tenants: `tenants/actions.ts`
-  - [x] Domains: `domains/actions.ts`
-  - [x] Billing: `billing/actions.ts`
-  - Acceptance: uses "use server", revalidates relevant paths, includes `schoolId`
-
-### 9) Testing
-
-- [x] Unit tests for utilities and server actions
-  - Added tests for tenants queries, domains/billing/tenants actions, logs provider mapping
-- [x] Integration tests for Prisma queries with tenant scoping (mocked Prisma layer)
-- [-] E2E smoke (Playwright) — removed in favor of integration smoke via Vitest
-  - Acceptance: green CI; no cross-tenant leakage in tests
-
-### 10) Documentation
-
-- [x] Keep `README.md` in sync with progress and links to key files
-  - Added Testing and E2E instructions; Observability provider env; Overview metrics
-  - Acceptance: checklist updated as tasks land
+### Security & RBAC
+- [x] requireOperator() middleware
+- [x] Audit logging for all actions
+- [x] Impersonation with full trail
+- [x] Session-based access control
 
 ---
 
-Dependencies and references:
-- Requirements: `src/app/docs/requeriments/page.mdx`
-- Roadmap: `src/app/docs/roadmap/page.mdx`
-- Arrangements: `src/app/docs/arrangements/page.mdx`
-- UI patterns: shadcn/ui; place primitives in `src/components/ui/*`
-- Mirror pattern: route `src/app/(platform)/operator/<segment>` mirrors `src/components/platform/operator/<segment>` and exports `<FolderName>Content`
+## Phase 1: Revenue & Financial Analytics 💰 [P0]
 
+**Goal:** Provide deep insights into revenue, MRR, churn, and financial health
 
+**Reusable Blocks:**
+- Invoice dashboard components (`src/components/invoice/dashboard/`)
+- Recharts library (already in dashboard)
+- Stats card pattern from tenants/billing
+
+### 1.1 MRR (Monthly Recurring Revenue) Dashboard
+- [ ] Create `src/components/operator/analytics/mrr-chart.tsx`
+  - Reuse ChartInvoice pattern from invoice dashboard
+  - Line chart showing MRR trend (last 6 months)
+  - MRR breakdown by plan tier (stacked area chart)
+- [ ] Create server action `calculateMRR` in `analytics/actions.ts`
+  - Calculate MRR from active subscriptions
+  - Group by plan type (Trial excluded)
+  - Return growth percentage vs previous period
+- [ ] Add MRR card to dashboard
+  - Current MRR value
+  - Growth % (green/red indicator)
+  - "View Details" link to analytics page
+- [ ] Create `/operator/analytics` route
+  - Full MRR dashboard with charts
+  - MRR per school table
+  - Export to CSV option
+
+**Acceptance Criteria:**
+- MRR updates in real-time when plans change
+- Accurate calculation: (sum of monthly subscription fees for active schools)
+- Chart shows clear trend with tooltips
+- Works with all plan types
+
+### 1.2 Revenue Trends & Forecasting
+- [ ] Create `src/components/operator/analytics/revenue-trends.tsx`
+  - 6-month revenue chart (bar + line combo)
+  - Actual revenue vs projected revenue
+  - Revenue by payment method breakdown
+- [ ] Add revenue stats to main dashboard
+  - Total revenue (all time)
+  - This month revenue
+  - Last month comparison
+- [ ] Create revenue export function
+  - Export revenue by month CSV
+  - Export revenue by school CSV
+  - Include payment method breakdown
+
+**Acceptance Criteria:**
+- Charts load within 2 seconds
+- Data matches invoice records exactly
+- Projections based on current MRR + growth rate
+
+### 1.3 Churn Analysis & At-Risk Schools
+- [ ] Create churn rate calculation
+  - Cancelled schools / total schools (monthly)
+  - Reasons for churn (if available)
+- [ ] Add churn rate card to dashboard
+  - Current month churn %
+  - Trend indicator (up/down)
+- [ ] Create at-risk schools detection
+  - Payment failures in last 30 days
+  - Usage dropped >50% from average
+  - No logins in 14 days
+  - Trial ending in <3 days with no payment method
+- [ ] Add "At Risk" filter to tenants table
+  - Show risk score/reason
+  - Quick actions: email, call, offer discount
+- [ ] Create `/operator/analytics/churn` route
+  - Churn trends over time
+  - Churn reasons breakdown
+  - At-risk schools table with actions
+
+**Acceptance Criteria:**
+- At-risk detection runs daily
+- Risk scores accurate and actionable
+- Clear path to retention actions
+
+---
+
+## Phase 2: Complete Billing Features 📄 [P0]
+
+**Goal:** Full billing lifecycle management including receipts, exports, and automation
+
+**Reusable Blocks:**
+- FileUploader (`src/components/operator/file-uploader.tsx`)
+- ExportButton pattern (`src/components/platform/*/export-button.tsx`)
+- DataTable with all features
+
+### 2.1 Receipts Management
+- [ ] Create receipts table using DataTable
+  - Columns: school, invoice, amount, file, status, uploaded date
+  - Filters: status (pending/approved/rejected), school, date range
+  - Actions: view file, approve, reject
+- [ ] Integrate FileUploader for receipt uploads
+  - Accept: PDF, PNG, JPG
+  - Max size: 5MB
+  - Auto-link to invoice if invoice number in filename
+- [ ] Create receipt review workflow
+  - Server action: `reviewReceipt(id, status, notes)`
+  - Approval updates invoice status to "paid"
+  - Rejection sends notification to school
+  - Audit log all reviews
+- [ ] Update billing content tabs
+  - Replace empty state with receipts table
+  - Add "Upload Receipt" button
+  - Show pending count badge
+- [ ] Create `/operator/billing/receipts` route
+  - Full receipts table
+  - Bulk review actions
+  - Export receipts list
+
+**Acceptance Criteria:**
+- File upload with progress indicator
+- Files stored securely (S3 or similar)
+- Receipts linked to correct invoices
+- Review actions create audit entries
+- Email notifications on status change
+
+### 2.2 Billing Exports
+- [ ] Add ExportButton to invoices table
+  - Reuse pattern from students export
+  - Export with current filters applied
+- [ ] Create `getInvoicesCSV` server action
+  - Include all invoice fields
+  - Include school name
+  - Respect filters (status, date range, school)
+- [ ] Add export to receipts table
+  - Include receipt status and file URL
+- [ ] Create financial reports export
+  - Monthly revenue report (by school)
+  - Outstanding balances report
+  - Payment method breakdown
+
+**Acceptance Criteria:**
+- CSV includes all visible columns
+- Filename auto-generated with date
+- Large exports (1000+ rows) don't timeout
+- UTF-8 encoding for international characters
+
+### 2.3 Payment Automation via Stripe
+- [ ] Create Stripe webhook endpoint
+  - Route: `/api/webhooks/stripe`
+  - Handle events: invoice.paid, invoice.payment_failed, customer.subscription.deleted
+- [ ] Auto-update invoice status
+  - Mark invoice as paid when payment succeeds
+  - Mark as failed with retry count
+  - Create audit log entry
+- [ ] Implement dunning management
+  - Auto-retry failed payments (3 attempts)
+  - Email notifications on each attempt
+  - Auto-suspend after 3 failures
+- [ ] Add payment retry button
+  - Manual retry from invoice detail
+  - Operator can trigger retry
+  - Log retry attempts
+
+**Acceptance Criteria:**
+- Webhook signature verification
+- Idempotent event handling
+- All status changes logged
+- Email notifications sent reliably
+
+---
+
+## Phase 3: School Health & Engagement 📊 [P1]
+
+**Goal:** Proactive monitoring of school health, usage, and engagement
+
+**Reusable Blocks:**
+- Stats cards pattern
+- DataTable with custom columns
+- Chart components from dashboard
+
+### 3.1 School Health Score Dashboard
+- [ ] Create health score algorithm
+  - Factors: payment status (40%), usage frequency (30%), support tickets (20%), feature adoption (10%)
+  - Scale: 0-100
+  - Categories: Critical (<40), At Risk (40-60), Healthy (60-80), Excellent (80+)
+- [ ] Add health score column to tenants table
+  - Color-coded badge (red/yellow/green)
+  - Sortable by health score
+  - Filter by health category
+- [ ] Create health score detail view
+  - Breakdown by factor
+  - Historical health trend (last 6 months)
+  - Recommended actions
+- [ ] Add health distribution card to dashboard
+  - Count by category
+  - Trend vs last month
+
+**Acceptance Criteria:**
+- Score updates daily
+- Algorithm weights configurable
+- Clear action items for low scores
+
+### 3.2 Usage Analytics per School
+- [ ] Track key usage metrics
+  - Daily active users (teachers + students)
+  - Feature usage: attendance, grades, assignments, announcements
+  - Peak usage times
+  - Mobile vs desktop
+- [ ] Add usage stats to tenant detail
+  - Usage graph (last 30 days)
+  - Feature adoption percentages
+  - Comparison to average school
+- [ ] Create `/operator/analytics/usage` route
+  - Usage heatmap by school
+  - Feature adoption table
+  - Schools with zero usage of key features
+
+**Acceptance Criteria:**
+- Metrics tracked in real-time or near real-time
+- Privacy-compliant (aggregated data only)
+- Identifies underutilized features
+
+### 3.3 Engagement Trends
+- [ ] Create engagement metrics
+  - Weekly active schools (logged in within 7 days)
+  - Monthly active schools
+  - Session duration averages
+  - Return rate (schools that log in >1x/week)
+- [ ] Add engagement chart to dashboard
+  - Line chart: WAU and MAU over time
+  - Engagement rate trend
+- [ ] Create engagement alerts
+  - School hasn't logged in for 14 days
+  - Drop in usage >30% vs previous month
+  - No key feature usage (e.g., no grades entered)
+
+**Acceptance Criteria:**
+- Charts update weekly
+- Alerts trigger email to operator
+- Engagement data exportable
+
+---
+
+## Phase 4: Advanced Tenant Management 🔍 [P1]
+
+**Goal:** Deeper tenant insights and bulk operations
+
+**Reusable Blocks:**
+- CSV import workflow (`src/components/platform/import/csv-import.tsx`)
+- DataTable with bulk actions
+- Server actions pattern
+
+### 4.1 Growth Tracking per School
+- [ ] Add growth metrics to tenant detail
+  - Student count trend (last 6 months)
+  - Teacher count trend
+  - Classes count trend
+  - Growth rate % vs average
+- [ ] Create growth chart component
+  - Line chart showing all metrics
+  - Comparison to industry average
+- [ ] Add growth indicators to tenants table
+  - Icon showing growth direction (↑↓→)
+  - Color-coded by growth rate
+
+**Acceptance Criteria:**
+- Historical data accurate
+- Growth % calculated correctly
+- Charts interactive with tooltips
+
+### 4.2 Onboarding Progress Tracker
+- [ ] Track onboarding step completion
+  - School created → Email verified → First user added → First class created → First student added → First grade entered
+  - Time spent at each step
+  - Drop-off points
+- [ ] Add onboarding progress column to tenants table
+  - Progress bar (0-100%)
+  - Current step name
+  - Days since last progress
+- [ ] Create onboarding analytics route
+  - Funnel chart showing drop-offs
+  - Average time to complete
+  - Schools stalled >7 days at a step
+- [ ] Add onboarding alerts
+  - Stalled at step for >7 days
+  - High-value school (trial, >100 students planned) stalled
+
+**Acceptance Criteria:**
+- Progress tracked automatically
+- Alerts actionable
+- Clear path to help stalled schools
+
+### 4.3 Bulk Operations
+- [ ] Adapt CSV import for operator use
+  - Bulk plan changes via CSV
+  - Format: school_id, new_plan, reason
+  - Validation: school exists, plan valid
+- [ ] Create bulk suspend/activate
+  - CSV format: school_id, action (suspend/activate), reason
+  - Audit log all changes
+  - Email notifications to affected schools
+- [ ] Create bulk discount application
+  - CSV format: school_id, discount_code, expiry_date
+  - Validate discount codes exist
+  - Apply to subscriptions
+- [ ] Add bulk actions to tenants table
+  - Select multiple schools
+  - Actions: change plan, suspend, apply discount
+  - Confirmation modal with preview
+
+**Acceptance Criteria:**
+- CSV validation comprehensive
+- All actions audited
+- Rollback available for errors
+- Email notifications sent
+
+---
+
+## Phase 5: Notifications & Alerts 🔔 [P1]
+
+**Goal:** Real-time awareness of critical events
+
+**Reusable Blocks:**
+- Toast notification system (Sonner)
+- Badge components
+- Server actions with revalidation
+
+### 5.1 Real-Time Alert System
+- [ ] Define alert types
+  - Trial expiring (7 days, 3 days, 1 day, expired)
+  - Payment failure
+  - High-value school signup (>100 students, enterprise plan)
+  - Churn risk (high risk score)
+  - Stalled onboarding (>7 days no progress)
+- [ ] Create alerts data model
+  - Table: Alert (type, schoolId, priority, message, read, createdAt)
+  - Index on read and createdAt
+- [ ] Create alert generation system
+  - Cron job runs daily
+  - Checks conditions for all schools
+  - Creates alerts if triggered
+- [ ] Add alert badges to dashboard
+  - Badge count by priority (critical/warning)
+  - Click to view alert center
+
+**Acceptance Criteria:**
+- Alerts generated accurately
+- No duplicate alerts for same event
+- Alerts cleared when condition resolved
+
+### 5.2 Notification Center
+- [ ] Create notifications table component
+  - Columns: type, school, message, priority, time
+  - Filters: priority, type, read/unread
+  - Actions: mark read, dismiss, view details
+- [ ] Create `/operator/notifications` route
+  - Full notifications table
+  - Mark all as read button
+  - Filter by date range
+- [ ] Add notification bell icon to navbar
+  - Unread count badge
+  - Dropdown preview (last 5)
+  - "View All" link
+- [ ] Create notification actions
+  - Click notification → navigate to relevant page (school detail, invoice, etc.)
+  - Mark as read automatically on click
+  - Dismiss button removes notification
+
+**Acceptance Criteria:**
+- Real-time updates (WebSocket or polling)
+- Notifications persist until dismissed
+- Clear visual hierarchy by priority
+
+---
+
+## Phase 6: Reporting & Exports 📈 [P2]
+
+**Goal:** Comprehensive reporting for all data
+
+**Reusable Blocks:**
+- ExportButton pattern throughout
+- CSV generation utilities
+- Email system (Resend)
+
+### 6.1 Universal CSV Exports
+- [ ] Add ExportButton to all tables
+  - Tenants table → tenants CSV
+  - Domains table → domains CSV
+  - Receipts table → receipts CSV
+  - Audit logs → logs CSV
+- [ ] Create export server actions
+  - Pattern: `get{Feature}CSV(filters)`
+  - Respect all table filters
+  - Include all columns
+- [ ] Add export history
+  - Track who exported what, when
+  - Link to download again (cache for 24h)
+
+**Acceptance Criteria:**
+- All tables have export button
+- Exports respect applied filters
+- Large exports (10k+ rows) handled efficiently
+
+### 6.2 Custom Date Range Reports
+- [ ] Create date range picker component
+  - Preset ranges: last 7d, 30d, 90d, year, custom
+  - Apply to any report
+- [ ] Create custom reports route
+  - Select report type (revenue, usage, schools)
+  - Select date range
+  - Apply filters
+  - Generate report
+- [ ] Add saved report templates
+  - Save filter + date range combinations
+  - Name templates (e.g., "Monthly Revenue Report")
+  - One-click regenerate
+
+**Acceptance Criteria:**
+- Date range picker intuitive
+- Reports generate within 5 seconds
+- Saved templates editable
+
+### 6.3 Email Report Delivery
+- [ ] Create email report scheduler
+  - Schedule report generation (daily, weekly, monthly)
+  - Select recipients (operator emails)
+  - Format: PDF or CSV attachment
+- [ ] Integrate with Resend
+  - Email template for reports
+  - Attachment handling
+  - Delivery confirmation
+- [ ] Add scheduled reports management
+  - List scheduled reports
+  - Edit/delete schedules
+  - Manual trigger
+
+**Acceptance Criteria:**
+- Emails sent reliably
+- Reports attached correctly
+- Recipients can opt-out
+
+---
+
+## Testing & Quality Assurance
+
+### Unit Tests
+- [ ] Test MRR calculation accuracy
+- [ ] Test churn rate calculation
+- [ ] Test health score algorithm
+- [ ] Test CSV export functions
+- [ ] Test bulk operations validation
+
+### Integration Tests
+- [ ] Test Stripe webhook handling
+- [ ] Test alert generation system
+- [ ] Test notification delivery
+- [ ] Test email report sending
+
+### E2E Tests (Playwright)
+- [ ] Operator login and navigation
+- [ ] Tenant detail workflow
+- [ ] Invoice review workflow
+- [ ] Receipt upload and approval
+- [ ] Bulk operations flow
+
+---
+
+## Documentation
+
+- [ ] API documentation for all server actions
+- [ ] Webhook endpoint documentation
+- [ ] Alert types and triggers guide
+- [ ] Bulk operations CSV format guide
+- [ ] Health score algorithm documentation
+
+---
+
+## Deployment & Monitoring
+
+- [ ] Set up error tracking (Sentry already integrated)
+- [ ] Create operator dashboard metrics (Vercel Analytics)
+- [ ] Set up uptime monitoring
+- [ ] Create runbook for common issues
+- [ ] Set up staging environment for testing
+
+---
+
+## Notes
+
+**Reusable Block Locations:**
+- DataTable: `src/components/table/data-table/`
+- ExportButton: `src/components/platform/*/export-button.tsx`
+- CSV Import: `src/components/platform/import/csv-import.tsx`
+- FileUploader: `src/components/operator/file-uploader.tsx`
+- Invoice System: `src/components/invoice/`
+- Stats Cards: Pattern in tenants/billing/domains content components
+- Charts: Recharts in dashboard (area-graph, bar-graph, pie-graph)
+
+**Dependencies:**
+- All features follow mirror pattern: components mirror routes
+- All mutations use server actions with "use server" directive
+- All actions include Zod validation
+- All operator actions create audit log entries
+- All queries respect operator RBAC (requireOperator middleware)

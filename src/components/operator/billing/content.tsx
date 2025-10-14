@@ -5,6 +5,7 @@ import { EmptyState } from "@/components/operator/common/empty-state";
 import { db } from "@/lib/db";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ExportButton } from "./export-button";
 import type { getDictionary } from "@/components/internationalization/dictionaries";
 import type { Locale } from "@/components/internationalization/config";
 
@@ -183,6 +184,9 @@ export async function BillingContent({ dictionary, lang, searchParams }: Props) 
           </TabsList>
 
           <TabsContent value="invoices" className="space-y-4">
+            <div className="flex justify-end">
+              <ExportButton filters={{ status: searchParams?.status, search: searchParams?.search }} />
+            </div>
             {invoiceData.rows.length > 0 ? (
               <InvoicesTable
                 data={invoiceData.rows}

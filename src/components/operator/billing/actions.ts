@@ -162,6 +162,76 @@ export async function receiptReview(
   }
 }
 
+// ============= CSV Export =============
+
+export async function getInvoicesCSV(filters?: { status?: string; search?: string }): Promise<string> {
+  await requireOperator();
+
+  const where = {
+    ...(filters?.status && filters.status !== "all"
+      ? { status: filters.status }
+      : {}),
+    ...(filters?.search
+      ? {
+          OR: [
+            { stripeInvoiceId: { contains: filters.search, mode: "insensitive" as const } },
+            { school: { name: { contains: filters.search, mode: "insensitive" as const } } }
+          ]
+        }
+      : {})
+  };
+
+  const invoices = await db.invoice.findMany({
+    where,
+    include: {
+      school: {
+        select: {
+          name: true,
+          domain: true,
+        },
+      },
+    },
+    orderBy: { createdAt: "desc" },
+    take: 10000, // Limit to prevent memory issues
+  });
+
+  // CSV header
+  const headers = [
+    "Invoice Number",
+    "School Name",
+    "School Domain",
+    "Amount Due",
+    "Amount Paid",
+    "Status",
+    "Period Start",
+    "Period End",
+    "Created At",
+    "Paid At",
+  ];
+
+  // CSV rows
+  const rows = invoices.map((invoice) => [
+    invoice.stripeInvoiceId || "",
+    invoice.school.name,
+    invoice.school.domain,
+    (invoice.amountDue / 100).toFixed(2),
+    (invoice.amountPaid / 100).toFixed(2),
+    invoice.status,
+    invoice.periodStart?.toLocaleDateString() || "",
+    invoice.periodEnd?.toLocaleDateString() || "",
+    invoice.createdAt.toLocaleDateString(),
+    invoice.paidAt?.toLocaleDateString() || "",
+  ]);
+
+  // Combine into CSV
+  const csv = [
+    headers.join(","),
+    ...rows.map((row) => row.map((cell) => `"${cell}"`).join(",")),
+  ].join("\n");
+
+  return csv;
+}
+
 
 
 

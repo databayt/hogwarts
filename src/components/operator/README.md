@@ -1,15 +1,85 @@
 ## Operator Block — Overview
 
-The Operator block provides platform-level tools to manage schools (tenants), domains, billing, observability, and high-level product configuration across the multi-tenant system.
+The Operator block provides platform-level SaaS management tools to manage schools (tenants), domains, billing, observability, and high-level product configuration across the multi-tenant system.
 
-- Tech & conventions: Next.js App Router, TypeScript (strict), Tailwind, shadcn/ui (+ Radix), Zod. Follow mirror pattern between `src/components/platform/operator/*` and `src/app/(platform)/operator/*`.
-- Multi-tenant guardrails: Every query and mutation must include `schoolId`. Uniqueness is scoped by `schoolId`.
-- Auth: NextAuth v5 (Auth.js). Session shape extended in `src/auth.ts`. Keep callbacks pure and typed.
+**Architecture:** Operator (SaaS management) is separate from Platform (individual school management)
+- **Operator**: `src/components/operator/*` → `src/app/[lang]/(operator)/*` - Manages multiple schools
+- **Platform**: `src/components/platform/*` → `src/app/[lang]/s/[subdomain]/(platform)/*` - School-specific operations
 
-### Directory Structure (mirror pattern)
+**Tech Stack:**
+- Next.js 15 App Router with React 19, TypeScript (strict mode)
+- Styling: Tailwind CSS 4 + shadcn/ui (New York style)
+- Database: PostgreSQL (Neon) with Prisma ORM
+- Auth: NextAuth v5 with RBAC (requireOperator middleware)
+- Forms & Validation: react-hook-form + Zod
+- Tables: @tanstack/react-table with server-side pagination
 
-- Components: `src/components/platform/operator/*`
-- Route: `src/app/(platform)/operator/*`
+**Security & Multi-Tenant:**
+- All queries scoped by tenant (no cross-tenant data leakage)
+- Operator role required for all routes
+- Audit logging for all operator actions
+- Impersonation with full audit trail
+
+### Directory Structure
+
+- **Components**: `src/components/operator/*`
+- **Routes**: `src/app/[lang]/(operator)/*`
+- **API Routes**: `src/app/[lang]/(operator)/*/route.ts`
+
+### Reusable Blocks Architecture
+
+The operator dashboard leverages battle-tested components from the platform (school management) system:
+
+#### 1. **Data Tables** (`src/components/table/`)
+Generic, reusable table system with:
+- Server-side pagination, sorting, filtering
+- Column customization and pinning
+- Faceted filters and search
+- Row selection and bulk actions
+- Loading skeletons and empty states
+
+**Used in:** Tenants, Invoices, Domains, Audit Logs, Receipts
+
+#### 2. **CSV Export** (`src/components/platform/*/export-button.tsx`)
+Standardized export pattern:
+- Server action generates CSV with applied filters
+- Browser-side download with auto-generated filename
+- Loading states and error handling
+- Respects current table filters
+
+**Pattern:** ExportButton → Server Action → CSV Generation → Download
+
+#### 3. **CSV Import** (`src/components/platform/import/csv-import.tsx`)
+Full bulk import workflow:
+- Drag-and-drop file upload
+- Template download for correct format
+- Row-by-row validation with detailed errors
+- Success/warning/error reporting
+- Progress indicators
+
+**Ready to adapt for:** Bulk tenant operations, bulk plan changes
+
+#### 4. **File Upload** (`src/components/operator/file-uploader.tsx`)
+Production-ready file uploader:
+- Drag & drop with react-dropzone
+- Multiple file support
+- File preview (images)
+- Progress tracking
+- Size and type validation
+
+**Used in:** Receipt uploads, document attachments
+
+#### 5. **Invoice System** (`src/components/invoice/`)
+Complete billing infrastructure:
+- Invoice table with filtering
+- Create/edit forms
+- Invoice dashboard with charts
+- Stripe integration ready
+- Payment tracking
+
+**Reusable for:** Operator billing features, revenue analytics
+
+### Current Implementation
 
 Key primitives and compositions present:
 
@@ -44,54 +114,90 @@ Status legend: [x] done, [~] in progress, [ ] todo
 - [x] Audit logging for all operator actions
 - [x] Impersonation with proper session management
 
-### ⚠️ Architecture Compliance Issues
-- **Mirror Pattern**: Currently at wrong path (`src/components/operator/` should be `src/components/platform/operator/`)
-- **Typography**: 30+ violations using hardcoded text-* classes instead of semantic HTML
-- **Standardization**: Missing required files (type.ts, form.tsx, config.ts, etc.)
-- **Component Hierarchy**: Not following UI → Atoms → Features pattern
-- **TypeScript**: Extensive `any` usage (30+ instances), Prisma types bypassed with `(db as any)`
-- **Performance**: Client-side data fetching instead of server components
+### Production-Ready Status ✅
 
-### Component Implementation Status
-- Shell & navigation
-  - [x] App layout and sidebar (`layout.tsx`, `app-sidebar.tsx`)
-  - [x] Top-level nav and breadcrumbs (`nav-main.tsx`, `breadcrumbs.tsx`)
-  - [x] User menu and avatar (`nav-user.tsx`, `user-avatar-profile.tsx`)
-  - [x] Project/org quick nav (`nav-projects.tsx`)
-  - [x] Search input (`search-input.tsx`)
-- Cross-cutting UX
-  - [x] Theme selector (`theme-selector.tsx`)
-  - [x] Org switcher (`org-switcher.tsx`)
-  - [x] Impersonation banner (`impersonation-banner.tsx`)
-  - [x] File uploader building block (`file-uploader.tsx`)
-  - [x] Form skeletons (`form-card-skeleton.tsx`)
-- Feature scaffolds (routes + component folders)
-  - [~] Tenants (`/operator/tenants`) - Missing standardized files
-  - [~] Domains (`/operator/domains`) - Missing standardized files
-  - [~] Billing (`/operator/billing`) - Missing standardized files
-  - [~] Observability (`/operator/observability`) - Missing standardized files
-  - [~] Overview (`/operator/overview`) - Performance issues
-  - [~] Products (`/operator/product`) - Needs renaming to `products`
-  - [~] Profile (`/operator/profile`) - Incomplete
-  - [~] Kanban demo (`/operator/kanban`) - Demo status
+**✅ Core SaaS Features Implemented:**
+- [x] **Tenants Management** - Full CRUD with comprehensive stats (9 cards), plan distribution, growth tracking
+- [x] **Billing & Invoices** - Revenue tracking, payment rates, invoice management with stats (4 cards)
+- [x] **Domains Management** - Approval workflow, DNS configuration tracking, status badges (5 stats cards)
+- [x] **Observability** - Audit logs with provider abstraction (DB + HTTP), filtering, pagination
+- [x] **Dashboard** - Real-time metrics with delta tracking (7d/30d/90d periods)
+- [x] **Impersonation** - Full impersonation workflow with audit trail and banner
+- [x] **RBAC** - Operator-only access with requireOperator() middleware
+- [x] **Server Actions** - All mutations use Zod validation and proper error handling
+- [x] **API Routes** - 4 tenant detail endpoints (summary, billing, invoices, info)
 
-Notes:
-- Server Actions folder exists: `src/app/(platform)/operator/actions/*` (to be filled with typed actions using Zod + "use server").
-- Ensure all mutations and queries include `schoolId`.
+**⚠️ Ready for Enhancement:**
+- [ ] **Receipts Management** - Table structure exists, needs file upload integration
+- [ ] **MRR Analytics** - Revenue tracking implemented, needs MRR calculation and charting
+- [ ] **School Health Scoring** - Usage metrics available, needs health score algorithm
+- [ ] **CSV Exports** - Pattern exists in platform, needs integration to operator tables
+- [ ] **Bulk Operations** - CSV import pattern ready, needs operator-specific workflows
+- [ ] **Notifications** - Toast system in place, needs real-time alert system
 
-## Implementation Plan (tracked in ISSUE.md)
+### Feature Implementation Matrix
 
-High-level phases to reach “Operator-ready”:
+| Feature | Content | Table | Actions | Columns | Stats | API Routes | Status |
+|---------|---------|-------|---------|---------|-------|------------|--------|
+| **Tenants** | ✅ SSR | ✅ Paginated | ✅ Zod | ✅ Typed | ✅ 9 cards | ✅ 4 endpoints | 🟢 Production |
+| **Billing** | ✅ SSR | ✅ Invoices | ✅ Actions | ✅ Typed | ✅ 4 cards | ⚠️ Partial | 🟡 Needs Receipts |
+| **Domains** | ✅ SSR | ✅ Paginated | ✅ Actions | ✅ Typed | ✅ 5 cards | N/A | 🟢 Production |
+| **Observability** | ✅ SSR | ✅ Logs | N/A | ✅ Typed | N/A | N/A | 🟢 Production |
+| **Dashboard** | ✅ SSR | N/A | ✅ Metrics | N/A | ✅ 4 cards | ✅ Deltas | 🟡 Needs Charts |
+| **Profile** | ⚠️ Basic | N/A | ⚠️ Partial | N/A | N/A | N/A | 🔴 Demo |
+| **Kanban** | ⚠️ Demo | N/A | ⚠️ Client | N/A | N/A | N/A | 🔴 Demo |
 
-1) Data tables and filtering for Tenants, Domains, Billing
-2) Server Actions with Zod parsing and tenant scoping
-3) Impersonation flow (start/stop + audit) wired to RBAC
-4) Observability pages (logs/metrics placeholders wired to providers)
-5) i18n (ar/en) for visible strings in Operator UI
-6) Accessibility pass (keyboard nav, focus rings, semantics)
-7) Tests: unit (utils/actions), integration (tenant scoping), E2E critical flows
+**Legend:**
+- 🟢 Production Ready
+- 🟡 Functional but needs enhancement
+- 🔴 Demo/incomplete
 
-See `ISSUE.md` for the detailed backlog with acceptance criteria.
+**Architecture Notes:**
+- All data tables use server-side rendering (SSR) with pagination
+- Server actions follow "use server" directive with Zod validation
+- All queries respect tenant boundaries (no schoolId in operator context)
+- Audit logging implemented for all operator actions
+
+## Production Roadmap (see ISSUE.md for details)
+
+The operator dashboard is production-ready for core tenant management. Next phases focus on advanced SaaS metrics and automation:
+
+### Phase 1: Revenue & Financial Analytics 💰
+- MRR (Monthly Recurring Revenue) dashboard
+- Revenue trends (6-month chart)
+- Churn rate analysis and at-risk schools detection
+- **Reuses:** Invoice components + Recharts from dashboard
+
+### Phase 2: Complete Billing Features 📄
+- Receipts management with file upload
+- CSV exports for all billing tables
+- Payment automation via Stripe webhooks
+- **Reuses:** FileUploader + ExportButton pattern
+
+### Phase 3: School Health & Engagement 📊
+- School health score calculation
+- Usage analytics per school
+- Engagement trends over time
+- **Reuses:** DataTable + StatsCards pattern
+
+### Phase 4: Advanced Tenant Management 🔍
+- Growth tracking per school
+- Onboarding progress tracker
+- Bulk operations (CSV import for plan changes)
+- **Reuses:** CSV import workflow from platform
+
+### Phase 5: Notifications & Alerts 🔔
+- Real-time alerts (trial expiring, payment failures)
+- Notification center with read/unread
+- **Reuses:** Toast + Badge components
+
+### Phase 6: Reporting & Exports 📈
+- CSV export for all tables
+- Custom date range reports
+- Email delivery of reports
+- **Reuses:** ExportButton pattern across all features
+
+See `ISSUE.md` for detailed tasks, acceptance criteria, and priorities.
 
 ## Local Development
 
