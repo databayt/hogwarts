@@ -116,9 +116,11 @@ export async function middleware(req: NextRequest) {
   const isPublicRoute = publicRoutes.includes(pathnameWithoutLocale);
   const isOnboardingRoute = pathnameWithoutLocale.startsWith('/onboarding');
   const isDocsRoute = pathnameWithoutLocale.startsWith('/docs');
+  // Stream routes can be at /stream or /s/[subdomain]/stream
+  const isStreamPublicRoute = pathnameWithoutLocale.startsWith('/stream') || pathnameWithoutLocale.includes('/stream');
 
   // Redirect to login if accessing protected routes without authentication
-  if (!isLoggedIn && !isPublicRoute && !isDocsRoute) {
+  if (!isLoggedIn && !isPublicRoute && !isDocsRoute && !isStreamPublicRoute) {
     const callbackUrl = url.pathname + url.search;
     logger.info('UNAUTHORIZED ACCESS - Redirecting to login', {
       ...baseContext,
