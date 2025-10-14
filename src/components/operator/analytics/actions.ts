@@ -237,6 +237,9 @@ export async function getAtRiskSchools() {
 
 /**
  * Get revenue trends for the last 6 months
+ *
+ * Note: Uses createdAt for date filtering since paidAt field doesn't exist.
+ * This shows revenue by invoice creation date, not payment date.
  */
 export async function getRevenueTrends() {
   await requireOperator();
@@ -260,7 +263,7 @@ export async function getRevenueTrends() {
       const result = await db.invoice.aggregate({
         where: {
           status: "paid",
-          paidAt: {
+          createdAt: {
             gte: startDate,
             lte: endDate,
           },
