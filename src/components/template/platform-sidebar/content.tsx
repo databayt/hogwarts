@@ -55,7 +55,7 @@ export default function PlatformSidebar({ school, ...props }: PlatformSidebarPro
       <SidebarContent className="border-0 bg-transparent">
         <ScrollArea className="h-full">
           <SidebarGroup className="p-2">
-            <SidebarMenu className="space-y-1">
+            <SidebarMenu className="space-y-1 list-none">
               {platformNav
                 // TODO: Re-enable role-based filtering when needed
                 // .filter((item) => (currentRole ? item.roles.includes(currentRole) : false))
