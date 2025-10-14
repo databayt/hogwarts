@@ -4,7 +4,7 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { getTenantContext } from "@/lib/tenant-context";
-import { resultCreateSchema, resultUpdateSchema, getResultsSchema } from "@/components/platform/results/validation";
+import { resultCreateSchema, resultUpdateSchema, getResultsSchema } from "@/components/platform/grades/validation";
 
 export async function createResult(input: z.infer<typeof resultCreateSchema>) {
   const { schoolId } = await getTenantContext();
@@ -28,7 +28,7 @@ export async function createResult(input: z.infer<typeof resultCreateSchema>) {
       gradedAt: new Date(),
     },
   });
-  revalidatePath("/dashboard/results");
+  revalidatePath("/dashboard/grades");
   return { success: true as const, id: row.id as string };
 }
 
@@ -58,7 +58,7 @@ export async function updateResult(input: z.infer<typeof resultUpdateSchema>) {
   data.gradedAt = new Date();
   
   await (db as any).result.updateMany({ where: { id, schoolId }, data });
-  revalidatePath("/dashboard/results");
+  revalidatePath("/dashboard/grades");
   return { success: true as const };
 }
 
@@ -67,7 +67,7 @@ export async function deleteResult(input: { id: string }) {
   if (!schoolId) throw new Error("Missing school context");
   const { id } = z.object({ id: z.string().min(1) }).parse(input);
   await (db as any).result.deleteMany({ where: { id, schoolId } });
-  revalidatePath("/dashboard/results");
+  revalidatePath("/dashboard/grades");
   return { success: true as const };
 }
 

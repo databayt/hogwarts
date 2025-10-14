@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { useModal } from "@/components/atom/modal/context";
 import Modal from "@/components/atom/modal/modal";
-import { ResultCreateForm } from "@/components/platform/results/form";
+import { ResultCreateForm } from "@/components/platform/grades/form";
 
 export function ResultsTable({ data, columns, pageCount }: { data: ResultRow[]; columns: ColumnDef<ResultRow, unknown>[]; pageCount: number }) {
   const { table } = useDataTable<ResultRow>({ data, columns, pageCount });

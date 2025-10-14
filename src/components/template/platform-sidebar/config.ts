@@ -55,6 +55,7 @@ export const platformNav: PlatformNavItem[] = [
   { title: "Reports", href: "/attendance/reports", icon: "barChart", roles: ["ADMIN", "STAFF"] },
   { title: "Timetable", href: "/timetable", icon: "clock", roles: ["ADMIN", "TEACHER", "STUDENT"]},
   { title: "Library", href: "/library", icon: "bookOpen", roles: ALL_ROLES },
+  { title: "Stream", href: "/stream", icon: "video", roles: ALL_ROLES },
   { title: "Settings", href: "/settings", icon: "cog", roles: ["ADMIN"] },
   { title: "Profile", href: "/profile", icon: "cog", roles: ALL_ROLES },
 ];

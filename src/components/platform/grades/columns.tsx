@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { MoreHorizontal } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useModal } from "@/components/atom/modal/context";
-import { deleteResult } from "@/components/platform/results/actions";
+import { deleteResult } from "@/components/platform/grades/actions";
 import { DeleteToast, ErrorToast, confirmDeleteDialog } from "@/components/atom/toast";
 
 export type ResultRow = {
@@ -91,7 +91,7 @@ export const resultColumns: ColumnDef<ResultRow>[] = [
       const { openModal } = useModal();
       const onView = () => {
         const qs = typeof window !== 'undefined' ? (window.location.search || "") : "";
-        window.location.href = `/results/${result.id}${qs}`;
+        window.location.href = `/grades/${result.id}${qs}`;
       };
       const onEdit = () => openModal(result.id);
       const onDelete = async () => {
