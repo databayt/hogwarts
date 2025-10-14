@@ -197,14 +197,12 @@ export async function getAtRiskSchools() {
   await requireOperator();
 
   const now = new Date();
-  const fourteenDaysAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
   const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
   const threeDaysFromNow = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
 
   // Get schools with various risk factors
   const [
     paymentFailures,
-    noRecentLogins,
     trialExpiringSoon,
   ] = await Promise.all([
     // Payment failures in last 30 days
@@ -226,26 +224,6 @@ export async function getAtRiskSchools() {
         },
       },
       distinct: ['schoolId'],
-    }),
-
-    // No logins in 14 days (using last user activity as proxy)
-    db.school.findMany({
-      where: {
-        isActive: true,
-        users: {
-          none: {
-            lastLoginAt: {
-              gte: fourteenDaysAgo,
-            },
-          },
-        },
-      },
-      select: {
-        id: true,
-        name: true,
-        domain: true,
-      },
-      take: 50,
     }),
 
     // Trial ending in less than 3 days
@@ -279,13 +257,6 @@ export async function getAtRiskSchools() {
       atRiskMap.set(school.id, { school, reasons: [] });
     }
     atRiskMap.get(school.id)!.reasons.push('Payment failure');
-  });
-
-  noRecentLogins.forEach((school) => {
-    if (!atRiskMap.has(school.id)) {
-      atRiskMap.set(school.id, { school, reasons: [] });
-    }
-    atRiskMap.get(school.id)!.reasons.push('No logins in 14 days');
   });
 
   trialExpiringSoon.forEach((school) => {
