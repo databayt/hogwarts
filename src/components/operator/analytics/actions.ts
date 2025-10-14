@@ -191,86 +191,47 @@ export async function calculateChurnRate(period: '7d' | '30d' | '90d' = '30d') {
 }
 
 /**
- * Detect at-risk schools
+ * Detect at-risk schools based on payment failures
+ *
+ * Note: Currently limited to payment-based risk detection.
+ * Additional signals (login activity, trial expiry) can be added
+ * when proper tracking fields are added to the schema.
  */
 export async function getAtRiskSchools() {
   await requireOperator();
 
-  const now = new Date();
-  const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-  const threeDaysFromNow = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 
-  // Get schools with various risk factors
-  const [
-    paymentFailures,
-    trialExpiringSoon,
-  ] = await Promise.all([
-    // Payment failures in last 30 days
-    db.invoice.findMany({
-      where: {
-        status: "uncollectible",
-        createdAt: {
-          gte: thirtyDaysAgo,
+  // Schools with payment failures in last 30 days
+  const paymentFailures = await db.invoice.findMany({
+    where: {
+      status: "uncollectible",
+      createdAt: {
+        gte: thirtyDaysAgo,
+      },
+    },
+    select: {
+      schoolId: true,
+      school: {
+        select: {
+          id: true,
+          name: true,
+          domain: true,
+          planType: true,
         },
       },
-      select: {
-        schoolId: true,
-        school: {
-          select: {
-            id: true,
-            name: true,
-            domain: true,
-          },
-        },
-      },
-      distinct: ['schoolId'],
-    }),
-
-    // Trial ending in less than 3 days
-    db.school.findMany({
-      where: {
-        planType: "TRIAL",
-        isActive: true,
-        trialEndsAt: {
-          lte: threeDaysFromNow,
-          gte: now,
-        },
-      },
-      select: {
-        id: true,
-        name: true,
-        domain: true,
-        trialEndsAt: true,
-      },
-    }),
-  ]);
-
-  // Combine and deduplicate at-risk schools
-  const atRiskMap = new Map<string, {
-    school: { id: string; name: string; domain: string };
-    reasons: string[];
-  }>();
-
-  paymentFailures.forEach((invoice) => {
-    const school = invoice.school;
-    if (!atRiskMap.has(school.id)) {
-      atRiskMap.set(school.id, { school, reasons: [] });
-    }
-    atRiskMap.get(school.id)!.reasons.push('Payment failure');
+    },
+    distinct: ['schoolId'],
   });
 
-  trialExpiringSoon.forEach((school) => {
-    if (!atRiskMap.has(school.id)) {
-      atRiskMap.set(school.id, { school, reasons: [] });
-    }
-    const daysLeft = Math.ceil((school.trialEndsAt!.getTime() - now.getTime()) / (24 * 60 * 60 * 1000));
-    atRiskMap.get(school.id)!.reasons.push(`Trial ending in ${daysLeft} day(s)`);
-  });
-
-  return Array.from(atRiskMap.values()).map(({ school, reasons }) => ({
-    ...school,
-    riskReasons: reasons,
-    riskScore: reasons.length * 33, // Simple scoring
+  // Map to at-risk schools with reasons
+  return paymentFailures.map((invoice) => ({
+    id: invoice.school.id,
+    name: invoice.school.name,
+    domain: invoice.school.domain,
+    planType: invoice.school.planType,
+    riskReasons: ['Payment failure in last 30 days'],
+    riskScore: 75, // High risk due to payment issues
   }));
 }
 
