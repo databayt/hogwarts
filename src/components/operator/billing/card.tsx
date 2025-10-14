@@ -186,7 +186,7 @@ export function ReceiptCard({
           <div className="space-y-1">
             <CardTitle className="flex items-center gap-2">
               <FileText className="size-4" />
-              {receipt.filename}
+              {receipt.fileName}
             </CardTitle>
             <CardDescription>
               {receipt.school.name} • Invoice {receipt.invoice.number}
