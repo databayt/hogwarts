@@ -104,8 +104,8 @@ export async function getAnnouncements(input: Partial<z.infer<typeof getAnnounce
   const skip = (sp.page - 1) * sp.perPage;
   const take = sp.perPage;
   const orderBy = sp.sort && Array.isArray(sp.sort) && sp.sort.length
-    ? sp.sort.map((s) => ({ [s.id]: s.desc ? "desc" : "asc" }))
-    : [{ createdAt: "desc" }];
+    ? sp.sort.map((s) => ({ [s.id]: s.desc ? "desc" as const : "asc" as const }))
+    : [{ createdAt: "desc" as const }];
   const [rows, count] = await Promise.all([
     db.announcement.findMany({ where, orderBy, skip, take }),
     db.announcement.count({ where }),
