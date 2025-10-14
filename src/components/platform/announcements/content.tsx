@@ -1,5 +1,5 @@
 import { AnnouncementsTable } from '@/components/platform/announcements/table'
-import { getAnnouncementColumns, type AnnouncementRow } from '@/components/platform/announcements/columns'
+import { type AnnouncementRow } from '@/components/platform/announcements/columns'
 import { SearchParams } from 'nuqs/server'
 import { announcementsSearchParams } from '@/components/platform/announcements/list-params'
 import { db } from '@/lib/db'
@@ -49,7 +49,7 @@ export default async function AnnouncementsContent({ searchParams, dictionary }:
           <h1>{dictionary?.announcements?.title || 'Announcements'}</h1>
           <p className="text-sm text-muted-foreground">Create and manage announcements for your school</p>
         </div>
-        <AnnouncementsTable data={data} columns={getAnnouncementColumns(dictionary?.announcements)} pageCount={Math.max(1, Math.ceil(total / (sp.perPage || 20)))} />
+        <AnnouncementsTable data={data} pageCount={Math.max(1, Math.ceil(total / (sp.perPage || 20)))} dictionary={dictionary?.announcements} />
       </div>
     </PageContainer>
   )
