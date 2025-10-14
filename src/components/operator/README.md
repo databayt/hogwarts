@@ -118,32 +118,43 @@ Status legend: [x] done, [~] in progress, [ ] todo
 
 **✅ Core SaaS Features Implemented:**
 - [x] **Tenants Management** - Full CRUD with comprehensive stats (9 cards), plan distribution, growth tracking
-- [x] **Billing & Invoices** - Revenue tracking, payment rates, invoice management with stats (4 cards)
+- [x] **Billing & Invoices** - Revenue tracking, payment rates, invoice management with stats (4 cards), CSV export
+- [x] **Receipts Management** - Full review workflow with approve/reject, stats dashboard (4 cards), server actions
+- [x] **Analytics Dashboard** - MRR calculation with 6-month trend, plan breakdown, churn rate, at-risk detection
+- [x] **Financial Metrics** - MRR, ARR, churn rate cards on main dashboard with growth indicators
 - [x] **Domains Management** - Approval workflow, DNS configuration tracking, status badges (5 stats cards)
 - [x] **Observability** - Audit logs with provider abstraction (DB + HTTP), filtering, pagination
-- [x] **Dashboard** - Real-time metrics with delta tracking (7d/30d/90d periods)
+- [x] **Dashboard** - Real-time metrics with delta tracking (7d/30d/90d periods), MRR/ARR/Churn cards
 - [x] **Impersonation** - Full impersonation workflow with audit trail and banner
 - [x] **RBAC** - Operator-only access with requireOperator() middleware
 - [x] **Server Actions** - All mutations use Zod validation and proper error handling
 - [x] **API Routes** - 4 tenant detail endpoints (summary, billing, invoices, info)
+- [x] **CSV Exports** - Invoice exports with filter support, auto-generated filenames
+
+**✅ Recently Completed:**
+- [x] **Receipts Management** - Full table with approve/reject workflow, stats dashboard, route at `/operator/billing/receipts`
+- [x] **MRR Analytics** - Complete MRR calculation, 6-month trend chart, plan breakdown, route at `/operator/analytics`
+- [x] **Churn Analysis** - Churn rate calculation, at-risk school detection, dashboard cards with trend indicators
+- [x] **CSV Exports** - Invoice export with filter support, auto-generated filenames, 10k row limit
 
 **⚠️ Ready for Enhancement:**
-- [ ] **Receipts Management** - Table structure exists, needs file upload integration
-- [ ] **MRR Analytics** - Revenue tracking implemented, needs MRR calculation and charting
 - [ ] **School Health Scoring** - Usage metrics available, needs health score algorithm
-- [ ] **CSV Exports** - Pattern exists in platform, needs integration to operator tables
 - [ ] **Bulk Operations** - CSV import pattern ready, needs operator-specific workflows
 - [ ] **Notifications** - Toast system in place, needs real-time alert system
+- [ ] **Receipt File Storage** - Upload UI present, needs S3/storage integration
+- [ ] **Revenue Forecasting** - MRR calculated, needs projection algorithms
 
 ### Feature Implementation Matrix
 
 | Feature | Content | Table | Actions | Columns | Stats | API Routes | Status |
 |---------|---------|-------|---------|---------|-------|------------|--------|
 | **Tenants** | ✅ SSR | ✅ Paginated | ✅ Zod | ✅ Typed | ✅ 9 cards | ✅ 4 endpoints | 🟢 Production |
-| **Billing** | ✅ SSR | ✅ Invoices | ✅ Actions | ✅ Typed | ✅ 4 cards | ⚠️ Partial | 🟡 Needs Receipts |
+| **Billing** | ✅ SSR | ✅ Invoices | ✅ Actions | ✅ Typed | ✅ 4 cards | ✅ CSV Export | 🟢 Production |
+| **Receipts** | ✅ SSR | ✅ Paginated | ✅ Review | ✅ Typed | ✅ 4 cards | ✅ Route | 🟢 Production |
+| **Analytics** | ✅ SSR | ✅ Tables | ✅ Metrics | ✅ Typed | ✅ 4 cards | ✅ MRR/Churn | 🟢 Production |
 | **Domains** | ✅ SSR | ✅ Paginated | ✅ Actions | ✅ Typed | ✅ 5 cards | N/A | 🟢 Production |
 | **Observability** | ✅ SSR | ✅ Logs | N/A | ✅ Typed | N/A | N/A | 🟢 Production |
-| **Dashboard** | ✅ SSR | N/A | ✅ Metrics | N/A | ✅ 4 cards | ✅ Deltas | 🟡 Needs Charts |
+| **Dashboard** | ✅ SSR | N/A | ✅ Metrics | N/A | ✅ 7 cards | ✅ MRR/ARR/Churn | 🟢 Production |
 | **Profile** | ⚠️ Basic | N/A | ⚠️ Partial | N/A | N/A | N/A | 🔴 Demo |
 | **Kanban** | ⚠️ Demo | N/A | ⚠️ Client | N/A | N/A | N/A | 🔴 Demo |
 
@@ -162,17 +173,23 @@ Status legend: [x] done, [~] in progress, [ ] todo
 
 The operator dashboard is production-ready for core tenant management. Next phases focus on advanced SaaS metrics and automation:
 
-### Phase 1: Revenue & Financial Analytics 💰
-- MRR (Monthly Recurring Revenue) dashboard
-- Revenue trends (6-month chart)
-- Churn rate analysis and at-risk schools detection
-- **Reuses:** Invoice components + Recharts from dashboard
+### ✅ Phase 1: Revenue & Financial Analytics 💰 [COMPLETED]
+- [x] MRR (Monthly Recurring Revenue) dashboard with 6-month trend chart
+- [x] MRR breakdown by plan tier (bar chart)
+- [x] Churn rate calculation and dashboard card
+- [x] At-risk schools detection (payment failures, low usage, trial expiry)
+- [x] Revenue trends tracking
+- [x] Growth indicators (MRR %, ARR projection)
+- **Implementation:** `/operator/analytics` route, analytics/actions.ts with 5 server actions
 
-### Phase 2: Complete Billing Features 📄
-- Receipts management with file upload
-- CSV exports for all billing tables
-- Payment automation via Stripe webhooks
-- **Reuses:** FileUploader + ExportButton pattern
+### ✅ Phase 2: Complete Billing Features 📄 [MOSTLY COMPLETED]
+- [x] Receipts management with full table and review workflow
+- [x] Receipt approve/reject actions with audit logging
+- [x] CSV export for invoices with filter support
+- [x] Stats dashboard for receipts (4 cards)
+- [~] File upload integration (UI present, storage pending)
+- [ ] Payment automation via Stripe webhooks
+- **Implementation:** `/operator/billing/receipts` route, receipts/actions.ts
 
 ### Phase 3: School Health & Engagement 📊
 - School health score calculation
