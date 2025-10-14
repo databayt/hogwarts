@@ -16,7 +16,7 @@ export function ModeSwitcher() {
     <Button
       variant="link"
       size="icon"
-      className="h-8 w-8 px-0"
+      className="h-8 w-8 px-0 cursor-pointer"
       onClick={toggleTheme}
     >
       {resolvedTheme === "dark" ? (
