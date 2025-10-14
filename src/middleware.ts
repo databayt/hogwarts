@@ -258,6 +258,7 @@ export async function middleware(req: NextRequest) {
 
     const response = NextResponse.rewrite(url);
     response.headers.set('x-request-id', requestId);
+    response.headers.set('x-subdomain', subdomain);
     return response;
   }
 
