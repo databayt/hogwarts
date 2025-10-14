@@ -29,7 +29,7 @@ const Clock = () => {
             const transitionToReverse = () => {
                 const elapsed = Date.now() - startTime;
                 const progress = Math.min(elapsed / transitionDuration, 1);
-                
+
                 // Use easing function for smooth acceleration
                 const easedProgress = easeInOutQuad(progress);
                 setTransitionSpeed(1 - (easedProgress * 2)); // Transition from 1 to -1
@@ -48,7 +48,7 @@ const Clock = () => {
             const transitionToNormal = () => {
                 const elapsed = Date.now() - startTime;
                 const progress = Math.min(elapsed / transitionDuration, 1);
-                
+
                 // Use easing function for smooth deceleration
                 const easedProgress = easeInOutQuad(progress);
                 setTransitionSpeed(-1 + (easedProgress * 2)); // Transition from -1 to 1
@@ -78,7 +78,7 @@ const Clock = () => {
 
             // Apply the transition speed to the time offset
             const timeOffset = (elapsedTime / 10) * Math.abs(transitionSpeed);
-            
+
             if (transitionSpeed < 0) {
                 // Apply reverse movement based on transition speed
                 seconds = (seconds - timeOffset) % 60;

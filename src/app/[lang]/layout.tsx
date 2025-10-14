@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { Inter, Tajawal } from "next/font/google";
+import { GeistSans } from "geist/font/sans";
+import { Tajawal } from "next/font/google";
 import { type Locale, localeConfig, i18n } from "@/components/internationalization/config";
 import { getDictionary } from "@/components/internationalization/dictionaries";
 import { Toaster } from "@/components/ui/sonner";
@@ -12,12 +13,6 @@ import { ServiceWorkerProvider } from "@/components/providers/service-worker-pro
 import "../globals.css";
 
 // Configure fonts
-const inter = Inter({
-  subsets: ['latin'],
-  variable: '--font-inter',
-  display: 'swap'
-});
-
 const tajawal = Tajawal({
   subsets: ['arabic', 'latin'],
   variable: '--font-tajawal',
@@ -65,7 +60,7 @@ export default async function LocaleLayout({
   return (
     <html lang={lang} dir={config.dir} suppressHydrationWarning>
       <body
-        className={`${isRTL ? tajawal.className : inter.className} ${inter.variable} ${tajawal.variable} antialiased layout-container`}
+        className={`${isRTL ? tajawal.className : GeistSans.className} ${GeistSans.variable} ${tajawal.variable} antialiased layout-container`}
       >
         <SessionProvider session={session}>
           <NuqsAdapter>

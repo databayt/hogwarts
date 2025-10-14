@@ -1,131 +1,97 @@
-/* Typography System - Matches shadcn/ui */
+/* Typography System - Inspired by shadcn/ui */
 @layer base {
-  /* ===== BASE HEADINGS ===== */
-  h1 {
-    @apply scroll-m-20 text-4xl font-extrabold tracking-tight text-balance lg:text-5xl;
-  }
+    /* Headings */
+    h1 {
+        @apply scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl;
+    }
 
-  h2 {
-    @apply scroll-m-20 text-3xl font-semibold tracking-tight first:mt-0;
-  }
+    h2 {
+        @apply scroll-m-20  text-5xl font-bold tracking-tight first:mt-0;
+    }
 
-  h3 {
-    @apply scroll-m-20 text-2xl font-semibold tracking-tight;
-  }
+    h3 {
+        @apply scroll-m-20 text-2xl font-semibold tracking-tight;
+    }
 
-  h4 {
-    @apply scroll-m-20 text-xl font-semibold tracking-tight;
-  }
+    h4 {
+        @apply scroll-m-20 text-xl font-semibold tracking-tight;
+    }
 
-  h5 {
-    @apply scroll-m-20 text-lg font-semibold tracking-tight;
-  }
+    h5 {
+        @apply scroll-m-20 text-lg font-semibold tracking-tight;
+    }
 
-  h6 {
-    @apply scroll-m-20 text-base font-semibold tracking-tight;
-  }
+    h6 {
+        @apply scroll-m-20 text-base font-semibold tracking-tight;
+    }
 
-  /* ===== PARAGRAPH ===== */
-  p {
-    @apply leading-7 [&:not(:first-child)]:mt-6;
-  }
+    /* Paragraph */
+    p {
+        @apply leading-6 text-muted-foreground;
+    }
 
-  /* ===== BLOCKQUOTE ===== */
-  blockquote {
-    @apply mt-6 border-l-2 pl-6 italic;
-  }
+    /* Blockquote */
+    /* blockquote {
+      @apply mt-6 border-l-2 pl-6 italic;
+    } */
 
-  /* ===== LISTS ===== */
-  ul {
-    @apply my-6 ml-6 list-disc [&>li]:mt-2;
-  }
+    /* Lists */
+    /* ul {
+      @apply my-6 ml-6 list-disc [&>li]:mt-2;
+    } */
 
-  ol {
-    @apply my-6 ml-6 list-decimal [&>li]:mt-2;
-  }
+    ol {
+        @apply my-6 ml-6 list-decimal [&>li]:mt-2;
+    }
 
-  /* ===== INLINE CODE ===== */
-  code {
-    @apply relative rounded bg-muted px-[0.3rem] py-[0.2rem] font-mono text-sm font-semibold;
-  }
+    /* Inline code */
+    code {
+        @apply relative rounded bg-muted px-[0.3rem] py-[0.2rem] font-mono text-sm font-semibold;
+    }
 
-  /* ===== SMALL TEXT ===== */
-  small {
-    @apply text-sm font-medium leading-none;
-  }
+    /* Tables */
+    table {
+        @apply w-full;
+    }
 
-  /* ===== UTILITY CLASSES ===== */
-  /* Lead text - large intro paragraphs */
-  .lead {
-    @apply text-xl text-muted-foreground;
-  }
+    thead {
+        @apply [&_tr]:border-b;
+    }
 
-  /* Large text */
-  .large {
-    @apply text-lg font-semibold;
-  }
+    tbody {
+        @apply [&_tr:last-child]:border-0;
+    }
 
-  /* Muted text */
-  .muted {
-    @apply text-sm text-muted-foreground;
-  }
+    tr {
+        @apply border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted;
+    }
 
-  /* Bordered heading (commonly used with h2) */
-  .bordered {
-    @apply border-b pb-2;
-  }
+    th {
+        @apply h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0;
+    }
 
-  /* Gradient text effect */
-  .gradient {
-    @apply bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent;
-  }
+    td {
+        @apply p-4 align-middle [&:has([role=checkbox])]:pr-0;
+    }
 
-  /* ===== TABLES ===== */
-  table {
-    @apply w-full;
-  }
+    /* Links */
+    a {
+        @apply font-medium text-primary  hover:text-primary/80;
+    }
 
-  thead {
-    @apply [&_tr]:border-b;
-  }
+    /* Small text */
+    small {
+        @apply text-sm font-medium leading-none;
+    }
 
-  tbody {
-    @apply [&_tr:last-child]:border-0;
-  }
+    /* Large text */
+    .lead {
+        @apply text-xl text-muted-foreground;
+    }
 
-  tr {
-    @apply border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted;
-  }
+    /* Muted text */
+    .muted {
+        @apply text-sm text-muted-foreground;
+    }
 
-  th {
-    @apply h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0;
-  }
-
-  td {
-    @apply p-4 align-middle [&:has([role=checkbox])]:pr-0;
-  }
-
-  /* ===== LINKS ===== */
-  a {
-    @apply text-base font-medium text-primary hover:text-primary/80;
-  }
-
-  a[href] {
-    @apply text-base font-medium text-primary hover:text-primary/80 transition-colors;
-  }
-
-  /* ===== HEADER NAVIGATION LINKS ===== */
-  header a[href],
-  header a[href]:visited {
-    @apply text-sm font-medium transition-colors;
-  }
-
-  header a[href].active,
-  header a[href][aria-current="page"] {
-    @apply text-foreground;
-  }
-
-  header a[href]:not(.active):not([aria-current="page"]) {
-    @apply text-foreground/60 hover:text-foreground/80;
-  }
 } 

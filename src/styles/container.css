@@ -1,5 +1,5 @@
 /*
- * Optimized Container System
+ * Container System - Responsive & Reusable
  *
  * Usage Examples:
  *
@@ -62,7 +62,7 @@
     }
   }
 
-  /* Global layout container - Applied to body */
+  /* Global layout container - Applied to body or root layout */
   .layout-container {
     @apply w-full;
     padding-left: var(--container-px) !important;
@@ -84,6 +84,10 @@
 
   .container-wide {
     --container-max: 96rem; /* 1536px */
+  }
+
+  .container-xl {
+    --container-max: 90rem; /* 1440px */
   }
 
   /* Section with vertical spacing */
@@ -130,5 +134,22 @@
   .mx-container {
     margin-left: var(--container-px);
     margin-right: var(--container-px);
+  }
+
+  /* Responsive vertical spacing utilities */
+  .py-section {
+    @apply py-12 sm:py-16 lg:py-20;
+  }
+
+  .my-section {
+    @apply my-8 sm:my-12 lg:my-16;
+  }
+
+  .mt-section {
+    @apply mt-8 sm:mt-12 lg:mt-16;
+  }
+
+  .mb-section {
+    @apply mb-8 sm:mb-12 lg:mb-16;
   }
 }
