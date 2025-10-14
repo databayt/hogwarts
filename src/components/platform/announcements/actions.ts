@@ -11,7 +11,7 @@ export async function createAnnouncement(input: z.infer<typeof announcementCreat
   if (!schoolId) throw new Error("Missing school context");
   const parsed = announcementCreateSchema.parse(input);
   
-  const row = await (db as any).announcement.create({
+  const row = await db.announcement.create({
     data: {
       schoolId,
       title: parsed.title,
@@ -39,7 +39,7 @@ export async function updateAnnouncement(input: z.infer<typeof announcementUpdat
   if (typeof rest.role !== "undefined") data.role = rest.role || null;
   if (typeof rest.published !== "undefined") data.published = rest.published;
   
-  await (db as any).announcement.updateMany({ where: { id, schoolId }, data });
+  await db.announcement.updateMany({ where: { id, schoolId }, data });
   revalidatePath("/dashboard/announcements");
   return { success: true as const };
 }
@@ -48,7 +48,7 @@ export async function deleteAnnouncement(input: { id: string }) {
   const { schoolId } = await getTenantContext();
   if (!schoolId) throw new Error("Missing school context");
   const { id } = z.object({ id: z.string().min(1) }).parse(input);
-  await (db as any).announcement.deleteMany({ where: { id, schoolId } });
+  await db.announcement.deleteMany({ where: { id, schoolId } });
   revalidatePath("/dashboard/announcements");
   return { success: true as const };
 }
@@ -57,7 +57,7 @@ export async function toggleAnnouncementPublish(input: { id: string; publish: bo
   const { schoolId } = await getTenantContext();
   if (!schoolId) throw new Error("Missing school context");
   const { id, publish } = z.object({ id: z.string().min(1), publish: z.boolean() }).parse(input);
-  await (db as any).announcement.updateMany({ where: { id, schoolId }, data: { published: publish } });
+  await db.announcement.updateMany({ where: { id, schoolId }, data: { published: publish } });
   revalidatePath("/dashboard/announcements");
   return { success: true as const };
 }
@@ -67,8 +67,7 @@ export async function getAnnouncement(input: { id: string }) {
   const { schoolId } = await getTenantContext();
   if (!schoolId) throw new Error("Missing school context");
   const { id } = z.object({ id: z.string().min(1) }).parse(input);
-  if (!(db as any).announcement) return { announcement: null as null };
-  const a = await (db as any).announcement.findFirst({
+  const a = await db.announcement.findFirst({
     where: { id, schoolId },
     select: {
       id: true,
@@ -90,7 +89,6 @@ export async function getAnnouncements(input: Partial<z.infer<typeof getAnnounce
   const { schoolId } = await getTenantContext();
   if (!schoolId) throw new Error("Missing school context");
   const sp = getAnnouncementsSchema.parse(input ?? {});
-  if (!(db as any).announcement) return { rows: [] as Array<{ id: string; title: string; scope: string; published: boolean; createdAt: string }>, total: 0 };
   const where: any = {
     schoolId,
     ...(sp.title
@@ -109,8 +107,8 @@ export async function getAnnouncements(input: Partial<z.infer<typeof getAnnounce
     ? sp.sort.map((s) => ({ [s.id]: s.desc ? "desc" : "asc" }))
     : [{ createdAt: "desc" }];
   const [rows, count] = await Promise.all([
-    (db as any).announcement.findMany({ where, orderBy, skip, take }),
-    (db as any).announcement.count({ where }),
+    db.announcement.findMany({ where, orderBy, skip, take }),
+    db.announcement.count({ where }),
   ]);
   const mapped = (rows as Array<any>).map((a) => ({
     id: a.id as string,

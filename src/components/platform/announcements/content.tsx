@@ -17,7 +17,7 @@ export default async function AnnouncementsContent({ searchParams, dictionary }:
   const { schoolId } = await getTenantContext()
   let data: AnnouncementRow[] = []
   let total = 0
-  if (schoolId && (db as any).announcement) {
+  if (schoolId) {
     const where: any = {
       schoolId,
       ...(sp.title ? { title: { contains: sp.title, mode: 'insensitive' } } : {}),
@@ -30,15 +30,15 @@ export default async function AnnouncementsContent({ searchParams, dictionary }:
       ? sp.sort.map((s: any) => ({ [s.id]: s.desc ? 'desc' : 'asc' }))
       : [{ createdAt: 'desc' }]
     const [rows, count] = await Promise.all([
-      (db as any).announcement.findMany({ where, orderBy, skip, take }),
-      (db as any).announcement.count({ where }),
+      db.announcement.findMany({ where, orderBy, skip, take }),
+      db.announcement.count({ where }),
     ])
-    data = rows.map((a: any) => ({ 
-      id: a.id, 
-      title: a.title, 
-      scope: a.scope, 
-      published: a.published, 
-      createdAt: (a.createdAt as Date).toISOString() 
+    data = rows.map((a: any) => ({
+      id: a.id,
+      title: a.title,
+      scope: a.scope,
+      published: a.published,
+      createdAt: (a.createdAt as Date).toISOString()
     }))
     total = count as number
   }
