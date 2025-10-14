@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Bell, Mail } from "lucide-react";
 import ImpersonationBanner from "../../operator/impersonation-banner";
 import { useBreadcrumbs } from "@/components/operator/hooks/use-breadcrumbs";
+import { LanguageSwitcher } from "@/components/internationalization/language-switcher";
 import type { School } from "@/components/site/types";
 
 interface PlatformHeaderProps {
@@ -70,6 +71,7 @@ export default function PlatformHeader({ school }: PlatformHeaderProps = {}) {
             <Mail className="h-4 w-4" />
             <span className="sr-only">Messages</span>
           </Button>
+          <LanguageSwitcher variant="toggle" className="size-7" />
           <ModeSwitcher />
           <UserButton />
         </div>
