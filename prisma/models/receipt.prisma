@@ -1,15 +1,18 @@
 // Billing receipts uploaded by operator for offline payments
 model Receipt {
-  id        String   @id @default(cuid())
-  schoolId  String
-  invoiceId String
+  id         String    @id @default(cuid())
+  schoolId   String
+  invoiceId  String
 
-  filename  String
-  amount    Int
-  status    String   // e.g. pending, approved, rejected
+  fileName   String
+  fileUrl    String?
+  amount     Int
+  status     String    @default("pending") // pending, approved, rejected
+  notes      String?
+  reviewedAt DateTime?
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 
   // Relations (one-sided to avoid changing existing models)
   school  School  @relation(fields: [schoolId], references: [id], onDelete: Cascade)
@@ -17,6 +20,7 @@ model Receipt {
 
   @@index([schoolId])
   @@index([invoiceId])
+  @@index([status])
   @@map("receipts")
 }
 

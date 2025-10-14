@@ -4,25 +4,26 @@ import { ColumnDef } from "@tanstack/react-table";
 import { DataTableColumnHeader } from "@/components/table/data-table/data-table-column-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { receiptReview } from "@/components/operator/billing/actions";
+import { reviewReceipt } from "./actions";
 import { SuccessToast, ErrorToast } from "@/components/atom/toast";
 
 export type ReceiptRow = {
   id: string;
-  tenantName: string;
+  schoolName: string;
   invoiceNumber: string;
   amount: number;
-  filename: string;
-  status: string;
-  createdAt: string;
-  onApprove?: (id: string) => void;
-  onReject?: (id: string) => void;
+  fileUrl: string | null;
+  fileName: string | null;
+  status: "pending" | "approved" | "rejected";
+  uploadedAt: string;
+  reviewedAt: string | null;
+  notes: string | null;
 };
 
 export const receiptColumns: ColumnDef<ReceiptRow>[] = [
   {
-    id: "r_tenantName",
-    accessorKey: "tenantName",
+    id: "r_schoolName",
+    accessorKey: "schoolName",
     header: ({ column }) => <DataTableColumnHeader column={column} title="School" />,
     enableColumnFilter: true,
     meta: { label: "School", variant: "text" },
@@ -35,8 +36,20 @@ export const receiptColumns: ColumnDef<ReceiptRow>[] = [
     meta: { label: "Invoice", variant: "text" },
   },
   {
-    accessorKey: "filename",
+    accessorKey: "fileName",
     header: ({ column }) => <DataTableColumnHeader column={column} title="File" />,
+    cell: ({ row }) => {
+      const fileName = row.original.fileName;
+      const fileUrl = row.original.fileUrl;
+      if (fileUrl) {
+        return (
+          <a href={fileUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+            {fileName || "View File"}
+          </a>
+        );
+      }
+      return <span className="text-muted-foreground">{fileName || "No file"}</span>;
+    },
     meta: { label: "File", variant: "text" },
   },
   {
@@ -73,44 +86,56 @@ export const receiptColumns: ColumnDef<ReceiptRow>[] = [
       const r = row.original as ReceiptRow;
       return (
         <div className="flex gap-2">
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={async () => {
-              try {
-                const reason = prompt("Approval notes (optional)") || undefined;
-                const result = await receiptReview({ id: r.id, decision: "approved", reason });
-                if (result.success) {
-                  SuccessToast("Receipt approved successfully");
-                } else {
-                  ErrorToast(result.error.message);
-                }
-              } catch (e) {
-                ErrorToast(e instanceof Error ? e.message : "Approve failed");
-              }
-            }}
-          >
-            Approve
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={async () => {
-              try {
-                const reason = prompt("Rejection notes (optional)") || undefined;
-                const result = await receiptReview({ id: r.id, decision: "rejected", reason });
-                if (result.success) {
-                  SuccessToast("Receipt rejected successfully");
-                } else {
-                  ErrorToast(result.error.message);
-                }
-              } catch (e) {
-                ErrorToast(e instanceof Error ? e.message : "Reject failed");
-              }
-            }}
-          >
-            Reject
-          </Button>
+          {r.status === "pending" && (
+            <>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={async () => {
+                  try {
+                    const notes = prompt("Approval notes (optional)") || undefined;
+                    const result = await reviewReceipt({ receiptId: r.id, status: "approved", notes });
+                    if (result.success) {
+                      SuccessToast("Receipt approved successfully");
+                      window.location.reload();
+                    } else {
+                      ErrorToast(result.error.message);
+                    }
+                  } catch (e) {
+                    ErrorToast(e instanceof Error ? e.message : "Approve failed");
+                  }
+                }}
+              >
+                Approve
+              </Button>
+              <Button
+                size="sm"
+                variant="destructive"
+                onClick={async () => {
+                  try {
+                    const notes = prompt("Rejection reason (optional)") || undefined;
+                    const result = await reviewReceipt({ receiptId: r.id, status: "rejected", notes });
+                    if (result.success) {
+                      SuccessToast("Receipt rejected successfully");
+                      window.location.reload();
+                    } else {
+                      ErrorToast(result.error.message);
+                    }
+                  } catch (e) {
+                    ErrorToast(e instanceof Error ? e.message : "Reject failed");
+                  }
+                }}
+              >
+                Reject
+              </Button>
+            </>
+          )}
+          {r.status !== "pending" && (
+            <span className="text-xs text-muted-foreground">
+              {r.status === "approved" ? "Approved" : "Rejected"}
+              {r.reviewedAt && ` on ${new Date(r.reviewedAt).toLocaleDateString()}`}
+            </span>
+          )}
         </div>
       );
     },

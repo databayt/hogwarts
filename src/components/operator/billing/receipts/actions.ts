@@ -86,9 +86,20 @@ export async function uploadReceipt(data: z.infer<typeof uploadReceiptSchema>) {
     await requireOperator();
     const validated = uploadReceiptSchema.parse(data);
 
+    // Get the invoice to retrieve schoolId
+    const invoice = await db.invoice.findUnique({
+      where: { id: validated.invoiceId },
+      select: { schoolId: true },
+    });
+
+    if (!invoice) {
+      throw new Error("Invoice not found");
+    }
+
     const receipt = await db.receipt.create({
       data: {
         invoiceId: validated.invoiceId,
+        schoolId: invoice.schoolId,
         amount: validated.amount,
         fileName: validated.fileName,
         fileUrl: validated.fileUrl,
