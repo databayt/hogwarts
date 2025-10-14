@@ -52,9 +52,11 @@ export function useBreadcrumbs() {
 
     // If no exact match, fall back to generating breadcrumbs from the path
     const segments = pathname.split('/').filter(Boolean);
-		const items = segments.map((segment, index) => {
-      const path = `/${segments.slice(0, index + 1).join('/')}`;
-			const isIdSegment = index === segments.length - 1 && /^(?:[a-z0-9]{10,}|\w{6,})$/i.test(segment);
+		// Filter out language segments (en, ar)
+		const filteredSegments = segments.filter(segment => segment !== 'en' && segment !== 'ar');
+		const items = filteredSegments.map((segment, index) => {
+      const path = `/${filteredSegments.slice(0, index + 1).join('/')}`;
+			const isIdSegment = index === filteredSegments.length - 1 && /^(?:[a-z0-9]{10,}|\w{6,})$/i.test(segment);
 			return {
 				title: isIdSegment && dynamicTitle ? dynamicTitle : segment.charAt(0).toUpperCase() + segment.slice(1),
 				link: path
