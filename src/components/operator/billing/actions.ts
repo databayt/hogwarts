@@ -105,7 +105,7 @@ export async function getInvoicesCSV(filters?: { status?: string; search?: strin
     "Period Start",
     "Period End",
     "Created At",
-    "Paid At",
+    "Updated At",
   ];
 
   // CSV rows
@@ -119,7 +119,7 @@ export async function getInvoicesCSV(filters?: { status?: string; search?: strin
     invoice.periodStart?.toLocaleDateString() || "",
     invoice.periodEnd?.toLocaleDateString() || "",
     invoice.createdAt.toLocaleDateString(),
-    invoice.paidAt?.toLocaleDateString() || "",
+    invoice.updatedAt.toLocaleDateString(),
   ]);
 
   // Combine into CSV
