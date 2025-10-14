@@ -7,7 +7,7 @@ interface TimeProps {
 }
 
 const Time = ({ dictionary }: TimeProps) => {
-    const timeDict = dictionary.time || { title: 'Time', subtitle: 'We save the most valuable resource - your time.' };
+    const timeDict = (dictionary as any).time || { title: 'Time', subtitle: 'We save the most valuable resource - your time.' };
 
     return (
         <section className='flex justify-between items-center px-40 md:px-32 my-28 lg:px-44 bg-black dark:invert text-background -mx-40'>
