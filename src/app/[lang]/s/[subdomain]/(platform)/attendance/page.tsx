@@ -5,7 +5,7 @@ import { type Locale } from '@/components/internationalization/config'
 export const metadata = { title: 'Dashboard: Attendance' }
 
 interface Props {
-  params: Promise<{ lang: Locale }>
+  params: Promise<{ lang: Locale; subdomain: string }>
 }
 
 export default async function Page({ params }: Props) {

@@ -6,7 +6,7 @@ import { type Locale } from '@/components/internationalization/config'
 export const metadata = { title: 'Dashboard: Teachers' }
 
 interface Props {
-  params: Promise<{ lang: Locale }>
+  params: Promise<{ lang: Locale; subdomain: string }>
   searchParams: Promise<SearchParams>
 }
 
