@@ -71,7 +71,7 @@ export default function PlatformHeader({ school }: PlatformHeaderProps = {}) {
             <Mail className="h-4 w-4" />
             <span className="sr-only">Messages</span>
           </Button>
-          <LanguageSwitcher variant="toggle" className="size-7" />
+          <LanguageSwitcher variant="toggle" />
           <ModeSwitcher />
           <UserButton />
         </div>

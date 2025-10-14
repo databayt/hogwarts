@@ -32,9 +32,9 @@ export function LanguageSwitcher({
 
     return (
       <Button
-        variant="ghost"
+        variant="link"
         size="icon"
-        className={cn("h-9 w-9", className)}
+        className={cn("h-8 w-8 px-0", className)}
         asChild
       >
         <Link href={getSwitchLocaleHref(nextLocale)}>
