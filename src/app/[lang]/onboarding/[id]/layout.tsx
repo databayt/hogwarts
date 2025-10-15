@@ -32,36 +32,19 @@ function HostLayoutContent({ children }: HostLayoutProps) {
     return (
       <div className="px-4 sm:px-6 md:px-12 min-h-screen">
         <main className="h-screen pt-16">
-          <div className="max-w-4xl mx-auto space-y-8">
-            {/* Header skeleton */}
-            <div className="space-y-4">
-              <Skeleton className="h-8 w-64" />
-              <Skeleton className="h-4 w-96" />
-            </div>
-            
-            {/* Content skeleton */}
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <Skeleton className="h-4 w-32" />
-                  <Skeleton className="h-10 w-full" />
-                  <Skeleton className="h-4 w-48" />
-                </div>
-                <div className="space-y-4">
-                  <Skeleton className="h-4 w-32" />
-                  <Skeleton className="h-10 w-full" />
-                  <Skeleton className="h-4 w-48" />
-                </div>
+          <div className="w-full -mt-6 sm:-mt-10">
+            <div className="grid grid-cols-1 lg:grid-cols-2 items-center gap-6 lg:gap-12">
+              {/* Left Side - Text Content Skeleton */}
+              <div className="space-y-4 sm:space-y-6">
+                <Skeleton className="h-6 w-20" />
+                <Skeleton className="h-10 w-full max-w-md" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-4/5" />
               </div>
-              
-              <div className="space-y-4">
-                <Skeleton className="h-4 w-32" />
-                <Skeleton className="h-20 w-full" />
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Skeleton className="h-24 w-full" />
-                <Skeleton className="h-24 w-full" />
+
+              {/* Right Side - Image Skeleton */}
+              <div className="w-full sm:w-3/4 max-w-xl mx-auto h-[300px] sm:aspect-video flex items-center justify-center">
+                <Skeleton className="w-48 h-48 rounded-full" />
               </div>
             </div>
           </div>
