@@ -35,21 +35,21 @@ const StepsOverviewClient: React.FC<StepsOverviewClientProps> = ({ dictionary, l
       title: dictionary.steps.step1.title,
       description: dictionary.steps.step1.description,
       illustration: "/onboarding/about-school.png",
-      imageSize: 80 // Medium size (w-20 h-20)
+      imageSize: 96 // Unified size (w-24 h-24)
     },
     {
       number: 2,
       title: dictionary.steps.step2.title,
       description: dictionary.steps.step2.description,
       illustration: "/onboarding/stand-out.png",
-      imageSize: 96 // Larger (w-24 h-24)
+      imageSize: 96 // Unified size (w-24 h-24)
     },
     {
       number: 3,
       title: dictionary.steps.step3.title,
       description: dictionary.steps.step3.description,
       illustration: "/onboarding/finish-setup.png",
-      imageSize: 96 // Larger (w-24 h-24)
+      imageSize: 96 // Unified size (w-24 h-24)
     }
   ];
 
@@ -195,7 +195,7 @@ const StepsOverviewClient: React.FC<StepsOverviewClientProps> = ({ dictionary, l
                     </div>
                   </div>
                   <div className={`flex-shrink-0 hidden md:flex ${isRTL ? 'justify-start' : 'justify-end'}`}>
-                    <div className={`relative overflow-hidden ${step.illustration.includes('about-school') ? 'px-2' : ''}`} style={{ width: `${step.imageSize}px`, height: `${step.imageSize}px` }}>
+                    <div className="relative overflow-hidden" style={{ width: `${step.imageSize}px`, height: `${step.imageSize}px` }}>
                       <Image
                         src={step.illustration}
                         alt={step.title}
