@@ -227,8 +227,8 @@ export default function BentoGrid() {
                   </p>
                 </div>
               </div>
-              <div className="relative -mb-10 -mr-10 mt-8 h-fit rounded-tl-xl border bg-muted/30 pt-6 sm:ml-6 sm:mt-auto">
-                <div className="absolute left-3 top-2 flex gap-1">
+              <div className="relative -mb-10 ltr:-mr-10 rtl:-ml-10 mt-8 h-fit ltr:rounded-tl-xl rtl:rounded-tr-xl border bg-muted/30 pt-6 sm:ms-6 sm:mt-auto">
+                <div className="absolute ltr:left-3 rtl:right-3 top-2 flex gap-1">
                   <span className="block size-2 rounded-full border border-border"></span>
                   <span className="block size-2 rounded-full border border-border"></span>
                   <span className="block size-2 rounded-full border border-border"></span>
@@ -328,7 +328,7 @@ export default function BentoGrid() {
                       />
                     </div>
                   </div>
-                  <div className="relative ml-[calc(50%-1rem)] flex items-center gap-2">
+                  <div className="relative ms-[calc(50%-1rem)] flex items-center gap-2">
                     <div className="size-8 ring-4 ring-background">
                       <Image
                         width={100}

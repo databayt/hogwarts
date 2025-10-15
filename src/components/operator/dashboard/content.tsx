@@ -12,9 +12,11 @@ import { DollarSign, TrendingUp, TrendingDown, AlertTriangle } from "lucide-reac
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { type Locale } from "@/components/internationalization/config";
+import { type Dictionary } from "@/components/internationalization/dictionaries";
+import { formatCurrency } from "@/lib/i18n-format";
 
 interface DashboardContentProps {
-  dictionary: any; // TODO: Add proper type for dictionary
+  dictionary: Dictionary;
   lang: Locale;
 }
 
@@ -28,14 +30,7 @@ export async function DashboardContent({ dictionary, lang }: DashboardContentPro
     calculateChurnRate('30d'),
   ]);
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(value);
-  };
+  const t = dictionary.operator;
 
   return (
     <div className="flex flex-1 flex-col space-y-6">
@@ -49,11 +44,11 @@ export async function DashboardContent({ dictionary, lang }: DashboardContentPro
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Monthly Recurring Revenue</CardTitle>
+            <CardTitle className="text-sm font-medium">{t.dashboard.monthlyRecurringRevenue}</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(mrrData.currentMRR)}</div>
+            <div className="text-2xl font-bold">{formatCurrency(mrrData.currentMRR, lang)}</div>
             <div className="flex items-center gap-1 text-xs">
               {mrrData.growth >= 0 ? (
                 <>
@@ -66,11 +61,11 @@ export async function DashboardContent({ dictionary, lang }: DashboardContentPro
                   <span className="text-red-600">{mrrData.growth}%</span>
                 </>
               )}
-              <span className="text-muted-foreground ml-1">vs last month</span>
+              <span className="text-muted-foreground ms-1">{t.dashboard.vsLastMonth}</span>
             </div>
             <Link href={`/${lang}/analytics`}>
               <Button variant="link" size="sm" className="mt-2 h-auto p-0">
-                View Analytics →
+                {t.dashboard.viewAnalytics} →
               </Button>
             </Link>
           </CardContent>
@@ -78,26 +73,26 @@ export async function DashboardContent({ dictionary, lang }: DashboardContentPro
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Annual Run Rate (ARR)</CardTitle>
+            <CardTitle className="text-sm font-medium">{t.dashboard.annualRunRate}</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(mrrData.currentMRR * 12)}</div>
+            <div className="text-2xl font-bold">{formatCurrency(mrrData.currentMRR * 12, lang)}</div>
             <p className="text-xs text-muted-foreground">
-              Based on current MRR
+              {t.dashboard.basedOnCurrentMRR}
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Churn Rate (30d)</CardTitle>
+            <CardTitle className="text-sm font-medium">{t.dashboard.churnRate}</CardTitle>
             <AlertTriangle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{churnData.churnRate}%</div>
             <p className="text-xs text-muted-foreground">
-              {churnData.churned} school{churnData.churned !== 1 ? 's' : ''} churned
+              {churnData.churned} {churnData.churned !== 1 ? t.dashboard.schoolsChurned : t.dashboard.schoolChurned}
             </p>
           </CardContent>
         </Card>

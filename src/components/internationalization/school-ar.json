@@ -542,6 +542,92 @@
         "fileUploaded": "تم رفع الملف"
       }
     },
+    "principalDashboard": {
+      "title": "لوحة تحكم المدير",
+      "dashboardUnavailable": "لوحة التحكم غير متاحة",
+      "unableToLoadData": "تعذر تحميل بيانات لوحة التحكم. يرجى المحاولة مرة أخرى لاحقاً.",
+      "performanceScorecard": {
+        "overallScore": "الدرجة الإجمالية",
+        "performanceScore": "درجة الأداء",
+        "academic": "الأكاديمي",
+        "academicPerformance": "الأداء الأكاديمي",
+        "attendance": "الحضور",
+        "studentAttendance": "حضور الطلاب",
+        "discipline": "الانضباط",
+        "disciplineScore": "درجة الانضباط",
+        "parentSatisfaction": "رضا أولياء الأمور"
+      },
+      "criticalAlerts": {
+        "title": "التنبيهات الحرجة"
+      },
+      "quickActions": {
+        "title": "إجراءات سريعة",
+        "reviewReports": "مراجعة التقارير",
+        "approveBudgets": "الموافقة على الميزانيات",
+        "viewCalendars": "عرض التقاويم",
+        "sendCommunications": "إرسال التواصل"
+      },
+      "todaysPriorities": {
+        "title": "أولويات اليوم",
+        "noPriorities": "لا توجد أولويات مجدولة لهذا اليوم"
+      },
+      "academicPerformance": {
+        "title": "اتجاهات الأداء الأكاديمي",
+        "current": "الحالي",
+        "noData": "لا توجد بيانات أكاديمية متاحة"
+      },
+      "disciplinarySummary": {
+        "title": "ملخص الانضباط",
+        "totalIncidents": "إجمالي الحوادث",
+        "resolved": "تم الحل",
+        "pending": "قيد الانتظار",
+        "topIssues": "أهم المشاكل:"
+      },
+      "staffEvaluations": {
+        "title": "تقييمات الموظفين المستحقة",
+        "noEvaluations": "لا توجد تقييمات مستحقة",
+        "due": "الموعد"
+      },
+      "budgetStatus": {
+        "title": "حالة الميزانية",
+        "allocated": "المخصص",
+        "spent": "المنفق",
+        "remaining": "المتبقي",
+        "utilization": "الاستخدام",
+        "status": "الحالة:"
+      },
+      "parentFeedback": {
+        "title": "ملاحظات أولياء الأمور",
+        "satisfaction": "الرضا",
+        "communication": "التواصل",
+        "academicQuality": "الجودة الأكاديمية",
+        "facilities": "المرافق",
+        "overallSatisfaction": "الرضا الإجمالي"
+      },
+      "executiveSummary": {
+        "title": "الملخص التنفيذي",
+        "monthlyHighlights": "أبرز أحداث الشهر",
+        "noHighlights": "لا توجد أحداث بارزة هذا الشهر",
+        "goalProgress": "تقدم الأهداف",
+        "target": "الهدف",
+        "current": "الحالي"
+      },
+      "upcomingBoardMeetings": {
+        "title": "اجتماعات مجلس الإدارة القادمة",
+        "attendees": "الحاضرون"
+      },
+      "financialHealth": {
+        "title": "الصحة المالية",
+        "collectionRate": "معدل التحصيل",
+        "budgetStatus": "حالة الميزانية",
+        "yearToDate": "من بداية العام حتى الآن"
+      },
+      "statuses": {
+        "scheduled": "مجدول",
+        "confirmed": "مؤكد",
+        "inProgress": "قيد التنفيذ"
+      }
+    },
     "common": {
       "actions": {
         "add": "إضافة",

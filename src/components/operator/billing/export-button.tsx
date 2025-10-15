@@ -46,7 +46,7 @@ export function ExportButton({ filters, variant = "outline", size = "sm" }: Expo
       variant={variant}
       size={size}
     >
-      <Download className="mr-2 h-4 w-4" />
+      <Download className="me-2 h-4 w-4" />
       {isExporting ? "Exporting..." : "Export CSV"}
     </Button>
   );

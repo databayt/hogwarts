@@ -541,6 +541,92 @@
         "fileUploaded": "File uploaded"
       }
     },
+    "principalDashboard": {
+      "title": "Principal Dashboard",
+      "dashboardUnavailable": "Dashboard Unavailable",
+      "unableToLoadData": "Unable to load dashboard data. Please try again later.",
+      "performanceScorecard": {
+        "overallScore": "Overall Score",
+        "performanceScore": "Performance score",
+        "academic": "Academic",
+        "academicPerformance": "Academic performance",
+        "attendance": "Attendance",
+        "studentAttendance": "Student attendance",
+        "discipline": "Discipline",
+        "disciplineScore": "Discipline score",
+        "parentSatisfaction": "Parent Satisfaction"
+      },
+      "criticalAlerts": {
+        "title": "Critical Alerts"
+      },
+      "quickActions": {
+        "title": "Quick Actions",
+        "reviewReports": "Review Reports",
+        "approveBudgets": "Approve Budgets",
+        "viewCalendars": "View Calendars",
+        "sendCommunications": "Send Communications"
+      },
+      "todaysPriorities": {
+        "title": "Today's Priorities",
+        "noPriorities": "No priorities scheduled for today"
+      },
+      "academicPerformance": {
+        "title": "Academic Performance Trends",
+        "current": "Current",
+        "noData": "No academic data available"
+      },
+      "disciplinarySummary": {
+        "title": "Disciplinary Summary",
+        "totalIncidents": "Total Incidents",
+        "resolved": "Resolved",
+        "pending": "Pending",
+        "topIssues": "Top Issues:"
+      },
+      "staffEvaluations": {
+        "title": "Staff Evaluations Due",
+        "noEvaluations": "No evaluations due",
+        "due": "Due"
+      },
+      "budgetStatus": {
+        "title": "Budget Status",
+        "allocated": "Allocated",
+        "spent": "Spent",
+        "remaining": "Remaining",
+        "utilization": "Utilization",
+        "status": "Status:"
+      },
+      "parentFeedback": {
+        "title": "Parent Feedback",
+        "satisfaction": "Satisfaction",
+        "communication": "Communication",
+        "academicQuality": "Academic Quality",
+        "facilities": "Facilities",
+        "overallSatisfaction": "Overall Satisfaction"
+      },
+      "executiveSummary": {
+        "title": "Executive Summary",
+        "monthlyHighlights": "Monthly Highlights",
+        "noHighlights": "No highlights this month",
+        "goalProgress": "Goal Progress",
+        "target": "Target",
+        "current": "Current"
+      },
+      "upcomingBoardMeetings": {
+        "title": "Upcoming Board Meetings",
+        "attendees": "attendees"
+      },
+      "financialHealth": {
+        "title": "Financial Health",
+        "collectionRate": "Collection Rate",
+        "budgetStatus": "Budget Status",
+        "yearToDate": "Year to Date"
+      },
+      "statuses": {
+        "scheduled": "scheduled",
+        "confirmed": "confirmed",
+        "inProgress": "in-progress"
+      }
+    },
     "common": {
       "actions": {
         "add": "Add",

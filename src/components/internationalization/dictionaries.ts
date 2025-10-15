@@ -17,25 +17,32 @@ const streamDictionaries = {
   "ar": () => import("./stream-ar.json").then((module) => module.default),
 } as const;
 
+const operatorDictionaries = {
+  "en": () => import("./operator-en.json").then((module) => module.default),
+  "ar": () => import("./operator-ar.json").then((module) => module.default),
+} as const;
+
 export const getDictionary = async (locale: Locale) => {
   try {
     // Load all dictionaries
-    const [general, school, stream] = await Promise.all([
+    const [general, school, stream, operator] = await Promise.all([
       generalDictionaries[locale]?.() ?? generalDictionaries["en"](),
       schoolDictionaries[locale]?.() ?? schoolDictionaries["en"](),
-      streamDictionaries[locale]?.() ?? streamDictionaries["en"]()
+      streamDictionaries[locale]?.() ?? streamDictionaries["en"](),
+      operatorDictionaries[locale]?.() ?? operatorDictionaries["en"]()
     ]);
 
     // Merge dictionaries
-    return { ...general, ...school, ...stream };
+    return { ...general, ...school, ...stream, ...operator };
   } catch (error) {
     console.warn(`Failed to load dictionary for locale: ${locale}. Falling back to en.`);
-    const [general, school, stream] = await Promise.all([
+    const [general, school, stream, operator] = await Promise.all([
       generalDictionaries["en"](),
       schoolDictionaries["en"](),
-      streamDictionaries["en"]()
+      streamDictionaries["en"](),
+      operatorDictionaries["en"]()
     ]);
-    return { ...general, ...school, ...stream };
+    return { ...general, ...school, ...stream, ...operator };
   }
 };
 

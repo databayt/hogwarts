@@ -310,7 +310,7 @@ export function NotificationCenter({
         )}>
           <Icon className="h-5 w-5" />
           {notification.priority === 'urgent' && priorityConfig.urgent.pulse && (
-            <span className="absolute inline-flex h-3 w-3 -top-1 -right-1">
+            <span className="absolute inline-flex h-3 w-3 -top-1 ltr:-right-1 rtl:-left-1">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
               <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500" />
             </span>
@@ -379,16 +379,16 @@ export function NotificationCenter({
             <DropdownMenuContent align="end">
               {!notification.read && (
                 <DropdownMenuItem onClick={() => onMarkAsRead([notification.id])}>
-                  <Check className="h-4 w-4 mr-2" />
+                  <Check className="h-4 w-4 me-2" />
                   Mark as read
                 </DropdownMenuItem>
               )}
               <DropdownMenuItem onClick={() => onStar(notification.id)}>
-                <Star className="h-4 w-4 mr-2" />
+                <Star className="h-4 w-4 me-2" />
                 {notification.starred ? 'Unstar' : 'Star'}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => onArchive([notification.id])}>
-                <Archive className="h-4 w-4 mr-2" />
+                <Archive className="h-4 w-4 me-2" />
                 Archive
               </DropdownMenuItem>
               <DropdownMenuSeparator />
@@ -396,7 +396,7 @@ export function NotificationCenter({
                 className="text-red-600"
                 onClick={() => onDelete([notification.id])}
               >
-                <Trash2 className="h-4 w-4 mr-2" />
+                <Trash2 className="h-4 w-4 me-2" />
                 Delete
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -498,7 +498,7 @@ export function NotificationCenter({
               }
             }}
           >
-            <Icon className="h-4 w-4 mr-1" />
+            <Icon className="h-4 w-4 me-1" />
             {type.charAt(0).toUpperCase() + type.slice(1)}
           </Button>
         ))}
