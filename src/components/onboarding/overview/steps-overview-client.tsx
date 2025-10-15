@@ -33,19 +33,19 @@ const StepsOverviewClient: React.FC<StepsOverviewClientProps> = ({ dictionary, l
       number: 1,
       title: dictionary.steps.step1.title,
       description: dictionary.steps.step1.description,
-      illustration: "/site/tent.png"
+      illustration: "/onboarding/about-school.png"
     },
     {
       number: 2,
       title: dictionary.steps.step2.title,
       description: dictionary.steps.step2.description,
-      illustration: "/site/light-bulb.png"
+      illustration: "/onboarding/stand-out.png"
     },
     {
       number: 3,
       title: dictionary.steps.step3.title,
       description: dictionary.steps.step3.description,
-      illustration: "/site/world.png"
+      illustration: "/onboarding/finish-setup.png"
     }
   ];
 
