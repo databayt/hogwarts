@@ -6,6 +6,7 @@ import { calculateMRR, getMRRHistory, getRevenueTrends } from "./actions";
 import { TrendingUp, TrendingDown, DollarSign, Users } from "lucide-react";
 import type { getDictionary } from "@/components/internationalization/dictionaries";
 import type { Locale } from "@/components/internationalization/config";
+import { formatCurrency, formatPercentage } from "@/lib/i18n-format";
 
 interface Props {
   dictionary: any;
@@ -18,15 +19,6 @@ export async function AnalyticsContent({ dictionary, lang }: Props) {
     getMRRHistory(),
     getRevenueTrends(),
   ]);
-
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(value);
-  };
 
   return (
     <PageContainer>
@@ -44,17 +36,17 @@ export async function AnalyticsContent({ dictionary, lang }: Props) {
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{formatCurrency(mrrData.currentMRR)}</div>
+              <div className="text-2xl font-bold">{formatCurrency(mrrData.currentMRR, lang, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</div>
               <div className="flex items-center gap-1 text-xs text-muted-foreground">
                 {mrrData.growth >= 0 ? (
                   <>
                     <TrendingUp className="h-3 w-3 text-green-600" />
-                    <span className="text-green-600">+{mrrData.growth}%</span>
+                    <span className="text-green-600">+{formatPercentage(mrrData.growth / 100, lang)}</span>
                   </>
                 ) : (
                   <>
                     <TrendingDown className="h-3 w-3 text-red-600" />
-                    <span className="text-red-600">{mrrData.growth}%</span>
+                    <span className="text-red-600">{formatPercentage(mrrData.growth / 100, lang)}</span>
                   </>
                 )}
                 <span>vs last month</span>
@@ -68,7 +60,7 @@ export async function AnalyticsContent({ dictionary, lang }: Props) {
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{formatCurrency(mrrData.lastMonthMRR)}</div>
+              <div className="text-2xl font-bold">{formatCurrency(mrrData.lastMonthMRR, lang, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</div>
               <p className="text-xs text-muted-foreground">
                 Previous period
               </p>
@@ -95,7 +87,7 @@ export async function AnalyticsContent({ dictionary, lang }: Props) {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {formatCurrency(mrrData.totalSchools > 0 ? mrrData.currentMRR / mrrData.totalSchools : 0)}
+                {formatCurrency(mrrData.totalSchools > 0 ? mrrData.currentMRR / mrrData.totalSchools : 0, lang, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
               </div>
               <p className="text-xs text-muted-foreground">
                 Average revenue per school
@@ -106,8 +98,8 @@ export async function AnalyticsContent({ dictionary, lang }: Props) {
 
         {/* MRR Charts */}
         <div className="grid gap-4 md:grid-cols-2">
-          <MRRChart data={mrrHistory} />
-          <MRRByPlan data={mrrData.mrrByPlan} />
+          <MRRChart data={mrrHistory} lang={lang} />
+          <MRRByPlan data={mrrData.mrrByPlan} lang={lang} />
         </div>
 
         {/* Revenue Trends */}
@@ -133,10 +125,10 @@ export async function AnalyticsContent({ dictionary, lang }: Props) {
                         <span className="text-sm font-medium">{trend.month}</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-xl font-bold">{formatCurrency(trend.revenue)}</span>
+                        <span className="text-xl font-bold">{formatCurrency(trend.revenue, lang, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>
                         {index > 0 && (
                           <span className={`text-xs ${growth >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                            {growth >= 0 ? '+' : ''}{growth.toFixed(1)}%
+                            {growth >= 0 ? '+' : ''}{formatPercentage(growth / 100, lang)}
                           </span>
                         )}
                       </div>
@@ -163,18 +155,18 @@ export async function AnalyticsContent({ dictionary, lang }: Props) {
             <div className="grid gap-4 md:grid-cols-3">
               <div>
                 <p className="text-sm text-muted-foreground">Annual Run Rate (ARR)</p>
-                <p className="text-2xl font-bold">{formatCurrency(mrrData.currentMRR * 12)}</p>
+                <p className="text-2xl font-bold">{formatCurrency(mrrData.currentMRR * 12, lang, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Projected Next Month</p>
                 <p className="text-2xl font-bold">
-                  {formatCurrency(mrrData.currentMRR * (1 + mrrData.growth / 100))}
+                  {formatCurrency(mrrData.currentMRR * (1 + mrrData.growth / 100), lang, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                 </p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Projected 12 Months</p>
                 <p className="text-2xl font-bold">
-                  {formatCurrency(mrrData.currentMRR * Math.pow(1 + mrrData.growth / 100, 12) * 12)}
+                  {formatCurrency(mrrData.currentMRR * Math.pow(1 + mrrData.growth / 100, 12) * 12, lang, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                 </p>
               </div>
             </div>

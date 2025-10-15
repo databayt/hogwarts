@@ -11,19 +11,23 @@ import { useModal } from "@/components/atom/modal/context";
 import Modal from "@/components/atom/modal/modal";
 import { AnnouncementCreateForm } from "@/components/platform/announcements/form";
 import type { Dictionary } from "@/components/internationalization/dictionaries";
+import type { Locale } from "@/components/internationalization/config";
 
 export function AnnouncementsTable({
   data,
   pageCount,
-  dictionary
+  dictionary,
+  lang
 }: {
   data: AnnouncementRow[];
   pageCount: number;
-  dictionary?: Dictionary['school']['announcements'];
+  dictionary: Dictionary['school']['announcements'];
+  lang: Locale;
 }) {
   const columns = getAnnouncementColumns(dictionary);
   const { table } = useDataTable<AnnouncementRow>({ data, columns, pageCount });
   const { openModal } = useModal();
+  const t = dictionary;
   return (
     <DataTable table={table}>
       <DataTableToolbar table={table}>
@@ -33,13 +37,13 @@ export function AnnouncementsTable({
           size="sm"
           className="h-8 w-8 p-0 rounded-full"
           onClick={() => openModal()}
-          aria-label="Create"
-          title="Create"
+          aria-label={t.create}
+          title={t.create}
         >
           <Plus className="h-4 w-4" />
         </Button>
       </DataTableToolbar>
-      <Modal content={<AnnouncementCreateForm />} />
+      <Modal content={<AnnouncementCreateForm dictionary={dictionary} lang={lang} />} />
     </DataTable>
   );
 }

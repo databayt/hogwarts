@@ -13,8 +13,13 @@ import { useRouter } from "next/navigation";
 import { StudentAssignmentStep } from "./student-assignment";
 import { GradingStep } from "./grading";
 import { ResultFormFooter } from "./footer";
+import { type Dictionary } from "@/components/internationalization/dictionaries";
 
-export function ResultCreateForm() {
+interface ResultCreateFormProps {
+  dictionary: Dictionary;
+}
+
+export function ResultCreateForm({ dictionary }: ResultCreateFormProps) {
   const { modal, closeModal } = useModal();
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
@@ -59,11 +64,11 @@ export function ResultCreateForm() {
       ? await updateResult({ id: currentId, ...values })
       : await createResult(values);
     if (res?.success) {
-      toast.success(currentId ? "Result updated" : "Result created");
+      toast.success(currentId ? dictionary.school.grades.resultUpdated : dictionary.school.grades.resultCreated);
       closeModal();
       router.refresh();
     } else {
-      toast.error(currentId ? "Failed to update result" : "Failed to create result");
+      toast.error(currentId ? dictionary.school.grades.failedToUpdate : dictionary.school.grades.failedToCreate);
     }
   }
 
@@ -107,9 +112,9 @@ export function ResultCreateForm() {
   const renderCurrentStep = () => {
     switch (currentStep) {
       case 1:
-        return <StudentAssignmentStep form={form} isView={isView} />;
+        return <StudentAssignmentStep form={form} isView={isView} dictionary={dictionary} />;
       case 2:
-        return <GradingStep form={form} isView={isView} />;
+        return <GradingStep form={form} isView={isView} dictionary={dictionary} />;
       default:
         return null;
     }
@@ -122,8 +127,8 @@ export function ResultCreateForm() {
           <div className="flex-grow flex flex-col md:flex-row gap-6">
             {/* Title Section */}
             <div className="md:w-1/3">
-              <h2 className="text-2xl font-semibold">{isView ? "View Result" : currentId ? "Edit Result" : "Create Result"}</h2>
-              <p className="text-sm text-muted-foreground mt-2">{isView ? "View result details" : currentId ? "Update result details" : "Record a new academic result"}</p>
+              <h2>{isView ? dictionary.school.grades.viewResult : currentId ? dictionary.school.grades.editResult : dictionary.school.grades.createResult}</h2>
+              <p className="muted">{isView ? dictionary.school.grades.viewResultDetails : currentId ? dictionary.school.grades.updateResultDetails : dictionary.school.grades.recordNewResult}</p>
             </div>
 
             {/* Form Content */}
@@ -134,7 +139,7 @@ export function ResultCreateForm() {
             </div>
           </div>
 
-          <ResultFormFooter 
+          <ResultFormFooter
             currentStep={currentStep}
             isView={isView}
             currentId={currentId}
@@ -142,6 +147,7 @@ export function ResultCreateForm() {
             onNext={handleNext}
             onSaveCurrentStep={handleSaveCurrentStep}
             form={form}
+            dictionary={dictionary}
           />
         </form>
       </Form>

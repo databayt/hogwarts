@@ -8,16 +8,22 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { Button } from "@/components/ui/button";
 import { uploadReceipt } from "@/components/operator/billing/receipts/actions";
 import { SuccessToast, ErrorToast } from "@/components/atom/toast";
+import type { Locale } from "@/components/internationalization/config";
+import type { getDictionary } from "@/components/internationalization/dictionaries";
 
 type Props = {
   invoices: Array<{ id: string; number: string }>;
+  dictionary: Awaited<ReturnType<typeof getDictionary>>;
+  lang: Locale;
 };
 
-export function ReceiptUpload({ invoices }: Props) {
+export function ReceiptUpload({ invoices, dictionary, lang }: Props) {
   const [invoiceId, setInvoiceId] = React.useState(invoices[0]?.id ?? "");
   const [amount, setAmount] = React.useState(0);
   const [file, setFile] = React.useState<File | null>(null);
   const [submitting, setSubmitting] = React.useState(false);
+
+  const t = dictionary.operator;
 
   const onUpload = async (files: File[]) => {
     setFile(files[0] ?? null);
@@ -55,10 +61,10 @@ export function ReceiptUpload({ invoices }: Props) {
     <Card className="p-4">
       <form onSubmit={onSubmit} className="grid gap-3 md:grid-cols-3">
         <div>
-          <label className="block text-xs text-muted-foreground mb-1">Invoice</label>
+          <label className="block text-xs text-muted-foreground mb-1">{t.billing.viewInvoiceDetails}</label>
           <Select value={invoiceId} onValueChange={setInvoiceId}>
             <SelectTrigger className="h-8">
-              <SelectValue placeholder="Select invoice" />
+              <SelectValue placeholder={t.common.actions.filter} />
             </SelectTrigger>
             <SelectContent>
               {invoices.map((i) => (
@@ -68,14 +74,14 @@ export function ReceiptUpload({ invoices }: Props) {
           </Select>
         </div>
         <div>
-          <label className="block text-xs text-muted-foreground mb-1">Amount (cents)</label>
+          <label className="block text-xs text-muted-foreground mb-1">{t.billing.totalRevenue}</label>
           <Input className="h-8" type="number" inputMode="numeric" value={amount} onChange={(e) => setAmount(Number(e.target.value))} />
         </div>
         <div className="md:col-span-3">
           <FileUploader maxFiles={1} onUpload={onUpload} />
         </div>
         <div className="md:col-span-3">
-          <Button size="sm" disabled={submitting || !file || !invoiceId}>Submit receipt</Button>
+          <Button size="sm" disabled={submitting || !file || !invoiceId}>{t.common.actions.submit}</Button>
         </div>
       </form>
     </Card>

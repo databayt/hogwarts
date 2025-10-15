@@ -2,6 +2,8 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import type { Locale } from "@/components/internationalization/config";
+import { formatCurrency, formatPercentage } from "@/lib/i18n-format";
 
 interface MRRByPlanProps {
   data: {
@@ -9,23 +11,15 @@ interface MRRByPlanProps {
     PREMIUM: number;
     ENTERPRISE: number;
   };
+  lang: Locale;
 }
 
-export function MRRByPlan({ data }: MRRByPlanProps) {
+export function MRRByPlan({ data, lang }: MRRByPlanProps) {
   const chartData = [
     { name: "Basic", value: data.BASIC, fill: "hsl(var(--chart-1))" },
     { name: "Premium", value: data.PREMIUM, fill: "hsl(var(--chart-2))" },
     { name: "Enterprise", value: data.ENTERPRISE, fill: "hsl(var(--chart-3))" },
   ];
-
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(value);
-  };
 
   const total = data.BASIC + data.PREMIUM + data.ENTERPRISE;
 
@@ -38,7 +32,7 @@ export function MRRByPlan({ data }: MRRByPlanProps) {
       <CardContent>
         <div className="mb-4 flex items-center justify-between">
           <span className="text-sm text-muted-foreground">Total MRR</span>
-          <span className="text-2xl font-bold">{formatCurrency(total)}</span>
+          <span className="text-2xl font-bold">{formatCurrency(total, lang, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>
         </div>
         <ResponsiveContainer width="100%" height={300}>
           <BarChart data={chartData}>
@@ -51,20 +45,20 @@ export function MRRByPlan({ data }: MRRByPlanProps) {
             <YAxis
               className="text-xs"
               tick={{ fill: 'hsl(var(--muted-foreground))' }}
-              tickFormatter={formatCurrency}
+              tickFormatter={(value) => formatCurrency(value, lang, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
             />
             <Tooltip
               content={({ active, payload }) => {
                 if (active && payload && payload.length) {
                   const data = payload[0].payload;
-                  const percentage = total > 0 ? ((data.value / total) * 100).toFixed(1) : 0;
+                  const percentage = total > 0 ? (data.value / total) : 0;
                   return (
                     <div className="rounded-lg border bg-background p-3 shadow-lg">
                       <div className="grid gap-2">
                         <span className="font-semibold">{data.name}</span>
                         <div className="flex flex-col">
-                          <span className="text-sm font-bold">{formatCurrency(data.value)}</span>
-                          <span className="text-xs text-muted-foreground">{percentage}% of total</span>
+                          <span className="text-sm font-bold">{formatCurrency(data.value, lang, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>
+                          <span className="text-xs text-muted-foreground">{formatPercentage(percentage, lang)} of total</span>
                         </div>
                       </div>
                     </div>
@@ -78,7 +72,7 @@ export function MRRByPlan({ data }: MRRByPlanProps) {
         </ResponsiveContainer>
         <div className="mt-4 grid grid-cols-3 gap-4">
           {chartData.map((item) => {
-            const percentage = total > 0 ? ((item.value / total) * 100).toFixed(0) : 0;
+            const percentage = total > 0 ? (item.value / total) : 0;
             return (
               <div key={item.name} className="flex flex-col">
                 <div className="flex items-center gap-2">
@@ -88,7 +82,7 @@ export function MRRByPlan({ data }: MRRByPlanProps) {
                   />
                   <span className="text-xs text-muted-foreground">{item.name}</span>
                 </div>
-                <span className="text-sm font-semibold">{percentage}%</span>
+                <span className="text-sm font-semibold">{formatPercentage(percentage, lang, { maximumFractionDigits: 0 })}</span>
               </div>
             );
           })}

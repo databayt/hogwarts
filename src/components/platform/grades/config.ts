@@ -1,6 +1,8 @@
+// Steps are now translated via dictionary.school.grades.studentAssignmentInfo and dictionary.school.grades.gradingInfo
+// Kept here for reference but should use dictionary in components
 export const STEPS = {
-  1: "Student & Assignment",
-  2: "Grading & Feedback"
+  1: "studentAssignmentInfo",
+  2: "gradingInfo"
 } as const;
 
 export const STEP_FIELDS = {

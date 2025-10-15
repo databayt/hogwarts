@@ -12,7 +12,7 @@ import { useEffect } from "react";
 import { ResultFormStepProps } from "./types";
 import { GRADE_OPTIONS } from "./config";
 
-export function GradingStep({ form, isView }: ResultFormStepProps) {
+export function GradingStep({ form, isView, dictionary }: ResultFormStepProps) {
   const score = form.watch("score");
   const maxScore = form.watch("maxScore");
 
@@ -29,14 +29,14 @@ export function GradingStep({ form, isView }: ResultFormStepProps) {
           name="score"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Score</FormLabel>
+              <FormLabel>{dictionary.school.grades.score}</FormLabel>
               <FormControl>
-                <Input 
-                  type="number" 
-                  step="0.01" 
-                  min="0" 
-                  placeholder="0.00" 
-                  disabled={isView} 
+                <Input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  placeholder="0.00"
+                  disabled={isView}
                   {...field}
                   onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                 />
@@ -51,14 +51,14 @@ export function GradingStep({ form, isView }: ResultFormStepProps) {
           name="maxScore"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Max Score</FormLabel>
+              <FormLabel>{dictionary.school.grades.maxScore}</FormLabel>
               <FormControl>
-                <Input 
-                  type="number" 
-                  step="0.01" 
-                  min="0.01" 
-                  placeholder="0.00" 
-                  disabled={isView} 
+                <Input
+                  type="number"
+                  step="0.01"
+                  min="0.01"
+                  placeholder="0.00"
+                  disabled={isView}
                   {...field}
                   onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                 />
@@ -76,11 +76,11 @@ export function GradingStep({ form, isView }: ResultFormStepProps) {
         name="grade"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Grade</FormLabel>
+            <FormLabel>{dictionary.school.grades.grade}</FormLabel>
             <Select onValueChange={field.onChange} value={field.value} disabled={isView}>
               <FormControl>
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select grade" />
+                  <SelectValue placeholder={dictionary.school.grades.selectGrade} />
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
@@ -101,13 +101,13 @@ export function GradingStep({ form, isView }: ResultFormStepProps) {
         name="feedback"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Feedback</FormLabel>
+            <FormLabel>{dictionary.school.grades.feedback}</FormLabel>
             <FormControl>
-              <Textarea 
-                placeholder="Enter feedback for the student..." 
+              <Textarea
+                placeholder={dictionary.school.grades.feedbackPlaceholder}
                 className="min-h-[120px]"
-                disabled={isView} 
-                {...field} 
+                disabled={isView}
+                {...field}
               />
             </FormControl>
             <FormMessage />

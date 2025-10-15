@@ -9,14 +9,16 @@ import { toast } from "sonner";
 interface Props {
   bookId: string;
   schoolId: string;
+  dictionary: any;
 }
 
-export default function BookTableActions({ bookId, schoolId }: Props) {
+export default function BookTableActions({ bookId, schoolId, dictionary }: Props) {
   const [isDeleting, setIsDeleting] = useState(false);
   const router = useRouter();
+  const t = dictionary.school;
 
   const handleDelete = async () => {
-    if (!confirm("Are you sure you want to delete this book?")) {
+    if (!confirm(`${t.common.messages.confirmDelete}?`)) {
       return;
     }
 
@@ -29,10 +31,10 @@ export default function BookTableActions({ bookId, schoolId }: Props) {
         toast.success(result.message);
         router.refresh();
       } else {
-        toast.error(result.error || "Failed to delete book");
+        toast.error(result.error || t.library.messages.bookNotFound);
       }
     } catch (error) {
-      toast.error("An unexpected error occurred");
+      toast.error(t.common.messages.errorOccurred);
     } finally {
       setIsDeleting(false);
     }
@@ -45,7 +47,7 @@ export default function BookTableActions({ bookId, schoolId }: Props) {
         size="sm"
         onClick={() => router.push(`/library/books/${bookId}`)}
       >
-        View
+        {t.common.actions.view}
       </Button>
       <Button
         variant="destructive"
@@ -53,7 +55,7 @@ export default function BookTableActions({ bookId, schoolId }: Props) {
         onClick={handleDelete}
         disabled={isDeleting}
       >
-        {isDeleting ? "Deleting..." : "Delete"}
+        {isDeleting ? t.common.status.deleting : t.common.actions.delete}
       </Button>
     </div>
   );

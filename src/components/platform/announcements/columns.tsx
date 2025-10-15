@@ -19,28 +19,16 @@ export type AnnouncementRow = {
   createdAt: string;
 };
 
-export const getAnnouncementColumns = (dictionary?: Dictionary['school']['announcements']): ColumnDef<AnnouncementRow>[] => {
-  const dict = dictionary || {
-    announcementTitle: "Title",
-    scope: "Scope",
-    published: "Published",
-    draft: "Draft",
-    schoolWide: "School",
-    classSpecific: "Class",
-    roleSpecific: "Role",
-    publish: "Publish",
-    unpublish: "Unpublish",
-    editAnnouncement: "Edit",
-    deleteAnnouncement: "Delete"
-  };
+export const getAnnouncementColumns = (dictionary: Dictionary['school']['announcements']): ColumnDef<AnnouncementRow>[] => {
+  const t = dictionary;
 
   // Map dictionary keys to column structure for easier access
   const columns = {
-    title: dict.announcementTitle || "Title",
-    scope: dict.scope || "Scope",
-    status: "Status",
-    created: "Created",
-    actions: "Actions"
+    title: t.announcementTitle,
+    scope: t.scope,
+    status: t.status,
+    created: t.created,
+    actions: t.actions
   };
 
   return [
@@ -58,9 +46,9 @@ export const getAnnouncementColumns = (dictionary?: Dictionary['school']['announ
       label: columns.scope,
       variant: "select",
       options: [
-        { label: dict.schoolWide || "School", value: "school" },
-        { label: dict.classSpecific || "Class", value: "class" },
-        { label: dict.roleSpecific || "Role", value: "role" },
+        { label: t.schoolWide, value: "school" },
+        { label: t.classSpecific, value: "class" },
+        { label: t.roleSpecific, value: "role" },
       ],
     },
     enableColumnFilter: true,
@@ -70,14 +58,14 @@ export const getAnnouncementColumns = (dictionary?: Dictionary['school']['announ
     header: ({ column }) => <DataTableColumnHeader column={column} title={columns.status} />,
     cell: ({ getValue }) => {
       const is = getValue<boolean>();
-      return <Badge variant={is ? "default" : "outline"}>{is ? dict.published || "Published" : dict.draft || "Draft"}</Badge>;
+      return <Badge variant={is ? "default" : "outline"}>{is ? t.published : t.draft}</Badge>;
     },
     meta: {
       label: columns.status,
       variant: "select",
       options: [
-        { label: dict.published || "Published", value: "true" },
-        { label: dict.draft || "Draft", value: "false" },
+        { label: t.published, value: "true" },
+        { label: t.draft, value: "false" },
       ],
     },
     id: 'published',
@@ -107,17 +95,17 @@ export const getAnnouncementColumns = (dictionary?: Dictionary['school']['announ
           await toggleAnnouncementPublish({ id: announcement.id, publish: !announcement.published });
           // Success toast will be handled by the action
         } catch (e) {
-          ErrorToast(e instanceof Error ? e.message : "Failed to toggle publish status");
+          ErrorToast(e instanceof Error ? e.message : t.failedToTogglePublish);
         }
       };
       const onDelete = async () => {
         try {
-          const ok = await confirmDeleteDialog(`Delete ${announcement.title}?`);
+          const ok = await confirmDeleteDialog(t.confirmDelete.replace('{title}', announcement.title));
           if (!ok) return;
           await deleteAnnouncement({ id: announcement.id });
           DeleteToast();
         } catch (e) {
-          ErrorToast(e instanceof Error ? e.message : "Failed to delete");
+          ErrorToast(e instanceof Error ? e.message : t.failedToDelete);
         }
       };
       return (
@@ -125,18 +113,18 @@ export const getAnnouncementColumns = (dictionary?: Dictionary['school']['announ
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="h-8 w-8 p-0">
               <MoreHorizontal className="h-4 w-4" />
-              <span className="sr-only">Open menu</span>
+              <span className="sr-only">{t.openMenu}</span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>{columns.actions}</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={onView}>View</DropdownMenuItem>
-            <DropdownMenuItem onClick={onEdit}>{dict.editAnnouncement || "Edit"}</DropdownMenuItem>
+            <DropdownMenuItem onClick={onView}>{t.view}</DropdownMenuItem>
+            <DropdownMenuItem onClick={onEdit}>{t.editAnnouncement}</DropdownMenuItem>
             <DropdownMenuItem onClick={onToggle}>
-              {announcement.published ? dict.unpublish || "Unpublish" : dict.publish || "Publish"}
+              {announcement.published ? t.unpublish : t.publish}
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={onDelete}>{dict.deleteAnnouncement || "Delete"}</DropdownMenuItem>
+            <DropdownMenuItem onClick={onDelete}>{t.deleteAnnouncement}</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       );
@@ -146,9 +134,6 @@ export const getAnnouncementColumns = (dictionary?: Dictionary['school']['announ
   },
   ];
 }
-
-// Export a default version for backward compatibility
-export const announcementColumns = getAnnouncementColumns();
 
 
 

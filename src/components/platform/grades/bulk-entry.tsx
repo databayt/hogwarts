@@ -31,6 +31,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { Save, Download, Upload } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { type Dictionary } from '@/components/internationalization/dictionaries';
+import { type Locale } from '@/components/internationalization/config';
+import { formatNumber, formatPercentage } from '@/lib/i18n-format';
 
 interface Student {
   id: string;
@@ -54,6 +57,8 @@ interface BulkGradeEntryProps {
   students: Student[];
   gradeScale?: Array<{ min: number; max: number; grade: string }>;
   onSave: (entries: BulkGradeEntry[]) => Promise<void>;
+  dictionary: Dictionary;
+  locale: Locale;
 }
 
 export function BulkGradeEntry({
@@ -70,6 +75,8 @@ export function BulkGradeEntry({
     { min: 0, max: 59, grade: 'F' },
   ],
   onSave,
+  dictionary,
+  locale,
 }: BulkGradeEntryProps) {
   const [entries, setEntries] = useState<Map<string, BulkGradeEntry>>(
     new Map(students.map(s => [s.id, { studentId: s.id, score: '', grade: '', feedback: '' }]))
@@ -127,12 +134,12 @@ export function BulkGradeEntry({
 
     return {
       count: scores.length,
-      average: avg.toFixed(2),
-      median: median.toFixed(2),
-      highest: Math.max(...scores).toFixed(2),
-      lowest: Math.min(...scores).toFixed(2),
+      average: formatNumber(avg, locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+      median: formatNumber(median, locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+      highest: formatNumber(Math.max(...scores), locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+      lowest: formatNumber(Math.min(...scores), locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
     };
-  }, [entries]);
+  }, [entries, locale]);
 
   // Save all entries
   const handleSave = async () => {
@@ -140,13 +147,13 @@ export function BulkGradeEntry({
     try {
       const validEntries = Array.from(entries.values()).filter(e => typeof e.score === 'number');
       if (validEntries.length === 0) {
-        toast.error('No grades to save');
+        toast.error(dictionary.school.grades.noGradesToSave);
         return;
       }
       await onSave(validEntries);
-      toast.success(`Saved ${validEntries.length} grades`);
+      toast.success(dictionary.school.grades.savedGrades.replace('{count}', validEntries.length.toString()));
     } catch (error) {
-      toast.error('Failed to save grades');
+      toast.error(dictionary.school.grades.failedToSave);
     } finally {
       setSaving(false);
     }
@@ -154,15 +161,22 @@ export function BulkGradeEntry({
 
   // Export to CSV
   const exportToCSV = () => {
-    const headers = ['Student ID', 'Name', 'Score', 'Grade', 'Percentage', 'Feedback'];
+    const headers = [
+      dictionary.school.students.studentId,
+      dictionary.school.students.fullName,
+      dictionary.school.grades.score,
+      dictionary.school.grades.grade,
+      dictionary.school.grades.percentage,
+      dictionary.school.grades.feedback
+    ];
     const rows = students.map(student => {
       const entry = entries.get(student.id);
       const score = entry?.score || '';
-      const percentage = typeof score === 'number' ? ((score / maxScore) * 100).toFixed(2) : '';
+      const percentage = typeof score === 'number' ? formatNumber((score / maxScore) * 100, locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '';
       return [
         student.studentId || student.id,
         `${student.givenName} ${student.surname}`,
-        score.toString(),
+        typeof score === 'number' ? formatNumber(score, locale) : '',
         entry?.grade || '',
         percentage,
         entry?.feedback || '',
@@ -194,7 +208,7 @@ export function BulkGradeEntry({
       const feedbackIndex = headers.findIndex(h => h.toLowerCase().includes('feedback'));
 
       if (scoreIndex === -1) {
-        toast.error('CSV must contain a Score column');
+        toast.error(dictionary.school.grades.csvMustContainScore);
         return;
       }
 
@@ -218,7 +232,7 @@ export function BulkGradeEntry({
       });
 
       setEntries(newEntries);
-      toast.success('Grades imported successfully');
+      toast.success(dictionary.school.grades.importedSuccessfully);
     };
     reader.readAsText(file);
   };
@@ -227,9 +241,9 @@ export function BulkGradeEntry({
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Bulk Grade Entry</CardTitle>
+          <CardTitle>{dictionary.school.grades.bulkEntry}</CardTitle>
           <CardDescription>
-            Enter grades for all students in the class. Max score: {maxScore}
+            {dictionary.school.grades.bulkEntryDescription.replace('{maxScore}', formatNumber(maxScore, locale))}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -242,12 +256,12 @@ export function BulkGradeEntry({
                 onChange={(e) => setAutoCalculateGrades(e.target.checked)}
                 className="rounded border-gray-300"
               />
-              <Label htmlFor="auto-grade">Auto-calculate grades</Label>
+              <Label htmlFor="auto-grade">{dictionary.school.grades.autoCalculateGrades}</Label>
             </div>
 
             <Button variant="outline" size="sm" onClick={exportToCSV}>
               <Download className="h-4 w-4 mr-2" />
-              Export CSV
+              {dictionary.school.grades.exportCSV}
             </Button>
 
             <div>
@@ -261,7 +275,7 @@ export function BulkGradeEntry({
               <Button variant="outline" size="sm" asChild>
                 <label htmlFor="import-csv" className="cursor-pointer">
                   <Upload className="h-4 w-4 mr-2" />
-                  Import CSV
+                  {dictionary.school.grades.importCSV}
                 </label>
               </Button>
             </div>
@@ -272,18 +286,18 @@ export function BulkGradeEntry({
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-[50px]">#</TableHead>
-                  <TableHead>Student Name</TableHead>
-                  <TableHead className="w-[120px]">Score</TableHead>
-                  <TableHead className="w-[100px]">Grade</TableHead>
-                  <TableHead className="w-[100px]">%</TableHead>
-                  <TableHead>Feedback</TableHead>
+                  <TableHead>{dictionary.school.grades.studentName}</TableHead>
+                  <TableHead className="w-[120px]">{dictionary.school.grades.score}</TableHead>
+                  <TableHead className="w-[100px]">{dictionary.school.grades.grade}</TableHead>
+                  <TableHead className="w-[100px]">{dictionary.school.grades.percentage}</TableHead>
+                  <TableHead>{dictionary.school.grades.feedback}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {students.map((student, idx) => {
                   const entry = entries.get(student.id);
                   const percentage = typeof entry?.score === 'number'
-                    ? ((entry.score / maxScore) * 100).toFixed(1)
+                    ? formatNumber((entry.score / maxScore) * 100, locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })
                     : '';
 
                   return (
@@ -348,7 +362,7 @@ export function BulkGradeEntry({
                         <Textarea
                           value={entry?.feedback || ''}
                           onChange={(e) => updateEntry(student.id, 'feedback', e.target.value)}
-                          placeholder="Optional feedback..."
+                          placeholder={dictionary.school.grades.optionalFeedback}
                           className="min-h-[38px] h-[38px] resize-none"
                           rows={1}
                         />
@@ -363,28 +377,28 @@ export function BulkGradeEntry({
           {stats && (
             <Card className="mt-4">
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm">Statistics</CardTitle>
+                <CardTitle className="text-sm">{dictionary.school.grades.statistics}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-5 gap-4 text-sm">
                   <div>
-                    <div className="text-muted-foreground">Graded</div>
-                    <div className="font-medium">{stats.count}/{students.length}</div>
+                    <div className="text-muted-foreground">{dictionary.school.grades.graded}</div>
+                    <div className="font-medium">{formatNumber(stats.count, locale)}/{formatNumber(students.length, locale)}</div>
                   </div>
                   <div>
-                    <div className="text-muted-foreground">Average</div>
+                    <div className="text-muted-foreground">{dictionary.school.grades.average}</div>
                     <div className="font-medium">{stats.average}</div>
                   </div>
                   <div>
-                    <div className="text-muted-foreground">Median</div>
+                    <div className="text-muted-foreground">{dictionary.school.grades.median}</div>
                     <div className="font-medium">{stats.median}</div>
                   </div>
                   <div>
-                    <div className="text-muted-foreground">Highest</div>
+                    <div className="text-muted-foreground">{dictionary.school.grades.highest}</div>
                     <div className="font-medium text-green-600">{stats.highest}</div>
                   </div>
                   <div>
-                    <div className="text-muted-foreground">Lowest</div>
+                    <div className="text-muted-foreground">{dictionary.school.grades.lowest}</div>
                     <div className="font-medium text-red-600">{stats.lowest}</div>
                   </div>
                 </div>
@@ -395,7 +409,7 @@ export function BulkGradeEntry({
           <div className="flex justify-end mt-4">
             <Button onClick={handleSave} disabled={saving}>
               <Save className="h-4 w-4 mr-2" />
-              {saving ? 'Saving...' : 'Save All Grades'}
+              {saving ? dictionary.school.grades.saving : dictionary.school.grades.saveGrades}
             </Button>
           </div>
         </CardContent>

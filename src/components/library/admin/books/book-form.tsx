@@ -30,16 +30,20 @@ import { BOOK_GENRES } from "../../config";
 import { createBook } from "../../actions";
 import ColorPicker from "./color-picker";
 import FileUpload from "./file-upload";
+import { type Locale } from "@/components/internationalization/config";
 
 interface Props {
   type?: "create" | "update";
   bookData?: Partial<BookSchema>;
   schoolId: string;
+  dictionary: any;
+  lang: Locale;
 }
 
-export default function BookForm({ type = "create", bookData, schoolId }: Props) {
+export default function BookForm({ type = "create", bookData, schoolId, dictionary, lang }: Props) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const t = dictionary.school;
 
   const form = useForm<BookSchema>({
     resolver: zodResolver(bookSchema),
@@ -71,10 +75,10 @@ export default function BookForm({ type = "create", bookData, schoolId }: Props)
         router.push("/library/admin/books");
         router.refresh();
       } else {
-        toast.error(result.error || "Failed to create book");
+        toast.error(result.error || t.library.messages.bookNotFound);
       }
     } catch (error) {
-      toast.error("An unexpected error occurred");
+      toast.error(t.common.messages.errorOccurred);
     } finally {
       setIsSubmitting(false);
     }
@@ -88,10 +92,10 @@ export default function BookForm({ type = "create", bookData, schoolId }: Props)
           name="title"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Book Title</FormLabel>
+              <FormLabel>{t.library.admin.bookTitle}</FormLabel>
               <FormControl>
                 <Input
-                  placeholder="Enter book title"
+                  placeholder={t.library.admin.bookTitle}
                   {...field}
                 />
               </FormControl>
@@ -105,10 +109,10 @@ export default function BookForm({ type = "create", bookData, schoolId }: Props)
           name="author"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Author</FormLabel>
+              <FormLabel>{t.library.admin.bookAuthor}</FormLabel>
               <FormControl>
                 <Input
-                  placeholder="Enter author name"
+                  placeholder={t.library.admin.bookAuthor}
                   {...field}
                 />
               </FormControl>
@@ -122,11 +126,11 @@ export default function BookForm({ type = "create", bookData, schoolId }: Props)
           name="genre"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Genre</FormLabel>
+              <FormLabel>{t.library.admin.bookGenre}</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select a genre" />
+                    <SelectValue placeholder={t.library.admin.selectGenre} />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
@@ -147,14 +151,14 @@ export default function BookForm({ type = "create", bookData, schoolId }: Props)
           name="rating"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Rating (0-5)</FormLabel>
+              <FormLabel>{t.library.admin.bookRating}</FormLabel>
               <FormControl>
                 <Input
                   type="number"
                   min={0}
                   max={5}
                   step={0.1}
-                  placeholder="Enter rating"
+                  placeholder={t.library.admin.enterRating}
                   {...field}
                   onChange={(e) => field.onChange(parseFloat(e.target.value))}
                 />
@@ -169,12 +173,12 @@ export default function BookForm({ type = "create", bookData, schoolId }: Props)
           name="totalCopies"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Total Copies</FormLabel>
+              <FormLabel>{t.library.admin.totalCopies}</FormLabel>
               <FormControl>
                 <Input
                   type="number"
                   min={1}
-                  placeholder="Enter total copies"
+                  placeholder={t.library.admin.totalCopies}
                   {...field}
                   onChange={(e) => field.onChange(parseInt(e.target.value))}
                 />
@@ -189,13 +193,13 @@ export default function BookForm({ type = "create", bookData, schoolId }: Props)
           name="coverUrl"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Book Cover Image</FormLabel>
+              <FormLabel>{t.library.admin.bookCover}</FormLabel>
               <FormControl>
                 <FileUpload
                   value={field.value}
                   onChange={field.onChange}
                   accept="image"
-                  placeholder="Upload book cover"
+                  placeholder={t.library.admin.uploadBookCover}
                 />
               </FormControl>
               <FormMessage />
@@ -208,7 +212,7 @@ export default function BookForm({ type = "create", bookData, schoolId }: Props)
           name="coverColor"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Cover Background Color</FormLabel>
+              <FormLabel>{t.library.admin.coverColor}</FormLabel>
               <FormControl>
                 <ColorPicker
                   value={field.value}
@@ -225,13 +229,13 @@ export default function BookForm({ type = "create", bookData, schoolId }: Props)
           name="videoUrl"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Book Trailer (Optional)</FormLabel>
+              <FormLabel>{t.library.admin.bookTrailer}</FormLabel>
               <FormControl>
                 <FileUpload
                   value={field.value || ""}
                   onChange={field.onChange}
                   accept="video"
-                  placeholder="Upload book trailer"
+                  placeholder={t.library.admin.uploadBookTrailer}
                 />
               </FormControl>
               <FormMessage />
@@ -244,10 +248,10 @@ export default function BookForm({ type = "create", bookData, schoolId }: Props)
           name="description"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Description</FormLabel>
+              <FormLabel>{t.library.admin.bookDescription}</FormLabel>
               <FormControl>
                 <Textarea
-                  placeholder="Enter book description"
+                  placeholder={t.library.admin.bookDescription}
                   rows={5}
                   {...field}
                 />
@@ -262,10 +266,10 @@ export default function BookForm({ type = "create", bookData, schoolId }: Props)
           name="summary"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Summary</FormLabel>
+              <FormLabel>{t.library.admin.bookSummary}</FormLabel>
               <FormControl>
                 <Textarea
-                  placeholder="Enter book summary"
+                  placeholder={t.library.admin.bookSummary}
                   rows={4}
                   {...field}
                 />
@@ -281,10 +285,10 @@ export default function BookForm({ type = "create", bookData, schoolId }: Props)
             variant="outline"
             onClick={() => router.back()}
           >
-            Cancel
+            {t.library.admin.cancel}
           </Button>
           <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Creating..." : "Add Book to Library"}
+            {isSubmitting ? t.library.admin.creating : t.library.admin.addBookToLibrary}
           </Button>
         </div>
       </form>

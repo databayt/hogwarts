@@ -5,6 +5,7 @@ import { Progress } from "@/components/ui/progress";
 import { type UseFormReturn } from "react-hook-form";
 import { z } from "zod";
 import { announcementCreateSchema } from "./validation";
+import type { Dictionary } from "@/components/internationalization/dictionaries";
 
 interface FooterProps {
   currentStep: number;
@@ -14,11 +15,18 @@ interface FooterProps {
   onNext: () => void;
   onSaveCurrentStep: () => void;
   form: UseFormReturn<z.infer<typeof announcementCreateSchema>>;
+  dictionary: Dictionary['school']['announcements'];
 }
 
-import { STEPS, STEP_FIELDS, TOTAL_FIELDS } from "./config";
+import { STEP_FIELDS, TOTAL_FIELDS } from "./config";
 
-export function AnnouncementFormFooter({ currentStep, isView, currentId, onBack, onNext, onSaveCurrentStep, form }: FooterProps) {
+export function AnnouncementFormFooter({ currentStep, isView, currentId, onBack, onNext, onSaveCurrentStep, form, dictionary }: FooterProps) {
+  const t = dictionary;
+
+  const steps = {
+    1: t.basicInformation,
+    2: t.scopeAndPublishing
+  };
   // Calculate progress based on filled fields
   // Watch all form fields for changes
   const values = form.watch();
@@ -44,39 +52,39 @@ export function AnnouncementFormFooter({ currentStep, isView, currentId, onBack,
       <div className="py-3">
         <Progress value={progressPercentage} className="h-1" />
       </div>
-      
+
       <div className="flex items-center justify-between ">
         <div className="text-sm font-medium text-muted-foreground">
-          {STEPS[currentStep as keyof typeof STEPS]}
+          {steps[currentStep as keyof typeof steps]}
         </div>
         <div className="flex gap-3">
-          <Button 
-            type="button" 
+          <Button
+            type="button"
             size="sm"
-            variant="ghost" 
+            variant="ghost"
             onClick={onBack}
           >
-            {currentStep === 1 ? 'Cancel' : 'Back'}
+            {currentStep === 1 ? t.cancel : t.back}
           </Button>
           {!isView && (
             <>
               {currentId && currentStep === 1 && (
-                <Button 
+                <Button
                   type="button"
                   size="sm"
                   variant="outline"
                   onClick={onSaveCurrentStep}
                   disabled={!form.formState.isDirty}
                 >
-                  Save
+                  {t.save}
                 </Button>
               )}
-              <Button 
+              <Button
                 type="button"
                 size="sm"
                 onClick={onNext}
               >
-                {currentStep === 1 ? 'Next' : currentId ? 'Save' : 'Create'}
+                {currentStep === 1 ? t.next : currentId ? t.save : t.create}
               </Button>
             </>
           )}

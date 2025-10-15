@@ -6,15 +6,18 @@ import { db } from '@/lib/db'
 import { getTenantContext } from '@/lib/tenant-context'
 import { Shell as PageContainer } from '@/components/table/shell'
 import type { Dictionary } from '@/components/internationalization/dictionaries'
+import type { Locale } from '@/components/internationalization/config'
 
 interface Props {
   searchParams: Promise<SearchParams>
-  dictionary?: Dictionary['school']
+  dictionary: Dictionary['school']
+  lang: Locale
 }
 
-export default async function AnnouncementsContent({ searchParams, dictionary }: Props) {
+export default async function AnnouncementsContent({ searchParams, dictionary, lang }: Props) {
   const sp = await announcementsSearchParams.parse(await searchParams)
   const { schoolId } = await getTenantContext()
+  const t = dictionary.announcements
   let data: AnnouncementRow[] = []
   let total = 0
   if (schoolId) {
@@ -46,10 +49,10 @@ export default async function AnnouncementsContent({ searchParams, dictionary }:
     <PageContainer>
       <div className="flex flex-1 flex-col gap-4">
         <div>
-          <h1>{dictionary?.announcements?.title || 'Announcements'}</h1>
-          <p className="text-sm text-muted-foreground">Create and manage announcements for your school</p>
+          <h1>{t.title}</h1>
+          <p className="muted">{t.description}</p>
         </div>
-        <AnnouncementsTable data={data} pageCount={Math.max(1, Math.ceil(total / (sp.perPage || 20)))} dictionary={dictionary?.announcements} />
+        <AnnouncementsTable data={data} pageCount={Math.max(1, Math.ceil(total / (sp.perPage || 20)))} dictionary={t} lang={lang} />
       </div>
     </PageContainer>
   )

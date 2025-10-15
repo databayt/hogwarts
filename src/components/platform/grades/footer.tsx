@@ -5,6 +5,7 @@ import { Progress } from "@/components/ui/progress";
 import { type UseFormReturn } from "react-hook-form";
 import { z } from "zod";
 import { resultCreateSchema } from "./validation";
+import { type Dictionary } from "@/components/internationalization/dictionaries";
 
 interface FooterProps {
   currentStep: number;
@@ -14,11 +15,12 @@ interface FooterProps {
   onNext: () => void;
   onSaveCurrentStep: () => void;
   form: UseFormReturn<z.infer<typeof resultCreateSchema>>;
+  dictionary: Dictionary;
 }
 
-import { STEPS, STEP_FIELDS, TOTAL_FIELDS } from "./config";
+import { STEP_FIELDS, TOTAL_FIELDS } from "./config";
 
-export function ResultFormFooter({ currentStep, isView, currentId, onBack, onNext, onSaveCurrentStep, form }: FooterProps) {
+export function ResultFormFooter({ currentStep, isView, currentId, onBack, onNext, onSaveCurrentStep, form, dictionary }: FooterProps) {
   // Calculate progress based on filled fields
   // Watch all form fields for changes
   const values = form.watch();
@@ -45,36 +47,36 @@ export function ResultFormFooter({ currentStep, isView, currentId, onBack, onNex
       
       <div className="flex items-center justify-between ">
         <div className="text-sm font-medium text-muted-foreground">
-          {STEPS[currentStep as keyof typeof STEPS]}
+          {currentStep === 1 ? dictionary.school.grades.studentAssignmentInfo : dictionary.school.grades.gradingInfo}
         </div>
         <div className="flex gap-3">
-          <Button 
-            type="button" 
+          <Button
+            type="button"
             size="sm"
-            variant="ghost" 
+            variant="ghost"
             onClick={onBack}
           >
-            {currentStep === 1 ? 'Cancel' : 'Back'}
+            {currentStep === 1 ? dictionary.school.common.actions.cancel : dictionary.school.grades.back}
           </Button>
           {!isView && (
             <>
               {currentId && currentStep === 1 && (
-                <Button 
+                <Button
                   type="button"
                   size="sm"
                   variant="outline"
                   onClick={onSaveCurrentStep}
                   disabled={!form.formState.isDirty}
                 >
-                  Save
+                  {dictionary.school.common.actions.save}
                 </Button>
               )}
-              <Button 
+              <Button
                 type="button"
                 size="sm"
                 onClick={onNext}
               >
-                {currentStep === 1 ? 'Next' : currentId ? 'Save' : 'Create'}
+                {currentStep === 1 ? dictionary.school.grades.next : currentId ? dictionary.school.common.actions.save : dictionary.school.grades.createResult}
               </Button>
             </>
           )}

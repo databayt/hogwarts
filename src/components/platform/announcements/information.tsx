@@ -6,10 +6,17 @@ import { announcementCreateSchema } from "./validation";
 import { FormControl, FormField, FormItem, FormMessage, FormLabel } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import type { Dictionary } from "@/components/internationalization/dictionaries";
 
 import { AnnouncementFormStepProps } from "./types";
 
-export function InformationStep({ form, isView }: AnnouncementFormStepProps) {
+interface InformationStepProps extends AnnouncementFormStepProps {
+  dictionary: Dictionary['school']['announcements'];
+}
+
+export function InformationStep({ form, isView, dictionary }: InformationStepProps) {
+  const t = dictionary;
+
   return (
     <div className="space-y-4 w-full">
       <FormField
@@ -17,9 +24,9 @@ export function InformationStep({ form, isView }: AnnouncementFormStepProps) {
         name="title"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Title</FormLabel>
+            <FormLabel>{t.titleLabel}</FormLabel>
             <FormControl>
-              <Input placeholder="Announcement title" disabled={isView} {...field} />
+              <Input placeholder={t.titlePlaceholder} disabled={isView} {...field} />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -31,13 +38,13 @@ export function InformationStep({ form, isView }: AnnouncementFormStepProps) {
         name="body"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Content</FormLabel>
+            <FormLabel>{t.contentLabel}</FormLabel>
             <FormControl>
-              <Textarea 
-                placeholder="Announcement content..." 
+              <Textarea
+                placeholder={t.contentPlaceholder}
                 className="min-h-[120px]"
-                disabled={isView} 
-                {...field} 
+                disabled={isView}
+                {...field}
               />
             </FormControl>
             <FormMessage />

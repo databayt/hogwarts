@@ -2,6 +2,8 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import type { Locale } from "@/components/internationalization/config";
+import { formatCurrency } from "@/lib/i18n-format";
 
 interface MRRData {
   month: string;
@@ -11,17 +13,10 @@ interface MRRData {
 
 interface MRRChartProps {
   data: MRRData[];
+  lang: Locale;
 }
 
-export function MRRChart({ data }: MRRChartProps) {
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(value);
-  };
+export function MRRChart({ data, lang }: MRRChartProps) {
 
   return (
     <Card>
@@ -47,7 +42,7 @@ export function MRRChart({ data }: MRRChartProps) {
             <YAxis
               className="text-xs"
               tick={{ fill: 'hsl(var(--muted-foreground))' }}
-              tickFormatter={formatCurrency}
+              tickFormatter={(value) => formatCurrency(value, lang, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
             />
             <Tooltip
               content={({ active, payload }) => {
@@ -58,7 +53,7 @@ export function MRRChart({ data }: MRRChartProps) {
                       <div className="grid gap-2">
                         <div className="flex flex-col">
                           <span className="text-xs text-muted-foreground">{data.month}</span>
-                          <span className="font-bold">{formatCurrency(data.mrr)}</span>
+                          <span className="font-bold">{formatCurrency(data.mrr, lang, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>
                         </div>
                         <div className="flex items-center gap-2">
                           <span className="text-xs text-muted-foreground">Schools:</span>

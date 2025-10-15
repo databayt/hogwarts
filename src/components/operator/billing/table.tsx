@@ -7,11 +7,14 @@ import { useDataTable } from "@/components/table/hooks/use-data-table";
 import type { InvoiceRow } from "./columns";
 import { Button } from "@/components/ui/button";
 import { exportTableToCSV } from "@/components/table/lib/export";
+import type { Locale } from "@/components/internationalization/config";
+import { getInvoiceColumns } from "./columns";
 
-export function InvoicesTable({ data, columns, pageCount }: { data: InvoiceRow[]; columns: ColumnDef<InvoiceRow, unknown>[]; pageCount: number }) {
+export function InvoicesTable({ data, columns, pageCount, lang }: { data: InvoiceRow[]; columns?: ColumnDef<InvoiceRow, unknown>[]; pageCount: number; lang: Locale }) {
+  const actualColumns = columns || getInvoiceColumns(lang);
   const { table } = useDataTable<InvoiceRow>({
     data,
-    columns,
+    columns: actualColumns,
     pageCount,
   });
 

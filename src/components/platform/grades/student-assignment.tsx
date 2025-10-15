@@ -9,7 +9,7 @@ import { useEffect, useState } from "react";
 
 import { ResultFormStepProps } from "./types";
 
-export function StudentAssignmentStep({ form, isView }: ResultFormStepProps) {
+export function StudentAssignmentStep({ form, isView, dictionary }: ResultFormStepProps) {
   const [students, setStudents] = useState<Array<{ id: string; givenName: string; surname: string }>>([]);
   const [assignments, setAssignments] = useState<Array<{ id: string; title: string; totalPoints: number }>>([]);
   const [classes, setClasses] = useState<Array<{ id: string; name: string }>>([]);
@@ -58,11 +58,11 @@ export function StudentAssignmentStep({ form, isView }: ResultFormStepProps) {
         name="studentId"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Student</FormLabel>
+            <FormLabel>{dictionary.school.grades.student}</FormLabel>
             <Select onValueChange={field.onChange} value={field.value} disabled={isView}>
               <FormControl>
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select student" />
+                  <SelectValue placeholder={dictionary.school.grades.selectStudent} />
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
@@ -83,17 +83,17 @@ export function StudentAssignmentStep({ form, isView }: ResultFormStepProps) {
         name="assignmentId"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Assignment</FormLabel>
+            <FormLabel>{dictionary.school.grades.assignment}</FormLabel>
             <Select onValueChange={field.onChange} value={field.value} disabled={isView}>
               <FormControl>
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select assignment" />
+                  <SelectValue placeholder={dictionary.school.grades.selectAssignment} />
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
                 {assignments.map((assignment) => (
                   <SelectItem key={assignment.id} value={assignment.id}>
-                    {assignment.title} ({assignment.totalPoints} points)
+                    {assignment.title} ({assignment.totalPoints} {dictionary.school.grades.points})
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -108,11 +108,11 @@ export function StudentAssignmentStep({ form, isView }: ResultFormStepProps) {
         name="classId"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Class</FormLabel>
+            <FormLabel>{dictionary.school.grades.class}</FormLabel>
             <Select onValueChange={field.onChange} value={field.value} disabled={isView}>
               <FormControl>
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select class" />
+                  <SelectValue placeholder={dictionary.school.grades.selectClass} />
                 </SelectTrigger>
               </FormControl>
               <SelectContent>

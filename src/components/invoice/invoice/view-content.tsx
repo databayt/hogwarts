@@ -5,6 +5,7 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import type { Locale } from "@/components/internationalization/config";
+import { formatCurrency, formatDate } from "@/lib/i18n-format";
 
 interface InvoiceViewProps {
   invoiceId: string;
@@ -12,7 +13,7 @@ interface InvoiceViewProps {
   lang?: Locale;
 }
 
-export default function ViewInvoiceModalContent({ invoiceId, dictionary, lang }: InvoiceViewProps) {
+export default function ViewInvoiceModalContent({ invoiceId, dictionary, lang = 'en' }: InvoiceViewProps) {
   const [invoice, setInvoice] = useState<any | null>(null);
 
   useEffect(() => {
@@ -29,11 +30,6 @@ export default function ViewInvoiceModalContent({ invoiceId, dictionary, lang }:
   }, [invoiceId]);
 
   if (!invoice) return <div className="p-6">Loading...</div>;
-
-  const totalAmountInCurrencyFormat = new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: invoice.currency || "USD",
-  }).format(invoice.total);
 
   return (
     <div className="p-6 max-w-3xl w-full">
@@ -61,11 +57,11 @@ export default function ViewInvoiceModalContent({ invoiceId, dictionary, lang }:
       <div className="grid grid-cols-2 gap-6 mb-6 text-sm">
         <div>
           <span className="font-medium">Invoice Date</span>
-          <p>{format(new Date(invoice.invoice_date), "PPP")}</p>
+          <p>{formatDate(invoice.invoice_date, lang)}</p>
         </div>
         <div>
           <span className="font-medium">Due Date</span>
-          <p>{format(new Date(invoice.due_date), "PPP")}</p>
+          <p>{formatDate(invoice.due_date, lang)}</p>
         </div>
       </div>
 
@@ -83,20 +79,12 @@ export default function ViewInvoiceModalContent({ invoiceId, dictionary, lang }:
         <tbody>
           {invoice.items.map((item: any) => {
             const itemTotal = item.quantity * item.price;
-            const itemTotalFormatted = new Intl.NumberFormat("en-US", {
-              style: "currency",
-              currency: invoice.currency || "USD",
-            }).format(itemTotal);
-            const priceFormatted = new Intl.NumberFormat("en-US", {
-              style: "currency",
-              currency: invoice.currency || "USD",
-            }).format(item.price);
             return (
               <tr key={item.id} className="border-b">
                 <td className="py-2">{item.item_name}</td>
                 <td className="text-right py-2">{item.quantity}</td>
-                <td className="text-right py-2">{priceFormatted}</td>
-                <td className="text-right py-2">{itemTotalFormatted}</td>
+                <td className="text-right py-2">{formatCurrency(item.price, lang)}</td>
+                <td className="text-right py-2">{formatCurrency(itemTotal, lang)}</td>
               </tr>
             );
           })}
@@ -107,7 +95,7 @@ export default function ViewInvoiceModalContent({ invoiceId, dictionary, lang }:
         <div className="w-56">
           <div className="flex justify-between py-2">
             <span className="font-medium">Total</span>
-            <span className="font-bold">{totalAmountInCurrencyFormat}</span>
+            <span className="font-bold">{formatCurrency(invoice.total, lang)}</span>
           </div>
         </div>
       </div>

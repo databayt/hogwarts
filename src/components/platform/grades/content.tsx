@@ -77,10 +77,10 @@ export default async function ResultsContent({ searchParams, dictionary, lang }:
     <PageContainer>
       <div className="flex flex-1 flex-col gap-4">
         <div>
-          <h1 className="text-xl font-semibold">Results</h1>
-          <p className="text-sm text-muted-foreground">Manage academic results and grades</p>
+          <h1>{dictionary.school.grades.results}</h1>
+          <p className="muted">{dictionary.school.grades.manageResults}</p>
         </div>
-        <ResultsTable data={data} columns={resultColumns} pageCount={Math.max(1, Math.ceil(total / (sp.perPage || 20)))} />
+        <ResultsTable data={data} columns={resultColumns(dictionary, lang)} pageCount={Math.max(1, Math.ceil(total / (sp.perPage || 20)))} />
       </div>
     </PageContainer>
   )

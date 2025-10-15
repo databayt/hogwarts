@@ -24,6 +24,7 @@ import { useModal } from "@/components/atom/modal/context";
 import Modal from "@/components/atom/modal/modal";
 import CreateEditInvoiceModalContent from "@/components/invoice/invoice/create-edit-content";
 import type { Locale } from "@/components/internationalization/config";
+import { formatCurrency, formatDate } from "@/lib/i18n-format";
 
 interface IInvoiceClientPage {
   currency: string | undefined;
@@ -80,15 +81,14 @@ export default function InvoiceClientPage({ userId, currency = "USD", dictionary
 
   const columns: ColumnDef<Invoice>[] = [
     { accessorKey: "invoice_no", header: "Invoice No" },
-    { accessorKey: "invoice_date", header: "Date", cell: ({ row }) => format(row.original.invoice_date, "PP") },
-    { accessorKey: "due_date", header: "Due", cell: ({ row }) => format(row.original.due_date, "PP") },
+    { accessorKey: "invoice_date", header: "Date", cell: ({ row }) => formatDate(row.original.invoice_date, lang) },
+    { accessorKey: "due_date", header: "Due", cell: ({ row }) => formatDate(row.original.due_date, lang) },
     { accessorKey: "to.name", header: "Client Name" },
     {
       accessorKey: "total",
       header: "Amount",
       cell: ({ row }) => {
-        const currencyCode = row.original.currency || currency || "USD";
-        return new Intl.NumberFormat("en-US", { style: "currency", currency: currencyCode }).format(row.original.total);
+        return formatCurrency(row.original.total, lang);
       },
     },
     { accessorKey: "status", header: "Status", cell: ({ row }) => <Badge>{row.original.status}</Badge> },

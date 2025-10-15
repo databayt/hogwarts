@@ -8,6 +8,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { useModal } from "@/components/atom/modal/context";
 import { deleteResult } from "@/components/platform/grades/actions";
 import { DeleteToast, ErrorToast, confirmDeleteDialog } from "@/components/atom/toast";
+import { type Dictionary } from "@/components/internationalization/dictionaries";
+import { type Locale } from "@/components/internationalization/config";
 
 export type ResultRow = {
   id: string;
@@ -21,71 +23,77 @@ export type ResultRow = {
   createdAt: string;
 };
 
-export const resultColumns: ColumnDef<ResultRow>[] = [
+export const resultColumns = (dictionary: Dictionary, locale: Locale = 'en'): ColumnDef<ResultRow>[] => [
   {
     accessorKey: "studentName",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Student" />,
-    meta: { label: "Student", variant: "text" },
+    header: ({ column }) => <DataTableColumnHeader column={column} title={dictionary.school.grades.student} />,
+    meta: { label: dictionary.school.grades.student, variant: "text" },
     id: 'studentName',
     enableColumnFilter: true,
   },
   {
     accessorKey: "assignmentTitle",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Assignment" />,
-    meta: { label: "Assignment", variant: "text" },
+    header: ({ column }) => <DataTableColumnHeader column={column} title={dictionary.school.grades.assignment} />,
+    meta: { label: dictionary.school.grades.assignment, variant: "text" },
     id: 'assignmentTitle',
     enableColumnFilter: true,
   },
   {
     accessorKey: "className",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Class" />,
-    meta: { label: "Class", variant: "text" },
+    header: ({ column }) => <DataTableColumnHeader column={column} title={dictionary.school.grades.class} />,
+    meta: { label: dictionary.school.grades.class, variant: "text" },
     id: 'className',
     enableColumnFilter: true,
   },
   {
     accessorKey: "score",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Score" />,
-    meta: { label: "Score", variant: "number" },
+    header: ({ column }) => <DataTableColumnHeader column={column} title={dictionary.school.grades.score} />,
+    meta: { label: dictionary.school.grades.score, variant: "number" },
     id: 'score',
     enableColumnFilter: true,
   },
   {
     accessorKey: "maxScore",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Max Score" />,
-    meta: { label: "Max Score", variant: "number" },
+    header: ({ column }) => <DataTableColumnHeader column={column} title={dictionary.school.grades.maxScore} />,
+    meta: { label: dictionary.school.grades.maxScore, variant: "number" },
     id: 'maxScore',
     enableColumnFilter: true,
   },
   {
     accessorKey: "percentage",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Percentage" />,
-    meta: { label: "Percentage", variant: "number" },
+    header: ({ column }) => <DataTableColumnHeader column={column} title={dictionary.school.grades.percentage} />,
+    meta: { label: dictionary.school.grades.percentage, variant: "number" },
     id: 'percentage',
-    cell: ({ getValue }) => (
-      <span className="text-xs tabular-nums text-muted-foreground">
-        {(getValue<number>() || 0).toFixed(1)}%
-      </span>
-    ),
+    cell: ({ getValue }) => {
+      const value = getValue<number>() || 0;
+      return (
+        <small className="tabular-nums">
+          {new Intl.NumberFormat(locale, {
+            minimumFractionDigits: 1,
+            maximumFractionDigits: 1
+          }).format(value)}%
+        </small>
+      );
+    },
   },
   {
     accessorKey: "grade",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Grade" />,
-    meta: { label: "Grade", variant: "text" },
+    header: ({ column }) => <DataTableColumnHeader column={column} title={dictionary.school.grades.grade} />,
+    meta: { label: dictionary.school.grades.grade, variant: "text" },
     id: 'grade',
     enableColumnFilter: true,
   },
   {
     accessorKey: "createdAt",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Created" />,
-    meta: { label: "Created", variant: "text" },
+    header: ({ column }) => <DataTableColumnHeader column={column} title={dictionary.school.grades.created} />,
+    meta: { label: dictionary.school.grades.created, variant: "text" },
     cell: ({ getValue }) => (
-      <span className="text-xs tabular-nums text-muted-foreground">{new Date(getValue<string>()).toLocaleDateString()}</span>
+      <small className="tabular-nums">{new Date(getValue<string>()).toLocaleDateString(locale)}</small>
     ),
   },
   {
     id: "actions",
-    header: () => <span className="sr-only">Actions</span>,
+    header: () => <span className="sr-only">{dictionary.school.grades.actions}</span>,
     cell: ({ row }) => {
       const result = row.original;
       const { openModal } = useModal();
@@ -96,12 +104,12 @@ export const resultColumns: ColumnDef<ResultRow>[] = [
       const onEdit = () => openModal(result.id);
       const onDelete = async () => {
         try {
-          const ok = await confirmDeleteDialog(`Delete result for ${result.studentName}?`);
+          const ok = await confirmDeleteDialog(dictionary.school.grades.deleteResultConfirm.replace('{studentName}', result.studentName));
           if (!ok) return;
           await deleteResult({ id: result.id });
           DeleteToast();
         } catch (e) {
-          ErrorToast(e instanceof Error ? e.message : "Failed to delete");
+          ErrorToast(e instanceof Error ? e.message : dictionary.school.grades.failedToUpdate);
         }
       };
       return (
@@ -109,15 +117,15 @@ export const resultColumns: ColumnDef<ResultRow>[] = [
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="h-8 w-8 p-0">
               <MoreHorizontal className="h-4 w-4" />
-              <span className="sr-only">Open menu</span>
+              <span className="sr-only">{dictionary.school.grades.openMenu}</span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+            <DropdownMenuLabel>{dictionary.school.grades.actions}</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={onView}>View</DropdownMenuItem>
-            <DropdownMenuItem onClick={onEdit}>Edit</DropdownMenuItem>
-            <DropdownMenuItem onClick={onDelete}>Delete</DropdownMenuItem>
+            <DropdownMenuItem onClick={onView}>{dictionary.school.common.actions.view}</DropdownMenuItem>
+            <DropdownMenuItem onClick={onEdit}>{dictionary.school.common.actions.edit}</DropdownMenuItem>
+            <DropdownMenuItem onClick={onDelete}>{dictionary.school.common.actions.delete}</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       );

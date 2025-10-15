@@ -8,13 +8,33 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { useEffect, useState } from "react";
 import { getClassesForSelection } from "@/components/platform/attendance/actions";
+import type { Dictionary } from "@/components/internationalization/dictionaries";
 
 import { AnnouncementFormStepProps } from "./types";
-import { SCOPE_OPTIONS, ROLE_OPTIONS } from "./config";
 
-export function ScopeStep({ form, isView }: AnnouncementFormStepProps) {
+interface ScopeStepProps extends AnnouncementFormStepProps {
+  dictionary: Dictionary['school']['announcements'];
+}
+
+export function ScopeStep({ form, isView, dictionary }: ScopeStepProps) {
   const [classes, setClasses] = useState<Array<{ id: string; name: string }>>([]);
   const scope = form.watch("scope");
+  const t = dictionary;
+
+  const scopeOptions = [
+    { label: t.school, value: "school" },
+    { label: t.class, value: "class" },
+    { label: t.role, value: "role" }
+  ];
+
+  const roleOptions = [
+    { label: t.roleAdmin, value: "ADMIN" },
+    { label: t.roleTeacher, value: "TEACHER" },
+    { label: t.roleStudent, value: "STUDENT" },
+    { label: t.roleGuardian, value: "GUARDIAN" },
+    { label: t.roleStaff, value: "STAFF" },
+    { label: t.roleAccountant, value: "ACCOUNTANT" }
+  ];
 
   useEffect(() => {
     const loadClasses = async () => {
@@ -35,15 +55,15 @@ export function ScopeStep({ form, isView }: AnnouncementFormStepProps) {
         name="scope"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Scope</FormLabel>
+            <FormLabel>{t.scopeLabel}</FormLabel>
             <Select onValueChange={field.onChange} value={field.value} disabled={isView}>
               <FormControl>
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select scope" />
+                  <SelectValue placeholder={t.scopePlaceholder} />
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
-                {SCOPE_OPTIONS.map((scope) => (
+                {scopeOptions.map((scope) => (
                   <SelectItem key={scope.value} value={scope.value}>
                     {scope.label}
                   </SelectItem>
@@ -61,11 +81,11 @@ export function ScopeStep({ form, isView }: AnnouncementFormStepProps) {
           name="classId"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Class</FormLabel>
+              <FormLabel>{t.classLabel}</FormLabel>
               <Select onValueChange={field.onChange} value={field.value || ""} disabled={isView}>
                 <FormControl>
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select class" />
+                    <SelectValue placeholder={t.classPlaceholder} />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
@@ -88,15 +108,15 @@ export function ScopeStep({ form, isView }: AnnouncementFormStepProps) {
           name="role"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Role</FormLabel>
+              <FormLabel>{t.roleLabel}</FormLabel>
               <Select onValueChange={field.onChange} value={field.value || ""} disabled={isView}>
                 <FormControl>
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select role" />
+                    <SelectValue placeholder={t.rolePlaceholder} />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {ROLE_OPTIONS.map((role) => (
+                  {roleOptions.map((role) => (
                     <SelectItem key={role.value} value={role.value}>
                       {role.label}
                     </SelectItem>
@@ -115,9 +135,9 @@ export function ScopeStep({ form, isView }: AnnouncementFormStepProps) {
         render={({ field }) => (
           <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
             <div className="space-y-0.5">
-              <FormLabel className="text-base">Publish immediately</FormLabel>
+              <FormLabel className="text-base">{t.publishImmediately}</FormLabel>
               <div className="text-sm text-muted-foreground">
-                Make this announcement visible to users right away
+                {t.publishImmediatelyDescription}
               </div>
             </div>
             <FormControl>

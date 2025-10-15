@@ -1,6 +1,7 @@
 import { type UseFormReturn } from "react-hook-form";
 import { z } from "zod";
 import { resultCreateSchema } from "./validation";
+import { type Dictionary } from "@/components/internationalization/dictionaries";
 
 export type ResultDTO = {
   id: string;
@@ -37,6 +38,7 @@ export type ResultRow = {
 export interface ResultFormStepProps {
   form: UseFormReturn<z.infer<typeof resultCreateSchema>>;
   isView: boolean;
+  dictionary: Dictionary;
 }
 
 export type StepFieldKeys = keyof z.infer<typeof resultCreateSchema>;

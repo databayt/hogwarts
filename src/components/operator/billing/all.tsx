@@ -161,7 +161,7 @@ export function AllInvoices({
             }}
           >
             <SelectTrigger>
-              <SlidersHorizontal className="mr-2 size-4" />
+              <SlidersHorizontal className="me-2 size-4" />
               <SelectValue placeholder="Sort by" />
             </SelectTrigger>
             <SelectContent>

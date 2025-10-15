@@ -22,6 +22,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function LibraryAdmin({ params }: Props) {
   const session = await auth();
+  const { lang } = await params;
+  const dictionary = await getDictionary(lang);
 
   // Check authentication
   if (!session?.user?.id) {
@@ -34,5 +36,5 @@ export default async function LibraryAdmin({ params }: Props) {
     redirect("/library");
   }
 
-  return <LibraryAdminContent />;
+  return <LibraryAdminContent dictionary={dictionary} lang={lang} />;
 }

@@ -13,10 +13,18 @@ import { useRouter } from "next/navigation";
 import { InformationStep } from "./information";
 import { ScopeStep } from "./scope";
 import { AnnouncementFormFooter } from "./footer";
+import type { Dictionary } from "@/components/internationalization/dictionaries";
+import type { Locale } from "@/components/internationalization/config";
 
-export function AnnouncementCreateForm() {
+interface AnnouncementCreateFormProps {
+  dictionary: Dictionary['school']['announcements'];
+  lang: Locale;
+}
+
+export function AnnouncementCreateForm({ dictionary, lang }: AnnouncementCreateFormProps) {
   const { modal, closeModal } = useModal();
   const router = useRouter();
+  const t = dictionary;
   const [currentStep, setCurrentStep] = useState(1);
   const form = useForm<z.infer<typeof announcementCreateSchema>>({
     resolver: zodResolver(announcementCreateSchema),
@@ -57,11 +65,11 @@ export function AnnouncementCreateForm() {
       ? await updateAnnouncement({ id: currentId, ...values })
       : await createAnnouncement(values);
     if (res?.success) {
-      toast.success(currentId ? "Announcement updated" : "Announcement created");
+      toast.success(currentId ? t.announcementUpdated : t.announcementCreated);
       closeModal();
       router.refresh();
     } else {
-      toast.error(currentId ? "Failed to update announcement" : "Failed to create announcement");
+      toast.error(currentId ? t.failedToUpdate : t.failedToCreate);
     }
   }
 
@@ -105,9 +113,9 @@ export function AnnouncementCreateForm() {
   const renderCurrentStep = () => {
     switch (currentStep) {
       case 1:
-        return <InformationStep form={form} isView={isView} />;
+        return <InformationStep form={form} isView={isView} dictionary={dictionary} />;
       case 2:
-        return <ScopeStep form={form} isView={isView} />;
+        return <ScopeStep form={form} isView={isView} dictionary={dictionary} />;
       default:
         return null;
     }
@@ -120,8 +128,8 @@ export function AnnouncementCreateForm() {
           <div className="flex-grow flex flex-col md:flex-row gap-6">
             {/* Title Section */}
             <div className="md:w-1/3">
-              <h2 className="text-2xl font-semibold">{isView ? "View Announcement" : currentId ? "Edit Announcement" : "Create Announcement"}</h2>
-              <p className="text-sm text-muted-foreground mt-2">{isView ? "View announcement details" : currentId ? "Update announcement details" : "Create a new announcement for your school"}</p>
+              <h2>{isView ? t.viewAnnouncement : currentId ? t.editAnnouncement : t.createAnnouncement}</h2>
+              <p className="muted">{isView ? t.viewAnnouncementDetails : currentId ? t.updateAnnouncementDetails : t.createNewAnnouncement}</p>
             </div>
 
             {/* Form Content */}
@@ -132,7 +140,7 @@ export function AnnouncementCreateForm() {
             </div>
           </div>
 
-          <AnnouncementFormFooter 
+          <AnnouncementFormFooter
             currentStep={currentStep}
             isView={isView}
             currentId={currentId}
@@ -140,6 +148,7 @@ export function AnnouncementCreateForm() {
             onNext={handleNext}
             onSaveCurrentStep={handleSaveCurrentStep}
             form={form}
+            dictionary={dictionary}
           />
         </form>
       </Form>
