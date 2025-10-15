@@ -1,8 +1,10 @@
 "use client";
 
 import React from 'react';
+import Image from 'next/image';
 import HostStepHeader from '@/components/onboarding/step-header';
 import { useHostValidation } from '@/components/onboarding/host-validation-context';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface Props {
   dictionary?: any;
@@ -10,7 +12,7 @@ interface Props {
 
 export default function AboutSchoolContent({ dictionary }: Props) {
   const dict = dictionary?.onboarding || {};
-  const videoRef = React.useRef<HTMLVideoElement>(null);
+  const [imageLoaded, setImageLoaded] = React.useState(false);
   const { enableNext } = useHostValidation();
 
   // Enable next button for this informational page
@@ -18,38 +20,19 @@ export default function AboutSchoolContent({ dictionary }: Props) {
     enableNext();
   }, [enableNext]);
 
-  // Auto-play video when component mounts
-  React.useEffect(() => {
-    if (videoRef.current) {
-      videoRef.current.play().catch((error) => {
-        console.log('Auto-play was prevented:', error);
-      });
-    }
-  }, []);
-
   const illustration = (
-    <div className="w-full sm:w-3/4 max-w-xl mx-auto bg-gradient-to-br from-orange-50 to-pink-50 rounded-xl sm:rounded-2xl flex items-center justify-center overflow-hidden h-[300px] sm:aspect-video">
-      <video
-        ref={videoRef}
-        className="w-full h-full object-cover"
-        autoPlay
-        muted
-        playsInline
-        preload="auto"
-        onLoadedData={() => {
-          // Ensure video plays after loading
-          if (videoRef.current) {
-            videoRef.current.play().catch((error) => {
-              console.log('Video play failed:', error);
-            });
-          }
-        }}
-      >
-        <source
-          src="https://stream.media.muscache.com/zFaydEaihX6LP01x8TSCl76WHblb01Z01RrFELxyCXoNek.mp4?v_q=high"
-          type="video/mp4"
-        />
-      </video>
+    <div className="w-full sm:w-3/4 max-w-xl mx-auto bg-gradient-to-br from-orange-50 to-pink-50 rounded-xl sm:rounded-2xl flex items-center justify-center overflow-hidden h-[300px] sm:aspect-video relative">
+      {!imageLoaded && (
+        <Skeleton className="absolute inset-0 w-full h-full rounded-xl sm:rounded-2xl" />
+      )}
+      <Image
+        src="/onboarding/about-school.png"
+        alt="About School"
+        fill
+        className="object-contain p-8"
+        onLoad={() => setImageLoaded(true)}
+        priority
+      />
     </div>
   );
 
