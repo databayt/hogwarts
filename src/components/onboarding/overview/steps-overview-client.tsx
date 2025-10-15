@@ -195,7 +195,7 @@ const StepsOverviewClient: React.FC<StepsOverviewClientProps> = ({ dictionary, l
                     </div>
                   </div>
                   <div className={`flex-shrink-0 hidden md:flex ${isRTL ? 'justify-start' : 'justify-end'}`}>
-                    <div className="relative overflow-hidden" style={{ width: `${step.imageSize}px`, height: `${step.imageSize}px` }}>
+                    <div className={`relative overflow-hidden ${step.illustration.includes('about-school') ? 'px-2' : ''}`} style={{ width: `${step.imageSize}px`, height: `${step.imageSize}px` }}>
                       <Image
                         src={step.illustration}
                         alt={step.title}
