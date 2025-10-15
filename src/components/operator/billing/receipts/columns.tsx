@@ -99,7 +99,7 @@ export const receiptColumns: ColumnDef<ReceiptRow>[] = [
                       SuccessToast("Receipt approved successfully");
                       window.location.reload();
                     } else {
-                      ErrorToast(result.error.message);
+                      ErrorToast(result.error?.message || "Failed to approve receipt");
                     }
                   } catch (e) {
                     ErrorToast(e instanceof Error ? e.message : "Approve failed");
@@ -119,7 +119,7 @@ export const receiptColumns: ColumnDef<ReceiptRow>[] = [
                       SuccessToast("Receipt rejected successfully");
                       window.location.reload();
                     } else {
-                      ErrorToast(result.error.message);
+                      ErrorToast(result.error?.message || "Failed to reject receipt");
                     }
                   } catch (e) {
                     ErrorToast(e instanceof Error ? e.message : "Reject failed");
