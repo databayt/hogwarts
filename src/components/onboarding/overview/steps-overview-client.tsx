@@ -191,12 +191,12 @@ const StepsOverviewClient: React.FC<StepsOverviewClientProps> = ({ dictionary, l
                     </div>
                   </div>
                   <div className="flex-shrink-0 hidden md:block">
-                    <div className="relative w-24 h-24 overflow-hidden">
+                    <div className="relative w-16 h-16 overflow-hidden">
                       <Image
                         src={step.illustration}
                         alt={step.title}
                         fill
-                        sizes="96px"
+                        sizes="64px"
                         className="object-contain"
                       />
                     </div>
