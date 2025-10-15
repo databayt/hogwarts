@@ -10,8 +10,16 @@ import { Plus } from "lucide-react";
 import { useModal } from "@/components/atom/modal/context";
 import Modal from "@/components/atom/modal/modal";
 import { ResultCreateForm } from "@/components/platform/grades/form";
+import type { Dictionary } from "@/components/internationalization/dictionaries";
 
-export function ResultsTable({ data, columns, pageCount }: { data: ResultRow[]; columns: ColumnDef<ResultRow, unknown>[]; pageCount: number }) {
+interface ResultsTableProps {
+  data: ResultRow[];
+  columns: ColumnDef<ResultRow, unknown>[];
+  pageCount: number;
+  dictionary: Dictionary;
+}
+
+export function ResultsTable({ data, columns, pageCount, dictionary }: ResultsTableProps) {
   const { table } = useDataTable<ResultRow>({ data, columns, pageCount });
   const { openModal } = useModal();
   return (
@@ -29,7 +37,7 @@ export function ResultsTable({ data, columns, pageCount }: { data: ResultRow[]; 
           <Plus className="h-4 w-4" />
         </Button>
       </DataTableToolbar>
-      <Modal content={<ResultCreateForm />} />
+      <Modal content={<ResultCreateForm dictionary={dictionary} />} />
     </DataTable>
   );
 }

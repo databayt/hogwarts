@@ -80,7 +80,7 @@ export default async function ResultsContent({ searchParams, dictionary, lang }:
           <h1>{dictionary.school.grades.results}</h1>
           <p className="muted">{dictionary.school.grades.manageResults}</p>
         </div>
-        <ResultsTable data={data} columns={resultColumns(dictionary, lang)} pageCount={Math.max(1, Math.ceil(total / (sp.perPage || 20)))} />
+        <ResultsTable data={data} columns={resultColumns(dictionary, lang)} pageCount={Math.max(1, Math.ceil(total / (sp.perPage || 20)))} dictionary={dictionary} />
       </div>
     </PageContainer>
   )
