@@ -23,18 +23,20 @@ export default function AboutSchoolContent({ dictionary }: Props) {
   const illustration = (
     <div className="w-full sm:w-3/4 max-w-xl mx-auto rounded-xl sm:rounded-2xl flex items-center justify-center overflow-hidden h-[300px] sm:aspect-video relative">
       {!imageLoaded && (
-        <div className="w-full h-full flex items-center justify-center">
+        <div className="absolute inset-0 flex items-center justify-center">
           <Skeleton className="w-48 h-48 rounded-full" />
         </div>
       )}
-      <Image
-        src="/onboarding/about-school.png"
-        alt="About School"
-        fill
-        className="object-contain"
-        onLoad={() => setImageLoaded(true)}
-        priority
-      />
+      <div className={`relative w-full h-full ${!imageLoaded ? 'opacity-0' : 'opacity-100 transition-opacity duration-300'}`}>
+        <Image
+          src="/onboarding/about-school.png"
+          alt="About School"
+          fill
+          className="object-contain"
+          onLoad={() => setImageLoaded(true)}
+          priority
+        />
+      </div>
     </div>
   );
 
