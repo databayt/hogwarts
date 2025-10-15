@@ -162,7 +162,12 @@ const StepsOverviewClient: React.FC<StepsOverviewClientProps> = ({ dictionary, l
             {/* Left Side - Title */}
             <div>
               <h2 className={`text-4xl font-bold ${isRTL ? 'text-right' : 'text-left'}`}>
-                {dictionary.title}
+                {dictionary.title.split('\n').map((line, index) => (
+                  <React.Fragment key={index}>
+                    {line}
+                    {index < dictionary.title.split('\n').length - 1 && <br />}
+                  </React.Fragment>
+                ))}
               </h2>
             </div>
 
