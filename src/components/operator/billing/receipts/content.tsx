@@ -1,6 +1,6 @@
 import { Shell as PageContainer } from "@/components/table/shell";
 import { ReceiptsTable } from "./table";
-import { receiptColumns, type ReceiptRow } from "./columns";
+import { getReceiptColumns, type ReceiptRow } from "./columns";
 import { EmptyState } from "@/components/operator/common/empty-state";
 import { db } from "@/lib/db";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -169,7 +169,7 @@ export async function ReceiptsContent({ dictionary, lang, searchParams }: Props)
           {receiptData.rows.length > 0 ? (
             <ReceiptsTable
               data={receiptData.rows}
-              columns={receiptColumns}
+              columns={getReceiptColumns(lang)}
               pageCount={receiptData.pageCount}
             />
           ) : (

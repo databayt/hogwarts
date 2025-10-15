@@ -13,11 +13,10 @@ interface Props {
 
 export default async function Dashboard({ params }: Props) {
   const { lang } = await params;
+  const dictionary = await getDictionary(lang);
 
-  // The operator dashboard doesn't have dictionary support yet
-  // Pass an empty object for now
   return <DashboardContent
-    dictionary={{}}
+    dictionary={dictionary}
     lang={lang}
   />;
 }
