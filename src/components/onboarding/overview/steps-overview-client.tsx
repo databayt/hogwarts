@@ -15,6 +15,7 @@ interface Step {
   title: string;
   description: string;
   illustration: string;
+  imageSize: number;
 }
 
 interface StepsOverviewClientProps {
@@ -33,19 +34,22 @@ const StepsOverviewClient: React.FC<StepsOverviewClientProps> = ({ dictionary, l
       number: 1,
       title: dictionary.steps.step1.title,
       description: dictionary.steps.step1.description,
-      illustration: "/onboarding/about-school.png"
+      illustration: "/onboarding/about-school.png",
+      imageSize: 64 // Keep small (w-16 h-16)
     },
     {
       number: 2,
       title: dictionary.steps.step2.title,
       description: dictionary.steps.step2.description,
-      illustration: "/onboarding/stand-out.png"
+      illustration: "/onboarding/stand-out.png",
+      imageSize: 96 // Larger (w-24 h-24)
     },
     {
       number: 3,
       title: dictionary.steps.step3.title,
       description: dictionary.steps.step3.description,
-      illustration: "/onboarding/finish-setup.png"
+      illustration: "/onboarding/finish-setup.png",
+      imageSize: 96 // Larger (w-24 h-24)
     }
   ];
 
@@ -161,13 +165,8 @@ const StepsOverviewClient: React.FC<StepsOverviewClientProps> = ({ dictionary, l
           <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-12 items-start py-12">
             {/* Left Side - Title */}
             <div>
-              <h2 className={`text-4xl font-bold ${isRTL ? 'text-right' : 'text-left'}`}>
-                {dictionary.title.split('\n').map((line, index) => (
-                  <React.Fragment key={index}>
-                    {line}
-                    {index < dictionary.title.split('\n').length - 1 && <br />}
-                  </React.Fragment>
-                ))}
+              <h2 className={`text-4xl font-bold whitespace-pre-line ${isRTL ? 'text-right' : 'text-left'}`}>
+                {dictionary.title}
               </h2>
             </div>
 
@@ -191,12 +190,12 @@ const StepsOverviewClient: React.FC<StepsOverviewClientProps> = ({ dictionary, l
                     </div>
                   </div>
                   <div className="flex-shrink-0 hidden md:block">
-                    <div className="relative w-16 h-16 overflow-hidden">
+                    <div className="relative overflow-hidden" style={{ width: `${step.imageSize}px`, height: `${step.imageSize}px` }}>
                       <Image
                         src={step.illustration}
                         alt={step.title}
                         fill
-                        sizes="64px"
+                        sizes={`${step.imageSize}px`}
                         className="object-contain"
                       />
                     </div>
