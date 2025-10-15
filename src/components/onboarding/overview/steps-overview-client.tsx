@@ -35,7 +35,7 @@ const StepsOverviewClient: React.FC<StepsOverviewClientProps> = ({ dictionary, l
       title: dictionary.steps.step1.title,
       description: dictionary.steps.step1.description,
       illustration: "/onboarding/about-school.png",
-      imageSize: 64 // Keep small (w-16 h-16)
+      imageSize: 80 // Medium size (w-20 h-20)
     },
     {
       number: 2,
@@ -165,15 +165,20 @@ const StepsOverviewClient: React.FC<StepsOverviewClientProps> = ({ dictionary, l
           <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-12 items-start py-12">
             {/* Left Side - Title */}
             <div>
-              <h2 className={`text-4xl font-bold whitespace-pre-line ${isRTL ? 'text-right' : 'text-left'}`}>
-                {dictionary.title}
+              <h2 className={`text-4xl font-bold ${isRTL ? 'text-right' : 'text-left'}`}>
+                {dictionary.title.split('\\n').map((line, index) => (
+                  <React.Fragment key={index}>
+                    {line}
+                    {index < dictionary.title.split('\\n').length - 1 && <br />}
+                  </React.Fragment>
+                ))}
               </h2>
             </div>
 
             {/* Right Side - Steps */}
             <div className="space-y-6">
               {steps.map((step) => (
-                <div key={step.number} className={`flex gap-6 items-start ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
+                <div key={step.number} className={`flex gap-6 items-start justify-between ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
                   <div className={`flex gap-3 flex-1 ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
                     <div className="flex-shrink-0">
                       <h4 className="text-foreground">
@@ -189,7 +194,7 @@ const StepsOverviewClient: React.FC<StepsOverviewClientProps> = ({ dictionary, l
                       </p>
                     </div>
                   </div>
-                  <div className="flex-shrink-0 hidden md:block">
+                  <div className={`flex-shrink-0 hidden md:flex ${isRTL ? 'justify-start' : 'justify-end'}`}>
                     <div className="relative overflow-hidden" style={{ width: `${step.imageSize}px`, height: `${step.imageSize}px` }}>
                       <Image
                         src={step.illustration}
