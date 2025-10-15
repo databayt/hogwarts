@@ -51,11 +51,8 @@ export async function reviewReceipt(data: z.infer<typeof reviewReceiptSchema>) {
       data: {
         action: `receipt_${validated.status}`,
         userId: "operator", // TODO: Get actual operator user ID
-        details: {
-          receiptId: validated.receiptId,
-          status: validated.status,
-          notes: validated.notes,
-        },
+        schoolId: receipt.invoice.schoolId,
+        reason: validated.notes || `Receipt ${validated.status} for invoice ${receipt.invoiceId}`,
       },
     });
 
@@ -112,12 +109,8 @@ export async function uploadReceipt(data: z.infer<typeof uploadReceiptSchema>) {
       data: {
         action: "receipt_uploaded",
         userId: "operator",
-        details: {
-          receiptId: receipt.id,
-          invoiceId: validated.invoiceId,
-          amount: validated.amount,
-          fileName: validated.fileName,
-        },
+        schoolId: invoice.schoolId,
+        reason: `Receipt uploaded: ${validated.fileName} for invoice ${validated.invoiceId} - Amount: $${(validated.amount / 100).toFixed(2)}`,
       },
     });
 
