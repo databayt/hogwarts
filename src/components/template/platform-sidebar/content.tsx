@@ -19,16 +19,19 @@ import type { Role } from "@/components/template/platform-sidebar/config";
 import { Icons } from "@/components/template/platform-sidebar/icons";
 import { useCurrentRole } from "@/components/auth/use-current-role";
 import type { School } from "@/components/site/types";
+import { useDictionary } from "@/components/internationalization/use-dictionary";
 
 interface PlatformSidebarProps extends React.ComponentProps<typeof Sidebar> {
   school?: School;
+  lang?: string;
 }
 
-export default function PlatformSidebar({ school, ...props }: PlatformSidebarProps = {}) {
+export default function PlatformSidebar({ school, lang, ...props }: PlatformSidebarProps = {}) {
   const pathname = usePathname();
   const { setOpenMobile } = useSidebar();
   const role = useCurrentRole();
   const currentRole = (role as unknown as Role | undefined) ?? undefined;
+  const { dictionary } = useDictionary();
 
   // Use school name if available, otherwise use a default
   const schoolName = school?.name || "Your School";
@@ -61,6 +64,10 @@ export default function PlatformSidebar({ school, ...props }: PlatformSidebarPro
                 // .filter((item) => (currentRole ? item.roles.includes(currentRole) : false))
                 .map((item) => {
                 const isActive = pathname === item.href || pathname?.startsWith(item.href + "/");
+                // Get translated title from dictionary if available
+                const titleKey = item.titleKey || item.title;
+                const translatedTitle = dictionary?.platform?.sidebar?.[titleKey] || item.title;
+
                 return (
                   <SidebarMenuItem key={item.href}>
                     <SidebarMenuButton asChild isActive={isActive} size="sm">
@@ -76,7 +83,7 @@ export default function PlatformSidebar({ school, ...props }: PlatformSidebarPro
                             return Icon ? <Icon className="h-4 w-4" /> : null;
                           })()}
                         </span>
-                        {item.title}
+                        {translatedTitle}
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
