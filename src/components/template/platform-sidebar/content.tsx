@@ -65,9 +65,8 @@ export default function PlatformSidebar({ school, lang, ...props }: PlatformSide
                 .map((item) => {
                 const isActive = pathname === item.href || pathname?.startsWith(item.href + "/");
                 // Get translated title from dictionary if available
-                const titleKey = item.titleKey || item.title;
                 const sidebarDict = dictionary?.platform?.sidebar as Record<string, string> | undefined;
-                const translatedTitle = sidebarDict?.[titleKey] || item.title;
+                const translatedTitle = sidebarDict?.[item.title] || item.title;
 
                 return (
                   <SidebarMenuItem key={item.href}>
