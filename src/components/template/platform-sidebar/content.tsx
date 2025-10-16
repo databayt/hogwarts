@@ -33,7 +33,7 @@ export default function PlatformSidebar({ school, lang, ...props }: PlatformSide
   const role = useCurrentRole();
   const currentRole = (role as unknown as Role | undefined) ?? undefined;
   const { dictionary } = useDictionary();
-  const { isRTL } = useLocale();
+  const { isRTL, locale } = useLocale();
 
   // Use school name if available, otherwise use a default
   const schoolName = school?.name || "Your School";
@@ -65,7 +65,9 @@ export default function PlatformSidebar({ school, lang, ...props }: PlatformSide
                 // TODO: Re-enable role-based filtering when needed
                 // .filter((item) => (currentRole ? item.roles.includes(currentRole) : false))
                 .map((item) => {
-                const isActive = pathname === item.href || pathname?.startsWith(item.href + "/");
+                // Prepend locale to href to preserve language when navigating
+                const localizedHref = `/${locale}${item.href}`;
+                const isActive = pathname === localizedHref || pathname?.startsWith(localizedHref + "/");
                 // Get translated title from dictionary if available
                 const sidebarDict = dictionary?.platform?.sidebar as Record<string, string> | undefined;
                 const translatedTitle = sidebarDict?.[item.title] || item.title;
@@ -74,7 +76,7 @@ export default function PlatformSidebar({ school, lang, ...props }: PlatformSide
                   <SidebarMenuItem key={item.href}>
                     <SidebarMenuButton asChild isActive={isActive} size="sm">
                       <Link
-                        href={item.href}
+                        href={localizedHref}
                         className="muted"
                         onClick={handleLinkClick}
                       >
