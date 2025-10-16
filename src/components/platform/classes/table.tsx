@@ -1,10 +1,10 @@
 "use client";
 
-import { ColumnDef } from "@tanstack/react-table";
+import { useMemo } from "react";
 import { DataTable } from "@/components/table/data-table/data-table";
 import { DataTableToolbar } from "@/components/table/data-table/data-table-toolbar";
 import { useDataTable } from "@/components/table/hooks/use-data-table";
-import type { ClassRow } from "./columns";
+import { getClassColumns, type ClassRow } from "./columns";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { useModal } from "@/components/atom/modal/context";
@@ -12,7 +12,15 @@ import Modal from "@/components/atom/modal/modal";
 import { ClassCreateForm } from "@/components/platform/classes/form";
 import { ExportButton } from "./export-button";
 
-export function ClassesTable({ data, columns, pageCount }: { data: ClassRow[]; columns: ColumnDef<ClassRow, unknown>[]; pageCount: number }) {
+interface ClassesTableProps {
+  data: ClassRow[];
+  pageCount: number;
+}
+
+export function ClassesTable({ data, pageCount }: ClassesTableProps) {
+  // Generate columns on the client side with hooks
+  const columns = useMemo(() => getClassColumns(), []);
+
   const { table } = useDataTable<ClassRow>({ data, columns, pageCount });
   const { openModal } = useModal();
   return (

@@ -18,7 +18,7 @@ export type ClassRow = {
   createdAt: string;
 };
 
-export const classColumns: ColumnDef<ClassRow>[] = [
+export const getClassColumns = (): ColumnDef<ClassRow>[] => [
   {
     accessorKey: "name",
     header: ({ column }) => <DataTableColumnHeader column={column} title="Class Name" />,

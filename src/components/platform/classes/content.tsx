@@ -1,5 +1,5 @@
 import { ClassesTable } from '@/components/platform/classes/table'
-import { classColumns, type ClassRow } from '@/components/platform/classes/columns'
+import { type ClassRow } from '@/components/platform/classes/columns'
 import { SearchParams } from 'nuqs/server'
 import { classesSearchParams } from '@/components/platform/classes/list-params'
 import { db } from '@/lib/db'
@@ -76,7 +76,7 @@ export default async function ClassesContent({ searchParams, dictionary, lang }:
           <h1 className="text-xl font-semibold">Classes</h1>
           <p className="text-sm text-muted-foreground">Manage academic classes and schedules</p>
         </div>
-        <ClassesTable data={data} columns={classColumns} pageCount={Math.max(1, Math.ceil(total / (sp.perPage || 20)))} />
+        <ClassesTable data={data} pageCount={Math.max(1, Math.ceil(total / (sp.perPage || 20)))} />
       </div>
     </PageContainer>
   )
