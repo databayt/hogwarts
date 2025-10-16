@@ -41,7 +41,9 @@ export default function PlatformHeader({ school, lang }: PlatformHeaderProps = {
                 <BreadcrumbList className={`flex items-center ${isRTL ? 'space-x-reverse' : ''} space-x-1`}>
                   {breadcrumbItems.map((item, index) => {
                     // Translate breadcrumb title
-                    const translatedTitle = dictionary?.platform?.breadcrumb?.[item.title.toLowerCase()] || item.title;
+                    const titleKey = item.title.toLowerCase();
+                    const breadcrumbDict = dictionary?.platform?.breadcrumb as Record<string, string> | undefined;
+                    const translatedTitle = breadcrumbDict?.[titleKey] || item.title;
 
                     return (
                       <div key={item.title} className="flex items-center">
