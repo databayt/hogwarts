@@ -2,8 +2,6 @@
 
 import React, { useEffect, Dispatch, SetStateAction } from 'react';
 import { Modal } from '@/components/atom/modal';
-import { Button } from '@/components/ui/button';
-import { CheckCircle, ExternalLink, Sparkles } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 interface SuccessCompletionModalProps {
@@ -83,49 +81,40 @@ export default function SuccessCompletionModal({
       <div className="p-8 text-center">
         {/* Success Icon */}
         <div className="flex justify-center mb-6">
-          <div className="relative">
-            <div className="w-20 h-20 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center shadow-lg">
-              <CheckCircle className="w-12 h-12 text-white" />
-            </div>
-            <Sparkles className="absolute -top-2 -right-2 w-6 h-6 text-yellow-500 animate-pulse" />
+          <div className="relative h-16 w-16 rounded-full bg-green-500 flex items-center justify-center">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-8 w-8"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="white"
+              strokeWidth={3}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
           </div>
         </div>
 
         {/* Success Message */}
-        <h2 className="mb-3 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+        <h2 className="mb-6">
           Congratulations!
         </h2>
 
-        <p className="lead mb-2 text-muted-foreground">
-          {schoolData.name}
+        <p className="mb-2 text-muted-foreground">
+          Your school has been successfully created at
         </p>
 
-        <p className="mb-6 text-muted-foreground">
-          Your school has been successfully created and is ready to use!
-        </p>
+        <h5 className="text-primary mb-6">
+          {schoolData.domain}.databayt.org
+        </h5>
 
-        {/* School URL */}
-        <div className="bg-primary/10 border border-primary/20 rounded-lg p-4 mb-6">
-          <p className="muted mb-1">Your school's portal:</p>
-          <h5 className="text-primary">
-            {schoolData.domain}.databayt.org
-          </h5>
-        </div>
-
-        {/* Action Button */}
-        <Button
-          size="lg"
+        {/* Action Link */}
+        <button
           onClick={onGoToDashboard}
-          className="w-full gap-2 py-6"
+          className="text-primary underline hover:no-underline transition-all"
         >
           Go to Dashboard
-          <ExternalLink className="w-4 h-4" />
-        </Button>
-
-        {/* Help Text */}
-        <small className="block text-muted-foreground mt-4">
-          You can now invite teachers, add students, and set up classes from your dashboard
-        </small>
+        </button>
       </div>
     </Modal>
   );
