@@ -5,7 +5,7 @@ import PlatformSidebar from "@/components/template/platform-sidebar/content";
 import { SchoolProvider } from "@/components/platform/context/school-context";
 import { getSchoolBySubdomain } from "@/lib/subdomain-actions";
 import { notFound } from "next/navigation";
-import { getLocale } from "@/components/internationalization/config";
+import { isRTL as checkIsRTL, type Locale } from "@/components/internationalization/config";
 
 interface PlatformLayoutProps {
   children: React.ReactNode;
@@ -25,8 +25,7 @@ export default async function PlatformLayout({
   }
 
   const school = result.data;
-  const locale = getLocale(lang);
-  const isRTL = locale?.direction === 'rtl';
+  const isRTL = checkIsRTL(lang as Locale);
 
   // Debug logging
   console.log('Platform layout - school data:', { subdomain, school, lang, isRTL });
