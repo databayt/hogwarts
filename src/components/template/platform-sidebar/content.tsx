@@ -20,6 +20,7 @@ import { Icons } from "@/components/template/platform-sidebar/icons";
 import { useCurrentRole } from "@/components/auth/use-current-role";
 import type { School } from "@/components/site/types";
 import { useDictionary } from "@/components/internationalization/use-dictionary";
+import { useLocale } from "@/components/internationalization/use-locale";
 
 interface PlatformSidebarProps extends React.ComponentProps<typeof Sidebar> {
   school?: School;
@@ -32,6 +33,7 @@ export default function PlatformSidebar({ school, lang, ...props }: PlatformSide
   const role = useCurrentRole();
   const currentRole = (role as unknown as Role | undefined) ?? undefined;
   const { dictionary } = useDictionary();
+  const { isRTL } = useLocale();
 
   // Use school name if available, otherwise use a default
   const schoolName = school?.name || "Your School";
@@ -41,7 +43,7 @@ export default function PlatformSidebar({ school, lang, ...props }: PlatformSide
   }, [setOpenMobile]);
 
   return (
-    <Sidebar {...props} className="w-56 top-16" collapsible="offcanvas">
+    <Sidebar {...props} className="w-56 top-16" collapsible="offcanvas" side={isRTL ? "right" : "left"}>
       {/* <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
@@ -56,7 +58,7 @@ export default function PlatformSidebar({ school, lang, ...props }: PlatformSide
         </SidebarMenu>
       </SidebarHeader> */}
       <SidebarContent className="border-0 bg-transparent">
-        <ScrollArea className="h-full">
+        <ScrollArea className="h-full" dir={isRTL ? "rtl" : "ltr"}>
           <SidebarGroup className="p-2">
             <SidebarMenu className="space-y-1 list-none">
               {platformNav
@@ -71,10 +73,12 @@ export default function PlatformSidebar({ school, lang, ...props }: PlatformSide
                 return (
                   <SidebarMenuItem key={item.href}>
                     <SidebarMenuButton asChild isActive={isActive} size="sm">
-                      <Link href={item.href} className="muted" onClick={handleLinkClick}>
-                        <span className={`mr-2 inline-flex items-center justify-center ${
-                          item.className ? "size-auto" : "size-4"
-                        }`}>
+                      <Link
+                        href={item.href}
+                        className="muted"
+                        onClick={handleLinkClick}
+                      >
+                        <span className="inline-flex items-center justify-center size-4">
                           {(() => {
                             const Icon = Icons[item.icon];
                             if (item.className) {
