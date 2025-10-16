@@ -1,5 +1,5 @@
 import { TeachersTable } from '@/components/platform/teachers/table'
-import { getTeacherColumns, type TeacherRow } from '@/components/platform/teachers/columns'
+import { type TeacherRow } from '@/components/platform/teachers/columns'
 import { SearchParams } from 'nuqs/server'
 import { teachersSearchParams } from '@/components/platform/teachers/list-params'
 import { db } from '@/lib/db'
@@ -58,7 +58,7 @@ export default async function TeachersContent({ searchParams, dictionary }: Prop
           <h1>{dictionary?.teachers?.title || 'Teachers'}</h1>
           {/* <p className="text-sm text-muted-foreground">List and manage teachers (placeholder)</p> */}
         </div>
-        <TeachersTable data={data} columns={getTeacherColumns(dictionary?.teachers)} pageCount={Math.max(1, Math.ceil(total / (sp.perPage || 20)))} />
+        <TeachersTable data={data} pageCount={Math.max(1, Math.ceil(total / (sp.perPage || 20)))} dictionary={dictionary?.teachers} />
       </div>
     </PageContainer>
   )
