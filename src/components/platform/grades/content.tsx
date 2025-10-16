@@ -1,5 +1,5 @@
 import { ResultsTable } from '@/components/platform/grades/table'
-import { resultColumns, type ResultRow } from '@/components/platform/grades/columns'
+import { type ResultRow } from '@/components/platform/grades/columns'
 import { SearchParams } from 'nuqs/server'
 import { resultsSearchParams } from '@/components/platform/grades/list-params'
 import { db } from '@/lib/db'
@@ -80,7 +80,7 @@ export default async function ResultsContent({ searchParams, dictionary, lang }:
           <h1>{dictionary.school.grades.results}</h1>
           <p className="muted">{dictionary.school.grades.manageResults}</p>
         </div>
-        <ResultsTable data={data} columns={resultColumns(dictionary, lang)} pageCount={Math.max(1, Math.ceil(total / (sp.perPage || 20)))} dictionary={dictionary} />
+        <ResultsTable data={data} pageCount={Math.max(1, Math.ceil(total / (sp.perPage || 20)))} dictionary={dictionary} lang={lang} />
       </div>
     </PageContainer>
   )
