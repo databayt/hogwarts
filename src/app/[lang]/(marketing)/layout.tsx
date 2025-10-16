@@ -24,7 +24,7 @@ export default async function MarketingLayout({
       >
         {children}
       </main>
-      <MarketingFooter dictionary={dictionary} />
+      <MarketingFooter />
     </div>
   );
 }
