@@ -1,18 +1,28 @@
 "use client";
 
-import { ColumnDef } from "@tanstack/react-table";
+import { useMemo } from "react";
 import { DataTable } from "@/components/table/data-table/data-table";
 import { DataTableToolbar } from "@/components/table/data-table/data-table-toolbar";
 import { useDataTable } from "@/components/table/hooks/use-data-table";
-import type { StudentRow } from "./columns";
+import { getStudentColumns, type StudentRow } from "./columns";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { useModal } from "@/components/atom/modal/context";
 import Modal from "@/components/atom/modal/modal";
 import { StudentCreateForm } from "@/components/platform/students/form";
 import { ExportButton } from "./export-button";
+import type { Dictionary } from "@/components/internationalization/dictionaries";
 
-export function StudentsTable({ data, columns, pageCount }: { data: StudentRow[]; columns: ColumnDef<StudentRow, unknown>[]; pageCount: number }) {
+interface StudentsTableProps {
+  data: StudentRow[];
+  pageCount: number;
+  dictionary?: Dictionary['school']['students'];
+}
+
+export function StudentsTable({ data, pageCount, dictionary }: StudentsTableProps) {
+  // Generate columns on the client side with hooks
+  const columns = useMemo(() => getStudentColumns(dictionary), [dictionary]);
+
   const { table } = useDataTable<StudentRow>({ data, columns, pageCount });
   const { openModal } = useModal();
   return (

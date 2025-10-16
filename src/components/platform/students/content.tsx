@@ -1,5 +1,5 @@
 import { StudentsTable } from '@/components/platform/students/table'
-import { getStudentColumns, type StudentRow } from '@/components/platform/students/columns'
+import { type StudentRow } from '@/components/platform/students/columns'
 import { SearchParams } from 'nuqs/server'
 import { studentsSearchParams } from '@/components/platform/students/list-params'
 import { db } from '@/lib/db'
@@ -58,7 +58,7 @@ export default async function StudentsContent({ searchParams, school, dictionary
         </h1>
         {/* <p className="text-sm text-muted-foreground">List and manage students (placeholder)</p> */}
       </div>
-      <StudentsTable data={data} columns={getStudentColumns(dictionary?.students)} pageCount={Math.max(1, Math.ceil(total / (sp.perPage || 20)))} />
+      <StudentsTable data={data} pageCount={Math.max(1, Math.ceil(total / (sp.perPage || 20)))} dictionary={dictionary?.students} />
     </div>
   )
 }
