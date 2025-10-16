@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useSwitchLocaleHref, useLocale } from '@/components/internationalization/use-locale';
 import { i18n, localeConfig, type Locale } from '@/components/internationalization/config';
 import {
@@ -22,8 +22,18 @@ export function LanguageSwitcher({
   className,
   variant = "dropdown"
 }: LanguageSwitcherProps) {
+  const router = useRouter();
   const getSwitchLocaleHref = useSwitchLocaleHref();
   const { locale: currentLocale, isRTL } = useLocale();
+
+  const handleLocaleChange = (locale: Locale) => {
+    // Set cookie to persist locale preference
+    document.cookie = `NEXT_LOCALE=${locale}; path=/; max-age=31536000; samesite=lax`;
+
+    // Navigate to the new locale URL
+    const newPath = getSwitchLocaleHref(locale);
+    router.push(newPath);
+  };
 
   // Toggle variant - simple button that switches to the other language
   if (variant === "toggle") {
@@ -35,12 +45,10 @@ export function LanguageSwitcher({
         variant="link"
         size="icon"
         className={cn("h-8 w-8 px-0", className)}
-        asChild
+        onClick={() => handleLocaleChange(nextLocale)}
       >
-        <Link href={getSwitchLocaleHref(nextLocale)}>
-          <Languages className="h-4 w-4" />
-          <span className="sr-only">Switch language</span>
-        </Link>
+        <Languages className="h-4 w-4" />
+        <span className="sr-only">Switch language</span>
       </Button>
     );
   }
@@ -53,9 +61,9 @@ export function LanguageSwitcher({
           const isActive = locale === currentLocale;
 
           return (
-            <Link
+            <button
               key={locale}
-              href={getSwitchLocaleHref(locale)}
+              onClick={() => handleLocaleChange(locale)}
               className={cn(
                 "px-3 py-1 rounded-md transition-colors",
                 isActive
@@ -65,7 +73,7 @@ export function LanguageSwitcher({
             >
               <span className="text-lg mr-2">{config.flag}</span>
               <span className="text-sm">{config.nativeName}</span>
-            </Link>
+            </button>
           );
         })}
       </div>
@@ -90,20 +98,19 @@ export function LanguageSwitcher({
           const isActive = locale === currentLocale;
 
           return (
-            <DropdownMenuItem key={locale} asChild>
-              <Link
-                href={getSwitchLocaleHref(locale)}
-                className={cn(
-                  "flex items-center gap-2 w-full",
-                  isActive && "bg-muted"
-                )}
-              >
-                <span className="text-lg">{config.flag}</span>
-                <span>{config.nativeName}</span>
-                {isActive && (
-                  <span className="ml-auto text-xs">✓</span>
-                )}
-              </Link>
+            <DropdownMenuItem
+              key={locale}
+              onClick={() => handleLocaleChange(locale)}
+              className={cn(
+                "flex items-center gap-2 w-full cursor-pointer",
+                isActive && "bg-muted"
+              )}
+            >
+              <span className="text-lg">{config.flag}</span>
+              <span>{config.nativeName}</span>
+              {isActive && (
+                <span className={`${isRTL ? 'mr-auto' : 'ml-auto'} text-xs`}>✓</span>
+              )}
             </DropdownMenuItem>
           );
         })}
