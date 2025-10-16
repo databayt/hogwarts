@@ -52,9 +52,9 @@ export default function PriceContent(props: Props) {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="w-full flex flex-col items-center space-y-6">
       {/* Large price display with edit functionality */}
-      <div className="flex items-start justify-start mb-6">
+      <div className="flex items-start justify-center mb-6">
         <div className="relative flex items-center">
           <input
             ref={inputRef}
@@ -80,7 +80,7 @@ export default function PriceContent(props: Props) {
                 e.currentTarget.setSelectionRange(1, 1);
               }
             }}
-            className="text-foreground border-none outline-none w-auto min-w-0 bg-transparent text-6xl font-extrabold"
+            className="text-foreground border-none outline-none w-auto min-w-0 bg-transparent text-6xl font-extrabold text-center"
             style={{
               width: `${(`$${price}`).length * 0.8}em`,
               caretColor: 'var(--foreground)'
@@ -102,7 +102,7 @@ export default function PriceContent(props: Props) {
       </div>
 
       {/* View similar schools button */}
-      <div className="mb-4">
+      <div className="mb-4 flex justify-center">
         <Button variant="outline" className="inline-flex items-center space-x-2 rounded-full">
           <DollarSign size={12} />
           <span>View similar schools</span>
@@ -110,7 +110,7 @@ export default function PriceContent(props: Props) {
       </div>
 
       {/* Learn more link */}
-      <div className="">
+      <div className="flex justify-center">
         <Button variant="link" className="text-muted-foreground underline hover:no-underline p-0">
           Learn more about fees
         </Button>

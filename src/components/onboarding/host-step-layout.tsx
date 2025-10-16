@@ -19,7 +19,7 @@ const HostStepLayout: React.FC<HostStepLayoutProps> = ({
   return (
     <div className={cn('', className)}>
       <div className="items-center justify-center">
-        <div className="flex flex-col lg:flex-row gap-6 lg:gap-12">
+        <div className="flex flex-col lg:flex-row gap-6 lg:gap-12 items-start">
           {/* Left div - Title and subtitle */}
           <div className="flex-1 flex flex-col">
             {title && title !== ' ' && (
@@ -43,7 +43,7 @@ const HostStepLayout: React.FC<HostStepLayoutProps> = ({
           </div>
 
           {/* Right div - Content */}
-          <div className="flex-1">
+          <div className="flex-1 flex flex-col items-center justify-center">
             {children}
           </div>
         </div>
