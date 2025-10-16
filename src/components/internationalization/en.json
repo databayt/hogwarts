@@ -801,5 +801,27 @@
       "stream": "Stream",
       "profile": "Profile"
     }
+  },
+  "saas": {
+    "sidebar": {
+      "Dashboard": "Dashboard",
+      "Kanban": "Kanban",
+      "Products": "Products",
+      "Domains": "Domains",
+      "Billing": "Billing",
+      "Observability": "Observability",
+      "Tenants": "Tenants",
+      "Profile": "Profile"
+    },
+    "breadcrumb": {
+      "dashboard": "Dashboard",
+      "kanban": "Kanban",
+      "product": "Products",
+      "domains": "Domains",
+      "billing": "Billing",
+      "observability": "Observability",
+      "tenants": "Tenants",
+      "profile": "Profile"
+    }
   }
 }

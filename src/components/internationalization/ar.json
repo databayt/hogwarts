@@ -391,5 +391,27 @@
       "stream": "البث",
       "profile": "الملف الشخصي"
     }
+  },
+  "saas": {
+    "sidebar": {
+      "Dashboard": "لوحة التحكم",
+      "Kanban": "كانبان",
+      "Products": "المنتجات",
+      "Domains": "النطاقات",
+      "Billing": "الفواتير",
+      "Observability": "الرصد",
+      "Tenants": "المستأجرون",
+      "Profile": "الملف الشخصي"
+    },
+    "breadcrumb": {
+      "dashboard": "لوحة التحكم",
+      "kanban": "كانبان",
+      "product": "المنتجات",
+      "domains": "النطاقات",
+      "billing": "الفواتير",
+      "observability": "الرصد",
+      "tenants": "المستأجرون",
+      "profile": "الملف الشخصي"
+    }
   }
 }

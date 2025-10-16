@@ -16,31 +16,37 @@ import {
 } from "@/components/ui/sidebar";
 import { platformNav } from "./config";
 import { Icons } from "@/components/template/platform-sidebar/icons";
+import { useDictionary } from "@/components/internationalization/use-dictionary";
+import { useLocale } from "@/components/internationalization/use-locale";
 
 export default function SaasSidebar() {
   const pathname = usePathname();
   const { setOpenMobile } = useSidebar();
+  const { dictionary } = useDictionary();
+  const { isRTL } = useLocale();
 
   const handleLinkClick = React.useCallback(() => {
     setOpenMobile(false);
   }, [setOpenMobile]);
 
   return (
-    <Sidebar className="w-56 top-16" collapsible="offcanvas">
-      
+    <Sidebar className="w-56 top-16" collapsible="offcanvas" side={isRTL ? "right" : "left"}>
+
       <SidebarContent className="border-0 bg-transparent">
-        <ScrollArea className="h-full">
+        <ScrollArea className="h-full" dir={isRTL ? "rtl" : "ltr"}>
           <SidebarGroup className="p-2">
-            <SidebarMenu className="space-y-1">
+            <SidebarMenu className="space-y-1 list-none">
               {platformNav.map((item) => {
                 const isActive = pathname === item.href || pathname?.startsWith(item.href + "/");
+                // Get translated title from dictionary if available
+                const sidebarDict = dictionary?.saas?.sidebar as Record<string, string> | undefined;
+                const translatedTitle = sidebarDict?.[item.title] || item.title;
+
                 return (
                   <SidebarMenuItem key={item.href}>
                     <SidebarMenuButton asChild isActive={isActive} size="sm">
                       <Link href={item.href} className="muted" onClick={handleLinkClick}>
-                        <span className={`mr-2 inline-flex items-center justify-center ${
-                          item.className ? "size-auto" : "size-4"
-                        }`}>
+                        <span className="inline-flex items-center justify-center size-4">
                           {(() => {
                             const Icon = Icons[item.icon];
                             if (item.className) {
@@ -49,7 +55,7 @@ export default function SaasSidebar() {
                             return Icon ? <Icon className="h-4 w-4" /> : null;
                           })()}
                         </span>
-                        {item.title}
+                        {translatedTitle}
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
