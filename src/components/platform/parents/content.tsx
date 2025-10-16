@@ -57,7 +57,7 @@ export default async function ParentsContent({ searchParams, dictionary, lang }:
     <PageContainer>
       <div className="flex flex-1 flex-col gap-4">
         <div>
-          <h1 className="text-xl font-semibold">Parents</h1>
+          <h1 className="text-xl font-semibold">{dictionary?.school?.parents?.title || 'Parents'}</h1>
           {/* <p className="text-sm text-muted-foreground">List and manage parents (placeholder)</p> */}
         </div>
         <ParentsTable data={data} columns={parentColumns} pageCount={Math.max(1, Math.ceil(total / (sp.perPage || 20)))} />

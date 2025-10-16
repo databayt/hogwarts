@@ -73,8 +73,8 @@ export default async function ClassesContent({ searchParams, dictionary, lang }:
     <PageContainer>
       <div className="flex flex-1 flex-col gap-4">
         <div>
-          <h1 className="text-xl font-semibold">Classes</h1>
-          <p className="text-sm text-muted-foreground">Manage academic classes and schedules</p>
+          <h1 className="text-xl font-semibold">{dictionary?.school?.classes?.title || 'Classes'}</h1>
+          <p className="text-sm text-muted-foreground">{dictionary?.school?.classes?.description || 'Manage academic classes and schedules'}</p>
         </div>
         <ClassesTable data={data} pageCount={Math.max(1, Math.ceil(total / (sp.perPage || 20)))} />
       </div>

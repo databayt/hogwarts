@@ -48,9 +48,9 @@ export function EnhancedSettingsContent({ dictionary, lang }: Props) {
     <div className="space-y-6">
       {/* Page Header */}
       <div>
-        <h2 className="text-3xl font-bold tracking-tight">Settings</h2>
+        <h2 className="text-3xl font-bold tracking-tight">{dictionary?.school?.settings?.title || 'Settings'}</h2>
         <p className="text-muted-foreground">
-          Manage your school settings, users, roles, and permissions
+          {dictionary?.school?.settings?.description || 'Manage your school settings, users, roles, and permissions'}
         </p>
       </div>
 
@@ -59,27 +59,27 @@ export function EnhancedSettingsContent({ dictionary, lang }: Props) {
         <TabsList className="grid w-full grid-cols-2 lg:grid-cols-6">
           <TabsTrigger value="general" className="flex items-center gap-2">
             <School className="h-4 w-4" />
-            <span className="hidden sm:inline">General</span>
+            <span className="hidden sm:inline">{dictionary?.school?.settings?.general || 'General'}</span>
           </TabsTrigger>
           <TabsTrigger value="users" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
-            <span className="hidden sm:inline">Users</span>
+            <span className="hidden sm:inline">{dictionary?.school?.settings?.users || 'Users'}</span>
           </TabsTrigger>
           <TabsTrigger value="roles" className="flex items-center gap-2">
             <UserCog className="h-4 w-4" />
-            <span className="hidden sm:inline">Roles</span>
+            <span className="hidden sm:inline">{dictionary?.school?.settings?.roles || 'Roles'}</span>
           </TabsTrigger>
           <TabsTrigger value="permissions" className="flex items-center gap-2">
             <Shield className="h-4 w-4" />
-            <span className="hidden sm:inline">Permissions</span>
+            <span className="hidden sm:inline">{dictionary?.school?.settings?.permissions || 'Permissions'}</span>
           </TabsTrigger>
           <TabsTrigger value="notifications" className="flex items-center gap-2">
             <Bell className="h-4 w-4" />
-            <span className="hidden sm:inline">Notifications</span>
+            <span className="hidden sm:inline">{dictionary?.school?.settings?.notifications || 'Notifications'}</span>
           </TabsTrigger>
           <TabsTrigger value="advanced" className="flex items-center gap-2">
             <Database className="h-4 w-4" />
-            <span className="hidden sm:inline">Advanced</span>
+            <span className="hidden sm:inline">{dictionary?.school?.settings?.advanced || 'Advanced'}</span>
           </TabsTrigger>
         </TabsList>
 
@@ -125,6 +125,7 @@ export function EnhancedSettingsContent({ dictionary, lang }: Props) {
             isDeveloper={isDeveloper}
             isAdmin={isAdmin}
             schoolId={school?.id}
+            dictionary={dictionary}
           />
         </TabsContent>
       </Tabs>
@@ -137,10 +138,12 @@ function AdvancedSettings({
   isDeveloper,
   isAdmin,
   schoolId,
+  dictionary,
 }: {
   isDeveloper: boolean;
   isAdmin: boolean;
   schoolId?: string;
+  dictionary: Dictionary;
 }) {
   const [dataExportLoading, setDataExportLoading] = React.useState(false);
   const [cacheCleared, setCacheCleared] = React.useState(false);
@@ -170,10 +173,10 @@ function AdvancedSettings({
         <div>
           <h3 className="flex items-center gap-2 mb-1">
             <Database className="h-5 w-5" />
-            Database Operations
+            {dictionary?.school?.settings?.databaseOperations || 'Database Operations'}
           </h3>
           <p className="text-sm text-muted-foreground">
-            Manage database and system operations
+            {dictionary?.school?.settings?.manageDatabaseOperations || 'Manage database and system operations'}
           </p>
         </div>
 
@@ -181,9 +184,9 @@ function AdvancedSettings({
           {/* Data Export */}
           <div className="flex items-center justify-between p-4 rounded-lg border">
             <div>
-              <p className="font-medium">Export School Data</p>
+              <p className="font-medium">{dictionary?.school?.settings?.exportSchoolData || 'Export School Data'}</p>
               <p className="text-sm text-muted-foreground">
-                Download all school data in CSV/Excel format
+                {dictionary?.school?.settings?.downloadAllData || 'Download all school data in CSV/Excel format'}
               </p>
             </div>
             <button
@@ -191,23 +194,23 @@ function AdvancedSettings({
               disabled={dataExportLoading}
               className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50"
             >
-              {dataExportLoading ? "Exporting..." : "Export Data"}
+              {dataExportLoading ? (dictionary?.school?.settings?.exporting || 'Exporting...') : (dictionary?.school?.settings?.exportData || 'Export Data')}
             </button>
           </div>
 
           {/* Cache Management */}
           <div className="flex items-center justify-between p-4 rounded-lg border">
             <div>
-              <p className="font-medium">Clear Cache</p>
+              <p className="font-medium">{dictionary?.school?.settings?.clearCache || 'Clear Cache'}</p>
               <p className="text-sm text-muted-foreground">
-                Clear browser cache and temporary data
+                {dictionary?.school?.settings?.clearBrowserCache || 'Clear browser cache and temporary data'}
               </p>
             </div>
             <button
               onClick={handleCacheClear}
               className="px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/90"
             >
-              {cacheCleared ? "Cache Cleared!" : "Clear Cache"}
+              {cacheCleared ? (dictionary?.school?.settings?.cacheCleared || 'Cache Cleared!') : (dictionary?.school?.settings?.clearCache || 'Clear Cache')}
             </button>
           </div>
 
@@ -216,20 +219,20 @@ function AdvancedSettings({
             <p className="font-medium mb-2">System Information</p>
             <div className="space-y-1 text-sm">
               <div className="flex justify-between">
-                <span className="text-muted-foreground">School ID:</span>
+                <span className="text-muted-foreground">{dictionary?.school?.settings?.schoolId || 'School ID:'}</span>
                 <span className="font-mono">{schoolId || "N/A"}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Version:</span>
+                <span className="text-muted-foreground">{dictionary?.school?.settings?.version || 'Version:'}</span>
                 <span>v1.0.0</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Environment:</span>
+                <span className="text-muted-foreground">{dictionary?.school?.settings?.environment || 'Environment:'}</span>
                 <span>{process.env.NODE_ENV}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">API Status:</span>
-                <span className="text-green-600">Operational</span>
+                <span className="text-muted-foreground">{dictionary?.school?.settings?.apiStatus || 'API Status:'}</span>
+                <span className="text-green-600">{dictionary?.school?.settings?.operational || 'Operational'}</span>
               </div>
             </div>
           </div>
@@ -238,17 +241,17 @@ function AdvancedSettings({
           {isDeveloper && (
             <div className="p-4 rounded-lg border border-purple-200 bg-purple-50 dark:bg-purple-950/20">
               <p className="font-medium mb-2 text-purple-700 dark:text-purple-400">
-                Developer Tools
+                {dictionary?.school?.settings?.developerTools || 'Developer Tools'}
               </p>
               <div className="space-y-2">
                 <button className="w-full px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 text-sm">
-                  Run Database Migrations
+                  {dictionary?.school?.settings?.runDatabaseMigrations || 'Run Database Migrations'}
                 </button>
                 <button className="w-full px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 text-sm">
-                  Seed Test Data
+                  {dictionary?.school?.settings?.seedTestData || 'Seed Test Data'}
                 </button>
                 <button className="w-full px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 text-sm">
-                  View Debug Logs
+                  {dictionary?.school?.settings?.viewDebugLogs || 'View Debug Logs'}
                 </button>
               </div>
             </div>
@@ -259,16 +262,16 @@ function AdvancedSettings({
       {/* API Settings */}
       <div className="rounded-lg border bg-card p-6 space-y-4">
         <div>
-          <h3 className="mb-1">API Settings</h3>
+          <h3 className="mb-1">{dictionary?.school?.settings?.apiSettings || 'API Settings'}</h3>
           <p className="text-sm text-muted-foreground">
-            Configure API access and webhooks
+            {dictionary?.school?.settings?.configureApiAccess || 'Configure API access and webhooks'}
           </p>
         </div>
 
         <div className="space-y-4">
           {/* API Key */}
           <div className="p-4 rounded-lg border">
-            <p className="font-medium mb-2">API Key</p>
+            <p className="font-medium mb-2">{dictionary?.school?.settings?.apiKey || 'API Key'}</p>
             <div className="flex items-center gap-2">
               <input
                 type="password"
@@ -277,22 +280,22 @@ function AdvancedSettings({
                 readOnly
               />
               <button className="px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/90">
-                Regenerate
+                {dictionary?.school?.settings?.regenerate || 'Regenerate'}
               </button>
             </div>
             <p className="text-xs text-muted-foreground mt-2">
-              Use this key to authenticate API requests
+              {dictionary?.school?.settings?.useKeyToAuthenticate || 'Use this key to authenticate API requests'}
             </p>
           </div>
 
           {/* Webhooks */}
           <div className="p-4 rounded-lg border">
-            <p className="font-medium mb-2">Webhooks</p>
+            <p className="font-medium mb-2">{dictionary?.school?.settings?.webhooks || 'Webhooks'}</p>
             <p className="text-sm text-muted-foreground mb-3">
-              Configure webhook endpoints for real-time events
+              {dictionary?.school?.settings?.configureWebhooks || 'Configure webhook endpoints for real-time events'}
             </p>
             <button className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90">
-              Configure Webhooks
+              {dictionary?.school?.settings?.configureWebhooksButton || 'Configure Webhooks'}
             </button>
           </div>
         </div>
@@ -302,9 +305,9 @@ function AdvancedSettings({
       {(isDeveloper || isAdmin) && (
         <div className="rounded-lg border border-red-200 bg-red-50 dark:bg-red-950/20 p-6 space-y-4">
           <div>
-            <h3 className="text-red-700 dark:text-red-400 mb-1">Danger Zone</h3>
+            <h3 className="text-red-700 dark:text-red-400 mb-1">{dictionary?.school?.settings?.dangerZone || 'Danger Zone'}</h3>
             <p className="text-sm text-red-600 dark:text-red-500">
-              These actions are irreversible. Please proceed with caution.
+              {dictionary?.school?.settings?.irreversibleActions || 'These actions are irreversible. Please proceed with caution.'}
             </p>
           </div>
 
@@ -313,14 +316,14 @@ function AdvancedSettings({
             <div className="flex items-center justify-between p-4 rounded-lg border border-red-200">
               <div>
                 <p className="font-medium text-red-700 dark:text-red-400">
-                  Reset School Data
+                  {dictionary?.school?.settings?.resetSchoolData || 'Reset School Data'}
                 </p>
                 <p className="text-sm text-red-600 dark:text-red-500">
-                  Delete all school data and start fresh
+                  {dictionary?.school?.settings?.deleteAllData || 'Delete all school data and start fresh'}
                 </p>
               </div>
               <button className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">
-                Reset Data
+                {dictionary?.school?.settings?.resetData || 'Reset Data'}
               </button>
             </div>
 
@@ -329,14 +332,14 @@ function AdvancedSettings({
               <div className="flex items-center justify-between p-4 rounded-lg border border-red-200">
                 <div>
                   <p className="font-medium text-red-700 dark:text-red-400">
-                    Delete School
+                    {dictionary?.school?.settings?.deleteSchool || 'Delete School'}
                   </p>
                   <p className="text-sm text-red-600 dark:text-red-500">
-                    Permanently delete this school and all associated data
+                    {dictionary?.school?.settings?.permanentlyDelete || 'Permanently delete this school and all associated data'}
                   </p>
                 </div>
                 <button className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">
-                  Delete School
+                  {dictionary?.school?.settings?.deleteSchool || 'Delete School'}
                 </button>
               </div>
             )}

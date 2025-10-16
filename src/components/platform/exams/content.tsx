@@ -76,8 +76,8 @@ export default async function ExamsContent({ searchParams, dictionary, lang }: P
     <PageContainer>
       <div className="flex flex-1 flex-col gap-4">
         <div>
-          <h1 className="text-xl font-semibold">Exams</h1>
-          <p className="text-sm text-muted-foreground">Schedule and manage your exams</p>
+          <h1 className="text-xl font-semibold">{dictionary?.school?.exams?.title || 'Exams'}</h1>
+          <p className="text-sm text-muted-foreground">{dictionary?.school?.exams?.description || 'Schedule and manage your exams'}</p>
         </div>
         <ExamsTable data={data} columns={examColumns} pageCount={Math.max(1, Math.ceil(total / (sp.perPage || 20)))} />
       </div>

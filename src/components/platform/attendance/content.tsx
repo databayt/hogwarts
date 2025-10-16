@@ -51,9 +51,9 @@ export function AttendanceContent({ dictionary }: Props) {
       await markAttendance({ classId, date: new Date(date).toISOString(), records })
       setChanged({})
       await load()
-      SuccessToast("Attendance saved successfully")
+      SuccessToast(dictionary?.attendance?.attendanceSaved || "Attendance saved successfully")
     } catch (e) {
-      ErrorToast(e instanceof Error ? e.message : 'Failed')
+      ErrorToast(e instanceof Error ? e.message : (dictionary?.attendance?.failed || 'Failed'))
     } finally {
       setSubmitting(false)
     }
@@ -103,7 +103,7 @@ export function AttendanceContent({ dictionary }: Props) {
           <div className="ml-auto flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={() => setRows((r) => r.map((x) => ({ ...x, status: 'present' })))}>{dict.allPresent || "All Present"}</Button>
             <Button variant="outline" size="sm" onClick={() => setRows((r) => r.map((x) => ({ ...x, status: 'absent' })))}>{dict.allAbsent || "All Absent"}</Button>
-            <Button variant="outline" size="sm" onClick={() => setRows((r) => r.map((x) => ({ ...x, status: 'late' })))}>All Late</Button>
+            <Button variant="outline" size="sm" onClick={() => setRows((r) => r.map((x) => ({ ...x, status: 'late' })))}>{ dict.allLate || "All Late"}</Button>
           </div>
         </div>
         <Button size="sm" onClick={onSubmit} disabled={submitting || !Object.keys(changed).length}>{dict.saveAttendance || "Save Attendance"}</Button>

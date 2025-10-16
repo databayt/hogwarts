@@ -11,7 +11,11 @@
       "todayAttendance": "Today's Attendance",
       "pendingTasks": "Pending Tasks",
       "recentActivities": "Recent Activities",
-      "upcomingEvents": "Upcoming Events"
+      "upcomingEvents": "Upcoming Events",
+      "yourSchool": "Your School",
+      "dashboardComingSoon": "Dashboard Coming Soon",
+      "workingOnDashboard": "We're working on a personalized dashboard for your role. Check back soon for updates!",
+      "unknown": "Unknown"
     },
     "attendance": {
       "title": "Attendance",
@@ -28,12 +32,15 @@
       "bulkMark": "Bulk Mark",
       "allPresent": "All Present",
       "allAbsent": "All Absent",
+      "allLate": "All Late",
       "exportReport": "Export Report",
       "attendanceRate": "Attendance Rate",
       "dailyReport": "Daily Report",
       "monthlyReport": "Monthly Report",
       "studentReport": "Student Report",
-      "classReport": "Class Report"
+      "classReport": "Class Report",
+      "attendanceSaved": "Attendance saved successfully",
+      "failed": "Failed"
     },
     "students": {
       "title": "Students",
@@ -95,6 +102,7 @@
     },
     "classes": {
       "title": "Classes",
+      "description": "Manage academic classes and schedules",
       "allClasses": "All Classes",
       "addClass": "Add Class",
       "editClass": "Edit Class",
@@ -113,6 +121,7 @@
     },
     "subjects": {
       "title": "Subjects",
+      "description": "Manage academic subjects and their departments",
       "allSubjects": "All Subjects",
       "addSubject": "Add Subject",
       "editSubject": "Edit Subject",
@@ -249,6 +258,7 @@
     },
     "exams": {
       "title": "Exams",
+      "description": "Schedule and manage your exams",
       "allExams": "All Exams",
       "createExam": "Create Exam",
       "editExam": "Edit Exam",
@@ -271,8 +281,28 @@
       "gradeReport": "Grade Report",
       "transcript": "Transcript"
     },
+    "lessons": {
+      "title": "Lessons",
+      "description": "Plan and manage your lessons"
+    },
+    "events": {
+      "title": "Events",
+      "description": "Schedule and manage your school events",
+      "locationTBD": "TBD",
+      "organizerTBD": "TBD",
+      "audienceTBD": "All"
+    },
+    "assignments": {
+      "title": "Assignments",
+      "description": "Manage academic assignments and assessments"
+    },
     "settings": {
       "title": "Settings",
+      "description": "Manage your school settings, users, roles, and permissions",
+      "general": "General",
+      "users": "Users",
+      "advanced": "Advanced",
+      "notifications": "Notifications",
       "schoolSettings": "School Settings",
       "schoolName": "School Name",
       "schoolLogo": "School Logo",
@@ -296,7 +326,40 @@
       "systemInfo": "System Information",
       "language": "Language",
       "timezone": "Timezone",
-      "currency": "Currency"
+      "currency": "Currency",
+      "databaseOperations": "Database Operations",
+      "manageDatabaseOperations": "Manage database and system operations",
+      "exportSchoolData": "Export School Data",
+      "downloadAllData": "Download all school data in CSV/Excel format",
+      "exporting": "Exporting...",
+      "exportData": "Export Data",
+      "clearCache": "Clear Cache",
+      "clearBrowserCache": "Clear browser cache and temporary data",
+      "cacheCleared": "Cache Cleared!",
+      "schoolId": "School ID:",
+      "version": "Version:",
+      "environment": "Environment:",
+      "apiStatus": "API Status:",
+      "operational": "Operational",
+      "developerTools": "Developer Tools",
+      "runDatabaseMigrations": "Run Database Migrations",
+      "seedTestData": "Seed Test Data",
+      "viewDebugLogs": "View Debug Logs",
+      "apiSettings": "API Settings",
+      "configureApiAccess": "Configure API access and webhooks",
+      "apiKey": "API Key",
+      "regenerate": "Regenerate",
+      "useKeyToAuthenticate": "Use this key to authenticate API requests",
+      "webhooks": "Webhooks",
+      "configureWebhooks": "Configure webhook endpoints for real-time events",
+      "configureWebhooksButton": "Configure Webhooks",
+      "dangerZone": "Danger Zone",
+      "irreversibleActions": "These actions are irreversible. Please proceed with caution.",
+      "resetSchoolData": "Reset School Data",
+      "deleteAllData": "Delete all school data and start fresh",
+      "resetData": "Reset Data",
+      "deleteSchool": "Delete School",
+      "permanentlyDelete": "Permanently delete this school and all associated data"
     },
     "billing": {
       "title": "Billing",

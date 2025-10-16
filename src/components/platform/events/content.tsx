@@ -53,9 +53,9 @@ export default async function EventsContent({ searchParams, dictionary, lang }: 
       eventDate: (e.eventDate as Date).toISOString(), 
       startTime: e.startTime, 
       endTime: e.endTime, 
-      location: e.location || 'TBD', 
-      organizer: e.organizer || 'TBD', 
-      targetAudience: e.targetAudience || 'All', 
+      location: e.location || dictionary?.school?.events?.locationTBD || 'TBD',
+      organizer: e.organizer || dictionary?.school?.events?.organizerTBD || 'TBD',
+      targetAudience: e.targetAudience || dictionary?.school?.events?.audienceTBD || 'All', 
       maxAttendees: e.maxAttendees, 
       currentAttendees: e.currentAttendees, 
       status: e.status, 
@@ -69,8 +69,8 @@ export default async function EventsContent({ searchParams, dictionary, lang }: 
     <PageContainer>
       <div className="flex flex-1 flex-col gap-4">
         <div>
-          <h1 className="text-xl font-semibold">Events</h1>
-          <p className="text-sm text-muted-foreground">Schedule and manage your school events</p>
+          <h1 className="text-xl font-semibold">{dictionary?.school?.events?.title || 'Events'}</h1>
+          <p className="text-sm text-muted-foreground">{dictionary?.school?.events?.description || 'Schedule and manage your school events'}</p>
         </div>
         <EventsTable data={data} columns={eventColumns} pageCount={Math.max(1, Math.ceil(total / (sp.perPage || 20)))} />
       </div>

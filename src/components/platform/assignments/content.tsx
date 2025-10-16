@@ -61,8 +61,8 @@ export default async function AssignmentsContent({ searchParams, dictionary, lan
     <PageContainer>
       <div className="flex flex-1 flex-col gap-4">
         <div>
-          <h1 className="text-xl font-semibold">Assignments</h1>
-          <p className="text-sm text-muted-foreground">Manage academic assignments and assessments</p>
+          <h1 className="text-xl font-semibold">{dictionary?.school?.assignments?.title || 'Assignments'}</h1>
+          <p className="text-sm text-muted-foreground">{dictionary?.school?.assignments?.description || 'Manage academic assignments and assessments'}</p>
         </div>
         <AssignmentsTable data={data} columns={assignmentColumns} pageCount={Math.max(1, Math.ceil(total / (sp.perPage || 20)))} />
       </div>

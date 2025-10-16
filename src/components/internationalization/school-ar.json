@@ -11,7 +11,11 @@
       "todayAttendance": "حضور اليوم",
       "pendingTasks": "المهام المعلقة",
       "recentActivities": "الأنشطة الأخيرة",
-      "upcomingEvents": "الأحداث القادمة"
+      "upcomingEvents": "الأحداث القادمة",
+      "yourSchool": "مدرستك",
+      "dashboardComingSoon": "لوحة التحكم قريباً",
+      "workingOnDashboard": "نحن نعمل على لوحة تحكم شخصية لدورك. تحقق قريباً للحصول على التحديثات!",
+      "unknown": "غير معروف"
     },
     "attendance": {
       "title": "الحضور",
@@ -28,12 +32,15 @@
       "bulkMark": "تحديد جماعي",
       "allPresent": "الكل حاضر",
       "allAbsent": "الكل غائب",
+      "allLate": "الكل متأخر",
       "exportReport": "تصدير التقرير",
       "attendanceRate": "معدل الحضور",
       "dailyReport": "التقرير اليومي",
       "monthlyReport": "التقرير الشهري",
       "studentReport": "تقرير الطالب",
-      "classReport": "تقرير الفصل"
+      "classReport": "تقرير الفصل",
+      "attendanceSaved": "تم حفظ الحضور بنجاح",
+      "failed": "فشل"
     },
     "students": {
       "title": "الطلاب",
@@ -95,6 +102,7 @@
     },
     "classes": {
       "title": "الفصول",
+      "description": "إدارة الفصول الدراسية والجداول",
       "allClasses": "جميع الفصول",
       "addClass": "إضافة فصل",
       "editClass": "تعديل فصل",
@@ -113,6 +121,7 @@
     },
     "subjects": {
       "title": "المواد",
+      "description": "إدارة المواد الدراسية وأقسامها",
       "allSubjects": "جميع المواد",
       "addSubject": "إضافة مادة",
       "editSubject": "تعديل مادة",
@@ -249,6 +258,7 @@
     },
     "exams": {
       "title": "الامتحانات",
+      "description": "جدولة وإدارة الامتحانات",
       "allExams": "جميع الامتحانات",
       "createExam": "إنشاء امتحان",
       "editExam": "تعديل امتحان",
@@ -271,8 +281,28 @@
       "gradeReport": "تقرير الدرجات",
       "transcript": "كشف الدرجات"
     },
+    "lessons": {
+      "title": "الدروس",
+      "description": "تخطيط وإدارة الدروس"
+    },
+    "events": {
+      "title": "الفعاليات",
+      "description": "جدولة وإدارة فعاليات المدرسة",
+      "locationTBD": "سيحدد لاحقاً",
+      "organizerTBD": "سيحدد لاحقاً",
+      "audienceTBD": "الجميع"
+    },
+    "assignments": {
+      "title": "الواجبات",
+      "description": "إدارة الواجبات والتقييمات الأكاديمية"
+    },
     "settings": {
       "title": "الإعدادات",
+      "description": "إدارة إعدادات المدرسة والمستخدمين والأدوار والصلاحيات",
+      "general": "عام",
+      "users": "المستخدمون",
+      "advanced": "متقدم",
+      "notifications": "الإشعارات",
       "schoolSettings": "إعدادات المدرسة",
       "schoolName": "اسم المدرسة",
       "schoolLogo": "شعار المدرسة",
@@ -296,7 +326,40 @@
       "systemInfo": "معلومات النظام",
       "language": "اللغة",
       "timezone": "المنطقة الزمنية",
-      "currency": "العملة"
+      "currency": "العملة",
+      "databaseOperations": "عمليات قاعدة البيانات",
+      "manageDatabaseOperations": "إدارة عمليات قاعدة البيانات والنظام",
+      "exportSchoolData": "تصدير بيانات المدرسة",
+      "downloadAllData": "تحميل جميع بيانات المدرسة بصيغة CSV/Excel",
+      "exporting": "جاري التصدير...",
+      "exportData": "تصدير البيانات",
+      "clearCache": "مسح ذاكرة التخزين المؤقت",
+      "clearBrowserCache": "مسح ذاكرة التخزين المؤقت للمتصفح والبيانات المؤقتة",
+      "cacheCleared": "تم مسح ذاكرة التخزين المؤقت!",
+      "schoolId": "معرف المدرسة:",
+      "version": "الإصدار:",
+      "environment": "البيئة:",
+      "apiStatus": "حالة API:",
+      "operational": "يعمل",
+      "developerTools": "أدوات المطور",
+      "runDatabaseMigrations": "تشغيل ترحيلات قاعدة البيانات",
+      "seedTestData": "إضافة بيانات تجريبية",
+      "viewDebugLogs": "عرض سجلات التصحيح",
+      "apiSettings": "إعدادات API",
+      "configureApiAccess": "تكوين وصول API وWebhooks",
+      "apiKey": "مفتاح API",
+      "regenerate": "إعادة توليد",
+      "useKeyToAuthenticate": "استخدم هذا المفتاح للمصادقة على طلبات API",
+      "webhooks": "Webhooks",
+      "configureWebhooks": "تكوين نقاط نهاية Webhook للأحداث في الوقت الفعلي",
+      "configureWebhooksButton": "تكوين Webhooks",
+      "dangerZone": "منطقة الخطر",
+      "irreversibleActions": "هذه الإجراءات لا يمكن التراجع عنها. يرجى المتابعة بحذر.",
+      "resetSchoolData": "إعادة تعيين بيانات المدرسة",
+      "deleteAllData": "حذف جميع بيانات المدرسة والبدء من جديد",
+      "resetData": "إعادة تعيين البيانات",
+      "deleteSchool": "حذف المدرسة",
+      "permanentlyDelete": "حذف هذه المدرسة وجميع البيانات المرتبطة بها بشكل دائم"
     },
     "billing": {
       "title": "الفوترة",

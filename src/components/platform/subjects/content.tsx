@@ -58,8 +58,8 @@ export default async function SubjectsContent({ searchParams, dictionary, lang }
     <PageContainer>
       <div className="flex flex-1 flex-col gap-4">
         <div>
-          <h1 className="text-xl font-semibold">Subjects</h1>
-          <p className="text-sm text-muted-foreground">Manage academic subjects and their departments</p>
+          <h1 className="text-xl font-semibold">{dictionary?.school?.subjects?.title || 'Subjects'}</h1>
+          <p className="text-sm text-muted-foreground">{dictionary?.school?.subjects?.description || 'Manage academic subjects and their departments'}</p>
         </div>
         <SubjectsTable data={data} columns={subjectColumns} pageCount={Math.max(1, Math.ceil(total / (sp.perPage || 20)))} />
       </div>

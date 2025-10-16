@@ -80,8 +80,8 @@ export default async function LessonsContent({ searchParams, dictionary, lang }:
     <PageContainer>
       <div className="flex flex-1 flex-col gap-4">
         <div>
-          <h1 className="text-xl font-semibold">Lessons</h1>
-          <p className="text-sm text-muted-foreground">Plan and manage your lessons</p>
+          <h1 className="text-xl font-semibold">{dictionary?.school?.lessons?.title || 'Lessons'}</h1>
+          <p className="text-sm text-muted-foreground">{dictionary?.school?.lessons?.description || 'Plan and manage your lessons'}</p>
         </div>
         <LessonsTable data={data} columns={lessonColumns} pageCount={Math.max(1, Math.ceil(total / (sp.perPage || 20)))} />
       </div>
