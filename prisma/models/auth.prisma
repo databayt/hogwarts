@@ -55,6 +55,11 @@ model User {
   // Library relations
   borrowRecords BorrowRecord[]
 
+  // Banking relations
+  bankAccounts     BankAccount[]     @relation("UserBankAccounts")
+  plaidItems       PlaidItem[]       @relation("UserPlaidItems")
+  dwollaCustomers  DwollaCustomer[]  @relation("UserDwollaCustomers")
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
