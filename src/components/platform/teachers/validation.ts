@@ -77,6 +77,13 @@ export const experienceSchema = z.object({
   }
 )
 
+// Phone number schema
+export const phoneNumberSchema = z.object({
+  phoneType: z.enum(["mobile", "home", "work", "emergency"]),
+  phoneNumber: z.string().min(1, "Phone number is required"),
+  isPrimary: z.boolean().default(false),
+})
+
 // Subject expertise schema
 export const subjectExpertiseSchema = z.object({
   subjectId: z.string().min(1, "Subject is required"),
@@ -87,6 +94,7 @@ export const subjectExpertiseSchema = z.object({
 export const teacherCreateSchema = teacherBaseSchema
   .merge(employmentDetailsSchema)
   .extend({
+    phoneNumbers: z.array(phoneNumberSchema).optional().default([]),
     qualifications: z.array(qualificationSchema).optional().default([]),
     experiences: z.array(experienceSchema).optional().default([]),
     subjectExpertise: z.array(subjectExpertiseSchema).optional().default([]),

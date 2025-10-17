@@ -1,0 +1,166 @@
+{
+  "title": "Library",
+  "subtitle": "Explore our collection of books and resources",
+  "description": "Welcome to the school library. Browse, borrow, and discover new books.",
+  "search": {
+    "placeholder": "Search books by title, author, or genre...",
+    "button": "Search",
+    "noResults": "No books found matching your search"
+  },
+  "filters": {
+    "all": "All Books",
+    "available": "Available",
+    "borrowed": "Borrowed",
+    "genre": "Genre",
+    "rating": "Rating"
+  },
+  "book": {
+    "by": "By",
+    "genre": "Genre",
+    "rating": "Rating",
+    "available": "Available",
+    "borrowed": "Borrowed",
+    "copies": "copies",
+    "copy": "copy",
+    "viewDetails": "View Details",
+    "borrow": "Borrow Book",
+    "return": "Return Book",
+    "reserve": "Reserve",
+    "summary": "Summary",
+    "description": "Description",
+    "video": "Book Video",
+    "dueDate": "Due Date",
+    "borrowedOn": "Borrowed On",
+    "status": {
+      "available": "Available",
+      "borrowed": "Borrowed",
+      "overdue": "Overdue",
+      "reserved": "Reserved"
+    }
+  },
+  "borrowing": {
+    "title": "Borrow Book",
+    "confirmMessage": "Are you sure you want to borrow this book?",
+    "successMessage": "Book borrowed successfully!",
+    "errorMessage": "Failed to borrow book. Please try again.",
+    "limitReached": "You have reached your borrowing limit",
+    "alreadyBorrowed": "You have already borrowed this book",
+    "notAvailable": "This book is not available for borrowing"
+  },
+  "returning": {
+    "title": "Return Book",
+    "confirmMessage": "Are you sure you want to return this book?",
+    "successMessage": "Book returned successfully!",
+    "errorMessage": "Failed to return book. Please try again.",
+    "overdueFine": "This book is overdue. Fine amount:"
+  },
+  "myProfile": {
+    "title": "My Library Profile",
+    "subtitle": "View your borrowed books and history",
+    "currentlyBorrowed": "Currently Borrowed",
+    "borrowingHistory": "Borrowing History",
+    "noBooksMessage": "You haven't borrowed any books yet",
+    "daysRemaining": "days remaining",
+    "overdue": "overdue",
+    "returned": "Returned",
+    "fine": "Fine"
+  },
+  "admin": {
+    "title": "Library Administration",
+    "subtitle": "Manage books, borrowing, and library settings",
+    "dashboard": "Dashboard",
+    "books": "Books",
+    "borrowers": "Borrowers",
+    "reports": "Reports",
+    "settings": "Settings",
+    "stats": {
+      "totalBooks": "Total Books",
+      "availableBooks": "Available Books",
+      "borrowedBooks": "Borrowed Books",
+      "overdueBooks": "Overdue Books",
+      "totalUsers": "Total Users",
+      "activeUsers": "Active Borrowers"
+    },
+    "actions": {
+      "addBook": "Add New Book",
+      "editBook": "Edit Book",
+      "deleteBook": "Delete Book",
+      "viewBorrowers": "View Borrowers",
+      "sendReminder": "Send Reminder",
+      "generateReport": "Generate Report"
+    },
+    "form": {
+      "title": "Title",
+      "author": "Author",
+      "genre": "Genre",
+      "isbn": "ISBN",
+      "description": "Description",
+      "summary": "Summary",
+      "totalCopies": "Total Copies",
+      "coverImage": "Cover Image",
+      "coverColor": "Cover Color",
+      "videoUrl": "Video URL (optional)",
+      "save": "Save Book",
+      "cancel": "Cancel",
+      "saving": "Saving...",
+      "validation": {
+        "titleRequired": "Title is required",
+        "authorRequired": "Author is required",
+        "genreRequired": "Genre is required",
+        "copiesMin": "At least 1 copy is required",
+        "invalidUrl": "Invalid URL format"
+      }
+    },
+    "deleteConfirm": {
+      "title": "Delete Book",
+      "message": "Are you sure you want to delete this book? This action cannot be undone.",
+      "confirm": "Delete",
+      "cancel": "Cancel"
+    }
+  },
+  "genres": {
+    "fiction": "Fiction",
+    "nonFiction": "Non-Fiction",
+    "science": "Science",
+    "technology": "Technology",
+    "history": "History",
+    "biography": "Biography",
+    "poetry": "Poetry",
+    "drama": "Drama",
+    "romance": "Romance",
+    "mystery": "Mystery",
+    "thriller": "Thriller",
+    "fantasy": "Fantasy",
+    "scienceFiction": "Science Fiction",
+    "selfHelp": "Self Help",
+    "business": "Business",
+    "education": "Education",
+    "children": "Children's Books",
+    "youngAdult": "Young Adult",
+    "reference": "Reference",
+    "textbook": "Textbook"
+  },
+  "navigation": {
+    "home": "Library Home",
+    "browse": "Browse Books",
+    "myBooks": "My Books",
+    "admin": "Admin Panel"
+  },
+  "footer": {
+    "copyright": "© 2024 School Library. All rights reserved.",
+    "contact": "Contact Librarian",
+    "hours": "Library Hours",
+    "rules": "Library Rules"
+  },
+  "errors": {
+    "notFound": "Book not found",
+    "unauthorized": "You are not authorized to access this page",
+    "serverError": "Something went wrong. Please try again later.",
+    "networkError": "Network error. Please check your connection."
+  },
+  "loading": {
+    "books": "Loading books...",
+    "bookDetails": "Loading book details...",
+    "profile": "Loading profile..."
+  }
+}

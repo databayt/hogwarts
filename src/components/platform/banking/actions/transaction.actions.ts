@@ -1,5 +1,6 @@
 'use server'
 
+import { auth } from '@/auth'
 import { db } from '@/lib/db'
 import { parseStringify } from '../lib/utils'
 
@@ -13,17 +14,31 @@ export async function getTransactionsByBankId({
   limit?: number
 }) {
   try {
+    // Get schoolId from session for multi-tenant isolation
+    const session = await auth()
+    const schoolId = session?.user?.schoolId
+
+    if (!schoolId) {
+      return null
+    }
+
     const skip = (page - 1) * limit
 
     const transactions = await db.transaction.findMany({
-      where: { bankAccountId },
+      where: {
+        bankAccountId,
+        schoolId // Multi-tenant isolation
+      },
       orderBy: { date: 'desc' },
       take: limit,
       skip
     })
 
     const total = await db.transaction.count({
-      where: { bankAccountId }
+      where: {
+        bankAccountId,
+        schoolId // Multi-tenant isolation
+      }
     })
 
     return parseStringify({
@@ -48,11 +63,22 @@ export async function getTransactionsByUserId({
   limit?: number
 }) {
   try {
+    // Get schoolId from session for multi-tenant isolation
+    const session = await auth()
+    const schoolId = session?.user?.schoolId
+
+    if (!schoolId) {
+      return null
+    }
+
     const skip = (page - 1) * limit
 
-    // Get all bank accounts for the user
+    // Get all bank accounts for the user within the school
     const bankAccounts = await db.bankAccount.findMany({
-      where: { userId },
+      where: {
+        userId,
+        schoolId // Multi-tenant isolation
+      },
       select: { id: true }
     })
 
@@ -63,7 +89,8 @@ export async function getTransactionsByUserId({
       where: {
         bankAccountId: {
           in: bankAccountIds
-        }
+        },
+        schoolId // Multi-tenant isolation
       },
       orderBy: { date: 'desc' },
       take: limit,
@@ -82,7 +109,8 @@ export async function getTransactionsByUserId({
       where: {
         bankAccountId: {
           in: bankAccountIds
-        }
+        },
+        schoolId // Multi-tenant isolation
       }
     })
 

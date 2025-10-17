@@ -1,9 +1,9 @@
 import { redirect } from 'next/navigation'
 import { auth } from '@/auth'
-import { BankingSidebar } from '@/components/banking/shared/sidebar'
-import { BankingMobileNav } from '@/components/banking/shared/mobile-nav'
-import { getDictionary } from '@/components/local/dictionaries'
-import type { Locale } from '@/components/local/config'
+import { BankingSidebar } from '@/components/platform/banking/shared/sidebar'
+import { BankingMobileNav } from '@/components/platform/banking/shared/mobile-nav'
+import { getDictionary } from '@/components/internationalization/dictionaries'
+import type { Locale } from '@/components/internationalization/config'
 
 export default async function BankingLayout({
   children,

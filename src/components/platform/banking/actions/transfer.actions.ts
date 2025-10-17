@@ -1,5 +1,6 @@
 'use server'
 
+import { auth } from '@/auth'
 import { db } from '@/lib/db'
 import { parseStringify } from '../lib/utils'
 
@@ -15,9 +16,20 @@ export async function createTransfer({
   note?: string
 }) {
   try {
-    // Check sender has sufficient funds
-    const senderAccount = await db.bankAccount.findUnique({
-      where: { id: senderBankId }
+    // Get schoolId from session for multi-tenant isolation
+    const session = await auth()
+    const schoolId = session?.user?.schoolId
+
+    if (!schoolId) {
+      throw new Error('School context not found')
+    }
+
+    // Check sender has sufficient funds and belongs to the same school
+    const senderAccount = await db.bankAccount.findFirst({
+      where: {
+        id: senderBankId,
+        schoolId // Multi-tenant isolation
+      }
     })
 
     if (!senderAccount) {
@@ -28,9 +40,22 @@ export async function createTransfer({
       throw new Error('Insufficient funds')
     }
 
+    // Verify receiver account belongs to the same school
+    const receiverAccount = await db.bankAccount.findFirst({
+      where: {
+        id: receiverBankId,
+        schoolId // Multi-tenant isolation - transfers only within same school
+      }
+    })
+
+    if (!receiverAccount) {
+      throw new Error('Receiver account not found or not in same school')
+    }
+
     // Create transfer record
     const transfer = await db.transfer.create({
       data: {
+        schoolId, // Multi-tenant support
         senderBankId,
         receiverBankId,
         amount,
@@ -85,10 +110,19 @@ export async function getTransferHistory({
   limit?: number
 }) {
   try {
+    // Get schoolId from session for multi-tenant isolation
+    const session = await auth()
+    const schoolId = session?.user?.schoolId
+
+    if (!schoolId) {
+      return null
+    }
+
     const skip = (page - 1) * limit
 
     const transfers = await db.transfer.findMany({
       where: {
+        schoolId, // Multi-tenant isolation
         OR: [
           { senderBankId: bankAccountId },
           { receiverBankId: bankAccountId }
@@ -109,6 +143,7 @@ export async function getTransferHistory({
 
     const total = await db.transfer.count({
       where: {
+        schoolId, // Multi-tenant isolation
         OR: [
           { senderBankId: bankAccountId },
           { receiverBankId: bankAccountId }

@@ -20,13 +20,13 @@ export function TotalBalanceBox({
     <div className="rounded-lg border bg-card p-6">
       <div className="flex items-center justify-between">
         <div className="space-y-2">
-          <p className="text-sm font-medium text-muted-foreground">
+          <p className="muted font-medium">
             {dictionary?.totalBalance || 'Total Balance'}
           </p>
-          <div className="text-3xl font-bold">
+          <h2>
             <AnimatedCounter amount={totalCurrentBalance} />
-          </div>
-          <p className="text-sm text-muted-foreground">
+          </h2>
+          <p className="muted">
             {totalBanks} {totalBanks === 1 ? 'Bank Account' : 'Bank Accounts'}
           </p>
         </div>

@@ -67,6 +67,7 @@ model Class {
   lessons          Lesson[]
   dependentCourses Class[]        @relation("CoursePrerequisites")
   classTeachers    ClassTeacher[] // Co-teaching support
+  feeStructures    FeeStructure[] // Fees module relation
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

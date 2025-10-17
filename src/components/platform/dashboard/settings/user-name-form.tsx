@@ -7,11 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useSession } from "next-auth/react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { z } from "zod";
-
-const userNameSchema = z.object({
-  name: z.string().min(1, "Name is required").max(32, "Max 32 characters"),
-});
+import { userNameSchema } from "../validation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";

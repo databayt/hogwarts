@@ -38,6 +38,7 @@ export function TeacherCreateForm() {
       contractStartDate: undefined,
       contractEndDate: undefined,
       // Arrays for future steps
+      phoneNumbers: [],
       qualifications: [],
       experiences: [],
       subjectExpertise: [],

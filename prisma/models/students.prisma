@@ -109,6 +109,13 @@ model Student {
   libraryRecords    LibraryRecord[]
   feeRecords        FeeRecord[]
 
+  // Fees module relations
+  feeAssignments        FeeAssignment[]
+  payments              Payment[]
+  refunds               Refund[]
+  scholarshipApplications ScholarshipApplication[]
+  fines                 Fine[]
+
   // Auth relationship
   userId String? @unique
   user   User?   @relation(fields: [userId], references: [id])

@@ -7,13 +7,13 @@ export function BankCard({ account, userName, showBalance = true }: BankCardProp
     <Card className="flex flex-col">
       <CardHeader className="flex flex-row items-center justify-between">
         <div className="flex flex-col">
-          <p className="text-lg font-semibold">{account.name}</p>
-          <p className="text-sm text-muted-foreground">
+          <h5>{account.name}</h5>
+          <p className="muted">
             {account.officialName || account.name}
           </p>
         </div>
         {account.mask && (
-          <p className="text-sm text-muted-foreground">
+          <p className="muted">
             •••• {account.mask}
           </p>
         )}
@@ -21,30 +21,30 @@ export function BankCard({ account, userName, showBalance = true }: BankCardProp
       <CardContent className="flex-1">
         <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">Account holder</span>
-            <span className="text-sm font-medium">{userName}</span>
+            <span className="muted">Account holder</span>
+            <small className="font-medium">{userName}</small>
           </div>
           {showBalance && (
             <>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Current balance</span>
-                <span className="text-sm font-medium">
+                <span className="muted">Current balance</span>
+                <small className="font-medium">
                   {formatAmount(Number(account.currentBalance))}
-                </span>
+                </small>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Available balance</span>
-                <span className="text-sm font-medium">
+                <span className="muted">Available balance</span>
+                <small className="font-medium">
                   {formatAmount(Number(account.availableBalance))}
-                </span>
+                </small>
               </div>
             </>
           )}
           <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">Type</span>
-            <span className="text-sm font-medium capitalize">
+            <span className="muted">Type</span>
+            <small className="font-medium capitalize">
               {account.type}
-            </span>
+            </small>
           </div>
         </div>
       </CardContent>

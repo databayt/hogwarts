@@ -1,8 +1,8 @@
 import { Suspense } from 'react'
 import { auth } from '@/auth'
-import { BankingDashboardContent } from '@/components/banking/dashboard/content'
-import { getDictionary } from '@/components/local/dictionaries'
-import type { Locale } from '@/components/local/config'
+import { BankingDashboardContent } from '@/components/platform/banking/dashboard/content'
+import { getDictionary } from '@/components/internationalization/dictionaries'
+import type { Locale } from '@/components/internationalization/config'
 
 export default async function BankingDashboardPage({
   searchParams,

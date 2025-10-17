@@ -31,8 +31,26 @@ export async function getAccounts(
   try {
     const { userId } = params
 
+    // Get schoolId from session for multi-tenant isolation
+    const session = await auth()
+    const schoolId = session?.user?.schoolId
+
+    if (!schoolId) {
+      return {
+        success: false,
+        error: {
+          code: 'NO_SCHOOL_CONTEXT',
+          message: 'School context not found',
+          statusCode: 403
+        }
+      }
+    }
+
     const accounts = await db.bankAccount.findMany({
-      where: { userId },
+      where: {
+        userId,
+        schoolId // Multi-tenant isolation
+      },
       include: {
         transactions: {
           take: 5,
@@ -91,8 +109,26 @@ export async function getAccount(
   try {
     const { accountId } = params
 
-    const account = await db.bankAccount.findUnique({
-      where: { id: accountId },
+    // Get schoolId from session for multi-tenant isolation
+    const session = await auth()
+    const schoolId = session?.user?.schoolId
+
+    if (!schoolId) {
+      return {
+        success: false,
+        error: {
+          code: 'NO_SCHOOL_CONTEXT',
+          message: 'School context not found',
+          statusCode: 403
+        }
+      }
+    }
+
+    const account = await db.bankAccount.findFirst({
+      where: {
+        id: accountId,
+        schoolId // Multi-tenant isolation
+      },
       include: {
         transactions: {
           orderBy: { date: 'desc' },
@@ -149,8 +185,26 @@ export async function getAccountByPlaidId(
   try {
     const { accountId } = params
 
-    const account = await db.bankAccount.findUnique({
-      where: { accountId },
+    // Get schoolId from session for multi-tenant isolation
+    const session = await auth()
+    const schoolId = session?.user?.schoolId
+
+    if (!schoolId) {
+      return {
+        success: false,
+        error: {
+          code: 'NO_SCHOOL_CONTEXT',
+          message: 'School context not found',
+          statusCode: 403
+        }
+      }
+    }
+
+    const account = await db.bankAccount.findFirst({
+      where: {
+        accountId,
+        schoolId // Multi-tenant isolation
+      },
       include: {
         transactions: {
           orderBy: { date: 'desc' }
@@ -213,6 +267,21 @@ export async function createBankAccount(
       shareableId,
     } = params
 
+    // Get schoolId from session for multi-tenant isolation
+    const session = await auth()
+    const schoolId = session?.user?.schoolId
+
+    if (!schoolId) {
+      return {
+        success: false,
+        error: {
+          code: 'NO_SCHOOL_CONTEXT',
+          message: 'School context not found',
+          statusCode: 403
+        }
+      }
+    }
+
     // Get account details from Plaid
     const accountsResponse = await plaidClient.accountsGet({
       access_token: accessToken,
@@ -242,6 +311,7 @@ export async function createBankAccount(
     // Create bank account in database
     const bankAccount = await db.bankAccount.create({
       data: {
+        schoolId, // Multi-tenant support
         userId,
         bankId,
         accountId,
@@ -301,8 +371,26 @@ export async function syncTransactions(
   try {
     const { accountId } = params
 
-    const account = await db.bankAccount.findUnique({
-      where: { id: accountId },
+    // Get schoolId from session for multi-tenant isolation
+    const session = await auth()
+    const schoolId = session?.user?.schoolId
+
+    if (!schoolId) {
+      return {
+        success: false,
+        error: {
+          code: 'NO_SCHOOL_CONTEXT',
+          message: 'School context not found',
+          statusCode: 403
+        }
+      }
+    }
+
+    const account = await db.bankAccount.findFirst({
+      where: {
+        id: accountId,
+        schoolId // Multi-tenant isolation
+      },
     })
 
     if (!account) {
@@ -340,6 +428,7 @@ export async function syncTransactions(
           },
           create: {
             id: transaction.transaction_id,
+            schoolId, // Multi-tenant support
             accountId: transaction.account_id,
             bankAccountId: account.id,
             name: transaction.name,
@@ -400,8 +489,26 @@ export async function getBankInfo(
   try {
     const { accountId } = params
 
-    const account = await db.bankAccount.findUnique({
-      where: { id: accountId },
+    // Get schoolId from session for multi-tenant isolation
+    const session = await auth()
+    const schoolId = session?.user?.schoolId
+
+    if (!schoolId) {
+      return {
+        success: false,
+        error: {
+          code: 'NO_SCHOOL_CONTEXT',
+          message: 'School context not found',
+          statusCode: 403
+        }
+      }
+    }
+
+    const account = await db.bankAccount.findFirst({
+      where: {
+        id: accountId,
+        schoolId // Multi-tenant isolation
+      },
     })
 
     if (!account) {
@@ -455,11 +562,27 @@ export async function deleteBankAccount(
   try {
     const { accountId, userId } = params
 
-    // Verify ownership
+    // Get schoolId from session for multi-tenant isolation
+    const session = await auth()
+    const schoolId = session?.user?.schoolId
+
+    if (!schoolId) {
+      return {
+        success: false,
+        error: {
+          code: 'NO_SCHOOL_CONTEXT',
+          message: 'School context not found',
+          statusCode: 403
+        }
+      }
+    }
+
+    // Verify ownership and school context
     const account = await db.bankAccount.findFirst({
       where: {
         id: accountId,
         userId,
+        schoolId // Multi-tenant isolation
       }
     })
 

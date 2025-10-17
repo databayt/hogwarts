@@ -1,7 +1,7 @@
 import { auth } from '@/auth'
-import { TransactionHistoryContent } from '@/components/banking/transaction-history/content'
-import { getDictionary } from '@/components/local/dictionaries'
-import type { Locale } from '@/components/local/config'
+import { TransactionHistoryContent } from '@/components/platform/banking/transaction-history/content'
+import { getDictionary } from '@/components/internationalization/dictionaries'
+import type { Locale } from '@/components/internationalization/config'
 
 export default async function TransactionHistoryPage({
   searchParams,

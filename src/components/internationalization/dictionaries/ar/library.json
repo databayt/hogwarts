@@ -1,0 +1,166 @@
+{
+  "title": "المكتبة",
+  "subtitle": "استكشف مجموعتنا من الكتب والموارد",
+  "description": "مرحباً بكم في مكتبة المدرسة. تصفح واستعر واكتشف كتباً جديدة.",
+  "search": {
+    "placeholder": "البحث عن الكتب بالعنوان أو المؤلف أو النوع...",
+    "button": "بحث",
+    "noResults": "لم يتم العثور على كتب مطابقة لبحثك"
+  },
+  "filters": {
+    "all": "جميع الكتب",
+    "available": "متاح",
+    "borrowed": "مُستعار",
+    "genre": "النوع",
+    "rating": "التقييم"
+  },
+  "book": {
+    "by": "بقلم",
+    "genre": "النوع",
+    "rating": "التقييم",
+    "available": "متاح",
+    "borrowed": "مُستعار",
+    "copies": "نسخ",
+    "copy": "نسخة",
+    "viewDetails": "عرض التفاصيل",
+    "borrow": "استعارة الكتاب",
+    "return": "إرجاع الكتاب",
+    "reserve": "حجز",
+    "summary": "الملخص",
+    "description": "الوصف",
+    "video": "فيديو الكتاب",
+    "dueDate": "تاريخ الإرجاع",
+    "borrowedOn": "تاريخ الاستعارة",
+    "status": {
+      "available": "متاح",
+      "borrowed": "مُستعار",
+      "overdue": "متأخر",
+      "reserved": "محجوز"
+    }
+  },
+  "borrowing": {
+    "title": "استعارة كتاب",
+    "confirmMessage": "هل أنت متأكد من رغبتك في استعارة هذا الكتاب؟",
+    "successMessage": "تم استعارة الكتاب بنجاح!",
+    "errorMessage": "فشل في استعارة الكتاب. يرجى المحاولة مرة أخرى.",
+    "limitReached": "لقد وصلت إلى حد الاستعارة الخاص بك",
+    "alreadyBorrowed": "لقد قمت بالفعل باستعارة هذا الكتاب",
+    "notAvailable": "هذا الكتاب غير متاح للاستعارة"
+  },
+  "returning": {
+    "title": "إرجاع كتاب",
+    "confirmMessage": "هل أنت متأكد من رغبتك في إرجاع هذا الكتاب؟",
+    "successMessage": "تم إرجاع الكتاب بنجاح!",
+    "errorMessage": "فشل في إرجاع الكتاب. يرجى المحاولة مرة أخرى.",
+    "overdueFine": "هذا الكتاب متأخر. مبلغ الغرامة:"
+  },
+  "myProfile": {
+    "title": "ملفي في المكتبة",
+    "subtitle": "عرض الكتب المستعارة والسجل",
+    "currentlyBorrowed": "الكتب المستعارة حالياً",
+    "borrowingHistory": "سجل الاستعارة",
+    "noBooksMessage": "لم تقم باستعارة أي كتب بعد",
+    "daysRemaining": "أيام متبقية",
+    "overdue": "متأخر",
+    "returned": "تم الإرجاع",
+    "fine": "غرامة"
+  },
+  "admin": {
+    "title": "إدارة المكتبة",
+    "subtitle": "إدارة الكتب والاستعارة وإعدادات المكتبة",
+    "dashboard": "لوحة التحكم",
+    "books": "الكتب",
+    "borrowers": "المستعيرون",
+    "reports": "التقارير",
+    "settings": "الإعدادات",
+    "stats": {
+      "totalBooks": "إجمالي الكتب",
+      "availableBooks": "الكتب المتاحة",
+      "borrowedBooks": "الكتب المستعارة",
+      "overdueBooks": "الكتب المتأخرة",
+      "totalUsers": "إجمالي المستخدمين",
+      "activeUsers": "المستعيرون النشطون"
+    },
+    "actions": {
+      "addBook": "إضافة كتاب جديد",
+      "editBook": "تعديل الكتاب",
+      "deleteBook": "حذف الكتاب",
+      "viewBorrowers": "عرض المستعيرين",
+      "sendReminder": "إرسال تذكير",
+      "generateReport": "إنشاء تقرير"
+    },
+    "form": {
+      "title": "العنوان",
+      "author": "المؤلف",
+      "genre": "النوع",
+      "isbn": "الرقم الدولي المعياري للكتاب",
+      "description": "الوصف",
+      "summary": "الملخص",
+      "totalCopies": "إجمالي النسخ",
+      "coverImage": "صورة الغلاف",
+      "coverColor": "لون الغلاف",
+      "videoUrl": "رابط الفيديو (اختياري)",
+      "save": "حفظ الكتاب",
+      "cancel": "إلغاء",
+      "saving": "جاري الحفظ...",
+      "validation": {
+        "titleRequired": "العنوان مطلوب",
+        "authorRequired": "المؤلف مطلوب",
+        "genreRequired": "النوع مطلوب",
+        "copiesMin": "مطلوب نسخة واحدة على الأقل",
+        "invalidUrl": "تنسيق الرابط غير صحيح"
+      }
+    },
+    "deleteConfirm": {
+      "title": "حذف الكتاب",
+      "message": "هل أنت متأكد من رغبتك في حذف هذا الكتاب؟ لا يمكن التراجع عن هذا الإجراء.",
+      "confirm": "حذف",
+      "cancel": "إلغاء"
+    }
+  },
+  "genres": {
+    "fiction": "خيال",
+    "nonFiction": "غير خيالي",
+    "science": "علوم",
+    "technology": "تكنولوجيا",
+    "history": "تاريخ",
+    "biography": "سيرة ذاتية",
+    "poetry": "شعر",
+    "drama": "دراما",
+    "romance": "رومانسية",
+    "mystery": "غموض",
+    "thriller": "إثارة",
+    "fantasy": "خيال علمي",
+    "scienceFiction": "خيال علمي",
+    "selfHelp": "تطوير الذات",
+    "business": "أعمال",
+    "education": "تعليم",
+    "children": "كتب الأطفال",
+    "youngAdult": "الشباب",
+    "reference": "مرجع",
+    "textbook": "كتاب مدرسي"
+  },
+  "navigation": {
+    "home": "الصفحة الرئيسية للمكتبة",
+    "browse": "تصفح الكتب",
+    "myBooks": "كتبي",
+    "admin": "لوحة الإدارة"
+  },
+  "footer": {
+    "copyright": "© 2024 مكتبة المدرسة. جميع الحقوق محفوظة.",
+    "contact": "الاتصال بأمين المكتبة",
+    "hours": "ساعات المكتبة",
+    "rules": "قواعد المكتبة"
+  },
+  "errors": {
+    "notFound": "الكتاب غير موجود",
+    "unauthorized": "غير مصرح لك بالوصول إلى هذه الصفحة",
+    "serverError": "حدث خطأ ما. يرجى المحاولة مرة أخرى لاحقاً.",
+    "networkError": "خطأ في الشبكة. يرجى التحقق من اتصالك."
+  },
+  "loading": {
+    "books": "جاري تحميل الكتب...",
+    "bookDetails": "جاري تحميل تفاصيل الكتاب...",
+    "profile": "جاري تحميل الملف الشخصي..."
+  }
+}

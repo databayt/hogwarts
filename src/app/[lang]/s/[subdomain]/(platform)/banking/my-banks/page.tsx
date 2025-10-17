@@ -1,7 +1,7 @@
 import { auth } from '@/auth'
-import { MyBanksContent } from '@/components/banking/my-banks/content'
-import { getDictionary } from '@/components/local/dictionaries'
-import type { Locale } from '@/components/local/config'
+import { MyBanksContent } from '@/components/platform/banking/my-banks/content'
+import { getDictionary } from '@/components/internationalization/dictionaries'
+import type { Locale } from '@/components/internationalization/config'
 
 export default async function MyBanksPage({
   params: { lang },

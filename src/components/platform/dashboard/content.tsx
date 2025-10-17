@@ -60,6 +60,8 @@ export default async function DashboardContent({ school, dictionary }: Props = {
         return <StaffDashboard user={user} dictionary={dictionary} />;
       case "ADMIN":
         return <AdminDashboard user={user} dictionary={dictionary} />;
+      case "PRINCIPAL":
+        return <PrincipalDashboard user={user} dictionary={dictionary} />;
       case "ACCOUNTANT":
         return <AccountantDashboard user={user} dictionary={dictionary} />;
       default:

@@ -169,7 +169,7 @@ const columns = useMemo(() => getColumns(dictionary), [dictionary]) // ✅ Gener
 
 ### Prisma Models
 
-Models are split across 19 files in `prisma/models/*.prisma`:
+Models are split across 27 files in `prisma/models/*.prisma`:
 - **auth.prisma**: User, Account, Session, VerificationToken, TwoFactorToken
 - **school.prisma**: School, SchoolYear, Period, Term, YearLevel
 - **staff.prisma**: Teacher, Department, TeacherDepartment
@@ -184,6 +184,19 @@ Models are split across 19 files in `prisma/models/*.prisma`:
 - **subscription.prisma**: SubscriptionTier, Subscription, Discount
 - **invoice.prisma**: UserInvoice, Invoice
 - **legal.prisma**: LegalDocument, LegalConsent
+- **admission.prisma**: Admission campaigns, applications, merit lists
+- **fees.prisma**: Fee structures, payments, refunds, scholarships
+- **banking.prisma**: Bank accounts, transactions, transfers
+- **exams.prisma**: Exam management and scheduling
+- **grades.prisma**: Grading system and score ranges
+- **library.prisma**: Library management, book inventory
+- **lessons.prisma**: Lesson planning and curriculum
+- **receipt.prisma**: Receipt generation and tracking
+- **schedule.prisma**: Scheduling and calendar management
+- **stream.prisma**: Streaming/course content management
+- **task.prisma**: Task management and assignments
+- **domain.prisma**: Domain configuration for multi-tenancy
+- **audit.prisma**: Audit logs and system tracking
 - All business models include required `schoolId` field for multi-tenancy
 - Relations use `@@index` for performance
 - Unique constraints scoped by `schoolId` for tenant isolation
@@ -350,7 +363,10 @@ Use the `typography-refactor` agent to automatically convert hardcoded typograph
 
 ## Git Workflow
 
-**IMPORTANT**: Always automatically push changes to GitHub after making code modifications. Use `git push` to ensure all changes are synced to the remote repository.
+When working with git in this repository:
+- Commit messages should be descriptive and follow conventional commit format when possible
+- Use `git push` to sync changes to the remote repository
+- The main branch is `main` (not master)
 
 ## Performance Optimizations
 
