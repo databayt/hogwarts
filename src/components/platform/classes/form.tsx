@@ -28,6 +28,7 @@ export function ClassCreateForm() {
       startPeriodId: "",
       endPeriodId: "",
       classroomId: "",
+      evaluationType: "NORMAL",
     },
   });
 
