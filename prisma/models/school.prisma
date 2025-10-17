@@ -89,6 +89,19 @@ model School {
   books            Book[]
   borrowRecords    BorrowRecord[]
 
+  // Lesson relations
+  lessons          Lesson[]
+
+  // Student management relations
+  studentBatches        StudentBatch[]
+  batches               Batch[]
+  studentDocuments      StudentDocument[]
+  healthRecords         HealthRecord[]
+  achievements          Achievement[]
+  disciplinaryRecords   DisciplinaryRecord[]
+  libraryRecords        LibraryRecord[]
+  feeRecords            FeeRecord[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -206,6 +219,7 @@ model YearLevel {
   school            School             @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   studentYearLevels StudentYearLevel[]
   reportCards       ReportCard[]
+  batches           Batch[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

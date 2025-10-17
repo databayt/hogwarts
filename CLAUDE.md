@@ -137,6 +137,26 @@ import { itemSchema } from './validation'
 const form = useForm({ resolver: zodResolver(itemSchema) })
 ```
 
+### Data Table Column Pattern
+
+**CRITICAL**: Column definitions that use hooks MUST be generated in client components:
+
+```typescript
+// columns.tsx - "use client"
+export const getColumns = (dictionary?: Dictionary): ColumnDef<Row>[] => [
+  // Column definitions with hooks like useModal
+]
+
+// content.tsx - server component (WRONG)
+<Table columns={getColumns(dictionary)} /> // ❌ Will cause server-side exception
+
+// content.tsx - server component (CORRECT)
+<Table dictionary={dictionary} /> // ✅ Pass props instead
+
+// table.tsx - client component (CORRECT)
+const columns = useMemo(() => getColumns(dictionary), [dictionary]) // ✅ Generate on client
+```
+
 ### Key Utilities
 
 - **cn()** (`src/lib/utils.ts`) - Merge Tailwind classes with clsx and tailwind-merge
@@ -317,14 +337,16 @@ Use the `typography-refactor` agent to automatically convert hardcoded typograph
 
 ## Common Gotchas
 
-1. **Vercel Build Failures**: Run `pnpm install` locally to update lockfile before pushing
-2. **OAuth Redirects**: Check `auth.ts` redirect callback for URL handling logic
-3. **Location Form**: Uses simplified inputs (no Mapbox), stores concatenated address string
-4. **Capacity Form**: Auto-saves on change, no explicit submit button
-5. **Price Page**: Uses empty title/subtitle to maintain two-column layout consistency
-6. **TypeScript Errors**: Prisma client may need regeneration: `pnpm prisma generate`
-7. **Multi-Tenant Queries**: Always include schoolId - missing it breaks tenant isolation
-8. **Typography Violations**: Never use `<div>` for text content - use semantic HTML
+1. **Server/Client Component Boundaries**: Column definitions with hooks (useModal) MUST be generated in client components. Never call column functions from server components - pass dictionary/lang props instead and use `useMemo` to generate columns
+2. **Vercel Build Failures**: Run `pnpm install` locally to update lockfile before pushing
+3. **OAuth Redirects**: Check `auth.ts` redirect callback for URL handling logic
+4. **Location Form**: Uses simplified inputs (no Mapbox), stores concatenated address string
+5. **Capacity Form**: Auto-saves on change, no explicit submit button
+6. **Price Page**: Uses empty title/subtitle to maintain two-column layout consistency
+7. **TypeScript Errors**: Prisma client may need regeneration: `pnpm prisma generate`
+8. **Multi-Tenant Queries**: Always include schoolId - missing it breaks tenant isolation
+9. **Typography Violations**: Never use `<div>` for text content - use semantic HTML
+10. **Navigation Locale Preservation**: Sidebar links must include locale prefix (e.g., `/${locale}${item.href}`) to prevent unwanted language switches
 
 ## Git Workflow
 
@@ -346,10 +368,14 @@ The codebase includes several performance optimizations:
 The middleware (`src/middleware.ts`) handles:
 - **i18n Locale Detection**: Arabic (default) or English based on cookie/headers
 - **Subdomain Rewriting**: Maps subdomains to `/[lang]/s/[subdomain]/...` routes
+  - Production: `*.databayt.org` → `/[lang]/s/[subdomain]/...`
+  - Vercel preview: `tenant---branch.vercel.app` → `/[lang]/s/tenant/...`
+  - Development: `subdomain.localhost` → `/[lang]/s/subdomain/...`
 - **Auth Protection**: Enforces authentication for private routes
-- **Request ID Generation**: Adds unique ID for traceability
+- **Request ID Generation**: Adds unique ID (`x-request-id` header) for traceability
+- **Locale Preservation**: Ensures all routes include locale prefix (`/ar/...` or `/en/...`)
 - **Security Headers**: Injects CSP, HSTS, X-Frame-Options
-- **Route Matching**: Uses exported config for path patterns
+- **Route Matching**: Uses exported config from `src/routes.ts` for path patterns
 
 ## Key Project Information
 

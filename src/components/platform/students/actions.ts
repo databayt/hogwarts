@@ -256,3 +256,264 @@ export async function getStudentsCSV(input?: Partial<z.infer<typeof getStudentsS
 
   return arrayToCSV(exportData, { columns });
 }
+
+/**
+ * Register a new student with comprehensive information
+ */
+export async function registerStudent(input: any) {
+  try {
+    const { schoolId } = await getTenantContext();
+    if (!schoolId) throw new Error("Missing school context");
+
+    // Process guardian data first if provided
+    const guardianIds = [];
+    if (input.guardians && input.guardians.length > 0) {
+      for (const guardian of input.guardians) {
+        // Check if guardian already exists by email
+        let guardianRecord = await (db as any).guardian.findFirst({
+          where: {
+            schoolId,
+            emailAddress: guardian.email,
+          },
+        });
+
+        if (!guardianRecord) {
+          // Create new guardian
+          guardianRecord = await (db as any).guardian.create({
+            data: {
+              schoolId,
+              givenName: guardian.givenName,
+              surname: guardian.surname,
+              emailAddress: guardian.email,
+            },
+          });
+
+          // Add phone number if provided
+          if (guardian.mobileNumber) {
+            await (db as any).guardianPhoneNumber.create({
+              data: {
+                schoolId,
+                guardianId: guardianRecord.id,
+                phoneNumber: guardian.mobileNumber,
+                phoneType: "mobile",
+                isPrimary: true,
+              },
+            });
+          }
+        }
+
+        guardianIds.push({
+          id: guardianRecord.id,
+          relation: guardian.relation,
+          isPrimary: guardian.isPrimary || false,
+        });
+      }
+    }
+
+    // Prepare student data
+    const studentData: any = {
+      schoolId,
+      givenName: input.givenName,
+      middleName: input.middleName || null,
+      surname: input.surname,
+      dateOfBirth: new Date(input.dateOfBirth),
+      gender: input.gender,
+      bloodGroup: input.bloodGroup || null,
+      nationality: input.nationality || "Saudi Arabia",
+      passportNumber: input.passportNumber || null,
+      visaStatus: input.visaStatus || null,
+      visaExpiryDate: input.visaExpiryDate ? new Date(input.visaExpiryDate) : null,
+
+      // Contact Information
+      email: input.email || null,
+      mobileNumber: input.mobileNumber || null,
+      alternatePhone: input.alternatePhone || null,
+
+      // Address
+      currentAddress: input.currentAddress || null,
+      permanentAddress: input.sameAsPermanent
+        ? input.currentAddress
+        : (input.permanentAddress || null),
+      city: input.city || null,
+      state: input.state || null,
+      postalCode: input.postalCode || null,
+      country: input.country || "Saudi Arabia",
+
+      // Emergency Contact
+      emergencyContactName: input.emergencyContactName || null,
+      emergencyContactPhone: input.emergencyContactPhone || null,
+      emergencyContactRelation: input.emergencyContactRelation || null,
+
+      // Status and Enrollment
+      status: input.status || "ACTIVE",
+      enrollmentDate: input.enrollmentDate ? new Date(input.enrollmentDate) : new Date(),
+      admissionNumber: input.admissionNumber || null,
+      admissionDate: input.admissionDate ? new Date(input.admissionDate) : new Date(),
+
+      // Academic
+      category: input.category || null,
+      studentType: input.studentType || "REGULAR",
+
+      // Health Information
+      medicalConditions: input.medicalConditions || null,
+      allergies: input.allergies || null,
+      medicationRequired: input.medicationRequired || null,
+      doctorName: input.doctorName || null,
+      doctorContact: input.doctorContact || null,
+      insuranceProvider: input.insuranceProvider || null,
+      insuranceNumber: input.insuranceNumber || null,
+
+      // Previous Education
+      previousSchoolName: input.previousSchoolName || null,
+      previousSchoolAddress: input.previousSchoolAddress || null,
+      previousGrade: input.previousGrade || null,
+      transferCertificateNo: input.transferCertificateNo || null,
+      transferDate: input.transferDate ? new Date(input.transferDate) : null,
+      previousAcademicRecord: input.previousAcademicRecord || null,
+
+      // Photo
+      profilePhotoUrl: input.profilePhotoUrl || null,
+
+      // GR Number - Auto-generate if not provided
+      grNumber: input.grNumber || null,
+    };
+
+    // Generate GR Number if not provided
+    if (!studentData.grNumber) {
+      const lastStudent = await (db as any).student.findFirst({
+        where: { schoolId },
+        orderBy: { createdAt: "desc" },
+        select: { grNumber: true },
+      });
+
+      let nextGRNumber = 1;
+      if (lastStudent?.grNumber) {
+        const match = lastStudent.grNumber.match(/\d+/);
+        if (match) {
+          nextGRNumber = parseInt(match[0]) + 1;
+        }
+      }
+
+      const year = new Date().getFullYear();
+      studentData.grNumber = `GR${year}${nextGRNumber.toString().padStart(4, '0')}`;
+    }
+
+    // Create the student record
+    const student = await (db as any).student.create({
+      data: studentData,
+    });
+
+    // Create guardian relationships
+    if (guardianIds.length > 0) {
+      // Get or create guardian type
+      let guardianType = await (db as any).guardianType.findFirst({
+        where: {
+          schoolId,
+          name: "Parent"
+        },
+      });
+
+      if (!guardianType) {
+        guardianType = await (db as any).guardianType.create({
+          data: {
+            schoolId,
+            name: "Parent",
+          },
+        });
+      }
+
+      // Create student-guardian relationships
+      for (const guardian of guardianIds) {
+        await (db as any).studentGuardian.create({
+          data: {
+            schoolId,
+            studentId: student.id,
+            guardianId: guardian.id,
+            guardianTypeId: guardianType.id,
+            isPrimary: guardian.isPrimary,
+          },
+        });
+      }
+    }
+
+    // Save documents if provided
+    if (input.documents && input.documents.length > 0) {
+      for (const doc of input.documents) {
+        if (doc.fileUrl) {
+          await (db as any).studentDocument.create({
+            data: {
+              schoolId,
+              studentId: student.id,
+              documentType: doc.documentType,
+              documentName: doc.documentName,
+              description: doc.description || null,
+              fileUrl: doc.fileUrl,
+              fileSize: doc.fileSize || null,
+              mimeType: doc.mimeType || null,
+              tags: doc.tags || [],
+            },
+          });
+        }
+      }
+    }
+
+    // Save health records/vaccinations if provided
+    if (input.vaccinations && input.vaccinations.length > 0) {
+      for (const vaccination of input.vaccinations) {
+        if (vaccination.name) {
+          await (db as any).healthRecord.create({
+            data: {
+              schoolId,
+              studentId: student.id,
+              recordDate: new Date(vaccination.date),
+              recordType: "VACCINATION",
+              title: vaccination.name,
+              description: `Vaccination record for ${vaccination.name}`,
+              followUpDate: vaccination.nextDueDate ? new Date(vaccination.nextDueDate) : null,
+              recordedBy: "System",
+            },
+          });
+        }
+      }
+    }
+
+    // Enroll in class/batch if provided
+    if (input.classId) {
+      await (db as any).studentClass.create({
+        data: {
+          schoolId,
+          studentId: student.id,
+          classId: input.classId,
+          dateJoined: new Date(),
+          isActive: true,
+        },
+      });
+    }
+
+    if (input.batchId) {
+      await (db as any).studentBatch.create({
+        data: {
+          schoolId,
+          studentId: student.id,
+          batchId: input.batchId,
+          startDate: new Date(),
+          isActive: true,
+        },
+      });
+    }
+
+    revalidatePath("/students");
+
+    return {
+      success: true,
+      data: student,
+      message: "Student registered successfully"
+    };
+  } catch (error: any) {
+    console.error("Student registration error:", error);
+    return {
+      success: false,
+      error: error?.message || "Failed to register student"
+    };
+  }
+}

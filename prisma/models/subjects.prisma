@@ -1,5 +1,12 @@
 // Subject and Class Models
 
+enum EvaluationType {
+  NORMAL // Percentage-based (0-100%)
+  GPA    // Grade Point Average (4.0 scale)
+  CWA    // Cumulative Weighted Average
+  CCE    // Continuous Comprehensive Evaluation
+}
+
 model Subject {
   id           String @id @default(cuid())
   schoolId     String
@@ -31,6 +38,15 @@ model Class {
   classroomId   String
   name          String
 
+  // Course Management Fields
+  courseCode     String?         // e.g., "CS101", "MATH201"
+  credits        Decimal?        @db.Decimal(3, 2) // Credit hours/units
+  evaluationType EvaluationType  @default(NORMAL)
+  minCapacity    Int?            @default(10) // Minimum students
+  maxCapacity    Int?            @default(50) // Maximum students
+  duration       Int?            // Duration in weeks
+  prerequisiteId String?         // Parent course (course hierarchy)
+
   school      School    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   subject     Subject   @relation(fields: [subjectId], references: [id])
   teacher     Teacher   @relation(fields: [teacherId], references: [id])
@@ -38,19 +54,24 @@ model Class {
   startPeriod Period    @relation("ClassStartPeriod", fields: [startPeriodId], references: [id])
   endPeriod   Period    @relation("ClassEndPeriod", fields: [endPeriodId], references: [id])
   classroom   Classroom @relation(fields: [classroomId], references: [id])
+  prerequisite Class?   @relation("CoursePrerequisites", fields: [prerequisiteId], references: [id], onDelete: SetNull)
 
-  studentClasses StudentClass[]
-  assignments    Assignment[]
-  attendances    Attendance[]
-  announcements  Announcement[]
-  timetables     Timetable[]
-  exams          Exam[]
-  results        Result[]
+  studentClasses   StudentClass[]
+  assignments      Assignment[]
+  attendances      Attendance[]
+  announcements    Announcement[]
+  timetables       Timetable[]
+  exams            Exam[]
+  results          Result[]
+  lessons          Lesson[]
+  dependentCourses Class[]        @relation("CoursePrerequisites")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@unique([schoolId, name]) // Unique class name per school
+  @@index([courseCode])
+  @@index([evaluationType])
   @@map("classes")
 }
 

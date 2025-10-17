@@ -5,6 +5,7 @@ import { DeleteAccountSection } from "@/components/platform/dashboard/delete-acc
 import { DashboardHeader } from "@/components/platform/dashboard/header";
 import { UserNameForm } from "@/components/platform/dashboard/settings/user-name-form";
 import { UserRoleForm } from "@/components/marketing/pricing/forms/user-role-form";
+import { RoleSwitcher } from "@/components/platform/settings/role-switcher";
 import { Separator } from "@/components/ui/separator";
 import { UserRole } from "@prisma/client";
 import { type Locale } from "@/components/internationalization/config";
@@ -35,12 +36,20 @@ export default async function SettingsContent({ dictionary, lang }: SettingsCont
         heading="Settings"
         text="Manage account and website settings."
       />
-      <div className="divide-y divide-muted py-4 pb-10">
+      <div className="space-y-8 py-4 pb-10">
         <div className="flex flex-col bg-muted rounded-lg px-6">
-        <UserNameForm user={{ id: user.id, name: user.name || "" }} />
-        <Separator />
+          <UserNameForm user={{ id: user.id, name: user.name || "" }} />
+          <Separator />
           <UserRoleForm user={{ id: user.id, role: user.role as UserRole }} />
         </div>
+
+        {/* Role Switcher for testing different dashboard views */}
+        <RoleSwitcher
+          currentRole={user.role as UserRole}
+          currentUserId={user.id}
+          schoolId={user.schoolId || undefined}
+        />
+
         <DeleteAccountSection />
       </div>
     </>

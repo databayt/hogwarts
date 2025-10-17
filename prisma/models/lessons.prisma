@@ -1,0 +1,36 @@
+// Lesson Planning and Curriculum Management
+
+enum LessonStatus {
+  PLANNED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+model Lesson {
+  id          String       @id @default(cuid())
+  schoolId    String
+  classId     String
+  title       String
+  description String?
+  lessonDate  DateTime
+  startTime   String       // HH:MM format
+  endTime     String       // HH:MM format
+  objectives  String?      @db.Text // Learning objectives
+  materials   String?      @db.Text // Required materials
+  activities  String?      @db.Text // Planned activities
+  assessment  String?      @db.Text // Assessment methods
+  notes       String?      @db.Text // Additional notes
+  status      LessonStatus @default(PLANNED)
+
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  class  Class  @relation(fields: [classId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([schoolId, classId])
+  @@index([lessonDate])
+  @@index([status])
+  @@map("lessons")
+}

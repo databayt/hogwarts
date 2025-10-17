@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { setPreviewRole, clearPreviewRole } from "./role-preview-actions";
 import {
   Card,
   CardContent,
@@ -138,10 +139,14 @@ export function RoleSwitcher({
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [isSwitching, setIsSwitching] = useState(false);
 
-  // Load developer mode preference
+  // Load developer mode preference and check preview mode
   useEffect(() => {
     const devMode = localStorage.getItem("developer-mode") === "true";
     setIsDeveloperMode(devMode);
+
+    // Check if preview mode is active
+    const previewMode = localStorage.getItem("preview-mode") === "true";
+    setIsPreviewMode(previewMode);
   }, []);
 
   // Save developer mode preference
@@ -166,10 +171,13 @@ export function RoleSwitcher({
     setIsSwitching(true);
 
     try {
-      // In production, this would call a server action to switch roles
-      // For now, we'll simulate the switch with localStorage
+      // Call server action to switch roles
+      await setPreviewRole(selectedRole);
+
+      // Also store in localStorage for client-side checks
       localStorage.setItem("preview-role", selectedRole);
       localStorage.setItem("preview-mode", "true");
+      setIsPreviewMode(true);
 
       SuccessToast(`Switched to ${selectedRole} role`);
 
@@ -186,12 +194,21 @@ export function RoleSwitcher({
   };
 
   // Exit preview mode
-  const handleExitPreview = () => {
-    localStorage.removeItem("preview-role");
-    localStorage.removeItem("preview-mode");
-    setIsPreviewMode(false);
-    router.refresh();
-    SuccessToast("Exited preview mode");
+  const handleExitPreview = async () => {
+    try {
+      // Call server action to clear preview role
+      await clearPreviewRole();
+
+      // Clear localStorage
+      localStorage.removeItem("preview-role");
+      localStorage.removeItem("preview-mode");
+      setIsPreviewMode(false);
+
+      SuccessToast("Exited preview mode");
+      router.refresh();
+    } catch (error) {
+      ErrorToast("Failed to exit preview mode");
+    }
   };
 
   const currentConfig = ROLE_CONFIGS.find((r) => r.value === currentRole);

@@ -1,16 +1,95 @@
 // Student and Guardian Models
 
+enum StudentStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  GRADUATED
+  TRANSFERRED
+  DROPPED_OUT
+}
+
+enum StudentType {
+  REGULAR
+  TRANSFER
+  INTERNATIONAL
+  EXCHANGE
+}
+
 model Student {
+  // Personal Information
   id             String   @id @default(cuid())
   schoolId       String
+  grNumber       String?  // General Register Number (unique per school)
   studentId      String?  // External student identifier
+
+  // Name fields
   givenName      String
   middleName     String?
   surname        String
+
+  // Extended personal details
   dateOfBirth    DateTime @db.Date
   gender         String
-  enrollmentDate DateTime @default(now())
+  bloodGroup     String?  // A+, B-, O+, etc.
+  nationality    String?  @default("Saudi Arabia")
+  passportNumber String?
+  visaStatus     String?  // For international students
+  visaExpiryDate DateTime? @db.Date
 
+  // Contact Information
+  email          String?
+  mobileNumber   String?
+  alternatePhone String?
+
+  // Address
+  currentAddress   String? @db.Text
+  permanentAddress String? @db.Text
+  city             String?
+  state            String?
+  postalCode       String?
+  country          String? @default("Saudi Arabia")
+
+  // Emergency Contact
+  emergencyContactName     String?
+  emergencyContactPhone    String?
+  emergencyContactRelation String?
+
+  // Status and Enrollment
+  status           StudentStatus @default(ACTIVE)
+  enrollmentDate   DateTime @default(now())
+  admissionNumber  String?
+  admissionDate    DateTime?
+  graduationDate   DateTime?
+
+  // Academic Category
+  category     String? // General, SC/ST, OBC, etc.
+  studentType  StudentType @default(REGULAR)
+
+  // Photo and Documents
+  profilePhotoUrl  String?
+  idCardNumber     String?
+  idCardIssuedDate DateTime?
+  idCardBarcode    String? // For ID card barcode
+
+  // Health Information
+  medicalConditions  String? @db.Text
+  allergies          String? @db.Text
+  medicationRequired String? @db.Text
+  doctorName         String?
+  doctorContact      String?
+  insuranceProvider  String?
+  insuranceNumber    String?
+
+  // Previous Education
+  previousSchoolName     String?
+  previousSchoolAddress  String? @db.Text
+  previousGrade          String?
+  transferCertificateNo  String?
+  transferDate           DateTime?
+  previousAcademicRecord String? @db.Text
+
+  // Relations
   school            School                 @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   studentClasses    StudentClass[]
   studentYearLevels StudentYearLevel[]
@@ -21,6 +100,15 @@ model Student {
   results           Result[]
   reportCards       ReportCard[]
 
+  // New Relations
+  batches           StudentBatch[]
+  documents         StudentDocument[]
+  healthRecords     HealthRecord[]
+  achievements      Achievement[]
+  disciplinaryRecords DisciplinaryRecord[]
+  libraryRecords    LibraryRecord[]
+  feeRecords        FeeRecord[]
+
   // Auth relationship
   userId String? @unique
   user   User?   @relation(fields: [userId], references: [id])
@@ -29,6 +117,11 @@ model Student {
   updatedAt DateTime @updatedAt
 
   @@unique([schoolId, studentId]) // Unique student ID per school
+  @@unique([schoolId, grNumber])  // Unique GR number per school
+  @@unique([schoolId, admissionNumber]) // Unique admission number per school
+  @@index([schoolId, status]) // Index for filtering by status
+  @@index([schoolId, studentType]) // Index for filtering by type
+  @@index([schoolId, category]) // Index for filtering by category
   @@map("students")
 }
 
@@ -127,4 +220,214 @@ model StudentYearLevel {
 
   @@unique([schoolId, studentId, yearId]) // Unique student-year per school
   @@map("student_year_levels")
+}
+
+// New Supporting Models for Enhanced Student Management
+
+model StudentBatch {
+  id        String    @id @default(cuid())
+  schoolId  String
+  studentId String
+  batchId   String
+  startDate DateTime  @default(now())
+  endDate   DateTime?
+  isActive  Boolean   @default(true)
+  notes     String?   @db.Text
+
+  school  School  @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  batch   Batch   @relation(fields: [batchId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([schoolId, studentId, batchId, startDate]) // Prevent duplicate batch assignments
+  @@index([schoolId, studentId, isActive])
+  @@map("student_batches")
+}
+
+model Batch {
+  id           String   @id @default(cuid())
+  schoolId     String
+  name         String
+  code         String   // e.g., "2024-A", "2024-B"
+  yearLevelId  String
+  maxCapacity  Int      @default(30)
+  isActive     Boolean  @default(true)
+
+  school       School         @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  yearLevel    YearLevel      @relation(fields: [yearLevelId], references: [id])
+  students     StudentBatch[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([schoolId, code])
+  @@index([schoolId, yearLevelId])
+  @@map("batches")
+}
+
+model StudentDocument {
+  id             String    @id @default(cuid())
+  schoolId       String
+  studentId      String
+  documentType   String    // Birth Certificate, Transfer Certificate, Medical Report, etc.
+  documentName   String
+  description    String?   @db.Text
+  fileUrl        String
+  fileSize       Int?      // File size in bytes
+  mimeType       String?   // application/pdf, image/jpeg, etc.
+  uploadedAt     DateTime  @default(now())
+  uploadedBy     String?   // User who uploaded
+  verifiedAt     DateTime?
+  verifiedBy     String?   // User who verified
+  isVerified     Boolean   @default(false)
+  expiryDate     DateTime? // For documents that expire
+  tags           String[]  // For categorization
+
+  school  School  @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([schoolId, studentId, documentType])
+  @@index([schoolId, studentId, isVerified])
+  @@map("student_documents")
+}
+
+model HealthRecord {
+  id              String   @id @default(cuid())
+  schoolId        String
+  studentId       String
+  recordDate      DateTime
+  recordType      String   // Vaccination, Medical Check-up, Incident, Illness, Allergy Update
+  title           String
+  description     String   @db.Text
+  severity        String?  // Low, Medium, High, Critical
+  doctorName      String?
+  hospitalName    String?
+  prescription    String?  @db.Text
+  followUpDate    DateTime?
+  attachmentUrl   String?
+  attachmentName  String?
+  recordedBy      String   // User who recorded
+
+  school  School  @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([schoolId, studentId, recordDate])
+  @@index([schoolId, studentId, recordType])
+  @@map("health_records")
+}
+
+model Achievement {
+  id              String   @id @default(cuid())
+  schoolId        String
+  studentId       String
+  title           String
+  description     String?  @db.Text
+  achievementDate DateTime
+  category        String   // Academic, Sports, Arts, Cultural, Leadership, Community Service
+  level           String?  // School, District, State, National, International
+  position        String?  // 1st Place, Winner, Participant, etc.
+  certificateUrl  String?
+  certificateNo   String?  // Certificate number if applicable
+  issuedBy        String?  // Organization that issued the certificate
+  points          Int?     // Points/Score if applicable
+
+  school  School  @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([schoolId, studentId, achievementDate])
+  @@index([schoolId, studentId, category])
+  @@map("achievements")
+}
+
+model DisciplinaryRecord {
+  id             String    @id @default(cuid())
+  schoolId       String
+  studentId      String
+  incidentDate   DateTime
+  incidentType   String    // Warning, Detention, Suspension, etc.
+  severity       String    // Minor, Major, Severe
+  description    String    @db.Text
+  action         String    @db.Text // Action taken
+  reportedBy     String    // Teacher/Staff who reported
+  witnessNames   String?   @db.Text
+  parentNotified Boolean   @default(false)
+  notifiedDate   DateTime?
+  followUpDate   DateTime?
+  resolution     String?   @db.Text
+  attachmentUrl  String?
+
+  school  School  @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([schoolId, studentId, incidentDate])
+  @@index([schoolId, studentId, severity])
+  @@map("disciplinary_records")
+}
+
+model LibraryRecord {
+  id           String    @id @default(cuid())
+  schoolId     String
+  studentId    String
+  bookId       String
+  issueDate    DateTime
+  dueDate      DateTime
+  returnDate   DateTime?
+  fineAmount   Decimal?  @db.Decimal(10, 2)
+  finePaid     Boolean   @default(false)
+  renewalCount Int       @default(0)
+  bookCondition String?  // Good, Damaged, Lost
+
+  school  School  @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([schoolId, studentId, returnDate])
+  @@index([schoolId, studentId, finePaid])
+  @@map("library_records")
+}
+
+model FeeRecord {
+  id              String   @id @default(cuid())
+  schoolId        String
+  studentId       String
+  academicYearId  String
+  feeType         String   // Tuition, Transport, Library, Sports, etc.
+  amount          Decimal  @db.Decimal(10, 2)
+  dueDate         DateTime
+  paidAmount      Decimal? @db.Decimal(10, 2)
+  paymentDate     DateTime?
+  paymentMethod   String?  // Cash, Card, Bank Transfer, etc.
+  transactionId   String?
+  status          String   @default("PENDING") // PENDING, PARTIAL, PAID, OVERDUE, WAIVED
+  lateFee         Decimal? @db.Decimal(10, 2)
+  discount        Decimal? @db.Decimal(10, 2)
+  discountReason  String?
+  receiptNumber   String?
+  remarks         String?  @db.Text
+
+  school  School  @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([schoolId, studentId, academicYearId])
+  @@index([schoolId, studentId, status])
+  @@map("fee_records")
 }
