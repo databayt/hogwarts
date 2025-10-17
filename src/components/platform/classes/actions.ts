@@ -216,7 +216,7 @@ export async function getClassesCSV(input?: Partial<z.infer<typeof getClassesSch
       },
       classroom: {
         select: {
-          roomNumber: true,
+          roomName: true,
           capacity: true,
         },
       },
@@ -239,7 +239,7 @@ export async function getClassesCSV(input?: Partial<z.infer<typeof getClassesSch
       ? `${classItem.teacher.givenName} ${classItem.teacher.surname}`
       : "",
     term: classItem.term?.termNumber ? `Term ${classItem.term.termNumber}` : "",
-    classroom: classItem.classroom?.roomNumber || "",
+    classroom: classItem.classroom?.roomName || "",
     roomCapacity: classItem.classroom?.capacity || "",
     credits: classItem.credits || "",
     evaluationType: classItem.evaluationType || "NORMAL",
