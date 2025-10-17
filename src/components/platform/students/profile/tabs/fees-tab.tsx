@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Alert } from "@/components/ui/alert";
 import {
   CreditCard,
   DollarSign,
@@ -21,8 +22,8 @@ interface FeesTabProps {
 }
 
 export function FeesTab({ student }: FeesTabProps) {
-  // Mock fee records
-  const feeRecords: FeeRecord[] = student.feeRecords || [
+  // Mock fee records - TODO: Replace with actual data from database
+  const feeRecords: FeeRecord[] = [
     {
       id: "1",
       schoolId: student.schoolId,

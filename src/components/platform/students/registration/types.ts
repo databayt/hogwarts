@@ -275,6 +275,8 @@ export interface FeeRecord {
   discountReason?: string;
   receiptNumber?: string;
   remarks?: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export type FeeStatus =
