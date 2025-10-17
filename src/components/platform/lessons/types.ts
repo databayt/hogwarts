@@ -5,11 +5,9 @@ import { lessonCreateSchema } from "./validation";
 export type LessonDTO = {
   id: string;
   schoolId: string;
+  classId: string;
   title: string;
   description: string | null;
-  classId: string;
-  teacherId: string;
-  subjectId: string;
   lessonDate: Date;
   startTime: string;
   endTime: string;
@@ -19,9 +17,12 @@ export type LessonDTO = {
   assessment: string | null;
   notes: string | null;
   status: "PLANNED" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
-  class?: { id: string; name: string } | null;
-  teacher?: { id: string; givenName: string; surname: string } | null;
-  subject?: { id: string; subjectName: string } | null;
+  class?: {
+    id: string;
+    name: string;
+    teacher: { id: string; givenName: string; surname: string } | null;
+    subject: { id: string; subjectName: string } | null;
+  } | null;
   createdAt: Date;
   updatedAt: Date;
 }

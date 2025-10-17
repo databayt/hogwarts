@@ -9,12 +9,27 @@ model Teacher {
   gender       String?
   emailAddress String
 
-  school             School               @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  // New profile fields
+  birthDate           DateTime?
+  joiningDate         DateTime?
+  employmentStatus    String    @default("ACTIVE") // ACTIVE, ON_LEAVE, TERMINATED, RETIRED
+  employmentType      String    @default("FULL_TIME") // FULL_TIME, PART_TIME, CONTRACT, SUBSTITUTE
+  contractStartDate   DateTime?
+  contractEndDate     DateTime?
+  profilePhotoUrl     String?
+
+  school             School                    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   classes            Class[]
   teacherDepartments TeacherDepartment[]
   phoneNumbers       TeacherPhoneNumber[]
   guardianProfiles   Guardian[] // Teachers can also be guardians
   timetables         Timetable[]
+
+  // New relations
+  qualifications   TeacherQualification[]
+  experiences      TeacherExperience[]
+  subjectExpertise TeacherSubjectExpertise[]
+  classTeachers    ClassTeacher[] // Co-teaching assignments
 
   // Auth relationship
   userId String? @unique
@@ -80,4 +95,88 @@ model TeacherPhoneNumber {
 
   @@unique([schoolId, teacherId, phoneNumber]) // Unique phone per teacher per school
   @@map("teacher_phone_numbers")
+}
+
+// Teacher Qualifications (Degrees, Certifications, Licenses)
+model TeacherQualification {
+  id                String    @id @default(cuid())
+  schoolId          String
+  teacherId         String
+  qualificationType String // DEGREE, CERTIFICATION, LICENSE
+  name              String // e.g., "Bachelor of Science", "TEFL Certificate"
+  institution       String? // University or issuing body
+  major             String? // Field of study (for degrees)
+  dateObtained      DateTime
+  expiryDate        DateTime?
+  licenseNumber     String?
+  documentUrl       String? // Future: S3/upload integration
+
+  teacher Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  school  School  @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([schoolId, teacherId, qualificationType, name]) // Prevent duplicate qualifications
+  @@index([schoolId, teacherId])
+  @@map("teacher_qualifications")
+}
+
+// Teacher Experience Records
+model TeacherExperience {
+  id          String    @id @default(cuid())
+  schoolId    String
+  teacherId   String
+  institution String // Previous school/organization name
+  position    String // Job title/role
+  startDate   DateTime
+  endDate     DateTime?
+  isCurrent   Boolean   @default(false)
+  description String?   @db.Text // Responsibilities, achievements
+
+  teacher Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  school  School  @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([schoolId, teacherId])
+  @@map("teacher_experiences")
+}
+
+// Teacher Subject Expertise
+model TeacherSubjectExpertise {
+  id             String @id @default(cuid())
+  schoolId       String
+  teacherId      String
+  subjectId      String
+  expertiseLevel String // PRIMARY, SECONDARY, CERTIFIED
+
+  teacher Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  subject Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  school  School  @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([schoolId, teacherId, subjectId]) // One expertise record per teacher-subject pair
+  @@index([schoolId, teacherId])
+  @@map("teacher_subject_expertise")
+}
+
+// School-level Workload Configuration
+model WorkloadConfig {
+  id                    String @id @default(cuid())
+  schoolId              String @unique
+  minPeriodsPerWeek     Int    @default(15) // Below this = underutilized
+  normalPeriodsPerWeek  Int    @default(20) // Normal teaching load
+  maxPeriodsPerWeek     Int    @default(25) // Recommended maximum
+  overloadThreshold     Int    @default(25) // Above this = overload warning
+
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("workload_configs")
 }

@@ -10,15 +10,13 @@ export async function createLesson(input: z.infer<typeof lessonCreateSchema>) {
   const { schoolId } = await getTenantContext();
   if (!schoolId) throw new Error("Missing school context");
   const parsed = lessonCreateSchema.parse(input);
-  
-  const row = await (db as any).lesson.create({
+
+  const row = await db.lesson.create({
     data: {
       schoolId,
+      classId: parsed.classId,
       title: parsed.title,
       description: parsed.description || null,
-      classId: parsed.classId,
-      teacherId: parsed.teacherId,
-      subjectId: parsed.subjectId,
       lessonDate: parsed.lessonDate,
       startTime: parsed.startTime,
       endTime: parsed.endTime,
@@ -40,12 +38,10 @@ export async function updateLesson(input: z.infer<typeof lessonUpdateSchema>) {
   const parsed = lessonUpdateSchema.parse(input);
   const { id, ...rest } = parsed;
   const data: Record<string, unknown> = {};
-  
+
   if (typeof rest.title !== "undefined") data.title = rest.title;
   if (typeof rest.description !== "undefined") data.description = rest.description || null;
   if (typeof rest.classId !== "undefined") data.classId = rest.classId;
-  if (typeof rest.teacherId !== "undefined") data.teacherId = rest.teacherId;
-  if (typeof rest.subjectId !== "undefined") data.subjectId = rest.subjectId;
   if (typeof rest.lessonDate !== "undefined") data.lessonDate = rest.lessonDate;
   if (typeof rest.startTime !== "undefined") data.startTime = rest.startTime;
   if (typeof rest.endTime !== "undefined") data.endTime = rest.endTime;
@@ -54,8 +50,8 @@ export async function updateLesson(input: z.infer<typeof lessonUpdateSchema>) {
   if (typeof rest.activities !== "undefined") data.activities = rest.activities || null;
   if (typeof rest.assessment !== "undefined") data.assessment = rest.assessment || null;
   if (typeof rest.notes !== "undefined") data.notes = rest.notes || null;
-  
-  await (db as any).lesson.updateMany({ where: { id, schoolId }, data });
+
+  await db.lesson.updateMany({ where: { id, schoolId }, data });
   revalidatePath("/dashboard/lessons");
   return { success: true as const };
 }
@@ -64,7 +60,7 @@ export async function deleteLesson(input: { id: string }) {
   const { schoolId } = await getTenantContext();
   if (!schoolId) throw new Error("Missing school context");
   const { id } = z.object({ id: z.string().min(1) }).parse(input);
-  await (db as any).lesson.deleteMany({ where: { id, schoolId } });
+  await db.lesson.deleteMany({ where: { id, schoolId } });
   revalidatePath("/dashboard/lessons");
   return { success: true as const };
 }
@@ -74,17 +70,14 @@ export async function getLesson(input: { id: string }) {
   const { schoolId } = await getTenantContext();
   if (!schoolId) throw new Error("Missing school context");
   const { id } = z.object({ id: z.string().min(1) }).parse(input);
-  if (!(db as any).lesson) return { lesson: null as null };
-  const l = await (db as any).lesson.findFirst({
+  const l = await db.lesson.findFirst({
     where: { id, schoolId },
     select: {
       id: true,
       schoolId: true,
+      classId: true,
       title: true,
       description: true,
-      classId: true,
-      teacherId: true,
-      subjectId: true,
       lessonDate: true,
       startTime: true,
       endTime: true,
@@ -105,7 +98,6 @@ export async function getLessons(input: Partial<z.infer<typeof getLessonsSchema>
   const { schoolId } = await getTenantContext();
   if (!schoolId) throw new Error("Missing school context");
   const sp = getLessonsSchema.parse(input ?? {});
-  if (!(db as any).lesson) return { rows: [] as Array<{ id: string; title: string; className: string; teacherName: string; subjectName: string; lessonDate: string; startTime: string; endTime: string; status: string; createdAt: string }>, total: 0 };
   const where: any = {
     schoolId,
     ...(sp.title
@@ -113,12 +105,6 @@ export async function getLessons(input: Partial<z.infer<typeof getLessonsSchema>
       : {}),
     ...(sp.classId
       ? { classId: sp.classId }
-      : {}),
-    ...(sp.teacherId
-      ? { teacherId: sp.teacherId }
-      : {}),
-    ...(sp.subjectId
-      ? { subjectId: sp.subjectId }
       : {}),
     ...(sp.status
       ? { status: sp.status }
@@ -133,38 +119,38 @@ export async function getLessons(input: Partial<z.infer<typeof getLessonsSchema>
     ? sp.sort.map((s) => ({ [s.id]: s.desc ? "desc" : "asc" }))
     : [{ lessonDate: "desc" }, { startTime: "asc" }];
   const [rows, count] = await Promise.all([
-    (db as any).lesson.findMany({ 
-      where, 
-      orderBy, 
-      skip, 
+    db.lesson.findMany({
+      where,
+      orderBy,
+      skip,
       take,
       include: {
         class: {
           select: {
-            name: true
-          }
-        },
-        teacher: {
-          select: {
-            givenName: true,
-            surname: true
-          }
-        },
-        subject: {
-          select: {
-            subjectName: true
+            name: true,
+            subject: {
+              select: {
+                subjectName: true
+              }
+            },
+            teacher: {
+              select: {
+                givenName: true,
+                surname: true
+              }
+            }
           }
         }
       }
     }),
-    (db as any).lesson.count({ where }),
+    db.lesson.count({ where }),
   ]);
   const mapped = (rows as Array<any>).map((l) => ({
     id: l.id as string,
     title: l.title as string,
     className: l.class?.name || "Unknown",
-    teacherName: l.teacher ? `${l.teacher.givenName} ${l.teacher.surname}` : "Unknown",
-    subjectName: l.subject?.subjectName || "Unknown",
+    teacherName: l.class?.teacher ? `${l.class.teacher.givenName} ${l.class.teacher.surname}` : "Unknown",
+    subjectName: l.class?.subject?.subjectName || "Unknown",
     lessonDate: (l.lessonDate as Date).toISOString(),
     startTime: l.startTime as string,
     endTime: l.endTime as string,

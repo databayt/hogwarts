@@ -4,6 +4,15 @@
 
 The Lessons feature empowers teachers to create lesson plans, organize curriculum content, link to assignments and resources, and track lesson delivery with comprehensive planning tools.
 
+### Course Management Integration
+
+Lessons are now fully integrated with the enhanced Course Management system:
+- **Lessons are linked to Class (Course Sections)** - Each lesson belongs to a specific class/section
+- **Teacher & Subject auto-assigned** - Inherited from the class configuration
+- **Evaluation Types supported** - Normal, GPA, CWA, and CCE grading systems
+- **Course Hierarchy** - Classes can have prerequisites and dependencies
+- **Batch/Section Management** - Multiple sections per course with capacity limits
+
 ### What Admins Can Do
 
 **Core Capabilities:**
@@ -124,24 +133,63 @@ The Lessons feature empowers teachers to create lesson plans, organize curriculu
 
 **Database Schema:**
 ```prisma
-model Lesson {
-  id          String   @id @default(cuid())
-  schoolId    String
-  title       String
-  classId     String
-  subjectId   String
-  content     String
-  objectives  String?
-  materials   String?
-  duration    Int?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+enum LessonStatus {
+  PLANNED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
 
-  school   School  @relation(fields: [schoolId], references: [id])
-  class    Class   @relation(fields: [classId], references: [id])
-  subject  Subject @relation(fields: [subjectId], references: [id])
+model Lesson {
+  id          String       @id @default(cuid())
+  schoolId    String
+  classId     String       // Links to Class (Course Section)
+  title       String
+  description String?
+  lessonDate  DateTime
+  startTime   String       // HH:MM format
+  endTime     String       // HH:MM format
+  objectives  String?      @db.Text
+  materials   String?      @db.Text
+  activities  String?      @db.Text
+  assessment  String?      @db.Text
+  notes       String?      @db.Text
+  status      LessonStatus @default(PLANNED)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  school School @relation(fields: [schoolId], references: [id])
+  class  Class  @relation(fields: [classId], references: [id])
 
   @@index([schoolId, classId])
+  @@index([lessonDate])
+  @@index([status])
+}
+
+// Enhanced Class (Course Section) Model
+enum EvaluationType {
+  NORMAL // Percentage-based (0-100%)
+  GPA    // Grade Point Average (4.0 scale)
+  CWA    // Cumulative Weighted Average
+  CCE    // Continuous Comprehensive Evaluation
+}
+
+model Class {
+  // ... existing fields ...
+
+  // Course Management Fields
+  courseCode     String?         // e.g., "CS101"
+  credits        Decimal?        @db.Decimal(3, 2)
+  evaluationType EvaluationType  @default(NORMAL)
+  minCapacity    Int?            @default(10)
+  maxCapacity    Int?            @default(50)
+  duration       Int?            // Duration in weeks
+  prerequisiteId String?         // Parent course
+
+  // Relations
+  lessons          Lesson[]
+  prerequisite     Class?  @relation("CoursePrerequisites", fields: [prerequisiteId], references: [id])
+  dependentCourses Class[] @relation("CoursePrerequisites")
 }
 ```
 

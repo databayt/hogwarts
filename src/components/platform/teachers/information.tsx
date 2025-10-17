@@ -42,7 +42,7 @@ export function InformationStep({ form, isView }: TeacherFormStepProps) {
         />
       </div>
 
-      {/* Right Column - Gender */}
+      {/* Right Column - Gender & Birth Date */}
       <div className="space-y-4">
         <FormField
           control={form.control}
@@ -63,6 +63,25 @@ export function InformationStep({ form, isView }: TeacherFormStepProps) {
                   ))}
                 </SelectContent>
               </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="birthDate"
+          render={({ field }) => (
+            <FormItem>
+              <FormControl>
+                <Input
+                  type="date"
+                  placeholder="Birth date"
+                  disabled={isView}
+                  value={field.value instanceof Date ? field.value.toISOString().split('T')[0] : field.value || ''}
+                  onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : undefined)}
+                />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}

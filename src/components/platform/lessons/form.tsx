@@ -26,8 +26,6 @@ export function LessonCreateForm() {
       title: "",
       description: "",
       classId: "",
-      teacherId: "",
-      subjectId: "",
       lessonDate: new Date(),
       startTime: "",
       endTime: "",
@@ -53,8 +51,6 @@ export function LessonCreateForm() {
         title: l.title ?? "",
         description: l.description ?? "",
         classId: l.classId ?? "",
-        teacherId: l.teacherId ?? "",
-        subjectId: l.subjectId ?? "",
         lessonDate: l.lessonDate ? new Date(l.lessonDate) : new Date(),
         startTime: l.startTime ?? "",
         endTime: l.endTime ?? "",
@@ -85,7 +81,7 @@ export function LessonCreateForm() {
 
   const handleNext = async () => {
     if (currentStep === 1) {
-      const step1Fields = ['title', 'description', 'classId', 'teacherId', 'subjectId'] as const;
+      const step1Fields = ['title', 'description', 'classId'] as const;
       const step1Valid = await form.trigger(step1Fields);
       if (step1Valid) {
         setCurrentStep(2);
@@ -104,12 +100,12 @@ export function LessonCreateForm() {
   const handleSaveCurrentStep = async () => {
     if (currentId) {
       // For editing, save current step data
-      const currentStepFields = currentStep === 1 
-        ? ['title', 'description', 'classId', 'teacherId', 'subjectId'] as const
+      const currentStepFields = currentStep === 1
+        ? ['title', 'description', 'classId'] as const
         : currentStep === 2
         ? ['lessonDate', 'startTime', 'endTime'] as const
         : ['objectives', 'materials', 'activities', 'assessment', 'notes'] as const;
-      
+
       const stepValid = await form.trigger(currentStepFields);
       if (stepValid) {
         await form.handleSubmit(onSubmit)();

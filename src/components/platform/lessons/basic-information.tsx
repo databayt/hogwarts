@@ -12,9 +12,7 @@ import { useEffect, useState } from "react";
 import { LessonFormStepProps } from "./types";
 
 export function BasicInformationStep({ form, isView }: LessonFormStepProps) {
-  const [classes, setClasses] = useState<Array<{ id: string; name: string }>>([]);
-  const [teachers, setTeachers] = useState<Array<{ id: string; givenName: string; surname: string }>>([]);
-  const [subjects, setSubjects] = useState<Array<{ id: string; subjectName: string }>>([]);
+  const [classes, setClasses] = useState<Array<{ id: string; name: string; teacher?: string; subject?: string }>>([]);
 
   useEffect(() => {
     const loadData = async () => {
@@ -22,19 +20,9 @@ export function BasicInformationStep({ form, isView }: LessonFormStepProps) {
         // This would need to be implemented in separate actions
         // For now, we'll use placeholders
         setClasses([
-          { id: "cls_001", name: "Transfiguration 101" },
-          { id: "cls_002", name: "Potions 101" },
-          { id: "cls_003", name: "Creatures 101" }
-        ]);
-        setTeachers([
-          { id: "tch_001", givenName: "Minerva", surname: "McGonagall" },
-          { id: "tch_002", givenName: "Severus", surname: "Snape" },
-          { id: "tch_003", givenName: "Rubeus", surname: "Hagrid" }
-        ]);
-        setSubjects([
-          { id: "sub_001", subjectName: "Transfiguration" },
-          { id: "sub_002", subjectName: "Potions" },
-          { id: "sub_003", subjectName: "Care of Magical Creatures" }
+          { id: "cls_001", name: "Transfiguration 101", teacher: "Minerva McGonagall", subject: "Transfiguration" },
+          { id: "cls_002", name: "Potions 101", teacher: "Severus Snape", subject: "Potions" },
+          { id: "cls_003", name: "Creatures 101", teacher: "Rubeus Hagrid", subject: "Care of Magical Creatures" }
         ]);
       } catch (error) {
         console.error("Failed to load data:", error);
@@ -78,82 +66,37 @@ export function BasicInformationStep({ form, isView }: LessonFormStepProps) {
         )}
       />
 
-      <div className="grid grid-cols-3 gap-4">
-        <FormField
-          control={form.control}
-          name="classId"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Class</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value} disabled={isView}>
-                <FormControl>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select class" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {classes.map((cls) => (
-                    <SelectItem key={cls.id} value={cls.id}>
-                      {cls.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="teacherId"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Teacher</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value} disabled={isView}>
-                <FormControl>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select teacher" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {teachers.map((teacher) => (
-                    <SelectItem key={teacher.id} value={teacher.id}>
-                      {teacher.givenName} {teacher.surname}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="subjectId"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Subject</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value} disabled={isView}>
-                <FormControl>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select subject" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {subjects.map((subject) => (
-                    <SelectItem key={subject.id} value={subject.id}>
-                      {subject.subjectName}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      </div>
+      <FormField
+        control={form.control}
+        name="classId"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Class (Course Section)</FormLabel>
+            <Select onValueChange={field.onChange} value={field.value} disabled={isView}>
+              <FormControl>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select class" />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                {classes.map((cls) => (
+                  <SelectItem key={cls.id} value={cls.id}>
+                    <div className="flex flex-col">
+                      <span className="font-medium">{cls.name}</span>
+                      {cls.teacher && cls.subject && (
+                        <span className="text-xs text-muted-foreground">
+                          {cls.subject} • {cls.teacher}
+                        </span>
+                      )}
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
     </div>
   );
 }

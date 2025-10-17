@@ -413,5 +413,18 @@
       "tenants": "المستأجرون",
       "profile": "الملف الشخصي"
     }
+  },
+  "commandMenu": {
+    "placeholder": "اكتب أمراً أو ابحث...",
+    "searchShort": "بحث...",
+    "noResults": "لا توجد نتائج.",
+    "navigation": "التصفح",
+    "actions": "الإجراءات",
+    "settings": "الإعدادات",
+    "recent": "الأخيرة",
+    "theme": "المظهر",
+    "light": "فاتح",
+    "dark": "داكن",
+    "system": "النظام"
   }
 }

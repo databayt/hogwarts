@@ -19,59 +19,59 @@ export default async function LessonsContent({ searchParams, dictionary, lang }:
   const { schoolId } = await getTenantContext()
   let data: LessonRow[] = []
   let total = 0
-  
-  if (schoolId && (db as any).lesson) {
+
+  if (schoolId) {
     const where: any = {
       schoolId,
       ...(sp.title ? { title: { contains: sp.title, mode: 'insensitive' } } : {}),
       ...(sp.classId ? { classId: sp.classId } : {}),
-      ...(sp.teacherId ? { teacherId: sp.teacherId } : {}),
-      ...(sp.subjectId ? { subjectId: sp.subjectId } : {}),
       ...(sp.status ? { status: sp.status } : {}),
       ...(sp.lessonDate ? { lessonDate: new Date(sp.lessonDate) } : {}),
     }
-    
+
     const skip = (sp.page - 1) * sp.perPage
     const take = sp.perPage
     const orderBy = (sp.sort && Array.isArray(sp.sort) && sp.sort.length)
       ? sp.sort.map((s: any) => ({ [s.id]: s.desc ? 'desc' : 'asc' }))
       : [{ lessonDate: 'desc' }, { startTime: 'asc' }]
-      
+
     const [rows, count] = await Promise.all([
-      (db as any).lesson.findMany({ 
-        where, 
-        orderBy, 
-        skip, 
+      db.lesson.findMany({
+        where,
+        orderBy,
+        skip,
         take,
         include: {
           class: {
-            select: { name: true }
-          },
-          teacher: {
             select: {
-              givenName: true,
-              surname: true
+              name: true,
+              subject: {
+                select: { subjectName: true }
+              },
+              teacher: {
+                select: {
+                  givenName: true,
+                  surname: true
+                }
+              }
             }
-          },
-          subject: {
-            select: { subjectName: true }
           }
         }
       }),
-      (db as any).lesson.count({ where }),
+      db.lesson.count({ where }),
     ])
-    
-    data = rows.map((l: any) => ({ 
-      id: l.id, 
-      title: l.title, 
-      className: l.class?.name || 'Unknown', 
-      teacherName: l.teacher ? `${l.teacher.givenName} ${l.teacher.surname}` : 'Unknown', 
-      subjectName: l.subject?.subjectName || 'Unknown', 
-      lessonDate: (l.lessonDate as Date).toISOString(), 
-      startTime: l.startTime, 
-      endTime: l.endTime, 
-      status: l.status, 
-      createdAt: (l.createdAt as Date).toISOString() 
+
+    data = rows.map((l: any) => ({
+      id: l.id,
+      title: l.title,
+      className: l.class?.name || 'Unknown',
+      teacherName: l.class?.teacher ? `${l.class.teacher.givenName} ${l.class.teacher.surname}` : 'Unknown',
+      subjectName: l.class?.subject?.subjectName || 'Unknown',
+      lessonDate: (l.lessonDate as Date).toISOString(),
+      startTime: l.startTime,
+      endTime: l.endTime,
+      status: l.status,
+      createdAt: (l.createdAt as Date).toISOString()
     }))
     total = count as number
   }

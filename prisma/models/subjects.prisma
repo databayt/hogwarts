@@ -13,12 +13,13 @@ model Subject {
   departmentId String
   subjectName  String
 
-  school           School             @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  department       Department         @relation(fields: [departmentId], references: [id])
-  classes          Class[]
-  exams            Exam[]
-  results          Result[]
-  reportCardGrades ReportCardGrade[]
+  school               School                    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  department           Department                @relation(fields: [departmentId], references: [id])
+  classes              Class[]
+  exams                Exam[]
+  results              Result[]
+  reportCardGrades     ReportCardGrade[]
+  teacherExpertise     TeacherSubjectExpertise[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -65,6 +66,7 @@ model Class {
   results          Result[]
   lessons          Lesson[]
   dependentCourses Class[]        @relation("CoursePrerequisites")
+  classTeachers    ClassTeacher[] // Co-teaching support
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -107,4 +109,24 @@ model ScoreRange {
 
   @@unique([schoolId, grade]) // Unique grade per school
   @@map("score_ranges")
+}
+
+// Class-Teacher Join Table (Co-teaching Support)
+model ClassTeacher {
+  id        String @id @default(cuid())
+  schoolId  String
+  classId   String
+  teacherId String
+  role      String @default("PRIMARY") // PRIMARY, CO_TEACHER, ASSISTANT
+
+  class   Class   @relation(fields: [classId], references: [id], onDelete: Cascade)
+  teacher Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  school  School  @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([schoolId, classId, teacherId]) // One role per teacher per class
+  @@index([schoolId, teacherId])
+  @@map("class_teachers")
 }

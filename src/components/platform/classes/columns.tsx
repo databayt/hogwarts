@@ -15,6 +15,11 @@ export type ClassRow = {
   subjectName: string;
   teacherName: string;
   termName: string;
+  courseCode: string;
+  credits: string | number;
+  evaluationType: string;
+  enrolledStudents: number;
+  maxCapacity: number;
   createdAt: string;
 };
 
@@ -25,6 +30,17 @@ export const getClassColumns = (): ColumnDef<ClassRow>[] => [
     meta: { label: "Class Name", variant: "text" },
     id: 'name',
     enableColumnFilter: true,
+  },
+  {
+    accessorKey: "courseCode",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Course Code" />,
+    meta: { label: "Course Code", variant: "text" },
+    id: 'courseCode',
+    enableColumnFilter: true,
+    cell: ({ getValue }) => {
+      const value = getValue<string>();
+      return value ? <span className="font-mono text-xs">{value}</span> : <span className="text-muted-foreground">-</span>;
+    },
   },
   {
     accessorKey: "subjectName",
@@ -39,6 +55,42 @@ export const getClassColumns = (): ColumnDef<ClassRow>[] => [
     meta: { label: "Teacher", variant: "text" },
     id: 'teacherName',
     enableColumnFilter: true,
+  },
+  {
+    accessorKey: "credits",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Credits" />,
+    meta: { label: "Credits", variant: "number" },
+    id: 'credits',
+    cell: ({ getValue }) => {
+      const value = getValue<string | number>();
+      return value ? <span className="tabular-nums">{value}</span> : <span className="text-muted-foreground">-</span>;
+    },
+  },
+  {
+    accessorKey: "evaluationType",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Evaluation" />,
+    meta: { label: "Evaluation", variant: "text" },
+    id: 'evaluationType',
+    enableColumnFilter: true,
+    cell: ({ getValue }) => {
+      const value = getValue<string>();
+      return <span className="text-xs">{value}</span>;
+    },
+  },
+  {
+    accessorKey: "enrolledStudents",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Enrolled" />,
+    meta: { label: "Enrolled", variant: "number" },
+    id: 'enrolledStudents',
+    cell: ({ row }) => {
+      const enrolled = row.original.enrolledStudents;
+      const max = row.original.maxCapacity;
+      return (
+        <span className="tabular-nums text-xs">
+          {enrolled}/{max}
+        </span>
+      );
+    },
   },
   {
     accessorKey: "termName",

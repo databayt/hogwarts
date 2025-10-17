@@ -12,6 +12,11 @@ import { useModal } from "@/components/atom/modal/context";
 import { useRouter } from "next/navigation";
 import { InformationStep } from "./information";
 import { ContactStep } from "./contact";
+import { EmploymentDetailsStep } from "./employment";
+import { QualificationsStep } from "./qualifications";
+import { ExperienceStep } from "./experience";
+import { SubjectExpertiseStep } from "./expertise";
+import { ReviewStep } from "./review";
 import { TeacherFormFooter } from "./footer";
 
 export function TeacherCreateForm() {
@@ -25,6 +30,17 @@ export function TeacherCreateForm() {
       surname: "",
       gender: undefined as unknown as "male" | "female" | undefined,
       emailAddress: "",
+      // Employment details
+      employeeId: "",
+      joiningDate: undefined,
+      employmentStatus: "ACTIVE",
+      employmentType: "FULL_TIME",
+      contractStartDate: undefined,
+      contractEndDate: undefined,
+      // Arrays for future steps
+      qualifications: [],
+      experiences: [],
+      subjectExpertise: [],
     },
   });
 
@@ -42,6 +58,13 @@ export function TeacherCreateForm() {
         surname: t.surname ?? "",
         gender: ((t.gender ?? "") as string).toLowerCase() === "female" ? "female" : "male",
         emailAddress: t.emailAddress ?? "",
+        // Employment details
+        employeeId: t.employeeId ?? "",
+        joiningDate: t.joiningDate ? new Date(t.joiningDate) : undefined,
+        employmentStatus: t.employmentStatus ?? "ACTIVE",
+        employmentType: t.employmentType ?? "FULL_TIME",
+        contractStartDate: t.contractStartDate ? new Date(t.contractStartDate) : undefined,
+        contractEndDate: t.contractEndDate ? new Date(t.contractEndDate) : undefined,
       });
     };
     void load();
@@ -63,12 +86,31 @@ export function TeacherCreateForm() {
 
   const handleNext = async () => {
     if (currentStep === 1) {
-      const step1Fields = ['givenName', 'surname', 'gender'] as const;
+      const step1Fields = ['givenName', 'surname', 'gender', 'birthDate'] as const;
       const step1Valid = await form.trigger(step1Fields);
       if (step1Valid) {
         setCurrentStep(2);
       }
     } else if (currentStep === 2) {
+      const step2Fields = ['emailAddress'] as const;
+      const step2Valid = await form.trigger(step2Fields);
+      if (step2Valid) {
+        setCurrentStep(3);
+      }
+    } else if (currentStep === 3) {
+      // Employment fields are optional, just move to next step
+      setCurrentStep(4);
+    } else if (currentStep === 4) {
+      // Qualifications are optional, move to next
+      setCurrentStep(5);
+    } else if (currentStep === 5) {
+      // Experience is optional, move to next
+      setCurrentStep(6);
+    } else if (currentStep === 6) {
+      // Subject expertise is optional, move to review
+      setCurrentStep(7);
+    } else if (currentStep === 7) {
+      // Submit from review step
       await form.handleSubmit(onSubmit)();
     }
   };
@@ -76,10 +118,11 @@ export function TeacherCreateForm() {
   const handleSaveCurrentStep = async () => {
     if (currentId) {
       // For editing, save current step data
-      const currentStepFields = currentStep === 1 
-        ? ['givenName', 'surname', 'gender'] as const
-        : ['emailAddress'] as const;
-      
+      const currentStepFields =
+        currentStep === 1 ? ['givenName', 'surname', 'gender', 'birthDate'] as const :
+        currentStep === 2 ? ['emailAddress'] as const :
+        ['employeeId', 'joiningDate', 'employmentStatus', 'employmentType', 'contractStartDate', 'contractEndDate'] as const;
+
       const stepValid = await form.trigger(currentStepFields);
       if (stepValid) {
         await form.handleSubmit(onSubmit)();
@@ -91,8 +134,8 @@ export function TeacherCreateForm() {
   };
 
   const handleBack = () => {
-    if (currentStep === 2) {
-      setCurrentStep(1);
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1);
     } else {
       closeModal();
     }
@@ -104,6 +147,16 @@ export function TeacherCreateForm() {
         return <InformationStep form={form} isView={isView} />;
       case 2:
         return <ContactStep form={form} isView={isView} />;
+      case 3:
+        return <EmploymentDetailsStep form={form} isView={isView} />;
+      case 4:
+        return <QualificationsStep form={form} isView={isView} />;
+      case 5:
+        return <ExperienceStep form={form} isView={isView} />;
+      case 6:
+        return <SubjectExpertiseStep form={form} isView={isView} />;
+      case 7:
+        return <ReviewStep form={form} isView={isView} />;
       default:
         return null;
     }

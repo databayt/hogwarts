@@ -8,6 +8,24 @@ export const classBaseSchema = z.object({
   startPeriodId: z.string().min(1, "Start period is required"),
   endPeriodId: z.string().min(1, "End period is required"),
   classroomId: z.string().min(1, "Classroom is required"),
+
+  // Course Management Fields
+  courseCode: z.string().optional(),
+  credits: z.coerce.number().min(0).max(999.99).optional(),
+  evaluationType: z.enum(["NORMAL", "GPA", "CWA", "CCE"]).default("NORMAL"),
+  minCapacity: z.coerce.number().int().min(1).optional(),
+  maxCapacity: z.coerce.number().int().min(1).optional(),
+  duration: z.coerce.number().int().min(1).optional(),
+  prerequisiteId: z.string().optional().nullable(),
+}).superRefine((val, ctx) => {
+  // Ensure maxCapacity >= minCapacity if both are provided
+  if (val.minCapacity && val.maxCapacity && val.maxCapacity < val.minCapacity) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Maximum capacity must be greater than or equal to minimum capacity",
+      path: ["maxCapacity"]
+    })
+  }
 })
 
 export const classCreateSchema = classBaseSchema

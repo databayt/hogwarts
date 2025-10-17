@@ -5,7 +5,7 @@ export const STEPS = {
 } as const;
 
 export const STEP_FIELDS = {
-  1: ['title', 'description', 'classId', 'teacherId', 'subjectId'] as const,
+  1: ['title', 'description', 'classId'] as const,
   2: ['lessonDate', 'startTime', 'endTime'] as const,
   3: ['objectives', 'materials', 'activities', 'assessment', 'notes'] as const
 } as const;

@@ -823,5 +823,18 @@
       "tenants": "Tenants",
       "profile": "Profile"
     }
+  },
+  "commandMenu": {
+    "placeholder": "Type a command or search...",
+    "searchShort": "Search...",
+    "noResults": "No results found.",
+    "navigation": "Navigation",
+    "actions": "Actions",
+    "settings": "Settings",
+    "recent": "Recent",
+    "theme": "Theme",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
   }
 }

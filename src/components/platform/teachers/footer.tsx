@@ -24,13 +24,13 @@ export function TeacherFormFooter({ currentStep, isView, currentId, onBack, onNe
   const values = form.watch();
   
   const getFilledFieldsCount = () => {
-    // Count filled fields across all steps
-    const allFields = [...STEP_FIELDS[1], ...STEP_FIELDS[2]];
+    // Count filled fields across all steps (up to step 3 for now)
+    const allFields = [...STEP_FIELDS[1], ...STEP_FIELDS[2], ...STEP_FIELDS[3]];
     const filledCount = allFields.filter(field => {
       const value = values[field as keyof typeof values];
       return value !== undefined && value !== "" && value !== null;
     }).length;
-    
+
     return filledCount;
   };
 
@@ -69,12 +69,12 @@ export function TeacherFormFooter({ currentStep, isView, currentId, onBack, onNe
                   Save
                 </Button>
               )}
-              <Button 
+              <Button
                 type="button"
                 size="sm"
                 onClick={onNext}
               >
-                {currentStep === 1 ? 'Next' : currentId ? 'Save' : 'Create'}
+                {currentStep < 7 ? 'Next' : currentId ? 'Save' : 'Create'}
               </Button>
             </>
           )}

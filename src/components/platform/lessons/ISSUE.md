@@ -1,29 +1,64 @@
 # Lessons — Production Readiness Tracker
 
-**Status:** ✅ Production-Ready MVP
-**Last Updated:** 2025-10-10
+**Status:** ✅ Production-Ready with Course Management Enhancements
+**Last Updated:** 2025-10-17
 
 ---
 
 ## Current Status
 
-**Production-Ready MVP Features ✅**
-- [x] CRUD operations
-- [x] Class and subject linking
-- [x] Lesson content management
-- [x] Multi-tenant isolation
+**Production-Ready Features ✅**
+- [x] CRUD operations for lessons
+- [x] Class (Course Section) linking with auto teacher/subject assignment
+- [x] Lesson content management (objectives, materials, activities, assessment)
+- [x] Multi-tenant isolation with schoolId scoping
+- [x] Lesson status tracking (Planned, In Progress, Completed, Cancelled)
+- [x] Date/time scheduling with validation
+
+**Course Management Enhancements ✅**
+- [x] Evaluation types support (Normal, GPA, CWA, CCE)
+- [x] Course codes and credit hours
+- [x] Course prerequisite hierarchy
+- [x] Capacity management (min/max students)
+- [x] Course duration tracking
+- [x] Batch/section support via Class model
 
 ---
 
-## Enhancement Items
+## Enhancement Items Completed
 
-### Critical Issues (Priority 1) 🔴
+### Phase 1: Database Schema ✅
+- [x] Created Lesson model with LessonStatus enum
+- [x] Added EvaluationType enum (Normal, GPA, CWA, CCE)
+- [x] Enhanced Class model with course management fields
+- [x] Added prerequisite course hierarchy support
+- [x] Configured proper indexes for performance
+
+### Phase 2: Core Functionality ✅
+- [x] Updated lesson actions to use new Prisma model
+- [x] Removed direct teacher/subject assignment (inherited from Class)
+- [x] Updated validation schemas
+- [x] Enhanced form components for better UX
+- [x] Updated lesson content display with proper relations
+
+### Phase 3: Evaluation System ✅
+- [x] Created evaluation type configuration (`src/lib/evaluation-types.ts`)
+- [x] GPA calculation helpers
+- [x] Weighted average (CWA) calculation
+- [x] CCE competency level mapping
+- [x] Score formatting utilities
+
+---
+
+## Remaining Enhancement Items
+
+### Priority 2 Features 🟡
 - [ ] Resource attachments (file upload)
 - [ ] Link to timetable slots
 - [ ] Learning objectives framework
 - [ ] Lesson templates library
-- [ ] Curriculum mapping
-- [ ] Progress tracking
+- [ ] Curriculum mapping view
+- [ ] Progress tracking dashboard
 
 ### Additional Features
 - [ ] Collaborative lesson planning
@@ -31,6 +66,8 @@
 - [ ] Standards alignment
 - [ ] Assessment integration
 - [ ] Student progress notes
+- [ ] Course catalog page
+- [ ] Enrollment management with capacity validation
 
 ---
 

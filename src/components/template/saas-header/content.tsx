@@ -16,6 +16,8 @@ import { useBreadcrumbs } from "@/components/operator/hooks/use-breadcrumbs";
 import { LanguageSwitcher } from "@/components/internationalization/language-switcher";
 import { useDictionary } from "@/components/internationalization/use-dictionary";
 import { useLocale } from "@/components/internationalization/use-locale";
+import { GenericCommandMenu } from "@/components/atom/generic-command-menu";
+import { saasSearchConfig } from "@/components/atom/generic-command-menu/saas-config";
 
 export default function SaasHeader() {
   const breadcrumbItems = useBreadcrumbs();
@@ -63,6 +65,10 @@ export default function SaasHeader() {
           </div>
         </div>
         <div className={`flex items-center gap-1.5 ${isRTL ? 'mr-auto' : 'ml-auto'}`}>
+          <GenericCommandMenu
+            config={saasSearchConfig}
+            variant="compact"
+          />
           <LanguageSwitcher variant="toggle" />
           <ModeSwitcher />
           <Button variant="link" size="icon" className="size-7">

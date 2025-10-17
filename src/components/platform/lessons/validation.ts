@@ -4,8 +4,6 @@ export const lessonBaseSchema = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string().optional(),
   classId: z.string().min(1, "Class is required"),
-  teacherId: z.string().min(1, "Teacher is required"),
-  subjectId: z.string().min(1, "Subject is required"),
   lessonDate: z.date(),
   startTime: z.string().min(1, "Start time is required"),
   endTime: z.string().min(1, "End time is required"),
@@ -20,23 +18,25 @@ export const lessonBaseSchema = z.object({
     const start = new Date(`2000-01-01T${val.startTime}`);
     const end = new Date(`2000-01-01T${val.endTime}`);
     if (end <= start) {
-      ctx.addIssue({ 
-        code: z.ZodIssueCode.custom, 
-        message: "End time must be after start time", 
-        path: ["endTime"] 
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "End time must be after start time",
+        path: ["endTime"]
       })
     }
   }
-  
-  // Ensure lesson date is not in the past
+
+  // Ensure lesson date is not in the past (optional validation)
   if (val.lessonDate) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    if (val.lessonDate < today) {
-      ctx.addIssue({ 
-        code: z.ZodIssueCode.custom, 
-        message: "Lesson date cannot be in the past", 
-        path: ["lessonDate"] 
+    const lessonDate = new Date(val.lessonDate);
+    lessonDate.setHours(0, 0, 0, 0);
+    if (lessonDate < today) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Lesson date cannot be in the past",
+        path: ["lessonDate"]
       })
     }
   }
@@ -55,8 +55,6 @@ export const getLessonsSchema = z.object({
   perPage: z.number().int().positive().max(200).default(20),
   title: z.string().optional().default(""),
   classId: z.string().optional().default(""),
-  teacherId: z.string().optional().default(""),
-  subjectId: z.string().optional().default(""),
   status: z.string().optional().default(""),
   lessonDate: z.string().optional().default(""),
   sort: z.array(sortItemSchema).optional().default([]),

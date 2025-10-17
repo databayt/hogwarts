@@ -19,6 +19,11 @@ import { LanguageSwitcher } from "@/components/internationalization/language-swi
 import { useDictionary } from "@/components/internationalization/use-dictionary";
 import { useLocale } from "@/components/internationalization/use-locale";
 import type { School } from "@/components/site/types";
+import { GenericCommandMenu } from "@/components/atom/generic-command-menu";
+import { platformSearchConfig } from "@/components/atom/generic-command-menu/platform-config";
+import { useCurrentRole } from "@/components/auth/use-current-role";
+import { usePathname } from "next/navigation";
+import type { Role } from "@/components/atom/generic-command-menu/types";
 
 interface PlatformHeaderProps {
   school?: School;
@@ -29,6 +34,8 @@ export default function PlatformHeader({ school, lang }: PlatformHeaderProps = {
   const breadcrumbItems = useBreadcrumbs();
   const { dictionary } = useDictionary();
   const { isRTL } = useLocale();
+  const role = useCurrentRole() as Role | undefined;
+  const pathname = usePathname();
 
   return (
     <div className="sticky top-0 z-40 bg-background -mx-2">
@@ -71,6 +78,15 @@ export default function PlatformHeader({ school, lang }: PlatformHeaderProps = {
           </div>
         </div>
         <div className={`flex items-center gap-1.5 ${isRTL ? 'mr-auto' : 'ml-auto'}`}>
+          <GenericCommandMenu
+            config={platformSearchConfig}
+            context={{
+              currentRole: role,
+              currentPath: pathname,
+              schoolId: school?.id,
+            }}
+            variant="compact"
+          />
           <LanguageSwitcher variant="toggle" />
           <ModeSwitcher />
           <Button variant="link" size="icon" className="size-7">

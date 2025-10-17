@@ -11,8 +11,8 @@ export async function createClass(input: z.infer<typeof classCreateSchema>) {
   const { schoolId } = await getTenantContext();
   if (!schoolId) throw new Error("Missing school context");
   const parsed = classCreateSchema.parse(input);
-  
-  const row = await (db as any).class.create({
+
+  const row = await db.class.create({
     data: {
       schoolId,
       name: parsed.name,
@@ -22,6 +22,14 @@ export async function createClass(input: z.infer<typeof classCreateSchema>) {
       startPeriodId: parsed.startPeriodId,
       endPeriodId: parsed.endPeriodId,
       classroomId: parsed.classroomId,
+      // Course Management Fields
+      courseCode: parsed.courseCode || null,
+      credits: parsed.credits || null,
+      evaluationType: parsed.evaluationType || "NORMAL",
+      minCapacity: parsed.minCapacity || 10,
+      maxCapacity: parsed.maxCapacity || 50,
+      duration: parsed.duration || null,
+      prerequisiteId: parsed.prerequisiteId || null,
     },
   });
   revalidatePath("/dashboard/classes");
@@ -41,8 +49,16 @@ export async function updateClass(input: z.infer<typeof classUpdateSchema>) {
   if (typeof rest.startPeriodId !== "undefined") data.startPeriodId = rest.startPeriodId;
   if (typeof rest.endPeriodId !== "undefined") data.endPeriodId = rest.endPeriodId;
   if (typeof rest.classroomId !== "undefined") data.classroomId = rest.classroomId;
-  
-  await (db as any).class.updateMany({ where: { id, schoolId }, data });
+  // Course Management Fields
+  if (typeof rest.courseCode !== "undefined") data.courseCode = rest.courseCode || null;
+  if (typeof rest.credits !== "undefined") data.credits = rest.credits || null;
+  if (typeof rest.evaluationType !== "undefined") data.evaluationType = rest.evaluationType || "NORMAL";
+  if (typeof rest.minCapacity !== "undefined") data.minCapacity = rest.minCapacity || null;
+  if (typeof rest.maxCapacity !== "undefined") data.maxCapacity = rest.maxCapacity || null;
+  if (typeof rest.duration !== "undefined") data.duration = rest.duration || null;
+  if (typeof rest.prerequisiteId !== "undefined") data.prerequisiteId = rest.prerequisiteId || null;
+
+  await db.class.updateMany({ where: { id, schoolId }, data });
   revalidatePath("/dashboard/classes");
   return { success: true as const };
 }
@@ -51,7 +67,7 @@ export async function deleteClass(input: { id: string }) {
   const { schoolId } = await getTenantContext();
   if (!schoolId) throw new Error("Missing school context");
   const { id } = z.object({ id: z.string().min(1) }).parse(input);
-  await (db as any).class.deleteMany({ where: { id, schoolId } });
+  await db.class.deleteMany({ where: { id, schoolId } });
   revalidatePath("/dashboard/classes");
   return { success: true as const };
 }
@@ -61,8 +77,7 @@ export async function getClass(input: { id: string }) {
   const { schoolId } = await getTenantContext();
   if (!schoolId) throw new Error("Missing school context");
   const { id } = z.object({ id: z.string().min(1) }).parse(input);
-  if (!(db as any).class) return { class: null as null };
-  const c = await (db as any).class.findFirst({
+  const c = await db.class.findFirst({
     where: { id, schoolId },
     select: {
       id: true,
@@ -74,6 +89,14 @@ export async function getClass(input: { id: string }) {
       startPeriodId: true,
       endPeriodId: true,
       classroomId: true,
+      // Course Management Fields
+      courseCode: true,
+      credits: true,
+      evaluationType: true,
+      minCapacity: true,
+      maxCapacity: true,
+      duration: true,
+      prerequisiteId: true,
       createdAt: true,
       updatedAt: true,
     },
@@ -85,7 +108,6 @@ export async function getClasses(input: Partial<z.infer<typeof getClassesSchema>
   const { schoolId } = await getTenantContext();
   if (!schoolId) throw new Error("Missing school context");
   const sp = getClassesSchema.parse(input ?? {});
-  if (!(db as any).class) return { rows: [] as Array<{ id: string; name: string; subjectName: string; teacherName: string; termName: string; createdAt: string }>, total: 0 };
   const where: any = {
     schoolId,
     ...(sp.name
@@ -107,10 +129,10 @@ export async function getClasses(input: Partial<z.infer<typeof getClassesSchema>
     ? sp.sort.map((s) => ({ [s.id]: s.desc ? "desc" : "asc" }))
     : [{ createdAt: "desc" }];
   const [rows, count] = await Promise.all([
-    (db as any).class.findMany({ 
-      where, 
-      orderBy, 
-      skip, 
+    db.class.findMany({
+      where,
+      orderBy,
+      skip,
       take,
       include: {
         subject: {
@@ -126,19 +148,29 @@ export async function getClasses(input: Partial<z.infer<typeof getClassesSchema>
         },
         term: {
           select: {
-            termName: true
+            termNumber: true
+          }
+        },
+        _count: {
+          select: {
+            studentClasses: true
           }
         }
       }
     }),
-    (db as any).class.count({ where }),
+    db.class.count({ where }),
   ]);
   const mapped = (rows as Array<any>).map((c) => ({
     id: c.id as string,
     name: c.name as string,
     subjectName: c.subject?.subjectName || "Unknown",
     teacherName: c.teacher ? `${c.teacher.givenName} ${c.teacher.surname}` : "Unknown",
-    termName: c.term?.termName || "Unknown",
+    termName: c.term?.termNumber ? `Term ${c.term.termNumber}` : "Unknown",
+    courseCode: c.courseCode || "",
+    credits: c.credits || "",
+    evaluationType: c.evaluationType || "NORMAL",
+    enrolledStudents: c._count.studentClasses,
+    maxCapacity: c.maxCapacity || 50,
     createdAt: (c.createdAt as Date).toISOString(),
   }));
   return { rows: mapped, total: count as number };
@@ -152,7 +184,6 @@ export async function getClassesCSV(input?: Partial<z.infer<typeof getClassesSch
   if (!schoolId) throw new Error("Missing school context");
 
   const sp = getClassesSchema.parse(input ?? {});
-  if (!(db as any).class) return "";
 
   // Build where clause with filters
   const where: any = {
@@ -164,7 +195,7 @@ export async function getClassesCSV(input?: Partial<z.infer<typeof getClassesSch
   };
 
   // Fetch ALL classes matching filters (no pagination for export)
-  const classes = await (db as any).class.findMany({
+  const classes = await db.class.findMany({
     where,
     include: {
       subject: {
@@ -180,7 +211,7 @@ export async function getClassesCSV(input?: Partial<z.infer<typeof getClassesSch
       },
       term: {
         select: {
-          termName: true,
+          termNumber: true,
         },
       },
       classroom: {
@@ -202,13 +233,19 @@ export async function getClassesCSV(input?: Partial<z.infer<typeof getClassesSch
   const exportData = classes.map((classItem: any) => ({
     classId: classItem.id,
     name: classItem.name || "",
+    courseCode: classItem.courseCode || "",
     subject: classItem.subject?.subjectName || "",
     teacher: classItem.teacher
       ? `${classItem.teacher.givenName} ${classItem.teacher.surname}`
       : "",
-    term: classItem.term?.termName || "",
+    term: classItem.term?.termNumber ? `Term ${classItem.term.termNumber}` : "",
     classroom: classItem.classroom?.roomNumber || "",
-    capacity: classItem.classroom?.capacity || "",
+    roomCapacity: classItem.classroom?.capacity || "",
+    credits: classItem.credits || "",
+    evaluationType: classItem.evaluationType || "NORMAL",
+    minCapacity: classItem.minCapacity || "",
+    maxCapacity: classItem.maxCapacity || "",
+    duration: classItem.duration || "",
     enrolledStudents: classItem._count.studentClasses,
     createdAt: new Date(classItem.createdAt).toISOString().split("T")[0],
   }));
@@ -217,11 +254,17 @@ export async function getClassesCSV(input?: Partial<z.infer<typeof getClassesSch
   const columns = [
     { key: "classId", label: "Class ID" },
     { key: "name", label: "Class Name" },
+    { key: "courseCode", label: "Course Code" },
     { key: "subject", label: "Subject" },
     { key: "teacher", label: "Teacher" },
     { key: "term", label: "Term" },
     { key: "classroom", label: "Classroom" },
-    { key: "capacity", label: "Room Capacity" },
+    { key: "roomCapacity", label: "Room Capacity" },
+    { key: "credits", label: "Credit Hours" },
+    { key: "evaluationType", label: "Evaluation Type" },
+    { key: "minCapacity", label: "Min Students" },
+    { key: "maxCapacity", label: "Max Students" },
+    { key: "duration", label: "Duration (weeks)" },
     { key: "enrolledStudents", label: "Enrolled Students" },
     { key: "createdAt", label: "Created Date" },
   ];
