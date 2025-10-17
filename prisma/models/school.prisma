@@ -107,6 +107,27 @@ model School {
   libraryRecords        LibraryRecord[]
   feeRecords            FeeRecord[]
 
+  // Banking relations
+  bankAccounts          BankAccount[]
+  transactions          Transaction[]
+  transfers             Transfer[]
+  plaidItems            PlaidItem[]
+  dwollaCustomers       DwollaCustomer[]
+
+  // Admission relations
+  admissionCampaigns    AdmissionCampaign[]
+  applications          Application[]
+  communications        Communication[]
+
+  // Fees relations
+  feeStructures         FeeStructure[]
+  feeAssignments        FeeAssignment[]
+  payments              Payment[]
+  refunds               Refund[]
+  scholarships          Scholarship[]
+  scholarshipApplications ScholarshipApplication[]
+  fines                 Fine[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
