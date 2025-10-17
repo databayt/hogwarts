@@ -174,6 +174,8 @@ export interface HealthRecord {
   attachmentUrl?: string;
   attachmentName?: string;
   recordedBy: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export type HealthRecordType =
