@@ -252,21 +252,21 @@ export async function getClassesCSV(input?: Partial<z.infer<typeof getClassesSch
 
   // Define CSV columns
   const columns = [
-    { key: "classId", label: "Class ID" },
-    { key: "name", label: "Class Name" },
-    { key: "courseCode", label: "Course Code" },
-    { key: "subject", label: "Subject" },
-    { key: "teacher", label: "Teacher" },
-    { key: "term", label: "Term" },
-    { key: "classroom", label: "Classroom" },
-    { key: "roomCapacity", label: "Room Capacity" },
-    { key: "credits", label: "Credit Hours" },
-    { key: "evaluationType", label: "Evaluation Type" },
-    { key: "minCapacity", label: "Min Students" },
-    { key: "maxCapacity", label: "Max Students" },
-    { key: "duration", label: "Duration (weeks)" },
-    { key: "enrolledStudents", label: "Enrolled Students" },
-    { key: "createdAt", label: "Created Date" },
+    { key: "classId" as const, label: "Class ID" },
+    { key: "name" as const, label: "Class Name" },
+    { key: "courseCode" as const, label: "Course Code" },
+    { key: "subject" as const, label: "Subject" },
+    { key: "teacher" as const, label: "Teacher" },
+    { key: "term" as const, label: "Term" },
+    { key: "classroom" as const, label: "Classroom" },
+    { key: "roomCapacity" as const, label: "Room Capacity" },
+    { key: "credits" as const, label: "Credit Hours" },
+    { key: "evaluationType" as const, label: "Evaluation Type" },
+    { key: "minCapacity" as const, label: "Min Students" },
+    { key: "maxCapacity" as const, label: "Max Students" },
+    { key: "duration" as const, label: "Duration (weeks)" },
+    { key: "enrolledStudents" as const, label: "Enrolled Students" },
+    { key: "createdAt" as const, label: "Created Date" },
   ];
 
   return arrayToCSV(exportData, { columns });
