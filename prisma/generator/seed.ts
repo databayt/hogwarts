@@ -576,6 +576,166 @@ async function ensureClassesAndWork(
   }
 }
 
+async function ensureLibraryBooks(schoolId: string) {
+  const booksData = [
+    {
+      title: "To Kill a Mockingbird",
+      author: "Harper Lee",
+      genre: "Fiction",
+      rating: 5,
+      coverColor: "#8B4513",
+      description: "A gripping, heart-wrenching, and wholly remarkable tale of coming-of-age in a South poisoned by virulent prejudice.",
+      summary: "The unforgettable novel of a childhood in a sleepy Southern town and the crisis of conscience that rocked it. Through the young eyes of Scout and Jem Finch, Harper Lee explores with rich humor and unswerving honesty the irrationality of adult attitudes toward race and class in the Deep South of the 1930s.",
+      totalCopies: 5,
+      availableCopies: 5,
+    },
+    {
+      title: "1984",
+      author: "George Orwell",
+      genre: "Science Fiction",
+      rating: 5,
+      coverColor: "#2F4F4F",
+      description: "A dystopian social science fiction novel and cautionary tale about the dangers of totalitarianism.",
+      summary: "Among the seminal texts of the 20th century, Nineteen Eighty-Four is a rare work that grows more haunting as its futuristic purgatory becomes more real. Published in 1949, the book offers political satirist George Orwell's nightmare vision of a totalitarian, bureaucratic world and one poor stiff's attempt to find individuality.",
+      totalCopies: 4,
+      availableCopies: 4,
+    },
+    {
+      title: "Pride and Prejudice",
+      author: "Jane Austen",
+      genre: "Romance",
+      rating: 5,
+      coverColor: "#FFB6C1",
+      description: "A romantic novel of manners that follows the character development of Elizabeth Bennet.",
+      summary: "Since its immediate success in 1813, Pride and Prejudice has remained one of the most popular novels in the English language. Jane Austen called this brilliant work 'her own darling child' and its vivacious heroine, Elizabeth Bennet, 'as delightful a creature as ever appeared in print.'",
+      totalCopies: 3,
+      availableCopies: 3,
+    },
+    {
+      title: "The Great Gatsby",
+      author: "F. Scott Fitzgerald",
+      genre: "Fiction",
+      rating: 4,
+      coverColor: "#FFD700",
+      description: "A tale of the American Dream's corruption in the materialistic 1920s.",
+      summary: "The Great Gatsby, F. Scott Fitzgerald's third book, stands as the supreme achievement of his career. This exemplary novel of the Jazz Age has been acclaimed by generations of readers.",
+      totalCopies: 6,
+      availableCopies: 6,
+    },
+    {
+      title: "Harry Potter and the Philosopher's Stone",
+      author: "J.K. Rowling",
+      genre: "Fantasy",
+      rating: 5,
+      coverColor: "#8B0000",
+      description: "The first novel in the Harry Potter series and Rowling's debut novel.",
+      summary: "Harry Potter has never even heard of Hogwarts when the letters start dropping on the doormat at number four, Privet Drive. Addressed in green ink on yellowish parchment with a purple seal, they are swiftly confiscated by his grisly aunt and uncle.",
+      totalCopies: 8,
+      availableCopies: 8,
+    },
+    {
+      title: "The Hobbit",
+      author: "J.R.R. Tolkien",
+      genre: "Fantasy",
+      rating: 5,
+      coverColor: "#228B22",
+      description: "A children's fantasy novel and a prelude to The Lord of the Rings.",
+      summary: "Bilbo Baggins is a hobbit who enjoys a comfortable, unambitious life, rarely traveling any farther than his pantry or cellar. But his contentment is disturbed when the wizard Gandalf and a company of dwarves arrive on his doorstep one day to whisk him away on an adventure.",
+      totalCopies: 4,
+      availableCopies: 4,
+    },
+    {
+      title: "The Catcher in the Rye",
+      author: "J.D. Salinger",
+      genre: "Fiction",
+      rating: 4,
+      coverColor: "#DC143C",
+      description: "A story about teenage rebellion and alienation that has been translated into almost all of the world's major languages.",
+      summary: "The hero-narrator of The Catcher in the Rye is an ancient child of sixteen, a native New Yorker named Holden Caulfield. Through circumstances that tend to preclude adult, secondhand description, he leaves his prep school in Pennsylvania and goes underground in New York City for three days.",
+      totalCopies: 3,
+      availableCopies: 3,
+    },
+    {
+      title: "The Lord of the Rings",
+      author: "J.R.R. Tolkien",
+      genre: "Fantasy",
+      rating: 5,
+      coverColor: "#4B0082",
+      description: "An epic high-fantasy novel divided into three volumes.",
+      summary: "One Ring to rule them all, One Ring to find them, One Ring to bring them all and in the darkness bind them. In ancient times the Rings of Power were crafted by the Elven-smiths, and Sauron, the Dark Lord, forged the One Ring, filling it with his own power so that he could rule all others.",
+      totalCopies: 5,
+      availableCopies: 5,
+    },
+    {
+      title: "Animal Farm",
+      author: "George Orwell",
+      genre: "Political Satire",
+      rating: 4,
+      coverColor: "#8B4513",
+      description: "A satirical allegorical novella about Stalinism and the Russian Revolution.",
+      summary: "A farm is taken over by its overworked, mistreated animals. With flaming idealism and stirring slogans, they set out to create a paradise of progress, justice, and equality. Thus the stage is set for one of the most telling satiric fables ever penned.",
+      totalCopies: 4,
+      availableCopies: 4,
+    },
+    {
+      title: "Brave New World",
+      author: "Aldous Huxley",
+      genre: "Science Fiction",
+      rating: 4,
+      coverColor: "#4682B4",
+      description: "A dystopian novel set in a futuristic World State of genetically modified citizens.",
+      summary: "Aldous Huxley's profoundly important classic of world literature, Brave New World is a searching vision of an unequal, technologically-advanced future where humans are genetically bred, socially indoctrinated, and pharmaceutically anesthetized to passively uphold an authoritarian ruling order.",
+      totalCopies: 3,
+      availableCopies: 3,
+    },
+    {
+      title: "The Chronicles of Narnia",
+      author: "C.S. Lewis",
+      genre: "Fantasy",
+      rating: 5,
+      coverColor: "#DAA520",
+      description: "A series of seven fantasy novels featuring magical lands and mythical creatures.",
+      summary: "Journeys to the end of the world, fantastic creatures, and epic battles between good and evil—what more could any reader ask for in one book? The book that has it all is The Lion, the Witch and the Wardrobe, written in 1949 by Clive Staples Lewis.",
+      totalCopies: 6,
+      availableCopies: 6,
+    },
+    {
+      title: "Moby-Dick",
+      author: "Herman Melville",
+      genre: "Adventure",
+      rating: 4,
+      coverColor: "#000080",
+      description: "The saga of Captain Ahab and his obsessive quest to kill the white whale.",
+      summary: "In Moby-Dick, Ishmael narrates the monomaniacal quest of Ahab, captain of the whaler Pequod, for revenge on the white whale Moby Dick, which on a previous voyage destroyed Ahab's ship and severed his leg at the knee.",
+      totalCopies: 2,
+      availableCopies: 2,
+    },
+  ];
+
+  // Check if books already exist for this school
+  const existingBooks = await prisma.book.findMany({
+    where: { schoolId },
+    select: { title: true },
+  });
+
+  const existingTitles = new Set(existingBooks.map((b) => b.title));
+  const newBooks = booksData.filter((book) => !existingTitles.has(book.title));
+
+  if (newBooks.length > 0) {
+    await prisma.book.createMany({
+      data: newBooks.map((book) => ({
+        schoolId,
+        ...book,
+        coverUrl: `/placeholder-book-cover.jpg`, // Using placeholder
+      })),
+      skipDuplicates: true,
+    });
+    console.log(`Seeded ${newBooks.length} books for school`);
+  } else {
+    console.log(`Books already exist for school, skipping...`);
+  }
+}
+
 async function main() {
   for (const s of SUDAN_SCHOOLS) {
     const school = await ensureSchool(s);
@@ -651,6 +811,9 @@ async function main() {
     if (rows.length > 0) {
       await prisma.timetable.createMany({ data: rows, skipDuplicates: true })
     }
+
+    // Seed library books
+    await ensureLibraryBooks(school.id);
 
     console.log("Seed completed for school:", school.domain);
   }

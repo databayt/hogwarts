@@ -47,6 +47,7 @@ export default async function LibraryBookDetailContent({ bookId, userId }: Props
             coverUrl={book.coverUrl}
             coverColor={book.coverColor}
             title={book.title}
+            author={book.author}
           />
         </div>
 
