@@ -24,7 +24,7 @@ export function AttendanceTab({ student }: AttendanceTabProps) {
     const isToday = format(date, "yyyy-MM-dd") === format(new Date(), "yyyy-MM-dd");
     const isFuture = date > new Date();
 
-    let status: "present" | "absent" | "late" | "holiday" | "weekend" | "future" = "future";
+    let status: "present" | "absent" | "late" | "weekend" | "future" = "future";
 
     if (isFuture) {
       status = "future";
@@ -48,9 +48,8 @@ export function AttendanceTab({ student }: AttendanceTabProps) {
     present: attendanceRecords.filter(r => r.status === "present").length,
     absent: attendanceRecords.filter(r => r.status === "absent").length,
     late: attendanceRecords.filter(r => r.status === "late").length,
-    holidays: attendanceRecords.filter(r => r.status === "holiday").length,
     totalSchoolDays: attendanceRecords.filter(r =>
-      r.status !== "weekend" && r.status !== "future" && r.status !== "holiday"
+      r.status !== "weekend" && r.status !== "future"
     ).length,
   };
 
