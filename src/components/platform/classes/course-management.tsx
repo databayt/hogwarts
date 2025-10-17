@@ -7,7 +7,9 @@ import { PrerequisiteSelector } from "./prerequisite-selector";
 import { ClassFormStepProps } from "./types";
 
 export function CourseManagementStep({ form, isView }: ClassFormStepProps) {
-  const currentClassId = form.watch("id");
+  // Note: 'id' field only exists in update schema, not in create schema
+  // PrerequisiteSelector handles undefined currentClassId gracefully
+  const currentClassId = undefined;
 
   return (
     <div className="space-y-6 w-full">
