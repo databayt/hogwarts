@@ -26,8 +26,6 @@ export function AchievementsTab({ student }: AchievementsTabProps) {
       certificateNo: "MATH-2024-001",
       issuedBy: "State Education Board",
       points: 100,
-      createdAt: new Date(),
-      updatedAt: new Date(),
     },
     {
       id: "2",
@@ -40,8 +38,6 @@ export function AchievementsTab({ student }: AchievementsTabProps) {
       level: "SCHOOL",
       position: "Winner",
       points: 50,
-      createdAt: new Date(),
-      updatedAt: new Date(),
     },
     {
       id: "3",
@@ -54,8 +50,6 @@ export function AchievementsTab({ student }: AchievementsTabProps) {
       level: "DISTRICT",
       position: "Champion",
       points: 75,
-      createdAt: new Date(),
-      updatedAt: new Date(),
     },
     {
       id: "4",
@@ -68,8 +62,6 @@ export function AchievementsTab({ student }: AchievementsTabProps) {
       level: "SCHOOL",
       position: "Participant",
       points: 25,
-      createdAt: new Date(),
-      updatedAt: new Date(),
     },
   ];
 
