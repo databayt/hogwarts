@@ -12,7 +12,7 @@ export const classBaseSchema = z.object({
   // Course Management Fields
   courseCode: z.string().optional(),
   credits: z.coerce.number().min(0).max(999.99).optional(),
-  evaluationType: z.enum(["NORMAL", "GPA", "CWA", "CCE"]).default("NORMAL"),
+  evaluationType: z.enum(["NORMAL", "GPA", "CWA", "CCE"]),
   minCapacity: z.coerce.number().int().min(1).optional(),
   maxCapacity: z.coerce.number().int().min(1).optional(),
   duration: z.coerce.number().int().min(1).optional(),

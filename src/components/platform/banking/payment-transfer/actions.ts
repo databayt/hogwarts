@@ -1,0 +1,261 @@
+'use server';
+
+import { db } from '@/lib/db';
+import { currentUser } from '@/lib/auth';
+import { revalidatePath } from 'next/cache';
+import { cache } from 'react';
+import { z } from 'zod';
+import type { BankAccount, ActionResult } from '../types';
+import { transferSchema } from './validation';
+
+/**
+ * Get accounts for transfer selection
+ */
+export const getAccounts = cache(async (params: {
+  userId: string;
+}): Promise<BankAccount[]> => {
+  try {
+    const accounts = await db.bankAccount.findMany({
+      where: {
+        userId: params.userId,
+        isActive: true,
+      },
+      include: {
+        bank: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return accounts.map(account => ({
+      ...account,
+      currentBalance: account.currentBalance.toNumber(),
+      availableBalance: account.availableBalance?.toNumber() || account.currentBalance.toNumber(),
+    }));
+  } catch (error) {
+    console.error('Failed to fetch accounts:', error);
+    return [];
+  }
+});
+
+/**
+ * Create a transfer between accounts
+ */
+export async function createTransfer(
+  prevState: any,
+  formData: FormData
+): Promise<ActionResult<{ transactionId: string }>> {
+  try {
+    const user = await currentUser();
+    if (!user) {
+      return {
+        success: false,
+        error: { code: 'UNAUTHORIZED', message: 'User not authenticated' },
+      };
+    }
+
+    // Parse form data
+    const rawData = {
+      fromAccountId: formData.get('fromAccountId') as string,
+      toAccountId: formData.get('toAccountId') as string,
+      amount: parseFloat(formData.get('amount') as string),
+      description: formData.get('description') as string,
+      recipientEmail: formData.get('recipientEmail') as string,
+    };
+
+    // Validate with Zod
+    const validationResult = transferSchema.safeParse(rawData);
+    if (!validationResult.success) {
+      return {
+        success: false,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: validationResult.error.errors[0].message,
+        },
+      };
+    }
+
+    const data = validationResult.data;
+
+    // Verify account ownership
+    const fromAccount = await db.bankAccount.findFirst({
+      where: {
+        id: data.fromAccountId,
+        userId: user.id,
+      },
+    });
+
+    if (!fromAccount) {
+      return {
+        success: false,
+        error: { code: 'NOT_FOUND', message: 'Source account not found' },
+      };
+    }
+
+    // Check sufficient balance
+    const balance = fromAccount.availableBalance || fromAccount.currentBalance;
+    if (balance.toNumber() < data.amount) {
+      return {
+        success: false,
+        error: { code: 'INSUFFICIENT_FUNDS', message: 'Insufficient balance for transfer' },
+      };
+    }
+
+    // Handle internal vs external transfer
+    let toAccount = null;
+    if (data.toAccountId) {
+      // Internal transfer between user's accounts
+      toAccount = await db.bankAccount.findFirst({
+        where: {
+          id: data.toAccountId,
+          userId: user.id,
+        },
+      });
+
+      if (!toAccount) {
+        return {
+          success: false,
+          error: { code: 'NOT_FOUND', message: 'Destination account not found' },
+        };
+      }
+    } else if (data.recipientEmail) {
+      // External transfer to another user
+      const recipient = await db.user.findUnique({
+        where: { email: data.recipientEmail },
+      });
+
+      if (!recipient) {
+        return {
+          success: false,
+          error: { code: 'NOT_FOUND', message: 'Recipient not found' },
+        };
+      }
+
+      // Get recipient's default account
+      toAccount = await db.bankAccount.findFirst({
+        where: {
+          userId: recipient.id,
+          isDefault: true,
+        },
+      });
+
+      if (!toAccount) {
+        return {
+          success: false,
+          error: { code: 'NOT_FOUND', message: 'Recipient has no default account' },
+        };
+      }
+    }
+
+    // Create transaction records in a transaction
+    const result = await db.$transaction(async (tx) => {
+      // Debit from source account
+      const debitTransaction = await tx.transaction.create({
+        data: {
+          accountId: fromAccount.id,
+          amount: -data.amount,
+          type: 'transfer_out',
+          category: 'transfer',
+          name: `Transfer to ${toAccount?.name || data.recipientEmail}`,
+          description: data.description,
+          date: new Date(),
+        },
+      });
+
+      // Update source account balance
+      await tx.bankAccount.update({
+        where: { id: fromAccount.id },
+        data: {
+          currentBalance: {
+            decrement: data.amount,
+          },
+          availableBalance: {
+            decrement: data.amount,
+          },
+        },
+      });
+
+      if (toAccount) {
+        // Credit to destination account
+        await tx.transaction.create({
+          data: {
+            accountId: toAccount.id,
+            amount: data.amount,
+            type: 'transfer_in',
+            category: 'transfer',
+            name: `Transfer from ${fromAccount.name}`,
+            description: data.description,
+            date: new Date(),
+          },
+        });
+
+        // Update destination account balance
+        await tx.bankAccount.update({
+          where: { id: toAccount.id },
+          data: {
+            currentBalance: {
+              increment: data.amount,
+            },
+            availableBalance: {
+              increment: data.amount,
+            },
+          },
+        });
+      }
+
+      return debitTransaction;
+    });
+
+    // Revalidate affected paths
+    revalidatePath('/banking');
+    revalidatePath('/banking/payment-transfer');
+    revalidatePath('/banking/transaction-history');
+
+    return {
+      success: true,
+      data: { transactionId: result.id },
+    };
+  } catch (error) {
+    console.error('Failed to create transfer:', error);
+    return {
+      success: false,
+      error: {
+        code: 'INTERNAL_ERROR',
+        message: 'Failed to process transfer',
+      },
+    };
+  }
+}
+
+/**
+ * Get recent transfers for a user
+ */
+export const getRecentTransfers = cache(async (params: {
+  userId: string;
+  limit?: number;
+}): Promise<any[]> => {
+  try {
+    const transfers = await db.transaction.findMany({
+      where: {
+        account: {
+          userId: params.userId,
+        },
+        category: 'transfer',
+      },
+      include: {
+        account: {
+          include: { bank: true },
+        },
+      },
+      orderBy: { date: 'desc' },
+      take: params.limit || 10,
+    });
+
+    return transfers.map(t => ({
+      ...t,
+      amount: t.amount.toNumber(),
+    }));
+  } catch (error) {
+    console.error('Failed to fetch transfers:', error);
+    return [];
+  }
+});

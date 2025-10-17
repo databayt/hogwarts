@@ -1,0 +1,128 @@
+// Banking Module Models
+
+model BankAccount {
+  id               String   @id @default(cuid())
+  userId           String
+  bankId           String
+  accountId        String   @unique
+  accessToken      String   @db.Text // Encrypted
+  fundingSourceUrl String?
+  shareableId      String?
+  institutionId    String
+  name             String
+  officialName     String?
+  mask             String?
+  currentBalance   Decimal  @db.Decimal(10, 2)
+  availableBalance Decimal  @db.Decimal(10, 2)
+  type             String   // depository, credit, loan, investment
+  subtype          String
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  // Relations
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions     Transaction[]
+  sentTransfers    Transfer[] @relation("SentTransfers")
+  receivedTransfers Transfer[] @relation("ReceivedTransfers")
+
+  @@index([userId])
+  @@index([accountId])
+}
+
+model Transaction {
+  id              String   @id @default(cuid())
+  accountId       String
+  bankAccountId   String
+  name            String
+  amount          Decimal  @db.Decimal(10, 2)
+  date            DateTime
+  paymentChannel  String?  // online, in_store, other
+  category        String
+  subcategory     String?
+  type            String   // debit, credit
+  pending         Boolean  @default(false)
+  merchantName    String?
+  merchantId      String?
+  locationAddress String?
+  locationCity    String?
+  locationState   String?
+  locationZip     String?
+  locationCountry String?
+  isoCurrencyCode String   @default("USD")
+  createdAt       DateTime @default(now())
+
+  // Relations
+  bankAccount     BankAccount @relation(fields: [bankAccountId], references: [id], onDelete: Cascade)
+
+  @@index([bankAccountId])
+  @@index([accountId])
+  @@index([date])
+  @@index([category])
+}
+
+model Transfer {
+  id              String   @id @default(cuid())
+  senderBankId    String
+  receiverBankId  String
+  amount          Decimal  @db.Decimal(10, 2)
+  note            String?
+  status          String   // pending, completed, failed
+  transferDate    DateTime
+  dwollaTransferId String? @unique
+  dwollaTransferUrl String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  senderBank      BankAccount @relation("SentTransfers", fields: [senderBankId], references: [id])
+  receiverBank    BankAccount @relation("ReceivedTransfers", fields: [receiverBankId], references: [id])
+
+  @@index([senderBankId])
+  @@index([receiverBankId])
+  @@index([status])
+  @@index([transferDate])
+}
+
+model PlaidItem {
+  id              String   @id @default(cuid())
+  userId          String
+  accessToken     String   @unique @db.Text // Encrypted
+  itemId          String   @unique
+  institutionId   String
+  institutionName String
+  cursor          String?  // For transaction sync
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([itemId])
+}
+
+model DwollaCustomer {
+  id               String   @id @default(cuid())
+  userId           String   @unique
+  customerId       String   @unique
+  customerUrl      String   @unique
+  status           String   // unverified, suspended, retry, document, verified, deactivated
+  type             String   // personal, business
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  // Relations
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([customerId])
+  @@index([status])
+}
+
+// Extend existing User model with banking fields
+// Add these fields to your existing User model in auth.prisma:
+//
+// dwollaCustomerId  String?    @unique
+// dwollaCustomerUrl String?
+// plaidItems        PlaidItem[]
+// bankAccounts      BankAccount[]
+// dwollaCustomer    DwollaCustomer?
