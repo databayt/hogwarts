@@ -1,5 +1,8 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import type { Book } from "../types";
 
@@ -9,18 +12,29 @@ interface Props {
 }
 
 export default function BookOverview({ book, userId }: Props) {
+  const [imageError, setImageError] = useState(false);
+  const hasValidImage = book.coverUrl && !book.coverUrl.includes('placeholder') && !imageError;
+
   return (
     <section className="book-overview">
       <div className="book-overview-container">
         <div className="book-overview-cover" style={{ backgroundColor: book.coverColor }}>
-          <Image
-            src={book.coverUrl}
-            alt={book.title}
-            width={400}
-            height={600}
-            className="book-overview-image"
-            priority
-          />
+          {hasValidImage ? (
+            <Image
+              src={book.coverUrl}
+              alt={book.title}
+              width={400}
+              height={600}
+              className="book-overview-image"
+              priority
+              onError={() => setImageError(true)}
+            />
+          ) : (
+            <div className="flex flex-col items-center justify-center h-full p-8 text-center">
+              <h2 className="font-bold text-white text-4xl mb-4 line-clamp-4">{book.title}</h2>
+              <p className="text-white/90 text-2xl">{book.author}</p>
+            </div>
+          )}
         </div>
 
         <div className="book-overview-content">
