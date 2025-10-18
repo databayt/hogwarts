@@ -172,7 +172,7 @@ export function CampaignsList({ campaigns }: Props) {
         campaign={selectedCampaign}
         open={dialogOpen}
         onOpenChange={setDialogOpen}
-        dictionary={dictionary}
+        
       />
     </div>
   );

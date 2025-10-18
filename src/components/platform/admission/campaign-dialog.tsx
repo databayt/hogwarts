@@ -109,8 +109,7 @@ export function CampaignDialog({ campaign, open, onOpenChange }: Props) {
               : "Create New Campaign"}
           </DialogTitle>
           <DialogDescription>
-            {dictionary?.admission?.campaign?.description ||
-              "Set up an admission campaign for student enrollment"}
+            Set up an admission campaign for student enrollment
           </DialogDescription>
         </DialogHeader>
 

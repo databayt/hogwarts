@@ -51,7 +51,7 @@ export function MeritListView({ campaigns }: Props) {
 
   const handleGenerateMeritList = async () => {
     if (!selectedCampaign) {
-      toast.error(dictionary?.admission?.merit?.selectCampaign || "Please select a campaign");
+      toast.error("Please select a campaign");
       return;
     }
 
@@ -71,9 +71,9 @@ export function MeritListView({ campaigns }: Props) {
         .sort((a: any, b: any) => a.meritRank - b.meritRank);
       setMeritList(sortedApplications);
 
-      toast.success(dictionary?.admission?.merit?.generateSuccess || "Merit list generated successfully");
+      toast.success("Merit list generated successfully");
     } catch (error) {
-      toast.error(dictionary?.admission?.merit?.generateError || "Failed to generate merit list");
+      toast.error("Failed to generate merit list");
     } finally {
       setLoading(false);
     }
@@ -86,18 +86,18 @@ export function MeritListView({ campaigns }: Props) {
       {/* Configuration */}
       <Card>
         <CardHeader>
-          <CardTitle>{dictionary?.admission?.merit?.configuration || "Merit List Configuration"}</CardTitle>
+          <CardTitle>{"Merit List Configuration"}</CardTitle>
           <CardDescription>
-            {dictionary?.admission?.merit?.configDescription || "Configure the weightage for different criteria"}
+            {"Configure the weightage for different criteria"}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Campaign Selection */}
           <div className="space-y-2">
-            <Label>{dictionary?.admission?.merit?.selectCampaign || "Select Campaign"}</Label>
+            <Label>{"Select Campaign"}</Label>
             <Select value={selectedCampaign} onValueChange={setSelectedCampaign}>
               <SelectTrigger>
-                <SelectValue placeholder={dictionary?.admission?.merit?.campaignPlaceholder || "Choose a campaign"} />
+                <SelectValue placeholder={"Choose a campaign"} />
               </SelectTrigger>
               <SelectContent>
                 {campaigns.map((campaign) => (
@@ -111,11 +111,11 @@ export function MeritListView({ campaigns }: Props) {
 
           {/* Criteria Weights */}
           <div className="space-y-4">
-            <h4>{dictionary?.admission?.merit?.criteriaWeights || "Criteria Weights"}</h4>
+            <h4>{"Criteria Weights"}</h4>
 
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label>{dictionary?.admission?.merit?.academic || "Academic Performance"}</Label>
+                <Label>{"Academic Performance"}</Label>
                 <span className="text-sm font-medium">{criteria.academicWeight}%</span>
               </div>
               <Slider
@@ -128,7 +128,7 @@ export function MeritListView({ campaigns }: Props) {
 
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label>{dictionary?.admission?.merit?.entrance || "Entrance Exam"}</Label>
+                <Label>{"Entrance Exam"}</Label>
                 <span className="text-sm font-medium">{criteria.entranceWeight}%</span>
               </div>
               <Slider
@@ -141,7 +141,7 @@ export function MeritListView({ campaigns }: Props) {
 
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label>{dictionary?.admission?.merit?.interview || "Interview"}</Label>
+                <Label>{"Interview"}</Label>
                 <span className="text-sm font-medium">{criteria.interviewWeight}%</span>
               </div>
               <Slider
@@ -154,7 +154,7 @@ export function MeritListView({ campaigns }: Props) {
 
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label>{dictionary?.admission?.merit?.extracurricular || "Extracurricular"}</Label>
+                <Label>{"Extracurricular"}</Label>
                 <span className="text-sm font-medium">{criteria.extracurricularWeight}%</span>
               </div>
               <Slider
@@ -167,14 +167,14 @@ export function MeritListView({ campaigns }: Props) {
 
             {totalWeight !== 100 && (
               <p className="text-sm text-destructive">
-                {dictionary?.admission?.merit?.totalWeight || "Total weight must be 100%"} ({totalWeight}%)
+                {"Total weight must be 100%"} ({totalWeight}%)
               </p>
             )}
           </div>
 
           {/* Cutoff Score */}
           <div className="space-y-2">
-            <Label>{dictionary?.admission?.merit?.cutoff || "Cutoff Score"}</Label>
+            <Label>{"Cutoff Score"}</Label>
             <div className="flex items-center gap-2">
               <Input
                 type="number"
@@ -185,7 +185,7 @@ export function MeritListView({ campaigns }: Props) {
                 className="w-24"
               />
               <span className="text-sm text-muted-foreground">
-                {dictionary?.admission?.merit?.cutoffHint || "Minimum score for selection"}
+                {"Minimum score for selection"}
               </span>
             </div>
           </div>
@@ -196,8 +196,8 @@ export function MeritListView({ campaigns }: Props) {
             className="w-full"
           >
             {loading
-              ? dictionary?.admission?.merit?.generating || "Generating..."
-              : dictionary?.admission?.merit?.generate || "Generate Merit List"}
+              ? "Generating..."
+              : "Generate Merit List"}
           </Button>
         </CardContent>
       </Card>
@@ -207,14 +207,14 @@ export function MeritListView({ campaigns }: Props) {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
-              <CardTitle>{dictionary?.admission?.merit?.title || "Merit List"}</CardTitle>
+              <CardTitle>{"Merit List"}</CardTitle>
               <CardDescription>
-                {dictionary?.admission?.merit?.listDescription || "Ranked list of applicants based on merit score"}
+                {"Ranked list of applicants based on merit score"}
               </CardDescription>
             </div>
             <Button variant="outline">
               <IconDownload className="mr-2 h-4 w-4" />
-              {dictionary?.admission?.merit?.export || "Export"}
+              {"Export"}
             </Button>
           </CardHeader>
           <CardContent>
@@ -222,13 +222,13 @@ export function MeritListView({ campaigns }: Props) {
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-[80px]">
-                    {dictionary?.admission?.merit?.rank || "Rank"}
+                    {"Rank"}
                   </TableHead>
-                  <TableHead>{dictionary?.admission?.merit?.applicationNo || "Application No"}</TableHead>
-                  <TableHead>{dictionary?.admission?.merit?.name || "Name"}</TableHead>
-                  <TableHead>{dictionary?.admission?.merit?.category || "Category"}</TableHead>
-                  <TableHead>{dictionary?.admission?.merit?.score || "Merit Score"}</TableHead>
-                  <TableHead>{dictionary?.admission?.merit?.status || "Status"}</TableHead>
+                  <TableHead>{"Application No"}</TableHead>
+                  <TableHead>{"Name"}</TableHead>
+                  <TableHead>{"Category"}</TableHead>
+                  <TableHead>{"Merit Score"}</TableHead>
+                  <TableHead>{"Status"}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

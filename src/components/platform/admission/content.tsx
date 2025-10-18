@@ -25,7 +25,7 @@ export default async function AdmissionContent() {
       </div>
 
       <Suspense fallback={<div>Loading...</div>}>
-        <AdmissionDashboard stats={stats} dictionary={dictionary} />
+        <AdmissionDashboard stats={stats}  />
       </Suspense>
 
       <Tabs defaultValue="campaigns" className="w-full">
@@ -53,7 +53,7 @@ export default async function AdmissionContent() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <CampaignsList campaigns={campaigns} dictionary={dictionary} />
+              <CampaignsList campaigns={campaigns}  />
             </CardContent>
           </Card>
         </TabsContent>
@@ -67,7 +67,7 @@ export default async function AdmissionContent() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <ApplicationsList applications={applications} dictionary={dictionary} />
+              <ApplicationsList applications={applications}  />
             </CardContent>
           </Card>
         </TabsContent>
@@ -81,7 +81,7 @@ export default async function AdmissionContent() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <MeritListView campaigns={campaigns} dictionary={dictionary} />
+              <MeritListView campaigns={campaigns}  />
             </CardContent>
           </Card>
         </TabsContent>
