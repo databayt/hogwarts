@@ -7,10 +7,10 @@ export const campaignSchema = z.object({
   academicYear: z.string().min(1, "Academic year is required"),
   startDate: z.date(),
   endDate: z.date(),
-  status: z.enum(["DRAFT", "OPEN", "CLOSED", "PROCESSING", "COMPLETED"]).default("DRAFT"),
+  status: z.enum(["DRAFT", "OPEN", "CLOSED", "PROCESSING", "COMPLETED"]).optional().default("DRAFT"),
   description: z.string().optional(),
   eligibilityCriteria: z.array(z.string()).optional(),
-  requiredDocuments: z.array(z.string()).default([
+  requiredDocuments: z.array(z.string()).optional().default([
     "Birth Certificate",
     "Previous School Transfer Certificate",
     "Previous Year Marksheet",
