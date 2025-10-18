@@ -93,13 +93,22 @@ export async function POST(request: NextRequest) {
     const result = await syncTransactions({ accountId })
 
     // Return result
+    if (!result.success) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'Sync failed',
+          error: result.error
+        },
+        { status: 400 }
+      )
+    }
+
     return NextResponse.json(
       {
-        success: result.success,
-        message: result.success
-          ? `Synced ${result.count} transactions`
-          : 'Sync failed',
-        ...result
+        success: true,
+        message: `Synced ${result.data.count} transactions`,
+        data: result.data
       },
       {
         headers: {
