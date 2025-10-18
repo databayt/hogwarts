@@ -151,7 +151,7 @@ export const bulkActionSchema = z.object({
     "SEND_EMAIL",
     "SEND_SMS",
   ]),
-  data: z.record(z.any()).optional(),
+  data: z.record(z.string(), z.any()).optional(),
 });
 
 // Communication schema
