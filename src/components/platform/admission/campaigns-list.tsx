@@ -24,7 +24,6 @@ import { format } from "date-fns";
 import { CampaignDialog } from "./campaign-dialog";
 import { deleteCampaign } from "./actions";
 import { toast } from "sonner";
-import type { Dictionary } from "@/components/internationalization/dictionaries";
 
 interface Campaign {
   id: string;
@@ -39,7 +38,7 @@ interface Campaign {
 
 interface Props {
   campaigns: Campaign[];
-  dictionary?: Dictionary;
+  
 }
 
 export function CampaignsList({ campaigns, dictionary }: Props) {
@@ -47,12 +46,12 @@ export function CampaignsList({ campaigns, dictionary }: Props) {
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const handleDelete = async (id: string) => {
-    if (confirm(dictionary?.admission?.campaigns?.deleteConfirm || "Are you sure you want to delete this campaign?")) {
+    if (confirm("Are you sure you want to delete this campaign?")) {
       try {
         await deleteCampaign(id);
-        toast.success(dictionary?.admission?.campaigns?.deleteSuccess || "Campaign deleted successfully");
+        toast.success("Campaign deleted successfully");
       } catch (error) {
-        toast.error(dictionary?.admission?.campaigns?.deleteError || "Failed to delete campaign");
+        toast.error("Failed to delete campaign");
       }
     }
   };
@@ -84,7 +83,7 @@ export function CampaignsList({ campaigns, dictionary }: Props) {
           }}
         >
           <IconPlus className="mr-2 h-4 w-4" />
-          {dictionary?.admission?.campaigns?.addCampaign || "Add Campaign"}
+          {"Add Campaign"}
         </Button>
       </div>
 
@@ -92,14 +91,14 @@ export function CampaignsList({ campaigns, dictionary }: Props) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>{dictionary?.admission?.campaigns?.name || "Name"}</TableHead>
-              <TableHead>{dictionary?.admission?.campaigns?.academicYear || "Academic Year"}</TableHead>
-              <TableHead>{dictionary?.admission?.campaigns?.duration || "Duration"}</TableHead>
-              <TableHead>{dictionary?.admission?.campaigns?.status || "Status"}</TableHead>
-              <TableHead>{dictionary?.admission?.campaigns?.seats || "Total Seats"}</TableHead>
-              <TableHead>{dictionary?.admission?.campaigns?.fee || "Application Fee"}</TableHead>
+              <TableHead>{"Name"}</TableHead>
+              <TableHead>{"Academic Year"}</TableHead>
+              <TableHead>{"Duration"}</TableHead>
+              <TableHead>{"Status"}</TableHead>
+              <TableHead>{"Total Seats"}</TableHead>
+              <TableHead>{"Application Fee"}</TableHead>
               <TableHead className="text-right">
-                {dictionary?.admission?.campaigns?.actions || "Actions"}
+                {"Actions"}
               </TableHead>
             </TableRow>
           </TableHeader>
@@ -107,7 +106,7 @@ export function CampaignsList({ campaigns, dictionary }: Props) {
             {campaigns.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                  {dictionary?.admission?.campaigns?.noCampaigns || "No campaigns found"}
+                  {"No campaigns found"}
                 </TableCell>
               </TableRow>
             ) : (
@@ -128,7 +127,7 @@ export function CampaignsList({ campaigns, dictionary }: Props) {
                   <TableCell>
                     {campaign.applicationFee
                       ? `₹${campaign.applicationFee}`
-                      : dictionary?.admission?.campaigns?.free || "Free"}
+                      : "Free"}
                   </TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
@@ -140,7 +139,7 @@ export function CampaignsList({ campaigns, dictionary }: Props) {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>
-                          {dictionary?.admission?.campaigns?.actions || "Actions"}
+                          {"Actions"}
                         </DropdownMenuLabel>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
@@ -150,14 +149,14 @@ export function CampaignsList({ campaigns, dictionary }: Props) {
                           }}
                         >
                           <IconEdit className="mr-2 h-4 w-4" />
-                          {dictionary?.admission?.campaigns?.edit || "Edit"}
+                          {"Edit"}
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => handleDelete(campaign.id)}
                           className="text-red-600"
                         >
                           <IconTrash className="mr-2 h-4 w-4" />
-                          {dictionary?.admission?.campaigns?.delete || "Delete"}
+                          {"Delete"}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>

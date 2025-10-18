@@ -13,11 +13,10 @@ import {
   IconTrendingUp,
 } from "@tabler/icons-react";
 import type { AdmissionStats } from "./types";
-import type { Dictionary } from "@/components/internationalization/dictionaries";
 
 interface Props {
   stats: AdmissionStats;
-  dictionary?: Dictionary;
+  
 }
 
 export function AdmissionDashboard({ stats, dictionary }: Props) {
@@ -31,49 +30,49 @@ export function AdmissionDashboard({ stats, dictionary }: Props) {
 
   const statsCards = [
     {
-      title: dictionary?.admission?.dashboard?.totalApplications || "Total Applications",
+      title: "Total Applications",
       value: stats.totalApplications,
       icon: IconUsers,
       color: "text-blue-500",
     },
     {
-      title: dictionary?.admission?.dashboard?.submitted || "Submitted",
+      title: "Submitted",
       value: stats.submitted,
       icon: IconUserCheck,
       color: "text-green-500",
     },
     {
-      title: dictionary?.admission?.dashboard?.underReview || "Under Review",
+      title: "Under Review",
       value: stats.underReview,
       icon: IconClock,
       color: "text-yellow-500",
     },
     {
-      title: dictionary?.admission?.dashboard?.selected || "Selected",
+      title: "Selected",
       value: stats.selected,
       icon: IconCheck,
       color: "text-emerald-500",
     },
     {
-      title: dictionary?.admission?.dashboard?.waitlisted || "Waitlisted",
+      title: "Waitlisted",
       value: stats.waitlisted,
       icon: IconList,
       color: "text-orange-500",
     },
     {
-      title: dictionary?.admission?.dashboard?.rejected || "Rejected",
+      title: "Rejected",
       value: stats.rejected,
       icon: IconX,
       color: "text-red-500",
     },
     {
-      title: dictionary?.admission?.dashboard?.admitted || "Admitted",
+      title: "Admitted",
       value: stats.admitted,
       icon: IconSchool,
       color: "text-purple-500",
     },
     {
-      title: dictionary?.admission?.dashboard?.conversionRate || "Conversion Rate",
+      title: "Conversion Rate",
       value: `${conversionRate}%`,
       icon: IconTrendingUp,
       color: "text-indigo-500",
@@ -106,14 +105,14 @@ export function AdmissionDashboard({ stats, dictionary }: Props) {
       <Card>
         <CardHeader>
           <CardTitle>
-            {dictionary?.admission?.dashboard?.seatUtilization || "Seat Utilization"}
+            {"Seat Utilization"}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="space-y-1">
               <p className="text-sm text-muted-foreground">
-                {dictionary?.admission?.dashboard?.seatsFilledText || "Seats Filled"}
+                {"Seats Filled"}
               </p>
               <p className="text-2xl font-bold">
                 {stats.seatsFilled} / {stats.seatsFilled + stats.seatsAvailable}
@@ -121,7 +120,7 @@ export function AdmissionDashboard({ stats, dictionary }: Props) {
             </div>
             <div className="text-right">
               <p className="text-sm text-muted-foreground">
-                {dictionary?.admission?.dashboard?.availableSeats || "Available"}
+                {"Available"}
               </p>
               <p className="text-2xl font-bold text-green-500">
                 {stats.seatsAvailable}
@@ -130,7 +129,7 @@ export function AdmissionDashboard({ stats, dictionary }: Props) {
           </div>
           <Progress value={seatUtilization} className="h-2" />
           <p className="text-sm text-muted-foreground text-center">
-            {seatUtilization.toFixed(1)}% {dictionary?.admission?.dashboard?.utilized || "utilized"}
+            {seatUtilization.toFixed(1)}% {"utilized"}
           </p>
         </CardContent>
       </Card>
@@ -139,7 +138,7 @@ export function AdmissionDashboard({ stats, dictionary }: Props) {
       <Card>
         <CardHeader>
           <CardTitle>
-            {dictionary?.admission?.dashboard?.applicationPipeline || "Application Pipeline"}
+            {"Application Pipeline"}
           </CardTitle>
         </CardHeader>
         <CardContent>

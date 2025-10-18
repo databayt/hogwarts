@@ -32,7 +32,6 @@ import {
 import { campaignSchema, type CampaignFormData } from "./validation";
 import { createCampaign, updateCampaign } from "./actions";
 import { toast } from "sonner";
-import type { Dictionary } from "@/components/internationalization/dictionaries";
 
 interface Campaign {
   id: string;
@@ -50,7 +49,7 @@ interface Props {
   campaign: Campaign | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  dictionary?: Dictionary;
+  
 }
 
 export function CampaignDialog({ campaign, open, onOpenChange, dictionary }: Props) {
@@ -89,14 +88,14 @@ export function CampaignDialog({ campaign, open, onOpenChange, dictionary }: Pro
     try {
       if (campaign) {
         await updateCampaign(campaign.id, data);
-        toast.success(dictionary?.admission?.campaign?.updateSuccess || "Campaign updated successfully");
+        toast.success("Campaign updated successfully");
       } else {
         await createCampaign(data);
-        toast.success(dictionary?.admission?.campaign?.createSuccess || "Campaign created successfully");
+        toast.success("Campaign created successfully");
       }
       onOpenChange(false);
     } catch (error) {
-      toast.error(dictionary?.admission?.campaign?.error || "Something went wrong");
+      toast.error("Something went wrong");
     }
   };
 
@@ -106,8 +105,8 @@ export function CampaignDialog({ campaign, open, onOpenChange, dictionary }: Pro
         <DialogHeader>
           <DialogTitle>
             {campaign
-              ? dictionary?.admission?.campaign?.editTitle || "Edit Campaign"
-              : dictionary?.admission?.campaign?.createTitle || "Create New Campaign"}
+              ? "Edit Campaign"
+              : "Create New Campaign"}
           </DialogTitle>
           <DialogDescription>
             {dictionary?.admission?.campaign?.description ||
@@ -122,7 +121,7 @@ export function CampaignDialog({ campaign, open, onOpenChange, dictionary }: Pro
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{dictionary?.admission?.campaign?.name || "Campaign Name"}</FormLabel>
+                  <FormLabel>{"Campaign Name"}</FormLabel>
                   <FormControl>
                     <Input placeholder="e.g., Class XI Admission 2024" {...field} />
                   </FormControl>
@@ -136,7 +135,7 @@ export function CampaignDialog({ campaign, open, onOpenChange, dictionary }: Pro
               name="academicYear"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{dictionary?.admission?.campaign?.academicYear || "Academic Year"}</FormLabel>
+                  <FormLabel>{"Academic Year"}</FormLabel>
                   <FormControl>
                     <Input placeholder="e.g., 2024-2025" {...field} />
                   </FormControl>
@@ -151,7 +150,7 @@ export function CampaignDialog({ campaign, open, onOpenChange, dictionary }: Pro
                 name="startDate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{dictionary?.admission?.campaign?.startDate || "Start Date"}</FormLabel>
+                    <FormLabel>{"Start Date"}</FormLabel>
                     <FormControl>
                       <Input
                         type="date"
@@ -170,7 +169,7 @@ export function CampaignDialog({ campaign, open, onOpenChange, dictionary }: Pro
                 name="endDate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{dictionary?.admission?.campaign?.endDate || "End Date"}</FormLabel>
+                    <FormLabel>{"End Date"}</FormLabel>
                     <FormControl>
                       <Input
                         type="date"
@@ -190,7 +189,7 @@ export function CampaignDialog({ campaign, open, onOpenChange, dictionary }: Pro
               name="status"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{dictionary?.admission?.campaign?.status || "Status"}</FormLabel>
+                  <FormLabel>{"Status"}</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
@@ -215,7 +214,7 @@ export function CampaignDialog({ campaign, open, onOpenChange, dictionary }: Pro
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{dictionary?.admission?.campaign?.description || "Description"}</FormLabel>
+                  <FormLabel>{"Description"}</FormLabel>
                   <FormControl>
                     <Textarea
                       placeholder="Enter campaign details and instructions..."
@@ -234,7 +233,7 @@ export function CampaignDialog({ campaign, open, onOpenChange, dictionary }: Pro
                 name="totalSeats"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{dictionary?.admission?.campaign?.totalSeats || "Total Seats"}</FormLabel>
+                    <FormLabel>{"Total Seats"}</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
@@ -252,7 +251,7 @@ export function CampaignDialog({ campaign, open, onOpenChange, dictionary }: Pro
                 name="applicationFee"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{dictionary?.admission?.campaign?.applicationFee || "Application Fee"}</FormLabel>
+                    <FormLabel>{"Application Fee"}</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
@@ -263,7 +262,7 @@ export function CampaignDialog({ campaign, open, onOpenChange, dictionary }: Pro
                       />
                     </FormControl>
                     <FormDescription>
-                      {dictionary?.admission?.campaign?.feeHint || "Leave empty for free applications"}
+                      {"Leave empty for free applications"}
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -273,12 +272,12 @@ export function CampaignDialog({ campaign, open, onOpenChange, dictionary }: Pro
 
             <div className="flex justify-end gap-4 pt-4">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-                {dictionary?.admission?.campaign?.cancel || "Cancel"}
+                {"Cancel"}
               </Button>
               <Button type="submit">
                 {campaign
-                  ? dictionary?.admission?.campaign?.update || "Update Campaign"
-                  : dictionary?.admission?.campaign?.create || "Create Campaign"}
+                  ? "Update Campaign"
+                  : "Create Campaign"}
               </Button>
             </div>
           </form>

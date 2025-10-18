@@ -31,7 +31,6 @@ import { IconDotsVertical, IconEye, IconMail, IconDownload } from "@tabler/icons
 import { format } from "date-fns";
 import { performBulkAction } from "./actions";
 import { toast } from "sonner";
-import type { Dictionary } from "@/components/internationalization/dictionaries";
 
 interface Application {
   id: string;
@@ -50,10 +49,9 @@ interface Application {
 
 interface Props {
   applications: Application[];
-  dictionary?: Dictionary;
 }
 
-export function ApplicationsList({ applications, dictionary }: Props) {
+export function ApplicationsList({ applications }: Props) {
   const [selectedApplications, setSelectedApplications] = useState<string[]>([]);
   const [bulkAction, setBulkAction] = useState("");
 
@@ -75,7 +73,7 @@ export function ApplicationsList({ applications, dictionary }: Props) {
 
   const handleBulkAction = async () => {
     if (!bulkAction || selectedApplications.length === 0) {
-      toast.error(dictionary?.admission?.applications?.selectAction || "Please select an action and applications");
+      toast.error("Please select an action and applications");
       return;
     }
 
@@ -84,11 +82,11 @@ export function ApplicationsList({ applications, dictionary }: Props) {
         applicationIds: selectedApplications,
         action: bulkAction as any,
       });
-      toast.success(dictionary?.admission?.applications?.bulkSuccess || "Bulk action completed successfully");
+      toast.success("Bulk action completed successfully");
       setSelectedApplications([]);
       setBulkAction("");
     } catch (error) {
-      toast.error(dictionary?.admission?.applications?.bulkError || "Failed to perform bulk action");
+      toast.error("Failed to perform bulk action");
     }
   };
 
@@ -121,29 +119,29 @@ export function ApplicationsList({ applications, dictionary }: Props) {
       {selectedApplications.length > 0 && (
         <div className="flex items-center gap-4 p-4 bg-muted rounded-lg">
           <span className="text-sm font-medium">
-            {selectedApplications.length} {dictionary?.admission?.applications?.selected || "selected"}
+            {selectedApplications.length} {"selected"}
           </span>
           <Select value={bulkAction} onValueChange={setBulkAction}>
             <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder={dictionary?.admission?.applications?.selectAction || "Select action"} />
+              <SelectValue placeholder={"Select action"} />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="SHORTLIST">
-                {dictionary?.admission?.applications?.shortlist || "Shortlist"}
+                {"Shortlist"}
               </SelectItem>
               <SelectItem value="SELECT">
-                {dictionary?.admission?.applications?.select || "Select"}
+                {"Select"}
               </SelectItem>
               <SelectItem value="WAITLIST">
-                {dictionary?.admission?.applications?.waitlist || "Waitlist"}
+                {"Waitlist"}
               </SelectItem>
               <SelectItem value="REJECT">
-                {dictionary?.admission?.applications?.reject || "Reject"}
+                {"Reject"}
               </SelectItem>
             </SelectContent>
           </Select>
           <Button onClick={handleBulkAction}>
-            {dictionary?.admission?.applications?.apply || "Apply"}
+            {"Apply"}
           </Button>
         </div>
       )}
@@ -158,14 +156,14 @@ export function ApplicationsList({ applications, dictionary }: Props) {
                   onCheckedChange={handleSelectAll}
                 />
               </TableHead>
-              <TableHead>{dictionary?.admission?.applications?.applicationNo || "Application No"}</TableHead>
-              <TableHead>{dictionary?.admission?.applications?.name || "Name"}</TableHead>
-              <TableHead>{dictionary?.admission?.applications?.class || "Class"}</TableHead>
-              <TableHead>{dictionary?.admission?.applications?.campaign || "Campaign"}</TableHead>
-              <TableHead>{dictionary?.admission?.applications?.status || "Status"}</TableHead>
-              <TableHead>{dictionary?.admission?.applications?.date || "Applied Date"}</TableHead>
+              <TableHead>{"Application No"}</TableHead>
+              <TableHead>{"Name"}</TableHead>
+              <TableHead>{"Class"}</TableHead>
+              <TableHead>{"Campaign"}</TableHead>
+              <TableHead>{"Status"}</TableHead>
+              <TableHead>{"Applied Date"}</TableHead>
               <TableHead className="text-right">
-                {dictionary?.admission?.applications?.actions || "Actions"}
+                {"Actions"}
               </TableHead>
             </TableRow>
           </TableHeader>
@@ -173,7 +171,7 @@ export function ApplicationsList({ applications, dictionary }: Props) {
             {applications.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                  {dictionary?.admission?.applications?.noApplications || "No applications found"}
+                  {"No applications found"}
                 </TableCell>
               </TableRow>
             ) : (
@@ -215,20 +213,20 @@ export function ApplicationsList({ applications, dictionary }: Props) {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>
-                          {dictionary?.admission?.applications?.actions || "Actions"}
+                          {"Actions"}
                         </DropdownMenuLabel>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem>
                           <IconEye className="mr-2 h-4 w-4" />
-                          {dictionary?.admission?.applications?.view || "View Details"}
+                          {"View Details"}
                         </DropdownMenuItem>
                         <DropdownMenuItem>
                           <IconMail className="mr-2 h-4 w-4" />
-                          {dictionary?.admission?.applications?.sendEmail || "Send Email"}
+                          {"Send Email"}
                         </DropdownMenuItem>
                         <DropdownMenuItem>
                           <IconDownload className="mr-2 h-4 w-4" />
-                          {dictionary?.admission?.applications?.download || "Download"}
+                          {"Download"}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>

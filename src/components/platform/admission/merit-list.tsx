@@ -25,7 +25,6 @@ import { Badge } from "@/components/ui/badge";
 import { generateMeritList, getApplications } from "./actions";
 import { toast } from "sonner";
 import { IconTrophy, IconDownload } from "@tabler/icons-react";
-import type { Dictionary } from "@/components/internationalization/dictionaries";
 
 interface Campaign {
   id: string;
@@ -35,7 +34,7 @@ interface Campaign {
 
 interface Props {
   campaigns: Campaign[];
-  dictionary?: Dictionary;
+  
 }
 
 export function MeritListView({ campaigns, dictionary }: Props) {

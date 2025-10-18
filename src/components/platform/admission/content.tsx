@@ -6,10 +6,9 @@ import { ApplicationsList } from "./applications-list";
 import { AdmissionDashboard } from "./dashboard";
 import { MeritListView } from "./merit-list";
 import { getAdmissionStats, getCampaigns, getApplications } from "./actions";
-import type { Dictionary } from "@/components/internationalization/dictionaries";
 
 interface Props {
-  dictionary?: Dictionary;
+  
 }
 
 export default async function AdmissionContent({ dictionary }: Props) {
@@ -23,9 +22,9 @@ export default async function AdmissionContent({ dictionary }: Props) {
   return (
     <div className="space-y-6">
       <div>
-        <h1>{dictionary?.admission?.title || "Admission Management"}</h1>
+        <h1>{"Admission Management"}</h1>
         <p className="text-muted-foreground">
-          {dictionary?.admission?.subtitle || "Manage admission campaigns, applications, and enrollment"}
+          {"Manage admission campaigns, applications, and enrollment"}
         </p>
       </div>
 
@@ -36,25 +35,25 @@ export default async function AdmissionContent({ dictionary }: Props) {
       <Tabs defaultValue="campaigns" className="w-full">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="campaigns">
-            {dictionary?.admission?.tabs?.campaigns || "Campaigns"}
+            {"Campaigns"}
           </TabsTrigger>
           <TabsTrigger value="applications">
-            {dictionary?.admission?.tabs?.applications || "Applications"}
+            {"Applications"}
           </TabsTrigger>
           <TabsTrigger value="merit">
-            {dictionary?.admission?.tabs?.merit || "Merit List"}
+            {"Merit List"}
           </TabsTrigger>
           <TabsTrigger value="settings">
-            {dictionary?.admission?.tabs?.settings || "Settings"}
+            {"Settings"}
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="campaigns" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>{dictionary?.admission?.campaigns?.title || "Admission Campaigns"}</CardTitle>
+              <CardTitle>{"Admission Campaigns"}</CardTitle>
               <CardDescription>
-                {dictionary?.admission?.campaigns?.description || "Create and manage admission campaigns for different academic years"}
+                {"Create and manage admission campaigns for different academic years"}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -66,9 +65,9 @@ export default async function AdmissionContent({ dictionary }: Props) {
         <TabsContent value="applications" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>{dictionary?.admission?.applications?.title || "Applications"}</CardTitle>
+              <CardTitle>{"Applications"}</CardTitle>
               <CardDescription>
-                {dictionary?.admission?.applications?.description || "Review and process admission applications"}
+                {"Review and process admission applications"}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -80,9 +79,9 @@ export default async function AdmissionContent({ dictionary }: Props) {
         <TabsContent value="merit" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>{dictionary?.admission?.merit?.title || "Merit List"}</CardTitle>
+              <CardTitle>{"Merit List"}</CardTitle>
               <CardDescription>
-                {dictionary?.admission?.merit?.description || "Generate and view merit lists based on configured criteria"}
+                {"Generate and view merit lists based on configured criteria"}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -94,15 +93,15 @@ export default async function AdmissionContent({ dictionary }: Props) {
         <TabsContent value="settings" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>{dictionary?.admission?.settings?.title || "Admission Settings"}</CardTitle>
+              <CardTitle>{"Admission Settings"}</CardTitle>
               <CardDescription>
-                {dictionary?.admission?.settings?.description || "Configure admission criteria, documents, and policies"}
+                {"Configure admission criteria, documents, and policies"}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 <div>
-                  <h3>{dictionary?.admission?.settings?.documents || "Required Documents"}</h3>
+                  <h3>{"Required Documents"}</h3>
                   <ul className="list-disc list-inside text-muted-foreground">
                     <li>Birth Certificate</li>
                     <li>Previous School Transfer Certificate</li>
@@ -112,9 +111,9 @@ export default async function AdmissionContent({ dictionary }: Props) {
                   </ul>
                 </div>
                 <div>
-                  <h3>{dictionary?.admission?.settings?.criteria || "Eligibility Criteria"}</h3>
+                  <h3>{"Eligibility Criteria"}</h3>
                   <p className="text-muted-foreground">
-                    {dictionary?.admission?.settings?.criteriaText || "Configure minimum age, academic requirements, and other eligibility criteria for each class"}
+                    {"Configure minimum age, academic requirements, and other eligibility criteria for each class"}
                   </p>
                 </div>
               </div>
