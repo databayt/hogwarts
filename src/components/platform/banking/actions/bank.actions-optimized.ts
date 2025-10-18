@@ -160,7 +160,7 @@ export async function createBankAccount({
         currentBalance: accountData.balances.current || 0,
         availableBalance: accountData.balances.available || 0,
         type: accountData.type,
-        subtype: accountData.subtype,
+        subtype: accountData.subtype || '',
       },
     })
 
