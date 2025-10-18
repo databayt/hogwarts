@@ -39,8 +39,8 @@ export async function generateMetadata({
   const dictionary = await getDictionary(lang as Locale)
 
   return {
-    title: dictionary.banking?.transactions?.title || 'Transaction History',
-    description: dictionary.banking?.transactions?.description || 'View your transaction history',
+    title: dictionary.banking?.transactionHistory || 'Transaction History',
+    description: dictionary.banking?.allTransactions || 'View your transaction history',
   }
 }
 
@@ -126,10 +126,10 @@ export default async function TransactionHistoryPage({
       {/* Page header */}
       <div>
         <h1 className="text-3xl font-bold tracking-tight">
-          {dictionary.banking?.transactions?.title || 'Transaction History'}
+          {dictionary.banking?.transactionHistory || 'Transaction History'}
         </h1>
         <p className="text-muted-foreground">
-          {dictionary.banking?.transactions?.description || 'View and manage your transactions'}
+          {dictionary.banking?.allTransactions || 'View and manage your transactions'}
         </p>
       </div>
 
@@ -149,7 +149,7 @@ export default async function TransactionHistoryPage({
         <TransactionDataWrapper
           userId={session.user.id}
           searchParams={urlSearchParams}
-          dictionary={dictionary.banking?.transactions}
+          dictionary={dictionary.banking}
           lang={lang}
         />
       </Suspense>
