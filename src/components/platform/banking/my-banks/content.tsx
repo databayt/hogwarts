@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
 import type { Locale } from '@/components/local/config';
 import type { getDictionary } from '@/components/local/dictionaries';
-import { currentUser } from '@/lib/auth';
+import { currentUser } from '@/auth';
 import { redirect } from 'next/navigation';
 import { getAccounts } from './actions';
 import BankList from './bank-list';

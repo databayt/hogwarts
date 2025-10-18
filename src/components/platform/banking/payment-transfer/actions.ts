@@ -1,7 +1,7 @@
 'use server';
 
 import { db } from '@/lib/db';
-import { currentUser } from '@/lib/auth';
+import { currentUser } from '@/auth';
 import { revalidatePath } from 'next/cache';
 import { cache } from 'react';
 import { z } from 'zod';
