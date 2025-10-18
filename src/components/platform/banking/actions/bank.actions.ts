@@ -67,7 +67,7 @@ export async function getAccounts(
       return total + Number(account.availableBalance)
     }, 0)
 
-    // Serialize Decimal fields to numbers
+    // Serialize Decimal fields to numbers and cast payment channel
     const serializedAccounts = accounts.map(account => ({
       ...account,
       currentBalance: Number(account.currentBalance),
@@ -75,6 +75,7 @@ export async function getAccounts(
       transactions: account.transactions.map(tx => ({
         ...tx,
         amount: Number(tx.amount),
+        paymentChannel: tx.paymentChannel as 'online' | 'in_store' | 'other' | null,
       }))
     }))
 
