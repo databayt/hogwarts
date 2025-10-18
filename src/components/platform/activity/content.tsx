@@ -2,19 +2,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { IconPlus } from "@tabler/icons-react";
-import type { Dictionary } from "@/components/internationalization/dictionaries";
 
-interface Props {
-  dictionary?: Dictionary;
-}
-
-export default async function ActivityContent({ dictionary }: Props) {
+export default async function ActivityContent() {
   return (
     <div className="space-y-6">
       <div>
-        <h1>{dictionary?.activity?.title || "Co-curricular Activities"}</h1>
+        <h1>Co-curricular Activities</h1>
         <p className="text-muted-foreground">
-          {dictionary?.activity?.subtitle || "Manage sports, clubs, and extracurricular activities"}
+          Manage sports, clubs, and extracurricular activities
         </p>
       </div>
 
