@@ -52,7 +52,7 @@ interface Props {
   
 }
 
-export function CampaignDialog({ campaign, open, onOpenChange, dictionary }: Props) {
+export function CampaignDialog({ campaign, open, onOpenChange }: Props) {
   const form = useForm<CampaignFormData>({
     resolver: zodResolver(campaignSchema),
     defaultValues: {

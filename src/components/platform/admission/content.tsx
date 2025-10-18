@@ -7,11 +7,7 @@ import { AdmissionDashboard } from "./dashboard";
 import { MeritListView } from "./merit-list";
 import { getAdmissionStats, getCampaigns, getApplications } from "./actions";
 
-interface Props {
-  
-}
-
-export default async function AdmissionContent({ dictionary }: Props) {
+export default async function AdmissionContent() {
   // Fetch initial data
   const [stats, campaigns, applications] = await Promise.all([
     getAdmissionStats(),

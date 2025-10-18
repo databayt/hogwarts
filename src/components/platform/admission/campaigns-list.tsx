@@ -41,7 +41,7 @@ interface Props {
   
 }
 
-export function CampaignsList({ campaigns, dictionary }: Props) {
+export function CampaignsList({ campaigns }: Props) {
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
 

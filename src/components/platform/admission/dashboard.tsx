@@ -19,7 +19,7 @@ interface Props {
   
 }
 
-export function AdmissionDashboard({ stats, dictionary }: Props) {
+export function AdmissionDashboard({ stats }: Props) {
   const conversionRate = stats.totalApplications > 0
     ? ((stats.admitted / stats.totalApplications) * 100).toFixed(1)
     : "0";

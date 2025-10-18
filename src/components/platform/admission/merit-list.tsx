@@ -37,7 +37,7 @@ interface Props {
   
 }
 
-export function MeritListView({ campaigns, dictionary }: Props) {
+export function MeritListView({ campaigns }: Props) {
   const [selectedCampaign, setSelectedCampaign] = useState("");
   const [meritList, setMeritList] = useState<any[]>([]);
   const [criteria, setCriteria] = useState({
