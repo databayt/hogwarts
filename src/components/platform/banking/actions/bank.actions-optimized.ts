@@ -200,7 +200,7 @@ export async function syncTransactions({
   try {
     const account = await db.bankAccount.findUnique({
       where: { id: accountId },
-      select: { id: true, accessToken: true, accountId: true }
+      select: { id: true, accessToken: true, accountId: true, schoolId: true }
     })
 
     if (!account) {
@@ -231,6 +231,7 @@ export async function syncTransactions({
           id: transaction.transaction_id,
           accountId: transaction.account_id,
           bankAccountId: account.id,
+          schoolId: account.schoolId,
           name: transaction.name,
           amount: transaction.amount,
           date: new Date(transaction.date),
