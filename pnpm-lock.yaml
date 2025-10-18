@@ -215,6 +215,9 @@ importers:
       nuqs:
         specifier: ^2.4.3
         version: 2.4.3(next@15.4.4(@babel/core@7.28.0)(@opentelemetry/api@1.9.0)(@playwright/test@1.55.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react@19.1.0)
+      plaid:
+        specifier: ^39.0.0
+        version: 39.0.0
       qrcode.react:
         specifier: ^4.2.0
         version: 4.2.0(react@19.1.0)
@@ -224,6 +227,9 @@ importers:
       react-colorful:
         specifier: ^5.6.1
         version: 5.6.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      react-countup:
+        specifier: ^6.5.3
+        version: 6.5.3(react@19.1.0)
       react-day-picker:
         specifier: ^9.8.1
         version: 9.8.1(react@19.1.0)
@@ -3340,6 +3346,9 @@ packages:
   core-js@3.45.1:
     resolution: {integrity: sha512-L4NPsJlCfZsPeXukyzHFlg/i7IIVwHSItR0wg0FLNqYClJ4MQYTYLbC7EkjKYRLZF2iof2MUgN0EGy7MdQFChg==}
 
+  countup.js@2.9.0:
+    resolution: {integrity: sha512-llqrvyXztRFPp6+i8jx25phHWcVWhrHO4Nlt0uAOSKHB8778zzQswa4MU3qKBvkXfJKftRYFJuVHez67lyKdHg==}
+
   crc-32@1.2.2:
     resolution: {integrity: sha512-ROmzCKrTnOwybPcJApAA6WBWij23HVfGVNKqqrZpuyZOHqK2CwHSvpGuyt/UNNvaIjEd8X5IFGp4Mh+Ie1IHJQ==}
     engines: {node: '>=0.8'}
@@ -4831,6 +4840,10 @@ packages:
   pkg-types@2.2.0:
     resolution: {integrity: sha512-2SM/GZGAEkPp3KWORxQZns4M+WSeXbC2HEvmOIJe3Cmiv6ieAJvdVhDldtHqM5J1Y7MrR1XhkBT/rMlhh9FdqQ==}
 
+  plaid@39.0.0:
+    resolution: {integrity: sha512-7WuI97/R/xzjQV8ZSWY/rx5mFjjLDbIuGpFrOq0AolqplwT9StHe0ADa+H5rrpeOi6NNr+DdN7Ace/TACYME1w==}
+    engines: {node: '>=10.0.0'}
+
   playwright-core@1.55.0:
     resolution: {integrity: sha512-GvZs4vU3U5ro2nZpeiwyb0zuFaqb9sUiAJuyrWpcGouD8y9/HLgGbNRjIph7zU9D3hnPaisMl9zG9CgFi/biIg==}
     engines: {node: '>=18'}
@@ -4950,6 +4963,11 @@ packages:
     peerDependencies:
       react: '>=16.8.0'
       react-dom: '>=16.8.0'
+
+  react-countup@6.5.3:
+    resolution: {integrity: sha512-udnqVQitxC7QWADSPDOxVWULkLvKUWrDapn5i53HE4DPRVgs+Y5rr4bo25qEl8jSh+0l2cToJgGMx+clxPM3+w==}
+    peerDependencies:
+      react: '>= 16.3.0'
 
   react-day-picker@9.8.1:
     resolution: {integrity: sha512-kMcLrp3PfN/asVJayVv82IjF3iLOOxuH5TNFWezX6lS/T8iVRFPTETpHl3TUSTH99IDMZLubdNPJr++rQctkEw==}
@@ -8778,6 +8796,8 @@ snapshots:
   core-js@3.45.1:
     optional: true
 
+  countup.js@2.9.0: {}
+
   crc-32@1.2.2: {}
 
   cross-spawn@7.0.6:
@@ -10621,6 +10641,12 @@ snapshots:
       exsolve: 1.0.7
       pathe: 2.0.3
 
+  plaid@39.0.0:
+    dependencies:
+      axios: 1.12.2
+    transitivePeerDependencies:
+      - debug
+
   playwright-core@1.55.0: {}
 
   playwright@1.55.0:
@@ -10724,6 +10750,11 @@ snapshots:
     dependencies:
       react: 19.1.0
       react-dom: 19.1.0(react@19.1.0)
+
+  react-countup@6.5.3(react@19.1.0):
+    dependencies:
+      countup.js: 2.9.0
+      react: 19.1.0
 
   react-day-picker@9.8.1(react@19.1.0):
     dependencies:
