@@ -70,6 +70,7 @@ export async function getAccounts(
     // Serialize Decimal fields to numbers and cast enum types
     const serializedAccounts = accounts.map(account => ({
       ...account,
+      type: account.type as 'depository' | 'credit' | 'loan' | 'investment',
       currentBalance: Number(account.currentBalance),
       availableBalance: Number(account.availableBalance),
       transactions: account.transactions.map(tx => ({
