@@ -142,7 +142,6 @@ export default async function TransactionHistoryPage({
           userId={session.user.id}
           searchParams={urlSearchParams}
           dictionary={dictionary.banking}
-          lang={lang}
         />
       </Suspense>
     </div>
@@ -154,21 +153,37 @@ async function TransactionDataWrapper({
   userId,
   searchParams,
   dictionary,
-  lang,
 }: {
   userId: string
   searchParams: URLSearchParams
   dictionary: any
-  lang: Locale
 }) {
   try {
-    const transactions = await TransactionData({ userId, searchParams })
+    const result = await TransactionData({ userId, searchParams })
+    const { getAccounts } = await import('@/components/platform/banking/actions/bank.actions')
+
+    // Get accounts for the user
+    const accounts = await getAccounts({ userId })
+
+    if (!accounts?.data || accounts.data.length === 0) {
+      return (
+        <div className="border rounded-lg p-12 text-center">
+          <h3 className="text-lg font-semibold mb-2">
+            {dictionary?.noTransactionHistory || 'No transaction history'}
+          </h3>
+          <p className="text-muted-foreground">
+            {dictionary?.connectBankForHistory || 'Connect a bank account to see your transaction history'}
+          </p>
+        </div>
+      )
+    }
 
     return (
       <TransactionsTable
-        transactions={transactions}
+        transactions={result.data}
+        accounts={accounts.data}
+        currentPage={result.page}
         dictionary={dictionary}
-        lang={lang}
       />
     )
   } catch (error) {
