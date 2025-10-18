@@ -131,6 +131,13 @@ export async function createBankAccount({
       throw new Error('Unauthorized')
     }
 
+    // Verify schoolId exists
+    if (!session.user.schoolId) {
+      throw new Error('School ID not found in session')
+    }
+
+    const schoolId = session.user.schoolId
+
     // Get account details from Plaid
     const accountsResponse = await plaidClient.accountsGet({
       access_token: accessToken,
@@ -148,6 +155,7 @@ export async function createBankAccount({
     const bankAccount = await db.bankAccount.create({
       data: {
         userId,
+        schoolId,
         bankId,
         accountId,
         accessToken,
