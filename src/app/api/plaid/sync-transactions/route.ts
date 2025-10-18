@@ -19,12 +19,14 @@ export async function POST(request: NextRequest) {
   try {
     const session = await auth()
 
-    if (!session?.user) {
+    if (!session?.user || !session.user.schoolId) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
       )
     }
+
+    const schoolId = session.user.schoolId
 
     const body = await request.json()
     const { bankAccountId } = body
@@ -34,6 +36,7 @@ export async function POST(request: NextRequest) {
       where: {
         id: bankAccountId,
         userId: session.user.id,
+        schoolId,
       },
       include: {
         transactions: {
@@ -65,6 +68,7 @@ export async function POST(request: NextRequest) {
     const existingTransactionIds = await db.transaction.findMany({
       where: {
         bankAccountId: bankAccount.id,
+        schoolId,
         accountId: {
           in: transactionsResponse.data.transactions.map(t => t.transaction_id),
         },
@@ -82,6 +86,7 @@ export async function POST(request: NextRequest) {
       const transactions = newTransactions.map((transaction) => ({
         accountId: transaction.transaction_id,
         bankAccountId: bankAccount.id,
+        schoolId,
         name: transaction.name,
         amount: Math.abs(transaction.amount),
         date: new Date(transaction.date),
