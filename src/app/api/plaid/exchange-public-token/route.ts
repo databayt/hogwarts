@@ -20,12 +20,14 @@ export async function POST(request: NextRequest) {
   try {
     const session = await auth()
 
-    if (!session?.user) {
+    if (!session?.user || !session.user.schoolId) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
       )
     }
+
+    const schoolId = session.user.schoolId
 
     const body = await request.json()
     const { publicToken, institutionId, accountId } = body
@@ -58,6 +60,7 @@ export async function POST(request: NextRequest) {
     await db.plaidItem.create({
       data: {
         userId: session.user.id,
+        schoolId,
         accessToken,
         itemId,
         institutionId,
@@ -69,6 +72,7 @@ export async function POST(request: NextRequest) {
     const bankAccount = await db.bankAccount.create({
       data: {
         userId: session.user.id,
+        schoolId,
         bankId: itemId,
         accountId: accountData.account_id,
         accessToken,
@@ -97,6 +101,7 @@ export async function POST(request: NextRequest) {
     const transactions = transactionsResponse.data.transactions.map((transaction) => ({
       accountId: transaction.account_id,
       bankAccountId: bankAccount.id,
+      schoolId,
       name: transaction.name,
       amount: transaction.amount,
       date: new Date(transaction.date),
