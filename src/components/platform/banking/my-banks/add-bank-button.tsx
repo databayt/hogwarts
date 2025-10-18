@@ -4,7 +4,7 @@ import { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Plus, Loader2 } from 'lucide-react';
 import type { getDictionary } from '@/components/local/dictionaries';
-import PlaidLink from '../shared/plaid-link';
+import { PlaidLink } from '../shared/plaid-link';
 
 interface Props {
   dictionary: Awaited<ReturnType<typeof getDictionary>>['banking'];
@@ -45,10 +45,8 @@ export default function AddBankButton(props: Props) {
 
       {isLinking && (
         <PlaidLink
-          user={{ id: '', email: '', name: '' }} // Will be fetched in PlaidLink
+          user={{ id: '' }} // Will be fetched in PlaidLink
           dictionary={props.dictionary}
-          onSuccess={handleLinkComplete}
-          onExit={handleLinkComplete}
         />
       )}
     </>

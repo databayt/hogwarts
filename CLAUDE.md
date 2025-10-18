@@ -400,3 +400,4 @@ The middleware (`src/middleware.ts`) handles:
 - **License**: MIT License
 - **Test Coverage**: 234 test files across all features
 - **MVP Status**: 100% complete, production-ready
+- fix errors and push don't run build

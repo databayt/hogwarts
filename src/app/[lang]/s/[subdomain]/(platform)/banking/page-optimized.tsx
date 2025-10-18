@@ -2,11 +2,9 @@ import { Suspense } from 'react'
 import { Metadata } from 'next'
 import { auth } from '@/auth'
 import { redirect } from 'next/navigation'
-import { getDictionary } from '@/components/local/dictionaries'
-import type { Locale } from '@/components/local/config'
-import { BankingDashboardContent } from '@/components/banking/dashboard/content'
-import { getAccounts } from '@/components/banking/actions/bank.actions'
-import { getRecentTransactions } from '@/components/banking/actions/transaction.actions'
+import { getDictionary } from '@/components/internationalization/dictionaries'
+import type { Locale } from '@/components/internationalization/config'
+import { BankingDashboardContent } from '@/components/platform/banking/dashboard/content'
 
 // Runtime configuration - Node.js required for Prisma
 export const runtime = 'nodejs'
@@ -18,10 +16,11 @@ export const fetchCache = 'force-no-store'
 
 // Metadata generation
 export async function generateMetadata({
-  params: { lang },
+  params,
 }: {
-  params: { lang: Locale }
+  params: Promise<{ lang: Locale; subdomain: string }>
 }): Promise<Metadata> {
+  const { lang } = await params
   const dictionary = await getDictionary(lang)
 
   return {
@@ -47,47 +46,30 @@ function DashboardSkeleton() {
 
 export default async function BankingDashboardPage({
   searchParams,
-  params: { lang },
+  params,
 }: {
-  searchParams: { id?: string; page?: string }
-  params: { lang: Locale }
+  searchParams: Promise<{ id?: string; page?: string }>
+  params: Promise<{ lang: Locale; subdomain: string }>
 }) {
+  const { lang } = await params
+  const resolvedSearchParams = await searchParams
+
   // Auth check - redirect if not authenticated
   const session = await auth()
   if (!session?.user?.id) {
     redirect(`/${lang}/login?callbackUrl=/${lang}/banking`)
   }
 
-  // Parallel data fetching for better performance
-  const [dictionary, accountsData, recentTransactions] = await Promise.all([
-    getDictionary(lang),
-    getAccounts({ userId: session.user.id }),
-    getRecentTransactions({ userId: session.user.id, limit: 10 }),
-  ])
+  const dictionary = await getDictionary(lang)
 
   return (
-    <div className="layout-container">
-      {/* Stream header immediately */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">
-          {dictionary.banking?.title || 'Banking Dashboard'}
-        </h1>
-        <p className="text-muted-foreground">
-          {dictionary.banking?.description || 'Overview of your financial accounts'}
-        </p>
-      </div>
-
-      {/* Main content with Suspense for progressive loading */}
-      <Suspense fallback={<DashboardSkeleton />}>
-        <BankingDashboardContent
-          user={session.user}
-          accountsData={accountsData}
-          recentTransactions={recentTransactions}
-          searchParams={searchParams}
-          dictionary={dictionary.banking}
-          lang={lang}
-        />
-      </Suspense>
-    </div>
+    <Suspense fallback={<DashboardSkeleton />}>
+      <BankingDashboardContent
+        user={session.user}
+        searchParams={resolvedSearchParams}
+        dictionary={dictionary.banking}
+        lang={lang}
+      />
+    </Suspense>
   )
 }

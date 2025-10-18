@@ -6,11 +6,13 @@ import type { Locale } from '@/components/internationalization/config'
 
 export default async function BankingDashboardPage({
   searchParams,
-  params: { lang },
+  params,
 }: {
-  searchParams: { id?: string; page?: string }
-  params: { lang: Locale }
+  searchParams: Promise<{ id?: string; page?: string }>
+  params: Promise<{ lang: Locale; subdomain: string }>
 }) {
+  const { lang } = await params
+  const resolvedSearchParams = await searchParams
   const session = await auth()
   const dictionary = await getDictionary(lang)
 
@@ -22,7 +24,7 @@ export default async function BankingDashboardPage({
     <Suspense fallback={<div>Loading...</div>}>
       <BankingDashboardContent
         user={session.user}
-        searchParams={searchParams}
+        searchParams={resolvedSearchParams}
         dictionary={dictionary.banking}
         lang={lang}
       />

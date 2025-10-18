@@ -5,20 +5,23 @@ import { BankingMobileNav } from '@/components/platform/banking/shared/mobile-na
 import { getDictionary } from '@/components/internationalization/dictionaries'
 import type { Locale } from '@/components/internationalization/config'
 
+interface BankingLayoutProps {
+  children: React.ReactNode
+  params: Promise<{ lang: string; subdomain: string }>
+}
+
 export default async function BankingLayout({
   children,
-  params: { lang },
-}: {
-  children: React.ReactNode
-  params: { lang: Locale }
-}) {
+  params,
+}: Readonly<BankingLayoutProps>) {
+  const { lang } = await params
   const session = await auth()
 
   if (!session?.user) {
     redirect(`/${lang}/login`)
   }
 
-  const dictionary = await getDictionary(lang)
+  const dictionary = await getDictionary(lang as Locale)
 
   return (
     <div className="flex h-screen w-full">
@@ -27,7 +30,7 @@ export default async function BankingLayout({
         <BankingSidebar
           user={session.user}
           dictionary={dictionary.banking}
-          lang={lang}
+          lang={lang as Locale}
         />
       </div>
 
@@ -36,7 +39,7 @@ export default async function BankingLayout({
         <BankingMobileNav
           user={session.user}
           dictionary={dictionary.banking}
-          lang={lang}
+          lang={lang as Locale}
         />
       </div>
 

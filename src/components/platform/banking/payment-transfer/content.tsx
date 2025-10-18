@@ -1,8 +1,6 @@
 import { Suspense } from 'react';
 import type { Locale } from '@/components/local/config';
 import type { getDictionary } from '@/components/local/dictionaries';
-import { currentUser } from '@/auth';
-import { redirect } from 'next/navigation';
 import { getAccounts } from './actions';
 import PaymentTransferForm from './form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,22 +8,17 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { CreditCard, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import type { User } from 'next-auth';
 
 interface Props {
+  user: User;
   dictionary: Awaited<ReturnType<typeof getDictionary>>['banking'];
   lang: Locale;
 }
 
 export default async function PaymentTransferContent(props: Props) {
-  // Get current user (server-side)
-  const user = await currentUser();
-
-  if (!user) {
-    redirect(`/${props.lang}/login`);
-  }
-
   // Fetch user's bank accounts
-  const accounts = await getAccounts({ userId: user.id });
+  const accounts = await getAccounts({ userId: props.user.id });
 
   // Check if user has enough accounts for transfer
   if (!accounts || accounts.length === 0) {

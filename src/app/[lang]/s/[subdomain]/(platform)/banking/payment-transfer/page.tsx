@@ -1,13 +1,14 @@
 import { auth } from '@/auth'
-import { PaymentTransferContent } from '@/components/platform/banking/payment-transfer/content'
+import PaymentTransferContent from '@/components/platform/banking/payment-transfer/content'
 import { getDictionary } from '@/components/internationalization/dictionaries'
 import type { Locale } from '@/components/internationalization/config'
 
 export default async function PaymentTransferPage({
-  params: { lang },
+  params,
 }: {
-  params: { lang: Locale }
+  params: Promise<{ lang: Locale; subdomain: string }>
 }) {
+  const { lang } = await params
   const session = await auth()
   const dictionary = await getDictionary(lang)
 

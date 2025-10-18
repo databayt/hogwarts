@@ -5,11 +5,13 @@ import type { Locale } from '@/components/internationalization/config'
 
 export default async function TransactionHistoryPage({
   searchParams,
-  params: { lang },
+  params,
 }: {
-  searchParams: { page?: string; accountId?: string }
-  params: { lang: Locale }
+  searchParams: Promise<{ page?: string; accountId?: string }>
+  params: Promise<{ lang: Locale; subdomain: string }>
 }) {
+  const { lang } = await params
+  const resolvedSearchParams = await searchParams
   const session = await auth()
   const dictionary = await getDictionary(lang)
 
@@ -20,7 +22,7 @@ export default async function TransactionHistoryPage({
   return (
     <TransactionHistoryContent
       user={session.user}
-      searchParams={searchParams}
+      searchParams={resolvedSearchParams}
       dictionary={dictionary.banking}
       lang={lang}
     />

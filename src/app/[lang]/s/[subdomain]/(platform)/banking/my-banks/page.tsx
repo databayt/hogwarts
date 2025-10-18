@@ -1,13 +1,14 @@
 import { auth } from '@/auth'
-import { MyBanksContent } from '@/components/platform/banking/my-banks/content'
+import MyBanksContent from '@/components/platform/banking/my-banks/content'
 import { getDictionary } from '@/components/internationalization/dictionaries'
 import type { Locale } from '@/components/internationalization/config'
 
 export default async function MyBanksPage({
-  params: { lang },
+  params,
 }: {
-  params: { lang: Locale }
+  params: Promise<{ lang: Locale; subdomain: string }>
 }) {
+  const { lang } = await params
   const session = await auth()
   const dictionary = await getDictionary(lang)
 

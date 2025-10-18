@@ -2,9 +2,9 @@ import { Suspense } from 'react'
 import { Metadata } from 'next'
 import { auth } from '@/auth'
 import { redirect, notFound } from 'next/navigation'
-import { getDictionary } from '@/components/local/dictionaries'
-import type { Locale } from '@/components/local/config'
-import dynamic from 'next/dynamic'
+import { getDictionary } from '@/components/internationalization/dictionaries'
+import type { Locale } from '@/components/internationalization/config'
+import dynamicImport from 'next/dynamic'
 
 // Runtime - Node.js for database operations
 export const runtime = 'nodejs'
@@ -14,27 +14,28 @@ export const dynamic = 'force-dynamic'
 export const revalidate = 60 // Revalidate every minute
 
 // Dynamic imports for code splitting
-const TransactionTable = dynamic(
-  () => import('@/components/banking/transaction-history/table').then(mod => mod.TransactionTable),
+const TransactionsTable = dynamicImport(
+  () => import('@/components/platform/banking/transaction-history/table').then(mod => mod.TransactionsTable),
   {
     loading: () => <TableSkeleton />,
     ssr: true,
   }
 )
 
-const TransactionFilters = dynamic(
-  () => import('@/components/banking/transaction-history/filters').then(mod => mod.TransactionFilters),
-  {
-    loading: () => <FilterSkeleton />,
-  }
-)
+// const TransactionFilters = dynamicImport(
+//   () => import('@/components/platform/banking/transaction-history/filters').then(mod => mod.TransactionFilters),
+//   {
+//     loading: () => <FilterSkeleton />,
+//   }
+// )
 
 // Metadata generation
 export async function generateMetadata({
-  params: { lang },
+  params,
 }: {
-  params: { lang: Locale }
+  params: Promise<{ lang: Locale; subdomain: string }>
 }): Promise<Metadata> {
+  const { lang } = await params
   const dictionary = await getDictionary(lang)
 
   return {
@@ -73,7 +74,7 @@ async function TransactionData({
   userId: string
   searchParams: URLSearchParams
 }) {
-  const { getTransactions } = await import('@/components/banking/actions/transaction.actions')
+  const { getTransactions } = await import('@/components/platform/banking/actions/transaction.actions')
 
   // Parse search params
   const page = Number(searchParams.get('page')) || 1
@@ -103,11 +104,14 @@ async function TransactionData({
 
 export default async function TransactionHistoryPage({
   searchParams,
-  params: { lang },
+  params,
 }: {
-  searchParams: { [key: string]: string | string[] | undefined }
-  params: { lang: Locale }
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+  params: Promise<{ lang: Locale; subdomain: string }>
 }) {
+  const { lang } = await params
+  const resolvedSearchParams = await searchParams
+
   // Auth check
   const session = await auth()
   if (!session?.user?.id) {
@@ -115,7 +119,7 @@ export default async function TransactionHistoryPage({
   }
 
   const dictionary = await getDictionary(lang)
-  const urlSearchParams = new URLSearchParams(searchParams as Record<string, string>)
+  const urlSearchParams = new URLSearchParams(resolvedSearchParams as Record<string, string>)
 
   return (
     <div className="space-y-6">
@@ -130,12 +134,12 @@ export default async function TransactionHistoryPage({
       </div>
 
       {/* Filters - Client component for interactivity */}
-      <Suspense fallback={<FilterSkeleton />}>
+      {/* <Suspense fallback={<FilterSkeleton />}>
         <TransactionFilters
           dictionary={dictionary.banking?.transactions}
           defaultValues={Object.fromEntries(urlSearchParams)}
         />
-      </Suspense>
+      </Suspense> */}
 
       {/* Transaction table with streaming */}
       <Suspense
@@ -169,7 +173,7 @@ async function TransactionDataWrapper({
     const transactions = await TransactionData({ userId, searchParams })
 
     return (
-      <TransactionTable
+      <TransactionsTable
         transactions={transactions}
         dictionary={dictionary}
         lang={lang}

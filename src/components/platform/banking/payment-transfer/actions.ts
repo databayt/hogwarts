@@ -1,7 +1,7 @@
 'use server';
 
 import { db } from '@/lib/db';
-import { currentUser } from '@/auth';
+import { auth } from '@/auth';
 import { revalidatePath } from 'next/cache';
 import { cache } from 'react';
 import { z } from 'zod';
@@ -45,13 +45,14 @@ export async function createTransfer(
   formData: FormData
 ): Promise<ActionResult<{ transactionId: string }>> {
   try {
-    const user = await currentUser();
-    if (!user) {
+    const session = await auth();
+    if (!session?.user) {
       return {
         success: false,
         error: { code: 'UNAUTHORIZED', message: 'User not authenticated' },
       };
     }
+    const user = session.user;
 
     // Parse form data
     const rawData = {

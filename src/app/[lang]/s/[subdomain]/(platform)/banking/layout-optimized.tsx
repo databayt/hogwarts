@@ -3,23 +3,23 @@ import { Metadata } from 'next'
 import { auth } from '@/auth'
 import { redirect } from 'next/navigation'
 import dynamic from 'next/dynamic'
-import type { Locale } from '@/components/local/config'
-import { getDictionary } from '@/components/local/dictionaries'
+import type { Locale } from '@/components/internationalization/config'
+import { getDictionary } from '@/components/internationalization/dictionaries'
 
 // Runtime - Node.js required for auth
 export const runtime = 'nodejs'
 
 // Dynamically import heavy components
 const BankingSidebar = dynamic(
-  () => import('@/components/banking/shared/sidebar').then(mod => mod.BankingSidebar),
+  () => import('@/components/platform/banking/shared/sidebar').then(mod => mod.BankingSidebar),
   {
     loading: () => <div className="w-64 h-screen bg-muted animate-pulse" />,
     ssr: true, // Server-side render for SEO
   }
 )
 
-const BankingHeader = dynamic(
-  () => import('@/components/banking/shared/header').then(mod => mod.BankingHeader),
+const BankingMobileNav = dynamic(
+  () => import('@/components/platform/banking/shared/mobile-nav').then(mod => mod.BankingMobileNav),
   {
     loading: () => <div className="h-16 bg-background border-b animate-pulse" />,
     ssr: true,
@@ -41,7 +41,7 @@ export const metadata: Metadata = {
 
 interface BankingLayoutProps {
   children: ReactNode
-  params: { lang: Locale }
+  params: Promise<{ lang: Locale; subdomain: string }>
   // Parallel routes (if needed)
   modal?: ReactNode
   sheet?: ReactNode
@@ -49,10 +49,12 @@ interface BankingLayoutProps {
 
 export default async function BankingLayout({
   children,
-  params: { lang },
+  params,
   modal,
   sheet,
 }: BankingLayoutProps) {
+  const { lang } = await params
+
   // Auth check with redirect
   const session = await auth()
 
@@ -64,36 +66,36 @@ export default async function BankingLayout({
   const dictionary = await getDictionary(lang)
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header with user info */}
-      <Suspense fallback={<div className="h-16 bg-background border-b" />}>
-        <BankingHeader
-          user={session.user}
-          dictionary={dictionary.banking}
-          lang={lang}
-        />
-      </Suspense>
-
-      <div className="flex">
-        {/* Sidebar navigation */}
-        <Suspense fallback={<div className="w-64 h-[calc(100vh-4rem)]" />}>
+    <div className="flex h-screen w-full">
+      {/* Desktop Sidebar */}
+      <div className="hidden lg:block">
+        <Suspense fallback={<div className="w-64 h-screen bg-muted animate-pulse" />}>
           <BankingSidebar
+            user={session.user}
             dictionary={dictionary.banking}
             lang={lang}
           />
         </Suspense>
+      </div>
 
-        {/* Main content area */}
-        <main className="flex-1 overflow-y-auto">
-          <div className="layout-container py-6">
-            {children}
-          </div>
-        </main>
+      {/* Mobile Navigation */}
+      <div className="lg:hidden">
+        <Suspense fallback={<div className="h-16 bg-background border-b animate-pulse" />}>
+          <BankingMobileNav
+            user={session.user}
+            dictionary={dictionary.banking}
+            lang={lang}
+          />
+        </Suspense>
+      </div>
 
+      {/* Main Content */}
+      <main className="flex-1 overflow-y-auto">
+        {children}
         {/* Parallel routes for modals/sheets */}
         {modal}
         {sheet}
-      </div>
+      </main>
     </div>
   )
 }

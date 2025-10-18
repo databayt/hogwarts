@@ -1,7 +1,7 @@
 'use server';
 
 import { db } from '@/lib/db';
-import { currentUser } from '@/auth';
+import { auth } from '@/auth';
 import { revalidatePath } from 'next/cache';
 import { cache } from 'react';
 import type { BankAccount, ActionResult } from '../types';
@@ -42,13 +42,14 @@ export async function removeBank(params: {
   accountId: string;
 }): Promise<ActionResult<{ message: string }>> {
   try {
-    const user = await currentUser();
-    if (!user) {
+    const session = await auth();
+    if (!session?.user) {
       return {
         success: false,
         error: { code: 'UNAUTHORIZED', message: 'User not authenticated' },
       };
     }
+    const user = session.user;
 
     // Verify ownership
     const account = await db.bankAccount.findFirst({
@@ -97,13 +98,14 @@ export async function syncBankData(params: {
   accountId: string;
 }): Promise<ActionResult<{ message: string }>> {
   try {
-    const user = await currentUser();
-    if (!user) {
+    const session = await auth();
+    if (!session?.user) {
       return {
         success: false,
         error: { code: 'UNAUTHORIZED', message: 'User not authenticated' },
       };
     }
+    const user = session.user;
 
     // Verify ownership
     const account = await db.bankAccount.findFirst({
