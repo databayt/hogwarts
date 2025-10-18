@@ -1,5 +1,5 @@
 import { Suspense } from 'react'
-import { getAccounts, getAccount } from '@/components/banking/actions/bank.actions'
+import { getAccounts, getAccount } from '@/components/platform/banking/actions/bank.actions'
 import { DashboardHeader } from './header'
 import { DashboardMainContent } from './main-content'
 import { DashboardSidebar } from './sidebar'

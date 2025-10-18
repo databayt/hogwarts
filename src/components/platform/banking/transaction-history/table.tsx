@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
-import { formatAmount, formatDateTime } from '@/components/banking/lib/utils'
+import { formatAmount, formatDateTime } from '@/components/platform/banking/lib/utils'
 
 interface TransactionsTableProps {
   transactions: any[]

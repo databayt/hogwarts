@@ -8,6 +8,6 @@ generator client {
   engineType = "binary"
 }
 
-// Import model files
-// Using Prisma's built-in support for multiple files via VSCode/cursor context; the actual schema is composed by concatenation at build time.
-// Ensure dev tooling picks up all model files.
+// Multi-file schema configuration
+// All .prisma files in the prisma/models directory are automatically included
+// when using "schema": "./prisma" in package.json

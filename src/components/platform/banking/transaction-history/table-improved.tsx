@@ -50,7 +50,7 @@ import {
   ArrowUpDown,
   Eye
 } from 'lucide-react'
-import { formatAmount, formatDateTime } from '@/components/banking/lib/utils'
+import { formatAmount, formatDateTime } from '@/components/platform/banking/lib/utils'
 import { cn } from '@/lib/utils'
 import type { Transaction, BankAccount, BankingDictionary } from '../types'
 

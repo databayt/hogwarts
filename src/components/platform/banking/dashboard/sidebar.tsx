@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { BankCard } from '@/components/banking/shared/bank-card'
+import { BankCard } from '@/components/platform/banking/shared/bank-card'
 import { Button } from '@/components/ui/button'
 import { Plus } from 'lucide-react'
 

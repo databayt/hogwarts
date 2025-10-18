@@ -12,7 +12,7 @@ import {
   TableRow
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
-import { formatAmount, formatDateTime } from '@/components/banking/lib/utils'
+import { formatAmount, formatDateTime } from '@/components/platform/banking/lib/utils'
 import { Loader2 } from 'lucide-react'
 
 interface RecentTransactionsListProps {

@@ -1,4 +1,4 @@
-import { AnimatedCounter } from '@/components/banking/shared/animated-counter'
+import { AnimatedCounter } from '@/components/platform/banking/shared/animated-counter'
 import type { DashboardHeaderProps } from '../types'
 
 interface StatCardProps {

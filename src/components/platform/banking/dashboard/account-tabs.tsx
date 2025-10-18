@@ -3,7 +3,7 @@
 import { memo, useCallback, useMemo, useTransition } from 'react'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { formatAmount } from '@/components/banking/lib/utils'
+import { formatAmount } from '@/components/platform/banking/lib/utils'
 import { Loader2 } from 'lucide-react'
 
 interface AccountTabsProps {

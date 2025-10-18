@@ -1,4 +1,4 @@
-import { formatAmount } from '@/components/banking/lib/utils'
+import { formatAmount } from '@/components/platform/banking/lib/utils'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import type { BankCardProps } from '../types'
 

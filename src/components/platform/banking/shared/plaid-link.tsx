@@ -9,7 +9,7 @@ import {
   PlaidLinkOptions,
   usePlaidLink,
 } from 'react-plaid-link'
-import { createBankAccount } from '@/components/banking/actions/bank.actions'
+import { createBankAccount } from '@/components/platform/banking/actions/bank.actions'
 import { Loader2, AlertCircle } from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 

@@ -7,7 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { formatAmount } from '@/components/banking/lib/utils'
+import { formatAmount } from '@/components/platform/banking/lib/utils'
 
 interface BankDropdownProps {
   accounts: any[]

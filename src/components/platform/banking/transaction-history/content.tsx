@@ -1,4 +1,4 @@
-import { getAccounts } from '@/components/banking/actions/bank.actions'
+import { getAccounts } from '@/components/platform/banking/actions/bank.actions'
 import { TransactionsTable } from './table'
 
 interface TransactionHistoryContentProps {
