@@ -53,7 +53,7 @@ interface Props {
 }
 
 export function CampaignDialog({ campaign, open, onOpenChange }: Props) {
-  const form = useForm<CampaignFormData>({
+  const form = useForm({
     resolver: zodResolver(campaignSchema),
     defaultValues: {
       name: "",
@@ -84,7 +84,7 @@ export function CampaignDialog({ campaign, open, onOpenChange }: Props) {
     }
   }, [campaign, form]);
 
-  const onSubmit = async (data: CampaignFormData) => {
+  const onSubmit = async (data: any) => {
     try {
       if (campaign) {
         await updateCampaign(campaign.id, data);
