@@ -33,10 +33,10 @@ const TransactionsTable = dynamicImport(
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ lang: Locale; subdomain: string }>
+  params: Promise<{ lang: string; subdomain: string }>
 }): Promise<Metadata> {
   const { lang } = await params
-  const dictionary = await getDictionary(lang)
+  const dictionary = await getDictionary(lang as Locale)
 
   return {
     title: dictionary.banking?.transactions?.title || 'Transaction History',
@@ -107,7 +107,7 @@ export default async function TransactionHistoryPage({
   params,
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>
-  params: Promise<{ lang: Locale; subdomain: string }>
+  params: Promise<{ lang: string; subdomain: string }>
 }) {
   const { lang } = await params
   const resolvedSearchParams = await searchParams
@@ -118,7 +118,7 @@ export default async function TransactionHistoryPage({
     redirect(`/${lang}/login?callbackUrl=/${lang}/banking/transaction-history`)
   }
 
-  const dictionary = await getDictionary(lang)
+  const dictionary = await getDictionary(lang as Locale)
   const urlSearchParams = new URLSearchParams(resolvedSearchParams as Record<string, string>)
 
   return (

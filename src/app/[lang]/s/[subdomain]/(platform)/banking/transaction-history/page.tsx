@@ -8,12 +8,12 @@ export default async function TransactionHistoryPage({
   params,
 }: {
   searchParams: Promise<{ page?: string; accountId?: string }>
-  params: Promise<{ lang: Locale; subdomain: string }>
+  params: Promise<{ lang: string; subdomain: string }>
 }) {
   const { lang } = await params
   const resolvedSearchParams = await searchParams
   const session = await auth()
-  const dictionary = await getDictionary(lang)
+  const dictionary = await getDictionary(lang as Locale)
 
   if (!session?.user) {
     return null // Layout handles redirect
@@ -24,7 +24,7 @@ export default async function TransactionHistoryPage({
       user={session.user}
       searchParams={resolvedSearchParams}
       dictionary={dictionary.banking}
-      lang={lang}
+      lang={lang as Locale}
     />
   )
 }

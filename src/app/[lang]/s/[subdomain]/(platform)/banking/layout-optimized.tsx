@@ -41,7 +41,7 @@ export const metadata: Metadata = {
 
 interface BankingLayoutProps {
   children: ReactNode
-  params: Promise<{ lang: Locale; subdomain: string }>
+  params: Promise<{ lang: string; subdomain: string }>
   // Parallel routes (if needed)
   modal?: ReactNode
   sheet?: ReactNode
@@ -63,7 +63,7 @@ export default async function BankingLayout({
   }
 
   // Fetch dictionary for i18n
-  const dictionary = await getDictionary(lang)
+  const dictionary = await getDictionary(lang as Locale)
 
   return (
     <div className="flex h-screen w-full">
@@ -73,7 +73,7 @@ export default async function BankingLayout({
           <BankingSidebar
             user={session.user}
             dictionary={dictionary.banking}
-            lang={lang}
+            lang={lang as Locale}
           />
         </Suspense>
       </div>
@@ -84,7 +84,7 @@ export default async function BankingLayout({
           <BankingMobileNav
             user={session.user}
             dictionary={dictionary.banking}
-            lang={lang}
+            lang={lang as Locale}
           />
         </Suspense>
       </div>

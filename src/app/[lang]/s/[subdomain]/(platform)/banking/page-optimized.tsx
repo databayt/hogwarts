@@ -18,10 +18,10 @@ export const fetchCache = 'force-no-store'
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ lang: Locale; subdomain: string }>
+  params: Promise<{ lang: string; subdomain: string }>
 }): Promise<Metadata> {
   const { lang } = await params
-  const dictionary = await getDictionary(lang)
+  const dictionary = await getDictionary(lang as Locale)
 
   return {
     title: dictionary.banking?.title || 'Banking Dashboard',
@@ -49,7 +49,7 @@ export default async function BankingDashboardPage({
   params,
 }: {
   searchParams: Promise<{ id?: string; page?: string }>
-  params: Promise<{ lang: Locale; subdomain: string }>
+  params: Promise<{ lang: string; subdomain: string }>
 }) {
   const { lang } = await params
   const resolvedSearchParams = await searchParams
@@ -60,7 +60,7 @@ export default async function BankingDashboardPage({
     redirect(`/${lang}/login?callbackUrl=/${lang}/banking`)
   }
 
-  const dictionary = await getDictionary(lang)
+  const dictionary = await getDictionary(lang as Locale)
 
   return (
     <Suspense fallback={<DashboardSkeleton />}>
@@ -68,7 +68,7 @@ export default async function BankingDashboardPage({
         user={session.user}
         searchParams={resolvedSearchParams}
         dictionary={dictionary.banking}
-        lang={lang}
+        lang={lang as Locale}
       />
     </Suspense>
   )
