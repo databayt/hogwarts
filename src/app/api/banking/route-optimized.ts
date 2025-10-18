@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
     const query = AccountsQuerySchema.parse(Object.fromEntries(searchParams))
 
     // Import action server-side
-    const { getAccounts } = await import('@/components/banking/actions/bank.actions')
+    const { getAccounts } = await import('@/components/platform/banking/actions/bank.actions')
 
     // Fetch accounts
     const accounts = await getAccounts({
@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Import and execute sync
-    const { syncTransactions } = await import('@/components/banking/actions/bank.actions')
+    const { syncTransactions } = await import('@/components/platform/banking/actions/bank.actions')
     const result = await syncTransactions({ accountId })
 
     // Return result
