@@ -264,9 +264,9 @@ export function MeritListView({ campaigns }: Props) {
                       <Badge
                         variant={
                           application.status === "SELECTED"
-                            ? "success"
+                            ? "default"
                             : application.status === "WAITLISTED"
-                            ? "warning"
+                            ? "outline"
                             : "secondary"
                         }
                       >
