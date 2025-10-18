@@ -163,9 +163,21 @@ async function TransactionDataWrapper({
     const { getAccounts } = await import('@/components/platform/banking/actions/bank.actions')
 
     // Get accounts for the user
-    const accounts = await getAccounts({ userId })
+    const accountsResult = await getAccounts({ userId })
 
-    if (!accounts?.data || accounts.data.length === 0) {
+    // Handle error case
+    if (!accountsResult.success) {
+      return (
+        <div className="text-center py-10">
+          <p className="text-muted-foreground">
+            {dictionary?.error || 'Failed to load accounts'}
+          </p>
+        </div>
+      )
+    }
+
+    // Check if user has any accounts
+    if (!accountsResult.data?.data || accountsResult.data.data.length === 0) {
       return (
         <div className="border rounded-lg p-12 text-center">
           <h3 className="text-lg font-semibold mb-2">
@@ -181,7 +193,7 @@ async function TransactionDataWrapper({
     return (
       <TransactionsTable
         transactions={result.data}
-        accounts={accounts.data}
+        accounts={accountsResult.data.data}
         currentPage={result.page}
         dictionary={dictionary}
       />
