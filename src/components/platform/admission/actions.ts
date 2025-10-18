@@ -95,7 +95,11 @@ export async function getCampaigns() {
     orderBy: { createdAt: "desc" },
   });
 
-  return campaigns;
+  // Convert Decimal to number for applicationFee
+  return campaigns.map(campaign => ({
+    ...campaign,
+    applicationFee: campaign.applicationFee ? Number(campaign.applicationFee) : null,
+  }));
 }
 
 // Application Actions
