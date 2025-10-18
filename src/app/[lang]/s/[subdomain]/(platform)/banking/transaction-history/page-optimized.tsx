@@ -74,25 +74,17 @@ async function TransactionData({
   userId: string
   searchParams: URLSearchParams
 }) {
-  const { getTransactions } = await import('@/components/platform/banking/actions/transaction.actions')
+  const { getTransactionsByUserId } = await import('@/components/platform/banking/actions/transaction.actions')
 
   // Parse search params
   const page = Number(searchParams.get('page')) || 1
   const limit = Number(searchParams.get('limit')) || 20
-  const accountId = searchParams.get('account') || undefined
-  const category = searchParams.get('category') || undefined
-  const startDate = searchParams.get('startDate') || undefined
-  const endDate = searchParams.get('endDate') || undefined
 
-  // Fetch transactions with filters
-  const transactions = await getTransactions({
+  // Fetch transactions (filters not yet implemented in the action)
+  const transactions = await getTransactionsByUserId({
     userId,
     page,
     limit,
-    accountId,
-    category,
-    startDate: startDate ? new Date(startDate) : undefined,
-    endDate: endDate ? new Date(endDate) : undefined,
   })
 
   if (!transactions) {
