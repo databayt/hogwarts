@@ -151,14 +151,17 @@ export async function getAccount(
       }
     }
 
-    // Serialize Decimal fields
+    // Serialize Decimal fields and cast enum types
     const serializedAccount = {
       ...account,
+      type: account.type as 'depository' | 'credit' | 'loan' | 'investment',
       currentBalance: Number(account.currentBalance),
       availableBalance: Number(account.availableBalance),
       transactions: account.transactions.map(tx => ({
         ...tx,
         amount: Number(tx.amount),
+        type: tx.type as 'debit' | 'credit',
+        paymentChannel: tx.paymentChannel as 'online' | 'in_store' | 'other' | null,
       }))
     }
 
@@ -226,14 +229,17 @@ export async function getAccountByPlaidId(
       }
     }
 
-    // Serialize Decimal fields
+    // Serialize Decimal fields and cast enum types
     const serializedAccount = {
       ...account,
+      type: account.type as 'depository' | 'credit' | 'loan' | 'investment',
       currentBalance: Number(account.currentBalance),
       availableBalance: Number(account.availableBalance),
       transactions: account.transactions.map(tx => ({
         ...tx,
         amount: Number(tx.amount),
+        type: tx.type as 'debit' | 'credit',
+        paymentChannel: tx.paymentChannel as 'online' | 'in_store' | 'other' | null,
       }))
     }
 
