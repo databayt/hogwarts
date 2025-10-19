@@ -22,8 +22,11 @@ export const getAccounts = cache(async (params: {
 
     return accounts.map(account => ({
       ...account,
+      type: account.type as 'depository' | 'credit' | 'loan' | 'investment',
       currentBalance: account.currentBalance.toNumber(),
       availableBalance: account.availableBalance?.toNumber() || null,
+      officialName: account.officialName ?? undefined,
+      mask: account.mask ?? undefined,
     }));
   } catch (error) {
     console.error('Failed to fetch accounts:', error);
