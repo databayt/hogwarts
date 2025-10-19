@@ -8,6 +8,7 @@ import { ListingProvider, useListing } from '@/components/onboarding/use-listing
 import { ErrorBoundary } from '@/components/onboarding/error-boundary';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useDictionary } from '@/components/internationalization/use-dictionary';
+import { useLocale } from '@/components/internationalization/use-locale';
 
 interface HostLayoutProps {
   children: React.ReactNode;
@@ -17,7 +18,9 @@ function HostLayoutContent({ children }: HostLayoutProps) {
   const params = useParams();
   const { loadListing, isLoading, error } = useListing();
   const { dictionary } = useDictionary();
+  const { locale } = useLocale();
   const listingId = params.id as string | null;
+  const dict = dictionary?.school?.onboarding || {};
 
 
   useEffect(() => {
@@ -216,7 +219,7 @@ function HostLayoutContent({ children }: HostLayoutProps) {
         <main className="h-screen pt-16">
           {renderPageSkeleton()}
         </main>
-        <HostFooter dictionary={dictionary?.school} />
+        <HostFooter dictionary={dictionary?.school} locale={locale} />
       </div>
     );
   }
@@ -227,26 +230,26 @@ function HostLayoutContent({ children }: HostLayoutProps) {
       <div className="px-4 sm:px-6 md:px-12 min-h-screen">
         <main className="h-screen pt-16 flex items-center justify-center">
           <div className="text-center max-w-md">
-            <div className="text-red-500 text-6xl mb-4">⚠️</div>
-            <h2 className="text-xl font-semibold mb-2">Unable to Load School</h2>
-            <p className="text-muted-foreground mb-4">{error}</p>
+            <div className="text-6xl mb-4">⚠️</div>
+            <h2>{dict.unableToLoadSchool || "Unable to Load School"}</h2>
+            <p className="muted mb-4">{error}</p>
             <div className="flex flex-col gap-3">
-              <button 
+              <button
                 onClick={() => listingId && loadListing(listingId)}
                 className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
               >
-                Try Again
+                {dict.tryAgain || "Try Again"}
               </button>
-              <button 
+              <button
                 onClick={() => window.location.href = '/onboarding/overview'}
                 className="px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/90 transition-colors"
               >
-                Back to Overview
+                {dict.backToOverview || "Back to Overview"}
               </button>
             </div>
           </div>
         </main>
-        <HostFooter dictionary={dictionary?.school} />
+        <HostFooter dictionary={dictionary?.school} locale={locale} />
       </div>
     );
   }
@@ -256,7 +259,7 @@ function HostLayoutContent({ children }: HostLayoutProps) {
       <main className="h-screen pt-16 ">
         {children}
       </main>
-      <HostFooter dictionary={dictionary?.school} />
+      <HostFooter dictionary={dictionary?.school} locale={locale} />
     </div>
   );
 }
