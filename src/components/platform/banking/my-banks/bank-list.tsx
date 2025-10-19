@@ -104,9 +104,11 @@ function BankAccountRow({
             <span className="text-sm text-muted-foreground">
               ****{account.mask || '0000'}
             </span>
-            <span className="text-sm text-muted-foreground">
-              {dictionary.lastSynced}: {formatDate(account.updatedAt)}
-            </span>
+            {account.lastUpdated && (
+              <span className="text-sm text-muted-foreground">
+                {dictionary.lastSynced}: {formatDate(account.lastUpdated)}
+              </span>
+            )}
           </div>
         </div>
       </div>
