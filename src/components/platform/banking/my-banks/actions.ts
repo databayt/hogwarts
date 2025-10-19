@@ -16,7 +16,6 @@ export const getAccounts = cache(async (params: {
     const accounts = await db.bankAccount.findMany({
       where: {
         userId: params.userId,
-        isActive: true,
       },
       include: {
         bank: true,
