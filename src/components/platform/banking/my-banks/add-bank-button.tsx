@@ -3,7 +3,7 @@
 import { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Plus, Loader2 } from 'lucide-react';
-import type { getDictionary } from '@/components/local/dictionaries';
+import type { getDictionary } from '@/components/internationalization/dictionaries';
 import { PlaidLink } from '../shared/plaid-link';
 
 interface Props {

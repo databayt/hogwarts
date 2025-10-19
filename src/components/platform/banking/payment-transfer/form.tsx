@@ -16,8 +16,8 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { createTransfer } from './actions';
 import type { BankAccount } from '../types';
-import type { getDictionary } from '@/components/local/dictionaries';
-import type { Locale } from '@/components/local/config';
+import type { getDictionary } from '@/components/internationalization/dictionaries';
+import type { Locale } from '@/components/internationalization/config';
 
 interface Props {
   accounts: BankAccount[];

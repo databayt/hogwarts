@@ -18,8 +18,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import type { BankAccount } from '../types';
-import type { getDictionary } from '@/components/local/dictionaries';
-import type { Locale } from '@/components/local/config';
+import type { getDictionary } from '@/components/internationalization/dictionaries';
+import type { Locale } from '@/components/internationalization/config';
 import { cn } from '@/lib/utils';
 import BankActions from './bank-actions';
 

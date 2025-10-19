@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
-import type { Locale } from '@/components/local/config';
-import type { getDictionary } from '@/components/local/dictionaries';
+import type { Locale } from '@/components/internationalization/config';
+import type { getDictionary } from '@/components/internationalization/dictionaries';
 import { getAccounts } from './actions';
 import PaymentTransferForm from './form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
