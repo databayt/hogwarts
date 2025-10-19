@@ -20,11 +20,12 @@ export async function BankingDashboardContent({
 }: BankingDashboardContentProps) {
   const currentPage = Number(searchParams?.page) || 1
 
-  const accounts = await getAccounts({
+  const accountsResult = await getAccounts({
     userId: user.id
   })
 
-  if (!accounts?.data) {
+  // Handle error or no accounts
+  if (!accountsResult.success || !accountsResult.data?.data || accountsResult.data.data.length === 0) {
     return (
       <div className="flex h-screen items-center justify-center">
         <p className="text-muted-foreground">
@@ -34,9 +35,11 @@ export async function BankingDashboardContent({
     )
   }
 
+  const accounts = accountsResult.data
   const accountsData = accounts.data
   const accountId = searchParams?.id || accountsData[0]?.id
-  const account = await getAccount({ accountId })
+  const accountResult = await getAccount({ accountId })
+  const account = accountResult.success ? accountResult.data : null
 
   return (
     <div className="flex h-screen overflow-hidden">
