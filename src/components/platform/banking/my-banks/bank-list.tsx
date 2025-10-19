@@ -30,35 +30,34 @@ interface Props {
 }
 
 export default function BankList(props: Props) {
-  // Group accounts by bank
+  // Group accounts by institution ID (each institution represents a bank)
   const accountsByBank = props.accounts.reduce((groups, account) => {
-    const bankName = account.bank?.name || 'Unknown Bank';
-    if (!groups[bankName]) {
-      groups[bankName] = [];
+    const bankKey = account.institutionId || 'unknown';
+    // Use the first account's name as the group name, or a default
+    const bankName = account.officialName || account.name || 'Bank Account';
+    if (!groups[bankKey]) {
+      groups[bankKey] = { name: bankName, accounts: [] };
     }
-    groups[bankName].push(account);
+    groups[bankKey].accounts.push(account);
     return groups;
-  }, {} as Record<string, BankAccount[]>);
+  }, {} as Record<string, { name: string; accounts: BankAccount[] }>);
 
   return (
     <div className="space-y-6">
-      {Object.entries(accountsByBank).map(([bankName, bankAccounts]) => (
-        <Card key={bankName}>
+      {Object.entries(accountsByBank).map(([bankKey, bankData]) => (
+        <Card key={bankKey}>
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle>{bankName}</CardTitle>
+                <CardTitle>{bankData.name}</CardTitle>
                 <CardDescription>
-                  {bankAccounts.length} {props.dictionary.accounts}
+                  {bankData.accounts.length} {props.dictionary.accounts}
                 </CardDescription>
               </div>
-              <Badge variant="secondary">
-                {props.dictionary.connected}
-              </Badge>
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            {bankAccounts.map((account) => (
+            {bankData.accounts.map((account) => (
               <BankAccountRow
                 key={account.id}
                 account={account}
