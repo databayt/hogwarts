@@ -65,10 +65,9 @@ export async function removeBank(params: {
       };
     }
 
-    // Soft delete
-    await db.bankAccount.update({
+    // Hard delete - no soft delete field available
+    await db.bankAccount.delete({
       where: { id: params.accountId },
-      data: { isActive: false },
     });
 
     revalidatePath('/banking/my-banks');
