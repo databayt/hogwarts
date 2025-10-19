@@ -20,7 +20,7 @@ function HostLayoutContent({ children }: HostLayoutProps) {
   const { dictionary } = useDictionary();
   const { locale } = useLocale();
   const listingId = params.id as string | null;
-  const dict = dictionary?.school?.onboarding || {};
+  const dict = (dictionary?.school?.onboarding || {}) as any;
 
 
   useEffect(() => {
