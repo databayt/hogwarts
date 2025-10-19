@@ -17,7 +17,8 @@
       "Bash(git commit -m \"$(cat <<''EOF''\nfix(banking): Fix all params type errors in banking routes\n\n- Changed all params types from Promise<{ lang: Locale }> to Promise<{ lang: string }>\n- Added type casting (lang as Locale) where needed for dictionary and component props\n- Fixed pages: banking dashboard, transaction-history (both regular and optimized)\n- Fixed layouts: banking layout-optimized.tsx\n- Ensures TypeScript build succeeds on Vercel\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
       "WebSearch",
       "WebFetch(domain:actix.rs)",
-      "WebFetch(domain:docs.rs)"
+      "WebFetch(domain:docs.rs)",
+      "Bash(dir /b /s \"D:\\repo\\hogwarts\\.claude\")"
     ],
     "deny": [],
     "ask": []
