@@ -17,7 +17,7 @@ interface PlaidLinkProps {
   user: {
     id: string
   }
-  variant?: 'primary' | 'ghost'
+  variant?: 'default' | 'ghost'
   dictionary?: any
 }
 
@@ -34,7 +34,7 @@ interface LinkTokenError {
  * - Loading states with useTransition
  * - Memoized callbacks to prevent recreations
  */
-export function PlaidLink({ user, variant = 'primary', dictionary }: PlaidLinkProps) {
+export function PlaidLink({ user, variant = 'default', dictionary }: PlaidLinkProps) {
   const router = useRouter()
   const [token, setToken] = useState('')
   const [error, setError] = useState<string | null>(null)
