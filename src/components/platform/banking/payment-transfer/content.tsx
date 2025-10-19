@@ -36,10 +36,10 @@ export default async function PaymentTransferContent(props: Props) {
           <CardContent className="flex flex-col items-center justify-center py-16">
             <CreditCard className="h-16 w-16 text-muted-foreground mb-4" />
             <h2 className="text-xl font-semibold mb-2">
-              {props.dictionary.noBanksForTransfer}
+              {props.dictionary.noBanks}
             </h2>
             <p className="text-muted-foreground text-center max-w-sm mb-6">
-              {props.dictionary.connectBankFirst}
+              {props.dictionary.connectYourBank}
             </p>
             <Link href={`/${props.lang}/banking/my-banks`}>
               <Button>
