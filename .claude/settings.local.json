@@ -18,7 +18,9 @@
       "WebSearch",
       "WebFetch(domain:actix.rs)",
       "WebFetch(domain:docs.rs)",
-      "Bash(dir /b /s \"D:\\repo\\hogwarts\\.claude\")"
+      "Bash(dir /b /s \"D:\\repo\\hogwarts\\.claude\")",
+      "Bash(xargs ls -la)",
+      "Bash(xargs cat)"
     ],
     "deny": [],
     "ask": []

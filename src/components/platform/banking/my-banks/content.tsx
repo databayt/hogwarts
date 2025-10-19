@@ -16,6 +16,14 @@ interface Props {
 
 export default async function MyBanksContent(props: Props) {
   // Fetch user's bank accounts
+  if (!props.user.id) {
+    return (
+      <div className="container mx-auto py-8">
+        <p className="text-muted-foreground">User ID not found</p>
+      </div>
+    );
+  }
+
   const accounts = await getAccounts({ userId: props.user.id });
 
   return (
@@ -92,13 +100,13 @@ export default async function MyBanksContent(props: Props) {
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium">
-                  {props.dictionary.lastSync}
+                  {props.dictionary.lastSynced}
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
                   {formatTimeAgo(
-                    accounts[0]?.lastSyncedAt || new Date()
+                    accounts[0]?.lastUpdated || new Date()
                   )}
                 </div>
                 <p className="text-xs text-muted-foreground">
