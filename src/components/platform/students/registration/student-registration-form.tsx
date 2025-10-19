@@ -63,8 +63,8 @@ export function StudentRegistrationForm({
   const router = useRouter();
 
   const form = useForm<StudentRegistration>({
-    resolver: zodResolver(studentRegistrationSchema),
-    defaultValues: student || {
+    resolver: zodResolver(studentRegistrationSchema) as any,
+    defaultValues: (student as any) || {
       givenName: "",
       surname: "",
       gender: "Male",
@@ -143,14 +143,12 @@ export function StudentRegistrationForm({
         toast({
           title: "Error",
           description: result.error || "Failed to register student",
-          variant: "destructive",
         });
       }
     } catch (error) {
       toast({
         title: "Error",
         description: "An unexpected error occurred",
-        variant: "destructive",
       });
     } finally {
       setIsSubmitting(false);

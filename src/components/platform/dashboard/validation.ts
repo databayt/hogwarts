@@ -56,7 +56,7 @@ export const dashboardWidgetSchema = z.object({
     w: z.number().min(1).max(12),
     h: z.number().min(1).max(12),
   }),
-  settings: z.record(z.any()).optional(),
+  settings: z.record(z.string(), z.any()).optional(),
   visible: z.boolean().default(true),
 });
 
@@ -76,7 +76,7 @@ export const quickActionSchema = z.object({
     "message_parent",
     "generate_report",
   ]),
-  data: z.record(z.any()).optional(),
+  data: z.record(z.string(), z.any()).optional(),
 });
 
 // Dashboard search schema

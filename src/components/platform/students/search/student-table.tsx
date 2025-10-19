@@ -100,7 +100,6 @@ export function StudentTable({
               <TableHead className="w-12">
                 <Checkbox
                   checked={selectedStudents.size === students.length && students.length > 0}
-                  indeterminate={selectedStudents.size > 0 && selectedStudents.size < students.length}
                   onCheckedChange={toggleSelectAll}
                 />
               </TableHead>

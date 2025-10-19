@@ -347,7 +347,7 @@ export function DocumentUploadStep({ form, dictionary }: DocumentUploadStepProps
         <CardContent>
           <div className="space-y-2 text-sm">
             {documentTypes.filter(t => t.required || (isTransferStudent && t.value === "TRANSFER_CERTIFICATE")).map((type) => {
-              const hasDocument = documents.some(d => d.documentType === type.value && d.fileUrl);
+              const hasDocument = documents.some((d: any) => d.documentType === type.value && d.fileUrl);
               return (
                 <div key={type.value} className="flex items-center gap-2">
                   {hasDocument ? (

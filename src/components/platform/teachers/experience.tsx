@@ -24,8 +24,8 @@ export function ExperienceStep({ form, isView }: TeacherFormStepProps) {
     append({
       institution: "",
       position: "",
-      startDate: undefined,
-      endDate: undefined,
+      startDate: null as any,
+      endDate: null as any,
       isCurrent: false,
       description: "",
     });
@@ -37,7 +37,7 @@ export function ExperienceStep({ form, isView }: TeacherFormStepProps) {
       update(index, {
         ...fields[index],
         isCurrent: true,
-        endDate: undefined,
+        endDate: null as any,
       });
     } else {
       update(index, {

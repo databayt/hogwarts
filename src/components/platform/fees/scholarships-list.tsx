@@ -57,28 +57,28 @@ export function ScholarshipsList({ scholarships, dictionary }: Props) {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
-          <CardTitle>{dictionary?.fees?.scholarships?.title || "Scholarships"}</CardTitle>
+          <CardTitle>Scholarships</CardTitle>
           <CardDescription>
-            {dictionary?.fees?.scholarships?.description || "Manage scholarship programs and beneficiaries"}
+            Manage scholarship programs and beneficiaries
           </CardDescription>
         </div>
         <Button>
           <IconPlus className="mr-2 h-4 w-4" />
-          {dictionary?.fees?.scholarships?.add || "Add Scholarship"}
+          Add Scholarship
         </Button>
       </CardHeader>
       <CardContent>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>{dictionary?.fees?.scholarships?.name || "Name"}</TableHead>
-              <TableHead>{dictionary?.fees?.scholarships?.academicYear || "Academic Year"}</TableHead>
-              <TableHead>{dictionary?.fees?.scholarships?.coverage || "Coverage"}</TableHead>
-              <TableHead>{dictionary?.fees?.scholarships?.beneficiaries || "Beneficiaries"}</TableHead>
-              <TableHead>{dictionary?.fees?.scholarships?.validity || "Validity"}</TableHead>
-              <TableHead>{dictionary?.fees?.scholarships?.status || "Status"}</TableHead>
+              <TableHead>Name</TableHead>
+              <TableHead>Academic Year</TableHead>
+              <TableHead>Coverage</TableHead>
+              <TableHead>Beneficiaries</TableHead>
+              <TableHead>Validity</TableHead>
+              <TableHead>Status</TableHead>
               <TableHead className="text-right">
-                {dictionary?.fees?.scholarships?.actions || "Actions"}
+                Actions
               </TableHead>
             </TableRow>
           </TableHeader>
@@ -86,7 +86,7 @@ export function ScholarshipsList({ scholarships, dictionary }: Props) {
             {scholarships.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                  {dictionary?.fees?.scholarships?.noScholarships || "No scholarships found"}
+                  No scholarships found
                 </TableCell>
               </TableRow>
             ) : (
@@ -106,7 +106,7 @@ export function ScholarshipsList({ scholarships, dictionary }: Props) {
                     {format(new Date(scholarship.endDate), "MMM dd, yyyy")}
                   </TableCell>
                   <TableCell>
-                    <Badge variant={scholarship.isActive ? "success" : "secondary"}>
+                    <Badge variant={scholarship.isActive ? "default" : "secondary"}>
                       {scholarship.isActive ? "Active" : "Inactive"}
                     </Badge>
                   </TableCell>

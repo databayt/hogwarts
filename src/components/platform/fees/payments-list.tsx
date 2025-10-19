@@ -24,7 +24,7 @@ interface Payment {
   receiptNumber: string;
   status: string;
   student?: {
-    studentId: string;
+    studentId: string | null;
     givenName: string;
     surname: string;
   };
@@ -70,29 +70,29 @@ export function PaymentsList({ payments, dictionary }: Props) {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
-          <CardTitle>{dictionary?.fees?.payments?.title || "Payments"}</CardTitle>
+          <CardTitle>Payments</CardTitle>
           <CardDescription>
-            {dictionary?.fees?.payments?.description || "Track and manage fee payments"}
+            Track and manage fee payments
           </CardDescription>
         </div>
         <Button>
           <IconPlus className="mr-2 h-4 w-4" />
-          {dictionary?.fees?.payments?.recordPayment || "Record Payment"}
+          Record Payment
         </Button>
       </CardHeader>
       <CardContent>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>{dictionary?.fees?.payments?.paymentNo || "Payment No"}</TableHead>
-              <TableHead>{dictionary?.fees?.payments?.student || "Student"}</TableHead>
-              <TableHead>{dictionary?.fees?.payments?.feeType || "Fee Type"}</TableHead>
-              <TableHead>{dictionary?.fees?.payments?.amount || "Amount"}</TableHead>
-              <TableHead>{dictionary?.fees?.payments?.method || "Method"}</TableHead>
-              <TableHead>{dictionary?.fees?.payments?.date || "Date"}</TableHead>
-              <TableHead>{dictionary?.fees?.payments?.status || "Status"}</TableHead>
+              <TableHead>Payment No</TableHead>
+              <TableHead>Student</TableHead>
+              <TableHead>Fee Type</TableHead>
+              <TableHead>Amount</TableHead>
+              <TableHead>Method</TableHead>
+              <TableHead>Date</TableHead>
+              <TableHead>Status</TableHead>
               <TableHead className="text-right">
-                {dictionary?.fees?.payments?.actions || "Actions"}
+                Actions
               </TableHead>
             </TableRow>
           </TableHeader>
@@ -100,7 +100,7 @@ export function PaymentsList({ payments, dictionary }: Props) {
             {payments.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                  {dictionary?.fees?.payments?.noPayments || "No payments found"}
+                  No payments found
                 </TableCell>
               </TableRow>
             ) : (
@@ -121,7 +121,7 @@ export function PaymentsList({ payments, dictionary }: Props) {
                     {format(new Date(payment.paymentDate), "MMM dd, yyyy")}
                   </TableCell>
                   <TableCell>
-                    <Badge variant={payment.status === "SUCCESS" ? "success" : "destructive"}>
+                    <Badge variant={payment.status === "SUCCESS" ? "default" : "destructive"}>
                       {payment.status}
                     </Badge>
                   </TableCell>

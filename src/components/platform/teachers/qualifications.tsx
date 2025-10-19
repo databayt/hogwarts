@@ -24,8 +24,8 @@ export function QualificationsStep({ form, isView }: TeacherFormStepProps) {
       name: "",
       institution: "",
       major: "",
-      dateObtained: undefined,
-      expiryDate: undefined,
+      dateObtained: null as any,
+      expiryDate: null as any,
       licenseNumber: "",
       documentUrl: "",
     });

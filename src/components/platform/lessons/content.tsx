@@ -32,8 +32,8 @@ export default async function LessonsContent({ searchParams, dictionary, lang }:
     const skip = (sp.page - 1) * sp.perPage
     const take = sp.perPage
     const orderBy = (sp.sort && Array.isArray(sp.sort) && sp.sort.length)
-      ? sp.sort.map((s: any) => ({ [s.id]: s.desc ? 'desc' : 'asc' }))
-      : [{ lessonDate: 'desc' }, { startTime: 'asc' }]
+      ? sp.sort.map((s: any) => ({ [s.id]: s.desc ? 'desc' as const : 'asc' as const }))
+      : [{ lessonDate: 'desc' as const }, { startTime: 'asc' as const }]
 
     const [rows, count] = await Promise.all([
       db.lesson.findMany({

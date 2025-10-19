@@ -129,7 +129,7 @@ export function AcademicRecords({
     averageAttendance: filteredRecords.reduce((sum, r) => sum + r.attendance, 0) / filteredRecords.length || 0,
     totalAchievements: achievements.length,
     recentAchievements: achievements.filter(a => {
-      const achievementDate = new Date(a.dateAchieved);
+      const achievementDate = new Date(a.achievementDate);
       const sixMonthsAgo = new Date();
       sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
       return achievementDate > sixMonthsAgo;
@@ -458,16 +458,16 @@ export function AcademicRecords({
                                   {achievement.level} Level
                                 </Badge>
                               )}
-                              {achievement.rank && (
+                              {achievement.position && (
                                 <Badge variant="secondary">
-                                  Rank #{achievement.rank}
+                                  Rank #{achievement.position}
                                 </Badge>
                               )}
                             </div>
                           </div>
                           <div className="text-right">
                             <p className="text-sm text-muted-foreground">
-                              {format(new Date(achievement.dateAchieved), "MMM dd, yyyy")}
+                              {format(new Date(achievement.achievementDate), "MMM dd, yyyy")}
                             </p>
                             {achievement.issuedBy && (
                               <p className="text-xs text-muted-foreground mt-1">
@@ -531,7 +531,7 @@ export function AcademicRecords({
                   <Award className="h-6 w-6 text-purple-500" />
                   <div>
                     <p className="text-xl font-bold">
-                      {achievements.filter(a => a.category === "EXTRACURRICULAR").length}
+                      {achievements.filter(a => a.category !== "ACADEMIC" && a.category !== "SPORTS").length}
                     </p>
                     <p className="text-sm text-muted-foreground">Extra-curricular</p>
                   </div>

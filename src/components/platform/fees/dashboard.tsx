@@ -31,49 +31,49 @@ export function FeeDashboard({ stats, dictionary }: Props) {
 
   const statsCards = [
     {
-      title: dictionary?.fees?.dashboard?.totalDue || "Total Due",
+      title: "Total Due",
       value: formatCurrency(stats.totalDue),
       icon: IconCurrencyRupee,
       color: "text-blue-500",
     },
     {
-      title: dictionary?.fees?.dashboard?.collected || "Collected",
+      title: "Collected",
       value: formatCurrency(stats.totalCollected),
       icon: IconReceipt,
       color: "text-green-500",
     },
     {
-      title: dictionary?.fees?.dashboard?.pending || "Pending",
+      title: "Pending",
       value: formatCurrency(stats.totalPending),
       icon: IconClock,
       color: "text-yellow-500",
     },
     {
-      title: dictionary?.fees?.dashboard?.overdue || "Overdue",
+      title: "Overdue",
       value: formatCurrency(stats.totalOverdue),
       icon: IconAlertCircle,
       color: "text-red-500",
     },
     {
-      title: dictionary?.fees?.dashboard?.collectionRate || "Collection Rate",
+      title: "Collection Rate",
       value: `${stats.collectionRate.toFixed(1)}%`,
       icon: IconTrendingUp,
       color: "text-indigo-500",
     },
     {
-      title: dictionary?.fees?.dashboard?.studentsWithDues || "Students with Dues",
+      title: "Students with Dues",
       value: stats.studentsWithDues.toString(),
       icon: IconUsers,
       color: "text-orange-500",
     },
     {
-      title: dictionary?.fees?.dashboard?.scholarships || "Scholarships",
+      title: "Scholarships",
       value: stats.scholarshipsAwarded.toString(),
       icon: IconSchool,
       color: "text-purple-500",
     },
     {
-      title: dictionary?.fees?.dashboard?.refunds || "Refunds",
+      title: "Refunds",
       value: stats.refundsProcessed.toString(),
       icon: IconRefresh,
       color: "text-cyan-500",
@@ -106,14 +106,14 @@ export function FeeDashboard({ stats, dictionary }: Props) {
       <Card>
         <CardHeader>
           <CardTitle>
-            {dictionary?.fees?.dashboard?.collectionProgress || "Collection Progress"}
+            Collection Progress
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">
-                {dictionary?.fees?.dashboard?.totalCollected || "Total Collected"}
+                Total Collected
               </span>
               <span className="text-sm font-medium">
                 {formatCurrency(stats.totalCollected)} / {formatCurrency(stats.totalDue)}
@@ -125,7 +125,7 @@ export function FeeDashboard({ stats, dictionary }: Props) {
           <div className="grid grid-cols-2 gap-4 pt-4">
             <div className="space-y-1">
               <p className="text-sm text-muted-foreground">
-                {dictionary?.fees?.dashboard?.fullyPaid || "Fully Paid Students"}
+                Fully Paid Students
               </p>
               <p className="text-2xl font-bold text-green-500">
                 {stats.studentsFullyPaid}
@@ -133,7 +133,7 @@ export function FeeDashboard({ stats, dictionary }: Props) {
             </div>
             <div className="space-y-1">
               <p className="text-sm text-muted-foreground">
-                {dictionary?.fees?.dashboard?.currentMonth || "Current Month"}
+                Current Month
               </p>
               <p className="text-2xl font-bold">
                 {formatCurrency(stats.currentMonthCollection)}
@@ -147,24 +147,24 @@ export function FeeDashboard({ stats, dictionary }: Props) {
       <Card>
         <CardHeader>
           <CardTitle>
-            {dictionary?.fees?.dashboard?.feeDistribution || "Fee Distribution"}
+            Fee Distribution
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             {[
               {
-                label: dictionary?.fees?.dashboard?.paid || "Paid",
+                label: "Paid",
                 value: stats.totalCollected,
                 color: "bg-green-500",
               },
               {
-                label: dictionary?.fees?.dashboard?.pending || "Pending",
+                label: "Pending",
                 value: stats.totalPending,
                 color: "bg-yellow-500",
               },
               {
-                label: dictionary?.fees?.dashboard?.overdue || "Overdue",
+                label: "Overdue",
                 value: stats.totalOverdue,
                 color: "bg-red-500",
               },

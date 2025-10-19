@@ -9,15 +9,11 @@ export const enrollmentSchema = z.object({
   // Academic Details
   academicYearId: z.string().min(1, "Academic year is required"),
   termId: z.string().optional(),
-  enrollmentDate: z.date({
-    required_error: "Enrollment date is required",
-  }),
+  enrollmentDate: z.date(),
   expectedGraduationDate: z.date().optional(),
 
   // Enrollment Details
-  enrollmentType: z.enum(["NEW", "TRANSFER", "READMISSION", "PROMOTION"], {
-    required_error: "Enrollment type is required",
-  }),
+  enrollmentType: z.enum(["NEW", "TRANSFER", "READMISSION", "PROMOTION"]),
   previousSchoolId: z.string().optional(),
   previousBatchId: z.string().optional(),
   transferReason: z.string().max(500).optional(),
@@ -51,9 +47,7 @@ export const batchTransferSchema = z.object({
   fromBatchId: z.string().min(1, "Current batch is required"),
   toBatchId: z.string().min(1, "New batch is required"),
   reason: z.string().min(10, "Reason must be at least 10 characters").max(500),
-  effectiveDate: z.date({
-    required_error: "Effective date is required",
-  }),
+  effectiveDate: z.date(),
 });
 
 export const courseSchema = z.object({

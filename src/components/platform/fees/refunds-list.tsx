@@ -13,14 +13,14 @@ export function RefundsList({ dictionary }: Props) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{dictionary?.fees?.refunds?.title || "Refunds"}</CardTitle>
+        <CardTitle>Refunds</CardTitle>
         <CardDescription>
-          {dictionary?.fees?.refunds?.description || "Process and track refund requests"}
+          Process and track refund requests
         </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="text-center py-12 text-muted-foreground">
-          {dictionary?.fees?.refunds?.noRefunds || "No refund requests at this time"}
+          No refund requests at this time
         </div>
       </CardContent>
     </Card>

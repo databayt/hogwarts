@@ -24,7 +24,7 @@ export function TeacherCreateForm() {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
   const form = useForm<z.infer<typeof teacherCreateSchema>>({
-    resolver: zodResolver(teacherCreateSchema),
+    resolver: zodResolver(teacherCreateSchema) as any,
     defaultValues: {
       givenName: "",
       surname: "",

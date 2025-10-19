@@ -51,21 +51,21 @@ export default async function DashboardContent({ school, dictionary }: Props = {
     const userRole = user.role || 'USER';
     switch (userRole) {
       case "STUDENT":
-        return <StudentDashboard user={user} dictionary={dictionary} />;
+        return <StudentDashboard user={user} dictionary={dictionary!} />;
       case "TEACHER":
-        return <TeacherDashboard user={user} dictionary={dictionary} />;
+        return <TeacherDashboard user={user} dictionary={dictionary!} />;
       case "GUARDIAN":
-        return <ParentDashboard user={user} dictionary={dictionary} />;
+        return <ParentDashboard user={user} dictionary={dictionary!} />;
       case "STAFF":
-        return <StaffDashboard user={user} dictionary={dictionary} />;
+        return <StaffDashboard user={user} dictionary={dictionary!} />;
       case "ADMIN":
-        return <AdminDashboard user={user} dictionary={dictionary} />;
+        return <AdminDashboard user={user} dictionary={dictionary!} />;
       case "PRINCIPAL":
-        return <PrincipalDashboard user={user} dictionary={dictionary} />;
+        return <PrincipalDashboard user={user} dictionary={dictionary!} />;
       case "ACCOUNTANT":
-        return <AccountantDashboard user={user} dictionary={dictionary} />;
+        return <AccountantDashboard user={user} dictionary={dictionary!} />;
       default:
-        return <DefaultDashboard user={user} dictionary={dictionary} />;
+        return <DefaultDashboard user={user} dictionary={dictionary!} />;
     }
   };
 

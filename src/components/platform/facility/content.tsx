@@ -13,9 +13,9 @@ export default async function FacilityContent({ dictionary }: Props) {
   return (
     <div className="space-y-6">
       <div>
-        <h1>{dictionary?.facility?.title || "Facility Management"}</h1>
+        <h1>Facility Management</h1>
         <p className="text-muted-foreground">
-          {dictionary?.facility?.subtitle || "Manage school infrastructure and resources"}
+          Manage school infrastructure and resources
         </p>
       </div>
 
@@ -95,7 +95,7 @@ export default async function FacilityContent({ dictionary }: Props) {
                         Capacity: {room.capacity} people
                       </p>
                     </div>
-                    <Badge variant={room.status === "available" ? "success" : "default"}>
+                    <Badge variant={room.status === "available" ? "secondary" : "default"}>
                       {room.status === "available" ? "Available" : "In Use"}
                     </Badge>
                   </div>
@@ -134,7 +134,7 @@ export default async function FacilityContent({ dictionary }: Props) {
                         {lab.equipment} equipment items
                       </p>
                     </div>
-                    <Badge variant={lab.status === "operational" ? "success" : "warning"}>
+                    <Badge variant={lab.status === "operational" ? "secondary" : "destructive"}>
                       {lab.status === "operational" ? "Operational" : "Maintenance"}
                     </Badge>
                   </div>
@@ -209,7 +209,7 @@ export default async function FacilityContent({ dictionary }: Props) {
                         {vehicle.route} • Capacity: {vehicle.capacity}
                       </p>
                     </div>
-                    <Badge variant={vehicle.status === "active" ? "success" : "warning"}>
+                    <Badge variant={vehicle.status === "active" ? "secondary" : "destructive"}>
                       {vehicle.status === "active" ? "Active" : "Maintenance"}
                     </Badge>
                   </div>

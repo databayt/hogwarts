@@ -42,16 +42,12 @@ export const personalInfoSchema = z.object({
   surname: z.string().min(2, "Last name must be at least 2 characters"),
 
   // Date and Gender
-  dateOfBirth: z.date({
-    required_error: "Date of birth is required",
-  }).refine((date) => {
+  dateOfBirth: z.date().refine((date) => {
     const age = new Date().getFullYear() - date.getFullYear();
     return age >= 3 && age <= 25;
   }, "Student must be between 3 and 25 years old"),
 
-  gender: z.enum(["Male", "Female", "Other"], {
-    required_error: "Gender is required",
-  }),
+  gender: z.enum(["Male", "Female", "Other"]),
 
   // Health Info
   bloodGroup: z.enum([

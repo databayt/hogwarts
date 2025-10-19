@@ -48,7 +48,7 @@ export function EnrollmentForm({
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
 
   const form = useForm<EnrollmentFormInput>({
-    resolver: zodResolver(enrollmentSchema),
+    resolver: zodResolver(enrollmentSchema) as any,
     defaultValues: {
       studentId: student?.id || "",
       enrollmentDate: new Date(),

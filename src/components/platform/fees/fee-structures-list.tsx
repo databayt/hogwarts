@@ -46,28 +46,28 @@ export function FeeStructuresList({ structures, dictionary }: Props) {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
-          <CardTitle>{dictionary?.fees?.structures?.title || "Fee Structures"}</CardTitle>
+          <CardTitle>Fee Structures</CardTitle>
           <CardDescription>
-            {dictionary?.fees?.structures?.description || "Configure fee structures for different classes and academic years"}
+            Configure fee structures for different classes and academic years
           </CardDescription>
         </div>
         <Button>
           <IconPlus className="mr-2 h-4 w-4" />
-          {dictionary?.fees?.structures?.add || "Add Structure"}
+          Add Structure
         </Button>
       </CardHeader>
       <CardContent>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>{dictionary?.fees?.structures?.name || "Name"}</TableHead>
-              <TableHead>{dictionary?.fees?.structures?.class || "Class"}</TableHead>
-              <TableHead>{dictionary?.fees?.structures?.academicYear || "Academic Year"}</TableHead>
-              <TableHead>{dictionary?.fees?.structures?.amount || "Total Amount"}</TableHead>
-              <TableHead>{dictionary?.fees?.structures?.installments || "Installments"}</TableHead>
-              <TableHead>{dictionary?.fees?.structures?.status || "Status"}</TableHead>
+              <TableHead>Name</TableHead>
+              <TableHead>Class</TableHead>
+              <TableHead>Academic Year</TableHead>
+              <TableHead>Total Amount</TableHead>
+              <TableHead>Installments</TableHead>
+              <TableHead>Status</TableHead>
               <TableHead className="text-right">
-                {dictionary?.fees?.structures?.actions || "Actions"}
+                Actions
               </TableHead>
             </TableRow>
           </TableHeader>
@@ -75,7 +75,7 @@ export function FeeStructuresList({ structures, dictionary }: Props) {
             {structures.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                  {dictionary?.fees?.structures?.noStructures || "No fee structures found"}
+                  No fee structures found
                 </TableCell>
               </TableRow>
             ) : (
@@ -87,7 +87,7 @@ export function FeeStructuresList({ structures, dictionary }: Props) {
                   <TableCell>{formatCurrency(structure.totalAmount)}</TableCell>
                   <TableCell>{structure.installments}</TableCell>
                   <TableCell>
-                    <Badge variant={structure.isActive ? "success" : "secondary"}>
+                    <Badge variant={structure.isActive ? "default" : "secondary"}>
                       {structure.isActive ? "Active" : "Inactive"}
                     </Badge>
                   </TableCell>

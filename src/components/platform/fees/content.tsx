@@ -24,9 +24,9 @@ export default async function FeesContent({ dictionary }: Props) {
   return (
     <div className="space-y-6">
       <div>
-        <h1>{dictionary?.fees?.title || "Fee Management"}</h1>
+        <h1>Fee Management</h1>
         <p className="text-muted-foreground">
-          {dictionary?.fees?.subtitle || "Manage fee structures, payments, scholarships, and refunds"}
+          Manage fee structures, payments, scholarships, and refunds
         </p>
       </div>
 
@@ -37,19 +37,19 @@ export default async function FeesContent({ dictionary }: Props) {
       <Tabs defaultValue="structures" className="w-full">
         <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="structures">
-            {dictionary?.fees?.tabs?.structures || "Fee Structures"}
+            Fee Structures
           </TabsTrigger>
           <TabsTrigger value="payments">
-            {dictionary?.fees?.tabs?.payments || "Payments"}
+            Payments
           </TabsTrigger>
           <TabsTrigger value="scholarships">
-            {dictionary?.fees?.tabs?.scholarships || "Scholarships"}
+            Scholarships
           </TabsTrigger>
           <TabsTrigger value="refunds">
-            {dictionary?.fees?.tabs?.refunds || "Refunds"}
+            Refunds
           </TabsTrigger>
           <TabsTrigger value="reports">
-            {dictionary?.fees?.tabs?.reports || "Reports"}
+            Reports
           </TabsTrigger>
         </TabsList>
 
@@ -71,7 +71,7 @@ export default async function FeesContent({ dictionary }: Props) {
 
         <TabsContent value="reports" className="space-y-4">
           <div className="text-center py-12 text-muted-foreground">
-            {dictionary?.fees?.reports?.comingSoon || "Financial reports coming soon..."}
+            Financial reports coming soon...
           </div>
         </TabsContent>
       </Tabs>
