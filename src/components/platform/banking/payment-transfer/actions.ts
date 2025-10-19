@@ -162,17 +162,27 @@ export async function createTransfer(
       }
     }
 
+    // Get schoolId for multi-tenant support
+    const schoolId = session.user.schoolId;
+    if (!schoolId) {
+      return {
+        success: false,
+        error: { code: 'NO_SCHOOL_CONTEXT', message: 'School context not found' },
+      };
+    }
+
     // Create transaction records in a transaction
     const result = await db.$transaction(async (tx) => {
       // Debit from source account
       const debitTransaction = await tx.transaction.create({
         data: {
-          accountId: fromAccount.id,
-          amount: -data.amount,
-          type: 'transfer_out',
-          category: 'transfer',
+          schoolId,
+          accountId: fromAccount.accountId,
+          bankAccountId: fromAccount.id,
+          amount: data.amount,
+          type: 'debit',
+          category: 'Transfer',
           name: `Transfer to ${toAccount?.name || data.recipientEmail}`,
-          description: data.description,
           date: new Date(),
         },
       });
@@ -194,12 +204,13 @@ export async function createTransfer(
         // Credit to destination account
         await tx.transaction.create({
           data: {
-            accountId: toAccount.id,
+            schoolId,
+            accountId: toAccount.accountId,
+            bankAccountId: toAccount.id,
             amount: data.amount,
-            type: 'transfer_in',
-            category: 'transfer',
+            type: 'credit',
+            category: 'Transfer',
             name: `Transfer from ${fromAccount.name}`,
-            description: data.description,
             date: new Date(),
           },
         });
