@@ -17,9 +17,6 @@ export const getAccounts = cache(async (params: {
       where: {
         userId: params.userId,
       },
-      include: {
-        bank: true,
-      },
       orderBy: { createdAt: 'desc' },
     });
 
