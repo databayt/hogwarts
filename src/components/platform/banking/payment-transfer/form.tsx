@@ -19,6 +19,16 @@ import type { BankAccount } from '../types';
 import type { getDictionary } from '@/components/internationalization/dictionaries';
 import type { Locale } from '@/components/internationalization/config';
 
+// Utility function to format currency
+function formatAmount(amount: number): string {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(amount);
+}
+
 interface Props {
   accounts: BankAccount[];
   dictionary: Awaited<ReturnType<typeof getDictionary>>['banking'];
