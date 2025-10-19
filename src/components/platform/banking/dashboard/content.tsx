@@ -67,7 +67,7 @@ export async function BankingDashboardContent({
 
       <DashboardSidebar
         user={user}
-        transactions={account?.transactions}
+        transactions={account?.transactions || []}
         banks={accountsData?.slice(0, 2)}
         dictionary={dictionary}
         lang={lang}
