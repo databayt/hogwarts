@@ -81,6 +81,7 @@ function PaymentTransferForm(props: Props) {
   const [transferType, setTransferType] = useState<'internal' | 'external'>('internal');
   const [state, formAction, isPending] = useActionState(createTransfer, {
     success: false,
+    error: { code: '', message: '' },
   });
 
   // Reset form on successful submission
