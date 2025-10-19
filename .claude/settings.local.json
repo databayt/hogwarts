@@ -21,7 +21,8 @@
       "Bash(dir /b /s \"D:\\repo\\hogwarts\\.claude\")",
       "Bash(xargs ls -la)",
       "Bash(xargs cat)",
-      "Bash(pnpm tsc --noEmit)"
+      "Bash(pnpm tsc --noEmit)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nfix(banking): Fix TypeScript errors in banking module\n\n- Fixed template literal types in utils.types.ts (AccountMask, TimePeriod)\n- Fixed ActionResult type handling in payment-transfer/form.tsx\n- Fixed ActionResult type handling in transaction-history/content.tsx\n- Added missing dictionary keys for payment transfer form (en & ar)\n- Installed chart.js and react-chartjs-2 for doughnut-chart.tsx\n- Fixed button variant type in plaid-link.tsx (primary → default)\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
     ],
     "deny": [],
     "ask": []

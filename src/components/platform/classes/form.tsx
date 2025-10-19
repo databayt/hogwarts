@@ -19,7 +19,7 @@ export function ClassCreateForm() {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
   const form = useForm<z.infer<typeof classCreateSchema>>({
-    resolver: zodResolver(classCreateSchema),
+    resolver: zodResolver(classCreateSchema) as any,
     defaultValues: {
       name: "",
       subjectId: "",
@@ -29,6 +29,12 @@ export function ClassCreateForm() {
       endPeriodId: "",
       classroomId: "",
       evaluationType: "NORMAL",
+      courseCode: undefined,
+      credits: undefined,
+      minCapacity: undefined,
+      maxCapacity: undefined,
+      duration: undefined,
+      prerequisiteId: undefined,
     },
   });
 
