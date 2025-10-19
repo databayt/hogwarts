@@ -34,9 +34,6 @@ export default async function MyBanksContent(props: Props) {
           <h1 className="text-3xl font-bold tracking-tight">
             {props.dictionary.myBanks}
           </h1>
-          <p className="text-muted-foreground mt-2">
-            {props.dictionary.myBanksDescription}
-          </p>
         </div>
         {accounts.length > 0 && (
           <Suspense fallback={<div className="h-10 w-32 bg-muted animate-pulse rounded" />}>
@@ -51,10 +48,10 @@ export default async function MyBanksContent(props: Props) {
           <CardContent className="flex flex-col items-center justify-center py-16">
             <Building2 className="h-16 w-16 text-muted-foreground mb-4" />
             <h2 className="text-xl font-semibold mb-2">
-              {props.dictionary.noBanksTitle}
+              {props.dictionary.noBanks}
             </h2>
             <p className="text-muted-foreground text-center max-w-sm mb-6">
-              {props.dictionary.noBanksDescription}
+              {props.dictionary.connectYourBank}
             </p>
             <Suspense fallback={<div className="h-10 w-40 bg-muted animate-pulse rounded" />}>
               <AddBankButton dictionary={props.dictionary} size="lg" />
@@ -68,13 +65,13 @@ export default async function MyBanksContent(props: Props) {
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium">
-                  {props.dictionary.totalAccounts}
+                  {props.dictionary.accounts}
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{accounts.length}</div>
                 <p className="text-xs text-muted-foreground">
-                  {props.dictionary.connectedBankAccounts}
+                  {props.dictionary.connectBank}
                 </p>
               </CardContent>
             </Card>
@@ -91,9 +88,6 @@ export default async function MyBanksContent(props: Props) {
                     accounts.reduce((sum, acc) => sum + acc.currentBalance, 0)
                   )}
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  {props.dictionary.acrossAllAccounts}
-                </p>
               </CardContent>
             </Card>
 
@@ -109,9 +103,6 @@ export default async function MyBanksContent(props: Props) {
                     accounts[0]?.lastUpdated || new Date()
                   )}
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  {props.dictionary.dataFreshness}
-                </p>
               </CardContent>
             </Card>
           </div>
