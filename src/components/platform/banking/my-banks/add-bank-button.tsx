@@ -33,7 +33,7 @@ export default function AddBankButton(props: Props) {
         {isLinking ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            {props.dictionary.connecting}
+            {props.dictionary.processing}
           </>
         ) : (
           <>
