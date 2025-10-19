@@ -18,6 +18,14 @@ interface Props {
 
 export default async function PaymentTransferContent(props: Props) {
   // Fetch user's bank accounts
+  if (!props.user.id) {
+    return (
+      <div className="container mx-auto py-8">
+        <p className="text-muted-foreground">User ID not found</p>
+      </div>
+    );
+  }
+
   const accounts = await getAccounts({ userId: props.user.id });
 
   // Check if user has enough accounts for transfer
