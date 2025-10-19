@@ -18,18 +18,20 @@ export const getAccounts = cache(async (params: {
     const accounts = await db.bankAccount.findMany({
       where: {
         userId: params.userId,
-        isActive: true,
-      },
-      include: {
-        bank: true,
       },
       orderBy: { createdAt: 'desc' },
     });
 
     return accounts.map(account => ({
-      ...account,
+      id: account.id,
+      name: account.name,
+      officialName: account.officialName ?? undefined,
+      mask: account.mask ?? undefined,
+      type: account.type as 'checking' | 'savings' | 'credit' | 'investment' | 'loan' | 'other',
+      subtype: account.subtype,
       currentBalance: account.currentBalance.toNumber(),
       availableBalance: account.availableBalance?.toNumber() || account.currentBalance.toNumber(),
+      institutionId: account.institutionId,
     }));
   } catch (error) {
     console.error('Failed to fetch accounts:', error);
