@@ -22,9 +22,9 @@ export const getAccounts = cache(async (params: {
 
     return accounts.map(account => ({
       ...account,
-      type: account.type as 'depository' | 'credit' | 'loan' | 'investment',
+      type: account.type as 'checking' | 'savings' | 'credit' | 'investment' | 'loan' | 'other',
       currentBalance: account.currentBalance.toNumber(),
-      availableBalance: account.availableBalance?.toNumber() || null,
+      availableBalance: account.availableBalance?.toNumber() || 0,
       officialName: account.officialName ?? undefined,
       mask: account.mask ?? undefined,
     }));
