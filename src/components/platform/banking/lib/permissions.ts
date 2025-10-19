@@ -5,7 +5,7 @@ import { UserRole } from '@prisma/client'
  * Defines which roles can perform which banking operations
  */
 
-export const BANKING_PERMISSIONS = {
+export const BANKING_PERMISSIONS: Record<string, UserRole[]> = {
   // View permissions
   VIEW_OWN_ACCOUNTS: [
     UserRole.DEVELOPER,
@@ -80,7 +80,7 @@ export const BANKING_PERMISSIONS = {
     UserRole.ADMIN,
     UserRole.ACCOUNTANT,
   ],
-} as const
+}
 
 export type BankingPermission = keyof typeof BANKING_PERMISSIONS
 
