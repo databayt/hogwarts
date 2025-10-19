@@ -223,31 +223,35 @@ const HostFooter: React.FC<HostFooterProps> = ({
       {/* All controls in one row */}
       <div className={`flex items-center justify-between px-4 sm:px-6 md:px-12 lg:px-20 py-3 sm:py-4 ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
         {/* Left side - Logo, Help, Save (Right side in RTL) */}
-        <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
-          <div className="relative w-5 h-5">
-            <Image
-              src="/logo.png"
-              alt="Tent icon"
-              fill
-              sizes="20px"
-              className="object-contain"
-            />
+        <div className={`flex items-center gap-1 ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
+          <div className="relative w-8 h-8 flex items-center justify-center">
+            <div className="relative w-6 h-6">
+              <Image
+                src="/logo.png"
+                alt="Tent icon"
+                fill
+                sizes="24px"
+                className="object-contain"
+              />
+            </div>
           </div>
           <Button
             variant="link"
             size="icon"
             onClick={onHelp}
-            className={`rounded-full w-10 h-10 sm:w-10 sm:h-10 ${isRTL ? 'mr-2' : 'ml-2'}`}
+            className="rounded-full w-8 h-8 p-0 hover:bg-muted"
+            aria-label={dict.help || "Help"}
           >
-            <HelpCircle className="h-5 w-5 sm:h-10 sm:w-10" />
+            <HelpCircle className="h-5 w-5" />
           </Button>
           <Button
             variant="link"
             size="icon"
             onClick={onSave}
-            className="rounded-full w-10 h-10 sm:w-10 sm:h-10"
+            className="rounded-full w-8 h-8 p-0 hover:bg-muted"
+            aria-label={dict.save || "Save"}
           >
-            <Bookmark className="h-5 w-5 sm:h-10 sm:w-10" />
+            <Bookmark className="h-5 w-5" />
           </Button>
         </div>
 
