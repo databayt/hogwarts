@@ -56,8 +56,8 @@ const HostFooter: React.FC<HostFooterProps> = ({
   onHelp,
   onSave,
   currentStep: propCurrentStep,
-  backLabel = "Back",
-  nextLabel = "Next",
+  backLabel,
+  nextLabel,
   canGoBack = true,
   canGoNext = true,
   nextDisabled = false,
@@ -186,6 +186,16 @@ const HostFooter: React.FC<HostFooterProps> = ({
   
   const dict = dictionary?.onboarding || {};
 
+  // Debug: Log dictionary to verify translations
+  console.log("🔍 [HOST FOOTER] Dictionary check:", {
+    hasDictionary: !!dictionary,
+    hasOnboarding: !!dictionary?.onboarding,
+    backLabel: dict.back,
+    nextLabel: dict.next,
+    locale,
+    isRTL
+  });
+
   const stepLabels = [
     dict.tellUsAboutYourPlace || "Tell us about your place",
     dict.makeItStandOut || "Make it stand out",
@@ -209,7 +219,9 @@ const HostFooter: React.FC<HostFooterProps> = ({
   
   // Set the next button label based on current step
   const actualBackLabel = backLabel || dict.back || "Back";
-  const actualNextLabel = currentStepSlug === 'legal' ? (dict.createSchool || 'Create school') : (nextLabel || dict.next || "Next");
+  const actualNextLabel = currentStepSlug === 'legal'
+    ? (dict.createSchool || 'Create school')
+    : (nextLabel || dict.next || "Next");
 
   return (
     <footer className="fixed bottom-0 left-0 right-0 bg-white">
