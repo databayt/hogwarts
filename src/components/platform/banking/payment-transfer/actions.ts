@@ -72,7 +72,7 @@ export async function createTransfer(
         success: false,
         error: {
           code: 'VALIDATION_ERROR',
-          message: validationResult.error.errors[0].message,
+          message: validationResult.error.issues[0].message,
         },
       };
     }
