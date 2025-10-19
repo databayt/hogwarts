@@ -56,7 +56,7 @@ export async function BankingDashboardContent({
 
             <DashboardMainContent
               accounts={accountsData}
-              transactions={account?.transactions}
+              transactions={account?.transactions || []}
               accountId={accountId}
               currentPage={currentPage}
               dictionary={dictionary}
