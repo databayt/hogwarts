@@ -136,7 +136,7 @@ export type FormattedAmount = `${CurrencyCode} ${number}`
 /**
  * Account mask format
  */
-export type AccountMask = `${'•'.repeat(4)} ${string}`
+export type AccountMask = `•••• ${string}`
 
 /**
  * Date format strings
@@ -146,7 +146,7 @@ export type DateFormat = 'short' | 'medium' | 'long' | 'full' | 'relative'
 /**
  * Time period strings
  */
-export type TimePeriod = `${number}${'d' | 'w' | 'm' | 'y'}`
+export type TimePeriod = `${number}d` | `${number}w` | `${number}m` | `${number}y`
 
 // ============================================================================
 // Conditional Types

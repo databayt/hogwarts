@@ -64,5 +64,16 @@
   "income": "Income",
   "expenses": "Expenses",
   "spentThisMonth": "Spent this month",
-  "earnedThisMonth": "Earned this month"
+  "earnedThisMonth": "Earned this month",
+  "transferSuccess": "Transfer completed successfully",
+  "transferType": "Transfer Type",
+  "betweenMyAccounts": "Between My Accounts",
+  "toAnotherUser": "To Another User",
+  "fromAccount": "From Account",
+  "toAccount": "To Account",
+  "selectAccount": "Select an account",
+  "recipientEmail": "Recipient Email",
+  "maxAmount": "Maximum amount",
+  "descriptionPlaceholder": "Enter a description for this transfer",
+  "sendTransfer": "Send Transfer"
 }

@@ -15,9 +15,9 @@ export async function TransactionHistoryContent({
   lang
 }: TransactionHistoryContentProps) {
   const page = Number(searchParams?.page) || 1
-  const accounts = await getAccounts({ userId: user.id })
+  const accountsResult = await getAccounts({ userId: user.id })
 
-  if (!accounts?.data || accounts.data.length === 0) {
+  if (!accountsResult.success || !accountsResult.data?.data || accountsResult.data.data.length === 0) {
     return (
       <div className="p-8">
         <div className="border rounded-lg p-12 text-center">
@@ -32,8 +32,10 @@ export async function TransactionHistoryContent({
     )
   }
 
+  const accounts = accountsResult.data.data
+
   // Get all transactions from all accounts
-  const allTransactions = accounts.data.flatMap((account: any) =>
+  const allTransactions = accounts.flatMap((account: any) =>
     account.transactions || []
   ).sort((a: any, b: any) =>
     new Date(b.date).getTime() - new Date(a.date).getTime()
@@ -52,7 +54,7 @@ export async function TransactionHistoryContent({
 
       <TransactionsTable
         transactions={allTransactions}
-        accounts={accounts.data}
+        accounts={accounts}
         currentPage={page}
         dictionary={dictionary}
       />

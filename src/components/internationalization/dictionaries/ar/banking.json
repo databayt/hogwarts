@@ -64,5 +64,16 @@
   "income": "الدخل",
   "expenses": "المصروفات",
   "spentThisMonth": "المنفق هذا الشهر",
-  "earnedThisMonth": "المكتسب هذا الشهر"
+  "earnedThisMonth": "المكتسب هذا الشهر",
+  "transferSuccess": "تم التحويل بنجاح",
+  "transferType": "نوع التحويل",
+  "betweenMyAccounts": "بين حساباتي",
+  "toAnotherUser": "إلى مستخدم آخر",
+  "fromAccount": "من الحساب",
+  "toAccount": "إلى الحساب",
+  "selectAccount": "اختر حساباً",
+  "recipientEmail": "البريد الإلكتروني للمستلم",
+  "maxAmount": "الحد الأقصى للمبلغ",
+  "descriptionPlaceholder": "أدخل وصفاً لهذا التحويل",
+  "sendTransfer": "إرسال التحويل"
 }

@@ -79,10 +79,11 @@ function PaymentTransferForm(props: Props) {
   const [selectedFromAccount, setSelectedFromAccount] = useState('');
   const [selectedToAccount, setSelectedToAccount] = useState('');
   const [transferType, setTransferType] = useState<'internal' | 'external'>('internal');
-  const [state, formAction, isPending] = useActionState(createTransfer, {
+  const initialState: { success: false; error: { code: string; message: string } } = {
     success: false,
     error: { code: '', message: '' },
-  });
+  };
+  const [state, formAction, isPending] = useActionState(createTransfer, initialState);
 
   // Reset form on successful submission
   useEffect(() => {
@@ -105,7 +106,7 @@ function PaymentTransferForm(props: Props) {
   return (
     <form id="transfer-form" action={formAction} className="space-y-6">
       {/* Status Messages */}
-      {state.error && (
+      {!state.success && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>{state.error.message || 'An error occurred'}</AlertDescription>
