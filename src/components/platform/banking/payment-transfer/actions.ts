@@ -263,14 +263,18 @@ export const getRecentTransfers = cache(async (params: {
   try {
     const transfers = await db.transaction.findMany({
       where: {
-        account: {
+        bankAccount: {
           userId: params.userId,
         },
-        category: 'transfer',
+        category: 'Transfer',
       },
       include: {
-        account: {
-          include: { bank: true },
+        bankAccount: {
+          select: {
+            id: true,
+            name: true,
+            mask: true,
+          }
         },
       },
       orderBy: { date: 'desc' },
