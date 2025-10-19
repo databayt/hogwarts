@@ -14,5 +14,5 @@ interface Props {
 export default async function Onboarding({ params }: Props) {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
-  return <OnboardingContent dictionary={dictionary.school} />;
+  return <OnboardingContent dictionary={dictionary.school} locale={lang} />;
 }

@@ -11,9 +11,10 @@ import type { Dictionary } from '@/components/internationalization/dictionaries'
 
 interface Props {
   dictionary?: Dictionary['school'];
+  locale?: string;
 }
 
-export default function OnboardingContent({ dictionary }: Props) {
+export default function OnboardingContent({ dictionary, locale }: Props) {
   const router = useRouter();
   const user = useCurrentUser();
   const [isCreating, setIsCreating] = React.useState(false);
@@ -112,7 +113,7 @@ export default function OnboardingContent({ dictionary }: Props) {
   return (
     <ErrorBoundary>
       <div className="min-h-screen flex items-center justify-center">
-        <SchoolOnboardingDashboard 
+        <SchoolOnboardingDashboard
           userName={user?.name || "Admin"}
           schools={schools.map(school => ({
             id: school.id!,
@@ -126,6 +127,7 @@ export default function OnboardingContent({ dictionary }: Props) {
           onCreateNew={handleCreateNew}
           onCreateFromTemplate={handleCreateFromTemplate}
           dictionary={dictionary}
+          locale={locale}
         />
       </div>
     </ErrorBoundary>

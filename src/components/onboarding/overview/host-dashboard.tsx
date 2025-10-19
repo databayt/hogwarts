@@ -20,6 +20,7 @@ interface SchoolOnboardingDashboardProps {
   onCreateFromTemplate?: () => void;
   totalSchools?: number; // Total number of schools available
   dictionary?: any;
+  locale?: string;
 }
 
 const SchoolOnboardingDashboard: React.FC<SchoolOnboardingDashboardProps> = ({
@@ -29,7 +30,8 @@ const SchoolOnboardingDashboard: React.FC<SchoolOnboardingDashboardProps> = ({
   onCreateNew,
   onCreateFromTemplate,
   totalSchools,
-  dictionary
+  dictionary,
+  locale
 }) => {
   const dict = dictionary?.onboarding || {};
   const draftSchools = schools.filter(school => school.status === 'draft');
@@ -41,7 +43,7 @@ const SchoolOnboardingDashboard: React.FC<SchoolOnboardingDashboardProps> = ({
       {/* Welcome Header */}
       <div>
         <h3 className="mb-3 sm:mb-4 text-lg sm:text-xl lg:text-2xl">
-          {dict.welcomeBack || 'Welcome back'}, {userName}
+          {dict.welcomeStatic || 'Welcome'}
         </h3>
       </div>
 
@@ -81,6 +83,7 @@ const SchoolOnboardingDashboard: React.FC<SchoolOnboardingDashboardProps> = ({
         onCreateNew={onCreateNew}
         onCreateFromTemplate={onCreateFromTemplate}
         dictionary={dictionary}
+        locale={locale}
       />
     </div>
   );
