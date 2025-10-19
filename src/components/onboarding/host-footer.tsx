@@ -21,6 +21,7 @@ interface HostFooterProps {
   canGoNext?: boolean;
   nextDisabled?: boolean;
   dictionary?: any;
+  locale?: string;
 }
 
 // Define the step order for the hosting flow
@@ -60,12 +61,17 @@ const HostFooter: React.FC<HostFooterProps> = ({
   canGoBack = true,
   canGoNext = true,
   nextDisabled = false,
-  dictionary
+  dictionary,
+  locale: propLocale
 }) => {
   const router = useRouter();
   const params = useParams();
   const pathname = usePathname();
-  const { isRTL } = useLocale();
+  const { isRTL: hookIsRTL, locale: hookLocale } = useLocale();
+
+  // Use prop locale if provided, otherwise use hook locale
+  const locale = propLocale || hookLocale;
+  const isRTL = locale === 'ar';
   
   // Use validation context if available
   let contextNextDisabled = false;
