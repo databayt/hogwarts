@@ -123,11 +123,7 @@ export async function syncBankData(params: {
     // TODO: Implement Plaid sync logic
     // const plaidData = await plaidClient.syncAccount(account.plaidAccountId);
 
-    // Update last synced timestamp
-    await db.bankAccount.update({
-      where: { id: params.accountId },
-      data: { lastSyncedAt: new Date() },
-    });
+    // Note: updatedAt field is automatically updated by Prisma @updatedAt directive
 
     revalidatePath('/banking/my-banks');
     revalidatePath('/banking');
