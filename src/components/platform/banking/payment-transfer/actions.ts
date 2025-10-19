@@ -121,24 +121,37 @@ export async function createTransfer(
         };
       }
     } else if (data.recipientEmail) {
-      // External transfer to another user
+      // External transfer to another user - must be in same school
+      const schoolId = session.user.schoolId;
+      if (!schoolId) {
+        return {
+          success: false,
+          error: { code: 'NO_SCHOOL_CONTEXT', message: 'School context not found' },
+        };
+      }
+
       const recipient = await db.user.findUnique({
-        where: { email: data.recipientEmail },
+        where: {
+          email_schoolId: {
+            email: data.recipientEmail,
+            schoolId: schoolId
+          }
+        },
       });
 
       if (!recipient) {
         return {
           success: false,
-          error: { code: 'NOT_FOUND', message: 'Recipient not found' },
+          error: { code: 'NOT_FOUND', message: 'Recipient not found in your school' },
         };
       }
 
-      // Get recipient's default account
+      // Get recipient's first account (no isDefault field exists)
       toAccount = await db.bankAccount.findFirst({
         where: {
           userId: recipient.id,
-          isDefault: true,
         },
+        orderBy: { createdAt: 'asc' }
       });
 
       if (!toAccount) {
