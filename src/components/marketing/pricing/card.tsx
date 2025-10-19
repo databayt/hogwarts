@@ -10,6 +10,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { cn } from "@/lib/utils";
 import { getCtaLabel, getIncludesHeading, getPriceDisplay, getYearlyTotal, isStarterTitle, isProTitle } from "./config";
 import { Separator } from "@/components/ui/separator";
+import type { Locale } from "@/components/internationalization/config";
 
 interface PricingCardProps {
   offer: SubscriptionPlan;
@@ -17,9 +18,10 @@ interface PricingCardProps {
   userId?: string;
   subscriptionPlan?: UserSubscriptionPlan;
   userRole?: string;
+  lang?: Locale;
 }
 
-export function PricingCard({ offer, isYearly, userId, subscriptionPlan, userRole }: PricingCardProps) {
+export function PricingCard({ offer, isYearly, userId, subscriptionPlan, userRole, lang }: PricingCardProps) {
   const isPro = isProTitle(offer.title);
   const isStarter = isStarterTitle(offer.title);
   const priceDisplay = getPriceDisplay(offer, isYearly);
@@ -29,10 +31,10 @@ export function PricingCard({ offer, isYearly, userId, subscriptionPlan, userRol
       {userId && subscriptionPlan ? (
         isStarter ? (
           <Link
-            href="/dashboard"
+            href={`/${lang}/dashboard`}
             className={cn(
               buttonVariants({ variant: "default" }),
-              
+
             )}
           >
             Start trial
@@ -52,8 +54,8 @@ export function PricingCard({ offer, isYearly, userId, subscriptionPlan, userRol
             const yearly = offer.stripeIds.yearly;
             const priceId = (isYearly ? yearly : monthly) || monthly;
             return priceId
-              ? `/starter/dashboard/billing/checkout?price=${encodeURIComponent(priceId)}`
-              : `/starter/dashboard/billing`;
+              ? `/${lang}/starter/dashboard/billing/checkout?price=${encodeURIComponent(priceId)}`
+              : `/${lang}/starter/dashboard/billing`;
           })()}
           className={cn(
             buttonVariants({

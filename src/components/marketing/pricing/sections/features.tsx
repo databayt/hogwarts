@@ -5,8 +5,13 @@ import { Button } from "@/components/ui/button";
 import { HeaderSection } from "@/components/atom/header-section";
 import { Icons } from "../shared/icons";
 import MaxWidthWrapper from "../shared/max-width-wrapper";
+import type { Locale } from "@/components/internationalization/config";
 
-export default function Features() {
+interface FeaturesProps {
+  lang?: Locale
+}
+
+export default function Features({ lang }: FeaturesProps) {
   return (
     <section>
       <div className="pb-6 pt-28">
@@ -45,7 +50,7 @@ export default function Features() {
                         size="sm"
                         className="px-4 rounded-full"
                       >
-                        <Link href="/" className="flex items-center gap-2">
+                        <Link href={`/${lang}`} className="flex items-center gap-2">
                           <span>Visit the site</span>
                           <Icons.arrowUpRight className="size-4" />
                         </Link>

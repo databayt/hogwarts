@@ -13,12 +13,14 @@ import {
 } from "@/components/ui/card";
 import { cn, formatDate } from "@/components/marketing/pricing/lib/utils";
 import { UserSubscriptionPlan } from "@/components/marketing/pricing/types";
+import type { Locale } from "@/components/internationalization/config";
 
 interface BillingInfoProps extends React.HTMLAttributes<HTMLFormElement> {
   userSubscriptionPlan: UserSubscriptionPlan;
+  lang?: Locale;
 }
 
-export function BillingInfo({ userSubscriptionPlan }: BillingInfoProps) {
+export function BillingInfo({ userSubscriptionPlan, lang }: BillingInfoProps) {
   const {
     title,
     description,
@@ -50,7 +52,7 @@ export function BillingInfo({ userSubscriptionPlan }: BillingInfoProps) {
         {isPaid && stripeCustomerId ? (
           <CustomerPortalButton userStripeId={stripeCustomerId as string} />
         ) : (
-          <Link href="/pricing" className={cn(buttonVariants())}>
+          <Link href={`/${lang}/pricing`} className={cn(buttonVariants())}>
             Choose a plan
           </Link>
         )}

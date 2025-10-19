@@ -8,14 +8,16 @@ import { BillingToggle } from "./billing-toggle";
 import { HeaderSection } from "@/components/atom/header-section";
 import MaxWidthWrapper from "@/components/marketing/pricing/shared/max-width-wrapper";
 import { PricingCard } from "./card";
+import type { Locale } from "@/components/internationalization/config";
 
 interface PricingCardsProps {
   userId?: string;
   subscriptionPlan?: UserSubscriptionPlan;
   userRole?: string;
+  lang?: Locale;
 }
 
-export function PricingCards({ userId, subscriptionPlan, userRole }: PricingCardsProps) {
+export function PricingCards({ userId, subscriptionPlan, userRole, lang }: PricingCardsProps) {
   // Default to monthly on initial render
   const [isYearly, setIsYearly] = useState<boolean>(false);
 
@@ -39,6 +41,7 @@ export function PricingCards({ userId, subscriptionPlan, userRole }: PricingCard
               userId={userId}
               subscriptionPlan={subscriptionPlan}
               userRole={userRole}
+              lang={lang}
             />
           ))}
         </div>

@@ -20,6 +20,7 @@ interface Props {
 }
 
 export default async function PricingContent(props: Props) {
+  const { lang } = props;
   const user = await currentUser();
 
   let subscriptionPlan;
@@ -31,11 +32,11 @@ export default async function PricingContent(props: Props) {
     <div className="flex w-full flex-col py-14 items-center">
       <PricingLoaderOverlay />
       <PricingHeader />
-      <PricingCards userId={user?.id} subscriptionPlan={subscriptionPlan} userRole={user?.role} />
+      <PricingCards userId={user?.id} subscriptionPlan={subscriptionPlan} userRole={user?.role} lang={lang} />
       <ComparePlans />
       {/* <PricingFaq /> */}
       <PricingFAQs />
-      <EnterpriseSection />
+      <EnterpriseSection lang={lang} />
     </div>
   );
 }

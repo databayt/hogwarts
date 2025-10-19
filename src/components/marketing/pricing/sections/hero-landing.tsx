@@ -5,8 +5,13 @@ import { siteConfig } from "../config/site";
 import { cn, nFormatter } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 import { Icons } from "../shared/icons";
+import type { Locale } from "@/components/internationalization/config";
 
-export default async function HeroLanding() {
+interface HeroLandingProps {
+  lang?: Locale
+}
+
+export default async function HeroLanding({ lang }: HeroLandingProps) {
   const { stargazers_count: stars } = await fetch(
     "https://api.github.com/repos/mickasmt/next-saas-stripe-starter",
     {
@@ -59,7 +64,7 @@ export default async function HeroLanding() {
           style={{ animationDelay: "0.4s", animationFillMode: "forwards" }}
         >
           <Link
-            href="/pricing"
+            href={`/${lang}/pricing`}
             prefetch={true}
             className={cn(
               buttonVariants({ size: "lg" }),

@@ -21,10 +21,10 @@ interface Props {
 }
 
 export default function HomeContent(props: Props) {
-  const { dictionary } = props;
+  const { dictionary, lang } = props;
   return (
     <main className="flex min-h-screen flex-col">
-      <Hero dictionary={dictionary} />
+      <Hero dictionary={dictionary} lang={lang} />
       {/* <Gallery />
       <Stack />
       <Automated />
