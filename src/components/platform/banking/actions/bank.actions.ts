@@ -347,9 +347,10 @@ export async function createBankAccount(
 
     revalidatePath('/banking')
 
-    // Serialize the result
+    // Serialize the result and cast enum type
     const serializedAccount = {
       ...bankAccount,
+      type: bankAccount.type as 'depository' | 'credit' | 'loan' | 'investment',
       currentBalance: Number(bankAccount.currentBalance),
       availableBalance: Number(bankAccount.availableBalance),
     }
