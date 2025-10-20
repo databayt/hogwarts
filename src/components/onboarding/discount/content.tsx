@@ -43,27 +43,27 @@ const DiscountPage = (props: Props) => {
     {
       id: 'new-listing',
       percentage: '20%',
-      title: 'New family promotion',
-      description: 'Offer 20% off first semester for new student enrollments',
+      title: dictionary.onboarding.newFamilyPromotion,
+      description: dictionary.onboarding.newFamilyPromotionDescription,
     },
     {
       id: 'last-minute',
       percentage: '25%',
-      title: 'Sibling discount',
-      description: 'For families enrolling multiple children',
+      title: dictionary.onboarding.siblingDiscount,
+      description: dictionary.onboarding.siblingDiscountDescription,
     },
     {
       id: 'weekly',
       percentage: '10%',
-      title: 'Early enrollment discount',
-      description: 'enroll 30 days before term starts',
+      title: dictionary.onboarding.earlyEnrollmentDiscount,
+      description: dictionary.onboarding.earlyEnrollmentDiscountDescription,
     },
   ];
 
   return (
     <HostStepLayout
-      title="Add discounts"
-      subtitle="Attract more families and fill your enrollment faster with these promotional offers."
+      title={dictionary.onboarding.addDiscounts}
+      subtitle={dictionary.onboarding.addDiscountsSubtitle}
     >
       <div className="space-y-4">
         {discounts.map((discount) => (

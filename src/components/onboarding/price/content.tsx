@@ -105,14 +105,14 @@ export default function PriceContent(props: Props) {
       <div className="mb-4 flex justify-center">
         <Button variant="outline" className="inline-flex items-center space-x-2 rounded-full">
           <DollarSign size={12} />
-          <span>View similar schools</span>
+          <span>{dictionary.onboarding.viewSimilarSchools}</span>
         </Button>
       </div>
 
       {/* Learn more link */}
       <div className="flex justify-center">
         <Button variant="link" className="text-muted-foreground underline hover:no-underline p-0">
-          Learn more about fees
+          {dictionary.onboarding.learnMoreAboutFees}
         </Button>
       </div>
     </div>

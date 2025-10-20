@@ -20,13 +20,13 @@ const VisibilityContent = (props: Props) => {
   const guestOptions = [
     {
       id: 'full-transparency',
-      title: 'Full transparency',
-      description: 'Share attendance reports, announcements, and academic progress with all relevant parties.'
+      title: dictionary.onboarding.fullTransparency,
+      description: dictionary.onboarding.fullTransparencyDescription
     },
     {
       id: 'limited-sharing',
-      title: 'Limited sharing',
-      description: 'Share only essential information and require approval for detailed reports.',
+      title: dictionary.onboarding.limitedSharing,
+      description: dictionary.onboarding.limitedSharingDescription,
     },
   ];
 
@@ -37,12 +37,12 @@ const VisibilityContent = (props: Props) => {
           {/* Left column - Title and description */}
           <div className="lg:col-span-2 space-y-3 sm:space-y-4">
             <h3>
-            Choose your school's information visibility
+              {dictionary.onboarding.visibilityPageTitle}
             </h3>
             <p className="text-sm sm:text-base text-muted-foreground">
-            This determines what information is shared with parents and students.{' '}
+              {dictionary.onboarding.visibilityPageDescription}{' '}
               <button className="underline hover:no-underline text-foreground">
-                Learn more
+                {dictionary.onboarding.joinLearnMore}
               </button>
             </p>
           </div>

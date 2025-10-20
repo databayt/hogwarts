@@ -149,9 +149,9 @@ const LegalContent = (props: Props) => {
   };
 
   const safetyOptions = [
-    'CCTV surveillance system',
-    'Emergency alarm system',
-    'Transportation services',
+    dictionary.onboarding.cctvSurveillance,
+    dictionary.onboarding.emergencyAlarm,
+    dictionary.onboarding.transportationServices,
   ];
 
   const isFormValid = hostingType && safetyFeatures.length >= 0; // At least hosting type selected
@@ -173,7 +173,7 @@ const LegalContent = (props: Props) => {
         {/* Title at the top */}
         <div className="mb-6 sm:mb-8">
           <h2 className="text-xl sm:text-2xl lg:text-4xl font-medium text-foreground">
-            Share safety details
+            {dictionary.onboarding.shareSafetyDetails}
           </h2>
         </div>
 
@@ -183,7 +183,7 @@ const LegalContent = (props: Props) => {
           <div className="lg:col-span-2">
             <div className="flex items-center space-x-2 mb-3 sm:mb-4">
               <h5 className="text-foreground">
-                What is your school's operational status?
+                {dictionary.onboarding.operationalStatus}
               </h5>
               <HelpCircle size={16} className="text-muted-foreground sm:w-4.5 sm:h-4.5" />
             </div>
@@ -213,7 +213,7 @@ const LegalContent = (props: Props) => {
                     <div className="w-1.5 h-1.5 rounded-full bg-background"></div>
                   )}
                 </div>
-                <small className="text-foreground">Existing school with valid licenses</small>
+                <small className="text-foreground">{dictionary.onboarding.existingSchoolLicenses}</small>
               </label>
 
               <label className="flex items-center space-x-2 cursor-pointer">
@@ -240,7 +240,7 @@ const LegalContent = (props: Props) => {
                     <div className="w-1.5 h-1.5 rounded-full bg-background"></div>
                   )}
                 </div>
-                <small className="text-foreground">New school seeking registration</small>
+                <small className="text-foreground">{dictionary.onboarding.newSchoolRegistration}</small>
               </label>
             </div>
           </div>
@@ -251,7 +251,7 @@ const LegalContent = (props: Props) => {
             <div>
               <div className="flex items-center space-x-2 mb-3">
                 <h5 className="text-foreground">
-                  Does your school have any of these?
+                  {dictionary.onboarding.schoolSafetyFeatures}
                 </h5>
                 <HelpCircle size={16} className="text-muted-foreground sm:w-4.5 sm:h-4.5" />
               </div>
@@ -287,10 +287,10 @@ const LegalContent = (props: Props) => {
             {/* Important Information */}
             <div className="space-y-3">
               <h6 className="text-foreground">
-                Important things to know
+                {dictionary.onboarding.importantThingsToKnow}
               </h6>
               <small className="block text-muted-foreground leading-relaxed">
-                Be sure to comply with your <span className="underline">local education laws</span> and review our <span className="underline">school registration guidelines</span> and <span className="underline">fee structure</span>.
+                {dictionary.onboarding.complianceNotice} <span className="underline">{dictionary.onboarding.localEducationLaws}</span> {dictionary.onboarding.andReviewOur} <span className="underline">{dictionary.onboarding.schoolRegistrationGuidelines}</span> {dictionary.onboarding.and} <span className="underline">{dictionary.onboarding.feeStructure}</span>.
               </small>
             </div>
           </div>
