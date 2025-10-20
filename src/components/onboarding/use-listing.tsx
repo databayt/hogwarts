@@ -108,14 +108,17 @@ export function ListingProvider({ children, initialListing = null }: ListingProv
   }, [])
 
   const loadListing = useCallback(async (id: string, retryCount = 0) => {
-    
+
     setIsLoading(true)
     setError(null)
-    
+
+    // Helper function to wait for a delay
+    const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+
     try {
       const result = await getListing(id)
-      
-      
+
+
       if (result.success && result.data) {
         const loadedListing: Listing = {
           id: result.data.id,
@@ -134,16 +137,16 @@ export function ListingProvider({ children, initialListing = null }: ListingProv
           createdAt: result.data.createdAt,
           updatedAt: result.data.updatedAt,
         }
-        
+
         setListing(loadedListing)
       } else {
-        
+
         // Extract error message from result.error
         let errorMessage = 'Failed to load listing';
         let isAccessDenied = false;
-        
+
         if (result.error) {
-          
+
           if (typeof result.error === 'string') {
             errorMessage = result.error;
             isAccessDenied = result.error.includes('Access denied') || result.error.includes('CROSS_TENANT_ACCESS_DENIED');
@@ -156,37 +159,36 @@ export function ListingProvider({ children, initialListing = null }: ListingProv
               errorMessage = `Error: ${errorObj.code}`;
               isAccessDenied = errorObj.code === 'CROSS_TENANT_ACCESS_DENIED';
             }
-            
+
             // Check for code field separately
             if ('code' in errorObj && errorObj.code === 'CROSS_TENANT_ACCESS_DENIED') {
               isAccessDenied = true;
             }
           }
         }
-        
+
         // Also check the result.code field directly
         if (result.code === 'CROSS_TENANT_ACCESS_DENIED') {
           isAccessDenied = true;
           errorMessage = 'Access denied to this school';
         }
-        
+
         // Fallback: If error is empty object and we're in onboarding, assume it's an access denied issue
         if (!result.success && (!result.error || (typeof result.error === 'object' && Object.keys(result.error).length === 0))) {
           isAccessDenied = true;
           errorMessage = 'Access denied to this school';
         }
-        
-        
+
+
                // Handle access denied error during onboarding with exponential backoff
        if (isAccessDenied && retryCount < 3) { // Increase retry count to 3
          const delay = Math.min(1000 * Math.pow(2, retryCount), 5000); // 1s, 2s, 4s, max 5s
-         
-         setTimeout(() => {
-           loadListing(id, retryCount + 1);
-         }, delay);
-         return;
+
+         // Wait for the delay and retry - DON'T return early
+         await wait(delay);
+         return loadListing(id, retryCount + 1);
        }
-       
+
        // If we've exhausted retries and it's still an access denied error, show specific message
        if (retryCount >= 3 && isAccessDenied) {
          setError('Unable to access this school. This might be because you\'re trying to access a different school than the one you created. Please go back to the overview and try again.');
@@ -197,28 +199,16 @@ export function ListingProvider({ children, initialListing = null }: ListingProv
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load listing'
-      
+
       // Handle access denied error during onboarding with exponential backoff
       if (errorMessage.includes('Access denied to this school') && retryCount < 2) {
-        // Check if this might be a schoolId mismatch issue
-        if (retryCount === 0) {
-          // For the first retry, try to get the user's current school from the session
-          try {
-            // Import the auth hook to get current user info
-            const { useCurrentUser } = await import('@/components/auth/use-current-user');
-            // Note: This won't work in a callback, but we can at least log the attempt
-          } catch (err) {
-          }
-        }
-        
         const delay = Math.min(1000 * Math.pow(2, retryCount), 4000); // 1s, 2s, max 4s
-        
-        setTimeout(() => {
-          loadListing(id, retryCount + 1);
-        }, delay);
-        return;
+
+        // Wait for the delay and retry - DON'T return early
+        await wait(delay);
+        return loadListing(id, retryCount + 1);
       }
-      
+
       // If we've exhausted retries or it's a different error, show the error
       if (retryCount >= 2 && errorMessage.includes('Access denied to this school')) {
         // Provide more specific error message for schoolId mismatch
