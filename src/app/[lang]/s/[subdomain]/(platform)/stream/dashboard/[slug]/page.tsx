@@ -1,4 +1,5 @@
 import { getCourseSidebarData } from "@/components/stream/data/course/get-course-sidebar-data";
+import { getTenantContext } from "@/lib/tenant-context";
 import { redirect } from "next/navigation";
 
 interface Props {
@@ -7,8 +8,9 @@ interface Props {
 
 export default async function StreamCourseSlugRoute({ params }: Props) {
   const { slug } = await params;
+  const { schoolId } = await getTenantContext();
 
-  const course = await getCourseSidebarData(slug);
+  const course = await getCourseSidebarData(slug, schoolId);
 
   const firstChapter = course.course.chapter[0];
   const firstLesson = firstChapter.lessons[0];

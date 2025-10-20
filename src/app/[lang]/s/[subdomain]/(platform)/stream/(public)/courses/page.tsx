@@ -1,8 +1,10 @@
 import { getDictionary } from "@/components/internationalization/dictionaries";
 import type { Locale } from "@/components/internationalization/config";
-import { StreamCoursesContent } from "@/components/stream/courses/content";
+import { StreamCoursesContent, StreamCoursesLoadingSkeleton } from "@/components/stream/courses/content";
 import { Metadata } from "next";
 import { getTenantContext } from "@/lib/tenant-context";
+import { getAllCourses } from "@/components/stream/data/course/get-all-courses";
+import { Suspense } from "react";
 
 export const dynamic = "force-dynamic";
 
@@ -28,11 +30,37 @@ export default async function StreamCoursesPage({ params, searchParams }: Props)
   const search = await searchParams;
 
   return (
+    <Suspense fallback={<StreamCoursesLoadingSkeleton />}>
+      <CoursesRenderer
+        lang={lang}
+        schoolId={schoolId}
+        dictionary={dictionary.stream}
+        searchParams={search}
+      />
+    </Suspense>
+  );
+}
+
+async function CoursesRenderer({
+  lang,
+  schoolId,
+  dictionary,
+  searchParams,
+}: {
+  lang: string;
+  schoolId: string | null;
+  dictionary: any;
+  searchParams?: { category?: string; search?: string };
+}) {
+  const courses = await getAllCourses(schoolId);
+
+  return (
     <StreamCoursesContent
-      dictionary={dictionary.stream}
+      dictionary={dictionary}
       lang={lang}
       schoolId={schoolId}
-      searchParams={search}
+      courses={courses}
+      searchParams={searchParams}
     />
   );
 }

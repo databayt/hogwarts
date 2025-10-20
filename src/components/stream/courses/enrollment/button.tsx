@@ -7,7 +7,7 @@ import { enrollInCourseAction } from "./actions";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
-export function EnrollmentButton({ courseId }: { courseId: string }) {
+export function EnrollmentButton({ courseId, lang }: { courseId: string; lang: string }) {
   const [pending, startTransition] = useTransition();
 
   function onSubmit() {

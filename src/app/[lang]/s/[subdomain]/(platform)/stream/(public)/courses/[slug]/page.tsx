@@ -3,6 +3,10 @@ import type { Locale } from "@/components/internationalization/config";
 import { StreamCourseDetailContent } from "@/components/stream/courses/[slug]/content";
 import { Metadata } from "next";
 import { getTenantContext } from "@/lib/tenant-context";
+import { getIndividualCourse } from "@/components/stream/data/course/get-course";
+import { checkIfEnrolled } from "@/components/stream/data/course/check-enrollment";
+
+export const dynamic = "force-dynamic";
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string; slug: string }>;
@@ -10,13 +14,20 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { lang, slug } = await params;
-  const dictionary = await getDictionary(lang);
+  const { schoolId } = await getTenantContext();
 
-  // TODO: Fetch course title from database using slug for better SEO
-  return {
-    title: `${slug} - Course Details`,
-    description: "Course details and enrollment",
-  };
+  try {
+    const course = await getIndividualCourse(slug, schoolId);
+    return {
+      title: `${course.title} - Course Details`,
+      description: course.description || "Course details and enrollment",
+    };
+  } catch {
+    return {
+      title: "Course Not Found",
+      description: "The requested course could not be found",
+    };
+  }
 }
 
 export default async function StreamCourseDetailPage({ params }: Props) {
@@ -24,12 +35,16 @@ export default async function StreamCourseDetailPage({ params }: Props) {
   const dictionary = await getDictionary(lang);
   const { schoolId } = await getTenantContext();
 
+  const course = await getIndividualCourse(slug, schoolId);
+  const isEnrolled = await checkIfEnrolled(course.id, schoolId);
+
   return (
     <StreamCourseDetailContent
       dictionary={dictionary.stream}
       lang={lang}
       schoolId={schoolId}
-      slug={slug}
+      course={course}
+      isEnrolled={isEnrolled}
     />
   );
 }

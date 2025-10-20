@@ -1,18 +1,41 @@
 "use client";
 
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { BookOpen } from "lucide-react";
-import Link from "next/link";
+import { PublicCourseType } from "@/components/stream/data/course/get-all-courses";
+import { CourseCard, CourseCardSkeleton } from "./course-card";
+import { Suspense } from "react";
 
 interface Props {
   dictionary: any;
   lang: string;
   schoolId: string | null;
+  courses: PublicCourseType[];
   searchParams?: { category?: string; search?: string };
 }
 
-export function StreamCoursesContent({ dictionary, lang, schoolId, searchParams }: Props) {
+export function StreamCoursesContent({
+  dictionary,
+  lang,
+  schoolId,
+  courses,
+  searchParams
+}: Props) {
+  // Filter courses based on search params
+  const filteredCourses = courses.filter((course) => {
+    if (searchParams?.category && course.category?.name !== searchParams.category) {
+      return false;
+    }
+    if (searchParams?.search) {
+      const searchLower = searchParams.search.toLowerCase();
+      return (
+        course.title.toLowerCase().includes(searchLower) ||
+        course.description?.toLowerCase().includes(searchLower)
+      );
+    }
+    return true;
+  });
+
   return (
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex flex-col space-y-2">
@@ -23,17 +46,45 @@ export function StreamCoursesContent({ dictionary, lang, schoolId, searchParams 
         </p>
       </div>
 
-      <Card>
-        <CardContent className="py-10">
-          <div className="text-center">
-            <BookOpen className="mx-auto size-16 text-muted-foreground mb-4" />
-            <h3>No Courses Available</h3>
-            <p className="muted mb-6">
-              There are currently no courses available. Check back soon!
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+      {filteredCourses.length === 0 ? (
+        <Card>
+          <CardContent className="py-10">
+            <div className="text-center">
+              <BookOpen className="mx-auto size-16 text-muted-foreground mb-4" />
+              <h3>No Courses Available</h3>
+              <p className="muted mb-6">
+                There are currently no courses available. Check back soon!
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredCourses.map((course) => (
+            <CourseCard key={course.id} course={course} lang={lang} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function StreamCoursesLoadingSkeleton() {
+  return (
+    <div className="container mx-auto py-6 space-y-6">
+      <div className="flex flex-col space-y-2">
+        <h2>Explore Courses</h2>
+        <p className="muted">
+          Discover our wide range of courses designed to help you achieve your
+          learning goals.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {Array.from({ length: 6 }).map((_, index) => (
+          <CourseCardSkeleton key={index} />
+        ))}
+      </div>
     </div>
   );
 }

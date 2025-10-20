@@ -5,11 +5,17 @@ import { notFound } from "next/navigation";
 
 /**
  * Fetches course data for sidebar navigation
+ * Multi-tenant: Scoped by schoolId
  */
-export async function getCourseSidebarData(slug: string) {
+export async function getCourseSidebarData(slug: string, schoolId: string | null) {
+  if (!schoolId) {
+    notFound();
+  }
+
   const course = await db.streamCourse.findFirst({
     where: {
       slug,
+      schoolId,
       isPublished: true
     },
     include: {
