@@ -21,16 +21,16 @@ const JoinContent = (props: Props) => {
   const bookingOptions = [
     {
       id: 'invite-with-codes',
-      title: 'Invite with registration codes',
-      subtitle: 'Recommended',
-      description: 'Generate invitation codes that teachers, staff, students and parents can use to self-register. You can review and finalizing.',
+      title: dictionary.onboarding.inviteWithCodes,
+      subtitle: dictionary.onboarding.inviteWithCodesSubtitle,
+      description: dictionary.onboarding.inviteWithCodesDescription,
       // icon: CalendarCheckmark,
       recommended: true,
     },
     {
       id: 'manual-enrollment',
-      title: 'Manual enrollment',
-      description: 'Add all teachers, staff, and students yourself through the admin panel.',
+      title: dictionary.onboarding.manualEnrollment,
+      description: dictionary.onboarding.manualEnrollmentDescription,
       // icon: LightningBoltIcon,
       recommended: false,
     },
@@ -43,13 +43,12 @@ const JoinContent = (props: Props) => {
           {/* Left column - Title and description */}
           <div className="space-y-3 sm:space-y-4">
             <h3>
-            How students<br /> join your school
-              
+              {dictionary.onboarding.joinPageTitle}<br /> {dictionary.onboarding.joinPageTitleBreak}
             </h3>
             <p className="text-sm sm:text-base text-muted-foreground">
-              You can change this at any time.{' '}
+              {dictionary.onboarding.joinPageDescription}{' '}
               <button className="underline hover:no-underline text-foreground">
-                Learn more
+                {dictionary.onboarding.joinLearnMore}
               </button>
             </p>
           </div>
