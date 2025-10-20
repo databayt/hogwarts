@@ -52,20 +52,20 @@ export default async function ClassesContent({ searchParams, dictionary, lang }:
           },
           term: {
             select: {
-              termName: true
+              termNumber: true
             }
           }
         }
       }),
       (db as any).class.count({ where }),
     ])
-    data = rows.map((c: any) => ({ 
-      id: c.id, 
-      name: c.name, 
-      subjectName: c.subject?.subjectName || 'Unknown', 
+    data = rows.map((c: any) => ({
+      id: c.id,
+      name: c.name,
+      subjectName: c.subject?.subjectName || 'Unknown',
       teacherName: c.teacher ? `${c.teacher.givenName} ${c.teacher.surname}` : 'Unknown',
-      termName: c.term?.termName || 'Unknown',
-      createdAt: (c.createdAt as Date).toISOString() 
+      termName: c.term?.termNumber ? `Term ${c.term.termNumber}` : 'Unknown',
+      createdAt: (c.createdAt as Date).toISOString()
     }))
     total = count as number
   }
