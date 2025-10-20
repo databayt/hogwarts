@@ -1,11 +1,27 @@
 /*
-  Prisma seed for multi-file schema setup (multi-tenant, Sudan-focused sample data).
-  - Creates four demo schools across Sudan with realistic seed data.
-  - Idempotent: uses upsert or find-or-create patterns and createMany with skipDuplicates.
-  - Intentionally skips seeding anything from `task.prisma`.
+  Prisma seed for Port Sudan International School with comprehensive data.
+  - Seeds ONLY the portsudan school with full data across all Prisma models
+  - Uses Sudanese/Arabic/African names for realistic demo data
+  - Idempotent: uses upsert or find-or-create patterns and createMany with skipDuplicates
+  - Covers: academics, attendance, library, fees, exams, announcements, grades, etc.
 */
 
-import { PrismaClient, UserRole, AssessmentStatus, AssessmentType, SubmissionStatus, AttendanceStatus } from "@prisma/client";
+import {
+  PrismaClient,
+  UserRole,
+  AssessmentStatus,
+  AssessmentType,
+  SubmissionStatus,
+  AttendanceStatus,
+  AdmissionStatus,
+  AdmissionApplicationStatus,
+  FeeStatus,
+  PaymentMethod,
+  PaymentStatus,
+  ExamType,
+  ExamStatus,
+  AnnouncementScope
+} from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { faker } from "@faker-js/faker";
 
@@ -21,44 +37,34 @@ type SchoolSeedInput = {
   maxTeachers: number;
 };
 
-const SUDAN_SCHOOLS: SchoolSeedInput[] = [
-  {
-    domain: "khartoum",
-    name: "Khartoum Model Secondary School",
-    email: "info@khartoum.school.sd",
-    website: "https://khartoum.school.sd",
-    planType: "premium",
-    maxStudents: 2000,
-    maxTeachers: 200,
-  },
-  {
-    domain: "omdurman",
-    name: "Omdurman Excellence Secondary School",
-    email: "info@omdurman.school.sd",
-    website: "https://omdurman.school.sd",
-    planType: "premium",
-    maxStudents: 1500,
-    maxTeachers: 160,
-  },
-  {
-    domain: "portsudan",
-    name: "Port Sudan International School",
-    email: "info@portsudan.school.sd",
-    website: "https://portsudan.school.sd",
-    planType: "enterprise",
-    maxStudents: 2500,
-    maxTeachers: 240,
-  },
-  {
-    domain: "wadmadani",
-    name: "Wad Madani Pioneer School",
-    email: "info@wadmadani.school.sd",
-    website: "https://wadmadani.school.sd",
-    planType: "basic",
-    maxStudents: 800,
-    maxTeachers: 90,
-  },
+// Sudanese/Arabic/African names for realistic demo data
+const SUDANESE_MALE_NAMES = [
+  "Ahmed", "Mohamed", "Osman", "Ibrahim", "Khalid", "Hassan", "Ali", "Omar",
+  "Abdalla", "Mustafa", "Kamal", "Tariq", "Yousif", "Salih", "Malik", "Bashir",
+  "Hamza", "Idris", "Jamal", "Nabil", "Rashid", "Saeed", "Waleed", "Zain"
 ];
+
+const SUDANESE_FEMALE_NAMES = [
+  "Fatima", "Aisha", "Mariam", "Amina", "Khadija", "Huda", "Sara", "Layla",
+  "Sumaya", "Rania", "Noura", "Zahra", "Samira", "Hana", "Dalal", "Nawal",
+  "Mona", "Rehab", "Safaa", "Tahani", "Widad", "Yasmin", "Zainab", "Amal"
+];
+
+const SUDANESE_SURNAMES = [
+  "Hassan", "Ali", "Ahmed", "Mohamed", "Ibrahim", "Osman", "Yousif", "Salih",
+  "Abdalla", "Mustafa", "Khalid", "Omar", "Abdelrahman", "Kamal", "Malik",
+  "Bashir", "Hamza", "Idris", "Jamal", "Nabil", "Abbas", "Badawi", "Elsayed"
+];
+
+const PORTSUDAN_SCHOOL: SchoolSeedInput = {
+  domain: "portsudan",
+  name: "Port Sudan International School",
+  email: "info@portsudan.school.sd",
+  website: "https://portsudan.school.sd",
+  planType: "enterprise",
+  maxStudents: 2500,
+  maxTeachers: 240,
+};
 
 async function ensureSchool(input: SchoolSeedInput) {
   const existing = await prisma.school.findUnique({ where: { domain: input.domain } });
@@ -276,10 +282,19 @@ async function ensureRooms(schoolId: string) {
   return { classroomTypes: [ctLecture, ctLab, ctComputer], classrooms };
 }
 
+// Helper to generate Sudanese names
+function getSudaneseName(gender: "M" | "F"): { givenName: string; surname: string } {
+  const givenName = gender === "M"
+    ? SUDANESE_MALE_NAMES[Math.floor(Math.random() * SUDANESE_MALE_NAMES.length)]
+    : SUDANESE_FEMALE_NAMES[Math.floor(Math.random() * SUDANESE_FEMALE_NAMES.length)];
+  const surname = SUDANESE_SURNAMES[Math.floor(Math.random() * SUDANESE_SURNAMES.length)];
+  return { givenName, surname };
+}
+
 async function ensurePeople(schoolId: string) {
   const passwordHash = await bcrypt.hash("Password123!", 10);
 
-  // Teacher seeds (common Sudanese names)
+  // Teacher seeds (15 teachers with Sudanese names)
   const teacherSeeds = [
     { givenName: "Ahmed", surname: "Hassan", gender: "M" },
     { givenName: "Fatima", surname: "Ali", gender: "F" },
@@ -289,6 +304,13 @@ async function ensurePeople(schoolId: string) {
     { givenName: "Huda", surname: "Ibrahim", gender: "F" },
     { givenName: "Khalid", surname: "Ahmed", gender: "M" },
     { givenName: "Sara", surname: "Abbas", gender: "F" },
+    { givenName: "Ibrahim", surname: "Malik", gender: "M" },
+    { givenName: "Amina", surname: "Kamal", gender: "F" },
+    { givenName: "Tariq", surname: "Bashir", gender: "M" },
+    { givenName: "Layla", surname: "Hamza", gender: "F" },
+    { givenName: "Mustafa", surname: "Idris", gender: "M" },
+    { givenName: "Noura", surname: "Nabil", gender: "F" },
+    { givenName: "Hamza", surname: "Badawi", gender: "M" },
   ];
 
   const teacherUsers: { id: string; email: string }[] = [];
@@ -357,20 +379,23 @@ async function ensurePeople(schoolId: string) {
     create: { schoolId, name: "Mother" },
   });
 
-  // Guardians and Students (generate ~30 students with parents)
+  // Guardians and Students (generate ~60 students with Sudanese names)
   const guardianPairs: { mother: { id: string }, father: { id: string } }[] = [];
   const students: { id: string }[] = [];
 
-  for (let i = 0; i < 30; i++) {
-    const fatherName = faker.person.firstName().split(" ")[0];
-    const motherName = faker.person.firstName().split(" ")[0];
-    const familySurname = faker.person.lastName();
+  for (let i = 0; i < 60; i++) {
+    const fatherData = getSudaneseName("M");
+    const motherData = getSudaneseName("F");
+    const familySurname = SUDANESE_SURNAMES[i % SUDANESE_SURNAMES.length];
+
+    const fatherEmail = `${fatherData.givenName.toLowerCase()}.${familySurname.toLowerCase()}@guardian.local`;
+    const motherEmail = `${motherData.givenName.toLowerCase()}.${familySurname.toLowerCase()}@guardian.local`;
 
     const fatherUser = await prisma.user.upsert({
-      where: { email_schoolId: { email: `${fatherName.toLowerCase()}.${familySurname.toLowerCase()}@guardian.local`, schoolId } },
+      where: { email_schoolId: { email: fatherEmail, schoolId } },
       update: {},
       create: {
-        email: `${fatherName.toLowerCase()}.${familySurname.toLowerCase()}@guardian.local`,
+        email: fatherEmail,
         role: UserRole.GUARDIAN,
         password: passwordHash,
         emailVerified: new Date(),
@@ -378,10 +403,10 @@ async function ensurePeople(schoolId: string) {
       },
     });
     const motherUser = await prisma.user.upsert({
-      where: { email_schoolId: { email: `${motherName.toLowerCase()}.${familySurname.toLowerCase()}@guardian.local`, schoolId } },
+      where: { email_schoolId: { email: motherEmail, schoolId } },
       update: {},
       create: {
-        email: `${motherName.toLowerCase()}.${familySurname.toLowerCase()}@guardian.local`,
+        email: motherEmail,
         role: UserRole.GUARDIAN,
         password: passwordHash,
         emailVerified: new Date(),
@@ -390,24 +415,24 @@ async function ensurePeople(schoolId: string) {
     });
 
     const father = await prisma.guardian.upsert({
-      where: { schoolId_emailAddress: { schoolId, emailAddress: fatherUser.email ?? `${fatherName.toLowerCase()}.${familySurname.toLowerCase()}@guardian.local` } },
+      where: { schoolId_emailAddress: { schoolId, emailAddress: fatherEmail } },
       update: {},
       create: {
         schoolId,
-        givenName: fatherName,
+        givenName: fatherData.givenName,
         surname: familySurname,
-        emailAddress: fatherUser.email ?? `${fatherName.toLowerCase()}.${familySurname.toLowerCase()}@guardian.local`,
+        emailAddress: fatherEmail,
         userId: fatherUser.id,
       },
     });
     const mother = await prisma.guardian.upsert({
-      where: { schoolId_emailAddress: { schoolId, emailAddress: motherUser.email ?? `${motherName.toLowerCase()}.${familySurname.toLowerCase()}@guardian.local` } },
+      where: { schoolId_emailAddress: { schoolId, emailAddress: motherEmail } },
       update: {},
       create: {
         schoolId,
-        givenName: motherName,
+        givenName: motherData.givenName,
         surname: familySurname,
-        emailAddress: motherUser.email ?? `${motherName.toLowerCase()}.${familySurname.toLowerCase()}@guardian.local`,
+        emailAddress: motherEmail,
         userId: motherUser.id,
       },
     });
@@ -425,11 +450,13 @@ async function ensurePeople(schoolId: string) {
 
     guardianPairs.push({ mother: { id: mother.id }, father: { id: father.id } });
 
-    // Student
+    // Student (using Sudanese names)
     const gender = i % 2 === 0 ? "M" : "F";
-    const studentFirst = gender === "M" ? faker.person.firstName('male') : faker.person.firstName('female');
-    const middle = faker.person.firstName();
-    const studentEmail = `${studentFirst.toLowerCase()}.${familySurname.toLowerCase()}@student.local`;
+    const studentData = getSudaneseName(gender);
+    const middleName = gender === "M"
+      ? SUDANESE_MALE_NAMES[(i + 5) % SUDANESE_MALE_NAMES.length]
+      : SUDANESE_FEMALE_NAMES[(i + 5) % SUDANESE_FEMALE_NAMES.length];
+    const studentEmail = `${studentData.givenName.toLowerCase()}.${familySurname.toLowerCase()}@student.local`;
     const studentUser = await prisma.user.upsert({
       where: { email_schoolId: { email: studentEmail, schoolId } },
       update: {},
@@ -443,11 +470,17 @@ async function ensurePeople(schoolId: string) {
     });
     const dobYear = faker.number.int({ min: 2008, max: 2012 });
     const dob = new Date(Date.UTC(dobYear, faker.number.int({ min: 0, max: 11 }), faker.number.int({ min: 1, max: 28 })));
-    const student = await prisma.student.create({
+
+    // Check if student already exists
+    const existingStudent = await prisma.student.findUnique({
+      where: { userId: studentUser.id },
+    });
+
+    const student = existingStudent ?? await prisma.student.create({
       data: {
         schoolId,
-        givenName: studentFirst,
-        middleName: middle,
+        givenName: studentData.givenName,
+        middleName: middleName,
         surname: familySurname,
         dateOfBirth: dob,
         gender,
@@ -736,87 +769,427 @@ async function ensureLibraryBooks(schoolId: string) {
   }
 }
 
-async function main() {
-  for (const s of SUDAN_SCHOOLS) {
-    const school = await ensureSchool(s);
-    await ensureAuthUsers(school.id, s.domain);
-    const { schoolYear, term1, periods, yearLevels } = await ensureAcademicStructure(school.id);
-    const { subjects } = await ensureDepartmentsAndSubjects(school.id);
-    const { classrooms } = await ensureRooms(school.id);
-    const { teachers, students } = await ensurePeople(school.id);
+async function ensureAnnouncements(schoolId: string, classes: { id: string }[]) {
+  const announcements = [
+    {
+      title: "Welcome to Academic Year 2025-2026",
+      body: "We are delighted to welcome all students and parents to the new academic year. Let's make this year successful together!",
+      scope: AnnouncementScope.school,
+      published: true,
+    },
+    {
+      title: "Mid-Term Exams Schedule Released",
+      body: "The mid-term examination schedule has been published. Please check the timetable section for details.",
+      scope: AnnouncementScope.school,
+      published: true,
+    },
+    {
+      title: "Parent-Teacher Meeting - Grade 10",
+      body: "A parent-teacher meeting is scheduled for next week. All Grade 10 parents are requested to attend.",
+      scope: AnnouncementScope.class,
+      classId: classes[0]?.id,
+      published: true,
+    },
+    {
+      title: "Library New Arrivals",
+      body: "The school library has received new books in Science and Literature. Visit the library to explore!",
+      scope: AnnouncementScope.school,
+      published: true,
+    },
+    {
+      title: "Sports Day Announcement",
+      body: "Annual Sports Day will be held next month. All students are encouraged to participate.",
+      scope: AnnouncementScope.school,
+      published: false,
+    },
+  ];
 
-    await prisma.studentYearLevel.createMany({
-      data: students.map((st, idx) => ({
-        schoolId: school.id,
-        studentId: st.id,
-        levelId: yearLevels[idx % yearLevels.length].id,
-        yearId: schoolYear.id,
-      })),
-      skipDuplicates: true,
+  for (const ann of announcements) {
+    const existing = await prisma.announcement.findFirst({
+      where: { schoolId, title: ann.title },
+    });
+    if (!existing) {
+      await prisma.announcement.create({
+        data: { schoolId, ...ann },
+      });
+    }
+  }
+  console.log(`Seeded announcements (skipped duplicates)`);
+}
+
+async function ensureSchoolBranding(schoolId: string) {
+  await prisma.schoolBranding.upsert({
+    where: { schoolId },
+    update: {},
+    create: {
+      schoolId,
+      primaryColor: "#1e40af", // Blue
+      secondaryColor: "#dc2626", // Red
+      borderRadius: "md",
+      shadow: "lg",
+      isPubliclyListed: true,
+      allowSelfEnrollment: false,
+      requireParentApproval: true,
+      informationSharing: "limited-sharing",
+    },
+  });
+  console.log("Seeded school branding");
+}
+
+async function ensureFeeStructures(
+  schoolId: string,
+  classes: { id: string; name: string }[],
+  students: { id: string }[]
+) {
+  const academicYear = "2025-2026";
+
+  // Create fee structure for Grade 10
+  const existingFee = await prisma.feeStructure.findFirst({
+    where: { schoolId, name: "Grade 10 Annual Fee 2025-2026" },
+  });
+
+  const feeStructure = existingFee ?? await prisma.feeStructure.create({
+    data: {
+      schoolId,
+      name: "Grade 10 Annual Fee 2025-2026",
+      academicYear,
+      classId: classes[0]?.id,
+      tuitionFee: "15000.00",
+      admissionFee: "2000.00",
+      registrationFee: "500.00",
+      examFee: "1000.00",
+      libraryFee: "300.00",
+      laboratoryFee: "800.00",
+      sportsFee: "400.00",
+      totalAmount: "20000.00",
+      installments: 2,
+      isActive: true,
+    },
+  });
+
+  // Assign fees to first 30 students
+  for (let i = 0; i < Math.min(30, students.length); i++) {
+    const student = students[i];
+    const feeAssignment = await prisma.feeAssignment.upsert({
+      where: {
+        studentId_feeStructureId_academicYear: {
+          studentId: student.id,
+          feeStructureId: feeStructure.id,
+          academicYear,
+        },
+      },
+      update: {},
+      create: {
+        schoolId,
+        studentId: student.id,
+        feeStructureId: feeStructure.id,
+        academicYear,
+        finalAmount: "20000.00",
+        status: i < 20 ? FeeStatus.PAID : FeeStatus.PENDING,
+      },
     });
 
-    await ensureClassesAndWork(
-      school.id,
-      term1.id,
-      periods,
-      classrooms,
-      subjects,
-      teachers,
-      students,
-    );
-
-    // Schedule config per school (varied working days & lunch)
-    let workingDays: number[] = [0,1,2,3,4]; // Sun–Thu
-    let lunchAfter = 3;
-    if (s.domain === 'omdurman') { workingDays = [1,2,3,4,5]; lunchAfter = 2; } // Mon–Fri
-    if (s.domain === 'portsudan') { workingDays = [1,2,3,4,6]; lunchAfter = 4; } // Mon–Thu + Sat (Fri+Sun off)
-    if (s.domain === 'wadmadani') { workingDays = [0,1,2,3,4]; lunchAfter = 2; } // Sun–Thu, early lunch
-
-    await prisma.schoolWeekConfig.upsert({
-      where: { schoolId_termId: { schoolId: school.id, termId: term1.id } },
-      update: { workingDays, defaultLunchAfterPeriod: lunchAfter },
-      create: { schoolId: school.id, termId: term1.id, workingDays, defaultLunchAfterPeriod: lunchAfter },
-    })
-
-    // Seed a handful of timetable rows for demo
-    const someClasses = await prisma.class.findMany({
-      where: { schoolId: school.id, termId: term1.id },
-      select: { id: true, teacherId: true, classroomId: true },
-      take: 6,
-    })
-    const somePeriods = await prisma.period.findMany({
-      where: { schoolId: school.id, yearId: (await prisma.term.findUnique({ where: { id: term1.id }, select: { yearId: true } }))!.yearId },
-      orderBy: { startTime: 'asc' },
-      select: { id: true },
-      take: 4,
-    })
-    const cfg = await prisma.schoolWeekConfig.findUnique({ where: { schoolId_termId: { schoolId: school.id, termId: term1.id } } })
-    const days = (cfg?.workingDays ?? [0,1,2,3,4]).slice(0, 5)
-    const rows: any[] = []
-    for (let d = 0; d < days.length; d++) {
-      for (let p = 0; p < somePeriods.length; p++) {
-        const cls = someClasses[(d + p) % someClasses.length]
-        rows.push({
-          schoolId: school.id,
-          termId: term1.id,
-          dayOfWeek: days[d],
-          periodId: somePeriods[p].id,
-          classId: cls.id,
-          teacherId: cls.teacherId,
-          classroomId: cls.classroomId,
-          weekOffset: 0,
-        })
-      }
+    // Create payments for paid students
+    if (i < 20) {
+      await prisma.payment.create({
+        data: {
+          schoolId,
+          feeAssignmentId: feeAssignment.id,
+          studentId: student.id,
+          paymentNumber: `PAY-2025-${String(i + 1).padStart(5, "0")}`,
+          amount: "20000.00",
+          paymentDate: new Date(),
+          paymentMethod: i % 3 === 0 ? PaymentMethod.CASH : i % 3 === 1 ? PaymentMethod.BANK_TRANSFER : PaymentMethod.CHEQUE,
+          receiptNumber: `RCP-2025-${String(i + 1).padStart(5, "0")}`,
+          status: PaymentStatus.SUCCESS,
+        },
+      });
     }
-    if (rows.length > 0) {
-      await prisma.timetable.createMany({ data: rows, skipDuplicates: true })
-    }
-
-    // Seed library books
-    await ensureLibraryBooks(school.id);
-
-    console.log("Seed completed for school:", school.domain);
   }
+
+  console.log("Seeded fee structures and payments");
+}
+
+async function ensureExams(
+  schoolId: string,
+  classes: { id: string; name: string }[],
+  subjects: { id: string; subjectName: string }[],
+  students: { id: string }[]
+) {
+  const mathSubject = subjects.find((s) => s.subjectName === "Mathematics");
+  const arabicSubject = subjects.find((s) => s.subjectName === "Arabic Language");
+
+  if (!mathSubject || !arabicSubject || classes.length === 0) return;
+
+  // Create exams (check if already exist)
+  const existingMathExam = await prisma.exam.findFirst({
+    where: { schoolId, title: "Mathematics Mid-Term Exam" },
+  });
+
+  const mathExam = existingMathExam ?? await prisma.exam.create({
+    data: {
+      schoolId,
+      title: "Mathematics Mid-Term Exam",
+      description: "Mid-term examination for Grade 10 Mathematics",
+      classId: classes[0].id,
+      subjectId: mathSubject.id,
+      examDate: new Date("2025-11-15T00:00:00Z"),
+      startTime: "09:00",
+      endTime: "11:00",
+      duration: 120,
+      totalMarks: 100,
+      passingMarks: 50,
+      examType: ExamType.MIDTERM,
+      status: ExamStatus.COMPLETED,
+    },
+  });
+
+  const existingArabicExam = await prisma.exam.findFirst({
+    where: { schoolId, title: "Arabic Language Mid-Term Exam" },
+  });
+
+  const arabicExam = existingArabicExam ?? await prisma.exam.create({
+    data: {
+      schoolId,
+      title: "Arabic Language Mid-Term Exam",
+      description: "Mid-term examination for Grade 10 Arabic",
+      classId: classes[0].id,
+      subjectId: arabicSubject.id,
+      examDate: new Date("2025-11-16T00:00:00Z"),
+      startTime: "09:00",
+      endTime: "11:00",
+      duration: 120,
+      totalMarks: 100,
+      passingMarks: 50,
+      examType: ExamType.MIDTERM,
+      status: ExamStatus.COMPLETED,
+    },
+  });
+
+  // Create exam results for first 30 students
+  for (let i = 0; i < Math.min(30, students.length); i++) {
+    const mathMarks = faker.number.int({ min: 45, max: 98 });
+    const arabicMarks = faker.number.int({ min: 50, max: 95 });
+
+    await prisma.examResult.create({
+      data: {
+        schoolId,
+        examId: mathExam.id,
+        studentId: students[i].id,
+        marksObtained: mathMarks,
+        totalMarks: 100,
+        percentage: mathMarks,
+        grade: mathMarks >= 90 ? "A" : mathMarks >= 80 ? "B" : mathMarks >= 70 ? "C" : mathMarks >= 60 ? "D" : "F",
+        isAbsent: false,
+      },
+    });
+
+    await prisma.examResult.create({
+      data: {
+        schoolId,
+        examId: arabicExam.id,
+        studentId: students[i].id,
+        marksObtained: arabicMarks,
+        totalMarks: 100,
+        percentage: arabicMarks,
+        grade: arabicMarks >= 90 ? "A" : arabicMarks >= 80 ? "B" : arabicMarks >= 70 ? "C" : arabicMarks >= 60 ? "D" : "F",
+        isAbsent: false,
+      },
+    });
+  }
+
+  // Create grade boundaries
+  await prisma.gradeBoundary.createMany({
+    data: [
+      { schoolId, grade: "A+", minScore: "95.00", maxScore: "100.00", gpaValue: "4.00" },
+      { schoolId, grade: "A", minScore: "90.00", maxScore: "94.99", gpaValue: "3.70" },
+      { schoolId, grade: "B+", minScore: "85.00", maxScore: "89.99", gpaValue: "3.30" },
+      { schoolId, grade: "B", minScore: "80.00", maxScore: "84.99", gpaValue: "3.00" },
+      { schoolId, grade: "C+", minScore: "75.00", maxScore: "79.99", gpaValue: "2.70" },
+      { schoolId, grade: "C", minScore: "70.00", maxScore: "74.99", gpaValue: "2.30" },
+      { schoolId, grade: "D", minScore: "60.00", maxScore: "69.99", gpaValue: "2.00" },
+      { schoolId, grade: "F", minScore: "0.00", maxScore: "59.99", gpaValue: "0.00" },
+    ],
+    skipDuplicates: true,
+  });
+
+  console.log("Seeded exams and results");
+}
+
+async function ensureAdmissions(schoolId: string) {
+  const academicYear = "2026-2027";
+
+  // Create admission campaign (check if exists)
+  const existingCampaign = await prisma.admissionCampaign.findFirst({
+    where: { schoolId, name: "Admission Campaign 2026-2027" },
+  });
+
+  const campaign = existingCampaign ?? await prisma.admissionCampaign.create({
+    data: {
+      schoolId,
+      name: "Admission Campaign 2026-2027",
+      academicYear,
+      startDate: new Date("2026-03-01T00:00:00Z"),
+      endDate: new Date("2026-05-31T00:00:00Z"),
+      status: AdmissionStatus.OPEN,
+      description: "Applications open for Grade 7 admission for academic year 2026-2027",
+      applicationFee: "500.00",
+      totalSeats: 150,
+    },
+  });
+
+  // Create sample applications with Sudanese names (skip if exist)
+  const existingAppsCount = await prisma.application.count({
+    where: { schoolId, campaignId: campaign.id },
+  });
+
+  if (existingAppsCount === 0) {
+    for (let i = 0; i < 20; i++) {
+      const gender = i % 2 === 0 ? "M" : "F";
+      const studentData = getSudaneseName(gender);
+      const fatherData = getSudaneseName("M");
+      const motherData = getSudaneseName("F");
+
+      await prisma.application.create({
+        data: {
+        schoolId,
+        campaignId: campaign.id,
+        applicationNumber: `APP-2026-${String(i + 1).padStart(5, "0")}`,
+        firstName: studentData.givenName,
+        lastName: studentData.surname,
+        dateOfBirth: new Date(Date.UTC(2014, faker.number.int({ min: 0, max: 11 }), faker.number.int({ min: 1, max: 28 }))),
+        gender: gender === "M" ? "MALE" : "FEMALE",
+        nationality: "Sudanese",
+        email: `${studentData.givenName.toLowerCase()}.applicant@example.com`,
+        phone: `+249-9${faker.number.int({ min: 10_000_000, max: 99_999_999 })}`,
+        address: `${faker.location.streetAddress()}, Port Sudan`,
+        city: "Port Sudan",
+        state: "Red Sea",
+        postalCode: "11111",
+        country: "Sudan",
+        fatherName: `${fatherData.givenName} ${fatherData.surname}`,
+        fatherPhone: `+249-9${faker.number.int({ min: 10_000_000, max: 99_999_999 })}`,
+        motherName: `${motherData.givenName} ${motherData.surname}`,
+        motherPhone: `+249-9${faker.number.int({ min: 10_000_000, max: 99_999_999 })}`,
+        applyingForClass: "Grade 7",
+        status: i < 10 ? AdmissionApplicationStatus.ADMITTED : i < 15 ? AdmissionApplicationStatus.SELECTED : AdmissionApplicationStatus.UNDER_REVIEW,
+        submittedAt: new Date(),
+        applicationFeePaid: true,
+        paymentDate: new Date(),
+        },
+      });
+    }
+  }
+
+  console.log("Seeded admission campaigns and applications");
+}
+
+async function main() {
+  console.log("🌱 Starting seed for Port Sudan International School...");
+
+  const school = await ensureSchool(PORTSUDAN_SCHOOL);
+  console.log(`✅ School created/found: ${school.name}`);
+
+  await ensureAuthUsers(school.id, PORTSUDAN_SCHOOL.domain);
+  console.log("✅ Auth users created");
+
+  const { schoolYear, term1, periods, yearLevels } = await ensureAcademicStructure(school.id);
+  console.log("✅ Academic structure created");
+
+  const { subjects } = await ensureDepartmentsAndSubjects(school.id);
+  console.log("✅ Departments and subjects created");
+
+  const { classrooms } = await ensureRooms(school.id);
+  console.log("✅ Classrooms created");
+
+  const { teachers, students } = await ensurePeople(school.id);
+  console.log(`✅ People created: ${teachers.length} teachers, ${students.length} students`);
+
+  await prisma.studentYearLevel.createMany({
+    data: students.map((st, idx) => ({
+      schoolId: school.id,
+      studentId: st.id,
+      levelId: yearLevels[idx % yearLevels.length].id,
+      yearId: schoolYear.id,
+    })),
+    skipDuplicates: true,
+  });
+  console.log("✅ Student year levels assigned");
+
+  await ensureClassesAndWork(
+    school.id,
+    term1.id,
+    periods,
+    classrooms,
+    subjects,
+    teachers,
+    students,
+  );
+  console.log("✅ Classes and assignments created");
+
+  // Port Sudan working days: Mon–Thu + Sat (Fri+Sun off)
+  const workingDays = [1, 2, 3, 4, 6];
+  const lunchAfter = 4;
+
+  await prisma.schoolWeekConfig.upsert({
+    where: { schoolId_termId: { schoolId: school.id, termId: term1.id } },
+    update: { workingDays, defaultLunchAfterPeriod: lunchAfter },
+    create: { schoolId: school.id, termId: term1.id, workingDays, defaultLunchAfterPeriod: lunchAfter },
+  });
+  console.log("✅ School week config created");
+
+  // Seed timetable
+  const someClasses = await prisma.class.findMany({
+    where: { schoolId: school.id, termId: term1.id },
+    select: { id: true, name: true, teacherId: true, classroomId: true },
+    take: 6,
+  });
+  const somePeriods = await prisma.period.findMany({
+    where: { schoolId: school.id, yearId: schoolYear.id },
+    orderBy: { startTime: "asc" },
+    select: { id: true },
+    take: 4,
+  });
+  const days = workingDays.slice(0, 5);
+  const timetableRows: any[] = [];
+  for (let d = 0; d < days.length; d++) {
+    for (let p = 0; p < somePeriods.length; p++) {
+      const cls = someClasses[(d + p) % someClasses.length];
+      timetableRows.push({
+        schoolId: school.id,
+        termId: term1.id,
+        dayOfWeek: days[d],
+        periodId: somePeriods[p].id,
+        classId: cls.id,
+        teacherId: cls.teacherId,
+        classroomId: cls.classroomId,
+        weekOffset: 0,
+      });
+    }
+  }
+  if (timetableRows.length > 0) {
+    await prisma.timetable.createMany({ data: timetableRows, skipDuplicates: true });
+  }
+  console.log("✅ Timetable created");
+
+  // Seed library books
+  await ensureLibraryBooks(school.id);
+
+  // Seed new modules
+  await ensureSchoolBranding(school.id);
+  await ensureAnnouncements(school.id, someClasses);
+  await ensureFeeStructures(school.id, someClasses, students);
+  await ensureExams(school.id, someClasses, subjects, students);
+  await ensureAdmissions(school.id);
+
+  console.log("✅✅✅ Seed completed successfully for Port Sudan International School!");
+  console.log(`📊 Summary:`);
+  console.log(`   - School: ${school.name}`);
+  console.log(`   - Teachers: ${teachers.length}`);
+  console.log(`   - Students: ${students.length}`);
+  console.log(`   - Classes: ${someClasses.length}`);
+  console.log(`   - Year Levels: ${yearLevels.length}`);
+  console.log(`   - Subjects: ${subjects.length}`);
 }
 
 main()

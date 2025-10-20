@@ -248,6 +248,7 @@ export interface LegacyTimetableData {
   day_time: string[]
   timetable: LegacyTimetableCell[][]
   update_date: string
+  lunchAfterPeriod?: number | null
 }
 
 // Dictionary type for i18n
