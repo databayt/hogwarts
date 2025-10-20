@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useLocale } from '@/components/internationalization/use-locale';
 import type { getDictionary } from "@/components/internationalization/dictionaries";
 import type { Locale } from "@/components/internationalization/config";
 // import { CalendarCheckmark, LightningBoltIcon } from '@/components/atom/airbnb-icons';
@@ -15,6 +16,7 @@ interface Props {
 const JoinContent = (props: Props) => {
   const { dictionary, lang, id } = props;
   const router = useRouter();
+  const { isRTL } = useLocale();
   const [selectedOption, setSelectedOption] = useState<string>('invite-with-codes');
 
   const dict = (dictionary as any)?.school?.onboarding || {};
@@ -60,7 +62,7 @@ const JoinContent = (props: Props) => {
               <button
                 key={option.id}
                 onClick={() => setSelectedOption(option.id)}
-                className={`w-full py-4 sm:py-5 px-4 sm:px-8 rounded-xl border transition-all duration-200 text-left ${
+                className={`w-full py-4 sm:py-5 px-4 sm:px-8 rounded-xl border transition-all duration-200 ${isRTL ? 'text-right' : 'text-left'} ${
                   selectedOption === option.id
                     ? 'border-foreground bg-accent'
                     : 'border-border hover:border-foreground/50'
@@ -68,7 +70,7 @@ const JoinContent = (props: Props) => {
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <div className="flex items-center space-x-3">
+                    <div className={`flex items-center ${isRTL ? 'space-x-reverse' : ''} space-x-3`}>
                       <h5 className="text-sm sm:text-base font-medium">
                         {option.title}
                       </h5>
@@ -82,7 +84,7 @@ const JoinContent = (props: Props) => {
                       {option.description}
                     </p>
                   </div>
-                  <div className="flex-shrink-0 ml-3">
+                  <div className={`flex-shrink-0 ${isRTL ? 'mr-3' : 'ml-3'}`}>
                     {/* <option.icon size={20} className="sm:w-6 sm:h-6" /> */}
                   </div>
                 </div>

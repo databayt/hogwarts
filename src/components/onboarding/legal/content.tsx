@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useLocale } from '@/components/internationalization/use-locale';
 import { HelpCircle } from 'lucide-react';
 import { useHostValidation } from '@/components/onboarding/host-validation-context';
 import { completeOnboarding } from './actions';
@@ -18,6 +19,7 @@ interface Props {
 const LegalContent = (props: Props) => {
   const { dictionary, lang, id } = props;
   const router = useRouter();
+  const { isRTL } = useLocale();
   const schoolId = id;
   const [hostingType, setHostingType] = useState<string>('private-individual');
   const [safetyFeatures, setSafetyFeatures] = useState<string[]>([]);
@@ -182,7 +184,7 @@ const LegalContent = (props: Props) => {
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 lg:gap-20 items-start">
           {/* Left column - Hosting type */}
           <div className="lg:col-span-2">
-            <div className="flex items-center space-x-2 mb-3 sm:mb-4">
+            <div className={`flex items-center ${isRTL ? 'space-x-reverse' : ''} space-x-2 mb-3 sm:mb-4`}>
               <h5 className="text-foreground">
                 {dict.operationalStatus || "What is your school's operational status?"}
               </h5>
@@ -190,7 +192,7 @@ const LegalContent = (props: Props) => {
             </div>
             
             <div className="space-y-2">
-              <label className="flex items-center space-x-2 cursor-pointer">
+              <label className={`flex items-center ${isRTL ? 'space-x-reverse' : ''} space-x-2 cursor-pointer`}>
                 <input
                   type="radio"
                   name="hosting-type"
@@ -217,7 +219,7 @@ const LegalContent = (props: Props) => {
                 <small className="text-foreground">{dict.existingSchoolLicenses || 'Existing school with valid licenses'}</small>
               </label>
 
-              <label className="flex items-center space-x-2 cursor-pointer">
+              <label className={`flex items-center ${isRTL ? 'space-x-reverse' : ''} space-x-2 cursor-pointer`}>
                 <input
                   type="radio"
                   name="hosting-type"
@@ -250,7 +252,7 @@ const LegalContent = (props: Props) => {
           <div className="lg:col-span-3 space-y-3 sm:space-y-4">
             {/* Safety Features */}
             <div>
-              <div className="flex items-center space-x-2 mb-3">
+              <div className={`flex items-center ${isRTL ? 'space-x-reverse' : ''} space-x-2 mb-3`}>
                 <h5 className="text-foreground">
                   {dict.schoolSafetyFeatures || 'Does your school have any of these?'}
                 </h5>
@@ -259,7 +261,7 @@ const LegalContent = (props: Props) => {
 
               <div className="space-y-2">
                 {safetyOptions.map((option) => (
-                  <label key={option} className="flex items-center justify-between cursor-pointer">
+                  <label key={option} className={`flex items-center justify-between cursor-pointer ${isRTL ? 'flex-row-reverse' : ''}`}>
                     <small className="text-foreground">{option}</small>
                     <input
                       type="checkbox"

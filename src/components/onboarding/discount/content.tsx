@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useLocale } from '@/components/internationalization/use-locale';
 import { HostStepLayout } from '@/components/onboarding';
 import { Card } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -19,6 +20,7 @@ interface Props {
 const DiscountPage = (props: Props) => {
   const { dictionary, lang, id } = props;
   const router = useRouter();
+  const { isRTL } = useLocale();
   const [selectedDiscounts, setSelectedDiscounts] = useState<string[]>([
     'new-listing',
     'last-minute',
