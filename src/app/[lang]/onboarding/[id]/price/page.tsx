@@ -15,18 +15,19 @@ interface Props {
 export default async function Price({ params }: Props) {
   const { lang, id } = await params;
   const dictionary = await getDictionary(lang);
+  const dict = (dictionary as any)?.school?.onboarding || {};
 
   return (
     <HostStepLayout
       title={
         <div className="space-y-3 sm:space-y-4">
           <h3>
-            Set your school&apos;s
+            {dict.pricePageTitle || "Set your school's"}
             <br />
-            tuition fees
+            {dict.pricePageTitleBreak || "tuition fees"}
           </h3>
           <p className="text-sm sm:text-base text-muted-foreground">
-            This will be the annual tuition fee for your school. You can change this later in your school settings.
+            {dict.pricePageDescription || "This will be the annual tuition fee for your school. You can change this later in your school settings."}
           </p>
         </div>
       }

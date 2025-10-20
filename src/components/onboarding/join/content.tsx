@@ -17,7 +17,7 @@ const JoinContent = (props: Props) => {
   const router = useRouter();
   const [selectedOption, setSelectedOption] = useState<string>('invite-with-codes');
 
-  const dict = (dictionary as any)?.onboarding || {};
+  const dict = (dictionary as any)?.school?.onboarding || {};
 
   const bookingOptions = [
     {

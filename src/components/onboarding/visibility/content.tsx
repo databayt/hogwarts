@@ -16,7 +16,7 @@ const VisibilityContent = (props: Props) => {
   const router = useRouter();
   const [selectedOption, setSelectedOption] = useState<string>('full-transparency');
 
-  const dict = (dictionary as any)?.onboarding || {};
+  const dict = (dictionary as any)?.school?.onboarding || {};
 
   const guestOptions = [
     {

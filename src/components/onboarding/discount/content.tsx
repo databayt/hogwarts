@@ -39,7 +39,7 @@ const DiscountPage = (props: Props) => {
     );
   };
 
-  const dict = (dictionary as any)?.onboarding || {};
+  const dict = (dictionary as any)?.school?.onboarding || {};
 
   const discounts = [
     {

@@ -25,7 +25,7 @@ const LegalContent = (props: Props) => {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [schoolData, setSchoolData] = useState<any>(null);
   const { setCustomNavigation, enableNext } = useHostValidation();
-  const dict = (dictionary as any)?.onboarding || {};
+  const dict = (dictionary as any)?.school?.onboarding || {};
 
   console.log("🏗️ [LEGAL CONTENT] Component initialized", {
     schoolId,

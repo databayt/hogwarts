@@ -20,7 +20,7 @@ export default function PriceContent(props: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const schoolId = id;
   const { enableNext } = useHostValidation();
-  const dict = (dictionary as any)?.onboarding || {};
+  const dict = (dictionary as any)?.school?.onboarding || {};
 
   // Enable next button since we have a default price
   useEffect(() => {
