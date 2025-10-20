@@ -160,8 +160,8 @@ export async function enrollInCourseAction(courseId: string) {
           },
         ],
         mode: "payment",
-        success_url: `${env.NEXT_PUBLIC_APP_URL}/${locale}/s/${subdomain}/stream/payment/success?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${env.NEXT_PUBLIC_APP_URL}/${locale}/s/${subdomain}/stream/payment/cancel`,
+        success_url: `${env.NEXT_PUBLIC_APP_URL}/${locale}/stream/payment/success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${env.NEXT_PUBLIC_APP_URL}/${locale}/stream/payment/cancel`,
         metadata: {
           userId: session.user.id,
           courseId: course.id,
@@ -190,7 +190,7 @@ export async function enrollInCourseAction(courseId: string) {
       checkoutUrl = result.checkoutUrl;
     } else {
       // Free course - redirect to course page
-      redirect(`/${locale}/s/${subdomain}/stream/dashboard/${course.slug}`);
+      redirect(`/${locale}/stream/dashboard/${course.slug}`);
     }
   } catch (error) {
     console.error("Enrollment error:", error);
