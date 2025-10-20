@@ -1,6 +1,7 @@
 "use server";
 
 import { auth } from "@/auth";
+import { getTenantContext } from "@/lib/tenant-context";
 import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 
@@ -11,12 +12,21 @@ type ApiResponse = {
 
 export async function deleteCourse(courseId: string): Promise<ApiResponse> {
   const session = await auth();
+  const { schoolId } = await getTenantContext();
 
   // Check authentication
   if (!session?.user) {
     return {
       status: "error",
       message: "Unauthorized",
+    };
+  }
+
+  // Check school context
+  if (!schoolId) {
+    return {
+      status: "error",
+      message: "School context required",
     };
   }
 
@@ -33,6 +43,21 @@ export async function deleteCourse(courseId: string): Promise<ApiResponse> {
   }
 
   try {
+    // Verify course belongs to this school before deleting (CRITICAL for multi-tenant security)
+    const course = await db.streamCourse.findFirst({
+      where: {
+        id: courseId,
+        schoolId, // IMPORTANT: Multi-tenant scope
+      },
+    });
+
+    if (!course) {
+      return {
+        status: "error",
+        message: "Course not found or access denied",
+      };
+    }
+
     await db.streamCourse.delete({
       where: {
         id: courseId,

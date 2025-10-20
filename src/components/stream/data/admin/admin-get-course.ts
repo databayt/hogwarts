@@ -5,10 +5,18 @@ import { notFound } from "next/navigation";
 
 /**
  * Fetches a course by ID for admin editing
+ * Multi-tenant: Scoped by schoolId
  */
-export async function adminGetCourse(courseId: string) {
-  const course = await db.streamCourse.findUnique({
-    where: { id: courseId },
+export async function adminGetCourse(courseId: string, schoolId: string | null) {
+  if (!schoolId) {
+    notFound();
+  }
+
+  const course = await db.streamCourse.findFirst({
+    where: {
+      id: courseId,
+      schoolId, // IMPORTANT: Multi-tenant scope
+    },
     include: {
       category: true,
       chapters: {

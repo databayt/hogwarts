@@ -1,4 +1,5 @@
 import { adminGetCourse } from "@/components/stream/data/admin/admin-get-course";
+import { getTenantContext } from "@/lib/tenant-context";
 import {
   Card,
   CardContent,
@@ -14,7 +15,8 @@ type Params = Promise<{ courseId: string }>;
 
 export default async function StreamEditCoursePage({ params }: { params: Params }) {
   const { courseId } = await params;
-  const data = await adminGetCourse(courseId);
+  const { schoolId } = await getTenantContext();
+  const data = await adminGetCourse(courseId, schoolId);
 
   return (
     <div>
