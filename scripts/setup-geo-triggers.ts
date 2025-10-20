@@ -5,11 +5,9 @@
 
 import { readFileSync } from 'fs'
 import { join } from 'path'
-import { config } from 'dotenv'
 import pg from 'pg'
 
-// Load environment variables
-config()
+// Environment variables are loaded by Next.js
 
 const { Pool } = pg
 
