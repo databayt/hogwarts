@@ -11,6 +11,7 @@ import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { AnalyticsProvider } from "@/components/monitoring/analytics-provider";
 import { ServiceWorkerProvider } from "@/components/providers/service-worker-provider";
 import "../globals.css";
+import "leaflet/dist/leaflet.css";
 
 // Configure fonts
 const tajawal = Tajawal({

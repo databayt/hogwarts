@@ -32,6 +32,9 @@ export const RATE_LIMITS = {
   
   // Public endpoints - moderate limits
   PUBLIC: { windowMs: 60 * 1000, maxRequests: 30 },  // 30 requests per minute
+
+  // Geolocation endpoints - high frequency allowed (student location tracking)
+  GEO_LOCATION: { windowMs: 10 * 1000, maxRequests: 20 },  // 20 requests per 10 seconds
 } as const;
 
 /**

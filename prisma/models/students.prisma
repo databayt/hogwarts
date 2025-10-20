@@ -116,6 +116,10 @@ model Student {
   scholarshipApplications ScholarshipApplication[]
   fines                 Fine[]
 
+  // Geo-Attendance relations
+  locationTraces        LocationTrace[]
+  geoAttendanceEvents   GeoAttendanceEvent[]
+
   // Auth relationship
   userId String? @unique
   user   User?   @relation(fields: [userId], references: [id])
