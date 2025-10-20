@@ -63,7 +63,7 @@ export function StreamHomeContent({
               className={buttonVariants({
                 size: "lg",
               })}
-              href={`/${lang}/s/${schoolId ? schoolId : "demo"}/stream/courses`}
+              href={`/${lang}/stream/courses`}
             >
               {dictionary?.home?.exploreCourses || "Explore Courses"}
             </Link>
@@ -73,7 +73,7 @@ export function StreamHomeContent({
                 size: "lg",
                 variant: "outline",
               })}
-              href={`/${lang}/s/${schoolId ? schoolId : "demo"}/auth/login`}
+              href={`/${lang}/login`}
             >
               {dictionary?.home?.signIn || "Sign in"}
             </Link>

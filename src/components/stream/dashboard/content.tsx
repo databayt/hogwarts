@@ -34,7 +34,7 @@ export function StreamDashboardContent({ dictionary, lang, schoolId, userId }: P
               </p>
               <Link
                 className={buttonVariants()}
-                href="/stream/courses"
+                href={`/${lang}/stream/courses`}
               >
                 Browse Courses
               </Link>
