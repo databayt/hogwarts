@@ -20,6 +20,7 @@ export default function PriceContent(props: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const schoolId = id;
   const { enableNext } = useHostValidation();
+  const dict = (dictionary as any)?.onboarding || {};
 
   // Enable next button since we have a default price
   useEffect(() => {
@@ -105,14 +106,14 @@ export default function PriceContent(props: Props) {
       <div className="mb-4 flex justify-center">
         <Button variant="outline" className="inline-flex items-center space-x-2 rounded-full">
           <DollarSign size={12} />
-          <span>{dictionary.onboarding.viewSimilarSchools}</span>
+          <span>{dict.viewSimilarSchools || 'View similar schools'}</span>
         </Button>
       </div>
 
       {/* Learn more link */}
       <div className="flex justify-center">
         <Button variant="link" className="text-muted-foreground underline hover:no-underline p-0">
-          {dictionary.onboarding.learnMoreAboutFees}
+          {dict.learnMoreAboutFees || 'Learn more about fees'}
         </Button>
       </div>
     </div>

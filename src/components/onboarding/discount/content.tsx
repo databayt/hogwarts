@@ -32,38 +32,40 @@ const DiscountPage = (props: Props) => {
   }, [enableNext]);
 
   const toggleDiscount = (discountId: string) => {
-    setSelectedDiscounts(prev => 
+    setSelectedDiscounts(prev =>
       prev.includes(discountId)
         ? prev.filter(id => id !== discountId)
         : [...prev, discountId]
     );
   };
 
+  const dict = (dictionary as any)?.onboarding || {};
+
   const discounts = [
     {
       id: 'new-listing',
       percentage: '20%',
-      title: dictionary.onboarding.newFamilyPromotion,
-      description: dictionary.onboarding.newFamilyPromotionDescription,
+      title: dict.newFamilyPromotion || 'New family promotion',
+      description: dict.newFamilyPromotionDescription || 'Offer 20% off first semester for new student enrollments',
     },
     {
       id: 'last-minute',
       percentage: '25%',
-      title: dictionary.onboarding.siblingDiscount,
-      description: dictionary.onboarding.siblingDiscountDescription,
+      title: dict.siblingDiscount || 'Sibling discount',
+      description: dict.siblingDiscountDescription || 'For families enrolling multiple children',
     },
     {
       id: 'weekly',
       percentage: '10%',
-      title: dictionary.onboarding.earlyEnrollmentDiscount,
-      description: dictionary.onboarding.earlyEnrollmentDiscountDescription,
+      title: dict.earlyEnrollmentDiscount || 'Early enrollment discount',
+      description: dict.earlyEnrollmentDiscountDescription || 'enroll 30 days before term starts',
     },
   ];
 
   return (
     <HostStepLayout
-      title={dictionary.onboarding.addDiscounts}
-      subtitle={dictionary.onboarding.addDiscountsSubtitle}
+      title={dict.addDiscounts || 'Add discounts'}
+      subtitle={dict.addDiscountsSubtitle || 'Attract more families and fill your enrollment faster with these promotional offers.'}
     >
       <div className="space-y-4">
         {discounts.map((discount) => (

@@ -16,17 +16,18 @@ const VisibilityContent = (props: Props) => {
   const router = useRouter();
   const [selectedOption, setSelectedOption] = useState<string>('full-transparency');
 
+  const dict = (dictionary as any)?.onboarding || {};
 
   const guestOptions = [
     {
       id: 'full-transparency',
-      title: dictionary.onboarding.fullTransparency,
-      description: dictionary.onboarding.fullTransparencyDescription
+      title: dict.fullTransparency || 'Full transparency',
+      description: dict.fullTransparencyDescription || 'Share attendance reports, announcements, and academic progress with all relevant parties.'
     },
     {
       id: 'limited-sharing',
-      title: dictionary.onboarding.limitedSharing,
-      description: dictionary.onboarding.limitedSharingDescription,
+      title: dict.limitedSharing || 'Limited sharing',
+      description: dict.limitedSharingDescription || 'Share only essential information and require approval for detailed reports.',
     },
   ];
 
@@ -37,12 +38,12 @@ const VisibilityContent = (props: Props) => {
           {/* Left column - Title and description */}
           <div className="lg:col-span-2 space-y-3 sm:space-y-4">
             <h3>
-              {dictionary.onboarding.visibilityPageTitle}
+              {dict.visibilityPageTitle || "Choose your school's information visibility"}
             </h3>
             <p className="text-sm sm:text-base text-muted-foreground">
-              {dictionary.onboarding.visibilityPageDescription}{' '}
+              {dict.visibilityPageDescription || 'This determines what information is shared with parents and students.'}{' '}
               <button className="underline hover:no-underline text-foreground">
-                {dictionary.onboarding.joinLearnMore}
+                {dict.joinLearnMore || 'Learn more'}
               </button>
             </p>
           </div>

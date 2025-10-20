@@ -25,6 +25,7 @@ const LegalContent = (props: Props) => {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [schoolData, setSchoolData] = useState<any>(null);
   const { setCustomNavigation, enableNext } = useHostValidation();
+  const dict = (dictionary as any)?.onboarding || {};
 
   console.log("🏗️ [LEGAL CONTENT] Component initialized", {
     schoolId,
@@ -149,9 +150,9 @@ const LegalContent = (props: Props) => {
   };
 
   const safetyOptions = [
-    dictionary.onboarding.cctvSurveillance,
-    dictionary.onboarding.emergencyAlarm,
-    dictionary.onboarding.transportationServices,
+    dict.cctvSurveillance || 'CCTV surveillance system',
+    dict.emergencyAlarm || 'Emergency alarm system',
+    dict.transportationServices || 'Transportation services',
   ];
 
   const isFormValid = hostingType && safetyFeatures.length >= 0; // At least hosting type selected
@@ -173,7 +174,7 @@ const LegalContent = (props: Props) => {
         {/* Title at the top */}
         <div className="mb-6 sm:mb-8">
           <h2 className="text-xl sm:text-2xl lg:text-4xl font-medium text-foreground">
-            {dictionary.onboarding.shareSafetyDetails}
+            {dict.shareSafetyDetails || 'Share safety details'}
           </h2>
         </div>
 
@@ -183,7 +184,7 @@ const LegalContent = (props: Props) => {
           <div className="lg:col-span-2">
             <div className="flex items-center space-x-2 mb-3 sm:mb-4">
               <h5 className="text-foreground">
-                {dictionary.onboarding.operationalStatus}
+                {dict.operationalStatus || "What is your school's operational status?"}
               </h5>
               <HelpCircle size={16} className="text-muted-foreground sm:w-4.5 sm:h-4.5" />
             </div>
@@ -213,7 +214,7 @@ const LegalContent = (props: Props) => {
                     <div className="w-1.5 h-1.5 rounded-full bg-background"></div>
                   )}
                 </div>
-                <small className="text-foreground">{dictionary.onboarding.existingSchoolLicenses}</small>
+                <small className="text-foreground">{dict.existingSchoolLicenses || 'Existing school with valid licenses'}</small>
               </label>
 
               <label className="flex items-center space-x-2 cursor-pointer">
@@ -240,7 +241,7 @@ const LegalContent = (props: Props) => {
                     <div className="w-1.5 h-1.5 rounded-full bg-background"></div>
                   )}
                 </div>
-                <small className="text-foreground">{dictionary.onboarding.newSchoolRegistration}</small>
+                <small className="text-foreground">{dict.newSchoolRegistration || 'New school seeking registration'}</small>
               </label>
             </div>
           </div>
@@ -251,7 +252,7 @@ const LegalContent = (props: Props) => {
             <div>
               <div className="flex items-center space-x-2 mb-3">
                 <h5 className="text-foreground">
-                  {dictionary.onboarding.schoolSafetyFeatures}
+                  {dict.schoolSafetyFeatures || 'Does your school have any of these?'}
                 </h5>
                 <HelpCircle size={16} className="text-muted-foreground sm:w-4.5 sm:h-4.5" />
               </div>
@@ -287,10 +288,10 @@ const LegalContent = (props: Props) => {
             {/* Important Information */}
             <div className="space-y-3">
               <h6 className="text-foreground">
-                {dictionary.onboarding.importantThingsToKnow}
+                {dict.importantThingsToKnow || 'Important things to know'}
               </h6>
               <small className="block text-muted-foreground leading-relaxed">
-                {dictionary.onboarding.complianceNotice} <span className="underline">{dictionary.onboarding.localEducationLaws}</span> {dictionary.onboarding.andReviewOur} <span className="underline">{dictionary.onboarding.schoolRegistrationGuidelines}</span> {dictionary.onboarding.and} <span className="underline">{dictionary.onboarding.feeStructure}</span>.
+                {dict.complianceNotice || 'Be sure to comply with your'} <span className="underline">{dict.localEducationLaws || 'local education laws'}</span> {dict.andReviewOur || 'and review our'} <span className="underline">{dict.schoolRegistrationGuidelines || 'school registration guidelines'}</span> {dict.and || 'and'} <span className="underline">{dict.feeStructure || 'fee structure'}</span>.
               </small>
             </div>
           </div>

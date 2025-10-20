@@ -17,20 +17,21 @@ const JoinContent = (props: Props) => {
   const router = useRouter();
   const [selectedOption, setSelectedOption] = useState<string>('invite-with-codes');
 
+  const dict = (dictionary as any)?.onboarding || {};
 
   const bookingOptions = [
     {
       id: 'invite-with-codes',
-      title: dictionary.onboarding.inviteWithCodes,
-      subtitle: dictionary.onboarding.inviteWithCodesSubtitle,
-      description: dictionary.onboarding.inviteWithCodesDescription,
+      title: dict.inviteWithCodes || 'Invite with registration codes',
+      subtitle: dict.inviteWithCodesSubtitle || 'Recommended',
+      description: dict.inviteWithCodesDescription || 'Generate invitation codes that teachers, staff, students and parents can use to self-register. You can review and finalizing.',
       // icon: CalendarCheckmark,
       recommended: true,
     },
     {
       id: 'manual-enrollment',
-      title: dictionary.onboarding.manualEnrollment,
-      description: dictionary.onboarding.manualEnrollmentDescription,
+      title: dict.manualEnrollment || 'Manual enrollment',
+      description: dict.manualEnrollmentDescription || 'Add all teachers, staff, and students yourself through the admin panel.',
       // icon: LightningBoltIcon,
       recommended: false,
     },
@@ -43,12 +44,12 @@ const JoinContent = (props: Props) => {
           {/* Left column - Title and description */}
           <div className="space-y-3 sm:space-y-4">
             <h3>
-              {dictionary.onboarding.joinPageTitle}<br /> {dictionary.onboarding.joinPageTitleBreak}
+              {dict.joinPageTitle || 'How students'}<br /> {dict.joinPageTitleBreak || 'join your school'}
             </h3>
             <p className="text-sm sm:text-base text-muted-foreground">
-              {dictionary.onboarding.joinPageDescription}{' '}
+              {dict.joinPageDescription || 'You can change this at any time.'}{' '}
               <button className="underline hover:no-underline text-foreground">
-                {dictionary.onboarding.joinLearnMore}
+                {dict.joinLearnMore || 'Learn more'}
               </button>
             </p>
           </div>
