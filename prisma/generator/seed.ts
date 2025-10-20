@@ -330,7 +330,7 @@ async function ensurePeople(schoolId: string) {
     teacherUsers.push({ id: user.id, email });
   }
 
-  const teachers: { id: string; emailAddress: string }[] = [];
+  const teachers: { id: string; userId: string; emailAddress: string }[] = [];
   for (let i = 0; i < teacherSeeds.length; i++) {
     const t = teacherSeeds[i];
     const user = teacherUsers[i];
@@ -346,7 +346,7 @@ async function ensurePeople(schoolId: string) {
         userId: user.id,
       },
     });
-    teachers.push({ id: teacher.id, emailAddress: user.email });
+    teachers.push({ id: teacher.id, userId: user.id, emailAddress: user.email });
   }
 
   // Departments link (assign first two teachers)
@@ -891,12 +891,16 @@ async function ensureFeeStructures(
 
     // Create payments for paid students
     if (i < 20) {
-      await prisma.payment.create({
-        data: {
+      const paymentNumber = `PAY-2025-${String(i + 1).padStart(5, "0")}`;
+
+      await prisma.payment.upsert({
+        where: { paymentNumber },
+        update: {},
+        create: {
           schoolId,
           feeAssignmentId: feeAssignment.id,
           studentId: student.id,
-          paymentNumber: `PAY-2025-${String(i + 1).padStart(5, "0")}`,
+          paymentNumber,
           amount: "20000.00",
           paymentDate: new Date(),
           paymentMethod: i % 3 === 0 ? PaymentMethod.CASH : i % 3 === 1 ? PaymentMethod.BANK_TRANSFER : PaymentMethod.CHEQUE,
@@ -971,8 +975,15 @@ async function ensureExams(
     const mathMarks = faker.number.int({ min: 45, max: 98 });
     const arabicMarks = faker.number.int({ min: 50, max: 95 });
 
-    await prisma.examResult.create({
-      data: {
+    await prisma.examResult.upsert({
+      where: {
+        examId_studentId: {
+          examId: mathExam.id,
+          studentId: students[i].id,
+        },
+      },
+      update: {},
+      create: {
         schoolId,
         examId: mathExam.id,
         studentId: students[i].id,
@@ -984,8 +995,15 @@ async function ensureExams(
       },
     });
 
-    await prisma.examResult.create({
-      data: {
+    await prisma.examResult.upsert({
+      where: {
+        examId_studentId: {
+          examId: arabicExam.id,
+          studentId: students[i].id,
+        },
+      },
+      update: {},
+      create: {
         schoolId,
         examId: arabicExam.id,
         studentId: students[i].id,
@@ -1086,7 +1104,7 @@ async function ensureAdmissions(schoolId: string) {
 
 async function ensureStreamCourses(
   schoolId: string,
-  teachers: { id: string; name: string }[]
+  teachers: { id: string; userId: string; emailAddress: string }[]
 ) {
   console.log("Seeding Stream (LMS) courses...");
 
@@ -1295,7 +1313,7 @@ async function ensureStreamCourses(
       data: {
         ...courseInfo,
         schoolId,
-        userId: teachers[0]?.id || "system", // Assign to first teacher or system
+        userId: teachers[0]?.userId, // Assign to first teacher's User ID
       },
     });
 
