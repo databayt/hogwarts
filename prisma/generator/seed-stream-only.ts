@@ -22,14 +22,18 @@ async function seedStreamCoursesOnly() {
 
   console.log(`✅ Found school: ${school.name} (${school.id})\n`);
 
-  // Get teachers
-  const teachers = await prisma.teacher.findMany({
+  // Get a user from the school to be the course creator
+  const schoolUser = await prisma.user.findFirst({
     where: { schoolId: school.id },
-    select: { id: true, name: true },
-    take: 5,
+    select: { id: true },
   });
 
-  console.log(`✅ Found ${teachers.length} teachers\n`);
+  if (!schoolUser) {
+    console.error("❌ No user found for the school!");
+    return;
+  }
+
+  console.log(`✅ Found school user: ${schoolUser.id}\n`);
 
   // Create categories
   const categories = [
@@ -411,7 +415,7 @@ async function seedStreamCoursesOnly() {
       data: {
         ...courseInfo,
         schoolId: school.id,
-        userId: teachers[0]?.id || "system",
+        userId: schoolUser.id,
       },
     });
 

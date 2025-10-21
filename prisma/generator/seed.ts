@@ -594,18 +594,24 @@ async function ensureClassesAndWork(
     skipDuplicates: true,
   });
 
-  // Attendance for today (mark PRESENT/ABSENT alternately in first class)
+  // Attendance for today (mark PRESENT/ABSENT alternately in first class) - batch create
   if (classesCreated[0]) {
     const clazzId = classesCreated[0].id;
     const today = new Date();
     const dateOnly = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()));
-    for (const [index, s] of students.entries()) {
-      await prisma.attendance.upsert({
-        where: { schoolId_studentId_classId_date: { schoolId, studentId: s.id, classId: clazzId, date: dateOnly } },
-        update: {},
-        create: { schoolId, studentId: s.id, classId: clazzId, date: dateOnly, status: index % 3 === 0 ? AttendanceStatus.ABSENT : AttendanceStatus.PRESENT },
-      });
-    }
+
+    const attendanceRecords = students.map((s, index) => ({
+      schoolId,
+      studentId: s.id,
+      classId: clazzId,
+      date: dateOnly,
+      status: index % 3 === 0 ? AttendanceStatus.ABSENT : AttendanceStatus.PRESENT,
+    }));
+
+    await prisma.attendance.createMany({
+      data: attendanceRecords,
+      skipDuplicates: true,
+    });
   }
 }
 

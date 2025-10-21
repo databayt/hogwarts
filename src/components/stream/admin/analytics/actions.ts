@@ -39,13 +39,22 @@ export async function getStreamAnalytics(): Promise<AnalyticsData | null> {
     // Get total counts
     const [totalCourses, totalEnrollments, enrollments] = await Promise.all([
       db.streamCourse.count({
-        where: { schoolId, isPublished: true },
+        where: {
+          schoolId: schoolId || undefined,
+          isPublished: true,
+        },
       }),
       db.streamEnrollment.count({
-        where: { schoolId, isActive: true },
+        where: {
+          schoolId: schoolId || undefined,
+          isActive: true,
+        },
       }),
       db.streamEnrollment.findMany({
-        where: { schoolId, isActive: true },
+        where: {
+          schoolId: schoolId || undefined,
+          isActive: true,
+        },
         include: {
           course: {
             select: {
@@ -80,7 +89,7 @@ export async function getStreamAnalytics(): Promise<AnalyticsData | null> {
     const recentEnrollments = await db.streamEnrollment.groupBy({
       by: ["createdAt"],
       where: {
-        schoolId,
+        schoolId: schoolId || undefined,
         createdAt: {
           gte: sevenDaysAgo,
         },
