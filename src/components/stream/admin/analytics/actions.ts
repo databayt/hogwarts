@@ -145,7 +145,7 @@ export async function getStreamAnalytics(): Promise<AnalyticsData | null> {
 
     const revenueData = await db.streamEnrollment.findMany({
       where: {
-        schoolId,
+        schoolId: schoolId || undefined,
         createdAt: {
           gte: sixMonthsAgo,
         },

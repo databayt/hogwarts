@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Upload, X, File, Video, Image as ImageIcon, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 
 interface FileUploadProps {
   value?: string;
@@ -55,7 +55,6 @@ export function FileUpload({
       toast({
         title: "File too large",
         description: `Maximum file size is ${MAX_SIZE_MB[accept]}MB`,
-        variant: "destructive",
       });
       return;
     }
@@ -93,7 +92,6 @@ export function FileUpload({
       toast({
         title: "Upload failed",
         description: error instanceof Error ? error.message : "Failed to upload file",
-        variant: "destructive",
       });
     } finally {
       setIsUploading(false);
@@ -138,7 +136,6 @@ export function FileUpload({
       toast({
         title: "Delete failed",
         description: error instanceof Error ? error.message : "Failed to delete file",
-        variant: "destructive",
       });
     }
   };

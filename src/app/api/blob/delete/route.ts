@@ -82,7 +82,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // 7. Verify file belongs to user's school (pathname should start with stream/{schoolId}/)
-    if (session.user.role !== "DEVELOPER") {
+    if (session.user.role !== "DEVELOPER" && schoolId) {
       const expectedPrefix = `stream/${schoolId}/`;
       if (!pathname.startsWith(expectedPrefix)) {
         return NextResponse.json(
@@ -100,7 +100,7 @@ export async function DELETE(request: NextRequest) {
           videoUrl: url,
           chapter: {
             course: {
-              schoolId: schoolId || undefined,
+              schoolId: schoolId ?? undefined,
             },
           },
         },
@@ -112,7 +112,7 @@ export async function DELETE(request: NextRequest) {
           lesson: {
             chapter: {
               course: {
-                schoolId: schoolId || undefined,
+                schoolId: schoolId ?? undefined,
               },
             },
           },
@@ -123,7 +123,7 @@ export async function DELETE(request: NextRequest) {
         where: {
           videoUrl: url,
           course: {
-            schoolId: schoolId || undefined,
+            schoolId: schoolId ?? undefined,
           },
         },
       }),
@@ -145,7 +145,7 @@ export async function DELETE(request: NextRequest) {
     // 10. Log successful deletion
     logger.info("Blob deleted successfully", {
       action: "blob_delete",
-      schoolId,
+      schoolId: schoolId ?? "platform",
       userId: session.user.id,
       url,
       pathname,

@@ -126,7 +126,7 @@ export async function POST(request: NextRequest) {
     // 7. Generate unique filename with school context
     const timestamp = Date.now();
     const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
-    const filename = `stream/${schoolId || "platform"}/${category}/${timestamp}_${sanitizedName}`;
+    const filename = `stream/${schoolId ?? "platform"}/${category}/${timestamp}_${sanitizedName}`;
 
     // 8. Upload to Vercel Blob
     const blob = await put(filename, file, {
@@ -137,7 +137,7 @@ export async function POST(request: NextRequest) {
     // 9. Log successful upload
     logger.info("Blob upload successful", {
       action: "blob_upload",
-      schoolId,
+      schoolId: schoolId ?? "platform",
       userId: session.user.id,
       filename: blob.pathname,
       size: file.size,
