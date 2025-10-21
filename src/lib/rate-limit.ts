@@ -35,6 +35,11 @@ export const RATE_LIMITS = {
 
   // Geolocation endpoints - high frequency allowed (student location tracking)
   GEO_LOCATION: { windowMs: 10 * 1000, maxRequests: 20 },  // 20 requests per 10 seconds
+
+  // Stream endpoints - file upload/delete limits
+  STREAM_UPLOAD: { windowMs: 60 * 1000, maxRequests: 10 },  // 10 uploads per minute
+  STREAM_ENROLLMENT: { windowMs: 60 * 1000, maxRequests: 5 },  // 5 enrollments per minute
+  STREAM_API: { windowMs: 60 * 1000, maxRequests: 60 },  // 60 requests per minute
 } as const;
 
 /**

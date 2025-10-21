@@ -69,6 +69,8 @@ async function seedStreamCoursesOnly() {
       imageUrl:
         "https://images.unsplash.com/photo-1526379095098-d400fd0bf935?w=800&h=450&fit=crop",
       isPublished: true,
+      level: "BEGINNER" as const,
+      status: "PUBLISHED" as const,
       chapters: [
         {
           title: "Getting Started with Python",
@@ -163,6 +165,8 @@ async function seedStreamCoursesOnly() {
       imageUrl:
         "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=800&h=450&fit=crop",
       isPublished: true,
+      level: "ADVANCED" as const,
+      status: "PUBLISHED" as const,
       chapters: [
         {
           title: "Calculus Fundamentals",
@@ -227,6 +231,8 @@ async function seedStreamCoursesOnly() {
       imageUrl:
         "https://images.unsplash.com/photo-1636466497217-26a8cbeaf0aa?w=800&h=450&fit=crop",
       isPublished: true,
+      level: "INTERMEDIATE" as const,
+      status: "PUBLISHED" as const,
       chapters: [
         {
           title: "Newton's Laws of Motion",
@@ -291,6 +297,8 @@ async function seedStreamCoursesOnly() {
       imageUrl:
         "https://images.unsplash.com/photo-1546410531-bb4caa6b424d?w=800&h=450&fit=crop",
       isPublished: true,
+      level: "BEGINNER" as const,
+      status: "PUBLISHED" as const,
       chapters: [
         {
           title: "Grammar Essentials",
@@ -355,6 +363,8 @@ async function seedStreamCoursesOnly() {
       imageUrl:
         "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=800&h=450&fit=crop",
       isPublished: true,
+      level: "INTERMEDIATE" as const,
+      status: "PUBLISHED" as const,
       chapters: [
         {
           title: "Introduction to Management",
