@@ -190,16 +190,16 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
     async session({ session, token, user, trigger }) {
       // Only log in development
       if (process.env.NODE_ENV === 'development') {
-        console.log('📋 [DEBUG] SESSION CALLBACK START:', { 
+        console.log('📋 [DEBUG] SESSION CALLBACK START:', {
           trigger,
-          hasToken: !!token, 
+          hasToken: !!token,
           hasUser: !!user,
           sessionUser: session.user?.id,
           timestamp: new Date().toISOString(),
           host: typeof window !== 'undefined' ? window.location.host : 'server'
         });
       }
-      
+
       if (token) {
         if (process.env.NODE_ENV === 'development') {
           console.log('🔑 [DEBUG] Token data available:', {
@@ -214,9 +214,23 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
         // Always ensure we have the latest token data
         session.user.id = token.id as string
 
-        // Apply role and schoolId from token
-        if (token.role) {
+        // Check for preview role from cookies
+        const cookieStore = await cookies();
+        const previewRoleCookie = cookieStore.get('preview-role');
+        const previewModeCookie = cookieStore.get('preview-mode');
+
+        // Apply role from preview or token
+        if (previewModeCookie?.value === 'true' && previewRoleCookie?.value) {
+          // Apply preview role if preview mode is active
+          (session.user as any).role = previewRoleCookie.value
+          (session.user as any).isPreviewMode = true
+          if (process.env.NODE_ENV === 'development') {
+            console.log('🎭 [DEBUG] Preview role applied to session:', previewRoleCookie.value);
+          }
+        } else if (token.role) {
+          // Apply normal role from token
           (session.user as any).role = token.role
+          (session.user as any).isPreviewMode = false
           if (process.env.NODE_ENV === 'development') {
             console.log('🎭 [DEBUG] Role applied to session:', token.role);
           }

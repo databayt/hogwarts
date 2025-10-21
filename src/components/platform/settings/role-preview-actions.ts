@@ -33,22 +33,24 @@ export async function setPreviewRole(role: UserRole) {
   // Set cookies for preview mode
   const cookieStore = await cookies();
 
-  // Set preview role cookie
+  // Set preview role cookie with same domain config as auth cookies
   cookieStore.set(PREVIEW_ROLE_COOKIE, role, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
-    maxAge: 60 * 60 * 24, // 24 hours
+    maxAge: 60 * 60 * 24 * 7, // 7 days (longer persistence)
     path: "/",
+    domain: process.env.NODE_ENV === "production" ? '.databayt.org' : undefined,
   });
 
-  // Set preview mode flag
+  // Set preview mode flag with same domain config as auth cookies
   cookieStore.set(PREVIEW_MODE_COOKIE, "true", {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
-    maxAge: 60 * 60 * 24, // 24 hours
+    maxAge: 60 * 60 * 24 * 7, // 7 days (longer persistence)
     path: "/",
+    domain: process.env.NODE_ENV === "production" ? '.databayt.org' : undefined,
   });
 
   // Revalidate all paths to reflect the new role
