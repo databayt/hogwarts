@@ -1,6 +1,26 @@
 // Stream (LMS) Module Models
 // All models include schoolId for multi-tenant support
 
+enum StreamCourseLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum StreamCourseStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum StreamEnrollmentStatus {
+  PENDING
+  ACTIVE
+  COMPLETED
+  CANCELLED
+  EXPIRED
+}
+
 model StreamCourse {
   id          String   @id @default(cuid())
   schoolId    String   // Multi-tenant support
@@ -10,6 +30,8 @@ model StreamCourse {
   imageUrl    String?
   price       Float?
   isPublished Boolean  @default(false)
+  level       StreamCourseLevel @default(BEGINNER)
+  status      StreamCourseStatus @default(DRAFT)
 
   categoryId  String?
   category    StreamCategory? @relation(fields: [categoryId], references: [id])
@@ -120,6 +142,7 @@ model StreamEnrollment {
   stripePriceId          String?
 
   isActive  Boolean  @default(true)
+  status    StreamEnrollmentStatus @default(PENDING)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

@@ -1347,6 +1347,342 @@ async function ensureStreamCourses(
   console.log("✅ Stream courses seeded successfully");
 }
 
+async function ensureLibraryCirculation(
+  schoolId: string,
+  students: { id: string }[]
+) {
+  console.log("Seeding library circulation records...");
+
+  // Get some books
+  const books = await prisma.book.findMany({
+    where: { schoolId },
+    take: 5,
+  });
+
+  if (books.length === 0) return;
+
+  // Get students with their userId
+  const studentRecords = await prisma.student.findMany({
+    where: { schoolId, id: { in: students.map(s => s.id) } },
+    select: { id: true, userId: true },
+    take: 10,
+  });
+
+  // Create 10 borrow records
+  for (let i = 0; i < studentRecords.length; i++) {
+    const student = studentRecords[i];
+    const book = books[i % books.length];
+    const borrowDate = new Date();
+    borrowDate.setDate(borrowDate.getDate() - faker.number.int({ min: 1, max: 30 }));
+
+    const dueDate = new Date(borrowDate);
+    dueDate.setDate(dueDate.getDate() + 14); // 2 weeks
+
+    const isReturned = i < 5; // First 5 are returned
+    const returnDate = isReturned ? new Date(dueDate.getTime() - faker.number.int({ min: 1, max: 7 }) * 24 * 60 * 60 * 1000) : null;
+
+    const existingRecord = await prisma.borrowRecord.findFirst({
+      where: {
+        schoolId,
+        userId: student.userId,
+        bookId: book.id,
+      },
+    });
+
+    if (!existingRecord) {
+      await prisma.borrowRecord.create({
+        data: {
+          schoolId,
+          userId: student.userId,
+          bookId: book.id,
+          borrowDate,
+          dueDate,
+          returnDate,
+          status: isReturned ? "RETURNED" : new Date() > dueDate ? "OVERDUE" : "BORROWED",
+        },
+      });
+    }
+  }
+
+  console.log("✅ Library circulation records seeded");
+}
+
+async function ensureLessonPlans(
+  schoolId: string,
+  classes: { id: string; name: string }[]
+) {
+  console.log("Seeding lesson plans...");
+
+  const lessonTopics = [
+    { title: "Introduction to Algebra", objectives: "Understand basic algebraic concepts and solve simple equations" },
+    { title: "Arabic Grammar: Verb Conjugation", objectives: "Master present and past tense conjugation in Arabic" },
+    { title: "English Literature: Poetry Analysis", objectives: "Analyze poetic devices and themes in classical poetry" },
+    { title: "Physics: Newton's Laws", objectives: "Understand and apply Newton's three laws of motion" },
+    { title: "Chemistry: Periodic Table", objectives: "Memorize element symbols and understand periodic trends" },
+    { title: "Biology: Cell Structure", objectives: "Identify cell organelles and their functions" },
+    { title: "Mathematics: Geometry Basics", objectives: "Calculate areas and perimeters of 2D shapes" },
+    { title: "Islamic Studies: Quranic Recitation", objectives: "Improve tajweed and memorization techniques" },
+  ];
+
+  for (let i = 0; i < Math.min(8, classes.length * 2); i++) {
+    const classObj = classes[i % classes.length];
+    const topic = lessonTopics[i % lessonTopics.length];
+
+    const lessonDate = new Date();
+    lessonDate.setDate(lessonDate.getDate() + faker.number.int({ min: 1, max: 30 }));
+
+    const existing = await prisma.lesson.findFirst({
+      where: {
+        schoolId,
+        classId: classObj.id,
+        title: topic.title,
+      },
+    });
+
+    if (!existing) {
+      await prisma.lesson.create({
+        data: {
+          schoolId,
+          classId: classObj.id,
+          title: topic.title,
+          description: `Comprehensive lesson on ${topic.title}`,
+          lessonDate,
+          startTime: "09:00",
+          endTime: "10:00",
+          objectives: topic.objectives,
+          materials: "Textbook, whiteboard, projector, handouts",
+          activities: "Lecture (20 min), Group discussion (15 min), Practice exercises (20 min)",
+          assessment: "Quiz at end of class, homework assignment",
+          status: i < 3 ? "COMPLETED" : i < 6 ? "IN_PROGRESS" : "PLANNED",
+        },
+      });
+    }
+  }
+
+  console.log("✅ Lesson plans seeded");
+}
+
+async function ensureScholarshipsAndFines(
+  schoolId: string,
+  students: { id: string }[]
+) {
+  console.log("Seeding scholarships and fines...");
+
+  const academicYear = "2025-2026";
+
+  // Create scholarships
+  const meritScholarship = await prisma.scholarship.findFirst({
+    where: { schoolId, name: "Merit-Based Scholarship 2025" },
+  });
+
+  if (!meritScholarship) {
+    const scholarship = await prisma.scholarship.create({
+      data: {
+        schoolId,
+        name: "Merit-Based Scholarship 2025",
+        description: "Awarded to students with excellent academic performance (90%+ average)",
+        eligibilityCriteria: JSON.stringify({ minPercentage: 90, maxFamilyIncome: null }),
+        minPercentage: "90.00",
+        coverageType: "PERCENTAGE",
+        coverageAmount: "50.00", // 50% tuition coverage
+        academicYear,
+        startDate: new Date("2025-09-01"),
+        endDate: new Date("2026-06-30"),
+        maxBeneficiaries: 10,
+        currentBeneficiaries: 0,
+        isActive: true,
+      },
+    });
+
+    // Create 3 scholarship applications
+    for (let i = 0; i < 3; i++) {
+      const student = students[i];
+      const existing = await prisma.scholarshipApplication.findFirst({
+        where: { studentId: student.id, scholarshipId: scholarship.id },
+      });
+
+      if (!existing) {
+        await prisma.scholarshipApplication.create({
+          data: {
+            schoolId,
+            studentId: student.id,
+            scholarshipId: scholarship.id,
+            applicationNumber: `SCH-2025-${String(i + 1).padStart(5, "0")}`,
+            applicationDate: new Date(),
+            academicYear,
+            familyIncome: "5000.00",
+            statement: "I am a dedicated student who maintains excellent grades and would benefit from financial assistance.",
+            status: i === 0 ? "APPROVED" : "PENDING",
+            awardedAmount: i === 0 ? "10000.00" : null,
+            awardDate: i === 0 ? new Date() : null,
+          },
+        });
+      }
+    }
+  }
+
+  // Create fines
+  const fineTypes = [
+    { type: "LATE_FEE", reason: "Late payment of tuition fees", amount: "500.00" },
+    { type: "LIBRARY_FINE", reason: "Overdue library book return", amount: "50.00" },
+    { type: "DISCIPLINE_FINE", reason: "Uniform violation", amount: "100.00" },
+  ];
+
+  for (let i = 0; i < Math.min(5, students.length); i++) {
+    const student = students[i];
+    const fineType = fineTypes[i % fineTypes.length];
+
+    const existing = await prisma.fine.findFirst({
+      where: {
+        schoolId,
+        studentId: student.id,
+        fineType: fineType.type as any,
+      },
+    });
+
+    if (!existing) {
+      const dueDate = new Date();
+      dueDate.setDate(dueDate.getDate() + 7);
+
+      await prisma.fine.create({
+        data: {
+          schoolId,
+          studentId: student.id,
+          fineType: fineType.type as any,
+          amount: fineType.amount,
+          reason: fineType.reason,
+          dueDate,
+          isPaid: i < 2, // First 2 are paid
+          paidAmount: i < 2 ? fineType.amount : null,
+          paidDate: i < 2 ? new Date() : null,
+        },
+      });
+    }
+  }
+
+  console.log("✅ Scholarships and fines seeded");
+}
+
+async function ensureReportCards(
+  schoolId: string,
+  termId: string,
+  students: { id: string }[],
+  subjects: { id: string; subjectName: string }[]
+) {
+  console.log("Seeding report cards...");
+
+  // Create report cards for first 20 students
+  for (let i = 0; i < Math.min(20, students.length); i++) {
+    const student = students[i];
+
+    const existing = await prisma.reportCard.findFirst({
+      where: { schoolId, studentId: student.id, termId },
+    });
+
+    if (existing) continue;
+
+    // Calculate overall performance
+    const subjectGrades = subjects.slice(0, 5).map((subject) => {
+      const score = faker.number.int({ min: 65, max: 98 });
+      const grade = score >= 90 ? "A" : score >= 80 ? "B" : score >= 70 ? "C" : "D";
+      return { subjectId: subject.id, score, grade };
+    });
+
+    const avgScore = subjectGrades.reduce((sum, g) => sum + g.score, 0) / subjectGrades.length;
+    const overallGrade = avgScore >= 90 ? "A" : avgScore >= 80 ? "B" : avgScore >= 70 ? "C" : "D";
+    const gpa = avgScore >= 90 ? "3.70" : avgScore >= 80 ? "3.00" : avgScore >= 70 ? "2.30" : "2.00";
+
+    const reportCard = await prisma.reportCard.create({
+      data: {
+        schoolId,
+        studentId: student.id,
+        termId,
+        overallGrade,
+        overallGPA: gpa,
+        rank: i + 1,
+        totalStudents: students.length,
+        daysPresent: faker.number.int({ min: 80, max: 95 }),
+        daysAbsent: faker.number.int({ min: 0, max: 5 }),
+        daysLate: faker.number.int({ min: 0, max: 3 }),
+        teacherComments: "Good performance. Keep up the excellent work!",
+        isPublished: i < 10, // First 10 are published
+        publishedAt: i < 10 ? new Date() : null,
+      },
+    });
+
+    // Create subject grades
+    for (const gradeData of subjectGrades) {
+      await prisma.reportCardGrade.create({
+        data: {
+          schoolId,
+          reportCardId: reportCard.id,
+          subjectId: gradeData.subjectId,
+          grade: gradeData.grade,
+          score: gradeData.score.toString(),
+          maxScore: "100.00",
+          percentage: gradeData.score,
+          comments: "Satisfactory performance",
+        },
+      });
+    }
+  }
+
+  console.log("✅ Report cards seeded");
+}
+
+async function ensureResults(
+  schoolId: string,
+  classes: { id: string }[],
+  students: { id: string }[],
+  subjects: { id: string }[],
+  teachers: { id: string; userId: string }[]
+) {
+  console.log("Seeding individual grade results...");
+
+  // Create standalone grade entries (not linked to assignments/exams)
+  for (let i = 0; i < Math.min(15, students.length); i++) {
+    const student = students[i];
+    const classObj = classes[i % classes.length];
+    const subject = subjects[i % subjects.length];
+    const teacher = teachers[i % teachers.length];
+
+    const existing = await prisma.result.findFirst({
+      where: {
+        schoolId,
+        studentId: student.id,
+        classId: classObj.id,
+        title: "Class Participation Grade",
+      },
+    });
+
+    if (!existing) {
+      const score = faker.number.int({ min: 70, max: 100 });
+      const percentage = score;
+      const grade = score >= 90 ? "A" : score >= 80 ? "B" : score >= 70 ? "C" : "D";
+
+      await prisma.result.create({
+        data: {
+          schoolId,
+          studentId: student.id,
+          classId: classObj.id,
+          subjectId: subject.id,
+          score: score.toString(),
+          maxScore: "100.00",
+          percentage,
+          grade,
+          title: "Class Participation Grade",
+          description: "Regular class participation and engagement",
+          feedback: "Student shows good engagement in class discussions",
+          gradedAt: new Date(),
+          gradedBy: teacher.userId,
+        },
+      });
+    }
+  }
+
+  console.log("✅ Individual grade results seeded");
+}
+
 async function main() {
   console.log("🌱 Starting seed for Port Sudan International School...");
 
@@ -1448,6 +1784,13 @@ async function main() {
   // Seed Stream (LMS) courses
   await ensureStreamCourses(school.id, teachers);
 
+  // Seed additional high-priority modules
+  await ensureLibraryCirculation(school.id, students);
+  await ensureLessonPlans(school.id, someClasses);
+  await ensureScholarshipsAndFines(school.id, students);
+  await ensureReportCards(school.id, term1.id, students, subjects);
+  await ensureResults(school.id, someClasses, students, subjects, teachers);
+
   console.log("✅✅✅ Seed completed successfully for Port Sudan International School!");
   console.log(`📊 Summary:`);
   console.log(`   - School: ${school.name}`);
@@ -1456,6 +1799,9 @@ async function main() {
   console.log(`   - Classes: ${someClasses.length}`);
   console.log(`   - Year Levels: ${yearLevels.length}`);
   console.log(`   - Subjects: ${subjects.length}`);
+  console.log(`   - Library Books: 12`);
+  console.log(`   - LMS Courses: 5`);
+  console.log(`   - Report Cards: 20`);
 }
 
 main()

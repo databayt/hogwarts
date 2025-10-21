@@ -53,11 +53,11 @@ async function main() {
 
   // School Year
   const schoolYear = await prisma.schoolYear.upsert({
-    where: { schoolId_year: { schoolId: school.id, year: 2024 } },
+    where: { schoolId_yearName: { schoolId: school.id, yearName: '2024-2025' } },
     update: {},
     create: {
       schoolId: school.id,
-      year: 2024,
+      yearName: '2024-2025',
       startDate: new Date('2024-09-01'),
       endDate: new Date('2025-06-30')
     }
@@ -105,18 +105,16 @@ async function main() {
   for (let i = 1; i <= 12; i++) {
     const yl = await prisma.yearLevel.upsert({
       where: {
-        schoolId_yearId_level: {
+        schoolId_levelName: {
           schoolId: school.id,
-          yearId: schoolYear.id,
-          level: i
+          levelName: `Grade ${i}`
         }
       },
       update: {},
       create: {
         schoolId: school.id,
-        yearId: schoolYear.id,
-        level: i,
-        name: `Grade ${i}`
+        levelName: `Grade ${i}`,
+        levelOrder: i
       }
     })
     yearLevels.push(yl)
@@ -124,12 +122,12 @@ async function main() {
 
   // Periods (Daily Schedule)
   const periodTimes = [
-    { name: 'Period 1', start: '08:00', end: '08:45', order: 1 },
-    { name: 'Period 2', start: '08:50', end: '09:35', order: 2 },
-    { name: 'Period 3', start: '09:40', end: '10:25', order: 3 },
-    { name: 'Period 4', start: '10:30', end: '11:15', order: 4 },
-    { name: 'Period 5', start: '11:20', end: '12:05', order: 5 },
-    { name: 'Period 6', start: '12:10', end: '12:55', order: 6 },
+    { name: 'Period 1', start: '08:00', end: '08:45' },
+    { name: 'Period 2', start: '08:50', end: '09:35' },
+    { name: 'Period 3', start: '09:40', end: '10:25' },
+    { name: 'Period 4', start: '10:30', end: '11:15' },
+    { name: 'Period 5', start: '11:20', end: '12:05' },
+    { name: 'Period 6', start: '12:10', end: '12:55' },
   ]
 
   const periods = []
@@ -139,10 +137,10 @@ async function main() {
 
     const period = await prisma.period.upsert({
       where: {
-        schoolId_yearId_orderIndex: {
+        schoolId_yearId_name: {
           schoolId: school.id,
           yearId: schoolYear.id,
-          orderIndex: pt.order
+          name: pt.name
         }
       },
       update: {},
@@ -151,8 +149,7 @@ async function main() {
         yearId: schoolYear.id,
         name: pt.name,
         startTime,
-        endTime,
-        orderIndex: pt.order
+        endTime
       }
     })
     periods.push(period)

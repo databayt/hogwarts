@@ -10,7 +10,7 @@ async function seedStreamCoursesOnly() {
     where: {
       OR: [
         { name: { contains: "Port Sudan" } },
-        { subdomain: "portsudan" },
+        { domain: "portsudan" },
       ],
     },
   });
