@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { type DialogProps } from "@radix-ui/react-dialog";
-import { Laptop, Moon, Sun, Clock, ChevronRight } from "lucide-react";
+import { Laptop, Moon, Sun, Clock, ChevronRight, Search } from "lucide-react";
 import { useTheme } from "next-themes";
 
 import { cn } from "@/lib/utils";
@@ -27,7 +27,7 @@ import { useLocale } from "@/components/internationalization/use-locale";
 interface GenericCommandMenuProps extends DialogProps {
   config: SearchConfig;
   context?: SearchContext;
-  variant?: "default" | "compact";
+  variant?: "default" | "compact" | "icon";
 }
 
 export function GenericCommandMenu({
@@ -163,23 +163,36 @@ export function GenericCommandMenu({
 
   return (
     <>
-      <Button
-        variant="outline"
-        className={cn(
-          "relative h-8 w-full justify-start rounded-[0.5rem] bg-muted/50 text-sm font-normal text-muted-foreground shadow-none sm:pr-12",
-          variant === "compact" ? "md:w-40 lg:w-48" : "md:w-40 lg:w-56 xl:w-64"
-        )}
-        onClick={() => setOpen(true)}
-        {...props}
-      >
-        <span className="hidden lg:inline-flex">{placeholder}</span>
-        <span className="inline-flex lg:hidden">
-          {commandMenuDict?.searchShort || "Search..."}
-        </span>
-        <kbd className="pointer-events-none absolute right-[0.3rem] top-[0.3rem] hidden h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium opacity-100 sm:flex">
-          <span className="text-xs">⌘</span>K
-        </kbd>
-      </Button>
+      {variant === "icon" ? (
+        <Button
+          variant="link"
+          size="icon"
+          className="size-7"
+          onClick={() => setOpen(true)}
+          {...props}
+        >
+          <Search className="h-4 w-4" />
+          <span className="sr-only">{commandMenuDict?.search || "Search"}</span>
+        </Button>
+      ) : (
+        <Button
+          variant="outline"
+          className={cn(
+            "relative h-8 w-full justify-start rounded-[0.5rem] bg-muted/50 text-sm font-normal text-muted-foreground shadow-none sm:pr-12",
+            variant === "compact" ? "md:w-40 lg:w-48" : "md:w-40 lg:w-56 xl:w-64"
+          )}
+          onClick={() => setOpen(true)}
+          {...props}
+        >
+          <span className="hidden lg:inline-flex">{placeholder}</span>
+          <span className="inline-flex lg:hidden">
+            {commandMenuDict?.searchShort || "Search..."}
+          </span>
+          <kbd className="pointer-events-none absolute right-[0.3rem] top-[0.3rem] hidden h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium opacity-100 sm:flex">
+            <span className="text-xs">⌘</span>K
+          </kbd>
+        </Button>
+      )}
 
       <CommandDialog open={open} onOpenChange={setOpen}>
         <CommandInput

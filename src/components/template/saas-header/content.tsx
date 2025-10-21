@@ -67,7 +67,7 @@ export default function SaasHeader() {
         <div className={`flex items-center gap-1.5 ${isRTL ? 'mr-auto' : 'ml-auto'}`}>
           <GenericCommandMenu
             config={saasSearchConfig}
-            variant="compact"
+            variant="icon"
           />
           <LanguageSwitcher variant="toggle" />
           <ModeSwitcher />

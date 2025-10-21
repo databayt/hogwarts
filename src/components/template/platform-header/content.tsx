@@ -85,7 +85,7 @@ export default function PlatformHeader({ school, lang }: PlatformHeaderProps = {
               currentPath: pathname,
               schoolId: school?.id,
             }}
-            variant="compact"
+            variant="icon"
           />
           <LanguageSwitcher variant="toggle" />
           <ModeSwitcher />
