@@ -1652,6 +1652,15 @@ export const awesomeShadcn: AwesomeShadcnItem[] = [
     repository: "https://github.com/9d8dev/next-wp",
     tags: ["templates", "enhanced"]
   },
+  {
+    id: "file-drive",
+    title: "FileDrive",
+    description:
+      "File storage application with organizations, file upload, management, and role-based authorization. Complete file management solution built with modern web technologies.",
+    link: "https://github.com/webdevcody/file-drive",
+    repository: "https://github.com/webdevcody/file-drive",
+    tags: ["templates", "specialized", "enhanced", "modern"]
+  },
 ]
 
 
