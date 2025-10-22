@@ -33,6 +33,7 @@ import {
   CheckCircle,
 } from "lucide-react";
 import { SuccessToast } from "@/components/atom/toast";
+import { type Dictionary } from "@/components/internationalization/dictionaries";
 
 interface NotificationSettings {
   email: {
@@ -75,7 +76,11 @@ interface NotificationSettings {
   };
 }
 
-export function NotificationSettings() {
+interface Props {
+  dictionary?: Dictionary["school"];
+}
+
+export function NotificationSettings({ dictionary }: Props) {
   const [settings, setSettings] = useState<NotificationSettings>({
     email: {
       enabled: true,
@@ -175,17 +180,17 @@ export function NotificationSettings() {
       {/* Email Notifications */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 rtl:flex-row-reverse">
             <Mail className="h-5 w-5" />
-            Email Notifications
+            {dictionary?.settings?.notifications?.emailNotifications || "Email Notifications"}
           </CardTitle>
           <CardDescription>
-            Configure email notification preferences
+            {dictionary?.settings?.notifications?.configureEmail || "Configure email notification preferences"}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <Label htmlFor="email-enabled">Enable Email Notifications</Label>
+          <div className="flex items-center justify-between rtl:flex-row-reverse">
+            <Label htmlFor="email-enabled">{dictionary?.settings?.notifications?.enableEmail || "Enable Email Notifications"}</Label>
             <Switch
               id="email-enabled"
               checked={settings.email.enabled}
@@ -201,7 +206,7 @@ export function NotificationSettings() {
           {settings.email.enabled && (
             <>
               <div className="space-y-2">
-                <Label htmlFor="email-digest">Email Frequency</Label>
+                <Label htmlFor="email-digest">{dictionary?.settings?.notifications?.emailFrequency || "Email Frequency"}</Label>
                 <Select
                   value={settings.email.digest}
                   onValueChange={(value: "instant" | "daily" | "weekly") =>
@@ -215,23 +220,23 @@ export function NotificationSettings() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="instant">Instant</SelectItem>
-                    <SelectItem value="daily">Daily Digest</SelectItem>
-                    <SelectItem value="weekly">Weekly Digest</SelectItem>
+                    <SelectItem value="instant">{dictionary?.settings?.notifications?.instant || "Instant"}</SelectItem>
+                    <SelectItem value="daily">{dictionary?.settings?.notifications?.dailyDigest || "Daily Digest"}</SelectItem>
+                    <SelectItem value="weekly">{dictionary?.settings?.notifications?.weeklyDigest || "Weekly Digest"}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-3">
-                <Label>Notification Types</Label>
+                <Label>{dictionary?.settings?.notifications?.notificationTypes || "Notification Types"}</Label>
                 <div className="space-y-2">
                   {Object.entries(settings.email.types).map(([type, enabled]) => (
-                    <div key={type} className="flex items-center justify-between py-1">
+                    <div key={type} className="flex items-center justify-between py-1 rtl:flex-row-reverse">
                       <Label
                         htmlFor={`email-${type}`}
-                        className="text-sm font-normal capitalize cursor-pointer"
+                        className="text-sm font-normal cursor-pointer"
                       >
-                        {type}
+                        {dictionary?.settings?.notifications?.types?.[type as keyof typeof dictionary.settings.notifications.types] || type}
                       </Label>
                       <Switch
                         id={`email-${type}`}
@@ -252,17 +257,17 @@ export function NotificationSettings() {
       {/* Push Notifications */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 rtl:flex-row-reverse">
             <Bell className="h-5 w-5" />
-            Push Notifications
+            {dictionary?.settings?.notifications?.pushNotifications || "Push Notifications"}
           </CardTitle>
           <CardDescription>
-            Configure browser push notification preferences
+            {dictionary?.settings?.notifications?.configurePush || "Configure browser push notification preferences"}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <Label htmlFor="push-enabled">Enable Push Notifications</Label>
+          <div className="flex items-center justify-between rtl:flex-row-reverse">
+            <Label htmlFor="push-enabled">{dictionary?.settings?.notifications?.enablePush || "Enable Push Notifications"}</Label>
             <Switch
               id="push-enabled"
               checked={settings.push.enabled}
@@ -277,14 +282,14 @@ export function NotificationSettings() {
 
           {settings.push.enabled && (
             <>
-              <div className="flex items-center justify-between">
-                <Label htmlFor="push-sound" className="flex items-center gap-2">
+              <div className="flex items-center justify-between rtl:flex-row-reverse">
+                <Label htmlFor="push-sound" className="flex items-center gap-2 rtl:flex-row-reverse">
                   {settings.push.sound ? (
                     <Volume2 className="h-4 w-4" />
                   ) : (
                     <VolumeX className="h-4 w-4" />
                   )}
-                  Notification Sound
+                  {dictionary?.settings?.notifications?.notificationSound || "Notification Sound"}
                 </Label>
                 <Switch
                   id="push-sound"
@@ -299,15 +304,15 @@ export function NotificationSettings() {
               </div>
 
               <div className="space-y-3">
-                <Label>Notification Types</Label>
+                <Label>{dictionary?.settings?.notifications?.notificationTypes || "Notification Types"}</Label>
                 <div className="space-y-2">
                   {Object.entries(settings.push.types).map(([type, enabled]) => (
-                    <div key={type} className="flex items-center justify-between py-1">
+                    <div key={type} className="flex items-center justify-between py-1 rtl:flex-row-reverse">
                       <Label
                         htmlFor={`push-${type}`}
-                        className="text-sm font-normal capitalize cursor-pointer"
+                        className="text-sm font-normal cursor-pointer"
                       >
-                        {type}
+                        {dictionary?.settings?.notifications?.types?.[type as keyof typeof dictionary.settings.notifications.types] || type}
                       </Label>
                       <Switch
                         id={`push-${type}`}
@@ -328,20 +333,20 @@ export function NotificationSettings() {
       {/* SMS Notifications */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 rtl:flex-row-reverse">
             <Smartphone className="h-5 w-5" />
-            SMS Notifications
+            {dictionary?.settings?.notifications?.smsNotifications || "SMS Notifications"}
           </CardTitle>
           <CardDescription>
-            Configure SMS notification preferences for critical alerts
+            {dictionary?.settings?.notifications?.configureSms || "Configure SMS notification preferences for critical alerts"}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between rtl:flex-row-reverse">
             <div className="space-y-1">
-              <Label htmlFor="sms-enabled">Enable SMS Notifications</Label>
+              <Label htmlFor="sms-enabled">{dictionary?.settings?.notifications?.enableSms || "Enable SMS Notifications"}</Label>
               <p className="text-xs text-muted-foreground">
-                SMS notifications may incur additional charges
+                {dictionary?.settings?.notifications?.smsCharges || "SMS notifications may incur additional charges"}
               </p>
             </div>
             <Switch
@@ -358,19 +363,19 @@ export function NotificationSettings() {
 
           {settings.sms.enabled && (
             <div className="space-y-3">
-              <Label>SMS Notification Types</Label>
+              <Label>{dictionary?.settings?.notifications?.notificationTypes || "SMS Notification Types"}</Label>
               <div className="space-y-2">
                 {Object.entries(settings.sms.types).map(([type, enabled]) => (
-                  <div key={type} className="flex items-center justify-between py-1">
-                    <div className="flex items-center gap-2">
+                  <div key={type} className="flex items-center justify-between py-1 rtl:flex-row-reverse">
+                    <div className="flex items-center gap-2 rtl:flex-row-reverse">
                       {type === "emergencies" && (
                         <AlertTriangle className="h-4 w-4 text-red-500" />
                       )}
                       <Label
                         htmlFor={`sms-${type}`}
-                        className="text-sm font-normal capitalize cursor-pointer"
+                        className="text-sm font-normal cursor-pointer"
                       >
-                        {type}
+                        {dictionary?.settings?.notifications?.types?.[type as keyof typeof dictionary.settings.notifications.types] || type}
                       </Label>
                     </div>
                     <Switch
@@ -391,17 +396,17 @@ export function NotificationSettings() {
       {/* Quiet Hours */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 rtl:flex-row-reverse">
             <Clock className="h-5 w-5" />
-            Quiet Hours
+            {dictionary?.settings?.notifications?.quietHours || "Quiet Hours"}
           </CardTitle>
           <CardDescription>
-            Set quiet hours to pause non-critical notifications
+            {dictionary?.settings?.notifications?.setQuietHours || "Set quiet hours to pause non-critical notifications"}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <Label htmlFor="quiet-enabled">Enable Quiet Hours</Label>
+          <div className="flex items-center justify-between rtl:flex-row-reverse">
+            <Label htmlFor="quiet-enabled">{dictionary?.settings?.notifications?.enableQuietHours || "Enable Quiet Hours"}</Label>
             <Switch
               id="quiet-enabled"
               checked={settings.quietHours.enabled}
@@ -418,7 +423,7 @@ export function NotificationSettings() {
             <>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="quiet-start">Start Time</Label>
+                  <Label htmlFor="quiet-start">{dictionary?.settings?.notifications?.startTime || "Start Time"}</Label>
                   <input
                     id="quiet-start"
                     type="time"
@@ -433,7 +438,7 @@ export function NotificationSettings() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="quiet-end">End Time</Label>
+                  <Label htmlFor="quiet-end">{dictionary?.settings?.notifications?.endTime || "End Time"}</Label>
                   <input
                     id="quiet-end"
                     type="time"
@@ -449,14 +454,14 @@ export function NotificationSettings() {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between rtl:flex-row-reverse">
                 <div className="space-y-1">
-                  <Label htmlFor="allow-emergencies" className="flex items-center gap-2">
+                  <Label htmlFor="allow-emergencies" className="flex items-center gap-2 rtl:flex-row-reverse">
                     <AlertTriangle className="h-4 w-4 text-red-500" />
-                    Allow Emergency Notifications
+                    {dictionary?.settings?.notifications?.allowEmergencies || "Allow Emergency Notifications"}
                   </Label>
                   <p className="text-xs text-muted-foreground">
-                    Critical alerts will still be sent during quiet hours
+                    {dictionary?.settings?.notifications?.emergenciesNote || "Critical alerts will still be sent during quiet hours"}
                   </p>
                 </div>
                 <Switch
@@ -478,49 +483,49 @@ export function NotificationSettings() {
       {/* Notification Summary */}
       <Card>
         <CardHeader>
-          <CardTitle>Notification Summary</CardTitle>
+          <CardTitle>{dictionary?.settings?.notifications?.notificationSummary || "Notification Summary"}</CardTitle>
           <CardDescription>
-            Overview of your notification preferences
+            {dictionary?.settings?.notifications?.overviewPreferences || "Overview of your notification preferences"}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            <div className="flex items-center justify-between p-3 rounded-lg border">
-              <div className="flex items-center gap-2">
+            <div className="flex items-center justify-between p-3 rounded-lg border rtl:flex-row-reverse">
+              <div className="flex items-center gap-2 rtl:flex-row-reverse">
                 <Mail className="h-4 w-4" />
-                <span>Email</span>
+                <span>{dictionary?.settings?.notifications?.email || "Email"}</span>
               </div>
               <Badge variant={settings.email.enabled ? "default" : "secondary"}>
-                {settings.email.enabled ? "Enabled" : "Disabled"}
+                {settings.email.enabled ? (dictionary?.settings?.notifications?.enabled || "Enabled") : (dictionary?.settings?.notifications?.disabled || "Disabled")}
               </Badge>
             </div>
-            <div className="flex items-center justify-between p-3 rounded-lg border">
-              <div className="flex items-center gap-2">
+            <div className="flex items-center justify-between p-3 rounded-lg border rtl:flex-row-reverse">
+              <div className="flex items-center gap-2 rtl:flex-row-reverse">
                 <Bell className="h-4 w-4" />
-                <span>Push</span>
+                <span>{dictionary?.settings?.notifications?.push || "Push"}</span>
               </div>
               <Badge variant={settings.push.enabled ? "default" : "secondary"}>
-                {settings.push.enabled ? "Enabled" : "Disabled"}
+                {settings.push.enabled ? (dictionary?.settings?.notifications?.enabled || "Enabled") : (dictionary?.settings?.notifications?.disabled || "Disabled")}
               </Badge>
             </div>
-            <div className="flex items-center justify-between p-3 rounded-lg border">
-              <div className="flex items-center gap-2">
+            <div className="flex items-center justify-between p-3 rounded-lg border rtl:flex-row-reverse">
+              <div className="flex items-center gap-2 rtl:flex-row-reverse">
                 <Smartphone className="h-4 w-4" />
-                <span>SMS</span>
+                <span>{dictionary?.settings?.notifications?.sms || "SMS"}</span>
               </div>
               <Badge variant={settings.sms.enabled ? "default" : "secondary"}>
-                {settings.sms.enabled ? "Enabled" : "Disabled"}
+                {settings.sms.enabled ? (dictionary?.settings?.notifications?.enabled || "Enabled") : (dictionary?.settings?.notifications?.disabled || "Disabled")}
               </Badge>
             </div>
-            <div className="flex items-center justify-between p-3 rounded-lg border">
-              <div className="flex items-center gap-2">
+            <div className="flex items-center justify-between p-3 rounded-lg border rtl:flex-row-reverse">
+              <div className="flex items-center gap-2 rtl:flex-row-reverse">
                 <Clock className="h-4 w-4" />
-                <span>Quiet Hours</span>
+                <span>{dictionary?.settings?.notifications?.quietHours || "Quiet Hours"}</span>
               </div>
               <Badge variant={settings.quietHours.enabled ? "default" : "secondary"}>
                 {settings.quietHours.enabled
                   ? `${settings.quietHours.start} - ${settings.quietHours.end}`
-                  : "Disabled"}
+                  : (dictionary?.settings?.notifications?.disabled || "Disabled")}
               </Badge>
             </div>
           </div>
@@ -528,9 +533,9 @@ export function NotificationSettings() {
       </Card>
 
       {/* Save Button */}
-      <div className="flex justify-end">
+      <div className="flex justify-end rtl:justify-start">
         <Button onClick={handleSave} disabled={isSaving} size="lg">
-          {isSaving ? "Saving..." : "Save Notification Settings"}
+          {isSaving ? (dictionary?.settings?.notifications?.saving || "Saving...") : (dictionary?.settings?.notifications?.saveSettings || "Save Notification Settings")}
         </Button>
       </div>
     </div>

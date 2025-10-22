@@ -23,7 +23,7 @@ interface Props {
   lang: Locale
 }
 
-export function SettingsContent({ dictionary, lang }: Props) {
+export const SettingsContent = React.memo(function SettingsContent({ dictionary, lang }: Props) {
   const { school } = useSchool()
   const [name, setName] = React.useState(school.name || '')
   const [timezone, setTimezone] = React.useState<SupportedTimezone>(
@@ -43,12 +43,12 @@ export function SettingsContent({ dictionary, lang }: Props) {
     }
 
     updateTime() // Initial update
-    const interval = setInterval(updateTime, 1000) // Update every second
+    const interval = setInterval(updateTime, 60000) // Update every minute
 
     return () => clearInterval(interval)
   }, [timezone])
 
-  const onSubmit = async () => {
+  const onSubmit = React.useCallback(async () => {
     setSubmitting(true)
     try {
       await updateSchoolSettings({ name, timezone, locale, logoUrl })
@@ -58,19 +58,19 @@ export function SettingsContent({ dictionary, lang }: Props) {
     } finally {
       setSubmitting(false)
     }
-  }
+  }, [name, timezone, locale, logoUrl])
 
   return (
     <div className="rounded-lg border bg-card p-6 space-y-6">
       <div>
-        <h3 className="mb-1">School Settings</h3>
-        <p className="text-sm text-muted-foreground">Configure your school's basic information and preferences</p>
+        <h3 className="mb-1">{dictionary?.school?.settings?.schoolSettings || "School Settings"}</h3>
+        <p className="text-sm text-muted-foreground">{dictionary?.school?.settings?.description || "Configure your school's basic information and preferences"}</p>
       </div>
 
       <div className="grid gap-6">
         <div className="space-y-2">
           <Label htmlFor="school-name" className="text-sm font-medium">
-            School Name
+            {dictionary?.school?.settings?.schoolName || "School Name"}
           </Label>
           <Input
             id="school-name"
@@ -82,7 +82,7 @@ export function SettingsContent({ dictionary, lang }: Props) {
 
         <div className="space-y-2">
           <Label htmlFor="timezone" className="text-sm font-medium">
-            Timezone
+            {dictionary?.school?.settings?.timezone || "Timezone"}
           </Label>
           <Select value={timezone} onValueChange={(value) => setTimezone(value as SupportedTimezone)}>
             <SelectTrigger id="timezone">
@@ -112,7 +112,7 @@ export function SettingsContent({ dictionary, lang }: Props) {
 
         <div className="space-y-2">
           <Label htmlFor="locale" className="text-sm font-medium">
-            Language
+            {dictionary?.school?.settings?.language || "Language"}
           </Label>
           <Select value={locale} onValueChange={(value) => setLocale(value as 'ar' | 'en')}>
             <SelectTrigger id="locale">
@@ -129,7 +129,7 @@ export function SettingsContent({ dictionary, lang }: Props) {
 
         <div className="space-y-2">
           <Label htmlFor="logo-url" className="text-sm font-medium">
-            Logo URL (Optional)
+            {dictionary?.school?.settings?.schoolLogo || "Logo URL"} (Optional)
           </Label>
           <Input
             id="logo-url"
@@ -152,12 +152,12 @@ export function SettingsContent({ dictionary, lang }: Props) {
           disabled={submitting || !name.trim()}
           className="w-fit"
         >
-          {submitting ? 'Saving...' : 'Save Settings'}
+          {submitting ? (dictionary?.school?.settings?.userManagementLabels?.saving || 'Saving...') : (dictionary?.school?.settings?.userManagementLabels?.saveSettings || 'Save Settings')}
         </Button>
       </div>
     </div>
   )
-}
+})
 
 
 

@@ -59,7 +59,7 @@ export default function PlatformSidebar({ school, lang, ...props }: PlatformSide
       </SidebarHeader> */}
       <SidebarContent className="border-0 bg-transparent">
         <ScrollArea className="h-full" dir={isRTL ? "rtl" : "ltr"}>
-          <SidebarGroup className="p-2">
+          <SidebarGroup className="p-2 pb-8">
             <SidebarMenu className="space-y-1 list-none">
               {platformNav
                 // TODO: Re-enable role-based filtering when needed

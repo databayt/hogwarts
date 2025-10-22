@@ -1,4 +1,5 @@
 import { EnhancedSettingsContent } from '@/components/platform/settings/content-enhanced'
+import { SettingsErrorBoundary } from '@/components/platform/settings/error-boundary'
 import { getDictionary } from '@/components/internationalization/dictionaries'
 import { type Locale } from '@/components/internationalization/config'
 import { Metadata } from 'next'
@@ -16,7 +17,11 @@ export default async function Page({ params }: Props) {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
 
-  return <EnhancedSettingsContent dictionary={dictionary} lang={lang} />
+  return (
+    <SettingsErrorBoundary dictionary={dictionary.school}>
+      <EnhancedSettingsContent dictionary={dictionary} lang={lang} />
+    </SettingsErrorBoundary>
+  )
 }
 
 
