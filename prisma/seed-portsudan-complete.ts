@@ -468,23 +468,23 @@ async function main() {
   for (let gradeLevel = 1; gradeLevel <= 6; gradeLevel++) {
     for (const section of ['A', 'B']) {
       const className = `Grade ${gradeLevel}${section}`
-      const yearLevel = yearLevels.find(yl => yl.level === gradeLevel)
+      const yearLevel = yearLevels.find(yl => yl.levelOrder === gradeLevel)
       const subject = randomItem(subjects)
       const teacher = randomItem(teachers)
       const classroom = randomItem(classrooms)
 
       const cls = await prisma.class.upsert({
-        where: { schoolId_termId_className: { schoolId: school.id, termId: term1.id, className } },
+        where: { schoolId_name: { schoolId: school.id, name: className } },
         update: {},
         create: {
           schoolId: school.id,
           termId: term1.id,
-          yearLevelId: yearLevel!.id,
           subjectId: subject.id,
           teacherId: teacher.id,
           classroomId: classroom.id,
-          className,
-          capacity: 30
+          startPeriodId: periods[0].id,
+          endPeriodId: periods[periods.length - 1].id,
+          name: className
         }
       })
 
@@ -495,9 +495,8 @@ async function main() {
       for (const student of studentsInGrade) {
         await prisma.studentClass.upsert({
           where: {
-            schoolId_termId_studentId_classId: {
+            schoolId_studentId_classId: {
               schoolId: school.id,
-              termId: term1.id,
               studentId: student.id,
               classId: cls.id
             }
@@ -505,7 +504,6 @@ async function main() {
           update: {},
           create: {
             schoolId: school.id,
-            termId: term1.id,
             studentId: student.id,
             classId: cls.id
           }
