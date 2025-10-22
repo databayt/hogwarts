@@ -190,7 +190,7 @@ export const LoginForm = ({
                           </FormControl>
                           <Link
                             href="/reset"
-                            className="text-start hover:underline underline-offset-4"
+                            className="text-start muted hover:underline underline-offset-4"
                           >
                             {dictionary?.auth?.forgotPassword || "Forgot password?"}
                           </Link>
