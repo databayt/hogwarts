@@ -202,12 +202,17 @@ async function main() {
   const subjects = []
   for (const s of subjectData) {
     const subject = await prisma.subject.upsert({
-      where: { schoolId_subjectCode: { schoolId: school.id, subjectCode: s.code } },
+      where: {
+        schoolId_departmentId_subjectName: {
+          schoolId: school.id,
+          departmentId: departments[s.deptIndex].id,
+          subjectName: s.name
+        }
+      },
       update: {},
       create: {
         schoolId: school.id,
         subjectName: s.name,
-        subjectCode: s.code,
         departmentId: departments[s.deptIndex].id
       }
     })
@@ -226,8 +231,7 @@ async function main() {
     update: {},
     create: {
       schoolId: school.id,
-      name: 'Standard',
-      description: 'Standard classroom'
+      name: 'Standard'
     }
   })
 
@@ -356,8 +360,7 @@ async function main() {
         userId: fatherUser.id,
         givenName: randomItem(firstNamesM),
         surname: surname,
-        emailAddress: fatherUser.email,
-        gender: Gender.MALE
+        emailAddress: fatherUser.email
       }
     })
 
@@ -382,8 +385,7 @@ async function main() {
         userId: motherUser.id,
         givenName: randomItem(firstNamesF),
         surname: surname,
-        emailAddress: motherUser.email,
-        gender: Gender.FEMALE
+        emailAddress: motherUser.email
       }
     })
 
