@@ -1,11 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Upload, X, File, Video, Image as ImageIcon, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
-import { STORAGE_CONFIG, SIZE_LABELS } from "@/lib/storage-config";
+import { uploadFileAction } from "@/components/file-uploader/actions";
+import { useSession } from "next-auth/react";
+import { FILE_SIZE_LIMITS } from "@/components/file-uploader/config/storage-config";
 
 interface FileUploadProps {
   value?: string;
@@ -17,15 +19,41 @@ interface FileUploadProps {
 }
 
 const ACCEPT_TYPES = {
-  video: "video/mp4,video/webm,video/quicktime,video/x-msvideo",
-  material: ".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.zip",
-  image: "image/jpeg,image/png,image/gif,image/svg+xml,image/webp",
+  video: {
+    'video/mp4': ['.mp4'],
+    'video/webm': ['.webm'],
+    'video/quicktime': ['.mov'],
+    'video/x-msvideo': ['.avi'],
+  },
+  material: {
+    'application/pdf': ['.pdf'],
+    'application/msword': ['.doc'],
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
+    'application/vnd.ms-powerpoint': ['.ppt'],
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation': ['.pptx'],
+    'application/vnd.ms-excel': ['.xls'],
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
+    'application/zip': ['.zip'],
+  },
+  image: {
+    'image/jpeg': ['.jpg', '.jpeg'],
+    'image/png': ['.png'],
+    'image/gif': ['.gif'],
+    'image/svg+xml': ['.svg'],
+    'image/webp': ['.webp'],
+  },
+};
+
+const CATEGORY_MAP = {
+  video: "video" as const,
+  material: "document" as const,
+  image: "image" as const,
 };
 
 const MAX_SIZE_MB = {
-  video: STORAGE_CONFIG.getMaxSize("video") / (1024 * 1024),
-  material: STORAGE_CONFIG.getMaxSize("material") / (1024 * 1024),
-  image: STORAGE_CONFIG.getMaxSize("image") / (1024 * 1024),
+  video: FILE_SIZE_LIMITS.lesson_video,
+  material: FILE_SIZE_LIMITS.document,
+  image: FILE_SIZE_LIMITS.content_image,
 };
 
 const ICONS = {
@@ -44,6 +72,7 @@ export function FileUpload({
 }: FileUploadProps) {
   const [isUploading, setIsUploading] = useState(false);
   const { toast } = useToast();
+  const { data: session } = useSession();
   const Icon = ICONS[accept];
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -51,11 +80,11 @@ export function FileUpload({
     if (!file) return;
 
     // Validate file size
-    const maxSizeBytes = MAX_SIZE_MB[accept] * 1024 * 1024;
+    const maxSizeBytes = MAX_SIZE_MB[accept];
     if (file.size > maxSizeBytes) {
       toast({
         title: "File too large",
-        description: `Maximum file size is ${MAX_SIZE_MB[accept]}MB`,
+        description: `Maximum file size is ${(maxSizeBytes / (1024 * 1024)).toFixed(0)}MB`,
       });
       return;
     }
@@ -63,31 +92,23 @@ export function FileUpload({
     setIsUploading(true);
 
     try {
-      // Upload to Vercel Blob
+      // Upload using centralized system
       const formData = new FormData();
       formData.append("file", file);
-      formData.append("type", accept);
+      formData.append("folder", `${session?.user?.schoolId}/stream/${accept}`);
+      formData.append("category", CATEGORY_MAP[accept]);
+      formData.append("type", accept === "material" ? "word" : accept);
 
-      const response = await fetch("/api/blob/upload", {
-        method: "POST",
-        body: formData,
-      });
+      const result = await uploadFileAction(formData);
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Upload failed");
-      }
-
-      const data = await response.json();
-
-      if (data.success && data.url) {
-        onChange(data.url);
+      if (result.success && result.metadata) {
+        onChange(result.metadata.url);
         toast({
           title: "Upload successful",
           description: "File uploaded successfully",
         });
       } else {
-        throw new Error("Upload failed");
+        throw new Error(result.error || "Upload failed");
       }
     } catch (error) {
       toast({
@@ -99,46 +120,15 @@ export function FileUpload({
     }
   };
 
-  const handleRemove = async () => {
+  const handleRemove = () => {
     if (!value || !onRemove) return;
 
-    try {
-      // Delete from Vercel Blob
-      const response = await fetch("/api/blob/delete", {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ url: value }),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-
-        // If file is referenced, just remove from form without deleting from blob
-        if (error.referenced) {
-          onRemove();
-          toast({
-            title: "File removed from form",
-            description: "File is still used elsewhere and was not deleted",
-          });
-          return;
-        }
-
-        throw new Error(error.error || "Delete failed");
-      }
-
-      onRemove();
-      toast({
-        title: "File deleted",
-        description: "File deleted successfully",
-      });
-    } catch (error) {
-      toast({
-        title: "Delete failed",
-        description: error instanceof Error ? error.message : "Failed to delete file",
-      });
-    }
+    // Simply remove from form - file stays in storage for potential reuse
+    onRemove();
+    toast({
+      title: "File removed",
+      description: "File removed from form (still available in storage)",
+    });
   };
 
   if (value) {
@@ -214,16 +204,16 @@ export function FileUpload({
         </p>
 
         <p className="text-xs text-muted-foreground text-center">
-          {accept === "video" && `MP4, WebM, MOV, AVI up to ${SIZE_LABELS.getLabel(STORAGE_CONFIG.getMaxSize("video"))}`}
-          {accept === "material" && `PDF, DOC, PPT, XLS, ZIP up to ${SIZE_LABELS.getLabel(STORAGE_CONFIG.getMaxSize("material"))}`}
-          {accept === "image" && `JPG, PNG, GIF, SVG, WebP up to ${SIZE_LABELS.getLabel(STORAGE_CONFIG.getMaxSize("image"))}`}
+          {accept === "video" && `MP4, WebM, MOV, AVI up to ${(MAX_SIZE_MB.video / (1024 * 1024 * 1024)).toFixed(1)}GB`}
+          {accept === "material" && `PDF, DOC, PPT, XLS, ZIP up to ${(MAX_SIZE_MB.material / (1024 * 1024)).toFixed(0)}MB`}
+          {accept === "image" && `JPG, PNG, GIF, SVG, WebP up to ${(MAX_SIZE_MB.image / (1024 * 1024)).toFixed(0)}MB`}
         </p>
       </label>
 
       <input
         id={`file-upload-${accept}`}
         type="file"
-        accept={ACCEPT_TYPES[accept]}
+        accept={Object.keys(ACCEPT_TYPES[accept]).join(',')}
         onChange={handleFileChange}
         disabled={disabled || isUploading}
         className="hidden"

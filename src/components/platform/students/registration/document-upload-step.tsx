@@ -21,6 +21,8 @@ import { useFieldArray } from "react-hook-form";
 import { useState } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
+import { uploadFileAction } from "@/components/file-uploader/actions";
+import { useSession } from "next-auth/react";
 
 interface DocumentUploadStepProps {
   form: UseFormReturn<any>;
@@ -41,6 +43,7 @@ const documentTypes = [
 ];
 
 export function DocumentUploadStep({ form, dictionary }: DocumentUploadStepProps) {
+  const { data: session } = useSession();
   const [uploadingFile, setUploadingFile] = useState<string | null>(null);
   const [profilePhotoPreview, setProfilePhotoPreview] = useState<string | null>(null);
 
@@ -52,26 +55,35 @@ export function DocumentUploadStep({ form, dictionary }: DocumentUploadStepProps
   const studentType = form.watch("studentType");
   const isTransferStudent = studentType === "TRANSFER" || studentType === "INTERNATIONAL";
 
-  // Mock file upload function
+  // Upload file using centralized system
   const handleFileUpload = async (file: File, fieldName: string) => {
     setUploadingFile(fieldName);
 
-    // In real implementation, upload to storage service
-    // const formData = new FormData();
-    // formData.append("file", file);
-    // const response = await uploadFile(formData);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("folder", `${session?.user?.schoolId}/students/documents`);
+      formData.append("category", file.type.startsWith("image/") ? "image" : "document");
+      formData.append("type", "student_record");
 
-    // Mock response
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    const mockUrl = URL.createObjectURL(file);
+      const result = await uploadFileAction(formData);
 
-    setUploadingFile(null);
-    return {
-      url: mockUrl,
-      name: file.name,
-      size: file.size,
-      mimeType: file.type,
-    };
+      setUploadingFile(null);
+
+      if (result.success && result.metadata) {
+        return {
+          url: result.metadata.url,
+          name: result.metadata.originalName,
+          size: result.metadata.size,
+          mimeType: result.metadata.mimeType,
+        };
+      } else {
+        throw new Error(result.error || "Upload failed");
+      }
+    } catch (error) {
+      setUploadingFile(null);
+      throw error;
+    }
   };
 
   const handleProfilePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
