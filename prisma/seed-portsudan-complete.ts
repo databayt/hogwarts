@@ -173,12 +173,11 @@ async function main() {
   const departments = []
   for (const d of deptData) {
     const dept = await prisma.department.upsert({
-      where: { schoolId_name: { schoolId: school.id, name: d.name } },
+      where: { schoolId_departmentName: { schoolId: school.id, departmentName: d.name } },
       update: {},
       create: {
         schoolId: school.id,
-        name: d.name,
-        code: d.code
+        departmentName: d.name
       }
     })
     departments.push(dept)
