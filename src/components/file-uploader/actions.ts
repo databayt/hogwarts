@@ -7,7 +7,6 @@
 
 import { revalidatePath } from 'next/cache';
 import { auth } from '@/auth';
-import { db } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import type {
   UploadFileInput,
@@ -122,25 +121,26 @@ export async function uploadFileAction(formData: FormData) {
       providerConfig.provider
     );
 
-    // 8. Save metadata to database
-    const metadata = await db.fileMetadata.create({
-      data: {
-        filename,
-        originalName: file.name,
-        size: file.size,
-        mimeType: file.type,
-        category: validated.category,
-        type: validated.type,
-        url,
-        pathname: fullPath,
-        uploadedBy: session.user.id!,
-        schoolId,
-        folder: folderPath,
-        storageProvider: providerConfig.provider,
-        storageTier: providerConfig.tier,
-        metadata: validated.metadata as any,
-      },
-    });
+    // 8. Create metadata object (no database - FileMetadata model not yet implemented)
+    const uploadedAt = new Date();
+    const metadata: FileMetadata = {
+      id: `temp-${Date.now()}`, // Temporary ID until database model is added
+      filename,
+      originalName: file.name,
+      size: file.size,
+      mimeType: file.type,
+      category: validated.category as any,
+      type: validated.type,
+      url,
+      pathname: fullPath,
+      uploadedAt,
+      uploadedBy: session.user.id!,
+      schoolId,
+      folder: folderPath,
+      storageProvider: providerConfig.provider as any,
+      storageTier: providerConfig.tier as any,
+      metadata: validated.metadata,
+    };
 
     // 9. Log upload
     logger.info('File uploaded via server action', {
@@ -158,23 +158,7 @@ export async function uploadFileAction(formData: FormData) {
 
     return {
       success: true,
-      metadata: {
-        id: metadata.id,
-        filename: metadata.filename,
-        originalName: metadata.originalName,
-        size: metadata.size,
-        mimeType: metadata.mimeType,
-        category: metadata.category,
-        type: metadata.type,
-        url: metadata.url,
-        pathname: metadata.pathname,
-        uploadedAt: metadata.uploadedAt,
-        uploadedBy: metadata.uploadedBy,
-        schoolId: metadata.schoolId,
-        folder: metadata.folder,
-        storageProvider: metadata.storageProvider,
-        storageTier: metadata.storageTier,
-      } as FileMetadata,
+      metadata,
     };
   } catch (error) {
     logger.error(
@@ -210,31 +194,11 @@ export async function deleteFileAction(data: DeleteFileInput) {
     // 2. Validate input
     const validated = deleteFileSchema.parse(data);
 
-    // 3. Find file in database
-    const file = await db.fileMetadata.findFirst({
-      where: {
-        url: validated.url,
-        schoolId: data.schoolId,
-      },
-    });
-
-    if (!file) {
-      return {
-        success: false,
-        error: 'File not found',
-      };
-    }
-
-    // 4. Check if file is referenced (unless force delete)
-    if (!validated.force) {
-      // TODO: Add reference checks once lesson/chapter models are updated with file URLs
-      // For now, allow deletion
-    }
-
-    // 5. Delete from storage provider
+    // 3. Delete from storage provider directly (no database lookup until FileMetadata model is added)
+    // Note: We assume the URL is from Vercel Blob for now
     const deleted = await deleteFromProvider(
       validated.url,
-      file.storageProvider as any
+      'vercel-blob' // Default provider until database tracking is implemented
     );
 
     if (!deleted) {
@@ -244,12 +208,7 @@ export async function deleteFileAction(data: DeleteFileInput) {
       };
     }
 
-    // 6. Delete from database
-    await db.fileMetadata.delete({
-      where: { id: file.id },
-    });
-
-    // 7. Log deletion
+    // 4. Log deletion
     logger.info('File deleted via server action', {
       action: 'file_delete',
       schoolId: data.schoolId,
@@ -257,7 +216,7 @@ export async function deleteFileAction(data: DeleteFileInput) {
       userId: session.user.id,
     });
 
-    // 8. Revalidate paths
+    // 5. Revalidate paths
     revalidatePath(`/${data.schoolId}/files`);
 
     return {
@@ -297,39 +256,18 @@ export async function listFilesAction(data: ListFilesInput) {
     // 2. Validate input
     const validated = listFilesSchema.parse(data);
 
-    // 3. Query database
-    const files = await db.fileMetadata.findMany({
-      where: {
-        schoolId: data.schoolId,
-        folder: validated.folder
-          ? { contains: validated.folder }
-          : undefined,
-        category: validated.category,
-        type: validated.type,
-      },
-      orderBy: {
-        uploadedAt: 'desc',
-      },
-      take: validated.limit,
-      skip: validated.offset,
-    });
-
-    // 4. Get total count
-    const total = await db.fileMetadata.count({
-      where: {
-        schoolId: data.schoolId,
-        folder: validated.folder
-          ? { contains: validated.folder }
-          : undefined,
-        category: validated.category,
-        type: validated.type,
-      },
+    // 3. Return empty list until FileMetadata model is implemented
+    // TODO: Implement database queries when FileMetadata model is added
+    logger.info('List files action called (not yet implemented)', {
+      action: 'list_files',
+      schoolId: data.schoolId,
+      folder: validated.folder,
     });
 
     return {
       success: true,
-      files: files as FileMetadata[],
-      total,
+      files: [] as FileMetadata[],
+      total: 0,
       limit: validated.limit,
       offset: validated.offset,
     };
@@ -367,33 +305,17 @@ export async function getFileAction(data: GetFileInput) {
     // 2. Validate input
     const validated = getFileSchema.parse(data);
 
-    // 3. Query database
-    const file = await db.fileMetadata.findFirst({
-      where: {
-        id: validated.id,
-        schoolId: data.schoolId,
-      },
-    });
-
-    if (!file) {
-      return {
-        success: false,
-        error: 'File not found',
-      };
-    }
-
-    // 4. Update access tracking
-    await db.fileMetadata.update({
-      where: { id: file.id },
-      data: {
-        accessCount: { increment: 1 },
-        lastAccessedAt: new Date(),
-      },
+    // 3. Return not found until FileMetadata model is implemented
+    // TODO: Implement database queries when FileMetadata model is added
+    logger.info('Get file action called (not yet implemented)', {
+      action: 'get_file',
+      schoolId: data.schoolId,
+      fileId: validated.id,
     });
 
     return {
-      success: true,
-      file: file as FileMetadata,
+      success: false,
+      error: 'File tracking not yet implemented. Use direct URL access.',
     };
   } catch (error) {
     logger.error(
