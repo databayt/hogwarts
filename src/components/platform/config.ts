@@ -1,6 +1,6 @@
 import { UserRole } from "@prisma/client";
 
-import { SidebarNavItem } from "types";
+import { SidebarNavItem } from "@/components/marketing/pricing/types";
 
 export const sidebarLinks: SidebarNavItem[] = [
   {

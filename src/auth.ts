@@ -222,15 +222,15 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
         // Apply role from preview or token
         if (previewModeCookie?.value === 'true' && previewRoleCookie?.value) {
           // Apply preview role if preview mode is active
-          (session.user as any).role = previewRoleCookie.value
-          (session.user as any).isPreviewMode = true
+          (session.user as any).role = previewRoleCookie.value;
+          (session.user as any).isPreviewMode = true;
           if (process.env.NODE_ENV === 'development') {
             console.log('🎭 [DEBUG] Preview role applied to session:', previewRoleCookie.value);
           }
         } else if (token.role) {
           // Apply normal role from token
-          (session.user as any).role = token.role
-          (session.user as any).isPreviewMode = false
+          (session.user as any).role = token.role;
+          (session.user as any).isPreviewMode = false;
           if (process.env.NODE_ENV === 'development') {
             console.log('🎭 [DEBUG] Role applied to session:', token.role);
           }
