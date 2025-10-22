@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import {
   Settings,
@@ -17,7 +17,6 @@ import { useSchool } from "@/components/platform/context/school-context";
 import { type Locale } from "@/components/internationalization/config";
 import { type Dictionary } from "@/components/internationalization/dictionaries";
 import { useSession } from "next-auth/react";
-import { cn } from "@/lib/utils";
 
 // Lazy load heavy components for better initial page load performance
 const BasicSettings = React.lazy(() => import("./content").then(m => ({ default: m.SettingsContent })));
@@ -97,32 +96,21 @@ export function EnhancedSettingsContent({ dictionary, lang }: Props) {
 
       {/* Settings Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        {/* Custom Tab Navigation */}
-        <div className="relative">
-          <ScrollArea className="max-w-[600px] lg:max-w-none">
-            <nav className="flex items-center gap-2 rtl:flex-row-reverse">
-              {tabs.map((tab) => {
-                const Icon = tab.icon;
-                return (
-                  <button
-                    key={tab.value}
-                    onClick={() => setActiveTab(tab.value)}
-                    className={cn(
-                      "flex h-7 items-center justify-center gap-2 rounded-full px-4 text-center text-sm transition-colors hover:text-primary",
-                      activeTab === tab.value
-                        ? "bg-muted text-primary"
-                        : "text-muted-foreground"
-                    )}
-                  >
-                    <Icon className="h-4 w-4" />
-                    <span className="hidden sm:inline">{tab.label}</span>
-                  </button>
-                );
-              })}
-            </nav>
-            <ScrollBar orientation="horizontal" className="invisible" />
-          </ScrollArea>
-        </div>
+        {/* Bordered Tab Navigation */}
+        <ScrollArea className="w-full">
+          <TabsList variant="bordered" className="rtl:flex-row-reverse">
+            {tabs.map((tab) => {
+              const Icon = tab.icon;
+              return (
+                <TabsTrigger key={tab.value} value={tab.value} variant="bordered">
+                  <Icon className="h-4 w-4" />
+                  <span className="hidden sm:inline">{tab.label}</span>
+                </TabsTrigger>
+              );
+            })}
+          </TabsList>
+          <ScrollBar orientation="horizontal" className="invisible" />
+        </ScrollArea>
 
         {/* General Settings */}
         <TabsContent value="general" className="space-y-6">
