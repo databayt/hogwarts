@@ -521,11 +521,11 @@ async function main() {
 
   // Week Config
   await prisma.schoolWeekConfig.upsert({
-    where: { schoolId_termId: { schoolId: school.id, termId: null } },
+    where: { schoolId_termId: { schoolId: school.id, termId: term1.id } },
     update: {},
     create: {
       schoolId: school.id,
-      termId: null,
+      termId: term1.id,
       workingDays: [0, 1, 2, 3, 4], // Sunday to Thursday
       defaultLunchAfterPeriod: 4
     }
