@@ -33,84 +33,85 @@ import {
 } from "lucide-react";
 import { SuccessToast, ErrorToast } from "@/components/atom/toast";
 import type { UserRole } from "./role-management";
+import { type Dictionary } from "@/components/internationalization/dictionaries";
 
-// Permission categories and their permissions
-const PERMISSION_CATEGORIES = {
+// Permission categories and their permissions - now returns function for i18n
+const getPermissionCategories = (dictionary?: Dictionary["school"]) => ({
   users: {
-    label: "User Management",
+    label: dictionary?.settings?.permissionsPanel?.categories?.users || "User Management",
     icon: Users,
     permissions: {
-      "users.view": "View users",
-      "users.create": "Create users",
-      "users.edit": "Edit users",
-      "users.delete": "Delete users",
-      "users.roles": "Manage user roles",
-      "users.permissions": "Manage permissions",
+      "users.view": dictionary?.settings?.permissionsPanel?.users?.view || "View users",
+      "users.create": dictionary?.settings?.permissionsPanel?.users?.create || "Create users",
+      "users.edit": dictionary?.settings?.permissionsPanel?.users?.edit || "Edit users",
+      "users.delete": dictionary?.settings?.permissionsPanel?.users?.delete || "Delete users",
+      "users.roles": dictionary?.settings?.permissionsPanel?.users?.roles || "Manage user roles",
+      "users.permissions": dictionary?.settings?.permissionsPanel?.users?.permissions || "Manage permissions",
     },
   },
   students: {
-    label: "Student Management",
+    label: dictionary?.settings?.permissionsPanel?.categories?.students || "Student Management",
     icon: Users,
     permissions: {
-      "students.view": "View students",
-      "students.create": "Add students",
-      "students.edit": "Edit student info",
-      "students.delete": "Remove students",
-      "students.grades": "Manage grades",
-      "students.attendance": "Track attendance",
+      "students.view": dictionary?.settings?.permissionsPanel?.students?.view || "View students",
+      "students.create": dictionary?.settings?.permissionsPanel?.students?.create || "Add students",
+      "students.edit": dictionary?.settings?.permissionsPanel?.students?.edit || "Edit student info",
+      "students.delete": dictionary?.settings?.permissionsPanel?.students?.delete || "Remove students",
+      "students.grades": dictionary?.settings?.permissionsPanel?.students?.grades || "Manage grades",
+      "students.attendance": dictionary?.settings?.permissionsPanel?.students?.attendance || "Track attendance",
     },
   },
   teachers: {
-    label: "Teacher Management",
+    label: dictionary?.settings?.permissionsPanel?.categories?.teachers || "Teacher Management",
     icon: Users,
     permissions: {
-      "teachers.view": "View teachers",
-      "teachers.create": "Add teachers",
-      "teachers.edit": "Edit teacher info",
-      "teachers.delete": "Remove teachers",
-      "teachers.schedule": "Manage schedules",
-      "teachers.evaluate": "Performance evaluation",
+      "teachers.view": dictionary?.settings?.permissionsPanel?.teachers?.view || "View teachers",
+      "teachers.create": dictionary?.settings?.permissionsPanel?.teachers?.create || "Add teachers",
+      "teachers.edit": dictionary?.settings?.permissionsPanel?.teachers?.edit || "Edit teacher info",
+      "teachers.delete": dictionary?.settings?.permissionsPanel?.teachers?.delete || "Remove teachers",
+      "teachers.schedule": dictionary?.settings?.permissionsPanel?.teachers?.schedule || "Manage schedules",
+      "teachers.evaluate": dictionary?.settings?.permissionsPanel?.teachers?.evaluate || "Performance evaluation",
     },
   },
   academics: {
-    label: "Academic Management",
+    label: dictionary?.settings?.permissionsPanel?.categories?.academics || "Academic Management",
     icon: FileText,
     permissions: {
-      "classes.view": "View classes",
-      "classes.create": "Create classes",
-      "classes.edit": "Edit classes",
-      "classes.delete": "Delete classes",
-      "assignments.manage": "Manage assignments",
-      "exams.manage": "Manage exams",
-      "curriculum.manage": "Manage curriculum",
+      "classes.view": dictionary?.settings?.permissionsPanel?.academics?.classesView || "View classes",
+      "classes.create": dictionary?.settings?.permissionsPanel?.academics?.classesCreate || "Create classes",
+      "classes.edit": dictionary?.settings?.permissionsPanel?.academics?.classesEdit || "Edit classes",
+      "classes.delete": dictionary?.settings?.permissionsPanel?.academics?.classesDelete || "Delete classes",
+      "assignments.manage": dictionary?.settings?.permissionsPanel?.academics?.assignments || "Manage assignments",
+      "exams.manage": dictionary?.settings?.permissionsPanel?.academics?.exams || "Manage exams",
+      "curriculum.manage": dictionary?.settings?.permissionsPanel?.academics?.curriculum || "Manage curriculum",
     },
   },
   finance: {
-    label: "Financial Management",
+    label: dictionary?.settings?.permissionsPanel?.categories?.finance || "Financial Management",
     icon: DollarSign,
     permissions: {
-      "finance.view": "View financial data",
-      "finance.edit": "Edit financial records",
-      "finance.create": "Create transactions",
-      "finance.delete": "Delete transactions",
-      "fees.manage": "Manage fees",
-      "payments.process": "Process payments",
-      "reports.financial": "Generate financial reports",
+      "finance.view": dictionary?.settings?.permissionsPanel?.finance?.view || "View financial data",
+      "finance.edit": dictionary?.settings?.permissionsPanel?.finance?.edit || "Edit financial records",
+      "finance.create": dictionary?.settings?.permissionsPanel?.finance?.create || "Create transactions",
+      "finance.delete": dictionary?.settings?.permissionsPanel?.finance?.delete || "Delete transactions",
+      "fees.manage": dictionary?.settings?.permissionsPanel?.finance?.fees || "Manage fees",
+      "payments.process": dictionary?.settings?.permissionsPanel?.finance?.payments || "Process payments",
+      "reports.financial": dictionary?.settings?.permissionsPanel?.finance?.reports || "Generate financial reports",
     },
   },
   system: {
-    label: "System Settings",
+    label: dictionary?.settings?.permissionsPanel?.categories?.settings || "System Settings",
     icon: Settings,
     permissions: {
-      "settings.view": "View settings",
-      "settings.edit": "Edit settings",
-      "system.backup": "Backup system",
-      "system.restore": "Restore system",
-      "system.audit": "View audit logs",
-      "system.developer": "Developer tools",
+      "settings.view": dictionary?.settings?.permissionsPanel?.settingsPerms?.view || "View settings",
+      "settings.edit": dictionary?.settings?.permissionsPanel?.settingsPerms?.edit || "Edit settings",
+      "system.backup": dictionary?.settings?.permissionsPanel?.settingsPerms?.system || "Backup system",
+      "system.restore": dictionary?.settings?.permissionsPanel?.settingsPerms?.system || "Restore system",
+      "system.audit": dictionary?.settings?.permissionsPanel?.settingsPerms?.system || "View audit logs",
+      "system.developer": dictionary?.settings?.permissionsPanel?.settingsPerms?.system || "Developer tools",
     },
   },
-};
+});
 
 // Default permissions for each role
 const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, string[]> = {
@@ -150,12 +151,16 @@ const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, string[]> = {
 interface PermissionsPanelProps {
   currentRole?: UserRole;
   isDeveloperMode?: boolean;
+  dictionary?: Dictionary["school"];
 }
 
 export function PermissionsPanel({
   currentRole = "USER",
   isDeveloperMode = false,
+  dictionary,
 }: PermissionsPanelProps) {
+  const PERMISSION_CATEGORIES = React.useMemo(() => getPermissionCategories(dictionary), [dictionary]);
+
   const [selectedRole, setSelectedRole] = useState<UserRole>(currentRole);
   const [permissions, setPermissions] = useState<Record<UserRole, string[]>>(
     DEFAULT_ROLE_PERMISSIONS
@@ -240,9 +245,9 @@ export function PermissionsPanel({
       {isDeveloperMode && (
         <Alert className="border-purple-200 bg-purple-50 dark:bg-purple-950/20">
           <Shield className="h-4 w-4" />
-          <AlertTitle>Advanced Permission Management</AlertTitle>
+          <AlertTitle>{dictionary?.settings?.permissionsPanel?.advancedManagement || "Advanced Permission Management"}</AlertTitle>
           <AlertDescription>
-            You can modify all role permissions. Changes affect all users with these roles.
+            {dictionary?.settings?.permissionsPanel?.modifyAllRoles || "You can modify all role permissions. Changes affect all users with these roles."}
           </AlertDescription>
         </Alert>
       )}
@@ -250,12 +255,12 @@ export function PermissionsPanel({
       {/* Role Selector */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 rtl:flex-row-reverse">
             <Shield className="h-5 w-5" />
-            Permission Management
+            {dictionary?.settings?.permissionsPanel?.permissionManagement || "Permission Management"}
           </CardTitle>
           <CardDescription>
-            Configure permissions for each role in the system
+            {dictionary?.settings?.permissionsPanel?.configurePermissions || "Configure permissions for each role in the system"}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -275,22 +280,22 @@ export function PermissionsPanel({
               <TabsContent key={role} value={role} className="space-y-6">
                 {/* Role Info */}
                 <div className="rounded-lg border p-4 bg-muted/50">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between rtl:flex-row-reverse">
                     <div>
-                      <p className="font-semibold">{role} Role</p>
+                      <p className="font-semibold">{role} {dictionary?.settings?.permissionsPanel?.role || "Role"}</p>
                       <p className="text-sm text-muted-foreground">
-                        {role === "DEVELOPER" && "Full system access"}
-                        {role === "ADMIN" && "School administration access"}
-                        {role === "TEACHER" && "Teaching and class management"}
-                        {role === "STUDENT" && "Student portal access"}
-                        {role === "GUARDIAN" && "Parent/Guardian access"}
-                        {role === "ACCOUNTANT" && "Financial management"}
-                        {role === "STAFF" && "Basic staff access"}
-                        {role === "USER" && "Basic user access"}
+                        {role === "DEVELOPER" && (dictionary?.settings?.permissionsPanel?.roleDescriptions?.developer || "Full system access")}
+                        {role === "ADMIN" && (dictionary?.settings?.permissionsPanel?.roleDescriptions?.admin || "School administration access")}
+                        {role === "TEACHER" && (dictionary?.settings?.permissionsPanel?.roleDescriptions?.teacher || "Teaching and class management")}
+                        {role === "STUDENT" && (dictionary?.settings?.permissionsPanel?.roleDescriptions?.student || "Student portal access")}
+                        {role === "GUARDIAN" && (dictionary?.settings?.permissionsPanel?.roleDescriptions?.guardian || "Parent/Guardian access")}
+                        {role === "ACCOUNTANT" && (dictionary?.settings?.permissionsPanel?.roleDescriptions?.accountant || "Financial management")}
+                        {role === "STAFF" && (dictionary?.settings?.permissionsPanel?.roleDescriptions?.staff || "Basic staff access")}
+                        {role === "USER" && (dictionary?.settings?.permissionsPanel?.roleDescriptions?.user || "Basic user access")}
                       </p>
                     </div>
                     <Badge variant={role === "DEVELOPER" ? "destructive" : "default"}>
-                      {permissions[role as UserRole]?.length || 0} permissions
+                      {permissions[role as UserRole]?.length || 0} {dictionary?.settings?.permissionsPanel?.permissionsCount || "permissions"}
                     </Badge>
                   </div>
                 </div>
@@ -299,9 +304,9 @@ export function PermissionsPanel({
                 {role === "DEVELOPER" && (
                   <Alert className="border-red-200">
                     <AlertTriangle className="h-4 w-4" />
-                    <AlertTitle>Developer Role</AlertTitle>
+                    <AlertTitle>{dictionary?.settings?.permissionsPanel?.developerRole || "Developer Role"}</AlertTitle>
                     <AlertDescription>
-                      Developers have full system access by default. This cannot be modified.
+                      {dictionary?.settings?.permissionsPanel?.developerFullAccess || "Developers have full system access by default. This cannot be modified."}
                     </AlertDescription>
                   </Alert>
                 )}
@@ -322,14 +327,14 @@ export function PermissionsPanel({
                     return (
                       <Card key={key}>
                         <CardHeader>
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
+                          <div className="flex items-center justify-between rtl:flex-row-reverse">
+                            <div className="flex items-center gap-2 rtl:flex-row-reverse">
                               <Icon className="h-4 w-4" />
                               <CardTitle className="text-base">{category.label}</CardTitle>
                             </div>
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 rtl:flex-row-reverse">
                               {hasSome && !hasAll && (
-                                <Badge variant="secondary">Partial</Badge>
+                                <Badge variant="secondary">{dictionary?.settings?.permissionsPanel?.partial || "Partial"}</Badge>
                               )}
                               <Switch
                                 checked={hasAll}
@@ -350,9 +355,9 @@ export function PermissionsPanel({
                             {Object.entries(category.permissions).map(([perm, label]) => (
                               <div
                                 key={perm}
-                                className="flex items-center justify-between py-2"
+                                className="flex items-center justify-between py-2 rtl:flex-row-reverse"
                               >
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-2 rtl:flex-row-reverse">
                                   {hasPermission(role as UserRole, perm) ? (
                                     <CheckCircle className="h-4 w-4 text-green-600" />
                                   ) : (
@@ -384,16 +389,16 @@ export function PermissionsPanel({
 
           {/* Action Buttons */}
           {hasChanges && (
-            <div className="flex items-center justify-between mt-6 p-4 rounded-lg bg-muted">
+            <div className="flex items-center justify-between mt-6 p-4 rounded-lg bg-muted rtl:flex-row-reverse">
               <p className="text-sm text-muted-foreground">
-                You have unsaved changes
+                {dictionary?.settings?.permissionsPanel?.unsavedChanges || "You have unsaved changes"}
               </p>
-              <div className="flex gap-2">
+              <div className="flex gap-2 rtl:flex-row-reverse rtl:gap-x-reverse">
                 <Button variant="outline" onClick={handleReset}>
-                  Reset to Defaults
+                  {dictionary?.settings?.permissionsPanel?.resetToDefaults || "Reset to Defaults"}
                 </Button>
                 <Button onClick={handleSave} disabled={isSaving}>
-                  {isSaving ? "Saving..." : "Save Changes"}
+                  {isSaving ? (dictionary?.settings?.permissionsPanel?.saving || "Saving...") : (dictionary?.settings?.permissionsPanel?.saveChanges || "Save Changes")}
                 </Button>
               </div>
             </div>
@@ -404,9 +409,9 @@ export function PermissionsPanel({
       {/* Permission Summary */}
       <Card>
         <CardHeader>
-          <CardTitle>Permission Summary</CardTitle>
+          <CardTitle>{dictionary?.settings?.permissionsPanel?.permissionSummary || "Permission Summary"}</CardTitle>
           <CardDescription>
-            Overview of permissions across all roles
+            {dictionary?.settings?.permissionsPanel?.overviewAllRoles || "Overview of permissions across all roles"}
           </CardDescription>
         </CardHeader>
         <CardContent>

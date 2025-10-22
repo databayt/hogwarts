@@ -459,7 +459,7 @@
         "saveSettings": "حفظ إعدادات الإشعارات",
         "saving": "جاري الحفظ..."
       },
-      "permissions": {
+      "permissionsPanel": {
         "title": "إدارة الصلاحيات",
         "description": "إدارة الصلاحيات القائمة على الأدوار والتحكم في الوصول",
         "rolePermissions": "صلاحيات الأدوار",

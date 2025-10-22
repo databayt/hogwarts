@@ -459,7 +459,7 @@
         "saveSettings": "Save Notification Settings",
         "saving": "Saving..."
       },
-      "permissions": {
+      "permissionsPanel": {
         "title": "Permissions Management",
         "description": "Manage role-based permissions and access control",
         "rolePermissions": "Role Permissions",

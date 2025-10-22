@@ -1,7 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import {
   Settings,
   Users,
@@ -13,14 +14,17 @@ import {
   Database,
 } from "lucide-react";
 import { useSchool } from "@/components/platform/context/school-context";
-import { SettingsContent as BasicSettings } from "./content";
-import { RoleManagement } from "./role-management";
-import { RoleSwitcher } from "./role-switcher";
-import { PermissionsPanel } from "./permissions-panel";
-import { NotificationSettings } from "./notification-settings";
 import { type Locale } from "@/components/internationalization/config";
 import { type Dictionary } from "@/components/internationalization/dictionaries";
 import { useSession } from "next-auth/react";
+import { cn } from "@/lib/utils";
+
+// Lazy load heavy components for better initial page load performance
+const BasicSettings = React.lazy(() => import("./content").then(m => ({ default: m.SettingsContent })));
+const RoleManagement = React.lazy(() => import("./role-management").then(m => ({ default: m.RoleManagement })));
+const RoleSwitcher = React.lazy(() => import("./role-switcher").then(m => ({ default: m.RoleSwitcher })));
+const PermissionsPanel = React.lazy(() => import("./permissions-panel").then(m => ({ default: m.PermissionsPanel })));
+const NotificationSettings = React.lazy(() => import("./notification-settings").then(m => ({ default: m.NotificationSettings })));
 
 interface Props {
   dictionary: Dictionary;
@@ -30,6 +34,9 @@ interface Props {
 export function EnhancedSettingsContent({ dictionary, lang }: Props) {
   const { school } = useSchool();
   const { data: session } = useSession();
+
+  // Active tab state
+  const [activeTab, setActiveTab] = React.useState("general");
 
   // Check if user has developer or admin access
   const isDeveloper = session?.user?.role === "DEVELOPER";
@@ -44,79 +51,125 @@ export function EnhancedSettingsContent({ dictionary, lang }: Props) {
     setIsDeveloperMode(devMode);
   }, []);
 
+  // Tab configuration
+  const tabs = React.useMemo(() => [
+    {
+      value: "general",
+      label: dictionary?.school?.settings?.general || "General",
+      icon: School,
+    },
+    {
+      value: "users",
+      label: dictionary?.school?.settings?.users || "Users",
+      icon: Users,
+    },
+    {
+      value: "roles",
+      label: dictionary?.school?.settings?.roles || "Roles",
+      icon: UserCog,
+    },
+    {
+      value: "permissions",
+      label: dictionary?.school?.settings?.permissionsPanel?.title || "Permissions",
+      icon: Shield,
+    },
+    {
+      value: "notifications",
+      label: dictionary?.school?.settings?.notifications?.title || "Notifications",
+      icon: Bell,
+    },
+    {
+      value: "advanced",
+      label: dictionary?.school?.settings?.advanced || "Advanced",
+      icon: Database,
+    },
+  ], [dictionary]);
+
   return (
     <div className="space-y-6">
       {/* Page Header */}
       <div>
-        <h2 className="text-3xl font-bold tracking-tight">{dictionary?.school?.settings?.title || 'Settings'}</h2>
+        <h2>{dictionary?.school?.settings?.title || 'Settings'}</h2>
         <p className="text-muted-foreground">
           {dictionary?.school?.settings?.description || 'Manage your school settings, users, roles, and permissions'}
         </p>
       </div>
 
       {/* Settings Tabs */}
-      <Tabs defaultValue="general" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-6">
-          <TabsTrigger value="general" className="flex items-center gap-2">
-            <School className="h-4 w-4" />
-            <span className="hidden sm:inline">{dictionary?.school?.settings?.general || 'General'}</span>
-          </TabsTrigger>
-          <TabsTrigger value="users" className="flex items-center gap-2">
-            <Users className="h-4 w-4" />
-            <span className="hidden sm:inline">{dictionary?.school?.settings?.users || 'Users'}</span>
-          </TabsTrigger>
-          <TabsTrigger value="roles" className="flex items-center gap-2">
-            <UserCog className="h-4 w-4" />
-            <span className="hidden sm:inline">{dictionary?.school?.settings?.roles || 'Roles'}</span>
-          </TabsTrigger>
-          <TabsTrigger value="permissions" className="flex items-center gap-2">
-            <Shield className="h-4 w-4" />
-            <span className="hidden sm:inline">{dictionary?.school?.settings?.permissions || 'Permissions'}</span>
-          </TabsTrigger>
-          <TabsTrigger value="notifications" className="flex items-center gap-2">
-            <Bell className="h-4 w-4" />
-            <span className="hidden sm:inline">{dictionary?.school?.settings?.notifications || 'Notifications'}</span>
-          </TabsTrigger>
-          <TabsTrigger value="advanced" className="flex items-center gap-2">
-            <Database className="h-4 w-4" />
-            <span className="hidden sm:inline">{dictionary?.school?.settings?.advanced || 'Advanced'}</span>
-          </TabsTrigger>
-        </TabsList>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        {/* Custom Tab Navigation */}
+        <div className="relative">
+          <ScrollArea className="max-w-[600px] lg:max-w-none">
+            <nav className="flex items-center gap-2 rtl:flex-row-reverse">
+              {tabs.map((tab) => {
+                const Icon = tab.icon;
+                return (
+                  <button
+                    key={tab.value}
+                    onClick={() => setActiveTab(tab.value)}
+                    className={cn(
+                      "flex h-7 items-center justify-center gap-2 rounded-full px-4 text-center text-sm transition-colors hover:text-primary",
+                      activeTab === tab.value
+                        ? "bg-muted text-primary"
+                        : "text-muted-foreground"
+                    )}
+                  >
+                    <Icon className="h-4 w-4" />
+                    <span className="hidden sm:inline">{tab.label}</span>
+                  </button>
+                );
+              })}
+            </nav>
+            <ScrollBar orientation="horizontal" className="invisible" />
+          </ScrollArea>
+        </div>
 
         {/* General Settings */}
         <TabsContent value="general" className="space-y-6">
-          <BasicSettings dictionary={dictionary} lang={lang} />
+          <React.Suspense fallback={<LoadingFallback />}>
+            <BasicSettings dictionary={dictionary} lang={lang} />
+          </React.Suspense>
         </TabsContent>
 
         {/* User Management */}
         <TabsContent value="users" className="space-y-6">
-          <RoleManagement
-            dictionary={dictionary.school}
-            currentUserId={session?.user?.id}
-            isDeveloperMode={isDeveloperMode || isDeveloper}
-          />
+          <React.Suspense fallback={<LoadingFallback />}>
+            <RoleManagement
+              dictionary={dictionary.school}
+              currentUserId={session?.user?.id}
+              isDeveloperMode={isDeveloperMode || isDeveloper}
+            />
+          </React.Suspense>
         </TabsContent>
 
         {/* Role Switcher */}
         <TabsContent value="roles" className="space-y-6">
-          <RoleSwitcher
-            currentRole={session?.user?.role as any}
-            currentUserId={session?.user?.id}
-            schoolId={school?.id}
-          />
+          <React.Suspense fallback={<LoadingFallback />}>
+            <RoleSwitcher
+              currentRole={(session?.user?.role || "USER") as import("./role-management").UserRole}
+              currentUserId={session?.user?.id}
+              schoolId={school?.id}
+              dictionary={dictionary.school}
+            />
+          </React.Suspense>
         </TabsContent>
 
         {/* Permissions Management */}
         <TabsContent value="permissions" className="space-y-6">
-          <PermissionsPanel
-            currentRole={session?.user?.role as any}
-            isDeveloperMode={isDeveloperMode || isDeveloper}
-          />
+          <React.Suspense fallback={<LoadingFallback />}>
+            <PermissionsPanel
+              currentRole={(session?.user?.role || "USER") as import("./role-management").UserRole}
+              isDeveloperMode={isDeveloperMode || isDeveloper}
+              dictionary={dictionary.school}
+            />
+          </React.Suspense>
         </TabsContent>
 
         {/* Notification Settings */}
         <TabsContent value="notifications" className="space-y-6">
-          <NotificationSettings />
+          <React.Suspense fallback={<LoadingFallback />}>
+            <NotificationSettings dictionary={dictionary.school} />
+          </React.Suspense>
         </TabsContent>
 
         {/* Advanced Settings */}
@@ -129,6 +182,17 @@ export function EnhancedSettingsContent({ dictionary, lang }: Props) {
           />
         </TabsContent>
       </Tabs>
+    </div>
+  );
+}
+
+// Loading Fallback Component
+function LoadingFallback() {
+  return (
+    <div className="space-y-4">
+      <div className="h-32 bg-muted animate-pulse rounded-lg" />
+      <div className="h-32 bg-muted animate-pulse rounded-lg" />
+      <div className="h-32 bg-muted animate-pulse rounded-lg" />
     </div>
   );
 }
