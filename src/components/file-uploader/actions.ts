@@ -14,6 +14,7 @@ import type {
   ListFilesInput,
   GetFileInput,
   FileMetadata,
+  FileType,
 } from './types';
 import { uploadToProvider, deleteFromProvider, listFromProvider } from './lib/providers';
 import { getStorageProvider } from './config/storage-config';
@@ -130,15 +131,15 @@ export async function uploadFileAction(formData: FormData) {
       size: file.size,
       mimeType: file.type,
       category: validated.category as any,
-      type: validated.type,
+      type: validated.type as FileType | undefined,
       url,
       pathname: fullPath,
       uploadedAt,
       uploadedBy: session.user.id!,
       schoolId,
       folder: folderPath,
-      storageProvider: providerConfig.provider as any,
-      storageTier: providerConfig.tier as any,
+      storageProvider: providerConfig.provider,
+      storageTier: providerConfig.tier,
       metadata: validated.metadata,
     };
 
@@ -198,7 +199,7 @@ export async function deleteFileAction(data: DeleteFileInput) {
     // Note: We assume the URL is from Vercel Blob for now
     const deleted = await deleteFromProvider(
       validated.url,
-      'vercel-blob' // Default provider until database tracking is implemented
+      'vercel_blob' // Default provider until database tracking is implemented
     );
 
     if (!deleted) {
