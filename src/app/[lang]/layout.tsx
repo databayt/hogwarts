@@ -5,6 +5,7 @@ import { type Locale, localeConfig, i18n } from "@/components/internationalizati
 import { getDictionary } from "@/components/internationalization/dictionaries";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/atom/theme-provider";
+import { UserThemeProvider } from "@/components/theme/theme-provider";
 import { SessionProvider } from "next-auth/react";
 import { auth } from "@/auth";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
@@ -66,10 +67,12 @@ export default async function LocaleLayout({
         <SessionProvider session={session}>
           <NuqsAdapter>
             <ThemeProvider>
-              {children}
-              <Toaster />
-              <AnalyticsProvider />
-              <ServiceWorkerProvider />
+              <UserThemeProvider>
+                {children}
+                <Toaster />
+                <AnalyticsProvider />
+                <ServiceWorkerProvider />
+              </UserThemeProvider>
             </ThemeProvider>
           </NuqsAdapter>
         </SessionProvider>
