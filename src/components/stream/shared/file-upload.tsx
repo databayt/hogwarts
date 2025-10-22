@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Upload, X, File, Video, Image as ImageIcon, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
+import { STORAGE_CONFIG, SIZE_LABELS } from "@/lib/storage-config";
 
 interface FileUploadProps {
   value?: string;
@@ -22,9 +23,9 @@ const ACCEPT_TYPES = {
 };
 
 const MAX_SIZE_MB = {
-  video: 500,
-  material: 50,
-  image: 10,
+  video: STORAGE_CONFIG.getMaxSize("video") / (1024 * 1024),
+  material: STORAGE_CONFIG.getMaxSize("material") / (1024 * 1024),
+  image: STORAGE_CONFIG.getMaxSize("image") / (1024 * 1024),
 };
 
 const ICONS = {
@@ -213,9 +214,9 @@ export function FileUpload({
         </p>
 
         <p className="text-xs text-muted-foreground text-center">
-          {accept === "video" && "MP4, WebM, MOV, AVI up to 500MB"}
-          {accept === "material" && "PDF, DOC, PPT, XLS, ZIP up to 50MB"}
-          {accept === "image" && "JPG, PNG, GIF, SVG, WebP up to 10MB"}
+          {accept === "video" && `MP4, WebM, MOV, AVI up to ${SIZE_LABELS.getLabel(STORAGE_CONFIG.getMaxSize("video"))}`}
+          {accept === "material" && `PDF, DOC, PPT, XLS, ZIP up to ${SIZE_LABELS.getLabel(STORAGE_CONFIG.getMaxSize("material"))}`}
+          {accept === "image" && `JPG, PNG, GIF, SVG, WebP up to ${SIZE_LABELS.getLabel(STORAGE_CONFIG.getMaxSize("image"))}`}
         </p>
       </label>
 

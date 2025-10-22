@@ -4,21 +4,27 @@ import { getTenantContext } from "@/lib/tenant-context";
 import { put } from "@vercel/blob";
 import { logger } from "@/lib/logger";
 import { rateLimit, RATE_LIMITS } from "@/lib/rate-limit";
+import { STORAGE_CONFIG, SIZE_LABELS } from "@/lib/storage-config";
 
 /**
- * Vercel Blob Upload API
+ * Vercel Blob Upload API (with Extended Storage Support)
  * Handles video and material uploads for Stream courses
  *
  * Supported file types:
  * - Videos: mp4, webm, mov, avi
  * - Materials: pdf, doc, docx, ppt, pptx, xls, xlsx, zip
  * - Images: jpg, jpeg, png, gif, svg, webp
+ *
+ * Storage Strategy:
+ * - Small videos (< 500MB): Vercel Blob
+ * - Large videos (up to 5GB): Cloudflare R2 or AWS S3 (if configured)
+ * - For 40-min lessons at 1080p (~2.4GB), configure extended storage
  */
 
 const MAX_FILE_SIZE = {
-  video: 500 * 1024 * 1024, // 500MB for videos
-  material: 50 * 1024 * 1024, // 50MB for materials
-  image: 10 * 1024 * 1024, // 10MB for images
+  video: STORAGE_CONFIG.getMaxSize("video"),
+  material: STORAGE_CONFIG.getMaxSize("material"),
+  image: STORAGE_CONFIG.getMaxSize("image"),
 };
 
 const ALLOWED_TYPES = {
@@ -115,9 +121,17 @@ export async function POST(request: NextRequest) {
     // 6. Validate file size
     const maxSize = MAX_FILE_SIZE[category];
     if (file.size > maxSize) {
+      const sizeLabel = SIZE_LABELS.getLabel(maxSize);
+      const fileSizeLabel = SIZE_LABELS.getLabel(file.size);
+
       return NextResponse.json(
         {
-          error: `File size exceeds limit. Maximum allowed: ${maxSize / (1024 * 1024)}MB`
+          error: `File size (${fileSizeLabel}) exceeds limit. Maximum allowed: ${sizeLabel}`,
+          maxSize: sizeLabel,
+          fileSize: fileSizeLabel,
+          hint: category === "video" && file.size > STORAGE_CONFIG.MAX_SIZES.VERCEL_BLOB.video
+            ? "For videos larger than 500MB, please configure AWS S3 or Cloudflare R2 in your environment variables."
+            : undefined,
         },
         { status: 400 }
       );
