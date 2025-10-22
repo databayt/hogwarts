@@ -1377,6 +1377,12 @@ async function ensureLibraryCirculation(
   // Create 10 borrow records
   for (let i = 0; i < studentRecords.length; i++) {
     const student = studentRecords[i];
+
+    // Skip students without a userId
+    if (!student.userId) {
+      continue;
+    }
+
     const book = books[i % books.length];
     const borrowDate = new Date();
     borrowDate.setDate(borrowDate.getDate() - faker.number.int({ min: 1, max: 30 }));
