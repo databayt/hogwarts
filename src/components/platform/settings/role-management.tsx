@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useTransition } from "react";
+import React, { useState, useTransition, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -32,6 +32,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -52,18 +62,26 @@ import {
 } from "lucide-react";
 import { SuccessToast, ErrorToast } from "@/components/atom/toast";
 import type { Dictionary } from "@/components/internationalization/dictionaries";
+import {
+  getSchoolUsers,
+  updateUserRole,
+  createUser,
+  deleteUser
+} from "@/components/platform/settings/actions";
 
 // All available roles in the system
-export const USER_ROLES = [
-  { value: "DEVELOPER", label: "Developer", description: "Platform admin with full access", color: "destructive" },
-  { value: "ADMIN", label: "Admin", description: "School administrator", color: "default" },
-  { value: "TEACHER", label: "Teacher", description: "Teaching staff", color: "secondary" },
-  { value: "STUDENT", label: "Student", description: "Enrolled student", color: "outline" },
-  { value: "GUARDIAN", label: "Guardian", description: "Parent/Guardian", color: "outline" },
-  { value: "ACCOUNTANT", label: "Accountant", description: "Finance staff", color: "secondary" },
-  { value: "STAFF", label: "Staff", description: "General school staff", color: "outline" },
-  { value: "USER", label: "User", description: "Basic user", color: "outline" },
+export const getUserRoles = (dictionary?: Dictionary["school"]) => [
+  { value: "DEVELOPER", label: dictionary?.settings?.rolesList?.developer || "Developer", description: dictionary?.settings?.rolesList?.developerDesc || "Platform admin with full access", color: "destructive" },
+  { value: "ADMIN", label: dictionary?.settings?.rolesList?.admin || "Admin", description: dictionary?.settings?.rolesList?.adminDesc || "School administrator", color: "default" },
+  { value: "TEACHER", label: dictionary?.settings?.rolesList?.teacher || "Teacher", description: dictionary?.settings?.rolesList?.teacherDesc || "Teaching staff", color: "secondary" },
+  { value: "STUDENT", label: dictionary?.settings?.rolesList?.student || "Student", description: dictionary?.settings?.rolesList?.studentDesc || "Enrolled student", color: "outline" },
+  { value: "GUARDIAN", label: dictionary?.settings?.rolesList?.guardian || "Guardian", description: dictionary?.settings?.rolesList?.guardianDesc || "Parent/Guardian", color: "outline" },
+  { value: "ACCOUNTANT", label: dictionary?.settings?.rolesList?.accountant || "Accountant", description: dictionary?.settings?.rolesList?.accountantDesc || "Finance staff", color: "secondary" },
+  { value: "STAFF", label: dictionary?.settings?.rolesList?.staff || "Staff", description: dictionary?.settings?.rolesList?.staffDesc || "General school staff", color: "outline" },
+  { value: "USER", label: dictionary?.settings?.rolesList?.user || "User", description: dictionary?.settings?.rolesList?.userDesc || "Basic user", color: "outline" },
 ] as const;
+
+export const USER_ROLES = getUserRoles(); // Default without dictionary
 
 export type UserRole = typeof USER_ROLES[number]["value"];
 
@@ -118,12 +136,13 @@ const ROLE_PERMISSIONS = {
 
 interface User {
   id: string;
-  name: string;
+  username: string | null;
   email: string;
   role: UserRole;
-  status: "active" | "inactive" | "suspended";
-  lastActive?: Date;
-  image?: string;
+  image?: string | null;
+  createdAt: Date;
+  emailVerified: Date | null;
+  isTwoFactorEnabled: boolean;
 }
 
 interface RoleManagementProps {
@@ -138,125 +157,139 @@ export function RoleManagement({
   isDeveloperMode = false,
 }: RoleManagementProps) {
   const [isPending, startTransition] = useTransition();
-  const [users, setUsers] = useState<User[]>([
-    {
-      id: "1",
-      name: "John Admin",
-      email: "admin@school.edu",
-      role: "ADMIN",
-      status: "active",
-      lastActive: new Date(),
-    },
-    {
-      id: "2",
-      name: "Sarah Teacher",
-      email: "teacher@school.edu",
-      role: "TEACHER",
-      status: "active",
-      lastActive: new Date(Date.now() - 3600000),
-    },
-    {
-      id: "3",
-      name: "Mike Student",
-      email: "student@school.edu",
-      role: "STUDENT",
-      status: "active",
-      lastActive: new Date(Date.now() - 86400000),
-    },
-  ]);
+  const [users, setUsers] = useState<User[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Get localized role labels
+  const USER_ROLES_LOCALIZED = React.useMemo(() => getUserRoles(dictionary), [dictionary]);
 
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isAddUserOpen, setIsAddUserOpen] = useState(false);
   const [isEditUserOpen, setIsEditUserOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<string | null>(null);
   const [newUser, setNewUser] = useState({
-    name: "",
+    username: "",
     email: "",
     role: "USER" as UserRole,
   });
+
+  // Fetch users on component mount
+  useEffect(() => {
+    async function fetchUsers() {
+      setIsLoading(true);
+      try {
+        const result = await getSchoolUsers();
+        if (result.success && result.users) {
+          setUsers(result.users as User[]);
+        } else {
+          ErrorToast(result.message || "Failed to fetch users");
+        }
+      } catch (error) {
+        ErrorToast("Failed to fetch users");
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchUsers();
+  }, []);
 
   // Handle role change
   const handleRoleChange = async (userId: string, newRole: UserRole) => {
     startTransition(async () => {
       try {
-        // In production, call server action to update role
-        setUsers((prev) =>
-          prev.map((user) =>
-            user.id === userId ? { ...user, role: newRole } : user
-          )
-        );
-        SuccessToast("Role updated successfully");
+        const formData = new FormData();
+        formData.append("userId", userId);
+        formData.append("role", newRole);
+
+        const result = await updateUserRole(formData);
+
+        if (result.success) {
+          setUsers((prev) =>
+            prev.map((user) =>
+              user.id === userId ? { ...user, role: newRole } : user
+            )
+          );
+          SuccessToast(result.message || "Role updated successfully");
+        } else {
+          ErrorToast(result.message || "Failed to update role");
+        }
       } catch (error) {
         ErrorToast("Failed to update role");
       }
     });
   };
 
-  // Handle user status change
-  const handleStatusChange = async (userId: string, status: User["status"]) => {
-    startTransition(async () => {
-      try {
-        setUsers((prev) =>
-          prev.map((user) =>
-            user.id === userId ? { ...user, status } : user
-          )
-        );
-        SuccessToast(`User ${status === "active" ? "activated" : "suspended"}`);
-      } catch (error) {
-        ErrorToast("Failed to update user status");
-      }
-    });
-  };
-
   // Add new user
   const handleAddUser = async () => {
-    if (!newUser.name || !newUser.email) {
+    if (!newUser.username || !newUser.email) {
       ErrorToast("Please fill in all fields");
       return;
     }
 
     startTransition(async () => {
       try {
-        const user: User = {
-          id: Date.now().toString(),
-          name: newUser.name,
-          email: newUser.email,
-          role: newUser.role,
-          status: "active",
-          lastActive: new Date(),
-        };
-        setUsers((prev) => [...prev, user]);
-        setNewUser({ name: "", email: "", role: "USER" });
-        setIsAddUserOpen(false);
-        SuccessToast("User added successfully");
+        const formData = new FormData();
+        formData.append("username", newUser.username);
+        formData.append("email", newUser.email);
+        formData.append("role", newUser.role);
+
+        const result = await createUser(formData);
+
+        if (result.success) {
+          // Refresh the user list
+          const usersResult = await getSchoolUsers();
+          if (usersResult.success && usersResult.users) {
+            setUsers(usersResult.users as User[]);
+          }
+          setNewUser({ username: "", email: "", role: "USER" });
+          setIsAddUserOpen(false);
+          SuccessToast(result.message || "User added successfully");
+        } else {
+          ErrorToast(result.message || "Failed to add user");
+        }
       } catch (error) {
         ErrorToast("Failed to add user");
       }
     });
   };
 
-  // Delete user
-  const handleDeleteUser = async (userId: string) => {
-    if (userId === currentUserId) {
+  // Delete user (with confirmation)
+  const confirmDeleteUser = async () => {
+    if (!userToDelete) return;
+
+    if (userToDelete === currentUserId) {
       ErrorToast("You cannot delete your own account");
       return;
     }
 
     startTransition(async () => {
       try {
-        setUsers((prev) => prev.filter((user) => user.id !== userId));
-        SuccessToast("User deleted successfully");
+        const result = await deleteUser(userToDelete);
+
+        if (result.success) {
+          setUsers((prev) => prev.filter((user) => user.id !== userToDelete));
+          SuccessToast(result.message || "User deleted successfully");
+        } else {
+          ErrorToast(result.message || "Failed to delete user");
+        }
       } catch (error) {
         ErrorToast("Failed to delete user");
+      } finally {
+        setIsDeleteDialogOpen(false);
+        setUserToDelete(null);
       }
     });
   };
 
-  const getRoleBadgeVariant = (role: UserRole): any => {
-    const roleConfig = USER_ROLES.find((r) => r.value === role);
-    return roleConfig?.color || "outline";
+  const getRoleBadgeVariant = (role: UserRole) => {
+    const roleConfig = USER_ROLES_LOCALIZED.find((r) => r.value === role);
+    return (roleConfig?.color || "outline") as "destructive" | "default" | "secondary" | "outline";
   };
 
-  const getUserInitials = (name: string) => {
+  const getUserInitials = (name: string | null) => {
+    if (!name) return "??";
     return name
       .split(" ")
       .map((n) => n[0])
@@ -264,6 +297,27 @@ export function RoleManagement({
       .toUpperCase()
       .slice(0, 2);
   };
+
+  // Show loading skeleton
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <div className="h-6 w-48 bg-muted animate-pulse rounded" />
+            <div className="h-4 w-96 bg-muted animate-pulse rounded mt-2" />
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-16 bg-muted animate-pulse rounded" />
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -273,11 +327,10 @@ export function RoleManagement({
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-yellow-700 dark:text-yellow-400">
               <AlertTriangle className="h-5 w-5" />
-              Developer Mode Active
+              {dictionary?.settings?.userManagementLabels?.developerModeActive || "Developer Mode Active"}
             </CardTitle>
             <CardDescription>
-              You have full access to all features and can manage all user roles.
-              This mode is for testing and development only.
+              {dictionary?.settings?.userManagementLabels?.developerModeDesc || "You have full access to all features and can manage all user roles. This mode is for testing and development only."}
             </CardDescription>
           </CardHeader>
         </Card>
@@ -290,44 +343,44 @@ export function RoleManagement({
             <div>
               <CardTitle className="flex items-center gap-2">
                 <Users className="h-5 w-5" />
-                User & Role Management
+                {dictionary?.settings?.userManagementLabels?.userRoleManagement || "User & Role Management"}
               </CardTitle>
               <CardDescription className="mt-2">
-                Manage user accounts, assign roles, and control permissions
+                {dictionary?.settings?.userManagementLabels?.manageUsersDesc || "Manage user accounts, assign roles, and control permissions"}
               </CardDescription>
             </div>
             <Dialog open={isAddUserOpen} onOpenChange={setIsAddUserOpen}>
               <DialogTrigger asChild>
                 <Button>
                   <UserPlus className="mr-2 h-4 w-4" />
-                  Add User
+                  {dictionary?.settings?.userManagementLabels?.addUser || "Add User"}
                 </Button>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Add New User</DialogTitle>
+                  <DialogTitle>{dictionary?.settings?.userManagementLabels?.createNewUser || "Add New User"}</DialogTitle>
                   <DialogDescription>
-                    Create a new user account and assign a role
+                    {dictionary?.settings?.userManagementLabels?.createUserDesc || "Create a new user account and assign a role"}
                   </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 py-4">
                   <div className="space-y-2">
-                    <Label htmlFor="name">Name</Label>
+                    <Label htmlFor="username">{dictionary?.settings?.userManagementLabels?.username || "Username"}</Label>
                     <Input
-                      id="name"
-                      placeholder="Enter full name"
-                      value={newUser.name}
+                      id="username"
+                      placeholder={dictionary?.settings?.userManagementLabels?.enterUsername || "Enter username"}
+                      value={newUser.username}
                       onChange={(e) =>
-                        setNewUser({ ...newUser, name: e.target.value })
+                        setNewUser({ ...newUser, username: e.target.value })
                       }
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
+                    <Label htmlFor="email">{dictionary?.settings?.userManagementLabels?.email || "Email"}</Label>
                     <Input
                       id="email"
                       type="email"
-                      placeholder="user@school.edu"
+                      placeholder={dictionary?.settings?.userManagementLabels?.enterEmail || "user@school.edu"}
                       value={newUser.email}
                       onChange={(e) =>
                         setNewUser({ ...newUser, email: e.target.value })
@@ -335,7 +388,7 @@ export function RoleManagement({
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="role">Role</Label>
+                    <Label htmlFor="role">{dictionary?.settings?.userManagementLabels?.role || "Role"}</Label>
                     <Select
                       value={newUser.role}
                       onValueChange={(value) =>
@@ -346,7 +399,7 @@ export function RoleManagement({
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {USER_ROLES.map((role) => (
+                        {USER_ROLES_LOCALIZED.map((role) => (
                           <SelectItem key={role.value} value={role.value}>
                             <div className="flex flex-col">
                               <span>{role.label}</span>
@@ -365,10 +418,10 @@ export function RoleManagement({
                     variant="outline"
                     onClick={() => setIsAddUserOpen(false)}
                   >
-                    Cancel
+                    {dictionary?.settings?.userManagementLabels?.cancel || "Cancel"}
                   </Button>
                   <Button onClick={handleAddUser} disabled={isPending}>
-                    Add User
+                    {dictionary?.settings?.userManagementLabels?.addUser || "Add User"}
                   </Button>
                 </DialogFooter>
               </DialogContent>
@@ -379,23 +432,23 @@ export function RoleManagement({
           {/* User Statistics */}
           <div className="mb-6 grid gap-4 md:grid-cols-4">
             <div className="rounded-lg border p-3">
-              <p className="text-sm text-muted-foreground">Total Users</p>
+              <p className="text-sm text-muted-foreground">{dictionary?.settings?.userManagementLabels?.totalUsers || "Total Users"}</p>
               <p className="text-2xl font-bold">{users.length}</p>
             </div>
             <div className="rounded-lg border p-3">
-              <p className="text-sm text-muted-foreground">Active</p>
+              <p className="text-sm text-muted-foreground">{dictionary?.settings?.userManagementLabels?.verified || "Verified"}</p>
               <p className="text-2xl font-bold text-green-600">
-                {users.filter((u) => u.status === "active").length}
+                {users.filter((u) => u.emailVerified).length}
               </p>
             </div>
             <div className="rounded-lg border p-3">
-              <p className="text-sm text-muted-foreground">Admins</p>
+              <p className="text-sm text-muted-foreground">{dictionary?.settings?.userManagementLabels?.admins || "Admins"}</p>
               <p className="text-2xl font-bold">
                 {users.filter((u) => u.role === "ADMIN" || u.role === "DEVELOPER").length}
               </p>
             </div>
             <div className="rounded-lg border p-3">
-              <p className="text-sm text-muted-foreground">Teachers</p>
+              <p className="text-sm text-muted-foreground">{dictionary?.settings?.userManagementLabels?.teachers || "Teachers"}</p>
               <p className="text-2xl font-bold">
                 {users.filter((u) => u.role === "TEACHER").length}
               </p>
@@ -407,12 +460,12 @@ export function RoleManagement({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>User</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Last Active</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead>{dictionary?.settings?.userManagementLabels?.user || "User"}</TableHead>
+                  <TableHead>{dictionary?.settings?.userManagementLabels?.email || "Email"}</TableHead>
+                  <TableHead>{dictionary?.settings?.userManagementLabels?.role || "Role"}</TableHead>
+                  <TableHead>{dictionary?.settings?.userManagementLabels?.emailVerified || "Verified"}</TableHead>
+                  <TableHead>{dictionary?.settings?.userManagementLabels?.twoFactor || "2FA"}</TableHead>
+                  <TableHead className="text-right">{dictionary?.settings?.userManagementLabels?.actions || "Actions"}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -421,16 +474,16 @@ export function RoleManagement({
                     <TableCell>
                       <div className="flex items-center gap-3">
                         <Avatar className="h-8 w-8">
-                          <AvatarImage src={user.image} />
+                          <AvatarImage src={user.image || undefined} />
                           <AvatarFallback>
-                            {getUserInitials(user.name)}
+                            {getUserInitials(user.username)}
                           </AvatarFallback>
                         </Avatar>
                         <div>
-                          <p className="font-medium">{user.name}</p>
+                          <p className="font-medium">{user.username || user.email}</p>
                           {user.id === currentUserId && (
                             <Badge variant="outline" className="mt-1 text-xs">
-                              You
+                              {dictionary?.settings?.userManagementLabels?.you || "You"}
                             </Badge>
                           )}
                         </div>
@@ -448,15 +501,15 @@ export function RoleManagement({
                         <SelectTrigger className="w-[140px]">
                           <SelectValue>
                             <Badge variant={getRoleBadgeVariant(user.role)}>
-                              {USER_ROLES.find((r) => r.value === user.role)?.label}
+                              {USER_ROLES_LOCALIZED.find((r) => r.value === user.role)?.label}
                             </Badge>
                           </SelectValue>
                         </SelectTrigger>
                         <SelectContent>
-                          {USER_ROLES.map((role) => (
+                          {USER_ROLES_LOCALIZED.map((role) => (
                             <SelectItem key={role.value} value={role.value}>
                               <div className="flex items-center gap-2">
-                                <Badge variant={role.color as any}>
+                                <Badge variant={role.color as "destructive" | "default" | "secondary" | "outline"}>
                                   {role.label}
                                 </Badge>
                               </div>
@@ -466,22 +519,14 @@ export function RoleManagement({
                       </Select>
                     </TableCell>
                     <TableCell>
-                      <Badge
-                        variant={
-                          user.status === "active"
-                            ? "default"
-                            : user.status === "suspended"
-                            ? "destructive"
-                            : "secondary"
-                        }
-                      >
-                        {user.status}
+                      <Badge variant={user.emailVerified ? "default" : "secondary"}>
+                        {user.emailVerified ? (dictionary?.settings?.userManagementLabels?.yes || "Yes") : (dictionary?.settings?.userManagementLabels?.no || "No")}
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      {user.lastActive
-                        ? formatLastActive(user.lastActive)
-                        : "Never"}
+                      <Badge variant={user.isTwoFactorEnabled ? "default" : "outline"}>
+                        {user.isTwoFactorEnabled ? (dictionary?.settings?.userManagementLabels?.enabled || "Enabled") : (dictionary?.settings?.userManagementLabels?.disabled || "Disabled")}
+                      </Badge>
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
@@ -489,34 +534,11 @@ export function RoleManagement({
                           variant="ghost"
                           size="icon"
                           onClick={() => {
-                            setSelectedUser(user);
-                            setIsEditUserOpen(true);
+                            setUserToDelete(user.id);
+                            setIsDeleteDialogOpen(true);
                           }}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() =>
-                            handleStatusChange(
-                              user.id,
-                              user.status === "active" ? "suspended" : "active"
-                            )
-                          }
-                          disabled={user.id === currentUserId}
-                        >
-                          {user.status === "active" ? (
-                            <Shield className="h-4 w-4" />
-                          ) : (
-                            <CheckCircle className="h-4 w-4" />
-                          )}
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDeleteUser(user.id)}
-                          disabled={user.id === currentUserId}
+                          disabled={user.id === currentUserId || isPending}
+                          title={dictionary?.settings?.userManagementLabels?.deleteUser || "Delete user"}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -535,20 +557,20 @@ export function RoleManagement({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Key className="h-5 w-5" />
-            Role Permissions
+            {dictionary?.settings?.userManagementLabels?.rolePermissions || "Role Permissions"}
           </CardTitle>
           <CardDescription>
-            View and manage permissions for each role
+            {dictionary?.settings?.userManagementLabels?.viewManagePermissions || "View and manage permissions for each role"}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {USER_ROLES.map((role) => (
+            {USER_ROLES_LOCALIZED.map((role) => (
               <div key={role.value} className="rounded-lg border p-4">
                 <div className="flex items-start justify-between">
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                      <Badge variant={role.color as any}>{role.label}</Badge>
+                      <Badge variant={role.color as "destructive" | "default" | "secondary" | "outline"}>{role.label}</Badge>
                       <span className="text-sm text-muted-foreground">
                         {role.description}
                       </span>
@@ -571,7 +593,7 @@ export function RoleManagement({
                   </div>
                   <Button variant="ghost" size="sm">
                     <Eye className="mr-2 h-4 w-4" />
-                    View All
+                    {dictionary?.settings?.userManagementLabels?.viewAll || "View All"}
                   </Button>
                 </div>
               </div>
@@ -579,19 +601,27 @@ export function RoleManagement({
           </div>
         </CardContent>
       </Card>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{dictionary?.settings?.userManagementLabels?.deleteConfirmTitle || "Are you sure?"}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {dictionary?.settings?.userManagementLabels?.deleteConfirmDesc || "This action cannot be undone. This will permanently delete the user account and remove all associated data."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setUserToDelete(null)}>{dictionary?.settings?.userManagementLabels?.cancel || "Cancel"}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDeleteUser}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {dictionary?.settings?.userManagementLabels?.deleteUserButton || "Delete User"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
-}
-
-function formatLastActive(date: Date): string {
-  const now = new Date();
-  const diff = now.getTime() - date.getTime();
-  const minutes = Math.floor(diff / 60000);
-  const hours = Math.floor(diff / 3600000);
-  const days = Math.floor(diff / 86400000);
-
-  if (minutes < 60) return `${minutes}m ago`;
-  if (hours < 24) return `${hours}h ago`;
-  if (days < 7) return `${days}d ago`;
-  return date.toLocaleDateString();
 }
