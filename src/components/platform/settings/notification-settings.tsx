@@ -490,7 +490,7 @@ export function NotificationSettings({ dictionary }: Props) {
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            <div className="flex items-center justify-between p-3 rounded-lg border rtl:flex-row-reverse">
+            <div className="flex items-center justify-between p-3 rounded-xl bg-background rtl:flex-row-reverse">
               <div className="flex items-center gap-2 rtl:flex-row-reverse">
                 <Mail className="h-4 w-4" />
                 <span>{dictionary?.settings?.notifications?.email || "Email"}</span>
@@ -499,7 +499,7 @@ export function NotificationSettings({ dictionary }: Props) {
                 {settings.email.enabled ? (dictionary?.settings?.notifications?.enabled || "Enabled") : (dictionary?.settings?.notifications?.disabled || "Disabled")}
               </Badge>
             </div>
-            <div className="flex items-center justify-between p-3 rounded-lg border rtl:flex-row-reverse">
+            <div className="flex items-center justify-between p-3 rounded-xl bg-background rtl:flex-row-reverse">
               <div className="flex items-center gap-2 rtl:flex-row-reverse">
                 <Bell className="h-4 w-4" />
                 <span>{dictionary?.settings?.notifications?.push || "Push"}</span>
@@ -508,7 +508,7 @@ export function NotificationSettings({ dictionary }: Props) {
                 {settings.push.enabled ? (dictionary?.settings?.notifications?.enabled || "Enabled") : (dictionary?.settings?.notifications?.disabled || "Disabled")}
               </Badge>
             </div>
-            <div className="flex items-center justify-between p-3 rounded-lg border rtl:flex-row-reverse">
+            <div className="flex items-center justify-between p-3 rounded-xl bg-background rtl:flex-row-reverse">
               <div className="flex items-center gap-2 rtl:flex-row-reverse">
                 <Smartphone className="h-4 w-4" />
                 <span>{dictionary?.settings?.notifications?.sms || "SMS"}</span>
@@ -517,7 +517,7 @@ export function NotificationSettings({ dictionary }: Props) {
                 {settings.sms.enabled ? (dictionary?.settings?.notifications?.enabled || "Enabled") : (dictionary?.settings?.notifications?.disabled || "Disabled")}
               </Badge>
             </div>
-            <div className="flex items-center justify-between p-3 rounded-lg border rtl:flex-row-reverse">
+            <div className="flex items-center justify-between p-3 rounded-xl bg-background rtl:flex-row-reverse">
               <div className="flex items-center gap-2 rtl:flex-row-reverse">
                 <Clock className="h-4 w-4" />
                 <span>{dictionary?.settings?.notifications?.quietHours || "Quiet Hours"}</span>

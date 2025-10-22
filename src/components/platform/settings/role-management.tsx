@@ -431,23 +431,23 @@ export function RoleManagement({
         <CardContent>
           {/* User Statistics */}
           <div className="mb-6 grid gap-4 md:grid-cols-4">
-            <div className="rounded-lg border p-3">
+            <div className="rounded-xl bg-background p-3">
               <p className="text-sm text-muted-foreground">{dictionary?.settings?.userManagementLabels?.totalUsers || "Total Users"}</p>
               <p className="text-2xl font-bold">{users.length}</p>
             </div>
-            <div className="rounded-lg border p-3">
+            <div className="rounded-xl bg-background p-3">
               <p className="text-sm text-muted-foreground">{dictionary?.settings?.userManagementLabels?.verified || "Verified"}</p>
               <p className="text-2xl font-bold text-green-600">
                 {users.filter((u) => u.emailVerified).length}
               </p>
             </div>
-            <div className="rounded-lg border p-3">
+            <div className="rounded-xl bg-background p-3">
               <p className="text-sm text-muted-foreground">{dictionary?.settings?.userManagementLabels?.admins || "Admins"}</p>
               <p className="text-2xl font-bold">
                 {users.filter((u) => u.role === "ADMIN" || u.role === "DEVELOPER").length}
               </p>
             </div>
-            <div className="rounded-lg border p-3">
+            <div className="rounded-xl bg-background p-3">
               <p className="text-sm text-muted-foreground">{dictionary?.settings?.userManagementLabels?.teachers || "Teachers"}</p>
               <p className="text-2xl font-bold">
                 {users.filter((u) => u.role === "TEACHER").length}
@@ -456,7 +456,7 @@ export function RoleManagement({
           </div>
 
           {/* Users Table */}
-          <div className="rounded-lg border">
+          <div className="rounded-xl bg-background overflow-hidden">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -566,7 +566,7 @@ export function RoleManagement({
         <CardContent>
           <div className="space-y-4">
             {USER_ROLES_LOCALIZED.map((role) => (
-              <div key={role.value} className="rounded-lg border p-4">
+              <div key={role.value} className="rounded-xl bg-background p-4">
                 <div className="flex items-start justify-between">
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">

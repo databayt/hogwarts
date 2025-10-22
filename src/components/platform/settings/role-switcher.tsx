@@ -222,10 +222,10 @@ export function RoleSwitcher({
   return (
     <div className="space-y-6">
       {/* Developer Mode Toggle */}
-      <Card className="border-purple-200 dark:border-purple-800">
+      <Card className="bg-purple-50 dark:bg-purple-950/20">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 rtl:flex-row-reverse">
-            <Sparkles className="h-5 w-5 text-purple-600" />
+          <CardTitle className="flex items-center gap-2 rtl:flex-row-reverse text-purple-700 dark:text-purple-400">
+            <Sparkles className="h-5 w-5" />
             {dictionary?.settings?.roleSwitcher?.developerMode || "Developer Mode"}
           </CardTitle>
           <CardDescription>
@@ -248,7 +248,7 @@ export function RoleSwitcher({
           </div>
 
           {isDeveloperMode && (
-            <Alert className="mt-4 border-purple-200 bg-purple-50 dark:bg-purple-950/20">
+            <Alert className="mt-4 bg-purple-100 dark:bg-purple-900/30">
               <AlertTriangle className="h-4 w-4 text-purple-600" />
               <AlertTitle>{dictionary?.settings?.roleSwitcher?.developerModeActive || "Developer Mode Active"}</AlertTitle>
               <AlertDescription>
@@ -422,8 +422,8 @@ export function RoleSwitcher({
               return (
                 <div
                   key={role.value}
-                  className={`rounded-lg border p-4 ${
-                    role.value === currentRole ? role.bgColor : ""
+                  className={`rounded-xl p-4 ${
+                    role.value === currentRole ? role.bgColor : "bg-background"
                   }`}
                 >
                   <div className="space-y-3">

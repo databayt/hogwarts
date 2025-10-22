@@ -1,8 +1,9 @@
 "use client";
 
 import * as React from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import {
   Settings,
   Users,
@@ -17,6 +18,7 @@ import { useSchool } from "@/components/platform/context/school-context";
 import { type Locale } from "@/components/internationalization/config";
 import { type Dictionary } from "@/components/internationalization/dictionaries";
 import { useSession } from "next-auth/react";
+import { cn } from "@/lib/utils";
 
 // Lazy load heavy components for better initial page load performance
 const BasicSettings = React.lazy(() => import("./content").then(m => ({ default: m.SettingsContent })));
@@ -96,21 +98,32 @@ export function EnhancedSettingsContent({ dictionary, lang }: Props) {
 
       {/* Settings Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        {/* Bordered Tab Navigation */}
-        <ScrollArea className="w-full">
-          <TabsList variant="bordered" className="rtl:flex-row-reverse">
-            {tabs.map((tab) => {
-              const Icon = tab.icon;
-              return (
-                <TabsTrigger key={tab.value} value={tab.value} variant="bordered">
-                  <Icon className="h-4 w-4" />
-                  <span className="hidden sm:inline">{tab.label}</span>
-                </TabsTrigger>
-              );
-            })}
-          </TabsList>
-          <ScrollBar orientation="horizontal" className="invisible" />
-        </ScrollArea>
+        {/* Custom Tab Navigation with Borders */}
+        <div className="border-y py-3">
+          <ScrollArea className="max-w-[600px] lg:max-w-none">
+            <nav className="flex items-center gap-2 rtl:flex-row-reverse">
+              {tabs.map((tab) => {
+                const Icon = tab.icon;
+                return (
+                  <button
+                    key={tab.value}
+                    onClick={() => setActiveTab(tab.value)}
+                    className={cn(
+                      "flex h-7 items-center justify-center gap-2 rounded-full px-4 text-center text-sm transition-colors hover:text-primary",
+                      activeTab === tab.value
+                        ? "bg-muted text-primary"
+                        : "text-muted-foreground"
+                    )}
+                  >
+                    <Icon className="h-4 w-4" />
+                    <span className="hidden sm:inline">{tab.label}</span>
+                  </button>
+                );
+              })}
+            </nav>
+            <ScrollBar orientation="horizontal" className="invisible" />
+          </ScrollArea>
+        </div>
 
         {/* General Settings */}
         <TabsContent value="general" className="space-y-6">
@@ -221,20 +234,20 @@ function AdvancedSettings({
   return (
     <div className="space-y-6">
       {/* Database Operations */}
-      <div className="rounded-lg border bg-card p-6 space-y-4">
-        <div>
-          <h3 className="flex items-center gap-2 mb-1">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 rtl:flex-row-reverse">
             <Database className="h-5 w-5" />
             {dictionary?.school?.settings?.databaseOperations || 'Database Operations'}
-          </h3>
-          <p className="text-sm text-muted-foreground">
+          </CardTitle>
+          <CardDescription>
             {dictionary?.school?.settings?.manageDatabaseOperations || 'Manage database and system operations'}
-          </p>
-        </div>
+          </CardDescription>
+        </CardHeader>
 
-        <div className="space-y-4">
+        <CardContent className="space-y-4">
           {/* Data Export */}
-          <div className="flex items-center justify-between p-4 rounded-lg border">
+          <div className="flex items-center justify-between p-4 rounded-xl bg-background rtl:flex-row-reverse">
             <div>
               <p className="font-medium">{dictionary?.school?.settings?.exportSchoolData || 'Export School Data'}</p>
               <p className="text-sm text-muted-foreground">
@@ -244,14 +257,14 @@ function AdvancedSettings({
             <button
               onClick={handleDataExport}
               disabled={dataExportLoading}
-              className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50"
+              className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50 shrink-0"
             >
               {dataExportLoading ? (dictionary?.school?.settings?.exporting || 'Exporting...') : (dictionary?.school?.settings?.exportData || 'Export Data')}
             </button>
           </div>
 
           {/* Cache Management */}
-          <div className="flex items-center justify-between p-4 rounded-lg border">
+          <div className="flex items-center justify-between p-4 rounded-xl bg-background rtl:flex-row-reverse">
             <div>
               <p className="font-medium">{dictionary?.school?.settings?.clearCache || 'Clear Cache'}</p>
               <p className="text-sm text-muted-foreground">
@@ -260,29 +273,29 @@ function AdvancedSettings({
             </div>
             <button
               onClick={handleCacheClear}
-              className="px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/90"
+              className="px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/90 shrink-0"
             >
               {cacheCleared ? (dictionary?.school?.settings?.cacheCleared || 'Cache Cleared!') : (dictionary?.school?.settings?.clearCache || 'Clear Cache')}
             </button>
           </div>
 
           {/* System Info */}
-          <div className="p-4 rounded-lg border bg-muted/50">
+          <div className="p-4 rounded-xl bg-background">
             <p className="font-medium mb-2">System Information</p>
             <div className="space-y-1 text-sm">
-              <div className="flex justify-between">
+              <div className="flex justify-between rtl:flex-row-reverse">
                 <span className="text-muted-foreground">{dictionary?.school?.settings?.schoolId || 'School ID:'}</span>
                 <span className="font-mono">{schoolId || "N/A"}</span>
               </div>
-              <div className="flex justify-between">
+              <div className="flex justify-between rtl:flex-row-reverse">
                 <span className="text-muted-foreground">{dictionary?.school?.settings?.version || 'Version:'}</span>
                 <span>v1.0.0</span>
               </div>
-              <div className="flex justify-between">
+              <div className="flex justify-between rtl:flex-row-reverse">
                 <span className="text-muted-foreground">{dictionary?.school?.settings?.environment || 'Environment:'}</span>
                 <span>{process.env.NODE_ENV}</span>
               </div>
-              <div className="flex justify-between">
+              <div className="flex justify-between rtl:flex-row-reverse">
                 <span className="text-muted-foreground">{dictionary?.school?.settings?.apiStatus || 'API Status:'}</span>
                 <span className="text-green-600">{dictionary?.school?.settings?.operational || 'Operational'}</span>
               </div>
@@ -291,7 +304,7 @@ function AdvancedSettings({
 
           {/* Developer Tools (Only for developers) */}
           {isDeveloper && (
-            <div className="p-4 rounded-lg border border-purple-200 bg-purple-50 dark:bg-purple-950/20">
+            <div className="p-4 rounded-xl bg-purple-50 dark:bg-purple-950/20">
               <p className="font-medium mb-2 text-purple-700 dark:text-purple-400">
                 {dictionary?.school?.settings?.developerTools || 'Developer Tools'}
               </p>
@@ -308,30 +321,30 @@ function AdvancedSettings({
               </div>
             </div>
           )}
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
       {/* API Settings */}
-      <div className="rounded-lg border bg-card p-6 space-y-4">
-        <div>
-          <h3 className="mb-1">{dictionary?.school?.settings?.apiSettings || 'API Settings'}</h3>
-          <p className="text-sm text-muted-foreground">
+      <Card>
+        <CardHeader>
+          <CardTitle>{dictionary?.school?.settings?.apiSettings || 'API Settings'}</CardTitle>
+          <CardDescription>
             {dictionary?.school?.settings?.configureApiAccess || 'Configure API access and webhooks'}
-          </p>
-        </div>
+          </CardDescription>
+        </CardHeader>
 
-        <div className="space-y-4">
+        <CardContent className="space-y-4">
           {/* API Key */}
-          <div className="p-4 rounded-lg border">
+          <div className="p-4 rounded-xl bg-background">
             <p className="font-medium mb-2">{dictionary?.school?.settings?.apiKey || 'API Key'}</p>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 rtl:flex-row-reverse">
               <input
                 type="password"
                 value="sk_live_••••••••••••••••"
                 className="flex-1 px-3 py-2 border rounded-md bg-background"
                 readOnly
               />
-              <button className="px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/90">
+              <button className="px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/90 shrink-0">
                 {dictionary?.school?.settings?.regenerate || 'Regenerate'}
               </button>
             </div>
@@ -341,7 +354,7 @@ function AdvancedSettings({
           </div>
 
           {/* Webhooks */}
-          <div className="p-4 rounded-lg border">
+          <div className="p-4 rounded-xl bg-background">
             <p className="font-medium mb-2">{dictionary?.school?.settings?.webhooks || 'Webhooks'}</p>
             <p className="text-sm text-muted-foreground mb-3">
               {dictionary?.school?.settings?.configureWebhooks || 'Configure webhook endpoints for real-time events'}
@@ -350,22 +363,22 @@ function AdvancedSettings({
               {dictionary?.school?.settings?.configureWebhooksButton || 'Configure Webhooks'}
             </button>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
       {/* Danger Zone (Admin/Developer only) */}
       {(isDeveloper || isAdmin) && (
-        <div className="rounded-lg border border-red-200 bg-red-50 dark:bg-red-950/20 p-6 space-y-4">
-          <div>
-            <h3 className="text-red-700 dark:text-red-400 mb-1">{dictionary?.school?.settings?.dangerZone || 'Danger Zone'}</h3>
-            <p className="text-sm text-red-600 dark:text-red-500">
+        <Card className="bg-red-50 dark:bg-red-950/20">
+          <CardHeader>
+            <CardTitle className="text-red-700 dark:text-red-400">{dictionary?.school?.settings?.dangerZone || 'Danger Zone'}</CardTitle>
+            <CardDescription className="text-red-600 dark:text-red-500">
               {dictionary?.school?.settings?.irreversibleActions || 'These actions are irreversible. Please proceed with caution.'}
-            </p>
-          </div>
+            </CardDescription>
+          </CardHeader>
 
-          <div className="space-y-4">
+          <CardContent className="space-y-4">
             {/* Reset School Data */}
-            <div className="flex items-center justify-between p-4 rounded-lg border border-red-200">
+            <div className="flex items-center justify-between p-4 rounded-xl bg-background rtl:flex-row-reverse">
               <div>
                 <p className="font-medium text-red-700 dark:text-red-400">
                   {dictionary?.school?.settings?.resetSchoolData || 'Reset School Data'}
@@ -374,14 +387,14 @@ function AdvancedSettings({
                   {dictionary?.school?.settings?.deleteAllData || 'Delete all school data and start fresh'}
                 </p>
               </div>
-              <button className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">
+              <button className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 shrink-0">
                 {dictionary?.school?.settings?.resetData || 'Reset Data'}
               </button>
             </div>
 
             {/* Delete School */}
             {isDeveloper && (
-              <div className="flex items-center justify-between p-4 rounded-lg border border-red-200">
+              <div className="flex items-center justify-between p-4 rounded-xl bg-background rtl:flex-row-reverse">
                 <div>
                   <p className="font-medium text-red-700 dark:text-red-400">
                     {dictionary?.school?.settings?.deleteSchool || 'Delete School'}
@@ -390,13 +403,13 @@ function AdvancedSettings({
                     {dictionary?.school?.settings?.permanentlyDelete || 'Permanently delete this school and all associated data'}
                   </p>
                 </div>
-                <button className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">
+                <button className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 shrink-0">
                   {dictionary?.school?.settings?.deleteSchool || 'Delete School'}
                 </button>
               </div>
             )}
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       )}
     </div>
   );

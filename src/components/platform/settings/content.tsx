@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Label } from '@/components/ui/label'
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 
 import { SuccessToast, ErrorToast } from '@/components/atom/toast'
 import { useSchool } from '@/components/platform/context/school-context'
@@ -61,13 +62,13 @@ export const SettingsContent = React.memo(function SettingsContent({ dictionary,
   }, [name, timezone, locale, logoUrl])
 
   return (
-    <div className="rounded-lg border bg-card p-6 space-y-6">
-      <div>
-        <h3 className="mb-1">{dictionary?.school?.settings?.schoolSettings || "School Settings"}</h3>
-        <p className="text-sm text-muted-foreground">{dictionary?.school?.settings?.description || "Configure your school's basic information and preferences"}</p>
-      </div>
+    <Card>
+      <CardHeader>
+        <CardTitle>{dictionary?.school?.settings?.schoolSettings || "School Settings"}</CardTitle>
+        <CardDescription>{dictionary?.school?.settings?.description || "Configure your school's basic information and preferences"}</CardDescription>
+      </CardHeader>
 
-      <div className="grid gap-6">
+      <CardContent className="grid gap-6">
         <div className="space-y-2">
           <Label htmlFor="school-name" className="text-sm font-medium">
             {dictionary?.school?.settings?.schoolName || "School Name"}
@@ -154,8 +155,8 @@ export const SettingsContent = React.memo(function SettingsContent({ dictionary,
         >
           {submitting ? (dictionary?.school?.settings?.userManagementLabels?.saving || 'Saving...') : (dictionary?.school?.settings?.userManagementLabels?.saveSettings || 'Save Settings')}
         </Button>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   )
 })
 

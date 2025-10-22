@@ -279,7 +279,7 @@ export function PermissionsPanel({
             {Object.entries(DEFAULT_ROLE_PERMISSIONS).map(([role]) => (
               <TabsContent key={role} value={role} className="space-y-6">
                 {/* Role Info */}
-                <div className="rounded-lg border p-4 bg-muted/50">
+                <div className="rounded-xl p-4 bg-background">
                   <div className="flex items-center justify-between rtl:flex-row-reverse">
                     <div>
                       <p className="font-semibold">{role} {dictionary?.settings?.permissionsPanel?.role || "Role"}</p>
@@ -417,7 +417,7 @@ export function PermissionsPanel({
         <CardContent>
           <div className="space-y-2">
             {Object.entries(PERMISSION_CATEGORIES).map(([key, category]) => (
-              <div key={key} className="p-3 rounded-lg border">
+              <div key={key} className="p-3 rounded-xl bg-background">
                 <p className="font-medium mb-2">{category.label}</p>
                 <div className="flex flex-wrap gap-2">
                   {(["ADMIN", "TEACHER", "STUDENT", "ACCOUNTANT", "STAFF"] as UserRole[]).map(
