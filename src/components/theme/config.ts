@@ -22,10 +22,12 @@ export const COMMON_STYLES = [
   'spacing',
 ]
 
-// Default font families
-export const DEFAULT_FONT_SANS = 'var(--font-geist-sans)'
-export const DEFAULT_FONT_SERIF = 'var(--font-geist-mono)'
-export const DEFAULT_FONT_MONO = 'var(--font-geist-mono)'
+// Default font families (using system font stacks like tweakcn)
+export const DEFAULT_FONT_SANS =
+  "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'"
+export const DEFAULT_FONT_SERIF = 'ui-serif, Georgia, Cambria, "Times New Roman", Times, serif'
+export const DEFAULT_FONT_MONO =
+  'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace'
 
 // Default light theme styles
 export const defaultLightThemeStyles: Partial<ThemeStyleProps> = {

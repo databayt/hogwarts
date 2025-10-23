@@ -1,145 +1,125 @@
+# Hogwarts Documentation
 
-# Welcome to Hogwarts Documentation
+## System Architecture Overview
 
-## 🚀 Comprehensive School Management Platform
+Hogwarts is a comprehensive school management platform with four distinct entry points, each designed for specific users and purposes. This documentation covers all aspects of the system architecture, implementation details, and usage guidelines.
 
-**Hogwarts** is a modern, cloud-based school management system designed to streamline educational operations, enhance learning experiences, and foster better communication between schools, teachers, students, and parents.
+## Four Entry Points
 
-### Why Choose Hogwarts?
+### 1. SaaS Marketing Site
+**URL**: Main domain (e.g., hogwarts.app)
+**Purpose**: Marketing and sales for the SaaS platform
+**Target Users**: Prospective schools, decision makers
+**Key Features**:
+- Product information and pricing
+- Feature demonstrations
+- Sign-up and onboarding flow
+- Case studies and testimonials
 
-<div className="grid gap-4 mt-6">
-  <div className="border rounded-lg p-4">
-    <h4 className="font-semibold mb-2">🏫 Multi-Tenant Architecture</h4>
-    <p className="text-sm text-muted-foreground">Each school gets its own secure, isolated environment with custom subdomain and branding</p>
-  </div>
+### 2. SaaS Operator Dashboard
+**URL**: /operator
+**Purpose**: Platform administration and management
+**Target Users**: SaaS administrators, support team
+**Key Features**:
+- Tenant management
+- Billing and subscriptions
+- Platform analytics
+- System monitoring
+- Domain configuration
 
-  <div className="border rounded-lg p-4">
-    <h4 className="font-semibold mb-2">🌍 International Support</h4>
-    <p className="text-sm text-muted-foreground">Built-in support for Arabic (RTL) and English, with more languages coming soon</p>
-  </div>
+### 3. School Marketing Site
+**URL**: school.domain.com
+**Purpose**: Individual school's public website
+**Target Users**: Parents, students, general public
+**Key Features**:
+- School information
+- Admission process
+- News and events
+- Contact information
 
-  <div className="border rounded-lg p-4">
-    <h4 className="font-semibold mb-2">📊 Complete Feature Set</h4>
-    <p className="text-sm text-muted-foreground">Everything from attendance to examinations, library management to fee collection</p>
-  </div>
+### 4. School Management Dashboard
+**URL**: school.domain.com/dashboard
+**Purpose**: School operations and management
+**Target Users**: School staff, teachers, students, parents
+**Key Features**:
+- Student management
+- Academic operations
+- Fee collection
+- Communication tools
+- Reports and analytics
 
-  <div className="border rounded-lg p-4">
-    <h4 className="font-semibold mb-2">🔐 Enterprise Security</h4>
-    <p className="text-sm text-muted-foreground">Role-based access control, secure authentication, and full audit trails</p>
-  </div>
-</div>
+## Documentation Structure
 
-### Key Features
+### Operator Documentation
+Technical documentation for SaaS platform management, covering multi-tenant architecture, billing systems, and platform administration.
 
-- **Student Information System** - Comprehensive student profiles, enrollment, and academic records
-- **Attendance Management** - Digital attendance tracking with leave management
-- **Examination System** - Complete exam scheduling, grading, and result processing
-- **Timetable Management** - Smart scheduling with conflict resolution
-- **Fee Management** - Online fee collection, receipts, and outstanding tracking
-- **Library System** - Digital catalog, issue/return tracking, and fine management
-- **Communication Hub** - Announcements, messaging, and notifications
-- **Parent Portal** - Real-time access to student progress and school updates
-- **Reports & Analytics** - Comprehensive reporting for data-driven decisions
+[View Operator Docs](/docs/operator)
 
+### Platform Documentation
+Comprehensive guides for school management features including student records, attendance, grades, and all educational operations.
 
-## Quick Start by Role
+[View Platform Docs](/docs/platform)
 
-Choose your role to get started with relevant documentation:
+### Component Documentation
+Technical reference for shared components, authentication systems, UI elements, and reusable modules across the platform.
 
-<div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-  <div className="border rounded-lg p-4 hover:shadow-lg transition-shadow">
-    <h3 className="font-semibold mb-2">👨‍💼 School Administrator</h3>
-    <p className="text-sm text-muted-foreground mb-3">Set up your school, manage users, and configure the system</p>
-    <ul className="space-y-1">
-      <li><a href="/docs/admin/dashboard" className="text-sm hover:underline">→ Admin Dashboard</a></li>
-      <li><a href="/docs/admin/school-setup" className="text-sm hover:underline">→ School Setup Guide</a></li>
-      <li><a href="/docs/admin/users" className="text-sm hover:underline">→ User Management</a></li>
-    </ul>
-  </div>
+[View Component Docs](/docs/components)
 
-  <div className="border rounded-lg p-4 hover:shadow-lg transition-shadow">
-    <h3 className="font-semibold mb-2">👩‍🏫 Teacher</h3>
-    <p className="text-sm text-muted-foreground mb-3">Manage your classroom, track attendance, and grade students</p>
-    <ul className="space-y-1">
-      <li><a href="/docs/teachers/classroom" className="text-sm hover:underline">→ Classroom Management</a></li>
-      <li><a href="/docs/teachers/attendance" className="text-sm hover:underline">→ Taking Attendance</a></li>
-      <li><a href="/docs/teachers/gradebook" className="text-sm hover:underline">→ Gradebook Guide</a></li>
-    </ul>
-  </div>
+### Developer Documentation
+Implementation guides, API references, deployment instructions, and technical architecture documentation.
 
-  <div className="border rounded-lg p-4 hover:shadow-lg transition-shadow">
-    <h3 className="font-semibold mb-2">👨‍👩‍👧 Parent</h3>
-    <p className="text-sm text-muted-foreground mb-3">Monitor your child's progress and communicate with teachers</p>
-    <ul className="space-y-1">
-      <li><a href="/docs/parents/portal" className="text-sm hover:underline">→ Parent Portal</a></li>
-      <li><a href="/docs/parents/monitoring" className="text-sm hover:underline">→ Progress Monitoring</a></li>
-      <li><a href="/docs/parents/fees" className="text-sm hover:underline">→ Fee Payments</a></li>
-    </ul>
-  </div>
+[View Developer Docs](/docs/developers)
 
-  <div className="border rounded-lg p-4 hover:shadow-lg transition-shadow">
-    <h3 className="font-semibold mb-2">🎓 Student</h3>
-    <p className="text-sm text-muted-foreground mb-3">Access your assignments, grades, and school resources</p>
-    <ul className="space-y-1">
-      <li><a href="/docs/students/portal" className="text-sm hover:underline">→ Student Portal</a></li>
-      <li><a href="/docs/students/assignments" className="text-sm hover:underline">→ Assignments</a></li>
-      <li><a href="/docs/students/grades" className="text-sm hover:underline">→ View Grades</a></li>
-    </ul>
-  </div>
-</div>
+## Quick Links
 
-## Popular Resources
+### Getting Started
+- [System Requirements](/docs/requirements)
+- [Quick Start Guide](/docs/quick-start)
+- [Demo Access](/docs/demo)
+- [Architecture Overview](/docs/architecture)
 
-<div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
-  <div className="space-y-3">
-    <h4 className="font-semibold">📚 Getting Started</h4>
-    <ul className="space-y-2">
-      <li><a href="/docs/quick-start" className="text-sm hover:underline">Quick Start Guide</a></li>
-      <li><a href="/docs/demo" className="text-sm hover:underline">Live Demo Access</a></li>
-      <li><a href="/docs/deployment" className="text-sm hover:underline">Deployment Guide</a></li>
-      <li><a href="/docs/requirements" className="text-sm hover:underline">System Requirements</a></li>
-    </ul>
-  </div>
+### For Schools
+- [Student Management](/docs/platform/students)
+- [Teacher Portal](/docs/platform/teachers)
+- [Parent Access](/docs/platform/parents)
+- [Fee Management](/docs/platform/fees)
 
-  <div className="space-y-3">
-    <h4 className="font-semibold">⚡ Key Features</h4>
-    <ul className="space-y-2">
-      <li><a href="/docs/features/students" className="text-sm hover:underline">Student Management</a></li>
-      <li><a href="/docs/features/attendance" className="text-sm hover:underline">Attendance System</a></li>
-      <li><a href="/docs/features/examinations" className="text-sm hover:underline">Examinations</a></li>
-      <li><a href="/docs/features/fees" className="text-sm hover:underline">Fee Management</a></li>
-    </ul>
-  </div>
+### For Developers
+- [API Reference](/docs/api)
+- [Deployment Guide](/docs/deployment)
+- [Contributing Guide](/docs/open-source/contributing)
+- [Testing Documentation](/docs/development/testing)
 
-  <div className="space-y-3">
-    <h4 className="font-semibold">🛠️ For Developers</h4>
-    <ul className="space-y-2">
-      <li><a href="/docs/api" className="text-sm hover:underline">API Reference</a></li>
-      <li><a href="/docs/architecture" className="text-sm hover:underline">Architecture</a></li>
-      <li><a href="/docs/components" className="text-sm hover:underline">Component Library</a></li>
-      <li><a href="/docs/development/setup" className="text-sm hover:underline">Local Setup</a></li>
-    </ul>
-  </div>
-</div>
+### Support
+- [Frequently Asked Questions](/docs/support/faq)
+- [Troubleshooting Guide](/docs/support/troubleshooting)
+- [Contact Support](/docs/support/contact)
+
+## Navigation Guide
+
+Use the sidebar to navigate through documentation sections:
+
+- **Getting Started** - Initial setup and overview
+- **Operator** - SaaS platform management
+- **Platform** - School management features
+- **Components** - Shared technical components
+- **Developers** - Technical implementation
+- **Business** - Pricing, partnerships, roadmap
+- **Open Source** - Community contribution
+- **Resources** - Templates and guides
+- **Support** - Help and troubleshooting
+- **Legal** - Terms, privacy, compliance
+
+## Version Information
+
+**Current Version**: 2.5.0
+**Last Updated**: January 2024
+**API Version**: v1
+**Documentation Version**: 2.0
 
 ## Need Help?
 
-<div className="border rounded-lg p-6 mt-8 bg-muted/50">
-  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-    <div className="text-center">
-      <h4 className="font-semibold mb-2">📖 Documentation</h4>
-      <p className="text-sm text-muted-foreground mb-3">Browse our comprehensive guides</p>
-      <a href="/docs/support/faq" className="text-sm font-medium hover:underline">View FAQ →</a>
-    </div>
-    <div className="text-center">
-      <h4 className="font-semibold mb-2">🎥 Video Tutorials</h4>
-      <p className="text-sm text-muted-foreground mb-3">Learn with step-by-step videos</p>
-      <a href="/docs/support/videos" className="text-sm font-medium hover:underline">Watch Videos →</a>
-    </div>
-    <div className="text-center">
-      <h4 className="font-semibold mb-2">💬 Support</h4>
-      <p className="text-sm text-muted-foreground mb-3">Get help from our team</p>
-      <a href="/docs/support/contact" className="text-sm font-medium hover:underline">Contact Support →</a>
-    </div>
-  </div>
-</div>
+- **Technical Issues**: [GitHub Issues](https://github.com/hogwarts/app/issues)
+- **General Support**: support@hogwarts.app
+- **Sales Inquiries**: sales@hogwarts.app
+- **Documentation Feedback**: docs@hogwarts.app

@@ -23,38 +23,38 @@ interface DocsConfig {
 export const docsConfig: DocsConfig = {
   mainNav: [
     {
-      title: "Overview",
+      title: "Welcome",
       href: "/docs",
     },
     {
-      title: "Product",
-      href: "/docs/product",
+      title: "Operator",
+      href: "/docs/operator",
     },
     {
-      title: "Business",
-      href: "/docs/business",
+      title: "Platform",
+      href: "/docs/platform",
+    },
+    {
+      title: "Components",
+      href: "/docs/components",
     },
     {
       title: "Developers",
       href: "/docs/developers",
     },
     {
-      title: "Community",
-      href: "/docs/community",
+      title: "Business",
+      href: "/docs/business",
     },
     {
-      title: "Resources",
-      href: "/docs/resources",
-    },
-    {
-      title: "Company",
-      href: "/docs/company",
+      title: "Support",
+      href: "/docs/support",
     },
   ],
   sidebarNav: [
-    // ============ OVERVIEW SECTION ============
+    // ============ WELCOME & OVERVIEW ============
     {
-      title: "🏠 Overview",
+      title: "Getting Started",
       items: [
         {
           title: "Welcome",
@@ -62,247 +62,373 @@ export const docsConfig: DocsConfig = {
           items: [],
         },
         {
-          title: "What is Hogwarts?",
-          href: "/docs/introduction",
+          title: "Architecture",
+          href: "/docs/architecture",
           items: [],
         },
-        {
-          title: "Why Choose Us",
-          href: "/docs/why-hogwarts",
-          items: [],
-        },
-        {
-          title: "Success Stories",
-          href: "/docs/case-studies",
-          items: [],
-        },
-        {
-          title: "Live Demo",
-          href: "/docs/demo",
-          badge: "Try Now",
-          items: [],
-        },
-      ],
-    },
-
-    // ============ PRODUCT SECTION ============
-    {
-      title: "📦 Product",
-      items: [
         {
           title: "Quick Start",
           href: "/docs/quick-start",
-          badge: "5 min",
           items: [],
         },
         {
-          title: "Features",
-          items: [
-            {
-              title: "Core Features",
-              items: [
-                { title: "Student Management", href: "/docs/features/students", items: [] },
-                { title: "Staff Management", href: "/docs/features/staff", items: [] },
-                { title: "Academic Management", href: "/docs/features/academics", items: [] },
-                { title: "Attendance System", href: "/docs/features/attendance", items: [] },
-                { title: "Examinations", href: "/docs/features/examinations", items: [] },
-                { title: "Timetable", href: "/docs/features/timetable", items: [] },
-              ]
-            },
-            {
-              title: "Financial",
-              items: [
-                { title: "Fee Management", href: "/docs/features/fees", items: [] },
-                { title: "Payroll", href: "/docs/features/payroll", items: [] },
-                { title: "Accounting", href: "/docs/features/accounting", items: [] },
-                { title: "Reports", href: "/docs/features/financial-reports", items: [] },
-              ]
-            },
-            {
-              title: "Communication",
-              items: [
-                { title: "Announcements", href: "/docs/features/announcements", items: [] },
-                { title: "Messaging", href: "/docs/features/messaging", items: [] },
-                { title: "Notifications", href: "/docs/features/notifications", items: [] },
-                { title: "Parent Portal", href: "/docs/features/parent-portal", items: [] },
-              ]
-            },
-            {
-              title: "Advanced",
-              items: [
-                { title: "Library System", href: "/docs/features/library", items: [] },
-                { title: "Transport", href: "/docs/features/transport", items: [] },
-                { title: "Hostel", href: "/docs/features/hostel", items: [] },
-                { title: "Inventory", href: "/docs/features/inventory", items: [] },
-              ]
-            }
-          ],
-        },
-        {
-          title: "User Guides",
-          items: [
-            { title: "Administrator Guide", href: "/docs/admin", items: [] },
-            { title: "Teacher Guide", href: "/docs/teachers", items: [] },
-            { title: "Student Guide", href: "/docs/students", items: [] },
-            { title: "Parent Guide", href: "/docs/parents", items: [] },
-            { title: "Accountant Guide", href: "/docs/accountant", items: [] },
-          ],
-        },
-        {
-          title: "Integrations",
-          href: "/docs/integrations",
-          items: [
-            { title: "Payment Gateways", href: "/docs/integrations/payment", items: [] },
-            { title: "SMS Providers", href: "/docs/integrations/sms", items: [] },
-            { title: "Google Workspace", href: "/docs/integrations/google", items: [] },
-            { title: "Microsoft 365", href: "/docs/integrations/microsoft", items: [] },
-            { title: "Zoom", href: "/docs/integrations/zoom", items: [] },
-            { title: "WhatsApp", href: "/docs/integrations/whatsapp", items: [] },
-          ],
+          title: "Demo",
+          href: "/docs/demo",
+          items: [],
         },
       ],
     },
 
-    // ============ BUSINESS SECTION ============
+    // ============ OPERATOR (SaaS Management) ============
     {
-      title: "💼 Business",
+      title: "Operator",
       items: [
         {
-          title: "For Investors",
-          href: "/docs/investors",
-          badge: "Investment Deck",
-          items: [
-            { title: "Executive Summary", href: "/docs/investors/executive-summary", items: [] },
-            { title: "Market Opportunity", href: "/docs/investors/market", items: [] },
-            { title: "Business Model", href: "/docs/investors/business-model", items: [] },
-            { title: "Financial Projections", href: "/docs/investors/financials", items: [] },
-            { title: "Competitive Analysis", href: "/docs/investors/competition", items: [] },
-            { title: "Growth Strategy", href: "/docs/investors/growth", items: [] },
-            { title: "Team", href: "/docs/investors/team", items: [] },
-            { title: "Funding", href: "/docs/investors/funding", items: [] },
-          ],
+          title: "Overview",
+          href: "/docs/operator",
+          items: [],
         },
         {
-          title: "For Partners",
-          href: "/docs/partners",
-          items: [
-            { title: "Partnership Program", href: "/docs/partners/program", items: [] },
-            { title: "Reseller Program", href: "/docs/partners/reseller", items: [] },
-            { title: "Affiliate Program", href: "/docs/partners/affiliate", items: [] },
-            { title: "Technology Partners", href: "/docs/partners/technology", items: [] },
-            { title: "Implementation Partners", href: "/docs/partners/implementation", items: [] },
-          ],
+          title: "Dashboard",
+          href: "/docs/operator/dashboard",
+          items: [],
         },
         {
-          title: "Sales & Marketing",
-          href: "/docs/sales",
-          items: [
-            { title: "Sales Process", href: "/docs/sales/process", items: [] },
-            { title: "Pricing", href: "/docs/sales/pricing", items: [] },
-            { title: "ROI Calculator", href: "/docs/sales/roi", items: [] },
-            { title: "Marketing Materials", href: "/docs/sales/materials", items: [] },
-            { title: "Brand Guidelines", href: "/docs/sales/brand", items: [] },
-          ],
+          title: "Tenants",
+          href: "/docs/operator/tenants",
+          items: [],
         },
         {
-          title: "Success Metrics",
-          href: "/docs/metrics",
-          items: [
-            { title: "KPIs", href: "/docs/metrics/kpis", items: [] },
-            { title: "Customer Analytics", href: "/docs/metrics/analytics", items: [] },
-            { title: "Market Share", href: "/docs/metrics/market-share", items: [] },
-            { title: "Growth Metrics", href: "/docs/metrics/growth", items: [] },
-          ],
+          title: "Billing",
+          href: "/docs/operator/billing",
+          items: [],
+        },
+        {
+          title: "Analytics",
+          href: "/docs/operator/analytics",
+          items: [],
+        },
+        {
+          title: "Domains",
+          href: "/docs/operator/domains",
+          items: [],
+        },
+        {
+          title: "Products",
+          href: "/docs/operator/products",
+          items: [],
+        },
+        {
+          title: "Observability",
+          href: "/docs/operator/observability",
+          items: [],
+        },
+        {
+          title: "Kanban",
+          href: "/docs/operator/kanban",
+          items: [],
+        },
+        {
+          title: "Profile",
+          href: "/docs/operator/profile",
+          items: [],
         },
       ],
     },
 
-    // ============ ROADMAP & MILESTONES ============
+    // ============ PLATFORM (School Management) ============
     {
-      title: "🗺️ Roadmap",
+      title: "Platform",
       items: [
         {
-          title: "Vision & Mission",
-          href: "/docs/roadmap/vision",
+          title: "Overview",
+          href: "/docs/platform",
           items: [],
         },
         {
-          title: "Product Roadmap",
-          href: "/docs/roadmap",
-          badge: "2024-2025",
-          items: [
-            { title: "Q1 2024", href: "/docs/roadmap/2024-q1", items: [] },
-            { title: "Q2 2024", href: "/docs/roadmap/2024-q2", items: [] },
-            { title: "Q3 2024", href: "/docs/roadmap/2024-q3", items: [] },
-            { title: "Q4 2024", href: "/docs/roadmap/2024-q4", items: [] },
-            { title: "2025 Vision", href: "/docs/roadmap/2025", items: [] },
-          ],
+          title: "Dashboard",
+          href: "/docs/platform/dashboard",
+          items: [],
         },
         {
-          title: "Milestones",
-          href: "/docs/milestones",
-          items: [
-            { title: "Achieved", href: "/docs/milestones/achieved", items: [] },
-            { title: "In Progress", href: "/docs/milestones/current", items: [] },
-            { title: "Upcoming", href: "/docs/milestones/upcoming", items: [] },
-          ],
+          title: "Students",
+          href: "/docs/platform/students",
+          items: [],
         },
         {
-          title: "Changelog",
-          href: "/docs/changelog",
-          badge: "Latest",
+          title: "Teachers",
+          href: "/docs/platform/teachers",
+          items: [],
+        },
+        {
+          title: "Parents",
+          href: "/docs/platform/parents",
+          items: [],
+        },
+        {
+          title: "Classes",
+          href: "/docs/platform/classes",
+          items: [],
+        },
+        {
+          title: "Subjects",
+          href: "/docs/platform/subjects",
+          items: [],
+        },
+        {
+          title: "Attendance",
+          href: "/docs/platform/attendance",
+          items: [],
+        },
+        {
+          title: "Grades",
+          href: "/docs/platform/grades",
+          items: [],
+        },
+        {
+          title: "Exams",
+          href: "/docs/platform/exams",
+          items: [],
+        },
+        {
+          title: "Assignments",
+          href: "/docs/platform/assignments",
+          items: [],
+        },
+        {
+          title: "Timetable",
+          href: "/docs/platform/timetable",
+          items: [],
+        },
+        {
+          title: "Fees",
+          href: "/docs/platform/fees",
+          items: [],
+        },
+        {
+          title: "Banking",
+          href: "/docs/platform/banking",
+          items: [],
+        },
+        {
+          title: "Library",
+          href: "/docs/platform/library",
+          items: [],
+        },
+        {
+          title: "Announcements",
+          href: "/docs/platform/announcements",
+          items: [],
+        },
+        {
+          title: "Events",
+          href: "/docs/platform/events",
+          items: [],
+        },
+        {
+          title: "Admission",
+          href: "/docs/platform/admission",
+          items: [],
+        },
+        {
+          title: "Lessons",
+          href: "/docs/platform/lessons",
+          items: [],
+        },
+        {
+          title: "Reports",
+          href: "/docs/platform/reports",
+          items: [],
+        },
+        {
+          title: "Settings",
+          href: "/docs/platform/settings",
+          items: [],
+        },
+        {
+          title: "Activity",
+          href: "/docs/platform/activity",
+          items: [],
+        },
+        {
+          title: "Communication",
+          href: "/docs/platform/communication",
+          items: [],
+        },
+        {
+          title: "Notifications",
+          href: "/docs/platform/notifications",
+          items: [],
+        },
+        {
+          title: "Parent Portal",
+          href: "/docs/platform/parent-portal",
+          items: [],
+        },
+        {
+          title: "Facility",
+          href: "/docs/platform/facility",
+          items: [],
+        },
+        {
+          title: "Import",
+          href: "/docs/platform/import",
+          items: [],
+        },
+        {
+          title: "Profile",
+          href: "/docs/platform/profile",
           items: [],
         },
       ],
     },
 
-    // ============ DEVELOPERS SECTION ============
+    // ============ SHARED COMPONENTS ============
     {
-      title: "👨‍💻 Developers",
+      title: "Components",
+      items: [
+        {
+          title: "Overview",
+          href: "/docs/components",
+          items: [],
+        },
+        {
+          title: "Authentication",
+          href: "/docs/components/auth",
+          items: [],
+        },
+        {
+          title: "Data Tables",
+          href: "/docs/components/table",
+          items: [],
+        },
+        {
+          title: "File Upload",
+          href: "/docs/components/file-uploader",
+          items: [],
+        },
+        {
+          title: "Rich Text Editor",
+          href: "/docs/components/rich-text-editor",
+          items: [],
+        },
+        {
+          title: "Internationalization",
+          href: "/docs/components/internationalization",
+          items: [],
+        },
+        {
+          title: "Theme",
+          href: "/docs/components/theme",
+          items: [],
+        },
+        {
+          title: "Marketing",
+          href: "/docs/components/marketing",
+          items: [],
+        },
+        {
+          title: "Onboarding",
+          href: "/docs/components/onboarding",
+          items: [],
+        },
+        {
+          title: "Monitoring",
+          href: "/docs/components/monitoring",
+          items: [],
+        },
+        {
+          title: "Offline Support",
+          href: "/docs/components/offline",
+          items: [],
+        },
+        {
+          title: "Invoice",
+          href: "/docs/components/invoice",
+          items: [],
+        },
+        {
+          title: "Stream",
+          href: "/docs/components/stream",
+          items: [],
+        },
+        {
+          title: "Tenant",
+          href: "/docs/components/tenant",
+          items: [],
+        },
+        {
+          title: "Sidebar",
+          href: "/docs/components/sidebar",
+          items: [],
+        },
+        {
+          title: "Profile",
+          href: "/docs/components/profile",
+          items: [],
+        },
+        {
+          title: "Providers",
+          href: "/docs/components/providers",
+          items: [],
+        },
+        {
+          title: "Site",
+          href: "/docs/components/site",
+          items: [],
+        },
+        {
+          title: "Library",
+          href: "/docs/components/library",
+          items: [],
+        },
+        {
+          title: "UI Components",
+          href: "/docs/components/ui",
+          items: [],
+        },
+        {
+          title: "Atoms",
+          href: "/docs/components/atom",
+          items: [],
+        },
+      ],
+    },
+
+    // ============ DEVELOPERS ============
+    {
+      title: "Developers",
       items: [
         {
           title: "Getting Started",
           items: [
-            { title: "Prerequisites", href: "/docs/requirements", items: [] },
-            { title: "Installation", href: "/docs/development/setup", items: [] },
-            { title: "Configuration", href: "/docs/development/config", items: [] },
-            { title: "Environment Setup", href: "/docs/deployment/environment", items: [] },
+            { title: "Requirements", href: "/docs/requirements", items: [] },
+            { title: "Installation", href: "/docs/installation", items: [] },
+            { title: "Configuration", href: "/docs/configuration", items: [] },
+            { title: "Environment Setup", href: "/docs/environment", items: [] },
           ],
         },
         {
           title: "Architecture",
-          href: "/docs/architecture",
           items: [
-            { title: "System Overview", href: "/docs/architecture", items: [] },
-            { title: "Tech Stack", href: "/docs/stack", items: [] },
-            { title: "Database Design", href: "/docs/database", items: [] },
-            { title: "Multi-Tenant Architecture", href: "/docs/architecture/multi-tenant", items: [] },
-            { title: "Security Architecture", href: "/docs/architecture/security", items: [] },
+            { title: "Overview", href: "/docs/architecture", items: [] },
+            { title: "Tech Stack", href: "/docs/architecture/stack", items: [] },
+            { title: "Database", href: "/docs/architecture/database", items: [] },
+            { title: "Multi-Tenant", href: "/docs/architecture/multi-tenant", items: [] },
+            { title: "Security", href: "/docs/architecture/security", items: [] },
             { title: "Performance", href: "/docs/architecture/performance", items: [] },
           ],
         },
         {
-          title: "API Reference",
+          title: "API",
           href: "/docs/api",
-          badge: "REST",
           items: [
             { title: "Overview", href: "/docs/api", items: [] },
             { title: "Authentication", href: "/docs/api/authentication", items: [] },
-            { title: "Core APIs", href: "/docs/api/core", items: [] },
+            { title: "Endpoints", href: "/docs/api/endpoints", items: [] },
             { title: "Webhooks", href: "/docs/api/webhooks", items: [] },
-            { title: "GraphQL", href: "/docs/api/graphql", badge: "Coming Soon", items: [] },
             { title: "Rate Limits", href: "/docs/api/rate-limits", items: [] },
-          ],
-        },
-        {
-          title: "Component Library",
-          href: "/docs/components",
-          items: [
-            { title: "UI Components", href: "/docs/components/ui", items: [] },
-            { title: "Data Tables", href: "/docs/components/tables", items: [] },
-            { title: "Forms", href: "/docs/components/forms", items: [] },
-            { title: "Charts", href: "/docs/components/charts", items: [] },
-            { title: "Auth Components", href: "/docs/components/auth", items: [] },
+            { title: "Errors", href: "/docs/api/errors", items: [] },
           ],
         },
         {
@@ -319,223 +445,243 @@ export const docsConfig: DocsConfig = {
           title: "Deployment",
           href: "/docs/deployment",
           items: [
+            { title: "Overview", href: "/docs/deployment", items: [] },
             { title: "Vercel", href: "/docs/deployment/vercel", items: [] },
             { title: "Docker", href: "/docs/deployment/docker", items: [] },
             { title: "Kubernetes", href: "/docs/deployment/kubernetes", items: [] },
             { title: "Custom Domain", href: "/docs/deployment/domain", items: [] },
-            { title: "SSL/TLS", href: "/docs/deployment/ssl", items: [] },
+            { title: "SSL", href: "/docs/deployment/ssl", items: [] },
             { title: "Monitoring", href: "/docs/deployment/monitoring", items: [] },
             { title: "Backup", href: "/docs/deployment/backup", items: [] },
-            { title: "Scaling", href: "/docs/deployment/scaling", items: [] },
+          ],
+        },
+        {
+          title: "Integrations",
+          href: "/docs/integrations",
+          items: [
+            { title: "Payment Gateways", href: "/docs/integrations/payment", items: [] },
+            { title: "SMS Providers", href: "/docs/integrations/sms", items: [] },
+            { title: "Email Services", href: "/docs/integrations/email", items: [] },
+            { title: "Google Workspace", href: "/docs/integrations/google", items: [] },
+            { title: "Microsoft 365", href: "/docs/integrations/microsoft", items: [] },
+            { title: "Zoom", href: "/docs/integrations/zoom", items: [] },
           ],
         },
       ],
     },
 
-    // ============ OPEN SOURCE & COMMUNITY ============
+    // ============ BUSINESS ============
     {
-      title: "🌟 Open Source",
+      title: "Business",
+      items: [
+        {
+          title: "Pricing",
+          href: "/docs/pricing",
+          items: [],
+        },
+        {
+          title: "Roadmap",
+          href: "/docs/roadmap",
+          items: [],
+        },
+        {
+          title: "Investors",
+          href: "/docs/investors",
+          items: [
+            { title: "Executive Summary", href: "/docs/investors/executive-summary", items: [] },
+            { title: "Market Opportunity", href: "/docs/investors/market", items: [] },
+            { title: "Business Model", href: "/docs/investors/business-model", items: [] },
+            { title: "Financial Projections", href: "/docs/investors/financials", items: [] },
+          ],
+        },
+        {
+          title: "Partners",
+          href: "/docs/partners",
+          items: [
+            { title: "Partnership Program", href: "/docs/partners/program", items: [] },
+            { title: "Technology Partners", href: "/docs/partners/technology", items: [] },
+            { title: "Reseller Program", href: "/docs/partners/reseller", items: [] },
+            { title: "Implementation Partners", href: "/docs/partners/implementation", items: [] },
+          ],
+        },
+        {
+          title: "Case Studies",
+          href: "/docs/case-studies",
+          items: [],
+        },
+        {
+          title: "Success Stories",
+          href: "/docs/success-stories",
+          items: [],
+        },
+      ],
+    },
+
+    // ============ OPEN SOURCE ============
+    {
+      title: "Open Source",
       items: [
         {
           title: "Contributing",
-          href: "/docs/contributing",
-          badge: "Join Us",
-          items: [
-            { title: "How to Contribute", href: "/docs/contributing/guide", items: [] },
-            { title: "Code of Conduct", href: "/docs/contributing/code-of-conduct", items: [] },
-            { title: "Development Setup", href: "/docs/contributing/setup", items: [] },
-            { title: "Pull Request Guide", href: "/docs/contributing/pull-requests", items: [] },
-            { title: "Issue Templates", href: "/docs/contributing/issues", items: [] },
-          ],
+          href: "/docs/open-source/contributing",
+          items: [],
+        },
+        {
+          title: "Code of Conduct",
+          href: "/docs/open-source/code-of-conduct",
+          items: [],
+        },
+        {
+          title: "Development Setup",
+          href: "/docs/open-source/setup",
+          items: [],
+        },
+        {
+          title: "Pull Requests",
+          href: "/docs/open-source/pull-requests",
+          items: [],
+        },
+        {
+          title: "Issue Templates",
+          href: "/docs/open-source/issues",
+          items: [],
         },
         {
           title: "Community",
-          href: "/docs/community",
-          items: [
-            { title: "Discord", href: "https://discord.gg/hogwarts", external: true, items: [] },
-            { title: "GitHub Discussions", href: "https://github.com/hogwarts/discussions", external: true, items: [] },
-            { title: "Stack Overflow", href: "https://stackoverflow.com/questions/tagged/hogwarts", external: true, items: [] },
-            { title: "Twitter", href: "https://twitter.com/hogwartsapp", external: true, items: [] },
-            { title: "Blog", href: "/blog", items: [] },
-          ],
-        },
-        {
-          title: "Sharing Economy",
-          href: "/docs/sharing",
-          badge: "New",
-          items: [
-            { title: "Revenue Sharing", href: "/docs/sharing/revenue", items: [] },
-            { title: "Contributor Rewards", href: "/docs/sharing/rewards", items: [] },
-            { title: "Bounty Program", href: "/docs/sharing/bounties", items: [] },
-            { title: "Stakeholder Benefits", href: "/docs/sharing/stakeholders", items: [] },
-          ],
+          href: "/docs/open-source/community",
+          items: [],
         },
         {
           title: "Governance",
-          href: "/docs/governance",
-          items: [
-            { title: "Project Structure", href: "/docs/governance/structure", items: [] },
-            { title: "Decision Making", href: "/docs/governance/decisions", items: [] },
-            { title: "Core Team", href: "/docs/governance/team", items: [] },
-            { title: "Advisory Board", href: "/docs/governance/advisory", items: [] },
-          ],
+          href: "/docs/open-source/governance",
+          items: [],
         },
       ],
     },
 
-    // ============ INCUBATOR & ACCELERATOR ============
+    // ============ RESOURCES ============
     {
-      title: "🚀 Incubator",
+      title: "Resources",
       items: [
         {
-          title: "Startup Program",
-          href: "/docs/incubator",
-          badge: "Apply Now",
+          title: "Brand Guidelines",
+          href: "/docs/resources/brand-guidelines",
+          items: [],
+        },
+        {
+          title: "Templates",
+          href: "/docs/resources/templates",
           items: [
-            { title: "Program Overview", href: "/docs/incubator/overview", items: [] },
-            { title: "Benefits", href: "/docs/incubator/benefits", items: [] },
-            { title: "Application Process", href: "/docs/incubator/apply", items: [] },
-            { title: "Selection Criteria", href: "/docs/incubator/criteria", items: [] },
-            { title: "Success Stories", href: "/docs/incubator/alumni", items: [] },
+            { title: "Import Templates", href: "/docs/resources/templates/import", items: [] },
+            { title: "Report Templates", href: "/docs/resources/templates/reports", items: [] },
+            { title: "Email Templates", href: "/docs/resources/templates/emails", items: [] },
+            { title: "Document Templates", href: "/docs/resources/templates/documents", items: [] },
           ],
         },
         {
-          title: "Accelerator",
-          href: "/docs/accelerator",
-          items: [
-            { title: "6-Month Program", href: "/docs/accelerator/program", items: [] },
-            { title: "Mentorship", href: "/docs/accelerator/mentors", items: [] },
-            { title: "Resources", href: "/docs/accelerator/resources", items: [] },
-            { title: "Demo Day", href: "/docs/accelerator/demo-day", items: [] },
-          ],
+          title: "Videos",
+          href: "/docs/resources/videos",
+          items: [],
         },
         {
-          title: "Innovation Lab",
-          href: "/docs/innovation",
-          items: [
-            { title: "Research Projects", href: "/docs/innovation/research", items: [] },
-            { title: "EdTech Trends", href: "/docs/innovation/trends", items: [] },
-            { title: "AI in Education", href: "/docs/innovation/ai", items: [] },
-            { title: "Future of Schools", href: "/docs/innovation/future", items: [] },
-          ],
+          title: "Blog",
+          href: "/docs/resources/blog",
+          items: [],
+        },
+        {
+          title: "Webinars",
+          href: "/docs/resources/webinars",
+          items: [],
+        },
+        {
+          title: "Research",
+          href: "/docs/resources/research",
+          items: [],
         },
       ],
     },
 
-    // ============ RESOURCES SECTION ============
+    // ============ SUPPORT ============
     {
-      title: "📚 Resources",
+      title: "Support",
       items: [
         {
-          title: "Creative Assets",
-          href: "/docs/creative",
-          items: [
-            { title: "Brand Kit", href: "/docs/creative/brand", items: [] },
-            { title: "Logo Files", href: "/docs/creative/logos", items: [] },
-            { title: "Marketing Templates", href: "/docs/creative/templates", items: [] },
-            { title: "Video Assets", href: "/docs/creative/videos", items: [] },
-            { title: "Presentation Decks", href: "/docs/creative/presentations", items: [] },
-            { title: "Social Media Kit", href: "/docs/creative/social", items: [] },
-          ],
+          title: "FAQ",
+          href: "/docs/support/faq",
+          items: [],
         },
         {
-          title: "Content Production",
-          href: "/docs/content",
-          items: [
-            { title: "Video Tutorials", href: "/docs/content/videos", items: [] },
-            { title: "Blog Writing Guide", href: "/docs/content/blog", items: [] },
-            { title: "Documentation Style", href: "/docs/content/docs", items: [] },
-            { title: "Translation Guide", href: "/docs/content/translation", items: [] },
-            { title: "SEO Guidelines", href: "/docs/content/seo", items: [] },
-          ],
+          title: "Troubleshooting",
+          href: "/docs/support/troubleshooting",
+          items: [],
         },
         {
-          title: "Educational Content",
-          href: "/docs/education",
-          items: [
-            { title: "Webinars", href: "/docs/education/webinars", items: [] },
-            { title: "Courses", href: "/docs/education/courses", items: [] },
-            { title: "Certifications", href: "/docs/education/certifications", items: [] },
-            { title: "Best Practices", href: "/docs/education/best-practices", items: [] },
-            { title: "Research Papers", href: "/docs/education/research", items: [] },
-          ],
+          title: "Contact",
+          href: "/docs/support/contact",
+          items: [],
         },
         {
-          title: "Templates & Tools",
-          href: "/docs/templates",
-          items: [
-            { title: "Import Templates", href: "/docs/templates/import", items: [] },
-            { title: "Report Templates", href: "/docs/templates/reports", items: [] },
-            { title: "Email Templates", href: "/docs/templates/emails", items: [] },
-            { title: "Document Templates", href: "/docs/templates/documents", items: [] },
-            { title: "Calculators", href: "/docs/templates/calculators", items: [] },
-          ],
+          title: "System Status",
+          href: "https://status.hogwarts.app",
+          external: true,
+          items: [],
         },
         {
-          title: "Support",
-          href: "/docs/support",
-          items: [
-            { title: "FAQ", href: "/docs/support/faq", items: [] },
-            { title: "Troubleshooting", href: "/docs/support/troubleshooting", items: [] },
-            { title: "Contact Support", href: "/docs/support/contact", items: [] },
-            { title: "System Status", href: "https://status.hogwarts.app", external: true, items: [] },
-            { title: "Feature Requests", href: "/docs/support/feature-requests", items: [] },
-          ],
+          title: "Feature Requests",
+          href: "/docs/support/feature-requests",
+          items: [],
+        },
+        {
+          title: "Changelog",
+          href: "/docs/support/changelog",
+          items: [],
         },
       ],
     },
 
-    // ============ COMPANY & LEGAL ============
+    // ============ LEGAL ============
     {
-      title: "🏢 Company",
+      title: "Legal",
       items: [
         {
-          title: "About Us",
-          href: "/docs/company",
-          items: [
-            { title: "Our Story", href: "/docs/company/story", items: [] },
-            { title: "Mission & Values", href: "/docs/company/mission", items: [] },
-            { title: "Team", href: "/docs/company/team", items: [] },
-            { title: "Careers", href: "/docs/company/careers", badge: "Hiring", items: [] },
-            { title: "Press Kit", href: "/docs/company/press", items: [] },
-            { title: "Contact", href: "/docs/company/contact", items: [] },
-          ],
+          title: "Terms",
+          href: "/docs/legal/terms",
+          items: [],
         },
         {
-          title: "Legal",
-          href: "/docs/legal",
-          items: [
-            { title: "Terms of Service", href: "/docs/legal/terms", items: [] },
-            { title: "Privacy Policy", href: "/docs/legal/privacy", items: [] },
-            { title: "Cookie Policy", href: "/docs/legal/cookies", items: [] },
-            { title: "GDPR Compliance", href: "/docs/legal/gdpr", items: [] },
-            { title: "Data Processing Agreement", href: "/docs/legal/dpa", items: [] },
-            { title: "SLA", href: "/docs/legal/sla", items: [] },
-            { title: "Licenses", href: "/docs/legal/licenses", items: [] },
-            { title: "Trademarks", href: "/docs/legal/trademarks", items: [] },
-          ],
+          title: "Privacy",
+          href: "/docs/legal/privacy",
+          items: [],
         },
         {
-          title: "Compliance",
-          href: "/docs/compliance",
-          items: [
-            { title: "Security Certifications", href: "/docs/compliance/security", items: [] },
-            { title: "ISO Standards", href: "/docs/compliance/iso", items: [] },
-            { title: "FERPA", href: "/docs/compliance/ferpa", items: [] },
-            { title: "COPPA", href: "/docs/compliance/coppa", items: [] },
-            { title: "Accessibility", href: "/docs/compliance/accessibility", items: [] },
-          ],
+          title: "Cookies",
+          href: "/docs/legal/cookies",
+          items: [],
         },
         {
-          title: "Policies",
-          href: "/docs/policies",
-          items: [
-            { title: "Acceptable Use", href: "/docs/policies/acceptable-use", items: [] },
-            { title: "Refund Policy", href: "/docs/policies/refund", items: [] },
-            { title: "Support Policy", href: "/docs/policies/support", items: [] },
-            { title: "Security Policy", href: "/docs/policies/security", items: [] },
-            { title: "Bug Bounty", href: "/docs/policies/bug-bounty", items: [] },
-          ],
+          title: "GDPR",
+          href: "/docs/legal/gdpr",
+          items: [],
+        },
+        {
+          title: "FERPA",
+          href: "/docs/legal/ferpa",
+          items: [],
+        },
+        {
+          title: "COPPA",
+          href: "/docs/legal/coppa",
+          items: [],
+        },
+        {
+          title: "Data Processing",
+          href: "/docs/legal/dpa",
+          items: [],
+        },
+        {
+          title: "SLA",
+          href: "/docs/legal/sla",
+          items: [],
         },
       ],
     },
