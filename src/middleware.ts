@@ -198,10 +198,19 @@ export async function middleware(req: NextRequest) {
   // For subdomain handling, we need to handle locale + subdomain rewriting
   let subdomain: string | null = null;
 
+  // Enhanced logging for subdomain detection
+  logger.info('SUBDOMAIN DETECTION', {
+    ...baseContext,
+    host,
+    endsWithDatabayt: host.endsWith(".databayt.org"),
+    startsWithEd: host.startsWith("ed."),
+    split: host.split("."),
+  });
+
   // Case 2: Production subdomains (*.databayt.org)
   if (host.endsWith(".databayt.org") && !host.startsWith("ed.")) {
     subdomain = host.split(".")[0];
-    logger.debug('PRODUCTION TENANT', { ...baseContext, subdomain });
+    logger.info('PRODUCTION TENANT DETECTED', { ...baseContext, subdomain, fullHost: host });
   }
 
   // Case 3: Vercel preview URLs (tenant---branch.vercel.app)
@@ -219,9 +228,18 @@ export async function middleware(req: NextRequest) {
     }
   }
 
+  // Log if no subdomain detected
+  if (!subdomain) {
+    logger.info('NO SUBDOMAIN DETECTED', {
+      ...baseContext,
+      host,
+      reason: 'No matching subdomain pattern found'
+    });
+  }
+
   // If we have a subdomain, handle tenant routing with i18n
   if (subdomain) {
-    logger.debug('TENANT REWRITE WITH I18N', {
+    logger.info('TENANT REWRITE WITH I18N', {
       ...baseContext,
       subdomain,
       originalPath: url.pathname,
