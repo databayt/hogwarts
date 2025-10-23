@@ -2,6 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import PageHeader from "@/components/atom/page-header";
 import { IconPlus } from "@tabler/icons-react";
 import type { Dictionary } from "@/components/internationalization/dictionaries";
 
@@ -12,12 +13,11 @@ interface Props {
 export default async function FacilityContent({ dictionary }: Props) {
   return (
     <div className="space-y-6">
-      <div>
-        <h1>Facility Management</h1>
-        <p className="text-muted-foreground">
-          Manage school infrastructure and resources
-        </p>
-      </div>
+      <PageHeader
+        title="Facility Management"
+        description="Manage school infrastructure and resources"
+        className="text-start max-w-none"
+      />
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>

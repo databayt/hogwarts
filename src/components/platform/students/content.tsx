@@ -5,6 +5,7 @@ import { studentsSearchParams } from '@/components/platform/students/list-params
 import { db } from '@/lib/db'
 import { getTenantContext } from '@/lib/tenant-context'
 import type { Dictionary } from '@/components/internationalization/dictionaries'
+import PageHeader from '@/components/atom/page-header'
 
 interface Props {
   searchParams: Promise<SearchParams>;
@@ -52,12 +53,10 @@ export default async function StudentsContent({ searchParams, school, dictionary
 
   return (
     <div className="flex flex-1 flex-col gap-4">
-      <div>
-        <h1>
-          {school?.name ? `${school.name} - ${dict.title}` : dict.title}
-        </h1>
-        {/* <p className="text-sm text-muted-foreground">List and manage students (placeholder)</p> */}
-      </div>
+      <PageHeader
+        title={school?.name ? `${school.name} - ${dict.title}` : dict.title}
+        className="text-start max-w-none"
+      />
       <StudentsTable data={data} pageCount={Math.max(1, Math.ceil(total / (sp.perPage || 20)))} dictionary={dictionary?.students} />
     </div>
   )

@@ -11,6 +11,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getParentAnnouncements } from "./actions";
 import { cn } from "@/lib/utils";
+import PageHeader from "@/components/atom/page-header";
 
 interface Announcement {
   id: string;
@@ -138,10 +139,11 @@ export function ParentAnnouncementsContent() {
   return (
     <div className="container mx-auto py-8 px-4">
       <div className="mb-8">
-        <h2>Announcements</h2>
-        <p className="text-muted-foreground mt-2">
-          Stay updated with school and class announcements
-        </p>
+        <PageHeader
+          title="Announcements"
+          description="Stay updated with school and class announcements"
+          className="text-start max-w-none"
+        />
       </div>
 
       <div className="space-y-6">

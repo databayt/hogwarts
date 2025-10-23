@@ -1,17 +1,17 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import PageHeader from "@/components/atom/page-header";
 import { IconPlus } from "@tabler/icons-react";
 
 export default async function ActivityContent() {
   return (
     <div className="space-y-6">
-      <div>
-        <h1>Co-curricular Activities</h1>
-        <p className="text-muted-foreground">
-          Manage sports, clubs, and extracurricular activities
-        </p>
-      </div>
+      <PageHeader
+        title="Co-curricular Activities"
+        description="Manage sports, clubs, and extracurricular activities"
+        className="text-start max-w-none"
+      />
 
       <Tabs defaultValue="sports" className="w-full">
         <TabsList className="grid w-full grid-cols-3">

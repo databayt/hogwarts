@@ -5,6 +5,7 @@ import { teachersSearchParams } from '@/components/platform/teachers/list-params
 import { db } from '@/lib/db'
 import { getTenantContext } from '@/lib/tenant-context'
 import { Shell as PageContainer } from '@/components/table/shell'
+import PageHeader from '@/components/atom/page-header'
 import type { Dictionary } from '@/components/internationalization/dictionaries'
 
 interface Props {
@@ -54,10 +55,10 @@ export default async function TeachersContent({ searchParams, dictionary }: Prop
   return (
     <PageContainer>
       <div className="flex flex-1 flex-col gap-4">
-        <div>
-          <h1>{dictionary?.teachers?.title || 'Teachers'}</h1>
-          {/* <p className="text-sm text-muted-foreground">List and manage teachers (placeholder)</p> */}
-        </div>
+        <PageHeader
+          title={dictionary?.teachers?.title || 'Teachers'}
+          className="text-start max-w-none"
+        />
         <TeachersTable data={data} pageCount={Math.max(1, Math.ceil(total / (sp.perPage || 20)))} dictionary={dictionary?.teachers} />
       </div>
     </PageContainer>
