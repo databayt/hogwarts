@@ -5,6 +5,7 @@ import { eventsSearchParams } from '@/components/platform/events/list-params'
 import { db } from '@/lib/db'
 import { getTenantContext } from '@/lib/tenant-context'
 import { Shell as PageContainer } from '@/components/table/shell'
+import PageHeader from '@/components/atom/page-header'
 import { type Locale } from '@/components/internationalization/config'
 import { type Dictionary } from '@/components/internationalization/dictionaries'
 
@@ -68,10 +69,11 @@ export default async function EventsContent({ searchParams, dictionary, lang }: 
   return (
     <PageContainer>
       <div className="flex flex-1 flex-col gap-4">
-        <div>
-          <h1 className="text-xl font-semibold">{dictionary?.school?.events?.title || 'Events'}</h1>
-          <p className="text-sm text-muted-foreground">{dictionary?.school?.events?.description || 'Schedule and manage your school events'}</p>
-        </div>
+        <PageHeader
+          title={dictionary?.school?.events?.title || 'Events'}
+          description={dictionary?.school?.events?.description || 'Schedule and manage your school events'}
+          className="text-start max-w-none"
+        />
         <EventsTable data={data} columns={eventColumns} pageCount={Math.max(1, Math.ceil(total / (sp.perPage || 20)))} />
       </div>
     </PageContainer>

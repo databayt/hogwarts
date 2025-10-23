@@ -5,6 +5,7 @@ import { lessonsSearchParams } from '@/components/platform/lessons/list-params'
 import { db } from '@/lib/db'
 import { getTenantContext } from '@/lib/tenant-context'
 import { Shell as PageContainer } from '@/components/table/shell'
+import PageHeader from '@/components/atom/page-header'
 import { type Locale } from '@/components/internationalization/config'
 import { type Dictionary } from '@/components/internationalization/dictionaries'
 
@@ -79,10 +80,11 @@ export default async function LessonsContent({ searchParams, dictionary, lang }:
   return (
     <PageContainer>
       <div className="flex flex-1 flex-col gap-4">
-        <div>
-          <h1 className="text-xl font-semibold">{dictionary?.school?.lessons?.title || 'Lessons'}</h1>
-          <p className="text-sm text-muted-foreground">{dictionary?.school?.lessons?.description || 'Plan and manage your lessons'}</p>
-        </div>
+        <PageHeader
+          title={dictionary?.school?.lessons?.title || 'Lessons'}
+          description={dictionary?.school?.lessons?.description || 'Plan and manage your lessons'}
+          className="text-start max-w-none"
+        />
         <LessonsTable data={data} columns={lessonColumns} pageCount={Math.max(1, Math.ceil(total / (sp.perPage || 20)))} />
       </div>
     </PageContainer>

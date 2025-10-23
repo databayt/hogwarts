@@ -5,6 +5,7 @@ import { announcementsSearchParams } from '@/components/platform/announcements/l
 import { db } from '@/lib/db'
 import { getTenantContext } from '@/lib/tenant-context'
 import { Shell as PageContainer } from '@/components/table/shell'
+import PageHeader from '@/components/atom/page-header'
 import type { Dictionary } from '@/components/internationalization/dictionaries'
 import type { Locale } from '@/components/internationalization/config'
 
@@ -48,10 +49,11 @@ export default async function AnnouncementsContent({ searchParams, dictionary, l
   return (
     <PageContainer>
       <div className="flex flex-1 flex-col gap-4">
-        <div>
-          <h1>{t.title}</h1>
-          <p className="muted">{t.description}</p>
-        </div>
+        <PageHeader
+          title={t.title}
+          description={t.description}
+          className="text-start max-w-none"
+        />
         <AnnouncementsTable data={data} pageCount={Math.max(1, Math.ceil(total / (sp.perPage || 20)))} dictionary={t} lang={lang} />
       </div>
     </PageContainer>

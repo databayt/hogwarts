@@ -5,6 +5,7 @@ import { examsSearchParams } from '@/components/platform/exams/list-params'
 import { db } from '@/lib/db'
 import { getTenantContext } from '@/lib/tenant-context'
 import { Shell as PageContainer } from '@/components/table/shell'
+import PageHeader from '@/components/atom/page-header'
 import { type Locale } from '@/components/internationalization/config'
 import { type Dictionary } from '@/components/internationalization/dictionaries'
 
@@ -75,10 +76,11 @@ export default async function ExamsContent({ searchParams, dictionary, lang }: P
   return (
     <PageContainer>
       <div className="flex flex-1 flex-col gap-4">
-        <div>
-          <h1 className="text-xl font-semibold">{dictionary?.school?.exams?.title || 'Exams'}</h1>
-          <p className="text-sm text-muted-foreground">{dictionary?.school?.exams?.description || 'Schedule and manage your exams'}</p>
-        </div>
+        <PageHeader
+          title={dictionary?.school?.exams?.title || 'Exams'}
+          description={dictionary?.school?.exams?.description || 'Schedule and manage your exams'}
+          className="text-start max-w-none"
+        />
         <ExamsTable data={data} columns={examColumns} pageCount={Math.max(1, Math.ceil(total / (sp.perPage || 20)))} />
       </div>
     </PageContainer>
