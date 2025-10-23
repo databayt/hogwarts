@@ -13,8 +13,8 @@ import { Skeleton } from '@/components/ui/skeleton'
 
 export function PresetGallery() {
   const { presets, isLoading, fetchPresets } = usePresetThemes()
-  const { applyPreset, isPending } = useThemeOperations()
-  const { theme } = useUserTheme()
+  const { applyTheme, isPending } = useThemeOperations()
+  const { themeState } = useUserTheme()
 
   // Fetch presets on mount
   useEffect(() => {
@@ -43,20 +43,19 @@ export function PresetGallery() {
 
   return (
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-      {presets.map((preset) => {
-        // Check if this preset is active
-        const isActive =
-          theme?.isPreset === true && theme?.name === preset.name && theme?.isActive === true
-
+      {presets.map((preset, index) => {
         return (
           <ThemeCard
-            key={preset.id}
+            key={preset.label || index}
             preset={preset}
-            name={preset.name}
-            description={preset.description}
-            isActive={isActive}
-            isPreset
-            onApply={() => applyPreset(preset.id)}
+            isActive={false}
+            onApply={() => {
+              applyTheme({
+                styles: preset.styles,
+                currentMode: themeState.currentMode,
+                hslAdjustments: { hueShift: 0, saturationScale: 1, lightnessScale: 1 },
+              })
+            }}
           />
         )
       })}

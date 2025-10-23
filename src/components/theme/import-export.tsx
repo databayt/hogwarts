@@ -14,18 +14,18 @@ import { useThemeImportExport, useUserTheme, useThemeOperations } from './use-th
 import { toast } from 'sonner'
 
 export function ThemeImportExport() {
-  const { themeConfig } = useUserTheme()
+  const { themeState } = useUserTheme()
   const { exportTheme, importTheme, isExporting, isImporting } = useThemeImportExport()
   const { saveTheme } = useThemeOperations()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [importedTheme, setImportedTheme] = useState<any>(null)
 
   const handleExport = () => {
-    if (!themeConfig) {
+    if (!themeState) {
       toast.error('No active theme to export')
       return
     }
-    exportTheme(themeConfig)
+    exportTheme('my-theme')
   }
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -46,7 +46,7 @@ export function ThemeImportExport() {
   const handleSaveImportedTheme = async () => {
     if (!importedTheme) return
 
-    await saveTheme(importedTheme.name, importedTheme)
+    await saveTheme('Imported Theme')
     setImportedTheme(null)
   }
 
@@ -59,7 +59,7 @@ export function ThemeImportExport() {
           <CardDescription>Download your current theme as a JSON file</CardDescription>
         </CardHeader>
         <CardContent>
-          <Button onClick={handleExport} disabled={isExporting || !themeConfig} className="w-full">
+          <Button onClick={handleExport} disabled={isExporting || !themeState} className="w-full">
             {isExporting ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
