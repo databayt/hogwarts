@@ -231,6 +231,9 @@ export function usePresetStore() {
 
 /**
  * Hook for fetching preset themes
+ *
+ * NOTE: Presets are registered globally in theme-provider on app mount.
+ * This hook just reads from the store - it doesn't register presets again.
  */
 export function usePresetThemes() {
   const [presets, setPresets] = useState<any[]>([])
@@ -241,22 +244,24 @@ export function usePresetThemes() {
   const fetchPresets = useCallback(async () => {
     setIsLoading(true)
     try {
-      // Import built-in presets and register them
-      const { builtInPresets } = await import('./presets')
+      // Read presets from store (already registered by theme-provider)
+      const allPresets = presetStore.getAllPresets()
+      const presetsArray = Object.values(allPresets)
 
-      // Register each preset in the store
-      builtInPresets.forEach((preset) => {
-        const presetName = preset.label?.toLowerCase().replace(/\s+/g, '-') || 'untitled'
-        presetStore.registerPreset(presetName, preset)
-      })
-
-      setPresets(builtInPresets)
+      // If store is empty, wait briefly for theme-provider initialization
+      if (presetsArray.length === 0) {
+        await new Promise(resolve => setTimeout(resolve, 100))
+        const retryPresets = Object.values(presetStore.getAllPresets())
+        setPresets(retryPresets)
+      } else {
+        setPresets(presetsArray)
+      }
     } catch (error) {
       console.error('Failed to load presets:', error)
     } finally {
       setIsLoading(false)
     }
-  }, [presetStore])
+  }, []) // No dependencies - stable reference to prevent infinite loops
 
   return {
     presets,

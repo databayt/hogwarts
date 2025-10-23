@@ -17,18 +17,26 @@ export function PresetGallery() {
   const { themeState, applyThemePreset } = useUserTheme()
   const presetStore = useThemePresetStore()
 
-  // Fetch presets on mount
+  // Fetch presets on mount (fetchPresets has stable reference now)
   useEffect(() => {
     fetchPresets()
   }, [fetchPresets])
 
-  // Convert presets to array for mapping
+  // Convert presets from hook to array (presets already includes all registered presets)
   const presetsArray = useMemo(() => {
-    return Object.entries(presetStore.getAllPresets()).map(([name, preset]) => ({
-      name,
+    if (!presets || presets.length === 0) {
+      // Fallback: read directly from store if hook hasn't populated yet
+      return Object.entries(presetStore.getAllPresets()).map(([name, preset]) => ({
+        name,
+        ...preset,
+      }))
+    }
+    // Use presets from hook (already formatted correctly)
+    return presets.map((preset, index) => ({
+      name: preset.label?.toLowerCase().replace(/\s+/g, '-') || `preset-${index}`,
       ...preset,
     }))
-  }, [presetStore.presets])
+  }, [presets]) // Only depend on presets array from hook (stable reference)
 
   if (isLoading) {
     return (
