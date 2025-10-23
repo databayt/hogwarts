@@ -27,7 +27,10 @@
       "Read(//c/Users/pc/Downloads/tweakcn-main/tweakcn-main/actions/**)",
       "Read(//c/Users/pc/Downloads/tweakcn-main/tweakcn-main/components/editor/**)",
       "Read(//c/Users/pc/Downloads/tweakcn-main/tweakcn-main/config/**)",
-      "Read(//c/Users/pc/Downloads/tweakcn-main/tweakcn-main/utils/**)"
+      "Read(//c/Users/pc/Downloads/tweakcn-main/tweakcn-main/utils/**)",
+      "WebFetch(domain:tweakcn.com)",
+      "Read(//c/Users/pc/Downloads/tweakcn-main/tweakcn-main/**)",
+      "Bash(git log:*)"
     ],
     "deny": [],
     "ask": []

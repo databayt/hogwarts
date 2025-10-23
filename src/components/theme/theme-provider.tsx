@@ -8,7 +8,7 @@
 
 'use client'
 
-import { type ReactNode, useEffect, useCallback } from 'react'
+import { type ReactNode, useEffect, useCallback, useRef } from 'react'
 import { useTheme as useNextTheme } from 'next-themes'
 import { useEditorStore } from '@/store/theme-editor-store'
 import { useThemePresetStore } from '@/store/theme-preset-store'
@@ -26,9 +26,12 @@ export function UserThemeProvider({ children, initialTheme }: ThemeProviderProps
   const { themeState, setThemeState } = useEditorStore()
   const { resolvedTheme } = useNextTheme()
   const presetStore = useThemePresetStore()
+  const hasInitialized = useRef(false)
 
-  // Initialize preset store with built-in presets
+  // Initialize preset store with built-in presets (run once)
   useEffect(() => {
+    if (hasInitialized.current) return
+
     const initializePresets = async () => {
       try {
         const { builtInPresets } = await import('./presets')
@@ -43,13 +46,15 @@ export function UserThemeProvider({ children, initialTheme }: ThemeProviderProps
         if (initialTheme) {
           await presetStore.loadSavedPresets()
         }
+
+        hasInitialized.current = true
       } catch (error) {
         console.error('Failed to initialize presets:', error)
       }
     }
 
     initializePresets()
-  }, [presetStore, initialTheme])
+  }, [initialTheme])
 
   // Load initial theme from server if provided
   useEffect(() => {
