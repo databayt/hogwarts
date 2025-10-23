@@ -161,3 +161,89 @@ export function useThemeBuilder() {
     currentMode,
   }
 }
+
+/**
+ * Hook for theme import/export
+ */
+export function useThemeImportExport() {
+  const [isExporting, setIsExporting] = useState(false)
+  const [isImporting, setIsImporting] = useState(false)
+
+  const exportTheme = useCallback(async (themeName: string = 'theme') => {
+    setIsExporting(true)
+    try {
+      const { themeState } = useEditorStore.getState()
+      const dataStr = JSON.stringify(themeState, null, 2)
+      const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr)
+      const exportFileDefaultName = `${themeName}-${Date.now()}.json`
+
+      const linkElement = document.createElement('a')
+      linkElement.setAttribute('href', dataUri)
+      linkElement.setAttribute('download', exportFileDefaultName)
+      linkElement.click()
+
+      toast.success('Theme exported successfully')
+    } catch (error) {
+      toast.error('Failed to export theme')
+      console.error(error)
+    } finally {
+      setIsExporting(false)
+    }
+  }, [])
+
+  const importTheme = useCallback(async (file: File): Promise<ThemeEditorState | null> => {
+    setIsImporting(true)
+    try {
+      const text = await file.text()
+      const themeState = JSON.parse(text) as ThemeEditorState
+
+      // Validate basic structure
+      if (!themeState.styles || !themeState.styles.light || !themeState.styles.dark) {
+        throw new Error('Invalid theme file format')
+      }
+
+      toast.success('Theme imported successfully')
+      return themeState
+    } catch (error) {
+      toast.error('Failed to import theme')
+      console.error(error)
+      return null
+    } finally {
+      setIsImporting(false)
+    }
+  }, [])
+
+  return {
+    exportTheme,
+    importTheme,
+    isExporting,
+    isImporting,
+  }
+}
+
+/**
+ * Hook for fetching preset themes
+ */
+export function usePresetThemes() {
+  const [presets, setPresets] = useState<any[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+
+  const fetchPresets = useCallback(async () => {
+    setIsLoading(true)
+    try {
+      // Import dynamically to avoid circular dependency
+      const { builtInPresets } = await import('./presets')
+      setPresets(builtInPresets)
+    } catch (error) {
+      console.error('Failed to load presets:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
+  return {
+    presets,
+    isLoading,
+    fetchPresets,
+  }
+}
