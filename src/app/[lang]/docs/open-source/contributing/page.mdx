@@ -1,0 +1,372 @@
+# Contributing to Hogwarts
+
+Welcome to the Hogwarts open source community! We're excited to have you contribute to revolutionizing education technology globally.
+
+## 🌟 Why Contribute?
+
+### Impact Education Globally
+- Your code helps **1M+ students** learn better
+- Support **50,000+ teachers** worldwide
+- Enable education in **underserved communities**
+- Build technology that **shapes future generations**
+
+### Benefits for Contributors
+- 🎓 **Learn** from experienced developers
+- 🏆 **Recognition** in our Hall of Fame
+- 💼 **Career** opportunities with partners
+- 🎁 **Swag** for active contributors
+- 📜 **Certificate** of contribution
+- 🌐 **Network** with global developers
+
+## 🚀 Getting Started
+
+### Prerequisites
+```bash
+# Required tools
+Node.js 18+
+pnpm 9.x
+PostgreSQL 14+
+Git 2.x
+```
+
+### Setup Development Environment
+
+1. **Fork the Repository**
+```bash
+# Fork on GitHub, then clone
+git clone https://github.com/YOUR_USERNAME/hogwarts.git
+cd hogwarts
+```
+
+2. **Install Dependencies**
+```bash
+pnpm install
+```
+
+3. **Setup Database**
+```bash
+# Copy environment template
+cp .env.example .env
+
+# Update DATABASE_URL in .env
+# Run migrations
+pnpm prisma migrate dev
+
+# Seed sample data
+pnpm db:seed
+```
+
+4. **Start Development Server**
+```bash
+pnpm dev
+# Open http://localhost:3000
+```
+
+## 📝 Contribution Guidelines
+
+### Code of Conduct
+
+We follow the [Contributor Covenant](https://www.contributor-covenant.org/):
+- 🤝 Be respectful and inclusive
+- 💬 Provide constructive feedback
+- 🎯 Focus on what's best for the community
+- 🌈 Embrace diversity of perspectives
+- ⚡ Show empathy towards others
+
+### Types of Contributions
+
+#### 🐛 Bug Fixes
+Find and fix issues in the codebase:
+1. Check [existing issues](https://github.com/hogwarts/app/issues)
+2. Reproduce the bug locally
+3. Write tests that fail
+4. Fix the bug
+5. Ensure tests pass
+6. Submit PR with clear description
+
+#### ✨ New Features
+Add new functionality:
+1. Discuss in [discussions](https://github.com/hogwarts/app/discussions) first
+2. Get consensus on approach
+3. Implement with tests
+4. Update documentation
+5. Submit PR for review
+
+#### 📚 Documentation
+Improve our docs:
+- Fix typos and grammar
+- Add missing documentation
+- Improve examples
+- Translate to new languages
+- Create video tutorials
+
+#### 🌍 Translations
+Help us reach more users:
+- Translate UI strings
+- Localize documentation
+- Review existing translations
+- Add new language support
+
+#### 🎨 Design
+Enhance user experience:
+- Improve UI components
+- Create new themes
+- Design icons and illustrations
+- Enhance accessibility
+
+#### 🧪 Testing
+Strengthen our test suite:
+- Write unit tests
+- Add integration tests
+- Create E2E tests
+- Improve test coverage
+
+## 🔄 Development Workflow
+
+### 1. Choose an Issue
+
+Browse issues labeled:
+- `good-first-issue` - Perfect for beginners
+- `help-wanted` - Community help needed
+- `hacktoberfest` - Hacktoberfest eligible
+- `bounty` - Paid contributions
+
+### 2. Create a Branch
+
+```bash
+# Create feature branch
+git checkout -b feature/issue-123-add-amazing-feature
+
+# Or bug fix branch
+git checkout -b fix/issue-456-fix-attendance-bug
+```
+
+### 3. Make Changes
+
+Follow our coding standards:
+- **TypeScript**: Use strict types, no `any`
+- **React**: Functional components with hooks
+- **Styling**: Tailwind CSS with cn() utility
+- **Testing**: Write tests for new code
+- **Commits**: Use conventional commits
+
+### 4. Commit Your Changes
+
+```bash
+# Stage changes
+git add .
+
+# Commit with conventional message
+git commit -m "feat: add student bulk import feature
+
+- Add CSV parser for student data
+- Implement validation logic
+- Add progress indicator
+- Update documentation
+
+Fixes #123"
+```
+
+Commit message format:
+- `feat:` New feature
+- `fix:` Bug fix
+- `docs:` Documentation
+- `style:` Formatting
+- `refactor:` Code restructuring
+- `test:` Testing
+- `chore:` Maintenance
+
+### 5. Push & Create PR
+
+```bash
+# Push to your fork
+git push origin feature/issue-123-add-amazing-feature
+```
+
+PR checklist:
+- [ ] Tests pass locally
+- [ ] Documentation updated
+- [ ] Follows code style
+- [ ] Linked to issue
+- [ ] Screenshots for UI changes
+- [ ] Performance impact considered
+
+### 6. Code Review Process
+
+Your PR will be reviewed for:
+- **Functionality**: Does it work as expected?
+- **Code Quality**: Is it maintainable?
+- **Performance**: No regressions?
+- **Security**: No vulnerabilities?
+- **Tests**: Adequate coverage?
+- **Documentation**: Clear and complete?
+
+## 🏗️ Architecture Guidelines
+
+### Component Structure
+```typescript
+// Follow our mirror pattern
+src/
+  app/[feature]/page.tsx      // Route
+  components/[feature]/
+    content.tsx               // UI composition
+    actions.ts               // Server actions
+    validation.ts            // Zod schemas
+    types.ts                // TypeScript types
+```
+
+### Multi-Tenant Safety
+```typescript
+// Always include schoolId
+const result = await db.model.findMany({
+  where: {
+    schoolId: session.user.schoolId // CRITICAL
+  }
+})
+```
+
+### Server Actions Pattern
+```typescript
+"use server"
+
+export async function createItem(data: FormData) {
+  const session = await auth()
+  const validated = schema.parse(data)
+
+  await db.model.create({
+    data: { ...validated, schoolId: session.user.schoolId }
+  })
+
+  revalidatePath('/items')
+}
+```
+
+## 🎯 Bounty Program
+
+### Active Bounties
+
+| Issue | Bounty | Difficulty | Deadline |
+|-------|--------|------------|----------|
+| [#234](https://github.com/hogwarts/app/issues/234) - Mobile app push notifications | $500 | Medium | Feb 15 |
+| [#456](https://github.com/hogwarts/app/issues/456) - GraphQL API implementation | $1000 | Hard | Mar 1 |
+| [#789](https://github.com/hogwarts/app/issues/789) - Accessibility audit & fixes | $750 | Medium | Feb 28 |
+| [#101](https://github.com/hogwarts/app/issues/101) - Performance optimization | $600 | Hard | Mar 15 |
+
+### How Bounties Work
+1. Claim issue by commenting
+2. Get assigned by maintainer
+3. Complete within deadline
+4. Submit PR for review
+5. Get paid upon merge
+
+## 🏆 Recognition & Rewards
+
+### Contributor Levels
+
+#### 🥉 Bronze (1-5 PRs)
+- Name in contributors list
+- Bronze badge on profile
+
+#### 🥈 Silver (6-20 PRs)
+- All Bronze benefits
+- Hogwarts t-shirt
+- Early access to features
+
+#### 🥇 Gold (21-50 PRs)
+- All Silver benefits
+- Hogwarts hoodie
+- Invitation to team meetings
+- Recommendation letter
+
+#### 💎 Diamond (50+ PRs)
+- All Gold benefits
+- Custom swag package
+- Conference sponsorship
+- Core team consideration
+
+### Hall of Fame
+
+Top contributors this month:
+1. **@alice** - 15 PRs, 2 features
+2. **@bob** - 12 PRs, 5 bug fixes
+3. **@charlie** - 8 PRs, documentation
+
+## 📚 Resources
+
+### Documentation
+- [Architecture Guide](/docs/developers/architecture)
+- [API Reference](/docs/api)
+- [Testing Guide](/docs/developers/testing)
+- [Style Guide](/docs/developers/style-guide)
+
+### Learning Resources
+- [Video Tutorials](https://youtube.com/@hogwarts)
+- [Blog Posts](https://blog.hogwarts.app)
+- [Example PRs](https://github.com/hogwarts/app/pulls?q=is:pr+label:good-example)
+- [Discord Community](https://discord.gg/hogwarts)
+
+### Tools & Extensions
+- [VS Code Extension](https://marketplace.visualstudio.com/items?itemName=hogwarts)
+- [Chrome DevTools](https://chrome.google.com/webstore/detail/hogwarts-devtools)
+- [Figma UI Kit](https://figma.com/@hogwarts)
+
+## 🤝 Community
+
+### Communication Channels
+- **Discord**: [Join 5000+ developers](https://discord.gg/hogwarts)
+- **GitHub Discussions**: [Technical discussions](https://github.com/hogwarts/app/discussions)
+- **Twitter**: [@HogwartsApp](https://twitter.com/hogwartsapp)
+- **Dev Blog**: [dev.hogwarts.app](https://dev.hogwarts.app)
+
+### Weekly Events
+- **Monday**: Architecture review (3 PM UTC)
+- **Wednesday**: Community call (5 PM UTC)
+- **Friday**: Code review session (2 PM UTC)
+- **Saturday**: Beginner workshop (10 AM UTC)
+
+### Mentorship Program
+Get paired with experienced contributors:
+- 1-on-1 guidance
+- Code review feedback
+- Career advice
+- Project recommendations
+
+[Apply for Mentorship](https://forms.hogwarts.app/mentorship)
+
+## 📜 License
+
+Hogwarts is open source under the [MIT License](https://github.com/hogwarts/app/blob/main/LICENSE).
+
+Your contributions will be licensed under the same terms.
+
+## ❓ FAQ
+
+### How long does PR review take?
+Usually 24-48 hours for first review. Complex PRs may take longer.
+
+### Can I work on multiple issues?
+Yes, but please complete one before claiming another.
+
+### Do I need to sign a CLA?
+Yes, you'll be prompted when creating your first PR.
+
+### Can I contribute without coding?
+Absolutely! Documentation, design, testing, and translations are equally valuable.
+
+### How do I get help?
+Ask in #help channel on Discord or comment on the issue.
+
+## 🚀 Start Contributing Today!
+
+Ready to make an impact?
+
+1. ⭐ [Star the repository](https://github.com/hogwarts/app)
+2. 🔍 [Browse good first issues](https://github.com/hogwarts/app/issues?q=is:issue+is:open+label:good-first-issue)
+3. 💬 [Join Discord](https://discord.gg/hogwarts)
+4. 🎯 [Pick an issue and start coding](https://github.com/hogwarts/app/issues)
+
+---
+
+*Thank you for contributing to education technology! Together, we're building the future of learning.*
+
+*Questions? Contact us at opensource@hogwarts.app*
