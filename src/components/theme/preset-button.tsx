@@ -57,7 +57,7 @@ export function PresetButton({ preset, onApply, isActive = false }: PresetButton
       onClick={onApply}
       whileHover={{ scale: 1.02, y: -2 }}
       whileTap={{ scale: 0.98 }}
-      className="group relative flex flex-col items-center gap-2 rounded-lg border p-3 transition-shadow hover:shadow-md"
+      className="group relative flex flex-row items-center gap-2.5 rounded-lg border px-4 py-2.5 transition-shadow hover:shadow-md"
       style={{
         backgroundColor,
         borderColor: isActive ? primaryColor : 'hsl(var(--border))',
@@ -65,7 +65,7 @@ export function PresetButton({ preset, onApply, isActive = false }: PresetButton
       }}
     >
       {/* Color circles */}
-      <div className="flex gap-1.5">
+      <div className="flex gap-1">
         <ColorBox color={primaryColor} />
         <ColorBox color={secondaryColor} />
         <ColorBox color={accentColor} />

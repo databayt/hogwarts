@@ -118,6 +118,7 @@ export const defaultDarkThemeStyles: Partial<ThemeStyleProps> = {
 
 // Default theme state
 export const defaultThemeState: ThemeEditorState = {
+  preset: 'default',
   styles: {
     light: defaultLightThemeStyles,
     dark: defaultDarkThemeStyles,
