@@ -7,16 +7,16 @@ interface PageHeaderProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 const PageHeader = React.forwardRef<HTMLDivElement, PageHeaderProps>(
-  ({ title, description = "beautifully-designed, blazing fast. Open Source. Open Code.", className, ...props }, ref) => {
+  ({ title, description, className, ...props }, ref) => {
     return (
       <div
         ref={ref}
         className={cn("flex w-full max-w-4xl flex-col gap-2 text-center", className)}
         {...props}
       >
-        <h2 className="font-heading">
+        <h3 className="font-heading">
           {title}
-        </h2>
+        </h3>
         {description && (
           <p className="mx-auto max-w-[85%] leading-normal text-muted-foreground sm:leading-7">
             {description}

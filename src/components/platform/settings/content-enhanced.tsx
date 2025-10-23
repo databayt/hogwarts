@@ -4,6 +4,7 @@ import * as React from "react";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import PageHeader from "@/components/atom/page-header";
 import { Database } from "lucide-react";
 import { useSchool } from "@/components/platform/context/school-context";
 import { type Locale } from "@/components/internationalization/config";
@@ -74,12 +75,10 @@ export function EnhancedSettingsContent({ dictionary, lang }: Props) {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div>
-        <h2>{dictionary?.school?.settings?.title || 'Settings'}</h2>
-        <p className="text-muted-foreground">
-          {dictionary?.school?.settings?.description || 'Manage your school settings, users, roles, and permissions'}
-        </p>
-      </div>
+      <PageHeader
+        title={dictionary?.school?.settings?.title || 'Settings'}
+        className="text-start max-w-none"
+      />
 
       {/* Settings Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
