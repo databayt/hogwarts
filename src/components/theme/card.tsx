@@ -2,6 +2,7 @@
  * Theme Preview Card Component
  *
  * Displays a visual preview of a theme with color swatches.
+ * Uses flat structure following tweakcn pattern.
  */
 
 'use client'
@@ -11,15 +12,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import type { ThemePreset, ThemeConfig } from './types'
+import type { ThemePreset } from '@/types/theme-editor'
 
 interface ThemeCardProps {
-  preset?: ThemePreset
-  themeConfig?: ThemeConfig
-  name: string
-  description?: string
+  preset: ThemePreset
   isActive?: boolean
-  isPreset?: boolean
   onApply?: () => void
   onDelete?: () => void
   className?: string
@@ -27,29 +24,20 @@ interface ThemeCardProps {
 
 export function ThemeCard({
   preset,
-  themeConfig,
-  name,
-  description,
   isActive = false,
-  isPreset: isPresetProp = false,
   onApply,
   onDelete,
   className,
 }: ThemeCardProps) {
-  // Use preset config if provided, otherwise use themeConfig
-  const config = preset?.config || themeConfig
-
-  if (!config) {
-    return null
-  }
+  const { label, styles, source } = preset
 
   // Extract primary colors for preview
-  const lightPrimary = config.light.primary
-  const lightSecondary = config.light.secondary
-  const lightAccent = config.light.accent
-  const darkPrimary = config.dark.primary
-  const darkSecondary = config.dark.secondary
-  const darkAccent = config.dark.accent
+  const lightPrimary = styles.light.primary || 'oklch(0.5 0.2 250)'
+  const lightSecondary = styles.light.secondary || 'oklch(0.9 0.04 250)'
+  const lightAccent = styles.light.accent || 'oklch(0.7 0.15 250)'
+  const darkPrimary = styles.dark.primary || 'oklch(0.7 0.2 250)'
+  const darkSecondary = styles.dark.secondary || 'oklch(0.25 0.04 250)'
+  const darkAccent = styles.dark.accent || 'oklch(0.5 0.15 250)'
 
   return (
     <Card className={cn('relative overflow-hidden transition-shadow hover:shadow-lg', className)}>
@@ -65,22 +53,14 @@ export function ThemeCard({
       <CardHeader>
         <div className="flex items-start justify-between">
           <div className="space-y-1">
-            <CardTitle>{name}</CardTitle>
-            {description && (
-              <CardDescription className="line-clamp-2">{description}</CardDescription>
+            <CardTitle>{label}</CardTitle>
+            {source && (
+              <Badge variant="outline" className="text-xs">
+                {source === 'BUILT_IN' ? 'Built-in' : 'Custom'}
+              </Badge>
             )}
           </div>
         </div>
-
-        {preset?.tags && preset.tags.length > 0 && (
-          <div className="flex flex-wrap gap-1 pt-2">
-            {preset.tags.slice(0, 3).map((tag) => (
-              <Badge key={tag} variant="outline" className="text-xs">
-                {tag}
-              </Badge>
-            ))}
-          </div>
-        )}
       </CardHeader>
 
       <CardContent className="space-y-4">
@@ -118,7 +98,7 @@ export function ThemeCard({
             </Button>
           )}
 
-          {!isPresetProp && onDelete && (
+          {source !== 'BUILT_IN' && onDelete && (
             <Button onClick={onDelete} size="sm" variant="outline" disabled={isActive}>
               Delete
             </Button>
