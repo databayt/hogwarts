@@ -142,7 +142,7 @@ function NavItem({ item, pathname, level = 0, onLinkClick }: NavItemProps) {
 }
 
 // Component for sub-navigation items
-function NavSubItem({ item, pathname, level, onLinkClick }: NavItemProps) {
+function NavSubItem({ item, pathname, level = 0, onLinkClick }: NavItemProps) {
   const [isOpen, setIsOpen] = React.useState(() => {
     // Auto-expand if current path is within this section
     if (item.href === pathname) return true
@@ -207,7 +207,7 @@ function NavSubItem({ item, pathname, level, onLinkClick }: NavItemProps) {
                 />
               ))}
             </div>
-          </div>
+          )}
         </div>
       ) : (
         // Link sub-item
