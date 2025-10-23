@@ -98,10 +98,10 @@ export function EnhancedSettingsContent({ dictionary, lang }: Props) {
 
       {/* Settings Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        {/* Custom Tab Navigation with Borders */}
-        <div className="border-y py-3">
+        {/* Tab Navigation with Bottom Border Indicator */}
+        <div className="border-b">
           <ScrollArea className="max-w-[600px] lg:max-w-none">
-            <nav className="flex items-center gap-2 rtl:flex-row-reverse">
+            <nav className="flex items-center gap-6 rtl:flex-row-reverse">
               {tabs.map((tab) => {
                 const Icon = tab.icon;
                 return (
@@ -109,14 +109,17 @@ export function EnhancedSettingsContent({ dictionary, lang }: Props) {
                     key={tab.value}
                     onClick={() => setActiveTab(tab.value)}
                     className={cn(
-                      "flex h-7 items-center justify-center gap-2 rounded-full px-4 text-center text-sm transition-colors hover:text-primary",
+                      "relative flex items-center justify-center gap-2 px-1 pb-3 text-sm font-medium transition-colors hover:text-primary",
                       activeTab === tab.value
-                        ? "bg-muted text-primary"
+                        ? "text-primary"
                         : "text-muted-foreground"
                     )}
                   >
                     <Icon className="h-4 w-4" />
                     <span className="hidden sm:inline">{tab.label}</span>
+                    {activeTab === tab.value && (
+                      <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+                    )}
                   </button>
                 );
               })}
