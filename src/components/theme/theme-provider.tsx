@@ -16,6 +16,7 @@ import { applyThemeToDocument, getCurrentThemeMode } from './inject-theme'
 import { getUserTheme } from './actions'
 import type { ThemeEditorState } from '@/types/theme-editor'
 import { defaultThemeState } from './config'
+import { DynamicFontLoader } from './dynamic-font-loader'
 
 interface ThemeProviderProps {
   children: ReactNode
@@ -80,5 +81,10 @@ export function UserThemeProvider({ children, initialTheme }: ThemeProviderProps
     applyThemeToDocument(currentStyles, mode)
   }, [resolvedTheme, themeState])
 
-  return <>{children}</>
+  return (
+    <>
+      <DynamicFontLoader />
+      {children}
+    </>
+  )
 }
