@@ -8,7 +8,9 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import { useTheme as useNextTheme } from 'next-themes'
 import type { ThemePreset } from '@/types/theme-editor'
+import { addAlphaChannel } from '@/lib/color-converter'
 
 interface ColorBoxProps {
   color: string
@@ -30,11 +32,17 @@ interface PresetButtonProps {
 }
 
 export function PresetButton({ preset, onApply, isActive = false }: PresetButtonProps) {
-  // Extract colors from the current mode (use light mode for preview)
-  const colors = preset.styles.light
+  const { resolvedTheme } = useNextTheme()
+
+  // Extract colors based on current theme mode
+  const mode = resolvedTheme === 'dark' ? 'dark' : 'light'
+  const colors = preset.styles[mode] || preset.styles.light
   const primaryColor = colors.primary || '#3b82f6'
   const secondaryColor = colors.secondary || '#e5e7eb'
   const accentColor = colors.accent || '#f3f4f6'
+
+  // Use color converter for proper opacity handling
+  const backgroundColor = addAlphaChannel(primaryColor, 0.1)
 
   // Format label: capitalize and replace dashes with spaces
   const formattedLabel = preset.label
@@ -51,7 +59,7 @@ export function PresetButton({ preset, onApply, isActive = false }: PresetButton
       whileTap={{ scale: 0.98 }}
       className="group relative flex flex-col items-center gap-2 rounded-lg border p-3 transition-shadow hover:shadow-md"
       style={{
-        backgroundColor: `${primaryColor}10`, // 10% opacity
+        backgroundColor,
         borderColor: isActive ? primaryColor : 'hsl(var(--border))',
         borderWidth: isActive ? '2px' : '1px',
       }}

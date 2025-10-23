@@ -222,24 +222,41 @@ export function useThemeImportExport() {
 }
 
 /**
+ * Hook for accessing preset store
+ */
+export function usePresetStore() {
+  const { useThemePresetStore } = require('@/store/theme-preset-store')
+  return useThemePresetStore()
+}
+
+/**
  * Hook for fetching preset themes
  */
 export function usePresetThemes() {
   const [presets, setPresets] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(false)
+  const { useThemePresetStore } = require('@/store/theme-preset-store')
+  const presetStore = useThemePresetStore()
 
   const fetchPresets = useCallback(async () => {
     setIsLoading(true)
     try {
-      // Import dynamically to avoid circular dependency
+      // Import built-in presets and register them
       const { builtInPresets } = await import('./presets')
+
+      // Register each preset in the store
+      builtInPresets.forEach((preset) => {
+        const presetName = preset.label?.toLowerCase().replace(/\s+/g, '-') || 'untitled'
+        presetStore.registerPreset(presetName, preset)
+      })
+
       setPresets(builtInPresets)
     } catch (error) {
       console.error('Failed to load presets:', error)
     } finally {
       setIsLoading(false)
     }
-  }, [])
+  }, [presetStore])
 
   return {
     presets,

@@ -9,6 +9,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { ThemeEditorState } from '@/types/theme-editor'
 import { defaultThemeState } from '@/components/theme/config'
+import { getPresetThemeStyles } from '@/components/theme/theme-preset-helper'
 
 const MAX_HISTORY_COUNT = 30
 const HISTORY_OVERRIDE_THRESHOLD_MS = 500 // 0.5 seconds
@@ -24,8 +25,11 @@ interface EditorStore {
   history: ThemeHistoryEntry[]
   future: ThemeHistoryEntry[]
   setThemeState: (state: ThemeEditorState) => void
+  applyThemePreset: (presetName: string) => void
   saveThemeCheckpoint: () => void
   restoreThemeCheckpoint: () => void
+  resetToCurrentPreset: () => void
+  hasThemeChangedFromCheckpoint: () => boolean
   hasUnsavedChanges: () => boolean
   undo: () => void
   redo: () => void
@@ -88,6 +92,37 @@ export const useEditorStore = create<EditorStore>()(
         })
       },
 
+      applyThemePreset: (presetName: string) => {
+        const currentThemeState = get().themeState
+        const oldHistory = get().history
+        const currentTime = Date.now()
+
+        // Get preset styles using helper
+        const presetStyles = getPresetThemeStyles(presetName)
+
+        // Create new theme state with preset
+        const newThemeState: ThemeEditorState = {
+          ...currentThemeState,
+          preset: presetName,
+          styles: presetStyles,
+          hslAdjustments: defaultThemeState.hslAdjustments, // Reset adjustments
+        }
+
+        // Add to history
+        const newHistoryEntry = { state: currentThemeState, timestamp: currentTime }
+        let updatedHistory = [...oldHistory, newHistoryEntry]
+        if (updatedHistory.length > MAX_HISTORY_COUNT) {
+          updatedHistory.shift()
+        }
+
+        set({
+          themeState: newThemeState,
+          themeCheckpoint: newThemeState, // Applying preset also updates checkpoint
+          history: updatedHistory,
+          future: [],
+        })
+      },
+
       saveThemeCheckpoint: () => {
         set({ themeCheckpoint: get().themeState })
       },
@@ -118,10 +153,44 @@ export const useEditorStore = create<EditorStore>()(
         }
       },
 
-      hasUnsavedChanges: () => {
+      resetToCurrentPreset: () => {
+        const currentThemeState = get().themeState
+
+        // Get preset styles (or default if no preset)
+        const presetName = currentThemeState.preset ?? 'default'
+        const presetStyles = getPresetThemeStyles(presetName)
+
+        const newThemeState: ThemeEditorState = {
+          ...currentThemeState,
+          styles: presetStyles,
+          hslAdjustments: defaultThemeState.hslAdjustments,
+        }
+
+        set({
+          themeState: newThemeState,
+          themeCheckpoint: newThemeState,
+          history: [],
+          future: [],
+        })
+      },
+
+      hasThemeChangedFromCheckpoint: () => {
         const checkpoint = get().themeCheckpoint
-        const current = get().themeState
-        return !isDeepEqual(current, checkpoint)
+        return !isDeepEqual(get().themeState, checkpoint)
+      },
+
+      hasUnsavedChanges: () => {
+        const themeState = get().themeState
+        const presetName = themeState.preset ?? 'default'
+        const presetStyles = getPresetThemeStyles(presetName)
+
+        const stylesChanged = !isDeepEqual(themeState.styles, presetStyles)
+        const hslChanged = !isDeepEqual(
+          themeState.hslAdjustments,
+          defaultThemeState.hslAdjustments
+        )
+
+        return stylesChanged || hslChanged
       },
 
       undo: () => {
@@ -144,6 +213,7 @@ export const useEditorStore = create<EditorStore>()(
             ...lastHistoryEntry.state,
             currentMode: currentThemeState.currentMode,
           },
+          themeCheckpoint: lastHistoryEntry.state,
           history: newHistory,
           future: newFuture,
         })
@@ -172,6 +242,7 @@ export const useEditorStore = create<EditorStore>()(
             ...firstFutureEntry.state,
             currentMode: currentThemeState.currentMode,
           },
+          themeCheckpoint: firstFutureEntry.state,
           history: updatedHistory,
           future: newFuture,
         })

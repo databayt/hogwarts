@@ -6,20 +6,29 @@
 
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 import { PresetButton } from './preset-button'
-import { usePresetThemes, useThemeOperations, useUserTheme } from './use-theme'
+import { usePresetThemes, useUserTheme } from './use-theme'
 import { Skeleton } from '@/components/ui/skeleton'
+import { useThemePresetStore } from '@/store/theme-preset-store'
 
 export function PresetGallery() {
   const { presets, isLoading, fetchPresets } = usePresetThemes()
-  const { applyTheme, isPending } = useThemeOperations()
-  const { themeState } = useUserTheme()
+  const { themeState, applyThemePreset } = useUserTheme()
+  const presetStore = useThemePresetStore()
 
   // Fetch presets on mount
   useEffect(() => {
     fetchPresets()
   }, [fetchPresets])
+
+  // Convert presets to array for mapping
+  const presetsArray = useMemo(() => {
+    return Object.entries(presetStore.getAllPresets()).map(([name, preset]) => ({
+      name,
+      ...preset,
+    }))
+  }, [presetStore.presets])
 
   if (isLoading) {
     return (
@@ -31,7 +40,7 @@ export function PresetGallery() {
     )
   }
 
-  if (!presets || presets.length === 0) {
+  if (!presetsArray || presetsArray.length === 0) {
     return (
       <div className="rounded-lg border border-dashed p-8 text-center">
         <p className="text-muted-foreground">No preset themes available</p>
@@ -41,19 +50,14 @@ export function PresetGallery() {
 
   return (
     <div className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8">
-      {presets.map((preset, index) => {
+      {presetsArray.map((preset) => {
+        const isActive = themeState.preset === preset.name
         return (
           <PresetButton
-            key={preset.label || index}
+            key={preset.name}
             preset={preset}
-            isActive={false}
-            onApply={() => {
-              applyTheme({
-                styles: preset.styles,
-                currentMode: themeState.currentMode,
-                hslAdjustments: { hueShift: 0, saturationScale: 1, lightnessScale: 1 },
-              })
-            }}
+            isActive={isActive}
+            onApply={() => applyThemePreset(preset.name)}
           />
         )
       })}

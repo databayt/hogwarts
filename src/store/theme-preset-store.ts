@@ -2,6 +2,7 @@
  * Theme Preset Store
  *
  * Zustand store for managing theme presets (built-in and user-saved).
+ * Based on tweakcn's theme-preset-store.ts pattern.
  */
 
 import { create } from 'zustand'
@@ -10,50 +11,50 @@ import { getUserThemes } from '@/components/theme/actions'
 
 interface ThemePresetStore {
   presets: Record<string, ThemePreset>
-  registerPreset: (id: string, preset: ThemePreset) => void
-  unregisterPreset: (id: string) => void
-  updatePreset: (id: string, preset: ThemePreset) => void
-  getPreset: (id: string) => ThemePreset | undefined
+  registerPreset: (name: string, preset: ThemePreset) => void
+  unregisterPreset: (name: string) => void
+  updatePreset: (name: string, preset: ThemePreset) => void
+  getPreset: (name: string) => ThemePreset | undefined
   getAllPresets: () => Record<string, ThemePreset>
   loadSavedPresets: () => Promise<void>
   unloadSavedPresets: () => void
 }
 
-// Default presets will be loaded from config
+// Initialize with empty presets (will be populated by theme provider)
 const defaultPresets: Record<string, ThemePreset> = {}
 
 export const useThemePresetStore = create<ThemePresetStore>()((set, get) => ({
   presets: defaultPresets,
 
-  registerPreset: (id: string, preset: ThemePreset) => {
+  registerPreset: (name: string, preset: ThemePreset) => {
     set((state) => ({
       presets: {
         ...state.presets,
-        [id]: preset,
+        [name]: preset,
       },
     }))
   },
 
-  unregisterPreset: (id: string) => {
+  unregisterPreset: (name: string) => {
     set((state) => {
-      const { [id]: _, ...remainingPresets } = state.presets
+      const { [name]: _, ...remainingPresets } = state.presets
       return {
         presets: remainingPresets,
       }
     })
   },
 
-  updatePreset: (id: string, preset: ThemePreset) => {
+  updatePreset: (name: string, preset: ThemePreset) => {
     set((state) => ({
       presets: {
         ...state.presets,
-        [id]: preset,
+        [name]: preset,
       },
     }))
   },
 
-  getPreset: (id: string) => {
-    return get().presets[id]
+  getPreset: (name: string) => {
+    return get().presets[name]
   },
 
   getAllPresets: () => {
@@ -71,7 +72,8 @@ export const useThemePresetStore = create<ThemePresetStore>()((set, get) => ({
       const savedThemes = result.themes || []
       const savedPresets = savedThemes.reduce(
         (acc, theme) => {
-          acc[theme.id] = {
+          const presetName = theme.name.toLowerCase().replace(/\s+/g, '-')
+          acc[presetName] = {
             label: theme.name,
             styles: theme.themeConfig as any, // Type assertion needed
             source: 'SAVED',
@@ -94,6 +96,15 @@ export const useThemePresetStore = create<ThemePresetStore>()((set, get) => ({
   },
 
   unloadSavedPresets: () => {
-    set({ presets: defaultPresets })
+    set((state) => {
+      const builtInPresets = Object.entries(state.presets)
+        .filter(([_, preset]) => preset.source === 'BUILT_IN')
+        .reduce((acc, [name, preset]) => {
+          acc[name] = preset
+          return acc
+        }, {} as Record<string, ThemePreset>)
+
+      return { presets: builtInPresets }
+    })
   },
 }))
