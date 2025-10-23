@@ -301,8 +301,10 @@
       "description": "إدارة إعدادات المدرسة والمستخدمين والأدوار والصلاحيات",
       "general": "عام",
       "users": "المستخدمون",
-      "advanced": "متقدم",
+      "roles": "الأدوار",
+      "permissions": "الصلاحيات",
       "notifications": "الإشعارات",
+      "advanced": "متقدم",
       "schoolSettings": "إعدادات المدرسة",
       "schoolName": "اسم المدرسة",
       "schoolLogo": "شعار المدرسة",
@@ -415,7 +417,7 @@
         "deleteConfirmDesc": "لا يمكن التراجع عن هذا الإجراء. سيؤدي هذا إلى حذف حساب المستخدم بشكل دائم وإزالة جميع البيانات المرتبطة.",
         "deleteUserButton": "حذف المستخدم"
       },
-      "notifications": {
+      "notificationSettings": {
         "title": "إعدادات الإشعارات",
         "emailNotifications": "إشعارات البريد الإلكتروني",
         "configureEmail": "تكوين تفضيلات إشعارات البريد الإلكتروني",

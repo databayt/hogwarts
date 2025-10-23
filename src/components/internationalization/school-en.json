@@ -301,8 +301,10 @@
       "description": "Manage your school settings, users, roles, and permissions",
       "general": "General",
       "users": "Users",
-      "advanced": "Advanced",
+      "roles": "Roles",
+      "permissions": "Permissions",
       "notifications": "Notifications",
+      "advanced": "Advanced",
       "schoolSettings": "School Settings",
       "schoolName": "School Name",
       "schoolLogo": "School Logo",
@@ -415,7 +417,7 @@
         "deleteConfirmDesc": "This action cannot be undone. This will permanently delete the user account and remove all associated data.",
         "deleteUserButton": "Delete User"
       },
-      "notifications": {
+      "notificationSettings": {
         "title": "Notification Settings",
         "emailNotifications": "Email Notifications",
         "configureEmail": "Configure email notification preferences",

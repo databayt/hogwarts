@@ -4,16 +4,7 @@ import * as React from "react";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import {
-  Settings,
-  Users,
-  UserCog,
-  Shield,
-  School,
-  Bell,
-  Palette,
-  Database,
-} from "lucide-react";
+import { Database } from "lucide-react";
 import { useSchool } from "@/components/platform/context/school-context";
 import { type Locale } from "@/components/internationalization/config";
 import { type Dictionary } from "@/components/internationalization/dictionaries";
@@ -57,32 +48,26 @@ export function EnhancedSettingsContent({ dictionary, lang }: Props) {
     {
       value: "general",
       label: dictionary?.school?.settings?.general || "General",
-      icon: School,
     },
     {
       value: "users",
       label: dictionary?.school?.settings?.users || "Users",
-      icon: Users,
     },
     {
       value: "roles",
       label: dictionary?.school?.settings?.roles || "Roles",
-      icon: UserCog,
     },
     {
       value: "permissions",
-      label: dictionary?.school?.settings?.permissionsPanel?.title || "Permissions",
-      icon: Shield,
+      label: dictionary?.school?.settings?.permissions || "Permissions",
     },
     {
       value: "notifications",
-      label: dictionary?.school?.settings?.notifications?.title || "Notifications",
-      icon: Bell,
+      label: dictionary?.school?.settings?.notifications || "Notifications",
     },
     {
       value: "advanced",
       label: dictionary?.school?.settings?.advanced || "Advanced",
-      icon: Database,
     },
   ], [dictionary]);
 
@@ -103,20 +88,18 @@ export function EnhancedSettingsContent({ dictionary, lang }: Props) {
           <ScrollArea className="max-w-[600px] lg:max-w-none">
             <nav className="flex items-center gap-6 rtl:flex-row-reverse">
               {tabs.map((tab) => {
-                const Icon = tab.icon;
                 return (
                   <button
                     key={tab.value}
                     onClick={() => setActiveTab(tab.value)}
                     className={cn(
-                      "relative flex items-center justify-center gap-2 px-1 pb-3 text-sm font-medium transition-colors hover:text-primary",
+                      "relative px-1 pb-3 text-sm font-medium transition-colors hover:text-primary whitespace-nowrap",
                       activeTab === tab.value
                         ? "text-primary"
                         : "text-muted-foreground"
                     )}
                   >
-                    <Icon className="h-4 w-4" />
-                    <span className="hidden sm:inline">{tab.label}</span>
+                    {tab.label}
                     {activeTab === tab.value && (
                       <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
                     )}

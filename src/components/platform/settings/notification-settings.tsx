@@ -182,15 +182,15 @@ export function NotificationSettings({ dictionary }: Props) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 rtl:flex-row-reverse">
             <Mail className="h-5 w-5" />
-            {dictionary?.settings?.notifications?.emailNotifications || "Email Notifications"}
+            {dictionary?.settings?.notificationSettings?.emailNotifications || "Email Notifications"}
           </CardTitle>
           <CardDescription>
-            {dictionary?.settings?.notifications?.configureEmail || "Configure email notification preferences"}
+            {dictionary?.settings?.notificationSettings?.configureEmail || "Configure email notification preferences"}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between rtl:flex-row-reverse">
-            <Label htmlFor="email-enabled">{dictionary?.settings?.notifications?.enableEmail || "Enable Email Notifications"}</Label>
+            <Label htmlFor="email-enabled">{dictionary?.settings?.notificationSettings?.enableEmail || "Enable Email Notifications"}</Label>
             <Switch
               id="email-enabled"
               checked={settings.email.enabled}
@@ -206,7 +206,7 @@ export function NotificationSettings({ dictionary }: Props) {
           {settings.email.enabled && (
             <>
               <div className="space-y-2">
-                <Label htmlFor="email-digest">{dictionary?.settings?.notifications?.emailFrequency || "Email Frequency"}</Label>
+                <Label htmlFor="email-digest">{dictionary?.settings?.notificationSettings?.emailFrequency || "Email Frequency"}</Label>
                 <Select
                   value={settings.email.digest}
                   onValueChange={(value: "instant" | "daily" | "weekly") =>
@@ -220,15 +220,15 @@ export function NotificationSettings({ dictionary }: Props) {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="instant">{dictionary?.settings?.notifications?.instant || "Instant"}</SelectItem>
-                    <SelectItem value="daily">{dictionary?.settings?.notifications?.dailyDigest || "Daily Digest"}</SelectItem>
-                    <SelectItem value="weekly">{dictionary?.settings?.notifications?.weeklyDigest || "Weekly Digest"}</SelectItem>
+                    <SelectItem value="instant">{dictionary?.settings?.notificationSettings?.instant || "Instant"}</SelectItem>
+                    <SelectItem value="daily">{dictionary?.settings?.notificationSettings?.dailyDigest || "Daily Digest"}</SelectItem>
+                    <SelectItem value="weekly">{dictionary?.settings?.notificationSettings?.weeklyDigest || "Weekly Digest"}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-3">
-                <Label>{dictionary?.settings?.notifications?.notificationTypes || "Notification Types"}</Label>
+                <Label>{dictionary?.settings?.notificationSettings?.notificationTypes || "Notification Types"}</Label>
                 <div className="space-y-2">
                   {Object.entries(settings.email.types).map(([type, enabled]) => (
                     <div key={type} className="flex items-center justify-between py-1 rtl:flex-row-reverse">
@@ -236,7 +236,7 @@ export function NotificationSettings({ dictionary }: Props) {
                         htmlFor={`email-${type}`}
                         className="text-sm font-normal cursor-pointer"
                       >
-                        {dictionary?.settings?.notifications?.types?.[type as keyof typeof dictionary.settings.notifications.types] || type}
+                        {dictionary?.settings?.notificationSettings?.types?.[type as keyof typeof dictionary.settings.notificationSettings.types] || type}
                       </Label>
                       <Switch
                         id={`email-${type}`}
@@ -259,15 +259,15 @@ export function NotificationSettings({ dictionary }: Props) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 rtl:flex-row-reverse">
             <Bell className="h-5 w-5" />
-            {dictionary?.settings?.notifications?.pushNotifications || "Push Notifications"}
+            {dictionary?.settings?.notificationSettings?.pushNotifications || "Push Notifications"}
           </CardTitle>
           <CardDescription>
-            {dictionary?.settings?.notifications?.configurePush || "Configure browser push notification preferences"}
+            {dictionary?.settings?.notificationSettings?.configurePush || "Configure browser push notification preferences"}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between rtl:flex-row-reverse">
-            <Label htmlFor="push-enabled">{dictionary?.settings?.notifications?.enablePush || "Enable Push Notifications"}</Label>
+            <Label htmlFor="push-enabled">{dictionary?.settings?.notificationSettings?.enablePush || "Enable Push Notifications"}</Label>
             <Switch
               id="push-enabled"
               checked={settings.push.enabled}
@@ -289,7 +289,7 @@ export function NotificationSettings({ dictionary }: Props) {
                   ) : (
                     <VolumeX className="h-4 w-4" />
                   )}
-                  {dictionary?.settings?.notifications?.notificationSound || "Notification Sound"}
+                  {dictionary?.settings?.notificationSettings?.notificationSound || "Notification Sound"}
                 </Label>
                 <Switch
                   id="push-sound"
@@ -304,7 +304,7 @@ export function NotificationSettings({ dictionary }: Props) {
               </div>
 
               <div className="space-y-3">
-                <Label>{dictionary?.settings?.notifications?.notificationTypes || "Notification Types"}</Label>
+                <Label>{dictionary?.settings?.notificationSettings?.notificationTypes || "Notification Types"}</Label>
                 <div className="space-y-2">
                   {Object.entries(settings.push.types).map(([type, enabled]) => (
                     <div key={type} className="flex items-center justify-between py-1 rtl:flex-row-reverse">
@@ -312,7 +312,7 @@ export function NotificationSettings({ dictionary }: Props) {
                         htmlFor={`push-${type}`}
                         className="text-sm font-normal cursor-pointer"
                       >
-                        {dictionary?.settings?.notifications?.types?.[type as keyof typeof dictionary.settings.notifications.types] || type}
+                        {dictionary?.settings?.notificationSettings?.types?.[type as keyof typeof dictionary.settings.notificationSettings.types] || type}
                       </Label>
                       <Switch
                         id={`push-${type}`}
@@ -335,18 +335,18 @@ export function NotificationSettings({ dictionary }: Props) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 rtl:flex-row-reverse">
             <Smartphone className="h-5 w-5" />
-            {dictionary?.settings?.notifications?.smsNotifications || "SMS Notifications"}
+            {dictionary?.settings?.notificationSettings?.smsNotifications || "SMS Notifications"}
           </CardTitle>
           <CardDescription>
-            {dictionary?.settings?.notifications?.configureSms || "Configure SMS notification preferences for critical alerts"}
+            {dictionary?.settings?.notificationSettings?.configureSms || "Configure SMS notification preferences for critical alerts"}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between rtl:flex-row-reverse">
             <div className="space-y-1">
-              <Label htmlFor="sms-enabled">{dictionary?.settings?.notifications?.enableSms || "Enable SMS Notifications"}</Label>
+              <Label htmlFor="sms-enabled">{dictionary?.settings?.notificationSettings?.enableSms || "Enable SMS Notifications"}</Label>
               <p className="text-xs text-muted-foreground">
-                {dictionary?.settings?.notifications?.smsCharges || "SMS notifications may incur additional charges"}
+                {dictionary?.settings?.notificationSettings?.smsCharges || "SMS notifications may incur additional charges"}
               </p>
             </div>
             <Switch
@@ -363,7 +363,7 @@ export function NotificationSettings({ dictionary }: Props) {
 
           {settings.sms.enabled && (
             <div className="space-y-3">
-              <Label>{dictionary?.settings?.notifications?.notificationTypes || "SMS Notification Types"}</Label>
+              <Label>{dictionary?.settings?.notificationSettings?.notificationTypes || "SMS Notification Types"}</Label>
               <div className="space-y-2">
                 {Object.entries(settings.sms.types).map(([type, enabled]) => (
                   <div key={type} className="flex items-center justify-between py-1 rtl:flex-row-reverse">
@@ -375,7 +375,7 @@ export function NotificationSettings({ dictionary }: Props) {
                         htmlFor={`sms-${type}`}
                         className="text-sm font-normal cursor-pointer"
                       >
-                        {dictionary?.settings?.notifications?.types?.[type as keyof typeof dictionary.settings.notifications.types] || type}
+                        {dictionary?.settings?.notificationSettings?.types?.[type as keyof typeof dictionary.settings.notificationSettings.types] || type}
                       </Label>
                     </div>
                     <Switch
@@ -398,15 +398,15 @@ export function NotificationSettings({ dictionary }: Props) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 rtl:flex-row-reverse">
             <Clock className="h-5 w-5" />
-            {dictionary?.settings?.notifications?.quietHours || "Quiet Hours"}
+            {dictionary?.settings?.notificationSettings?.quietHours || "Quiet Hours"}
           </CardTitle>
           <CardDescription>
-            {dictionary?.settings?.notifications?.setQuietHours || "Set quiet hours to pause non-critical notifications"}
+            {dictionary?.settings?.notificationSettings?.setQuietHours || "Set quiet hours to pause non-critical notifications"}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between rtl:flex-row-reverse">
-            <Label htmlFor="quiet-enabled">{dictionary?.settings?.notifications?.enableQuietHours || "Enable Quiet Hours"}</Label>
+            <Label htmlFor="quiet-enabled">{dictionary?.settings?.notificationSettings?.enableQuietHours || "Enable Quiet Hours"}</Label>
             <Switch
               id="quiet-enabled"
               checked={settings.quietHours.enabled}
@@ -423,7 +423,7 @@ export function NotificationSettings({ dictionary }: Props) {
             <>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="quiet-start">{dictionary?.settings?.notifications?.startTime || "Start Time"}</Label>
+                  <Label htmlFor="quiet-start">{dictionary?.settings?.notificationSettings?.startTime || "Start Time"}</Label>
                   <input
                     id="quiet-start"
                     type="time"
@@ -438,7 +438,7 @@ export function NotificationSettings({ dictionary }: Props) {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="quiet-end">{dictionary?.settings?.notifications?.endTime || "End Time"}</Label>
+                  <Label htmlFor="quiet-end">{dictionary?.settings?.notificationSettings?.endTime || "End Time"}</Label>
                   <input
                     id="quiet-end"
                     type="time"
@@ -458,10 +458,10 @@ export function NotificationSettings({ dictionary }: Props) {
                 <div className="space-y-1">
                   <Label htmlFor="allow-emergencies" className="flex items-center gap-2 rtl:flex-row-reverse">
                     <AlertTriangle className="h-4 w-4 text-red-500" />
-                    {dictionary?.settings?.notifications?.allowEmergencies || "Allow Emergency Notifications"}
+                    {dictionary?.settings?.notificationSettings?.allowEmergencies || "Allow Emergency Notifications"}
                   </Label>
                   <p className="text-xs text-muted-foreground">
-                    {dictionary?.settings?.notifications?.emergenciesNote || "Critical alerts will still be sent during quiet hours"}
+                    {dictionary?.settings?.notificationSettings?.emergenciesNote || "Critical alerts will still be sent during quiet hours"}
                   </p>
                 </div>
                 <Switch
@@ -483,9 +483,9 @@ export function NotificationSettings({ dictionary }: Props) {
       {/* Notification Summary */}
       <Card>
         <CardHeader>
-          <CardTitle>{dictionary?.settings?.notifications?.notificationSummary || "Notification Summary"}</CardTitle>
+          <CardTitle>{dictionary?.settings?.notificationSettings?.notificationSummary || "Notification Summary"}</CardTitle>
           <CardDescription>
-            {dictionary?.settings?.notifications?.overviewPreferences || "Overview of your notification preferences"}
+            {dictionary?.settings?.notificationSettings?.overviewPreferences || "Overview of your notification preferences"}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -493,39 +493,39 @@ export function NotificationSettings({ dictionary }: Props) {
             <div className="flex items-center justify-between p-3 rounded-xl bg-background rtl:flex-row-reverse">
               <div className="flex items-center gap-2 rtl:flex-row-reverse">
                 <Mail className="h-4 w-4" />
-                <span>{dictionary?.settings?.notifications?.email || "Email"}</span>
+                <span>{dictionary?.settings?.notificationSettings?.email || "Email"}</span>
               </div>
               <Badge variant={settings.email.enabled ? "default" : "secondary"}>
-                {settings.email.enabled ? (dictionary?.settings?.notifications?.enabled || "Enabled") : (dictionary?.settings?.notifications?.disabled || "Disabled")}
+                {settings.email.enabled ? (dictionary?.settings?.notificationSettings?.enabled || "Enabled") : (dictionary?.settings?.notificationSettings?.disabled || "Disabled")}
               </Badge>
             </div>
             <div className="flex items-center justify-between p-3 rounded-xl bg-background rtl:flex-row-reverse">
               <div className="flex items-center gap-2 rtl:flex-row-reverse">
                 <Bell className="h-4 w-4" />
-                <span>{dictionary?.settings?.notifications?.push || "Push"}</span>
+                <span>{dictionary?.settings?.notificationSettings?.push || "Push"}</span>
               </div>
               <Badge variant={settings.push.enabled ? "default" : "secondary"}>
-                {settings.push.enabled ? (dictionary?.settings?.notifications?.enabled || "Enabled") : (dictionary?.settings?.notifications?.disabled || "Disabled")}
+                {settings.push.enabled ? (dictionary?.settings?.notificationSettings?.enabled || "Enabled") : (dictionary?.settings?.notificationSettings?.disabled || "Disabled")}
               </Badge>
             </div>
             <div className="flex items-center justify-between p-3 rounded-xl bg-background rtl:flex-row-reverse">
               <div className="flex items-center gap-2 rtl:flex-row-reverse">
                 <Smartphone className="h-4 w-4" />
-                <span>{dictionary?.settings?.notifications?.sms || "SMS"}</span>
+                <span>{dictionary?.settings?.notificationSettings?.sms || "SMS"}</span>
               </div>
               <Badge variant={settings.sms.enabled ? "default" : "secondary"}>
-                {settings.sms.enabled ? (dictionary?.settings?.notifications?.enabled || "Enabled") : (dictionary?.settings?.notifications?.disabled || "Disabled")}
+                {settings.sms.enabled ? (dictionary?.settings?.notificationSettings?.enabled || "Enabled") : (dictionary?.settings?.notificationSettings?.disabled || "Disabled")}
               </Badge>
             </div>
             <div className="flex items-center justify-between p-3 rounded-xl bg-background rtl:flex-row-reverse">
               <div className="flex items-center gap-2 rtl:flex-row-reverse">
                 <Clock className="h-4 w-4" />
-                <span>{dictionary?.settings?.notifications?.quietHours || "Quiet Hours"}</span>
+                <span>{dictionary?.settings?.notificationSettings?.quietHours || "Quiet Hours"}</span>
               </div>
               <Badge variant={settings.quietHours.enabled ? "default" : "secondary"}>
                 {settings.quietHours.enabled
                   ? `${settings.quietHours.start} - ${settings.quietHours.end}`
-                  : (dictionary?.settings?.notifications?.disabled || "Disabled")}
+                  : (dictionary?.settings?.notificationSettings?.disabled || "Disabled")}
               </Badge>
             </div>
           </div>
@@ -535,7 +535,7 @@ export function NotificationSettings({ dictionary }: Props) {
       {/* Save Button */}
       <div className="flex justify-end rtl:justify-start">
         <Button onClick={handleSave} disabled={isSaving} size="lg">
-          {isSaving ? (dictionary?.settings?.notifications?.saving || "Saving...") : (dictionary?.settings?.notifications?.saveSettings || "Save Notification Settings")}
+          {isSaving ? (dictionary?.settings?.notificationSettings?.saving || "Saving...") : (dictionary?.settings?.notificationSettings?.saveSettings || "Save Notification Settings")}
         </Button>
       </div>
     </div>
