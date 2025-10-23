@@ -11,9 +11,11 @@ import { useEffect, useMemo } from 'react'
 import { useEditorStore } from '@/store/theme-editor-store'
 import { extractFontFamily, getDefaultWeights } from '@/lib/fonts'
 import { loadGoogleFont } from '@/lib/fonts/google-fonts'
+import { useMounted } from '@/hooks/use-mounted'
 
 export function DynamicFontLoader() {
   const { themeState } = useEditorStore()
+  const isMounted = useMounted()
 
   // Extract fonts from light mode styles (fonts are common to both modes)
   const fontSans = themeState.styles.light['font-sans']
@@ -29,8 +31,13 @@ export function DynamicFontLoader() {
   }, [fontSans, fontSerif, fontMono])
 
   useEffect(() => {
+    if (!isMounted) return
+
     try {
       Object.entries(currentFonts).forEach(([_type, fontValue]) => {
+        // Check if fontValue is defined before passing to extractFontFamily
+        if (!fontValue) return
+
         const fontFamily = extractFontFamily(fontValue)
         if (fontFamily) {
           const weights = getDefaultWeights(['400', '500', '600', '700'])
@@ -40,7 +47,7 @@ export function DynamicFontLoader() {
     } catch (e) {
       console.warn('DynamicFontLoader: Failed to load Google fonts:', e)
     }
-  }, [currentFonts])
+  }, [isMounted, currentFonts])
 
   return null
 }

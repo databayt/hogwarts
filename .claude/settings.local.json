@@ -30,7 +30,10 @@
       "Read(//c/Users/pc/Downloads/tweakcn-main/tweakcn-main/utils/**)",
       "WebFetch(domain:tweakcn.com)",
       "Read(//c/Users/pc/Downloads/tweakcn-main/tweakcn-main/**)",
-      "Bash(git log:*)"
+      "Bash(git log:*)",
+      "Bash(dir /b /s \"C:\\Users\\pc\\Downloads\\tweakcn-main\\tweakcn-main\")",
+      "Bash(findstr:*)",
+      "Bash(dir /b \"C:\\Users\\pc\\Downloads\\tweakcn-main\\tweakcn-main\")"
     ],
     "deny": [],
     "ask": []

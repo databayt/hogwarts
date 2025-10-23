@@ -1,73 +1,145 @@
 
+# Welcome to Hogwarts Documentation
 
-## Introduction
+## 🚀 Comprehensive School Management Platform
 
-**Hogwarts** is school automation. Cloud based. One central database and logic, many schools — each with its own domain and theme.
+**Hogwarts** is a modern, cloud-based school management system designed to streamline educational operations, enhance learning experiences, and foster better communication between schools, teachers, students, and parents.
 
-### Highlights
+### Why Choose Hogwarts?
 
-- Multi-tenant by design: every record is scoped by `schoolId`
-- Custom subdomains per school (e.g., `school.hogwarts.app`)
-- Role-based access: Owner, Admin, Teacher, Student, Parent, Accountant
-- Core features: attendance, timetable (basic), announcements, settings, billing (manual-friendly)
-- Arabic‑first (RTL) with English alongside it
-- Low-bandwidth UX: light pages and assets
-- Secure authentication, permissions, and auditability
+<div className="grid gap-4 mt-6">
+  <div className="border rounded-lg p-4">
+    <h4 className="font-semibold mb-2">🏫 Multi-Tenant Architecture</h4>
+    <p className="text-sm text-muted-foreground">Each school gets its own secure, isolated environment with custom subdomain and branding</p>
+  </div>
+
+  <div className="border rounded-lg p-4">
+    <h4 className="font-semibold mb-2">🌍 International Support</h4>
+    <p className="text-sm text-muted-foreground">Built-in support for Arabic (RTL) and English, with more languages coming soon</p>
+  </div>
+
+  <div className="border rounded-lg p-4">
+    <h4 className="font-semibold mb-2">📊 Complete Feature Set</h4>
+    <p className="text-sm text-muted-foreground">Everything from attendance to examinations, library management to fee collection</p>
+  </div>
+
+  <div className="border rounded-lg p-4">
+    <h4 className="font-semibold mb-2">🔐 Enterprise Security</h4>
+    <p className="text-sm text-muted-foreground">Role-based access control, secure authentication, and full audit trails</p>
+  </div>
+</div>
+
+### Key Features
+
+- **Student Information System** - Comprehensive student profiles, enrollment, and academic records
+- **Attendance Management** - Digital attendance tracking with leave management
+- **Examination System** - Complete exam scheduling, grading, and result processing
+- **Timetable Management** - Smart scheduling with conflict resolution
+- **Fee Management** - Online fee collection, receipts, and outstanding tracking
+- **Library System** - Digital catalog, issue/return tracking, and fine management
+- **Communication Hub** - Announcements, messaging, and notifications
+- **Parent Portal** - Real-time access to student progress and school updates
+- **Reports & Analytics** - Comprehensive reporting for data-driven decisions
 
 
-## What You'll Find Here
+## Quick Start by Role
 
-### For Developers
+Choose your role to get started with relevant documentation:
 
-* [Requirements](/docs/requeriments) – Functional and non-functional requirements
-* [Architecture](/docs/architecture) – System design and technical specs
-* [Stack](/docs/stack) – Technology used
-* [Pattern](/docs/pattern) – Best practices and coding standards
-* [Contributing Guide](/docs/contribute) – How to get involved in development
-* [Issues](/docs/issues) – Open Issues
-* [Inspiration](/docs/inspiration) – Source of inspiration
+<div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+  <div className="border rounded-lg p-4 hover:shadow-lg transition-shadow">
+    <h3 className="font-semibold mb-2">👨‍💼 School Administrator</h3>
+    <p className="text-sm text-muted-foreground mb-3">Set up your school, manage users, and configure the system</p>
+    <ul className="space-y-1">
+      <li><a href="/docs/admin/dashboard" className="text-sm hover:underline">→ Admin Dashboard</a></li>
+      <li><a href="/docs/admin/school-setup" className="text-sm hover:underline">→ School Setup Guide</a></li>
+      <li><a href="/docs/admin/users" className="text-sm hover:underline">→ User Management</a></li>
+    </ul>
+  </div>
 
----
+  <div className="border rounded-lg p-4 hover:shadow-lg transition-shadow">
+    <h3 className="font-semibold mb-2">👩‍🏫 Teacher</h3>
+    <p className="text-sm text-muted-foreground mb-3">Manage your classroom, track attendance, and grade students</p>
+    <ul className="space-y-1">
+      <li><a href="/docs/teachers/classroom" className="text-sm hover:underline">→ Classroom Management</a></li>
+      <li><a href="/docs/teachers/attendance" className="text-sm hover:underline">→ Taking Attendance</a></li>
+      <li><a href="/docs/teachers/gradebook" className="text-sm hover:underline">→ Gradebook Guide</a></li>
+    </ul>
+  </div>
 
-### For Stakeholders
+  <div className="border rounded-lg p-4 hover:shadow-lg transition-shadow">
+    <h3 className="font-semibold mb-2">👨‍👩‍👧 Parent</h3>
+    <p className="text-sm text-muted-foreground mb-3">Monitor your child's progress and communicate with teachers</p>
+    <ul className="space-y-1">
+      <li><a href="/docs/parents/portal" className="text-sm hover:underline">→ Parent Portal</a></li>
+      <li><a href="/docs/parents/monitoring" className="text-sm hover:underline">→ Progress Monitoring</a></li>
+      <li><a href="/docs/parents/fees" className="text-sm hover:underline">→ Fee Payments</a></li>
+    </ul>
+  </div>
 
-* [Business Model](/docs/business/earning) – Revenue streams and value creation
-* [Roadmap](/docs/business/roadmap) – Product development plans and strategic goals
-* [Sales Process](/docs/business/sales) – Customer acquisition and revenue generation
-* [Stock Sharing](/docs/governance/stock-sharing) – Equity distribution and governance
+  <div className="border rounded-lg p-4 hover:shadow-lg transition-shadow">
+    <h3 className="font-semibold mb-2">🎓 Student</h3>
+    <p className="text-sm text-muted-foreground mb-3">Access your assignments, grades, and school resources</p>
+    <ul className="space-y-1">
+      <li><a href="/docs/students/portal" className="text-sm hover:underline">→ Student Portal</a></li>
+      <li><a href="/docs/students/assignments" className="text-sm hover:underline">→ Assignments</a></li>
+      <li><a href="/docs/students/grades" className="text-sm hover:underline">→ View Grades</a></li>
+    </ul>
+  </div>
+</div>
 
----
+## Popular Resources
 
-### For Community
+<div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
+  <div className="space-y-3">
+    <h4 className="font-semibold">📚 Getting Started</h4>
+    <ul className="space-y-2">
+      <li><a href="/docs/quick-start" className="text-sm hover:underline">Quick Start Guide</a></li>
+      <li><a href="/docs/demo" className="text-sm hover:underline">Live Demo Access</a></li>
+      <li><a href="/docs/deployment" className="text-sm hover:underline">Deployment Guide</a></li>
+      <li><a href="/docs/requirements" className="text-sm hover:underline">System Requirements</a></li>
+    </ul>
+  </div>
 
-* [Code of Conduct](/docs/governance/code-of-conduct) – Community standards and expectations
-* [Issues & Support](/docs/community/issues) – Bug reporting and assistance
-* [Discussions](/docs/community/discussions) – Forums and knowledge sharing
+  <div className="space-y-3">
+    <h4 className="font-semibold">⚡ Key Features</h4>
+    <ul className="space-y-2">
+      <li><a href="/docs/features/students" className="text-sm hover:underline">Student Management</a></li>
+      <li><a href="/docs/features/attendance" className="text-sm hover:underline">Attendance System</a></li>
+      <li><a href="/docs/features/examinations" className="text-sm hover:underline">Examinations</a></li>
+      <li><a href="/docs/features/fees" className="text-sm hover:underline">Fee Management</a></li>
+    </ul>
+  </div>
 
----
+  <div className="space-y-3">
+    <h4 className="font-semibold">🛠️ For Developers</h4>
+    <ul className="space-y-2">
+      <li><a href="/docs/api" className="text-sm hover:underline">API Reference</a></li>
+      <li><a href="/docs/architecture" className="text-sm hover:underline">Architecture</a></li>
+      <li><a href="/docs/components" className="text-sm hover:underline">Component Library</a></li>
+      <li><a href="/docs/development/setup" className="text-sm hover:underline">Local Setup</a></li>
+    </ul>
+  </div>
+</div>
 
-### For Clients
+## Need Help?
 
-* Understand our [Business Model](/docs/business/earning)
-* See what's ahead in the [Roadmap](/docs/business/roadmap)
-* [Contact Sales](/docs/business/sales) to discuss your needs
-* Access [Support Options](/docs/community/support) when needed
-
----
-
-### For Legal
-
-* [Open Source Licenses](/docs/legal/licenses) – Usage terms and compliance
-* [Terms of Service](/docs/legal/terms) – Legal policies
-* [Privacy Policy](/docs/legal/privacy) – Data protection commitments
-
----
-
-## Getting Started
-
-New comer? Start with the essentials:
-
-* Review the [Code of Conduct](/docs/code-of-conduct)
-* Explore the [Architecture](/docs/architecture)
-* Check the [Contributing Guide](/docs/contributing)
-* Join [Community Discussions](/docs/community)
+<div className="border rounded-lg p-6 mt-8 bg-muted/50">
+  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div className="text-center">
+      <h4 className="font-semibold mb-2">📖 Documentation</h4>
+      <p className="text-sm text-muted-foreground mb-3">Browse our comprehensive guides</p>
+      <a href="/docs/support/faq" className="text-sm font-medium hover:underline">View FAQ →</a>
+    </div>
+    <div className="text-center">
+      <h4 className="font-semibold mb-2">🎥 Video Tutorials</h4>
+      <p className="text-sm text-muted-foreground mb-3">Learn with step-by-step videos</p>
+      <a href="/docs/support/videos" className="text-sm font-medium hover:underline">Watch Videos →</a>
+    </div>
+    <div className="text-center">
+      <h4 className="font-semibold mb-2">💬 Support</h4>
+      <p className="text-sm text-muted-foreground mb-3">Get help from our team</p>
+      <a href="/docs/support/contact" className="text-sm font-medium hover:underline">Contact Support →</a>
+    </div>
+  </div>
+</div>
