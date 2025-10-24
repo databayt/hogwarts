@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { Bell, X, AlertTriangle, CheckCircle, Info, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -51,9 +51,9 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     const stored = localStorage.getItem("dashboard-notifications");
     if (stored) {
       try {
-        const parsed = JSON.parse(stored) as Array<Notification & { timestamp: string }>;
+        const parsed = JSON.parse(stored);
         setNotifications(
-          parsed.map((n) => ({
+          parsed.map((n: any) => ({
             ...n,
             timestamp: new Date(n.timestamp),
           }))
@@ -69,46 +69,49 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     localStorage.setItem("dashboard-notifications", JSON.stringify(notifications));
   }, [notifications]);
 
-  const addNotification = (notification: Omit<Notification, "id" | "timestamp">) => {
-    const newNotification: Notification = {
-      ...notification,
-      id: `notif_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      timestamp: new Date(),
-      read: false,
-    };
+  const addNotification = useCallback(
+    (notification: Omit<Notification, "id" | "timestamp">) => {
+      const newNotification: Notification = {
+        ...notification,
+        id: `notif_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        timestamp: new Date(),
+        read: false,
+      };
 
-    setNotifications((prev) => [newNotification, ...prev].slice(0, 50)); // Keep max 50
+      setNotifications((prev) => [newNotification, ...prev].slice(0, 50)); // Keep max 50
 
-    // Auto-dismiss non-persistent notifications after 10 seconds
-    if (!notification.persistent) {
-      setTimeout(() => {
-        setNotifications((prev) => prev.filter((n) => n.id !== newNotification.id));
-      }, 10000);
-    }
+      // Auto-dismiss non-persistent notifications after 10 seconds
+      if (!notification.persistent) {
+        setTimeout(() => {
+          setNotifications((prev) => prev.filter((n) => n.id !== newNotification.id));
+        }, 10000);
+      }
 
-    // Play sound for high priority notifications
-    if (notification.priority === "urgent" || notification.priority === "high") {
-      playNotificationSound();
-    }
-  };
+      // Play sound for high priority notifications
+      if (notification.priority === "urgent" || notification.priority === "high") {
+        playNotificationSound();
+      }
+    },
+    []
+  );
 
-  const markAsRead = (id: string) => {
+  const markAsRead = useCallback((id: string) => {
     setNotifications((prev) =>
       prev.map((n) => (n.id === id ? { ...n, read: true } : n))
     );
-  };
+  }, []);
 
-  const markAllAsRead = () => {
+  const markAllAsRead = useCallback(() => {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-  };
+  }, []);
 
-  const removeNotification = (id: string) => {
+  const removeNotification = useCallback((id: string) => {
     setNotifications((prev) => prev.filter((n) => n.id !== id));
-  };
+  }, []);
 
-  const clearAll = () => {
+  const clearAll = useCallback(() => {
     setNotifications([]);
-  };
+  }, []);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 

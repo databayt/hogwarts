@@ -16,16 +16,14 @@ interface ErrorBoundaryState {
  * Error boundary component for dashboard
  * Catches errors and displays user-friendly error messages
  */
-interface DashboardErrorBoundaryProps {
-  children: React.ReactNode;
-  fallback?: React.ComponentType<{ error: Error; reset: () => void }>;
-}
-
 export class DashboardErrorBoundary extends React.Component<
-  DashboardErrorBoundaryProps,
+  {
+    children: React.ReactNode;
+    fallback?: React.ComponentType<{ error: Error; reset: () => void }>;
+  },
   ErrorBoundaryState
 > {
-  constructor(props: DashboardErrorBoundaryProps) {
+  constructor(props: any) {
     super(props);
     this.state = { hasError: false };
   }

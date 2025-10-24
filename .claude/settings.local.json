@@ -34,7 +34,9 @@
       "Bash(dir /b /s \"C:\\Users\\pc\\Downloads\\tweakcn-main\\tweakcn-main\")",
       "Bash(findstr:*)",
       "Bash(dir /b \"C:\\Users\\pc\\Downloads\\tweakcn-main\\tweakcn-main\")",
-      "Bash(dir:*)"
+      "Bash(dir:*)",
+      "Read(//d/repo/da/**)",
+      "WebFetch(domain:portsudan.databayt.org)"
     ],
     "deny": [],
     "ask": []

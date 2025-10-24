@@ -129,10 +129,13 @@ export function InteractiveBarChart() {
   const [activeChart, setActiveChart] =
     React.useState<keyof typeof chartConfig>("desktop");
 
-  const total = {
-    desktop: chartData.reduce((acc, curr) => acc + curr.desktop, 0),
-    mobile: chartData.reduce((acc, curr) => acc + curr.mobile, 0),
-  };
+  const total = React.useMemo(
+    () => ({
+      desktop: chartData.reduce((acc, curr) => acc + curr.desktop, 0),
+      mobile: chartData.reduce((acc, curr) => acc + curr.mobile, 0),
+    }),
+    [],
+  );
 
   return (
     <Card className="border-none shadow-none bg-muted">

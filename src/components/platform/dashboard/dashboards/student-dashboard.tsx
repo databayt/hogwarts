@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { QuickActions, type QuickAction } from "@/components/platform/dashboard/quick-actions";
+import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import {
   Calendar,
@@ -14,15 +14,20 @@ import {
 import type { Dictionary } from "@/components/internationalization/dictionaries";
 import { getStudentDashboardData } from "../actions";
 
-interface Props {
-  user: any;
+interface StudentDashboardProps {
+  user: {
+    id: string;
+    email?: string | null;
+    role?: string;
+    schoolId?: string | null;
+  };
   dictionary?: Dictionary["school"];
 }
 
 export async function StudentDashboard({
   user,
   dictionary,
-}: Props) {
+}: StudentDashboardProps) {
   // Fetch real data from server action
   const data = await getStudentDashboardData();
 
@@ -136,33 +141,31 @@ export async function StudentDashboard({
       </div>
 
       {/* Quick Actions */}
-      <div className="space-y-3">
-        <h2>{dashDict.quickActions.title}</h2>
-        <QuickActions
-          actions={[
-            {
-              icon: FileText,
-              label: dashDict.quickActions.submitAssignment,
-              href: "/assignments",
-            },
-            {
-              icon: Award,
-              label: dashDict.quickActions.checkGrades,
-              href: "/grades",
-            },
-            {
-              icon: CalendarDays,
-              label: dashDict.quickActions.viewTimetable,
-              href: "/timetable",
-            },
-            {
-              icon: MessageSquare,
-              label: dashDict.quickActions.messages,
-              href: "/messages",
-            },
-          ] as QuickAction[]}
-        />
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>{dashDict.quickActions.title}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" size="sm">
+              <FileText className="mr-2 h-4 w-4" />
+              {dashDict.quickActions.submitAssignment}
+            </Button>
+            <Button variant="outline" size="sm">
+              <Award className="mr-2 h-4 w-4" />
+              {dashDict.quickActions.checkGrades}
+            </Button>
+            <Button variant="outline" size="sm">
+              <CalendarDays className="mr-2 h-4 w-4" />
+              {dashDict.quickActions.viewTimetable}
+            </Button>
+            <Button variant="outline" size="sm">
+              <MessageSquare className="mr-2 h-4 w-4" />
+              {dashDict.quickActions.messages}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Main Content Grid */}
       <div className="grid gap-6 md:grid-cols-2">
