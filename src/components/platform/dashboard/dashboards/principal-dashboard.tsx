@@ -20,12 +20,12 @@ import { DashboardSectionError } from "../error-boundary";
 
 interface Props {
   user: any;
-  dictionary: Dictionary["school"];
+  dictionary?: Dictionary["school"];
 }
 
 export async function PrincipalDashboard({ user, dictionary }: Props) {
   // Helper variable for dictionary access
-  const t = dictionary.principalDashboard;
+  const t = dictionary?.principalDashboard;
 
   // Fetch all real data from server actions
   let dashboardData;
@@ -36,8 +36,8 @@ export async function PrincipalDashboard({ user, dictionary }: Props) {
     console.error("Error fetching principal dashboard data:", error);
     return (
       <DashboardSectionError
-        title={t.dashboardUnavailable}
-        message={t.unableToLoadData}
+        title={t?.dashboardUnavailable}
+        message={t?.unableToLoadData}
       />
     );
   }
@@ -62,56 +62,56 @@ export async function PrincipalDashboard({ user, dictionary }: Props) {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{t.performanceScorecard.overallScore}</CardTitle>
+            <CardTitle className="text-sm font-medium">{t?.performanceScorecard.overallScore}</CardTitle>
             <Award className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{performanceScorecard.overall}</div>
-            <p className="text-xs text-muted-foreground">{t.performanceScorecard.performanceScore}</p>
+            <p className="text-xs text-muted-foreground">{t?.performanceScorecard.performanceScore}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{t.performanceScorecard.academic}</CardTitle>
+            <CardTitle className="text-sm font-medium">{t?.performanceScorecard.academic}</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{performanceScorecard.academic}</div>
-            <p className="text-xs text-muted-foreground">{t.performanceScorecard.academicPerformance}</p>
+            <p className="text-xs text-muted-foreground">{t?.performanceScorecard.academicPerformance}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{t.performanceScorecard.attendance}</CardTitle>
+            <CardTitle className="text-sm font-medium">{t?.performanceScorecard.attendance}</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{performanceScorecard.attendance}%</div>
-            <p className="text-xs text-muted-foreground">{t.performanceScorecard.studentAttendance}</p>
+            <p className="text-xs text-muted-foreground">{t?.performanceScorecard.studentAttendance}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{t.performanceScorecard.discipline}</CardTitle>
+            <CardTitle className="text-sm font-medium">{t?.performanceScorecard.discipline}</CardTitle>
             <CheckCircle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{performanceScorecard.discipline}</div>
-            <p className="text-xs text-muted-foreground">{t.performanceScorecard.disciplineScore}</p>
+            <p className="text-xs text-muted-foreground">{t?.performanceScorecard.disciplineScore}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{t.performanceScorecard.parentSatisfaction}</CardTitle>
+            <CardTitle className="text-sm font-medium">{t?.performanceScorecard.parentSatisfaction}</CardTitle>
             <Award className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{performanceScorecard.parentSatisfaction}%</div>
-            <p className="text-xs text-muted-foreground">{t.performanceScorecard.parentSatisfaction}</p>
+            <p className="text-xs text-muted-foreground">{t?.performanceScorecard.parentSatisfaction}</p>
           </CardContent>
         </Card>
       </div>
@@ -122,7 +122,7 @@ export async function PrincipalDashboard({ user, dictionary }: Props) {
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <AlertTriangle className="h-5 w-5 text-red-500" />
-              <span>{t.criticalAlerts.title}</span>
+              <span>{t?.criticalAlerts.title}</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -131,24 +131,24 @@ export async function PrincipalDashboard({ user, dictionary }: Props) {
                 <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
                   <div className="flex items-center space-x-3">
                     <AlertTriangle className={`h-5 w-5 ${
-                      alert.severity === "critical" || alert.severity === "high"
+                      alert?.severity === "critical" || alert?.severity === "high"
                         ? "text-red-500"
                         : "text-yellow-500"
                     }`} />
                     <div>
-                      <p className="font-medium">{alert.type}</p>
-                      <p className="text-sm text-muted-foreground">{alert.message}</p>
+                      <p className="font-medium">{alert?.type}</p>
+                      <p className="text-sm text-muted-foreground">{alert?.message}</p>
                     </div>
                   </div>
                   <div className="text-right">
                     <Badge variant={
-                      alert.severity === "critical" || alert.severity === "high"
+                      alert?.severity === "critical" || alert?.severity === "high"
                         ? "destructive"
                         : "secondary"
                     }>
-                      {alert.severity}
+                      {alert?.severity}
                     </Badge>
-                    <p className="text-xs text-muted-foreground mt-1">{alert.action}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{alert?.action}</p>
                   </div>
                 </div>
               ))}
@@ -159,27 +159,27 @@ export async function PrincipalDashboard({ user, dictionary }: Props) {
 
       {/* Quick Actions */}
       <div className="space-y-3">
-        <h2>{t.quickActions.title}</h2>
+        <h2>{t?.quickActions.title}</h2>
         <QuickActions
           actions={[
             {
               icon: FileText,
-              label: t.quickActions.reviewReports,
+              label: t?.quickActions.reviewReports,
               href: "/reports",
             },
             {
               icon: CheckCircle,
-              label: t.quickActions.approveBudgets,
+              label: t?.quickActions.approveBudgets,
               href: "/budgets",
             },
             {
               icon: Calendar,
-              label: t.quickActions.viewCalendars,
+              label: t?.quickActions.viewCalendars,
               href: "/calendar",
             },
             {
               icon: Users,
-              label: t.quickActions.sendCommunications,
+              label: t?.quickActions.sendCommunications,
               href: "/communications",
             },
           ] as QuickAction[]}
@@ -191,7 +191,7 @@ export async function PrincipalDashboard({ user, dictionary }: Props) {
         {/* Today's Priorities */}
         <Card>
           <CardHeader>
-            <CardTitle>{t.todaysPriorities.title}</CardTitle>
+            <CardTitle>{t?.todaysPriorities.title}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {todaysPriorities.length > 0 ? (
@@ -208,7 +208,7 @@ export async function PrincipalDashboard({ user, dictionary }: Props) {
               ))
             ) : (
               <p className="text-sm text-muted-foreground text-center py-4">
-                {t.todaysPriorities.noPriorities}
+                {t?.todaysPriorities.noPriorities}
               </p>
             )}
           </CardContent>
@@ -217,30 +217,30 @@ export async function PrincipalDashboard({ user, dictionary }: Props) {
         {/* Academic Performance Trends */}
         <Card>
           <CardHeader>
-            <CardTitle>{t.academicPerformance.title}</CardTitle>
+            <CardTitle>{t?.academicPerformance.title}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {academicTrends.length > 0 ? (
               academicTrends.map((subject, index) => (
                 <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
                   <div>
-                    <p className="font-medium">{subject.subject}</p>
-                    <p className="text-sm text-muted-foreground">{t.academicPerformance.current}: {subject.currentAvg}%</p>
+                    <p className="font-medium">{subject?.subject}</p>
+                    <p className="text-sm text-muted-foreground">{t?.academicPerformance.current}: {subject?.currentAvg}%</p>
                   </div>
                   <div className="text-right">
                     <Badge variant={
-                      subject.trend === "up" ? "default" :
-                      subject.trend === "down" ? "destructive" : "secondary"
+                      subject?.trend === "up" ? "default" :
+                      subject?.trend === "down" ? "destructive" : "secondary"
                     }>
-                      {subject.trend === "up" ? "↗" :
-                       subject.trend === "down" ? "↘" : "→"} {subject.improvement}
+                      {subject?.trend === "up" ? "↗" :
+                       subject?.trend === "down" ? "↘" : "→"} {subject?.improvement}
                     </Badge>
                   </div>
                 </div>
               ))
             ) : (
               <p className="text-sm text-muted-foreground text-center py-4">
-                {t.academicPerformance.noData}
+                {t?.academicPerformance.noData}
               </p>
             )}
           </CardContent>
@@ -249,26 +249,26 @@ export async function PrincipalDashboard({ user, dictionary }: Props) {
         {/* Disciplinary Summary */}
         <Card>
           <CardHeader>
-            <CardTitle>{t.disciplinarySummary.title}</CardTitle>
+            <CardTitle>{t?.disciplinarySummary.title}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-3 gap-4 text-center">
               <div>
                 <div className="text-2xl font-bold">{disciplinarySummary.totalIncidents}</div>
-                <p className="text-xs text-muted-foreground">{t.disciplinarySummary.totalIncidents}</p>
+                <p className="text-xs text-muted-foreground">{t?.disciplinarySummary.totalIncidents}</p>
               </div>
               <div>
                 <div className="text-2xl font-bold text-green-600">{disciplinarySummary.resolved}</div>
-                <p className="text-xs text-muted-foreground">{t.disciplinarySummary.resolved}</p>
+                <p className="text-xs text-muted-foreground">{t?.disciplinarySummary.resolved}</p>
               </div>
               <div>
                 <div className="text-2xl font-bold text-yellow-600">{disciplinarySummary.pending}</div>
-                <p className="text-xs text-muted-foreground">{t.disciplinarySummary.pending}</p>
+                <p className="text-xs text-muted-foreground">{t?.disciplinarySummary.pending}</p>
               </div>
             </div>
             {disciplinarySummary.topIssues.length > 0 && (
               <div className="pt-2 border-t">
-                <p className="text-sm text-muted-foreground mb-2">{t.disciplinarySummary.topIssues}</p>
+                <p className="text-sm text-muted-foreground mb-2">{t?.disciplinarySummary.topIssues}</p>
                 <div className="space-y-1">
                   {disciplinarySummary.topIssues.map((issue, index) => (
                     <Badge key={index} variant="outline" className="mr-1">
@@ -284,7 +284,7 @@ export async function PrincipalDashboard({ user, dictionary }: Props) {
         {/* Staff Evaluations Due */}
         <Card>
           <CardHeader>
-            <CardTitle>{t.staffEvaluations.title}</CardTitle>
+            <CardTitle>{t?.staffEvaluations.title}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {staffEvaluations.length > 0 ? (
@@ -299,14 +299,14 @@ export async function PrincipalDashboard({ user, dictionary }: Props) {
                       {evaluation.status}
                     </Badge>
                     <p className="text-xs text-muted-foreground mt-1">
-                      {t.staffEvaluations.due}: {new Date(evaluation.dueDate).toLocaleDateString()}
+                      {t?.staffEvaluations.due}: {new Date(evaluation.dueDate).toLocaleDateString()}
                     </p>
                   </div>
                 </div>
               ))
             ) : (
               <p className="text-sm text-muted-foreground text-center py-4">
-                {t.staffEvaluations.noEvaluations}
+                {t?.staffEvaluations.noEvaluations}
               </p>
             )}
           </CardContent>
@@ -315,29 +315,29 @@ export async function PrincipalDashboard({ user, dictionary }: Props) {
         {/* Budget Status */}
         <Card>
           <CardHeader>
-            <CardTitle>{t.budgetStatus.title}</CardTitle>
+            <CardTitle>{t?.budgetStatus.title}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">{t.budgetStatus.allocated}</span>
+              <span className="text-sm text-muted-foreground">{t?.budgetStatus.allocated}</span>
               <span className="font-medium">${(budgetStatus.allocated / 1000000).toFixed(1)}M</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">{t.budgetStatus.spent}</span>
+              <span className="text-sm text-muted-foreground">{t?.budgetStatus.spent}</span>
               <span className="font-medium text-red-600">${(budgetStatus.spent / 1000000).toFixed(1)}M</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">{t.budgetStatus.remaining}</span>
+              <span className="text-sm text-muted-foreground">{t?.budgetStatus.remaining}</span>
               <span className="font-medium text-green-600">${(budgetStatus.remaining / 1000).toFixed(0)}K</span>
             </div>
             <div className="pt-2 border-t">
               <div className="flex justify-between items-center mb-2">
-                <span className="text-sm text-muted-foreground">{t.budgetStatus.utilization}</span>
+                <span className="text-sm text-muted-foreground">{t?.budgetStatus.utilization}</span>
                 <span className="font-medium">{budgetStatus.utilization.toFixed(1)}%</span>
               </div>
               <Progress value={budgetStatus.utilization} className="mt-2" />
               <p className="text-xs text-muted-foreground mt-2 text-center">
-                {t.budgetStatus.status} {budgetStatus.projections}
+                {t?.budgetStatus.status} {budgetStatus.projections}
               </p>
             </div>
           </CardContent>
@@ -346,32 +346,32 @@ export async function PrincipalDashboard({ user, dictionary }: Props) {
         {/* Parent Feedback */}
         <Card>
           <CardHeader>
-            <CardTitle>{t.parentFeedback.title}</CardTitle>
+            <CardTitle>{t?.parentFeedback.title}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex items-center justify-between p-2 border rounded">
-              <span className="text-sm">{t.parentFeedback.satisfaction}</span>
+              <span className="text-sm">{t?.parentFeedback.satisfaction}</span>
               <div className="flex items-center space-x-2">
                 <Progress value={parentFeedback.satisfaction} className="w-20" />
                 <span className="text-sm font-medium">{parentFeedback.satisfaction.toFixed(1)}%</span>
               </div>
             </div>
             <div className="flex items-center justify-between p-2 border rounded">
-              <span className="text-sm">{t.parentFeedback.communication}</span>
+              <span className="text-sm">{t?.parentFeedback.communication}</span>
               <div className="flex items-center space-x-2">
                 <Progress value={parentFeedback.communication} className="w-20" />
                 <span className="text-sm font-medium">{parentFeedback.communication.toFixed(1)}%</span>
               </div>
             </div>
             <div className="flex items-center justify-between p-2 border rounded">
-              <span className="text-sm">{t.parentFeedback.academicQuality}</span>
+              <span className="text-sm">{t?.parentFeedback.academicQuality}</span>
               <div className="flex items-center space-x-2">
                 <Progress value={parentFeedback.academicQuality} className="w-20" />
                 <span className="text-sm font-medium">{parentFeedback.academicQuality.toFixed(1)}%</span>
               </div>
             </div>
             <div className="flex items-center justify-between p-2 border rounded">
-              <span className="text-sm">{t.parentFeedback.facilities}</span>
+              <span className="text-sm">{t?.parentFeedback.facilities}</span>
               <div className="flex items-center space-x-2">
                 <Progress value={parentFeedback.facilities} className="w-20" />
                 <span className="text-sm font-medium">{parentFeedback.facilities.toFixed(1)}%</span>
@@ -379,7 +379,7 @@ export async function PrincipalDashboard({ user, dictionary }: Props) {
             </div>
             <div className="pt-2 border-t text-center">
               <div className="text-lg font-bold text-blue-600">{parentFeedback.overall.toFixed(1)}%</div>
-              <p className="text-xs text-muted-foreground">{t.parentFeedback.overallSatisfaction}</p>
+              <p className="text-xs text-muted-foreground">{t?.parentFeedback.overallSatisfaction}</p>
             </div>
           </CardContent>
         </Card>
@@ -388,42 +388,42 @@ export async function PrincipalDashboard({ user, dictionary }: Props) {
       {/* Executive Summary */}
       <Card>
         <CardHeader>
-          <CardTitle>{t.executiveSummary.title}</CardTitle>
+          <CardTitle>{t?.executiveSummary.title}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid gap-6 md:grid-cols-2">
             {/* Monthly Highlights */}
             <div>
-              <h4 className="mb-3">{t.executiveSummary.monthlyHighlights}</h4>
+              <h4 className="mb-3">{t?.executiveSummary.monthlyHighlights}</h4>
               <div className="space-y-3">
                 {monthlyHighlights.length > 0 ? (
                   monthlyHighlights.map((highlight, index) => (
                     <div key={index} className="p-3 border rounded-lg">
                       <div className="flex items-center space-x-2 mb-2">
-                        <Badge variant={highlight.impact === "high" ? "default" : "secondary"}>
-                          {highlight.impact}
+                        <Badge variant={highlight?.impact === "high" ? "default" : "secondary"}>
+                          {highlight?.impact}
                         </Badge>
                       </div>
-                      <p className="font-medium">{highlight.highlight}</p>
-                      <p className="text-sm text-muted-foreground">{highlight.description}</p>
+                      <p className="font-medium">{highlight?.highlight}</p>
+                      <p className="text-sm text-muted-foreground">{highlight?.description}</p>
                     </div>
                   ))
                 ) : (
-                  <p className="text-sm text-muted-foreground">{t.executiveSummary.noHighlights}</p>
+                  <p className="text-sm text-muted-foreground">{t?.executiveSummary.noHighlights}</p>
                 )}
               </div>
             </div>
 
             {/* Goal Progress */}
             <div>
-              <h4 className="mb-3">{t.executiveSummary.goalProgress}</h4>
+              <h4 className="mb-3">{t?.executiveSummary.goalProgress}</h4>
               <div className="space-y-3">
                 {goalProgress.map((goal, index) => (
                   <div key={index} className="p-3 border rounded-lg">
                     <p className="font-medium mb-2">{goal.goal}</p>
                     <div className="flex justify-between items-center mb-2">
-                      <span className="text-sm text-muted-foreground">{t.executiveSummary.target}: {goal.target}</span>
-                      <span className="text-sm font-medium">{t.executiveSummary.current}: {goal.current}</span>
+                      <span className="text-sm text-muted-foreground">{t?.executiveSummary.target}: {goal.target}</span>
+                      <span className="text-sm font-medium">{t?.executiveSummary.current}: {goal.current}</span>
                     </div>
                     <Progress value={Math.min(100, goal.progress)} className="mt-2" />
                   </div>
@@ -437,7 +437,7 @@ export async function PrincipalDashboard({ user, dictionary }: Props) {
       {/* Upcoming Board Meetings */}
       <Card>
         <CardHeader>
-          <CardTitle>{t.upcomingBoardMeetings.title}</CardTitle>
+          <CardTitle>{t?.upcomingBoardMeetings.title}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
@@ -454,7 +454,7 @@ export async function PrincipalDashboard({ user, dictionary }: Props) {
                     {meeting.status}
                   </Badge>
                   <p className="text-xs text-muted-foreground mt-1">
-                    {meeting.attendees} {t.upcomingBoardMeetings.attendees}
+                    {meeting.attendees} {t?.upcomingBoardMeetings.attendees}
                   </p>
                 </div>
               </div>
@@ -468,19 +468,19 @@ export async function PrincipalDashboard({ user, dictionary }: Props) {
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
             <DollarSign className="h-5 w-5" />
-            <span>{t.financialHealth.title}</span>
+            <span>{t?.financialHealth.title}</span>
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-3">
             <div className="text-center">
-              <p className="text-sm text-muted-foreground mb-2">{t.financialHealth.collectionRate}</p>
+              <p className="text-sm text-muted-foreground mb-2">{t?.financialHealth.collectionRate}</p>
               <div className="text-2xl font-bold text-green-600">
                 {performanceScorecard.financialHealth?.toFixed(1) || "85"}%
               </div>
             </div>
             <div className="text-center">
-              <p className="text-sm text-muted-foreground mb-2">{t.financialHealth.budgetStatus}</p>
+              <p className="text-sm text-muted-foreground mb-2">{t?.financialHealth.budgetStatus}</p>
               <Badge variant={
                 budgetStatus.utilization > 90 ? "destructive" :
                 budgetStatus.utilization > 75 ? "secondary" : "default"
@@ -489,7 +489,7 @@ export async function PrincipalDashboard({ user, dictionary }: Props) {
               </Badge>
             </div>
             <div className="text-center">
-              <p className="text-sm text-muted-foreground mb-2">{t.financialHealth.yearToDate}</p>
+              <p className="text-sm text-muted-foreground mb-2">{t?.financialHealth.yearToDate}</p>
               <div className="text-2xl font-bold">
                 ${(budgetStatus.yearToDate?.spent || 0) > 1000000
                   ? `${(budgetStatus.yearToDate.spent / 1000000).toFixed(1)}M`
