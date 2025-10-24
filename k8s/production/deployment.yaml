@@ -1,0 +1,375 @@
+# Kubernetes Deployment for Hogwarts Platform
+# Production configuration with high availability and auto-scaling
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hogwarts-app
+  namespace: hogwarts-production
+  labels:
+    app: hogwarts
+    component: web
+    environment: production
+    version: "1.0.0"
+spec:
+  replicas: 3  # Minimum replicas for HA
+  revisionHistoryLimit: 10
+  progressDeadlineSeconds: 600
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0  # Zero-downtime deployment
+  selector:
+    matchLabels:
+      app: hogwarts
+      component: web
+  template:
+    metadata:
+      labels:
+        app: hogwarts
+        component: web
+        environment: production
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9090"
+        prometheus.io/path: "/metrics"
+    spec:
+      # Anti-affinity for spreading pods across nodes
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - hogwarts
+              topologyKey: kubernetes.io/hostname
+
+      # Security context
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        fsGroup: 1001
+        seccompProfile:
+          type: RuntimeDefault
+
+      # Service account
+      serviceAccountName: hogwarts-app
+
+      # Init container for database readiness
+      initContainers:
+      - name: wait-for-db
+        image: busybox:1.35
+        command: ['sh', '-c', 'until nc -z postgres-service 5432; do echo "Waiting for database..."; sleep 2; done;']
+        resources:
+          limits:
+            memory: "64Mi"
+            cpu: "50m"
+
+      containers:
+      - name: hogwarts
+        image: registry.databayt.org/hogwarts/app:latest
+        imagePullPolicy: Always
+
+        ports:
+        - name: http
+          containerPort: 3000
+          protocol: TCP
+        - name: metrics
+          containerPort: 9090
+          protocol: TCP
+
+        # Environment variables from ConfigMap and Secrets
+        envFrom:
+        - configMapRef:
+            name: hogwarts-config
+        - secretRef:
+            name: hogwarts-secrets
+
+        # Individual environment overrides
+        env:
+        - name: NODE_ENV
+          value: "production"
+        - name: PORT
+          value: "3000"
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: hogwarts-database
+              key: connection-string
+        - name: NEXTAUTH_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: hogwarts-auth
+              key: secret
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: hogwarts-aws
+              key: access-key-id
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: hogwarts-aws
+              key: secret-access-key
+
+        # Resource limits and requests
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+            ephemeral-storage: "1Gi"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+            ephemeral-storage: "10Gi"
+
+        # Probes for health checking
+        startupProbe:
+          httpGet:
+            path: /api/health
+            port: http
+            httpHeaders:
+            - name: X-Health-Check
+              value: startup
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 30
+
+        livenessProbe:
+          httpGet:
+            path: /api/health
+            port: http
+            httpHeaders:
+            - name: X-Health-Check
+              value: liveness
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 3
+
+        readinessProbe:
+          httpGet:
+            path: /api/health/ready
+            port: http
+            httpHeaders:
+            - name: X-Health-Check
+              value: readiness
+          initialDelaySeconds: 20
+          periodSeconds: 10
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 3
+
+        # Volume mounts
+        volumeMounts:
+        - name: upload-storage
+          mountPath: /app/uploads
+        - name: temp-storage
+          mountPath: /app/uploads/temp
+        - name: cache-storage
+          mountPath: /app/.next/cache
+        - name: logs
+          mountPath: /app/logs
+
+        # Security context for container
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: false
+          runAsNonRoot: true
+          runAsUser: 1001
+          capabilities:
+            drop:
+            - ALL
+            add:
+            - NET_BIND_SERVICE
+
+        # Lifecycle hooks
+        lifecycle:
+          preStop:
+            exec:
+              command: ["/bin/sh", "-c", "sleep 15"]  # Allow time for load balancer to drain
+
+      # Sidecar container for virus scanning
+      - name: clamav
+        image: clamav/clamav:latest
+        ports:
+        - name: clamav
+          containerPort: 3310
+          protocol: TCP
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "100m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        volumeMounts:
+        - name: quarantine-storage
+          mountPath: /quarantine
+        - name: clamav-db
+          mountPath: /var/lib/clamav
+
+      # Volumes
+      volumes:
+      - name: upload-storage
+        persistentVolumeClaim:
+          claimName: hogwarts-uploads-pvc
+      - name: temp-storage
+        emptyDir:
+          sizeLimit: 5Gi
+      - name: cache-storage
+        emptyDir:
+          sizeLimit: 2Gi
+      - name: logs
+        emptyDir:
+          sizeLimit: 1Gi
+      - name: quarantine-storage
+        emptyDir:
+          sizeLimit: 1Gi
+      - name: clamav-db
+        emptyDir:
+          sizeLimit: 2Gi
+
+      # Image pull secrets
+      imagePullSecrets:
+      - name: registry-credentials
+
+      # DNS configuration
+      dnsPolicy: ClusterFirst
+      dnsConfig:
+        options:
+        - name: ndots
+          value: "2"
+        - name: edns0
+
+      # Termination grace period
+      terminationGracePeriodSeconds: 30
+
+      # Node selector for specific node types
+      nodeSelector:
+        node.kubernetes.io/instance-type: "t3.large"
+
+---
+# HorizontalPodAutoscaler for auto-scaling
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: hogwarts-app-hpa
+  namespace: hogwarts-production
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: hogwarts-app
+  minReplicas: 3
+  maxReplicas: 20
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  - type: Pods
+    pods:
+      metric:
+        name: http_requests_per_second
+      target:
+        type: AverageValue
+        averageValue: "1000"
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+      - type: Pods
+        value: 2
+        periodSeconds: 60
+      - type: Percent
+        value: 100
+        periodSeconds: 60
+      selectPolicy: Max
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Pods
+        value: 1
+        periodSeconds: 60
+      selectPolicy: Min
+
+---
+# PodDisruptionBudget for high availability
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: hogwarts-app-pdb
+  namespace: hogwarts-production
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: hogwarts
+      component: web
+
+---
+# NetworkPolicy for security
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: hogwarts-app-netpol
+  namespace: hogwarts-production
+spec:
+  podSelector:
+    matchLabels:
+      app: hogwarts
+      component: web
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app: nginx-ingress
+    - namespaceSelector:
+        matchLabels:
+          name: ingress-nginx
+    ports:
+    - protocol: TCP
+      port: 3000
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app: postgres
+    ports:
+    - protocol: TCP
+      port: 5432
+  - to:
+    - podSelector:
+        matchLabels:
+          app: redis
+    ports:
+    - protocol: TCP
+      port: 6379
+  - to:  # Allow external HTTPS
+    ports:
+    - protocol: TCP
+      port: 443
+  - to:  # Allow DNS
+    ports:
+    - protocol: UDP
+      port: 53

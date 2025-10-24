@@ -1,0 +1,127 @@
+# Production Dockerfile for Hogwarts Platform with File Upload System
+# Multi-stage build for optimized image size and security
+
+# Stage 1: Dependencies
+FROM node:20-alpine AS deps
+LABEL stage=deps
+WORKDIR /app
+
+# Install system dependencies
+RUN apk add --no-cache libc6-compat python3 make g++ \
+    && npm install -g pnpm@9
+
+# Copy dependency files
+COPY package.json pnpm-lock.yaml ./
+COPY prisma ./prisma/
+
+# Install production dependencies
+RUN pnpm install --frozen-lockfile --prod \
+    && pnpm prisma generate
+
+# Stage 2: Builder
+FROM node:20-alpine AS builder
+LABEL stage=builder
+WORKDIR /app
+
+# Install build dependencies
+RUN apk add --no-cache libc6-compat python3 make g++ \
+    && npm install -g pnpm@9
+
+# Copy dependency files
+COPY package.json pnpm-lock.yaml ./
+
+# Install all dependencies (including dev)
+RUN pnpm install --frozen-lockfile
+
+# Copy source code
+COPY . .
+
+# Copy generated Prisma client from deps stage
+COPY --from=deps /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=deps /app/node_modules/@prisma ./node_modules/@prisma
+
+# Build application
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV SKIP_ENV_VALIDATION=1
+RUN pnpm build
+
+# Remove dev dependencies
+RUN pnpm prune --prod
+
+# Stage 3: Runner
+FROM node:20-alpine AS runner
+LABEL stage=production
+WORKDIR /app
+
+# Install runtime dependencies
+RUN apk add --no-cache \
+    libc6-compat \
+    curl \
+    # ClamAV for virus scanning
+    clamav \
+    clamav-libunrar \
+    # ImageMagick for image processing
+    imagemagick \
+    # FFmpeg for video processing
+    ffmpeg \
+    && freshclam --quiet
+
+# Create non-root user
+RUN addgroup -g 1001 -S nodejs \
+    && adduser -S nextjs -u 1001
+
+# Copy built application
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
+
+# Copy Prisma files for migrations
+COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma ./node_modules/@prisma
+
+# Copy configuration files
+COPY --from=builder --chown=nextjs:nodejs /app/next.config.mjs ./
+COPY --from=builder --chown=nextjs:nodejs /app/package.json ./
+
+# Create upload directories with proper permissions
+RUN mkdir -p /app/uploads/temp \
+    /app/uploads/processing \
+    /app/uploads/quarantine \
+    /app/logs \
+    && chown -R nextjs:nodejs /app/uploads \
+    && chown -R nextjs:nodejs /app/logs \
+    && chmod -R 755 /app/uploads
+
+# Security: Set secure environment defaults
+ENV NODE_ENV=production \
+    NEXT_TELEMETRY_DISABLED=1 \
+    PORT=3000 \
+    HOSTNAME="0.0.0.0" \
+    # File upload defaults
+    MAX_FILE_SIZE=5368709120 \
+    UPLOAD_DIR=/app/uploads \
+    TEMP_UPLOAD_DIR=/app/uploads/temp \
+    QUARANTINE_DIR=/app/uploads/quarantine \
+    # Security headers
+    SECURE_HEADERS=true \
+    # Logging
+    LOG_LEVEL=info \
+    LOG_DIR=/app/logs
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:3000/api/health || exit 1
+
+# Switch to non-root user
+USER nextjs
+
+# Expose port
+EXPOSE 3000
+
+# Start script with signal handling
+COPY --chown=nextjs:nodejs docker/entrypoint.sh /app/
+RUN chmod +x /app/entrypoint.sh
+
+ENTRYPOINT ["/app/entrypoint.sh"]
+CMD ["node", "server.js"]
