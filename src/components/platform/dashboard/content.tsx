@@ -1,4 +1,5 @@
 import { currentUser } from "@/components/auth/auth";
+import type { ExtendedUser } from "@/next-auth";
 import PageHeader from "@/components/atom/page-header";
 import { StudentDashboard } from "./dashboards/student-dashboard";
 import { TeacherDashboard } from "./dashboards/teacher-dashboard";
@@ -18,7 +19,7 @@ interface Props {
 }
 
 export default async function DashboardContent({ school, dictionary }: Props = {}) {
-  const user = await currentUser();
+  const user = await currentUser() as ExtendedUser | null;
 
   // If no user, show login component
   if (!user) {
@@ -73,7 +74,7 @@ export default async function DashboardContent({ school, dictionary }: Props = {
   );
 }
 
-function DefaultDashboard({ user, dictionary }: { user: any, dictionary?: Dictionary['school'] }) {
+function DefaultDashboard({ user, dictionary }: { user: ExtendedUser, dictionary?: Dictionary['school'] }) {
   return (
     <div className="grid gap-6">
       <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
