@@ -1,0 +1,403 @@
+// Enhanced attendance tracking models for multi-method support
+
+// Extended Attendance model with method tracking
+// Note: The base Attendance model exists in attendance.prisma
+// These are additional fields that should be added to the existing model:
+// - method: AttendanceMethod (tracking how attendance was marked)
+// - deviceId: String? (device used for marking)
+// - checkInTime: DateTime? (exact check-in time)
+// - checkOutTime: DateTime? (exact check-out time)
+// - location: Json? (location data if applicable)
+// - confidence: Float? (accuracy/confidence score for biometric methods)
+
+enum AttendanceMethod {
+  MANUAL
+  GEOFENCE
+  QR_CODE
+  BARCODE
+  RFID
+  FINGERPRINT
+  FACE_RECOGNITION
+  NFC
+  BLUETOOTH
+  BULK_UPLOAD
+}
+
+// Student identification methods (cards, biometrics, etc.)
+model StudentIdentifier {
+  id         String         @id @default(cuid())
+  schoolId   String
+  school     School         @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  studentId  String
+  student    Student        @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  type       IdentifierType
+  value      String         // Card number, fingerprint hash, face encoding, etc.
+  metadata   Json?          // Additional data specific to the identifier type
+  isActive   Boolean        @default(true)
+  isPrimary  Boolean        @default(false)
+  issuedAt   DateTime       @default(now())
+  issuedBy   String?        // User ID who issued this identifier
+  expiresAt  DateTime?
+  lastUsedAt DateTime?
+  usageCount Int            @default(0)
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  @@unique([schoolId, type, value])
+  @@index([studentId])
+  @@index([type])
+  @@index([isActive])
+  @@index([expiresAt])
+  @@map("student_identifiers")
+}
+
+enum IdentifierType {
+  BARCODE
+  QR_CODE
+  RFID_CARD
+  NFC_TAG
+  FINGERPRINT
+  FACE_ID
+  BLUETOOTH_MAC
+  STUDENT_ID     // Traditional student ID number
+  MOBILE_DEVICE  // Device ID for app-based tracking
+}
+
+// Attendance devices registry
+model AttendanceDevice {
+  id           String       @id @default(cuid())
+  schoolId     String
+  school       School       @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  deviceId     String       // Unique device identifier
+  name         String
+  type         DeviceType
+  model        String?      // Device model/manufacturer
+  location     String?      // Physical location of device
+  ipAddress    String?
+  macAddress   String?
+  isActive     Boolean      @default(true)
+  isOnline     Boolean      @default(false)
+  lastPing     DateTime?
+  configuration Json?       // Device-specific configuration
+  metadata     Json?        // Additional device information
+  installedAt  DateTime     @default(now())
+  installedBy  String?      // User ID who installed/registered
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  // Relations
+  sessions     AttendanceSession[]
+  events       AttendanceEvent[]
+
+  @@unique([schoolId, deviceId])
+  @@index([type])
+  @@index([isActive])
+  @@index([location])
+  @@map("attendance_devices")
+}
+
+enum DeviceType {
+  WEB_CAMERA
+  RFID_READER
+  NFC_READER
+  FINGERPRINT_SCANNER
+  FACE_CAMERA
+  BLE_BEACON
+  MOBILE_APP
+  TABLET_KIOSK
+  SMART_GATE
+}
+
+// Attendance sessions for time tracking
+model AttendanceSession {
+  id           String           @id @default(cuid())
+  schoolId     String
+  school       School           @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  studentId    String
+  student      Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  classId      String?
+  class        Class?           @relation(fields: [classId], references: [id], onDelete: SetNull)
+  date         DateTime         @db.Date
+  checkIn      DateTime
+  checkOut     DateTime?
+  duration     Int?             // Duration in minutes
+  method       AttendanceMethod
+  deviceId     String?
+  device       AttendanceDevice? @relation(fields: [deviceId], references: [id], onDelete: SetNull)
+  locations    Json[]           // Array of location updates during session
+  breaks       Json[]           // Break periods during the session
+  activities   Json[]           // Activities performed during session
+  isValid      Boolean          @default(true)
+  invalidReason String?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  @@index([studentId, date])
+  @@index([classId])
+  @@index([checkIn])
+  @@index([method])
+  @@map("attendance_sessions")
+}
+
+// Attendance events log
+model AttendanceEvent {
+  id           String           @id @default(cuid())
+  schoolId     String
+  school       School           @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  studentId    String
+  student      Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  eventType    AttendanceEventType
+  method       AttendanceMethod
+  deviceId     String?
+  device       AttendanceDevice? @relation(fields: [deviceId], references: [id], onDelete: SetNull)
+  location     Json?            // Location at time of event
+  metadata     Json?            // Event-specific data
+  success      Boolean          @default(true)
+  errorMessage String?
+  ipAddress    String?
+  userAgent    String?
+  timestamp    DateTime         @default(now())
+  processedAt  DateTime?
+  processedBy  String?          // System or user that processed the event
+
+  @@index([studentId])
+  @@index([eventType])
+  @@index([timestamp])
+  @@index([success])
+  @@map("attendance_events")
+}
+
+enum AttendanceEventType {
+  CHECK_IN
+  CHECK_OUT
+  STATUS_CHANGE
+  SCAN_SUCCESS
+  SCAN_FAILURE
+  AUTH_SUCCESS
+  AUTH_FAILURE
+  LOCATION_UPDATE
+  DEVICE_REGISTER
+  DEVICE_UNREGISTER
+  MANUAL_OVERRIDE
+  BULK_IMPORT
+}
+
+// QR Code tracking
+model QRCodeSession {
+  id           String    @id @default(cuid())
+  schoolId     String
+  school       School    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  classId      String
+  class        Class     @relation(fields: [classId], references: [id], onDelete: Cascade)
+  code         String    @unique
+  payload      Json      // Encrypted payload data
+  generatedBy  String    // User ID who generated
+  generatedAt  DateTime  @default(now())
+  expiresAt    DateTime
+  isActive     Boolean   @default(true)
+  scanCount    Int       @default(0)
+  maxScans     Int?      // Maximum allowed scans
+  scannedBy    Json[]    // Array of student IDs who scanned
+  configuration Json?    // QR code specific settings
+  invalidatedAt DateTime?
+  invalidatedBy String?
+
+  @@index([classId])
+  @@index([expiresAt])
+  @@index([isActive])
+  @@map("qr_code_sessions")
+}
+
+// Biometric templates storage
+model BiometricTemplate {
+  id           String         @id @default(cuid())
+  schoolId     String
+  school       School         @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  studentId    String
+  student      Student        @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  type         BiometricType
+  template     String         @db.Text // Encrypted biometric template
+  quality      Float?         // Template quality score
+  isActive     Boolean        @default(true)
+  isPrimary    Boolean        @default(false)
+  enrolledAt   DateTime       @default(now())
+  enrolledBy   String?        // User ID who enrolled
+  deviceId     String?        // Device used for enrollment
+  lastMatchedAt DateTime?
+  matchCount   Int            @default(0)
+  failureCount Int            @default(0)
+  metadata     Json?          // Additional biometric metadata
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  @@unique([schoolId, studentId, type, isPrimary])
+  @@index([studentId])
+  @@index([type])
+  @@index([isActive])
+  @@map("biometric_templates")
+}
+
+enum BiometricType {
+  FINGERPRINT
+  FACE
+  IRIS
+  PALM
+  VOICE
+}
+
+// RFID/NFC card management
+model AccessCard {
+  id           String       @id @default(cuid())
+  schoolId     String
+  school       School       @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  cardNumber   String       @unique
+  cardType     CardType
+  studentId    String?
+  student      Student?     @relation(fields: [studentId], references: [id], onDelete: SetNull)
+  teacherId    String?
+  teacher      Teacher?     @relation(fields: [teacherId], references: [id], onDelete: SetNull)
+  isActive     Boolean      @default(true)
+  isPrimary    Boolean      @default(false)
+  issuedAt     DateTime     @default(now())
+  issuedBy     String?      // User ID who issued
+  activatedAt  DateTime?
+  deactivatedAt DateTime?
+  expiresAt    DateTime?
+  lastUsedAt   DateTime?
+  usageCount   Int          @default(0)
+  accessLevel  String?      // Access permissions
+  metadata     Json?        // Additional card data
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  @@index([cardType])
+  @@index([studentId])
+  @@index([teacherId])
+  @@index([isActive])
+  @@index([expiresAt])
+  @@map("access_cards")
+}
+
+enum CardType {
+  RFID_125KHZ
+  RFID_13_56MHZ
+  NFC_MIFARE
+  NFC_NTAG
+  MAGNETIC
+  BARCODE
+  QR_CARD
+  SMART_CARD
+}
+
+// Bluetooth beacon registry
+model BluetoothBeacon {
+  id           String    @id @default(cuid())
+  schoolId     String
+  school       School    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  uuid         String    // Beacon UUID
+  major        Int       // Major value
+  minor        Int       // Minor value
+  macAddress   String    @unique
+  name         String
+  location     String    // Physical location
+  roomId       String?   // Associated classroom
+  signalPower  Int       @default(-59) // Measured power at 1 meter
+  isActive     Boolean   @default(true)
+  batteryLevel Float?    // Battery percentage
+  lastPing     DateTime?
+  configuration Json?    // Beacon-specific settings
+  installedAt  DateTime  @default(now())
+  installedBy  String?   // User ID who installed
+  metadata     Json?     // Additional beacon info
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@unique([uuid, major, minor])
+  @@index([schoolId])
+  @@index([location])
+  @@index([isActive])
+  @@map("bluetooth_beacons")
+}
+
+// Attendance rules and policies
+model AttendancePolicy {
+  id                String    @id @default(cuid())
+  schoolId          String
+  school            School    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  name              String
+  description       String?
+  isActive          Boolean   @default(true)
+  priority          Int       @default(0)
+  appliesTo         String[]  // Class IDs, Grade levels, or "ALL"
+  methods           AttendanceMethod[] // Allowed methods
+  startTime         DateTime  @db.Time // Class start time
+  graceperiod       Int       @default(15) // Minutes after start time
+  lateThreshold     Int       @default(15) // Minutes to be marked late
+  absentThreshold   Int       @default(30) // Minutes to be marked absent
+  requireCheckOut   Boolean   @default(false)
+  minSessionDuration Int?     // Minimum minutes for valid attendance
+  maxDailyAbsences  Int?      // Maximum absences before alert
+  alertRecipients   String[]  // User IDs to alert
+  exceptions        Json?     // Holiday/special day exceptions
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([schoolId])
+  @@index([isActive])
+  @@index([priority])
+  @@map("attendance_policies")
+}
+
+// Attendance reports configuration
+model AttendanceReport {
+  id           String         @id @default(cuid())
+  schoolId     String
+  school       School         @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  name         String
+  description  String?
+  type         ReportType
+  frequency    ReportFrequency
+  recipients   String[]       // Email addresses or user IDs
+  filters      Json           // Report filter criteria
+  groupBy      String[]       // Grouping fields
+  includeStats Boolean        @default(true)
+  format       String[]       @default(["PDF", "EXCEL"])
+  template     String?        // Custom template ID
+  isActive     Boolean        @default(true)
+  lastRunAt    DateTime?
+  nextRunAt    DateTime?
+  configuration Json?         // Additional report settings
+  createdBy    String         // User ID who created
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  @@index([schoolId])
+  @@index([type])
+  @@index([isActive])
+  @@index([nextRunAt])
+  @@map("attendance_reports")
+}
+
+enum ReportType {
+  DAILY_SUMMARY
+  WEEKLY_SUMMARY
+  MONTHLY_SUMMARY
+  STUDENT_REPORT
+  CLASS_REPORT
+  ABSENCE_REPORT
+  TARDINESS_REPORT
+  PERFECT_ATTENDANCE
+  AT_RISK_STUDENTS
+  COMPLIANCE_REPORT
+}
+
+enum ReportFrequency {
+  DAILY
+  WEEKLY
+  BIWEEKLY
+  MONTHLY
+  QUARTERLY
+  SEMESTER
+  YEARLY
+  ON_DEMAND
+}

@@ -31,7 +31,7 @@ import {
 import type { Task } from "@prisma/client";
 import { formatDate } from "@/components/table/lib/format";
 import { getErrorMessage } from "@/components/table/lib/handle-error";
-import type { DataTableRowAction } from "@/components/table/types/data-table";
+import type { DataTableRowAction } from "@/components/table/types";
 
 import { updateTask } from "../_lib/actions";
 import { getPriorityIcon, getStatusIcon } from "../_lib/utils";

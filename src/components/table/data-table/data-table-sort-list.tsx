@@ -38,7 +38,7 @@ import {
   SortableItemHandle,
   SortableOverlay,
 } from "@/components/table/atom/sortable";
-import { dataTableConfig } from "@/components/table/config/data-table";
+import { dataTableConfig } from "@/components/table/config";
 import { cn } from "@/lib/utils";
 
 const OPEN_MENU_SHORTCUT = "s";

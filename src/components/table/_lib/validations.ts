@@ -11,7 +11,7 @@ import type { Task } from "@prisma/client";
 import {
   getFiltersStateParser,
   getSortingStateParser,
-} from "@/components/table/lib/parsers";
+} from "@/components/table/utils";
 
 export const searchParamsCache = createSearchParamsCache({
   filterFlag: parseAsStringEnum(

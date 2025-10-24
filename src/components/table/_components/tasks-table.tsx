@@ -8,8 +8,8 @@ import { DataTableFilterMenu } from "@/components/table/data-table/data-table-fi
 import { DataTableSortList } from "@/components/table/data-table/data-table-sort-list";
 import { DataTableToolbar } from "@/components/table/data-table/data-table-toolbar";
 import type { Task } from "@prisma/client";
-import { useDataTable } from "@/components/table/hooks/use-data-table";
-import type { DataTableRowAction } from "@/components/table/types/data-table";
+import { useDataTable } from "@/components/table/use-data-table";
+import type { DataTableRowAction } from "@/components/table/types";
 import type {
   getEstimatedHoursRange,
   getTaskPriorityCounts,

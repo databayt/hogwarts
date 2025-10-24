@@ -36,13 +36,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useDebouncedCallback } from "@/components/table/hooks/use-debounced-callback";
-import { getDefaultFilterOperator, getFilterOperators } from "@/components/table/lib/data-table";
+import { useDebouncedCallback } from "@/components/table/use-debounced-callback";
+import { getDefaultFilterOperator, getFilterOperators, getFiltersStateParser } from "@/components/table/utils";
 import { formatDate } from "@/components/table/lib/format";
 import { generateId } from "@/components/table/lib/id";
-import { getFiltersStateParser } from "@/components/table/lib/parsers";
 import { cn } from "@/lib/utils";
-import type { ExtendedColumnFilter, FilterOperator } from "@/components/table/types/data-table";
+import type { ExtendedColumnFilter, FilterOperator } from "@/components/table/types";
 
 const FILTERS_KEY = "filters";
 const DEBOUNCE_MS = 300;

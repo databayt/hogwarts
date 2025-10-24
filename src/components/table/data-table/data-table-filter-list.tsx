@@ -55,18 +55,17 @@ import {
   SortableItemHandle,
   SortableOverlay,
 } from "@/components/table/atom/sortable";
-import { dataTableConfig } from "@/components/table/config/data-table";
-import { useDebouncedCallback } from "@/components/table/hooks/use-debounced-callback";
-import { getDefaultFilterOperator, getFilterOperators } from "@/components/table/lib/data-table";
+import { dataTableConfig } from "@/components/table/config";
+import { useDebouncedCallback } from "@/components/table/use-debounced-callback";
+import { getDefaultFilterOperator, getFilterOperators, getFiltersStateParser } from "@/components/table/utils";
 import { formatDate } from "@/components/table/lib/format";
 import { generateId } from "@/components/table/lib/id";
-import { getFiltersStateParser } from "@/components/table/lib/parsers";
 import { cn } from "@/lib/utils";
 import type {
   ExtendedColumnFilter,
   FilterOperator,
   JoinOperator,
-} from "@/components/table/types/data-table";
+} from "@/components/table/types";
 
 const FILTERS_KEY = "filters";
 const JOIN_OPERATOR_KEY = "joinOperator";
