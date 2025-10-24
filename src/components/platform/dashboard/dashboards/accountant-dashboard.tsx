@@ -1,22 +1,23 @@
 import type { Dictionary } from "@/components/internationalization/dictionaries";
+import type { AuthUser } from "@/types/auth";
 import { db } from "@/lib/db";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { QuickActions, type QuickAction } from "@/components/platform/dashboard/quick-actions";
 import { Progress } from "@/components/ui/progress";
 import { DollarSign, CreditCard, FileText, TrendingUp, AlertTriangle, Calendar, Calculator, Receipt } from "lucide-react";
 
-interface AccountantDashboardProps {
-  user: any;
+interface Props {
+  user: AuthUser;
   dictionary?: Dictionary["school"];
 }
 
-export async function AccountantDashboard({ user, dictionary }: AccountantDashboardProps) {
+export async function AccountantDashboard({ user, dictionary }: Props) {
   // Fetch real data from database
   const [totalInvoices, paidInvoices, unpaidInvoices] = await Promise.all([
-    db.userInvoice.count({ where: { schoolId: user.schoolId } }),
-    db.userInvoice.count({ where: { schoolId: user.schoolId, status: "PAID" } }),
-    db.userInvoice.count({ where: { schoolId: user.schoolId, status: "UNPAID" } })
+    db.userInvoice.count({ where: { schoolId: user.schoolId || "" } }),
+    db.userInvoice.count({ where: { schoolId: user.schoolId || "", status: "PAID" } }),
+    db.userInvoice.count({ where: { schoolId: user.schoolId || "", status: "UNPAID" } })
   ]);
 
   // Mock data for unimplemented features
@@ -138,31 +139,33 @@ export async function AccountantDashboard({ user, dictionary }: AccountantDashbo
       </div>
 
       {/* Quick Actions */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-2">
-            <Button variant="outline" size="sm">
-              <CreditCard className="mr-2 h-4 w-4" />
-              Process Payments
-            </Button>
-            <Button variant="outline" size="sm">
-              <Receipt className="mr-2 h-4 w-4" />
-              Generate Invoices
-            </Button>
-            <Button variant="outline" size="sm">
-              <FileText className="mr-2 h-4 w-4" />
-              Run Reports
-            </Button>
-            <Button variant="outline" size="sm">
-              <Calculator className="mr-2 h-4 w-4" />
-              Reconcile Accounts
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="space-y-3">
+        <h2>Quick Actions</h2>
+        <QuickActions
+          actions={[
+            {
+              icon: CreditCard,
+              label: "Process Payments",
+              href: "/payments/process",
+            },
+            {
+              icon: Receipt,
+              label: "Generate Invoices",
+              href: "/invoices/new",
+            },
+            {
+              icon: FileText,
+              label: "Run Reports",
+              href: "/reports/financial",
+            },
+            {
+              icon: Calculator,
+              label: "Reconcile Accounts",
+              href: "/accounting/reconcile",
+            },
+          ] as QuickAction[]}
+        />
+      </div>
 
       {/* Main Content Grid */}
       <div className="grid gap-6 md:grid-cols-2">
