@@ -1,5 +1,4 @@
 import { currentUser } from "@/components/auth/auth";
-import type { ExtendedUser } from "@/next-auth";
 import PageHeader from "@/components/atom/page-header";
 import { StudentDashboard } from "./dashboards/student-dashboard";
 import { TeacherDashboard } from "./dashboards/teacher-dashboard";
@@ -12,6 +11,14 @@ import { TenantLoginRedirect } from "@/components/auth/tenant-login-redirect";
 import { CookieDebug } from "@/components/auth/cookie-debug";
 import type { School } from "@/components/site/types";
 import type { Dictionary } from "@/components/internationalization/dictionaries";
+
+// Extended user type that includes the properties added by our auth callbacks
+type ExtendedUser = {
+  id: string;
+  email?: string | null;
+  role?: string;
+  schoolId?: string | null;
+};
 
 interface Props {
   school?: School; // Make school prop optional
