@@ -1,5 +1,4 @@
 import type { Dictionary } from "@/components/internationalization/dictionaries";
-import type { AuthUser } from "@/types/auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,7 +9,7 @@ import { formatDistanceToNow } from "date-fns";
 import { getDashboardSummary } from "./actions";
 
 interface Props {
-  user: AuthUser;
+  user: any;
   dictionary?: Dictionary["school"];
 }
 

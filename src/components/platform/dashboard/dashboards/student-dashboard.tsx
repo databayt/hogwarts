@@ -12,11 +12,10 @@ import {
   MessageSquare,
 } from "lucide-react";
 import type { Dictionary } from "@/components/internationalization/dictionaries";
-import type { AuthUser } from "@/types/auth";
 import { getStudentDashboardData } from "../actions";
 
 interface Props {
-  user: AuthUser;
+  user: any;
   dictionary?: Dictionary["school"];
 }
 

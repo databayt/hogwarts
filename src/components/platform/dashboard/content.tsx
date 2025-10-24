@@ -1,5 +1,4 @@
 import { currentUser } from "@/components/auth/auth";
-import type { AuthUser } from "@/types/auth";
 import PageHeader from "@/components/atom/page-header";
 import { StudentDashboard } from "./dashboards/student-dashboard";
 import { TeacherDashboard } from "./dashboards/teacher-dashboard";
@@ -19,7 +18,7 @@ interface Props {
 }
 
 export default async function DashboardContent({ school, dictionary }: Props = {}) {
-  const user = await currentUser() as AuthUser | null;
+  const user = await currentUser();
 
   // If no user, show login component
   if (!user) {
@@ -44,21 +43,21 @@ export default async function DashboardContent({ school, dictionary }: Props = {
     const userRole = user.role || 'USER';
     switch (userRole) {
       case "STUDENT":
-        return <StudentDashboard user={user} dictionary={dictionary!} />;
+        return <StudentDashboard user={user} dictionary={dictionary} />;
       case "TEACHER":
-        return <TeacherDashboard user={user} dictionary={dictionary!} />;
+        return <TeacherDashboard user={user} dictionary={dictionary} />;
       case "GUARDIAN":
-        return <ParentDashboard user={user} dictionary={dictionary!} />;
+        return <ParentDashboard user={user} dictionary={dictionary} />;
       case "STAFF":
-        return <StaffDashboard user={user} dictionary={dictionary!} />;
+        return <StaffDashboard user={user} dictionary={dictionary} />;
       case "ADMIN":
-        return <AdminDashboard user={user} dictionary={dictionary!} />;
+        return <AdminDashboard user={user} dictionary={dictionary} />;
       case "PRINCIPAL":
-        return <PrincipalDashboard user={user} dictionary={dictionary!} />;
+        return <PrincipalDashboard user={user} dictionary={dictionary} />;
       case "ACCOUNTANT":
-        return <AccountantDashboard user={user} dictionary={dictionary!} />;
+        return <AccountantDashboard user={user} dictionary={dictionary} />;
       default:
-        return <DefaultDashboard user={user} dictionary={dictionary!} />;
+        return <DefaultDashboard user={user} dictionary={dictionary} />;
     }
   };
 
@@ -74,7 +73,7 @@ export default async function DashboardContent({ school, dictionary }: Props = {
   );
 }
 
-function DefaultDashboard({ user, dictionary }: { user: AuthUser, dictionary?: Dictionary['school'] }) {
+function DefaultDashboard({ user, dictionary }: { user: any, dictionary?: Dictionary['school'] }) {
   return (
     <div className="grid gap-6">
       <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">

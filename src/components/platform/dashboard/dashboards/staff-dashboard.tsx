@@ -1,5 +1,4 @@
 import type { Dictionary } from "@/components/internationalization/dictionaries";
-import type { AuthUser } from "@/types/auth";
 import { db } from "@/lib/db";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,7 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { Users, Search, FileText, Settings, Clock, AlertTriangle, CheckCircle, Building } from "lucide-react";
 
 interface Props {
-  user: AuthUser;
+  user: any;
   dictionary?: Dictionary["school"];
 }
 

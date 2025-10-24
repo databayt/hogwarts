@@ -3,11 +3,10 @@ import { Badge } from "@/components/ui/badge";
 import { QuickActions, type QuickAction } from "@/components/platform/dashboard/quick-actions";
 import { Calendar, Users, FileText, MessageSquare, BookOpen } from "lucide-react";
 import type { Dictionary } from "@/components/internationalization/dictionaries";
-import type { AuthUser } from "@/types/auth";
 import { getTeacherDashboardData } from "../actions";
 
 interface Props {
-  user: AuthUser;
+  user: any;
   dictionary?: Dictionary["school"];
 }
 

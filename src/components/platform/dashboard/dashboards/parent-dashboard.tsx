@@ -11,11 +11,10 @@ import {
   Bell,
 } from "lucide-react";
 import type { Dictionary } from "@/components/internationalization/dictionaries";
-import type { AuthUser } from "@/types/auth";
 import { getParentDashboardData } from "../actions";
 
 interface Props {
-  user: AuthUser;
+  user: any;
   dictionary?: Dictionary["school"];
 }
 

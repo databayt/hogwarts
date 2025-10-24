@@ -1,5 +1,4 @@
 import type { Dictionary } from "@/components/internationalization/dictionaries";
-import type { AuthUser } from "@/types/auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { QuickActions, type QuickAction } from "@/components/platform/dashboard/quick-actions";
@@ -20,7 +19,7 @@ import { getPrincipalDashboardData } from "../actions/principal";
 import { DashboardSectionError } from "../error-boundary";
 
 interface Props {
-  user: AuthUser;
+  user: any;
   dictionary: Dictionary["school"];
 }
 
