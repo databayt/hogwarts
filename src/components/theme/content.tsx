@@ -48,18 +48,16 @@ export function ThemeContent({ dictionary, lang }: ThemeContentProps) {
 
         {/* Preset Themes Tab */}
         <TabsContent value="presets" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Preset Themes</CardTitle>
-              <CardDescription>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <h3>Preset Themes</h3>
+              <p className="muted">
                 Choose from our curated collection of beautiful themes. Click on any theme to apply
                 it instantly.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <PresetGallery />
-            </CardContent>
-          </Card>
+              </p>
+            </div>
+            <PresetGallery />
+          </div>
         </TabsContent>
 
         {/* Custom Theme Tab */}
