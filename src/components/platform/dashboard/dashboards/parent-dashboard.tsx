@@ -30,24 +30,62 @@ export async function ParentDashboard({
   // Fetch real data from server action
   const data = await getParentDashboardData();
 
+  // Get dashboard dictionary
+  const dashDict = dictionary?.parentDashboard || {
+    stats: {
+      children: "Children",
+      attendance: "Attendance",
+      assignments: "Assignments",
+      announcements: "Announcements",
+    },
+    quickActions: {
+      title: "Quick Actions",
+      messageTeacher: "Message Teacher",
+      viewReportCard: "View Report Card",
+      checkAttendance: "Check Attendance",
+    },
+    sections: {
+      childrenOverview: "Children Overview",
+      recentGrades: "Recent Grades",
+      upcomingAssignments: "Upcoming Assignments",
+      announcements: "School Announcements",
+      attendanceSummary: "Attendance Summary",
+    },
+    labels: {
+      enrolledStudents: "Enrolled students",
+      daysPresent: "days present",
+      upcoming: "Upcoming",
+      newMessages: "New messages",
+      noChildren: "No children found",
+      noGrades: "No recent grades",
+      noAssignments: "No upcoming assignments",
+      noAnnouncements: "No announcements",
+      due: "Due",
+      pending: "Pending",
+      attendance: "Attendance",
+      recentGrades: "Recent Grades",
+      presentDays: "Present Days",
+    },
+  };
+
   return (
     <div className="space-y-6">
       {/* Hero Section - Children Overview */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Children</CardTitle>
+            <CardTitle className="text-sm font-medium">{dashDict.stats.children}</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{data.children.length}</div>
-            <p className="text-xs text-muted-foreground">Enrolled students</p>
+            <p className="text-xs text-muted-foreground">{dashDict.labels.enrolledStudents}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Attendance</CardTitle>
+            <CardTitle className="text-sm font-medium">{dashDict.stats.attendance}</CardTitle>
             <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -55,33 +93,32 @@ export async function ParentDashboard({
               {data.attendanceSummary.percentage.toFixed(1)}%
             </div>
             <p className="text-xs text-muted-foreground">
-              {data.attendanceSummary.presentDays}/{data.attendanceSummary.totalDays} days
-              present
+              {data.attendanceSummary.presentDays}/{data.attendanceSummary.totalDays} {dashDict.labels.daysPresent}
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Assignments</CardTitle>
+            <CardTitle className="text-sm font-medium">{dashDict.stats.assignments}</CardTitle>
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
               {data.upcomingAssignments.length}
             </div>
-            <p className="text-xs text-muted-foreground">Upcoming</p>
+            <p className="text-xs text-muted-foreground">{dashDict.labels.upcoming}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Announcements</CardTitle>
+            <CardTitle className="text-sm font-medium">{dashDict.stats.announcements}</CardTitle>
             <Bell className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{data.announcements.length}</div>
-            <p className="text-xs text-muted-foreground">New messages</p>
+            <p className="text-xs text-muted-foreground">{dashDict.labels.newMessages}</p>
           </CardContent>
         </Card>
       </div>
@@ -89,21 +126,21 @@ export async function ParentDashboard({
       {/* Quick Actions */}
       <Card>
         <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
+          <CardTitle>{dashDict.quickActions.title}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" size="sm">
               <MessageSquare className="mr-2 h-4 w-4" />
-              Message Teacher
+              {dashDict.quickActions.messageTeacher}
             </Button>
             <Button variant="outline" size="sm">
               <FileText className="mr-2 h-4 w-4" />
-              View Report Card
+              {dashDict.quickActions.viewReportCard}
             </Button>
             <Button variant="outline" size="sm">
               <Calendar className="mr-2 h-4 w-4" />
-              Check Attendance
+              {dashDict.quickActions.checkAttendance}
             </Button>
           </div>
         </CardContent>
@@ -114,7 +151,7 @@ export async function ParentDashboard({
         {/* Children Overview Cards */}
         <Card>
           <CardHeader>
-            <CardTitle>Children Overview</CardTitle>
+            <CardTitle>{dashDict.sections.childrenOverview}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {data.children.length > 0 ? (
@@ -126,7 +163,7 @@ export async function ParentDashboard({
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <p className="text-sm text-muted-foreground">Attendance</p>
+                      <p className="text-sm text-muted-foreground">{dashDict.labels.attendance}</p>
                       <div className="flex items-center space-x-2">
                         <Progress
                           value={data.attendanceSummary.percentage}
@@ -139,7 +176,7 @@ export async function ParentDashboard({
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">
-                        Recent Grades
+                        {dashDict.labels.recentGrades}
                       </p>
                       <p className="text-lg font-bold">
                         {data.recentGrades.length}
@@ -150,7 +187,7 @@ export async function ParentDashboard({
               ))
             ) : (
               <p className="text-muted-foreground text-center py-4">
-                No children found
+                {dashDict.labels.noChildren}
               </p>
             )}
           </CardContent>
@@ -159,7 +196,7 @@ export async function ParentDashboard({
         {/* Recent Grades */}
         <Card>
           <CardHeader>
-            <CardTitle>Recent Grades</CardTitle>
+            <CardTitle>{dashDict.sections.recentGrades}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {data.recentGrades.length > 0 ? (
@@ -187,7 +224,7 @@ export async function ParentDashboard({
               ))
             ) : (
               <p className="text-muted-foreground text-center py-4">
-                No recent grades
+                {dashDict.labels.noGrades}
               </p>
             )}
           </CardContent>
@@ -196,7 +233,7 @@ export async function ParentDashboard({
         {/* Upcoming Assignments */}
         <Card>
           <CardHeader>
-            <CardTitle>Upcoming Assignments</CardTitle>
+            <CardTitle>{dashDict.sections.upcomingAssignments}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {data.upcomingAssignments.length > 0 ? (
@@ -222,18 +259,18 @@ export async function ParentDashboard({
                       }
                     >
                       {assignment.status === "NOT_SUBMITTED"
-                        ? "Pending"
+                        ? dashDict.labels.pending
                         : assignment.status}
                     </Badge>
                     <p className="text-xs text-muted-foreground mt-1">
-                      Due: {new Date(assignment.dueDate).toLocaleDateString()}
+                      {dashDict.labels.due}: {new Date(assignment.dueDate).toLocaleDateString()}
                     </p>
                   </div>
                 </div>
               ))
             ) : (
               <p className="text-muted-foreground text-center py-4">
-                No upcoming assignments
+                {dashDict.labels.noAssignments}
               </p>
             )}
           </CardContent>
@@ -242,7 +279,7 @@ export async function ParentDashboard({
         {/* School Announcements */}
         <Card>
           <CardHeader>
-            <CardTitle>School Announcements</CardTitle>
+            <CardTitle>{dashDict.sections.announcements}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {data.announcements.length > 0 ? (
@@ -261,7 +298,7 @@ export async function ParentDashboard({
               ))
             ) : (
               <p className="text-muted-foreground text-center py-4">
-                No announcements
+                {dashDict.labels.noAnnouncements}
               </p>
             )}
           </CardContent>
@@ -271,14 +308,14 @@ export async function ParentDashboard({
       {/* Attendance Summary */}
       <Card>
         <CardHeader>
-          <CardTitle>Attendance Summary</CardTitle>
+          <CardTitle>{dashDict.sections.attendanceSummary}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-between">
             <div className="flex-1">
               <div className="flex justify-between mb-2">
                 <span className="text-sm text-muted-foreground">
-                  Present Days
+                  {dashDict.labels.presentDays}
                 </span>
                 <span className="font-medium">
                   {data.attendanceSummary.presentDays} /{" "}
@@ -292,7 +329,7 @@ export async function ParentDashboard({
                 {data.attendanceSummary.percentage.toFixed(1)}%
               </div>
               <p className="text-xs text-muted-foreground text-center">
-                Attendance
+                {dashDict.labels.attendance}
               </p>
             </div>
           </div>

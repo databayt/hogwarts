@@ -22,8 +22,8 @@ export async function TeacherDashboard({
   // Fetch real data from server action
   const data = await getTeacherDashboardData();
 
-  // Get dashboard dictionary with fallbacks
-  const dashDict = {
+  // Get dashboard dictionary
+  const dashDict = dictionary?.teacherDashboard || {
     stats: {
       todaysClasses: "Today's Classes",
       pendingGrading: "Pending Grading",
@@ -56,6 +56,7 @@ export async function TeacherDashboard({
       noClasses: "No classes scheduled for today",
       noDeadlines: "No upcoming deadlines",
       average: "Average",
+      noPerformanceData: "No performance data available",
     },
   };
 
@@ -247,7 +248,7 @@ export async function TeacherDashboard({
               ))
             ) : (
               <p className="text-muted-foreground text-center py-4">
-                No performance data available
+                {dashDict.labels.noPerformanceData}
               </p>
             )}
           </CardContent>

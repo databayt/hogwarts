@@ -1035,6 +1035,116 @@
         "inProgress": "in-progress"
       }
     },
+    "teacherDashboard": {
+      "title": "Teacher Dashboard",
+      "stats": {
+        "todaysClasses": "Today's Classes",
+        "pendingGrading": "Pending Grading",
+        "attendanceDue": "Attendance Due",
+        "totalStudents": "Total Students"
+      },
+      "quickActions": {
+        "title": "Quick Actions",
+        "takeAttendance": "Take Attendance",
+        "enterGrades": "Enter Grades",
+        "createAssignment": "Create Assignment",
+        "messageParents": "Message Parents"
+      },
+      "sections": {
+        "todaysClasses": "Today's Classes",
+        "pendingAssignments": "Pending Assignments",
+        "classPerformance": "Class Performance Summary",
+        "upcomingDeadlines": "Upcoming Deadlines"
+      },
+      "labels": {
+        "classesScheduled": "Classes scheduled",
+        "assignmentsToGrade": "Assignments to grade",
+        "needAttendance": "Classes need attendance",
+        "acrossAllClasses": "Across all classes",
+        "room": "Room",
+        "students": "students",
+        "submissions": "submissions",
+        "due": "Due",
+        "noPending": "No pending assignments",
+        "noClasses": "No classes scheduled for today",
+        "noDeadlines": "No upcoming deadlines",
+        "average": "Average",
+        "noPerformanceData": "No performance data available"
+      }
+    },
+    "studentDashboard": {
+      "title": "Student Dashboard",
+      "stats": {
+        "attendance": "Attendance",
+        "assignments": "Upcoming Assignments",
+        "averageGrade": "Average Grade",
+        "announcements": "Announcements"
+      },
+      "quickActions": {
+        "title": "Quick Actions",
+        "submitAssignment": "Submit Assignment",
+        "checkGrades": "Check Grades",
+        "viewTimetable": "View Timetable",
+        "messages": "Messages"
+      },
+      "sections": {
+        "upcomingAssignments": "Upcoming Assignments",
+        "recentGrades": "Recent Grades",
+        "announcements": "School Announcements",
+        "todaySchedule": "Today's Schedule"
+      },
+      "labels": {
+        "daysPresent": "days present",
+        "dueThisWeek": "Due this week",
+        "noAssignments": "No upcoming assignments",
+        "noGrades": "No recent grades",
+        "noClasses": "No classes scheduled for today",
+        "noAnnouncements": "No announcements",
+        "due": "Due",
+        "room": "Room",
+        "grade": "Grade",
+        "basedOnRecentExams": "Based on recent exams",
+        "unreadMessages": "Unread messages",
+        "pending": "Pending"
+      }
+    },
+    "parentDashboard": {
+      "title": "Parent Dashboard",
+      "stats": {
+        "children": "Children",
+        "attendance": "Attendance",
+        "assignments": "Assignments",
+        "announcements": "Announcements"
+      },
+      "quickActions": {
+        "title": "Quick Actions",
+        "messageTeacher": "Message Teacher",
+        "viewReportCard": "View Report Card",
+        "checkAttendance": "Check Attendance"
+      },
+      "sections": {
+        "childrenOverview": "Children Overview",
+        "recentGrades": "Recent Grades",
+        "upcomingAssignments": "Upcoming Assignments",
+        "announcements": "School Announcements",
+        "attendanceSummary": "Attendance Summary"
+      },
+      "labels": {
+        "enrolledStudents": "Enrolled students",
+        "daysPresent": "days present",
+        "upcoming": "Upcoming",
+        "newMessages": "New messages",
+        "noChildren": "No children found",
+        "noGrades": "No recent grades",
+        "noAssignments": "No upcoming assignments",
+        "noAnnouncements": "No announcements",
+        "due": "Due",
+        "pending": "Pending",
+        "attendance": "Attendance",
+        "recentGrades": "Recent Grades",
+        "presentDays": "Present Days"
+      }
+    },
     "grades": {
       "title": "Grades",
       "allGrades": "All Grades",

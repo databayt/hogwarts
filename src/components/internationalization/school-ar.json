@@ -1036,6 +1036,116 @@
         "inProgress": "قيد التنفيذ"
       }
     },
+    "teacherDashboard": {
+      "title": "لوحة تحكم المعلم",
+      "stats": {
+        "todaysClasses": "فصول اليوم",
+        "pendingGrading": "درجات معلقة",
+        "attendanceDue": "حضور مستحق",
+        "totalStudents": "إجمالي الطلاب"
+      },
+      "quickActions": {
+        "title": "إجراءات سريعة",
+        "takeAttendance": "تسجيل الحضور",
+        "enterGrades": "إدخال الدرجات",
+        "createAssignment": "إنشاء واجب",
+        "messageParents": "مراسلة أولياء الأمور"
+      },
+      "sections": {
+        "todaysClasses": "فصول اليوم",
+        "pendingAssignments": "الواجبات المعلقة",
+        "classPerformance": "ملخص أداء الفصل",
+        "upcomingDeadlines": "المواعيد النهائية القادمة"
+      },
+      "labels": {
+        "classesScheduled": "فصول مجدولة",
+        "assignmentsToGrade": "واجبات للتصحيح",
+        "needAttendance": "فصول تحتاج حضور",
+        "acrossAllClasses": "عبر جميع الفصول",
+        "room": "الغرفة",
+        "students": "طلاب",
+        "submissions": "تسليمات",
+        "due": "الموعد",
+        "noPending": "لا توجد واجبات معلقة",
+        "noClasses": "لا توجد فصول مجدولة لهذا اليوم",
+        "noDeadlines": "لا توجد مواعيد نهائية قادمة",
+        "average": "المتوسط",
+        "noPerformanceData": "لا توجد بيانات أداء متاحة"
+      }
+    },
+    "studentDashboard": {
+      "title": "لوحة تحكم الطالب",
+      "stats": {
+        "attendance": "الحضور",
+        "assignments": "الواجبات القادمة",
+        "averageGrade": "متوسط الدرجة",
+        "announcements": "الإعلانات"
+      },
+      "quickActions": {
+        "title": "إجراءات سريعة",
+        "submitAssignment": "تسليم واجب",
+        "checkGrades": "التحقق من الدرجات",
+        "viewTimetable": "عرض الجدول الدراسي",
+        "messages": "الرسائل"
+      },
+      "sections": {
+        "upcomingAssignments": "الواجبات القادمة",
+        "recentGrades": "الدرجات الأخيرة",
+        "announcements": "إعلانات المدرسة",
+        "todaySchedule": "جدول اليوم"
+      },
+      "labels": {
+        "daysPresent": "أيام الحضور",
+        "dueThisWeek": "مستحقة هذا الأسبوع",
+        "noAssignments": "لا توجد واجبات قادمة",
+        "noGrades": "لا توجد درجات حديثة",
+        "noClasses": "لا توجد فصول مجدولة لهذا اليوم",
+        "noAnnouncements": "لا توجد إعلانات",
+        "due": "الموعد",
+        "room": "الغرفة",
+        "grade": "الدرجة",
+        "basedOnRecentExams": "بناءً على الامتحانات الأخيرة",
+        "unreadMessages": "رسائل غير مقروءة",
+        "pending": "معلق"
+      }
+    },
+    "parentDashboard": {
+      "title": "لوحة تحكم ولي الأمر",
+      "stats": {
+        "children": "الأبناء",
+        "attendance": "الحضور",
+        "assignments": "الواجبات",
+        "announcements": "الإعلانات"
+      },
+      "quickActions": {
+        "title": "إجراءات سريعة",
+        "messageTeacher": "مراسلة المعلم",
+        "viewReportCard": "عرض بطاقة التقرير",
+        "checkAttendance": "التحقق من الحضور"
+      },
+      "sections": {
+        "childrenOverview": "نظرة عامة على الأبناء",
+        "recentGrades": "الدرجات الأخيرة",
+        "upcomingAssignments": "الواجبات القادمة",
+        "announcements": "إعلانات المدرسة",
+        "attendanceSummary": "ملخص الحضور"
+      },
+      "labels": {
+        "enrolledStudents": "طلاب مسجلون",
+        "daysPresent": "أيام الحضور",
+        "upcoming": "قادم",
+        "newMessages": "رسائل جديدة",
+        "noChildren": "لم يتم العثور على أطفال",
+        "noGrades": "لا توجد درجات حديثة",
+        "noAssignments": "لا توجد واجبات قادمة",
+        "noAnnouncements": "لا توجد إعلانات",
+        "due": "الموعد",
+        "pending": "معلق",
+        "attendance": "الحضور",
+        "recentGrades": "الدرجات الأخيرة",
+        "presentDays": "أيام الحضور"
+      }
+    },
     "grades": {
       "title": "الدرجات",
       "allGrades": "جميع الدرجات",

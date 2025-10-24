@@ -31,8 +31,8 @@ export async function StudentDashboard({
   // Fetch real data from server action
   const data = await getStudentDashboardData();
 
-  // Get dashboard dictionary with fallbacks
-  const dashDict = {
+  // Get dashboard dictionary
+  const dashDict = dictionary?.studentDashboard || {
     stats: {
       attendance: "Attendance",
       assignments: "Upcoming Assignments",
@@ -62,6 +62,9 @@ export async function StudentDashboard({
       due: "Due",
       room: "Room",
       grade: "Grade",
+      basedOnRecentExams: "Based on recent exams",
+      unreadMessages: "Unread messages",
+      pending: "Pending",
     },
   };
 
@@ -121,7 +124,7 @@ export async function StudentDashboard({
           <CardContent>
             <div className="text-2xl font-bold">{averageGrade.toFixed(1)}%</div>
             <p className="text-xs text-muted-foreground">
-              Based on recent exams
+              {dashDict.labels.basedOnRecentExams}
             </p>
           </CardContent>
         </Card>
@@ -135,7 +138,7 @@ export async function StudentDashboard({
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{data.announcements.length}</div>
-            <p className="text-xs text-muted-foreground">Unread messages</p>
+            <p className="text-xs text-muted-foreground">{dashDict.labels.unreadMessages}</p>
           </CardContent>
         </Card>
       </div>
@@ -232,7 +235,7 @@ export async function StudentDashboard({
                           : "default"
                       }
                     >
-                      {assignment.status === "NOT_SUBMITTED" ? "Pending" : assignment.status}
+                      {assignment.status === "NOT_SUBMITTED" ? dashDict.labels.pending : assignment.status}
                     </Badge>
                     <p className="text-xs text-muted-foreground mt-1">
                       {dashDict.labels.due}:{" "}
