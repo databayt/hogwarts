@@ -164,22 +164,22 @@ export async function PrincipalDashboard({ user, dictionary }: Props) {
           actions={[
             {
               icon: FileText,
-              label: t?.quickActions.reviewReports,
+              label: t?.quickActions.reviewReports || "Review Reports",
               href: "/reports",
             },
             {
               icon: CheckCircle,
-              label: t?.quickActions.approveBudgets,
+              label: t?.quickActions.approveBudgets || "Approve Budgets",
               href: "/budgets",
             },
             {
               icon: Calendar,
-              label: t?.quickActions.viewCalendars,
+              label: t?.quickActions.viewCalendars || "View Calendars",
               href: "/calendar",
             },
             {
               icon: Users,
-              label: t?.quickActions.sendCommunications,
+              label: t?.quickActions.sendCommunications || "Send Communications",
               href: "/communications",
             },
           ] as QuickAction[]}
