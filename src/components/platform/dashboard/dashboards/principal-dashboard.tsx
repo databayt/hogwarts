@@ -1,7 +1,8 @@
 import type { Dictionary } from "@/components/internationalization/dictionaries";
+import type { AuthUser } from "@/types/auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { QuickActions, type QuickAction } from "@/components/platform/dashboard/quick-actions";
 import { Progress } from "@/components/ui/progress";
 import {
   TrendingUp,
@@ -18,12 +19,12 @@ import {
 import { getPrincipalDashboardData } from "../actions/principal";
 import { DashboardSectionError } from "../error-boundary";
 
-interface PrincipalDashboardProps {
-  user: any;
+interface Props {
+  user: AuthUser;
   dictionary: Dictionary["school"];
 }
 
-export async function PrincipalDashboard({ user, dictionary }: PrincipalDashboardProps) {
+export async function PrincipalDashboard({ user, dictionary }: Props) {
   // Helper variable for dictionary access
   const t = dictionary.principalDashboard;
 
@@ -158,31 +159,33 @@ export async function PrincipalDashboard({ user, dictionary }: PrincipalDashboar
       )}
 
       {/* Quick Actions */}
-      <Card>
-        <CardHeader>
-          <CardTitle>{t.quickActions.title}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-2">
-            <Button variant="outline" size="sm">
-              <FileText className="mr-2 h-4 w-4" />
-              {t.quickActions.reviewReports}
-            </Button>
-            <Button variant="outline" size="sm">
-              <CheckCircle className="mr-2 h-4 w-4" />
-              {t.quickActions.approveBudgets}
-            </Button>
-            <Button variant="outline" size="sm">
-              <Calendar className="mr-2 h-4 w-4" />
-              {t.quickActions.viewCalendars}
-            </Button>
-            <Button variant="outline" size="sm">
-              <Users className="mr-2 h-4 w-4" />
-              {t.quickActions.sendCommunications}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="space-y-3">
+        <h2>{t.quickActions.title}</h2>
+        <QuickActions
+          actions={[
+            {
+              icon: FileText,
+              label: t.quickActions.reviewReports,
+              href: "/reports",
+            },
+            {
+              icon: CheckCircle,
+              label: t.quickActions.approveBudgets,
+              href: "/budgets",
+            },
+            {
+              icon: Calendar,
+              label: t.quickActions.viewCalendars,
+              href: "/calendar",
+            },
+            {
+              icon: Users,
+              label: t.quickActions.sendCommunications,
+              href: "/communications",
+            },
+          ] as QuickAction[]}
+        />
+      </div>
 
       {/* Main Content Grid */}
       <div className="grid gap-6 md:grid-cols-2">

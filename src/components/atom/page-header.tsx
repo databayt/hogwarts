@@ -4,21 +4,34 @@ import { cn } from "@/lib/utils"
 interface PageHeaderProps extends React.HTMLAttributes<HTMLDivElement> {
   title: string
   description?: string
+  variant?: "default" | "dashboard" | "centered"
 }
 
 const PageHeader = React.forwardRef<HTMLDivElement, PageHeaderProps>(
-  ({ title, description, className, ...props }, ref) => {
+  ({ title, description, variant = "default", className, ...props }, ref) => {
     return (
       <div
         ref={ref}
-        className={cn("flex w-full max-w-4xl flex-col gap-2 text-center", className)}
+        className={cn(
+          "flex w-full flex-col gap-2",
+          variant === "default" && "max-w-4xl text-center",
+          variant === "centered" && "max-w-4xl text-center mx-auto",
+          variant === "dashboard" && "text-left ltr:text-left rtl:text-right",
+          className
+        )}
         {...props}
       >
-        <h3 className="font-heading">
+        <h1 className={cn(
+          "font-heading",
+          variant === "dashboard" && "text-3xl font-bold"
+        )}>
           {title}
-        </h3>
+        </h1>
         {description && (
-          <p className="mx-auto max-w-[85%] leading-normal text-muted-foreground sm:leading-7">
+          <p className={cn(
+            "leading-normal text-muted-foreground sm:leading-7",
+            variant !== "dashboard" && "mx-auto max-w-[85%]"
+          )}>
             {description}
           </p>
         )}

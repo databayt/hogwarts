@@ -31,10 +31,10 @@ export function SearchCommand({ links }: { links: SidebarNavItem[] }) {
     return () => document.removeEventListener("keydown", down);
   }, []);
 
-  const runCommand = React.useCallback((command: () => unknown) => {
+  const runCommand = (command: () => unknown) => {
     setOpen(false);
     command();
-  }, []);
+  };
 
   return (
     <>

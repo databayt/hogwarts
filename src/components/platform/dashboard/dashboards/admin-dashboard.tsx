@@ -1,14 +1,16 @@
 import type { Dictionary } from "@/components/internationalization/dictionaries";
+import type { AuthUser } from "@/types/auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { QuickActions, type QuickAction } from "@/components/platform/dashboard/quick-actions";
 import { Users, FileText, Bell, CheckCircle, AlertTriangle, TrendingUp } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { getDashboardSummary } from "./actions";
 
 interface Props {
-  user: any;
+  user: AuthUser;
   dictionary?: Dictionary["school"];
 }
 
@@ -72,7 +74,7 @@ export async function AdminDashboard({ user, dictionary }: Props) {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{enrollment.total}</div>
+            <h3>{enrollment.total}</h3>
             <p className="text-xs text-muted-foreground">
               +{enrollment.newThisMonth} this month
             </p>
@@ -85,7 +87,7 @@ export async function AdminDashboard({ user, dictionary }: Props) {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{attendance.attendanceRate}%</div>
+            <h3>{attendance.attendanceRate}%</h3>
             <p className="text-xs text-muted-foreground">
               {attendance.present} present, {attendance.absent} absent
             </p>
@@ -99,7 +101,7 @@ export async function AdminDashboard({ user, dictionary }: Props) {
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{classes.total}</div>
+            <h3>{classes.total}</h3>
             <p className="text-xs text-muted-foreground">
               {announcements.published} announcements
             </p>
@@ -112,7 +114,7 @@ export async function AdminDashboard({ user, dictionary }: Props) {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{staff.total}</div>
+            <h3>{staff.total}</h3>
             <p className="text-xs text-muted-foreground">
               {staff.departments} departments
             </p>
@@ -121,31 +123,33 @@ export async function AdminDashboard({ user, dictionary }: Props) {
       </div>
 
       {/* Quick Actions */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-2">
-            <Button variant="outline" size="sm">
-              <FileText className="mr-2 h-4 w-4" />
-              Generate Reports
-            </Button>
-            <Button variant="outline" size="sm">
-              <CheckCircle className="mr-2 h-4 w-4" />
-              Approve Requests
-            </Button>
-            <Button variant="outline" size="sm">
-              <Bell className="mr-2 h-4 w-4" />
-              Send Announcements
-            </Button>
-            <Button variant="outline" size="sm">
-              <Users className="mr-2 h-4 w-4" />
-              User Management
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="space-y-3">
+        <h2>Quick Actions</h2>
+        <QuickActions
+          actions={[
+            {
+              icon: FileText,
+              label: "Generate Reports",
+              href: "/reports",
+            },
+            {
+              icon: CheckCircle,
+              label: "Approve Requests",
+              href: "/approvals",
+            },
+            {
+              icon: Bell,
+              label: "Send Announcements",
+              href: "/announcements",
+            },
+            {
+              icon: Users,
+              label: "User Management",
+              href: "/users",
+            },
+          ] as QuickAction[]}
+        />
+      </div>
 
       {/* Main Content Grid */}
       <div className="grid gap-6 md:grid-cols-2">
@@ -320,27 +324,27 @@ export async function AdminDashboard({ user, dictionary }: Props) {
           <div className="grid gap-6 md:grid-cols-3">
             <div className="text-center">
               <h4 className="mb-2">Student-Teacher Ratio</h4>
-              <div className="text-2xl font-bold text-blue-600">
+              <h3 className="text-blue-600">
                 {classes.studentTeacherRatio}:1
-              </div>
+              </h3>
               <p className="text-xs text-muted-foreground">
                 {enrollment.active} students / {staff.total} teachers
               </p>
             </div>
             <div className="text-center">
               <h4 className="mb-2">Exams & Assignments</h4>
-              <div className="text-2xl font-bold text-green-600">
+              <h3 className="text-green-600">
                 {(academicPerformance.totalExams || 0) + (academicPerformance.totalAssignments || 0)}
-              </div>
+              </h3>
               <p className="text-xs text-muted-foreground">
                 {academicPerformance.totalExams} exams, {academicPerformance.totalAssignments} assignments
               </p>
             </div>
             <div className="text-center">
               <h4 className="mb-2">Recent Announcements</h4>
-              <div className="text-2xl font-bold text-purple-600">
+              <h3 className="text-purple-600">
                 {announcements.recentCount}
-              </div>
+              </h3>
               <p className="text-xs text-muted-foreground">
                 In the last 7 days
               </p>

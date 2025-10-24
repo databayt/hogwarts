@@ -14,11 +14,13 @@ interface Props {
 
 export async function AccountantDashboard({ user, dictionary }: Props) {
   // Fetch real data from database
-  const [totalInvoices, paidInvoices, unpaidInvoices] = await Promise.all([
-    db.userInvoice.count({ where: { schoolId: user.schoolId || "" } }),
-    db.userInvoice.count({ where: { schoolId: user.schoolId || "", status: "PAID" } }),
-    db.userInvoice.count({ where: { schoolId: user.schoolId || "", status: "UNPAID" } })
-  ]);
+  const [totalInvoices, paidInvoices, unpaidInvoices] = user.schoolId
+    ? await Promise.all([
+        db.userInvoice.count({ where: { schoolId: user.schoolId } }),
+        db.userInvoice.count({ where: { schoolId: user.schoolId, status: "PAID" } }),
+        db.userInvoice.count({ where: { schoolId: user.schoolId, status: "UNPAID" } })
+      ])
+    : [0, 0, 0];
 
   // Mock data for unimplemented features
   const mockFinancialHealthMetrics = {

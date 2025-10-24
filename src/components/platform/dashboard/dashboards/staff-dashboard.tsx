@@ -1,19 +1,20 @@
 import type { Dictionary } from "@/components/internationalization/dictionaries";
+import type { AuthUser } from "@/types/auth";
 import { db } from "@/lib/db";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { QuickActions, type QuickAction } from "@/components/platform/dashboard/quick-actions";
 import { Progress } from "@/components/ui/progress";
 import { Users, Search, FileText, Settings, Clock, AlertTriangle, CheckCircle, Building } from "lucide-react";
 
-interface StaffDashboardProps {
-  user: any;
+interface Props {
+  user: AuthUser;
   dictionary?: Dictionary["school"];
 }
 
-export async function StaffDashboard({ user, dictionary }: StaffDashboardProps) {
+export async function StaffDashboard({ user, dictionary }: Props) {
   // Fetch real data from database
-  const announcements = await db.announcement.findMany({
+  const announcements = user.schoolId ? await db.announcement.findMany({
     where: {
       schoolId: user.schoolId,
       published: true
@@ -22,7 +23,7 @@ export async function StaffDashboard({ user, dictionary }: StaffDashboardProps) 
     orderBy: {
       createdAt: 'desc'
     }
-  });
+  }) : [];
 
   // Mock data for unimplemented features
   const mockTodayTasks = [
@@ -126,31 +127,33 @@ export async function StaffDashboard({ user, dictionary }: StaffDashboardProps) 
       </div>
 
       {/* Quick Actions */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-2">
-            <Button variant="outline" size="sm">
-              <Search className="mr-2 h-4 w-4" />
-              Student Lookup
-            </Button>
-            <Button variant="outline" size="sm">
-              <FileText className="mr-2 h-4 w-4" />
-              Generate Report
-            </Button>
-            <Button variant="outline" size="sm">
-              <Settings className="mr-2 h-4 w-4" />
-              Process Request
-            </Button>
-            <Button variant="outline" size="sm">
-              <Users className="mr-2 h-4 w-4" />
-              Update Records
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="space-y-3">
+        <h2>Quick Actions</h2>
+        <QuickActions
+          actions={[
+            {
+              icon: Search,
+              label: "Student Lookup",
+              href: "/students/search",
+            },
+            {
+              icon: FileText,
+              label: "Generate Report",
+              href: "/reports",
+            },
+            {
+              icon: Settings,
+              label: "Process Request",
+              href: "/requests",
+            },
+            {
+              icon: Users,
+              label: "Update Records",
+              href: "/records",
+            },
+          ] as QuickAction[]}
+        />
+      </div>
 
       {/* Main Content Grid */}
       <div className="grid gap-6 md:grid-cols-2">

@@ -1,5 +1,6 @@
 import { currentUser } from "@/components/auth/auth";
-import { DashboardHeader } from "@/components/platform/dashboard/header";
+import type { AuthUser } from "@/types/auth";
+import PageHeader from "@/components/atom/page-header";
 import { StudentDashboard } from "./dashboards/student-dashboard";
 import { TeacherDashboard } from "./dashboards/teacher-dashboard";
 import { ParentDashboard } from "./dashboards/parent-dashboard";
@@ -12,21 +13,13 @@ import { CookieDebug } from "@/components/auth/cookie-debug";
 import type { School } from "@/components/site/types";
 import type { Dictionary } from "@/components/internationalization/dictionaries";
 
-// Extended user type that includes the properties added by our auth callbacks
-type ExtendedUser = {
-  id: string;
-  email?: string | null;
-  role?: string;
-  schoolId?: string | null;
-};
-
 interface Props {
   school?: School; // Make school prop optional
   dictionary?: Dictionary['school']; // Add dictionary prop
 }
 
 export default async function DashboardContent({ school, dictionary }: Props = {}) {
-  const user = await currentUser() as ExtendedUser | null;
+  const user = await currentUser() as AuthUser | null;
 
   // If no user, show login component
   if (!user) {
@@ -71,16 +64,17 @@ export default async function DashboardContent({ school, dictionary }: Props = {
 
   return (
     <div className="space-y-6">
-      <DashboardHeader
-        heading={dashboardDict.title}
-        text={`${dashboardDict.welcome.replace('Hogwarts', schoolName)}`}
+      <PageHeader
+        title={dashboardDict.title}
+        description={`${dashboardDict.welcome.replace('Hogwarts', schoolName)}`}
+        variant="dashboard"
       />
       {renderDashboard()}
     </div>
   );
 }
 
-function DefaultDashboard({ user, dictionary }: { user: ExtendedUser, dictionary?: Dictionary['school'] }) {
+function DefaultDashboard({ user, dictionary }: { user: AuthUser, dictionary?: Dictionary['school'] }) {
   return (
     <div className="grid gap-6">
       <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">

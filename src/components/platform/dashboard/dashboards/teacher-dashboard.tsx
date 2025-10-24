@@ -1,24 +1,20 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { QuickActions, type QuickAction } from "@/components/platform/dashboard/quick-actions";
 import { Calendar, Users, FileText, MessageSquare, BookOpen } from "lucide-react";
 import type { Dictionary } from "@/components/internationalization/dictionaries";
+import type { AuthUser } from "@/types/auth";
 import { getTeacherDashboardData } from "../actions";
 
-interface TeacherDashboardProps {
-  user: {
-    id: string;
-    email?: string | null;
-    role?: string;
-    schoolId?: string | null;
-  };
+interface Props {
+  user: AuthUser;
   dictionary?: Dictionary["school"];
 }
 
 export async function TeacherDashboard({
   user,
   dictionary,
-}: TeacherDashboardProps) {
+}: Props) {
   // Fetch real data from server action
   const data = await getTeacherDashboardData();
 
@@ -125,31 +121,33 @@ export async function TeacherDashboard({
       </div>
 
       {/* Quick Actions */}
-      <Card>
-        <CardHeader>
-          <CardTitle>{dashDict.quickActions.title}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-2">
-            <Button variant="outline" size="sm">
-              <Users className="mr-2 h-4 w-4" />
-              {dashDict.quickActions.takeAttendance}
-            </Button>
-            <Button variant="outline" size="sm">
-              <FileText className="mr-2 h-4 w-4" />
-              {dashDict.quickActions.enterGrades}
-            </Button>
-            <Button variant="outline" size="sm">
-              <BookOpen className="mr-2 h-4 w-4" />
-              {dashDict.quickActions.createAssignment}
-            </Button>
-            <Button variant="outline" size="sm">
-              <MessageSquare className="mr-2 h-4 w-4" />
-              {dashDict.quickActions.messageParents}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="space-y-3">
+        <h2>{dashDict.quickActions.title}</h2>
+        <QuickActions
+          actions={[
+            {
+              icon: Users,
+              label: dashDict.quickActions.takeAttendance,
+              href: "/attendance",
+            },
+            {
+              icon: FileText,
+              label: dashDict.quickActions.enterGrades,
+              href: "/grades",
+            },
+            {
+              icon: BookOpen,
+              label: dashDict.quickActions.createAssignment,
+              href: "/assignments/new",
+            },
+            {
+              icon: MessageSquare,
+              label: dashDict.quickActions.messageParents,
+              href: "/messages",
+            },
+          ] as QuickAction[]}
+        />
+      </div>
 
       {/* Main Content Grid */}
       <div className="grid gap-6 md:grid-cols-2">

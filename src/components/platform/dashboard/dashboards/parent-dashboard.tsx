@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { QuickActions, type QuickAction } from "@/components/platform/dashboard/quick-actions";
 import { Progress } from "@/components/ui/progress";
 import {
   Users,
@@ -11,22 +11,18 @@ import {
   Bell,
 } from "lucide-react";
 import type { Dictionary } from "@/components/internationalization/dictionaries";
+import type { AuthUser } from "@/types/auth";
 import { getParentDashboardData } from "../actions";
 
-interface ParentDashboardProps {
-  user: {
-    id: string;
-    email?: string | null;
-    role?: string;
-    schoolId?: string | null;
-  };
+interface Props {
+  user: AuthUser;
   dictionary?: Dictionary["school"];
 }
 
 export async function ParentDashboard({
   user,
   dictionary,
-}: ParentDashboardProps) {
+}: Props) {
   // Fetch real data from server action
   const data = await getParentDashboardData();
 
@@ -87,27 +83,33 @@ export async function ParentDashboard({
       </div>
 
       {/* Quick Actions */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-2">
-            <Button variant="outline" size="sm">
-              <MessageSquare className="mr-2 h-4 w-4" />
-              Message Teacher
-            </Button>
-            <Button variant="outline" size="sm">
-              <FileText className="mr-2 h-4 w-4" />
-              View Report Card
-            </Button>
-            <Button variant="outline" size="sm">
-              <Calendar className="mr-2 h-4 w-4" />
-              Check Attendance
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="space-y-3">
+        <h2>Quick Actions</h2>
+        <QuickActions
+          actions={[
+            {
+              icon: MessageSquare,
+              label: "Message Teacher",
+              href: "/messages",
+            },
+            {
+              icon: FileText,
+              label: "View Report Card",
+              href: "/reports",
+            },
+            {
+              icon: Calendar,
+              label: "Check Attendance",
+              href: "/attendance",
+            },
+            {
+              icon: CreditCard,
+              label: "Pay Fees",
+              href: "/payments",
+            },
+          ] as QuickAction[]}
+        />
+      </div>
 
       {/* Main Content Grid */}
       <div className="grid gap-6 md:grid-cols-2">
