@@ -232,7 +232,7 @@ export async function getPaymentMethods(): Promise<BillingActionResult<PaymentMe
       return { success: false, error: "Unauthorized" };
     }
 
-    const paymentMethods = await db.paymentMethod.findMany({
+    const paymentMethods = await db.billingPaymentMethod.findMany({
       where: { schoolId, status: "active" },
       include: {
         user: {
@@ -272,13 +272,13 @@ export async function addPaymentMethod(input: unknown): Promise<BillingActionRes
 
     // If setting as default, unset other defaults
     if (validated.isDefault) {
-      await db.paymentMethod.updateMany({
+      await db.billingPaymentMethod.updateMany({
         where: { schoolId, isDefault: true },
         data: { isDefault: false },
       });
     }
 
-    const paymentMethod = await db.paymentMethod.create({
+    const paymentMethod = await db.billingPaymentMethod.create({
       data: {
         schoolId,
         userId: session.user.id!,
@@ -324,7 +324,7 @@ export async function setDefaultPaymentMethod(paymentMethodId: string): Promise<
     }
 
     // Verify ownership
-    const paymentMethod = await db.paymentMethod.findFirst({
+    const paymentMethod = await db.billingPaymentMethod.findFirst({
       where: { id: paymentMethodId, schoolId },
     });
 
@@ -333,13 +333,13 @@ export async function setDefaultPaymentMethod(paymentMethodId: string): Promise<
     }
 
     // Unset all defaults
-    await db.paymentMethod.updateMany({
+    await db.billingPaymentMethod.updateMany({
       where: { schoolId, isDefault: true },
       data: { isDefault: false },
     });
 
     // Set new default
-    await db.paymentMethod.update({
+    await db.billingPaymentMethod.update({
       where: { id: paymentMethodId },
       data: { isDefault: true },
     });
@@ -364,7 +364,7 @@ export async function removePaymentMethod(paymentMethodId: string): Promise<Bill
       return { success: false, error: "Unauthorized" };
     }
 
-    const paymentMethod = await db.paymentMethod.findFirst({
+    const paymentMethod = await db.billingPaymentMethod.findFirst({
       where: { id: paymentMethodId, schoolId },
     });
 
@@ -374,7 +374,7 @@ export async function removePaymentMethod(paymentMethodId: string): Promise<Bill
 
     // Don't allow removing the default payment method if there are others
     if (paymentMethod.isDefault) {
-      const otherMethods = await db.paymentMethod.count({
+      const otherMethods = await db.billingPaymentMethod.count({
         where: { schoolId, id: { not: paymentMethodId }, status: "active" },
       });
 
@@ -384,7 +384,7 @@ export async function removePaymentMethod(paymentMethodId: string): Promise<Bill
     }
 
     // Soft delete
-    await db.paymentMethod.update({
+    await db.billingPaymentMethod.update({
       where: { id: paymentMethodId },
       data: { status: "removed" },
     });

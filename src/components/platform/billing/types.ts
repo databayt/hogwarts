@@ -2,7 +2,7 @@ import type {
   Subscription,
   SubscriptionTier,
   Invoice,
-  PaymentMethod,
+  BillingPaymentMethod,
   BillingHistory,
   UsageMetrics,
   CreditNote,
@@ -29,7 +29,7 @@ export type InvoiceWithDetails = Invoice & {
   }[];
 };
 
-export type PaymentMethodWithUser = PaymentMethod & {
+export type PaymentMethodWithUser = BillingPaymentMethod & {
   user: {
     id: string;
     name: string | null;
@@ -38,7 +38,7 @@ export type PaymentMethodWithUser = PaymentMethod & {
 };
 
 export type BillingHistoryWithDetails = BillingHistory & {
-  paymentMethod?: PaymentMethod | null;
+  paymentMethod?: BillingPaymentMethod | null;
   user: {
     id: string;
     name: string | null;
@@ -291,7 +291,7 @@ export type {
   Subscription,
   SubscriptionTier,
   Invoice,
-  PaymentMethod,
+  BillingPaymentMethod,
   BillingHistory,
   UsageMetrics,
   CreditNote,
