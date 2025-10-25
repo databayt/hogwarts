@@ -95,7 +95,7 @@ export function useChunkedUpload(options: ChunkedUploadOptions = {}) {
   );
 
   const uploadFile = useCallback(
-    async (file: File, category: FileCategory = 'OTHER') => {
+    async (file: File, category: FileCategory = 'other') => {
       const filename = file.name;
       const startTime = Date.now();
       let uploadedBytes = 0;
@@ -148,11 +148,12 @@ export function useChunkedUpload(options: ChunkedUploadOptions = {}) {
           category,
         });
 
-        if (!initResult.success) {
-          throw new Error(initResult.error);
+        if (!initResult.success || !('uploadId' in initResult) || !('fileId' in initResult)) {
+          throw new Error(initResult.success ? 'Invalid chunked upload response' : initResult.error);
         }
 
-        const { uploadId, fileId } = initResult;
+        const uploadId: string = initResult.uploadId as string;
+        const fileId: string = initResult.fileId as string;
 
         // Create abort controller for this upload
         const abortController = new AbortController();
@@ -244,7 +245,7 @@ export function useChunkedUpload(options: ChunkedUploadOptions = {}) {
   );
 
   const uploadMultiple = useCallback(
-    async (files: File[], category: FileCategory = 'OTHER') => {
+    async (files: File[], category: FileCategory = 'other') => {
       setIsUploading(true);
 
       const results = [];

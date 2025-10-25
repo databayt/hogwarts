@@ -64,7 +64,7 @@ interface FileWithPreview extends File {
 export function EnhancedFileUploader({
   schoolId,
   userId,
-  category = 'OTHER',
+  category = 'other',
   folder,
   maxSize = 5 * 1024 * 1024 * 1024, // 5GB
   maxFiles = 10,
@@ -224,9 +224,8 @@ export function EnhancedFileUploader({
 
     const results = await uploadMultiple(filesToUpload, category);
     const successfulIds = results
-      .filter((r) => r.success)
-      .map((r) => r.fileId)
-      .filter(Boolean) as string[];
+      .filter((r): r is { success: true; fileId: string } => r.success && 'fileId' in r)
+      .map((r) => r.fileId);
 
     if (successfulIds.length > 0) {
       onUploadComplete?.(successfulIds);
