@@ -133,6 +133,25 @@ model School {
   locationTraces        LocationTrace[]
   geoAttendanceEvents   GeoAttendanceEvent[]
 
+  // Billing relations
+  billingPaymentMethods BillingPaymentMethod[]
+  billingHistory        BillingHistory[]
+  usageMetrics          UsageMetrics[]
+  creditNotes           CreditNote[]
+  billingPreferences    BillingPreferences?
+
+  // Enhanced Attendance relations
+  studentIdentifiers    StudentIdentifier[]
+  attendanceDevices     AttendanceDevice[]
+  attendanceSessions    AttendanceSession[]
+  attendanceEvents      AttendanceEvent[]
+  qrCodeSessions        QRCodeSession[]
+  biometricTemplates    BiometricTemplate[]
+  accessCards           AccessCard[]
+  bluetoothBeacons      BluetoothBeacon[]
+  attendancePolicies    AttendancePolicy[]
+  attendanceReports     AttendanceReport[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

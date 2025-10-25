@@ -60,6 +60,11 @@ model User {
   plaidItems       PlaidItem[]       @relation("UserPlaidItems")
   dwollaCustomers  DwollaCustomer[]  @relation("UserDwollaCustomers")
 
+  // Billing relations
+  billingPaymentMethods BillingPaymentMethod[]
+  billingHistory        BillingHistory[]
+  creditNotes           CreditNote[]
+
   // Theme customization
   themes UserTheme[]
 

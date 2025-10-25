@@ -31,6 +31,9 @@ model Teacher {
   subjectExpertise TeacherSubjectExpertise[]
   classTeachers    ClassTeacher[] // Co-teaching assignments
 
+  // Enhanced Attendance relations
+  accessCards      AccessCard[]
+
   // Auth relationship
   userId String? @unique
   user   User?   @relation(fields: [userId], references: [id])
