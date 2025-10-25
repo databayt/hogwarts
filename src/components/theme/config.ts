@@ -23,8 +23,9 @@ export const COMMON_STYLES = [
 ]
 
 // Default font families (Geist Sans as primary with fallbacks)
+// Note: Using "Geist" string (not var reference) so themes can override properly
 export const DEFAULT_FONT_SANS =
-  "var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif"
+  "Geist, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif"
 export const DEFAULT_FONT_SERIF = 'ui-serif, Georgia, Cambria, "Times New Roman", Times, serif'
 export const DEFAULT_FONT_MONO =
   'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace'
