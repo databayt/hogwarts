@@ -51,7 +51,7 @@ export default async function Page({ params }: Props) {
             </p>
           </div>
         </div>
-        <AttendanceContent dictionary={dictionary} />
+        <AttendanceContent dictionary={dictionary.school} />
       </div>
     </AttendanceProvider>
   )

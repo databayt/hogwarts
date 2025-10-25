@@ -12,14 +12,14 @@
 import type { Prisma } from "@prisma/client";
 import type {
   ServerPaginationResult,
-  SortingInput,
-  FiltersInput,
 } from "@/components/table/types";
 import {
   paginationSchema,
   seeMorePaginationSchema,
   sortingSchema,
   filterSchema,
+  type SortingInput,
+  type FiltersInput,
 } from "@/components/table/validation";
 
 // ============================================================================

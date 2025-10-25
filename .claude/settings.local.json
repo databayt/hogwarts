@@ -37,7 +37,9 @@
       "Bash(dir:*)",
       "Read(//d/repo/da/**)",
       "WebFetch(domain:portsudan.databayt.org)",
-      "WebFetch(domain:www.anthropic.com)"
+      "WebFetch(domain:www.anthropic.com)",
+      "WebFetch(domain:www.rediker.com)",
+      "WebFetch(domain:www.teachngo.com)"
     ],
     "deny": [],
     "ask": []

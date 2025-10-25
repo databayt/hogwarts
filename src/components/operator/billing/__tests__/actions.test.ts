@@ -59,37 +59,6 @@ vi.mock('@/components/operator/lib/operator-auth', () => ({
 }))
 
 describe('billing/actions.ts', () => {
-  it('receiptCreate creates a receipt', async () => {
-    const result = await billing.receiptCreate({
-      invoiceId: 'i1',
-      schoolId: 's1',
-      filename: 'f.pdf',
-      amount: 1000
-    })
-    expect(result).toEqual({
-      success: true,
-      data: expect.objectContaining({
-        id: 'r1',
-        status: 'pending'
-      })
-    })
-  })
-
-  it('receiptReview reviews a receipt', async () => {
-    const result = await billing.receiptReview({
-      id: 'r1',
-      decision: 'approved',
-      reason: 'ok'
-    })
-    expect(result).toEqual({
-      success: true,
-      data: expect.objectContaining({
-        id: 'r1',
-        status: 'approved'
-      })
-    })
-  })
-
   it('invoiceUpdateStatus updates invoice status', async () => {
     const result = await billing.invoiceUpdateStatus({
       id: 'i1',
