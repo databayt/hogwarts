@@ -42,7 +42,8 @@ import {
 import { useAttendanceContext } from './attendance-context';
 import { cn } from '@/lib/utils';
 import { getMethodIcon, getMethodDisplayName, formatAttendanceDate } from '../shared/utils';
-import type { AttendanceMethod, Dictionary } from '../shared/types';
+import type { Dictionary } from '@/components/internationalization/dictionaries';
+import type { AttendanceMethod } from '../shared/types';
 
 // Method icon mapping
 const METHOD_ICONS: Record<AttendanceMethod, React.ReactNode> = {

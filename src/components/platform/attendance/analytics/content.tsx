@@ -30,7 +30,7 @@ import {
   RefreshCw
 } from 'lucide-react';
 import { useAttendanceContext } from '../core/attendance-context';
-import type { Dictionary } from '../shared/types';
+import type { Dictionary } from '@/components/internationalization/dictionaries';
 
 interface AnalyticsContentProps {
   dictionary?: Dictionary;

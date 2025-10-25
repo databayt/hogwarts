@@ -36,7 +36,8 @@
       "Bash(dir /b \"C:\\Users\\pc\\Downloads\\tweakcn-main\\tweakcn-main\")",
       "Bash(dir:*)",
       "Read(//d/repo/da/**)",
-      "WebFetch(domain:portsudan.databayt.org)"
+      "WebFetch(domain:portsudan.databayt.org)",
+      "WebFetch(domain:www.anthropic.com)"
     ],
     "deny": [],
     "ask": []

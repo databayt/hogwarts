@@ -11,7 +11,7 @@ import { QRGenerator } from './qr-generator';
 import { QRScanner } from './qr-scanner';
 import { useAttendanceContext } from '../core/attendance-context';
 import { AttendanceStats } from '../core/attendance-stats';
-import type { Dictionary } from '../shared/types';
+import type { Dictionary } from '@/components/internationalization/dictionaries';
 
 interface QRCodeAttendanceContentProps {
   dictionary?: Dictionary;

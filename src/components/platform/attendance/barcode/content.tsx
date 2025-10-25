@@ -11,7 +11,7 @@ import { BarcodeScanner } from './barcode-scanner';
 import { StudentCards } from './student-cards';
 import { useAttendanceContext } from '../core/attendance-context';
 import { AttendanceStats } from '../core/attendance-stats';
-import type { Dictionary } from '../shared/types';
+import type { Dictionary } from '@/components/internationalization/dictionaries';
 
 interface BarcodeAttendanceContentProps {
   dictionary?: Dictionary;

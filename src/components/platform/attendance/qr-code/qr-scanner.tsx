@@ -27,7 +27,8 @@ import {
 import { useCamera, useGeolocation } from '../shared/hooks';
 import { useAttendanceContext } from '../core/attendance-context';
 import { validateQRPayload } from '../shared/utils';
-import type { Dictionary, QRCodeScanPayload } from '../shared/types';
+import type { Dictionary } from '@/components/internationalization/dictionaries';
+import type { QRCodeScanPayload } from '../shared/types';
 
 interface QRScannerProps {
   onScanSuccess?: (data: any) => void;

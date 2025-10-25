@@ -19,6 +19,10 @@ export async function processBarcodeScan(data: z.infer<typeof barcodeScanSchema>
     const { barcode, format, scannedAt, deviceId } = data;
     const schoolId = session.user.schoolId;
 
+    if (!schoolId) {
+      throw new Error('School ID is required');
+    }
+
     // Find student by barcode
     const studentIdentifier = await db.studentIdentifier.findFirst({
       where: {
@@ -152,6 +156,10 @@ export async function assignBarcodeToStudent(data: z.infer<typeof studentIdentif
 
     const schoolId = session.user.schoolId;
 
+    if (!schoolId) {
+      throw new Error('School ID is required');
+    }
+
     // Check if barcode already exists
     const existing = await db.studentIdentifier.findFirst({
       where: {
@@ -219,6 +227,10 @@ export async function getStudentBarcodes(studentId?: string) {
 
     const schoolId = session.user.schoolId;
 
+    if (!schoolId) {
+      throw new Error('School ID is required');
+    }
+
     const barcodes = await db.studentIdentifier.findMany({
       where: {
         schoolId,
@@ -272,6 +284,10 @@ export async function updateBarcodeStatus(
 
     const schoolId = session.user.schoolId;
 
+    if (!schoolId) {
+      throw new Error('School ID is required');
+    }
+
     const identifier = await db.studentIdentifier.findFirst({
       where: {
         id: identifierId,
@@ -320,6 +336,10 @@ export async function deleteBarcode(identifierId: string) {
 
     const schoolId = session.user.schoolId;
 
+    if (!schoolId) {
+      throw new Error('School ID is required');
+    }
+
     const identifier = await db.studentIdentifier.findFirst({
       where: {
         id: identifierId,
@@ -366,6 +386,10 @@ export async function bulkImportBarcodes(csvData: string) {
     }
 
     const schoolId = session.user.schoolId;
+
+    if (!schoolId) {
+      throw new Error('School ID is required');
+    }
     const rows = csvData.split('\n').slice(1); // Skip header
     const results = {
       successful: 0,

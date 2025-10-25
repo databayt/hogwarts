@@ -30,7 +30,7 @@ import {
 } from 'lucide-react';
 import { useAttendanceContext } from '../core/attendance-context';
 import { useCamera } from '../shared/hooks';
-import type { Dictionary } from '../shared/types';
+import type { Dictionary } from '@/components/internationalization/dictionaries';
 
 interface BarcodeScannerProps {
   classId: string;

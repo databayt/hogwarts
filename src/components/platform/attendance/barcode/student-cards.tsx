@@ -44,7 +44,8 @@ import {
   Printer
 } from 'lucide-react';
 import { useAttendanceContext } from '../core/attendance-context';
-import type { Dictionary, StudentIdentifier } from '../shared/types';
+import type { Dictionary } from '@/components/internationalization/dictionaries';
+import type { StudentIdentifier } from '../shared/types';
 
 interface StudentCardsProps {
   dictionary?: Dictionary;

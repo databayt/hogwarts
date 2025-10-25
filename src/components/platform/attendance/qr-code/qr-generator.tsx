@@ -36,7 +36,8 @@ import {
 } from 'lucide-react';
 import { useCountdown } from '../shared/hooks';
 import { generateQRPayload } from '../shared/utils';
-import type { Dictionary, QRCodeConfig } from '../shared/types';
+import type { Dictionary } from '@/components/internationalization/dictionaries';
+import type { QRCodeConfig } from '../shared/types';
 
 interface QRGeneratorProps {
   classId: string;
