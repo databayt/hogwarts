@@ -1,5 +1,5 @@
 import { AssignmentsTable } from '@/components/platform/assignments/table'
-import { assignmentColumns, type AssignmentRow } from '@/components/platform/assignments/columns'
+import { type AssignmentRow } from '@/components/platform/assignments/columns'
 import { SearchParams } from 'nuqs/server'
 import { assignmentsSearchParams } from '@/components/platform/assignments/list-params'
 import { db } from '@/lib/db'
@@ -66,7 +66,7 @@ export default async function AssignmentsContent({ searchParams, dictionary, lan
           description={dictionary?.school?.assignments?.description || 'Manage academic assignments and assessments'}
           className="text-start max-w-none"
         />
-        <AssignmentsTable data={data} columns={assignmentColumns} pageCount={Math.max(1, Math.ceil(total / (sp.perPage || 20)))} />
+        <AssignmentsTable initialData={data} total={total} perPage={sp.perPage} />
       </div>
     </PageContainer>
   )

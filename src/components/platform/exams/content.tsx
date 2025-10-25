@@ -1,5 +1,5 @@
 import { ExamsTable } from '@/components/platform/exams/table'
-import { examColumns, type ExamRow } from '@/components/platform/exams/columns'
+import { type ExamRow } from '@/components/platform/exams/columns'
 import { SearchParams } from 'nuqs/server'
 import { examsSearchParams } from '@/components/platform/exams/list-params'
 import { db } from '@/lib/db'
@@ -81,7 +81,7 @@ export default async function ExamsContent({ searchParams, dictionary, lang }: P
           description={dictionary?.school?.exams?.description || 'Schedule and manage your exams'}
           className="text-start max-w-none"
         />
-        <ExamsTable data={data} columns={examColumns} pageCount={Math.max(1, Math.ceil(total / (sp.perPage || 20)))} />
+        <ExamsTable initialData={data} total={total} perPage={sp.perPage} />
       </div>
     </PageContainer>
   )

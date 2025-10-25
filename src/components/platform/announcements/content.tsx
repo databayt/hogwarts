@@ -54,7 +54,7 @@ export default async function AnnouncementsContent({ searchParams, dictionary, l
           description={t.description}
           className="text-start max-w-none"
         />
-        <AnnouncementsTable data={data} pageCount={Math.max(1, Math.ceil(total / (sp.perPage || 20)))} dictionary={t} lang={lang} />
+        <AnnouncementsTable initialData={data} total={total} dictionary={t} lang={lang} perPage={sp.perPage} />
       </div>
     </PageContainer>
   )

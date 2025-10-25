@@ -59,7 +59,7 @@ export default async function TeachersContent({ searchParams, dictionary }: Prop
           title={dictionary?.teachers?.title || 'Teachers'}
           className="text-start max-w-none"
         />
-        <TeachersTable data={data} pageCount={Math.max(1, Math.ceil(total / (sp.perPage || 20)))} dictionary={dictionary?.teachers} />
+        <TeachersTable initialData={data} total={total} dictionary={dictionary?.teachers} perPage={sp.perPage} />
       </div>
     </PageContainer>
   )

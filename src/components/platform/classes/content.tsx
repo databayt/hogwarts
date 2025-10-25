@@ -78,7 +78,7 @@ export default async function ClassesContent({ searchParams, dictionary, lang }:
           description={dictionary?.school?.classes?.description || 'Manage academic classes and schedules'}
           className="text-start max-w-none"
         />
-        <ClassesTable data={data} pageCount={Math.max(1, Math.ceil(total / (sp.perPage || 20)))} />
+        <ClassesTable initialData={data} total={total} perPage={sp.perPage} />
       </div>
     </PageContainer>
   )

@@ -1,5 +1,5 @@
 import { EventsTable } from '@/components/platform/events/table'
-import { eventColumns, type EventRow } from '@/components/platform/events/columns'
+import { type EventRow } from '@/components/platform/events/columns'
 import { SearchParams } from 'nuqs/server'
 import { eventsSearchParams } from '@/components/platform/events/list-params'
 import { db } from '@/lib/db'
@@ -74,7 +74,7 @@ export default async function EventsContent({ searchParams, dictionary, lang }: 
           description={dictionary?.school?.events?.description || 'Schedule and manage your school events'}
           className="text-start max-w-none"
         />
-        <EventsTable data={data} columns={eventColumns} pageCount={Math.max(1, Math.ceil(total / (sp.perPage || 20)))} />
+        <EventsTable initialData={data} total={total} perPage={sp.perPage} />
       </div>
     </PageContainer>
   )

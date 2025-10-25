@@ -1,5 +1,5 @@
 import { LessonsTable } from '@/components/platform/lessons/table'
-import { lessonColumns, type LessonRow } from '@/components/platform/lessons/columns'
+import { type LessonRow } from '@/components/platform/lessons/columns'
 import { SearchParams } from 'nuqs/server'
 import { lessonsSearchParams } from '@/components/platform/lessons/list-params'
 import { db } from '@/lib/db'
@@ -85,7 +85,7 @@ export default async function LessonsContent({ searchParams, dictionary, lang }:
           description={dictionary?.school?.lessons?.description || 'Plan and manage your lessons'}
           className="text-start max-w-none"
         />
-        <LessonsTable data={data} columns={lessonColumns} pageCount={Math.max(1, Math.ceil(total / (sp.perPage || 20)))} />
+        <LessonsTable initialData={data} total={total} perPage={sp.perPage} />
       </div>
     </PageContainer>
   )

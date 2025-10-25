@@ -1,5 +1,5 @@
 import { ParentsTable } from '@/components/platform/parents/table'
-import { parentColumns, type ParentRow } from '@/components/platform/parents/columns'
+import { type ParentRow } from '@/components/platform/parents/columns'
 import { SearchParams } from 'nuqs/server'
 import { parentsSearchParams } from '@/components/platform/parents/list-params'
 import { db } from '@/lib/db'
@@ -61,7 +61,7 @@ export default async function ParentsContent({ searchParams, dictionary, lang }:
           title={dictionary?.school?.parents?.title || 'Parents'}
           className="text-start max-w-none"
         />
-        <ParentsTable data={data} columns={parentColumns} pageCount={Math.max(1, Math.ceil(total / (sp.perPage || 20)))} />
+        <ParentsTable initialData={data} total={total} perPage={sp.perPage} />
       </div>
     </PageContainer>
   )

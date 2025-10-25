@@ -1,5 +1,5 @@
 import { SubjectsTable } from '@/components/platform/subjects/table'
-import { subjectColumns, type SubjectRow } from '@/components/platform/subjects/columns'
+import { type SubjectRow } from '@/components/platform/subjects/columns'
 import { SearchParams } from 'nuqs/server'
 import { subjectsSearchParams } from '@/components/platform/subjects/list-params'
 import { db } from '@/lib/db'
@@ -63,7 +63,7 @@ export default async function SubjectsContent({ searchParams, dictionary, lang }
           description={dictionary?.school?.subjects?.description || 'Manage academic subjects and their departments'}
           className="text-start max-w-none"
         />
-        <SubjectsTable data={data} columns={subjectColumns} pageCount={Math.max(1, Math.ceil(total / (sp.perPage || 20)))} />
+        <SubjectsTable initialData={data} total={total} perPage={sp.perPage} />
       </div>
     </PageContainer>
   )

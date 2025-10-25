@@ -82,7 +82,7 @@ export default async function ResultsContent({ searchParams, dictionary, lang }:
           description={dictionary.school.grades.manageResults}
           className="text-start max-w-none"
         />
-        <ResultsTable data={data} pageCount={Math.max(1, Math.ceil(total / (sp.perPage || 20)))} dictionary={dictionary} lang={lang} />
+        <ResultsTable initialData={data} total={total} dictionary={dictionary} lang={lang} perPage={sp.perPage} />
       </div>
     </PageContainer>
   )
