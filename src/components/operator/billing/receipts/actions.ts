@@ -4,6 +4,7 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { requireOperator } from "@/components/operator/lib/operator-auth";
 import { revalidatePath } from "next/cache";
+import type { ReceiptRow } from "./columns";
 
 const reviewReceiptSchema = z.object({
   receiptId: z.string().min(1),
@@ -125,6 +126,79 @@ export async function uploadReceipt(data: z.infer<typeof uploadReceiptSchema>) {
       error: {
         message: error instanceof Error ? error.message : "Failed to upload receipt",
       },
+    };
+  }
+}
+
+// Get receipts with filters for pagination
+export async function getReceipts(input: {
+  page: number;
+  perPage: number;
+  status?: string;
+  search?: string;
+}) {
+  try {
+    await requireOperator();
+
+    const offset = (input.page - 1) * input.perPage;
+    const where = {
+      ...(input.status && input.status !== "all" ? { status: input.status } : {}),
+      ...(input.search
+        ? {
+            OR: [
+              { invoice: { stripeInvoiceId: { contains: input.search, mode: "insensitive" as const } } },
+              { invoice: { school: { name: { contains: input.search, mode: "insensitive" as const } } } },
+            ]
+          }
+        : {})
+    };
+
+    const [receipts, total] = await Promise.all([
+      db.receipt.findMany({
+        where,
+        include: {
+          invoice: {
+            select: {
+              id: true,
+              stripeInvoiceId: true,
+              school: {
+                select: {
+                  name: true,
+                },
+              },
+            },
+          },
+        },
+        orderBy: { createdAt: "desc" },
+        skip: offset,
+        take: input.perPage,
+      }),
+      db.receipt.count({ where }),
+    ]);
+
+    const rows: ReceiptRow[] = receipts.map((receipt) => ({
+      id: receipt.id,
+      schoolName: receipt.invoice.school.name,
+      invoiceNumber: receipt.invoice.stripeInvoiceId,
+      amount: receipt.amount,
+      fileUrl: receipt.fileUrl,
+      fileName: receipt.fileName,
+      status: receipt.status as "pending" | "approved" | "rejected",
+      uploadedAt: receipt.createdAt.toISOString(),
+      reviewedAt: receipt.reviewedAt?.toISOString() || null,
+      notes: receipt.notes,
+    }));
+
+    return { success: true, data: rows, total };
+  } catch (error) {
+    console.error("Failed to fetch receipts:", error);
+    return {
+      success: false,
+      error: {
+        message: error instanceof Error ? error.message : "Failed to fetch receipts",
+      },
+      data: [],
+      total: 0,
     };
   }
 }

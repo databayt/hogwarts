@@ -56,7 +56,7 @@ export async function getTenants(input: GetTenantsInput) {
         db.school.findMany({ where, orderBy, skip, take: input.perPage }),
         db.school.count({ where }),
       ]);
-      return { data, pageCount: Math.ceil(total / input.perPage) };
+      return { data, total, pageCount: Math.ceil(total / input.perPage) };
     },
     [JSON.stringify(input)],
     { revalidate: 5, tags: ["tenants"] }

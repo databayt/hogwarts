@@ -61,6 +61,79 @@ export async function invoiceUpdateStatus(
 // ============= Receipt Actions =============
 // Moved to @/components/operator/billing/receipts/actions.ts for better organization
 
+// ============= Get Invoices Action =============
+
+export async function getInvoices(input: {
+  page: number;
+  perPage: number;
+  status?: string;
+  search?: string;
+}) {
+  try {
+    await requireOperator();
+
+    const offset = (input.page - 1) * input.perPage;
+    const where = {
+      ...(input.status && input.status !== "all" ? { status: input.status } : {}),
+      ...(input.search
+        ? {
+            OR: [
+              { stripeInvoiceId: { contains: input.search, mode: "insensitive" as const } },
+              { school: { name: { contains: input.search, mode: "insensitive" as const } } }
+            ]
+          }
+        : {})
+    };
+
+    const [invoices, total] = await Promise.all([
+      db.invoice.findMany({
+        where,
+        include: {
+          school: {
+            select: {
+              id: true,
+              name: true
+            }
+          },
+          receipts: {
+            select: {
+              id: true,
+              status: true
+            }
+          }
+        },
+        orderBy: { createdAt: "desc" },
+        skip: offset,
+        take: input.perPage
+      }),
+      db.invoice.count({ where })
+    ]);
+
+    const rows = invoices.map(invoice => ({
+      id: invoice.id,
+      number: invoice.stripeInvoiceId,
+      tenantName: invoice.school.name,
+      periodStart: invoice.periodStart?.toISOString() || null,
+      periodEnd: invoice.periodEnd?.toISOString() || null,
+      amount: invoice.amountDue,
+      status: invoice.status as "open" | "paid" | "void" | "uncollectible",
+      createdAt: invoice.createdAt.toISOString()
+    }));
+
+    return { success: true, data: rows, total };
+  } catch (error) {
+    console.error("Failed to fetch invoices:", error);
+    return {
+      success: false,
+      error: {
+        message: error instanceof Error ? error.message : "Failed to fetch invoices",
+      },
+      data: [],
+      total: 0,
+    };
+  }
+}
+
 // ============= CSV Export =============
 
 export async function getInvoicesCSV(filters?: { status?: string; search?: string }): Promise<string> {

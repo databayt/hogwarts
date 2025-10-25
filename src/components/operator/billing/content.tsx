@@ -21,7 +21,7 @@ interface Props {
   };
 }
 
-async function getInvoices(searchParams: Props["searchParams"]) {
+async function getInvoicesData(searchParams: Props["searchParams"]) {
   const page = Number(searchParams?.page) || 1;
   const limit = Number(searchParams?.limit) || 10;
   const offset = (page - 1) * limit;
@@ -77,6 +77,8 @@ async function getInvoices(searchParams: Props["searchParams"]) {
 
   return {
     rows,
+    total,
+    limit,
     pageCount: Math.ceil(total / limit)
   };
 }
@@ -111,7 +113,7 @@ async function getBillingStats() {
 
 export async function BillingContent({ dictionary, lang, searchParams }: Props) {
   const [invoiceData, stats] = await Promise.all([
-    getInvoices(searchParams),
+    getInvoicesData(searchParams),
     getBillingStats()
   ]);
 
@@ -195,8 +197,9 @@ export async function BillingContent({ dictionary, lang, searchParams }: Props) 
             </div>
             {invoiceData.rows.length > 0 ? (
               <InvoicesTable
-                data={invoiceData.rows}
-                pageCount={invoiceData.pageCount}
+                initialData={invoiceData.rows}
+                total={invoiceData.total}
+                perPage={invoiceData.limit}
                 lang={lang}
               />
             ) : (

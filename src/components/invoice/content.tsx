@@ -54,7 +54,7 @@ export async function InvoiceContent({ searchParams }: Props) {
         <h1 className="text-xl font-semibold">Invoices</h1>
         <p className="text-sm text-muted-foreground">Manage and track your invoices</p>
       </div>
-      <InvoiceTable data={data} columns={invoiceColumns} pageCount={Math.max(1, Math.ceil(total / (sp.perPage || 20)))} />
+      <InvoiceTable initialData={data} columns={invoiceColumns} total={total} perPage={sp.perPage} />
     </div>
   )
 }

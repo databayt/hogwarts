@@ -19,7 +19,7 @@ interface Props {
   };
 }
 
-async function getDomainRequests(searchParams: Props["searchParams"]) {
+async function getDomainRequestsData(searchParams: Props["searchParams"]) {
   const page = Number(searchParams?.page) || 1;
   const limit = Number(searchParams?.limit) || 10;
   const offset = (page - 1) * limit;
@@ -67,6 +67,8 @@ async function getDomainRequests(searchParams: Props["searchParams"]) {
 
   return {
     rows,
+    total,
+    limit,
     pageCount: Math.ceil(total / limit)
   };
 }
@@ -100,7 +102,7 @@ async function getDomainStats() {
 
 export async function DomainsContent({ dictionary, lang, searchParams }: Props) {
   const [domainData, stats] = await Promise.all([
-    getDomainRequests(searchParams),
+    getDomainRequestsData(searchParams),
     getDomainStats()
   ]);
 
@@ -192,9 +194,10 @@ export async function DomainsContent({ dictionary, lang, searchParams }: Props) 
 
           {domainData.rows.length > 0 ? (
             <DomainsTable
-              data={domainData.rows}
+              initialData={domainData.rows}
               columns={domainColumns}
-              pageCount={domainData.pageCount}
+              total={domainData.total}
+              perPage={domainData.limit}
             />
           ) : (
             <EmptyState

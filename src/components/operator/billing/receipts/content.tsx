@@ -21,7 +21,7 @@ interface Props {
   };
 }
 
-async function getReceipts(searchParams: Props["searchParams"]) {
+async function getReceiptsData(searchParams: Props["searchParams"]) {
   const page = Number(searchParams?.page) || 1;
   const limit = Number(searchParams?.limit) || 10;
   const offset = (page - 1) * limit;
@@ -78,6 +78,8 @@ async function getReceipts(searchParams: Props["searchParams"]) {
 
   return {
     rows,
+    total,
+    limit,
     pageCount: Math.ceil(total / limit),
   };
 }
@@ -101,7 +103,7 @@ async function getReceiptStats() {
 
 export async function ReceiptsContent({ dictionary, lang, searchParams }: Props) {
   const [receiptData, stats] = await Promise.all([
-    getReceipts(searchParams),
+    getReceiptsData(searchParams),
     getReceiptStats(),
   ]);
 
@@ -168,9 +170,10 @@ export async function ReceiptsContent({ dictionary, lang, searchParams }: Props)
         <div className="space-y-4">
           {receiptData.rows.length > 0 ? (
             <ReceiptsTable
-              data={receiptData.rows}
+              initialData={receiptData.rows}
               columns={getReceiptColumns(lang)}
-              pageCount={receiptData.pageCount}
+              total={receiptData.total}
+              perPage={receiptData.limit}
             />
           ) : (
             <EmptyState

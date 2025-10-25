@@ -90,6 +90,7 @@ async function getTenants(searchParams: Props["searchParams"]) {
 
   return {
     rows,
+    total,
     pageCount: Math.ceil(total / limit)
   };
 }
@@ -293,9 +294,10 @@ export async function TenantsContent({ dictionary, lang, searchParams }: Props) 
 
           {tenantData.rows.length > 0 ? (
             <TenantsTable
-              data={tenantData.rows}
+              initialData={tenantData.rows}
               columns={tenantColumns}
-              pageCount={tenantData.pageCount}
+              total={tenantData.total}
+              perPage={limit}
             />
           ) : (
             <EmptyState

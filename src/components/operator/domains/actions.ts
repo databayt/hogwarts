@@ -235,6 +235,71 @@ export async function domainCreate(
   }
 }
 
+// ============= Get Domains Action =============
+
+export async function getDomains(input: {
+  page: number;
+  perPage: number;
+  status?: string;
+  search?: string;
+}) {
+  try {
+    await requireOperator();
+
+    const offset = (input.page - 1) * input.perPage;
+    const where = {
+      ...(input.status && input.status !== "all" ? { status: input.status } : {}),
+      ...(input.search
+        ? {
+            OR: [
+              { domain: { contains: input.search, mode: "insensitive" as const } },
+              { school: { name: { contains: input.search, mode: "insensitive" as const } } }
+            ]
+          }
+        : {})
+    };
+
+    const [requests, total] = await Promise.all([
+      db.domainRequest.findMany({
+        where,
+        include: {
+          school: {
+            select: {
+              id: true,
+              name: true
+            }
+          }
+        },
+        orderBy: { createdAt: "desc" },
+        skip: offset,
+        take: input.perPage
+      }),
+      db.domainRequest.count({ where })
+    ]);
+
+    const rows = requests.map(request => ({
+      id: request.id,
+      schoolName: request.school.name,
+      domain: request.domain,
+      status: request.status as "pending" | "approved" | "rejected" | "verified",
+      createdAt: request.createdAt.toISOString(),
+      notes: request.notes
+    }));
+
+    return { success: true, data: rows, total };
+  } catch (error) {
+    console.error("Failed to fetch domain requests:", error);
+    return {
+      success: false,
+      error: {
+        message: error instanceof Error ? error.message : "Failed to fetch domain requests",
+      },
+      data: [],
+      total: 0,
+    };
+  }
+}
+
 // ============= Helper Functions =============
 
 /**
