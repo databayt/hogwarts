@@ -30,7 +30,7 @@ export default async function Page({ params }: Props) {
   return (
     <AttendanceProvider>
       <AnalyticsContent
-        dictionary={dictionary.school}
+        dictionary={dictionary}
         locale={lang}
       />
     </AttendanceProvider>
