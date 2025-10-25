@@ -143,6 +143,8 @@ async function getTenantStats() {
 }
 
 export async function TenantsContent({ dictionary, lang, searchParams }: Props) {
+  const limit = Number(searchParams?.limit) || 10;
+
   const [tenantData, stats] = await Promise.all([
     getTenants(searchParams),
     getTenantStats()
