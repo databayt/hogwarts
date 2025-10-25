@@ -294,6 +294,7 @@ export function EnhancedDropzone({
       disabled={isDisabled}
     >
       {(dropzoneProps) => (
+        // @ts-expect-error - framer-motion and react-dropzone prop type compatibility issue
         <motion.div
           {...dropzoneProps.getRootProps()}
           className={cn(

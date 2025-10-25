@@ -48,9 +48,9 @@ export type {
 } from './types';
 
 // Utils
-export { formatFileSize, getFileIcon, getFileCategory } from './lib/formatters';
+export { formatBytes, getFileTypeLabel, getCategoryLabel } from './lib/formatters';
 export { validateFile, validateFiles } from './lib/validation';
 
 // Config
-export { fileTypes, getFileTypeConfig } from './config/file-types';
-export { storageConfig, getStorageProvider } from './config/storage-config';
+export { FILE_TYPE_CONFIGS, getFileTypeConfig, detectCategory } from './config/file-types';
+export { STORAGE_CONFIG, getStorageProvider } from './config/storage-config';

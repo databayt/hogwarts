@@ -234,7 +234,7 @@ export function UploadQueue({
                     </>
                   )}
                   {upload.status === 'success' && (
-                    <Badge variant="success" className="text-xs">
+                    <Badge variant="secondary" className="text-xs">
                       {dictionary?.completed || 'Completed'}
                     </Badge>
                   )}
@@ -401,7 +401,7 @@ export function UploadQueue({
                 </Badge>
               )}
               {completedUploads.length > 0 && (
-                <Badge variant="success" className="text-xs">
+                <Badge variant="secondary" className="text-xs">
                   {completedUploads.length} {dictionary?.completed || 'completed'}
                 </Badge>
               )}

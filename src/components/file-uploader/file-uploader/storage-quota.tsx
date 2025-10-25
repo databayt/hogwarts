@@ -279,7 +279,7 @@ export function StorageQuota({
 
           {/* Alerts */}
           {showAlerts && isNearLimit && (
-            <Alert variant={isOverLimit ? 'destructive' : 'warning'}>
+            <Alert variant={isOverLimit ? 'destructive' : 'default'}>
               <AlertCircle className="h-4 w-4" />
               <AlertTitle>
                 {isOverLimit
