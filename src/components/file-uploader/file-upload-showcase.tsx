@@ -105,9 +105,9 @@ export function FileUploadShowcase({
   const [activeTab, setActiveTab] = React.useState('upload');
 
   // Hooks
-  // @ts-expect-error - userId property may not exist in UseFileUploadOptions type
   const { upload, uploadMultiple, progress, isUploading } = useFileUpload({
     schoolId,
+    // @ts-ignore - userId property may not exist in UseFileUploadOptions type
     userId,
   });
 
@@ -438,12 +438,11 @@ export function FileUploadShowcase({
 
       {/* File Preview Dialog/Sheet */}
       {previewFile && (
-        // @ts-expect-error - onAction prop type mismatch between component and handler
         <FilePreview
           file={previewFile}
           open={!!previewFile}
           onOpenChange={(open) => !open && setPreviewFile(null)}
-          onAction={handleFileAction}
+          onAction={handleFileAction as any}
           variant={isMobile ? 'sheet' : 'dialog'}
           showDetails
           showActions
