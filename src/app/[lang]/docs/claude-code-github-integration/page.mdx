@@ -1,0 +1,663 @@
+# Claude Code GitHub Integration
+
+Seamlessly integrate Claude Code with GitHub for intelligent repository management, code reviews, issue handling, and pull request automation.
+
+## What is GitHub Integration?
+
+The GitHub integration connects Claude Code directly to your GitHub repositories, enabling:
+
+- **Repository Operations**: Clone, create, manage repos
+- **Issue Management**: Create, update, search, close issues
+- **Pull Request Automation**: Create PRs, request reviews, merge
+- **Code Review**: AI-powered review with GitHub context
+- **Branch Management**: Create, switch, merge branches
+- **Release Management**: Create releases, manage tags
+- **GitHub Actions**: Trigger workflows, check status
+- **Discussion Participation**: Comment on issues and PRs
+
+All through natural language commands and automated workflows.
+
+## Setup Methods
+
+### Method 1: Quick Install (Recommended)
+
+```bash
+/install-github-app
+```
+
+This command:
+1. Opens browser to GitHub App installation
+2. Prompts for repository permissions
+3. Generates and stores authentication token
+4. Configures Claude Code automatically
+
+**Fastest way to get started.**
+
+### Method 2: Manual Installation
+
+#### Step 1: Create GitHub Personal Access Token
+
+1. Go to [GitHub Settings → Developer Settings → Personal Access Tokens](https://github.com/settings/tokens)
+2. Click "Generate new token (classic)"
+3. Select scopes:
+   - `repo` (Full control of private repositories)
+   - `workflow` (Update GitHub Action workflows)
+   - `read:org` (Read org and team membership)
+   - `user` (Update user data)
+
+4. Generate and copy token
+
+#### Step 2: Configure Claude Code
+
+Add to `~/.claude/settings.json`:
+
+```json
+{
+  "mcp": {
+    "servers": {
+      "github": {
+        "transport": "http",
+        "url": "https://mcp.github.com",
+        "headers": {
+          "Authorization": "token ${GITHUB_TOKEN}"
+        }
+      }
+    }
+  }
+}
+```
+
+#### Step 3: Set Environment Variable
+
+```bash
+export GITHUB_TOKEN=ghp_your_token_here
+```
+
+Add to `.env` or shell profile for persistence.
+
+#### Step 4: Verify Connection
+
+```bash
+claude
+> "List my repositories"
+```
+
+If Claude can list repos, setup is successful.
+
+## Required Permissions
+
+The GitHub integration requires these permissions:
+
+| Permission | Scope | Needed For |
+|------------|-------|------------|
+| Repository Access | `repo` | Read/write code, issues, PRs |
+| Workflows | `workflow` | Trigger/manage GitHub Actions |
+| Organization | `read:org` | Access org repos and teams |
+| User | `user` | Read user profile info |
+| Pull Requests | Included in `repo` | Create/review/merge PRs |
+| Issues | Included in `repo` | Create/manage issues |
+
+**Security Note**: Use fine-grained tokens when possible to limit access to specific repositories.
+
+## Key Features
+
+### Repository Management
+
+#### Clone Repository
+
+```
+You: "Clone the repo user/project"
+
+Claude: [Uses GitHub integration]
+!git clone https://github.com/user/project.git
+cd project
+
+Claude: Repository cloned successfully.
+```
+
+#### Create Repository
+
+```
+You: "Create a new GitHub repo called 'my-project'"
+
+Claude: Creating repository on GitHub...
+[Creates repo via GitHub API]
+!git init
+!git remote add origin https://github.com/user/my-project.git
+
+Claude: Repository created: https://github.com/user/my-project
+```
+
+#### Repository Information
+
+```
+You: "What's the latest activity on this repo?"
+
+Claude: [Fetches repo data]
+Claude: Latest activity:
+- 5 open PRs
+- 12 open issues
+- Last commit: 2 hours ago by @alice
+- Main branch: main
+- Stars: 1.2k
+```
+
+### Issue Management
+
+#### Create Issue
+
+```
+You: "Create an issue for the login bug we found"
+
+Claude: Creating GitHub issue...
+
+Issue created: #456
+Title: "Fix: Login fails with special characters in email"
+Labels: bug, priority-high
+URL: https://github.com/user/repo/issues/456
+```
+
+#### Search Issues
+
+```
+You: "Find open bugs related to authentication"
+
+Claude: [Searches issues]
+Claude: Found 3 authentication bugs:
+
+#123 - Login timeout after 30 minutes
+#234 - 2FA code validation fails
+#456 - Special characters in email break login
+
+Would you like me to review any of these?
+```
+
+#### Update Issue
+
+```
+You: "Add a comment to issue #456 with our findings"
+
+Claude: [Comments on issue]
+Claude: Comment added to #456 with:
+- Root cause analysis
+- Steps to reproduce
+- Proposed fix
+```
+
+#### Close Issue
+
+```
+You: "Close issue #456 as fixed"
+
+Claude: [Closes issue]
+!git commit -m "fix: Handle special characters in email validation
+
+Closes #456"
+
+Claude: Issue #456 closed and referenced in commit.
+```
+
+### Pull Request Automation
+
+#### Create Pull Request
+
+```
+You: "Create a PR for these changes"
+
+Claude: [Reviews current branch changes]
+
+!git diff main...HEAD
+!git log main..HEAD
+
+Claude: Creating pull request:
+
+Title: "feat: Add user authentication system"
+
+Description:
+## Changes
+- Implemented JWT authentication
+- Added login/logout endpoints
+- Protected dashboard routes
+- Added integration tests
+
+## Test Plan
+- ✓ Unit tests pass
+- ✓ Integration tests pass
+- ✓ Manual testing completed
+
+Closes #123
+
+PR created: #78
+https://github.com/user/repo/pull/78
+```
+
+#### Review Pull Request
+
+```
+You: "Review PR #78"
+
+Claude: [Fetches PR details]
+!gh pr view 78
+!gh pr diff 78
+
+Claude: Reviewing PR #78...
+
+✅ Strengths:
+- Clean implementation
+- Good test coverage (95%)
+- Follows project patterns
+
+⚠️  Issues:
+1. Line 45: Missing error handling for expired tokens
+2. Line 78: Consider using bcrypt for password hashing
+3. Missing JSDoc comments for public APIs
+
+💡 Suggestions:
+- Add rate limiting to login endpoint
+- Consider adding 2FA support in future
+
+Overall: Approve with minor changes requested
+```
+
+#### Request Changes
+
+```
+You: "Comment on the PR with review feedback"
+
+Claude: [Posts review comment]
+
+Review posted to PR #78:
+- Requested changes with inline comments
+- Suggested improvements
+- Approved after changes
+```
+
+#### Merge Pull Request
+
+```
+You: "Merge PR #78"
+
+Claude: [Checks PR status]
+
+Verifying PR is ready:
+✓ All checks passed
+✓ No merge conflicts
+✓ Required reviews: 2/2 approved
+✓ Branch is up to date
+
+!gh pr merge 78 --squash --delete-branch
+
+Claude: PR #78 merged and feature branch deleted.
+```
+
+### Code Review Features
+
+#### Intelligent Review
+
+Claude uses project context for reviews:
+
+```
+You: "Review this PR for security issues"
+
+Claude: [Analyzes PR with security focus]
+
+🔒 Security Review:
+
+Critical:
+- Line 23: SQL query vulnerable to injection
+  Fix: Use parameterized queries
+  ```typescript
+  // Bad
+  db.query(`SELECT * FROM users WHERE id = ${userId}`)
+
+  // Good
+  db.query('SELECT * FROM users WHERE id = ?', [userId])
+  ```
+
+Medium:
+- Line 56: Password hash using MD5
+  Fix: Use bcrypt or argon2
+
+Low:
+- Missing rate limiting on auth endpoints
+```
+
+#### Review Standards
+
+Claude follows project standards from CLAUDE.md:
+
+```markdown
+# In CLAUDE.md
+
+## Code Review Checklist
+
+Every PR must have:
+- [ ] Tests with 80%+ coverage
+- [ ] TypeScript strict mode passing
+- [ ] No console.log statements
+- [ ] Updated documentation
+- [ ] Conventional commit messages
+```
+
+Claude automatically checks these during reviews.
+
+### Branch Management
+
+#### Create Feature Branch
+
+```
+You: "Create a feature branch for user profiles"
+
+Claude: [Creates and switches to branch]
+!git checkout -b feature/user-profiles
+
+Claude: Created and switched to feature/user-profiles
+```
+
+#### Sync with Main
+
+```
+You: "Sync this branch with main"
+
+Claude: [Syncs branch]
+!git fetch origin main
+!git rebase origin/main
+
+Claude: Branch rebased on latest main.
+Conflicts: None
+```
+
+#### Push Branch
+
+```
+You: "Push this branch to GitHub"
+
+Claude: [Pushes branch]
+!git push -u origin feature/user-profiles
+
+Claude: Branch pushed to GitHub:
+https://github.com/user/repo/tree/feature/user-profiles
+```
+
+## Intelligent Mode Detection
+
+Claude automatically detects the best interaction mode based on context:
+
+### Conversational Mode
+
+For exploratory questions:
+
+```
+You: "What issues are assigned to me?"
+
+Claude: You have 5 issues assigned:
+- #123: Add dark mode (in progress)
+- #145: Fix mobile layout (todo)
+- #167: Update docs (todo)
+- #189: Performance optimization (in review)
+- #201: Add search feature (todo)
+
+Which would you like to work on?
+```
+
+### Action Mode
+
+For direct commands:
+
+```
+You: "Create PR for these changes"
+
+Claude: [Immediately creates PR without confirmation]
+PR #89 created: https://github.com/user/repo/pull/89
+```
+
+### Verification Mode
+
+For destructive operations:
+
+```
+You: "Delete branch feature/old-experiment"
+
+Claude: ⚠️  This will permanently delete branch 'feature/old-experiment'.
+
+Branch has:
+- 15 commits not merged to main
+- Last activity: 2 weeks ago
+
+Are you sure? Type 'DELETE' to confirm.
+```
+
+## CLAUDE.md for GitHub Standards
+
+Document GitHub workflows in CLAUDE.md:
+
+```markdown
+## GitHub Workflow
+
+### Branch Naming
+- `feature/` - New features
+- `fix/` - Bug fixes
+- `refactor/` - Code refactoring
+- `docs/` - Documentation updates
+
+### Commit Messages
+Follow conventional commits:
+- `feat:` - New features
+- `fix:` - Bug fixes
+- `docs:` - Documentation
+- `chore:` - Maintenance
+
+### Pull Request Process
+1. Create PR from feature branch
+2. Request review from @team-reviewers
+3. Wait for CI/CD to pass
+4. Address review comments
+5. Squash and merge
+
+### Issue Labels
+- `bug` - Something isn't working
+- `enhancement` - New feature request
+- `documentation` - Docs improvement
+- `good-first-issue` - Good for newcomers
+```
+
+Claude automatically follows these standards.
+
+## Advanced Features
+
+### GitHub Actions Integration
+
+#### Trigger Workflow
+
+```
+You: "Run the deployment workflow"
+
+Claude: [Triggers GitHub Action]
+!gh workflow run deploy.yml
+
+Claude: Workflow triggered: deployment
+Status: https://github.com/user/repo/actions
+```
+
+#### Check Workflow Status
+
+```
+You: "What's the status of CI?"
+
+Claude: [Checks workflow runs]
+
+Latest CI run:
+- Status: ✓ Passed
+- Duration: 3m 24s
+- Commit: abc1234
+- Triggered by: @alice
+- View: https://github.com/user/repo/actions/runs/123456
+```
+
+### Release Management
+
+#### Create Release
+
+```
+You: "Create a release for v2.1.0"
+
+Claude: [Creates GitHub release]
+
+Creating release v2.1.0...
+
+Changelog generated:
+## Features
+- Add user authentication (#78)
+- Implement dark mode (#92)
+
+## Fixes
+- Fix mobile layout (#145)
+- Resolve memory leak (#167)
+
+Release created: https://github.com/user/repo/releases/tag/v2.1.0
+```
+
+### Multi-Repository Operations
+
+```
+You: "What's the status across all my repos?"
+
+Claude: [Checks multiple repos]
+
+Status across 8 repositories:
+
+Active (3):
+- user/project-a: 2 open PRs, 5 issues
+- user/project-b: CI failing, 1 PR
+- user/project-c: Up to date
+
+Inactive (5):
+- user/archive-a: No activity in 6 months
+...
+```
+
+## Security Best Practices
+
+### Token Security
+
+**Never commit tokens**:
+
+```bash
+# .gitignore
+.env
+.env.local
+.claude/settings.local.json
+```
+
+**Use environment variables**:
+
+```json
+{
+  "headers": {
+    "Authorization": "token ${GITHUB_TOKEN}"
+  }
+}
+```
+
+**Rotate tokens regularly**:
+
+```bash
+# Every 90 days
+gh auth refresh -s repo,workflow
+```
+
+### Permission Scoping
+
+Use fine-grained tokens:
+
+```
+Fine-grained token permissions:
+- Repository access: Only needed repos
+- Permissions: Minimum required
+- Expiration: 90 days maximum
+```
+
+### Audit Logging
+
+Enable GitHub audit log:
+
+```json
+{
+  "github": {
+    "audit": {
+      "enabled": true,
+      "file": ".claude/github-audit.log"
+    }
+  }
+}
+```
+
+## Troubleshooting
+
+### Authentication Failed
+
+```
+Error: GitHub authentication failed
+```
+
+**Fix**:
+1. Verify `GITHUB_TOKEN` is set
+2. Check token hasn't expired
+3. Verify token has required scopes
+4. Test with: `gh auth status`
+
+### Rate Limit Exceeded
+
+```
+Error: API rate limit exceeded
+```
+
+**Fix**:
+- Authenticated: 5,000 requests/hour
+- Wait for reset (shown in error)
+- Use GraphQL for complex queries (higher limits)
+
+### Permission Denied
+
+```
+Error: Resource not accessible
+```
+
+**Fix**:
+1. Check repository permissions
+2. Verify token scopes
+3. Check if repo is private (needs `repo` scope)
+
+### Integration Not Working
+
+```
+Error: GitHub MCP server not responding
+```
+
+**Fix**:
+```bash
+# Test connection
+claude /mcp test github
+
+# Reinstall if needed
+claude /mcp remove github
+claude /mcp install github
+```
+
+## Next Steps
+
+- [GitHub Actions](/docs/claude-code-github-actions) - CI/CD integration
+- [Slash Commands](/docs/claude-code-slash-commands) - Automate GitHub workflows
+- [Hooks](/docs/claude-code-hooks) - Trigger actions on GitHub events
+- [Best Practices](/docs/claude-code-best-practices) - Effective GitHub workflows
+
+## Resources
+
+- **GitHub CLI**: https://cli.github.com
+- **GitHub API**: https://docs.github.com/rest
+- **Personal Access Tokens**: https://github.com/settings/tokens
+- **Fine-grained Tokens**: https://github.com/settings/tokens?type=beta
+
+---
+
+*GitHub integration makes Claude Code your intelligent GitHub assistant, handling everything from issue creation to complex PR workflows through natural language.*

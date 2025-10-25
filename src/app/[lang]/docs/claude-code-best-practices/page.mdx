@@ -1,0 +1,670 @@
+# Claude Code Best Practices
+
+Master proven workflows and techniques to maximize productivity and get the most out of Claude Code's agentic capabilities.
+
+## Core Workflow: Explore → Plan → Code → Commit
+
+The most effective Claude Code workflow follows a structured pattern that mirrors professional software development.
+
+### 1. Explore Phase
+
+Start by having Claude understand your codebase thoroughly before making changes.
+
+```
+You: "I need to add user authentication"
+
+Claude: Let me explore your codebase first...
+[Uses Glob to find auth-related files]
+[Reads current auth implementation]
+[Checks package.json for auth libraries]
+
+Claude: I found you're using NextAuth v5. I'll build on that foundation.
+```
+
+**Best Practices**:
+- Let Claude read relevant files before proposing solutions
+- Ask exploratory questions: "What authentication system do we use?"
+- Review Claude's findings before proceeding
+
+### 2. Plan Phase
+
+Have Claude create a detailed implementation plan before writing code.
+
+```
+You: "Create a plan for the authentication feature"
+
+Claude: Here's my implementation plan:
+
+1. Create auth middleware (src/middleware/auth.ts)
+2. Add protected route wrapper
+3. Update login/logout handlers
+4. Add JWT token validation
+5. Write integration tests
+6. Update CLAUDE.md with auth patterns
+
+Does this approach work for you?
+```
+
+**Best Practices**:
+- Always review the plan before implementation
+- Ask Claude to explain any unclear steps
+- Request estimates for each phase
+- Approve or adjust the plan explicitly
+
+### 3. Code Phase
+
+Execute the plan incrementally with verification at each step.
+
+```
+You: "Implement step 1"
+
+Claude: [Creates auth middleware]
+Claude: Middleware created. Running tests...
+Claude: ✓ Tests pass. Ready for step 2?
+
+You: "Proceed"
+```
+
+**Best Practices**:
+- Implement one step at a time for complex features
+- Run tests after each major change
+- Review diffs before proceeding to next step
+- Use `/clear` between unrelated features
+
+### 4. Commit Phase
+
+Let Claude handle git operations with meaningful commits.
+
+```
+You: "Create a commit for this feature"
+
+Claude: [Reviews changes]
+Claude: I'll create a commit with these changes:
+- Added JWT authentication middleware
+- Protected dashboard routes
+- Added auth integration tests
+
+[Creates commit with conventional commit format]
+```
+
+**Best Practices**:
+- Review `git diff` before committing
+- Use conventional commit format
+- Let Claude write descriptive commit messages
+- Commit small, logical units of work
+
+## Test-Driven Development (TDD)
+
+Claude excels at TDD workflows when guided properly.
+
+### Write Tests First
+
+```
+You: "Create a User model with email validation using TDD"
+
+Claude: I'll write the test first:
+[Creates user.test.ts with failing tests]
+
+Claude: Tests are failing as expected. Now implementing...
+[Implements User model]
+
+Claude: ✓ All tests passing!
+```
+
+### Test Coverage Verification
+
+```
+You: "Add tests for the edge cases we discussed"
+
+Claude: [Adds additional test cases]
+Claude: Coverage report:
+- Statements: 98%
+- Branches: 95%
+- Functions: 100%
+```
+
+**Best Practices**:
+- Explicitly request "TDD approach" for critical features
+- Have Claude run tests before and after implementation
+- Ask for coverage reports when needed
+- Use tests as living documentation
+
+## Visual Iteration
+
+Claude can work with screenshots and designs to match implementation to mockups.
+
+### Design to Code
+
+```
+You: [Drag and drop screenshot]
+You: "Implement this design"
+
+Claude: [Analyzes screenshot]
+Claude: I see a two-column layout with a sidebar and main content area.
+I'll create this using Tailwind Grid...
+```
+
+### Visual Verification Loop
+
+```
+Claude: [Implements component]
+Claude: Please take a screenshot so I can verify the result matches the design.
+
+You: [Shares screenshot]
+
+Claude: The spacing looks off. Let me adjust the padding...
+```
+
+**Best Practices**:
+- Share screenshots of designs before implementation
+- Provide screenshots during iteration for adjustments
+- Use annotations on screenshots for specific feedback
+- Include design system documentation in CLAUDE.md
+
+## Specificity in Instructions
+
+Precise instructions yield better results faster.
+
+### ❌ Vague Instructions
+
+```
+"Fix this code"
+"Make it better"
+"Clean up the UI"
+"Improve performance"
+```
+
+### ✅ Specific Instructions
+
+```
+"Fix the TypeScript error in UserService.ts line 45"
+"Refactor the UserList component to use React.memo"
+"Update the dashboard layout to match the Figma design"
+"Optimize the database query in getUsers() - it's causing N+1 queries"
+```
+
+### Provide Context
+
+**Include**:
+- Error messages (full stack traces)
+- Expected vs actual behavior
+- Related files or components
+- Recent changes that might be relevant
+- Environment details (OS, Node version, etc.)
+
+**Example**:
+
+```
+You: "The login form isn't working. When I submit, I get:
+Error: Cannot read property 'email' of undefined
+at LoginForm.tsx:45
+
+Expected: Form should call loginAction with email and password
+Actual: Getting undefined error
+
+Recent changes: I just updated react-hook-form from v7.50 to v7.61
+
+Environment: Node 20.11, Next.js 15.4.4"
+```
+
+## Visual Context
+
+Leverage Claude's vision capabilities for better results.
+
+### Screenshots
+
+```
+You: [Drag and drop error screenshot]
+You: "What's causing this error?"
+
+Claude: [Analyzes screenshot]
+Claude: The error shows a hydration mismatch. This happens when...
+```
+
+### Diagrams
+
+```
+You: [Share architecture diagram]
+You: "Implement this data flow"
+
+Claude: I see the flow goes: Client → API → Service → Database
+I'll implement each layer...
+```
+
+### Code in Images
+
+```
+You: [Screenshot of code from documentation]
+You: "Implement this pattern in our codebase"
+
+Claude: [Reads code from image]
+Claude: I'll adapt this pattern to your TypeScript setup...
+```
+
+**Best Practices**:
+- Use screenshots for visual bugs
+- Share error dialogs directly
+- Include network tab screenshots for API issues
+- Annotate images with arrows/circles for clarity
+
+## Course Correction Tools
+
+Know when to reset and redirect Claude's approach.
+
+### Use /clear Strategically
+
+Clear context when:
+- Starting a completely new feature
+- Claude seems confused or stuck in wrong approach
+- Switching to unrelated task
+- After completing a major milestone
+
+```bash
+/clear
+```
+
+**Don't clear when**:
+- Making small iterations on current task
+- Claude is mid-implementation
+- Building on previous context
+
+### Redirect with Explicit Feedback
+
+```
+You: "Stop. This approach won't work because we're using PostgreSQL, not MongoDB"
+
+Claude: You're right, let me revise...
+```
+
+### Ask for Alternative Approaches
+
+```
+You: "What are 3 different ways we could implement caching here?"
+
+Claude: Here are three approaches:
+1. Redis with TTL...
+2. In-memory LRU cache...
+3. Database-level caching...
+```
+
+## Checklists for Consistency
+
+Provide checklists for repetitive tasks to ensure consistency.
+
+### In CLAUDE.md
+
+```markdown
+## Pre-Commit Checklist
+
+Before committing, always:
+- [ ] Run `pnpm test`
+- [ ] Run `pnpm lint`
+- [ ] Check `git diff` for debug statements
+- [ ] Verify no `console.log` in production code
+- [ ] Update relevant tests
+- [ ] Run `pnpm build` to verify no build errors
+```
+
+### In Prompts
+
+```
+You: "Add the new API endpoint and run through the checklist:
+1. Add TypeScript types
+2. Add Zod validation
+3. Add error handling
+4. Add unit tests
+5. Update OpenAPI docs
+6. Test with Postman"
+```
+
+**Best Practices**:
+- Create checklists for common workflows
+- Reference checklists in CLAUDE.md
+- Have Claude confirm completion of each item
+- Update checklists based on lessons learned
+
+## Git Integration Best Practices
+
+### Meaningful Commit Messages
+
+```
+You: "Create a commit following conventional commits"
+
+Claude: git commit -m "feat(auth): Add JWT authentication middleware
+
+- Implement token validation
+- Add protected route wrapper
+- Include unit tests for auth flow
+- Update docs with auth setup
+
+Closes #123"
+```
+
+### Atomic Commits
+
+```
+You: "Create separate commits for:
+1. The bug fix
+2. The refactoring
+3. The new tests"
+
+Claude: [Creates three focused commits]
+```
+
+### Pre-Commit Verification
+
+```
+You: "Before committing, verify:
+- Tests pass
+- Linting passes
+- Build succeeds
+- No sensitive data in changes"
+
+Claude: [Runs all checks]
+Claude: ✓ All checks passed. Creating commit...
+```
+
+### Branch Management
+
+```
+You: "Create a feature branch and commit these changes"
+
+Claude: git checkout -b feature/user-authentication
+[Makes commits]
+Claude: Ready to push to remote?
+```
+
+**Best Practices**:
+- Let Claude generate descriptive commit messages
+- Review `git diff` before approving commits
+- Use conventional commit format
+- Keep commits focused and atomic
+
+## Headless Mode for Automation
+
+Use headless mode for scripted or automated workflows.
+
+### Single Task Execution
+
+```bash
+claude -p "Run tests and create a commit if they pass"
+```
+
+### CI/CD Integration
+
+```bash
+# In GitHub Actions
+- name: AI Code Review
+  run: |
+    claude -p "Review the changes in this PR and comment on potential issues"
+```
+
+### Batch Operations
+
+```bash
+claude -p "Update all components to use the new Button API"
+```
+
+**Best Practices**:
+- Use `-p` flag for one-off tasks
+- Redirect output for logging: `> claude-output.log`
+- Set explicit permissions in CI with `--dangerously-skip-permissions`
+- Keep prompts self-contained and specific
+
+## Multi-Claude Workflows
+
+Use multiple Claude instances for complex projects.
+
+### Parallel Development
+
+**Terminal 1 - Feature Development**:
+```bash
+cd ~/project
+git checkout feature/auth
+claude
+```
+
+**Terminal 2 - Code Review**:
+```bash
+cd ~/project
+git checkout main
+claude /agents/code-reviewer
+```
+
+### Separation of Concerns
+
+**Terminal 1 - Backend**:
+```bash
+cd ~/project/api
+claude
+> "Implement the API endpoints"
+```
+
+**Terminal 2 - Frontend**:
+```bash
+cd ~/project/web
+claude
+> "Create the React components"
+```
+
+### Git Worktrees
+
+```bash
+# Main development
+git worktree add ../project-feature feature/auth
+cd ../project-feature
+claude
+
+# Parallel bug fix
+git worktree add ../project-hotfix hotfix/login-error
+cd ../project-hotfix
+claude
+```
+
+**Best Practices**:
+- Use worktrees for parallel git contexts
+- Keep instances focused on specific domains
+- Use `/clear` to prevent context bleeding
+- Share findings between instances via commits
+
+## Incremental Refinement
+
+Build features iteratively rather than all at once.
+
+### Start Simple
+
+```
+You: "Create a basic user list component"
+Claude: [Creates simple component]
+
+You: "Add search functionality"
+Claude: [Adds search]
+
+You: "Add pagination"
+Claude: [Adds pagination]
+
+You: "Add sorting by column"
+Claude: [Adds sorting]
+```
+
+### Progressive Enhancement
+
+```
+You: "Create the feature with these priorities:
+1. Core functionality (MVP)
+2. Error handling
+3. Loading states
+4. Optimistic updates
+5. Animations
+Let's do one at a time."
+```
+
+**Best Practices**:
+- Build minimum viable version first
+- Test each increment
+- Add complexity gradually
+- Easier to debug small changes
+
+## Learning from Sessions
+
+Improve your CLAUDE.md based on interactions.
+
+### Press # During Sessions
+
+```
+# During conversation
+[Press #]
+
+Claude: Based on our conversation, I suggest adding to CLAUDE.md:
+
+## Testing Pattern
+- Always use Vitest, not Jest
+- Mock API calls with MSW
+- Place tests next to source files
+
+Add this?
+```
+
+### Session Review
+
+```
+You: "What should we add to CLAUDE.md based on this session?"
+
+Claude: We discovered:
+1. The API requires authentication header
+2. Database queries must include schoolId
+3. Forms need both client and server validation
+
+I'll update CLAUDE.md with these patterns.
+```
+
+**Best Practices**:
+- Use `#` key regularly during sessions
+- Review CLAUDE.md weekly
+- Commit CLAUDE.md changes
+- Share updates with team
+
+## Common Anti-Patterns
+
+### ❌ Too Much at Once
+
+```
+You: "Create the entire auth system, payment integration, admin dashboard, and email notifications"
+```
+
+**Better**: Break into separate sessions or step-by-step prompts.
+
+### ❌ Insufficient Context
+
+```
+You: "Fix the bug"
+[No error message, no file path, no description]
+```
+
+**Better**: Include error, location, expected behavior, and what you've tried.
+
+### ❌ Over-Reliance Without Review
+
+```
+You: "Implement this feature"
+Claude: [Makes 50 file changes]
+You: "Commit it"
+[Never reviews the changes]
+```
+
+**Better**: Review diffs, run tests, verify behavior before committing.
+
+### ❌ Fighting Claude's Approach
+
+```
+Claude: "I'll use approach A because..."
+You: "No, use approach B"
+Claude: [Uses approach B]
+You: "Actually, why not approach C?"
+```
+
+**Better**: Explain your requirements upfront or ask Claude to compare approaches.
+
+## Performance Tips
+
+### Optimize Context Window
+
+```
+# Clear between unrelated tasks
+/clear
+
+# Start fresh for new features
+You: "Starting new feature. Previous context not needed."
+```
+
+### Use Targeted File Reading
+
+```
+You: "Only read the authentication files, ignore the rest of the codebase"
+```
+
+### Batch Related Changes
+
+```
+You: "Update all 10 components to use the new API in one go"
+```
+
+### Use Faster Models for Simple Tasks
+
+```
+# Simple refactoring
+/model
+[Select Haiku]
+
+You: "Rename this function across the codebase"
+```
+
+## Debugging with Claude
+
+### Systematic Debugging
+
+```
+You: "Debug this error systematically:
+1. Read the error trace
+2. Find the source file
+3. Identify the root cause
+4. Suggest 3 potential fixes
+5. Implement the best fix"
+```
+
+### Rubber Duck Debugging
+
+```
+You: "Explain this code to me line by line"
+
+Claude: [Explains code]
+Claude: Wait, I see the issue on line 15...
+```
+
+### Comparative Debugging
+
+```
+You: "Compare the working version (commit abc123) with current broken version"
+
+Claude: [Compares files]
+Claude: The regression was introduced when...
+```
+
+## Next Steps
+
+- [Slash Commands](/docs/claude-code-slash-commands) - Create custom workflows
+- [Subagents](/docs/claude-code-subagents) - Specialized assistants for specific tasks
+- [Hooks](/docs/claude-code-hooks) - Automate actions at key moments
+- [Multi-Agent Workflows](/docs/claude-code-multi-agent) - Advanced parallel development
+- [Thinking Modes](/docs/claude-code-thinking-modes) - When to use extended thinking
+
+## Resources
+
+- **Workflow Templates**: Common patterns for different project types
+- **Team Playbooks**: Shared best practices
+- **Case Studies**: Real-world examples of effective Claude Code usage
+- **Video Tutorials**: Visual guides to advanced techniques
+
+---
+
+*Master these patterns and you'll transform Claude Code from a helpful assistant into a true development partner.*

@@ -1,0 +1,233 @@
+# Claude Code Introduction
+
+Welcome to the comprehensive guide for Claude Code - Anthropic's agentic coding tool that lives in your terminal and transforms how you write code.
+
+## What is Claude Code?
+
+Claude Code is an AI-powered development assistant that understands your codebase, executes routine tasks, explains complex code, and handles git workflows through natural language commands. It combines the intelligence of Claude with specialized tools designed for software development.
+
+## Key Features
+
+### Intelligent Code Understanding
+Claude Code analyzes your entire codebase, understanding context, patterns, and relationships between files. It can:
+- Navigate complex codebases with ease
+- Understand project structure and dependencies
+- Maintain context across multiple files
+- Follow your coding conventions and patterns
+
+### Natural Language Interface
+Communicate with Claude using everyday language:
+- "Implement the feature described in issue #123"
+- "Refactor this component to use React hooks"
+- "Find and fix all TypeScript type errors"
+- "Create a PR with these changes"
+
+### Agentic Task Execution
+Unlike simple code completion, Claude Code can:
+- Plan complex multi-step tasks
+- Execute commands and scripts
+- Make code changes across multiple files
+- Run tests and verify implementations
+- Create commits and pull requests
+
+## Installation
+
+### Prerequisites
+- **Operating System**: macOS, Linux, or Windows (WSL recommended)
+- **Node.js**: Version 18.x or higher
+- **Git**: Version 2.x or higher
+- **Anthropic API Key**: Get one at [console.anthropic.com](https://console.anthropic.com)
+
+### Install via npm
+
+```bash
+npm install -g claude-code
+```
+
+### Install via Homebrew (macOS)
+
+```bash
+brew install claude-code
+```
+
+### Verify Installation
+
+```bash
+claude --version
+```
+
+## First Time Setup
+
+### 1. Authenticate
+
+Run Claude Code for the first time:
+
+```bash
+claude
+```
+
+You'll be prompted to enter your Anthropic API key. Alternatively, set it as an environment variable:
+
+```bash
+export ANTHROPIC_API_KEY=your-api-key-here
+```
+
+### 2. Initialize Project
+
+Navigate to your project directory and initialize:
+
+```bash
+cd your-project
+claude /init
+```
+
+This creates a `.claude/` directory with default configuration and a `CLAUDE.md` file documenting your project for Claude.
+
+### 3. Configure Permissions
+
+Claude Code respects your system by requesting permission before modifying files. Configure allowed tools:
+
+```bash
+claude /permissions
+```
+
+Common permissions to allow:
+- `Edit` - File modifications
+- `Write` - Creating new files
+- `Bash(git:*)` - All git operations
+- `Bash(npm:*)` - Package management
+
+## Basic Usage
+
+### Start a Session
+
+```bash
+claude
+```
+
+This opens an interactive terminal session where you can chat with Claude.
+
+### Run Single Command
+
+```bash
+claude -p "Add error handling to the login function"
+```
+
+The `-p` flag runs a single prompt in headless mode.
+
+### Interactive Mode
+
+In interactive mode, you can:
+- Type naturally: "Find all TODO comments in the codebase"
+- Use `/` commands: `/help`, `/clear`, `/model`
+- Press `Esc` to interrupt Claude
+- Double-tap `Esc` to edit previous prompts
+
+## Core Concepts
+
+### Context Window
+Claude Code maintains conversation history and file context. Use `/clear` to reset when starting new tasks.
+
+### Tools
+Claude has access to specialized tools:
+- **Read/Write/Edit**: File operations
+- **Glob/Grep**: File search and content search
+- **Bash**: Execute shell commands
+- **Task**: Launch specialized subagents
+
+### Models
+Switch between Claude models based on your needs:
+- **Sonnet (default)**: Balanced performance and cost
+- **Opus**: Maximum intelligence for complex tasks
+- **Haiku**: Fast responses for simple tasks
+
+Use `/model` to switch models during a session.
+
+## Workflow Patterns
+
+### Explore → Plan → Code → Verify
+
+```
+You: "Add authentication to the API"
+
+Claude: Let me first explore your codebase...
+[Reads relevant files]
+
+Claude: Here's my plan:
+1. Create auth middleware
+2. Add JWT token generation
+3. Protect routes
+4. Add tests
+
+You: "Looks good, proceed"
+
+Claude: [Implements the plan step by step]
+```
+
+### Test-Driven Development
+
+```
+You: "Create a User model with validation"
+
+Claude: I'll write tests first...
+[Creates test file]
+
+Claude: Tests are failing as expected. Now implementing...
+[Implements the feature]
+
+Claude: All tests passing!
+```
+
+## Best Practices
+
+### Be Specific
+❌ "Fix this code"
+✅ "Fix the TypeScript type error in `UserService.ts` line 45"
+
+### Provide Context
+Include relevant information:
+- Error messages
+- Expected behavior
+- Related files or components
+- Screenshots (drag and drop)
+
+### Iterate Incrementally
+Break large tasks into smaller steps:
+1. "First, create the database schema"
+2. "Now add the API endpoints"
+3. "Finally, add frontend components"
+
+### Use CLAUDE.md
+Document project-specific information in `CLAUDE.md`:
+- Coding standards
+- Testing conventions
+- Common commands
+- Deployment procedures
+
+## Next Steps
+
+Now that you understand the basics, explore:
+
+- [Configuration](/docs/claude-code-configuration) - Customize Claude Code for your workflow
+- [Best Practices](/docs/claude-code-best-practices) - Advanced tips and techniques
+- [Slash Commands](/docs/claude-code-slash-commands) - Custom commands and automation
+- [Subagents](/docs/claude-code-subagents) - Specialized AI assistants
+- [MCP Integration](/docs/claude-code-mcp) - Connect to external tools and services
+
+## Resources
+
+- **Official Documentation**: [docs.claude.com/en/docs/claude-code](https://docs.claude.com/en/docs/claude-code)
+- **GitHub Repository**: [github.com/anthropics/claude-code](https://github.com/anthropics/claude-code)
+- **Discord Community**: Join for support and discussions
+- **Blog**: Latest updates and use cases
+
+## Getting Help
+
+- Run `/help` within Claude Code
+- Check [Troubleshooting](/docs/claude-code-troubleshooting)
+- Visit the [support forum](https://support.anthropic.com)
+- Report issues on [GitHub](https://github.com/anthropics/claude-code/issues)
+
+---
+
+*Ready to transform your development workflow? Start experimenting with Claude Code and discover how AI can accelerate your coding!*
