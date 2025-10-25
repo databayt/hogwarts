@@ -6,6 +6,7 @@ import { cookies } from "next/headers";
 import { db } from "@/lib/db";
 import { requireOperator, requireNotImpersonating, logOperatorAudit } from "@/components/operator/lib/operator-auth";
 import type { School } from "@prisma/client";
+import { getTenants as getTenantsQuery, type GetTenantsInput } from "./queries";
 
 // ============= Type Definitions =============
 
@@ -258,6 +259,24 @@ export async function tenantStopImpersonation(
     return {
       success: false,
       error: error instanceof Error ? error : new Error("Failed to stop impersonation")
+    };
+  }
+}
+
+/**
+ * Get tenants with pagination (can be called from client)
+ * This is a wrapper around the getTenants query that can be used in client components
+ */
+export async function fetchTenants(input: GetTenantsInput) {
+  try {
+    await requireOperator();
+    const result = await getTenantsQuery(input);
+    return result;
+  } catch (error) {
+    console.error("Failed to fetch tenants:", error);
+    return {
+      data: [],
+      total: 0
     };
   }
 }

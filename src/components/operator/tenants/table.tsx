@@ -4,7 +4,7 @@ import { DataTable } from "@/components/table/data-table/data-table";
 import { DataTableToolbar } from "@/components/table/data-table/data-table-toolbar";
 import { useDataTable } from "@/components/table/hooks/use-data-table";
 import { ColumnDef } from "@tanstack/react-table";
-import { getTenants } from "./queries";
+import { fetchTenants } from "./actions";
 
 interface TenantsTableProps<TData> {
   initialData: TData[];
@@ -41,7 +41,7 @@ export function TenantsTable<TData>({
     setIsLoading(true);
     try {
       const nextPage = currentPage + 1;
-      const result = await getTenants({ page: nextPage, perPage });
+      const result = await fetchTenants({ page: nextPage, perPage });
 
       if (result.data.length > 0) {
         setData(prev => [...prev, ...result.data as TData[]]);
