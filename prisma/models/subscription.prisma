@@ -68,8 +68,8 @@ model AppliedDiscount {
   @@map("applied_discounts")
 }
 
-// Payment Methods - Stored payment methods for subscriptions
-model PaymentMethod {
+// Billing Payment Methods - Stored payment methods for platform subscriptions
+model BillingPaymentMethod {
   id                String   @id @default(cuid())
   schoolId          String
   userId            String
@@ -119,7 +119,7 @@ model PaymentMethod {
   @@index([userId])
   @@index([isDefault])
   @@index([status])
-  @@map("payment_methods")
+  @@map("billing_payment_methods")
 }
 
 // Billing History - Complete transaction log
@@ -154,7 +154,7 @@ model BillingHistory {
   // Relationships
   school            School            @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  paymentMethod     PaymentMethod?    @relation(fields: [paymentMethodId], references: [id], onDelete: SetNull)
+  paymentMethod     BillingPaymentMethod?    @relation(fields: [paymentMethodId], references: [id], onDelete: SetNull)
 
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
