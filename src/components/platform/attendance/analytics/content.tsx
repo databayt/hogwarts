@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { DatePicker } from '@/components/ui/date-picker';
+import { DateRangePicker } from '@/components/ui/date-picker';
 import { AttendanceExport } from '../core/attendance-export';
 import {
   AttendanceTrendsChart,
@@ -189,16 +189,11 @@ export default function AnalyticsContent({ dictionary, locale = 'en' }: Analytic
           <div className="flex flex-wrap gap-4">
             <div className="flex items-center gap-2">
               <label className="text-sm font-medium">Date Range:</label>
-              <DatePicker
-                date={dateRange.from}
-                onDateChange={(date) => date && setDateRange(prev => ({ ...prev, from: date }))}
-                placeholder="From"
-              />
-              <span>-</span>
-              <DatePicker
-                date={dateRange.to}
-                onDateChange={(date) => date && setDateRange(prev => ({ ...prev, to: date }))}
-                placeholder="To"
+              <DateRangePicker
+                from={dateRange.from}
+                to={dateRange.to}
+                onSelect={(range) => setDateRange({ from: range.from || new Date(), to: range.to || new Date() })}
+                placeholder="Select date range"
               />
             </div>
             <Select value={selectedClass} onValueChange={setSelectedClass}>

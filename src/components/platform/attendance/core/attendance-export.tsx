@@ -22,8 +22,8 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { DatePicker } from '@/components/ui/date-picker';
-import { toast } from '@/hooks/use-toast';
+import { DateRangePicker } from '@/components/ui/date-picker';
+import { toast } from '@/components/ui/use-toast';
 import {
   Download,
   FileText,
@@ -246,19 +246,12 @@ export function AttendanceExport({
           {/* Date Range */}
           <div className="space-y-2">
             <Label>Date Range</Label>
-            <div className="flex items-center gap-2">
-              <DatePicker
-                date={dateRange.from}
-                onDateChange={(date) => date && setDateRange(prev => ({ ...prev, from: date }))}
-                placeholder="Start date"
-              />
-              <span className="text-muted-foreground">to</span>
-              <DatePicker
-                date={dateRange.to}
-                onDateChange={(date) => date && setDateRange(prev => ({ ...prev, to: date }))}
-                placeholder="End date"
-              />
-            </div>
+            <DateRangePicker
+              from={dateRange.from}
+              to={dateRange.to}
+              onSelect={(range) => setDateRange({ from: range.from, to: range.to })}
+              placeholder="Select date range"
+            />
           </div>
 
           {/* Status Filter */}

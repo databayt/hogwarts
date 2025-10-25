@@ -273,7 +273,7 @@ export function AttendanceStats({
                 <div className="grid grid-cols-3 gap-4 text-center">
                   <div className="space-y-2">
                     <div className="text-2xl font-bold text-green-600">{timeStats.early}</div>
-                    <p className="text-sm text-muted-foreground">Early (<9 AM)</p>
+                    <p className="text-sm text-muted-foreground">Early (&lt;9 AM)</p>
                   </div>
                   <div className="space-y-2">
                     <div className="text-2xl font-bold text-blue-600">{timeStats.onTime}</div>
@@ -281,7 +281,7 @@ export function AttendanceStats({
                   </div>
                   <div className="space-y-2">
                     <div className="text-2xl font-bold text-yellow-600">{timeStats.late}</div>
-                    <p className="text-sm text-muted-foreground">Late (>10 AM)</p>
+                    <p className="text-sm text-muted-foreground">Late (&gt;10 AM)</p>
                   </div>
                 </div>
               </CardContent>
