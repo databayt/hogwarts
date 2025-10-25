@@ -2,6 +2,7 @@ import { flexRender, type Table as TanstackTable } from "@tanstack/react-table";
 import type * as React from "react";
 
 import { DataTablePagination } from "@/components/table/data-table/data-table-pagination";
+import { DataTableLoadMore } from "@/components/table/data-table/data-table-load-more";
 import {
   Table,
   TableBody,
@@ -16,6 +17,10 @@ import { cn } from "@/lib/utils";
 interface DataTableProps<TData> extends React.ComponentProps<"div"> {
   table: TanstackTable<TData>;
   actionBar?: React.ReactNode;
+  paginationMode?: "pagination" | "load-more";
+  hasMore?: boolean;
+  isLoading?: boolean;
+  onLoadMore?: () => void;
 }
 
 export function DataTable<TData>({
@@ -23,6 +28,10 @@ export function DataTable<TData>({
   actionBar,
   children,
   className,
+  paginationMode = "pagination",
+  hasMore = false,
+  isLoading = false,
+  onLoadMore,
   ...props
 }: DataTableProps<TData>) {
   return (
@@ -91,7 +100,16 @@ export function DataTable<TData>({
         </Table>
       </div>
       <div className="flex flex-col gap-2.5">
-        <DataTablePagination table={table} />
+        {paginationMode === "pagination" ? (
+          <DataTablePagination table={table} />
+        ) : (
+          <DataTableLoadMore
+            table={table}
+            hasMore={hasMore}
+            isLoading={isLoading}
+            onLoadMore={onLoadMore}
+          />
+        )}
         {actionBar &&
           table.getFilteredSelectedRowModel().rows.length > 0 &&
           actionBar}

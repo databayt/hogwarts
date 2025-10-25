@@ -57,7 +57,7 @@ export default async function StudentsContent({ searchParams, school, dictionary
         title={school?.name ? `${school.name} - ${dict.title}` : dict.title}
         className="text-start max-w-none"
       />
-      <StudentsTable data={data} pageCount={Math.max(1, Math.ceil(total / (sp.perPage || 20)))} dictionary={dictionary?.students} />
+      <StudentsTable initialData={data} total={total} dictionary={dictionary?.students} perPage={sp.perPage} />
     </div>
   )
 }
