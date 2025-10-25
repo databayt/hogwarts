@@ -11,6 +11,7 @@ import { auth } from "@/auth";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { AnalyticsProvider } from "@/components/monitoring/analytics-provider";
 import { ServiceWorkerProvider } from "@/components/providers/service-worker-provider";
+import { headers } from "next/headers";
 import "../globals.css";
 import "leaflet/dist/leaflet.css";
 
@@ -59,9 +60,17 @@ export default async function LocaleLayout({
   const config = localeConfig[lang];
   const isRTL = config.dir === 'rtl';
 
-  // Use locale-specific fonts for all pages
-  // Geist Sans for English (LTR), Tajawal for Arabic (RTL)
-  const fontClass = isRTL ? tajawal.className : GeistSans.className;
+  // Check if we're in a subdomain route
+  // The middleware sets x-subdomain header for subdomain routes
+  const headersList = await headers();
+  const subdomain = headersList.get("x-subdomain");
+  const isSubdomain = !!subdomain; // True if x-subdomain header exists
+
+  // Use dynamic font (font-sans) for subdomain pages to allow theme system to work
+  // Use hardcoded fonts for marketing/dashboard pages
+  const fontClass = isSubdomain
+    ? 'font-sans'
+    : (isRTL ? tajawal.className : GeistSans.className);
 
   return (
     <html lang={lang} dir={config.dir} suppressHydrationWarning>
