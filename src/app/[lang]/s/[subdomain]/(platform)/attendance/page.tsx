@@ -37,7 +37,7 @@ export default async function Page({ params }: Props) {
       userPermissions={permissions}
     >
       <AttendanceHub
-        dictionary={dictionary.school}
+        dictionary={dictionary}
         locale={lang}
       />
     </AttendanceProvider>

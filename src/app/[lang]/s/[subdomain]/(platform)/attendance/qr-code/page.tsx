@@ -18,7 +18,7 @@ export default async function Page({ params }: Props) {
   return (
     <AttendanceProvider initialMethod="QR_CODE">
       <QRCodeAttendanceContent
-        dictionary={dictionary.school}
+        dictionary={dictionary}
         locale={lang}
       />
     </AttendanceProvider>
