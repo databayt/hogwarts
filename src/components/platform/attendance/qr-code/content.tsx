@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { toast } from '@/hooks/use-toast';
+import { toast } from '@/components/ui/use-toast';
 import { QrCode, Scan, Users, RefreshCw, Settings, AlertCircle } from 'lucide-react';
 import { QRGenerator } from './qr-generator';
 import { QRScanner } from './qr-scanner';

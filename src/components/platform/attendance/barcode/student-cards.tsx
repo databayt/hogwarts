@@ -29,7 +29,7 @@ import {
   TableHeader,
   TableRow
 } from '@/components/ui/table';
-import { toast } from '@/hooks/use-toast';
+import { toast } from '@/components/ui/use-toast';
 import {
   CreditCard,
   Plus,

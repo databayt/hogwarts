@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { toast } from '@/hooks/use-toast';
+import { toast } from '@/components/ui/use-toast';
 import { Barcode, Scan, CreditCard, Users, Settings, AlertCircle } from 'lucide-react';
 import { BarcodeScanner } from './barcode-scanner';
 import { StudentCards } from './student-cards';
@@ -218,7 +218,7 @@ export default function BarcodeAttendanceContent({
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm">Avg Scan Time</span>
-                  <span className="text-sm font-medium">< 1s</span>
+                  <span className="text-sm font-medium">&lt; 1s</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm">Cards in System</span>
