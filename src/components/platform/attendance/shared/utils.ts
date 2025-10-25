@@ -330,7 +330,7 @@ export function checkDeviceSupport(method: AttendanceMethod): { supported: boole
       return { supported: true };
 
     case 'BLUETOOTH':
-      if (!navigator.bluetooth) {
+      if (!('bluetooth' in navigator)) {
         return { supported: false, message: 'Web Bluetooth not supported' };
       }
       return { supported: true };

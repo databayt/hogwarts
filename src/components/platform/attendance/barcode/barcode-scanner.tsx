@@ -106,8 +106,7 @@ export function BarcodeScanner({
         console.error('Quagga init error:', err);
         toast({
           title: "Scanner Error",
-          description: "Failed to initialize barcode scanner",
-          variant: "destructive"
+          description: "Failed to initialize barcode scanner"
         });
         return;
       }
@@ -189,8 +188,7 @@ export function BarcodeScanner({
 
       toast({
         title: "Scan Failed",
-        description: message,
-        variant: "destructive"
+        description: message
       });
 
       onScanError?.(message);
@@ -300,8 +298,7 @@ export function BarcodeScanner({
       const message = error instanceof Error ? error.message : 'Failed to process barcode';
       toast({
         title: "Error",
-        description: message,
-        variant: "destructive"
+        description: message
       });
       onScanError?.(message);
     } finally {

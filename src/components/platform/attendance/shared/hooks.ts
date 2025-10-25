@@ -47,7 +47,6 @@ export function useAttendance() {
       toast({
         title: "Error",
         description: message,
-        variant: "destructive"
       });
       throw err;
     } finally {
@@ -75,7 +74,6 @@ export function useAttendance() {
       toast({
         title: "Error",
         description: message,
-        variant: "destructive"
       });
       throw err;
     } finally {
@@ -96,7 +94,6 @@ export function useAttendance() {
       toast({
         title: "Error",
         description: message,
-        variant: "destructive"
       });
     } finally {
       setLoading(false);
@@ -139,7 +136,6 @@ export function useCamera() {
       toast({
         title: "Camera Permission Denied",
         description: "Please allow camera access to scan codes",
-        variant: "destructive"
       });
     }
   }, []);
@@ -190,7 +186,6 @@ export function useGeolocation(options?: PositionOptions) {
         toast({
           title: "Location Error",
           description: err.message,
-          variant: "destructive"
         });
       },
       options
@@ -479,7 +474,6 @@ export function useOfflineQueue<T>() {
       toast({
         title: "Offline Mode",
         description: "Data will be synced when connection is restored",
-        variant: "destructive"
       });
     };
 

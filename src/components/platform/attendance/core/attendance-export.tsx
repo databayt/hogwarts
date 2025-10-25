@@ -59,8 +59,8 @@ export function AttendanceExport({
   const [groupBy, setGroupBy] = useState<GroupByOption>('none');
   const [includeStats, setIncludeStats] = useState(true);
   const [dateRange, setDateRange] = useState({
-    from: filters?.dateFrom || new Date(new Date().setDate(new Date().getDate() - 30)),
-    to: filters?.dateTo || new Date()
+    from: filters?.dateFrom ? (typeof filters.dateFrom === 'string' ? new Date(filters.dateFrom) : filters.dateFrom) : new Date(new Date().setDate(new Date().getDate() - 30)),
+    to: filters?.dateTo ? (typeof filters.dateTo === 'string' ? new Date(filters.dateTo) : filters.dateTo) : new Date()
   });
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([
     'PRESENT', 'ABSENT', 'LATE', 'EXCUSED', 'SICK', 'HOLIDAY'
@@ -114,8 +114,7 @@ export function AttendanceExport({
     } catch (error) {
       toast({
         title: "Export Failed",
-        description: error instanceof Error ? error.message : "Failed to export data",
-        variant: "destructive"
+        description: error instanceof Error ? error.message : "Failed to export data"
       });
     } finally {
       setExporting(false);
@@ -154,8 +153,7 @@ export function AttendanceExport({
     // For now, we'll show a message
     toast({
       title: "PDF Export",
-      description: "PDF export will be available soon. Please use CSV format for now.",
-      variant: "default"
+      description: "PDF export will be available soon. Please use CSV format for now."
     });
   };
 
@@ -249,7 +247,7 @@ export function AttendanceExport({
             <DateRangePicker
               from={dateRange.from}
               to={dateRange.to}
-              onSelect={(range) => setDateRange({ from: range.from, to: range.to })}
+              onSelect={(range) => setDateRange({ from: range.from || new Date(), to: range.to || new Date() })}
               placeholder="Select date range"
             />
           </div>

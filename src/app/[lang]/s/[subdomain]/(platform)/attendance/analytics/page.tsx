@@ -32,6 +32,7 @@ export default async function Page({ params }: Props) {
       <AnalyticsContent
         dictionary={dictionary}
         locale={lang}
+        schoolId={session.user.schoolId!}
       />
     </AttendanceProvider>
   )

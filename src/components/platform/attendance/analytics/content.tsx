@@ -35,9 +35,10 @@ import type { Dictionary } from '@/components/internationalization/dictionaries'
 interface AnalyticsContentProps {
   dictionary?: Dictionary;
   locale?: string;
+  schoolId: string;
 }
 
-export default function AnalyticsContent({ dictionary, locale = 'en' }: AnalyticsContentProps) {
+export default function AnalyticsContent({ dictionary, locale = 'en', schoolId }: AnalyticsContentProps) {
   const [dateRange, setDateRange] = useState({
     from: new Date(new Date().setDate(new Date().getDate() - 30)),
     to: new Date()
@@ -139,6 +140,7 @@ export default function AnalyticsContent({ dictionary, locale = 'en' }: Analytic
   const handleRefresh = async () => {
     setRefreshing(true);
     await fetchAttendance({
+      schoolId,
       dateFrom: dateRange.from.toISOString(),
       dateTo: dateRange.to.toISOString()
     });

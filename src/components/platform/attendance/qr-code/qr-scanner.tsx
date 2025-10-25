@@ -141,8 +141,7 @@ export function QRScanner({
 
       toast({
         title: "Scan Failed",
-        description: message,
-        variant: "destructive"
+        description: message
       });
 
       onScanError?.(message);
@@ -180,8 +179,7 @@ export function QRScanner({
       // In production, you would decode the QR from image
       toast({
         title: "File Upload",
-        description: "QR code file upload is not yet implemented",
-        variant: "default"
+        description: "QR code file upload is not yet implemented"
       });
     };
     reader.readAsDataURL(file);
@@ -221,10 +219,6 @@ export function QRScanner({
                   constraints={{
                     facingMode: 'environment',
                     aspectRatio: 1
-                  }}
-                  containerStyle={{
-                    width: '100%',
-                    height: '100%'
                   }}
                 />
 

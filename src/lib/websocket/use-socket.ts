@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useSession } from 'next-auth/react';
-import { toast } from '@/hooks/use-toast';
+import { toast } from '@/components/ui/use-toast';
 import socketService, { SocketEvents } from './socket-service';
 import type { AttendanceRecord, AttendanceUpdate, AttendanceStats } from '@/components/platform/attendance/shared/types';
 
@@ -44,8 +44,8 @@ export function useSocket(options: UseSocketOptions = {}): UseSocketReturn {
 
     try {
       await socketService.connect(
-        session.user.schoolId,
-        session.user.id,
+        session.user.schoolId || '',
+        session.user.id || "",
         session.user.role
       );
       setIsConnected(true);
@@ -111,11 +111,11 @@ export function useSocket(options: UseSocketOptions = {}): UseSocketReturn {
 
   // Subscribe to class updates if classId provided
   useEffect(() => {
-    if (isConnected && options.classId) {
-      subscribeToClass(options.classId);
+    if (isConnected && options.classId || "") {
+      subscribeToClass(options.classId || "");
 
       return () => {
-        unsubscribeFromClass(options.classId);
+        unsubscribeFromClass(options.classId || "");
       };
     }
   }, [isConnected, options.classId, subscribeToClass, unsubscribeFromClass]);
@@ -157,8 +157,7 @@ export function useSocket(options: UseSocketOptions = {}): UseSocketReturn {
       subscribe('notification', (data) => {
         toast({
           title: data.type === 'success' ? 'Success' : 'Notification',
-          description: data.message,
-          variant: data.type === 'error' ? 'destructive' : 'default'
+          description: data.message
         });
       })
     );
@@ -168,7 +167,6 @@ export function useSocket(options: UseSocketOptions = {}): UseSocketReturn {
         toast({
           title: 'Error',
           description: data.error,
-          variant: 'destructive'
         });
         options.onError?.(data.error);
       })
@@ -284,7 +282,6 @@ export function useLocationTracking(enabled: boolean = false) {
       toast({
         title: 'Error',
         description: 'Geolocation is not supported',
-        variant: 'destructive'
       });
       return;
     }
@@ -311,7 +308,6 @@ export function useLocationTracking(enabled: boolean = false) {
         toast({
           title: 'Location Error',
           description: error.message,
-          variant: 'destructive'
         });
         setIsTracking(false);
       },

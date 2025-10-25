@@ -35,7 +35,7 @@ interface DataTableSeeMoreProps extends React.ComponentProps<"div"> {
   /**
    * Batch size options for the dropdown
    */
-  batchSizeOptions?: number[];
+  batchSizeOptions?: readonly number[];
   /**
    * Handler for batch size change
    */

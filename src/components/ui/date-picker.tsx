@@ -7,6 +7,7 @@ import { Calendar as CalendarIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
+import type { DateRange } from "react-day-picker"
 import {
   Popover,
   PopoverContent,
@@ -59,7 +60,7 @@ export function DatePicker({
 interface DateRangePickerProps {
   from?: Date
   to?: Date
-  onSelect?: (range: { from: Date | undefined; to: Date | undefined }) => void
+  onSelect?: (range: DateRange) => void
   placeholder?: string
   className?: string
   disabled?: boolean
@@ -73,7 +74,7 @@ export function DateRangePicker({
   className,
   disabled = false
 }: DateRangePickerProps) {
-  const [range, setRange] = React.useState<{ from: Date | undefined; to: Date | undefined }>({
+  const [range, setRange] = React.useState<DateRange>({
     from,
     to
   })
@@ -82,7 +83,7 @@ export function DateRangePicker({
     setRange({ from, to })
   }, [from, to])
 
-  const handleSelect = (newRange: { from: Date | undefined; to: Date | undefined } | undefined) => {
+  const handleSelect = (newRange: DateRange | undefined) => {
     if (newRange) {
       setRange(newRange)
       onSelect?.(newRange)

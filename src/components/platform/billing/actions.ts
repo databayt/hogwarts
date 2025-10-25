@@ -135,7 +135,7 @@ export async function updateSubscription(input: unknown): Promise<BillingActionR
       data: {
         tierId: validated.tierId,
         stripePriceId,
-        currentPeriodEnd: new Date(updatedStripeSubscription.current_period_end * 1000),
+        currentPeriodEnd: new Date((updatedStripeSubscription as any).current_period_end * 1000),
       },
       include: { subscriptionTier: true },
     });
@@ -238,7 +238,7 @@ export async function getPaymentMethods(): Promise<BillingActionResult<PaymentMe
         user: {
           select: {
             id: true,
-            name: true,
+            username: true,
             email: true,
           },
         },
@@ -515,7 +515,7 @@ export async function getBillingHistory(filters?: unknown): Promise<BillingActio
           user: {
             select: {
               id: true,
-              name: true,
+              username: true,
               email: true,
             },
           },
@@ -560,7 +560,7 @@ async function logBillingEvent(input: unknown): Promise<void> {
         paymentProvider: validated.paymentProvider,
         transactionId: validated.transactionId,
         receiptUrl: validated.receiptUrl,
-        metadata: validated.metadata,
+        metadata: validated.metadata as any,
         errorCode: validated.errorCode,
         errorMessage: validated.errorMessage,
         paymentMethodId: validated.paymentMethodId,
@@ -755,7 +755,7 @@ export async function updateUsageMetrics(input: unknown): Promise<BillingActionR
         apiCallsThisMonth: validated.apiCallsThisMonth,
         emailsSentThisMonth: validated.emailsSentThisMonth,
         smssSentThisMonth: validated.smssSentThisMonth,
-        featuresUsed: validated.featuresUsed,
+        featuresUsed: validated.featuresUsed as any,
       },
       create: {
         schoolId,
@@ -767,7 +767,7 @@ export async function updateUsageMetrics(input: unknown): Promise<BillingActionR
         apiCallsThisMonth: validated.apiCallsThisMonth || 0,
         emailsSentThisMonth: validated.emailsSentThisMonth || 0,
         smssSentThisMonth: validated.smssSentThisMonth || 0,
-        featuresUsed: validated.featuresUsed,
+        featuresUsed: validated.featuresUsed as any,
         periodStart,
         periodEnd: subscription.currentPeriodEnd,
       },

@@ -20,6 +20,7 @@ export default async function Page({ params }: Props) {
       <QRCodeAttendanceContent
         dictionary={dictionary}
         locale={lang}
+        schoolId={session?.user?.schoolId!}
       />
     </AttendanceProvider>
   )

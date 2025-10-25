@@ -24,6 +24,10 @@ export async function generateAttendanceQR(data: z.infer<typeof qrCodeGeneration
     const { classId, validFor = 60, includeLocation = false, secret } = data;
     const schoolId = session.user.schoolId;
 
+    if (!schoolId) {
+      throw new Error('School ID not found in session');
+    }
+
     // Validate that the class exists and belongs to the school
     const classExists = await db.class.findFirst({
       where: {
@@ -95,6 +99,10 @@ export async function processQRScan(data: z.infer<typeof qrCodeScanSchema>) {
     const schoolId = session.user.schoolId;
     const studentId = session.user.id; // Assuming user is a student
 
+    if (!schoolId) {
+      throw new Error('School ID not found in session');
+    }
+
     // Parse and validate QR code
     let qrData: any;
     try {
@@ -138,14 +146,7 @@ export async function processQRScan(data: z.infer<typeof qrCodeScanSchema>) {
         classId: qrSession.classId,
         date: new Date(),
         status: 'PRESENT',
-        method: 'QR_CODE',
-        deviceId,
-        checkInTime: new Date(scannedAt),
-        location: location ? {
-          lat: location.lat,
-          lon: location.lon
-        } : undefined,
-        confidence: 1.0,
+        notes: `Scanned via QR_CODE at ${new Date(scannedAt).toISOString()}${location ? ` (${location.lat},${location.lon})` : ''}`,
         markedAt: new Date()
       }
     });
@@ -188,13 +189,13 @@ export async function processQRScan(data: z.infer<typeof qrCodeScanSchema>) {
       data: {
         attendanceId: attendance.id,
         status: attendance.status,
-        checkInTime: attendance.checkInTime
+        checkInTime: attendance.markedAt
       }
     };
   } catch (error) {
     // Log failed scan attempt
     const session = await auth();
-    if (session?.user) {
+    if (session?.user?.schoolId) {
       await db.attendanceEvent.create({
         data: {
           schoolId: session.user.schoolId,
@@ -336,8 +337,8 @@ export async function getStudentQRScans(studentId?: string) {
         student: {
           select: {
             id: true,
-            firstName: true,
-            lastName: true
+            givenName: true,
+            surname: true
           }
         }
       }
@@ -372,7 +373,6 @@ export async function getQRCodeStats(classId: string, dateFrom?: Date, dateTo?: 
       where: {
         classId,
         schoolId,
-        method: 'QR_CODE',
         date: {
           gte: dateFrom || new Date(new Date().setHours(0, 0, 0, 0)),
           lte: dateTo || new Date(new Date().setHours(23, 59, 59, 999))

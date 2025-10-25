@@ -60,7 +60,7 @@ export function getSeeMorePaginationParams(loadedCount: number, batchSize: numbe
  */
 export function buildPrismaOrderBy<T extends Record<string, unknown>>(
   sorting?: SortingInput
-): Prisma.Args<T, "findMany">["orderBy"] {
+): any {
   if (!sorting || sorting.length === 0) {
     return undefined;
   }
@@ -69,12 +69,12 @@ export function buildPrismaOrderBy<T extends Record<string, unknown>>(
 
   if (validated.length === 1) {
     const { id, desc } = validated[0];
-    return { [id]: desc ? "desc" : "asc" } as Prisma.Args<T, "findMany">["orderBy"];
+    return { [id]: desc ? "desc" : "asc" };
   }
 
   return validated.map(({ id, desc }) => ({
     [id]: desc ? "desc" : "asc",
-  })) as Prisma.Args<T, "findMany">["orderBy"];
+  }));
 }
 
 // ============================================================================
@@ -87,8 +87,8 @@ export function buildPrismaOrderBy<T extends Record<string, unknown>>(
  */
 export function buildPrismaWhere<T extends Record<string, unknown>>(
   filters?: FiltersInput,
-  baseWhere?: Prisma.Args<T, "findMany">["where"]
-): Prisma.Args<T, "findMany">["where"] {
+  baseWhere?: any
+): any {
   if (!filters || filters.length === 0) {
     return baseWhere;
   }
@@ -146,7 +146,7 @@ export function buildPrismaWhere<T extends Record<string, unknown>>(
   return {
     ...baseWhere,
     AND: [filterClauses],
-  } as Prisma.Args<T, "findMany">["where"];
+  } as any;
 }
 
 // ============================================================================

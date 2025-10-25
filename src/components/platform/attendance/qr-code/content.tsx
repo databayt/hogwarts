@@ -16,11 +16,13 @@ import type { Dictionary } from '@/components/internationalization/dictionaries'
 interface QRCodeAttendanceContentProps {
   dictionary?: Dictionary;
   locale?: string;
+  schoolId: string;
 }
 
 export default function QRCodeAttendanceContent({
   dictionary,
-  locale = 'en'
+  locale = 'en',
+  schoolId
 }: QRCodeAttendanceContentProps) {
   const [activeTab, setActiveTab] = useState<'generate' | 'scan' | 'manage'>('generate');
   const [isTeacherMode, setIsTeacherMode] = useState(true); // Should come from auth/role
@@ -42,12 +44,13 @@ export default function QRCodeAttendanceContent({
     // Fetch attendance when class or date changes
     if (selectedClass && selectedDate) {
       fetchAttendance({
+        schoolId,
         classId: selectedClass,
         dateFrom: selectedDate,
         dateTo: selectedDate
       });
     }
-  }, [selectedClass, selectedDate, fetchAttendance]);
+  }, [selectedClass, selectedDate, schoolId, fetchAttendance]);
 
   return (
     <div className="space-y-6">

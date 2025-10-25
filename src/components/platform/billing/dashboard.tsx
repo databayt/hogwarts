@@ -357,7 +357,7 @@ export function BillingDashboard({ stats, invoices, paymentMethods, dictionary }
                             {method.cardBrand ? `${method.cardBrand.toUpperCase()} •••• ${method.cardLast4}` : method.type}
                           </p>
                           <p className="text-sm text-muted-foreground">
-                            {method.billingName || method.user.name}
+                            {method.billingName || method.user.username}
                           </p>
                         </div>
                       </div>

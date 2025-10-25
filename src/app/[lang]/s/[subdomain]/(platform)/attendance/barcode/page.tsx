@@ -20,6 +20,7 @@ export default async function Page({ params }: Props) {
       <BarcodeAttendanceContent
         dictionary={dictionary}
         locale={lang}
+        schoolId={session?.user?.schoolId!}
       />
     </AttendanceProvider>
   )

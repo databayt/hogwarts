@@ -86,10 +86,7 @@ export async function processBarcodeScan(data: z.infer<typeof barcodeScanSchema>
         classId,
         date: new Date(),
         status: 'PRESENT',
-        method: 'BARCODE',
-        deviceId: barcode,
-        checkInTime: new Date(scannedAt),
-        confidence: 1.0,
+        notes: `Scanned via BARCODE at ${new Date(scannedAt).toISOString()}`,
         markedAt: new Date()
       }
     });
@@ -127,7 +124,7 @@ export async function processBarcodeScan(data: z.infer<typeof barcodeScanSchema>
       success: true,
       data: {
         attendanceId: attendance.id,
-        studentName: studentIdentifier.student.firstName + ' ' + studentIdentifier.student.lastName,
+        studentName: studentIdentifier.student.givenName + ' ' + studentIdentifier.student.surname,
         status: attendance.status
       }
     };
@@ -241,8 +238,8 @@ export async function getStudentBarcodes(studentId?: string) {
         student: {
           select: {
             id: true,
-            firstName: true,
-            lastName: true,
+            givenName: true,
+            surname: true,
             email: true
           }
         }

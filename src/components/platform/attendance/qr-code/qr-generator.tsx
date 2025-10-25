@@ -115,7 +115,6 @@ export function QRGenerator({
       toast({
         title: "Generation Failed",
         description: "Failed to generate QR code",
-        variant: "destructive"
       });
     } finally {
       setIsGenerating(false);
@@ -153,7 +152,6 @@ export function QRGenerator({
       toast({
         title: "Not Supported",
         description: "Sharing is not supported on this device",
-        variant: "destructive"
       });
       return;
     }

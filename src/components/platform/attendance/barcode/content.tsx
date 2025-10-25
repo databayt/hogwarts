@@ -16,11 +16,13 @@ import type { Dictionary } from '@/components/internationalization/dictionaries'
 interface BarcodeAttendanceContentProps {
   dictionary?: Dictionary;
   locale?: string;
+  schoolId: string;
 }
 
 export default function BarcodeAttendanceContent({
   dictionary,
-  locale = 'en'
+  locale = 'en',
+  schoolId
 }: BarcodeAttendanceContentProps) {
   const [activeTab, setActiveTab] = useState<'scan' | 'cards' | 'manage'>('scan');
   const {
@@ -39,12 +41,13 @@ export default function BarcodeAttendanceContent({
   useEffect(() => {
     if (selectedClass && selectedDate) {
       fetchAttendance({
+        schoolId,
         classId: selectedClass,
         dateFrom: selectedDate,
         dateTo: selectedDate
       });
     }
-  }, [selectedClass, selectedDate, fetchAttendance]);
+  }, [selectedClass, selectedDate, schoolId, fetchAttendance]);
 
   return (
     <div className="space-y-6">
@@ -132,6 +135,7 @@ export default function BarcodeAttendanceContent({
           <StudentCards
             dictionary={dictionary}
             locale={locale}
+            schoolId={schoolId}
           />
         </TabsContent>
 

@@ -226,7 +226,7 @@ export const createBillingHistorySchema = z.object({
   paymentProvider: z.string().optional(),
   transactionId: z.string().optional(),
   receiptUrl: z.string().url().optional(),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
   errorCode: z.string().optional(),
   errorMessage: z.string().optional(),
   paymentMethodId: z.string().cuid().optional(),
@@ -244,7 +244,7 @@ export const updateUsageMetricsSchema = z.object({
   apiCallsThisMonth: z.number().int().min(0).optional(),
   emailsSentThisMonth: z.number().int().min(0).optional(),
   smssSentThisMonth: z.number().int().min(0).optional(),
-  featuresUsed: z.record(z.boolean()).optional(),
+  featuresUsed: z.record(z.string(), z.boolean()).optional(),
 });
 
 // Payment processing schemas
@@ -266,7 +266,7 @@ export const stripeWebhookSchema = z.object({
   id: z.string(),
   type: z.string(),
   data: z.object({
-    object: z.record(z.unknown()),
+    object: z.record(z.string(), z.unknown()),
   }),
 });
 

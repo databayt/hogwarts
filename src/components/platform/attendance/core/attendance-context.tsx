@@ -229,7 +229,6 @@ export function AttendanceProvider({
       toast({
         title: "Error",
         description: message,
-        variant: "destructive"
       });
       throw err;
     } finally {
@@ -264,7 +263,6 @@ export function AttendanceProvider({
       toast({
         title: "Error",
         description: message,
-        variant: "destructive"
       });
       throw err;
     } finally {
@@ -296,7 +294,6 @@ export function AttendanceProvider({
       toast({
         title: "Error",
         description: message,
-        variant: "destructive"
       });
       throw err;
     } finally {
@@ -324,7 +321,6 @@ export function AttendanceProvider({
       toast({
         title: "Error",
         description: message,
-        variant: "destructive"
       });
       throw err;
     } finally {
@@ -348,7 +344,6 @@ export function AttendanceProvider({
       toast({
         title: "Error",
         description: message,
-        variant: "destructive"
       });
     } finally {
       setLoading(false);
@@ -395,7 +390,6 @@ export function AttendanceProvider({
       toast({
         title: "Error",
         description: message,
-        variant: "destructive"
       });
       throw err;
     } finally {
@@ -423,7 +417,6 @@ export function AttendanceProvider({
       toast({
         title: "Error",
         description: message,
-        variant: "destructive"
       });
       throw err;
     } finally {

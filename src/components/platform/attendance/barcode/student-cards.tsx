@@ -50,9 +50,10 @@ import type { StudentIdentifier } from '../shared/types';
 interface StudentCardsProps {
   dictionary?: Dictionary;
   locale?: string;
+  schoolId: string;
 }
 
-export function StudentCards({ dictionary, locale = 'en' }: StudentCardsProps) {
+export function StudentCards({ dictionary, locale = 'en', schoolId }: StudentCardsProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingCard, setEditingCard] = useState<StudentIdentifier | null>(null);
@@ -83,14 +84,14 @@ export function StudentCards({ dictionary, locale = 'en' }: StudentCardsProps) {
     if (!newCard.studentId || !newCard.barcode) {
       toast({
         title: "Error",
-        description: "Please fill in all required fields",
-        variant: "destructive"
+        description: "Please fill in all required fields"
       });
       return;
     }
 
     try {
       await addStudentIdentifier({
+        schoolId,
         studentId: newCard.studentId,
         type: 'BARCODE',
         value: newCard.barcode,
@@ -109,8 +110,7 @@ export function StudentCards({ dictionary, locale = 'en' }: StudentCardsProps) {
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to add card",
-        variant: "destructive"
+        description: "Failed to add card"
       });
     }
   };
@@ -125,8 +125,7 @@ export function StudentCards({ dictionary, locale = 'en' }: StudentCardsProps) {
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to remove card",
-        variant: "destructive"
+        description: "Failed to remove card"
       });
     }
   };

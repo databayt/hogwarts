@@ -32,7 +32,7 @@ export type InvoiceWithDetails = Invoice & {
 export type PaymentMethodWithUser = BillingPaymentMethod & {
   user: {
     id: string;
-    name: string | null;
+    username: string | null;
     email: string | null;
   };
 };
@@ -41,7 +41,7 @@ export type BillingHistoryWithDetails = BillingHistory & {
   paymentMethod?: BillingPaymentMethod | null;
   user: {
     id: string;
-    name: string | null;
+    username: string | null;
     email: string | null;
   };
 };
