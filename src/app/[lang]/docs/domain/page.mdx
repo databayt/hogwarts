@@ -5,21 +5,21 @@ This page explains how tenant routing works via subdomains, how the `schoolId` i
 ### Explain it like I'm five (ELI5)
 
 - Think of the website like a big city (the root domain).
-- Each school is a different house on its own street (the subdomain), like `khartoum.hogwarts.app`.
-- When you walk into a house, you only see that family’s stuff. In our app, when you go to a school’s subdomain, you only see that school’s data.
-- The “key” we use to make sure we only look at the right family’s stuff is called `schoolId`.
+- Each school is a different house on its own street (the subdomain), like `demo.databayt.org`.
+- When you walk into a house, you only see that family's stuff. In our app, when you go to a school's subdomain, you only see that school's data.
+- The "key" we use to make sure we only look at the right family's stuff is called `schoolId`.
 
 ### TL;DR — Quick test (dev + prod)
 
-- Dev (no subdomains): add `?x-school=khartoum` to any page, e.g. `/dashboard?x-school=khartoum`.
-- Dev (with local subdomains): set `NEXT_PUBLIC_ROOT_DOMAIN=localhost` and visit `http://khartoum.localhost:3000/dashboard`.
-- Prod: visit the subdomain directly, e.g., `https://khartoum.hogwarts.app/dashboard`.
-- Role‑gated pages: ensure your user role (e.g., `ADMIN`) is set. See “Set my role for testing”.
+- Dev (no subdomains): add `?x-school=demo` to any page, e.g. `/dashboard?x-school=demo`.
+- Dev (with local subdomains): set `NEXT_PUBLIC_ROOT_DOMAIN=localhost` and visit `http://demo.localhost:3000/dashboard`.
+- Prod: visit the subdomain directly, e.g., `https://demo.databayt.org/dashboard`.
+- Role‑gated pages: ensure your user role (e.g., `ADMIN`) is set. See "Set my role for testing".
 
 ### Concepts
 
-- **Root domain**: Your main host, e.g., `hogwarts.app` (set via `NEXT_PUBLIC_ROOT_DOMAIN`).
-- **Subdomain (tenant slug)**: The school’s unique domain slug stored on the `School` model as `domain` (e.g., `khartoum`). Full host example: `khartoum.hogwarts.app`.
+- **Root domain**: Your main host, e.g., `databayt.org` (set via `NEXT_PUBLIC_ROOT_DOMAIN`).
+- **Subdomain (tenant slug)**: The school's unique domain slug stored on the `School` model as `domain` (e.g., `demo`). Full host example: `demo.databayt.org`.
 - **Tenant identity**: All data is partitioned by `schoolId`. Every query/mutation must include `{ schoolId }`.
 
 ### Data model
@@ -109,29 +109,29 @@ You have two convenient options while developing on `localhost`:
 - Add `?x-school=<domain>` to any URL to simulate a tenant. Example: `/dashboard?x-school=khartoum`.
 - For public, unauthenticated APIs that support fallback, pass `?domain=<domain>`.
   - See Timetable docs for examples:
-    - Terms: `GET /api/terms?domain=khartoum`
-    - Timetable: `GET /api/timetable?domain=khartoum&weekOffset=0`
+    - Terms: `GET /api/terms?domain=demo`
+    - Timetable: `GET /api/timetable?domain=demo&weekOffset=0`
 
-Seeded demo domains: `khartoum`, `omdurman`, `portsudan`, `wadmadani`.
+Seeded demo domain: `demo` (fully-featured demo school with 150 students, 25 teachers). Other examples like `portsudan`, `khartoum` can be seeded as needed.
 
 ### Hands‑on: interactive debug page
 
 - Visit `/operator/tenant-debug` in the app to see the current tenant and live counts for students/teachers/classes.
 - In development: click a school card to reload with `?x-school=<domain>` and watch the counts change instantly.
-- In production: navigate to the school’s subdomain (e.g., `khartoum.hogwarts.app/operator/tenant-debug`).
-- If you see “No active tenant detected”, either add `?x-school=<domain>` in dev or switch to the correct subdomain in prod.
+- In production: navigate to the school's subdomain (e.g., `demo.databayt.org/operator/tenant-debug`).
+- If you see "No active tenant detected", either add `?x-school=<domain>` in dev or switch to the correct subdomain in prod.
 
 ### Simple: set my school for testing
 
 Pick one of these:
 
-1) Easiest (URL param): add `?x-school=<domain>` to the page you’re testing.
-   - Example: `/dashboard?x-school=khartoum`.
+1) Easiest (URL param): add `?x-school=<domain>` to the page you're testing.
+   - Example: `/dashboard?x-school=demo`.
 
-2) Correct (user is tied to a school): set your user’s `schoolId` to match a school.
+2) Correct (user is tied to a school): set your user's `schoolId` to match a school.
    - Using Prisma Studio:
      1. Run: `pnpm dlx prisma studio`
-     2. Open `School` table, copy the `id` of the row where `domain = "khartoum"`.
+     2. Open `School` table, copy the `id` of the row where `domain = "demo"`.
      3. Open `User` table, set your `schoolId` to that `id` and save.
 
 3) Operator (DEVELOPER only): start impersonation which sets a cookie overriding the tenant.
@@ -143,12 +143,12 @@ Pick one of these:
 Set your root domain to enable subdomain parsing in middleware.
 
 ```env
-NEXT_PUBLIC_ROOT_DOMAIN=hogwarts.app
+NEXT_PUBLIC_ROOT_DOMAIN=databayt.org
 ```
 
-If you deploy to a different host, update this variable accordingly (e.g., `ed.databayt.org`).
+For the Databayt platform, the root domain is `databayt.org`. The marketing site is at `ed.databayt.org`, and schools use `*.databayt.org` (e.g., `demo.databayt.org`).
 
-In local development, to use subdomains like `khartoum.localhost:3000`, set:
+In local development, to use subdomains like `demo.localhost:3000`, set:
 
 ```env
 NEXT_PUBLIC_ROOT_DOMAIN=localhost
@@ -170,9 +170,9 @@ Pages and actions are often role‑gated (e.g., Admin‑only). Make your test us
 -- Make the user a developer
 UPDATE users SET role = 'DEVELOPER' WHERE email = 'me@example.com';
 
--- Tie the user to the khartoum school
+-- Tie the user to the demo school
 UPDATE users
-SET schoolId = (SELECT id FROM schools WHERE domain = 'khartoum')
+SET schoolId = (SELECT id FROM schools WHERE domain = 'demo')
 WHERE email = 'me@example.com';
 ```
 
