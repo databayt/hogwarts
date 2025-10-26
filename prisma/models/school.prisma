@@ -57,7 +57,6 @@ model School {
   domainRequests        DomainRequest[]
   subscriptions         Subscription[]
   invoices              Invoice[]
-  receipts              Receipt[]
   // Standalone invoice block relations
   userInvoices          UserInvoice[]
   userInvoiceItems      UserInvoiceItem[]
@@ -137,6 +136,9 @@ model School {
   billingPaymentMethods BillingPaymentMethod[]
   billingHistory        BillingHistory[]
   usageMetrics          UsageMetrics[]
+
+  // Receipt tracking relations
+  expenseReceipts       ExpenseReceipt[]
   creditNotes           CreditNote[]
   billingPreferences    BillingPreferences?
 

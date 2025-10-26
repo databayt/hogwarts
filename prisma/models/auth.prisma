@@ -65,6 +65,9 @@ model User {
   billingHistory        BillingHistory[]
   creditNotes           CreditNote[]
 
+  // Receipt tracking relations
+  expenseReceipts ExpenseReceipt[]
+
   // Theme customization
   themes UserTheme[]
 

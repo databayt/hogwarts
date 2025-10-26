@@ -35,7 +35,9 @@ describe('attendance actions', () => {
     const findMany = vi.fn().mockResolvedValue([
       { date: new Date('2024-01-01'), studentId: 'stu1', classId: 'c1', status: 'PRESENT' },
     ])
-    ;(await import('@/lib/db')).db.attendance = { upsert, findMany } as any
+    vi.doMock('@/lib/db', () => ({
+      db: { attendance: { upsert, findMany } },
+    }))
     const csv = await getAttendanceReportCsv({ classId: 'c1' })
     expect(csv.split('\n')[0]).toContain('date,studentId,classId,status')
     expect(csv).toContain('stu1')

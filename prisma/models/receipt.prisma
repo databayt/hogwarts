@@ -1,28 +1,44 @@
-// Billing receipts uploaded by operator for offline payments
-model Receipt {
-  id         String    @id @default(cuid())
-  schoolId   String
-  invoiceId  String
+// Expense receipt tracking with AI-powered OCR extraction
+model ExpenseReceipt {
+  id              String   @id @default(cuid())
+  schoolId        String
+  userId          String
 
-  fileName   String
-  fileUrl    String?
-  amount     Int
-  status     String    @default("pending") // pending, approved, rejected
-  notes      String?
-  reviewedAt DateTime?
+  // File information
+  fileName        String
+  fileDisplayName String?
+  fileUrl         String
+  fileSize        Int
+  mimeType        String
 
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
+  // Processing status
+  status          String   @default("pending") // pending, processing, processed, error
 
-  // Relations (one-sided to avoid changing existing models)
-  school  School  @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  // Extracted data (OCR results)
+  merchantName    String?
+  merchantAddress String?
+  merchantContact String?
+  transactionDate DateTime?
+  transactionAmount Decimal? @db.Decimal(10, 2)
+  currency        String?  @default("USD")
+  receiptSummary  String?  @db.Text
+
+  // Line items (stored as JSON)
+  items           Json?    // Array of {name, quantity, unitPrice, totalPrice}
+
+  // Metadata
+  uploadedAt      DateTime @default(now())
+  processedAt     DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([schoolId])
-  @@index([invoiceId])
+  @@index([userId])
   @@index([status])
-  @@map("receipts")
+  @@index([transactionDate])
+  @@map("expense_receipts")
 }
-
-
-
