@@ -13,11 +13,11 @@ vi.mock('@/lib/db', () => ({
   db: { announcement: { create, updateMany, deleteMany } },
 }))
 
-import { createAnnouncement, toggleAnnouncementPublish, deleteAnnouncement } from '@/app/(platform)/announcements/actions'
+import { createAnnouncement, toggleAnnouncementPublish, deleteAnnouncement } from '@/components/platform/announcements/actions'
 
 describe('announcement actions', () => {
   it('creates announcement with schoolId', async () => {
-    await createAnnouncement({ title: 't', body: 'b', scope: 'school' })
+    await createAnnouncement({ title: 't', body: 'b', scope: 'school', published: false })
     expect(create).toHaveBeenCalled()
   })
   it('toggles publish with tenant safety', async () => {
