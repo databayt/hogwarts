@@ -1,147 +1,283 @@
-import { Configuration, OpenAIApi } from "openai";
+// AI Question Generation using OpenAI
+// Support for multiple question types and Bloom's taxonomy
 
-const configuration = new Configuration({
+import OpenAI from "openai";
+import type {
+  QuestionType,
+  DifficultyLevel,
+  BloomLevel,
+  AIGeneratedQuestion,
+  AIGradingResult,
+  QuestionOption,
+} from "../types";
+import { aiSettings } from "../config";
+
+// Initialize OpenAI client
+const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
-const openai = new OpenAIApi(configuration);
 
-interface OutputFormat {
-  [key: string]: string | string[] | OutputFormat;
+// ============================================
+// Question Generation
+// ============================================
+
+interface GenerateQuestionsParams {
+  topic: string;
+  questionType: QuestionType;
+  difficulty: DifficultyLevel;
+  count: number;
+  bloomLevel?: BloomLevel;
+  subjectId?: string;
 }
 
-export async function strict_output(
-  system_prompt: string,
-  user_prompt: string | string[],
-  output_format: OutputFormat,
-  default_category: string = "",
-  output_value_only: boolean = false,
-  model: string = "gpt-3.5-turbo",
-  temperature: number = 1,
-  num_tries: number = 3,
-  verbose: boolean = false
-): Promise<
-  {
-    question: string;
-    answer: string;
-  }[]
-> {
-  // if the user input is in a list, we also process the output as a list of json
-  const list_input: boolean = Array.isArray(user_prompt);
-  // if the output format contains dynamic elements of < or >, then add to the prompt to handle dynamic elements
-  const dynamic_elements: boolean = /<.*?>/.test(JSON.stringify(output_format));
-  // if the output format contains list elements of [ or ], then we add to the prompt to handle lists
-  const list_output: boolean = /\[.*?\]/.test(JSON.stringify(output_format));
+export async function generateQuestions(
+  params: GenerateQuestionsParams
+): Promise<AIGeneratedQuestion[]> {
+  const { topic, questionType, difficulty, count, bloomLevel } = params;
 
-  // start off with no error message
-  let error_msg: string = "";
+  const systemPrompt = buildSystemPrompt(questionType, difficulty, bloomLevel);
+  const userPrompt = buildUserPrompt(topic, questionType, count);
 
-  for (let i = 0; i < num_tries; i++) {
-    let output_format_prompt: string = `\nYou are to output the following in json format: ${JSON.stringify(
-      output_format
-    )}. \nDo not put quotation marks or escape character \\ in the output fields.`;
-
-    if (list_output) {
-      output_format_prompt += `\nIf output field is a list, classify output into the best element of the list.`;
-    }
-
-    // if output_format contains dynamic elements, process it accordingly
-    if (dynamic_elements) {
-      output_format_prompt += `\nAny text enclosed by < and > indicates you must generate content to replace it. Example input: Go to <location>, Example output: Go to the garden\nAny output key containing < and > indicates you must generate the key name to replace it. Example input: {'<location>': 'description of location'}, Example output: {school: a place for education}`;
-    }
-
-    // if input is in a list format, ask it to generate json in a list
-    if (list_input) {
-      output_format_prompt += `\nGenerate a list of json, one json for each input element.`;
-    }
-
-    // Use OpenAI to get a response
-    const response = await openai.createChatCompletion({
-      temperature: temperature,
-      model: model,
+  try {
+    const response = await openai.chat.completions.create({
+      model: aiSettings.model,
+      temperature: aiSettings.temperature,
+      max_tokens: aiSettings.maxTokens,
+      response_format: { type: "json_object" },
       messages: [
-        {
-          role: "system",
-          content: system_prompt + output_format_prompt + error_msg,
-        },
-        { role: "user", content: user_prompt.toString() },
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt },
       ],
     });
 
-    let res: string =
-      response.data.choices[0].message?.content?.replace(/'/g, '"') ?? "";
-
-    // ensure that we don't replace away apostrophes in text
-    res = res.replace(/(\w)"(\w)/g, "$1'$2");
-
-    if (verbose) {
-      console.log(
-        "System prompt:",
-        system_prompt + output_format_prompt + error_msg
-      );
-      console.log("\nUser prompt:", user_prompt);
-      console.log("\nGPT response:", res);
+    const content = response.choices[0]?.message?.content;
+    if (!content) {
+      throw new Error("No content in AI response");
     }
 
-    // try-catch block to ensure output format is adhered to
-    try {
-      let output: any = JSON.parse(res);
+    const parsed = JSON.parse(content);
+    const questions = Array.isArray(parsed.questions)
+      ? parsed.questions
+      : [parsed];
 
-      if (list_input) {
-        if (!Array.isArray(output)) {
-          throw new Error("Output format not in a list of json");
-        }
-      } else {
-        output = [output];
-      }
+    return questions.map((q: any) => ({
+      questionText: q.question || q.questionText,
+      questionType,
+      difficulty,
+      bloomLevel: bloomLevel || inferBloomLevel(q),
+      options: formatOptions(q, questionType),
+      correctAnswer: q.answer || q.correctAnswer,
+      sampleAnswer: q.sampleAnswer,
+      explanation: q.explanation,
+      tags: q.tags || [topic],
+    }));
+  } catch (error) {
+    console.error("Error generating questions:", error);
+    throw new Error("Failed to generate questions with AI");
+  }
+}
 
-      // check for each element in the output_list, the format is correctly adhered to
-      for (let index = 0; index < output.length; index++) {
-        for (const key in output_format) {
-          // unable to ensure accuracy of dynamic output header, so skip it
-          if (/<.*?>/.test(key)) {
-            continue;
-          }
+// ============================================
+// Answer Grading (for open-ended questions)
+// ============================================
 
-          // if output field missing, raise an error
-          if (!(key in output[index])) {
-            throw new Error(`${key} not in json output`);
-          }
+interface GradeAnswerParams {
+  questionText: string;
+  sampleAnswer: string;
+  userAnswer: string;
+  maxScore: number;
+}
 
-          // check that one of the choices given for the list of words is an unknown
-          if (Array.isArray(output_format[key])) {
-            const choices = output_format[key] as string[];
-            // ensure output is not a list
-            if (Array.isArray(output[index][key])) {
-              output[index][key] = output[index][key][0];
-            }
-            // output the default category (if any) if GPT is unable to identify the category
-            if (!choices.includes(output[index][key]) && default_category) {
-              output[index][key] = default_category;
-            }
-            // if the output is a description format, get only the label
-            if (output[index][key].includes(":")) {
-              output[index][key] = output[index][key].split(":")[0];
-            }
-          }
-        }
+export async function gradeOpenEndedAnswer(
+  params: GradeAnswerParams
+): Promise<AIGradingResult> {
+  const { questionText, sampleAnswer, userAnswer, maxScore } = params;
 
-        // if we just want the values for the outputs
-        if (output_value_only) {
-          output[index] = Object.values(output[index]);
-          // just output without the list if there is only one element
-          if (output[index].length === 1) {
-            output[index] = output[index][0];
-          }
-        }
-      }
+  const systemPrompt = `You are an expert educational grader. Evaluate student answers fairly and provide constructive feedback.
+Score based on accuracy, completeness, and understanding. Return a JSON object with: score, percentage, feedback, suggestions, and isCorrect.`;
 
-      return list_input ? output : output[0];
-    } catch (e) {
-      error_msg = `\n\nResult: ${res}\n\nError message: ${e}`;
-      console.log("An exception occurred:", e);
-      console.log("Current invalid json format:", res);
+  const userPrompt = `Question: ${questionText}
+
+Sample Answer: ${sampleAnswer}
+
+Student Answer: ${userAnswer}
+
+Please grade the student's answer out of ${maxScore} points and provide detailed feedback.`;
+
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-4-turbo-preview",
+      temperature: 0.3, // Lower temperature for consistent grading
+      response_format: { type: "json_object" },
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt },
+      ],
+    });
+
+    const content = response.choices[0]?.message?.content;
+    if (!content) {
+      throw new Error("No content in grading response");
     }
+
+    const result = JSON.parse(content);
+    return {
+      score: Number(result.score) || 0,
+      maxScore,
+      percentage: (Number(result.score) / maxScore) * 100,
+      feedback: result.feedback || "No feedback provided",
+      suggestions: result.suggestions || [],
+      isCorrect: result.isCorrect || Number(result.score) >= maxScore * 0.7,
+    };
+  } catch (error) {
+    console.error("Error grading answer:", error);
+    // Fallback: basic similarity check
+    return fallbackGrading(sampleAnswer, userAnswer, maxScore);
+  }
+}
+
+// ============================================
+// Helper Functions
+// ============================================
+
+function buildSystemPrompt(
+  questionType: QuestionType,
+  difficulty: DifficultyLevel,
+  bloomLevel?: BloomLevel
+): string {
+  let prompt = aiSettings.systemPrompt + "\n\n";
+
+  // Add question type specific instructions
+  switch (questionType) {
+    case "MULTIPLE_CHOICE":
+      prompt += `Generate multiple-choice questions with 4 options. Exactly one option must be correct. Include explanations for the correct answer.`;
+      break;
+    case "TRUE_FALSE":
+      prompt += `Generate true/false questions. Provide clear, unambiguous statements that are definitively true or false.`;
+      break;
+    case "SHORT_ANSWER":
+      prompt += `Generate short answer questions that can be answered in 1-2 sentences (max 15 words). Provide a sample answer.`;
+      break;
+    case "ESSAY":
+      prompt += `Generate essay questions that require detailed, thoughtful responses. Provide a comprehensive sample answer and grading rubric.`;
+      break;
+    case "FILL_BLANK":
+      prompt += `Generate fill-in-the-blank questions. Provide multiple acceptable answers and indicate if case-sensitive.`;
+      break;
   }
 
-  return [];
+  prompt += `\n\nDifficulty: ${difficulty}`;
+
+  if (bloomLevel) {
+    const bloomDescriptions = {
+      REMEMBER: "Recall facts and basic concepts",
+      UNDERSTAND: "Explain ideas and concepts",
+      APPLY: "Use information in new situations",
+      ANALYZE: "Draw connections and identify patterns",
+      EVALUATE: "Justify decisions and make judgments",
+      CREATE: "Produce new or original work",
+    };
+    prompt += `\nBloom's Taxonomy Level: ${bloomLevel} - ${bloomDescriptions[bloomLevel]}`;
+  }
+
+  prompt += `\n\nReturn a JSON object with a "questions" array containing the generated questions.`;
+
+  return prompt;
+}
+
+function buildUserPrompt(
+  topic: string,
+  questionType: QuestionType,
+  count: number
+): string {
+  return `Generate ${count} high-quality ${questionType.toLowerCase().replace("_", " ")} question(s) about: ${topic}
+
+Each question should include:
+- question: The question text
+- answer: The correct answer
+${questionType === "MULTIPLE_CHOICE" ? "- option1, option2, option3: Incorrect options" : ""}
+- explanation: Why this is the correct answer
+- tags: Relevant topic tags
+
+Ensure questions are clear, accurate, and educationally valuable.`;
+}
+
+function formatOptions(
+  questionData: any,
+  questionType: QuestionType
+): QuestionOption[] | undefined {
+  if (questionType === "MULTIPLE_CHOICE") {
+    const options: QuestionOption[] = [
+      { text: questionData.answer, isCorrect: true },
+      { text: questionData.option1, isCorrect: false },
+      { text: questionData.option2, isCorrect: false },
+      { text: questionData.option3, isCorrect: false },
+    ];
+    // Shuffle options
+    return options.sort(() => Math.random() - 0.5);
+  }
+
+  if (questionType === "TRUE_FALSE") {
+    const isTrue = questionData.answer?.toLowerCase() === "true";
+    return [
+      { text: "True", isCorrect: isTrue },
+      { text: "False", isCorrect: !isTrue },
+    ];
+  }
+
+  return undefined;
+}
+
+function inferBloomLevel(questionData: any): BloomLevel {
+  const question = questionData.question?.toLowerCase() || "";
+
+  if (question.includes("create") || question.includes("design") || question.includes("develop")) {
+    return "CREATE";
+  }
+  if (question.includes("evaluate") || question.includes("justify") || question.includes("assess")) {
+    return "EVALUATE";
+  }
+  if (question.includes("analyze") || question.includes("compare") || question.includes("contrast")) {
+    return "ANALYZE";
+  }
+  if (question.includes("apply") || question.includes("solve") || question.includes("use")) {
+    return "APPLY";
+  }
+  if (question.includes("explain") || question.includes("describe") || question.includes("summarize")) {
+    return "UNDERSTAND";
+  }
+  return "REMEMBER";
+}
+
+function fallbackGrading(
+  sampleAnswer: string,
+  userAnswer: string,
+  maxScore: number
+): AIGradingResult {
+  const similarity = calculateSimilarity(
+    sampleAnswer.toLowerCase(),
+    userAnswer.toLowerCase()
+  );
+  const score = Math.round(similarity * maxScore);
+
+  return {
+    score,
+    maxScore,
+    percentage: similarity * 100,
+    feedback: similarity >= 0.7
+      ? "Good answer! Shows understanding of the topic."
+      : "Your answer needs more detail or accuracy.",
+    suggestions: similarity < 0.7
+      ? ["Review the topic and try to include more key points"]
+      : [],
+    isCorrect: similarity >= 0.7,
+  };
+}
+
+function calculateSimilarity(str1: string, str2: string): number {
+  const words1 = new Set(str1.split(/\s+/));
+  const words2 = new Set(str2.split(/\s+/));
+  const intersection = new Set([...words1].filter((x) => words2.has(x)));
+  const union = new Set([...words1, ...words2]);
+  return intersection.size / union.size;
 }

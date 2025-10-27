@@ -39,15 +39,15 @@ model User {
   stripeCurrentPeriodEnd DateTime?
 
   // User-scoped invoicing (standalone invoice block)
-  userInvoices         UserInvoice[]
-  userInvoiceSettings  UserInvoiceSettings?
+  userInvoices        UserInvoice[]
+  userInvoiceSettings UserInvoiceSettings?
 
   // Legal relations
-  legalConsents        LegalConsent[]
-  complianceLogs       ComplianceLog[]
+  legalConsents  LegalConsent[]
+  complianceLogs ComplianceLog[]
 
   // Stream (LMS) relations
-  streamCourses        StreamCourse[]        @relation("UserCourses")
+  streamCourses        StreamCourse[]         @relation("UserCourses")
   streamEnrollments    StreamEnrollment[]
   streamLessonProgress StreamLessonProgress[]
   streamCertificates   StreamCertificate[]
@@ -56,9 +56,9 @@ model User {
   borrowRecords BorrowRecord[]
 
   // Banking relations
-  bankAccounts     BankAccount[]     @relation("UserBankAccounts")
-  plaidItems       PlaidItem[]       @relation("UserPlaidItems")
-  dwollaCustomers  DwollaCustomer[]  @relation("UserDwollaCustomers")
+  bankAccounts    BankAccount[]    @relation("UserBankAccounts")
+  plaidItems      PlaidItem[]      @relation("UserPlaidItems")
+  dwollaCustomers DwollaCustomer[] @relation("UserDwollaCustomers")
 
   // Billing relations
   billingPaymentMethods BillingPaymentMethod[]
@@ -70,6 +70,12 @@ model User {
 
   // Theme customization
   themes UserTheme[]
+
+  // Quiz relations
+  quizGames          QuizGame[]
+  quizCategoryStats  QuizCategoryStats[]
+  quizAchievements   QuizAchievement[]
+  quizLeaderboards   QuizLeaderboard[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

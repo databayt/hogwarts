@@ -2,9 +2,9 @@
 
 enum EvaluationType {
   NORMAL // Percentage-based (0-100%)
-  GPA    // Grade Point Average (4.0 scale)
-  CWA    // Cumulative Weighted Average
-  CCE    // Continuous Comprehensive Evaluation
+  GPA // Grade Point Average (4.0 scale)
+  CWA // Cumulative Weighted Average
+  CCE // Continuous Comprehensive Evaluation
 }
 
 model Subject {
@@ -13,16 +13,21 @@ model Subject {
   departmentId String
   subjectName  String
 
-  school               School                    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  department           Department                @relation(fields: [departmentId], references: [id])
-  classes              Class[]
-  exams                Exam[]
-  results              Result[]
-  reportCardGrades     ReportCardGrade[]
-  teacherExpertise     TeacherSubjectExpertise[]
+  school           School                    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  department       Department                @relation(fields: [departmentId], references: [id])
+  classes          Class[]
+  exams            Exam[]
+  results          Result[]
+  reportCardGrades ReportCardGrade[]
+  teacherExpertise TeacherSubjectExpertise[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  // Quiz relations
+  quizCategories QuizCategory[]
+
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  QuestionBank QuestionBank[]
+  ExamTemplate ExamTemplate[]
 
   @@unique([schoolId, departmentId, subjectName]) // Unique subject per department per school
   @@map("subjects")
@@ -40,22 +45,22 @@ model Class {
   name          String
 
   // Course Management Fields
-  courseCode     String?         // e.g., "CS101", "MATH201"
-  credits        Decimal?        @db.Decimal(3, 2) // Credit hours/units
-  evaluationType EvaluationType  @default(NORMAL)
-  minCapacity    Int?            @default(10) // Minimum students
-  maxCapacity    Int?            @default(50) // Maximum students
-  duration       Int?            // Duration in weeks
-  prerequisiteId String?         // Parent course (course hierarchy)
+  courseCode     String? // e.g., "CS101", "MATH201"
+  credits        Decimal?       @db.Decimal(3, 2) // Credit hours/units
+  evaluationType EvaluationType @default(NORMAL)
+  minCapacity    Int?           @default(10) // Minimum students
+  maxCapacity    Int?           @default(50) // Maximum students
+  duration       Int? // Duration in weeks
+  prerequisiteId String? // Parent course (course hierarchy)
 
-  school      School    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  subject     Subject   @relation(fields: [subjectId], references: [id])
-  teacher     Teacher   @relation(fields: [teacherId], references: [id])
-  term        Term      @relation(fields: [termId], references: [id])
-  startPeriod Period    @relation("ClassStartPeriod", fields: [startPeriodId], references: [id])
-  endPeriod   Period    @relation("ClassEndPeriod", fields: [endPeriodId], references: [id])
-  classroom   Classroom @relation(fields: [classroomId], references: [id])
-  prerequisite Class?   @relation("CoursePrerequisites", fields: [prerequisiteId], references: [id], onDelete: SetNull)
+  school       School    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  subject      Subject   @relation(fields: [subjectId], references: [id])
+  teacher      Teacher   @relation(fields: [teacherId], references: [id])
+  term         Term      @relation(fields: [termId], references: [id])
+  startPeriod  Period    @relation("ClassStartPeriod", fields: [startPeriodId], references: [id])
+  endPeriod    Period    @relation("ClassEndPeriod", fields: [endPeriodId], references: [id])
+  classroom    Classroom @relation(fields: [classroomId], references: [id])
+  prerequisite Class?    @relation("CoursePrerequisites", fields: [prerequisiteId], references: [id], onDelete: SetNull)
 
   studentClasses   StudentClass[]
   assignments      Assignment[]

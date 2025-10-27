@@ -17,120 +17,120 @@ model School {
   maxStudents Int     @default(100)
   maxTeachers Int     @default(10)
   isActive    Boolean @default(true)
-  
+
   // Onboarding status (uncomment after migration)
   // onboardingCompletedAt DateTime?
   // operationalStatus     String? // existing school, new school
   // safetyFeatures        String[] @default([])
 
   // School relationships
-  users                 User[]
-  schoolYears           SchoolYear[]
-  periods               Period[]
-  terms                 Term[]
-  departments           Department[]
-  yearLevels            YearLevel[]
-  students              Student[]
-  teachers              Teacher[]
-  teacherQualifications TeacherQualification[]
-  teacherExperiences    TeacherExperience[]
+  users                   User[]
+  schoolYears             SchoolYear[]
+  periods                 Period[]
+  terms                   Term[]
+  departments             Department[]
+  yearLevels              YearLevel[]
+  students                Student[]
+  teachers                Teacher[]
+  teacherQualifications   TeacherQualification[]
+  teacherExperiences      TeacherExperience[]
   teacherSubjectExpertise TeacherSubjectExpertise[]
-  workloadConfigs       WorkloadConfig[]
-  guardians             Guardian[]
-  classrooms            Classroom[]
-  classroomTypes        ClassroomType[]
-  teacherDepartments    TeacherDepartment[]
-  teacherPhoneNumbers   TeacherPhoneNumber[]
-  guardianTypes         GuardianType[]
-  studentGuardians      StudentGuardian[]
-  guardianPhoneNumbers  GuardianPhoneNumber[]
-  studentYearLevels     StudentYearLevel[]
-  subjects              Subject[]
-  classes               Class[]
-  studentClasses        StudentClass[]
-  classTeachers         ClassTeacher[]
-  scoreRanges           ScoreRange[]
-  assignments           Assignment[]
-  assignmentSubmissions AssignmentSubmission[]
-  attendances           Attendance[]
-  announcements         Announcement[]
-  domainRequests        DomainRequest[]
-  subscriptions         Subscription[]
-  invoices              Invoice[]
+  workloadConfigs         WorkloadConfig[]
+  guardians               Guardian[]
+  classrooms              Classroom[]
+  classroomTypes          ClassroomType[]
+  teacherDepartments      TeacherDepartment[]
+  teacherPhoneNumbers     TeacherPhoneNumber[]
+  guardianTypes           GuardianType[]
+  studentGuardians        StudentGuardian[]
+  guardianPhoneNumbers    GuardianPhoneNumber[]
+  studentYearLevels       StudentYearLevel[]
+  subjects                Subject[]
+  classes                 Class[]
+  studentClasses          StudentClass[]
+  classTeachers           ClassTeacher[]
+  scoreRanges             ScoreRange[]
+  assignments             Assignment[]
+  assignmentSubmissions   AssignmentSubmission[]
+  attendances             Attendance[]
+  announcements           Announcement[]
+  domainRequests          DomainRequest[]
+  subscriptions           Subscription[]
+  invoices                Invoice[]
   // Standalone invoice block relations
-  userInvoices          UserInvoice[]
-  userInvoiceItems      UserInvoiceItem[]
-  userInvoiceAddresses  UserInvoiceAddress[]
-  userInvoiceSettings   UserInvoiceSettings[]
-  userInvoiceSignatures UserInvoiceSignature[]
-  timetables            Timetable[]
-  schoolWeekConfigs     SchoolWeekConfig[]
+  userInvoices            UserInvoice[]
+  userInvoiceItems        UserInvoiceItem[]
+  userInvoiceAddresses    UserInvoiceAddress[]
+  userInvoiceSettings     UserInvoiceSettings[]
+  userInvoiceSignatures   UserInvoiceSignature[]
+  timetables              Timetable[]
+  schoolWeekConfigs       SchoolWeekConfig[]
   // Legal relations
-  legalConsents         LegalConsent[]
-  legalDocuments        LegalDocument[]
-  complianceLogs        ComplianceLog[]
+  legalConsents           LegalConsent[]
+  legalDocuments          LegalDocument[]
+  complianceLogs          ComplianceLog[]
   // Subscription relations
-  discounts             Discount[]
-  appliedDiscounts      AppliedDiscount[]
+  discounts               Discount[]
+  appliedDiscounts        AppliedDiscount[]
   // Branding and visibility
-  branding              SchoolBranding?
+  branding                SchoolBranding?
   // Examination relations
-  exams                 Exam[]
-  examResults           ExamResult[]
-  gradeBoundaries       GradeBoundary[]
+  exams                   Exam[]
+  examResults             ExamResult[]
+  gradeBoundaries         GradeBoundary[]
   // Gradebook relations
-  results               Result[]
-  reportCards           ReportCard[]
-  reportCardGrades      ReportCardGrade[]
+  results                 Result[]
+  reportCards             ReportCard[]
+  reportCardGrades        ReportCardGrade[]
 
   // Stream (LMS) relations
-  streamCourses         StreamCourse[]
-  streamCategories      StreamCategory[]
-  streamEnrollments     StreamEnrollment[]
-  streamCertificates    StreamCertificate[]
+  streamCourses      StreamCourse[]
+  streamCategories   StreamCategory[]
+  streamEnrollments  StreamEnrollment[]
+  streamCertificates StreamCertificate[]
 
   // Library relations
-  books            Book[]
-  borrowRecords    BorrowRecord[]
+  books         Book[]
+  borrowRecords BorrowRecord[]
 
   // Lesson relations
-  lessons          Lesson[]
+  lessons Lesson[]
 
   // Student management relations
-  studentBatches        StudentBatch[]
-  batches               Batch[]
-  studentDocuments      StudentDocument[]
-  healthRecords         HealthRecord[]
-  achievements          Achievement[]
-  disciplinaryRecords   DisciplinaryRecord[]
-  libraryRecords        LibraryRecord[]
-  feeRecords            FeeRecord[]
+  studentBatches      StudentBatch[]
+  batches             Batch[]
+  studentDocuments    StudentDocument[]
+  healthRecords       HealthRecord[]
+  achievements        Achievement[]
+  disciplinaryRecords DisciplinaryRecord[]
+  libraryRecords      LibraryRecord[]
+  feeRecords          FeeRecord[]
 
   // Banking relations
-  bankAccounts          BankAccount[]
-  transactions          Transaction[]
-  transfers             Transfer[]
-  plaidItems            PlaidItem[]
-  dwollaCustomers       DwollaCustomer[]
+  bankAccounts    BankAccount[]
+  transactions    Transaction[]
+  transfers       Transfer[]
+  plaidItems      PlaidItem[]
+  dwollaCustomers DwollaCustomer[]
 
   // Admission relations
-  admissionCampaigns    AdmissionCampaign[]
-  applications          Application[]
-  communications        Communication[]
+  admissionCampaigns AdmissionCampaign[]
+  applications       Application[]
+  communications     Communication[]
 
   // Fees relations
-  feeStructures         FeeStructure[]
-  feeAssignments        FeeAssignment[]
-  payments              Payment[]
-  refunds               Refund[]
-  scholarships          Scholarship[]
+  feeStructures           FeeStructure[]
+  feeAssignments          FeeAssignment[]
+  payments                Payment[]
+  refunds                 Refund[]
+  scholarships            Scholarship[]
   scholarshipApplications ScholarshipApplication[]
-  fines                 Fine[]
+  fines                   Fine[]
 
   // Geo-Attendance relations
-  geoFences             GeoFence[]
-  locationTraces        LocationTrace[]
-  geoAttendanceEvents   GeoAttendanceEvent[]
+  geoFences           GeoFence[]
+  locationTraces      LocationTrace[]
+  geoAttendanceEvents GeoAttendanceEvent[]
 
   // Billing relations
   billingPaymentMethods BillingPaymentMethod[]
@@ -138,39 +138,58 @@ model School {
   usageMetrics          UsageMetrics[]
 
   // Receipt tracking relations
-  expenseReceipts       ExpenseReceipt[]
-  creditNotes           CreditNote[]
-  billingPreferences    BillingPreferences?
+  expenseReceipts    ExpenseReceipt[]
+  creditNotes        CreditNote[]
+  billingPreferences BillingPreferences?
 
   // Enhanced Attendance relations
-  studentIdentifiers    StudentIdentifier[]
-  attendanceDevices     AttendanceDevice[]
-  attendanceSessions    AttendanceSession[]
-  attendanceEvents      AttendanceEvent[]
-  qrCodeSessions        QRCodeSession[]
-  biometricTemplates    BiometricTemplate[]
-  accessCards           AccessCard[]
-  bluetoothBeacons      BluetoothBeacon[]
-  attendancePolicies    AttendancePolicy[]
-  attendanceReports     AttendanceReport[]
+  studentIdentifiers StudentIdentifier[]
+  attendanceDevices  AttendanceDevice[]
+  attendanceSessions AttendanceSession[]
+  attendanceEvents   AttendanceEvent[]
+  qrCodeSessions     QRCodeSession[]
+  biometricTemplates BiometricTemplate[]
+  accessCards        AccessCard[]
+  bluetoothBeacons   BluetoothBeacon[]
+  attendancePolicies AttendancePolicy[]
+  attendanceReports  AttendanceReport[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  // Quiz relations
+  quizGames          QuizGame[]
+  quizGameQuestions  QuizGameQuestion[]
+  quizCategories     QuizCategory[]
+  quizCategoryStats  QuizCategoryStats[]
+  quizAchievements   QuizAchievement[]
+  quizLeaderboards   QuizLeaderboard[]
+
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @updatedAt
+  QuestionBank          QuestionBank[]
+  ExamTemplate          ExamTemplate[]
+  GeneratedExam         GeneratedExam[]
+  GeneratedExamQuestion GeneratedExamQuestion[]
+  QuestionAnalytics     QuestionAnalytics[]
+  Rubric                Rubric[]
+  RubricCriterion       RubricCriterion[]
+  StudentAnswer         StudentAnswer[]
+  MarkingResult         MarkingResult[]
+  GradeOverride         GradeOverride[]
 
   @@map("schools")
 }
+
 model Subscription {
-  id                  String   @id @default(cuid())
-  schoolId            String
-  stripeSubscriptionId String  @unique
+  id                   String   @id @default(cuid())
+  schoolId             String
+  stripeSubscriptionId String   @unique
   stripeCustomerId     String
   stripePriceId        String
   currentPeriodEnd     DateTime
   cancelAtPeriodEnd    Boolean  @default(false)
-  status               String   // active, past_due, canceled, etc
-  tierId              String
-  
-  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  status               String // active, past_due, canceled, etc
+  tierId               String
+
+  school           School           @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   subscriptionTier SubscriptionTier @relation(fields: [tierId], references: [id])
 
   createdAt DateTime @default(now())
@@ -180,18 +199,18 @@ model Subscription {
 }
 
 model Invoice {
-  id             String   @id @default(cuid())
-  schoolId       String
-  stripeInvoiceId String  @unique
-  amountDue      Int
-  amountPaid     Int
-  currency       String
-  status         String   // draft, open, paid, uncollectible, void
-  periodStart    DateTime
-  periodEnd      DateTime
+  id              String   @id @default(cuid())
+  schoolId        String
+  stripeInvoiceId String   @unique
+  amountDue       Int
+  amountPaid      Int
+  currency        String
+  status          String // draft, open, paid, uncollectible, void
+  periodStart     DateTime
+  periodEnd       DateTime
 
-  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  receipts Receipt[]
+  school           School            @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  receipts         Receipt[]
   appliedDiscounts AppliedDiscount[]
 
   createdAt DateTime @default(now())
@@ -227,10 +246,10 @@ model Period {
   startTime DateTime @db.Time()
   endTime   DateTime @db.Time()
 
-  school         School     @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  schoolYear     SchoolYear @relation(fields: [yearId], references: [id], onDelete: Cascade)
-  classesAsStart Class[]    @relation("ClassStartPeriod")
-  classesAsEnd   Class[]    @relation("ClassEndPeriod")
+  school         School      @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  schoolYear     SchoolYear  @relation(fields: [yearId], references: [id], onDelete: Cascade)
+  classesAsStart Class[]     @relation("ClassStartPeriod")
+  classesAsEnd   Class[]     @relation("ClassEndPeriod")
   timetables     Timetable[]
 
   createdAt DateTime @default(now())
@@ -248,12 +267,12 @@ model Term {
   startDate  DateTime
   endDate    DateTime
 
-  school     School     @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  schoolYear SchoolYear @relation(fields: [yearId], references: [id], onDelete: Cascade)
-  classes    Class[]
-  timetables Timetable[]
+  school            School             @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  schoolYear        SchoolYear         @relation(fields: [yearId], references: [id], onDelete: Cascade)
+  classes           Class[]
+  timetables        Timetable[]
   schoolWeekConfigs SchoolWeekConfig[]
-  reportCards ReportCard[]
+  reportCards       ReportCard[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
