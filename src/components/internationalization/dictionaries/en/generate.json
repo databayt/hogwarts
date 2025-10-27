@@ -1,0 +1,289 @@
+{
+  "title": "Auto-Generate Exams",
+  "description": "Create, manage, and generate exams with intelligent question selection",
+
+  "pageTitle": "Auto-Generate Exams",
+  "pageDescription": "Create, manage, and generate exams with intelligent question selection",
+
+  "stats": {
+    "questions": "Questions",
+    "templates": "Templates",
+    "generated": "Generated",
+    "inQuestionBank": "In question bank",
+    "reusableBlueprints": "Reusable blueprints",
+    "examsCreated": "Exams created"
+  },
+
+  "actions": {
+    "viewQuestions": "View Questions",
+    "addQuestion": "Add Question",
+    "generateWithAI": "Generate with AI",
+    "viewTemplates": "View Templates",
+    "createTemplate": "Create Template",
+    "viewAnalytics": "View Analytics",
+    "cancel": "Cancel",
+    "create": "Create",
+    "update": "Update",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "view": "View",
+    "add": "Add",
+    "remove": "Remove",
+    "actions": "Actions"
+  },
+
+  "cards": {
+    "questionBank": {
+      "title": "Question Bank",
+      "description": "Create and manage reusable exam questions with detailed metadata",
+      "details": "Build a library of questions categorized by subject, difficulty, and Bloom's taxonomy level. Support for MCQ, True/False, Fill-in-Blank, Short Answer, and Essay questions."
+    },
+    "aiGeneration": {
+      "title": "AI Generation",
+      "description": "Generate questions automatically using AI",
+      "details": "Use AI to create multiple questions based on your topic, difficulty level, and Bloom's taxonomy requirements. Review and edit before adding to your question bank."
+    },
+    "examTemplates": {
+      "title": "Exam Templates",
+      "description": "Create reusable exam blueprints",
+      "details": "Define exam templates with specific question distribution rules. Specify how many questions of each type and difficulty level should be included."
+    },
+    "analytics": {
+      "title": "Analytics",
+      "description": "Track question performance",
+      "details": "View detailed analytics on question usage, success rates, and perceived difficulty. Identify questions that work well and those that need adjustment."
+    }
+  },
+
+  "quickStart": {
+    "title": "Quick Start Guide",
+    "description": "Get started with auto-generating exams in 3 easy steps",
+    "step1": {
+      "title": "Build Your Question Bank",
+      "description": "Create questions manually or use AI to generate them. Categorize by subject, difficulty, and Bloom's level."
+    },
+    "step2": {
+      "title": "Create Exam Templates",
+      "description": "Define reusable templates with question distribution rules (e.g., 10 easy MCQs, 5 hard essays)."
+    },
+    "step3": {
+      "title": "Generate Exams",
+      "description": "Select a template and let the system intelligently pick questions. Preview and customize before finalizing."
+    }
+  },
+
+  "questionBank": {
+    "title": "Question Bank",
+    "createQuestion": "Create Question",
+    "editQuestion": "Edit Question",
+    "viewQuestion": "View Question",
+
+    "form": {
+      "subjectLabel": "Subject",
+      "subjectPlaceholder": "Select subject",
+      "questionTypeLabel": "Question Type",
+      "questionTypePlaceholder": "Select type",
+      "questionTextLabel": "Question Text",
+      "questionTextPlaceholder": "Enter your question here...",
+      "difficultyLabel": "Difficulty",
+      "difficultyPlaceholder": "Select difficulty",
+      "bloomLevelLabel": "Bloom Level",
+      "bloomLevelPlaceholder": "Select level",
+      "pointsLabel": "Points",
+      "timeEstimateLabel": "Time Estimate (min)",
+      "timeEstimateDescription": "Optional",
+      "optionsLabel": "Options",
+      "addOption": "Add Option",
+      "optionPlaceholder": "Option {{number}}",
+      "explanationPlaceholder": "Explanation (optional)",
+      "acceptedAnswersLabel": "Accepted Answers",
+      "addAnswer": "Add Answer",
+      "answerPlaceholder": "Answer {{number}}",
+      "caseSensitiveLabel": "Case sensitive",
+      "sampleAnswerLabel": "Sample Answer",
+      "sampleAnswerPlaceholder": "Provide a good sample answer...",
+      "gradingRubricLabel": "Grading Rubric",
+      "gradingRubricPlaceholder": "Describe key points for grading...",
+      "gradingRubricDescription": "List the criteria for grading this question",
+      "tagsLabel": "Tags",
+      "tagsDescription": "Press Enter to add tags (e.g., algebra, geometry)",
+      "tagsPlaceholder": "Type and press Enter",
+      "explanationLabel": "Explanation (Optional)",
+      "explanationPlaceholder": "Explain the concept or provide additional context...",
+      "imageUrlLabel": "Image URL (Optional)"
+    },
+
+    "columns": {
+      "question": "Question",
+      "type": "Type",
+      "difficulty": "Difficulty",
+      "bloomLevel": "Bloom Level",
+      "subject": "Subject",
+      "points": "Points",
+      "source": "Source",
+      "used": "Used",
+      "successRate": "Success Rate",
+      "created": "Created",
+      "timesUsed": "{{count}} times",
+      "noData": "-"
+    },
+
+    "messages": {
+      "questionCreated": "Question created!",
+      "questionUpdated": "Question updated!",
+      "questionDeleted": "Question deleted!",
+      "deleteConfirm": "Delete question \"{{text}}\"?",
+      "failedToSave": "Failed to save question",
+      "failedToDelete": "Failed to delete"
+    }
+  },
+
+  "templates": {
+    "title": "Exam Templates",
+    "createTemplate": "Create Exam Template",
+    "editTemplate": "Edit Template",
+    "viewTemplate": "View Template",
+
+    "form": {
+      "templateNameLabel": "Template Name",
+      "templateNamePlaceholder": "e.g., Midterm Template - Mathematics",
+      "descriptionLabel": "Description (Optional)",
+      "descriptionPlaceholder": "Describe this template...",
+      "subjectLabel": "Subject",
+      "subjectPlaceholder": "Select subject",
+      "durationLabel": "Duration (minutes)",
+      "totalMarksLabel": "Total Marks",
+      "distributionLabel": "Question Distribution",
+      "distributionDescription": "Total Questions: {{count}}",
+      "bloomDistributionLabel": "Bloom Distribution (Optional)"
+    },
+
+    "distribution": {
+      "title": "Question Distribution",
+      "description": "Specify how many questions of each type and difficulty level",
+      "questionType": "Question Type",
+      "difficulty": "Difficulty",
+      "count": "Count",
+      "total": "Total",
+      "rowTotal": "Row Total",
+      "columnTotal": "Column Total",
+      "grandTotal": "Grand Total"
+    },
+
+    "columns": {
+      "templateName": "Template Name",
+      "subject": "Subject",
+      "duration": "Duration",
+      "totalMarks": "Total Marks",
+      "totalQuestions": "Total Questions",
+      "timesUsed": "Times Used",
+      "isActive": "Active",
+      "created": "Created",
+      "durationFormat": "{{minutes}} min",
+      "marksFormat": "{{marks}} marks",
+      "questionsFormat": "{{count}} questions",
+      "usedFormat": "{{count}} times"
+    },
+
+    "messages": {
+      "templateCreated": "Template created!",
+      "templateUpdated": "Template updated!",
+      "templateDeleted": "Template deleted!",
+      "deleteConfirm": "Delete template \"{{name}}\"?",
+      "failedToSave": "Failed to save template",
+      "failedToDelete": "Failed to delete"
+    }
+  },
+
+  "questionTypes": {
+    "MULTIPLE_CHOICE": {
+      "label": "Multiple Choice",
+      "description": "Select one or more correct answers from a list of options"
+    },
+    "TRUE_FALSE": {
+      "label": "True/False",
+      "description": "Binary choice question with two options"
+    },
+    "FILL_BLANK": {
+      "label": "Fill-in-the-Blank",
+      "description": "Complete the sentence with the correct answer"
+    },
+    "SHORT_ANSWER": {
+      "label": "Short Answer",
+      "description": "Brief written response (1-2 sentences)"
+    },
+    "ESSAY": {
+      "label": "Essay",
+      "description": "Extended written response with detailed analysis"
+    }
+  },
+
+  "difficultyLevels": {
+    "EASY": {
+      "label": "Easy",
+      "description": "Basic recall and understanding"
+    },
+    "MEDIUM": {
+      "label": "Medium",
+      "description": "Application and analysis"
+    },
+    "HARD": {
+      "label": "Hard",
+      "description": "Evaluation and creation"
+    }
+  },
+
+  "bloomLevels": {
+    "REMEMBER": {
+      "label": "Remember",
+      "description": "Recall facts and basic concepts",
+      "examples": "Define, List, Name, Identify, Recall"
+    },
+    "UNDERSTAND": {
+      "label": "Understand",
+      "description": "Explain ideas or concepts",
+      "examples": "Describe, Explain, Summarize, Interpret"
+    },
+    "APPLY": {
+      "label": "Apply",
+      "description": "Use information in new situations",
+      "examples": "Implement, Solve, Use, Demonstrate"
+    },
+    "ANALYZE": {
+      "label": "Analyze",
+      "description": "Draw connections among ideas",
+      "examples": "Compare, Contrast, Examine, Categorize"
+    },
+    "EVALUATE": {
+      "label": "Evaluate",
+      "description": "Justify a decision or course of action",
+      "examples": "Assess, Critique, Judge, Recommend"
+    },
+    "CREATE": {
+      "label": "Create",
+      "description": "Produce new or original work",
+      "examples": "Design, Construct, Develop, Formulate"
+    }
+  },
+
+  "sources": {
+    "MANUAL": "Manual",
+    "AI": "AI",
+    "IMPORTED": "Imported"
+  },
+
+  "common": {
+    "loading": "Loading...",
+    "noResults": "No results found",
+    "error": "An error occurred",
+    "success": "Success",
+    "optional": "Optional",
+    "required": "Required",
+    "searchPlaceholder": "Search...",
+    "filterBy": "Filter by {{field}}",
+    "sortBy": "Sort by {{field}}",
+    "loadMore": "Load More",
+    "showingResults": "Showing {{count}} of {{total}} results"
+  }
+}

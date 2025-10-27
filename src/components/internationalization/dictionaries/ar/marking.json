@@ -1,0 +1,298 @@
+{
+  "title": "التصحيح الآلي",
+  "dashboard": "لوحة التصحيح",
+  "description": "تصحيح إجابات الطلاب بمساعدة الذكاء الاصطناعي",
+
+  "navigation": {
+    "dashboard": "لوحة التحكم",
+    "questionBank": "بنك الأسئلة",
+    "questions": "الأسئلة",
+    "grading": "التصحيح",
+    "analytics": "التحليلات"
+  },
+
+  "statistics": {
+    "totalSubmissions": "إجمالي الإجابات",
+    "notStarted": "لم يبدأ",
+    "needsReview": "يحتاج مراجعة",
+    "completed": "مكتمل",
+    "inProgress": "قيد التنفيذ",
+    "autoGraded": "مصحح آلياً",
+    "aiGraded": "مصحح بالذكاء الاصطناعي",
+    "totalQuestions": "إجمالي الأسئلة",
+    "autoGradable": "قابل للتصحيح الآلي",
+    "withRubrics": "مع معايير التقييم"
+  },
+
+  "tabs": {
+    "all": "الكل",
+    "pending": "قيد الانتظار",
+    "review": "يحتاج مراجعة",
+    "completed": "مكتمل"
+  },
+
+  "questionTypes": {
+    "multipleChoice": "اختيار من متعدد",
+    "trueFalse": "صح وخطأ",
+    "shortAnswer": "إجابة قصيرة",
+    "essay": "مقال",
+    "fillInBlank": "املأ الفراغ",
+    "matching": "مطابقة"
+  },
+
+  "difficulty": {
+    "easy": "سهل",
+    "medium": "متوسط",
+    "hard": "صعب"
+  },
+
+  "bloomLevels": {
+    "remember": "التذكر",
+    "understand": "الفهم",
+    "apply": "التطبيق",
+    "analyze": "التحليل",
+    "evaluate": "التقييم",
+    "create": "الإبداع"
+  },
+
+  "gradingMethods": {
+    "auto": "تلقائي",
+    "aiAssisted": "بمساعدة الذكاء الاصطناعي",
+    "manual": "يدوي"
+  },
+
+  "submissionTypes": {
+    "digital": "رقمي",
+    "upload": "رفع ملف",
+    "ocr": "معالج بالتعرف البصري"
+  },
+
+  "status": {
+    "notStarted": "لم يبدأ",
+    "inProgress": "قيد التنفيذ",
+    "autoGraded": "مصحح آلياً",
+    "aiGraded": "مصحح بالذكاء الاصطناعي",
+    "reviewed": "تمت المراجعة",
+    "completed": "مكتمل"
+  },
+
+  "table": {
+    "student": "الطالب",
+    "question": "السؤال",
+    "type": "النوع",
+    "status": "الحالة",
+    "score": "الدرجة",
+    "method": "الطريقة",
+    "review": "المراجعة",
+    "actions": "الإجراءات",
+    "noSubmissions": "لا توجد إجابات للتصحيح",
+    "showing": "عرض",
+    "of": "من",
+    "submissions": "إجابة",
+    "search": "البحث عن الطلاب أو الأسئلة..."
+  },
+
+  "buttons": {
+    "newQuestion": "سؤال جديد",
+    "createQuestion": "إنشاء سؤال",
+    "editQuestion": "تعديل السؤال",
+    "deleteQuestion": "حذف السؤال",
+    "saveQuestion": "حفظ السؤال",
+    "cancel": "إلغاء",
+    "save": "حفظ",
+    "autoGrade": "تصحيح آلي",
+    "aiGrade": "تصحيح بالذكاء الاصطناعي",
+    "manualGrade": "تصحيح يدوي",
+    "saveGrade": "حفظ الدرجة",
+    "override": "تجاوز",
+    "viewAnswer": "عرض الإجابة",
+    "viewRubric": "عرض معايير التقييم",
+    "createRubric": "إنشاء معايير التقييم",
+    "exportGrades": "تصدير الدرجات",
+    "bulkGrade": "تصحيح جماعي",
+    "back": "رجوع",
+    "next": "التالي",
+    "previous": "السابق",
+    "submit": "إرسال"
+  },
+
+  "questionBank": {
+    "title": "بنك الأسئلة",
+    "description": "إدارة مكتبة الأسئلة القابلة لإعادة الاستخدام",
+    "noQuestions": "لا توجد أسئلة بعد. أنشئ سؤالك الأول للبدء.",
+    "createFirst": "أنشئ سؤالك الأول",
+    "points": "نقاط",
+    "criteria": "معايير",
+    "tags": "الوسوم"
+  },
+
+  "questionForm": {
+    "questionText": "نص السؤال",
+    "questionTextPlaceholder": "أدخل سؤالك هنا...",
+    "questionType": "نوع السؤال",
+    "selectQuestionType": "اختر نوع السؤال",
+    "difficulty": "مستوى الصعوبة",
+    "selectDifficulty": "اختر مستوى الصعوبة",
+    "bloomLevel": "مستوى بلوم",
+    "selectBloomLevel": "اختر مستوى بلوم التصنيفي",
+    "points": "النقاط",
+    "pointsPlaceholder": "أدخل النقاط",
+    "timeEstimate": "الوقت المقدر (دقائق)",
+    "timeEstimatePlaceholder": "الوقت المقدر للإجابة",
+    "explanation": "التوضيح",
+    "explanationPlaceholder": "اشرح لماذا هذه الإجابة الصحيحة...",
+    "sampleAnswer": "نموذج الإجابة",
+    "sampleAnswerPlaceholder": "قدم إجابة نموذجية...",
+    "tags": "الوسوم",
+    "tagsPlaceholder": "الجبر، المعادلات، الصف التاسع",
+    "imageUrl": "رابط الصورة (اختياري)",
+    "imageUrlPlaceholder": "https://example.com/image.jpg"
+  },
+
+  "options": {
+    "title": "خيارات الإجابة",
+    "addOption": "إضافة خيار",
+    "removeOption": "إزالة الخيار",
+    "optionText": "نص الخيار",
+    "isCorrect": "الإجابة الصحيحة",
+    "atLeastTwo": "أضف خيارين على الأقل",
+    "atLeastOneCorrect": "حدد خياراً صحيحاً واحداً على الأقل"
+  },
+
+  "rubric": {
+    "title": "معايير التقييم",
+    "description": "حدد معايير التقييم للأسئلة الذاتية",
+    "rubricTitle": "عنوان معايير التقييم",
+    "rubricTitlePlaceholder": "أدخل عنوان معايير التقييم...",
+    "rubricDescription": "وصف معايير التقييم",
+    "rubricDescriptionPlaceholder": "صف معايير التقييم...",
+    "criteria": "المعايير",
+    "addCriterion": "إضافة معيار",
+    "removeCriterion": "إزالة المعيار",
+    "criterion": "المعيار",
+    "criterionPlaceholder": "ما الذي سيتم تقييمه",
+    "criterionDescription": "الوصف",
+    "criterionDescriptionPlaceholder": "وصف تفصيلي...",
+    "maxPoints": "الحد الأقصى للنقاط",
+    "totalPoints": "مجموع النقاط",
+    "noRubric": "لم يتم تحديد معايير تقييم لهذا السؤال"
+  },
+
+  "grading": {
+    "title": "تصحيح الإجابة",
+    "question": "السؤال",
+    "studentAnswer": "إجابة الطالب",
+    "noAnswer": "لم يتم تقديم إجابة",
+    "uploadedFile": "الملف المرفوع",
+    "viewUploadedFile": "عرض الملف المرفوع",
+    "ocrExtractedText": "النص المستخرج بالتعرف البصري",
+    "ocrPending": "معالجة التعرف البصري قيد الانتظار...",
+    "currentGrade": "الدرجة الحالية",
+    "score": "الدرجة",
+    "status": "الحالة",
+    "gradingMethod": "طريقة التصحيح",
+    "aiConfidence": "ثقة الذكاء الاصطناعي",
+    "aiReasoning": "تفسير الذكاء الاصطناعي",
+    "feedback": "الملاحظات",
+    "manualGrading": "التصحيح اليدوي",
+    "pointsAwarded": "النقاط الممنوحة",
+    "feedbackPlaceholder": "قدم ملاحظات بناءة للطالب...",
+    "maxPoints": "الحد الأقصى",
+    "confidence": "الثقة"
+  },
+
+  "aiGrading": {
+    "processing": "الذكاء الاصطناعي يقوم بالتصحيح...",
+    "highConfidence": "ثقة عالية في التصحيح بالذكاء الاصطناعي",
+    "mediumConfidence": "ثقة متوسطة - يُنصح بالمراجعة",
+    "lowConfidence": "ثقة منخفضة - المراجعة مطلوبة",
+    "poorConfidence": "ثقة منخفضة جداً - يُوصى بالتصحيح اليدوي",
+    "needsReview": "هذه الدرجة تحتاج إلى مراجعة المعلم"
+  },
+
+  "ocr": {
+    "processing": "جاري معالجة التعرف البصري...",
+    "highConfidence": "ثقة عالية في استخراج النص",
+    "mediumConfidence": "ثقة متوسطة - يُنصح بالمراجعة",
+    "lowConfidence": "ثقة منخفضة - المراجعة اليدوية مطلوبة",
+    "poorQuality": "جودة منخفضة للتعرف البصري - يُوصى بالإدخال اليدوي",
+    "extractedText": "النص المستخرج",
+    "confidence": "الثقة"
+  },
+
+  "override": {
+    "title": "تجاوز الدرجة",
+    "reason": "سبب التجاوز",
+    "reasonPlaceholder": "اشرح سبب تغيير الدرجة...",
+    "previousScore": "الدرجة السابقة",
+    "newScore": "الدرجة الجديدة",
+    "confirmOverride": "تأكيد التجاوز"
+  },
+
+  "bulkGrading": {
+    "title": "تصحيح جماعي للامتحان",
+    "selectStudents": "اختر الطلاب",
+    "allStudents": "جميع الطلاب",
+    "selectQuestions": "اختر الأسئلة",
+    "allQuestions": "جميع الأسئلة",
+    "autoGradeOnly": "تصحيح آلي فقط (تخطي الأسئلة الذاتية)",
+    "processing": "التصحيح قيد التنفيذ...",
+    "completed": "اكتمل التصحيح الجماعي",
+    "graded": "مصحح",
+    "failed": "فشل",
+    "total": "الإجمالي"
+  },
+
+  "messages": {
+    "questionCreated": "تم إنشاء السؤال بنجاح",
+    "questionUpdated": "تم تحديث السؤال بنجاح",
+    "questionDeleted": "تم حذف السؤال بنجاح",
+    "rubricCreated": "تم إنشاء معايير التقييم بنجاح",
+    "answerSubmitted": "تم إرسال الإجابة بنجاح",
+    "gradeSubmitted": "تم إرسال الدرجة بنجاح",
+    "gradeOverridden": "تم تجاوز الدرجة بنجاح",
+    "ocrProcessed": "تم معالجة التعرف البصري بنجاح",
+    "bulkGradeCompleted": "اكتمل التصحيح الجماعي بنجاح",
+    "error": "حدث خطأ",
+    "unauthorized": "غير مصرح",
+    "notFound": "غير موجود",
+    "invalidData": "بيانات غير صالحة"
+  },
+
+  "errors": {
+    "questionRequired": "نص السؤال مطلوب",
+    "questionMinLength": "يجب أن يكون السؤال 10 أحرف على الأقل",
+    "typeRequired": "نوع السؤال مطلوب",
+    "difficultyRequired": "مستوى الصعوبة مطلوب",
+    "bloomLevelRequired": "مستوى بلوم مطلوب",
+    "pointsRequired": "النقاط مطلوبة",
+    "pointsMin": "يجب أن تكون النقاط 1 على الأقل",
+    "pointsMax": "لا يمكن أن تتجاوز النقاط 100",
+    "optionsRequired": "الخيارات مطلوبة لهذا النوع من الأسئلة",
+    "optionsMinTwo": "يجب تقديم خيارين على الأقل",
+    "optionsCorrectRequired": "يجب تحديد إجابة صحيحة واحدة على الأقل",
+    "rubricRequired": "معايير التقييم مطلوبة لأسئلة المقال",
+    "criteriaRequired": "يجب تقديم معيار واحد على الأقل",
+    "answerRequired": "الإجابة مطلوبة",
+    "scoreRequired": "الدرجة مطلوبة",
+    "scoreInvalid": "يجب أن تكون الدرجة بين 0 والحد الأقصى للنقاط",
+    "reasonRequired": "السبب مطلوب لتجاوز الدرجة",
+    "reasonMinLength": "يجب أن يكون السبب 10 أحرف على الأقل"
+  },
+
+  "analytics": {
+    "title": "تحليلات التصحيح",
+    "overview": "نظرة عامة",
+    "averageScore": "متوسط الدرجات",
+    "highestScore": "أعلى درجة",
+    "lowestScore": "أدنى درجة",
+    "medianScore": "الدرجة الوسطى",
+    "passingRate": "معدل النجاح",
+    "gradeDistribution": "توزيع الدرجات",
+    "byQuestionType": "حسب نوع السؤال",
+    "byDifficulty": "حسب الصعوبة",
+    "byGradingMethod": "حسب طريقة التصحيح",
+    "totalTime": "إجمالي وقت التصحيح",
+    "averageTime": "متوسط الوقت لكل إجابة"
+  }
+}

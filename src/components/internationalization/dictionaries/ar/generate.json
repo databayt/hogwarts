@@ -1,0 +1,289 @@
+{
+  "title": "إنشاء الاختبارات تلقائياً",
+  "description": "إنشاء وإدارة وتوليد الاختبارات باستخدام اختيار ذكي للأسئلة",
+
+  "pageTitle": "إنشاء الاختبارات تلقائياً",
+  "pageDescription": "إنشاء وإدارة وتوليد الاختبارات باستخدام اختيار ذكي للأسئلة",
+
+  "stats": {
+    "questions": "الأسئلة",
+    "templates": "القوالب",
+    "generated": "المُنشأة",
+    "inQuestionBank": "في بنك الأسئلة",
+    "reusableBlueprints": "قوالب قابلة لإعادة الاستخدام",
+    "examsCreated": "اختبارات تم إنشاؤها"
+  },
+
+  "actions": {
+    "viewQuestions": "عرض الأسئلة",
+    "addQuestion": "إضافة سؤال",
+    "generateWithAI": "إنشاء بالذكاء الاصطناعي",
+    "viewTemplates": "عرض القوالب",
+    "createTemplate": "إنشاء قالب",
+    "viewAnalytics": "عرض التحليلات",
+    "cancel": "إلغاء",
+    "create": "إنشاء",
+    "update": "تحديث",
+    "save": "حفظ",
+    "delete": "حذف",
+    "edit": "تعديل",
+    "view": "عرض",
+    "add": "إضافة",
+    "remove": "إزالة",
+    "actions": "الإجراءات"
+  },
+
+  "cards": {
+    "questionBank": {
+      "title": "بنك الأسئلة",
+      "description": "إنشاء وإدارة أسئلة الاختبارات القابلة لإعادة الاستخدام مع بيانات تفصيلية",
+      "details": "بناء مكتبة من الأسئلة مصنفة حسب المادة والصعوبة ومستوى بلوم التعليمي. دعم الاختيار من متعدد، صح وخطأ، املأ الفراغ، إجابة قصيرة، ومقال."
+    },
+    "aiGeneration": {
+      "title": "الإنشاء بالذكاء الاصطناعي",
+      "description": "إنشاء الأسئلة تلقائياً باستخدام الذكاء الاصطناعي",
+      "details": "استخدم الذكاء الاصطناعي لإنشاء أسئلة متعددة بناءً على موضوعك ومستوى الصعوبة ومتطلبات تصنيف بلوم. راجع وعدّل قبل الإضافة إلى بنك الأسئلة."
+    },
+    "examTemplates": {
+      "title": "قوالب الاختبارات",
+      "description": "إنشاء قوالب اختبارات قابلة لإعادة الاستخدام",
+      "details": "حدد قوالب الاختبارات مع قواعد توزيع محددة للأسئلة. حدد عدد الأسئلة من كل نوع ومستوى صعوبة."
+    },
+    "analytics": {
+      "title": "التحليلات",
+      "description": "تتبع أداء الأسئلة",
+      "details": "عرض تحليلات مفصلة حول استخدام الأسئلة ومعدلات النجاح والصعوبة المتصورة. حدد الأسئلة التي تعمل بشكل جيد وتلك التي تحتاج إلى تعديل."
+    }
+  },
+
+  "quickStart": {
+    "title": "دليل البدء السريع",
+    "description": "ابدأ في إنشاء الاختبارات تلقائياً في 3 خطوات سهلة",
+    "step1": {
+      "title": "بناء بنك الأسئلة",
+      "description": "أنشئ الأسئلة يدوياً أو استخدم الذكاء الاصطناعي لإنشائها. صنفها حسب المادة والصعوبة ومستوى بلوم."
+    },
+    "step2": {
+      "title": "إنشاء قوالب الاختبارات",
+      "description": "حدد قوالب قابلة لإعادة الاستخدام مع قواعد توزيع الأسئلة (مثلاً، 10 أسئلة اختيار من متعدد سهلة، 5 مقالات صعبة)."
+    },
+    "step3": {
+      "title": "إنشاء الاختبارات",
+      "description": "اختر قالباً ودع النظام يختار الأسئلة بذكاء. معاينة وتخصيص قبل الانتهاء."
+    }
+  },
+
+  "questionBank": {
+    "title": "بنك الأسئلة",
+    "createQuestion": "إنشاء سؤال",
+    "editQuestion": "تعديل سؤال",
+    "viewQuestion": "عرض سؤال",
+
+    "form": {
+      "subjectLabel": "المادة",
+      "subjectPlaceholder": "اختر المادة",
+      "questionTypeLabel": "نوع السؤال",
+      "questionTypePlaceholder": "اختر النوع",
+      "questionTextLabel": "نص السؤال",
+      "questionTextPlaceholder": "أدخل سؤالك هنا...",
+      "difficultyLabel": "مستوى الصعوبة",
+      "difficultyPlaceholder": "اختر مستوى الصعوبة",
+      "bloomLevelLabel": "مستوى بلوم",
+      "bloomLevelPlaceholder": "اختر المستوى",
+      "pointsLabel": "النقاط",
+      "timeEstimateLabel": "الوقت المتوقع (دقيقة)",
+      "timeEstimateDescription": "اختياري",
+      "optionsLabel": "الخيارات",
+      "addOption": "إضافة خيار",
+      "optionPlaceholder": "الخيار {{number}}",
+      "explanationPlaceholder": "التوضيح (اختياري)",
+      "acceptedAnswersLabel": "الإجابات المقبولة",
+      "addAnswer": "إضافة إجابة",
+      "answerPlaceholder": "الإجابة {{number}}",
+      "caseSensitiveLabel": "حساس لحالة الأحرف",
+      "sampleAnswerLabel": "إجابة نموذجية",
+      "sampleAnswerPlaceholder": "قدم إجابة نموذجية جيدة...",
+      "gradingRubricLabel": "معايير التصحيح",
+      "gradingRubricPlaceholder": "صف النقاط الرئيسية للتصحيح...",
+      "gradingRubricDescription": "اذكر معايير تصحيح هذا السؤال",
+      "tagsLabel": "الوسوم",
+      "tagsDescription": "اضغط Enter لإضافة وسوم (مثل: الجبر، الهندسة)",
+      "tagsPlaceholder": "اكتب واضغط Enter",
+      "explanationLabel": "التوضيح (اختياري)",
+      "explanationPlaceholder": "اشرح المفهوم أو قدم سياقاً إضافياً...",
+      "imageUrlLabel": "رابط الصورة (اختياري)"
+    },
+
+    "columns": {
+      "question": "السؤال",
+      "type": "النوع",
+      "difficulty": "الصعوبة",
+      "bloomLevel": "مستوى بلوم",
+      "subject": "المادة",
+      "points": "النقاط",
+      "source": "المصدر",
+      "used": "الاستخدام",
+      "successRate": "معدل النجاح",
+      "created": "تاريخ الإنشاء",
+      "timesUsed": "{{count}} مرة",
+      "noData": "-"
+    },
+
+    "messages": {
+      "questionCreated": "تم إنشاء السؤال!",
+      "questionUpdated": "تم تحديث السؤال!",
+      "questionDeleted": "تم حذف السؤال!",
+      "deleteConfirm": "حذف السؤال \"{{text}}\"؟",
+      "failedToSave": "فشل في حفظ السؤال",
+      "failedToDelete": "فشل في الحذف"
+    }
+  },
+
+  "templates": {
+    "title": "قوالب الاختبارات",
+    "createTemplate": "إنشاء قالب اختبار",
+    "editTemplate": "تعديل قالب",
+    "viewTemplate": "عرض قالب",
+
+    "form": {
+      "templateNameLabel": "اسم القالب",
+      "templateNamePlaceholder": "مثال: قالب اختبار منتصف الفصل - الرياضيات",
+      "descriptionLabel": "الوصف (اختياري)",
+      "descriptionPlaceholder": "صف هذا القالب...",
+      "subjectLabel": "المادة",
+      "subjectPlaceholder": "اختر المادة",
+      "durationLabel": "المدة (بالدقائق)",
+      "totalMarksLabel": "مجموع الدرجات",
+      "distributionLabel": "توزيع الأسئلة",
+      "distributionDescription": "إجمالي الأسئلة: {{count}}",
+      "bloomDistributionLabel": "توزيع بلوم (اختياري)"
+    },
+
+    "distribution": {
+      "title": "توزيع الأسئلة",
+      "description": "حدد عدد الأسئلة من كل نوع ومستوى صعوبة",
+      "questionType": "نوع السؤال",
+      "difficulty": "الصعوبة",
+      "count": "العدد",
+      "total": "المجموع",
+      "rowTotal": "مجموع الصف",
+      "columnTotal": "مجموع العمود",
+      "grandTotal": "المجموع الكلي"
+    },
+
+    "columns": {
+      "templateName": "اسم القالب",
+      "subject": "المادة",
+      "duration": "المدة",
+      "totalMarks": "مجموع الدرجات",
+      "totalQuestions": "إجمالي الأسئلة",
+      "timesUsed": "مرات الاستخدام",
+      "isActive": "نشط",
+      "created": "تاريخ الإنشاء",
+      "durationFormat": "{{minutes}} دقيقة",
+      "marksFormat": "{{marks}} درجة",
+      "questionsFormat": "{{count}} سؤال",
+      "usedFormat": "{{count}} مرة"
+    },
+
+    "messages": {
+      "templateCreated": "تم إنشاء القالب!",
+      "templateUpdated": "تم تحديث القالب!",
+      "templateDeleted": "تم حذف القالب!",
+      "deleteConfirm": "حذف القالب \"{{name}}\"؟",
+      "failedToSave": "فشل في حفظ القالب",
+      "failedToDelete": "فشل في الحذف"
+    }
+  },
+
+  "questionTypes": {
+    "MULTIPLE_CHOICE": {
+      "label": "اختيار من متعدد",
+      "description": "اختر إجابة واحدة أو أكثر صحيحة من قائمة الخيارات"
+    },
+    "TRUE_FALSE": {
+      "label": "صح وخطأ",
+      "description": "سؤال ثنائي الخيار مع خيارين"
+    },
+    "FILL_BLANK": {
+      "label": "املأ الفراغ",
+      "description": "أكمل الجملة بالإجابة الصحيحة"
+    },
+    "SHORT_ANSWER": {
+      "label": "إجابة قصيرة",
+      "description": "استجابة كتابية مختصرة (1-2 جملة)"
+    },
+    "ESSAY": {
+      "label": "مقال",
+      "description": "استجابة كتابية موسعة مع تحليل مفصل"
+    }
+  },
+
+  "difficultyLevels": {
+    "EASY": {
+      "label": "سهل",
+      "description": "استدعاء أساسي وفهم"
+    },
+    "MEDIUM": {
+      "label": "متوسط",
+      "description": "تطبيق وتحليل"
+    },
+    "HARD": {
+      "label": "صعب",
+      "description": "تقييم وإبداع"
+    }
+  },
+
+  "bloomLevels": {
+    "REMEMBER": {
+      "label": "تذكر",
+      "description": "استدعاء الحقائق والمفاهيم الأساسية",
+      "examples": "عرّف، اذكر، سمِّ، حدد، تذكر"
+    },
+    "UNDERSTAND": {
+      "label": "فهم",
+      "description": "شرح الأفكار أو المفاهيم",
+      "examples": "صف، اشرح، لخص، فسّر"
+    },
+    "APPLY": {
+      "label": "تطبيق",
+      "description": "استخدام المعلومات في مواقف جديدة",
+      "examples": "نفذ، حل، استخدم، وضح"
+    },
+    "ANALYZE": {
+      "label": "تحليل",
+      "description": "رسم الروابط بين الأفكار",
+      "examples": "قارن، قابل، افحص، صنف"
+    },
+    "EVALUATE": {
+      "label": "تقييم",
+      "description": "تبرير قرار أو مسار عمل",
+      "examples": "قيّم، انتقد، احكم، أوصِ"
+    },
+    "CREATE": {
+      "label": "إبداع",
+      "description": "إنتاج عمل جديد أو أصلي",
+      "examples": "صمم، ابنِ، طوّر، صغ"
+    }
+  },
+
+  "sources": {
+    "MANUAL": "يدوي",
+    "AI": "ذكاء اصطناعي",
+    "IMPORTED": "مستورد"
+  },
+
+  "common": {
+    "loading": "جارٍ التحميل...",
+    "noResults": "لا توجد نتائج",
+    "error": "حدث خطأ",
+    "success": "نجح",
+    "optional": "اختياري",
+    "required": "مطلوب",
+    "searchPlaceholder": "بحث...",
+    "filterBy": "تصفية بواسطة {{field}}",
+    "sortBy": "ترتيب بواسطة {{field}}",
+    "loadMore": "تحميل المزيد",
+    "showingResults": "عرض {{count}} من {{total}} نتيجة"
+  }
+}

@@ -1,0 +1,298 @@
+{
+  "title": "Auto-Marking",
+  "dashboard": "Marking Dashboard",
+  "description": "Grade student submissions with AI assistance",
+
+  "navigation": {
+    "dashboard": "Dashboard",
+    "questionBank": "Question Bank",
+    "questions": "Questions",
+    "grading": "Grading",
+    "analytics": "Analytics"
+  },
+
+  "statistics": {
+    "totalSubmissions": "Total Submissions",
+    "notStarted": "Not Started",
+    "needsReview": "Needs Review",
+    "completed": "Completed",
+    "inProgress": "In Progress",
+    "autoGraded": "Auto-Graded",
+    "aiGraded": "AI Graded",
+    "totalQuestions": "Total Questions",
+    "autoGradable": "Auto-Gradable",
+    "withRubrics": "With Rubrics"
+  },
+
+  "tabs": {
+    "all": "All",
+    "pending": "Pending",
+    "review": "Needs Review",
+    "completed": "Completed"
+  },
+
+  "questionTypes": {
+    "multipleChoice": "Multiple Choice",
+    "trueFalse": "True/False",
+    "shortAnswer": "Short Answer",
+    "essay": "Essay",
+    "fillInBlank": "Fill in the Blank",
+    "matching": "Matching"
+  },
+
+  "difficulty": {
+    "easy": "Easy",
+    "medium": "Medium",
+    "hard": "Hard"
+  },
+
+  "bloomLevels": {
+    "remember": "Remember",
+    "understand": "Understand",
+    "apply": "Apply",
+    "analyze": "Analyze",
+    "evaluate": "Evaluate",
+    "create": "Create"
+  },
+
+  "gradingMethods": {
+    "auto": "Automatic",
+    "aiAssisted": "AI Assisted",
+    "manual": "Manual"
+  },
+
+  "submissionTypes": {
+    "digital": "Digital",
+    "upload": "Upload",
+    "ocr": "OCR Processed"
+  },
+
+  "status": {
+    "notStarted": "Not Started",
+    "inProgress": "In Progress",
+    "autoGraded": "Auto-Graded",
+    "aiGraded": "AI Graded",
+    "reviewed": "Reviewed",
+    "completed": "Completed"
+  },
+
+  "table": {
+    "student": "Student",
+    "question": "Question",
+    "type": "Type",
+    "status": "Status",
+    "score": "Score",
+    "method": "Method",
+    "review": "Review",
+    "actions": "Actions",
+    "noSubmissions": "No submissions to grade",
+    "showing": "Showing",
+    "of": "of",
+    "submissions": "submissions",
+    "search": "Search students, questions..."
+  },
+
+  "buttons": {
+    "newQuestion": "New Question",
+    "createQuestion": "Create Question",
+    "editQuestion": "Edit Question",
+    "deleteQuestion": "Delete Question",
+    "saveQuestion": "Save Question",
+    "cancel": "Cancel",
+    "save": "Save",
+    "autoGrade": "Auto Grade",
+    "aiGrade": "AI Grade",
+    "manualGrade": "Manual Grade",
+    "saveGrade": "Save Grade",
+    "override": "Override",
+    "viewAnswer": "View Answer",
+    "viewRubric": "View Rubric",
+    "createRubric": "Create Rubric",
+    "exportGrades": "Export Grades",
+    "bulkGrade": "Bulk Grade",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "submit": "Submit"
+  },
+
+  "questionBank": {
+    "title": "Question Bank",
+    "description": "Manage your reusable question library",
+    "noQuestions": "No questions yet. Create your first question to get started.",
+    "createFirst": "Create your first question",
+    "points": "points",
+    "criteria": "criteria",
+    "tags": "Tags"
+  },
+
+  "questionForm": {
+    "questionText": "Question Text",
+    "questionTextPlaceholder": "Enter your question here...",
+    "questionType": "Question Type",
+    "selectQuestionType": "Select question type",
+    "difficulty": "Difficulty",
+    "selectDifficulty": "Select difficulty level",
+    "bloomLevel": "Bloom's Level",
+    "selectBloomLevel": "Select Bloom's taxonomy level",
+    "points": "Points",
+    "pointsPlaceholder": "Enter points",
+    "timeEstimate": "Time Estimate (minutes)",
+    "timeEstimatePlaceholder": "Estimated time to answer",
+    "explanation": "Explanation",
+    "explanationPlaceholder": "Explain why this is the correct answer...",
+    "sampleAnswer": "Sample Answer",
+    "sampleAnswerPlaceholder": "Provide an example answer...",
+    "tags": "Tags",
+    "tagsPlaceholder": "algebra, equations, grade-9",
+    "imageUrl": "Image URL (optional)",
+    "imageUrlPlaceholder": "https://example.com/image.jpg"
+  },
+
+  "options": {
+    "title": "Answer Options",
+    "addOption": "Add Option",
+    "removeOption": "Remove Option",
+    "optionText": "Option Text",
+    "isCorrect": "Correct Answer",
+    "atLeastTwo": "Add at least 2 options",
+    "atLeastOneCorrect": "Mark at least one option as correct"
+  },
+
+  "rubric": {
+    "title": "Grading Rubric",
+    "description": "Define grading criteria for subjective questions",
+    "rubricTitle": "Rubric Title",
+    "rubricTitlePlaceholder": "Enter rubric title...",
+    "rubricDescription": "Rubric Description",
+    "rubricDescriptionPlaceholder": "Describe the grading criteria...",
+    "criteria": "Criteria",
+    "addCriterion": "Add Criterion",
+    "removeCriterion": "Remove Criterion",
+    "criterion": "Criterion",
+    "criterionPlaceholder": "What to evaluate",
+    "criterionDescription": "Description",
+    "criterionDescriptionPlaceholder": "Detailed description...",
+    "maxPoints": "Max Points",
+    "totalPoints": "Total Points",
+    "noRubric": "No rubric defined for this question"
+  },
+
+  "grading": {
+    "title": "Grade Submission",
+    "question": "Question",
+    "studentAnswer": "Student Answer",
+    "noAnswer": "No answer provided",
+    "uploadedFile": "Uploaded File",
+    "viewUploadedFile": "View Uploaded File",
+    "ocrExtractedText": "OCR Extracted Text",
+    "ocrPending": "OCR processing pending...",
+    "currentGrade": "Current Grade",
+    "score": "Score",
+    "status": "Status",
+    "gradingMethod": "Grading Method",
+    "aiConfidence": "AI Confidence",
+    "aiReasoning": "AI Reasoning",
+    "feedback": "Feedback",
+    "manualGrading": "Manual Grading",
+    "pointsAwarded": "Points Awarded",
+    "feedbackPlaceholder": "Provide constructive feedback to the student...",
+    "maxPoints": "Max",
+    "confidence": "Confidence"
+  },
+
+  "aiGrading": {
+    "processing": "AI is grading...",
+    "highConfidence": "High confidence AI grading",
+    "mediumConfidence": "Medium confidence - review suggested",
+    "lowConfidence": "Low confidence - review required",
+    "poorConfidence": "Very low confidence - manual grading recommended",
+    "needsReview": "This grade needs teacher review"
+  },
+
+  "ocr": {
+    "processing": "Processing OCR...",
+    "highConfidence": "High confidence OCR extraction",
+    "mediumConfidence": "Medium confidence - review recommended",
+    "lowConfidence": "Low confidence - manual review required",
+    "poorQuality": "Poor OCR quality - manual entry recommended",
+    "extractedText": "Extracted Text",
+    "confidence": "Confidence"
+  },
+
+  "override": {
+    "title": "Override Grade",
+    "reason": "Reason for Override",
+    "reasonPlaceholder": "Explain why you're changing the grade...",
+    "previousScore": "Previous Score",
+    "newScore": "New Score",
+    "confirmOverride": "Confirm Override"
+  },
+
+  "bulkGrading": {
+    "title": "Bulk Grade Exam",
+    "selectStudents": "Select Students",
+    "allStudents": "All Students",
+    "selectQuestions": "Select Questions",
+    "allQuestions": "All Questions",
+    "autoGradeOnly": "Auto-grade only (skip subjective questions)",
+    "processing": "Grading in progress...",
+    "completed": "Bulk grading completed",
+    "graded": "Graded",
+    "failed": "Failed",
+    "total": "Total"
+  },
+
+  "messages": {
+    "questionCreated": "Question created successfully",
+    "questionUpdated": "Question updated successfully",
+    "questionDeleted": "Question deleted successfully",
+    "rubricCreated": "Rubric created successfully",
+    "answerSubmitted": "Answer submitted successfully",
+    "gradeSubmitted": "Grade submitted successfully",
+    "gradeOverridden": "Grade overridden successfully",
+    "ocrProcessed": "OCR processed successfully",
+    "bulkGradeCompleted": "Bulk grading completed successfully",
+    "error": "An error occurred",
+    "unauthorized": "Unauthorized",
+    "notFound": "Not found",
+    "invalidData": "Invalid data"
+  },
+
+  "errors": {
+    "questionRequired": "Question text is required",
+    "questionMinLength": "Question must be at least 10 characters",
+    "typeRequired": "Question type is required",
+    "difficultyRequired": "Difficulty level is required",
+    "bloomLevelRequired": "Bloom's level is required",
+    "pointsRequired": "Points are required",
+    "pointsMin": "Points must be at least 1",
+    "pointsMax": "Points cannot exceed 100",
+    "optionsRequired": "Options are required for this question type",
+    "optionsMinTwo": "At least 2 options are required",
+    "optionsCorrectRequired": "At least one correct answer is required",
+    "rubricRequired": "Rubric is required for essay questions",
+    "criteriaRequired": "At least one criterion is required",
+    "answerRequired": "Answer is required",
+    "scoreRequired": "Score is required",
+    "scoreInvalid": "Score must be between 0 and max points",
+    "reasonRequired": "Reason is required for grade override",
+    "reasonMinLength": "Reason must be at least 10 characters"
+  },
+
+  "analytics": {
+    "title": "Grading Analytics",
+    "overview": "Overview",
+    "averageScore": "Average Score",
+    "highestScore": "Highest Score",
+    "lowestScore": "Lowest Score",
+    "medianScore": "Median Score",
+    "passingRate": "Passing Rate",
+    "gradeDistribution": "Grade Distribution",
+    "byQuestionType": "By Question Type",
+    "byDifficulty": "By Difficulty",
+    "byGradingMethod": "By Grading Method",
+    "totalTime": "Total Grading Time",
+    "averageTime": "Average Time per Submission"
+  }
+}
