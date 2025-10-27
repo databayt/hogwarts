@@ -17,29 +17,29 @@ enum LibraryUserStatus {
 
 // Book Model - Core library resource
 model Book {
-  id               String          @id @default(cuid())
-  title            String
-  author           String
-  genre            String
-  rating           Int             @default(0)
-  coverUrl         String
-  coverColor       String          @default("#000000")
-  description      String          @db.Text
-  totalCopies      Int             @default(1)
-  availableCopies  Int             @default(1)
-  videoUrl         String?
-  summary          String          @db.Text
+  id              String  @id @default(cuid())
+  title           String
+  author          String
+  genre           String
+  rating          Int     @default(0)
+  coverUrl        String
+  coverColor      String  @default("#000000")
+  description     String  @db.Text
+  totalCopies     Int     @default(1)
+  availableCopies Int     @default(1)
+  videoUrl        String?
+  summary         String  @db.Text
 
   // Multi-tenant support
-  schoolId         String
-  school           School          @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  schoolId String
+  school   School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
 
   // Relations
-  borrowRecords    BorrowRecord[]
+  borrowRecords BorrowRecord[]
 
   // Timestamps
-  createdAt        DateTime        @default(now())
-  updatedAt        DateTime        @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([schoolId])
   @@index([schoolId, title])
@@ -48,28 +48,28 @@ model Book {
 
 // Borrow Record Model - Tracks book borrowing
 model BorrowRecord {
-  id               String          @id @default(cuid())
+  id String @id @default(cuid())
 
   // Relations
-  userId           String
-  user             User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  bookId           String
-  book             Book            @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  bookId String
+  book   Book   @relation(fields: [bookId], references: [id], onDelete: Cascade)
 
   // Multi-tenant support
-  schoolId         String
-  school           School          @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  schoolId String
+  school   School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
 
   // Borrow details
-  borrowDate       DateTime        @default(now())
-  dueDate          DateTime
-  returnDate       DateTime?
-  status           BorrowStatus    @default(BORROWED)
+  borrowDate DateTime     @default(now())
+  dueDate    DateTime
+  returnDate DateTime?
+  status     BorrowStatus @default(BORROWED)
 
   // Timestamps
-  createdAt        DateTime        @default(now())
-  updatedAt        DateTime        @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([userId, schoolId])
   @@index([bookId, schoolId])

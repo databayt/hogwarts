@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label"
 import { ArrowLeft, Brain, Zap, Save } from "lucide-react"
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { formatPoints, formatConfidence, getAIConfidenceIndicator } from "@/components/platform/mark/utils"
+import { formatPoints, formatConfidence, getAIConfidenceIndicator } from "@/components/platform/exams/mark/utils"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import type { Locale } from "@/components/internationalization/config"
 

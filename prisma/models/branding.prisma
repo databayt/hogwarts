@@ -1,27 +1,27 @@
 // Branding and Visibility Models
 
 model SchoolBranding {
-  id                String   @id @default(cuid())
-  schoolId          String   @unique
-  primaryColor      String?  // Hex color code
-  secondaryColor    String?  // Hex color code
-  borderRadius      String?  // none, sm, md, lg, xl, full
-  shadow           String?  // none, sm, md, lg, xl
-  customFontUrl    String?
-  customCssUrl     String?
+  id             String  @id @default(cuid())
+  schoolId       String  @unique
+  primaryColor   String? // Hex color code
+  secondaryColor String? // Hex color code
+  borderRadius   String? // none, sm, md, lg, xl, full
+  shadow         String? // none, sm, md, lg, xl
+  customFontUrl  String?
+  customCssUrl   String?
 
   // Visibility settings
-  isPubliclyListed Boolean  @default(true)
-  allowSelfEnrollment Boolean @default(false)
+  isPubliclyListed      Boolean @default(true)
+  allowSelfEnrollment   Boolean @default(false)
   requireParentApproval Boolean @default(true)
-  informationSharing String @default("limited-sharing") // full-transparency, limited-sharing
+  informationSharing    String  @default("limited-sharing") // full-transparency, limited-sharing
 
   // Import tracking
-  lastImportDate   DateTime?
-  lastImportType   String?  // csv, api, manual
-  importStatus     String?  // success, failed, in-progress
-  importErrors     String?  // JSON string of errors
-  totalImported    Int      @default(0)
+  lastImportDate DateTime?
+  lastImportType String? // csv, api, manual
+  importStatus   String? // success, failed, in-progress
+  importErrors   String? // JSON string of errors
+  totalImported  Int       @default(0)
 
   school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
 

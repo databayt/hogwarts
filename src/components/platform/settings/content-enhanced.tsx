@@ -18,6 +18,7 @@ const RoleManagement = React.lazy(() => import("./role-management").then(m => ({
 const RoleSwitcher = React.lazy(() => import("./role-switcher").then(m => ({ default: m.RoleSwitcher })));
 const PermissionsPanel = React.lazy(() => import("./permissions-panel").then(m => ({ default: m.PermissionsPanel })));
 const NotificationSettings = React.lazy(() => import("./notification-settings").then(m => ({ default: m.NotificationSettings })));
+const AppearanceSettings = React.lazy(() => import("./appearance-settings").then(m => ({ default: m.AppearanceSettings })));
 
 interface Props {
   dictionary: Dictionary;
@@ -65,6 +66,10 @@ export function EnhancedSettingsContent({ dictionary, lang }: Props) {
     {
       value: "notifications",
       label: dictionary?.school?.settings?.notifications || "Notifications",
+    },
+    {
+      value: "appearance",
+      label: dictionary?.school?.settings?.appearance || "Appearance",
     },
     {
       value: "advanced",
@@ -155,6 +160,13 @@ export function EnhancedSettingsContent({ dictionary, lang }: Props) {
         <TabsContent value="notifications" className="space-y-6">
           <React.Suspense fallback={<LoadingFallback />}>
             <NotificationSettings dictionary={dictionary.school} />
+          </React.Suspense>
+        </TabsContent>
+
+        {/* Appearance Settings */}
+        <TabsContent value="appearance" className="space-y-6">
+          <React.Suspense fallback={<LoadingFallback />}>
+            <AppearanceSettings dictionary={dictionary} lang={lang} />
           </React.Suspense>
         </TabsContent>
 

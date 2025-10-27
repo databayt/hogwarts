@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { useModal } from "@/components/atom/modal/context";
 import Modal from "@/components/atom/modal/modal";
-import { ExamCreateForm } from "@/components/platform/exams/form";
+import { ExamCreateForm } from "./form";
 import { ExportButton } from "./export-button";
 import { getExams } from "./actions";
 

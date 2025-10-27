@@ -2,104 +2,102 @@
 // Part of the Hogwarts School Management System
 
 enum GeoFenceType {
-  SCHOOL_GROUNDS    // Main campus boundary (triggers auto-attendance)
-  CLASSROOM         // Individual classroom zone
-  BUS_ROUTE         // Bus pickup/dropoff area
-  PLAYGROUND        // Playground area
-  CAFETERIA         // Cafeteria area
-  LIBRARY           // Library area
+  SCHOOL_GROUNDS // Main campus boundary (triggers auto-attendance)
+  CLASSROOM // Individual classroom zone
+  BUS_ROUTE // Bus pickup/dropoff area
+  PLAYGROUND // Playground area
+  CAFETERIA // Cafeteria area
+  LIBRARY // Library area
 }
 
 enum GeoEventType {
-  ENTER             // Student entered geofence
-  EXIT              // Student exited geofence
-  INSIDE            // Student confirmed inside (periodic check)
+  ENTER // Student entered geofence
+  EXIT // Student exited geofence
+  INSIDE // Student confirmed inside (periodic check)
 }
 
 // Geofence definitions (school boundaries, classrooms, etc.)
 model GeoFence {
   id          String       @id @default(cuid())
   schoolId    String
-  name        String       // e.g., "Main Campus", "Math Classroom 101"
+  name        String // e.g., "Main Campus", "Math Classroom 101"
   type        GeoFenceType
   description String?
 
   // Option 1: Circular geofence (simpler, faster with Haversine)
-  centerLat   Decimal?     @db.Decimal(10, 8) // Center latitude
-  centerLon   Decimal?     @db.Decimal(11, 8) // Center longitude
-  radiusMeters Int?        // Radius in meters (e.g., 500)
+  centerLat    Decimal? @db.Decimal(10, 8) // Center latitude
+  centerLon    Decimal? @db.Decimal(11, 8) // Center longitude
+  radiusMeters Int? // Radius in meters (e.g., 500)
 
   // Option 2: Polygon geofence (complex shapes, uses PostGIS)
-  polygonGeoJSON String?   @db.Text
+  polygonGeoJSON String? @db.Text
 
-  isActive    Boolean      @default(true)
-  color       String?      @default("#3b82f6") // For dashboard visualization
+  isActive Boolean @default(true)
+  color    String? @default("#3b82f6") // For dashboard visualization
 
-  school      School       @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  events      GeoAttendanceEvent[]
+  school School               @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  events GeoAttendanceEvent[]
 
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
+  @@unique([schoolId, name]) // Geofence names unique within school
   @@index([schoolId, isActive])
   @@index([type])
-  @@unique([schoolId, name]) // Geofence names unique within school
   @@map("geo_fences")
 }
 
 // Raw location traces (GPS breadcrumbs)
 model LocationTrace {
-  id          String   @id @default(cuid())
-  schoolId    String
-  studentId   String
+  id        String @id @default(cuid())
+  schoolId  String
+  studentId String
 
-  lat         Decimal  @db.Decimal(10, 8)
-  lon         Decimal  @db.Decimal(11, 8)
-  accuracy    Float?   // GPS accuracy in meters
-  altitude    Float?   // Altitude in meters (optional)
-  heading     Float?   // Direction of travel (0-360 degrees)
-  speed       Float?   // Speed in m/s (optional)
+  lat      Decimal @db.Decimal(10, 8)
+  lon      Decimal @db.Decimal(11, 8)
+  accuracy Float? // GPS accuracy in meters
+  altitude Float? // Altitude in meters (optional)
+  heading  Float? // Direction of travel (0-360 degrees)
+  speed    Float? // Speed in m/s (optional)
 
-  battery     Int?     // Battery percentage (0-100)
-  deviceId    String?  // Device fingerprint for fraud detection
-  userAgent   String?  // Browser user agent
+  battery   Int? // Battery percentage (0-100)
+  deviceId  String? // Device fingerprint for fraud detection
+  userAgent String? // Browser user agent
 
-  timestamp   DateTime @default(now())
+  timestamp DateTime @default(now())
 
-  school      School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  student     Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  school  School  @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
   // Performance indexes (CRITICAL for multi-tenant and time-series queries)
   @@index([schoolId, studentId, timestamp(sort: Desc)]) // Latest location per student
   @@index([timestamp(sort: Desc)]) // For cleanup/archival (BRIN candidate)
   @@index([schoolId, timestamp(sort: Desc)]) // School-wide queries
-
   @@map("location_traces")
 }
 
 // Geofence entry/exit events
 model GeoAttendanceEvent {
-  id          String       @id @default(cuid())
-  schoolId    String
-  studentId   String
-  geofenceId  String
-  eventType   GeoEventType
+  id         String       @id @default(cuid())
+  schoolId   String
+  studentId  String
+  geofenceId String
+  eventType  GeoEventType
 
   // Event metadata
-  lat         Decimal      @db.Decimal(10, 8) // Location at event time
-  lon         Decimal      @db.Decimal(11, 8)
-  accuracy    Float?
+  lat      Decimal @db.Decimal(10, 8) // Location at event time
+  lon      Decimal @db.Decimal(11, 8)
+  accuracy Float?
 
-  timestamp   DateTime     @default(now())
-  processedAt DateTime?    // When attendance was auto-marked (for audit)
+  timestamp   DateTime  @default(now())
+  processedAt DateTime? // When attendance was auto-marked (for audit)
 
-  school      School       @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  student     Student      @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  geofence    GeoFence     @relation(fields: [geofenceId], references: [id], onDelete: Cascade)
+  school   School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  student  Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  geofence GeoFence @relation(fields: [geofenceId], references: [id], onDelete: Cascade)
 
   @@index([schoolId, geofenceId, timestamp(sort: Desc)])
   @@index([studentId, eventType, timestamp(sort: Desc)])
   @@index([timestamp(sort: Desc)])
-
   @@map("geo_attendance_events")
 }

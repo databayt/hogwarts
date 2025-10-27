@@ -1,7 +1,7 @@
 // Auto-Marking Dashboard Page
 
 import { Suspense } from "react"
-import { MarkingContent } from "@/components/platform/mark/content"
+import { MarkingContent } from "@/components/platform/exams/mark/content"
 import { Skeleton } from "@/components/ui/skeleton"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import type { Locale } from "@/components/internationalization/config"

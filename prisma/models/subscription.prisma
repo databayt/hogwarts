@@ -1,24 +1,24 @@
 // Subscription and Pricing Models
 
 model SubscriptionTier {
-  id                String   @id @default(cuid())
-  name              String   // basic, premium, enterprise
-  description       String
-  monthlyPrice      Int     // Price in cents
-  annualPrice       Int     // Price in cents
-  maxStudents       Int
-  maxTeachers       Int
-  maxClasses        Int
-  features          String[] // Array of feature identifiers
-  isActive          Boolean  @default(true)
-  
+  id           String   @id @default(cuid())
+  name         String // basic, premium, enterprise
+  description  String
+  monthlyPrice Int // Price in cents
+  annualPrice  Int // Price in cents
+  maxStudents  Int
+  maxTeachers  Int
+  maxClasses   Int
+  features     String[] // Array of feature identifiers
+  isActive     Boolean  @default(true)
+
   // Stripe integration
   monthlyPriceStripeId String? @unique
   yearlyPriceStripeId  String? @unique
-  
+
   // Subscription relationships
-  subscriptions     Subscription[]
-  discounts         Discount[]
+  subscriptions Subscription[]
+  discounts     Discount[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -27,23 +27,23 @@ model SubscriptionTier {
 }
 
 model Discount {
-  id                String   @id @default(cuid())
-  schoolId          String
-  tierId            String
-  code              String   @unique
-  type              String   // percentage, fixed
-  value             Int      // Percentage or fixed amount in cents
-  description       String
-  validFrom         DateTime
-  validUntil        DateTime
-  maxUses           Int?     // Optional maximum number of uses
-  currentUses       Int      @default(0)
-  isActive          Boolean  @default(true)
+  id          String   @id @default(cuid())
+  schoolId    String
+  tierId      String
+  code        String   @unique
+  type        String // percentage, fixed
+  value       Int // Percentage or fixed amount in cents
+  description String
+  validFrom   DateTime
+  validUntil  DateTime
+  maxUses     Int? // Optional maximum number of uses
+  currentUses Int      @default(0)
+  isActive    Boolean  @default(true)
 
   // Relationships
-  school            School           @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  subscriptionTier  SubscriptionTier @relation(fields: [tierId], references: [id])
-  appliedDiscounts  AppliedDiscount[]
+  school           School            @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  subscriptionTier SubscriptionTier  @relation(fields: [tierId], references: [id])
+  appliedDiscounts AppliedDiscount[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -53,67 +53,67 @@ model Discount {
 }
 
 model AppliedDiscount {
-  id          String   @id @default(cuid())
-  schoolId    String
-  discountId  String
-  invoiceId   String
-  amount      Int      // Amount saved in cents
-  appliedAt   DateTime @default(now())
+  id         String   @id @default(cuid())
+  schoolId   String
+  discountId String
+  invoiceId  String
+  amount     Int // Amount saved in cents
+  appliedAt  DateTime @default(now())
 
   // Relationships
-  school      School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  discount    Discount @relation(fields: [discountId], references: [id])
-  invoice     Invoice  @relation(fields: [invoiceId], references: [id])
+  school   School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  discount Discount @relation(fields: [discountId], references: [id])
+  invoice  Invoice  @relation(fields: [invoiceId], references: [id])
 
   @@map("applied_discounts")
 }
 
 // Billing Payment Methods - Stored payment methods for platform subscriptions
 model BillingPaymentMethod {
-  id                String   @id @default(cuid())
-  schoolId          String
-  userId            String
+  id       String @id @default(cuid())
+  schoolId String
+  userId   String
 
   // Payment method details
-  type              PaymentMethodType // card, bank_account, paypal, other
-  provider          String            // stripe, plaid, paypal, manual
+  type     PaymentMethodType // card, bank_account, paypal, other
+  provider String // stripe, plaid, paypal, manual
 
   // Stripe/Provider IDs
   stripePaymentMethodId String? @unique
   stripeCustomerId      String?
 
   // Card details (if applicable)
-  cardBrand         String?           // visa, mastercard, amex
-  cardLast4         String?
-  cardExpMonth      Int?
-  cardExpYear       Int?
+  cardBrand    String? // visa, mastercard, amex
+  cardLast4    String?
+  cardExpMonth Int?
+  cardExpYear  Int?
 
   // Bank account details (if applicable)
-  bankName          String?
-  bankLast4         String?
-  accountType       String?           // checking, savings
+  bankName    String?
+  bankLast4   String?
+  accountType String? // checking, savings
 
   // PayPal/Wallet details
-  email             String?
-  walletId          String?
+  email    String?
+  walletId String?
 
   // Status and defaults
-  isDefault         Boolean  @default(false)
-  isVerified        Boolean  @default(false)
-  status            String   @default("active") // active, expired, failed, removed
+  isDefault  Boolean @default(false)
+  isVerified Boolean @default(false)
+  status     String  @default("active") // active, expired, failed, removed
 
   // Metadata
-  billingName       String?
-  billingEmail      String?
-  billingAddress    Json?             // Address object
+  billingName    String?
+  billingEmail   String?
+  billingAddress Json? // Address object
 
   // Relationships
-  school            School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  billingHistory    BillingHistory[]
+  school         School           @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  billingHistory BillingHistory[]
 
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([schoolId])
   @@index([userId])
@@ -124,40 +124,40 @@ model BillingPaymentMethod {
 
 // Billing History - Complete transaction log
 model BillingHistory {
-  id                String   @id @default(cuid())
-  schoolId          String
-  userId            String
-  subscriptionId    String?
-  invoiceId         String?
-  paymentMethodId   String?
+  id              String  @id @default(cuid())
+  schoolId        String
+  userId          String
+  subscriptionId  String?
+  invoiceId       String?
+  paymentMethodId String?
 
   // Transaction details
-  type              BillingEventType  // payment, refund, credit, subscription_change, payment_failed
-  status            BillingStatus     // success, failed, pending, cancelled
-  amount            Int               // Amount in cents
-  currency          String            @default("USD")
+  type     BillingEventType // payment, refund, credit, subscription_change, payment_failed
+  status   BillingStatus // success, failed, pending, cancelled
+  amount   Int // Amount in cents
+  currency String           @default("USD")
 
   // Payment details
-  paymentProvider   String?           // stripe, paypal, manual
-  transactionId     String?           // External transaction ID
-  receiptUrl        String?
+  paymentProvider String? // stripe, paypal, manual
+  transactionId   String? // External transaction ID
+  receiptUrl      String?
 
   // Description and metadata
-  description       String
-  metadata          Json?             // Additional context
+  description String
+  metadata    Json? // Additional context
 
   // Error tracking
-  errorCode         String?
-  errorMessage      String?
-  retryCount        Int               @default(0)
+  errorCode    String?
+  errorMessage String?
+  retryCount   Int     @default(0)
 
   // Relationships
-  school            School            @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  paymentMethod     BillingPaymentMethod?    @relation(fields: [paymentMethodId], references: [id], onDelete: SetNull)
+  school        School                @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  user          User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  paymentMethod BillingPaymentMethod? @relation(fields: [paymentMethodId], references: [id], onDelete: SetNull)
 
-  createdAt         DateTime          @default(now())
-  updatedAt         DateTime          @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([schoolId])
   @@index([userId])
@@ -170,27 +170,27 @@ model BillingHistory {
 
 // Usage Metrics - Track feature usage against subscription limits
 model UsageMetrics {
-  id                String   @id @default(cuid())
-  schoolId          String
-  subscriptionId    String
+  id             String @id @default(cuid())
+  schoolId       String
+  subscriptionId String
 
   // Current usage
-  currentStudents   Int      @default(0)
-  currentTeachers   Int      @default(0)
-  currentClasses    Int      @default(0)
-  currentStorage    Int      @default(0) // in MB
+  currentStudents Int @default(0)
+  currentTeachers Int @default(0)
+  currentClasses  Int @default(0)
+  currentStorage  Int @default(0) // in MB
 
   // Usage tracking
-  apiCallsThisMonth Int      @default(0)
-  emailsSentThisMonth Int    @default(0)
-  smssSentThisMonth Int      @default(0)
+  apiCallsThisMonth   Int @default(0)
+  emailsSentThisMonth Int @default(0)
+  smssSentThisMonth   Int @default(0)
 
   // Feature usage flags
-  featuresUsed      Json?    // Track which features are actively used
+  featuresUsed Json? // Track which features are actively used
 
   // Billing period
-  periodStart       DateTime
-  periodEnd         DateTime
+  periodStart DateTime
+  periodEnd   DateTime
 
   // Alerts
   studentsWarningTriggered Boolean @default(false)
@@ -198,10 +198,10 @@ model UsageMetrics {
   classesWarningTriggered  Boolean @default(false)
 
   // Relationships
-  school            School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
 
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([schoolId, subscriptionId, periodStart])
   @@index([schoolId])
@@ -212,44 +212,44 @@ model UsageMetrics {
 
 // Credit Notes - Account credits and refunds
 model CreditNote {
-  id                String   @id @default(cuid())
-  schoolId          String
-  userId            String
-  invoiceId         String?
+  id        String  @id @default(cuid())
+  schoolId  String
+  userId    String
+  invoiceId String?
 
   // Credit details
-  creditNumber      String   @unique
-  amount            Int      // Amount in cents
-  remainingAmount   Int      // Unused credit in cents
-  currency          String   @default("USD")
+  creditNumber    String @unique
+  amount          Int // Amount in cents
+  remainingAmount Int // Unused credit in cents
+  currency        String @default("USD")
 
   // Reason and type
-  type              CreditType       // refund, promotional, adjustment, goodwill
-  reason            String           @db.Text
+  type   CreditType // refund, promotional, adjustment, goodwill
+  reason String     @db.Text
 
   // Validity
-  validFrom         DateTime         @default(now())
-  validUntil        DateTime?        // null = never expires
-  status            CreditStatus     @default(ACTIVE)
+  validFrom  DateTime     @default(now())
+  validUntil DateTime? // null = never expires
+  status     CreditStatus @default(ACTIVE)
 
   // Application tracking
-  appliedToInvoices Json?            // Array of {invoiceId, amount, date}
+  appliedToInvoices Json? // Array of {invoiceId, amount, date}
 
   // Approval workflow
-  requestedBy       String?
-  approvedBy        String?
-  approvedAt        DateTime?
+  requestedBy String?
+  approvedBy  String?
+  approvedAt  DateTime?
 
   // Metadata
-  notes             String?          @db.Text
-  metadata          Json?
+  notes    String? @db.Text
+  metadata Json?
 
   // Relationships
-  school            School           @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  user              User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  createdAt         DateTime         @default(now())
-  updatedAt         DateTime         @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([schoolId])
   @@index([userId])
@@ -261,46 +261,46 @@ model CreditNote {
 
 // Billing Preferences - School billing settings
 model BillingPreferences {
-  id                String   @id @default(cuid())
-  schoolId          String   @unique
+  id       String @id @default(cuid())
+  schoolId String @unique
 
   // Payment preferences
-  autoPayEnabled    Boolean  @default(true)
-  paymentRetries    Int      @default(3)
-  retryInterval     Int      @default(3) // days between retries
+  autoPayEnabled Boolean @default(true)
+  paymentRetries Int     @default(3)
+  retryInterval  Int     @default(3) // days between retries
 
   // Notification preferences
-  sendPaymentSuccess Boolean @default(true)
-  sendPaymentFailed  Boolean @default(true)
+  sendPaymentSuccess  Boolean @default(true)
+  sendPaymentFailed   Boolean @default(true)
   sendUpcomingRenewal Boolean @default(true)
-  sendUsageWarnings  Boolean @default(true)
-  reminderDaysBefore Int     @default(7)
+  sendUsageWarnings   Boolean @default(true)
+  reminderDaysBefore  Int     @default(7)
 
   // Invoice preferences
-  invoicePrefix     String   @default("INV")
-  invoiceNumbering  Int      @default(1000)
-  invoiceLogo       String?
-  invoiceFooter     String?  @db.Text
+  invoicePrefix    String  @default("INV")
+  invoiceNumbering Int     @default(1000)
+  invoiceLogo      String?
+  invoiceFooter    String? @db.Text
 
   // Tax settings
-  taxEnabled        Boolean  @default(false)
-  taxId             String?
-  taxRate           Int?     // Percentage * 100 (e.g., 1800 = 18%)
-  taxName           String?  // VAT, GST, etc.
+  taxEnabled Boolean @default(false)
+  taxId      String?
+  taxRate    Int? // Percentage * 100 (e.g., 1800 = 18%)
+  taxName    String? // VAT, GST, etc.
 
   // Currency and locale
-  currency          String   @default("USD")
-  locale            String   @default("en")
+  currency String @default("USD")
+  locale   String @default("en")
 
   // Budget alerts
   budgetAlertEnabled Boolean @default(false)
-  monthlyBudgetLimit Int?    // in cents
+  monthlyBudgetLimit Int? // in cents
 
   // Relationships
-  school            School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
 
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([schoolId])
   @@map("billing_preferences")

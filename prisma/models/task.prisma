@@ -34,7 +34,7 @@ model Task {
   updatedAt      DateTime     @updatedAt @map("updated_at")
 
   // Multi-tenant scoping (optional for demo data-table)
-  schoolId       String?
+  schoolId String?
 
   @@map("shadcn_tasks")
 }

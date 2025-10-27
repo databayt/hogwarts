@@ -2,19 +2,19 @@
 // This is separate from ExpenseReceipt which tracks expense receipts with OCR
 
 model Receipt {
-  id          String   @id @default(cuid())
-  invoiceId   String
-  fileName    String
-  fileUrl     String
-  amount      Int
-  status      String   @default("pending") // pending, approved, rejected
-  notes       String?  @db.Text
-  reviewedAt  DateTime?
+  id         String    @id @default(cuid())
+  invoiceId  String
+  fileName   String
+  fileUrl    String
+  amount     Int
+  status     String    @default("pending") // pending, approved, rejected
+  notes      String?   @db.Text
+  reviewedAt DateTime?
 
-  invoice     Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([invoiceId])
   @@index([status])

@@ -4,7 +4,7 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { getTenantContext } from "@/lib/tenant-context";
-import { examCreateSchema, examUpdateSchema, getExamsSchema } from "@/components/platform/exams/validation";
+import { examCreateSchema, examUpdateSchema, getExamsSchema } from "./validation";
 import { arrayToCSV } from "@/lib/csv-export";
 
 export async function createExam(input: z.infer<typeof examCreateSchema>) {

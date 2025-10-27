@@ -10,15 +10,15 @@ model Teacher {
   emailAddress String
 
   // New profile fields
-  birthDate           DateTime?
-  joiningDate         DateTime?
-  employmentStatus    String    @default("ACTIVE") // ACTIVE, ON_LEAVE, TERMINATED, RETIRED
-  employmentType      String    @default("FULL_TIME") // FULL_TIME, PART_TIME, CONTRACT, SUBSTITUTE
-  contractStartDate   DateTime?
-  contractEndDate     DateTime?
-  profilePhotoUrl     String?
+  birthDate         DateTime?
+  joiningDate       DateTime?
+  employmentStatus  String    @default("ACTIVE") // ACTIVE, ON_LEAVE, TERMINATED, RETIRED
+  employmentType    String    @default("FULL_TIME") // FULL_TIME, PART_TIME, CONTRACT, SUBSTITUTE
+  contractStartDate DateTime?
+  contractEndDate   DateTime?
+  profilePhotoUrl   String?
 
-  school             School                    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  school             School               @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   classes            Class[]
   teacherDepartments TeacherDepartment[]
   phoneNumbers       TeacherPhoneNumber[]
@@ -32,7 +32,7 @@ model Teacher {
   classTeachers    ClassTeacher[] // Co-teaching assignments
 
   // Enhanced Attendance relations
-  accessCards      AccessCard[]
+  accessCards AccessCard[]
 
   // Auth relationship
   userId String? @unique
@@ -169,12 +169,12 @@ model TeacherSubjectExpertise {
 
 // School-level Workload Configuration
 model WorkloadConfig {
-  id                    String @id @default(cuid())
-  schoolId              String @unique
-  minPeriodsPerWeek     Int    @default(15) // Below this = underutilized
-  normalPeriodsPerWeek  Int    @default(20) // Normal teaching load
-  maxPeriodsPerWeek     Int    @default(25) // Recommended maximum
-  overloadThreshold     Int    @default(25) // Above this = overload warning
+  id                   String @id @default(cuid())
+  schoolId             String @unique
+  minPeriodsPerWeek    Int    @default(15) // Below this = underutilized
+  normalPeriodsPerWeek Int    @default(20) // Normal teaching load
+  maxPeriodsPerWeek    Int    @default(25) // Recommended maximum
+  overloadThreshold    Int    @default(25) // Above this = overload warning
 
   school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
 

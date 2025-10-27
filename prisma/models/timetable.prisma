@@ -1,35 +1,31 @@
 // Timetable placement model (weekly slots)
 
 model Timetable {
-  id          String   @id @default(cuid())
+  id          String @id @default(cuid())
   schoolId    String
   termId      String
-  dayOfWeek   Int      // 0 = Sun ... 6 = Sat
+  dayOfWeek   Int // 0 = Sun ... 6 = Sat
   periodId    String
   classId     String
   teacherId   String
   classroomId String
-  weekOffset  Int      @default(0) // 0 current, 1 next
+  weekOffset  Int    @default(0) // 0 current, 1 next
 
   // Relations
-  school     School     @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  term       Term       @relation(fields: [termId], references: [id])
-  period     Period     @relation(fields: [periodId], references: [id])
-  class      Class      @relation(fields: [classId], references: [id])
-  teacher    Teacher    @relation(fields: [teacherId], references: [id])
-  classroom  Classroom  @relation(fields: [classroomId], references: [id])
+  school    School    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  term      Term      @relation(fields: [termId], references: [id])
+  period    Period    @relation(fields: [periodId], references: [id])
+  class     Class     @relation(fields: [classId], references: [id])
+  teacher   Teacher   @relation(fields: [teacherId], references: [id])
+  classroom Classroom @relation(fields: [classroomId], references: [id])
 
-  createdAt  DateTime   @default(now())
-  updatedAt  DateTime   @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([schoolId, termId, dayOfWeek, periodId, classId, weekOffset])
   @@unique([schoolId, termId, dayOfWeek, periodId, teacherId, weekOffset])
   @@unique([schoolId, termId, dayOfWeek, periodId, classroomId, weekOffset])
-
   @@index([schoolId, termId, dayOfWeek])
   @@index([schoolId, termId, periodId])
-
   @@map("timetables")
 }
-
-

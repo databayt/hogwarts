@@ -1,15 +1,15 @@
 // Weekly schedule configuration per school/term
 
 model SchoolWeekConfig {
-  id                       String  @id @default(cuid())
-  schoolId                 String
-  termId                   String?
-  workingDays              Int[]   // e.g., [0,1,2,3,4] for Sun–Thu
-  defaultLunchAfterPeriod  Int?
-  extraLunchRules          Json?
+  id                      String  @id @default(cuid())
+  schoolId                String
+  termId                  String?
+  workingDays             Int[] // e.g., [0,1,2,3,4] for Sun–Thu
+  defaultLunchAfterPeriod Int?
+  extraLunchRules         Json?
 
-  school    School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  term      Term?  @relation(fields: [termId], references: [id])
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  term   Term?  @relation(fields: [termId], references: [id])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -17,5 +17,3 @@ model SchoolWeekConfig {
   @@unique([schoolId, termId])
   @@map("school_week_configs")
 }
-
-

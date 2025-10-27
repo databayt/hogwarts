@@ -1,4 +1,4 @@
-import ExamsContent from '@/components/platform/exams/content'
+import ExamsContent from '@/components/platform/exams/manage/content'
 import { SearchParams } from 'nuqs/server'
 import { getDictionary } from '@/components/internationalization/dictionaries'
 import { type Locale } from '@/components/internationalization/config'

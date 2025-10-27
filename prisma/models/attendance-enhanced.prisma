@@ -31,12 +31,12 @@ model StudentIdentifier {
   studentId  String
   student    Student        @relation(fields: [studentId], references: [id], onDelete: Cascade)
   type       IdentifierType
-  value      String         // Card number, fingerprint hash, face encoding, etc.
-  metadata   Json?          // Additional data specific to the identifier type
+  value      String // Card number, fingerprint hash, face encoding, etc.
+  metadata   Json? // Additional data specific to the identifier type
   isActive   Boolean        @default(true)
   isPrimary  Boolean        @default(false)
   issuedAt   DateTime       @default(now())
-  issuedBy   String?        // User ID who issued this identifier
+  issuedBy   String? // User ID who issued this identifier
   expiresAt  DateTime?
   lastUsedAt DateTime?
   usageCount Int            @default(0)
@@ -59,35 +59,35 @@ enum IdentifierType {
   FINGERPRINT
   FACE_ID
   BLUETOOTH_MAC
-  STUDENT_ID     // Traditional student ID number
-  MOBILE_DEVICE  // Device ID for app-based tracking
+  STUDENT_ID // Traditional student ID number
+  MOBILE_DEVICE // Device ID for app-based tracking
 }
 
 // Attendance devices registry
 model AttendanceDevice {
-  id           String       @id @default(cuid())
-  schoolId     String
-  school       School       @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  deviceId     String       // Unique device identifier
-  name         String
-  type         DeviceType
-  model        String?      // Device model/manufacturer
-  location     String?      // Physical location of device
-  ipAddress    String?
-  macAddress   String?
-  isActive     Boolean      @default(true)
-  isOnline     Boolean      @default(false)
-  lastPing     DateTime?
-  configuration Json?       // Device-specific configuration
-  metadata     Json?        // Additional device information
-  installedAt  DateTime     @default(now())
-  installedBy  String?      // User ID who installed/registered
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
+  id            String     @id @default(cuid())
+  schoolId      String
+  school        School     @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  deviceId      String // Unique device identifier
+  name          String
+  type          DeviceType
+  model         String? // Device model/manufacturer
+  location      String? // Physical location of device
+  ipAddress     String?
+  macAddress    String?
+  isActive      Boolean    @default(true)
+  isOnline      Boolean    @default(false)
+  lastPing      DateTime?
+  configuration Json? // Device-specific configuration
+  metadata      Json? // Additional device information
+  installedAt   DateTime   @default(now())
+  installedBy   String? // User ID who installed/registered
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
 
   // Relations
-  sessions     AttendanceSession[]
-  events       AttendanceEvent[]
+  sessions AttendanceSession[]
+  events   AttendanceEvent[]
 
   @@unique([schoolId, deviceId])
   @@index([type])
@@ -110,27 +110,27 @@ enum DeviceType {
 
 // Attendance sessions for time tracking
 model AttendanceSession {
-  id           String           @id @default(cuid())
-  schoolId     String
-  school       School           @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  studentId    String
-  student      Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  classId      String?
-  class        Class?           @relation(fields: [classId], references: [id], onDelete: SetNull)
-  date         DateTime         @db.Date
-  checkIn      DateTime
-  checkOut     DateTime?
-  duration     Int?             // Duration in minutes
-  method       AttendanceMethod
-  deviceId     String?
-  device       AttendanceDevice? @relation(fields: [deviceId], references: [id], onDelete: SetNull)
-  locations    Json[]           // Array of location updates during session
-  breaks       Json[]           // Break periods during the session
-  activities   Json[]           // Activities performed during session
-  isValid      Boolean          @default(true)
+  id            String            @id @default(cuid())
+  schoolId      String
+  school        School            @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  studentId     String
+  student       Student           @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  classId       String?
+  class         Class?            @relation(fields: [classId], references: [id], onDelete: SetNull)
+  date          DateTime          @db.Date
+  checkIn       DateTime
+  checkOut      DateTime?
+  duration      Int? // Duration in minutes
+  method        AttendanceMethod
+  deviceId      String?
+  device        AttendanceDevice? @relation(fields: [deviceId], references: [id], onDelete: SetNull)
+  locations     Json[] // Array of location updates during session
+  breaks        Json[] // Break periods during the session
+  activities    Json[] // Activities performed during session
+  isValid       Boolean           @default(true)
   invalidReason String?
-  createdAt    DateTime         @default(now())
-  updatedAt    DateTime         @updatedAt
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
 
   @@index([studentId, date])
   @@index([classId])
@@ -141,24 +141,24 @@ model AttendanceSession {
 
 // Attendance events log
 model AttendanceEvent {
-  id           String           @id @default(cuid())
+  id           String              @id @default(cuid())
   schoolId     String
-  school       School           @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  school       School              @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   studentId    String
-  student      Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  student      Student             @relation(fields: [studentId], references: [id], onDelete: Cascade)
   eventType    AttendanceEventType
   method       AttendanceMethod
   deviceId     String?
-  device       AttendanceDevice? @relation(fields: [deviceId], references: [id], onDelete: SetNull)
-  location     Json?            // Location at time of event
-  metadata     Json?            // Event-specific data
-  success      Boolean          @default(true)
+  device       AttendanceDevice?   @relation(fields: [deviceId], references: [id], onDelete: SetNull)
+  location     Json? // Location at time of event
+  metadata     Json? // Event-specific data
+  success      Boolean             @default(true)
   errorMessage String?
   ipAddress    String?
   userAgent    String?
-  timestamp    DateTime         @default(now())
+  timestamp    DateTime            @default(now())
   processedAt  DateTime?
-  processedBy  String?          // System or user that processed the event
+  processedBy  String? // System or user that processed the event
 
   @@index([studentId])
   @@index([eventType])
@@ -184,21 +184,21 @@ enum AttendanceEventType {
 
 // QR Code tracking
 model QRCodeSession {
-  id           String    @id @default(cuid())
-  schoolId     String
-  school       School    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  classId      String
-  class        Class     @relation(fields: [classId], references: [id], onDelete: Cascade)
-  code         String    @unique
-  payload      Json      // Encrypted payload data
-  generatedBy  String    // User ID who generated
-  generatedAt  DateTime  @default(now())
-  expiresAt    DateTime
-  isActive     Boolean   @default(true)
-  scanCount    Int       @default(0)
-  maxScans     Int?      // Maximum allowed scans
-  scannedBy    Json[]    // Array of student IDs who scanned
-  configuration Json?    // QR code specific settings
+  id            String    @id @default(cuid())
+  schoolId      String
+  school        School    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  classId       String
+  class         Class     @relation(fields: [classId], references: [id], onDelete: Cascade)
+  code          String    @unique
+  payload       Json // Encrypted payload data
+  generatedBy   String // User ID who generated
+  generatedAt   DateTime  @default(now())
+  expiresAt     DateTime
+  isActive      Boolean   @default(true)
+  scanCount     Int       @default(0)
+  maxScans      Int? // Maximum allowed scans
+  scannedBy     Json[] // Array of student IDs who scanned
+  configuration Json? // QR code specific settings
   invalidatedAt DateTime?
   invalidatedBy String?
 
@@ -210,25 +210,25 @@ model QRCodeSession {
 
 // Biometric templates storage
 model BiometricTemplate {
-  id           String         @id @default(cuid())
-  schoolId     String
-  school       School         @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  studentId    String
-  student      Student        @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  type         BiometricType
-  template     String         @db.Text // Encrypted biometric template
-  quality      Float?         // Template quality score
-  isActive     Boolean        @default(true)
-  isPrimary    Boolean        @default(false)
-  enrolledAt   DateTime       @default(now())
-  enrolledBy   String?        // User ID who enrolled
-  deviceId     String?        // Device used for enrollment
+  id            String        @id @default(cuid())
+  schoolId      String
+  school        School        @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  studentId     String
+  student       Student       @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  type          BiometricType
+  template      String        @db.Text // Encrypted biometric template
+  quality       Float? // Template quality score
+  isActive      Boolean       @default(true)
+  isPrimary     Boolean       @default(false)
+  enrolledAt    DateTime      @default(now())
+  enrolledBy    String? // User ID who enrolled
+  deviceId      String? // Device used for enrollment
   lastMatchedAt DateTime?
-  matchCount   Int            @default(0)
-  failureCount Int            @default(0)
-  metadata     Json?          // Additional biometric metadata
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
+  matchCount    Int           @default(0)
+  failureCount  Int           @default(0)
+  metadata      Json? // Additional biometric metadata
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
 
   @@unique([schoolId, studentId, type, isPrimary])
   @@index([studentId])
@@ -247,28 +247,28 @@ enum BiometricType {
 
 // RFID/NFC card management
 model AccessCard {
-  id           String       @id @default(cuid())
-  schoolId     String
-  school       School       @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  cardNumber   String       @unique
-  cardType     CardType
-  studentId    String?
-  student      Student?     @relation(fields: [studentId], references: [id], onDelete: SetNull)
-  teacherId    String?
-  teacher      Teacher?     @relation(fields: [teacherId], references: [id], onDelete: SetNull)
-  isActive     Boolean      @default(true)
-  isPrimary    Boolean      @default(false)
-  issuedAt     DateTime     @default(now())
-  issuedBy     String?      // User ID who issued
-  activatedAt  DateTime?
+  id            String    @id @default(cuid())
+  schoolId      String
+  school        School    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  cardNumber    String    @unique
+  cardType      CardType
+  studentId     String?
+  student       Student?  @relation(fields: [studentId], references: [id], onDelete: SetNull)
+  teacherId     String?
+  teacher       Teacher?  @relation(fields: [teacherId], references: [id], onDelete: SetNull)
+  isActive      Boolean   @default(true)
+  isPrimary     Boolean   @default(false)
+  issuedAt      DateTime  @default(now())
+  issuedBy      String? // User ID who issued
+  activatedAt   DateTime?
   deactivatedAt DateTime?
-  expiresAt    DateTime?
-  lastUsedAt   DateTime?
-  usageCount   Int          @default(0)
-  accessLevel  String?      // Access permissions
-  metadata     Json?        // Additional card data
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
+  expiresAt     DateTime?
+  lastUsedAt    DateTime?
+  usageCount    Int       @default(0)
+  accessLevel   String? // Access permissions
+  metadata      Json? // Additional card data
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   @@index([cardType])
   @@index([studentId])
@@ -291,26 +291,26 @@ enum CardType {
 
 // Bluetooth beacon registry
 model BluetoothBeacon {
-  id           String    @id @default(cuid())
-  schoolId     String
-  school       School    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  uuid         String    // Beacon UUID
-  major        Int       // Major value
-  minor        Int       // Minor value
-  macAddress   String    @unique
-  name         String
-  location     String    // Physical location
-  roomId       String?   // Associated classroom
-  signalPower  Int       @default(-59) // Measured power at 1 meter
-  isActive     Boolean   @default(true)
-  batteryLevel Float?    // Battery percentage
-  lastPing     DateTime?
-  configuration Json?    // Beacon-specific settings
-  installedAt  DateTime  @default(now())
-  installedBy  String?   // User ID who installed
-  metadata     Json?     // Additional beacon info
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  id            String    @id @default(cuid())
+  schoolId      String
+  school        School    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  uuid          String // Beacon UUID
+  major         Int // Major value
+  minor         Int // Minor value
+  macAddress    String    @unique
+  name          String
+  location      String // Physical location
+  roomId        String? // Associated classroom
+  signalPower   Int       @default(-59) // Measured power at 1 meter
+  isActive      Boolean   @default(true)
+  batteryLevel  Float? // Battery percentage
+  lastPing      DateTime?
+  configuration Json? // Beacon-specific settings
+  installedAt   DateTime  @default(now())
+  installedBy   String? // User ID who installed
+  metadata      Json? // Additional beacon info
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   @@unique([uuid, major, minor])
   @@index([schoolId])
@@ -321,26 +321,26 @@ model BluetoothBeacon {
 
 // Attendance rules and policies
 model AttendancePolicy {
-  id                String    @id @default(cuid())
-  schoolId          String
-  school            School    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  name              String
-  description       String?
-  isActive          Boolean   @default(true)
-  priority          Int       @default(0)
-  appliesTo         String[]  // Class IDs, Grade levels, or "ALL"
-  methods           AttendanceMethod[] // Allowed methods
-  startTime         DateTime  @db.Time // Class start time
-  graceperiod       Int       @default(15) // Minutes after start time
-  lateThreshold     Int       @default(15) // Minutes to be marked late
-  absentThreshold   Int       @default(30) // Minutes to be marked absent
-  requireCheckOut   Boolean   @default(false)
-  minSessionDuration Int?     // Minimum minutes for valid attendance
-  maxDailyAbsences  Int?      // Maximum absences before alert
-  alertRecipients   String[]  // User IDs to alert
-  exceptions        Json?     // Holiday/special day exceptions
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
+  id                 String             @id @default(cuid())
+  schoolId           String
+  school             School             @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  name               String
+  description        String?
+  isActive           Boolean            @default(true)
+  priority           Int                @default(0)
+  appliesTo          String[] // Class IDs, Grade levels, or "ALL"
+  methods            AttendanceMethod[] // Allowed methods
+  startTime          DateTime           @db.Time // Class start time
+  graceperiod        Int                @default(15) // Minutes after start time
+  lateThreshold      Int                @default(15) // Minutes to be marked late
+  absentThreshold    Int                @default(30) // Minutes to be marked absent
+  requireCheckOut    Boolean            @default(false)
+  minSessionDuration Int? // Minimum minutes for valid attendance
+  maxDailyAbsences   Int? // Maximum absences before alert
+  alertRecipients    String[] // User IDs to alert
+  exceptions         Json? // Holiday/special day exceptions
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
 
   @@index([schoolId])
   @@index([isActive])
@@ -350,26 +350,26 @@ model AttendancePolicy {
 
 // Attendance reports configuration
 model AttendanceReport {
-  id           String         @id @default(cuid())
-  schoolId     String
-  school       School         @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  name         String
-  description  String?
-  type         ReportType
-  frequency    ReportFrequency
-  recipients   String[]       // Email addresses or user IDs
-  filters      Json           // Report filter criteria
-  groupBy      String[]       // Grouping fields
-  includeStats Boolean        @default(true)
-  format       String[]       @default(["PDF", "EXCEL"])
-  template     String?        // Custom template ID
-  isActive     Boolean        @default(true)
-  lastRunAt    DateTime?
-  nextRunAt    DateTime?
-  configuration Json?         // Additional report settings
-  createdBy    String         // User ID who created
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
+  id            String          @id @default(cuid())
+  schoolId      String
+  school        School          @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  name          String
+  description   String?
+  type          ReportType
+  frequency     ReportFrequency
+  recipients    String[] // Email addresses or user IDs
+  filters       Json // Report filter criteria
+  groupBy       String[] // Grouping fields
+  includeStats  Boolean         @default(true)
+  format        String[]        @default(["PDF", "EXCEL"])
+  template      String? // Custom template ID
+  isActive      Boolean         @default(true)
+  lastRunAt     DateTime?
+  nextRunAt     DateTime?
+  configuration Json? // Additional report settings
+  createdBy     String // User ID who created
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
 
   @@index([schoolId])
   @@index([type])

@@ -14,8 +14,8 @@ model Lesson {
   title       String
   description String?
   lessonDate  DateTime
-  startTime   String       // HH:MM format
-  endTime     String       // HH:MM format
+  startTime   String // HH:MM format
+  endTime     String // HH:MM format
   objectives  String?      @db.Text // Learning objectives
   materials   String?      @db.Text // Required materials
   activities  String?      @db.Text // Planned activities

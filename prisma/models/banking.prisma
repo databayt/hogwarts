@@ -2,7 +2,7 @@
 
 model BankAccount {
   id               String   @id @default(cuid())
-  schoolId         String   // Multi-tenant support
+  schoolId         String // Multi-tenant support
   userId           String
   bankId           String
   accountId        String
@@ -15,17 +15,17 @@ model BankAccount {
   mask             String?
   currentBalance   Decimal  @db.Decimal(10, 2)
   availableBalance Decimal  @db.Decimal(10, 2)
-  type             String   // depository, credit, loan, investment
+  type             String // depository, credit, loan, investment
   subtype          String
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
   // Relations
-  school           School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  user             User     @relation("UserBankAccounts", fields: [userId], references: [id], onDelete: Cascade)
-  transactions     Transaction[]
-  sentTransfers    Transfer[] @relation("SentTransfers")
-  receivedTransfers Transfer[] @relation("ReceivedTransfers")
+  school            School        @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  user              User          @relation("UserBankAccounts", fields: [userId], references: [id], onDelete: Cascade)
+  transactions      Transaction[]
+  sentTransfers     Transfer[]    @relation("SentTransfers")
+  receivedTransfers Transfer[]    @relation("ReceivedTransfers")
 
   @@unique([schoolId, accountId]) // Account unique per school
   @@index([schoolId])
@@ -35,16 +35,16 @@ model BankAccount {
 
 model Transaction {
   id              String   @id @default(cuid())
-  schoolId        String   // Multi-tenant support
+  schoolId        String // Multi-tenant support
   accountId       String
   bankAccountId   String
   name            String
   amount          Decimal  @db.Decimal(10, 2)
   date            DateTime
-  paymentChannel  String?  // online, in_store, other
+  paymentChannel  String? // online, in_store, other
   category        String
   subcategory     String?
-  type            String   // debit, credit
+  type            String // debit, credit
   pending         Boolean  @default(false)
   merchantName    String?
   merchantId      String?
@@ -57,8 +57,8 @@ model Transaction {
   createdAt       DateTime @default(now())
 
   // Relations
-  school          School      @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  bankAccount     BankAccount @relation(fields: [bankAccountId], references: [id], onDelete: Cascade)
+  school      School      @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  bankAccount BankAccount @relation(fields: [bankAccountId], references: [id], onDelete: Cascade)
 
   @@index([schoolId])
   @@index([bankAccountId])
@@ -68,23 +68,23 @@ model Transaction {
 }
 
 model Transfer {
-  id              String   @id @default(cuid())
-  schoolId        String   // Multi-tenant support
-  senderBankId    String
-  receiverBankId  String
-  amount          Decimal  @db.Decimal(10, 2)
-  note            String?
-  status          String   // pending, completed, failed
-  transferDate    DateTime
-  dwollaTransferId String?
+  id                String   @id @default(cuid())
+  schoolId          String // Multi-tenant support
+  senderBankId      String
+  receiverBankId    String
+  amount            Decimal  @db.Decimal(10, 2)
+  note              String?
+  status            String // pending, completed, failed
+  transferDate      DateTime
+  dwollaTransferId  String?
   dwollaTransferUrl String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
   // Relations
-  school          School      @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  senderBank      BankAccount @relation("SentTransfers", fields: [senderBankId], references: [id])
-  receiverBank    BankAccount @relation("ReceivedTransfers", fields: [receiverBankId], references: [id])
+  school       School      @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  senderBank   BankAccount @relation("SentTransfers", fields: [senderBankId], references: [id])
+  receiverBank BankAccount @relation("ReceivedTransfers", fields: [receiverBankId], references: [id])
 
   @@unique([schoolId, dwollaTransferId]) // Unique per school
   @@index([schoolId])
@@ -96,19 +96,19 @@ model Transfer {
 
 model PlaidItem {
   id              String   @id @default(cuid())
-  schoolId        String   // Multi-tenant support
+  schoolId        String // Multi-tenant support
   userId          String
   accessToken     String   @db.Text // Encrypted
   itemId          String
   institutionId   String
   institutionName String
-  cursor          String?  // For transaction sync
+  cursor          String? // For transaction sync
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
   // Relations
-  school          School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  user            User     @relation("UserPlaidItems", fields: [userId], references: [id], onDelete: Cascade)
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  user   User   @relation("UserPlaidItems", fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([schoolId, accessToken]) // Unique per school
   @@unique([schoolId, itemId]) // Unique per school
@@ -118,19 +118,19 @@ model PlaidItem {
 }
 
 model DwollaCustomer {
-  id               String   @id @default(cuid())
-  schoolId         String   // Multi-tenant support
-  userId           String
-  customerId       String
-  customerUrl      String
-  status           String   // unverified, suspended, retry, document, verified, deactivated
-  type             String   // personal, business
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  id          String   @id @default(cuid())
+  schoolId    String // Multi-tenant support
+  userId      String
+  customerId  String
+  customerUrl String
+  status      String // unverified, suspended, retry, document, verified, deactivated
+  type        String // personal, business
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   // Relations
-  school           School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  user             User     @relation("UserDwollaCustomers", fields: [userId], references: [id], onDelete: Cascade)
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  user   User   @relation("UserDwollaCustomers", fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([schoolId, userId]) // One customer per user per school
   @@unique([schoolId, customerId]) // Unique per school

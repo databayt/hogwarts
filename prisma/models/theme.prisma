@@ -1,15 +1,15 @@
 model UserTheme {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // Theme metadata
-  name      String   // Theme name (e.g., "Ocean Blue", "Dark Mode", "Custom")
-  isActive  Boolean  @default(false) // Only one theme can be active per user
-  isPreset  Boolean  @default(false) // true for system presets, false for custom themes
+  name     String // Theme name (e.g., "Ocean Blue", "Dark Mode", "Custom")
+  isActive Boolean @default(false) // Only one theme can be active per user
+  isPreset Boolean @default(false) // true for system presets, false for custom themes
 
   // Theme configuration stored as JSON
-  themeConfig Json   // Complete CSS variable configuration
+  themeConfig Json // Complete CSS variable configuration
 
   // Timestamps
   createdAt DateTime @default(now())

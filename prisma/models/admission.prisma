@@ -1,23 +1,23 @@
 // Admission Campaign - Defines admission periods
 model AdmissionCampaign {
-  id                String              @id @default(cuid())
-  schoolId          String
-  name              String
-  academicYear      String
-  startDate         DateTime
-  endDate           DateTime
-  status            AdmissionStatus     @default(DRAFT)
-  description       String?
+  id                  String          @id @default(cuid())
+  schoolId            String
+  name                String
+  academicYear        String
+  startDate           DateTime
+  endDate             DateTime
+  status              AdmissionStatus @default(DRAFT)
+  description         String?
   eligibilityCriteria Json?
-  requiredDocuments Json?
-  applicationFee    Decimal?            @db.Decimal(10, 2)
-  totalSeats        Int
-  reservedSeats     Json?               // Category-wise reservation
-  createdAt         DateTime            @default(now())
-  updatedAt         DateTime            @updatedAt
+  requiredDocuments   Json?
+  applicationFee      Decimal?        @db.Decimal(10, 2)
+  totalSeats          Int
+  reservedSeats       Json? // Category-wise reservation
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
 
-  school            School              @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  applications      Application[]
+  school       School        @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  applications Application[]
 
   @@index([schoolId])
   @@index([status])
@@ -26,96 +26,96 @@ model AdmissionCampaign {
 
 // Student Application
 model Application {
-  id                String              @id @default(cuid())
+  id                String @id @default(cuid())
   schoolId          String
   campaignId        String
-  applicationNumber String              @unique
+  applicationNumber String @unique
 
   // Applicant Details
-  firstName         String
-  middleName        String?
-  lastName          String
-  dateOfBirth       DateTime
-  gender            Gender
-  nationality       String
-  religion          String?
-  category          String?             // General/OBC/SC/ST etc
+  firstName   String
+  middleName  String?
+  lastName    String
+  dateOfBirth DateTime
+  gender      Gender
+  nationality String
+  religion    String?
+  category    String? // General/OBC/SC/ST etc
 
   // Contact Information
-  email             String
-  phone             String
-  alternatePhone    String?
-  address           String
-  city              String
-  state             String
-  postalCode        String
-  country           String              @default("India")
+  email          String
+  phone          String
+  alternatePhone String?
+  address        String
+  city           String
+  state          String
+  postalCode     String
+  country        String  @default("India")
 
   // Parent/Guardian Details
-  fatherName        String
-  fatherOccupation  String?
-  fatherPhone       String?
-  fatherEmail       String?
-  motherName        String
-  motherOccupation  String?
-  motherPhone       String?
-  motherEmail       String?
-  guardianName      String?
-  guardianRelation  String?
-  guardianPhone     String?
-  guardianEmail     String?
+  fatherName       String
+  fatherOccupation String?
+  fatherPhone      String?
+  fatherEmail      String?
+  motherName       String
+  motherOccupation String?
+  motherPhone      String?
+  motherEmail      String?
+  guardianName     String?
+  guardianRelation String?
+  guardianPhone    String?
+  guardianEmail    String?
 
   // Academic Details
-  previousSchool    String?
-  previousClass     String?
-  previousMarks     Decimal?            @db.Decimal(5, 2)
-  previousPercentage Decimal?           @db.Decimal(5, 2)
-  achievements      String?             @db.Text
+  previousSchool     String?
+  previousClass      String?
+  previousMarks      Decimal? @db.Decimal(5, 2)
+  previousPercentage Decimal? @db.Decimal(5, 2)
+  achievements       String?  @db.Text
 
   // Application Details
-  applyingForClass  String
-  preferredStream   String?
-  secondLanguage    String?
-  thirdLanguage     String?
+  applyingForClass String
+  preferredStream  String?
+  secondLanguage   String?
+  thirdLanguage    String?
 
   // Documents
-  documents         Json?               // Array of document URLs/IDs
-  photoUrl          String?
-  signatureUrl      String?
+  documents    Json? // Array of document URLs/IDs
+  photoUrl     String?
+  signatureUrl String?
 
   // Status Tracking
-  status            AdmissionApplicationStatus   @default(DRAFT)
-  submittedAt       DateTime?
-  reviewedAt        DateTime?
-  reviewedBy        String?
-  reviewNotes       String?             @db.Text
+  status      AdmissionApplicationStatus @default(DRAFT)
+  submittedAt DateTime?
+  reviewedAt  DateTime?
+  reviewedBy  String?
+  reviewNotes String?                    @db.Text
 
   // Merit & Selection
-  entranceScore     Decimal?            @db.Decimal(5, 2)
-  interviewScore    Decimal?            @db.Decimal(5, 2)
-  meritScore        Decimal?            @db.Decimal(5, 2)
-  meritRank         Int?
-  waitlistNumber    Int?
+  entranceScore  Decimal? @db.Decimal(5, 2)
+  interviewScore Decimal? @db.Decimal(5, 2)
+  meritScore     Decimal? @db.Decimal(5, 2)
+  meritRank      Int?
+  waitlistNumber Int?
 
   // Admission Details
-  admissionOffered  Boolean             @default(false)
-  offerDate         DateTime?
-  offerExpiryDate   DateTime?
-  admissionConfirmed Boolean            @default(false)
-  confirmationDate  DateTime?
-  enrollmentNumber  String?
+  admissionOffered   Boolean   @default(false)
+  offerDate          DateTime?
+  offerExpiryDate    DateTime?
+  admissionConfirmed Boolean   @default(false)
+  confirmationDate   DateTime?
+  enrollmentNumber   String?
 
   // Payment
-  applicationFeePaid Boolean            @default(false)
-  paymentId         String?
-  paymentDate       DateTime?
+  applicationFeePaid Boolean   @default(false)
+  paymentId          String?
+  paymentDate        DateTime?
 
-  createdAt         DateTime            @default(now())
-  updatedAt         DateTime            @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  school            School              @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  campaign          AdmissionCampaign   @relation(fields: [campaignId], references: [id], onDelete: Cascade)
-  communications    Communication[]
+  school         School            @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  campaign       AdmissionCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  communications Communication[]
 
   @@unique([schoolId, applicationNumber])
   @@index([schoolId])
@@ -127,18 +127,18 @@ model Application {
 
 // Communication with applicants
 model Communication {
-  id                String              @id @default(cuid())
-  schoolId          String
-  applicationId     String
-  type              CommunicationType
-  subject           String
-  message           String              @db.Text
-  sentAt            DateTime            @default(now())
-  sentBy            String
-  status            CommunicationStatus @default(SENT)
+  id            String              @id @default(cuid())
+  schoolId      String
+  applicationId String
+  type          CommunicationType
+  subject       String
+  message       String              @db.Text
+  sentAt        DateTime            @default(now())
+  sentBy        String
+  status        CommunicationStatus @default(SENT)
 
-  school            School              @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  application       Application         @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  school      School      @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
 
   @@index([schoolId])
   @@index([applicationId])

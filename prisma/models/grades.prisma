@@ -2,7 +2,7 @@
 
 // Individual grade/result entry (can be for assignments, exams, or standalone grades)
 model Result {
-  id           String   @id @default(cuid())
+  id           String  @id @default(cuid())
   schoolId     String
   studentId    String
   classId      String
@@ -11,26 +11,26 @@ model Result {
   subjectId    String? // Optional: for subject-specific grades
 
   // Scoring
-  score        Decimal  @db.Decimal(6, 2)
-  maxScore     Decimal  @db.Decimal(6, 2)
-  percentage   Float    // Auto-calculated
-  grade        String   // Letter grade (A+, A, B+, etc.)
+  score      Decimal @db.Decimal(6, 2)
+  maxScore   Decimal @db.Decimal(6, 2)
+  percentage Float // Auto-calculated
+  grade      String // Letter grade (A+, A, B+, etc.)
 
   // Metadata
-  title        String? // Title if standalone grade entry
-  description  String?  @db.Text
-  feedback     String?  @db.Text
-  submittedAt  DateTime?
-  gradedAt     DateTime
-  gradedBy     String? // Teacher ID who entered the grade
+  title       String? // Title if standalone grade entry
+  description String?   @db.Text
+  feedback    String?   @db.Text
+  submittedAt DateTime?
+  gradedAt    DateTime
+  gradedBy    String? // Teacher ID who entered the grade
 
   // Relations
-  school     School              @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  student    Student             @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  class      Class               @relation(fields: [classId], references: [id], onDelete: Cascade)
-  assignment Assignment?         @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
-  exam       Exam?               @relation(fields: [examId], references: [id], onDelete: Cascade)
-  subject    Subject?            @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  school     School      @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  student    Student     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  class      Class       @relation(fields: [classId], references: [id], onDelete: Cascade)
+  assignment Assignment? @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  exam       Exam?       @relation(fields: [examId], references: [id], onDelete: Cascade)
+  subject    Subject?    @relation(fields: [subjectId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -46,36 +46,36 @@ model Result {
 
 // Report card for a specific term/period
 model ReportCard {
-  id            String   @id @default(cuid())
-  schoolId      String
-  studentId     String
-  termId        String
-  yearLevelId   String?
+  id          String  @id @default(cuid())
+  schoolId    String
+  studentId   String
+  termId      String
+  yearLevelId String?
 
   // Overall performance
   overallGrade  String?
   overallGPA    Decimal? @db.Decimal(3, 2)
-  rank          Int?     // Student rank in class
-  totalStudents Int?     // Total students in class for rank context
+  rank          Int? // Student rank in class
+  totalStudents Int? // Total students in class for rank context
 
   // Attendance summary
-  daysPresent   Int?
-  daysAbsent    Int?
-  daysLate      Int?
+  daysPresent Int?
+  daysAbsent  Int?
+  daysLate    Int?
 
   // Comments
-  teacherComments String? @db.Text
+  teacherComments   String? @db.Text
   principalComments String? @db.Text
 
   // Status
-  isPublished   Boolean  @default(false)
-  publishedAt   DateTime?
+  isPublished Boolean   @default(false)
+  publishedAt DateTime?
 
   // Relations
-  school    School     @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  student   Student    @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  term      Term       @relation(fields: [termId], references: [id], onDelete: Cascade)
-  yearLevel YearLevel? @relation(fields: [yearLevelId], references: [id], onDelete: SetNull)
+  school    School            @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  student   Student           @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  term      Term              @relation(fields: [termId], references: [id], onDelete: Cascade)
+  yearLevel YearLevel?        @relation(fields: [yearLevelId], references: [id], onDelete: SetNull)
   grades    ReportCardGrade[]
 
   createdAt DateTime @default(now())
@@ -95,18 +95,18 @@ model ReportCardGrade {
   reportCardId String
   subjectId    String
 
-  grade        String
-  score        Decimal? @db.Decimal(6, 2)
-  maxScore     Decimal? @db.Decimal(6, 2)
-  percentage   Float?
-  credits      Decimal? @db.Decimal(3, 1)
+  grade      String
+  score      Decimal? @db.Decimal(6, 2)
+  maxScore   Decimal? @db.Decimal(6, 2)
+  percentage Float?
+  credits    Decimal? @db.Decimal(3, 1)
 
-  comments     String? @db.Text
+  comments String? @db.Text
 
   // Relations
-  school     School      @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  reportCard ReportCard  @relation(fields: [reportCardId], references: [id], onDelete: Cascade)
-  subject    Subject     @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  school     School     @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  reportCard ReportCard @relation(fields: [reportCardId], references: [id], onDelete: Cascade)
+  subject    Subject    @relation(fields: [subjectId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
