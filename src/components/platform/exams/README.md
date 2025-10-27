@@ -1,513 +1,460 @@
-## Exams — Examination Management
+# Exam Block System
 
-**Admin Control Center for Exam Scheduling and Assessment**
+**Comprehensive Examination Management with 5 Feature-Based Sub-Blocks**
 
-The Exams feature empowers school administrators and teachers to schedule examinations, manage exam logistics, enter marks, track student performance, and generate comprehensive assessment reports.
+The Exam Block provides end-to-end examination management from question creation to result generation with PDF reports. Built using feature-based architecture where each sub-block is fully self-contained.
 
-### What Admins Can Do
+## 📦 Architecture Overview
 
-**Core Capabilities:**
-- 📝 Create and schedule exams (date, time, duration)
-- 📚 Assign exams to classes and subjects
-- ⏰ Set exam timing (start time, end time, duration)
-- 📊 Configure marking scheme (total marks, passing threshold)
-- 📋 Manage exam types (midterm, final, quiz, test)
-- 🏫 Assign exam halls and invigilators
-- 📁 Export exam schedules to CSV/PDF
-- 🔄 Bulk exam creation for multiple classes
-- 📈 View exam performance analytics
+### Sub-Block Structure
 
-### What Teachers Can Do
-- ✅ Create exams for their assigned classes
-- ✅ Schedule exam date and time
-- ✅ Enter marks for students
-- ✅ View exam results and statistics
-- ✅ Generate grade reports
-- ✅ Export exam marks to CSV
-- ❌ Cannot modify other teachers' exams
-
-### What Students Can View
-- ✅ View upcoming exams (schedule)
-- ✅ See exam details (date, time, duration, total marks)
-- ✅ View their exam scores after marking
-- ✅ See grade analysis and feedback
-- ❌ Cannot view other students' marks
-
-### What Parents Can View
-- ✅ View their child's exam schedule
-- ✅ See exam details and instructions
-- ✅ View child's exam results
-- ✅ Access performance trends
-- ❌ Cannot view full class results
-
-### Current Implementation Status
-**Production-Ready MVP ✅**
-
-**Completed:**
-- ✅ CRUD operations with validation
-- ✅ Multi-step form (basic info → schedule → instructions)
-- ✅ Exam scheduling (date, time, duration)
-- ✅ Class and subject assignment
-- ✅ Total marks and passing threshold configuration
-- ✅ Exam types (MIDTERM, FINAL, QUIZ, TEST, PRACTICAL)
-- ✅ Exam status (PLANNED, IN_PROGRESS, COMPLETED, CANCELLED)
-- ✅ Search and filtering
-- ✅ Multi-tenant isolation (schoolId scoping)
-
-**In Progress:**
-- 🚧 Marks entry interface
-- 🚧 Grade boundaries (A+, A, B+, etc.)
-- 🚧 Exam analytics dashboard
-
-**Planned:**
-- ⏸️ Exam hall assignment
-- ⏸️ Invigilator scheduling
-- ⏸️ Question paper upload
-- ⏸️ Automated grade calculation
-- ⏸️ Performance comparison (class average, median)
-
----
-
-## Admin Workflows
-
-### 1. Create a New Exam
-**Prerequisites:** Classes, subjects, and term already configured
-
-1. Navigate to `/exams`
-2. Click "Create" button in toolbar
-3. Fill in multi-step exam form:
-   - **Step 1 - Basic Information**:
-     - Exam title (e.g., "Mathematics Midterm Exam")
-     - Description/instructions
-     - Select class (e.g., Grade 10A)
-     - Select subject (e.g., Mathematics)
-   - **Step 2 - Schedule & Marks**:
-     - Exam date (date picker)
-     - Start time (e.g., 09:00 AM)
-     - End time (e.g., 11:00 AM)
-     - Duration (auto-calculated or manual, in minutes)
-     - Total marks (e.g., 100)
-     - Passing marks (e.g., 40)
-     - Exam type (Midterm/Final/Quiz/Test/Practical)
-   - **Step 3 - Instructions & Details**:
-     - Exam instructions for students
-     - Materials allowed (calculator, formula sheet, etc.)
-     - Special notes
-4. Click "Save"
-5. System validates and creates exam
-6. Exam status set to "PLANNED"
-7. Success toast confirms creation
-
-### 2. Bulk Create Exams for Multiple Classes
-**Scenario:** Final exams for all Grade 10 sections (A, B, C, D)
-
-1. Navigate to `/exams/bulk-create`
-2. Configure exam template:
-   - Subject: Mathematics
-   - Exam type: Final
-   - Date: 2025-06-15
-   - Time: 09:00 - 11:00
-   - Total marks: 100
-   - Passing marks: 40
-3. Select classes: Grade 10A, 10B, 10C, 10D
-4. Click "Create for All Classes"
-5. System creates 4 identical exams (one per class)
-6. Review created exams in list
-
-### 3. Schedule Exam Calendar
-**View all exams on timeline:**
-
-1. Navigate to `/exams/calendar`
-2. View calendar with color-coded exams:
-   - Green: Upcoming exams
-   - Blue: In progress
-   - Gray: Completed
-   - Red: Cancelled
-3. Filter by:
-   - Class
-   - Subject
-   - Exam type
-   - Date range
-4. Click exam on calendar to view details
-5. Identify scheduling conflicts (same class, same time)
-
-### 4. Enter Exam Marks
-**After exam is completed:**
-
-1. Navigate to exam detail page
-2. Click "Enter Marks" button
-3. System shows class roster with all enrolled students
-4. For each student, enter:
-   - Marks obtained (e.g., 85 out of 100)
-   - Grade (auto-calculated based on boundaries)
-   - Remarks (optional: "Excellent", "Needs improvement")
-5. Validation ensures marks ≤ total marks
-6. Click "Save Marks"
-7. System stores marks in `ExamResult` model
-8. Students can now view their scores
-
-**Bulk Marks Entry:**
-- Import marks from CSV (studentId, marks)
-- Copy-paste from spreadsheet
-- Quick keyboard navigation (Tab between students)
-
-### 5. Configure Grade Boundaries
-**Define grading scale:**
-
-1. Navigate to `/settings/grading`
-2. Configure grade boundaries:
-   - A+: 95-100
-   - A: 90-94
-   - B+: 85-89
-   - B: 80-84
-   - C+: 75-79
-   - C: 70-74
-   - D: 60-69
-   - F: Below 60
-3. Apply to all exams or per subject
-4. System auto-calculates letter grades from numeric marks
-
-### 6. View Exam Results and Analytics
-**Class Performance Analysis:**
-
-1. Navigate to exam detail page
-2. View "Results" tab with statistics:
-   - **Class Average**: 78.5/100
-   - **Highest Score**: 98/100 (Student name)
-   - **Lowest Score**: 45/100
-   - **Median**: 80/100
-   - **Pass Rate**: 85% (17 out of 20 passed)
-   - **Grade Distribution**:
-     - A: 3 students
-     - B: 7 students
-     - C: 5 students
-     - D: 2 students
-     - F: 3 students
-3. Visual charts:
-   - Bar chart: Grade distribution
-   - Line chart: Score distribution
-   - Pie chart: Pass/fail ratio
-
-**Individual Student Performance:**
-1. Navigate to student detail page
-2. View "Exams" tab
-3. See all exams with scores, grades, and trends
-4. Identify strengths and weaknesses per subject
-
-### 7. Export Exam Data
-**Export Exam Schedule:**
-1. Navigate to `/exams`
-2. Apply filters (date range, class, subject)
-3. Click "Export Schedule to PDF"
-4. Generate printable exam timetable for distribution
-
-**Export Exam Marks:**
-1. Navigate to exam detail page
-2. Click "Export Marks to CSV"
-3. Download CSV with columns:
-   - studentId, studentName, marksObtained, totalMarks, grade, percentage
-4. Use for record-keeping or analysis
-
-### 8. Manage Exam Status Workflow
-**Status Transitions:**
-
-- **PLANNED** → **IN_PROGRESS** → **COMPLETED**
-- **PLANNED** → **CANCELLED** (if exam is postponed/cancelled)
-
-**Update Status:**
-1. Navigate to exam detail page
-2. Click "Update Status" button
-3. Select new status:
-   - **In Progress**: Exam is currently being taken
-   - **Completed**: Exam finished, marks can be entered
-   - **Cancelled**: Exam postponed or cancelled
-4. Add reason/notes (for cancelled exams)
-5. Save
-6. Students notified of status change
-
-### 9. Assign Exam Hall and Invigilators (Future)
-**Exam Logistics:**
-
-1. Edit exam
-2. Navigate to "Logistics" tab
-3. Assign exam hall/room (e.g., Room 101)
-4. Check room capacity vs. class size
-5. Assign invigilators (teachers not teaching that class)
-6. Set invigilator schedule (who supervises when)
-7. Generate invigilator duty roster
-8. Print seating arrangement
-
-### 10. Search and Filter Exams
-**Quick Search:**
-1. Use search box in toolbar
-2. Type exam title (partial match)
-3. Results update as you type
-
-**Advanced Filtering:**
-1. Click "Class" dropdown → Select specific class
-2. Click "Subject" dropdown → Select subject
-3. Click "Exam Type" dropdown → Select midterm/final/quiz
-4. Click "Status" dropdown → Select planned/completed
-5. Click "Date" picker → Filter by exam date
-6. Filters combine (AND logic)
-7. URL updates with filter state (shareable)
-
----
-
-## Integration with Other Features
-
-### Links to Classes
-- Exams assigned to specific classes
-- All students in class take the exam
-- Class roster used for marks entry
-- Class performance analytics calculated
-
-### Links to Subjects
-- Exams linked to specific subjects
-- Subject-wise performance tracking
-- Subject teachers create exams
-- Curriculum alignment per subject
-
-### Links to Students
-- Exam results stored per student
-- Student profile shows exam history
-- Performance trends across exams
-- GPA calculation uses exam scores
-
-### Links to Results
-- Exam marks feed into gradebook
-- Results aggregated for report cards
-- GPA calculation includes exam scores
-- Term-wise and year-wise performance
-
-### Links to Teachers
-- Teachers create exams for their subjects
-- Teachers enter marks for their classes
-- Teacher dashboard shows marking tasks
-- Exam creation permissions per teacher
-
-### Links to Timetable
-- Exam schedule integrated with regular timetable
-- Exam dates block regular class slots
-- Conflict detection (no two exams same time for student)
-- Exam hall availability checked
-
-### Links to Announcements
-- Exam schedule announcements sent to students/parents
-- Reminders for upcoming exams
-- Results publication announcements
-- Important updates about exam changes
-
-### Links to Dashboard
-- Admin dashboard shows:
-  - Upcoming exams count
-  - Exams needing marks entry
-  - Recently completed exams
-- Student dashboard shows:
-  - Next exam date and subject
-  - Exam preparation countdown
-  - Recent exam results
-
----
-
-## Technical Implementation
-
-### Files and Responsibilities
-
-- **`content.tsx`**: Server component that renders exams table
-- **`table.tsx`**: Client table with exams list
-- **`columns.tsx`**: Column definitions for exams table
-- **`form.tsx`**: Multi-step exam creation/edit form
-- **`basic-information.tsx`**: Step 1 - Title, class, subject
-- **`schedule-marks.tsx`**: Step 2 - Date, time, marks configuration
-- **`instructions-details.tsx`**: Step 3 - Instructions and special notes
-- **`footer.tsx`**: Form navigation and progress indicator
-- **`actions.ts`**: Server actions for CRUD operations
-- **`validation.ts`**: Zod schemas for exam data
-- **`types.ts`**: TypeScript type definitions
-- **`config.ts`**: Exam types and status enums
-- **`list-params.ts`**: URL state management
-
-### Server Actions
-
-**`createExam(input)`**
-- Input: `{ title, description, classId, subjectId, examDate, startTime, endTime, duration, totalMarks, passingMarks, examType, instructions }`
-- Validates with `examCreateSchema`
-- Creates exam with status "PLANNED"
-- Scopes by `schoolId`
-- Revalidates `/dashboard/exams`
-- Returns `{ success: true, id }`
-
-**`updateExam(input)`**
-- Input: `{ id, ...fields to update }`
-- Validates with `examUpdateSchema`
-- Updates only provided fields
-- Uses `updateMany` with schoolId filter for security
-- Revalidates path
-- Returns `{ success: true }`
-
-**`deleteExam(input)`**
-- Input: `{ id }`
-- Uses `deleteMany` with schoolId filter
-- Cascades to exam results (if configured)
-- Revalidates path
-- Returns `{ success: true }`
-
-**`getExam(input)`**
-- Input: `{ id }`
-- Fetches single exam by id and schoolId
-- Returns full exam object
-- Used for detail page and edit form
-
-**`getExams(input)`**
-- Input: `{ title?, classId?, subjectId?, examType?, status?, examDate?, page, perPage, sort }`
-- Supports filtering and pagination
-- Joins with class and subject for display names
-- Default sort: examDate desc, startTime asc
-- Returns `{ rows, total }`
-
-### Database Schema
-
-```prisma
-model Exam {
-  id           String       @id @default(cuid())
-  schoolId     String
-  title        String
-  description  String?
-  classId      String
-  subjectId    String
-  examDate     DateTime
-  startTime    String
-  endTime      String
-  duration     Int          // minutes
-  totalMarks   Int
-  passingMarks Int
-  examType     ExamType
-  instructions String?
-  status       ExamStatus   @default(PLANNED)
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
-
-  school       School       @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  class        Class        @relation(fields: [classId], references: [id])
-  subject      Subject      @relation(fields: [subjectId], references: [id])
-  results      ExamResult[]
-
-  @@index([schoolId, examDate])
-  @@index([schoolId, classId])
-  @@index([schoolId, subjectId])
-}
-
-enum ExamType {
-  MIDTERM
-  FINAL
-  QUIZ
-  TEST
-  PRACTICAL
-}
-
-enum ExamStatus {
-  PLANNED
-  IN_PROGRESS
-  COMPLETED
-  CANCELLED
-}
+```
+exams/
+├── content.tsx              # Main exam dashboard
+├── manage/                  # Exam lifecycle management
+│   ├── types.ts
+│   ├── validation.ts
+│   ├── actions.ts
+│   ├── config.ts
+│   ├── utils.ts
+│   ├── content.tsx
+│   ├── form.tsx
+│   ├── table.tsx
+│   └── columns.tsx
+├── qbank/                   # Question bank repository
+│   └── [same structure]
+├── generate/                # AI-powered exam generation
+│   └── [same structure]
+├── mark/                    # Automated marking system
+│   └── [same structure]
+└── results/                 # Results & PDF generation
+    ├── lib/
+    │   ├── calculator.ts
+    │   ├── pdf-generator.ts
+    │   └── templates/
+    │       ├── classic.tsx
+    │       ├── modern.tsx
+    │       └── minimal.tsx
+    └── [standard files]
 ```
 
-### Multi-Tenant Safety
+### Technology Stack
 
-- All queries include `schoolId` from `getTenantContext()`
-- Update and delete use `updateMany`/`deleteMany` with schoolId filter
-- Prevents cross-tenant data access
-- Foreign keys enforce referential integrity
+- **Framework**: Next.js 15 (App Router) + React 19
+- **Database**: PostgreSQL (Neon) + Prisma ORM 6.14
+- **Forms**: React Hook Form 7.61 + Zod 4.0 validation
+- **Tables**: @tanstack/react-table 8.21
+- **PDF**: @react-pdf/renderer 4.3
+- **UI**: shadcn/ui + Tailwind CSS 4
+- **i18n**: Full Arabic (RTL) & English (LTR) support
 
-### Validation
+## 🎯 Feature Blocks
 
-**Client-Side:**
-- Title required, min 3 characters
-- Class and subject selection required
-- Exam date required
-- Start/end times required
-- Total marks > 0
-- Passing marks ≤ total marks
+### 1. Manage Block (`manage/`)
 
-**Server-Side:**
-- `examCreateSchema` validates all fields
-- Date parsing and normalization
-- Status enum validation
-- Exam type enum validation
+**Exam Lifecycle Management**
 
----
+Create, schedule, and oversee all examinations from planning to completion.
 
-## Usage
+**Features:**
+- Multi-step exam creation form
+- Date and time scheduling
+- Class and subject assignment
+- Marks configuration (total, passing threshold)
+- Exam types (MIDTERM, FINAL, QUIZ, TEST, PRACTICAL)
+- Status workflow (PLANNED → IN_PROGRESS → COMPLETED)
+- Search, filter, and sort capabilities
+- Bulk operations
 
-The component is used in the platform dashboard at `/dashboard/exams` and automatically handles:
+**Routes:**
+- `/[lang]/exams` - Exams listing
+- `/[lang]/exams/new` - Create exam
+- `/[lang]/exams/[id]` - Exam details
+- `/[lang]/exams/[id]/edit` - Edit exam
 
-- Multi-tenant data isolation (schoolId scoping)
-- Multi-step form state management
-- Server-side validation
-- Optimistic updates
-- Error handling with user-friendly messages
+**Key Files:**
+- `form.tsx` - Multi-step creation form
+- `table.tsx` - Exams data table
+- `actions.ts` - CRUD server actions
+- `utils.ts` - Duration calculation, conflict detection
 
----
-
-## Dependencies
-
-- React Hook Form for form management
-- Zod for validation
-- TanStack Table for data display
-- shadcn/ui components (DatePicker, Select, Input, Textarea)
-- Next.js server actions for backend operations
-- Prisma for database access
-
----
-
-## Technology Stack & Dependencies
-
-This feature is built with the following technologies (see [Platform README](../README.md) for complete stack details):
-
-### Core Framework
-- **Next.js 15.4+** - App Router with Server Components ([Docs](https://nextjs.org/docs))
-- **React 19+** - Server Actions, new hooks (`useActionState`, `useFormStatus`) ([Docs](https://react.dev))
-- **TypeScript** - Strict mode for type safety
-
-### Database & ORM
-- **Neon PostgreSQL** - Serverless database with autoscaling ([Docs](https://neon.tech/docs/introduction))
-- **Prisma ORM 6.14+** - Type-safe queries and migrations ([Docs](https://www.prisma.io/docs))
-
-### Forms & Validation
-- **React Hook Form 7.61+** - Performant form state management ([Docs](https://react-hook-form.com))
-- **Zod 4.0+** - Runtime schema validation (client + server) ([Docs](https://zod.dev))
-
-### UI Components
-- **shadcn/ui** - Accessible components built on Radix UI ([Docs](https://ui.shadcn.com/docs))
-- **TanStack Table 8.21+** - Headless table with sorting/filtering ([Docs](https://tanstack.com/table))
-- **Tailwind CSS 4** - Utility-first styling ([Docs](https://tailwindcss.com/docs))
-
-### Server Actions Pattern
-All mutations follow the standard server action pattern:
+**Usage:**
 ```typescript
-"use server"
-export async function performAction(input: FormData) {
-  const { schoolId } = await getTenantContext()
-  const validated = schema.parse(input)
-  await db.model.create({ data: { ...validated, schoolId } })
-  revalidatePath('/feature-path')
-  return { success: true }
+import { createExam } from '@/components/platform/exams/manage/actions';
+
+const exam = await createExam({
+  title: "Mathematics Midterm",
+  classId: "class-id",
+  subjectId: "subject-id",
+  examDate: new Date("2025-03-15"),
+  startTime: "09:00",
+  endTime: "11:00",
+  totalMarks: 100,
+  passingMarks: 50,
+  examType: "MIDTERM"
+});
+```
+
+### 2. Question Bank Block (`qbank/`)
+
+**Question Repository Management**
+
+Build and maintain a reusable library of exam questions with rich metadata.
+
+**Features:**
+- Multiple question types:
+  - Multiple Choice (MCQ)
+  - True/False
+  - Fill in the Blank
+  - Short Answer
+  - Essay
+- Difficulty levels (EASY, MEDIUM, HARD)
+- Bloom's taxonomy classification
+- Topic and tag management
+- Point value assignment
+- Search and filter by metadata
+- Bulk import/export
+
+**Routes:**
+- `/[lang]/generate/questions` - Question listing
+- `/[lang]/generate/questions/new` - Add question
+- `/[lang]/generate/questions/[id]` - Question details
+
+**Key Files:**
+- `form.tsx` - Question creation form
+- `table.tsx` - Questions data table
+- `actions.ts` - Question CRUD operations
+- `types.ts` - Question type definitions
+
+**Usage:**
+```typescript
+import { createQuestion } from '@/components/platform/exams/qbank/actions';
+
+const question = await createQuestion({
+  subjectId: "subject-id",
+  questionText: "What is the capital of Sudan?",
+  questionType: "MULTIPLE_CHOICE",
+  difficulty: "EASY",
+  bloomLevel: "REMEMBER",
+  points: 2,
+  options: [
+    { text: "Khartoum", isCorrect: true },
+    { text: "Cairo", isCorrect: false },
+    { text: "Addis Ababa", isCorrect: false },
+    { text: "Nairobi", isCorrect: false }
+  ]
+});
+```
+
+### 3. Auto-Generate Block (`generate/`)
+
+**AI-Powered Exam Creation**
+
+Generate exams automatically using templates or AI-powered question selection.
+
+**Features:**
+- Exam template management
+- Question distribution rules
+- AI question generation
+- Smart question selection algorithms
+- Bloom's taxonomy distribution
+- Difficulty balancing
+- Template-based generation
+- Preview before finalization
+
+**Routes:**
+- `/[lang]/generate` - Generation dashboard
+- `/[lang]/generate/templates` - Template listing
+- `/[lang]/generate/templates/new` - Create template
+
+**Key Files:**
+- `form.tsx` - Template creation
+- `distribution-editor.tsx` - Distribution configuration
+- `actions.ts` - Generation logic
+- `utils.ts` - Selection algorithms
+
+**Usage:**
+```typescript
+import { generateExamFromTemplate } from '@/components/platform/exams/generate/actions';
+
+const exam = await generateExamFromTemplate({
+  templateId: "template-id",
+  classId: "class-id",
+  examDate: new Date("2025-04-10"),
+  startTime: "10:00"
+});
+```
+
+### 4. Auto-Mark Block (`mark/`)
+
+**Automated Grading System**
+
+Grade student submissions automatically with AI assistance for subjective answers.
+
+**Features:**
+- Automatic MCQ/True-False grading
+- Rubric-based essay marking
+- AI-assisted grading for subjective answers
+- Bulk marking capabilities
+- Grade override system
+- Detailed feedback mechanism
+- Marking progress tracking
+- Question-wise analysis
+
+**Routes:**
+- `/[lang]/mark` - Marking dashboard
+- `/[lang]/mark/grade/[id]` - Grade specific exam
+- `/[lang]/mark/pending` - Pending exams
+
+**Key Files:**
+- `content.tsx` - Marking dashboard
+- `form.tsx` - Marking interface
+- `actions.ts` - Grading logic
+- `utils.ts` - Score calculation
+
+**Usage:**
+```typescript
+import { markExam } from '@/components/platform/exams/mark/actions';
+
+const result = await markExam({
+  examId: "exam-id",
+  studentId: "student-id",
+  answers: [
+    { questionId: "q1", answer: "A", pointsAwarded: 2 },
+    { questionId: "q2", answer: "Essay text...", pointsAwarded: 8 }
+  ]
+});
+```
+
+### 5. Results Block (`results/`)
+
+**Comprehensive Results & Analytics**
+
+Generate detailed reports, calculate grades, and create customizable PDF certificates.
+
+**Features:**
+- Mark summation and aggregation
+- Grade calculation with boundaries
+- Class rank computation
+- Performance analytics
+- PDF report generation (3 templates):
+  - **Classic**: Traditional formal report card
+  - **Modern**: Visual design with charts
+  - **Minimal**: Clean text-based layout
+- Question-wise breakdown
+- Export capabilities (PDF, CSV)
+- A4-friendly layouts for printing
+
+**Routes:**
+- `/[lang]/results` - Results listing
+- `/[lang]/results/[examId]` - Exam results detail
+- `/[lang]/results/analytics` - Performance analytics
+
+**Key Files:**
+- `lib/calculator.ts` - Grade calculation (340 lines, 20+ functions)
+- `lib/pdf-generator.ts` - PDF generation core (280 lines)
+- `lib/templates/classic.tsx` - Formal template (400 lines)
+- `lib/templates/modern.tsx` - Visual template (380 lines)
+- `lib/templates/minimal.tsx` - Simple template (350 lines)
+- `actions.ts` - Results operations (300 lines)
+- `utils.ts` - Helper functions (200+ lines)
+
+**Usage:**
+```typescript
+import { getExamResults, generateStudentPDF } from '@/components/platform/exams/results/actions';
+
+// Get all results
+const results = await getExamResults({
+  examId: "exam-id",
+  includeAbsent: true,
+  includeQuestionBreakdown: true
+});
+
+// Generate PDF
+const pdf = await generateStudentPDF({
+  examId: "exam-id",
+  studentId: "student-id",
+  options: {
+    template: "modern",
+    includeQuestionBreakdown: true,
+    includeClassAnalytics: true,
+    language: "en"
+  }
+});
+```
+
+## 🚀 Getting Started
+
+### Installation
+
+```bash
+# Install dependencies
+pnpm install
+
+# Generate Prisma client
+pnpm prisma generate
+```
+
+### Database Models
+
+See `prisma/models/exams.prisma` and `prisma/models/marking.prisma`:
+- `Exam` - Main exam entity
+- `ExamResult` - Student results
+- `QuestionBank` - Question repository
+- `ExamTemplate` - Reusable blueprints
+- `GeneratedExam` - AI-generated exams
+- `GradeBoundary` - Grade rules
+- `MarkingResult` - Detailed marks
+- `Rubric` - Marking criteria
+
+### Configuration
+
+1. **Grade Boundaries**: Configure in database
+```sql
+INSERT INTO grade_boundaries (grade, min_score, max_score, gpa_value, school_id)
+VALUES
+  ('A+', 95, 100, 4.0, 'school-id'),
+  ('A', 90, 94, 3.7, 'school-id');
+```
+
+2. **PDF Templates**: Customize in `results/lib/templates/`
+
+3. **Question Types**: Defined in `prisma/models/exams.prisma`
+
+## 🔒 Multi-Tenant Safety
+
+**Critical**: All operations are scoped by `schoolId`:
+
+```typescript
+import { getTenantContext } from '@/lib/tenant-context';
+
+export async function myAction() {
+  "use server";
+
+  const { schoolId } = await getTenantContext();
+
+  // Always include schoolId
+  const data = await db.exam.findMany({
+    where: { schoolId }  // Required!
+  });
 }
 ```
 
-### Key Features
-- **Multi-Tenant Isolation**: All queries scoped by `schoolId`
-- **Type Safety**: End-to-end TypeScript with Prisma + Zod inference
-- **Server-Side Operations**: Mutations via Next.js Server Actions
-- **URL State Management**: Filters and pagination synced to URL (where applicable)
-- **Accessibility**: ARIA labels, keyboard navigation, semantic HTML
+## 🌍 Internationalization
 
-For complete technology documentation, see [Platform Technology Stack](../README.md#technology-stack--documentation).
+Full bilingual support with 150+ translation keys:
 
----
+**Dictionaries:**
+- `dictionary.school.exams.dashboard.*` - Dashboard UI
+- `dictionary.results.*` - Results block
+- `dictionary.generate.*` - Generation block
+- `dictionary.marking.*` - Marking block
 
-## Future Enhancements
+**Languages:**
+- Arabic (RTL) - Default
+- English (LTR)
 
-See `ISSUE.md` for detailed production readiness tracker and enhancement roadmap.
+**Usage:**
+```typescript
+<h1>{dictionary?.school?.exams?.title}</h1>
+<p>{dictionary?.results?.statistics?.averageScore}</p>
+```
+
+## 📊 Analytics & Metrics
+
+### Available Statistics
+- Class average and median scores
+- Pass/fail rates
+- Grade distribution
+- Top performers (configurable count)
+- Students needing attention (below threshold)
+- Question-wise difficulty analysis
+- Performance trends by topic
+
+### Calculation Functions
+
+From `results/lib/calculator.ts`:
+```typescript
+- calculateGrade() - Letter grade from percentage
+- calculateMarkSummation() - Aggregate marks
+- calculateRanks() - Class rankings
+- calculateGPA() - GPA from percentage
+- calculateClassAverage() - Class performance
+- calculateGradeDistribution() - Grade breakdown
+- identifyTopPerformers() - Top N students
+- identifyNeedsAttention() - Struggling students
+```
+
+## 🎨 UI Components
+
+### Dashboard
+- 8 overview statistics cards
+- 5 feature block navigation cards
+- Quick actions menu (4 shortcuts)
+- 5-step workflow guide
+
+### Tables
+All blocks use `@tanstack/react-table`:
+- Server-side pagination
+- Multi-column sorting
+- Advanced filtering
+- Column visibility controls
+- Bulk selection and actions
+- Export capabilities
+
+### Forms
+Built with `react-hook-form` + Zod:
+- Real-time validation
+- Multi-step flows
+- Auto-save functionality
+- Error handling with toast notifications
+- Optimistic updates
+
+## 📝 Code Statistics
+
+- **Total Lines**: ~16,800
+- **Results Block**: ~2,500 lines
+- **PDF Templates**: 1,130 lines (3 templates)
+- **Calculator**: 340 lines (20+ functions)
+- **Server Actions**: 600+ lines
+- **Type Definitions**: 500+ lines
+- **i18n Keys**: 150+ (en/ar)
+
+## 🐛 Troubleshooting
+
+See [ISSUE.md](./ISSUE.md) for common issues and solutions.
+
+## 📚 Sub-Block Documentation
+
+- [Manage Block](./manage/README.md) - Exam management details
+- [Question Bank](./qbank/README.md) - Question repository guide
+- [Auto-Generate](./generate/README.md) - Generation system docs
+- [Auto-Marking](./mark/README.md) - Marking system guide
+- [Results](./results/README.md) - Results & analytics docs
+
+## 🤝 Contributing
+
+When adding features:
+1. Follow feature-based structure
+2. Keep blocks self-contained
+3. Always scope by schoolId
+4. Add i18n dictionary keys (en + ar)
+5. Include TypeScript types
+6. Write server actions with "use server"
+7. Validate with Zod (client + server)
+8. Update documentation
+
+## 🔐 Security Checklist
+
+- [ ] All queries include `schoolId`
+- [ ] Server actions use "use server" directive
+- [ ] Input validation with Zod on server
+- [ ] Use `updateMany`/`deleteMany` for modifications
+- [ ] Sanitize user input before database operations
+- [ ] Check permissions before sensitive operations
+- [ ] Rate limit API endpoints
+- [ ] Audit log for grade changes
+
+## 📄 License
+
+Part of the Hogwarts School Management System - MIT License
