@@ -257,8 +257,8 @@
       "communicateWithTeacher": "Communicate with Teacher"
     },
     "exams": {
-      "title": "Exams",
-      "description": "Schedule and manage your exams",
+      "title": "Examination Management",
+      "description": "Comprehensive exam management system with question banks, auto-generation, marking, and results",
       "allExams": "All Exams",
       "createExam": "Create Exam",
       "editExam": "Edit Exam",
@@ -279,7 +279,98 @@
       "viewResults": "View Results",
       "publishResults": "Publish Results",
       "gradeReport": "Grade Report",
-      "transcript": "Transcript"
+      "transcript": "Transcript",
+      "dashboard": {
+        "title": "Examination Management",
+        "description": "Comprehensive exam management system with question banks, auto-generation, marking, and results",
+        "stats": {
+          "totalExams": "Total Exams",
+          "allScheduledExams": "All scheduled exams",
+          "upcoming": "Upcoming",
+          "scheduledForFuture": "Scheduled for future",
+          "questionBank": "Question Bank",
+          "availableQuestions": "Available questions",
+          "students": "Students",
+          "enrolledStudents": "Enrolled students",
+          "completed": "Completed",
+          "examsFinished": "Exams finished",
+          "pendingMarking": "Pending Marking",
+          "awaitingGrading": "Awaiting grading",
+          "resultsGenerated": "Results Generated",
+          "studentResults": "Student results",
+          "templates": "Templates",
+          "examTemplates": "Exam templates"
+        },
+        "blocks": {
+          "manage": {
+            "title": "Exam Management",
+            "description": "Schedule, organize, and oversee all examinations",
+            "details": "Create exams, set schedules, define marks, and manage exam lifecycle from draft to completion.",
+            "viewAll": "View All Exams",
+            "createNew": "Create New Exam"
+          },
+          "qbank": {
+            "title": "Question Bank",
+            "description": "Build and manage your repository of questions",
+            "details": "Store questions with metadata, difficulty levels, Bloom taxonomy, and topic tags for reuse.",
+            "browse": "Browse Questions",
+            "add": "Add Question"
+          },
+          "generate": {
+            "title": "Auto Generation",
+            "description": "AI-powered exam and question generation",
+            "details": "Generate exams from templates or let AI create questions based on curriculum and difficulty.",
+            "dashboard": "Generate Dashboard",
+            "templates": "Exam Templates"
+          },
+          "mark": {
+            "title": "Auto Marking",
+            "description": "Automated grading with AI assistance",
+            "details": "Grade MCQs automatically, use rubrics for essays, and leverage AI for subjective answers.",
+            "dashboard": "Marking Dashboard",
+            "pending": "Pending"
+          },
+          "results": {
+            "title": "Results & Reports",
+            "description": "Generate comprehensive result reports",
+            "details": "Calculate grades, generate PDF reports, analyze performance, and export results.",
+            "view": "View Results",
+            "analytics": "Analytics"
+          }
+        },
+        "quickActions": {
+          "title": "Quick Actions",
+          "description": "Common tasks and shortcuts",
+          "viewUpcoming": "View Upcoming Exams",
+          "gradePending": "Grade Pending Exams",
+          "recentResults": "Recent Results",
+          "generateAI": "Generate Questions with AI"
+        },
+        "workflow": {
+          "title": "Exam Workflow Guide",
+          "description": "Follow these steps for a complete exam lifecycle",
+          "step1": {
+            "title": "Build Question Bank",
+            "description": "Add questions manually or use AI generation. Tag with topics, difficulty, and Bloom levels."
+          },
+          "step2": {
+            "title": "Create Exam",
+            "description": "Use templates or generate from question bank. Set schedule, duration, and marks distribution."
+          },
+          "step3": {
+            "title": "Conduct Exam",
+            "description": "Publish exam to students. Monitor progress and attendance during exam period."
+          },
+          "step4": {
+            "title": "Grade & Mark",
+            "description": "Auto-grade MCQs, use rubrics for essays, and AI assistance for subjective answers."
+          },
+          "step5": {
+            "title": "Generate Results",
+            "description": "Calculate final marks, assign grades, generate PDF reports, and analyze performance metrics."
+          }
+        }
+      }
     },
     "lessons": {
       "title": "Lessons",

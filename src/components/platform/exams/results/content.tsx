@@ -74,19 +74,21 @@ export default async function ResultsContent({ dictionary, lang }: Props) {
     });
   }
 
+  const r = dictionary?.results;
+
   return (
     <PageContainer>
       <div className="flex flex-1 flex-col gap-6">
         <div className="flex items-center justify-between">
           <PageHeader
-            title="Examination Results"
-            description="View, analyze, and export exam results and performance reports"
+            title={r?.title}
+            description={r?.description}
             className="text-start max-w-none"
           />
           <Button asChild>
             <Link href={`/${lang}/results/analytics`}>
               <TrendingUp className="mr-2 h-4 w-4" />
-              View Analytics
+              {r?.actions?.viewAnalytics}
             </Link>
           </Button>
         </div>
@@ -95,12 +97,12 @@ export default async function ResultsContent({ dictionary, lang }: Props) {
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">
               <FileBarChart className="h-12 w-12 text-muted-foreground mb-4" />
-              <h3 className="font-semibold text-lg mb-2">No Results Available</h3>
+              <h3 className="font-semibold text-lg mb-2">{r?.messages?.noResults}</h3>
               <p className="text-sm text-muted-foreground mb-4">
-                Complete and grade exams to generate results
+                {r?.messages?.noResultsDescription}
               </p>
               <Button asChild>
-                <Link href={`/${lang}/exams`}>Go to Exams</Link>
+                <Link href={`/${lang}/exams`}>{r?.actions?.goToExams}</Link>
               </Button>
             </CardContent>
           </Card>
@@ -120,27 +122,27 @@ export default async function ResultsContent({ dictionary, lang }: Props) {
                     <Button asChild variant="outline" size="sm">
                       <Link href={`/${lang}/results/${exam.id}`}>
                         <FileBarChart className="mr-2 h-4 w-4" />
-                        View Results
+                        {r?.actions?.viewResults}
                       </Link>
                     </Button>
                     <Button variant="outline" size="sm">
                       <Download className="mr-2 h-4 w-4" />
-                      Export
+                      {r?.actions?.exportCSV}
                     </Button>
                   </div>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-3 gap-4">
                     <div>
-                      <p className="text-sm text-muted-foreground">Total Students</p>
+                      <p className="text-sm text-muted-foreground">{r?.statistics?.totalStudents}</p>
                       <p className="text-2xl font-bold">{exam.totalStudents}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-muted-foreground">Results Generated</p>
+                      <p className="text-sm text-muted-foreground">{r?.statistics?.resultsGenerated}</p>
                       <p className="text-2xl font-bold">{exam.resultsGenerated}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-muted-foreground">Average Score</p>
+                      <p className="text-sm text-muted-foreground">{r?.statistics?.averageScore}</p>
                       <p className="text-2xl font-bold">
                         {exam.averagePercentage !== null
                           ? `${exam.averagePercentage.toFixed(1)}%`

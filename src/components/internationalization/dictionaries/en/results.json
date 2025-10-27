@@ -1,0 +1,159 @@
+{
+  "title": "Exam Results",
+  "dashboard": "Results Dashboard",
+  "description": "View, analyze, and export exam results and performance reports",
+
+  "navigation": {
+    "dashboard": "Dashboard",
+    "results": "Results",
+    "analytics": "Analytics",
+    "reports": "Reports"
+  },
+
+  "statistics": {
+    "totalStudents": "Total Students",
+    "presentStudents": "Present Students",
+    "absentStudents": "Absent Students",
+    "passedStudents": "Passed",
+    "failedStudents": "Failed",
+    "passRate": "Pass Rate",
+    "averageScore": "Average Score",
+    "scoreRange": "Score Range",
+    "highestMarks": "Highest Marks",
+    "lowestMarks": "Lowest Marks",
+    "resultsGenerated": "Results Generated",
+    "completedExams": "Completed Exams",
+    "totalResults": "Total Results",
+    "overallPerformance": "Overall Performance",
+    "successPercentage": "Success Percentage",
+    "completionRate": "Completion Rate"
+  },
+
+  "status": {
+    "pass": "Pass",
+    "fail": "Fail",
+    "absent": "Absent",
+    "present": "Present",
+    "completed": "Completed",
+    "pending": "Pending"
+  },
+
+  "performance": {
+    "excellent": "Excellent",
+    "veryGood": "Very Good",
+    "good": "Good",
+    "satisfactory": "Satisfactory",
+    "needsImprovement": "Needs Improvement",
+    "aboveAverage": "Above Average",
+    "atAverage": "At Average",
+    "belowAverage": "Below Average"
+  },
+
+  "labels": {
+    "studentName": "Student Name",
+    "studentId": "Student ID",
+    "class": "Class",
+    "subject": "Subject",
+    "examination": "Examination",
+    "examDate": "Exam Date",
+    "examTitle": "Exam Title",
+    "marks": "Marks",
+    "marksObtained": "Marks Obtained",
+    "totalMarks": "Total Marks",
+    "percentage": "Percentage",
+    "grade": "Grade",
+    "gpa": "GPA",
+    "rank": "Rank",
+    "classRank": "Class Rank",
+    "classAverage": "Class Average",
+    "yourPerformance": "Your Performance",
+    "outOf": "Out of",
+    "remarks": "Remarks",
+    "generatedOn": "Generated on",
+    "academicYear": "Academic Year",
+    "result": "Result"
+  },
+
+  "actions": {
+    "viewResults": "View Results",
+    "viewAnalytics": "View Analytics",
+    "exportAll": "Export All PDFs",
+    "exportPDF": "Export PDF",
+    "exportCSV": "Export CSV",
+    "download": "Download",
+    "print": "Print",
+    "share": "Share",
+    "goToExams": "Go to Exams",
+    "viewReport": "View Report",
+    "generateReport": "Generate Report"
+  },
+
+  "pdf": {
+    "templates": {
+      "classic": "Classic",
+      "modern": "Modern",
+      "minimal": "Minimal"
+    },
+    "classicDescription": "Traditional report card with formal layout",
+    "modernDescription": "Visual design with charts and progress indicators",
+    "minimalDescription": "Clean and simple text-based layout",
+    "officialTranscripts": "Official transcripts and certificates",
+    "studentEngagement": "Student engagement and parent communication",
+    "quickReports": "Quick reports and internal use",
+    "features": "Features",
+    "bestFor": "Best For"
+  },
+
+  "sections": {
+    "studentInformation": "Student Information",
+    "studentDetails": "Student Details",
+    "examInformation": "Examination Information",
+    "examDetails": "Examination Details",
+    "performance": "Performance",
+    "marksDisplay": "Marks Display",
+    "gradeDisplay": "Grade Display",
+    "classPerformance": "Class Performance",
+    "classAnalytics": "Class Analytics",
+    "questionBreakdown": "Question-wise Breakdown",
+    "questionPerformance": "Question-wise Performance",
+    "performanceMetrics": "Performance Metrics",
+    "performanceTrends": "Performance Trends",
+    "performanceIndicators": "Performance Indicators",
+    "signatureSection": "Signatures",
+    "footer": "Footer"
+  },
+
+  "breakdown": {
+    "questionNumber": "Question No.",
+    "questionType": "Type",
+    "maxPoints": "Max Points",
+    "pointsAwarded": "Points Awarded",
+    "obtained": "Obtained",
+    "correct": "Correct",
+    "incorrect": "Incorrect",
+    "feedback": "Feedback"
+  },
+
+  "messages": {
+    "noResults": "No Results Available",
+    "noResultsDescription": "Complete and grade exams to generate results",
+    "failedToLoad": "Failed to load results",
+    "systemGenerated": "This is a system-generated document and does not require a signature.",
+    "comingSoon": "Charts and visualizations will be implemented here"
+  },
+
+  "cards": {
+    "individual": {
+      "title": "Student Results",
+      "description": "Individual performance and rankings for all students"
+    },
+    "analytics": {
+      "title": "Results Analytics",
+      "description": "Comprehensive analysis of exam performance and trends"
+    },
+    "trends": {
+      "title": "Performance Trends",
+      "description": "Visual analysis and charts"
+    }
+  }
+}

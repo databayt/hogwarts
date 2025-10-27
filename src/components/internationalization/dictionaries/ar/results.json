@@ -1,0 +1,159 @@
+{
+  "title": "نتائج الامتحانات",
+  "dashboard": "لوحة النتائج",
+  "description": "عرض وتحليل وتصدير نتائج الامتحانات وتقارير الأداء",
+
+  "navigation": {
+    "dashboard": "لوحة التحكم",
+    "results": "النتائج",
+    "analytics": "التحليلات",
+    "reports": "التقارير"
+  },
+
+  "statistics": {
+    "totalStudents": "إجمالي الطلاب",
+    "presentStudents": "الطلاب الحاضرون",
+    "absentStudents": "الطلاب الغائبون",
+    "passedStudents": "ناجح",
+    "failedStudents": "راسب",
+    "passRate": "معدل النجاح",
+    "averageScore": "المتوسط",
+    "scoreRange": "نطاق الدرجات",
+    "highestMarks": "أعلى الدرجات",
+    "lowestMarks": "أدنى الدرجات",
+    "resultsGenerated": "النتائج المُولدة",
+    "completedExams": "الامتحانات المكتملة",
+    "totalResults": "إجمالي النتائج",
+    "overallPerformance": "الأداء العام",
+    "successPercentage": "نسبة النجاح",
+    "completionRate": "معدل الإنجاز"
+  },
+
+  "status": {
+    "pass": "ناجح",
+    "fail": "راسب",
+    "absent": "غائب",
+    "present": "حاضر",
+    "completed": "مكتمل",
+    "pending": "قيد الانتظار"
+  },
+
+  "performance": {
+    "excellent": "ممتاز",
+    "veryGood": "جيد جداً",
+    "good": "جيد",
+    "satisfactory": "مُرضٍ",
+    "needsImprovement": "يحتاج إلى تحسين",
+    "aboveAverage": "فوق المتوسط",
+    "atAverage": "في المتوسط",
+    "belowAverage": "أقل من المتوسط"
+  },
+
+  "labels": {
+    "studentName": "اسم الطالب",
+    "studentId": "رقم الطالب",
+    "class": "الصف",
+    "subject": "المادة",
+    "examination": "الامتحان",
+    "examDate": "تاريخ الامتحان",
+    "examTitle": "عنوان الامتحان",
+    "marks": "الدرجات",
+    "marksObtained": "الدرجات المحصلة",
+    "totalMarks": "إجمالي الدرجات",
+    "percentage": "النسبة المئوية",
+    "grade": "الدرجة",
+    "gpa": "المعدل التراكمي",
+    "rank": "الترتيب",
+    "classRank": "الترتيب في الصف",
+    "classAverage": "متوسط الصف",
+    "yourPerformance": "أداؤك",
+    "outOf": "من أصل",
+    "remarks": "ملاحظات",
+    "generatedOn": "تم الإنشاء في",
+    "academicYear": "السنة الدراسية",
+    "result": "النتيجة"
+  },
+
+  "actions": {
+    "viewResults": "عرض النتائج",
+    "viewAnalytics": "عرض التحليلات",
+    "exportAll": "تصدير جميع ملفات PDF",
+    "exportPDF": "تصدير PDF",
+    "exportCSV": "تصدير CSV",
+    "download": "تحميل",
+    "print": "طباعة",
+    "share": "مشاركة",
+    "goToExams": "الذهاب إلى الامتحانات",
+    "viewReport": "عرض التقرير",
+    "generateReport": "إنشاء تقرير"
+  },
+
+  "pdf": {
+    "templates": {
+      "classic": "كلاسيكي",
+      "modern": "عصري",
+      "minimal": "بسيط"
+    },
+    "classicDescription": "بطاقة تقرير تقليدية بتخطيط رسمي",
+    "modernDescription": "تصميم مرئي مع مخططات ومؤشرات تقدم",
+    "minimalDescription": "تخطيط نصي نظيف وبسيط",
+    "officialTranscripts": "النصوص الرسمية والشهادات",
+    "studentEngagement": "مشاركة الطلاب والتواصل مع أولياء الأمور",
+    "quickReports": "التقارير السريعة والاستخدام الداخلي",
+    "features": "الميزات",
+    "bestFor": "الأفضل لـ"
+  },
+
+  "sections": {
+    "studentInformation": "معلومات الطالب",
+    "studentDetails": "تفاصيل الطالب",
+    "examInformation": "معلومات الامتحان",
+    "examDetails": "تفاصيل الامتحان",
+    "performance": "الأداء",
+    "marksDisplay": "عرض الدرجات",
+    "gradeDisplay": "عرض التقدير",
+    "classPerformance": "أداء الصف",
+    "classAnalytics": "تحليلات الصف",
+    "questionBreakdown": "التوزيع حسب الأسئلة",
+    "questionPerformance": "الأداء حسب الأسئلة",
+    "performanceMetrics": "مقاييس الأداء",
+    "performanceTrends": "اتجاهات الأداء",
+    "performanceIndicators": "مؤشرات الأداء",
+    "signatureSection": "التوقيعات",
+    "footer": "التذييل"
+  },
+
+  "breakdown": {
+    "questionNumber": "رقم السؤال",
+    "questionType": "النوع",
+    "maxPoints": "النقاط القصوى",
+    "pointsAwarded": "النقاط الممنوحة",
+    "obtained": "المحصلة",
+    "correct": "صحيح",
+    "incorrect": "خطأ",
+    "feedback": "التعليقات"
+  },
+
+  "messages": {
+    "noResults": "لا توجد نتائج متاحة",
+    "noResultsDescription": "أكمل وقيّم الامتحانات لإنشاء النتائج",
+    "failedToLoad": "فشل تحميل النتائج",
+    "systemGenerated": "هذه وثيقة مُنشأة بواسطة النظام ولا تتطلب توقيعاً.",
+    "comingSoon": "سيتم تنفيذ المخططات والتصورات هنا"
+  },
+
+  "cards": {
+    "individual": {
+      "title": "نتائج الطلاب",
+      "description": "الأداء الفردي والترتيب لجميع الطلاب"
+    },
+    "analytics": {
+      "title": "تحليلات النتائج",
+      "description": "تحليل شامل لأداء الامتحانات والاتجاهات"
+    },
+    "trends": {
+      "title": "اتجاهات الأداء",
+      "description": "التحليل المرئي والمخططات"
+    }
+  }
+}

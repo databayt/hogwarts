@@ -79,15 +79,14 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
     ]);
   }
 
+  const d = dictionary?.school?.exams?.dashboard;
+
   return (
     <PageContainer>
       <div className="flex flex-1 flex-col gap-6">
         <PageHeader
-          title={dictionary?.school?.exams?.title || "Examination Management"}
-          description={
-            dictionary?.school?.exams?.description ||
-            "Comprehensive exam management system with question banks, auto-generation, marking, and results"
-          }
+          title={dictionary?.school?.exams?.title}
+          description={dictionary?.school?.exams?.description}
           className="text-start max-w-none"
         />
 
@@ -95,52 +94,52 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
         <div className="grid gap-4 md:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Exams</CardTitle>
+              <CardTitle className="text-sm font-medium">{d?.stats?.totalExams}</CardTitle>
               <Calendar className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{examsCount}</div>
               <p className="text-xs text-muted-foreground">
-                All scheduled exams
+                {d?.stats?.allScheduledExams}
               </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Upcoming</CardTitle>
+              <CardTitle className="text-sm font-medium">{d?.stats?.upcoming}</CardTitle>
               <Clock className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{upcomingExamsCount}</div>
               <p className="text-xs text-muted-foreground">
-                Scheduled for future
+                {d?.stats?.scheduledForFuture}
               </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Question Bank</CardTitle>
+              <CardTitle className="text-sm font-medium">{d?.stats?.questionBank}</CardTitle>
               <BookOpen className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{questionBankCount}</div>
               <p className="text-xs text-muted-foreground">
-                Available questions
+                {d?.stats?.availableQuestions}
               </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Students</CardTitle>
+              <CardTitle className="text-sm font-medium">{d?.stats?.students}</CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{studentsEnrolledCount}</div>
               <p className="text-xs text-muted-foreground">
-                Enrolled students
+                {d?.stats?.enrolledStudents}
               </p>
             </CardContent>
           </Card>
@@ -150,52 +149,52 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
         <div className="grid gap-4 md:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Completed</CardTitle>
+              <CardTitle className="text-sm font-medium">{d?.stats?.completed}</CardTitle>
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{completedExamsCount}</div>
               <p className="text-xs text-muted-foreground">
-                Exams finished
+                {d?.stats?.examsFinished}
               </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Pending Marking</CardTitle>
+              <CardTitle className="text-sm font-medium">{d?.stats?.pendingMarking}</CardTitle>
               <ClipboardCheck className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{pendingMarkingCount}</div>
               <p className="text-xs text-muted-foreground">
-                Awaiting grading
+                {d?.stats?.awaitingGrading}
               </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Results Generated</CardTitle>
+              <CardTitle className="text-sm font-medium">{d?.stats?.resultsGenerated}</CardTitle>
               <FileBarChart className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{resultsGeneratedCount}</div>
               <p className="text-xs text-muted-foreground">
-                Student results
+                {d?.stats?.studentResults}
               </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Templates</CardTitle>
+              <CardTitle className="text-sm font-medium">{d?.stats?.templates}</CardTitle>
               <BookMarked className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{templatesCount}</div>
               <p className="text-xs text-muted-foreground">
-                Exam templates
+                {d?.stats?.examTemplates}
               </p>
             </CardContent>
           </Card>
@@ -208,26 +207,26 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Calendar className="h-5 w-5 text-primary" />
-                Exam Management
+                {d?.blocks?.manage?.title}
               </CardTitle>
               <CardDescription>
-                Schedule, organize, and oversee all examinations
+                {d?.blocks?.manage?.description}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               <p className="text-sm text-muted-foreground">
-                Create exams, set schedules, define marks, and manage exam lifecycle from draft to completion.
+                {d?.blocks?.manage?.details}
               </p>
               <div className="flex flex-col gap-2">
                 <Button asChild>
                   <Link href={`/${lang}/exams`}>
                     <Calendar className="mr-2 h-4 w-4" />
-                    View All Exams
+                    {d?.blocks?.manage?.viewAll}
                   </Link>
                 </Button>
                 <Button variant="outline" asChild size="sm">
                   <Link href={`/${lang}/exams/new`}>
-                    Create New Exam
+                    {d?.blocks?.manage?.createNew}
                   </Link>
                 </Button>
               </div>
@@ -239,26 +238,26 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <BookOpen className="h-5 w-5 text-blue-500" />
-                Question Bank
+                {d?.blocks?.qbank?.title}
               </CardTitle>
               <CardDescription>
-                Build and manage your repository of questions
+                {d?.blocks?.qbank?.description}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               <p className="text-sm text-muted-foreground">
-                Store questions with metadata, difficulty levels, Bloom taxonomy, and topic tags for reuse.
+                {d?.blocks?.qbank?.details}
               </p>
               <div className="flex flex-col gap-2">
                 <Button asChild variant="secondary">
                   <Link href={`/${lang}/generate/questions`}>
                     <BookOpen className="mr-2 h-4 w-4" />
-                    Browse Questions
+                    {d?.blocks?.qbank?.browse}
                   </Link>
                 </Button>
                 <Button variant="outline" asChild size="sm">
                   <Link href={`/${lang}/generate/questions/new`}>
-                    Add Question
+                    {d?.blocks?.qbank?.add}
                   </Link>
                 </Button>
               </div>
@@ -270,26 +269,26 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Sparkles className="h-5 w-5 text-purple-500" />
-                Auto Generation
+                {d?.blocks?.generate?.title}
               </CardTitle>
               <CardDescription>
-                AI-powered exam and question generation
+                {d?.blocks?.generate?.description}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               <p className="text-sm text-muted-foreground">
-                Generate exams from templates or let AI create questions based on curriculum and difficulty.
+                {d?.blocks?.generate?.details}
               </p>
               <div className="flex flex-col gap-2">
                 <Button asChild variant="secondary">
                   <Link href={`/${lang}/generate`}>
                     <Sparkles className="mr-2 h-4 w-4" />
-                    Generate Dashboard
+                    {d?.blocks?.generate?.dashboard}
                   </Link>
                 </Button>
                 <Button variant="outline" asChild size="sm">
                   <Link href={`/${lang}/generate/templates`}>
-                    Exam Templates
+                    {d?.blocks?.generate?.templates}
                   </Link>
                 </Button>
               </div>
@@ -301,26 +300,26 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <ClipboardCheck className="h-5 w-5 text-orange-500" />
-                Auto Marking
+                {d?.blocks?.mark?.title}
               </CardTitle>
               <CardDescription>
-                Automated grading with AI assistance
+                {d?.blocks?.mark?.description}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               <p className="text-sm text-muted-foreground">
-                Grade MCQs automatically, use rubrics for essays, and leverage AI for subjective answers.
+                {d?.blocks?.mark?.details}
               </p>
               <div className="flex flex-col gap-2">
                 <Button asChild variant="secondary">
                   <Link href={`/${lang}/mark`}>
                     <ClipboardCheck className="mr-2 h-4 w-4" />
-                    Marking Dashboard
+                    {d?.blocks?.mark?.dashboard}
                   </Link>
                 </Button>
                 <Button variant="outline" asChild size="sm">
                   <Link href={`/${lang}/mark/pending`}>
-                    Pending ({pendingMarkingCount})
+                    {d?.blocks?.mark?.pending} ({pendingMarkingCount})
                   </Link>
                 </Button>
               </div>
@@ -332,26 +331,26 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <FileBarChart className="h-5 w-5 text-green-500" />
-                Results & Reports
+                {d?.blocks?.results?.title}
               </CardTitle>
               <CardDescription>
-                Generate comprehensive result reports
+                {d?.blocks?.results?.description}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               <p className="text-sm text-muted-foreground">
-                Calculate grades, generate PDF reports, analyze performance, and export results.
+                {d?.blocks?.results?.details}
               </p>
               <div className="flex flex-col gap-2">
                 <Button asChild variant="secondary">
                   <Link href={`/${lang}/results`}>
                     <FileBarChart className="mr-2 h-4 w-4" />
-                    View Results
+                    {d?.blocks?.results?.view}
                   </Link>
                 </Button>
                 <Button variant="outline" asChild size="sm">
                   <Link href={`/${lang}/results/analytics`}>
-                    Analytics
+                    {d?.blocks?.results?.analytics}
                   </Link>
                 </Button>
               </div>
@@ -363,31 +362,31 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <TrendingUp className="h-5 w-5" />
-                Quick Actions
+                {d?.quickActions?.title}
               </CardTitle>
               <CardDescription>
-                Common tasks and shortcuts
+                {d?.quickActions?.description}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-2">
               <Button variant="ghost" className="w-full justify-start" asChild size="sm">
                 <Link href={`/${lang}/exams/upcoming`}>
-                  View Upcoming Exams
+                  {d?.quickActions?.viewUpcoming}
                 </Link>
               </Button>
               <Button variant="ghost" className="w-full justify-start" asChild size="sm">
                 <Link href={`/${lang}/mark/pending`}>
-                  Grade Pending Exams
+                  {d?.quickActions?.gradePending}
                 </Link>
               </Button>
               <Button variant="ghost" className="w-full justify-start" asChild size="sm">
                 <Link href={`/${lang}/results/recent`}>
-                  Recent Results
+                  {d?.quickActions?.recentResults}
                 </Link>
               </Button>
               <Button variant="ghost" className="w-full justify-start" asChild size="sm">
                 <Link href={`/${lang}/generate/questions/ai-generate`}>
-                  Generate Questions with AI
+                  {d?.quickActions?.generateAI}
                 </Link>
               </Button>
             </CardContent>
@@ -397,9 +396,9 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
         {/* Workflow Guide */}
         <Card>
           <CardHeader>
-            <CardTitle>Exam Workflow Guide</CardTitle>
+            <CardTitle>{d?.workflow?.title}</CardTitle>
             <CardDescription>
-              Follow these steps for a complete exam lifecycle
+              {d?.workflow?.description}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -409,9 +408,9 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
                   1
                 </div>
                 <div>
-                  <h3 className="font-medium">Build Question Bank</h3>
+                  <h3 className="font-medium">{d?.workflow?.step1?.title}</h3>
                   <p className="text-sm text-muted-foreground">
-                    Add questions manually or use AI generation. Tag with topics, difficulty, and Bloom levels.
+                    {d?.workflow?.step1?.description}
                   </p>
                 </div>
               </li>
@@ -420,9 +419,9 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
                   2
                 </div>
                 <div>
-                  <h3 className="font-medium">Create Exam</h3>
+                  <h3 className="font-medium">{d?.workflow?.step2?.title}</h3>
                   <p className="text-sm text-muted-foreground">
-                    Use templates or generate from question bank. Set schedule, duration, and marks distribution.
+                    {d?.workflow?.step2?.description}
                   </p>
                 </div>
               </li>
@@ -431,9 +430,9 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
                   3
                 </div>
                 <div>
-                  <h3 className="font-medium">Conduct Exam</h3>
+                  <h3 className="font-medium">{d?.workflow?.step3?.title}</h3>
                   <p className="text-sm text-muted-foreground">
-                    Publish exam to students. Monitor progress and attendance during exam period.
+                    {d?.workflow?.step3?.description}
                   </p>
                 </div>
               </li>
@@ -442,9 +441,9 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
                   4
                 </div>
                 <div>
-                  <h3 className="font-medium">Grade & Mark</h3>
+                  <h3 className="font-medium">{d?.workflow?.step4?.title}</h3>
                   <p className="text-sm text-muted-foreground">
-                    Auto-grade MCQs, use rubrics for essays, and AI assistance for subjective answers.
+                    {d?.workflow?.step4?.description}
                   </p>
                 </div>
               </li>
@@ -453,9 +452,9 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
                   5
                 </div>
                 <div>
-                  <h3 className="font-medium">Generate Results</h3>
+                  <h3 className="font-medium">{d?.workflow?.step5?.title}</h3>
                   <p className="text-sm text-muted-foreground">
-                    Calculate final marks, assign grades, generate PDF reports, and analyze performance metrics.
+                    {d?.workflow?.step5?.description}
                   </p>
                 </div>
               </li>
