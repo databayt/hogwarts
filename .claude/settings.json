@@ -1,12 +1,94 @@
 {
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "permissions": {
     "allow": [
-      "Bash(pnpm add:*)",
-      "Bash(pnpm list:*)",
-      "Bash(mkdir:*)",
-      "Bash(pnpm prisma generate:*)"
+      "Read",
+      "Write",
+      "Edit",
+      "Glob",
+      "Grep",
+      "Task",
+      "WebSearch",
+      "Bash(git:*)",
+      "Bash(pnpm:*)",
+      "Bash(npm:*)",
+      "Bash(npx:*)",
+      "Bash(node:*)",
+      "Bash(prisma:*)",
+      "Bash(cat:*)",
+      "Bash(ls:*)",
+      "Bash(dir:*)",
+      "Bash(tree:*)",
+      "Bash(find:*)",
+      "Bash(findstr:*)",
+      "Bash(xargs:*)",
+      "Bash(echo:*)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:nextjs.org)",
+      "WebFetch(domain:react.dev)",
+      "WebFetch(domain:ui.shadcn.com)",
+      "WebFetch(domain:tailwindcss.com)",
+      "WebFetch(domain:prisma.io)",
+      "WebFetch(domain:docs.rs)",
+      "WebFetch(domain:actix.rs)",
+      "WebFetch(domain:typescript-eslint.io)",
+      "WebFetch(domain:vitest.dev)",
+      "WebFetch(domain:playwright.dev)",
+      "WebFetch(domain:zod.dev)",
+      "mcp__Ref__ref_search_documentation",
+      "mcp__Ref__ref_read_url"
     ],
-    "deny": [],
+    "deny": [
+      "Bash(rm:*)",
+      "Bash(del:*)",
+      "Bash(rmdir:*)",
+      "Bash(format:*)",
+      "Bash(shutdown:*)",
+      "Bash(reboot:*)"
+    ],
     "ask": []
+  },
+  "model": "claude-sonnet-4-5-20250929",
+  "enableAllProjectMcpServers": true,
+  "includeCoAuthoredBy": true,
+  "alwaysThinkingEnabled": true,
+  "env": {
+    "PROJECT_NAME": "Hogwarts School Automation Platform",
+    "PROJECT_TYPE": "nextjs",
+    "MULTI_TENANT": "true",
+    "I18N_LANGUAGES": "en,ar"
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "npx prettier --write \"$CLAUDE_TOOL_ARGS\" --log-level silent || exit 0"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "npx prettier --write \"$CLAUDE_TOOL_ARGS\" --log-level silent || exit 0"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo Hogwarts School Automation Platform - Multi-tenant Next.js + React + Prisma"
+          }
+        ]
+      }
+    ]
   }
 }
