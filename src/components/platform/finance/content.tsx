@@ -60,66 +60,71 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
   let unpaidInvoices = 0
 
   if (schoolId) {
-    ;[
-      invoicesCount,
-      receiptsCount,
-      bankAccountsCount,
-      studentsWithFeesCount,
-      teachersWithSalaryCount,
-      pendingPayrollCount,
-      pendingTimesheetsCount,
-      walletsCount,
-      activeBudgetsCount,
-      pendingExpensesCount,
-      accountsCount,
-      reportsCount,
-    ] = await Promise.all([
-      db.userInvoice.count({ where: { schoolId } }),
-      db.expenseReceipt.count({ where: { schoolId } }),
-      db.bankAccount.count({ where: { schoolId } }),
-      db.feeAssignment.count({ where: { schoolId } }),
-      db.salaryStructure.count({ where: { schoolId } }),
-      db.payrollRun.count({
-        where: { schoolId, status: { in: ['DRAFT', 'PENDING_APPROVAL'] } },
-      }),
-      db.timesheetEntry.count({
-        where: { schoolId, status: 'SUBMITTED' },
-      }),
-      db.wallet.count({ where: { schoolId } }),
-      db.budget.count({
-        where: { schoolId, status: 'ACTIVE' },
-      }),
-      db.expense.count({
-        where: { schoolId, status: 'PENDING' },
-      }),
-      db.chartOfAccount.count({ where: { schoolId } }),
-      db.financialReport.count({ where: { schoolId } }),
-    ])
-
-    // Calculate financial totals
-    const [revenueAgg, expensesAgg, pendingPaymentsAgg, unpaidInvoicesAgg] =
-      await Promise.all([
-        db.payment.aggregate({
-          where: { schoolId, status: 'SUCCESS' },
-          _sum: { amount: true },
-        }),
-        db.expense.aggregate({
-          where: { schoolId, status: 'APPROVED' },
-          _sum: { amount: true },
-        }),
-        db.payment.aggregate({
+    try {
+      ;[
+        invoicesCount,
+        receiptsCount,
+        bankAccountsCount,
+        studentsWithFeesCount,
+        teachersWithSalaryCount,
+        pendingPayrollCount,
+        pendingTimesheetsCount,
+        walletsCount,
+        activeBudgetsCount,
+        pendingExpensesCount,
+        accountsCount,
+        reportsCount,
+      ] = await Promise.all([
+        db.userInvoice.count({ where: { schoolId } }).catch(() => 0),
+        db.expenseReceipt.count({ where: { schoolId } }).catch(() => 0),
+        db.bankAccount.count({ where: { schoolId } }).catch(() => 0),
+        db.feeAssignment.count({ where: { schoolId } }).catch(() => 0),
+        db.salaryStructure.count({ where: { schoolId } }).catch(() => 0),
+        db.payrollRun.count({
+          where: { schoolId, status: { in: ['DRAFT', 'PENDING_APPROVAL'] } },
+        }).catch(() => 0),
+        db.timesheetEntry.count({
+          where: { schoolId, status: 'SUBMITTED' },
+        }).catch(() => 0),
+        db.wallet.count({ where: { schoolId } }).catch(() => 0),
+        db.budget.count({
+          where: { schoolId, status: 'ACTIVE' },
+        }).catch(() => 0),
+        db.expense.count({
           where: { schoolId, status: 'PENDING' },
-          _sum: { amount: true },
-        }),
-        db.userInvoice.count({
-          where: { schoolId, status: { in: ['UNPAID', 'OVERDUE'] } },
-        }),
+        }).catch(() => 0),
+        db.chartOfAccount.count({ where: { schoolId } }).catch(() => 0),
+        db.financialReport.count({ where: { schoolId } }).catch(() => 0),
       ])
 
-    totalRevenue = revenueAgg._sum.amount?.toNumber() || 0
-    totalExpenses = expensesAgg._sum.amount?.toNumber() || 0
-    pendingPayments = pendingPaymentsAgg._sum.amount?.toNumber() || 0
-    unpaidInvoices = unpaidInvoicesAgg
+      // Calculate financial totals
+      const [revenueAgg, expensesAgg, pendingPaymentsAgg, unpaidInvoicesAgg] =
+        await Promise.all([
+          db.payment.aggregate({
+            where: { schoolId, status: 'SUCCESS' },
+            _sum: { amount: true },
+          }).catch(() => ({ _sum: { amount: null } })),
+          db.expense.aggregate({
+            where: { schoolId, status: 'APPROVED' },
+            _sum: { amount: true },
+          }).catch(() => ({ _sum: { amount: null } })),
+          db.payment.aggregate({
+            where: { schoolId, status: 'PENDING' },
+            _sum: { amount: true },
+          }).catch(() => ({ _sum: { amount: null } })),
+          db.userInvoice.count({
+            where: { schoolId, status: { in: ['UNPAID', 'OVERDUE'] } },
+          }).catch(() => 0),
+        ])
+
+      totalRevenue = revenueAgg._sum.amount?.toNumber() || 0
+      totalExpenses = expensesAgg._sum.amount?.toNumber() || 0
+      pendingPayments = pendingPaymentsAgg._sum.amount?.toNumber() || 0
+      unpaidInvoices = unpaidInvoicesAgg
+    } catch (error) {
+      console.error('Error fetching finance data:', error)
+      // Continue with zero values if database queries fail
+    }
   }
 
   // @ts-expect-error - finance dictionary not yet added to type definitions
