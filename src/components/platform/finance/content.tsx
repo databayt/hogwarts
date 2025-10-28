@@ -1,5 +1,6 @@
 import { Shell as PageContainer } from '@/components/table/shell'
 import PageHeader from '@/components/atom/page-header'
+import { PageNav, type PageNavItem } from '@/components/atom/page-nav'
 import type { Locale } from '@/components/internationalization/config'
 import type { Dictionary } from '@/components/internationalization/dictionaries'
 import { Button } from '@/components/ui/button'
@@ -130,16 +131,33 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
   // @ts-expect-error - finance dictionary not yet added to type definitions
   const d = dictionary?.school?.finance?.dashboard
 
+  // Define finance page navigation
+  const financePages: PageNavItem[] = [
+    { name: 'Overview', href: `/${lang}/finance` },
+    { name: 'Invoice', href: `/${lang}/finance/invoice` },
+    { name: 'Receipt', href: `/${lang}/finance/receipt` },
+    { name: 'Banking', href: `/${lang}/finance/banking` },
+    { name: 'Fees', href: `/${lang}/finance/fees` },
+    { name: 'Salary', href: `/${lang}/finance/salary` },
+    { name: 'Payroll', href: `/${lang}/finance/payroll` },
+    { name: 'Timesheet', href: `/${lang}/finance/timesheet` },
+    { name: 'Wallet', href: `/${lang}/finance/wallet` },
+    { name: 'Budget', href: `/${lang}/finance/budget` },
+    { name: 'Expenses', href: `/${lang}/finance/expenses` },
+    { name: 'Accounts', href: `/${lang}/finance/accounts` },
+    { name: 'Reports', href: `/${lang}/finance/reports` },
+  ]
+
   return (
     <PageContainer>
       <div className="flex flex-1 flex-col gap-6">
-        <PageHeader
-          // @ts-expect-error - finance dictionary not yet added to type definitions
-          title={dictionary?.school?.finance?.title}
-          // @ts-expect-error - finance dictionary not yet added to type definitions
-          description={dictionary?.school?.finance?.description}
-          className="text-start max-w-none"
-        />
+        <div className="flex flex-col gap-4">
+          <PageHeader
+            title="Finance"
+            className="text-start max-w-none"
+          />
+          <PageNav pages={financePages} />
+        </div>
 
         {/* Overview Stats - Financial Health */}
         <div className="grid gap-4 md:grid-cols-4">
