@@ -3,6 +3,7 @@
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
+import type { QuestionType, DifficultyLevel, BloomLevel } from "@prisma/client";
 import type {
   CreateQuestionResult,
   UpdateQuestionResult,
@@ -17,7 +18,7 @@ import {
   examGeneratorSchema,
   updateAnalyticsSchema,
 } from "./validation";
-import { generateExamQuestions, generateExamPreview } from "./util";
+import { generateExamQuestions, generateExamPreview } from "../generate/utils";
 
 // ========== Question Bank Actions ==========
 
@@ -189,9 +190,9 @@ export async function getQuestions(filters?: {
       where: {
         schoolId, // CRITICAL: Multi-tenant scope
         ...(filters?.subjectId && { subjectId: filters.subjectId }),
-        ...(filters?.questionType && { questionType: filters.questionType as any }),
-        ...(filters?.difficulty && { difficulty: filters.difficulty as any }),
-        ...(filters?.bloomLevel && { bloomLevel: filters.bloomLevel as any }),
+        ...(filters?.questionType && { questionType: filters.questionType as QuestionType }),
+        ...(filters?.difficulty && { difficulty: filters.difficulty as DifficultyLevel }),
+        ...(filters?.bloomLevel && { bloomLevel: filters.bloomLevel as BloomLevel }),
         ...(filters?.search && {
           questionText: {
             contains: filters.search,
@@ -384,7 +385,7 @@ export async function generateExam(
         return { success: false, error: "Template not found" };
       }
 
-      distribution = template.distribution as any;
+      distribution = template.distribution as Record<string, Record<string, number>>;
     }
 
     if (!distribution) {

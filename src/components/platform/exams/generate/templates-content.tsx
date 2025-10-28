@@ -9,6 +9,8 @@ import PageHeader from "@/components/atom/page-header";
 import type { Locale } from "@/components/internationalization/config";
 import type { Dictionary } from "@/components/internationalization/dictionaries";
 import { calculateTotalQuestions } from "./utils";
+import type { Prisma } from "@prisma/client";
+import type { TemplateDistribution } from "./types";
 
 interface Props {
   searchParams: Promise<SearchParams>;
@@ -27,10 +29,10 @@ export default async function TemplatesContent({
   let total = 0;
 
   if (schoolId) {
-    const where: any = {
+    const where: Prisma.ExamTemplateWhereInput = {
       schoolId, // CRITICAL: Multi-tenant scope
       ...(sp.subjectId ? { subjectId: sp.subjectId } : {}),
-      ...(sp.isActive !== undefined ? { isActive: sp.isActive } : {}),
+      ...(sp.isActive !== undefined && sp.isActive !== null ? { isActive: sp.isActive } : {}),
       ...(sp.search
         ? {
             name: {
@@ -43,9 +45,9 @@ export default async function TemplatesContent({
 
     const skip = (sp.page - 1) * sp.perPage;
     const take = sp.perPage;
-    const orderBy =
+    const orderBy: Prisma.ExamTemplateOrderByWithRelationInput[] =
       sp.sort && Array.isArray(sp.sort) && sp.sort.length
-        ? sp.sort.map((s: any) => ({ [s.id]: s.desc ? "desc" : "asc" }))
+        ? [{ [sp.sort[0]]: sp.sort[1] === "desc" ? "desc" : "asc" } as Prisma.ExamTemplateOrderByWithRelationInput]
         : [{ createdAt: "desc" }];
 
     const [rows, count] = await Promise.all([
@@ -77,7 +79,7 @@ export default async function TemplatesContent({
       subjectName: t.subject?.subjectName || "Unknown",
       duration: t.duration,
       totalMarks: Number(t.totalMarks),
-      totalQuestions: calculateTotalQuestions(t.distribution as any),
+      totalQuestions: calculateTotalQuestions(t.distribution as TemplateDistribution),
       isActive: t.isActive,
       timesUsed: t._count.generatedExams,
       createdAt: t.createdAt.toISOString(),

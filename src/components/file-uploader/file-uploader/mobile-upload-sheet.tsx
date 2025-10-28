@@ -64,7 +64,7 @@ const uploadOptions: UploadOption[] = [
     icon: Camera,
     label: 'Take Photo',
     description: 'Use your camera',
-    color: 'bg-blue-500',
+    color: 'bg-chart-1',
     accept: 'image/*',
     capture: 'environment',
   },
@@ -73,7 +73,7 @@ const uploadOptions: UploadOption[] = [
     icon: ImageIcon,
     label: 'Photo Library',
     description: 'Choose from gallery',
-    color: 'bg-green-500',
+    color: 'bg-chart-2',
     accept: 'image/*',
   },
   {
@@ -81,7 +81,7 @@ const uploadOptions: UploadOption[] = [
     icon: Video,
     label: 'Record Video',
     description: 'Capture video',
-    color: 'bg-purple-500',
+    color: 'bg-chart-3',
     accept: 'video/*',
     capture: 'environment',
   },
@@ -90,7 +90,7 @@ const uploadOptions: UploadOption[] = [
     icon: FileText,
     label: 'Documents',
     description: 'PDFs and docs',
-    color: 'bg-orange-500',
+    color: 'bg-chart-1',
     accept: '.pdf,.doc,.docx,.txt',
   },
   {
@@ -98,7 +98,7 @@ const uploadOptions: UploadOption[] = [
     icon: Mic,
     label: 'Audio',
     description: 'Record or select',
-    color: 'bg-red-500',
+    color: 'bg-destructive',
     accept: 'audio/*',
   },
   {
@@ -106,7 +106,7 @@ const uploadOptions: UploadOption[] = [
     icon: FolderOpen,
     label: 'Browse Files',
     description: 'All file types',
-    color: 'bg-gray-500',
+    color: 'bg-muted-foreground',
     accept: '*',
   },
 ];

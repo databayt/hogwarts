@@ -38,16 +38,10 @@ export const QUESTION_TYPES: Record<
     icon: "FileText",
     autoGradable: false,
   },
-  FILL_IN_BLANK: {
+  FILL_BLANK: {
     label: "Fill in the Blank",
     description: "Complete the missing words or phrases",
     icon: "Pencil",
-    autoGradable: true,
-  },
-  MATCHING: {
-    label: "Matching",
-    description: "Match items from two lists",
-    icon: "Link",
     autoGradable: true,
   },
 }

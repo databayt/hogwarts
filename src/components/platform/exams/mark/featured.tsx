@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { TrendingUp, Star, Award, ThumbsUp } from "lucide-react"
 import Link from "next/link"
-import type { QuestionType, DifficultyLevel, BloomLevel } from "@prisma/client"
+import type { QuestionType, DifficultyLevel, BloomLevel, Rubric } from "@prisma/client"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 interface FeaturedQuestion {
@@ -20,9 +20,10 @@ interface FeaturedQuestion {
   points: number
   subject: { subjectName: string }
   tags?: string[]
-  rubrics?: any[]
+  rubrics?: Rubric[]
+  createdAt: Date
   _count: {
-    examQuestions: number
+    generatedExamQuestions: number
     studentAnswers: number
   }
   averageScore?: number
@@ -44,7 +45,7 @@ export function FeaturedQuestions({
 
   // Calculate featured categories
   const mostUsed = [...questions]
-    .sort((a, b) => b._count.examQuestions - a._count.examQuestions)
+    .sort((a, b) => b._count.generatedExamQuestions - a._count.generatedExamQuestions)
     .slice(0, 6)
 
   const highestRated = questions
@@ -108,7 +109,7 @@ export function FeaturedQuestions({
                   points={Number(question.points)}
                   subjectName={question.subject.subjectName}
                   tags={question.tags}
-                  usageCount={question._count.examQuestions}
+                  usageCount={question._count.generatedExamQuestions}
                   averageScore={question.averageScore}
                   hasRubric={question.rubrics ? question.rubrics.length > 0 : false}
                   dictionary={dictionary}
@@ -146,7 +147,7 @@ export function FeaturedQuestions({
                 points={Number(question.points)}
                 subjectName={question.subject.subjectName}
                 tags={question.tags}
-                usageCount={question._count.examQuestions}
+                usageCount={question._count.generatedExamQuestions}
                 averageScore={question.averageScore}
                 hasRubric={question.rubrics ? question.rubrics.length > 0 : false}
                 dictionary={dictionary}
@@ -183,7 +184,7 @@ export function FeaturedQuestions({
                 points={Number(question.points)}
                 subjectName={question.subject.subjectName}
                 tags={question.tags}
-                usageCount={question._count.examQuestions}
+                usageCount={question._count.generatedExamQuestions}
                 averageScore={question.averageScore}
                 hasRubric={question.rubrics ? question.rubrics.length > 0 : false}
                 dictionary={dictionary}

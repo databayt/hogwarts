@@ -196,7 +196,7 @@ const DroppableCell: React.FC<{
 
   if (isBreak) {
     return (
-      <td className="bg-gray-50 dark:bg-gray-800 text-center">
+      <td className="bg-muted text-center">
         <p className="muted">Break</p>
       </td>
     )
@@ -313,19 +313,19 @@ export function TimetableGridEnhanced({
     <DndProvider backend={Backend}>
       <div className="w-full overflow-x-auto">
         {conflicts.length > 0 && showConflicts && (
-          <div className="mb-4 p-3 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg">
+          <div className="mb-4 p-3 bg-chart-4 border border-chart-4 rounded-lg">
             <div className="flex items-center gap-2">
-              <AlertCircle className="h-5 w-5 text-orange-600 dark:text-orange-400" />
-              <h6 className="text-orange-900 dark:text-orange-100">
+              <AlertCircle className="h-5 w-5 text-chart-4" />
+              <h6 className="text-foreground">
                 {conflicts.length} conflict{conflicts.length > 1 ? 's' : ''} detected
               </h6>
             </div>
           </div>
         )}
 
-        <table className="w-full border-collapse bg-white dark:bg-gray-900 rounded-lg overflow-hidden shadow-sm">
+        <table className="w-full border-collapse bg-background rounded-lg overflow-hidden shadow-sm">
           <thead>
-            <tr className="bg-gray-50 dark:bg-gray-800">
+            <tr className="bg-muted">
               <th className="border-r border-b p-3 text-left"
                   style={{ width: `${GRID_SETTINGS.TIME_COLUMN_WIDTH}px` }}>
                 <h6 className="inline-flex items-center">
@@ -343,7 +343,7 @@ export function TimetableGridEnhanced({
           <tbody>
             {periods.map(period => (
               <tr key={period.id}>
-                <td className="border-r border-b p-3 bg-gray-50 dark:bg-gray-800">
+                <td className="border-r border-b p-3 bg-muted">
                   <h6>{period.name}</h6>
                   <p className="muted">
                     <small>{formatPeriodTime(period.startTime, period.endTime)}</small>

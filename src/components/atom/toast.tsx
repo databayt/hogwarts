@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 
 export const SuccessToast = (message: string) => {
     toast.success(message, {
-        icon: <div className="h-8 w-8 rounded-full bg-green-500 flex items-center justify-center">
+        icon: <div className="h-8 w-8 rounded-full bg-chart-2 flex items-center justify-center">
             <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-5 w-5"

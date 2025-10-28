@@ -20,12 +20,12 @@ import {
   confirmDeleteDialog,
 } from "@/components/atom/toast";
 import { Badge } from "@/components/ui/badge";
-import type { QuestionBankRow } from "../types";
+import type { QuestionBankRow } from "./types";
 import {
   QUESTION_TYPES,
   DIFFICULTY_LEVELS,
   BLOOM_LEVELS,
-} from "../config";
+} from "./config";
 
 export type { QuestionBankRow };
 

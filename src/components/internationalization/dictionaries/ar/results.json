@@ -155,5 +155,36 @@
       "title": "اتجاهات الأداء",
       "description": "التحليل المرئي والمخططات"
     }
-  }
+  },
+
+  "analytics": "التحليلات",
+  "totalStudents": "إجمالي الطلاب",
+  "averageScore": "متوسط الدرجات",
+  "passRate": "معدل النجاح",
+  "passed": "ناجح",
+  "topScore": "أعلى درجة",
+  "classAverage": "متوسط الفصل",
+  "viewResults": "عرض النتائج",
+  "performanceDistribution": "توزيع الأداء",
+  "detailedAnalytics": "تحليلات مفصلة",
+  "recentResults": "النتائج الأخيرة",
+  "recentDescription": "الامتحانات المكتملة مؤخراً",
+  "noRecentResults": "لا توجد نتائج حديثة متاحة",
+  "completed": "مكتمل",
+  "students": "طلاب",
+  "batchPDF": "إنشاء PDF جماعي",
+  "pdfTemplates": "قوالب PDF",
+  "chooseTemplate": "اختر قالباً لبطاقات التقارير",
+  "classicTemplate": "القالب الكلاسيكي",
+  "modernTemplate": "القالب الحديث",
+  "minimalTemplate": "القالب البسيط",
+  "pdfOptions": "خيارات PDF",
+  "customizeOutput": "تخصيص التقارير المُنشأة",
+  "includeBreakdown": "تضمين تفصيل الأسئلة",
+  "includeAnalytics": "تضمين تحليلات الفصل",
+  "addWatermark": "إضافة علامة مائية للمدرسة",
+  "generation": "الإنشاء",
+  "totalReports": "إجمالي التقارير",
+  "estimatedSize": "الحجم التقديري",
+  "generateAll": "إنشاء جميع ملفات PDF"
 }

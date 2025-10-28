@@ -25,9 +25,10 @@ export function getColumns(dictionary: Dictionary): ColumnDef<MarkingQueueItem>[
       header: dict.table.student,
       cell: ({ row }) => {
         const student = row.original.student
+        const fullName = `${student.givenName} ${student.middleName || ''} ${student.surname}`.trim().replace(/\s+/g, ' ')
         return (
           <div className="font-medium">
-            {student.user.name}
+            {fullName}
           </div>
         )
       },

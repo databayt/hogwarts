@@ -56,12 +56,12 @@ interface StudentProfileProps {
 }
 
 const statusColors = {
-  ACTIVE: "bg-green-500",
-  INACTIVE: "bg-gray-500",
-  SUSPENDED: "bg-red-500",
-  GRADUATED: "bg-blue-500",
-  TRANSFERRED: "bg-yellow-500",
-  DROPPED_OUT: "bg-red-700",
+  ACTIVE: "bg-chart-2", // Green semantic token
+  INACTIVE: "bg-muted",
+  SUSPENDED: "bg-destructive",
+  GRADUATED: "bg-primary",
+  TRANSFERRED: "bg-chart-4", // Yellow/accent semantic token
+  DROPPED_OUT: "bg-destructive",
 };
 
 const statusLabels = {

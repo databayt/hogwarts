@@ -61,13 +61,13 @@ export function PerformanceDashboard() {
 
     for (const [pattern, threshold] of Object.entries(thresholds)) {
       if (metricName.includes(pattern)) {
-        if (value >= threshold.critical) return 'text-red-600 bg-red-50';
-        if (value >= threshold.warning) return 'text-yellow-600 bg-yellow-50';
-        return 'text-green-600 bg-green-50';
+        if (value >= threshold.critical) return 'text-destructive bg-destructive/10';
+        if (value >= threshold.warning) return 'text-chart-4 bg-chart-4/10';
+        return 'text-chart-2 bg-chart-2/10';
       }
     }
 
-    return 'text-gray-600 bg-gray-50';
+    return 'text-muted-foreground bg-muted';
   };
 
   if (!summary) {
@@ -126,7 +126,7 @@ export function PerformanceDashboard() {
               const newSummary = performanceMonitor.getSummary(selectedTimeWindow);
               setSummary(newSummary);
             }}
-            className="px-3 py-1 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700"
+            className="px-3 py-1 bg-primary text-primary-foreground rounded-md text-sm hover:bg-primary/90"
           >
             Refresh
           </button>
@@ -134,9 +134,9 @@ export function PerformanceDashboard() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-white p-4 rounded-lg border border-gray-200">
+        <div className="bg-background p-4 rounded-lg border border-border">
           <h3 className="mb-2">Total Metrics</h3>
-          <p className="text-3xl font-bold text-blue-600">
+          <p className="text-3xl font-bold text-chart-1">
             {summary.metrics.length}
           </p>
           <p className="text-sm text-muted-foreground">
@@ -144,17 +144,17 @@ export function PerformanceDashboard() {
           </p>
         </div>
 
-        <div className="bg-white p-4 rounded-lg border border-gray-200">
+        <div className="bg-background p-4 rounded-lg border border-border">
           <h3 className="mb-2">Metric Types</h3>
-          <p className="text-3xl font-bold text-green-600">
+          <p className="text-3xl font-bold text-chart-2">
             {Object.keys(summary.averages).length}
           </p>
           <p className="text-sm text-muted-foreground">unique operations tracked</p>
         </div>
 
-        <div className="bg-white p-4 rounded-lg border border-gray-200">
+        <div className="bg-background p-4 rounded-lg border border-border">
           <h3 className="mb-2">Avg Response Time</h3>
-          <p className="text-3xl font-bold text-purple-600">
+          <p className="text-3xl font-bold text-chart-3">
             {Object.values(summary.averages).length > 0
               ? formatValue(
                   Object.values(summary.averages).reduce((sum, val) => sum + val, 0) / Object.values(summary.averages).length,

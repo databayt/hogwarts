@@ -60,24 +60,24 @@ interface StudentAssignmentViewProps {
 }
 
 const statusColors = {
-  NOT_SUBMITTED: 'bg-gray-100 text-gray-800',
-  DRAFT: 'bg-yellow-100 text-yellow-800',
-  SUBMITTED: 'bg-green-100 text-green-800',
-  LATE_SUBMITTED: 'bg-orange-100 text-orange-800',
-  GRADED: 'bg-blue-100 text-blue-800',
-  RETURNED: 'bg-purple-100 text-purple-800',
+  NOT_SUBMITTED: 'bg-muted text-muted-foreground',
+  DRAFT: 'bg-chart-4/10 text-chart-4',
+  SUBMITTED: 'bg-chart-2/10 text-chart-2',
+  LATE_SUBMITTED: 'bg-chart-1/10 text-chart-1',
+  GRADED: 'bg-primary/10 text-primary',
+  RETURNED: 'bg-chart-3/10 text-chart-3',
 };
 
 const typeColors = {
-  HOMEWORK: 'bg-indigo-100 text-indigo-800',
-  QUIZ: 'bg-pink-100 text-pink-800',
-  TEST: 'bg-red-100 text-red-800',
-  MIDTERM: 'bg-orange-100 text-orange-800',
-  FINAL_EXAM: 'bg-red-100 text-red-800',
-  PROJECT: 'bg-purple-100 text-purple-800',
-  LAB_REPORT: 'bg-cyan-100 text-cyan-800',
-  ESSAY: 'bg-green-100 text-green-800',
-  PRESENTATION: 'bg-yellow-100 text-yellow-800',
+  HOMEWORK: 'bg-primary/10 text-primary',
+  QUIZ: 'bg-chart-5/10 text-chart-5',
+  TEST: 'bg-destructive/10 text-destructive',
+  MIDTERM: 'bg-chart-1/10 text-chart-1',
+  FINAL_EXAM: 'bg-destructive/10 text-destructive',
+  PROJECT: 'bg-chart-3/10 text-chart-3',
+  LAB_REPORT: 'bg-chart-1/10 text-chart-1',
+  ESSAY: 'bg-chart-2/10 text-chart-2',
+  PRESENTATION: 'bg-chart-4/10 text-chart-4',
 };
 
 export function StudentAssignmentView({
@@ -161,9 +161,9 @@ export function StudentAssignmentView({
     const now = new Date();
     const daysUntilDue = Math.ceil((due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 
-    if (daysUntilDue < 0) return 'text-red-600';
-    if (daysUntilDue <= 1) return 'text-orange-600';
-    if (daysUntilDue <= 3) return 'text-yellow-600';
+    if (daysUntilDue < 0) return 'text-destructive';
+    if (daysUntilDue <= 1) return 'text-chart-1';
+    if (daysUntilDue <= 3) return 'text-chart-4';
     return 'text-muted-foreground';
   };
 
@@ -224,9 +224,9 @@ export function StudentAssignmentView({
                 <span className="font-medium">Score:</span>
                 <span className={cn(
                   "font-bold",
-                  submission.score >= assignment.totalPoints * 0.9 && "text-green-600",
-                  submission.score >= assignment.totalPoints * 0.7 && submission.score < assignment.totalPoints * 0.9 && "text-blue-600",
-                  submission.score < assignment.totalPoints * 0.7 && "text-red-600"
+                  submission.score >= assignment.totalPoints * 0.9 && "text-chart-2",
+                  submission.score >= assignment.totalPoints * 0.7 && submission.score < assignment.totalPoints * 0.9 && "text-primary",
+                  submission.score < assignment.totalPoints * 0.7 && "text-destructive"
                 )}>
                   {submission.score}/{assignment.totalPoints}
                 </span>
@@ -283,7 +283,7 @@ export function StudentAssignmentView({
             <CardDescription>Submitted</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{stats.submitted}</div>
+            <div className="text-2xl font-bold text-chart-2">{stats.submitted}</div>
             <Progress value={stats.submissionRate} className="mt-2 h-2" />
           </CardContent>
         </Card>
@@ -293,7 +293,7 @@ export function StudentAssignmentView({
             <CardDescription>Pending</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">{stats.pending}</div>
+            <div className="text-2xl font-bold text-chart-4">{stats.pending}</div>
           </CardContent>
         </Card>
 
@@ -302,7 +302,7 @@ export function StudentAssignmentView({
             <CardDescription>Average Score</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{stats.averageScore}%</div>
+            <div className="text-2xl font-bold text-primary">{stats.averageScore}%</div>
           </CardContent>
         </Card>
       </div>
@@ -342,7 +342,7 @@ export function StudentAssignmentView({
           <TabsTrigger value="overdue" className="relative">
             Overdue
             {categorizedAssignments.overdue.length > 0 && (
-              <span className="ml-2 text-xs bg-red-500/20 text-red-700 px-1.5 py-0.5 rounded-full">
+              <span className="ml-2 text-xs bg-destructive/20 text-destructive px-1.5 py-0.5 rounded-full">
                 {categorizedAssignments.overdue.length}
               </span>
             )}
@@ -350,7 +350,7 @@ export function StudentAssignmentView({
           <TabsTrigger value="completed">
             Completed
             {categorizedAssignments.completed.length > 0 && (
-              <span className="ml-2 text-xs bg-green-500/20 text-green-700 px-1.5 py-0.5 rounded-full">
+              <span className="ml-2 text-xs bg-chart-2/20 text-chart-2 px-1.5 py-0.5 rounded-full">
                 {categorizedAssignments.completed.length}
               </span>
             )}
@@ -365,7 +365,7 @@ export function StudentAssignmentView({
           ) : (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-8">
-                <Check className="h-12 w-12 text-green-500 mb-4" />
+                <Check className="h-12 w-12 text-chart-2 mb-4" />
                 <p className="text-muted-foreground">No upcoming assignments</p>
               </CardContent>
             </Card>
@@ -380,7 +380,7 @@ export function StudentAssignmentView({
           ) : (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-8">
-                <Check className="h-12 w-12 text-green-500 mb-4" />
+                <Check className="h-12 w-12 text-chart-2 mb-4" />
                 <p className="text-muted-foreground">No overdue assignments</p>
               </CardContent>
             </Card>

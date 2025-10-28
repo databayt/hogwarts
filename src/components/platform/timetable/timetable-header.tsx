@@ -147,15 +147,15 @@ export function TimetableHeader({
           onClick={() => onWeekChange(false)}
           disabled={!isNextWeek || isWeekChangeLoading}
           className={cn(
-            "border-neutral-200 dark:border-neutral-700 rounded-xl bg-neutral-50 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-900",
+            "border-border rounded-xl bg-muted hover:bg-muted/80",
             "px-3",
             isWeekChangeLoading && "opacity-50 cursor-not-allowed"
           )}
         >
           <ChevronLeft className={cn(
             "w-4 h-4",
-            "text-neutral-700 dark:text-neutral-300",
-            (isWeekChangeLoading || !isNextWeek) && "dark:text-neutral-600"
+            "text-foreground",
+            (isWeekChangeLoading || !isNextWeek) && "text-muted-foreground"
           )} />
         </Button>
         <Button
@@ -163,15 +163,15 @@ export function TimetableHeader({
           onClick={() => onWeekChange(true)}
           disabled={isNextWeek || isWeekChangeLoading}
           className={cn(
-            "border-neutral-200 dark:border-neutral-700 rounded-xl bg-neutral-50 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-900",
+            "border-border rounded-xl bg-muted hover:bg-muted/80",
             "px-3",
             isWeekChangeLoading && "opacity-50 cursor-not-allowed"
           )}
         >
           <ChevronRight className={cn(
             "w-4 h-4",
-            "text-neutral-700 dark:text-neutral-300",
-            (isWeekChangeLoading || isNextWeek) && "dark:text-neutral-600"
+            "text-foreground",
+            (isWeekChangeLoading || isNextWeek) && "text-muted-foreground"
           )} />
         </Button>
 
@@ -183,7 +183,7 @@ export function TimetableHeader({
         </Button>
         {conflicts != null && (
           <button
-            className={cn("muted underline-offset-2", conflicts > 0 ? "text-red-600 underline" : "")}
+            className={cn("muted underline-offset-2", conflicts > 0 ? "text-destructive underline" : "")}
             onClick={() => setOpenConflicts(true)}
           >
             <small>{conflicts} conflict(s)</small>
@@ -193,12 +193,12 @@ export function TimetableHeader({
         {/* Timetable Options Indicators */}
         <div className="flex items-center gap-2 ml-4">
           {useTimetableStore.getState().classConfig?.showAllSubjects && (
-            <div className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full">
+            <div className="px-2 py-1 bg-chart-1 text-chart-1 rounded-full">
               <small>All Subjects</small>
             </div>
           )}
           {useTimetableStore.getState().classConfig?.displayFallbackData && (
-            <div className="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-full">
+            <div className="px-2 py-1 bg-chart-2 text-chart-2 rounded-full">
               <small>Fallback Data</small>
             </div>
           )}

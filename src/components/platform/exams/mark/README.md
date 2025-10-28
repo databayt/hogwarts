@@ -130,7 +130,7 @@ src/app/[lang]/s/[subdomain]/(platform)/mark/
         └── page.tsx          # Individual grading interface
 
 prisma/models/
-└── marking.prisma            # Database schema (with optimized indexes)
+└── exam.prisma               # Database schema (consolidated exam system with marking models)
 
 src/components/internationalization/dictionaries/
 ├── en/

@@ -65,9 +65,9 @@ export function ImportCard({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             {result.success ? (
-              <CheckCircle className="h-5 w-5 text-green-600" />
+              <CheckCircle className="h-5 w-5 text-chart-2" />
             ) : (
-              <Upload className="h-5 w-5 text-orange-600" />
+              <Upload className="h-5 w-5 text-chart-1" />
             )}
             Import Result
           </CardTitle>
@@ -79,11 +79,11 @@ export function ImportCard({
           <div className="grid grid-cols-2 gap-4 muted">
             <div>
               <p className="text-muted-foreground">Imported</p>
-              <h5 className="text-green-600">{result.imported}</h5>
+              <h5 className="text-chart-2">{result.imported}</h5>
             </div>
             <div>
               <p className="text-muted-foreground">Skipped</p>
-              <h5 className="text-orange-600">{result.skipped}</h5>
+              <h5 className="text-chart-1">{result.skipped}</h5>
             </div>
           </div>
           
@@ -92,7 +92,7 @@ export function ImportCard({
               <p className="text-muted-foreground mb-2">Errors:</p>
               <div className="space-y-1">
                 {result.errors.slice(0, 3).map((error, index) => (
-                  <p key={index} className="muted text-red-600">
+                  <p key={index} className="muted text-destructive">
                     {typeof error === 'string' ? error : `Row ${error.row}: ${error.message}`}
                   </p>
                 ))}

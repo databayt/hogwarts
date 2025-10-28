@@ -209,8 +209,13 @@ export type TemplateFiltersSchema = z.infer<typeof templateFiltersSchema>;
 
 // ========== Update Schemas ==========
 
-export const updateQuestionSchema = questionBankSchema.partial().extend({
+export const updateQuestionSchema = questionBankBaseSchema.partial().extend({
   id: z.string().min(1, "Question ID is required"),
+  options: z.array(questionOptionSchema).optional(),
+  acceptedAnswers: z.array(z.string().min(1)).optional(),
+  caseSensitive: z.boolean().optional(),
+  sampleAnswer: z.string().optional(),
+  gradingRubric: z.string().optional(),
 });
 
 export type UpdateQuestionSchema = z.infer<typeof updateQuestionSchema>;

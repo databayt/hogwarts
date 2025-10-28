@@ -8,6 +8,7 @@ import { Shell as PageContainer } from '@/components/table/shell'
 import PageHeader from '@/components/atom/page-header'
 import { type Locale } from '@/components/internationalization/config'
 import { type Dictionary } from '@/components/internationalization/dictionaries'
+import { type Prisma, ExamType, ExamStatus } from '@prisma/client'
 
 interface Props {
   searchParams: Promise<SearchParams>
@@ -20,29 +21,29 @@ export default async function ExamsContent({ searchParams, dictionary, lang }: P
   const { schoolId } = await getTenantContext()
   let data: ExamRow[] = []
   let total = 0
-  
-  if (schoolId && (db as any).exam) {
-    const where: any = {
+
+  if (schoolId) {
+    const where: Prisma.ExamWhereInput = {
       schoolId,
       ...(sp.title ? { title: { contains: sp.title, mode: 'insensitive' } } : {}),
       ...(sp.classId ? { classId: sp.classId } : {}),
       ...(sp.subjectId ? { subjectId: sp.subjectId } : {}),
-      ...(sp.examType ? { examType: sp.examType } : {}),
-      ...(sp.status ? { status: sp.status } : {}),
+      ...(sp.examType ? { examType: sp.examType as ExamType } : {}),
+      ...(sp.status ? { status: sp.status as ExamStatus } : {}),
       ...(sp.examDate ? { examDate: new Date(sp.examDate) } : {}),
     }
-    
+
     const skip = (sp.page - 1) * sp.perPage
     const take = sp.perPage
     const orderBy = (sp.sort && Array.isArray(sp.sort) && sp.sort.length)
-      ? sp.sort.map((s: any) => ({ [s.id]: s.desc ? 'desc' : 'asc' }))
+      ? sp.sort.map((s) => ({ [s.id]: s.desc ? 'desc' : 'asc' }))
       : [{ examDate: 'desc' }, { startTime: 'asc' }]
-      
+
     const [rows, count] = await Promise.all([
-      (db as any).exam.findMany({ 
-        where, 
-        orderBy, 
-        skip, 
+      db.exam.findMany({
+        where,
+        orderBy,
+        skip,
         take,
         include: {
           class: {
@@ -53,24 +54,24 @@ export default async function ExamsContent({ searchParams, dictionary, lang }: P
           }
         }
       }),
-      (db as any).exam.count({ where }),
+      db.exam.count({ where }),
     ])
-    
-    data = rows.map((e: any) => ({ 
-      id: e.id, 
-      title: e.title, 
-      className: e.class?.name || 'Unknown', 
-      subjectName: e.subject?.subjectName || 'Unknown', 
-      examDate: (e.examDate as Date).toISOString(), 
-      startTime: e.startTime, 
-      endTime: e.endTime, 
-      duration: e.duration, 
-      totalMarks: e.totalMarks, 
-      examType: e.examType, 
-      status: e.status, 
-      createdAt: (e.createdAt as Date).toISOString() 
+
+    data = rows.map((e) => ({
+      id: e.id,
+      title: e.title,
+      className: e.class?.name || 'Unknown',
+      subjectName: e.subject?.subjectName || 'Unknown',
+      examDate: e.examDate.toISOString(),
+      startTime: e.startTime,
+      endTime: e.endTime,
+      duration: e.duration,
+      totalMarks: e.totalMarks,
+      examType: e.examType,
+      status: e.status,
+      createdAt: e.createdAt.toISOString()
     }))
-    total = count as number
+    total = count
   }
   
   return (

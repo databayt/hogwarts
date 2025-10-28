@@ -211,7 +211,7 @@ export function generateColorScale(baseColor: string): ColorScale {
   const scale: Partial<ColorScale> = {}
 
   for (const [key, lightness] of Object.entries(lightnessSteps)) {
-    scale[key as keyof ColorScale] = oklchToString({
+    scale[key as unknown as keyof ColorScale] = oklchToString({
       l: lightness,
       c: c * (lightness > 0.7 ? 0.8 : 1), // Reduce chroma in light colors
       h

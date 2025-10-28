@@ -71,38 +71,38 @@ interface StorageQuotaProps {
 const categoryConfig = {
   image: {
     icon: ImageIcon,
-    color: 'bg-blue-500',
-    lightColor: 'bg-blue-100 dark:bg-blue-900/20',
+    color: 'bg-chart-1',
+    lightColor: 'bg-chart-1/10',
     label: 'Images',
   },
   video: {
     icon: Video,
-    color: 'bg-purple-500',
-    lightColor: 'bg-purple-100 dark:bg-purple-900/20',
+    color: 'bg-chart-3',
+    lightColor: 'bg-chart-3/10',
     label: 'Videos',
   },
   document: {
     icon: FileText,
-    color: 'bg-green-500',
-    lightColor: 'bg-green-100 dark:bg-green-900/20',
+    color: 'bg-chart-2',
+    lightColor: 'bg-chart-2/10',
     label: 'Documents',
   },
   audio: {
     icon: Music,
-    color: 'bg-yellow-500',
-    lightColor: 'bg-yellow-100 dark:bg-yellow-900/20',
+    color: 'bg-chart-4',
+    lightColor: 'bg-chart-4/10',
     label: 'Audio',
   },
   archive: {
     icon: Archive,
-    color: 'bg-orange-500',
-    lightColor: 'bg-orange-100 dark:bg-orange-900/20',
+    color: 'bg-chart-1',
+    lightColor: 'bg-chart-1/10',
     label: 'Archives',
   },
   other: {
     icon: FileIcon,
-    color: 'bg-gray-500',
-    lightColor: 'bg-gray-100 dark:bg-gray-900/20',
+    color: 'bg-muted-foreground',
+    lightColor: 'bg-muted',
     label: 'Other',
   },
 };
@@ -117,14 +117,14 @@ const tierConfig = {
   pro: {
     icon: Database,
     label: 'Pro',
-    color: 'text-blue-600 dark:text-blue-400',
-    bgColor: 'bg-blue-100 dark:bg-blue-900/20',
+    color: 'text-chart-1',
+    bgColor: 'bg-chart-1/10',
   },
   enterprise: {
     icon: Cloud,
     label: 'Enterprise',
-    color: 'text-purple-600 dark:text-purple-400',
-    bgColor: 'bg-purple-100 dark:bg-purple-900/20',
+    color: 'text-chart-3',
+    bgColor: 'bg-chart-3/10',
   },
 };
 

@@ -297,7 +297,7 @@ pnpm prisma generate
 
 ### Database Models
 
-See `prisma/models/exams.prisma` and `prisma/models/marking.prisma`:
+See `prisma/models/exam.prisma` (consolidated exam system):
 - `Exam` - Main exam entity
 - `ExamResult` - Student results
 - `QuestionBank` - Question repository
@@ -306,6 +306,7 @@ See `prisma/models/exams.prisma` and `prisma/models/marking.prisma`:
 - `GradeBoundary` - Grade rules
 - `MarkingResult` - Detailed marks
 - `Rubric` - Marking criteria
+- `Result`, `ReportCard` - Results and report cards
 
 ### Configuration
 
@@ -319,7 +320,7 @@ VALUES
 
 2. **PDF Templates**: Customize in `results/lib/templates/`
 
-3. **Question Types**: Defined in `prisma/models/exams.prisma`
+3. **Question Types**: Defined in `prisma/models/exam.prisma`
 
 ## 🔒 Multi-Tenant Safety
 

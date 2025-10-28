@@ -10,7 +10,7 @@ import { Plus, Sparkles } from "lucide-react";
 import { useModal } from "@/components/atom/modal/context";
 import Modal from "@/components/atom/modal/modal";
 import { QuestionBankForm } from "./form";
-import { getQuestions } from "../actions";
+import { getQuestions } from "./actions";
 import type { Dictionary } from "@/components/internationalization/dictionaries";
 
 interface QuestionBankTableProps {

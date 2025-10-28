@@ -65,7 +65,6 @@ export async function createQuestion(data: FormData) {
         points: validated.points,
         timeEstimate: validated.timeEstimate,
         options: validated.options,
-        acceptedAnswers: validated.acceptedAnswers,
         sampleAnswer: validated.sampleAnswer,
         tags: validated.tags || [],
         explanation: validated.explanation,
@@ -75,7 +74,7 @@ export async function createQuestion(data: FormData) {
       },
     })
 
-    revalidatePath("/mark/questions")
+    revalidatePath("/mark")
     return { success: true }
   } catch (error) {
     console.error("Create question error:", error)
@@ -110,7 +109,7 @@ export async function updateQuestion(id: string, data: FormData) {
       data: formData,
     })
 
-    revalidatePath("/mark/questions")
+    revalidatePath("/mark")
     return { success: true }
   } catch (error) {
     console.error("Update question error:", error)
@@ -134,7 +133,7 @@ export async function deleteQuestion(id: string) {
       where: { id, schoolId },
     })
 
-    revalidatePath("/mark/questions")
+    revalidatePath("/mark")
     return { success: true }
   } catch (error) {
     console.error("Delete question error:", error)
@@ -189,7 +188,7 @@ export async function createRubric(data: FormData) {
       },
     })
 
-    revalidatePath("/mark/questions")
+    revalidatePath("/mark")
     return { success: true }
   } catch (error) {
     console.error("Create rubric error:", error)
@@ -370,8 +369,9 @@ export async function autoGradeAnswer(studentAnswerId: string) {
         break
       }
 
-      case "FILL_IN_BLANK": {
-        const acceptedAnswers = parseAcceptedAnswers(question.acceptedAnswers)
+      case "FILL_BLANK": {
+        const options = question.options as { acceptedAnswers?: string[], caseSensitive?: boolean } | null
+        const acceptedAnswers = parseAcceptedAnswers(options?.acceptedAnswers)
         result = gradeFillBlank(studentAnswer.answerText || "", acceptedAnswers)
         break
       }
@@ -466,7 +466,8 @@ export async function aiGradeAnswer(studentAnswerId: string) {
         sampleAnswer: question.sampleAnswer || undefined,
       })
     } else if (question.questionType === "SHORT_ANSWER") {
-      const acceptedAnswers = parseAcceptedAnswers(question.acceptedAnswers)
+      const options = question.options as { acceptedAnswers?: string[] } | null
+      const acceptedAnswers = parseAcceptedAnswers(options?.acceptedAnswers)
       aiResult = await gradeShortAnswerWithAI({
         questionText: question.questionText,
         studentAnswer: answerText,
@@ -519,7 +520,7 @@ export async function aiGradeAnswer(studentAnswerId: string) {
     }
 
     revalidatePath("/mark")
-    return { success: true, ...aiResult }
+    return aiResult
   } catch (error) {
     console.error("AI grade error:", error)
     return {

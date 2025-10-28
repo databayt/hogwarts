@@ -71,7 +71,7 @@ export function TeacherInfoPopup({ subject, onSave, initialInfo = "", children }
 
   const TeacherInfoForm = (
     <div className="grid gap-2">
-      <Label htmlFor="teacher" className="dark:text-neutral-200">Teacher name</Label>
+      <Label htmlFor="teacher">Teacher name</Label>
       <Input
         ref={inputRef}
         id="teacher"
@@ -80,12 +80,12 @@ export function TeacherInfoPopup({ subject, onSave, initialInfo = "", children }
         onKeyDown={handleKeyDown}
         maxLength={10}
         className={cn(
-          "h-8 dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-100 dark:placeholder-neutral-400",
-          error && "border-red-500 dark:border-red-500"
+          "h-8",
+          error && "border-destructive"
         )}
       />
       {error && (
-        <p className="muted text-red-500 dark:text-red-400">{error}</p>
+        <p className="muted text-destructive">{error}</p>
       )}
     </div>
   )
@@ -93,8 +93,8 @@ export function TeacherInfoPopup({ subject, onSave, initialInfo = "", children }
   const content = (
     <>
       <div className="space-y-2">
-        <h4 className="dark:text-neutral-100">Edit teacher info</h4>
-        <p className="muted dark:text-neutral-400">
+        <h4>Edit teacher info</h4>
+        <p className="muted">
           Enter info for {subject}. It will be stored in your browser.
         </p>
       </div>
@@ -129,9 +129,9 @@ export function TeacherInfoPopup({ subject, onSave, initialInfo = "", children }
   return (
     <Popover open={isOpen} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>{children}</PopoverTrigger>
-      <PopoverContent 
+      <PopoverContent
         className={cn(
-          "w-80 dark:bg-neutral-900 dark:border-neutral-800",
+          "w-80",
           "data-[state=open]:animate-slideUpAndFade data-[state=open]:duration-300",
           "data-[state=closed]:animate-fadeOut data-[state=closed]:duration-200"
         )}

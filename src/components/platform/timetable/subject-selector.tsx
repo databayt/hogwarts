@@ -89,7 +89,7 @@ export function SubjectSelector({
                 id="useCustomSubject"
                 checked={useCustomSubject}
                 onChange={(e) => setUseCustomSubject(e.target.checked)}
-                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-neutral-600 dark:bg-neutral-800 dark:focus:ring-blue-400"
+                className="h-4 w-4 rounded border-border bg-background text-primary focus:ring-primary"
               />
               <Label htmlFor="useCustomSubject">Use custom subject name</Label>
             </div>

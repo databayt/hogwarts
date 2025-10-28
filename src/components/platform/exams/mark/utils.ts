@@ -257,10 +257,9 @@ export function getEstimatedGradingTime(questionType: QuestionType): number {
   const gradingTimes: Record<QuestionType, number> = {
     MULTIPLE_CHOICE: 0.5,
     TRUE_FALSE: 0.5,
-    FILL_IN_BLANK: 1,
+    FILL_BLANK: 1,
     SHORT_ANSWER: 2,
     ESSAY: 5,
-    MATCHING: 1,
   }
 
   return gradingTimes[questionType] ?? 2

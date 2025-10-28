@@ -280,6 +280,23 @@
       "publishResults": "نشر النتائج",
       "gradeReport": "تقرير الدرجات",
       "transcript": "كشف الدرجات",
+      "examDetails": "تفاصيل الامتحان",
+      "edit": "تعديل",
+      "time": "الوقت",
+      "minutes": "دقائق",
+      "marks": "درجات",
+      "passing": "النجاح",
+      "class": "الفصل",
+      "subject": "المادة",
+      "status": "الحالة",
+      "instructions": "التعليمات",
+      "statistics": "الإحصائيات",
+      "totalResults": "إجمالي النتائج",
+      "createDescription": "إنشاء امتحان جديد",
+      "upcomingExams": "الامتحانات القادمة",
+      "upcomingDescription": "الامتحانات المجدولة",
+      "noUpcomingExams": "لا توجد امتحانات قادمة مجدولة",
+      "viewDetails": "عرض التفاصيل",
       "dashboard": {
         "title": "إدارة الامتحانات",
         "description": "نظام شامل لإدارة الامتحانات مع بنك الأسئلة والإنشاء التلقائي والتصحيح والنتائج",
@@ -370,6 +387,36 @@
             "description": "حساب الدرجات النهائية، تعيين التقديرات، إنشاء تقارير PDF، وتحليل مقاييس الأداء."
           }
         }
+      },
+      "qbank": {
+        "questionDetails": "تفاصيل السؤال",
+        "sampleAnswer": "الإجابة النموذجية",
+        "edit": "تعديل",
+        "type": "النوع",
+        "difficulty": "الصعوبة",
+        "points": "النقاط",
+        "bloomLevel": "مستوى تصنيف بلوم",
+        "options": "الخيارات",
+        "question": "السؤال",
+        "aiGenerate": "إنشاء الأسئلة بالذكاء الاصطناعي",
+        "aiGenerateDescription": "إنشاء الأسئلة باستخدام الذكاء الاصطناعي",
+        "aiDescription": "استخدام الذكاء الاصطناعي لإنشاء الأسئلة تلقائياً",
+        "aiGenerateFeature": "إنشاء الأسئلة بالذكاء الاصطناعي",
+        "aiFeature": "ميزة إنشاء الأسئلة بالذكاء الاصطناعي",
+        "aiComingSoon": "إنشاء الأسئلة بالذكاء الاصطناعي قريباً",
+        "aiCapabilities": "يمكن للذكاء الاصطناعي إنشاء الأسئلة بناءً على المنهج والصعوبة",
+        "aiGenerateCaption": "استخدام الذكاء الاصطناعي لإنشاء الأسئلة تلقائياً بناءً على المنهج ومستوى الصعوبة",
+        "addQuestion": "إضافة سؤال",
+        "addDescription": "إضافة سؤال جديد إلى بنك الأسئلة"
+      },
+      "generate": {
+        "templateDetails": "تفاصيل القالب",
+        "edit": "تعديل",
+        "subject": "المادة",
+        "duration": "المدة",
+        "totalMarks": "الدرجة الكلية",
+        "createTemplate": "إنشاء قالب",
+        "templateDescription": "إنشاء قالب امتحان جديد"
       }
     },
     "lessons": {

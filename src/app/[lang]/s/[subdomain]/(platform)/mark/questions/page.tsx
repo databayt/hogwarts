@@ -91,7 +91,7 @@ export default async function QuestionBankPage({
           <h3 className="text-2xl font-bold">
             {
               questions.filter((q) =>
-                ["MULTIPLE_CHOICE", "TRUE_FALSE", "FILL_IN_BLANK"].includes(
+                ["MULTIPLE_CHOICE", "TRUE_FALSE", "FILL_BLANK"].includes(
                   q.questionType
                 )
               ).length

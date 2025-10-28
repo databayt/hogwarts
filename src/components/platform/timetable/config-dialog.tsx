@@ -227,8 +227,8 @@ export function ConfigDialog({ open, onOpenChange, classConfig, onConfigChange, 
   const ConfigContent = () => (
     <div className="grid gap-4 py-4">
       <div className="flex flex-col gap-2">
-        <Label className="dark:text-neutral-200">School</Label>
-        <Popover 
+        <Label>School</Label>
+        <Popover
           open={openCombobox}
           onOpenChange={(open) => {
             setOpenCombobox(open)
@@ -239,7 +239,7 @@ export function ConfigDialog({ open, onOpenChange, classConfig, onConfigChange, 
               variant="outline"
               role="combobox"
               aria-expanded={openCombobox}
-              className="justify-between w-full dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-100"
+              className="justify-between w-full"
               onClick={() => {
                 setOpenCombobox(true)
               }}
@@ -248,42 +248,40 @@ export function ConfigDialog({ open, onOpenChange, classConfig, onConfigChange, 
               <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
             </Button>
           </PopoverTrigger>
-          <PopoverContent 
-            className="w-[var(--radix-popover-trigger-width)] p-0 dark:bg-neutral-800 dark:border-neutral-700"
+          <PopoverContent
+            className="w-[var(--radix-popover-trigger-width)] p-0"
             align="start"
           >
-            <Command 
-              className="dark:bg-neutral-800"
+            <Command
               filter={() => 1}
               shouldFilter={false}
             >
-              <CommandInput 
-                placeholder="Search school name..." 
+              <CommandInput
+                placeholder="Search school name..."
                 value={searchValue}
                 onValueChange={handleSearchValueChange}
-                className="dark:bg-neutral-800 dark:text-neutral-100"
               />
               
               <CommandList>
                 {error ? (
-                  <p className="py-6 text-center muted dark:text-neutral-400">
+                  <p className="py-6 text-center muted">
                     {error}
                   </p>
                 ) : searchValue.length <= 1 ? (
-                  <CommandEmpty className="py-6 text-center muted dark:text-neutral-400">
+                  <CommandEmpty className="py-6 text-center muted">
                     학교 이름을 입력하세요
                   </CommandEmpty>
                  ) : isLoading ? (
-                  <p className="py-6 text-center muted dark:text-neutral-400">Searching...</p>
+                  <p className="py-6 text-center muted">Searching...</p>
                 ) : schools.length === 0 ? (
-                  <p className="py-6 text-center muted dark:text-neutral-400">No results</p>
+                  <p className="py-6 text-center muted">No results</p>
                 ) : (
                   <CommandGroup>
                     {schools.map((school) => (
                         <CommandItem
                           key={`${school.SCHUL_NM}-${school.SD_SCHUL_CODE}`}
                           onSelect={() => handleSchoolSelect(school.SCHUL_NM)}
-                          className="dark:text-neutral-100 dark:hover:bg-neutral-700 cursor-pointer"
+                          className="cursor-pointer"
                         >
                           <Check
                             className={cn(
@@ -292,7 +290,7 @@ export function ConfigDialog({ open, onOpenChange, classConfig, onConfigChange, 
                             )}
                           />
                           {school.SCHUL_NM}
-                          <small className="ml-2 text-neutral-500 dark:text-neutral-400">
+                          <small className="ml-2 text-muted-foreground">
                             ({school.ATPT_OFCDC_SC_NM})
                           </small>
                         </CommandItem>
@@ -304,7 +302,7 @@ export function ConfigDialog({ open, onOpenChange, classConfig, onConfigChange, 
           </PopoverContent>
         </Popover>
         {error && (
-          <p className="muted dark:text-neutral-400 mt-1">
+          <p className="muted mt-1">
             {error}
           </p>
         )}
@@ -312,21 +310,20 @@ export function ConfigDialog({ open, onOpenChange, classConfig, onConfigChange, 
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <Label className="dark:text-neutral-200">Grade</Label>
+          <Label>Grade</Label>
           <Select
             disabled={!tempConfig.school || isSearching}
             value={tempConfig.grade}
             onValueChange={(value) => setTempConfig({ ...tempConfig, grade: value, class: '' })}
           >
-            <SelectTrigger className="dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-100">
+            <SelectTrigger>
               <SelectValue placeholder="Select grade" />
             </SelectTrigger>
-            <SelectContent className="dark:bg-neutral-800 dark:border-neutral-700">
+            <SelectContent>
               {tempConfig.school && getAvailableGrades(tempConfig.school).map((grade) => (
-                <SelectItem 
-                  key={grade} 
+                <SelectItem
+                  key={grade}
                   value={grade}
-                  className="dark:text-neutral-100 dark:focus:bg-neutral-700"
                 >
                    Grade {grade}
                 </SelectItem>
@@ -336,21 +333,20 @@ export function ConfigDialog({ open, onOpenChange, classConfig, onConfigChange, 
         </div>
 
         <div>
-          <Label className="dark:text-neutral-200">Class</Label>
+          <Label>Class</Label>
           <Select
             disabled={!tempConfig.school || !tempConfig.grade || isSearching}
             value={tempConfig.class}
             onValueChange={(value) => setTempConfig({ ...tempConfig, class: value })}
           >
-            <SelectTrigger className="dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-100">
+            <SelectTrigger>
               <SelectValue placeholder="Select class" />
             </SelectTrigger>
-            <SelectContent className="dark:bg-neutral-800 dark:border-neutral-700">
+            <SelectContent>
               {availableClasses.map((classNum) => (
-                <SelectItem 
-                  key={classNum} 
+                <SelectItem
+                  key={classNum}
                   value={classNum}
-                  className="dark:text-neutral-100 dark:focus:bg-neutral-700"
                 >
                   Class {classNum}
                 </SelectItem>
@@ -359,23 +355,22 @@ export function ConfigDialog({ open, onOpenChange, classConfig, onConfigChange, 
           </Select>
         </div>
       </div>
-      
+
       <div>
-        <Label className="dark:text-neutral-200">Lunch after period</Label>
+        <Label>Lunch after period</Label>
         <Select
           disabled={!tempConfig.school || !tempConfig.grade || !tempConfig.class || isSearching}
           value={tempConfig.lunchAfter.toString()}
           onValueChange={(value) => setTempConfig({ ...tempConfig, lunchAfter: parseInt(value) })}
         >
-          <SelectTrigger className="dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-100">
+          <SelectTrigger>
             <SelectValue placeholder="Select lunch period" />
           </SelectTrigger>
-          <SelectContent className="dark:bg-neutral-800 dark:border-neutral-700">
+          <SelectContent>
             {[3, 4, 5].map((period) => (
-              <SelectItem 
-                key={period} 
+              <SelectItem
+                key={period}
                 value={period.toString()}
-                className="dark:text-neutral-100 dark:focus:bg-neutral-700"
               >
                 After period {period}
               </SelectItem>
@@ -391,22 +386,22 @@ export function ConfigDialog({ open, onOpenChange, classConfig, onConfigChange, 
             id="showAllSubjects"
             checked={tempConfig.showAllSubjects}
             onChange={(e) => setTempConfig({ ...tempConfig, showAllSubjects: e.target.checked })}
-            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-neutral-600 dark:bg-neutral-800 dark:focus:ring-blue-400"
+            className="h-4 w-4 rounded border-border bg-background text-primary focus:ring-primary"
           />
-          <Label htmlFor="showAllSubjects" className="dark:text-neutral-200">
+          <Label htmlFor="showAllSubjects">
             Show all subjects in subject selection
           </Label>
         </div>
-        
+
         <div className="flex items-center space-x-2">
           <input
             type="checkbox"
             id="displayFallbackData"
             checked={tempConfig.displayFallbackData}
             onChange={(e) => setTempConfig({ ...tempConfig, displayFallbackData: e.target.checked })}
-            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-neutral-600 dark:bg-neutral-800 dark:focus:ring-blue-400"
+            className="h-4 w-4 rounded border-border bg-background text-primary focus:ring-primary"
           />
-          <Label htmlFor="displayFallbackData" className="dark:text-neutral-200">
+          <Label htmlFor="displayFallbackData">
             Display fallback data when main data is unavailable
           </Label>
         </div>
@@ -442,9 +437,8 @@ export function ConfigDialog({ open, onOpenChange, classConfig, onConfigChange, 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent 
+      <DialogContent
         className={cn(
-          "dark:bg-neutral-900/90 dark:border-neutral-800",
           "w-[90%] max-w-lg p-6",
           "rounded-lg",
           "data-[state=open]:animate-in data-[state=closed]:animate-out",
@@ -456,8 +450,8 @@ export function ConfigDialog({ open, onOpenChange, classConfig, onConfigChange, 
         )}
       >
         <DialogHeader>
-          <DialogTitle className="dark:text-neutral-100">Settings</DialogTitle>
-          <DialogDescription className="dark:text-neutral-400">
+          <DialogTitle>Settings</DialogTitle>
+          <DialogDescription>
             Configure your class information.
           </DialogDescription>
         </DialogHeader>

@@ -294,5 +294,19 @@
     "byGradingMethod": "حسب طريقة التصحيح",
     "totalTime": "إجمالي وقت التصحيح",
     "averageTime": "متوسط الوقت لكل إجابة"
-  }
+  },
+
+  "bulkMarking": "التصحيح الجماعي",
+  "bulkMarkingFeature": "ميزة التصحيح الجماعي",
+  "bulkMarkingDescription": "تصحيح امتحانات متعددة دفعة واحدة",
+  "examStats": "إحصائيات الامتحان",
+  "totalMarks": "الدرجة الكلية",
+  "totalResults": "إجمالي النتائج",
+  "startBulkMarking": "بدء التصحيح الجماعي",
+  "pendingTitle": "الامتحانات المعلقة",
+  "pendingDescription": "الامتحانات في انتظار التصحيح",
+  "noPendingExams": "لا توجد امتحانات معلقة",
+  "pending": "معلق",
+  "results": "النتائج",
+  "startGrading": "بدء التقييم"
 }

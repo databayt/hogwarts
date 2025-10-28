@@ -92,9 +92,9 @@ export default function SchoolDetail({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               {isCompleted ? (
-                <CheckCircle className="h-5 w-5 text-green-600" />
+                <CheckCircle className="h-5 w-5 text-chart-2" />
               ) : (
-                <Clock className="h-5 w-5 text-orange-600" />
+                <Clock className="h-5 w-5 text-chart-1" />
               )}
               Setup Progress
             </CardTitle>

@@ -27,9 +27,10 @@ import { createTemplate } from "./actions";
 import { examTemplateSchema } from "./validation";
 import { SuccessToast, ErrorToast } from "@/components/atom/toast";
 import { useModal } from "@/components/atom/modal/context";
-import type { ExamTemplateDTO } from "./types";
+import type { ExamTemplateDTO, TemplateDistribution, BloomDistribution } from "./types";
 import { DistributionEditor } from "./distribution-editor";
 import { calculateTotalQuestions } from "./utils";
+import type { z } from "zod";
 
 interface ExamTemplateFormProps {
   initialData?: ExamTemplateDTO;
@@ -53,15 +54,15 @@ export function ExamTemplateForm({
       subjectId: initialData?.subjectId || subjectId || "",
       duration: initialData?.duration || 60,
       totalMarks: initialData?.totalMarks ? Number(initialData.totalMarks) : 100,
-      distribution: (initialData?.distribution as any) || {},
-      bloomDistribution: (initialData?.bloomDistribution as any) || undefined,
+      distribution: (initialData?.distribution as TemplateDistribution) || {},
+      bloomDistribution: (initialData?.bloomDistribution as BloomDistribution) || undefined,
     },
   });
 
-  const distribution = form.watch("distribution");
+  const distribution = form.watch("distribution") as TemplateDistribution;
   const totalQuestions = calculateTotalQuestions(distribution);
 
-  const onSubmit = async (values: any) => {
+  const onSubmit = async (values: z.infer<typeof examTemplateSchema>) => {
     setIsSubmitting(true);
     try {
       const formData = new FormData();
@@ -191,6 +192,7 @@ export function ExamTemplateForm({
                       max="480"
                       disabled={isView}
                       {...field}
+                      value={field.value as number}
                       onChange={(e) => field.onChange(parseInt(e.target.value))}
                     />
                   </FormControl>
@@ -212,6 +214,7 @@ export function ExamTemplateForm({
                       max="1000"
                       disabled={isView}
                       {...field}
+                      value={field.value as number}
                       onChange={(e) =>
                         field.onChange(parseFloat(e.target.value))
                       }
@@ -232,9 +235,9 @@ export function ExamTemplateForm({
                 <FormLabel>Question Distribution</FormLabel>
                 <FormControl>
                   <DistributionEditor
-                    distribution={field.value}
+                    distribution={field.value as TemplateDistribution}
                     onChange={field.onChange}
-                    totalMarks={form.watch("totalMarks")}
+                    totalMarks={form.watch("totalMarks") as number}
                     disabled={isView}
                   />
                 </FormControl>

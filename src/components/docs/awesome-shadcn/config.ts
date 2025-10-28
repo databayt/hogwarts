@@ -722,6 +722,51 @@ export const awesomeShadcn: AwesomeShadcnItem[] = [
     tags: ["templates", "saas", "enhanced", "modern"]
   },
   {
+    id: "alvest-finance",
+    title: "Alvest Finance",
+    description:
+      "AI-powered financial analytics platform with automated insights and recommendations. Features expense tracking, real-time data, and secure authentication built with Next.js, Supabase, and shadcn/ui.",
+    link: "https://alvest-finance.vercel.app/",
+    repository: "https://github.com/ezeslucky/Ai-Saas-Finance",
+    tags: ["templates", "finance", "ai", "saas", "enhanced", "modern"]
+  },
+  {
+    id: "ai-finance-platform-piyush",
+    title: "AI Finance Platform",
+    description:
+      "Full-stack AI finance platform powered by Google Gemini API. Includes intelligent financial analysis, expense tracking, and automated recommendations with Supabase, Prisma, Inngest, and ArcJet security.",
+    link: "https://github.com/piyush-eon/ai-finance-platform",
+    repository: "https://github.com/piyush-eon/ai-finance-platform",
+    tags: ["templates", "finance", "ai", "saas", "enhanced", "modern"]
+  },
+  {
+    id: "finance-platform-josue",
+    title: "Finance Platform",
+    description:
+      "Personal finance SaaS platform with Plaid integration for bank connectivity. Features transaction tracking, categorization, account management, and CSV imports built with Next.js 14, Hono.js, and PostgreSQL.",
+    link: "https://github.com/JosueIsOffline/finance-platform",
+    repository: "https://github.com/JosueIsOffline/finance-platform",
+    tags: ["templates", "finance", "saas", "enhanced", "modern"]
+  },
+  {
+    id: "finance-forge",
+    title: "Finance Forge",
+    description:
+      "Finance SaaS dashboard with customizable widgets and Recharts visualizations. Built with Next.js 14, Hono.js, Drizzle ORM, Clerk authentication, and mobile-friendly TanStack tables.",
+    link: "https://finance-forge-mocha.vercel.app/",
+    repository: "https://github.com/collinskchirchir/finance-forge",
+    tags: ["templates", "finance", "saas", "dashboard", "enhanced", "modern"]
+  },
+  {
+    id: "finance-tracker-thounny",
+    title: "Finance Tracker",
+    description:
+      "Personal finance tracker with Plaid banking integration and Lemon Squeezy payments. Features transaction monitoring, categorization, account management, and CSV import capabilities.",
+    link: "https://finance-tracker-rosy.vercel.app/",
+    repository: "https://github.com/thounny/finance-tracker",
+    tags: ["templates", "finance", "saas", "enhanced", "modern"]
+  },
+  {
     id: "mdtaquiimam",
     title: "MdTaquiImam",
     description:

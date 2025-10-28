@@ -77,6 +77,9 @@ model User {
   quizAchievements   QuizAchievement[]
   quizLeaderboards   QuizLeaderboard[]
 
+  // Finance permissions
+  financePermissions FinancePermission[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

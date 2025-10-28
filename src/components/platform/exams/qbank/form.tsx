@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, type UseFormReturn } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import type { z } from "zod";
 import { QuestionType, DifficultyLevel, BloomLevel } from "@prisma/client";
 import { Button } from "@/components/ui/button";
 import {
@@ -26,17 +27,17 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Plus, X, Loader2 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
-import { createQuestion, updateQuestion } from "../actions";
-import { questionBankSchema } from "../validation";
+import { createQuestion, updateQuestion } from "./actions";
+import { questionBankSchema } from "./validation";
 import {
   QUESTION_TYPES,
   DIFFICULTY_LEVELS,
   BLOOM_LEVELS,
   calculateDefaultPoints,
-} from "../config";
+} from "./config";
 import { SuccessToast, ErrorToast } from "@/components/atom/toast";
 import { useModal } from "@/components/atom/modal/context";
-import type { QuestionBankDTO } from "../types";
+import type { QuestionBankDTO } from "./types";
 import type { Dictionary } from "@/components/internationalization/dictionaries";
 
 interface QuestionBankFormProps {
@@ -53,7 +54,7 @@ export function QuestionBankForm({
   dictionary,
 }: QuestionBankFormProps) {
   // Default dictionary fallback for when component is used without i18n
-  const dict = dictionary?.generate || {} as any;
+  const dict = dictionary?.generate || {};
   const { closeModal } = useModal();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedType, setSelectedType] = useState<QuestionType>(
@@ -71,13 +72,19 @@ export function QuestionBankForm({
       points: initialData?.points || 1,
       timeEstimate: initialData?.timeEstimate || undefined,
       options:
-        (initialData?.options as any[]) ||
+        (initialData?.options as { text: string; isCorrect: boolean; explanation?: string }[]) ||
         [
           { text: "", isCorrect: false, explanation: "" },
           { text: "", isCorrect: false, explanation: "" },
         ],
-      acceptedAnswers: (initialData?.options as any)?.acceptedAnswers || [""],
-      caseSensitive: false,
+      acceptedAnswers:
+        initialData?.questionType === "FILL_BLANK"
+          ? ((initialData.options as { acceptedAnswers?: string[], caseSensitive?: boolean })?.acceptedAnswers || [""])
+          : [""],
+      caseSensitive:
+        initialData?.questionType === "FILL_BLANK"
+          ? ((initialData.options as { acceptedAnswers?: string[], caseSensitive?: boolean })?.caseSensitive || false)
+          : false,
       sampleAnswer: initialData?.sampleAnswer || "",
       gradingRubric: initialData?.gradingRubric || "",
       tags: initialData?.tags || [],
@@ -102,7 +109,7 @@ export function QuestionBankForm({
     }
   }, [watchType, watchDifficulty, initialData, form]);
 
-  const onSubmit = async (values: any) => {
+  const onSubmit = async (values: z.infer<typeof questionBankSchema>) => {
     setIsSubmitting(true);
     try {
       const formData = new FormData();
@@ -129,8 +136,8 @@ export function QuestionBankForm({
       if (result.success) {
         SuccessToast(
           initialData?.id
-            ? (dict.questionBank?.messages?.questionUpdated || "Question updated!")
-            : (dict.questionBank?.messages?.questionCreated || "Question created!")
+            ? "Question updated!"
+            : "Question created!"
         );
         closeModal();
         window.location.reload();
@@ -139,7 +146,7 @@ export function QuestionBankForm({
       }
     } catch (error) {
       ErrorToast(
-        error instanceof Error ? error.message : (dict.questionBank?.messages?.failedToSave || "Failed to save question")
+        error instanceof Error ? error.message : "Failed to save question"
       );
     } finally {
       setIsSubmitting(false);
@@ -152,8 +159,8 @@ export function QuestionBankForm({
         <div className="space-y-4">
           <h2 className="text-lg font-semibold">
             {initialData?.id
-              ? (dict.questionBank?.editQuestion || "Edit Question")
-              : (dict.questionBank?.createQuestion || "Create Question")}
+              ? "Edit Question"
+              : "Create Question"}
           </h2>
 
           {/* Subject Selection */}
@@ -162,7 +169,7 @@ export function QuestionBankForm({
             name="subjectId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{dict.questionBank?.form?.subjectLabel || "Subject"}</FormLabel>
+                <FormLabel>{"Subject"}</FormLabel>
                 <Select
                   onValueChange={field.onChange}
                   defaultValue={field.value}
@@ -170,7 +177,7 @@ export function QuestionBankForm({
                 >
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder={dict.questionBank?.form?.subjectPlaceholder || "Select subject"} />
+                      <SelectValue placeholder={"Select subject"} />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
@@ -191,7 +198,7 @@ export function QuestionBankForm({
             name="questionType"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{dict.questionBank?.form?.questionTypeLabel || "Question Type"}</FormLabel>
+                <FormLabel>{"Question Type"}</FormLabel>
                 <Select
                   onValueChange={field.onChange}
                   defaultValue={field.value}
@@ -199,19 +206,19 @@ export function QuestionBankForm({
                 >
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder={dict.questionBank?.form?.questionTypePlaceholder || "Select type"} />
+                      <SelectValue placeholder={"Select type"} />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
                     {QUESTION_TYPES.map((type) => (
                       <SelectItem key={type.value} value={type.value}>
-                        {dict.questionTypes?.[type.value]?.label || type.label}
+                        {type.label}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
                 <FormDescription>
-                  {dict.questionTypes?.[field.value]?.description || QUESTION_TYPES.find((t) => t.value === field.value)?.description}
+                  {QUESTION_TYPES.find((t) => t.value === field.value)?.description}
                 </FormDescription>
                 <FormMessage />
               </FormItem>
@@ -224,10 +231,10 @@ export function QuestionBankForm({
             name="questionText"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{dict.questionBank?.form?.questionTextLabel || "Question Text"}</FormLabel>
+                <FormLabel>{"Question Text"}</FormLabel>
                 <FormControl>
                   <Textarea
-                    placeholder={dict.questionBank?.form?.questionTextPlaceholder || "Enter your question here..."}
+                    placeholder={"Enter your question here..."}
                     className="min-h-[100px]"
                     disabled={isView}
                     {...field}
@@ -245,7 +252,7 @@ export function QuestionBankForm({
               name="difficulty"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{dict.questionBank?.form?.difficultyLabel || "Difficulty"}</FormLabel>
+                  <FormLabel>{"Difficulty"}</FormLabel>
                   <Select
                     onValueChange={field.onChange}
                     defaultValue={field.value}
@@ -253,7 +260,7 @@ export function QuestionBankForm({
                   >
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder={dict.questionBank?.form?.difficultyPlaceholder || "Select difficulty"} />
+                        <SelectValue placeholder={"Select difficulty"} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -263,7 +270,7 @@ export function QuestionBankForm({
                             <span
                               className={`h-2 w-2 rounded-full bg-${level.color}-500`}
                             />
-                            {dict.difficultyLevels?.[level.value]?.label || level.label}
+                            {level.label}
                           </span>
                         </SelectItem>
                       ))}
@@ -279,7 +286,7 @@ export function QuestionBankForm({
               name="bloomLevel"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{dict.questionBank?.form?.bloomLevelLabel || "Bloom Level"}</FormLabel>
+                  <FormLabel>{"Bloom Level"}</FormLabel>
                   <Select
                     onValueChange={field.onChange}
                     defaultValue={field.value}
@@ -287,13 +294,13 @@ export function QuestionBankForm({
                   >
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder={dict.questionBank?.form?.bloomLevelPlaceholder || "Select level"} />
+                        <SelectValue placeholder={"Select level"} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
                       {BLOOM_LEVELS.map((level) => (
                         <SelectItem key={level.value} value={level.value}>
-                          {dict.bloomLevels?.[level.value]?.label || level.label} - {dict.bloomLevels?.[level.value]?.description || level.description}
+                          {level.label} - {level.description}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -311,7 +318,7 @@ export function QuestionBankForm({
               name="points"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{dict.questionBank?.form?.pointsLabel || "Points"}</FormLabel>
+                  <FormLabel>{"Points"}</FormLabel>
                   <FormControl>
                     <Input
                       type="number"
@@ -319,10 +326,13 @@ export function QuestionBankForm({
                       min="0.5"
                       max="100"
                       disabled={isView}
-                      {...field}
+                      value={field.value as number}
                       onChange={(e) =>
                         field.onChange(parseFloat(e.target.value))
                       }
+                      onBlur={field.onBlur}
+                      name={field.name}
+                      ref={field.ref}
                     />
                   </FormControl>
                   <FormMessage />
@@ -335,18 +345,21 @@ export function QuestionBankForm({
               name="timeEstimate"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{dict.questionBank?.form?.timeEstimateLabel || "Time Estimate (min)"}</FormLabel>
+                  <FormLabel>{"Time Estimate (min)"}</FormLabel>
                   <FormControl>
                     <Input
                       type="number"
                       min="1"
                       max="480"
                       disabled={isView}
-                      {...field}
+                      value={(field.value as number) || ''}
                       onChange={(e) => field.onChange(parseInt(e.target.value))}
+                      onBlur={field.onBlur}
+                      name={field.name}
+                      ref={field.ref}
                     />
                   </FormControl>
-                  <FormDescription>{dict.questionBank?.form?.timeEstimateDescription || "Optional"}</FormDescription>
+                  <FormDescription>{"Optional"}</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -377,7 +390,7 @@ export function QuestionBankForm({
                 <FormLabel>Tags</FormLabel>
                 <FormControl>
                   <TagsInput
-                    value={field.value}
+                    value={field.value || []}
                     onChange={field.onChange}
                     disabled={isView}
                   />
@@ -419,11 +432,11 @@ export function QuestionBankForm({
               onClick={closeModal}
               disabled={isSubmitting}
             >
-              {dict.actions?.cancel || "Cancel"}
+              {"Cancel"}
             </Button>
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {initialData?.id ? (dict.actions?.update || "Update") : (dict.actions?.create || "Create")}
+              {initialData?.id ? "Update" : "Create"}
             </Button>
           </div>
         )}
@@ -438,7 +451,7 @@ function MultipleChoiceFields({
   isView,
   type,
 }: {
-  form: any;
+  form: UseFormReturn<any>;
   isView: boolean;
   type: QuestionType;
 }) {
@@ -457,6 +470,7 @@ function MultipleChoiceFields({
     const current = form.getValues("options") || [];
     form.setValue(
       "options",
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       current.filter((_: any, i: number) => i !== index)
     );
   };
@@ -479,6 +493,7 @@ function MultipleChoiceFields({
       </div>
 
       <div className="space-y-3">
+        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
         {options.map((option: any, index: number) => (
           <div key={index} className="flex gap-2 items-start border p-3 rounded-md">
             <Checkbox
@@ -531,7 +546,7 @@ function MultipleChoiceFields({
 }
 
 // Fill in the Blank Fields
-function FillBlankFields({ form, isView }: { form: any; isView: boolean }) {
+function FillBlankFields({ form, isView }: { form: UseFormReturn<any>; isView: boolean }) {
   const answers = form.watch("acceptedAnswers") || [""];
 
   const addAnswer = () => {
@@ -543,6 +558,7 @@ function FillBlankFields({ form, isView }: { form: any; isView: boolean }) {
     const current = form.getValues("acceptedAnswers") || [];
     form.setValue(
       "acceptedAnswers",
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       current.filter((_: any, i: number) => i !== index)
     );
   };
@@ -607,7 +623,7 @@ function FillBlankFields({ form, isView }: { form: any; isView: boolean }) {
 }
 
 // Subjective Question Fields
-function SubjectiveFields({ form, isView }: { form: any; isView: boolean }) {
+function SubjectiveFields({ form, isView }: { form: UseFormReturn<any>; isView: boolean }) {
   return (
     <div className="space-y-4">
       <FormField
@@ -704,7 +720,7 @@ function TagsInput({
       </div>
       {value.length > 0 && (
         <div className="flex flex-wrap gap-2">
-          {value.map((tag) => (
+          {value.map((tag: string) => (
             <Badge key={tag} variant="secondary" className="gap-1">
               {tag}
               {!disabled && (

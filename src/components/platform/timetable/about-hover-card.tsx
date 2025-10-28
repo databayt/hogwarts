@@ -14,7 +14,7 @@ export function AboutHoverCard() {
 
   const AboutContent = () => (
     <>
-      <div className="muted dark:text-neutral-400 space-y-2 break-all mb-2">
+      <div className="muted space-y-2 break-all mb-2">
         <p>• Click a subject cell to enter the teacher's name.</p>
         <p>• Use Settings to change school, grade, and class.</p>
         <p>• Data is loaded from NEIS API or local JSON (mock mode).</p>
@@ -22,13 +22,13 @@ export function AboutHoverCard() {
         <p>• Press <kbd>Ctrl/Cmd + P</kbd> to print with a clean layout.</p>
         <p>• Your inputs are stored locally in the browser.</p>
       </div>
-      <div className="pt-2 border-t dark:border-neutral-800">
-        <p className="muted dark:text-neutral-400">
+      <div className="pt-2 border-t border-border">
+        <p className="muted">
           Made by{" "}
           <Link
             href="https://github.com/injoon5"
-            target="_blank" 
-            className="text-neutral-900 dark:text-neutral-100 hover:underline transition-colors duration-200"
+            target="_blank"
+            className="text-foreground hover:underline transition-colors duration-200"
           >
             @injoon5
           </Link>
@@ -36,7 +36,7 @@ export function AboutHoverCard() {
           <Link
             href="https://injoon5.com"
             target="_blank"
-            className="text-neutral-900 dark:text-neutral-100 hover:underline transition-colors duration-200"
+            className="text-foreground hover:underline transition-colors duration-200"
           >
             Website
           </Link>
@@ -49,8 +49,8 @@ export function AboutHoverCard() {
     return (
       <Drawer open={isOpen} onOpenChange={setIsOpen}>
         <DrawerTrigger asChild>
-          <button 
-            className="p-2 rounded-full text-neutral-500 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-900 transition-colors"
+          <button
+            className="p-2 rounded-full text-muted-foreground hover:bg-muted/80 transition-colors"
           >
             <Info className="w-5 h-5" />
           </button>
@@ -74,7 +74,7 @@ export function AboutHoverCard() {
       >
         <DialogTrigger asChild>
           <button
-                className="p-2 rounded-lg flex flex-row items-center gap-2 text-neutral-500 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-900 transition-colors"
+                className="p-2 rounded-lg flex flex-row items-center gap-2 text-muted-foreground hover:bg-muted/80 transition-colors"
                 onClick={() => setIsOpen(!isOpen)}
           >
             <Info className="w-5 h-5" /> About
@@ -82,12 +82,12 @@ export function AboutHoverCard() {
         </DialogTrigger>
         <DialogContent
           className={cn(
-          "w-96 dark:bg-neutral-900/90 dark:border-neutral-800",
+          "w-96",
               "rounded-lg max-w-lg p-6 backdrop-blur-sm"
           )}
         >
           <DialogHeader>
-          <DialogTitle className="dark:text-neutral-100">About</DialogTitle>
+          <DialogTitle>About</DialogTitle>
           </DialogHeader>
           <AboutContent />
         </DialogContent>

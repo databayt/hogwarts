@@ -137,6 +137,92 @@ Use for: Quality improvement, optimization
 Synthesize findings
 ```
 
+### Workflow 4: TDD Feature Development
+```
+Phase 1: Planning & Architecture (5 min)
+1. /agents/architecture (design structure, mirror pattern)
+2. /agents/multi-tenant (verify tenant isolation)
+3. /agents/security (review security implications)
+
+Phase 2: TDD - Write Tests First (10 min)
+4. /agents/test (generate comprehensive test suite - TDD RED)
+   - Unit tests for components
+   - Integration tests for server actions
+   - E2E tests for user flows (if applicable)
+   - Target: 95%+ coverage
+5. Run tests to confirm red state (all tests should fail)
+
+Phase 3: Implementation (20-40 min - Iterative until GREEN)
+6. [Parallel when possible] Tech Stack Agents:
+   - /agents/react (component implementation)
+   - /agents/nextjs (pages, layouts, server components)
+   - /agents/prisma (schema & migrations if needed)
+   - /agents/typescript (type definitions & validation)
+   - /agents/tailwind (styling with utility classes)
+   - /agents/i18n (Arabic/English translations)
+7. /agents/api (server actions with Zod validation)
+
+Phase 4: Test Validation (Iterative - Loop until PASS)
+8. Run tests
+9. If tests fail:
+   - /agents/debug (analyze failures)
+   - Relevant tech agent (fix issues)
+   - Return to step 8
+10. If tests pass: Proceed to Phase 5
+
+Phase 5: Comprehensive Review (10 min - REFACTOR)
+11. [Parallel execution]:
+   - /agents/architecture (pattern enforcement)
+   - /agents/security (security violations)
+   - /agents/performance (performance issues)
+   - /agents/typography (semantic HTML)
+   - /agents/multi-tenant (tenant isolation)
+   - /agents/react-reviewer (React best practices)
+   - /agents/typescript (type safety)
+   - /agents/tailwind (class order, RTL support)
+   - /agents/i18n (translation completeness)
+   - Auto-fix: Prettier/ESLint (via hooks)
+
+Phase 6: Build Verification (Iterative - Loop until PASS)
+12. /agents/nextjs (run production build)
+13. If build fails:
+   - /agents/nextjs (analyze build errors)
+   - Relevant tech agent (fix issues)
+   - Return to step 12
+14. If build passes: Proceed to Phase 7
+
+Phase 7: Commit & Push (with smart blocking)
+15. /agents/git-github:
+   - Create conventional commit message
+   - Commit changes
+   - Push to remote
+   - Smart blocking enforced via PreToolUse hooks:
+     * Main/master/production: BLOCKS if quality checks fail
+     * Feature branches: WARNS but allows commit
+
+Phase 8: Documentation (Automated)
+16. /agents/docs-manager:
+   - Update feature-based README
+   - Create/update GitHub issues
+   - Update main README (if significant)
+   - Generate changelog entry
+
+Quality Gates (Automated via PreToolUse hooks):
+- Pre-Commit: tests, eslint, tsc (block on main, warn on feature)
+- Pre-Push: build, prettier (block on main, warn on feature)
+
+Success Criteria:
+- ✅ Tests pass (95%+ coverage)
+- ✅ Build succeeds
+- ✅ No security violations
+- ✅ Pattern compliant (mirror pattern)
+- ✅ Multi-tenant safe (schoolId scoping)
+- ✅ i18n complete (Arabic & English)
+- ✅ Documentation updated
+```
+
+**Invocation**: This workflow is automatically used by the `/feature` command.
+
 ## Project Constraints (CRITICAL)
 
 ### Multi-Tenant

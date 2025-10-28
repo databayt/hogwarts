@@ -27,49 +27,16 @@ export async function MarkingContent({
     return <div>Unauthorized</div>
   }
 
-  // Fetch all submissions that need grading (optimized with select)
+  // Fetch all submissions that need grading
   const submissions = await db.studentAnswer.findMany({
     where: {
       schoolId,
       ...(examId ? { examId } : {}),
     },
-    select: {
-      id: true,
-      submissionType: true,
-      submittedAt: true,
-      answerText: true,
-      selectedOptionIds: true,
-      ocrConfidence: true,
-      student: {
-        select: {
-          id: true,
-          user: {
-            select: {
-              name: true,
-            },
-          },
-        },
-      },
-      question: {
-        select: {
-          id: true,
-          questionText: true,
-          questionType: true,
-          difficulty: true,
-          points: true,
-        },
-      },
-      markingResult: {
-        select: {
-          id: true,
-          status: true,
-          gradingMethod: true,
-          pointsAwarded: true,
-          maxPoints: true,
-          aiConfidence: true,
-          needsReview: true,
-        },
-      },
+    include: {
+      student: true,
+      question: true,
+      markingResult: true,
     },
     orderBy: {
       submittedAt: "desc",

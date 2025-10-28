@@ -162,6 +162,29 @@ model School {
   quizAchievements   QuizAchievement[]
   quizLeaderboards   QuizLeaderboard[]
 
+  // Finance Module Relations (NEW)
+  chartOfAccounts     ChartOfAccount[]
+  fiscalYears         FiscalYear[]
+  journalEntries      JournalEntry[]
+  ledgerEntries       LedgerEntry[]
+  accountBalances     AccountBalance[]
+  bankReconciliations BankReconciliation[]
+  salaryStructures    SalaryStructure[]
+  salaryAllowances    SalaryAllowance[]
+  salaryDeductions    SalaryDeduction[]
+  payrollRuns         PayrollRun[]
+  salarySlips         SalarySlip[]
+  timesheetPeriods    TimesheetPeriod[]
+  timesheetEntries    TimesheetEntry[]
+  wallets             Wallet[]
+  walletTransactions  WalletTransaction[]
+  budgets             Budget[]
+  budgetAllocations   BudgetAllocation[]
+  expenseCategories   ExpenseCategory[]
+  expenses            Expense[]
+  financialReports    FinancialReport[]
+  financePermissions  FinancePermission[]
+
   createdAt             DateTime                @default(now())
   updatedAt             DateTime                @updatedAt
   QuestionBank          QuestionBank[]

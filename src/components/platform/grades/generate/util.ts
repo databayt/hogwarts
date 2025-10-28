@@ -1,8 +1,5 @@
-import type {
-  BloomLevel,
-  DifficultyLevel,
-  QuestionType,
-} from "@prisma/client";
+import type { BloomLevel } from "@prisma/client";
+import { QuestionType, DifficultyLevel } from "@prisma/client";
 import type {
   QuestionBankDTO,
   TemplateDistribution,

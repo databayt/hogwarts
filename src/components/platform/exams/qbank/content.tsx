@@ -8,6 +8,7 @@ import { Shell as PageContainer } from "@/components/table/shell";
 import PageHeader from "@/components/atom/page-header";
 import type { Locale } from "@/components/internationalization/config";
 import type { Dictionary } from "@/components/internationalization/dictionaries";
+import type { Prisma, QuestionType, DifficultyLevel, BloomLevel, QuestionSource } from "@prisma/client";
 
 interface Props {
   searchParams: Promise<SearchParams>;
@@ -26,13 +27,13 @@ export default async function QuestionBankContent({
   let total = 0;
 
   if (schoolId) {
-    const where: any = {
+    const where: Prisma.QuestionBankWhereInput = {
       schoolId, // CRITICAL: Multi-tenant scope
       ...(sp.subjectId ? { subjectId: sp.subjectId } : {}),
-      ...(sp.questionType ? { questionType: sp.questionType } : {}),
-      ...(sp.difficulty ? { difficulty: sp.difficulty } : {}),
-      ...(sp.bloomLevel ? { bloomLevel: sp.bloomLevel } : {}),
-      ...(sp.source ? { source: sp.source } : {}),
+      ...(sp.questionType ? { questionType: sp.questionType as QuestionType } : {}),
+      ...(sp.difficulty ? { difficulty: sp.difficulty as DifficultyLevel } : {}),
+      ...(sp.bloomLevel ? { bloomLevel: sp.bloomLevel as BloomLevel } : {}),
+      ...(sp.source ? { source: sp.source as QuestionSource } : {}),
       ...(sp.search
         ? {
             questionText: {
@@ -45,10 +46,10 @@ export default async function QuestionBankContent({
 
     const skip = (sp.page - 1) * sp.perPage;
     const take = sp.perPage;
-    const orderBy =
+    const orderBy: Prisma.QuestionBankOrderByWithRelationInput[] =
       sp.sort && Array.isArray(sp.sort) && sp.sort.length
-        ? sp.sort.map((s: any) => ({ [s.id]: s.desc ? "desc" : "asc" }))
-        : [{ createdAt: "desc" }];
+        ? [{ [sp.sort[0]]: sp.sort[1] === "desc" ? "desc" : "asc" } as Prisma.QuestionBankOrderByWithRelationInput]
+        : [{ createdAt: "desc" as const }];
 
     const [rows, count] = await Promise.all([
       db.questionBank.findMany({

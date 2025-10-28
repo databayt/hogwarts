@@ -21,25 +21,25 @@ export function CapacityCard({
       label: "Students",
       value: studentCount,
       icon: Users,
-      color: "text-blue-600",
+      color: "text-chart-1",
     },
     {
       label: "Teachers",
       value: teachers,
       icon: UserCheck,
-      color: "text-green-600",
+      color: "text-chart-2",
     },
     {
       label: "Classrooms",
       value: classrooms,
       icon: DoorOpen,
-      color: "text-orange-600",
+      color: "text-chart-1",
     },
     {
       label: "Facilities",
       value: facilities,
       icon: Building2,
-      color: "text-purple-600",
+      color: "text-chart-3",
     },
   ];
 

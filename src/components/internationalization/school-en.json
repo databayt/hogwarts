@@ -280,6 +280,23 @@
       "publishResults": "Publish Results",
       "gradeReport": "Grade Report",
       "transcript": "Transcript",
+      "examDetails": "Exam Details",
+      "edit": "Edit",
+      "time": "Time",
+      "minutes": "minutes",
+      "marks": "marks",
+      "passing": "Passing",
+      "class": "Class",
+      "subject": "Subject",
+      "status": "Status",
+      "instructions": "Instructions",
+      "statistics": "Statistics",
+      "totalResults": "Total Results",
+      "createDescription": "Create a new examination",
+      "upcomingExams": "Upcoming Exams",
+      "upcomingDescription": "Scheduled examinations",
+      "noUpcomingExams": "No upcoming exams scheduled",
+      "viewDetails": "View Details",
       "dashboard": {
         "title": "Examination Management",
         "description": "Comprehensive exam management system with question banks, auto-generation, marking, and results",
@@ -370,6 +387,36 @@
             "description": "Calculate final marks, assign grades, generate PDF reports, and analyze performance metrics."
           }
         }
+      },
+      "qbank": {
+        "questionDetails": "Question Details",
+        "sampleAnswer": "Sample Answer",
+        "edit": "Edit",
+        "type": "Type",
+        "difficulty": "Difficulty",
+        "points": "Points",
+        "bloomLevel": "Bloom's Taxonomy Level",
+        "options": "Options",
+        "question": "Question",
+        "aiGenerate": "AI Question Generation",
+        "aiGenerateDescription": "Generate questions using AI",
+        "aiDescription": "Use AI to automatically generate questions",
+        "aiGenerateFeature": "AI-Powered Question Generation",
+        "aiFeature": "AI Question Generation Feature",
+        "aiComingSoon": "AI question generation coming soon",
+        "aiCapabilities": "AI can generate questions based on curriculum and difficulty",
+        "aiGenerateCaption": "Use AI to automatically generate questions based on curriculum and difficulty level",
+        "addQuestion": "Add Question",
+        "addDescription": "Add a new question to the question bank"
+      },
+      "generate": {
+        "templateDetails": "Template Details",
+        "edit": "Edit",
+        "subject": "Subject",
+        "duration": "Duration",
+        "totalMarks": "Total Marks",
+        "createTemplate": "Create Template",
+        "templateDescription": "Create a new exam template"
       }
     },
     "lessons": {

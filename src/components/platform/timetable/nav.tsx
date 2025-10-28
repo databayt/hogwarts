@@ -29,12 +29,12 @@ export function Nav() {
   }
 
   return (
-    <nav className="print:hidden bg-neutral-50  dark:bg-neutral-950">
+    <nav className="print:hidden bg-muted">
       <div className="flex h-16 items-center px-2 sm:px-4 md:px-6 max-w-4xl mx-auto">
         <div className="sm:hidden">
           <Drawer open={open} onOpenChange={setOpen}>
             <DrawerTrigger asChild>
-              <Button variant="ghost" size="icon" className="sm:hidden hover:bg-neutral-100 dark:hover:bg-neutral-900">
+              <Button variant="ghost" size="icon" className="sm:hidden hover:bg-muted/80">
                 <Menu className="h-6 w-6" />
                 <span className="sr-only">Toggle navigation menu</span>
               </Button>
@@ -56,9 +56,9 @@ export function Nav() {
                         onClick={() => setOpen(false)}
                         className={cn(
                           "flex items-center gap-2 lead",
-                          "text-neutral-500 dark:text-neutral-400",
-                          "hover:text-neutral-900 dark:hover:text-neutral-50",
-                          pathname === link.href && "text-neutral-900 dark:text-neutral-50"
+                          "text-muted-foreground",
+                          "hover:text-foreground",
+                          pathname === link.href && "text-foreground"
                         )}
                       >
                         <Icon className="h-6 w-6" />
@@ -81,9 +81,9 @@ export function Nav() {
                 href={link.href}
                 className={cn(
                   "flex items-center gap-2",
-                  "text-neutral-500 dark:text-neutral-400",
-                  "hover:text-neutral-900 dark:hover:text-neutral-50",
-                  pathname === link.href && "text-neutral-900 dark:text-neutral-50"
+                  "text-muted-foreground",
+                  "hover:text-foreground",
+                  pathname === link.href && "text-foreground"
                 )}
               >
                 <Icon className="h-5 w-5" />
@@ -99,8 +99,8 @@ export function Nav() {
             onClick={() => setShowConfig(true)}
             className={cn(
               "flex items-center gap-2 p-2 rounded-lg",
-              "text-neutral-500 dark:text-neutral-400",
-              "hover:bg-neutral-100 dark:hover:bg-neutral-900"
+              "text-muted-foreground",
+              "hover:bg-muted/80"
             )}
           >
             <Settings className="h-5 w-5" />

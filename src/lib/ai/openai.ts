@@ -1,7 +1,7 @@
 // OpenAI Integration for Auto-Marking System
 
 import OpenAI from "openai"
-import type { RubricWithCriteria, AIGradeResult, OCRProcessResult } from "@/components/platform/mark/types"
+import type { RubricWithCriteria, AIGradeResult, OCRProcessResult } from "@/components/platform/exams/mark/types"
 import { aiRateLimiter } from "./rate-limiter"
 
 // Initialize OpenAI client

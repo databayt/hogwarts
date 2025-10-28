@@ -28,7 +28,7 @@ export function FormField({ label, description, error, children }: FormFieldProp
       </div>
 
       {error && (
-        <p className="text-xs sm:text-sm text-red-600">
+        <p className="text-xs sm:text-sm text-destructive">
           {error}
         </p>
       )}

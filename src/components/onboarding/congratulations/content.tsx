@@ -81,8 +81,8 @@ export default function CongratulationsContent(props: Props) {
       <div className="max-w-4xl mx-auto py-8">
       {/* Success Header */}
       <div className="text-center mb-8">
-        <div className="inline-flex items-center justify-center w-20 h-20 bg-green-100 dark:bg-green-900/20 rounded-full mb-4">
-          <CheckCircle className="w-12 h-12 text-green-600 dark:text-green-400" />
+        <div className="inline-flex items-center justify-center w-20 h-20 bg-chart-2/10 rounded-full mb-4">
+          <CheckCircle className="w-12 h-12 text-chart-2" />
         </div>
         <h1 className="text-4xl font-bold mb-3">
           Congratulations! 🎉
@@ -120,8 +120,8 @@ export default function CongratulationsContent(props: Props) {
         <div className="grid gap-4 md:grid-cols-2">
           <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer" onClick={handleGoToDashboard}>
             <div className="flex items-start gap-4">
-              <div className="p-2 bg-blue-100 dark:bg-blue-900/20 rounded-lg">
-                <Users className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+              <div className="p-2 bg-chart-1/10 rounded-lg">
+                <Users className="w-6 h-6 text-chart-1" />
               </div>
               <div>
                 <h6 className="mb-1">Invite Your Team</h6>
@@ -134,8 +134,8 @@ export default function CongratulationsContent(props: Props) {
 
           <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer" onClick={handleGoToDashboard}>
             <div className="flex items-start gap-4">
-              <div className="p-2 bg-purple-100 dark:bg-purple-900/20 rounded-lg">
-                <GraduationCap className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+              <div className="p-2 bg-chart-3/10 rounded-lg">
+                <GraduationCap className="w-6 h-6 text-chart-3" />
               </div>
               <div>
                 <h6 className="mb-1">Add Students</h6>
@@ -148,8 +148,8 @@ export default function CongratulationsContent(props: Props) {
 
           <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer" onClick={handleGoToDashboard}>
             <div className="flex items-start gap-4">
-              <div className="p-2 bg-green-100 dark:bg-green-900/20 rounded-lg">
-                <Calendar className="w-6 h-6 text-green-600 dark:text-green-400" />
+              <div className="p-2 bg-chart-2/10 rounded-lg">
+                <Calendar className="w-6 h-6 text-chart-2" />
               </div>
               <div>
                 <h6 className="mb-1">Set Up Classes</h6>
@@ -162,8 +162,8 @@ export default function CongratulationsContent(props: Props) {
 
           <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer" onClick={handleGoToDashboard}>
             <div className="flex items-start gap-4">
-              <div className="p-2 bg-orange-100 dark:bg-orange-900/20 rounded-lg">
-                <ArrowRight className="w-6 h-6 text-orange-600 dark:text-orange-400" />
+              <div className="p-2 bg-chart-1/10 rounded-lg">
+                <ArrowRight className="w-6 h-6 text-chart-1" />
               </div>
               <div>
                 <h6 className="mb-1">Configure Settings</h6>

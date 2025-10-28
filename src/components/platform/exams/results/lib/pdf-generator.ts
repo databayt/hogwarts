@@ -313,7 +313,7 @@ export function sanitizePDFText(text: string): string {
  * Calculate content height for pagination
  */
 export function calculateContentHeight(
-  items: any[],
+  items: unknown[],
   itemHeight: number,
   pageHeight: number,
   marginTop: number,

@@ -294,5 +294,19 @@
     "byGradingMethod": "By Grading Method",
     "totalTime": "Total Grading Time",
     "averageTime": "Average Time per Submission"
-  }
+  },
+
+  "bulkMarking": "Bulk Marking",
+  "bulkMarkingFeature": "Bulk Marking Feature",
+  "bulkMarkingDescription": "Mark multiple exams at once",
+  "examStats": "Exam Statistics",
+  "totalMarks": "Total Marks",
+  "totalResults": "Total Results",
+  "startBulkMarking": "Start Bulk Marking",
+  "pendingTitle": "Pending Exams",
+  "pendingDescription": "Exams awaiting grading",
+  "noPendingExams": "No pending exams",
+  "pending": "Pending",
+  "results": "Results",
+  "startGrading": "Start Grading"
 }

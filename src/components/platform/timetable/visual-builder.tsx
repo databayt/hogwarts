@@ -94,11 +94,11 @@ const defaultTimeSlots: TimeSlot[] = [
 ];
 
 const defaultSubjects: Subject[] = [
-  { id: '1', name: 'Mathematics', color: 'bg-blue-500', teacherId: 't1', teacherName: 'Mr. Smith' },
-  { id: '2', name: 'English', color: 'bg-green-500', teacherId: 't2', teacherName: 'Ms. Johnson' },
-  { id: '3', name: 'Science', color: 'bg-purple-500', teacherId: 't3', teacherName: 'Dr. Brown' },
-  { id: '4', name: 'History', color: 'bg-yellow-500', teacherId: 't4', teacherName: 'Mr. Wilson' },
-  { id: '5', name: 'Art', color: 'bg-pink-500', teacherId: 't5', teacherName: 'Ms. Davis' },
+  { id: '1', name: 'Mathematics', color: 'bg-chart-1', teacherId: 't1', teacherName: 'Mr. Smith' },
+  { id: '2', name: 'English', color: 'bg-chart-2', teacherId: 't2', teacherName: 'Ms. Johnson' },
+  { id: '3', name: 'Science', color: 'bg-chart-3', teacherId: 't3', teacherName: 'Dr. Brown' },
+  { id: '4', name: 'History', color: 'bg-chart-4', teacherId: 't4', teacherName: 'Mr. Wilson' },
+  { id: '5', name: 'Art', color: 'bg-chart-5', teacherId: 't5', teacherName: 'Ms. Davis' },
 ];
 
 // Draggable Subject Card
@@ -167,7 +167,7 @@ function TimetableCell({
 
   if (isBreak) {
     return (
-      <div className="p-2 bg-gray-100 text-center text-sm text-muted-foreground">
+      <div className="p-2 bg-muted text-center text-sm text-muted-foreground">
         {timeSlot.label}
       </div>
     );
@@ -179,14 +179,14 @@ function TimetableCell({
       className={cn(
         "relative min-h-[80px] p-2 border rounded-lg transition-colors",
         isOver && "bg-primary/10 border-primary",
-        !entry && "bg-gray-50"
+        !entry && "bg-muted"
       )}
     >
       {entry ? (
         <div
           className={cn(
             "h-full p-2 rounded text-white text-sm",
-            entry.color || "bg-gray-500"
+            entry.color || "bg-muted"
           )}
         >
           <div className="flex justify-between items-start">

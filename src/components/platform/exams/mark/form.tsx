@@ -20,7 +20,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Plus, Trash, Save, ArrowLeft, ArrowRight } from "lucide-react"
-import { createQuestionSchema } from "./validation"
+import { createQuestionSchema, type CreateQuestionFormData } from "./validation"
 import { createQuestion, updateQuestion } from "./actions"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import type { QuestionType, DifficultyLevel, BloomLevel } from "@prisma/client"
@@ -32,7 +32,7 @@ interface QuestionFormProps {
   locale: string
   subjectId?: string
   questionId?: string
-  initialData?: any
+  initialData?: Partial<CreateQuestionFormData>
   onSuccess?: () => void
 }
 
@@ -55,7 +55,7 @@ export function QuestionForm({
     ]
   )
 
-  const form = useForm({
+  const form = useForm<CreateQuestionFormData>({
     resolver: zodResolver(createQuestionSchema),
     defaultValues: initialData || {
       subjectId: subjectId || "",
@@ -74,18 +74,19 @@ export function QuestionForm({
 
   const questionType = form.watch("questionType") as QuestionType
 
-  const handleSubmit = async (data: any) => {
+  const handleSubmit = async (data: CreateQuestionFormData) => {
     setLoading(true)
 
     try {
       const formData = new FormData()
       Object.keys(data).forEach((key) => {
+        const k = key as keyof CreateQuestionFormData
         if (key === "options") {
           formData.append(key, JSON.stringify(options))
         } else if (key === "tags") {
-          formData.append(key, JSON.stringify(data[key]))
+          formData.append(key, JSON.stringify(data[k]))
         } else {
-          formData.append(key, data[key])
+          formData.append(key, String(data[k]))
         }
       })
 
@@ -102,8 +103,8 @@ export function QuestionForm({
       } else {
         toast.error(result.error || dict.messages.error)
       }
-    } catch (error: any) {
-      toast.error(error.message || dict.messages.error)
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : dict.messages.error)
     } finally {
       setLoading(false)
     }
@@ -119,9 +120,13 @@ export function QuestionForm({
     }
   }
 
-  const updateOption = (index: number, field: "text" | "isCorrect", value: any) => {
+  const updateOption = (index: number, field: "text" | "isCorrect", value: string | boolean) => {
     const newOptions = [...options]
-    newOptions[index][field] = value
+    if (field === "text") {
+      newOptions[index].text = value as string
+    } else {
+      newOptions[index].isCorrect = value as boolean
+    }
     setOptions(newOptions)
   }
 

@@ -209,11 +209,12 @@ export type TemplateFiltersSchema = z.infer<typeof templateFiltersSchema>;
 
 // ========== Update Schemas ==========
 
-export const updateQuestionSchema = questionBankSchema.partial().extend({
-  id: z.string().min(1, "Question ID is required"),
-});
-
-export type UpdateQuestionSchema = z.infer<typeof updateQuestionSchema>;
+// TODO: Fix this - .partial() doesn't work on discriminated unions
+// Need to make each variant partial individually
+// export const updateQuestionSchema = questionBankSchema.partial().extend({
+//   id: z.string().min(1, "Question ID is required"),
+// });
+// export type UpdateQuestionSchema = z.infer<typeof updateQuestionSchema>;
 
 export const updateTemplateSchema = examTemplateSchema.partial().extend({
   id: z.string().min(1, "Template ID is required"),

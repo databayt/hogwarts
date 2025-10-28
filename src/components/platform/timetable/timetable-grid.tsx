@@ -61,16 +61,16 @@ export function TimetableGrid({
   return (
     <div className="min-w-full">
       {/* Header */}
-      <div className={cn('grid bg-muted border-neutral-200 dark:border-neutral-700', gridColsClass)}>
-        <div className="py-3 px-2 text-neutral-500 dark:text-neutral-400 flex flex-col items-center justify-center border-r border-neutral-200 dark:border-neutral-700 print:py-3">
+      <div className={cn('grid bg-muted border-border', gridColsClass)}>
+        <div className="py-3 px-2 text-muted-foreground flex flex-col items-center justify-center border-r border-border print:py-3">
           <Clock className="w-4 h-4 print:w-5 print:h-5" />
         </div>
         {labels.map((day, index) => (
           <div
             key={day}
             className={cn(
-              "py-2 px-4 text-center text-neutral-700 dark:text-neutral-300",
-              index < labels.length - 1 ? "border-r border-neutral-200 dark:border-neutral-700" : "",
+              "py-2 px-4 text-center text-foreground",
+              index < labels.length - 1 ? "border-r border-border" : "",
               "print:text-base print:font-semibold print:py-3"
             )}
           >
@@ -80,11 +80,11 @@ export function TimetableGrid({
       </div>
 
       {/* Body */}
-      <div className="divide-neutral-200 dark:divide-neutral-700">
+      <div className="divide-border">
         {periods.map((period) => (
           <div key={period.id} className={cn('grid avoid-break', gridColsClass)}>
-            <div className="py-3 sm:py-5 bg-muted flex flex-col justify-center items-center border-t border-r border-neutral-200 dark:border-neutral-700 print:py-4">
-              <h6 className="sm:text-base text-neutral-700 dark:text-neutral-300 print:text-base print:font-semibold">
+            <div className="py-3 sm:py-5 bg-muted flex flex-col justify-center items-center border-t border-r border-border print:py-4">
+              <h6 className="sm:text-base text-foreground print:text-base print:font-semibold">
                 {period.id === "Lunch" ? "Lunch" : `Period ${period.id}`}
               </h6>
               {period.id !== "Lunch" ? (
@@ -113,8 +113,8 @@ export function TimetableGrid({
                 )
               })
             ) : (
-              <div className={cn("bg-neutral-100 dark:bg-neutral-800 print:py-4 flex items-center justify-center border-t border-neutral-200 dark:border-neutral-700", lunchColSpan)}>
-                <h6 className="text-neutral-700 dark:text-neutral-300 print:text-base print:font-semibold">
+              <div className={cn("bg-muted print:py-4 flex items-center justify-center border-t border-border", lunchColSpan)}>
+                <h6 className="text-foreground print:text-base print:font-semibold">
                   Lunch
                 </h6>
               </div>

@@ -74,7 +74,7 @@ export async function QuestionDetail({
       // Usage statistics
       _count: {
         select: {
-          examQuestions: true,
+          generatedExamQuestions: true,
           studentAnswers: true,
         },
       },
@@ -324,7 +324,7 @@ export async function QuestionDetail({
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Times Used</p>
-                  <p className="text-2xl font-bold">{question._count.examQuestions}</p>
+                  <p className="text-2xl font-bold">{question._count.generatedExamQuestions}</p>
                 </div>
               </div>
 

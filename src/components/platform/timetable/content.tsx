@@ -160,19 +160,19 @@ export function TimetableContent({ dictionary }: Props) {
           />
 
           {error ? (
-            <div className="overflow-x-auto rounded-xl border border-neutral-200 dark:border-neutral-800">
-              <pre className="p-4 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 overflow-auto">
+            <div className="overflow-x-auto rounded-xl border border-border">
+              <pre className="p-4 bg-destructive/10 text-destructive overflow-auto">
                 {error}
               </pre>
             </div>
           ) : (isLoading || isWeekChangeLoading) ? (
-            <div className="overflow-x-auto shadow-lg rounded-xl border border-neutral-200 dark:border-neutral-800">
-              <div className="min-w-full bg-white dark:bg-neutral-900">
+            <div className="overflow-x-auto shadow-lg rounded-xl border border-border">
+              <div className="min-w-full bg-background">
                 <Skeleton className="h-[600px]" />
               </div>
             </div>
           ) : (
-            <div className="overflow-x-auto rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-700 print:shadow-none print:border print:rounded-none">
+            <div className="overflow-x-auto rounded-xl shadow-sm border border-border print:shadow-none print:border print:rounded-none">
               <TimetableGrid
                 periods={periods}
                 timetableData={timetableData}
@@ -188,7 +188,7 @@ export function TimetableContent({ dictionary }: Props) {
           <div className="mt-6 print:hidden">
             <div className="flex justify-between items-center mb-4">
               {timetableData?.update_date && !error && (
-                <p className="ml-1 text-sm text-neutral-500 dark:text-neutral-400">
+                <p className="ml-1 text-sm text-muted-foreground">
                   Updated: {timetableData.update_date.slice(1, -1)}
                 </p>
               )}

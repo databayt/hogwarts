@@ -623,7 +623,7 @@ pnpm prisma db execute --file=check_indexes.sql
 
 1. **Add database indexes**
 ```prisma
-// prisma/models/exams.prisma
+// prisma/models/exam.prisma
 model Exam {
   // ...
   @@index([schoolId, examDate])
@@ -955,7 +955,7 @@ A: `src/components/platform/exams/results/lib/templates/` - see `classic.tsx`, `
 
 **Q: How do I add a new question type?**
 A:
-1. Add to `QuestionType` enum in `prisma/models/exams.prisma`
+1. Add to `QuestionType` enum in `prisma/models/exam.prisma`
 2. Update validation in `qbank/validation.ts`
 3. Add UI rendering in `qbank/form.tsx`
 4. Update grading logic in `mark/utils.ts`

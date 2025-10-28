@@ -72,9 +72,9 @@ function StatCard({ title, value, icon, description, color, percentage, trend }:
           )}
           {trend && (
             <div className="flex items-center mt-2">
-              {trend === 'up' && <TrendingUp className="h-4 w-4 text-green-500 mr-1" />}
-              {trend === 'down' && <TrendingDown className="h-4 w-4 text-red-500 mr-1" />}
-              {trend === 'neutral' && <Activity className="h-4 w-4 text-gray-500 mr-1" />}
+              {trend === 'up' && <TrendingUp className="h-4 w-4 text-chart-2 mr-1" />}
+              {trend === 'down' && <TrendingDown className="h-4 w-4 text-destructive mr-1" />}
+              {trend === 'neutral' && <Activity className="h-4 w-4 text-muted-foreground mr-1" />}
               <span className="text-xs text-muted-foreground">
                 vs last period
               </span>
@@ -144,29 +144,29 @@ export function AttendanceStats({
           value={stats.total}
           icon={<Users className="h-4 w-4" />}
           description="Enrolled in class"
-          color="bg-blue-100"
+          color="bg-primary/10"
         />
         <StatCard
           title="Present"
           value={stats.present}
-          icon={<UserCheck className="h-4 w-4 text-green-600" />}
+          icon={<UserCheck className="h-4 w-4 text-chart-2" />}
           description={`${calculateAttendancePercentage(stats.present, stats.total)}% attendance`}
-          color="bg-green-100"
+          color="bg-chart-2/10"
           percentage={calculateAttendancePercentage(stats.present, stats.total)}
         />
         <StatCard
           title="Absent"
           value={stats.absent}
-          icon={<UserX className="h-4 w-4 text-red-600" />}
+          icon={<UserX className="h-4 w-4 text-destructive" />}
           description={`${calculateAttendancePercentage(stats.absent, stats.total)}% absence`}
-          color="bg-red-100"
+          color="bg-destructive/10"
         />
         <StatCard
           title="Late"
           value={stats.late}
-          icon={<Clock className="h-4 w-4 text-yellow-600" />}
+          icon={<Clock className="h-4 w-4 text-chart-4" />}
           description="Arrived after start time"
-          color="bg-yellow-100"
+          color="bg-chart-4/10"
         />
       </div>
 
@@ -177,23 +177,23 @@ export function AttendanceStats({
             <StatCard
               title="Excused"
               value={stats.excused}
-              icon={<UserMinus className="h-4 w-4 text-blue-600" />}
+              icon={<UserMinus className="h-4 w-4 text-primary" />}
               description="With valid excuse"
-              color="bg-blue-100"
+              color="bg-primary/10"
             />
             <StatCard
               title="Sick"
               value={stats.sick}
-              icon={<Activity className="h-4 w-4 text-orange-600" />}
+              icon={<Activity className="h-4 w-4 text-chart-1" />}
               description="Health-related absence"
-              color="bg-orange-100"
+              color="bg-chart-1/10"
             />
             <StatCard
               title="Holiday"
               value={stats.holiday}
-              icon={<Calendar className="h-4 w-4 text-purple-600" />}
+              icon={<Calendar className="h-4 w-4 text-chart-3" />}
               description="On approved leave"
-              color="bg-purple-100"
+              color="bg-chart-3/10"
             />
           </div>
 
@@ -215,9 +215,9 @@ export function AttendanceStats({
                     <p className="text-sm text-muted-foreground">Target: 95%</p>
                     <p className="text-xs text-muted-foreground">
                       {stats.attendanceRate >= 95 ? (
-                        <span className="text-green-600">Above target</span>
+                        <span className="text-chart-2">Above target</span>
                       ) : (
-                        <span className="text-red-600">
+                        <span className="text-destructive">
                           {(95 - stats.attendanceRate).toFixed(1)}% below target
                         </span>
                       )}
@@ -272,15 +272,15 @@ export function AttendanceStats({
               <CardContent>
                 <div className="grid grid-cols-3 gap-4 text-center">
                   <div className="space-y-2">
-                    <div className="text-2xl font-bold text-green-600">{timeStats.early}</div>
+                    <div className="text-2xl font-bold text-chart-2">{timeStats.early}</div>
                     <p className="text-sm text-muted-foreground">Early (&lt;9 AM)</p>
                   </div>
                   <div className="space-y-2">
-                    <div className="text-2xl font-bold text-blue-600">{timeStats.onTime}</div>
+                    <div className="text-2xl font-bold text-primary">{timeStats.onTime}</div>
                     <p className="text-sm text-muted-foreground">On Time (9-10 AM)</p>
                   </div>
                   <div className="space-y-2">
-                    <div className="text-2xl font-bold text-yellow-600">{timeStats.late}</div>
+                    <div className="text-2xl font-bold text-chart-4">{timeStats.late}</div>
                     <p className="text-sm text-muted-foreground">Late (&gt;10 AM)</p>
                   </div>
                 </div>
@@ -302,14 +302,14 @@ export function AttendanceStats({
                 <div className="space-y-1">
                   <div className="flex items-center justify-between text-sm">
                     <span className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full bg-green-500" />
+                      <div className="w-3 h-3 rounded-full bg-chart-2" />
                       Present
                     </span>
                     <span className="font-medium">{stats.present}</span>
                   </div>
                   <Progress
                     value={(stats.present / stats.total) * 100}
-                    className="h-2 bg-green-100"
+                    className="h-2"
                   />
                 </div>
 
@@ -317,14 +317,14 @@ export function AttendanceStats({
                 <div className="space-y-1">
                   <div className="flex items-center justify-between text-sm">
                     <span className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full bg-red-500" />
+                      <div className="w-3 h-3 rounded-full bg-destructive" />
                       Absent
                     </span>
                     <span className="font-medium">{stats.absent}</span>
                   </div>
                   <Progress
                     value={(stats.absent / stats.total) * 100}
-                    className="h-2 bg-red-100"
+                    className="h-2"
                   />
                 </div>
 
@@ -332,14 +332,14 @@ export function AttendanceStats({
                 <div className="space-y-1">
                   <div className="flex items-center justify-between text-sm">
                     <span className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full bg-yellow-500" />
+                      <div className="w-3 h-3 rounded-full bg-chart-4" />
                       Late
                     </span>
                     <span className="font-medium">{stats.late}</span>
                   </div>
                   <Progress
                     value={(stats.late / stats.total) * 100}
-                    className="h-2 bg-yellow-100"
+                    className="h-2"
                   />
                 </div>
 
@@ -348,14 +348,14 @@ export function AttendanceStats({
                   <div className="space-y-1">
                     <div className="flex items-center justify-between text-sm">
                       <span className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-full bg-blue-500" />
+                        <div className="w-3 h-3 rounded-full bg-primary" />
                         Excused
                       </span>
                       <span className="font-medium">{stats.excused}</span>
                     </div>
                     <Progress
                       value={(stats.excused / stats.total) * 100}
-                      className="h-2 bg-blue-100"
+                      className="h-2"
                     />
                   </div>
                 )}

@@ -294,25 +294,25 @@ function AdvancedSettings({
               </div>
               <div className="flex justify-between rtl:flex-row-reverse">
                 <span className="text-muted-foreground">{dictionary?.school?.settings?.apiStatus || 'API Status:'}</span>
-                <span className="text-green-600">{dictionary?.school?.settings?.operational || 'Operational'}</span>
+                <span className="text-chart-2">{dictionary?.school?.settings?.operational || 'Operational'}</span>
               </div>
             </div>
           </div>
 
           {/* Developer Tools (Only for developers) */}
           {isDeveloper && (
-            <div className="p-4 rounded-xl bg-purple-50 dark:bg-purple-950/20">
-              <p className="font-medium mb-2 text-purple-700 dark:text-purple-400">
+            <div className="p-4 rounded-xl bg-chart-3/10">
+              <p className="font-medium mb-2 text-chart-3">
                 {dictionary?.school?.settings?.developerTools || 'Developer Tools'}
               </p>
               <div className="space-y-2">
-                <button className="w-full px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 text-sm">
+                <button className="w-full px-4 py-2 bg-chart-3 text-white rounded-md hover:bg-chart-3/90 text-sm">
                   {dictionary?.school?.settings?.runDatabaseMigrations || 'Run Database Migrations'}
                 </button>
-                <button className="w-full px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 text-sm">
+                <button className="w-full px-4 py-2 bg-chart-3 text-white rounded-md hover:bg-chart-3/90 text-sm">
                   {dictionary?.school?.settings?.seedTestData || 'Seed Test Data'}
                 </button>
-                <button className="w-full px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 text-sm">
+                <button className="w-full px-4 py-2 bg-chart-3 text-white rounded-md hover:bg-chart-3/90 text-sm">
                   {dictionary?.school?.settings?.viewDebugLogs || 'View Debug Logs'}
                 </button>
               </div>
@@ -365,10 +365,10 @@ function AdvancedSettings({
 
       {/* Danger Zone (Admin/Developer only) */}
       {(isDeveloper || isAdmin) && (
-        <Card className="bg-red-50 dark:bg-red-950/20">
+        <Card className="bg-destructive/10">
           <CardHeader>
-            <CardTitle className="text-red-700 dark:text-red-400">{dictionary?.school?.settings?.dangerZone || 'Danger Zone'}</CardTitle>
-            <CardDescription className="text-red-600 dark:text-red-500">
+            <CardTitle className="text-destructive">{dictionary?.school?.settings?.dangerZone || 'Danger Zone'}</CardTitle>
+            <CardDescription className="text-destructive/80">
               {dictionary?.school?.settings?.irreversibleActions || 'These actions are irreversible. Please proceed with caution.'}
             </CardDescription>
           </CardHeader>
@@ -377,14 +377,14 @@ function AdvancedSettings({
             {/* Reset School Data */}
             <div className="flex items-center justify-between p-4 rounded-xl bg-background rtl:flex-row-reverse">
               <div>
-                <p className="font-medium text-red-700 dark:text-red-400">
+                <p className="font-medium text-destructive">
                   {dictionary?.school?.settings?.resetSchoolData || 'Reset School Data'}
                 </p>
-                <p className="text-sm text-red-600 dark:text-red-500">
+                <p className="text-sm text-destructive/80">
                   {dictionary?.school?.settings?.deleteAllData || 'Delete all school data and start fresh'}
                 </p>
               </div>
-              <button className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 shrink-0">
+              <button className="px-4 py-2 bg-destructive text-destructive-foreground rounded-md hover:bg-destructive/90 shrink-0">
                 {dictionary?.school?.settings?.resetData || 'Reset Data'}
               </button>
             </div>
@@ -393,14 +393,14 @@ function AdvancedSettings({
             {isDeveloper && (
               <div className="flex items-center justify-between p-4 rounded-xl bg-background rtl:flex-row-reverse">
                 <div>
-                  <p className="font-medium text-red-700 dark:text-red-400">
+                  <p className="font-medium text-destructive">
                     {dictionary?.school?.settings?.deleteSchool || 'Delete School'}
                   </p>
-                  <p className="text-sm text-red-600 dark:text-red-500">
+                  <p className="text-sm text-destructive/80">
                     {dictionary?.school?.settings?.permanentlyDelete || 'Permanently delete this school and all associated data'}
                   </p>
                 </div>
-                <button className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 shrink-0">
+                <button className="px-4 py-2 bg-destructive text-destructive-foreground rounded-md hover:bg-destructive/90 shrink-0">
                   {dictionary?.school?.settings?.deleteSchool || 'Delete School'}
                 </button>
               </div>

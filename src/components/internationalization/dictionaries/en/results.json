@@ -155,5 +155,36 @@
       "title": "Performance Trends",
       "description": "Visual analysis and charts"
     }
-  }
+  },
+
+  "analytics": "Analytics",
+  "totalStudents": "Total Students",
+  "averageScore": "Average Score",
+  "passRate": "Pass Rate",
+  "passed": "Passed",
+  "topScore": "Top Score",
+  "classAverage": "Class Average",
+  "viewResults": "View Results",
+  "performanceDistribution": "Performance Distribution",
+  "detailedAnalytics": "Detailed Analytics",
+  "recentResults": "Recent Results",
+  "recentDescription": "Recently completed examinations",
+  "noRecentResults": "No recent results available",
+  "completed": "Completed",
+  "students": "students",
+  "batchPDF": "Batch PDF Generation",
+  "pdfTemplates": "PDF Templates",
+  "chooseTemplate": "Choose a template for the report cards",
+  "classicTemplate": "Classic Template",
+  "modernTemplate": "Modern Template",
+  "minimalTemplate": "Minimal Template",
+  "pdfOptions": "PDF Options",
+  "customizeOutput": "Customize the generated reports",
+  "includeBreakdown": "Include question breakdown",
+  "includeAnalytics": "Include class analytics",
+  "addWatermark": "Add school watermark",
+  "generation": "Generation",
+  "totalReports": "Total Reports",
+  "estimatedSize": "Est. Size",
+  "generateAll": "Generate All PDFs"
 }

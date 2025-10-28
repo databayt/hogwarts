@@ -74,7 +74,7 @@ export default async function GradingPage({
           <div>
             <h2 className="text-2xl font-bold">{dict.grading.title}</h2>
             <p className="text-muted-foreground">
-              {studentAnswer.student.user.name} •{" "}
+              {studentAnswer.student.user?.username || studentAnswer.student.user?.email || "Unknown Student"} •{" "}
               {studentAnswer.exam.title}
             </p>
           </div>

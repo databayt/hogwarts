@@ -377,7 +377,7 @@ export async function searchQuestions(query: string, filters?: QuestionBankFilte
 **Alternative:** Use full-text search
 
 ```prisma
-// prisma/models/exams.prisma
+// prisma/models/exam.prisma
 model QuestionBank {
   // ...
   @@fulltext([questionText, explanation])

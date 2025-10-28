@@ -16,7 +16,7 @@ import { Badge } from "@/components/ui/badge"
 import { QuestionCard } from "./card"
 import { Search, Filter, X, Plus } from "lucide-react"
 import Link from "next/link"
-import type { QuestionType, DifficultyLevel, BloomLevel } from "@prisma/client"
+import type { QuestionType, DifficultyLevel, BloomLevel, Rubric } from "@prisma/client"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 interface Question {
@@ -28,7 +28,7 @@ interface Question {
   points: number
   subject: { subjectName: string }
   tags?: string[]
-  rubrics?: any[]
+  rubrics?: Rubric[]
   _count?: {
     examQuestions: number
     studentAnswers: number

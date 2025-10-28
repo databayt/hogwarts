@@ -30,7 +30,7 @@ export async function createExam(input: z.infer<typeof examCreateSchema>) {
       status: "PLANNED",
     },
   });
-  revalidatePath("/dashboard/exams");
+  revalidatePath("/exams");
   return { success: true as const, id: row.id as string };
 }
 
@@ -55,7 +55,7 @@ export async function updateExam(input: z.infer<typeof examUpdateSchema>) {
   if (typeof rest.instructions !== "undefined") data.instructions = rest.instructions || null;
   
   await db.exam.updateMany({ where: { id, schoolId }, data });
-  revalidatePath("/dashboard/exams");
+  revalidatePath("/exams");
   return { success: true as const };
 }
 
@@ -64,7 +64,7 @@ export async function deleteExam(input: { id: string }) {
   if (!schoolId) throw new Error("Missing school context");
   const { id } = z.object({ id: z.string().min(1) }).parse(input);
   await db.exam.deleteMany({ where: { id, schoolId } });
-  revalidatePath("/dashboard/exams");
+  revalidatePath("/exams");
   return { success: true as const };
 }
 
@@ -303,7 +303,7 @@ export async function enterMarks(input: {
     })
   );
 
-  revalidatePath("/dashboard/exams");
+  revalidatePath("/exams");
   return { success: true as const, count: results.length };
 }
 
@@ -499,7 +499,7 @@ export async function getExamsCSV(input?: Partial<z.infer<typeof getExamsSchema>
     { key: "status" as const, label: "Status" },
     { key: "resultsEntered" as const, label: "Results Entered" },
     { key: "createdAt" as const, label: "Created Date" },
-  ] as const;
+  ];
 
-  return arrayToCSV(exportData, { columns: columns as any });
+  return arrayToCSV(exportData, { columns });
 }

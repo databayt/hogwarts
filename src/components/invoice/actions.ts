@@ -3,7 +3,7 @@
 import { db } from "@/lib/db"
 import { auth, signOut } from "@/auth"
 import { revalidatePath } from "next/cache"
-import { Status } from "@prisma/client"
+import { InvoiceStatus } from "@prisma/client"
 import { resend } from "@/components/invoice/email.config"
 import { SendInvoiceEmail } from "@/components/invoice/SendInvoiceEmail"
 import { format } from "date-fns"
@@ -120,7 +120,7 @@ interface InvoiceFormData {
   tax_percentage?: number
   total: number
   notes?: string
-  status?: Status
+  status?: InvoiceStatus
 }
 
 // Generate unique invoice number for a school
@@ -666,8 +666,8 @@ export async function getDashboardStats() {
     const [invoices, totalInvoices, paidInvoices, unpaidInvoices, recentInvoices] = await Promise.all([
       db.userInvoice.findMany({ where: baseWhere, select: { invoice_date: true, total: true, status: true } }),
       db.userInvoice.count({ where: baseWhere }),
-      db.userInvoice.count({ where: { ...baseWhere, status: Status.PAID } }),
-      db.userInvoice.count({ where: { ...baseWhere, status: Status.UNPAID } }),
+      db.userInvoice.count({ where: { ...baseWhere, status: InvoiceStatus.PAID } }),
+      db.userInvoice.count({ where: { ...baseWhere, status: InvoiceStatus.UNPAID } }),
       db.userInvoice.findMany({
         where: { userId: session.user.id, schoolId: session.user.schoolId! },
         orderBy: { createdAt: 'desc' },
@@ -677,10 +677,10 @@ export async function getDashboardStats() {
     ])
 
     const totalRevenue = invoices.reduce((prev: number, curr: { total: number }) => prev + curr.total, 0)
-    const chartData = invoices.map((invoice: { invoice_date: Date; total: number; status: Status }) => ({
+    const chartData = invoices.map((invoice: { invoice_date: Date; total: number; status: InvoiceStatus }) => ({
       date: invoice.invoice_date.toISOString().split('T')[0],
       totalRevenue: invoice.total,
-      paidRevenue: invoice.status === Status.PAID ? invoice.total : 0
+      paidRevenue: invoice.status === InvoiceStatus.PAID ? invoice.total : 0
     }))
 
     return { success: true, data: { totalRevenue, totalInvoices, paidInvoices, unpaidInvoices, recentInvoices, chartData } }

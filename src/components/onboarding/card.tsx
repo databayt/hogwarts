@@ -303,7 +303,7 @@ export function StepCard({
       <CardHeader className="pb-2">
         <div className="flex items-center gap-3">
           <div className={`p-2 rounded-md ${
-            isCompleted ? 'bg-green-100 text-green-600' :
+            isCompleted ? 'bg-chart-2/10 text-chart-2' :
             isCurrent ? 'bg-primary/10 text-primary' :
             'bg-muted text-muted-foreground'
           }`}>

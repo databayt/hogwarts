@@ -99,24 +99,24 @@ export function determineAttendanceStatus(
 }
 
 /**
- * Get status badge color for UI
+ * Get status badge color for UI using semantic tokens
  */
 export function getStatusColor(status: AttendanceStatus): string {
   switch (status) {
     case 'PRESENT':
-      return 'bg-green-500';
+      return 'bg-chart-2'; // Green semantic token
     case 'ABSENT':
-      return 'bg-red-500';
+      return 'bg-destructive';
     case 'LATE':
-      return 'bg-yellow-500';
+      return 'bg-chart-4'; // Yellow semantic token
     case 'EXCUSED':
-      return 'bg-blue-500';
+      return 'bg-primary';
     case 'SICK':
-      return 'bg-orange-500';
+      return 'bg-chart-1'; // Orange semantic token
     case 'HOLIDAY':
-      return 'bg-purple-500';
+      return 'bg-chart-3'; // Purple semantic token
     default:
-      return 'bg-gray-500';
+      return 'bg-muted';
   }
 }
 

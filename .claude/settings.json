@@ -59,6 +59,26 @@
     "I18N_LANGUAGES": "en,ar"
   },
   "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash(git:commit)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo 'unknown'); echo \"🔍 Pre-Commit Quality Gates (Branch: $BRANCH)\"; echo \"\"; echo \"Running tests for changed files...\"; pnpm test --changed --silent --run 2>&1 | grep -v \"^$\" || TEST_EXIT=$?; echo \"Running ESLint...\"; pnpm lint --quiet 2>&1 | grep -v \"^$\" || LINT_EXIT=$?; echo \"Running TypeScript check...\"; pnpm tsc --noEmit 2>&1 | grep -v \"^$\" || TSC_EXIT=$?; echo \"\"; if [ \"$BRANCH\" = \"main\" ] || [ \"$BRANCH\" = \"master\" ] || [ \"$BRANCH\" = \"production\" ]; then if [ ! -z \"$TEST_EXIT\" ] || [ ! -z \"$LINT_EXIT\" ] || [ ! -z \"$TSC_EXIT\" ]; then echo \"❌ COMMIT BLOCKED: Quality checks failed on protected branch ($BRANCH)\"; echo \"Fix errors above before committing to $BRANCH\"; exit 1; fi; else if [ ! -z \"$TEST_EXIT\" ] || [ ! -z \"$LINT_EXIT\" ] || [ ! -z \"$TSC_EXIT\" ]; then echo \"⚠️  WARNING: Quality checks failed on feature branch ($BRANCH)\"; echo \"Allowing commit, but please fix errors before merging to main\"; fi; fi; echo \"✅ Pre-Commit checks passed\"; exit 0"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash(git:push)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo 'unknown'); echo \"🔍 Pre-Push Build Verification (Branch: $BRANCH)\"; echo \"\"; echo \"Running production build...\"; pnpm build 2>&1 | grep -v \"^$\" || BUILD_EXIT=$?; echo \"Checking Prettier formatting...\"; npx prettier --check \"src/**/*.{ts,tsx,js,jsx}\" --log-level error 2>&1 | grep -v \"^$\" || PRETTIER_EXIT=$?; echo \"\"; if [ \"$BRANCH\" = \"main\" ] || [ \"$BRANCH\" = \"master\" ] || [ \"$BRANCH\" = \"production\" ]; then if [ ! -z \"$BUILD_EXIT\" ] || [ ! -z \"$PRETTIER_EXIT\" ]; then echo \"❌ PUSH BLOCKED: Build or formatting checks failed on protected branch ($BRANCH)\"; echo \"Fix errors above before pushing to $BRANCH\"; exit 1; fi; else if [ ! -z \"$BUILD_EXIT\" ] || [ ! -z \"$PRETTIER_EXIT\" ]; then echo \"⚠️  WARNING: Build or formatting checks failed on feature branch ($BRANCH)\"; echo \"Allowing push, but please fix errors before merging to main\"; fi; fi; echo \"✅ Pre-Push checks passed\"; exit 0"
+          }
+        ]
+      }
+    ],
     "PostToolUse": [
       {
         "matcher": "Write",
@@ -86,6 +106,17 @@
           {
             "type": "command",
             "command": "echo Hogwarts School Automation Platform - Multi-tenant Next.js + React + Prisma"
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo \"\"; echo \"📊 Session Summary\"; echo \"Run: git log --oneline -5 to see recent commits\"; echo \"Run: git status to see current changes\"; echo \"\"; echo \"Thank you for using Hogwarts School Automation Platform!\""
           }
         ]
       }

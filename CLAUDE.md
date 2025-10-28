@@ -187,8 +187,7 @@ Models are split across 27 files in `prisma/models/*.prisma`:
 - **admission.prisma**: Admission campaigns, applications, merit lists
 - **fees.prisma**: Fee structures, payments, refunds, scholarships
 - **banking.prisma**: Bank accounts, transactions, transfers
-- **exams.prisma**: Exam management and scheduling
-- **grades.prisma**: Grading system and score ranges
+- **exam.prisma**: Complete exam management system (scheduling, question bank, auto-generation, marking, results)
 - **library.prisma**: Library management, book inventory
 - **lessons.prisma**: Lesson planning and curriculum
 - **receipt.prisma**: Receipt generation and tracking
@@ -393,6 +392,239 @@ The middleware (`src/middleware.ts`) handles:
 - **Security Headers**: Injects CSP, HSTS, X-Frame-Options
 - **Route Matching**: Uses exported config from `src/routes.ts` for path patterns
 
+## 🤖 Claude Code Automation Suite (OPTIMIZED)
+
+### Overview
+The project includes a **streamlined** Claude Code automation system with **20 specialized agents** (optimized from 25), 12 workflow commands, and 6 reusable skills for maximum productivity with minimal overhead.
+
+**Recent Optimization**: Reduced agent count by 20% through intelligent consolidation and elimination of redundancies.
+
+### Quick Reference
+
+#### 🎯 Specialized Agents (20 - Optimized)
+
+**Core Orchestration** (1 agent):
+- `/agents/orchestrate` - **Master coordinator** for complex multi-agent tasks
+
+**Tech Stack Experts** (7 agents):
+- `/agents/nextjs` - Next.js 15 App Router, Server Components, Turbopack, **build optimization**
+- `/agents/react` - React 19 performance, hooks, concurrent features
+- `/agents/shadcn` - shadcn/ui components (New York style), accessibility
+- `/agents/prisma` - Database schema, migrations, query optimization (MCP-enabled)
+- `/agents/typescript` - Type safety, strict mode, advanced types
+- `/agents/tailwind` - Utility-first CSS, responsive design, RTL/LTR
+- `/agents/i18n` - Arabic/English bilingual, RTL/LTR support
+
+**Process Specialists** (6 agents - Consolidated):
+- `/agents/architecture` - System design, **pattern enforcement**, scalability (merged: architect + pattern)
+- `/agents/test` - TDD specialist, Vitest, 95%+ coverage target
+- `/agents/security` - OWASP Top 10, vulnerability scanning
+- `/agents/auth` - NextAuth v5, JWT, multi-tenant authentication
+- `/agents/performance` - Profiling, optimization, rendering
+- `/agents/typography` - Semantic HTML enforcement, typography system
+
+**Workflow Specialists** (4 agents - Consolidated):
+- `/agents/git-github` - **Git workflow + GitHub integration** (merged: git + github)
+- `/agents/api` - Server actions, API routes, Zod validation
+- `/agents/multi-tenant` - Tenant safety, schoolId scoping verification
+- `/agents/database-optimizer` - Query optimization, N+1 detection (MCP-enabled)
+
+**Specialized Tools** (2 agents):
+- `/agents/debug` - Systematic debugging, 5 Whys technique (renamed from: bug)
+- `/agents/react-reviewer` - React code review specialist (renamed from: review)
+
+**Note**: Code formatting is automated via PostToolUse hooks, no agent needed.
+
+#### ⚡ Workflow Commands (12)
+
+Quick shortcuts for common tasks:
+
+**Component & Page Generation**:
+- `/component <name>` - Generate React component with types, tests, and boilerplate
+- `/page <path>` - Create Next.js page following mirror pattern
+- `/api <method> <path>` - Create server action or API route with validation
+
+**Database & Migrations**:
+- `/migration <name>` - Generate Prisma migration with multi-tenant safety checks
+
+**Quality & Testing**:
+- `/review` - Comprehensive code review (parallel agents: security, performance, tests, patterns)
+- `/test <file>` - Generate and run tests for specific file
+- `/fix-all` - Auto-fix all issues (prettier + eslint + type-check)
+- `/security-scan` - Full security vulnerability audit (OWASP + auth + tenant)
+
+**Performance & Optimization**:
+- `/optimize <file>` - Performance optimization analysis
+- `/build-changed` - Build only recently modified modules
+
+**Internationalization**:
+- `/i18n-check` - Verify translation completeness (Arabic & English)
+
+**Deployment**:
+- `/deploy <env>` - Deploy to staging/production with pre-flight checks
+
+#### 🎨 Reusable Skills (6)
+
+Shared capabilities across agents:
+
+- **prisma-optimizer** - Query optimization patterns, N+1 detection strategies
+- **react-performance** - Component optimization, memoization patterns
+- **security-scanner** - OWASP Top 10 checklist, vulnerability patterns
+- **test-generator** - TDD patterns, test case generation
+- **api-designer** - RESTful patterns, server action best practices
+- **multi-tenant-validator** - Tenant isolation verification, schoolId scoping
+
+### Usage Examples
+
+#### Example 1: Create New Feature
+```bash
+# Use orchestrator for complex features
+/agents/orchestrate -p "Create student attendance tracking feature with:
+- Calendar view
+- Bulk actions
+- Multi-tenant safety
+- Arabic/English support
+- Comprehensive tests"
+```
+
+#### Example 2: Code Review
+```bash
+# Automated comprehensive review
+/review
+```
+
+#### Example 3: Generate Component
+```bash
+# Create component with all boilerplate
+/component StudentCard
+```
+
+#### Example 4: Security Audit
+```bash
+# Full security scan
+/security-scan
+```
+
+#### Example 5: Database Migration
+```bash
+# Create migration with safety checks
+/migration add_attendance_table
+```
+
+### Automation Features
+
+#### Auto-Format on Save
+Every TypeScript/React file is automatically formatted with Prettier when written or edited (configured via PostToolUse hooks).
+
+#### Pre-Commit Checks
+Before every commit (via PreToolUse hooks):
+- ✅ Tests run automatically (if configured)
+- ✅ Linting checks
+- ✅ Type checking
+- ✅ Build verification (for main branch pushes)
+
+#### Session Management
+- **On Start**: Loads project context, shows git status
+- **On End**: Generates session summary, tracks progress
+
+#### Multi-Tenant Safety
+The `/agents/multi-tenant` agent automatically verifies that:
+- All database models include `schoolId` field
+- All queries include `schoolId` filter
+- Unique constraints are scoped by `schoolId`
+- Session verification before operations
+
+### MCP Integration
+
+**Enabled MCP Servers**:
+- **PostgreSQL** - Direct database access for query optimization and schema analysis
+- **GitHub** - Repository operations, PR/issue management
+- **Filesystem** - Enhanced file operations
+- **Memory** - Persistent context across sessions
+- **Ref Tools** - Documentation search (prevents hallucinations)
+- **Vercel** - Deployment management
+- **Linear** - Issue tracking
+- **Browser** - Playwright automation
+
+### Agent Orchestration
+
+The `/agents/orchestrate` master coordinator intelligently:
+1. **Analyzes** complex tasks and breaks them down
+2. **Selects** optimal agents for each subtask
+3. **Executes** in parallel when possible, sequential when dependencies exist
+4. **Synthesizes** results from multiple agents
+5. **Reports** comprehensive outcomes with metrics
+
+### Best Practices
+
+#### When to Use Which Agent
+
+| Task | Primary Agent | Why |
+|------|---------------|-----|
+| New page / Build issues | nextjs | App Router + build expertise |
+| Component | react | Performance patterns |
+| UI component | shadcn | Component library expert |
+| Database query | prisma | ORM expertise |
+| Type issues | typescript | Type system expert |
+| Styling | tailwind | CSS utility expert |
+| Translation | i18n | RTL/LTR expert |
+| Architecture / Pattern | architecture | Design + mirror pattern |
+| Test generation | test | TDD expert |
+| Security audit | security | OWASP expert |
+| Performance issue | performance | Optimization expert |
+| Git + GitHub | git-github | Commits + PRs + issues |
+| Debugging | debug | Systematic debugging |
+| React review | react-reviewer | React code review |
+| Complex feature | orchestrate | Multi-agent coordination |
+
+#### Migration Guide (Old → New)
+
+If you were using old agent names, use these mappings:
+
+```bash
+# Old → New
+/agents/architect → /agents/architecture
+/agents/bug → /agents/debug
+/agents/review → /agents/react-reviewer
+/agents/git → /agents/git-github
+/agents/github → /agents/git-github
+/agents/pattern → /agents/architecture
+# build functionality now in /agents/nextjs
+# prettier runs automatically via hooks
+```
+
+#### Workflow Tips
+
+1. **Start Complex Tasks with Orchestrator**: Use `/agents/orchestrate` for features requiring multiple domains
+2. **Use Commands for Quick Tasks**: Commands like `/component` and `/test` are faster for simple operations
+3. **Review Before Commit**: Always run `/review` before major commits
+4. **Check Security**: Run `/security-scan` after auth or API changes
+5. **Verify i18n**: Use `/i18n-check` to ensure translations are complete
+6. **Multi-Tenant Safety**: Invoke `/agents/multi-tenant` for any database schema or query changes
+7. **Use git-github for All Git Operations**: Commits, PRs, issues - all in one agent
+
+### Configuration Files
+
+- **`.claude/settings.json`** - Main configuration (full automation, hooks, MCP servers)
+- **`.claude/settings.local.json`** - Local overrides (not committed, DB credentials)
+- **`.mcp.json`** - MCP server configurations
+- **`.claude/agents/`** - **20 optimized agent definitions** (reduced from 25)
+- **`.claude/commands/`** - 12 workflow command shortcuts
+- **`.claude/skills/`** - 6 reusable skill packages
+- **`.claude/.backup/`** - Archived old agents (architect, pattern, git, github, build, prettier)
+
+### Metrics & Success
+
+Expected productivity improvements:
+- **10x faster** feature development with agent coordination
+- **Zero manual formatting** (auto-format on save)
+- **95%+ test coverage** maintained via test agent
+- **Zero security vulnerabilities** with automated scanning
+- **Multi-tenant safety** enforced automatically
+- **Complete i18n coverage** with translation checks
+
+---
+
 ## Key Project Information
 
 - **Platform Description**: Hogwarts is a school automation platform that manages students, faculty, and academic processes with an intuitive interface
@@ -400,4 +632,5 @@ The middleware (`src/middleware.ts`) handles:
 - **License**: MIT License
 - **Test Coverage**: 234 test files across all features
 - **MVP Status**: 100% complete, production-ready
+- **AI Automation**: **20 optimized agents** (streamlined from 25), 12 commands, 6 skills for maximum productivity
 - fix errors and push don't run build

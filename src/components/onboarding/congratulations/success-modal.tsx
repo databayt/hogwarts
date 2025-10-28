@@ -127,7 +127,7 @@ export default function SuccessModal({
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ duration: 0.6, type: "spring", bounce: 0.5 }}
-                className="inline-flex items-center justify-center w-32 h-32 bg-gradient-to-br from-green-400 to-green-600 rounded-full mb-8 shadow-2xl"
+                className="inline-flex items-center justify-center w-32 h-32 bg-gradient-to-br from-chart-2 to-chart-2 rounded-full mb-8 shadow-2xl"
               >
                 <CheckCircle className="w-20 h-20 text-white" />
               </motion.div>
@@ -141,9 +141,9 @@ export default function SuccessModal({
                   Congratulations!
                 </h1>
                 <div className="flex items-center justify-center gap-2 mb-6">
-                  <Sparkles className="w-6 h-6 text-yellow-500" />
-                  <Trophy className="w-8 h-8 text-yellow-500" />
-                  <Sparkles className="w-6 h-6 text-yellow-500" />
+                  <Sparkles className="w-6 h-6 text-chart-4" />
+                  <Trophy className="w-8 h-8 text-chart-4" />
+                  <Sparkles className="w-6 h-6 text-chart-4" />
                 </div>
                 <h2 className="text-muted-foreground mb-2">
                   {schoolData.name}
@@ -202,17 +202,17 @@ export default function SuccessModal({
                       <div className="flex items-start gap-4">
                         <div className={cn(
                           "p-3 rounded-xl",
-                          card.color === 'blue' && "bg-blue-100 dark:bg-blue-900/20",
-                          card.color === 'purple' && "bg-purple-100 dark:bg-purple-900/20",
-                          card.color === 'green' && "bg-green-100 dark:bg-green-900/20",
-                          card.color === 'orange' && "bg-orange-100 dark:bg-orange-900/20"
+                          card.color === 'blue' && "bg-chart-1/10",
+                          card.color === 'purple' && "bg-chart-3/10",
+                          card.color === 'green' && "bg-chart-2/10",
+                          card.color === 'orange' && "bg-chart-1/10"
                         )}>
                           <card.icon className={cn(
                             "w-8 h-8",
-                            card.color === 'blue' && "text-blue-600 dark:text-blue-400",
-                            card.color === 'purple' && "text-purple-600 dark:text-purple-400",
-                            card.color === 'green' && "text-green-600 dark:text-green-400",
-                            card.color === 'orange' && "text-orange-600 dark:text-orange-400"
+                            card.color === 'blue' && "text-chart-1",
+                            card.color === 'purple' && "text-chart-3",
+                            card.color === 'green' && "text-chart-2",
+                            card.color === 'orange' && "text-chart-1"
                           )} />
                         </div>
                         <div className="flex-1">

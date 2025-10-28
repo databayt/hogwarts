@@ -209,9 +209,15 @@ export type TemplateFiltersSchema = z.infer<typeof templateFiltersSchema>;
 
 // ========== Update Schemas ==========
 
-export const updateQuestionSchema = questionBankSchema.partial().extend({
+export const updateQuestionSchema = z.discriminatedUnion("questionType", [
+  multipleChoiceSchema.partial(),
+  trueFalseSchema.partial(),
+  fillBlankSchema.partial(),
+  shortAnswerSchema.partial(),
+  essaySchema.partial(),
+]).and(z.object({
   id: z.string().min(1, "Question ID is required"),
-});
+}));
 
 export type UpdateQuestionSchema = z.infer<typeof updateQuestionSchema>;
 
