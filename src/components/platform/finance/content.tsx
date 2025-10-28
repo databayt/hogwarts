@@ -151,13 +151,11 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
   return (
     <PageContainer>
       <div className="flex flex-1 flex-col gap-6">
-        <div className="flex flex-col gap-4">
-          <PageHeader
-            title="Finance"
-            className="text-start max-w-none"
-          />
-          <PageNav pages={financePages} />
-        </div>
+        <PageHeader
+          title="Finance"
+          className="text-start max-w-none"
+        />
+        <PageNav pages={financePages} />
 
         {/* Overview Stats - Financial Health */}
         <div className="grid gap-4 md:grid-cols-4">

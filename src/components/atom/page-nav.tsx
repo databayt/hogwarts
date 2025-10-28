@@ -59,10 +59,10 @@ function PageLink({
     <Link
       href={page.href}
       key={page.href}
-      className="flex h-7 items-center justify-center rounded-full px-4 text-center text-sm transition-colors hover:text-primary data-[active=true]:bg-muted data-[active=true]:text-primary"
+      className="flex h-7 items-center justify-center rounded-full px-4 text-center transition-colors hover:text-primary data-[active=true]:bg-muted data-[active=true]:text-primary"
       data-active={isActive}
     >
-      <span className="whitespace-nowrap">{page.name}</span>
+      <h6>{page.name}</h6>
     </Link>
   )
 }
