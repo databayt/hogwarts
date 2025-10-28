@@ -152,6 +152,7 @@ export const docsConfig: DocsConfig = {
         { title: "Introduction", href: "/docs/claude-code-introduction", items: [] },
         { title: "Configuration", href: "/docs/claude-code-configuration", items: [] },
         { title: "Best Practices", href: "/docs/claude-code-best-practices", items: [] },
+        { title: "Prompts", href: "/docs/prompt", items: [] },
         { title: "Slash Commands", href: "/docs/claude-code-slash-commands", items: [] },
         { title: "Subagents", href: "/docs/claude-code-subagents", items: [] },
         { title: "Skills", href: "/docs/claude-code-skills", items: [] },
