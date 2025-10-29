@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 import { auth } from '@/auth'
-import { BankingSidebar } from '@/components/platform/finance/banking/shared/sidebar'
-import { BankingMobileNav } from '@/components/platform/finance/banking/shared/mobile-nav'
+import PageHeader from '@/components/atom/page-header'
+import { PageNav, type PageNavItem } from '@/components/atom/page-nav'
 import { getDictionary } from '@/components/internationalization/dictionaries'
 import type { Locale } from '@/components/internationalization/config'
 
@@ -23,30 +23,23 @@ export default async function BankingLayout({
 
   const dictionary = await getDictionary(lang as Locale)
 
+  // Define banking page navigation
+  const bankingPages: PageNavItem[] = [
+    { name: dictionary?.banking?.dashboard || 'Dashboard', href: `/${lang}/finance/banking` },
+    { name: dictionary?.banking?.myBanks || 'My Banks', href: `/${lang}/finance/banking/my-banks` },
+    { name: dictionary?.banking?.paymentTransfer || 'Payment Transfer', href: `/${lang}/finance/banking/payment-transfer` },
+    { name: dictionary?.banking?.transactionHistory || 'Transaction History', href: `/${lang}/finance/banking/transaction-history` },
+  ]
+
   return (
-    <div className="flex h-screen w-full">
-      {/* Desktop Sidebar */}
-      <div className="hidden lg:block">
-        <BankingSidebar
-          user={session.user}
-          dictionary={dictionary.banking}
-          lang={lang as Locale}
-        />
-      </div>
+    <div className="space-y-6">
+      <PageHeader
+        title="Banking"
+        className="text-start max-w-none"
+      />
+      <PageNav pages={bankingPages} />
 
-      {/* Mobile Navigation */}
-      <div className="lg:hidden">
-        <BankingMobileNav
-          user={session.user}
-          dictionary={dictionary.banking}
-          lang={lang as Locale}
-        />
-      </div>
-
-      {/* Main Content */}
-      <main className="flex-1 overflow-y-auto">
-        {children}
-      </main>
+      {children}
     </div>
   )
 }

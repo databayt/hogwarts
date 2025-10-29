@@ -42,36 +42,24 @@ export async function BankingDashboardContent({
   const account = accountResult.success ? accountResult.data : null
 
   return (
-    <div className="flex h-screen overflow-hidden">
-      <div className="flex-1 overflow-y-auto">
-        <div className="p-8">
-          <Suspense fallback={<DashboardSkeleton />}>
-            <DashboardHeader
-              user={user}
-              accounts={accountsData}
-              totalBanks={accounts.totalBanks}
-              totalCurrentBalance={accounts.totalCurrentBalance}
-              dictionary={dictionary}
-            />
+    <div className="space-y-6">
+      <Suspense fallback={<DashboardSkeleton />}>
+        <DashboardHeader
+          user={user}
+          accounts={accountsData}
+          totalBanks={accounts.totalBanks}
+          totalCurrentBalance={accounts.totalCurrentBalance}
+          dictionary={dictionary}
+        />
 
-            <DashboardMainContent
-              accounts={accountsData}
-              transactions={account?.transactions || []}
-              accountId={accountId}
-              currentPage={currentPage}
-              dictionary={dictionary}
-            />
-          </Suspense>
-        </div>
-      </div>
-
-      <DashboardSidebar
-        user={user}
-        transactions={account?.transactions || []}
-        banks={accountsData?.slice(0, 2)}
-        dictionary={dictionary}
-        lang={lang}
-      />
+        <DashboardMainContent
+          accounts={accountsData}
+          transactions={account?.transactions || []}
+          accountId={accountId}
+          currentPage={currentPage}
+          dictionary={dictionary}
+        />
+      </Suspense>
     </div>
   )
 }
