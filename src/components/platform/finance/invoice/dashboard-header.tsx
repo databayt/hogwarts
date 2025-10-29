@@ -1,5 +1,5 @@
 import { currentUser } from "@/components/auth/auth"
-import user-profile-dropdown from "./UserProfileDropdown"
+import UserProfileDropDown from "./user-profile-dropdown"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 
 export default async function DashboardHeader(){
@@ -14,7 +14,7 @@ export default async function DashboardHeader(){
             </div>
 
             <div className="ml-auto w-fit">
-                <user-profile-dropdown
+                <UserProfileDropDown
                     isArrowUp={false}
                     isFullName={false}
                 />
