@@ -32,14 +32,11 @@ export async function createExpense(formData: FormData): Promise<ExpenseActionRe
       data: {
         ...validated,
         schoolId: session.user.schoolId,
-        submittedBy: { connect: { id: session.user.id! } },
+        submittedBy: session.user.id!,
         status: 'PENDING',
       },
       include: {
         category: {
-          select: { id: true, name: true },
-        },
-        submittedBy: {
           select: { id: true, name: true },
         },
       },
@@ -117,14 +114,11 @@ export async function approveExpense(formData: FormData) {
       },
       data: {
         status: validated.status,
-        approvedBy: { connect: { id: session.user.id! } },
+        approvedBy: session.user.id!,
         approvedAt: new Date(),
       },
       include: {
         category: {
-          select: { id: true, name: true },
-        },
-        submittedBy: {
           select: { id: true, name: true },
         },
       },
