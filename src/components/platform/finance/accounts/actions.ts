@@ -266,63 +266,30 @@ export async function postJournalEntry(journalEntryId: string): Promise<JournalE
       return { success: false, error: 'Journal entry is already posted' }
     }
 
-    // Post the entry and update account balances
-    const updated = await db.$transaction(async (tx) => {
-      // Update journal entry with posting information
-      const entry = await tx.journalEntry.update({
-        where: { id: journalEntryId },
-        data: {
-          isPosted: true,
-          postedAt: new Date(),
-          postedBy: session.user?.id,
-        },
-        include: {
-          ledgerEntries: {
-            include: {
-              account: {
-                select: {
-                  code: true,
-                  name: true,
-                  type: true,
-                },
+    // Post the entry
+    const updated = await db.journalEntry.update({
+      where: {
+        id: journalEntryId,
+        schoolId: session.user.schoolId,
+      },
+      data: {
+        isPosted: true,
+        postedAt: new Date(),
+        postedBy: session.user?.id,
+      },
+      include: {
+        ledgerEntries: {
+          include: {
+            account: {
+              select: {
+                code: true,
+                name: true,
+                type: true,
               },
             },
           },
         },
-      })
-
-      // Update account balances for each ledger entry
-      for (const ledgerEntry of journalEntry.ledgerEntries) {
-        await tx.accountBalance.upsert({
-          where: {
-            accountId_fiscalYearId: {
-              accountId: ledgerEntry.accountId,
-              fiscalYearId: journalEntry.fiscalYearId,
-            },
-          },
-          create: {
-            accountId: ledgerEntry.accountId,
-            fiscalYearId: journalEntry.fiscalYearId,
-            schoolId: session.user.schoolId!,
-            debitTotal: ledgerEntry.debit,
-            creditTotal: ledgerEntry.credit,
-            balance: ledgerEntry.debit - ledgerEntry.credit,
-          },
-          update: {
-            debitTotal: {
-              increment: ledgerEntry.debit,
-            },
-            creditTotal: {
-              increment: ledgerEntry.credit,
-            },
-            balance: {
-              increment: ledgerEntry.debit - ledgerEntry.credit,
-            },
-          },
-        })
-      }
-
-      return entry
+      },
     })
 
     revalidatePath('/finance/accounts/journal')
