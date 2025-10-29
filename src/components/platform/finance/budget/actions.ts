@@ -107,7 +107,9 @@ export async function createBudgetAllocation(formData: FormData) {
       data: {
         ...validated,
         schoolId: session.user.schoolId,
+        allocated: validated.allocatedAmount,
         spent: 0,
+        remaining: validated.allocatedAmount,
       },
     })
 
