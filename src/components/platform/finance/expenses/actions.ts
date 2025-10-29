@@ -28,11 +28,16 @@ export async function createExpense(formData: FormData): Promise<ExpenseActionRe
 
     const validated = expenseSchema.parse(data)
 
+    // Generate unique expense number
+    const expenseNumber = `EXP-${Date.now()}-${Math.random().toString(36).substring(2, 9).toUpperCase()}`
+
     const expense = await db.expense.create({
       data: {
         ...validated,
         schoolId: session.user.schoolId,
+        expenseNumber,
         submittedBy: session.user.id!,
+        submittedAt: new Date(),
         status: 'PENDING',
       },
       include: {
