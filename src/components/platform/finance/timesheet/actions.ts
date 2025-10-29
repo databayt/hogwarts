@@ -18,9 +18,9 @@ export async function createTimesheet(formData: FormData): Promise<TimesheetActi
     }
 
     const data = {
-      userId: formData.get('userId'),
-      periodStart: formData.get('periodStart'),
-      periodEnd: formData.get('periodEnd'),
+      name: formData.get('name'),
+      startDate: formData.get('startDate'),
+      endDate: formData.get('endDate'),
     }
 
     const validated = timesheetSchema.parse(data)
@@ -52,11 +52,14 @@ export async function addTimesheetEntry(formData: FormData) {
     }
 
     const data = {
-      timesheetId: formData.get('timesheetId'),
-      date: formData.get('date'),
+      periodId: formData.get('periodId'),
+      teacherId: formData.get('teacherId'),
+      entryDate: formData.get('entryDate'),
       hoursWorked: Number(formData.get('hoursWorked')),
-      description: formData.get('description') || undefined,
-      taskType: formData.get('taskType') || undefined,
+      overtimeHours: formData.get('overtimeHours') ? Number(formData.get('overtimeHours')) : undefined,
+      leaveHours: formData.get('leaveHours') ? Number(formData.get('leaveHours')) : undefined,
+      leaveType: formData.get('leaveType') || undefined,
+      notes: formData.get('notes') || undefined,
     }
 
     const validated = timesheetEntrySchema.parse(data)
@@ -73,7 +76,7 @@ export async function addTimesheetEntry(formData: FormData) {
       // Get updated timesheet period
       const timesheet = await tx.timesheetPeriod.findUnique({
         where: {
-          id: validated.timesheetId,
+          id: validated.periodId,
           schoolId: session.user.schoolId,
         },
         include: {
