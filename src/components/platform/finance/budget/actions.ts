@@ -33,6 +33,7 @@ export async function createBudget(formData: FormData): Promise<BudgetActionResu
       data: {
         ...validated,
         schoolId: session.user.schoolId,
+        createdBy: session.user.id!,
       },
       include: {
         allocations: true,
