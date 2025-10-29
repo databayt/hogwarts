@@ -159,7 +159,7 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                {d?.stats?.totalRevenue || 'Total Revenue'}
+                Total Revenue
               </CardTitle>
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
@@ -168,7 +168,7 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
                 ${(totalRevenue / 100).toLocaleString()}
               </div>
               <p className="text-xs text-muted-foreground">
-                {d?.stats?.fromCompletedPayments || 'From completed payments'}
+                From completed payments
               </p>
             </CardContent>
           </Card>
@@ -176,7 +176,7 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                {d?.stats?.totalExpenses || 'Total Expenses'}
+                Total Expenses
               </CardTitle>
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
@@ -185,7 +185,7 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
                 ${(totalExpenses / 100).toLocaleString()}
               </div>
               <p className="text-xs text-muted-foreground">
-                {d?.stats?.approvedExpenses || 'Approved expenses'}
+                Approved expenses
               </p>
             </CardContent>
           </Card>
@@ -193,7 +193,7 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                {d?.stats?.pendingPayments || 'Pending Payments'}
+                Pending Payments
               </CardTitle>
               <AlertCircle className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
@@ -202,7 +202,7 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
                 ${(pendingPayments / 100).toLocaleString()}
               </div>
               <p className="text-xs text-muted-foreground">
-                {d?.stats?.awaitingProcessing || 'Awaiting processing'}
+                Awaiting processing
               </p>
             </CardContent>
           </Card>
@@ -210,7 +210,7 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                {d?.stats?.netBalance || 'Net Balance'}
+                Net Balance
               </CardTitle>
               <Banknote className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
@@ -219,7 +219,7 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
                 ${((totalRevenue - totalExpenses) / 100).toLocaleString()}
               </div>
               <p className="text-xs text-muted-foreground">
-                {d?.stats?.revenueMinusExpenses || 'Revenue minus expenses'}
+                Revenue minus expenses
               </p>
             </CardContent>
           </Card>
@@ -230,14 +230,14 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                {d?.stats?.invoices || 'Invoices'}
+                Invoices
               </CardTitle>
               <FileText className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{invoicesCount}</div>
               <p className="text-xs text-muted-foreground">
-                {unpaidInvoices} {d?.stats?.unpaid || 'unpaid'}
+                {unpaidInvoices} unpaid
               </p>
             </CardContent>
           </Card>
@@ -245,14 +245,14 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                {d?.stats?.bankAccounts || 'Bank Accounts'}
+                Bank Accounts
               </CardTitle>
               <Building2 className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{bankAccountsCount}</div>
               <p className="text-xs text-muted-foreground">
-                {d?.stats?.connectedAccounts || 'Connected accounts'}
+                Connected accounts
               </p>
             </CardContent>
           </Card>
@@ -260,7 +260,7 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                {d?.stats?.activeStaff || 'Active Staff'}
+                Active Staff
               </CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
@@ -269,7 +269,7 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
                 {teachersWithSalaryCount}
               </div>
               <p className="text-xs text-muted-foreground">
-                {d?.stats?.withSalaryStructures || 'With salary structures'}
+                With salary structures
               </p>
             </CardContent>
           </Card>
@@ -277,7 +277,7 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                {d?.stats?.pendingActions || 'Pending Actions'}
+                Pending Actions
               </CardTitle>
               <Clock className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
@@ -286,7 +286,7 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
                 {pendingPayrollCount + pendingTimesheetsCount + pendingExpensesCount}
               </div>
               <p className="text-xs text-muted-foreground">
-                {d?.stats?.requiresApproval || 'Requires approval'}
+                Requires approval
               </p>
             </CardContent>
           </Card>
