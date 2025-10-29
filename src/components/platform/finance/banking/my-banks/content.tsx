@@ -28,7 +28,7 @@ export default async function MyBanksContent(props: Props) {
   const accounts = await getAccounts({ userId: props.user.id });
 
   return (
-    <div className="container mx-auto py-8 space-y-8">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <PageHeader

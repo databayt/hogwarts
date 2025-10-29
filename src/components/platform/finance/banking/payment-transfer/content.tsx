@@ -20,7 +20,7 @@ export default async function PaymentTransferContent(props: Props) {
   // Fetch user's bank accounts
   if (!props.user.id) {
     return (
-      <div className="container mx-auto py-8">
+      <div>
         <p className="text-muted-foreground">User ID not found</p>
       </div>
     );
@@ -31,24 +31,22 @@ export default async function PaymentTransferContent(props: Props) {
   // Check if user has enough accounts for transfer
   if (!accounts || accounts.length === 0) {
     return (
-      <div className="container mx-auto py-8">
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-16">
-            <CreditCard className="h-16 w-16 text-muted-foreground mb-4" />
-            <h2 className="text-xl font-semibold mb-2">
-              {props.dictionary.noBanks}
-            </h2>
-            <p className="text-muted-foreground text-center max-w-sm mb-6">
-              {props.dictionary.connectYourBank}
-            </p>
-            <Link href={`/${props.lang}/banking/my-banks`}>
-              <Button>
-                {props.dictionary.connectBank}
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
-      </div>
+      <Card>
+        <CardContent className="flex flex-col items-center justify-center py-16">
+          <CreditCard className="h-16 w-16 text-muted-foreground mb-4" />
+          <h2 className="text-xl font-semibold mb-2">
+            {props.dictionary.noBanks}
+          </h2>
+          <p className="text-muted-foreground text-center max-w-sm mb-6">
+            {props.dictionary.connectYourBank}
+          </p>
+          <Link href={`/${props.lang}/banking/my-banks`}>
+            <Button>
+              {props.dictionary.connectBank}
+            </Button>
+          </Link>
+        </CardContent>
+      </Card>
     );
   }
 
@@ -59,61 +57,59 @@ export default async function PaymentTransferContent(props: Props) {
   );
 
   return (
-    <div className="container mx-auto py-8">
-      <div className="max-w-4xl mx-auto space-y-8">
-        {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            {props.dictionary.paymentTransfer}
-          </h1>
-        </div>
+    <div className="space-y-6">
+      {/* Header */}
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">
+          {props.dictionary.paymentTransfer}
+        </h1>
+      </div>
 
-        {/* Balance Overview */}
-        <div className="grid gap-4 md:grid-cols-2">
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium">
-                {props.dictionary.availableBalance}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {formatCurrency(totalAvailable)}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium">
-                {props.dictionary.accounts}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{accounts.length}</div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Transfer Form */}
+      {/* Balance Overview */}
+      <div className="grid gap-4 md:grid-cols-2">
         <Card>
-          <CardHeader>
-            <CardTitle>{props.dictionary.transfer}</CardTitle>
-            <CardDescription>
-              {props.dictionary.sendMoney}
-            </CardDescription>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium">
+              {props.dictionary.availableBalance}
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <Suspense fallback={<FormSkeleton />}>
-              <PaymentTransferForm
-                accounts={accounts}
-                dictionary={props.dictionary}
-                lang={props.lang}
-              />
-            </Suspense>
+            <div className="text-2xl font-bold">
+              {formatCurrency(totalAvailable)}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium">
+              {props.dictionary.accounts}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{accounts.length}</div>
           </CardContent>
         </Card>
       </div>
+
+      {/* Transfer Form */}
+      <Card>
+        <CardHeader>
+          <CardTitle>{props.dictionary.transfer}</CardTitle>
+          <CardDescription>
+            {props.dictionary.sendMoney}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Suspense fallback={<FormSkeleton />}>
+            <PaymentTransferForm
+              accounts={accounts}
+              dictionary={props.dictionary}
+              lang={props.lang}
+            />
+          </Suspense>
+        </CardContent>
+      </Card>
     </div>
   );
 }
