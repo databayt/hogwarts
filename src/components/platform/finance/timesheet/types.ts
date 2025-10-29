@@ -2,35 +2,36 @@
  * Timesheet Module - Type Definitions
  */
 
-import type { TimesheetStatus } from '@prisma/client'
+import type { PeriodStatus, EntryStatus } from '@prisma/client'
 import type { timesheetSchema, timesheetEntrySchema } from './validation'
 import type { z } from 'zod'
 
 export type TimesheetInput = z.infer<typeof timesheetSchema>
 export type TimesheetEntryInput = z.infer<typeof timesheetEntrySchema>
 
-export interface TimesheetWithEntries {
+export interface TimesheetPeriodWithEntries {
   id: string
-  userId: string
-  periodStart: Date
-  periodEnd: Date
-  totalHours: number
-  status: TimesheetStatus
-  submittedAt: Date | null
-  approvedAt: Date | null
-  approvedById: string | null
+  name: string
+  startDate: Date
+  endDate: Date
+  status: PeriodStatus
+  closedBy: string | null
+  closedAt: Date | null
   entries: TimesheetEntryWithDetails[]
-  user: { id: string; name: string | null }
   schoolId: string
 }
 
 export interface TimesheetEntryWithDetails {
   id: string
-  timesheetId: string
-  date: Date
+  periodId: string
+  teacherId: string
+  entryDate: Date
   hoursWorked: number
-  description: string | null
-  taskType: string | null
+  overtimeHours: number | null
+  leaveHours: number | null
+  leaveType: string | null
+  notes: string | null
+  status: EntryStatus
 }
 
 export interface TimesheetDashboardStats {
@@ -43,6 +44,6 @@ export interface TimesheetDashboardStats {
 
 export interface TimesheetActionResult {
   success: boolean
-  data?: TimesheetWithEntries
+  data?: TimesheetPeriodWithEntries
   error?: string
 }
