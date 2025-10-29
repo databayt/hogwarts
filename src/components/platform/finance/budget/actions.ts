@@ -105,7 +105,11 @@ export async function createBudgetAllocation(formData: FormData) {
 
     const allocation = await db.budgetAllocation.create({
       data: {
-        ...validated,
+        budgetId: validated.budgetId,
+        allocatedAmount: validated.allocatedAmount,
+        ...(validated.departmentId && { departmentId: validated.departmentId }),
+        ...(validated.categoryId && { categoryId: validated.categoryId }),
+        ...(validated.description && { description: validated.description }),
         schoolId: session.user.schoolId,
         allocated: validated.allocatedAmount,
         spent: 0,
