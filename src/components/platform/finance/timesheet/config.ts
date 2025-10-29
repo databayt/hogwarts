@@ -2,9 +2,15 @@
  * Timesheet Module - Configuration
  */
 
-import { TimesheetStatus } from '@prisma/client'
+import { PeriodStatus, EntryStatus } from '@prisma/client'
 
-export const TimesheetStatusLabels: Record<TimesheetStatus, string> = {
+export const PeriodStatusLabels: Record<PeriodStatus, string> = {
+  OPEN: 'Open',
+  CLOSED: 'Closed',
+  LOCKED: 'Locked',
+}
+
+export const EntryStatusLabels: Record<EntryStatus, string> = {
   DRAFT: 'Draft',
   SUBMITTED: 'Submitted',
   APPROVED: 'Approved',
