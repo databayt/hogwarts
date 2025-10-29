@@ -83,9 +83,6 @@ export async function updateExpense(expenseId: string, formData: FormData): Prom
         category: {
           select: { id: true, name: true },
         },
-        submittedBy: {
-          select: { id: true, name: true },
-        },
       },
     })
 
