@@ -49,32 +49,32 @@ export default async function TimesheetContent({ dictionary, lang }: Props) {
       <div className="flex flex-1 flex-col gap-6">
         <PageHeader
           title={d?.title || 'Timesheet Management'}
-          description={d?.description || 'Track staff hours, approve timesheets, and integrate with payroll'}
+          description="Track staff hours, approve timesheets, and integrate with payroll"
           className="text-start max-w-none"
         />
 
         {/* Stats Grid - Uses semantic HTML (h6, h2, small) */}
         <DashboardGrid type="stats">
           <StatsCard
-            title={d?.totalHours || 'Total Hours'}
+            title="Total Hours"
             value={totalHours.toLocaleString()}
-            description={d?.approvedHours || 'Approved hours'}
+            description="Approved hours"
             icon={Clock}
           />
           <StatsCard
-            title={d?.entries || 'Timesheet Entries'}
+            title="Timesheet Entries"
             value={entriesCount}
-            description={`${approvedEntriesCount} ${d?.approved || 'approved'}`}
+            description={`${approvedEntriesCount} approved`}
             icon={FileText}
           />
           <StatsCard
-            title={d?.pendingApproval || 'Pending Approval'}
+            title="Pending Approval"
             value={pendingEntriesCount}
-            description={d?.requiresReview || 'Requires review'}
+            description="Requires review"
             icon={AlertCircle}
           />
           <StatsCard
-            title={d?.period || 'Active Periods'}
+            title="Active Periods"
             value={periodsCount}
             description="Configured periods"
             icon={Calendar}
@@ -84,22 +84,22 @@ export default async function TimesheetContent({ dictionary, lang }: Props) {
         {/* Feature Cards Grid */}
         <DashboardGrid type="features">
           <FeatureCard
-            title={d?.timesheets || 'Timesheet Periods'}
+            title="Timesheet Periods"
             description="Define and manage timesheet periods"
             icon={Calendar}
             isPrimary
             primaryAction={{
-              label: d?.viewTimesheet || 'View Periods',
+              label: 'View Periods',
               href: `/${lang}/finance/timesheet/periods`,
               count: periodsCount
             }}
             secondaryAction={{
-              label: d?.createTimesheet || 'Create Period',
+              label: 'Create Period',
               href: `/${lang}/finance/timesheet/periods/new`
             }}
           />
           <FeatureCard
-            title={d?.entries || 'Time Entries'}
+            title="Time Entries"
             description="Record and track staff working hours"
             icon={Clock}
             primaryAction={{
@@ -113,7 +113,7 @@ export default async function TimesheetContent({ dictionary, lang }: Props) {
             }}
           />
           <FeatureCard
-            title={d?.approveTimesheet || 'Approval Queue'}
+            title="Approval Queue"
             description="Review and approve timesheet entries"
             icon={CheckCircle}
             primaryAction={{
