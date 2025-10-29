@@ -21,10 +21,14 @@ export default async function ReportsContent({ dictionary, lang }: Props) {
   let generatedReportsCount = 0
 
   if (schoolId) {
-    ;[reportsCount, generatedReportsCount] = await Promise.all([
-      db.financialReport.count({ where: { schoolId } }),
-      db.financialReport.count({ where: { schoolId, status: 'COMPLETED' } }),
-    ])
+    try {
+      ;[reportsCount, generatedReportsCount] = await Promise.all([
+        db.financialReport.count({ where: { schoolId } }),
+        db.financialReport.count({ where: { schoolId, status: 'COMPLETED' } }),
+      ])
+    } catch (error) {
+      console.error('Error fetching report stats:', error)
+    }
   }
 
   // @ts-expect-error - finance dictionary not yet added to type definitions

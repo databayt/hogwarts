@@ -41,33 +41,37 @@ export default async function SalaryContent({ dictionary, lang }: Props) {
   let deductionsCount = 0
 
   if (schoolId) {
-    ;[activeStructuresCount, totalStaffCount, allowancesCount, deductionsCount] =
-      await Promise.all([
-        db.salaryStructure.count({
-          where: { schoolId, isActive: true },
-        }),
-        db.teacher.count({ where: { schoolId } }),
-        db.salaryAllowance.count({
-          where: { schoolId },
-        }),
-        db.salaryDeduction.count({
-          where: { schoolId },
-        }),
-      ])
+    try {
+      ;[activeStructuresCount, totalStaffCount, allowancesCount, deductionsCount] =
+        await Promise.all([
+          db.salaryStructure.count({
+            where: { schoolId, isActive: true },
+          }),
+          db.teacher.count({ where: { schoolId } }),
+          db.salaryAllowance.count({
+            where: { schoolId },
+          }),
+          db.salaryDeduction.count({
+            where: { schoolId },
+          }),
+        ])
 
-    // Calculate salary totals
-    const salaryAgg = await db.salaryStructure.aggregate({
-      where: { schoolId, isActive: true },
-      _sum: { baseSalary: true },
-      _avg: { baseSalary: true },
-    })
+      // Calculate salary totals
+      const salaryAgg = await db.salaryStructure.aggregate({
+        where: { schoolId, isActive: true },
+        _sum: { baseSalary: true },
+        _avg: { baseSalary: true },
+      })
 
-    totalMonthlySalary = salaryAgg._sum?.baseSalary
-      ? Number(salaryAgg._sum.baseSalary)
-      : 0
-    averageSalary = salaryAgg._avg?.baseSalary
-      ? Number(salaryAgg._avg.baseSalary)
-      : 0
+      totalMonthlySalary = salaryAgg._sum?.baseSalary
+        ? Number(salaryAgg._sum.baseSalary)
+        : 0
+      averageSalary = salaryAgg._avg?.baseSalary
+        ? Number(salaryAgg._avg.baseSalary)
+        : 0
+    } catch (error) {
+      console.error('Error fetching salary stats:', error)
+    }
   }
 
   // @ts-expect-error - finance dictionary not yet added to type definitions

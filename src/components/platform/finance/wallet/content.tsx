@@ -23,26 +23,30 @@ export default async function WalletContent({ dictionary, lang }: Props) {
   let totalTopups = 0
 
   if (schoolId) {
-    ;[walletsCount, transactionsCount] = await Promise.all([
-      db.wallet.count({ where: { schoolId, isActive: true } }),
-      db.walletTransaction.count({ where: { schoolId } }),
-    ])
+    try {
+      ;[walletsCount, transactionsCount] = await Promise.all([
+        db.wallet.count({ where: { schoolId, isActive: true } }),
+        db.walletTransaction.count({ where: { schoolId } }),
+      ])
 
-    const [balanceAgg, topupsAgg] = await Promise.all([
-      db.wallet.aggregate({
-        where: { schoolId, isActive: true },
-        _sum: { balance: true },
-      }),
-      db.walletTransaction.aggregate({
-        where: { schoolId, type: 'CREDIT' },
-        _sum: { amount: true },
-      }),
-    ])
+      const [balanceAgg, topupsAgg] = await Promise.all([
+        db.wallet.aggregate({
+          where: { schoolId, isActive: true },
+          _sum: { balance: true },
+        }),
+        db.walletTransaction.aggregate({
+          where: { schoolId, type: 'CREDIT' },
+          _sum: { amount: true },
+        }),
+      ])
 
-    totalBalance = balanceAgg._sum?.balance
-      ? Number(balanceAgg._sum.balance)
-      : 0
-    totalTopups = topupsAgg._sum?.amount ? Number(topupsAgg._sum.amount) : 0
+      totalBalance = balanceAgg._sum?.balance
+        ? Number(balanceAgg._sum.balance)
+        : 0
+      totalTopups = topupsAgg._sum?.amount ? Number(topupsAgg._sum.amount) : 0
+    } catch (error) {
+      console.error('Error fetching wallet stats:', error)
+    }
   }
 
   // @ts-expect-error - finance dictionary not yet added to type definitions

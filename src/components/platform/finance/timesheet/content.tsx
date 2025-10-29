@@ -24,20 +24,24 @@ export default async function TimesheetContent({ dictionary, lang }: Props) {
   let totalHours = 0
 
   if (schoolId) {
-    ;[periodsCount, entriesCount, pendingEntriesCount, approvedEntriesCount] = await Promise.all([
-      db.timesheetPeriod.count({ where: { schoolId, status: 'OPEN' } }),
-      db.timesheetEntry.count({ where: { schoolId } }),
-      db.timesheetEntry.count({ where: { schoolId, status: 'SUBMITTED' } }),
-      db.timesheetEntry.count({ where: { schoolId, status: 'APPROVED' } }),
-    ])
+    try {
+      ;[periodsCount, entriesCount, pendingEntriesCount, approvedEntriesCount] = await Promise.all([
+        db.timesheetPeriod.count({ where: { schoolId, status: 'OPEN' } }),
+        db.timesheetEntry.count({ where: { schoolId } }),
+        db.timesheetEntry.count({ where: { schoolId, status: 'SUBMITTED' } }),
+        db.timesheetEntry.count({ where: { schoolId, status: 'APPROVED' } }),
+      ])
 
-    const hoursAgg = await db.timesheetEntry.aggregate({
-      where: { schoolId, status: 'APPROVED' },
-      _sum: { hoursWorked: true },
-    })
-    totalHours = hoursAgg._sum?.hoursWorked
-      ? Number(hoursAgg._sum.hoursWorked)
-      : 0
+      const hoursAgg = await db.timesheetEntry.aggregate({
+        where: { schoolId, status: 'APPROVED' },
+        _sum: { hoursWorked: true },
+      })
+      totalHours = hoursAgg._sum?.hoursWorked
+        ? Number(hoursAgg._sum.hoursWorked)
+        : 0
+    } catch (error) {
+      console.error('Error fetching timesheet stats:', error)
+    }
   }
 
   // @ts-expect-error - finance dictionary not yet added to type definitions

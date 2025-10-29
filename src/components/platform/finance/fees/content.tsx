@@ -42,51 +42,56 @@ export default async function FeesContent({ dictionary, lang }: Props) {
   let finesCount = 0
 
   if (schoolId) {
-    ;[
-      feeStructuresCount,
-      activeAssignmentsCount,
-      scholarshipsCount,
-      finesCount,
-    ] = await Promise.all([
-      db.feeStructure.count({
-        where: { schoolId },
-      }),
-      db.feeAssignment.count({
-        where: { schoolId, status: { in: ['PENDING', 'PARTIAL', 'OVERDUE'] } },
-      }),
-      db.scholarship.count({
-        where: { schoolId },
-      }),
-      db.fine.count({
-        where: { schoolId },
-      }),
-    ])
+    try {
+      ;[
+        feeStructuresCount,
+        activeAssignmentsCount,
+        scholarshipsCount,
+        finesCount,
+      ] = await Promise.all([
+        db.feeStructure.count({
+          where: { schoolId },
+        }),
+        db.feeAssignment.count({
+          where: { schoolId, status: { in: ['PENDING', 'PARTIAL', 'OVERDUE'] } },
+        }),
+        db.scholarship.count({
+          where: { schoolId },
+        }),
+        db.fine.count({
+          where: { schoolId },
+        }),
+      ])
 
-    // Calculate financial totals
-    const [collectedAgg, pendingAgg, overdueAgg] = await Promise.all([
-      db.payment.aggregate({
-        where: { schoolId, status: 'SUCCESS' },
-        _sum: { amount: true },
-      }),
-      db.feeAssignment.aggregate({
-        where: { schoolId, status: 'PENDING' },
-        _sum: { finalAmount: true },
-      }),
-      db.feeAssignment.aggregate({
-        where: { schoolId, status: 'OVERDUE' },
-        _sum: { finalAmount: true },
-      }),
-    ])
+      // Calculate financial totals
+      const [collectedAgg, pendingAgg, overdueAgg] = await Promise.all([
+        db.payment.aggregate({
+          where: { schoolId, status: 'SUCCESS' },
+          _sum: { amount: true },
+        }),
+        db.feeAssignment.aggregate({
+          where: { schoolId, status: 'PENDING' },
+          _sum: { finalAmount: true },
+        }),
+        db.feeAssignment.aggregate({
+          where: { schoolId, status: 'OVERDUE' },
+          _sum: { finalAmount: true },
+        }),
+      ])
 
-    totalFeesCollected = collectedAgg._sum?.amount
-      ? Number(collectedAgg._sum.amount)
-      : 0
-    pendingPayments = pendingAgg._sum?.finalAmount
-      ? Number(pendingAgg._sum.finalAmount)
-      : 0
-    overduePayments = overdueAgg._sum?.finalAmount
-      ? Number(overdueAgg._sum.finalAmount)
-      : 0
+      totalFeesCollected = collectedAgg._sum?.amount
+        ? Number(collectedAgg._sum.amount)
+        : 0
+      pendingPayments = pendingAgg._sum?.finalAmount
+        ? Number(pendingAgg._sum.finalAmount)
+        : 0
+      overduePayments = overdueAgg._sum?.finalAmount
+        ? Number(overdueAgg._sum.finalAmount)
+        : 0
+    } catch (error) {
+      console.error('Error fetching fee stats:', error)
+      // Return zeros if tables don't exist yet
+    }
   }
 
   // @ts-expect-error - finance dictionary not yet added to type definitions

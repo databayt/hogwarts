@@ -23,26 +23,30 @@ export default async function BudgetContent({ dictionary, lang }: Props) {
   let totalSpent = 0
 
   if (schoolId) {
-    ;[budgetsCount, allocationsCount] = await Promise.all([
-      db.budget.count({ where: { schoolId, status: 'ACTIVE' } }),
-      db.budgetAllocation.count({ where: { schoolId } }),
-    ])
+    try {
+      ;[budgetsCount, allocationsCount] = await Promise.all([
+        db.budget.count({ where: { schoolId, status: 'ACTIVE' } }),
+        db.budgetAllocation.count({ where: { schoolId } }),
+      ])
 
-    const [budgetAgg, spentAgg] = await Promise.all([
-      db.budget.aggregate({
-        where: { schoolId, status: 'ACTIVE' },
-        _sum: { totalAmount: true },
-      }),
-      db.budgetAllocation.aggregate({
-        where: { schoolId },
-        _sum: { spent: true },
-      }),
-    ])
+      const [budgetAgg, spentAgg] = await Promise.all([
+        db.budget.aggregate({
+          where: { schoolId, status: 'ACTIVE' },
+          _sum: { totalAmount: true },
+        }),
+        db.budgetAllocation.aggregate({
+          where: { schoolId },
+          _sum: { spent: true },
+        }),
+      ])
 
-    totalBudget = budgetAgg._sum?.totalAmount
-      ? Number(budgetAgg._sum.totalAmount)
-      : 0
-    totalSpent = spentAgg._sum?.spent ? Number(spentAgg._sum.spent) : 0
+      totalBudget = budgetAgg._sum?.totalAmount
+        ? Number(budgetAgg._sum.totalAmount)
+        : 0
+      totalSpent = spentAgg._sum?.spent ? Number(spentAgg._sum.spent) : 0
+    } catch (error) {
+      console.error('Error fetching budget stats:', error)
+    }
   }
 
   const variance = totalBudget - totalSpent

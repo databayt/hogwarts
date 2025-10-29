@@ -24,21 +24,25 @@ export default async function ExpensesContent({ dictionary, lang }: Props) {
   let totalExpenses = 0
 
   if (schoolId) {
-    ;[categoriesCount, expensesCount, pendingExpensesCount, approvedExpensesCount] = await Promise.all([
-      db.expenseCategory.count({ where: { schoolId } }),
-      db.expense.count({ where: { schoolId } }),
-      db.expense.count({ where: { schoolId, status: 'PENDING' } }),
-      db.expense.count({ where: { schoolId, status: 'APPROVED' } }),
-    ])
+    try {
+      ;[categoriesCount, expensesCount, pendingExpensesCount, approvedExpensesCount] = await Promise.all([
+        db.expenseCategory.count({ where: { schoolId } }),
+        db.expense.count({ where: { schoolId } }),
+        db.expense.count({ where: { schoolId, status: 'PENDING' } }),
+        db.expense.count({ where: { schoolId, status: 'APPROVED' } }),
+      ])
 
-    const expensesAgg = await db.expense.aggregate({
-      where: { schoolId, status: 'APPROVED' },
-      _sum: { amount: true },
-    })
+      const expensesAgg = await db.expense.aggregate({
+        where: { schoolId, status: 'APPROVED' },
+        _sum: { amount: true },
+      })
 
-    totalExpenses = expensesAgg._sum?.amount
-      ? Number(expensesAgg._sum.amount)
-      : 0
+      totalExpenses = expensesAgg._sum?.amount
+        ? Number(expensesAgg._sum.amount)
+        : 0
+    } catch (error) {
+      console.error('Error fetching expense stats:', error)
+    }
   }
 
   // @ts-expect-error - finance dictionary not yet added to type definitions

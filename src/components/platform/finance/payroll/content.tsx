@@ -42,46 +42,50 @@ export default async function PayrollContent({ dictionary, lang }: Props) {
   let monthlyPayroll = 0
 
   if (schoolId) {
-    ;[
-      totalRunsCount,
-      pendingRunsCount,
-      completedRunsCount,
-      totalSlipsCount,
-      pendingSlipsCount,
-      paidSlipsCount,
-    ] = await Promise.all([
-      db.payrollRun.count({ where: { schoolId } }),
-      db.payrollRun.count({
-        where: { schoolId, status: { in: ['DRAFT', 'PENDING_APPROVAL'] } },
-      }),
-      db.payrollRun.count({
-        where: { schoolId, status: 'PAID' },
-      }),
-      db.salarySlip.count({ where: { schoolId } }),
-      db.salarySlip.count({
-        where: { schoolId, status: { in: ['GENERATED', 'REVIEWED'] } },
-      }),
-      db.salarySlip.count({
-        where: { schoolId, status: 'PAID' },
-      }),
-    ])
+    try {
+      ;[
+        totalRunsCount,
+        pendingRunsCount,
+        completedRunsCount,
+        totalSlipsCount,
+        pendingSlipsCount,
+        paidSlipsCount,
+      ] = await Promise.all([
+        db.payrollRun.count({ where: { schoolId } }),
+        db.payrollRun.count({
+          where: { schoolId, status: { in: ['DRAFT', 'PENDING_APPROVAL'] } },
+        }),
+        db.payrollRun.count({
+          where: { schoolId, status: 'PAID' },
+        }),
+        db.salarySlip.count({ where: { schoolId } }),
+        db.salarySlip.count({
+          where: { schoolId, status: { in: ['GENERATED', 'REVIEWED'] } },
+        }),
+        db.salarySlip.count({
+          where: { schoolId, status: 'PAID' },
+        }),
+      ])
 
-    // Calculate current month payroll
-    const currentMonthStart = new Date()
-    currentMonthStart.setDate(1)
-    currentMonthStart.setHours(0, 0, 0, 0)
+      // Calculate current month payroll
+      const currentMonthStart = new Date()
+      currentMonthStart.setDate(1)
+      currentMonthStart.setHours(0, 0, 0, 0)
 
-    const payrollAgg = await db.salarySlip.aggregate({
-      where: {
-        schoolId,
-        payPeriodStart: { gte: currentMonthStart },
-      },
-      _sum: { netSalary: true },
-    })
+      const payrollAgg = await db.salarySlip.aggregate({
+        where: {
+          schoolId,
+          payPeriodStart: { gte: currentMonthStart },
+        },
+        _sum: { netSalary: true },
+      })
 
-    monthlyPayroll = payrollAgg._sum?.netSalary
-      ? Number(payrollAgg._sum.netSalary)
-      : 0
+      monthlyPayroll = payrollAgg._sum?.netSalary
+        ? Number(payrollAgg._sum.netSalary)
+        : 0
+    } catch (error) {
+      console.error('Error fetching payroll stats:', error)
+    }
   }
 
   // @ts-expect-error - finance dictionary not yet added to type definitions

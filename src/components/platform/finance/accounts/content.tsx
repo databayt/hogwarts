@@ -25,14 +25,18 @@ export default async function AccountsContent({ dictionary, lang }: Props) {
   let unpostedEntriesCount = 0
 
   if (schoolId) {
-    ;[accountsCount, journalEntriesCount, ledgerEntriesCount, fiscalYearsCount, postedEntriesCount, unpostedEntriesCount] = await Promise.all([
-      db.chartOfAccount.count({ where: { schoolId } }),
-      db.journalEntry.count({ where: { schoolId } }),
-      db.ledgerEntry.count({ where: { schoolId } }),
-      db.fiscalYear.count({ where: { schoolId } }),
-      db.journalEntry.count({ where: { schoolId, isPosted: true } }),
-      db.journalEntry.count({ where: { schoolId, isPosted: false } }),
-    ])
+    try {
+      ;[accountsCount, journalEntriesCount, ledgerEntriesCount, fiscalYearsCount, postedEntriesCount, unpostedEntriesCount] = await Promise.all([
+        db.chartOfAccount.count({ where: { schoolId } }),
+        db.journalEntry.count({ where: { schoolId } }),
+        db.ledgerEntry.count({ where: { schoolId } }),
+        db.fiscalYear.count({ where: { schoolId } }),
+        db.journalEntry.count({ where: { schoolId, isPosted: true } }),
+        db.journalEntry.count({ where: { schoolId, isPosted: false } }),
+      ])
+    } catch (error) {
+      console.error('Error fetching account stats:', error)
+    }
   }
 
   // @ts-expect-error - finance dictionary not yet added to type definitions
