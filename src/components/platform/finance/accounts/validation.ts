@@ -4,7 +4,7 @@
  */
 
 import { z } from 'zod'
-import { AccountType, JournalEntryStatus } from '@prisma/client'
+import { AccountType } from '@prisma/client'
 
 /**
  * Account Schema
@@ -101,7 +101,7 @@ export const accountFilterSchema = z.object({
  * For filtering journal entries
  */
 export const journalEntryFilterSchema = z.object({
-  status: z.nativeEnum(JournalEntryStatus).optional(),
+  isPosted: z.boolean().optional(),
   fiscalYearId: z.string().optional(),
   sourceModule: z.string().optional(),
   startDate: z.coerce.date().optional(),
