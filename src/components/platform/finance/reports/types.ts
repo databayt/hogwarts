@@ -73,8 +73,6 @@ export interface AccountSummary {
   accountName: string
   accountType: AccountType
   balance: number
-  debitTotal: number
-  creditTotal: number
 }
 
 export interface TrialBalanceEntry {
