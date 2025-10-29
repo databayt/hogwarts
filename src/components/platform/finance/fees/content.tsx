@@ -78,9 +78,15 @@ export default async function FeesContent({ dictionary, lang }: Props) {
       }),
     ])
 
-    totalFeesCollected = collectedAgg._sum.amount?.toNumber() || 0
-    pendingPayments = pendingAgg._sum.finalAmount?.toNumber() || 0
-    overduePayments = overdueAgg._sum.finalAmount?.toNumber() || 0
+    totalFeesCollected = collectedAgg._sum?.amount
+      ? Number(collectedAgg._sum.amount)
+      : 0
+    pendingPayments = pendingAgg._sum?.finalAmount
+      ? Number(pendingAgg._sum.finalAmount)
+      : 0
+    overduePayments = overdueAgg._sum?.finalAmount
+      ? Number(overdueAgg._sum.finalAmount)
+      : 0
   }
 
   // @ts-expect-error - finance dictionary not yet added to type definitions
