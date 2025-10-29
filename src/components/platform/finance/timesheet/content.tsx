@@ -2,12 +2,10 @@ import { Shell as PageContainer } from '@/components/table/shell'
 import PageHeader from '@/components/atom/page-header'
 import type { Locale } from '@/components/internationalization/config'
 import type { Dictionary } from '@/components/internationalization/dictionaries'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Clock, Calendar, Users, CheckCircle, AlertCircle, FileText } from 'lucide-react'
-import Link from 'next/link'
 import { db } from '@/lib/db'
 import { getTenantContext } from '@/lib/tenant-context'
+import { StatsCard, FeatureCard, DashboardGrid } from '../lib/dashboard-components'
 
 interface Props {
   dictionary: Dictionary
@@ -44,8 +42,7 @@ export default async function TimesheetContent({ dictionary, lang }: Props) {
     }
   }
 
-  // @ts-expect-error - finance dictionary not yet added to type definitions
-  const d = dictionary?.school?.finance?.timesheet
+  const d = dictionary?.finance?.timesheet
 
   return (
     <PageContainer>
@@ -56,161 +53,119 @@ export default async function TimesheetContent({ dictionary, lang }: Props) {
           className="text-start max-w-none"
         />
 
-        <div className="grid gap-4 md:grid-cols-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{d?.stats?.totalHours || 'Total Hours'}</CardTitle>
-              <Clock className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{totalHours.toLocaleString()}</div>
-              <p className="text-xs text-muted-foreground">{d?.stats?.approved || 'Approved hours'}</p>
-            </CardContent>
-          </Card>
+        {/* Stats Grid - Uses semantic HTML (h6, h2, small) */}
+        <DashboardGrid type="stats">
+          <StatsCard
+            title={d?.totalHours || 'Total Hours'}
+            value={totalHours.toLocaleString()}
+            description={d?.approvedHours || 'Approved hours'}
+            icon={Clock}
+          />
+          <StatsCard
+            title={d?.entries || 'Timesheet Entries'}
+            value={entriesCount}
+            description={`${approvedEntriesCount} ${d?.approved || 'approved'}`}
+            icon={FileText}
+          />
+          <StatsCard
+            title={d?.pendingApproval || 'Pending Approval'}
+            value={pendingEntriesCount}
+            description={d?.requiresReview || 'Requires review'}
+            icon={AlertCircle}
+          />
+          <StatsCard
+            title={d?.period || 'Active Periods'}
+            value={periodsCount}
+            description="Configured periods"
+            icon={Calendar}
+          />
+        </DashboardGrid>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{d?.stats?.entries || 'Timesheet Entries'}</CardTitle>
-              <FileText className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{entriesCount}</div>
-              <p className="text-xs text-muted-foreground">{approvedEntriesCount} {d?.stats?.approved || 'approved'}</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{d?.stats?.pending || 'Pending Approval'}</CardTitle>
-              <AlertCircle className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{pendingEntriesCount}</div>
-              <p className="text-xs text-muted-foreground">{d?.stats?.requiresReview || 'Requires review'}</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{d?.stats?.periods || 'Active Periods'}</CardTitle>
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{periodsCount}</div>
-              <p className="text-xs text-muted-foreground">{d?.stats?.configured || 'Configured periods'}</p>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Calendar className="h-5 w-5" />
-                {d?.sections?.periods || 'Timesheet Periods'}
-              </CardTitle>
-              <CardDescription>{d?.sections?.periodsDesc || 'Define and manage timesheet periods'}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Button asChild className="w-full">
-                <Link href={`/${lang}/finance/timesheet/periods`}>{d?.actions?.viewPeriods || 'View Periods'} ({periodsCount})</Link>
-              </Button>
-              <Button variant="outline" asChild className="w-full" size="sm">
-                <Link href={`/${lang}/finance/timesheet/periods/new`}>{d?.actions?.createPeriod || 'Create Period'}</Link>
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Clock className="h-5 w-5" />
-                {d?.sections?.entries || 'Time Entries'}
-              </CardTitle>
-              <CardDescription>{d?.sections?.entriesDesc || 'Record and track staff working hours'}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Button asChild className="w-full">
-                <Link href={`/${lang}/finance/timesheet/entries`}>{d?.actions?.viewEntries || 'View Entries'} ({entriesCount})</Link>
-              </Button>
-              <Button variant="outline" asChild className="w-full" size="sm">
-                <Link href={`/${lang}/finance/timesheet/entries/new`}>{d?.actions?.recordTime || 'Record Time'}</Link>
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card className="border-primary/20">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <CheckCircle className="h-5 w-5 text-primary" />
-                {d?.sections?.approval || 'Approval Queue'}
-              </CardTitle>
-              <CardDescription>{d?.sections?.approvalDesc || 'Review and approve timesheet entries'}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Button asChild className="w-full">
-                <Link href={`/${lang}/finance/timesheet/approve`}>{d?.actions?.approveEntries || 'Approve Entries'} ({pendingEntriesCount})</Link>
-              </Button>
-              <Button variant="outline" asChild className="w-full" size="sm">
-                <Link href={`/${lang}/finance/timesheet/approve/bulk`}>{d?.actions?.bulkApprove || 'Bulk Approve'}</Link>
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5" />
-                {d?.sections?.staff || 'Staff Timesheets'}
-              </CardTitle>
-              <CardDescription>{d?.sections?.staffDesc || 'View timesheets by staff member'}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Button asChild className="w-full">
-                <Link href={`/${lang}/finance/timesheet/staff`}>{d?.actions?.viewByStaff || 'View By Staff'}</Link>
-              </Button>
-              <Button variant="outline" asChild className="w-full" size="sm">
-                <Link href={`/${lang}/finance/timesheet/staff/summary`}>{d?.actions?.staffSummary || 'Staff Summary'}</Link>
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="h-5 w-5" />
-                {d?.sections?.reports || 'Timesheet Reports'}
-              </CardTitle>
-              <CardDescription>{d?.sections?.reportsDesc || 'Generate timesheet reports and analytics'}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Button asChild className="w-full">
-                <Link href={`/${lang}/finance/timesheet/reports`}>{d?.actions?.viewReports || 'View Reports'}</Link>
-              </Button>
-              <Button variant="outline" asChild className="w-full" size="sm">
-                <Link href={`/${lang}/finance/timesheet/reports/hours`}>{d?.actions?.hoursReport || 'Hours Report'}</Link>
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Calendar className="h-5 w-5" />
-                {d?.sections?.calendar || 'Calendar View'}
-              </CardTitle>
-              <CardDescription>{d?.sections?.calendarDesc || 'Visual calendar of timesheet entries'}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Button asChild className="w-full">
-                <Link href={`/${lang}/finance/timesheet/calendar`}>{d?.actions?.calendar || 'View Calendar'}</Link>
-              </Button>
-              <Button variant="outline" asChild className="w-full" size="sm">
-                <Link href={`/${lang}/finance/timesheet/calendar/month`}>{d?.actions?.monthView || 'Month View'}</Link>
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
+        {/* Feature Cards Grid */}
+        <DashboardGrid type="features">
+          <FeatureCard
+            title={d?.timesheets || 'Timesheet Periods'}
+            description="Define and manage timesheet periods"
+            icon={Calendar}
+            isPrimary
+            primaryAction={{
+              label: d?.viewTimesheet || 'View Periods',
+              href: `/${lang}/finance/timesheet/periods`,
+              count: periodsCount
+            }}
+            secondaryAction={{
+              label: d?.createTimesheet || 'Create Period',
+              href: `/${lang}/finance/timesheet/periods/new`
+            }}
+          />
+          <FeatureCard
+            title={d?.entries || 'Time Entries'}
+            description="Record and track staff working hours"
+            icon={Clock}
+            primaryAction={{
+              label: 'View Entries',
+              href: `/${lang}/finance/timesheet/entries`,
+              count: entriesCount
+            }}
+            secondaryAction={{
+              label: 'Record Time',
+              href: `/${lang}/finance/timesheet/entries/new`
+            }}
+          />
+          <FeatureCard
+            title={d?.approveTimesheet || 'Approval Queue'}
+            description="Review and approve timesheet entries"
+            icon={CheckCircle}
+            primaryAction={{
+              label: 'Approve Entries',
+              href: `/${lang}/finance/timesheet/approve`,
+              count: pendingEntriesCount
+            }}
+            secondaryAction={{
+              label: 'Bulk Approve',
+              href: `/${lang}/finance/timesheet/approve/bulk`
+            }}
+          />
+          <FeatureCard
+            title="Staff Timesheets"
+            description="View timesheets by staff member"
+            icon={Users}
+            primaryAction={{
+              label: 'View By Staff',
+              href: `/${lang}/finance/timesheet/staff`
+            }}
+            secondaryAction={{
+              label: 'Staff Summary',
+              href: `/${lang}/finance/timesheet/staff/summary`
+            }}
+          />
+          <FeatureCard
+            title="Timesheet Reports"
+            description="Generate timesheet reports and analytics"
+            icon={FileText}
+            primaryAction={{
+              label: 'View Reports',
+              href: `/${lang}/finance/timesheet/reports`
+            }}
+            secondaryAction={{
+              label: 'Hours Report',
+              href: `/${lang}/finance/timesheet/reports/hours`
+            }}
+          />
+          <FeatureCard
+            title="Calendar View"
+            description="Visual calendar of timesheet entries"
+            icon={Calendar}
+            primaryAction={{
+              label: 'View Calendar',
+              href: `/${lang}/finance/timesheet/calendar`
+            }}
+            secondaryAction={{
+              label: 'Month View',
+              href: `/${lang}/finance/timesheet/calendar/month`
+            }}
+          />
+        </DashboardGrid>
       </div>
     </PageContainer>
   )

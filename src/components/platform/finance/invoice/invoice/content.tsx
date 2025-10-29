@@ -1,7 +1,7 @@
 import { auth } from "@/auth";
 import InvoiceClientPage from "@/components/platform/finance/invoice/invoice/InvoiceClientPage";
 import { Suspense } from "react";
-import Loading from "@/components/platform/finance/invoice/Loading";
+import Loading from "@/components/platform/finance/invoice/loading";
 import { type Locale } from "@/components/internationalization/config";
 import { type getDictionary } from "@/components/internationalization/dictionaries";
 

@@ -1,5 +1,6 @@
 import { Shell as PageContainer } from "@/components/table/shell";
 import PageHeader from "@/components/atom/page-header";
+import { PageNav, type PageNavItem } from "@/components/atom/page-nav";
 import type { Locale } from "@/components/internationalization/config";
 import type { Dictionary } from "@/components/internationalization/dictionaries";
 import { Button } from "@/components/ui/button";
@@ -81,6 +82,30 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
 
   const d = dictionary?.school?.exams?.dashboard;
 
+  // Define exams page navigation
+  const examsPages: PageNavItem[] = [
+    {
+      name: d?.blocks?.manage?.title || 'Exam Management',
+      href: `/${lang}/exams`
+    },
+    {
+      name: d?.blocks?.qbank?.title || 'Question Bank',
+      href: `/${lang}/generate/questions`
+    },
+    {
+      name: d?.blocks?.generate?.title || 'Auto Generation',
+      href: `/${lang}/generate`
+    },
+    {
+      name: d?.blocks?.mark?.title || 'Auto Marking',
+      href: `/${lang}/mark`
+    },
+    {
+      name: d?.blocks?.results?.title || 'Results & Reports',
+      href: `/${lang}/results`
+    },
+  ];
+
   return (
     <PageContainer>
       <div className="flex flex-1 flex-col gap-6">
@@ -90,6 +115,8 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
           className="text-start max-w-none"
         />
 
+        <PageNav pages={examsPages} />
+
         {/* Overview Stats */}
         <div className="grid gap-4 md:grid-cols-4">
           <Card>
@@ -98,10 +125,10 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
               <Calendar className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{examsCount}</div>
-              <p className="text-xs text-muted-foreground">
+              <h3>{examsCount}</h3>
+              <small className="muted">
                 {d?.stats?.allScheduledExams}
-              </p>
+              </small>
             </CardContent>
           </Card>
 
@@ -111,10 +138,10 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
               <Clock className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{upcomingExamsCount}</div>
-              <p className="text-xs text-muted-foreground">
+              <h3>{upcomingExamsCount}</h3>
+              <small className="muted">
                 {d?.stats?.scheduledForFuture}
-              </p>
+              </small>
             </CardContent>
           </Card>
 
@@ -124,10 +151,10 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
               <BookOpen className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{questionBankCount}</div>
-              <p className="text-xs text-muted-foreground">
+              <h3>{questionBankCount}</h3>
+              <small className="muted">
                 {d?.stats?.availableQuestions}
-              </p>
+              </small>
             </CardContent>
           </Card>
 
@@ -137,10 +164,10 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{studentsEnrolledCount}</div>
-              <p className="text-xs text-muted-foreground">
+              <h3>{studentsEnrolledCount}</h3>
+              <small className="muted">
                 {d?.stats?.enrolledStudents}
-              </p>
+              </small>
             </CardContent>
           </Card>
         </div>
@@ -153,10 +180,10 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{completedExamsCount}</div>
-              <p className="text-xs text-muted-foreground">
+              <h3>{completedExamsCount}</h3>
+              <small className="muted">
                 {d?.stats?.examsFinished}
-              </p>
+              </small>
             </CardContent>
           </Card>
 
@@ -166,10 +193,10 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
               <ClipboardCheck className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{pendingMarkingCount}</div>
-              <p className="text-xs text-muted-foreground">
+              <h3>{pendingMarkingCount}</h3>
+              <small className="muted">
                 {d?.stats?.awaitingGrading}
-              </p>
+              </small>
             </CardContent>
           </Card>
 
@@ -179,10 +206,10 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
               <FileBarChart className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{resultsGeneratedCount}</div>
-              <p className="text-xs text-muted-foreground">
+              <h3>{resultsGeneratedCount}</h3>
+              <small className="muted">
                 {d?.stats?.studentResults}
-              </p>
+              </small>
             </CardContent>
           </Card>
 
@@ -192,10 +219,10 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
               <BookMarked className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{templatesCount}</div>
-              <p className="text-xs text-muted-foreground">
+              <h3>{templatesCount}</h3>
+              <small className="muted">
                 {d?.stats?.examTemplates}
-              </p>
+              </small>
             </CardContent>
           </Card>
         </div>
@@ -214,7 +241,7 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              <p className="text-sm text-muted-foreground">
+              <p className="muted">
                 {d?.blocks?.manage?.details}
               </p>
               <div className="flex flex-col gap-2">
@@ -245,7 +272,7 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              <p className="text-sm text-muted-foreground">
+              <p className="muted">
                 {d?.blocks?.qbank?.details}
               </p>
               <div className="flex flex-col gap-2">
@@ -276,7 +303,7 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              <p className="text-sm text-muted-foreground">
+              <p className="muted">
                 {d?.blocks?.generate?.details}
               </p>
               <div className="flex flex-col gap-2">
@@ -307,7 +334,7 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              <p className="text-sm text-muted-foreground">
+              <p className="muted">
                 {d?.blocks?.mark?.details}
               </p>
               <div className="flex flex-col gap-2">
@@ -338,7 +365,7 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              <p className="text-sm text-muted-foreground">
+              <p className="muted">
                 {d?.blocks?.results?.details}
               </p>
               <div className="flex flex-col gap-2">
@@ -408,8 +435,8 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
                   1
                 </div>
                 <div>
-                  <h3 className="font-medium">{d?.workflow?.step1?.title}</h3>
-                  <p className="text-sm text-muted-foreground">
+                  <h3>{d?.workflow?.step1?.title}</h3>
+                  <p className="muted">
                     {d?.workflow?.step1?.description}
                   </p>
                 </div>
@@ -419,8 +446,8 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
                   2
                 </div>
                 <div>
-                  <h3 className="font-medium">{d?.workflow?.step2?.title}</h3>
-                  <p className="text-sm text-muted-foreground">
+                  <h3>{d?.workflow?.step2?.title}</h3>
+                  <p className="muted">
                     {d?.workflow?.step2?.description}
                   </p>
                 </div>
@@ -430,8 +457,8 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
                   3
                 </div>
                 <div>
-                  <h3 className="font-medium">{d?.workflow?.step3?.title}</h3>
-                  <p className="text-sm text-muted-foreground">
+                  <h3>{d?.workflow?.step3?.title}</h3>
+                  <p className="muted">
                     {d?.workflow?.step3?.description}
                   </p>
                 </div>
@@ -441,8 +468,8 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
                   4
                 </div>
                 <div>
-                  <h3 className="font-medium">{d?.workflow?.step4?.title}</h3>
-                  <p className="text-sm text-muted-foreground">
+                  <h3>{d?.workflow?.step4?.title}</h3>
+                  <p className="muted">
                     {d?.workflow?.step4?.description}
                   </p>
                 </div>
@@ -452,8 +479,8 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
                   5
                 </div>
                 <div>
-                  <h3 className="font-medium">{d?.workflow?.step5?.title}</h3>
-                  <p className="text-sm text-muted-foreground">
+                  <h3>{d?.workflow?.step5?.title}</h3>
+                  <p className="muted">
                     {d?.workflow?.step5?.description}
                   </p>
                 </div>

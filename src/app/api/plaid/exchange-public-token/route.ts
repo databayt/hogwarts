@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { Configuration, PlaidApi, PlaidEnvironments } from 'plaid'
 import { auth } from '@/auth'
 import { db } from '@/lib/db'
-import { parseStringify } from '@/components/platform/banking/lib/utils'
+import { parseStringify } from '@/components/platform/finance/banking/lib/utils'
 
 const configuration = new Configuration({
   basePath: PlaidEnvironments[process.env.PLAID_ENV || 'sandbox'],

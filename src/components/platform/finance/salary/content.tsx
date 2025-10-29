@@ -74,8 +74,7 @@ export default async function SalaryContent({ dictionary, lang }: Props) {
     }
   }
 
-  // @ts-expect-error - finance dictionary not yet added to type definitions
-  const d = dictionary?.school?.finance?.salary
+  const d = dictionary?.finance?.salary
 
   return (
     <PageContainer>

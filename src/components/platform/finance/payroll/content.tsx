@@ -3,26 +3,12 @@ import PageHeader from '@/components/atom/page-header'
 import type { Locale } from '@/components/internationalization/config'
 import type { Dictionary } from '@/components/internationalization/dictionaries'
 import { Button } from '@/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-import {
-  Users,
-  DollarSign,
-  Calendar,
-  FileText,
-  CheckCircle,
-  AlertCircle,
-  Clock,
-  Settings,
-} from 'lucide-react'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Users, DollarSign, Calendar, FileText, CheckCircle, AlertCircle, Clock, Settings } from 'lucide-react'
 import Link from 'next/link'
 import { db } from '@/lib/db'
 import { getTenantContext } from '@/lib/tenant-context'
+import { StatsCard, FeatureCard, DashboardGrid, formatCurrency } from '../lib/dashboard-components'
 
 interface Props {
   dictionary: Dictionary
@@ -88,8 +74,7 @@ export default async function PayrollContent({ dictionary, lang }: Props) {
     }
   }
 
-  // @ts-expect-error - finance dictionary not yet added to type definitions
-  const d = dictionary?.school?.finance?.payroll
+  const d = dictionary?.finance?.payroll
 
   return (
     <PageContainer>
@@ -103,229 +88,118 @@ export default async function PayrollContent({ dictionary, lang }: Props) {
           className="text-start max-w-none"
         />
 
-        {/* Overview Stats */}
-        <div className="grid gap-4 md:grid-cols-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                {d?.stats?.monthlyPayroll || 'Current Month Payroll'}
-              </CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                ${(monthlyPayroll / 100).toLocaleString()}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                {d?.stats?.totalNet || 'Total net salaries'}
-              </p>
-            </CardContent>
-          </Card>
+        {/* Stats Grid - Uses semantic HTML (h6, h2, small) */}
+        <DashboardGrid type="stats">
+          <StatsCard
+            title={d?.monthlyPayroll || 'Current Month Payroll'}
+            value={formatCurrency(monthlyPayroll)}
+            description={d?.totalNet || 'Total net salaries'}
+            icon={DollarSign}
+          />
+          <StatsCard
+            title={d?.payroll || 'Payroll Runs'}
+            value={totalRunsCount}
+            description={`${completedRunsCount} completed`}
+            icon={Calendar}
+          />
+          <StatsCard
+            title="Pending Approval"
+            value={pendingRunsCount}
+            description={`${pendingSlipsCount} slips`}
+            icon={AlertCircle}
+          />
+          <StatsCard
+            title="Paid Out"
+            value={paidSlipsCount}
+            description={`Salary slips / ${totalSlipsCount}`}
+            icon={CheckCircle}
+          />
+        </DashboardGrid>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                {d?.stats?.payrollRuns || 'Payroll Runs'}
-              </CardTitle>
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{totalRunsCount}</div>
-              <p className="text-xs text-muted-foreground">
-                {completedRunsCount} {d?.stats?.completed || 'completed'}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                {d?.stats?.pendingApproval || 'Pending Approval'}
-              </CardTitle>
-              <AlertCircle className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{pendingRunsCount}</div>
-              <p className="text-xs text-muted-foreground">
-                {pendingSlipsCount} {d?.stats?.slips || 'slips'}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                {d?.stats?.paidOut || 'Paid Out'}
-              </CardTitle>
-              <CheckCircle className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{paidSlipsCount}</div>
-              <p className="text-xs text-muted-foreground">
-                {d?.stats?.salarySlips || 'Salary slips'} / {totalSlipsCount}
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Feature Sections */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {/* Payroll Runs */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Calendar className="h-5 w-5" />
-                {d?.sections?.runs || 'Payroll Runs'}
-              </CardTitle>
-              <CardDescription>
-                {d?.sections?.runsDesc ||
-                  'Create and manage payroll processing runs'}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Button asChild className="w-full">
-                <Link href={`/${lang}/finance/payroll/runs`}>
-                  {d?.actions?.viewRuns || 'View Runs'} ({totalRunsCount})
-                </Link>
-              </Button>
-              <Button variant="outline" asChild className="w-full" size="sm">
-                <Link href={`/${lang}/finance/payroll/runs/new`}>
-                  {d?.actions?.createRun || 'Create New Run'}
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
-
-          {/* Salary Slips */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="h-5 w-5" />
-                {d?.sections?.slips || 'Salary Slips'}
-              </CardTitle>
-              <CardDescription>
-                {d?.sections?.slipsDesc ||
-                  'View and manage individual salary slips'}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Button asChild className="w-full">
-                <Link href={`/${lang}/finance/payroll/slips`}>
-                  {d?.actions?.viewSlips || 'View Slips'} ({totalSlipsCount})
-                </Link>
-              </Button>
-              <Button variant="outline" asChild className="w-full" size="sm">
-                <Link href={`/${lang}/finance/payroll/slips/pending`}>
-                  {d?.actions?.reviewPending || 'Review Pending'} ({pendingSlipsCount})
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
-
-          {/* Process Payroll */}
-          <Card className="border-primary/20">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5 text-primary" />
-                {d?.sections?.process || 'Process Payroll'}
-              </CardTitle>
-              <CardDescription>
-                {d?.sections?.processDesc ||
-                  'Start new payroll processing for current period'}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Button asChild className="w-full">
-                <Link href={`/${lang}/finance/payroll/process`}>
-                  {d?.actions?.processPayroll || 'Process Payroll'}
-                </Link>
-              </Button>
-              <Button variant="outline" asChild className="w-full" size="sm">
-                <Link href={`/${lang}/finance/payroll/process/batch`}>
-                  {d?.actions?.batchProcess || 'Batch Process'}
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
-
-          {/* Approval Queue */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <CheckCircle className="h-5 w-5" />
-                {d?.sections?.approval || 'Approval Queue'}
-              </CardTitle>
-              <CardDescription>
-                {d?.sections?.approvalDesc ||
-                  'Review and approve pending payroll runs'}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Button asChild className="w-full">
-                <Link href={`/${lang}/finance/payroll/approval`}>
-                  {d?.actions?.approvalQueue || 'Approval Queue'} ({pendingRunsCount})
-                </Link>
-              </Button>
-              <Button variant="outline" asChild className="w-full" size="sm">
-                <Link href={`/${lang}/finance/payroll/approval/history`}>
-                  {d?.actions?.approvalHistory || 'Approval History'}
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
-
-          {/* Disbursement */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <DollarSign className="h-5 w-5" />
-                {d?.sections?.disbursement || 'Disbursement'}
-              </CardTitle>
-              <CardDescription>
-                {d?.sections?.disbursementDesc ||
-                  'Process salary payments and disbursements'}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Button asChild className="w-full">
-                <Link href={`/${lang}/finance/payroll/disbursement`}>
-                  {d?.actions?.disburse || 'Disburse Salaries'}
-                </Link>
-              </Button>
-              <Button variant="outline" asChild className="w-full" size="sm">
-                <Link href={`/${lang}/finance/payroll/disbursement/history`}>
-                  {d?.actions?.disbursementHistory || 'Payment History'}
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
-
-          {/* Settings */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Settings className="h-5 w-5" />
-                {d?.sections?.settings || 'Payroll Settings'}
-              </CardTitle>
-              <CardDescription>
-                {d?.sections?.settingsDesc ||
-                  'Configure tax rates, deductions, and rules'}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Button asChild className="w-full">
-                <Link href={`/${lang}/finance/payroll/settings`}>
-                  {d?.actions?.settings || 'Payroll Settings'}
-                </Link>
-              </Button>
-              <Button variant="outline" asChild className="w-full" size="sm">
-                <Link href={`/${lang}/finance/payroll/settings/tax`}>
-                  {d?.actions?.taxSettings || 'Tax Configuration'}
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
+        {/* Feature Cards Grid */}
+        <DashboardGrid type="features">
+          <FeatureCard
+            title={d?.payroll || 'Payroll Runs'}
+            description="Create and manage payroll processing runs"
+            icon={Calendar}
+            isPrimary
+            primaryAction={{
+              label: 'View Runs',
+              href: `/${lang}/finance/payroll/runs`,
+              count: totalRunsCount
+            }}
+            secondaryAction={{
+              label: 'Create New Run',
+              href: `/${lang}/finance/payroll/runs/new`
+            }}
+          />
+          <FeatureCard
+            title={d?.payslip || 'Salary Slips'}
+            description="View and manage individual salary slips"
+            icon={FileText}
+            primaryAction={{
+              label: 'View Slips',
+              href: `/${lang}/finance/payroll/slips`,
+              count: totalSlipsCount
+            }}
+            secondaryAction={{
+              label: `Review Pending (${pendingSlipsCount})`,
+              href: `/${lang}/finance/payroll/slips/pending`
+            }}
+          />
+          <FeatureCard
+            title={d?.processPayroll || 'Process Payroll'}
+            description="Start new payroll processing for current period"
+            icon={Users}
+            primaryAction={{
+              label: 'Process Payroll',
+              href: `/${lang}/finance/payroll/process`
+            }}
+            secondaryAction={{
+              label: 'Batch Process',
+              href: `/${lang}/finance/payroll/process/batch`
+            }}
+          />
+          <FeatureCard
+            title="Approval Queue"
+            description="Review and approve pending payroll runs"
+            icon={CheckCircle}
+            primaryAction={{
+              label: `Approval Queue (${pendingRunsCount})`,
+              href: `/${lang}/finance/payroll/approval`
+            }}
+            secondaryAction={{
+              label: 'Approval History',
+              href: `/${lang}/finance/payroll/approval/history`
+            }}
+          />
+          <FeatureCard
+            title="Disbursement"
+            description="Process salary payments and disbursements"
+            icon={DollarSign}
+            primaryAction={{
+              label: 'Disburse Salaries',
+              href: `/${lang}/finance/payroll/disbursement`
+            }}
+            secondaryAction={{
+              label: 'Payment History',
+              href: `/${lang}/finance/payroll/disbursement/history`
+            }}
+          />
+          <FeatureCard
+            title="Payroll Settings"
+            description="Configure tax rates, deductions, and rules"
+            icon={Settings}
+            primaryAction={{
+              label: 'Payroll Settings',
+              href: `/${lang}/finance/payroll/settings`
+            }}
+            secondaryAction={{
+              label: 'Tax Configuration',
+              href: `/${lang}/finance/payroll/settings/tax`
+            }}
+          />
+        </DashboardGrid>
 
         {/* Quick Actions */}
         <Card>

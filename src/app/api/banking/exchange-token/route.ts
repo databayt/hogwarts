@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { plaidClient } from '@/components/platform/banking/lib/plaid'
+import { plaidClient } from '@/components/platform/finance/banking/lib/plaid'
 
 export async function POST(request: Request) {
   try {

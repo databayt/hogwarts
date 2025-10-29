@@ -127,8 +127,7 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
     }
   }
 
-  // @ts-expect-error - finance dictionary not yet added to type definitions
-  const d = dictionary?.school?.finance?.dashboard
+  const d = dictionary?.finance
 
   // Define finance page navigation
   const financePages: PageNavItem[] = [

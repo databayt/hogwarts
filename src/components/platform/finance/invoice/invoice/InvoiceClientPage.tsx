@@ -1,5 +1,5 @@
 "use client";
-import Loading from "@/components/platform/finance/invoice/Loading";
+import Loading from "@/components/platform/finance/invoice/loading";
 import { buttonVariants } from "@/components/ui/button";
 import { DataTable } from "@/components/table/data-table/data-table";
 import { cn } from "@/lib/utils";

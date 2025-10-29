@@ -2,12 +2,10 @@ import { Shell as PageContainer } from '@/components/table/shell'
 import PageHeader from '@/components/atom/page-header'
 import type { Locale } from '@/components/internationalization/config'
 import type { Dictionary } from '@/components/internationalization/dictionaries'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { BookOpen, FileText, BarChart, Lock, Calendar, Settings } from 'lucide-react'
-import Link from 'next/link'
 import { db } from '@/lib/db'
 import { getTenantContext } from '@/lib/tenant-context'
+import { StatsCard, FeatureCard, DashboardGrid } from '../lib/dashboard-components'
 
 interface Props {
   dictionary: Dictionary
@@ -39,8 +37,7 @@ export default async function AccountsContent({ dictionary, lang }: Props) {
     }
   }
 
-  // @ts-expect-error - finance dictionary not yet added to type definitions
-  const d = dictionary?.school?.finance?.accounts
+  const d = dictionary?.finance?.accounts
 
   return (
     <PageContainer>
@@ -51,161 +48,119 @@ export default async function AccountsContent({ dictionary, lang }: Props) {
           className="text-start max-w-none"
         />
 
-        <div className="grid gap-4 md:grid-cols-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{d?.stats?.accounts || 'Chart of Accounts'}</CardTitle>
-              <BookOpen className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{accountsCount}</div>
-              <p className="text-xs text-muted-foreground">{d?.stats?.configured || 'Configured accounts'}</p>
-            </CardContent>
-          </Card>
+        {/* Stats Grid - Uses semantic HTML (h6, h2, small) */}
+        <DashboardGrid type="stats">
+          <StatsCard
+            title={d?.chartOfAccounts || 'Chart of Accounts'}
+            value={accountsCount}
+            description="Configured accounts"
+            icon={BookOpen}
+          />
+          <StatsCard
+            title={d?.journalEntries || 'Journal Entries'}
+            value={journalEntriesCount}
+            description={`${postedEntriesCount} ${d?.posted || 'posted'}`}
+            icon={FileText}
+          />
+          <StatsCard
+            title="Ledger Entries"
+            value={ledgerEntriesCount}
+            description="Total transactions"
+            icon={BarChart}
+          />
+          <StatsCard
+            title="Unposted"
+            value={unpostedEntriesCount}
+            description="Requires posting"
+            icon={Calendar}
+          />
+        </DashboardGrid>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{d?.stats?.journal || 'Journal Entries'}</CardTitle>
-              <FileText className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{journalEntriesCount}</div>
-              <p className="text-xs text-muted-foreground">{postedEntriesCount} {d?.stats?.posted || 'posted'}</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{d?.stats?.ledger || 'Ledger Entries'}</CardTitle>
-              <BarChart className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{ledgerEntriesCount}</div>
-              <p className="text-xs text-muted-foreground">{d?.stats?.transactions || 'Total transactions'}</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{d?.stats?.unposted || 'Unposted'}</CardTitle>
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{unpostedEntriesCount}</div>
-              <p className="text-xs text-muted-foreground">{d?.stats?.requiresPosting || 'Requires posting'}</p>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <Card className="border-primary/20">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BookOpen className="h-5 w-5 text-primary" />
-                {d?.sections?.chart || 'Chart of Accounts'}
-              </CardTitle>
-              <CardDescription>{d?.sections?.chartDesc || 'Define and manage account structure'}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Button asChild className="w-full">
-                <Link href={`/${lang}/finance/accounts/chart`}>{d?.actions?.viewChart || 'View Chart'} ({accountsCount})</Link>
-              </Button>
-              <Button variant="outline" asChild className="w-full" size="sm">
-                <Link href={`/${lang}/finance/accounts/chart/new`}>{d?.actions?.addAccount || 'Add Account'}</Link>
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="h-5 w-5" />
-                {d?.sections?.journal || 'Journal Entries'}
-              </CardTitle>
-              <CardDescription>{d?.sections?.journalDesc || 'Record financial transactions'}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Button asChild className="w-full">
-                <Link href={`/${lang}/finance/accounts/journal`}>{d?.actions?.viewJournal || 'View Journal'} ({journalEntriesCount})</Link>
-              </Button>
-              <Button variant="outline" asChild className="w-full" size="sm">
-                <Link href={`/${lang}/finance/accounts/journal/new`}>{d?.actions?.newEntry || 'New Entry'}</Link>
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BarChart className="h-5 w-5" />
-                {d?.sections?.ledger || 'General Ledger'}
-              </CardTitle>
-              <CardDescription>{d?.sections?.ledgerDesc || 'View account balances and activity'}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Button asChild className="w-full">
-                <Link href={`/${lang}/finance/accounts/ledger`}>{d?.actions?.viewLedger || 'View Ledger'}</Link>
-              </Button>
-              <Button variant="outline" asChild className="w-full" size="sm">
-                <Link href={`/${lang}/finance/accounts/ledger/balances`}>{d?.actions?.balances || 'Account Balances'}</Link>
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Calendar className="h-5 w-5" />
-                {d?.sections?.fiscal || 'Fiscal Years'}
-              </CardTitle>
-              <CardDescription>{d?.sections?.fiscalDesc || 'Manage accounting periods'}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Button asChild className="w-full">
-                <Link href={`/${lang}/finance/accounts/fiscal`}>{d?.actions?.fiscalYears || 'Fiscal Years'} ({fiscalYearsCount})</Link>
-              </Button>
-              <Button variant="outline" asChild className="w-full" size="sm">
-                <Link href={`/${lang}/finance/accounts/fiscal/new`}>{d?.actions?.newYear || 'New Year'}</Link>
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Lock className="h-5 w-5" />
-                {d?.sections?.closing || 'Period Closing'}
-              </CardTitle>
-              <CardDescription>{d?.sections?.closingDesc || 'Close accounting periods'}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Button asChild className="w-full">
-                <Link href={`/${lang}/finance/accounts/closing`}>{d?.actions?.closePeriod || 'Close Period'}</Link>
-              </Button>
-              <Button variant="outline" asChild className="w-full" size="sm">
-                <Link href={`/${lang}/finance/accounts/closing/history`}>{d?.actions?.closingHistory || 'History'}</Link>
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Settings className="h-5 w-5" />
-                {d?.sections?.settings || 'Accounting Settings'}
-              </CardTitle>
-              <CardDescription>{d?.sections?.settingsDesc || 'Configure accounting rules'}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Button asChild className="w-full">
-                <Link href={`/${lang}/finance/accounts/settings`}>{d?.actions?.settings || 'Settings'}</Link>
-              </Button>
-              <Button variant="outline" asChild className="w-full" size="sm">
-                <Link href={`/${lang}/finance/accounts/settings/rules`}>{d?.actions?.rules || 'Posting Rules'}</Link>
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
+        {/* Feature Cards Grid */}
+        <DashboardGrid type="features">
+          <FeatureCard
+            title={d?.chartOfAccounts || 'Chart of Accounts'}
+            description="Define and manage account structure"
+            icon={BookOpen}
+            isPrimary
+            primaryAction={{
+              label: 'View Chart',
+              href: `/${lang}/finance/accounts/chart`,
+              count: accountsCount
+            }}
+            secondaryAction={{
+              label: d?.addAccount || 'Add Account',
+              href: `/${lang}/finance/accounts/chart/new`
+            }}
+          />
+          <FeatureCard
+            title={d?.journalEntry || 'Journal Entries'}
+            description="Record financial transactions"
+            icon={FileText}
+            primaryAction={{
+              label: 'View Journal',
+              href: `/${lang}/finance/accounts/journal`,
+              count: journalEntriesCount
+            }}
+            secondaryAction={{
+              label: 'New Entry',
+              href: `/${lang}/finance/accounts/journal/new`
+            }}
+          />
+          <FeatureCard
+            title="General Ledger"
+            description="View account balances and activity"
+            icon={BarChart}
+            primaryAction={{
+              label: 'View Ledger',
+              href: `/${lang}/finance/accounts/ledger`
+            }}
+            secondaryAction={{
+              label: 'Account Balances',
+              href: `/${lang}/finance/accounts/ledger/balances`
+            }}
+          />
+          <FeatureCard
+            title={d?.fiscalYear || 'Fiscal Years'}
+            description="Manage accounting periods"
+            icon={Calendar}
+            primaryAction={{
+              label: 'Fiscal Years',
+              href: `/${lang}/finance/accounts/fiscal`,
+              count: fiscalYearsCount
+            }}
+            secondaryAction={{
+              label: 'New Year',
+              href: `/${lang}/finance/accounts/fiscal/new`
+            }}
+          />
+          <FeatureCard
+            title="Period Closing"
+            description="Close accounting periods"
+            icon={Lock}
+            primaryAction={{
+              label: 'Close Period',
+              href: `/${lang}/finance/accounts/closing`
+            }}
+            secondaryAction={{
+              label: 'History',
+              href: `/${lang}/finance/accounts/closing/history`
+            }}
+          />
+          <FeatureCard
+            title="Accounting Settings"
+            description="Configure accounting rules"
+            icon={Settings}
+            primaryAction={{
+              label: 'Settings',
+              href: `/${lang}/finance/accounts/settings`
+            }}
+            secondaryAction={{
+              label: 'Posting Rules',
+              href: `/${lang}/finance/accounts/settings/rules`
+            }}
+          />
+        </DashboardGrid>
       </div>
     </PageContainer>
   )

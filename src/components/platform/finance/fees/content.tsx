@@ -94,8 +94,7 @@ export default async function FeesContent({ dictionary, lang }: Props) {
     }
   }
 
-  // @ts-expect-error - finance dictionary not yet added to type definitions
-  const d = dictionary?.school?.finance?.fees
+  const d = dictionary?.finance?.fees
 
   return (
     <PageContainer>

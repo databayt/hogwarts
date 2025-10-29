@@ -2,12 +2,10 @@ import { Shell as PageContainer } from '@/components/table/shell'
 import PageHeader from '@/components/atom/page-header'
 import type { Locale } from '@/components/internationalization/config'
 import type { Dictionary } from '@/components/internationalization/dictionaries'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { PieChart, TrendingUp, AlertTriangle, CheckCircle, DollarSign, BarChart } from 'lucide-react'
-import Link from 'next/link'
 import { db } from '@/lib/db'
 import { getTenantContext } from '@/lib/tenant-context'
+import { StatsCard, FeatureCard, DashboardGrid, formatCurrency, formatPercentage } from '../lib/dashboard-components'
 
 interface Props {
   dictionary: Dictionary
@@ -52,8 +50,7 @@ export default async function BudgetContent({ dictionary, lang }: Props) {
   const variance = totalBudget - totalSpent
   const utilizationRate = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0
 
-  // @ts-expect-error - finance dictionary not yet added to type definitions
-  const d = dictionary?.school?.finance?.budget
+  const d = dictionary?.finance?.budget
 
   return (
     <PageContainer>
@@ -64,161 +61,117 @@ export default async function BudgetContent({ dictionary, lang }: Props) {
           className="text-start max-w-none"
         />
 
-        <div className="grid gap-4 md:grid-cols-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{d?.stats?.totalBudget || 'Total Budget'}</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">${(totalBudget / 100).toLocaleString()}</div>
-              <p className="text-xs text-muted-foreground">{d?.stats?.allocated || 'Allocated budget'}</p>
-            </CardContent>
-          </Card>
+        {/* Stats Grid - Uses semantic HTML (h6, h2, small) */}
+        <DashboardGrid type="stats">
+          <StatsCard
+            title={d?.stats?.totalBudget || 'Total Budget'}
+            value={formatCurrency(totalBudget)}
+            description={d?.stats?.allocated || 'Allocated budget'}
+            icon={DollarSign}
+          />
+          <StatsCard
+            title={d?.stats?.spent || 'Spent'}
+            value={formatCurrency(totalSpent)}
+            description={`${formatPercentage(utilizationRate)} ${d?.stats?.utilization || 'utilization'}`}
+            icon={TrendingUp}
+          />
+          <StatsCard
+            title={d?.stats?.remaining || 'Remaining'}
+            value={formatCurrency(variance)}
+            description={d?.stats?.available || 'Available budget'}
+            icon={CheckCircle}
+          />
+          <StatsCard
+            title={d?.stats?.allocations || 'Allocations'}
+            value={allocationsCount}
+            description={`${budgetsCount} ${d?.stats?.active || 'active budgets'}`}
+            icon={PieChart}
+          />
+        </DashboardGrid>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{d?.stats?.spent || 'Spent'}</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">${(totalSpent / 100).toLocaleString()}</div>
-              <p className="text-xs text-muted-foreground">{utilizationRate.toFixed(1)}% {d?.stats?.utilization || 'utilization'}</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{d?.stats?.remaining || 'Remaining'}</CardTitle>
-              <CheckCircle className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">${(variance / 100).toLocaleString()}</div>
-              <p className="text-xs text-muted-foreground">{d?.stats?.available || 'Available budget'}</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{d?.stats?.allocations || 'Allocations'}</CardTitle>
-              <PieChart className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{allocationsCount}</div>
-              <p className="text-xs text-muted-foreground">{budgetsCount} {d?.stats?.active || 'active budgets'}</p>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <Card className="border-primary/20">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <PieChart className="h-5 w-5 text-primary" />
-                {d?.sections?.budgets || 'Budgets'}
-              </CardTitle>
-              <CardDescription>{d?.sections?.budgetsDesc || 'Create and manage school budgets'}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Button asChild className="w-full">
-                <Link href={`/${lang}/finance/budget/all`}>{d?.actions?.viewBudgets || 'View Budgets'} ({budgetsCount})</Link>
-              </Button>
-              <Button variant="outline" asChild className="w-full" size="sm">
-                <Link href={`/${lang}/finance/budget/new`}>{d?.actions?.createBudget || 'Create Budget'}</Link>
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <DollarSign className="h-5 w-5" />
-                {d?.sections?.allocations || 'Budget Allocations'}
-              </CardTitle>
-              <CardDescription>{d?.sections?.allocationsDesc || 'Allocate budget by department or category'}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Button asChild className="w-full">
-                <Link href={`/${lang}/finance/budget/allocations`}>{d?.actions?.viewAllocations || 'View Allocations'}</Link>
-              </Button>
-              <Button variant="outline" asChild className="w-full" size="sm">
-                <Link href={`/${lang}/finance/budget/allocations/new`}>{d?.actions?.allocate || 'Allocate Funds'}</Link>
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5" />
-                {d?.sections?.tracking || 'Spending Tracking'}
-              </CardTitle>
-              <CardDescription>{d?.sections?.trackingDesc || 'Monitor budget utilization and spending'}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Button asChild className="w-full">
-                <Link href={`/${lang}/finance/budget/tracking`}>{d?.actions?.trackSpending || 'Track Spending'}</Link>
-              </Button>
-              <Button variant="outline" asChild className="w-full" size="sm">
-                <Link href={`/${lang}/finance/budget/tracking/realtime`}>{d?.actions?.realtime || 'Real-time View'}</Link>
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <AlertTriangle className="h-5 w-5" />
-                {d?.sections?.variance || 'Variance Analysis'}
-              </CardTitle>
-              <CardDescription>{d?.sections?.varianceDesc || 'Analyze budget vs actual spending'}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Button asChild className="w-full">
-                <Link href={`/${lang}/finance/budget/variance`}>{d?.actions?.variance || 'Variance Report'}</Link>
-              </Button>
-              <Button variant="outline" asChild className="w-full" size="sm">
-                <Link href={`/${lang}/finance/budget/variance/alerts`}>{d?.actions?.alerts || 'Budget Alerts'}</Link>
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BarChart className="h-5 w-5" />
-                {d?.sections?.reports || 'Budget Reports'}
-              </CardTitle>
-              <CardDescription>{d?.sections?.reportsDesc || 'Generate budget analysis reports'}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Button asChild className="w-full">
-                <Link href={`/${lang}/finance/budget/reports`}>{d?.actions?.viewReports || 'View Reports'}</Link>
-              </Button>
-              <Button variant="outline" asChild className="w-full" size="sm">
-                <Link href={`/${lang}/finance/budget/reports/summary`}>{d?.actions?.summary || 'Budget Summary'}</Link>
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <CheckCircle className="h-5 w-5" />
-                {d?.sections?.approval || 'Budget Approval'}
-              </CardTitle>
-              <CardDescription>{d?.sections?.approvalDesc || 'Review and approve budget requests'}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Button asChild className="w-full">
-                <Link href={`/${lang}/finance/budget/approval`}>{d?.actions?.pending || 'Pending Approval'}</Link>
-              </Button>
-              <Button variant="outline" asChild className="w-full" size="sm">
-                <Link href={`/${lang}/finance/budget/approval/history`}>{d?.actions?.history || 'Approval History'}</Link>
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
+        {/* Feature Cards Grid */}
+        <DashboardGrid type="features">
+          <FeatureCard
+            title={d?.sections?.budgets || 'Budgets'}
+            description={d?.sections?.budgetsDesc || 'Create and manage school budgets'}
+            icon={PieChart}
+            isPrimary
+            primaryAction={{
+              label: d?.actions?.viewBudgets || 'View Budgets',
+              href: `/${lang}/finance/budget/all`,
+              count: budgetsCount
+            }}
+            secondaryAction={{
+              label: d?.actions?.createBudget || 'Create Budget',
+              href: `/${lang}/finance/budget/new`
+            }}
+          />
+          <FeatureCard
+            title={d?.sections?.allocations || 'Budget Allocations'}
+            description={d?.sections?.allocationsDesc || 'Allocate budget by department or category'}
+            icon={DollarSign}
+            primaryAction={{
+              label: d?.actions?.viewAllocations || 'View Allocations',
+              href: `/${lang}/finance/budget/allocations`
+            }}
+            secondaryAction={{
+              label: d?.actions?.allocate || 'Allocate Funds',
+              href: `/${lang}/finance/budget/allocations/new`
+            }}
+          />
+          <FeatureCard
+            title={d?.sections?.tracking || 'Spending Tracking'}
+            description={d?.sections?.trackingDesc || 'Monitor budget utilization and spending'}
+            icon={TrendingUp}
+            primaryAction={{
+              label: d?.actions?.trackSpending || 'Track Spending',
+              href: `/${lang}/finance/budget/tracking`
+            }}
+            secondaryAction={{
+              label: d?.actions?.realtime || 'Real-time View',
+              href: `/${lang}/finance/budget/tracking/realtime`
+            }}
+          />
+          <FeatureCard
+            title={d?.sections?.variance || 'Variance Analysis'}
+            description={d?.sections?.varianceDesc || 'Analyze budget vs actual spending'}
+            icon={AlertTriangle}
+            primaryAction={{
+              label: d?.actions?.variance || 'Variance Report',
+              href: `/${lang}/finance/budget/variance`
+            }}
+            secondaryAction={{
+              label: d?.actions?.alerts || 'Budget Alerts',
+              href: `/${lang}/finance/budget/variance/alerts`
+            }}
+          />
+          <FeatureCard
+            title={d?.sections?.reports || 'Budget Reports'}
+            description={d?.sections?.reportsDesc || 'Generate budget analysis reports'}
+            icon={BarChart}
+            primaryAction={{
+              label: d?.actions?.viewReports || 'View Reports',
+              href: `/${lang}/finance/budget/reports`
+            }}
+            secondaryAction={{
+              label: d?.actions?.summary || 'Budget Summary',
+              href: `/${lang}/finance/budget/reports/summary`
+            }}
+          />
+          <FeatureCard
+            title={d?.sections?.approval || 'Budget Approval'}
+            description={d?.sections?.approvalDesc || 'Review and approve budget requests'}
+            icon={CheckCircle}
+            primaryAction={{
+              label: d?.actions?.pending || 'Pending Approval',
+              href: `/${lang}/finance/budget/approval`
+            }}
+            secondaryAction={{
+              label: d?.actions?.history || 'Approval History',
+              href: `/${lang}/finance/budget/approval/history`
+            }}
+          />
+        </DashboardGrid>
       </div>
     </PageContainer>
   )

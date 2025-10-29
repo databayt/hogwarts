@@ -7,7 +7,7 @@ import {
 } from "react";
 import { signOut, useSession } from "next-auth/react";
 import { toast } from "sonner";
-import { deleteCurrentUser } from "@/components/invoice/actions/user";
+import { deleteCurrentUser } from "@/components/platform/finance/invoice/actions/user";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
