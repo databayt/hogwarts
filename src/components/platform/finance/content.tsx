@@ -1,4 +1,3 @@
-import { Shell as PageContainer } from '@/components/table/shell'
 import PageHeader from '@/components/atom/page-header'
 import { PageNav, type PageNavItem } from '@/components/atom/page-nav'
 import type { Locale } from '@/components/internationalization/config'
@@ -149,13 +148,12 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
   ]
 
   return (
-    <PageContainer>
-      <div className="flex flex-1 flex-col gap-6">
-        <PageHeader
-          title="Finance"
-          className="text-start max-w-none"
-        />
-        <PageNav pages={financePages} />
+    <div className="space-y-6">
+      <PageHeader
+        title="Finance"
+        className="text-start max-w-none"
+      />
+      <PageNav pages={financePages} />
 
         {/* Overview Stats - Financial Health */}
         <div className="grid gap-4 md:grid-cols-4">
@@ -798,6 +796,5 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
           </CardContent>
         </Card>
       </div>
-    </PageContainer>
   )
 }
