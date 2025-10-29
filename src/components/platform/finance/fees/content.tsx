@@ -101,10 +101,7 @@ export default async function FeesContent({ dictionary, lang }: Props) {
       <div className="flex flex-1 flex-col gap-6">
         <PageHeader
           title={d?.title || 'Student Fees Management'}
-          description={
-            d?.description ||
-            'Manage fee structures, track payments, handle scholarships and fines'
-          }
+          description="Manage fee structures, track payments, handle scholarships and fines"
           className="text-start max-w-none"
         />
 
@@ -113,7 +110,7 @@ export default async function FeesContent({ dictionary, lang }: Props) {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                {d?.stats?.collected || 'Fees Collected'}
+                Fees Collected
               </CardTitle>
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
@@ -122,7 +119,7 @@ export default async function FeesContent({ dictionary, lang }: Props) {
                 ${(totalFeesCollected / 100).toLocaleString()}
               </div>
               <p className="text-xs text-muted-foreground">
-                {d?.stats?.completed || 'Completed payments'}
+                Completed payments
               </p>
             </CardContent>
           </Card>
@@ -130,7 +127,7 @@ export default async function FeesContent({ dictionary, lang }: Props) {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                {d?.stats?.pending || 'Pending Payments'}
+                Pending Payments
               </CardTitle>
               <AlertCircle className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
@@ -139,7 +136,7 @@ export default async function FeesContent({ dictionary, lang }: Props) {
                 ${(pendingPayments / 100).toLocaleString()}
               </div>
               <p className="text-xs text-muted-foreground">
-                {activeAssignmentsCount} {d?.stats?.assignments || 'assignments'}
+                {activeAssignmentsCount} assignments
               </p>
             </CardContent>
           </Card>
@@ -147,7 +144,7 @@ export default async function FeesContent({ dictionary, lang }: Props) {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                {d?.stats?.overdue || 'Overdue Payments'}
+                Overdue Payments
               </CardTitle>
               <AlertTriangle className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
@@ -156,7 +153,7 @@ export default async function FeesContent({ dictionary, lang }: Props) {
                 ${(overduePayments / 100).toLocaleString()}
               </div>
               <p className="text-xs text-muted-foreground">
-                {d?.stats?.requiresAction || 'Requires action'}
+                Requires action
               </p>
             </CardContent>
           </Card>
@@ -164,14 +161,14 @@ export default async function FeesContent({ dictionary, lang }: Props) {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                {d?.stats?.activeScholarships || 'Active Scholarships'}
+                Active Scholarships
               </CardTitle>
               <Award className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{scholarshipsCount}</div>
               <p className="text-xs text-muted-foreground">
-                {d?.stats?.available || 'Available programs'}
+                Available programs
               </p>
             </CardContent>
           </Card>
@@ -184,23 +181,22 @@ export default async function FeesContent({ dictionary, lang }: Props) {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <CreditCard className="h-5 w-5" />
-                {d?.sections?.structures || 'Fee Structures'}
+                Fee Structures
               </CardTitle>
               <CardDescription>
-                {d?.sections?.structuresDesc ||
-                  'Define and manage fee types and amounts'}
+                Define and manage fee types and amounts
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-2">
               <Button asChild className="w-full">
                 <Link href={`/${lang}/finance/fees/structures`}>
-                  {d?.actions?.viewStructures || 'View Structures'} (
+                  View Structures (
                   {feeStructuresCount})
                 </Link>
               </Button>
               <Button variant="outline" asChild className="w-full" size="sm">
                 <Link href={`/${lang}/finance/fees/structures/new`}>
-                  {d?.actions?.createStructure || 'Create New Structure'}
+                  Create New Structure
                 </Link>
               </Button>
             </CardContent>
@@ -211,22 +207,21 @@ export default async function FeesContent({ dictionary, lang }: Props) {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <DollarSign className="h-5 w-5" />
-                {d?.sections?.payments || 'Payment Tracking'}
+                Payment Tracking
               </CardTitle>
               <CardDescription>
-                {d?.sections?.paymentsDesc ||
-                  'Record and track student fee payments'}
+                Record and track student fee payments
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-2">
               <Button asChild className="w-full">
                 <Link href={`/${lang}/finance/fees/payments`}>
-                  {d?.actions?.viewPayments || 'View Payments'}
+                  View Payments
                 </Link>
               </Button>
               <Button variant="outline" asChild className="w-full" size="sm">
                 <Link href={`/${lang}/finance/fees/payments/record`}>
-                  {d?.actions?.recordPayment || 'Record Payment'}
+                  Record Payment
                 </Link>
               </Button>
             </CardContent>
@@ -237,22 +232,21 @@ export default async function FeesContent({ dictionary, lang }: Props) {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Users className="h-5 w-5" />
-                {d?.sections?.assignments || 'Student Assignments'}
+                Student Assignments
               </CardTitle>
               <CardDescription>
-                {d?.sections?.assignmentsDesc ||
-                  'Assign fees to students and track status'}
+                Assign fees to students and track status
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-2">
               <Button asChild className="w-full">
                 <Link href={`/${lang}/finance/fees/assignments`}>
-                  {d?.actions?.viewAssignments || 'View Assignments'}
+                  View Assignments
                 </Link>
               </Button>
               <Button variant="outline" asChild className="w-full" size="sm">
                 <Link href={`/${lang}/finance/fees/assignments/bulk`}>
-                  {d?.actions?.bulkAssign || 'Bulk Assign Fees'}
+                  Bulk Assign Fees
                 </Link>
               </Button>
             </CardContent>
@@ -263,23 +257,22 @@ export default async function FeesContent({ dictionary, lang }: Props) {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Award className="h-5 w-5" />
-                {d?.sections?.scholarships || 'Scholarships'}
+                Scholarships
               </CardTitle>
               <CardDescription>
-                {d?.sections?.scholarshipsDesc ||
-                  'Manage scholarship programs and applications'}
+                Manage scholarship programs and applications
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-2">
               <Button asChild className="w-full">
                 <Link href={`/${lang}/finance/fees/scholarships`}>
-                  {d?.actions?.viewScholarships || 'View Scholarships'} (
+                  View Scholarships (
                   {scholarshipsCount})
                 </Link>
               </Button>
               <Button variant="outline" asChild className="w-full" size="sm">
                 <Link href={`/${lang}/finance/fees/scholarships/applications`}>
-                  {d?.actions?.viewApplications || 'Review Applications'}
+                  Review Applications
                 </Link>
               </Button>
             </CardContent>
@@ -290,22 +283,21 @@ export default async function FeesContent({ dictionary, lang }: Props) {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <AlertTriangle className="h-5 w-5" />
-                {d?.sections?.fines || 'Fines & Penalties'}
+                Fines & Penalties
               </CardTitle>
               <CardDescription>
-                {d?.sections?.finesDesc ||
-                  'Track and manage student fines and penalties'}
+                Track and manage student fines and penalties
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-2">
               <Button asChild className="w-full">
                 <Link href={`/${lang}/finance/fees/fines`}>
-                  {d?.actions?.viewFines || 'View Fines'} ({finesCount})
+                  View Fines ({finesCount})
                 </Link>
               </Button>
               <Button variant="outline" asChild className="w-full" size="sm">
                 <Link href={`/${lang}/finance/fees/fines/new`}>
-                  {d?.actions?.issueFine || 'Issue Fine'}
+                  Issue Fine
                 </Link>
               </Button>
             </CardContent>
@@ -316,22 +308,21 @@ export default async function FeesContent({ dictionary, lang }: Props) {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <TrendingUp className="h-5 w-5" />
-                {d?.sections?.reports || 'Fee Reports'}
+                Fee Reports
               </CardTitle>
               <CardDescription>
-                {d?.sections?.reportsDesc ||
-                  'Generate fee collection and analysis reports'}
+                Generate fee collection and analysis reports
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-2">
               <Button asChild className="w-full">
                 <Link href={`/${lang}/finance/fees/reports`}>
-                  {d?.actions?.viewReports || 'View Reports'}
+                  View Reports
                 </Link>
               </Button>
               <Button variant="outline" asChild className="w-full" size="sm">
                 <Link href={`/${lang}/finance/fees/reports/collection`}>
-                  {d?.actions?.collectionReport || 'Collection Report'}
+                  Collection Report
                 </Link>
               </Button>
             </CardContent>
