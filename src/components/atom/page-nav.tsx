@@ -34,7 +34,7 @@ export function PageNav({ pages, defaultPage, className, ...props }: PageNavProp
             <PageLink
               key={page.href}
               page={page}
-              isActive={pathname?.startsWith(page.href) ?? false}
+              isActive={pathname === page.href}
             />
           ))}
         </nav>
