@@ -25,7 +25,7 @@ export async function createTimesheet(formData: FormData): Promise<TimesheetActi
 
     const validated = timesheetSchema.parse(data)
 
-    const timesheet = await db.timesheet.create({
+    const timesheet = await db.timesheetPeriod.create({
       data: {
         ...validated,
         schoolId: session.user.schoolId,
@@ -75,7 +75,7 @@ export async function addTimesheetEntry(formData: FormData) {
       })
 
       // Update timesheet total hours
-      const timesheet = await tx.timesheet.update({
+      const timesheet = await tx.timesheetPeriod.update({
         where: {
           id: validated.timesheetId,
           schoolId: session.user.schoolId,
@@ -111,7 +111,7 @@ export async function submitTimesheet(timesheetId: string) {
       return { success: false, error: 'Unauthorized' }
     }
 
-    const timesheet = await db.timesheet.update({
+    const timesheet = await db.timesheetPeriod.update({
       where: {
         id: timesheetId,
         schoolId: session.user.schoolId,
@@ -151,7 +151,7 @@ export async function approveTimesheet(formData: FormData) {
 
     const validated = timesheetApprovalSchema.parse(data)
 
-    const timesheet = await db.timesheet.update({
+    const timesheet = await db.timesheetPeriod.update({
       where: {
         id: validated.timesheetId,
         schoolId: session.user.schoolId,
@@ -184,7 +184,7 @@ export async function getTimesheets(filters?: { status?: string; userId?: string
       return { success: false, error: 'Unauthorized' }
     }
 
-    const timesheets = await db.timesheet.findMany({
+    const timesheets = await db.timesheetPeriod.findMany({
       where: {
         schoolId: session.user.schoolId,
         ...(filters?.status && { status: filters.status as any }),
