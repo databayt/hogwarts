@@ -299,28 +299,26 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <FileText className="h-5 w-5 text-primary" />
-                {d?.blocks?.invoice?.title || 'Invoicing'}
+                Invoicing
               </CardTitle>
               <CardDescription>
-                {d?.blocks?.invoice?.description ||
-                  'Client invoicing and billing management'}
+                Client invoicing and billing management
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               <p className="text-sm text-muted-foreground">
-                {d?.blocks?.invoice?.details ||
-                  'Create professional invoices, track payments, and manage client billing.'}
+                Create professional invoices, track payments, and manage client billing.
               </p>
               <div className="flex flex-col gap-2">
                 <Button asChild>
                   <Link href={`/${lang}/finance/invoice`}>
                     <FileText className="mr-2 h-4 w-4" />
-                    {d?.blocks?.invoice?.viewAll || 'View All Invoices'}
+                    View All Invoices
                   </Link>
                 </Button>
                 <Button variant="outline" asChild size="sm">
                   <Link href={`/${lang}/finance/invoice/new`}>
-                    {d?.blocks?.invoice?.createNew || 'Create Invoice'}
+                    Create Invoice
                   </Link>
                 </Button>
               </div>
@@ -332,28 +330,26 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Receipt className="h-5 w-5 text-blue-500" />
-                {d?.blocks?.receipt?.title || 'Receipts'}
+                Receipts
               </CardTitle>
               <CardDescription>
-                {d?.blocks?.receipt?.description ||
-                  'Receipt generation and expense tracking'}
+                Receipt generation and expense tracking
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               <p className="text-sm text-muted-foreground">
-                {d?.blocks?.receipt?.details ||
-                  'Generate receipts, scan expenses with AI OCR, and track all transactions.'}
+                Generate receipts, scan expenses with AI OCR, and track all transactions.
               </p>
               <div className="flex flex-col gap-2">
                 <Button asChild variant="secondary">
                   <Link href={`/${lang}/finance/receipt`}>
                     <Receipt className="mr-2 h-4 w-4" />
-                    {d?.blocks?.receipt?.viewAll || 'View All Receipts'}
+                    View All Receipts
                   </Link>
                 </Button>
                 <Button variant="outline" asChild size="sm">
                   <Link href={`/${lang}/finance/receipt/upload`}>
-                    {d?.blocks?.receipt?.upload || 'Upload Receipt'}
+                    Upload Receipt
                   </Link>
                 </Button>
               </div>
@@ -365,28 +361,26 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Building2 className="h-5 w-5 text-green-500" />
-                {d?.blocks?.banking?.title || 'Banking'}
+                Banking
               </CardTitle>
               <CardDescription>
-                {d?.blocks?.banking?.description ||
-                  'Bank accounts and transaction management'}
+                Bank accounts and transaction management
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               <p className="text-sm text-muted-foreground">
-                {d?.blocks?.banking?.details ||
-                  'Connect bank accounts, track transactions, manage transfers, and reconcile.'}
+                Connect bank accounts, track transactions, manage transfers, and reconcile.
               </p>
               <div className="flex flex-col gap-2">
                 <Button asChild variant="secondary">
                   <Link href={`/${lang}/finance/banking`}>
                     <Building2 className="mr-2 h-4 w-4" />
-                    {d?.blocks?.banking?.viewAll || 'View Accounts'}
+                    View Accounts
                   </Link>
                 </Button>
                 <Button variant="outline" asChild size="sm">
                   <Link href={`/${lang}/finance/banking/connect`}>
-                    {d?.blocks?.banking?.connect || 'Connect Bank'}
+                    Connect Bank
                   </Link>
                 </Button>
               </div>
@@ -398,28 +392,26 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <CreditCard className="h-5 w-5 text-purple-500" />
-                {d?.blocks?.fees?.title || 'Student Fees'}
+                Student Fees
               </CardTitle>
               <CardDescription>
-                {d?.blocks?.fees?.description ||
-                  'Fee structures and student payment tracking'}
+                Fee structures and student payment tracking
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               <p className="text-sm text-muted-foreground">
-                {d?.blocks?.fees?.details ||
-                  'Manage fee structures, track student payments, handle scholarships and fines.'}
+                Manage fee structures, track student payments, handle scholarships and fines.
               </p>
               <div className="flex flex-col gap-2">
                 <Button asChild variant="secondary">
                   <Link href={`/${lang}/finance/fees`}>
                     <CreditCard className="mr-2 h-4 w-4" />
-                    {d?.blocks?.fees?.viewAll || 'View Fee Structures'}
+                    View Fee Structures
                   </Link>
                 </Button>
                 <Button variant="outline" asChild size="sm">
                   <Link href={`/${lang}/finance/fees/payments`}>
-                    {d?.blocks?.fees?.payments || 'Track Payments'}
+                    Track Payments
                   </Link>
                 </Button>
               </div>
@@ -431,28 +423,26 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <DollarSign className="h-5 w-5 text-orange-500" />
-                {d?.blocks?.salary?.title || 'Salary Management'}
+                Salary Management
               </CardTitle>
               <CardDescription>
-                {d?.blocks?.salary?.description ||
-                  'Staff salary structures and calculations'}
+                Staff salary structures and calculations
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               <p className="text-sm text-muted-foreground">
-                {d?.blocks?.salary?.details ||
-                  'Define salary structures, manage allowances and deductions, calculate pay.'}
+                Define salary structures, manage allowances and deductions, calculate pay.
               </p>
               <div className="flex flex-col gap-2">
                 <Button asChild variant="secondary">
                   <Link href={`/${lang}/finance/salary`}>
                     <DollarSign className="mr-2 h-4 w-4" />
-                    {d?.blocks?.salary?.viewAll || 'View Structures'}
+                    View Structures
                   </Link>
                 </Button>
                 <Button variant="outline" asChild size="sm">
                   <Link href={`/${lang}/finance/salary/calculator`}>
-                    {d?.blocks?.salary?.calculator || 'Salary Calculator'}
+                    Salary Calculator
                   </Link>
                 </Button>
               </div>
@@ -464,28 +454,26 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Users className="h-5 w-5 text-red-500" />
-                {d?.blocks?.payroll?.title || 'Payroll Processing'}
+                Payroll Processing
               </CardTitle>
               <CardDescription>
-                {d?.blocks?.payroll?.description ||
-                  'Payroll runs and salary slip generation'}
+                Payroll runs and salary slip generation
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               <p className="text-sm text-muted-foreground">
-                {d?.blocks?.payroll?.details ||
-                  'Process payroll, generate salary slips, calculate taxes, and handle disbursements.'}
+                Process payroll, generate salary slips, calculate taxes, and handle disbursements.
               </p>
               <div className="flex flex-col gap-2">
                 <Button asChild variant="secondary">
                   <Link href={`/${lang}/finance/payroll`}>
                     <Users className="mr-2 h-4 w-4" />
-                    {d?.blocks?.payroll?.viewAll || 'View Payroll Runs'}
+                    View Payroll Runs
                   </Link>
                 </Button>
                 <Button variant="outline" asChild size="sm">
                   <Link href={`/${lang}/finance/payroll/process`}>
-                    {d?.blocks?.payroll?.process || 'Process Payroll'} (
+                    Process Payroll (
                     {pendingPayrollCount})
                   </Link>
                 </Button>
@@ -498,28 +486,26 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Clock className="h-5 w-5 text-cyan-500" />
-                {d?.blocks?.timesheet?.title || 'Timesheets'}
+                Timesheets
               </CardTitle>
               <CardDescription>
-                {d?.blocks?.timesheet?.description ||
-                  'Staff timesheet tracking and approval'}
+                Staff timesheet tracking and approval
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               <p className="text-sm text-muted-foreground">
-                {d?.blocks?.timesheet?.details ||
-                  'Track staff hours, approve timesheets, calculate overtime, and integrate with payroll.'}
+                Track staff hours, approve timesheets, calculate overtime, and integrate with payroll.
               </p>
               <div className="flex flex-col gap-2">
                 <Button asChild variant="secondary">
                   <Link href={`/${lang}/finance/timesheet`}>
                     <Clock className="mr-2 h-4 w-4" />
-                    {d?.blocks?.timesheet?.viewAll || 'View Timesheets'}
+                    View Timesheets
                   </Link>
                 </Button>
                 <Button variant="outline" asChild size="sm">
                   <Link href={`/${lang}/finance/timesheet/approve`}>
-                    {d?.blocks?.timesheet?.approve || 'Approve Pending'} (
+                    Approve Pending (
                     {pendingTimesheetsCount})
                   </Link>
                 </Button>
@@ -532,28 +518,26 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Wallet className="h-5 w-5 text-indigo-500" />
-                {d?.blocks?.wallet?.title || 'Wallet Management'}
+                Wallet Management
               </CardTitle>
               <CardDescription>
-                {d?.blocks?.wallet?.description ||
-                  'School and parent wallet system'}
+                School and parent wallet system
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               <p className="text-sm text-muted-foreground">
-                {d?.blocks?.wallet?.details ||
-                  'Manage school wallet, track parent wallet balances, and handle top-ups.'}
+                Manage school wallet, track parent wallet balances, and handle top-ups.
               </p>
               <div className="flex flex-col gap-2">
                 <Button asChild variant="secondary">
                   <Link href={`/${lang}/finance/wallet`}>
                     <Wallet className="mr-2 h-4 w-4" />
-                    {d?.blocks?.wallet?.viewAll || 'View Wallets'}
+                    View Wallets
                   </Link>
                 </Button>
                 <Button variant="outline" asChild size="sm">
                   <Link href={`/${lang}/finance/wallet/transactions`}>
-                    {d?.blocks?.wallet?.transactions || 'View Transactions'}
+                    View Transactions
                   </Link>
                 </Button>
               </div>
@@ -565,28 +549,26 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <PieChart className="h-5 w-5 text-pink-500" />
-                {d?.blocks?.budget?.title || 'Budget Planning'}
+                Budget Planning
               </CardTitle>
               <CardDescription>
-                {d?.blocks?.budget?.description ||
-                  'Budget allocation and variance tracking'}
+                Budget allocation and variance tracking
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               <p className="text-sm text-muted-foreground">
-                {d?.blocks?.budget?.details ||
-                  'Create budgets, allocate funds by department, track spending, and analyze variance.'}
+                Create budgets, allocate funds by department, track spending, and analyze variance.
               </p>
               <div className="flex flex-col gap-2">
                 <Button asChild variant="secondary">
                   <Link href={`/${lang}/finance/budget`}>
                     <PieChart className="mr-2 h-4 w-4" />
-                    {d?.blocks?.budget?.viewAll || 'View Budgets'}
+                    View Budgets
                   </Link>
                 </Button>
                 <Button variant="outline" asChild size="sm">
                   <Link href={`/${lang}/finance/budget/variance`}>
-                    {d?.blocks?.budget?.variance || 'Variance Report'}
+                    Variance Report
                   </Link>
                 </Button>
               </div>
@@ -598,28 +580,26 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <TrendingUp className="h-5 w-5 text-amber-500" />
-                {d?.blocks?.expenses?.title || 'Expense Management'}
+                Expense Management
               </CardTitle>
               <CardDescription>
-                {d?.blocks?.expenses?.description ||
-                  'Expense tracking and approval workflow'}
+                Expense tracking and approval workflow
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               <p className="text-sm text-muted-foreground">
-                {d?.blocks?.expenses?.details ||
-                  'Submit expenses, manage approval workflow, track reimbursements, and categorize.'}
+                Submit expenses, manage approval workflow, track reimbursements, and categorize.
               </p>
               <div className="flex flex-col gap-2">
                 <Button asChild variant="secondary">
                   <Link href={`/${lang}/finance/expenses`}>
                     <TrendingUp className="mr-2 h-4 w-4" />
-                    {d?.blocks?.expenses?.viewAll || 'View Expenses'}
+                    View Expenses
                   </Link>
                 </Button>
                 <Button variant="outline" asChild size="sm">
                   <Link href={`/${lang}/finance/expenses/approve`}>
-                    {d?.blocks?.expenses?.approve || 'Approve Pending'} (
+                    Approve Pending (
                     {pendingExpensesCount})
                   </Link>
                 </Button>
@@ -632,28 +612,26 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <BookOpen className="h-5 w-5 text-slate-500" />
-                {d?.blocks?.accounts?.title || 'Accounting System'}
+                Accounting System
               </CardTitle>
               <CardDescription>
-                {d?.blocks?.accounts?.description ||
-                  'Double-entry bookkeeping and ledger'}
+                Double-entry bookkeeping and ledger
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               <p className="text-sm text-muted-foreground">
-                {d?.blocks?.accounts?.details ||
-                  'Manage chart of accounts, journal entries, general ledger, and period closing.'}
+                Manage chart of accounts, journal entries, general ledger, and period closing.
               </p>
               <div className="flex flex-col gap-2">
                 <Button asChild variant="secondary">
                   <Link href={`/${lang}/finance/accounts`}>
                     <BookOpen className="mr-2 h-4 w-4" />
-                    {d?.blocks?.accounts?.viewAll || 'Chart of Accounts'}
+                    Chart of Accounts
                   </Link>
                 </Button>
                 <Button variant="outline" asChild size="sm">
                   <Link href={`/${lang}/finance/accounts/journal`}>
-                    {d?.blocks?.accounts?.journal || 'Journal Entries'}
+                    Journal Entries
                   </Link>
                 </Button>
               </div>
@@ -665,28 +643,26 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <FileBarChart className="h-5 w-5 text-emerald-500" />
-                {d?.blocks?.reports?.title || 'Financial Reports'}
+                Financial Reports
               </CardTitle>
               <CardDescription>
-                {d?.blocks?.reports?.description ||
-                  'Comprehensive financial reporting'}
+                Comprehensive financial reporting
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               <p className="text-sm text-muted-foreground">
-                {d?.blocks?.reports?.details ||
-                  'Generate P&L, Balance Sheet, Cash Flow, Trial Balance, and custom reports.'}
+                Generate P&L, Balance Sheet, Cash Flow, Trial Balance, and custom reports.
               </p>
               <div className="flex flex-col gap-2">
                 <Button asChild variant="secondary">
                   <Link href={`/${lang}/finance/reports`}>
                     <FileBarChart className="mr-2 h-4 w-4" />
-                    {d?.blocks?.reports?.viewAll || 'View Reports'}
+                    View Reports
                   </Link>
                 </Button>
                 <Button variant="outline" asChild size="sm">
                   <Link href={`/${lang}/finance/reports/generate`}>
-                    {d?.blocks?.reports?.generate || 'Generate Report'}
+                    Generate Report
                   </Link>
                 </Button>
               </div>
