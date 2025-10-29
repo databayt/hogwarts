@@ -674,11 +674,10 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
         <Card>
           <CardHeader>
             <CardTitle>
-              {d?.workflow?.title || 'Finance Workflow Guide'}
+              Finance Workflow Guide
             </CardTitle>
             <CardDescription>
-              {d?.workflow?.description ||
-                'Step-by-step guide to managing school finances'}
+              Step-by-step guide to managing school finances
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -689,11 +688,10 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
                 </div>
                 <div>
                   <h3 className="font-medium">
-                    {d?.workflow?.step1?.title || 'Set Up Accounting System'}
+                    Set Up Accounting System
                   </h3>
                   <p className="text-sm text-muted-foreground">
-                    {d?.workflow?.step1?.description ||
-                      'Configure your chart of accounts, fiscal year, and connect bank accounts.'}
+                    Configure your chart of accounts, fiscal year, and connect bank accounts.
                   </p>
                 </div>
               </li>
@@ -703,11 +701,10 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
                 </div>
                 <div>
                   <h3 className="font-medium">
-                    {d?.workflow?.step2?.title || 'Configure Fee Structures'}
+                    Configure Fee Structures
                   </h3>
                   <p className="text-sm text-muted-foreground">
-                    {d?.workflow?.step2?.description ||
-                      'Define student fee structures, payment plans, scholarships, and fines.'}
+                    Define student fee structures, payment plans, scholarships, and fines.
                   </p>
                 </div>
               </li>
@@ -717,11 +714,10 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
                 </div>
                 <div>
                   <h3 className="font-medium">
-                    {d?.workflow?.step3?.title || 'Set Up Staff Salary'}
+                    Set Up Staff Salary
                   </h3>
                   <p className="text-sm text-muted-foreground">
-                    {d?.workflow?.step3?.description ||
-                      'Create salary structures with allowances and deductions for all staff members.'}
+                    Create salary structures with allowances and deductions for all staff members.
                   </p>
                 </div>
               </li>
@@ -731,11 +727,10 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
                 </div>
                 <div>
                   <h3 className="font-medium">
-                    {d?.workflow?.step4?.title || 'Track Revenue & Expenses'}
+                    Track Revenue & Expenses
                   </h3>
                   <p className="text-sm text-muted-foreground">
-                    {d?.workflow?.step4?.description ||
-                      'Monitor student payments, process invoices, approve expenses, and reconcile banks.'}
+                    Monitor student payments, process invoices, approve expenses, and reconcile banks.
                   </p>
                 </div>
               </li>
@@ -745,11 +740,10 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
                 </div>
                 <div>
                   <h3 className="font-medium">
-                    {d?.workflow?.step5?.title || 'Process Payroll Monthly'}
+                    Process Payroll Monthly
                   </h3>
                   <p className="text-sm text-muted-foreground">
-                    {d?.workflow?.step5?.description ||
-                      'Review timesheets, calculate salaries, generate slips, and process disbursements.'}
+                    Review timesheets, calculate salaries, generate slips, and process disbursements.
                   </p>
                 </div>
               </li>
@@ -759,11 +753,10 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
                 </div>
                 <div>
                   <h3 className="font-medium">
-                    {d?.workflow?.step6?.title || 'Generate Financial Reports'}
+                    Generate Financial Reports
                   </h3>
                   <p className="text-sm text-muted-foreground">
-                    {d?.workflow?.step6?.description ||
-                      'Create P&L statements, balance sheets, cash flow reports, and analyze performance.'}
+                    Create P&L statements, balance sheets, cash flow reports, and analyze performance.
                   </p>
                 </div>
               </li>
