@@ -55,7 +55,6 @@ model ChartOfAccount {
   @@unique([schoolId, code])
   @@index([schoolId, type])
   @@index([schoolId, isActive])
-  @@map("chart_of_accounts")
 }
 
 // Fiscal Year Configuration
@@ -79,7 +78,6 @@ model FiscalYear {
 
   @@unique([schoolId, name])
   @@index([schoolId, isCurrent])
-  @@map("fiscal_years")
 }
 
 // Journal Entry - Transaction header (immutable once posted)
@@ -120,7 +118,6 @@ model JournalEntry {
   @@index([schoolId, fiscalYearId])
   @@index([schoolId, sourceModule, sourceRecordId])
   @@index([schoolId, isPosted])
-  @@map("journal_entries")
 }
 
 // Ledger Entry - Individual debit/credit lines (immutable)
@@ -140,7 +137,6 @@ model LedgerEntry {
 
   @@index([schoolId, journalEntryId])
   @@index([schoolId, accountId])
-  @@map("ledger_entries")
 }
 
 // Account Balance - Real-time balances (updated via triggers/jobs)
@@ -157,7 +153,6 @@ model AccountBalance {
 
   @@unique([schoolId, accountId, asOfDate])
   @@index([schoolId, asOfDate])
-  @@map("account_balances")
 }
 
 // ============================================
@@ -204,7 +199,6 @@ model UserInvoice {
   @@index([userId])
   @@index([schoolId])
   @@index([status])
-  @@map("user_invoices")
 }
 
 model UserInvoiceItem {
@@ -222,7 +216,6 @@ model UserInvoiceItem {
 
   @@index([invoiceId])
   @@index([schoolId])
-  @@map("user_invoice_items")
 }
 
 model UserInvoiceAddress {
@@ -240,7 +233,6 @@ model UserInvoiceAddress {
   updatedAt   DateTime     @updatedAt
 
   @@index([schoolId])
-  @@map("user_invoice_addresses")
 }
 
 model UserInvoiceSettings {
@@ -255,7 +247,6 @@ model UserInvoiceSettings {
   updatedAt   DateTime              @updatedAt
 
   @@index([schoolId])
-  @@map("user_invoice_settings")
 }
 
 model UserInvoiceSignature {
@@ -268,7 +259,6 @@ model UserInvoiceSignature {
   school     School              @relation(fields: [schoolId], references: [id], onDelete: Cascade)
 
   @@index([schoolId])
-  @@map("user_invoice_signatures")
 }
 
 // Invoice payment receipt model (for billing/subscription module)
@@ -290,7 +280,6 @@ model Receipt {
 
   @@index([invoiceId])
   @@index([status])
-  @@map("invoice_receipts")
 }
 
 // ============================================
@@ -342,7 +331,6 @@ model ExpenseReceipt {
   @@index([userId])
   @@index([status])
   @@index([transactionDate])
-  @@map("expense_receipts")
 }
 
 // ============================================
@@ -381,7 +369,6 @@ model BankAccount {
   @@index([schoolId])
   @@index([userId])
   @@index([accountId])
-  @@map("bank_accounts")
 }
 
 model Transaction {
@@ -416,7 +403,6 @@ model Transaction {
   @@index([accountId])
   @@index([date])
   @@index([category])
-  @@map("bank_transactions")
 }
 
 model Transfer {
@@ -444,7 +430,6 @@ model Transfer {
   @@index([receiverBankId])
   @@index([status])
   @@index([transferDate])
-  @@map("bank_transfers")
 }
 
 model PlaidItem {
@@ -468,7 +453,6 @@ model PlaidItem {
   @@index([schoolId])
   @@index([userId])
   @@index([itemId])
-  @@map("plaid_items")
 }
 
 model DwollaCustomer {
@@ -492,7 +476,6 @@ model DwollaCustomer {
   @@index([schoolId])
   @@index([customerId])
   @@index([status])
-  @@map("dwolla_customers")
 }
 
 // Bank Reconciliation (NEW)
@@ -522,7 +505,6 @@ model BankReconciliation {
 
   @@index([schoolId, bankAccountId])
   @@index([schoolId, statementDate])
-  @@map("bank_reconciliations")
 }
 
 // ============================================
@@ -637,7 +619,6 @@ model FeeStructure {
   @@index([schoolId])
   @@index([classId])
   @@index([academicYear])
-  @@map("fee_structures")
 }
 
 model FeeAssignment {
@@ -670,7 +651,6 @@ model FeeAssignment {
   @@index([schoolId])
   @@index([studentId])
   @@index([status])
-  @@map("fee_assignments")
 }
 
 model Payment {
@@ -718,7 +698,6 @@ model Payment {
   @@index([paymentNumber])
   @@index([receiptNumber])
   @@index([paymentDate])
-  @@map("fee_payments")
 }
 
 model Refund {
@@ -755,7 +734,6 @@ model Refund {
   @@index([studentId])
   @@index([refundNumber])
   @@index([status])
-  @@map("fee_refunds")
 }
 
 model Scholarship {
@@ -792,7 +770,6 @@ model Scholarship {
 
   @@index([schoolId])
   @@index([academicYear])
-  @@map("scholarships")
 }
 
 model ScholarshipApplication {
@@ -833,7 +810,6 @@ model ScholarshipApplication {
   @@index([schoolId])
   @@index([studentId])
   @@index([status])
-  @@map("scholarship_applications")
 }
 
 model Fine {
@@ -868,7 +844,6 @@ model Fine {
   @@index([schoolId])
   @@index([studentId])
   @@index([isPaid])
-  @@map("student_fines")
 }
 
 // ============================================
@@ -913,7 +888,6 @@ model SalaryStructure {
   @@index([schoolId, teacherId])
   @@index([schoolId, isActive])
   @@index([schoolId, effectiveFrom, effectiveTo])
-  @@map("salary_structures")
 }
 
 model SalaryAllowance {
@@ -931,7 +905,6 @@ model SalaryAllowance {
   structure SalaryStructure @relation(fields: [structureId], references: [id], onDelete: Cascade)
 
   @@index([schoolId, structureId])
-  @@map("salary_allowances")
 }
 
 model SalaryDeduction {
@@ -949,7 +922,6 @@ model SalaryDeduction {
   structure SalaryStructure @relation(fields: [structureId], references: [id], onDelete: Cascade)
 
   @@index([schoolId, structureId])
-  @@map("salary_deductions")
 }
 
 // ============================================
@@ -1002,7 +974,6 @@ model PayrollRun {
   @@index([schoolId, payPeriodStart, payPeriodEnd])
   @@index([schoolId, status])
   @@index([schoolId, payDate])
-  @@map("payroll_runs")
 }
 
 model SalarySlip {
@@ -1054,7 +1025,6 @@ model SalarySlip {
   @@index([schoolId, teacherId])
   @@index([schoolId, payDate])
   @@index([status])
-  @@map("salary_slips")
 }
 
 // ============================================
@@ -1092,7 +1062,6 @@ model TimesheetPeriod {
   @@unique([schoolId, name])
   @@index([schoolId, startDate, endDate])
   @@index([schoolId, status])
-  @@map("timesheet_periods")
 }
 
 model TimesheetEntry {
@@ -1126,7 +1095,6 @@ model TimesheetEntry {
   @@index([schoolId, teacherId])
   @@index([schoolId, entryDate])
   @@index([status])
-  @@map("timesheet_entries")
 }
 
 // ============================================
@@ -1162,7 +1130,6 @@ model Wallet {
   @@unique([schoolId, walletType, ownerId])
   @@index([schoolId, walletType])
   @@index([schoolId, ownerId])
-  @@map("wallets")
 }
 
 model WalletTransaction {
@@ -1190,7 +1157,6 @@ model WalletTransaction {
   @@index([schoolId, walletId])
   @@index([schoolId, createdAt])
   @@index([sourceModule, sourceRecordId])
-  @@map("wallet_transactions")
 }
 
 // ============================================
@@ -1227,7 +1193,6 @@ model Budget {
   @@index([schoolId, fiscalYearId])
   @@index([schoolId, status])
   @@index([schoolId, createdBy])
-  @@map("budgets")
 }
 
 model BudgetAllocation {
@@ -1249,7 +1214,6 @@ model BudgetAllocation {
   @@unique([budgetId, categoryId])
   @@index([schoolId, budgetId])
   @@index([schoolId, categoryId])
-  @@map("budget_allocations")
 }
 
 // ============================================
@@ -1285,7 +1249,6 @@ model ExpenseCategory {
   @@unique([schoolId, name])
   @@index([schoolId, isActive])
   @@index([schoolId, parentId])
-  @@map("expense_categories")
 }
 
 model Expense {
@@ -1325,7 +1288,6 @@ model Expense {
   @@index([schoolId, categoryId])
   @@index([schoolId, status])
   @@index([schoolId, submittedBy])
-  @@map("expenses")
 }
 
 // ============================================
@@ -1371,7 +1333,6 @@ model FinancialReport {
   @@index([schoolId, reportType])
   @@index([schoolId, generatedAt])
   @@index([schoolId, status])
-  @@map("financial_reports")
 }
 
 // ============================================
@@ -1392,5 +1353,4 @@ model FinancePermission {
   @@unique([schoolId, userId, module, action])
   @@index([schoolId, userId])
   @@index([schoolId, module])
-  @@map("finance_permissions")
 }
