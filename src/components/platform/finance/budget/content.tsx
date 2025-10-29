@@ -57,7 +57,7 @@ export default async function BudgetContent({ dictionary, lang }: Props) {
       <div className="flex flex-1 flex-col gap-6">
         <PageHeader
           title={d?.title || 'Budget Planning'}
-          description={d?.description || 'Create budgets, allocate funds, and track spending variance'}
+          description="Create budgets, allocate funds, and track spending variance"
           className="text-start max-w-none"
         />
 
