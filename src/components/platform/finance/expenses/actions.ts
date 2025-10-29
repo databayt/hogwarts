@@ -181,9 +181,6 @@ export async function getExpenses(filters?: { status?: string; categoryId?: stri
         category: {
           select: { id: true, name: true },
         },
-        submittedBy: {
-          select: { id: true, name: true },
-        },
       },
       orderBy: { expenseDate: 'desc' },
       take: 100,
