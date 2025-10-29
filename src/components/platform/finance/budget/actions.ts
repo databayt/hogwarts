@@ -95,8 +95,7 @@ export async function createBudgetAllocation(formData: FormData) {
 
     const data = {
       budgetId: formData.get('budgetId'),
-      departmentId: formData.get('departmentId') || null,
-      categoryId: formData.get('categoryId') || null,
+      categoryId: formData.get('categoryId'),
       allocatedAmount: Number(formData.get('allocatedAmount')),
       description: formData.get('description') || undefined,
     }
@@ -106,14 +105,12 @@ export async function createBudgetAllocation(formData: FormData) {
     const allocation = await db.budgetAllocation.create({
       data: {
         budgetId: validated.budgetId,
-        allocatedAmount: validated.allocatedAmount,
-        ...(validated.departmentId && { departmentId: validated.departmentId }),
-        ...(validated.categoryId && { categoryId: validated.categoryId }),
-        ...(validated.description && { description: validated.description }),
+        categoryId: validated.categoryId,
         schoolId: session.user.schoolId,
         allocated: validated.allocatedAmount,
         spent: 0,
         remaining: validated.allocatedAmount,
+        ...(validated.description && { notes: validated.description }),
       },
     })
 

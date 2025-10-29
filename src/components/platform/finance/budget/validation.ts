@@ -19,8 +19,7 @@ export const budgetSchema = z.object({
 
 export const budgetAllocationSchema = z.object({
   budgetId: z.string().min(1, 'Budget is required'),
-  departmentId: z.string().optional().nullable(),
-  categoryId: z.string().optional().nullable(),
+  categoryId: z.string().min(1, 'Category is required'),
   allocatedAmount: z.number().min(0.01, 'Amount must be greater than 0'),
   description: z.string().max(500).optional(),
 })
