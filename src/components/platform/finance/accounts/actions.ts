@@ -206,6 +206,7 @@ export async function createJournalEntry(formData: FormData): Promise<JournalEnt
         createdBy: session.user.id!,
         ledgerEntries: {
           create: validated.entries.map(entry => ({
+            schoolId: session.user.schoolId,
             accountId: entry.accountId,
             debit: entry.debit,
             credit: entry.credit,
