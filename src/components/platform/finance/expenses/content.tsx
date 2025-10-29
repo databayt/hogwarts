@@ -48,103 +48,103 @@ export default async function ExpensesContent({ dictionary, lang }: Props) {
       <div className="flex flex-1 flex-col gap-6">
         <PageHeader
           title={d?.title || 'Expense Management'}
-          description={d?.description || 'Submit expenses, manage approval workflow, and track reimbursements'}
+          description="Submit expenses, manage approval workflow, and track reimbursements"
           className="text-start max-w-none"
         />
 
         <DashboardGrid type="stats">
           <StatsCard
-            title={d?.stats?.totalExpenses || 'Total Expenses'}
+            title="Total Expenses"
             value={formatCurrency(totalExpenses)}
-            description={d?.stats?.approved || 'Approved expenses'}
+            description="Approved expenses"
             icon={DollarSign}
           />
           <StatsCard
-            title={d?.stats?.pending || 'Pending'}
+            title="Pending"
             value={pendingExpensesCount}
-            description={d?.stats?.awaitingApproval || 'Awaiting approval'}
+            description="Awaiting approval"
             icon={AlertCircle}
           />
           <StatsCard
-            title={d?.stats?.allExpenses || 'All Expenses'}
+            title="All Expenses"
             value={expensesCount}
-            description={d?.stats?.totalSubmitted || 'Total submitted'}
+            description="Total submitted"
             icon={Receipt}
           />
           <StatsCard
-            title={d?.stats?.categories || 'Categories'}
+            title="Categories"
             value={categoriesCount}
-            description={d?.stats?.expenseTypes || 'Expense types'}
+            description="Expense types"
             icon={FolderOpen}
           />
         </DashboardGrid>
 
         <DashboardGrid type="features">
           <FeatureCard
-            title={d?.sections?.expenses || 'All Expenses'}
-            description={d?.sections?.expensesDesc || 'View and manage expense submissions'}
+            title="All Expenses"
+            description="View and manage expense submissions"
             icon={Receipt}
             isPrimary
             primaryAction={{
-              label: d?.actions?.viewExpenses || 'View Expenses',
+              label: 'View Expenses',
               href: `/${lang}/finance/expenses/all`,
               count: expensesCount
             }}
             secondaryAction={{
-              label: d?.actions?.submit || 'Submit Expense',
+              label: 'Submit Expense',
               href: `/${lang}/finance/expenses/new`
             }}
           />
           <FeatureCard
-            title={d?.sections?.approval || 'Approval Workflow'}
-            description={d?.sections?.approvalDesc || 'Review and approve expense requests'}
+            title="Approval Workflow"
+            description="Review and approve expense requests"
             icon={CheckCircle}
             primaryAction={{
-              label: d?.actions?.pending || 'Pending Approval',
+              label: 'Pending Approval',
               href: `/${lang}/finance/expenses/approval`,
               count: pendingExpensesCount
             }}
             secondaryAction={{
-              label: d?.actions?.approved || 'Approved',
+              label: 'Approved',
               href: `/${lang}/finance/expenses/approved`
             }}
           />
           <FeatureCard
-            title={d?.sections?.categories || 'Expense Categories'}
-            description={d?.sections?.categoriesDesc || 'Manage expense categories and types'}
+            title="Expense Categories"
+            description="Manage expense categories and types"
             icon={FolderOpen}
             primaryAction={{
-              label: d?.actions?.viewCategories || 'View Categories',
+              label: 'View Categories',
               href: `/${lang}/finance/expenses/categories`
             }}
             secondaryAction={{
-              label: d?.actions?.createCategory || 'Create Category',
+              label: 'Create Category',
               href: `/${lang}/finance/expenses/categories/new`
             }}
           />
           <FeatureCard
-            title={d?.sections?.reimbursement || 'Reimbursements'}
-            description={d?.sections?.reimbursementDesc || 'Process expense reimbursements'}
+            title="Reimbursements"
+            description="Process expense reimbursements"
             icon={DollarSign}
             primaryAction={{
-              label: d?.actions?.processReimbursement || 'Process',
+              label: 'Process',
               href: `/${lang}/finance/expenses/reimbursement`
             }}
             secondaryAction={{
-              label: d?.actions?.history || 'History',
+              label: 'History',
               href: `/${lang}/finance/expenses/reimbursement/history`
             }}
           />
           <FeatureCard
-            title={d?.sections?.reports || 'Expense Reports'}
-            description={d?.sections?.reportsDesc || 'Generate expense analysis reports'}
+            title="Expense Reports"
+            description="Generate expense analysis reports"
             icon={TrendingUp}
             primaryAction={{
-              label: d?.actions?.reports || 'View Reports',
+              label: 'View Reports',
               href: `/${lang}/finance/expenses/reports`
             }}
             secondaryAction={{
-              label: d?.actions?.export || 'Export',
+              label: 'Export',
               href: `/${lang}/finance/expenses/reports/export`
             }}
           />
