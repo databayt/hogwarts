@@ -81,23 +81,20 @@ export default async function PayrollContent({ dictionary, lang }: Props) {
       <div className="flex flex-1 flex-col gap-6">
         <PageHeader
           title={d?.title || 'Payroll Processing'}
-          description={
-            d?.description ||
-            'Process payroll runs, generate salary slips, and manage disbursements'
-          }
+          description="Process payroll runs, generate salary slips, and manage disbursements"
           className="text-start max-w-none"
         />
 
         {/* Stats Grid - Uses semantic HTML (h6, h2, small) */}
         <DashboardGrid type="stats">
           <StatsCard
-            title={d?.monthlyPayroll || 'Current Month Payroll'}
+            title="Current Month Payroll"
             value={formatCurrency(monthlyPayroll)}
-            description={d?.totalNet || 'Total net salaries'}
+            description="Total net salaries"
             icon={DollarSign}
           />
           <StatsCard
-            title={d?.payroll || 'Payroll Runs'}
+            title="Payroll Runs"
             value={totalRunsCount}
             description={`${completedRunsCount} completed`}
             icon={Calendar}
@@ -119,7 +116,7 @@ export default async function PayrollContent({ dictionary, lang }: Props) {
         {/* Feature Cards Grid */}
         <DashboardGrid type="features">
           <FeatureCard
-            title={d?.payroll || 'Payroll Runs'}
+            title="Payroll Runs"
             description="Create and manage payroll processing runs"
             icon={Calendar}
             isPrimary
@@ -134,7 +131,7 @@ export default async function PayrollContent({ dictionary, lang }: Props) {
             }}
           />
           <FeatureCard
-            title={d?.payslip || 'Salary Slips'}
+            title="Salary Slips"
             description="View and manage individual salary slips"
             icon={FileText}
             primaryAction={{
@@ -148,7 +145,7 @@ export default async function PayrollContent({ dictionary, lang }: Props) {
             }}
           />
           <FeatureCard
-            title={d?.processPayroll || 'Process Payroll'}
+            title="Process Payroll"
             description="Start new payroll processing for current period"
             icon={Users}
             primaryAction={{
@@ -204,32 +201,32 @@ export default async function PayrollContent({ dictionary, lang }: Props) {
         {/* Quick Actions */}
         <Card>
           <CardHeader>
-            <CardTitle>{d?.quickActions?.title || 'Quick Actions'}</CardTitle>
+            <CardTitle>Quick Actions</CardTitle>
             <CardDescription>
-              {d?.quickActions?.description || 'Common payroll operations'}
+              Common payroll operations
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-wrap gap-2">
             <Button variant="outline" size="sm" asChild>
               <Link href={`/${lang}/finance/payroll/process/current-month`}>
                 <Clock className="mr-2 h-4 w-4" />
-                {d?.quickActions?.processMonth || 'Process Current Month'}
+                Process Current Month
               </Link>
             </Button>
             <Button variant="outline" size="sm" asChild>
               <Link href={`/${lang}/finance/payroll/slips/generate`}>
                 <FileText className="mr-2 h-4 w-4" />
-                {d?.quickActions?.generateSlips || 'Generate Slips'}
+                Generate Slips
               </Link>
             </Button>
             <Button variant="outline" size="sm" asChild>
               <Link href={`/${lang}/finance/payroll/reports/summary`}>
-                {d?.quickActions?.payrollSummary || 'Payroll Summary'}
+                Payroll Summary
               </Link>
             </Button>
             <Button variant="outline" size="sm" asChild>
               <Link href={`/${lang}/finance/payroll/reports/tax`}>
-                {d?.quickActions?.taxReport || 'Tax Report'}
+                Tax Report
               </Link>
             </Button>
           </CardContent>
