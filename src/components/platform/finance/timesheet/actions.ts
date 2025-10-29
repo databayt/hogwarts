@@ -29,14 +29,10 @@ export async function createTimesheet(formData: FormData): Promise<TimesheetActi
       data: {
         ...validated,
         schoolId: session.user.schoolId,
-        status: 'DRAFT',
-        totalHours: 0,
+        status: 'OPEN',
       },
       include: {
         entries: true,
-        user: {
-          select: { id: true, name: true },
-        },
       },
     })
 
@@ -74,22 +70,14 @@ export async function addTimesheetEntry(formData: FormData) {
         },
       })
 
-      // Update timesheet total hours
-      const timesheet = await tx.timesheetPeriod.update({
+      // Get updated timesheet period
+      const timesheet = await tx.timesheetPeriod.findUnique({
         where: {
           id: validated.timesheetId,
           schoolId: session.user.schoolId,
         },
-        data: {
-          totalHours: {
-            increment: validated.hoursWorked,
-          },
-        },
         include: {
           entries: true,
-          user: {
-            select: { id: true, name: true },
-          },
         },
       })
 
@@ -117,14 +105,12 @@ export async function submitTimesheet(timesheetId: string) {
         schoolId: session.user.schoolId,
       },
       data: {
-        status: 'SUBMITTED',
-        submittedAt: new Date(),
+        status: 'CLOSED',
+        closedBy: session.user.id,
+        closedAt: new Date(),
       },
       include: {
         entries: true,
-        user: {
-          select: { id: true, name: true },
-        },
       },
     })
 
@@ -158,14 +144,11 @@ export async function approveTimesheet(formData: FormData) {
       },
       data: {
         status: validated.status,
-        approvedById: session.user.id,
-        approvedAt: new Date(),
+        closedBy: session.user.id,
+        closedAt: new Date(),
       },
       include: {
         entries: true,
-        user: {
-          select: { id: true, name: true },
-        },
       },
     })
 
@@ -188,17 +171,13 @@ export async function getTimesheets(filters?: { status?: string; userId?: string
       where: {
         schoolId: session.user.schoolId,
         ...(filters?.status && { status: filters.status as any }),
-        ...(filters?.userId && { userId: filters.userId }),
       },
       include: {
-        user: {
-          select: { id: true, name: true },
-        },
         entries: {
-          orderBy: { date: 'asc' },
+          orderBy: { entryDate: 'asc' },
         },
       },
-      orderBy: { periodStart: 'desc' },
+      orderBy: { startDate: 'desc' },
       take: 50,
     })
 
