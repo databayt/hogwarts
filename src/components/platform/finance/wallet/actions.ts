@@ -27,15 +27,14 @@ export async function createWallet(formData: FormData): Promise<WalletActionResu
 
     const wallet = await db.wallet.create({
       data: {
-        ...validated,
+        walletType: validated.type,
+        ownerId: validated.userId || session.user.schoolId,
+        isActive: validated.isActive,
         schoolId: session.user.schoolId,
         balance: 0,
       },
       include: {
         transactions: true,
-        user: {
-          select: { id: true, name: true, email: true },
-        },
       },
     })
 
@@ -85,6 +84,8 @@ export async function topupWallet(formData: FormData) {
           type: 'CREDIT',
           description: validated.description || `Top-up via ${validated.paymentMethod}`,
           schoolId: session.user.schoolId!,
+          balanceAfter: wallet.balance,
+          createdBy: session.user.id,
         },
       })
 
@@ -126,7 +127,7 @@ export async function refundWallet(formData: FormData) {
       return { success: false, error: 'Wallet not found' }
     }
 
-    if (wallet.balance < validated.amount) {
+    if (Number(wallet.balance) < validated.amount) {
       return { success: false, error: 'Insufficient balance' }
     }
 
@@ -146,9 +147,11 @@ export async function refundWallet(formData: FormData) {
         data: {
           walletId: validated.walletId,
           amount: validated.amount,
-          type: 'REFUND',
+          type: 'DEBIT',
           description: `Refund: ${validated.reason}`,
           schoolId: session.user.schoolId!,
+          balanceAfter: updatedWallet.balance,
+          createdBy: session.user.id,
         },
       })
 
@@ -177,9 +180,6 @@ export async function getWallets(filters?: { type?: string; isActive?: boolean }
         ...(filters?.isActive !== undefined && { isActive: filters.isActive }),
       },
       include: {
-        user: {
-          select: { id: true, name: true, email: true },
-        },
         transactions: {
           take: 10,
           orderBy: { createdAt: 'desc' },

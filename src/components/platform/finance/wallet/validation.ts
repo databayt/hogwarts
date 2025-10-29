@@ -3,7 +3,7 @@
  */
 
 import { z } from 'zod'
-import { WalletType, WalletTransactionType } from '@prisma/client'
+import { WalletType, TransactionType } from '@prisma/client'
 
 export const walletSchema = z.object({
   type: z.nativeEnum(WalletType),
@@ -14,7 +14,7 @@ export const walletSchema = z.object({
 export const walletTransactionSchema = z.object({
   walletId: z.string().min(1, 'Wallet is required'),
   amount: z.number().min(0.01, 'Amount must be greater than 0'),
-  type: z.nativeEnum(WalletTransactionType),
+  type: z.nativeEnum(TransactionType),
   description: z.string().max(500).optional(),
   referenceId: z.string().optional(),
 })

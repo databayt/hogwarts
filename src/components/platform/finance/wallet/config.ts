@@ -2,7 +2,7 @@
  * Wallet Module - Configuration
  */
 
-import { WalletType, WalletTransactionType } from '@prisma/client'
+import { WalletType, TransactionType } from '@prisma/client'
 
 export const WalletTypeLabels: Record<WalletType, string> = {
   SCHOOL: 'School Wallet',
@@ -10,11 +10,10 @@ export const WalletTypeLabels: Record<WalletType, string> = {
   STUDENT: 'Student Wallet',
 }
 
-export const WalletTransactionTypeLabels: Record<WalletTransactionType, string> = {
+export const WalletTransactionTypeLabels: Record<TransactionType, string> = {
   CREDIT: 'Credit (Top-up)',
   DEBIT: 'Debit (Payment)',
-  REFUND: 'Refund',
-  ADJUSTMENT: 'Adjustment',
+  TRANSFER: 'Transfer',
 }
 
 export const PaymentMethods = [

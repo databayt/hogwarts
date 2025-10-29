@@ -45,7 +45,7 @@ export default async function WalletContent({ dictionary, lang }: Props) {
     }
   }
 
-  const d = dictionary?.finance?.wallet
+  const d = dictionary?.finance?.wallet as any
 
   return (
     <PageContainer>

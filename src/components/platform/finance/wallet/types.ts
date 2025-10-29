@@ -2,7 +2,7 @@
  * Wallet Module - Type Definitions
  */
 
-import type { WalletType, WalletTransactionType } from '@prisma/client'
+import type { WalletType, TransactionType } from '@prisma/client'
 import type { walletSchema, walletTransactionSchema } from './validation'
 import type { z } from 'zod'
 
@@ -24,7 +24,7 @@ export interface WalletTransactionWithDetails {
   id: string
   walletId: string
   amount: number
-  type: WalletTransactionType
+  type: TransactionType
   description: string | null
   referenceId: string | null
   createdAt: Date

@@ -19,6 +19,7 @@ model AdmissionCampaign {
   school       School        @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   applications Application[]
 
+  @@unique([schoolId, name])
   @@index([schoolId])
   @@index([status])
   @@index([startDate, endDate])
