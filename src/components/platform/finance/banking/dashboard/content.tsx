@@ -38,8 +38,7 @@ export async function BankingDashboardContent({
   const accounts = accountsResult.data
   const accountsData = accounts.data
   const accountId = searchParams?.id || accountsData[0]?.id
-  const accountResult = await getAccount({ accountId })
-  const account = accountResult.success ? accountResult.data : null
+  const account = accountId ? await getAccount(accountId) : null
 
   return (
     <div className="space-y-6">
