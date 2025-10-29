@@ -203,7 +203,6 @@ export async function createJournalEntry(formData: FormData): Promise<JournalEnt
         fiscalYearId: validated.fiscalYearId,
         schoolId: session.user.schoolId,
         sourceModule: 'MANUAL',
-        status: 'DRAFT',
         entries: {
           create: validated.entries.map(entry => ({
             accountId: entry.accountId,
@@ -261,17 +260,12 @@ export async function postJournalEntry(journalEntryId: string): Promise<JournalE
       return { success: false, error: 'Journal entry not found' }
     }
 
-    if (journalEntry.status === 'POSTED') {
-      return { success: false, error: 'Journal entry is already posted' }
-    }
-
     // Post the entry and update account balances
     const updated = await db.$transaction(async (tx) => {
-      // Update journal entry status
+      // Update journal entry with posting information
       const entry = await tx.journalEntry.update({
         where: { id: journalEntryId },
         data: {
-          status: 'POSTED',
           postedAt: new Date(),
           postedBy: session.user?.id,
         },
