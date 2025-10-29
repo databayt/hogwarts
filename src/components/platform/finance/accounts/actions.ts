@@ -203,7 +203,8 @@ export async function createJournalEntry(formData: FormData): Promise<JournalEnt
         fiscalYearId: validated.fiscalYearId,
         schoolId: session.user.schoolId,
         sourceModule: 'MANUAL',
-        entries: {
+        createdBy: session.user.id!,
+        ledgerEntries: {
           create: validated.entries.map(entry => ({
             accountId: entry.accountId,
             debit: entry.debit,
@@ -213,7 +214,7 @@ export async function createJournalEntry(formData: FormData): Promise<JournalEnt
         },
       },
       include: {
-        entries: {
+        ledgerEntries: {
           include: {
             account: {
               select: {
@@ -252,12 +253,16 @@ export async function postJournalEntry(journalEntryId: string): Promise<JournalE
         schoolId: session.user.schoolId,
       },
       include: {
-        entries: true,
+        ledgerEntries: true,
       },
     })
 
     if (!journalEntry) {
       return { success: false, error: 'Journal entry not found' }
+    }
+
+    if (journalEntry.isPosted) {
+      return { success: false, error: 'Journal entry is already posted' }
     }
 
     // Post the entry and update account balances
@@ -266,11 +271,12 @@ export async function postJournalEntry(journalEntryId: string): Promise<JournalE
       const entry = await tx.journalEntry.update({
         where: { id: journalEntryId },
         data: {
+          isPosted: true,
           postedAt: new Date(),
           postedBy: session.user?.id,
         },
         include: {
-          entries: {
+          ledgerEntries: {
             include: {
               account: {
                 select: {
@@ -285,7 +291,7 @@ export async function postJournalEntry(journalEntryId: string): Promise<JournalE
       })
 
       // Update account balances for each ledger entry
-      for (const ledgerEntry of journalEntry.entries) {
+      for (const ledgerEntry of journalEntry.ledgerEntries) {
         await tx.accountBalance.upsert({
           where: {
             accountId_fiscalYearId: {
@@ -358,7 +364,7 @@ export async function getChartOfAccounts(filters?: { type?: string; isActive?: b
  * Get Journal Entries
  * Retrieves journal entries with filtering
  */
-export async function getJournalEntries(filters?: { status?: string; fiscalYearId?: string }) {
+export async function getJournalEntries(filters?: { isPosted?: boolean; fiscalYearId?: string }) {
   try {
     const session = await auth()
     if (!session?.user?.schoolId) {
@@ -368,11 +374,11 @@ export async function getJournalEntries(filters?: { status?: string; fiscalYearI
     const entries = await db.journalEntry.findMany({
       where: {
         schoolId: session.user.schoolId,
-        ...(filters?.status && { status: filters.status as any }),
+        ...(filters?.isPosted !== undefined && { isPosted: filters.isPosted }),
         ...(filters?.fiscalYearId && { fiscalYearId: filters.fiscalYearId }),
       },
       include: {
-        entries: {
+        ledgerEntries: {
           include: {
             account: {
               select: {
