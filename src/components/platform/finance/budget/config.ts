@@ -6,9 +6,10 @@ import { BudgetStatus } from '@prisma/client'
 
 export const BudgetStatusLabels: Record<BudgetStatus, string> = {
   DRAFT: 'Draft',
+  PENDING_APPROVAL: 'Pending Approval',
+  APPROVED: 'Approved',
   ACTIVE: 'Active',
   CLOSED: 'Closed',
-  ARCHIVED: 'Archived',
 }
 
 export const BudgetCategories = [
