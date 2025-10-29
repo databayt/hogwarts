@@ -9,6 +9,7 @@ export const ExpenseStatusLabels: Record<ExpenseStatus, string> = {
   APPROVED: 'Approved',
   REJECTED: 'Rejected',
   PAID: 'Paid',
+  CANCELLED: 'Cancelled',
 }
 
 export const ExpenseStatusColors: Record<ExpenseStatus, string> = {
@@ -16,6 +17,7 @@ export const ExpenseStatusColors: Record<ExpenseStatus, string> = {
   APPROVED: 'success',
   REJECTED: 'destructive',
   PAID: 'secondary',
+  CANCELLED: 'secondary',
 }
 
 export const DefaultExpenseCategories = [
