@@ -44,7 +44,7 @@ export default async function AccountsContent({ dictionary, lang }: Props) {
       <div className="flex flex-1 flex-col gap-6">
         <PageHeader
           title={d?.title || 'Accounting System'}
-          description={d?.description || 'Double-entry bookkeeping, chart of accounts, journal entries, and general ledger'}
+          description="Double-entry bookkeeping, chart of accounts, journal entries, and general ledger"
           className="text-start max-w-none"
         />
 
