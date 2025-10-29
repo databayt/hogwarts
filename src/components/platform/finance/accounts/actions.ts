@@ -46,9 +46,14 @@ export async function createAccount(formData: FormData): Promise<AccountActionRe
       return { success: false, error: 'Account code already exists' }
     }
 
+    // Derive normalBalance from account type
+    const { NormalBalance } = await import('./config')
+    const normalBalance = NormalBalance[validated.type]
+
     const account = await db.chartOfAccount.create({
       data: {
         ...validated,
+        normalBalance,
         schoolId: session.user.schoolId,
       },
     })
@@ -83,12 +88,19 @@ export async function updateAccount(accountId: string, formData: FormData): Prom
 
     const validated = accountSchema.parse(data)
 
+    // Derive normalBalance from account type
+    const { NormalBalance } = await import('./config')
+    const normalBalance = NormalBalance[validated.type]
+
     const account = await db.chartOfAccount.update({
       where: {
         id: accountId,
         schoolId: session.user.schoolId,
       },
-      data: validated,
+      data: {
+        ...validated,
+        normalBalance,
+      },
     })
 
     revalidatePath('/finance/accounts')
