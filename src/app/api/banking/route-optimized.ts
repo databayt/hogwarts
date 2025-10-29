@@ -107,8 +107,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         success: true,
-        message: `Synced ${result.data.synced} transactions`,
-        data: result.data
+        message: `Synced ${result.count} transactions`,
+        count: result.count
       },
       {
         headers: {

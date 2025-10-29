@@ -1,5 +1,5 @@
 import { getAccounts } from '@/components/platform/finance/banking/actions/bank.actions'
-import { TransactionsTable } from './table'
+import { TransactionsTableImproved as TransactionsTable } from './table'
 import PageHeader from '@/components/atom/page-header'
 
 interface TransactionHistoryContentProps {
