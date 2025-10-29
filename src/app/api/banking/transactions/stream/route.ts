@@ -143,15 +143,15 @@ export async function POST(request: NextRequest) {
 
     if (!result.success) {
       return Response.json(
-        { error: result.error?.message || 'Sync failed' },
-        { status: result.error?.statusCode || 500 }
+        { error: result.error || 'Sync failed' },
+        { status: 500 }
       )
     }
 
     return Response.json({
       success: true,
-      message: `Synced ${result.data?.synced || 0} new transactions`,
-      data: result.data
+      message: `Synced ${result.count || 0} new transactions`,
+      count: result.count
     })
   } catch (error) {
     console.error('Sync error:', error)
