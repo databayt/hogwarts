@@ -62,8 +62,12 @@ export default async function SalaryContent({ dictionary, lang }: Props) {
       _avg: { baseSalary: true },
     })
 
-    totalMonthlySalary = salaryAgg._sum.baseSalary?.toNumber() || 0
-    averageSalary = salaryAgg._avg.baseSalary?.toNumber() || 0
+    totalMonthlySalary = salaryAgg._sum?.baseSalary
+      ? Number(salaryAgg._sum.baseSalary)
+      : 0
+    averageSalary = salaryAgg._avg?.baseSalary
+      ? Number(salaryAgg._avg.baseSalary)
+      : 0
   }
 
   // @ts-expect-error - finance dictionary not yet added to type definitions

@@ -39,8 +39,10 @@ export default async function WalletContent({ dictionary, lang }: Props) {
       }),
     ])
 
-    totalBalance = balanceAgg._sum.balance?.toNumber() || 0
-    totalTopups = topupsAgg._sum.amount?.toNumber() || 0
+    totalBalance = balanceAgg._sum?.balance
+      ? Number(balanceAgg._sum.balance)
+      : 0
+    totalTopups = topupsAgg._sum?.amount ? Number(topupsAgg._sum.amount) : 0
   }
 
   // @ts-expect-error - finance dictionary not yet added to type definitions

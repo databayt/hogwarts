@@ -35,7 +35,9 @@ export default async function TimesheetContent({ dictionary, lang }: Props) {
       where: { schoolId, status: 'APPROVED' },
       _sum: { hoursWorked: true },
     })
-    totalHours = hoursAgg._sum.hoursWorked?.toNumber() || 0
+    totalHours = hoursAgg._sum?.hoursWorked
+      ? Number(hoursAgg._sum.hoursWorked)
+      : 0
   }
 
   // @ts-expect-error - finance dictionary not yet added to type definitions

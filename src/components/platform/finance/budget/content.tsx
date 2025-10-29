@@ -39,8 +39,10 @@ export default async function BudgetContent({ dictionary, lang }: Props) {
       }),
     ])
 
-    totalBudget = budgetAgg._sum.totalAmount?.toNumber() || 0
-    totalSpent = spentAgg._sum.spent?.toNumber() || 0
+    totalBudget = budgetAgg._sum?.totalAmount
+      ? Number(budgetAgg._sum.totalAmount)
+      : 0
+    totalSpent = spentAgg._sum?.spent ? Number(spentAgg._sum.spent) : 0
   }
 
   const variance = totalBudget - totalSpent

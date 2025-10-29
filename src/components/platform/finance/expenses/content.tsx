@@ -36,7 +36,9 @@ export default async function ExpensesContent({ dictionary, lang }: Props) {
       _sum: { amount: true },
     })
 
-    totalExpenses = expensesAgg._sum.amount?.toNumber() || 0
+    totalExpenses = expensesAgg._sum?.amount
+      ? Number(expensesAgg._sum.amount)
+      : 0
   }
 
   // @ts-expect-error - finance dictionary not yet added to type definitions

@@ -79,7 +79,9 @@ export default async function PayrollContent({ dictionary, lang }: Props) {
       _sum: { netSalary: true },
     })
 
-    monthlyPayroll = payrollAgg._sum.netSalary?.toNumber() || 0
+    monthlyPayroll = payrollAgg._sum?.netSalary
+      ? Number(payrollAgg._sum.netSalary)
+      : 0
   }
 
   // @ts-expect-error - finance dictionary not yet added to type definitions
