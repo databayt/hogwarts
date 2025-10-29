@@ -3,7 +3,7 @@
  * Core accounting system types for chart of accounts, journal entries, and ledger
  */
 
-import type { AccountType, JournalEntryStatus } from '@prisma/client'
+import type { AccountType } from '@prisma/client'
 import type { accountSchema, journalEntrySchema, ledgerEntrySchema } from './validation'
 import type { z } from 'zod'
 
@@ -31,18 +31,18 @@ export interface JournalEntryWithEntries {
   entryNumber: string
   entryDate: Date
   description: string
-  status: JournalEntryStatus
+  isPosted: boolean
   sourceModule: string | null
   sourceId: string | null
   fiscalYearId: string
   schoolId: string
-  entries: LedgerEntryWithAccount[]
+  ledgerEntries: LedgerEntryWithAccount[]
   createdAt: Date
   postedAt: Date | null
   postedBy: string | null
+  isReversed: boolean
   reversedAt: Date | null
-  reversedBy: string | null
-  reversingEntryId: string | null
+  reversalEntryId: string | null
 }
 
 export interface LedgerEntryWithAccount {
