@@ -64,27 +64,27 @@ export default async function BudgetContent({ dictionary, lang }: Props) {
         {/* Stats Grid - Uses semantic HTML (h6, h2, small) */}
         <DashboardGrid type="stats">
           <StatsCard
-            title={d?.stats?.totalBudget || 'Total Budget'}
+            title="Total Budget"
             value={formatCurrency(totalBudget)}
-            description={d?.stats?.allocated || 'Allocated budget'}
+            description="Allocated budget"
             icon={DollarSign}
           />
           <StatsCard
-            title={d?.stats?.spent || 'Spent'}
+            title="Spent"
             value={formatCurrency(totalSpent)}
-            description={`${formatPercentage(utilizationRate)} ${d?.stats?.utilization || 'utilization'}`}
+            description={`${formatPercentage(utilizationRate)} utilization`}
             icon={TrendingUp}
           />
           <StatsCard
-            title={d?.stats?.remaining || 'Remaining'}
+            title="Remaining"
             value={formatCurrency(variance)}
-            description={d?.stats?.available || 'Available budget'}
+            description="Available budget"
             icon={CheckCircle}
           />
           <StatsCard
-            title={d?.stats?.allocations || 'Allocations'}
+            title="Allocations"
             value={allocationsCount}
-            description={`${budgetsCount} ${d?.stats?.active || 'active budgets'}`}
+            description={`${budgetsCount} active budgets`}
             icon={PieChart}
           />
         </DashboardGrid>
@@ -92,82 +92,82 @@ export default async function BudgetContent({ dictionary, lang }: Props) {
         {/* Feature Cards Grid */}
         <DashboardGrid type="features">
           <FeatureCard
-            title={d?.sections?.budgets || 'Budgets'}
-            description={d?.sections?.budgetsDesc || 'Create and manage school budgets'}
+            title="Budgets"
+            description="Create and manage school budgets"
             icon={PieChart}
             isPrimary
             primaryAction={{
-              label: d?.actions?.viewBudgets || 'View Budgets',
+              label: 'View Budgets',
               href: `/${lang}/finance/budget/all`,
               count: budgetsCount
             }}
             secondaryAction={{
-              label: d?.actions?.createBudget || 'Create Budget',
+              label: 'Create Budget',
               href: `/${lang}/finance/budget/new`
             }}
           />
           <FeatureCard
-            title={d?.sections?.allocations || 'Budget Allocations'}
-            description={d?.sections?.allocationsDesc || 'Allocate budget by department or category'}
+            title="Budget Allocations"
+            description="Allocate budget by department or category"
             icon={DollarSign}
             primaryAction={{
-              label: d?.actions?.viewAllocations || 'View Allocations',
+              label: 'View Allocations',
               href: `/${lang}/finance/budget/allocations`
             }}
             secondaryAction={{
-              label: d?.actions?.allocate || 'Allocate Funds',
+              label: 'Allocate Funds',
               href: `/${lang}/finance/budget/allocations/new`
             }}
           />
           <FeatureCard
-            title={d?.sections?.tracking || 'Spending Tracking'}
-            description={d?.sections?.trackingDesc || 'Monitor budget utilization and spending'}
+            title="Spending Tracking"
+            description="Monitor budget utilization and spending"
             icon={TrendingUp}
             primaryAction={{
-              label: d?.actions?.trackSpending || 'Track Spending',
+              label: 'Track Spending',
               href: `/${lang}/finance/budget/tracking`
             }}
             secondaryAction={{
-              label: d?.actions?.realtime || 'Real-time View',
+              label: 'Real-time View',
               href: `/${lang}/finance/budget/tracking/realtime`
             }}
           />
           <FeatureCard
-            title={d?.sections?.variance || 'Variance Analysis'}
-            description={d?.sections?.varianceDesc || 'Analyze budget vs actual spending'}
+            title="Variance Analysis"
+            description="Analyze budget vs actual spending"
             icon={AlertTriangle}
             primaryAction={{
-              label: d?.actions?.variance || 'Variance Report',
+              label: 'Variance Report',
               href: `/${lang}/finance/budget/variance`
             }}
             secondaryAction={{
-              label: d?.actions?.alerts || 'Budget Alerts',
+              label: 'Budget Alerts',
               href: `/${lang}/finance/budget/variance/alerts`
             }}
           />
           <FeatureCard
-            title={d?.sections?.reports || 'Budget Reports'}
-            description={d?.sections?.reportsDesc || 'Generate budget analysis reports'}
+            title="Budget Reports"
+            description="Generate budget analysis reports"
             icon={BarChart}
             primaryAction={{
-              label: d?.actions?.viewReports || 'View Reports',
+              label: 'View Reports',
               href: `/${lang}/finance/budget/reports`
             }}
             secondaryAction={{
-              label: d?.actions?.summary || 'Budget Summary',
+              label: 'Budget Summary',
               href: `/${lang}/finance/budget/reports/summary`
             }}
           />
           <FeatureCard
-            title={d?.sections?.approval || 'Budget Approval'}
-            description={d?.sections?.approvalDesc || 'Review and approve budget requests'}
+            title="Budget Approval"
+            description="Review and approve budget requests"
             icon={CheckCircle}
             primaryAction={{
-              label: d?.actions?.pending || 'Pending Approval',
+              label: 'Pending Approval',
               href: `/${lang}/finance/budget/approval`
             }}
             secondaryAction={{
-              label: d?.actions?.history || 'Approval History',
+              label: 'Approval History',
               href: `/${lang}/finance/budget/approval/history`
             }}
           />
