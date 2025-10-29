@@ -10,7 +10,8 @@ import { format } from "date-fns";
 import { RecentInvoicesCard, StatsCards } from "./card";
 
 import { chartConfig } from "./config";
-import { DashboardHeader } from "./header";
+import PageHeader from '@/components/atom/page-header'
+import { PageNav, type PageNavItem } from '@/components/atom/page-nav'
 import { type Locale } from '@/components/internationalization/config'
 import { type Dictionary } from '@/components/internationalization/dictionaries'
 
@@ -28,6 +29,16 @@ export function DashboardContent({ dictionary, lang }: Props) {
     recentInvoice: [],
     chartData: [],
   });
+
+  // Define invoice page navigation
+  const invoicePages: PageNavItem[] = [
+    { name: 'Dashboard', href: `/${lang}/finance/invoice` },
+    { name: 'All Invoices', href: `/${lang}/finance/invoice/invoice` },
+    { name: 'List View', href: `/${lang}/finance/invoice/list` },
+    { name: 'Create New', href: `/${lang}/finance/invoice/invoice/create` },
+    { name: 'Onboarding', href: `/${lang}/finance/invoice/onboarding` },
+    { name: 'Settings', href: `/${lang}/finance/invoice/settings` },
+  ]
 
   const fetchData = async () => {
     try {
@@ -87,29 +98,33 @@ export function DashboardContent({ dictionary, lang }: Props) {
     },
   ];
   return (
-    <>
-      <DashboardHeader />
-  
-    <div className="grid gap-6  lg:grid-cols-4">
-      <StatsCards
-        stats={{
-          totalRevenue: data?.totalRevenue ?? "-",
-          totalInvoice: data?.totalInvoice ?? "-",
-          paidInvoice: data?.paidInvoice ?? "-",
-          UnpaidInvoice: data?.UnpaidInvoice ?? "-",
-        }}
+    <div className="space-y-6">
+      <PageHeader
+        title="Invoice"
+        className="text-start max-w-none"
       />
+      <PageNav pages={invoicePages} />
 
-      {/***chart */}
-      <ChartInvoice chartConfig={chartConfig} chartData={data.chartData} />
+      <div className="grid gap-6  lg:grid-cols-4">
+        <StatsCards
+          stats={{
+            totalRevenue: data?.totalRevenue ?? "-",
+            totalInvoice: data?.totalInvoice ?? "-",
+            paidInvoice: data?.paidInvoice ?? "-",
+            UnpaidInvoice: data?.UnpaidInvoice ?? "-",
+          }}
+        />
 
-      {/***latest 10 Invoice last 30days */}
-      <RecentInvoicesCard
-        className="lg:col-span-2"
-         data={data?.recentInvoice as unknown as UserInvoice[]}
-        columns={columns}
-      />
+        {/***chart */}
+        <ChartInvoice chartConfig={chartConfig} chartData={data.chartData} />
+
+        {/***latest 10 Invoice last 30days */}
+        <RecentInvoicesCard
+          className="lg:col-span-2"
+          data={data?.recentInvoice as unknown as UserInvoice[]}
+          columns={columns}
+        />
+      </div>
     </div>
-    </>
   );
 }
