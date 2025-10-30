@@ -85,33 +85,32 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
   // Define exams page navigation
   const examsPages: PageNavItem[] = [
     {
-      name: d?.blocks?.manage?.title || 'Exam Management',
+      name: 'Manage',
       href: `/${lang}/exams`
     },
     {
-      name: d?.blocks?.qbank?.title || 'Question Bank',
+      name: 'QBank',
       href: `/${lang}/generate/questions`
     },
     {
-      name: d?.blocks?.generate?.title || 'Auto Generation',
+      name: 'Generate',
       href: `/${lang}/generate`
     },
     {
-      name: d?.blocks?.mark?.title || 'Auto Marking',
+      name: 'Mark',
       href: `/${lang}/mark`
     },
     {
-      name: d?.blocks?.results?.title || 'Results & Reports',
+      name: 'Result',
       href: `/${lang}/results`
     },
   ];
 
   return (
     <PageContainer>
-      <div className="flex flex-1 flex-col gap-6">
+      <div className="flex flex-col gap-6">
         <PageHeader
-          title={dictionary?.school?.exams?.title}
-          description={dictionary?.school?.exams?.description}
+          title="Exams"
           className="text-start max-w-none"
         />
 
