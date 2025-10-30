@@ -16,6 +16,20 @@ interface Props {
 export default async function WalletContent({ dictionary, lang }: Props) {
   const { schoolId } = await getTenantContext()
 
+  if (!schoolId) {
+    return (
+      <PageContainer>
+        <div className="flex flex-1 flex-col gap-6">
+          <PageHeader
+            title="Wallet Management"
+            description="School context not found"
+            className="text-start max-w-none"
+          />
+        </div>
+      </PageContainer>
+    )
+  }
+
   // Check permissions for current user
   const canView = await checkCurrentUserPermission(schoolId, 'wallet', 'view')
   const canCreate = await checkCurrentUserPermission(schoolId, 'wallet', 'create')
