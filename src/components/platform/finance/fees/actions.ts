@@ -51,7 +51,7 @@ export async function getFeeStructures(): Promise<ActionResult<any[]>> {
     const feeStructures = await db.feeStructure.findMany({
       where: { schoolId, isActive: true },
       include: {
-        class: { select: { id: true, className: true } },
+        class: { select: { id: true, name: true } },
         _count: { select: { feeAssignments: true } },
       },
       orderBy: { createdAt: "desc" },
