@@ -548,10 +548,10 @@ export async function getSalarySlip(
         teacher: {
           select: {
             id: true,
-            firstName: true,
-            lastName: true,
-            employeeNumber: true,
-            email: true,
+            givenName: true,
+            surname: true,
+            employeeId: true,
+            emailAddress: true,
           },
         },
         payrollRun: true,
