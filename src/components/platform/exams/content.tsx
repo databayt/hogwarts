@@ -107,7 +107,7 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
   ];
 
   return (
-    <PageContainer>
+    <div>
       <div className="flex flex-col gap-6">
         <PageHeader
           title="Exams"
@@ -276,13 +276,13 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
               </p>
               <div className="flex flex-col gap-2">
                 <Button asChild variant="secondary">
-                  <Link href={`/${lang}/generate/questions`}>
+                  <Link href={`/${lang}/exams/qbank`}>
                     <BookOpen className="mr-2 h-4 w-4" />
                     {d?.blocks?.qbank?.browse}
                   </Link>
                 </Button>
                 <Button variant="outline" asChild size="sm">
-                  <Link href={`/${lang}/generate/questions/new`}>
+                  <Link href={`/${lang}/exams/qbank/new`}>
                     {d?.blocks?.qbank?.add}
                   </Link>
                 </Button>
@@ -307,13 +307,13 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
               </p>
               <div className="flex flex-col gap-2">
                 <Button asChild variant="secondary">
-                  <Link href={`/${lang}/generate`}>
+                  <Link href={`/${lang}/exams/generate`}>
                     <Sparkles className="mr-2 h-4 w-4" />
                     {d?.blocks?.generate?.dashboard}
                   </Link>
                 </Button>
                 <Button variant="outline" asChild size="sm">
-                  <Link href={`/${lang}/generate/templates`}>
+                  <Link href={`/${lang}/exams/generate/templates`}>
                     {d?.blocks?.generate?.templates}
                   </Link>
                 </Button>
@@ -338,13 +338,13 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
               </p>
               <div className="flex flex-col gap-2">
                 <Button asChild variant="secondary">
-                  <Link href={`/${lang}/mark`}>
+                  <Link href={`/${lang}/exams/mark`}>
                     <ClipboardCheck className="mr-2 h-4 w-4" />
                     {d?.blocks?.mark?.dashboard}
                   </Link>
                 </Button>
                 <Button variant="outline" asChild size="sm">
-                  <Link href={`/${lang}/mark/pending`}>
+                  <Link href={`/${lang}/exams/mark/pending`}>
                     {d?.blocks?.mark?.pending} ({pendingMarkingCount})
                   </Link>
                 </Button>
@@ -369,13 +369,13 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
               </p>
               <div className="flex flex-col gap-2">
                 <Button asChild variant="secondary">
-                  <Link href={`/${lang}/results`}>
+                  <Link href={`/${lang}/exams/result`}>
                     <FileBarChart className="mr-2 h-4 w-4" />
                     {d?.blocks?.results?.view}
                   </Link>
                 </Button>
                 <Button variant="outline" asChild size="sm">
-                  <Link href={`/${lang}/results/analytics`}>
+                  <Link href={`/${lang}/exams/result/analytics`}>
                     {d?.blocks?.results?.analytics}
                   </Link>
                 </Button>
@@ -401,17 +401,17 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
                 </Link>
               </Button>
               <Button variant="ghost" className="w-full justify-start" asChild size="sm">
-                <Link href={`/${lang}/mark/pending`}>
+                <Link href={`/${lang}/exams/mark/pending`}>
                   {d?.quickActions?.gradePending}
                 </Link>
               </Button>
               <Button variant="ghost" className="w-full justify-start" asChild size="sm">
-                <Link href={`/${lang}/results/recent`}>
+                <Link href={`/${lang}/exams/result/recent`}>
                   {d?.quickActions?.recentResults}
                 </Link>
               </Button>
               <Button variant="ghost" className="w-full justify-start" asChild size="sm">
-                <Link href={`/${lang}/generate/questions/ai-generate`}>
+                <Link href={`/${lang}/exams/qbank/ai-generate`}>
                   {d?.quickActions?.generateAI}
                 </Link>
               </Button>
@@ -488,6 +488,6 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
           </CardContent>
         </Card>
       </div>
-    </PageContainer>
+    </div>
   );
 }
