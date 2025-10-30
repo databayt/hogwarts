@@ -59,9 +59,9 @@ export async function getSalaryStructures(
         teacher: {
           select: {
             id: true,
-            firstName: true,
-            lastName: true,
-            employeeNumber: true,
+            givenName: true,
+            surname: true,
+            employeeId: true,
           },
         },
         allowances: true,

@@ -90,9 +90,9 @@ export async function getPayrollRun(
             teacher: {
               select: {
                 id: true,
-                firstName: true,
-                lastName: true,
-                employeeNumber: true,
+                givenName: true,
+                surname: true,
+                employeeId: true,
               },
             },
           },
