@@ -104,11 +104,10 @@ export async function getSalaryStructure(
         teacher: {
           select: {
             id: true,
-            firstName: true,
-            lastName: true,
-            employeeNumber: true,
-            email: true,
-            phoneNumber: true,
+            givenName: true,
+            surname: true,
+            employeeId: true,
+            emailAddress: true,
           },
         },
         allowances: {
