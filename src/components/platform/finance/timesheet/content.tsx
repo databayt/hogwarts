@@ -6,6 +6,7 @@ import { Clock, Calendar, Users, CheckCircle, AlertCircle, FileText } from 'luci
 import { db } from '@/lib/db'
 import { getTenantContext } from '@/lib/tenant-context'
 import { StatsCard, FeatureCard, DashboardGrid } from '../lib/dashboard-components'
+import { checkCurrentUserPermission } from '../lib/permissions'
 
 interface Props {
   dictionary: Dictionary
@@ -14,6 +15,28 @@ interface Props {
 
 export default async function TimesheetContent({ dictionary, lang }: Props) {
   const { schoolId } = await getTenantContext()
+
+  // Check permissions for current user
+  const canView = await checkCurrentUserPermission(schoolId, 'timesheet', 'view')
+  const canCreate = await checkCurrentUserPermission(schoolId, 'timesheet', 'create')
+  const canEdit = await checkCurrentUserPermission(schoolId, 'timesheet', 'edit')
+  const canApprove = await checkCurrentUserPermission(schoolId, 'timesheet', 'approve')
+  const canExport = await checkCurrentUserPermission(schoolId, 'timesheet', 'export')
+
+  // If user can't view timesheet, show empty state
+  if (!canView) {
+    return (
+      <PageContainer>
+        <div className="flex flex-1 flex-col gap-6">
+          <PageHeader
+            title="Timesheet Management"
+            description="You don't have permission to view timesheets"
+            className="text-start max-w-none"
+          />
+        </div>
+      </PageContainer>
+    )
+  }
 
   let periodsCount = 0
   let entriesCount = 0
@@ -83,21 +106,23 @@ export default async function TimesheetContent({ dictionary, lang }: Props) {
 
         {/* Feature Cards Grid */}
         <DashboardGrid type="features">
-          <FeatureCard
-            title="Timesheet Periods"
-            description="Define and manage timesheet periods"
-            icon={Calendar}
-            isPrimary
-            primaryAction={{
-              label: 'View Periods',
-              href: `/${lang}/finance/timesheet/periods`,
-              count: periodsCount
-            }}
-            secondaryAction={{
-              label: 'Create Period',
-              href: `/${lang}/finance/timesheet/periods/new`
-            }}
-          />
+          {canEdit && (
+            <FeatureCard
+              title="Timesheet Periods"
+              description="Define and manage timesheet periods"
+              icon={Calendar}
+              isPrimary
+              primaryAction={{
+                label: 'View Periods',
+                href: `/${lang}/finance/timesheet/periods`,
+                count: periodsCount
+              }}
+              secondaryAction={canCreate ? {
+                label: 'Create Period',
+                href: `/${lang}/finance/timesheet/periods/new`
+              } : undefined}
+            />
+          )}
           <FeatureCard
             title="Time Entries"
             description="Record and track staff working hours"
@@ -107,25 +132,27 @@ export default async function TimesheetContent({ dictionary, lang }: Props) {
               href: `/${lang}/finance/timesheet/entries`,
               count: entriesCount
             }}
-            secondaryAction={{
+            secondaryAction={canCreate ? {
               label: 'Record Time',
               href: `/${lang}/finance/timesheet/entries/new`
-            }}
+            } : undefined}
           />
-          <FeatureCard
-            title="Approval Queue"
-            description="Review and approve timesheet entries"
-            icon={CheckCircle}
-            primaryAction={{
-              label: 'Approve Entries',
-              href: `/${lang}/finance/timesheet/approve`,
-              count: pendingEntriesCount
-            }}
-            secondaryAction={{
-              label: 'Bulk Approve',
-              href: `/${lang}/finance/timesheet/approve/bulk`
-            }}
-          />
+          {canApprove && (
+            <FeatureCard
+              title="Approval Queue"
+              description="Review and approve timesheet entries"
+              icon={CheckCircle}
+              primaryAction={{
+                label: 'Approve Entries',
+                href: `/${lang}/finance/timesheet/approve`,
+                count: pendingEntriesCount
+              }}
+              secondaryAction={{
+                label: 'Bulk Approve',
+                href: `/${lang}/finance/timesheet/approve/bulk`
+              }}
+            />
+          )}
           <FeatureCard
             title="Staff Timesheets"
             description="View timesheets by staff member"
@@ -139,19 +166,21 @@ export default async function TimesheetContent({ dictionary, lang }: Props) {
               href: `/${lang}/finance/timesheet/staff/summary`
             }}
           />
-          <FeatureCard
-            title="Timesheet Reports"
-            description="Generate timesheet reports and analytics"
-            icon={FileText}
-            primaryAction={{
-              label: 'View Reports',
-              href: `/${lang}/finance/timesheet/reports`
-            }}
-            secondaryAction={{
-              label: 'Hours Report',
-              href: `/${lang}/finance/timesheet/reports/hours`
-            }}
-          />
+          {canExport && (
+            <FeatureCard
+              title="Timesheet Reports"
+              description="Generate timesheet reports and analytics"
+              icon={FileText}
+              primaryAction={{
+                label: 'View Reports',
+                href: `/${lang}/finance/timesheet/reports`
+              }}
+              secondaryAction={{
+                label: 'Hours Report',
+                href: `/${lang}/finance/timesheet/reports/hours`
+              }}
+            />
+          )}
           <FeatureCard
             title="Calendar View"
             description="Visual calendar of timesheet entries"

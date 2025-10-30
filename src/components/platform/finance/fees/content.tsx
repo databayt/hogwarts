@@ -23,6 +23,7 @@ import {
 import Link from 'next/link'
 import { db } from '@/lib/db'
 import { getTenantContext } from '@/lib/tenant-context'
+import { checkCurrentUserPermission } from '../lib/permissions'
 
 interface Props {
   dictionary: Dictionary
@@ -31,6 +32,28 @@ interface Props {
 
 export default async function FeesContent({ dictionary, lang }: Props) {
   const { schoolId } = await getTenantContext()
+
+  // Check permissions for current user
+  const canView = await checkCurrentUserPermission(schoolId, 'fees', 'view')
+  const canCreate = await checkCurrentUserPermission(schoolId, 'fees', 'create')
+  const canEdit = await checkCurrentUserPermission(schoolId, 'fees', 'edit')
+  const canApprove = await checkCurrentUserPermission(schoolId, 'fees', 'approve')
+  const canExport = await checkCurrentUserPermission(schoolId, 'fees', 'export')
+
+  // If user can't view fees, show empty state
+  if (!canView) {
+    return (
+      <PageContainer>
+        <div className="flex flex-1 flex-col gap-6">
+          <PageHeader
+            title="Student Fees Management"
+            description="You don't have permission to view fees"
+            className="text-start max-w-none"
+          />
+        </div>
+      </PageContainer>
+    )
+  }
 
   // Get comprehensive fee stats
   let feeStructuresCount = 0
@@ -177,30 +200,34 @@ export default async function FeesContent({ dictionary, lang }: Props) {
         {/* Quick Actions */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {/* Fee Structures */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <CreditCard className="h-5 w-5" />
-                Fee Structures
-              </CardTitle>
-              <CardDescription>
-                Define and manage fee types and amounts
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Button asChild className="w-full">
-                <Link href={`/${lang}/finance/fees/structures`}>
-                  View Structures (
-                  {feeStructuresCount})
-                </Link>
-              </Button>
-              <Button variant="outline" asChild className="w-full" size="sm">
-                <Link href={`/${lang}/finance/fees/structures/new`}>
-                  Create New Structure
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
+          {canEdit && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CreditCard className="h-5 w-5" />
+                  Fee Structures
+                </CardTitle>
+                <CardDescription>
+                  Define and manage fee types and amounts
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <Button asChild className="w-full">
+                  <Link href={`/${lang}/finance/fees/structures`}>
+                    View Structures (
+                    {feeStructuresCount})
+                  </Link>
+                </Button>
+                {canCreate && (
+                  <Button variant="outline" asChild className="w-full" size="sm">
+                    <Link href={`/${lang}/finance/fees/structures/new`}>
+                      Create New Structure
+                    </Link>
+                  </Button>
+                )}
+              </CardContent>
+            </Card>
+          )}
 
           {/* Payment Tracking */}
           <Card>
@@ -219,114 +246,126 @@ export default async function FeesContent({ dictionary, lang }: Props) {
                   View Payments
                 </Link>
               </Button>
-              <Button variant="outline" asChild className="w-full" size="sm">
-                <Link href={`/${lang}/finance/fees/payments/record`}>
-                  Record Payment
-                </Link>
-              </Button>
+              {canCreate && (
+                <Button variant="outline" asChild className="w-full" size="sm">
+                  <Link href={`/${lang}/finance/fees/payments/record`}>
+                    Record Payment
+                  </Link>
+                </Button>
+              )}
             </CardContent>
           </Card>
 
           {/* Student Assignments */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5" />
-                Student Assignments
-              </CardTitle>
-              <CardDescription>
-                Assign fees to students and track status
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Button asChild className="w-full">
-                <Link href={`/${lang}/finance/fees/assignments`}>
-                  View Assignments
-                </Link>
-              </Button>
-              <Button variant="outline" asChild className="w-full" size="sm">
-                <Link href={`/${lang}/finance/fees/assignments/bulk`}>
-                  Bulk Assign Fees
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
+          {canEdit && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  Student Assignments
+                </CardTitle>
+                <CardDescription>
+                  Assign fees to students and track status
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <Button asChild className="w-full">
+                  <Link href={`/${lang}/finance/fees/assignments`}>
+                    View Assignments
+                  </Link>
+                </Button>
+                {canCreate && (
+                  <Button variant="outline" asChild className="w-full" size="sm">
+                    <Link href={`/${lang}/finance/fees/assignments/bulk`}>
+                      Bulk Assign Fees
+                    </Link>
+                  </Button>
+                )}
+              </CardContent>
+            </Card>
+          )}
 
           {/* Scholarships */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Award className="h-5 w-5" />
-                Scholarships
-              </CardTitle>
-              <CardDescription>
-                Manage scholarship programs and applications
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Button asChild className="w-full">
-                <Link href={`/${lang}/finance/fees/scholarships`}>
-                  View Scholarships (
-                  {scholarshipsCount})
-                </Link>
-              </Button>
-              <Button variant="outline" asChild className="w-full" size="sm">
-                <Link href={`/${lang}/finance/fees/scholarships/applications`}>
-                  Review Applications
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
+          {canApprove && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Award className="h-5 w-5" />
+                  Scholarships
+                </CardTitle>
+                <CardDescription>
+                  Manage scholarship programs and applications
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <Button asChild className="w-full">
+                  <Link href={`/${lang}/finance/fees/scholarships`}>
+                    View Scholarships (
+                    {scholarshipsCount})
+                  </Link>
+                </Button>
+                <Button variant="outline" asChild className="w-full" size="sm">
+                  <Link href={`/${lang}/finance/fees/scholarships/applications`}>
+                    Review Applications
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Fines */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <AlertTriangle className="h-5 w-5" />
-                Fines & Penalties
-              </CardTitle>
-              <CardDescription>
-                Track and manage student fines and penalties
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Button asChild className="w-full">
-                <Link href={`/${lang}/finance/fees/fines`}>
-                  View Fines ({finesCount})
-                </Link>
-              </Button>
-              <Button variant="outline" asChild className="w-full" size="sm">
-                <Link href={`/${lang}/finance/fees/fines/new`}>
-                  Issue Fine
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
+          {canCreate && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <AlertTriangle className="h-5 w-5" />
+                  Fines & Penalties
+                </CardTitle>
+                <CardDescription>
+                  Track and manage student fines and penalties
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <Button asChild className="w-full">
+                  <Link href={`/${lang}/finance/fees/fines`}>
+                    View Fines ({finesCount})
+                  </Link>
+                </Button>
+                <Button variant="outline" asChild className="w-full" size="sm">
+                  <Link href={`/${lang}/finance/fees/fines/new`}>
+                    Issue Fine
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Reports */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5" />
-                Fee Reports
-              </CardTitle>
-              <CardDescription>
-                Generate fee collection and analysis reports
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Button asChild className="w-full">
-                <Link href={`/${lang}/finance/fees/reports`}>
-                  View Reports
-                </Link>
-              </Button>
-              <Button variant="outline" asChild className="w-full" size="sm">
-                <Link href={`/${lang}/finance/fees/reports/collection`}>
-                  Collection Report
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
+          {canExport && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5" />
+                  Fee Reports
+                </CardTitle>
+                <CardDescription>
+                  Generate fee collection and analysis reports
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <Button asChild className="w-full">
+                  <Link href={`/${lang}/finance/fees/reports`}>
+                    View Reports
+                  </Link>
+                </Button>
+                <Button variant="outline" asChild className="w-full" size="sm">
+                  <Link href={`/${lang}/finance/fees/reports/collection`}>
+                    Collection Report
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
     </PageContainer>

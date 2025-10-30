@@ -6,6 +6,7 @@ import { Wallet, Users, DollarSign, TrendingUp, ArrowUpCircle, ArrowDownCircle }
 import { db } from '@/lib/db'
 import { getTenantContext } from '@/lib/tenant-context'
 import { StatsCard, FeatureCard, DashboardGrid, formatCurrency } from '../lib/dashboard-components'
+import { checkCurrentUserPermission } from '../lib/permissions'
 
 interface Props {
   dictionary: Dictionary
@@ -14,6 +15,28 @@ interface Props {
 
 export default async function WalletContent({ dictionary, lang }: Props) {
   const { schoolId } = await getTenantContext()
+
+  // Check permissions for current user
+  const canView = await checkCurrentUserPermission(schoolId, 'wallet', 'view')
+  const canCreate = await checkCurrentUserPermission(schoolId, 'wallet', 'create')
+  const canEdit = await checkCurrentUserPermission(schoolId, 'wallet', 'edit')
+  const canProcess = await checkCurrentUserPermission(schoolId, 'wallet', 'process')
+  const canExport = await checkCurrentUserPermission(schoolId, 'wallet', 'export')
+
+  // If user can't view wallet, show empty state
+  if (!canView) {
+    return (
+      <PageContainer>
+        <div className="flex flex-1 flex-col gap-6">
+          <PageHeader
+            title="Wallet Management"
+            description="You don't have permission to view wallet"
+            className="text-start max-w-none"
+          />
+        </div>
+      </PageContainer>
+    )
+  }
 
   let walletsCount = 0
   let transactionsCount = 0
@@ -94,24 +117,26 @@ export default async function WalletContent({ dictionary, lang }: Props) {
               href: `/${lang}/finance/wallet/all`,
               count: walletsCount
             }}
-            secondaryAction={{
+            secondaryAction={canCreate ? {
               label: d?.actions?.createWallet || 'Create Wallet',
               href: `/${lang}/finance/wallet/new`
-            }}
+            } : undefined}
           />
-          <FeatureCard
-            title={d?.sections?.topup || 'Top-up Wallet'}
-            description={d?.sections?.topupDesc || 'Add funds to parent or school wallets'}
-            icon={ArrowUpCircle}
-            primaryAction={{
-              label: d?.actions?.topup || 'Top-up',
-              href: `/${lang}/finance/wallet/topup`
-            }}
-            secondaryAction={{
-              label: d?.actions?.bulkTopup || 'Bulk Top-up',
-              href: `/${lang}/finance/wallet/topup/bulk`
-            }}
-          />
+          {canProcess && (
+            <FeatureCard
+              title={d?.sections?.topup || 'Top-up Wallet'}
+              description={d?.sections?.topupDesc || 'Add funds to parent or school wallets'}
+              icon={ArrowUpCircle}
+              primaryAction={{
+                label: d?.actions?.topup || 'Top-up',
+                href: `/${lang}/finance/wallet/topup`
+              }}
+              secondaryAction={{
+                label: d?.actions?.bulkTopup || 'Bulk Top-up',
+                href: `/${lang}/finance/wallet/topup/bulk`
+              }}
+            />
+          )}
           <FeatureCard
             title={d?.sections?.transactions || 'Transactions'}
             description={d?.sections?.transactionsDesc || 'View wallet transaction history'}
@@ -120,24 +145,26 @@ export default async function WalletContent({ dictionary, lang }: Props) {
               label: d?.actions?.viewTransactions || 'View Transactions',
               href: `/${lang}/finance/wallet/transactions`
             }}
-            secondaryAction={{
+            secondaryAction={canExport ? {
               label: d?.actions?.export || 'Export',
               href: `/${lang}/finance/wallet/transactions/export`
-            }}
+            } : undefined}
           />
-          <FeatureCard
-            title={d?.sections?.refunds || 'Refunds'}
-            description={d?.sections?.refundsDesc || 'Process wallet refunds and adjustments'}
-            icon={ArrowDownCircle}
-            primaryAction={{
-              label: d?.actions?.processRefund || 'Process Refund',
-              href: `/${lang}/finance/wallet/refund`
-            }}
-            secondaryAction={{
-              label: d?.actions?.refundHistory || 'Refund History',
-              href: `/${lang}/finance/wallet/refund/history`
-            }}
-          />
+          {canProcess && (
+            <FeatureCard
+              title={d?.sections?.refunds || 'Refunds'}
+              description={d?.sections?.refundsDesc || 'Process wallet refunds and adjustments'}
+              icon={ArrowDownCircle}
+              primaryAction={{
+                label: d?.actions?.processRefund || 'Process Refund',
+                href: `/${lang}/finance/wallet/refund`
+              }}
+              secondaryAction={{
+                label: d?.actions?.refundHistory || 'Refund History',
+                href: `/${lang}/finance/wallet/refund/history`
+              }}
+            />
+          )}
           <FeatureCard
             title={d?.sections?.parentWallets || 'Parent Wallets'}
             description={d?.sections?.parentWalletsDesc || 'Manage parent wallet accounts'}
@@ -151,19 +178,21 @@ export default async function WalletContent({ dictionary, lang }: Props) {
               href: `/${lang}/finance/wallet/parents/statements`
             }}
           />
-          <FeatureCard
-            title={d?.sections?.reports || 'Wallet Reports'}
-            description={d?.sections?.reportsDesc || 'Generate wallet balance and transaction reports'}
-            icon={DollarSign}
-            primaryAction={{
-              label: d?.actions?.reports || 'View Reports',
-              href: `/${lang}/finance/wallet/reports`
-            }}
-            secondaryAction={{
-              label: d?.actions?.balanceSheet || 'Balance Sheet',
-              href: `/${lang}/finance/wallet/reports/balance`
-            }}
-          />
+          {canExport && (
+            <FeatureCard
+              title={d?.sections?.reports || 'Wallet Reports'}
+              description={d?.sections?.reportsDesc || 'Generate wallet balance and transaction reports'}
+              icon={DollarSign}
+              primaryAction={{
+                label: d?.actions?.reports || 'View Reports',
+                href: `/${lang}/finance/wallet/reports`
+              }}
+              secondaryAction={{
+                label: d?.actions?.balanceSheet || 'Balance Sheet',
+                href: `/${lang}/finance/wallet/reports/balance`
+              }}
+            />
+          )}
         </DashboardGrid>
       </div>
     </PageContainer>

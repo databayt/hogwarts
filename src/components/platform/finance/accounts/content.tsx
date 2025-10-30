@@ -6,6 +6,7 @@ import { BookOpen, FileText, BarChart, Lock, Calendar, Settings } from 'lucide-r
 import { db } from '@/lib/db'
 import { getTenantContext } from '@/lib/tenant-context'
 import { StatsCard, FeatureCard, DashboardGrid } from '../lib/dashboard-components'
+import { checkCurrentUserPermission } from '../lib/permissions'
 
 interface Props {
   dictionary: Dictionary
@@ -14,6 +15,27 @@ interface Props {
 
 export default async function AccountsContent({ dictionary, lang }: Props) {
   const { schoolId } = await getTenantContext()
+
+  // Check permissions for current user
+  const canView = await checkCurrentUserPermission(schoolId, 'accounts', 'view')
+  const canCreate = await checkCurrentUserPermission(schoolId, 'accounts', 'create')
+  const canEdit = await checkCurrentUserPermission(schoolId, 'accounts', 'edit')
+  const canApprove = await checkCurrentUserPermission(schoolId, 'accounts', 'approve')
+
+  // If user can't view accounts, show empty state
+  if (!canView) {
+    return (
+      <PageContainer>
+        <div className="flex flex-1 flex-col gap-6">
+          <PageHeader
+            title="Accounting System"
+            description="You don't have permission to view accounting"
+            className="text-start max-w-none"
+          />
+        </div>
+      </PageContainer>
+    )
+  }
 
   let accountsCount = 0
   let journalEntriesCount = 0
@@ -88,10 +110,10 @@ export default async function AccountsContent({ dictionary, lang }: Props) {
               href: `/${lang}/finance/accounts/chart`,
               count: accountsCount
             }}
-            secondaryAction={{
+            secondaryAction={canCreate ? {
               label: d?.addAccount || 'Add Account',
               href: `/${lang}/finance/accounts/chart/new`
-            }}
+            } : undefined}
           />
           <FeatureCard
             title={d?.journalEntry || 'Journal Entries'}
@@ -102,10 +124,10 @@ export default async function AccountsContent({ dictionary, lang }: Props) {
               href: `/${lang}/finance/accounts/journal`,
               count: journalEntriesCount
             }}
-            secondaryAction={{
+            secondaryAction={canCreate ? {
               label: 'New Entry',
               href: `/${lang}/finance/accounts/journal/new`
-            }}
+            } : undefined}
           />
           <FeatureCard
             title="General Ledger"
@@ -120,46 +142,52 @@ export default async function AccountsContent({ dictionary, lang }: Props) {
               href: `/${lang}/finance/accounts/ledger/balances`
             }}
           />
-          <FeatureCard
-            title={d?.fiscalYear || 'Fiscal Years'}
-            description="Manage accounting periods"
-            icon={Calendar}
-            primaryAction={{
-              label: 'Fiscal Years',
-              href: `/${lang}/finance/accounts/fiscal`,
-              count: fiscalYearsCount
-            }}
-            secondaryAction={{
-              label: 'New Year',
-              href: `/${lang}/finance/accounts/fiscal/new`
-            }}
-          />
-          <FeatureCard
-            title="Period Closing"
-            description="Close accounting periods"
-            icon={Lock}
-            primaryAction={{
-              label: 'Close Period',
-              href: `/${lang}/finance/accounts/closing`
-            }}
-            secondaryAction={{
-              label: 'History',
-              href: `/${lang}/finance/accounts/closing/history`
-            }}
-          />
-          <FeatureCard
-            title="Accounting Settings"
-            description="Configure accounting rules"
-            icon={Settings}
-            primaryAction={{
-              label: 'Settings',
-              href: `/${lang}/finance/accounts/settings`
-            }}
-            secondaryAction={{
-              label: 'Posting Rules',
-              href: `/${lang}/finance/accounts/settings/rules`
-            }}
-          />
+          {canEdit && (
+            <FeatureCard
+              title={d?.fiscalYear || 'Fiscal Years'}
+              description="Manage accounting periods"
+              icon={Calendar}
+              primaryAction={{
+                label: 'Fiscal Years',
+                href: `/${lang}/finance/accounts/fiscal`,
+                count: fiscalYearsCount
+              }}
+              secondaryAction={canCreate ? {
+                label: 'New Year',
+                href: `/${lang}/finance/accounts/fiscal/new`
+              } : undefined}
+            />
+          )}
+          {canApprove && (
+            <FeatureCard
+              title="Period Closing"
+              description="Close accounting periods"
+              icon={Lock}
+              primaryAction={{
+                label: 'Close Period',
+                href: `/${lang}/finance/accounts/closing`
+              }}
+              secondaryAction={{
+                label: 'History',
+                href: `/${lang}/finance/accounts/closing/history`
+              }}
+            />
+          )}
+          {canEdit && (
+            <FeatureCard
+              title="Accounting Settings"
+              description="Configure accounting rules"
+              icon={Settings}
+              primaryAction={{
+                label: 'Settings',
+                href: `/${lang}/finance/accounts/settings`
+              }}
+              secondaryAction={{
+                label: 'Posting Rules',
+                href: `/${lang}/finance/accounts/settings/rules`
+              }}
+            />
+          )}
         </DashboardGrid>
       </div>
     </PageContainer>

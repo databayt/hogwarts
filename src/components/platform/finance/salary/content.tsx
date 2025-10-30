@@ -23,6 +23,7 @@ import {
 import Link from 'next/link'
 import { db } from '@/lib/db'
 import { getTenantContext } from '@/lib/tenant-context'
+import { checkCurrentUserPermission } from '../lib/permissions'
 
 interface Props {
   dictionary: Dictionary
@@ -31,6 +32,27 @@ interface Props {
 
 export default async function SalaryContent({ dictionary, lang }: Props) {
   const { schoolId } = await getTenantContext()
+
+  // Check permissions for current user
+  const canView = await checkCurrentUserPermission(schoolId, 'salary', 'view')
+  const canCreate = await checkCurrentUserPermission(schoolId, 'salary', 'create')
+  const canEdit = await checkCurrentUserPermission(schoolId, 'salary', 'edit')
+  const canExport = await checkCurrentUserPermission(schoolId, 'salary', 'export')
+
+  // If user can't view salary, show empty state
+  if (!canView) {
+    return (
+      <PageContainer>
+        <div className="flex flex-1 flex-col gap-6">
+          <PageHeader
+            title="Salary Management"
+            description="You don't have permission to view salary"
+            className="text-start max-w-none"
+          />
+        </div>
+      </PageContainer>
+    )
+  }
 
   // Get comprehensive salary stats
   let activeStructuresCount = 0
@@ -158,79 +180,91 @@ export default async function SalaryContent({ dictionary, lang }: Props) {
         {/* Feature Sections */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {/* Salary Structures */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="h-5 w-5" />
-                Salary Structures
-              </CardTitle>
-              <CardDescription>
-                Define and manage staff salary structures
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Button asChild className="w-full">
-                <Link href={`/${lang}/finance/salary/structures`}>
-                  View Structures ({activeStructuresCount})
-                </Link>
-              </Button>
-              <Button variant="outline" asChild className="w-full" size="sm">
-                <Link href={`/${lang}/finance/salary/structures/new`}>
-                  Create Structure
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
+          {canEdit && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5" />
+                  Salary Structures
+                </CardTitle>
+                <CardDescription>
+                  Define and manage staff salary structures
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <Button asChild className="w-full">
+                  <Link href={`/${lang}/finance/salary/structures`}>
+                    View Structures ({activeStructuresCount})
+                  </Link>
+                </Button>
+                {canCreate && (
+                  <Button variant="outline" asChild className="w-full" size="sm">
+                    <Link href={`/${lang}/finance/salary/structures/new`}>
+                      Create Structure
+                    </Link>
+                  </Button>
+                )}
+              </CardContent>
+            </Card>
+          )}
 
           {/* Allowances */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Award className="h-5 w-5" />
-                Allowances
-              </CardTitle>
-              <CardDescription>
-                Manage salary allowances and bonuses
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Button asChild className="w-full">
-                <Link href={`/${lang}/finance/salary/allowances`}>
-                  View Allowances ({allowancesCount})
-                </Link>
-              </Button>
-              <Button variant="outline" asChild className="w-full" size="sm">
-                <Link href={`/${lang}/finance/salary/allowances/new`}>
-                  Add Allowance
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
+          {canEdit && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Award className="h-5 w-5" />
+                  Allowances
+                </CardTitle>
+                <CardDescription>
+                  Manage salary allowances and bonuses
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <Button asChild className="w-full">
+                  <Link href={`/${lang}/finance/salary/allowances`}>
+                    View Allowances ({allowancesCount})
+                  </Link>
+                </Button>
+                {canCreate && (
+                  <Button variant="outline" asChild className="w-full" size="sm">
+                    <Link href={`/${lang}/finance/salary/allowances/new`}>
+                      Add Allowance
+                    </Link>
+                  </Button>
+                )}
+              </CardContent>
+            </Card>
+          )}
 
           {/* Deductions */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5" />
-                Deductions
-              </CardTitle>
-              <CardDescription>
-                Manage salary deductions and contributions
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Button asChild className="w-full">
-                <Link href={`/${lang}/finance/salary/deductions`}>
-                  View Deductions ({deductionsCount})
-                </Link>
-              </Button>
-              <Button variant="outline" asChild className="w-full" size="sm">
-                <Link href={`/${lang}/finance/salary/deductions/new`}>
-                  Add Deduction
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
+          {canEdit && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5" />
+                  Deductions
+                </CardTitle>
+                <CardDescription>
+                  Manage salary deductions and contributions
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <Button asChild className="w-full">
+                  <Link href={`/${lang}/finance/salary/deductions`}>
+                    View Deductions ({deductionsCount})
+                  </Link>
+                </Button>
+                {canCreate && (
+                  <Button variant="outline" asChild className="w-full" size="sm">
+                    <Link href={`/${lang}/finance/salary/deductions/new`}>
+                      Add Deduction
+                    </Link>
+                  </Button>
+                )}
+              </CardContent>
+            </Card>
+          )}
 
           {/* Salary Calculator */}
           <Card>
@@ -259,54 +293,58 @@ export default async function SalaryContent({ dictionary, lang }: Props) {
           </Card>
 
           {/* Salary Reports */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BarChart className="h-5 w-5" />
-                Salary Reports
-              </CardTitle>
-              <CardDescription>
-                Generate salary analysis and reports
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Button asChild className="w-full">
-                <Link href={`/${lang}/finance/salary/reports`}>
-                  View Reports
-                </Link>
-              </Button>
-              <Button variant="outline" asChild className="w-full" size="sm">
-                <Link href={`/${lang}/finance/salary/reports/analysis`}>
-                  Salary Analysis
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
+          {canExport && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BarChart className="h-5 w-5" />
+                  Salary Reports
+                </CardTitle>
+                <CardDescription>
+                  Generate salary analysis and reports
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <Button asChild className="w-full">
+                  <Link href={`/${lang}/finance/salary/reports`}>
+                    View Reports
+                  </Link>
+                </Button>
+                <Button variant="outline" asChild className="w-full" size="sm">
+                  <Link href={`/${lang}/finance/salary/reports/analysis`}>
+                    Salary Analysis
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Bulk Operations */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5" />
-                Bulk Operations
-              </CardTitle>
-              <CardDescription>
-                Apply salary changes to multiple staff
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Button asChild className="w-full">
-                <Link href={`/${lang}/finance/salary/bulk/increment`}>
-                  Bulk Increment
-                </Link>
-              </Button>
-              <Button variant="outline" asChild className="w-full" size="sm">
-                <Link href={`/${lang}/finance/salary/bulk/update`}>
-                  Bulk Update
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
+          {canEdit && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  Bulk Operations
+                </CardTitle>
+                <CardDescription>
+                  Apply salary changes to multiple staff
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <Button asChild className="w-full">
+                  <Link href={`/${lang}/finance/salary/bulk/increment`}>
+                    Bulk Increment
+                  </Link>
+                </Button>
+                <Button variant="outline" asChild className="w-full" size="sm">
+                  <Link href={`/${lang}/finance/salary/bulk/update`}>
+                    Bulk Update
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
     </PageContainer>

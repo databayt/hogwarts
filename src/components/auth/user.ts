@@ -1,5 +1,7 @@
 import { db } from "@/lib/db";
-import type { User as PrismaUser } from "@prisma/client";
+import type { User as PrismaUser} from "@prisma/client";
+import { auth } from "@/auth";
+import { revalidatePath } from "next/cache";
 
 export const getUserByEmail = async (email: string) => {
   try {
@@ -61,3 +63,39 @@ export const getOrCreateOAuthUser = async (email: string, provider: string, prof
     return null;
   }
 };
+
+/**
+ * Delete the currently authenticated user account
+ * NOTE: This is a destructive operation. Use with caution.
+ * Recommended: Implement soft delete or archive instead of hard delete
+ */
+export async function deleteCurrentUser() {
+  try {
+    const session = await auth();
+
+    if (!session?.user?.id) {
+      return { success: false, error: "Not authenticated" };
+    }
+
+    const userId = session.user.id;
+
+    // CRITICAL: Multi-tenant safety - only delete if user has proper context
+    // For production, consider:
+    // 1. Soft delete (isActive: false) instead of hard delete
+    // 2. Archive user data before deletion
+    // 3. Cancel subscriptions via Stripe API
+    // 4. Remove from external services (Plaid, Dwolla, etc.)
+    // 5. Cascade delete or nullify related records
+
+    await db.user.delete({
+      where: { id: userId },
+    });
+
+    revalidatePath("/");
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error deleting user:", error);
+    return { success: false, error: "Failed to delete user account" };
+  }
+}

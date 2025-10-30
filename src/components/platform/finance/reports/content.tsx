@@ -8,6 +8,7 @@ import { FileBarChart, TrendingUp, BarChart, PieChart, Calendar, Download } from
 import Link from 'next/link'
 import { db } from '@/lib/db'
 import { getTenantContext } from '@/lib/tenant-context'
+import { checkCurrentUserPermission } from '../lib/permissions'
 
 interface Props {
   dictionary: Dictionary
@@ -16,6 +17,25 @@ interface Props {
 
 export default async function ReportsContent({ dictionary, lang }: Props) {
   const { schoolId } = await getTenantContext()
+
+  // Check permissions for current user
+  const canView = await checkCurrentUserPermission(schoolId, 'reports', 'view')
+  const canExport = await checkCurrentUserPermission(schoolId, 'reports', 'export')
+
+  // If user can't view reports, show empty state
+  if (!canView) {
+    return (
+      <PageContainer>
+        <div className="flex flex-1 flex-col gap-6">
+          <PageHeader
+            title="Financial Reports"
+            description="You don't have permission to view reports"
+            className="text-start max-w-none"
+          />
+        </div>
+      </PageContainer>
+    )
+  }
 
   let reportsCount = 0
   let generatedReportsCount = 0

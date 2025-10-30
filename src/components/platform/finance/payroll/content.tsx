@@ -9,6 +9,7 @@ import Link from 'next/link'
 import { db } from '@/lib/db'
 import { getTenantContext } from '@/lib/tenant-context'
 import { StatsCard, FeatureCard, DashboardGrid, formatCurrency } from '../lib/dashboard-components'
+import { checkCurrentUserPermission } from '../lib/permissions'
 
 interface Props {
   dictionary: Dictionary
@@ -17,6 +18,27 @@ interface Props {
 
 export default async function PayrollContent({ dictionary, lang }: Props) {
   const { schoolId } = await getTenantContext()
+
+  // Check permissions for current user
+  const canView = await checkCurrentUserPermission(schoolId, 'payroll', 'view')
+  const canCreate = await checkCurrentUserPermission(schoolId, 'payroll', 'create')
+  const canProcess = await checkCurrentUserPermission(schoolId, 'payroll', 'process')
+  const canApprove = await checkCurrentUserPermission(schoolId, 'payroll', 'approve')
+
+  // If user can't view payroll, show empty state
+  if (!canView) {
+    return (
+      <PageContainer>
+        <div className="flex flex-1 flex-col gap-6">
+          <PageHeader
+            title="Payroll Processing"
+            description="You don't have permission to view payroll"
+            className="text-start max-w-none"
+          />
+        </div>
+      </PageContainer>
+    )
+  }
 
   // Get comprehensive payroll stats
   let totalRunsCount = 0
@@ -125,10 +147,10 @@ export default async function PayrollContent({ dictionary, lang }: Props) {
               href: `/${lang}/finance/payroll/runs`,
               count: totalRunsCount
             }}
-            secondaryAction={{
+            secondaryAction={canCreate ? {
               label: 'Create New Run',
               href: `/${lang}/finance/payroll/runs/new`
-            }}
+            } : undefined}
           />
           <FeatureCard
             title="Salary Slips"
@@ -144,45 +166,51 @@ export default async function PayrollContent({ dictionary, lang }: Props) {
               href: `/${lang}/finance/payroll/slips/pending`
             }}
           />
-          <FeatureCard
-            title="Process Payroll"
-            description="Start new payroll processing for current period"
-            icon={Users}
-            primaryAction={{
-              label: 'Process Payroll',
-              href: `/${lang}/finance/payroll/process`
-            }}
-            secondaryAction={{
-              label: 'Batch Process',
-              href: `/${lang}/finance/payroll/process/batch`
-            }}
-          />
-          <FeatureCard
-            title="Approval Queue"
-            description="Review and approve pending payroll runs"
-            icon={CheckCircle}
-            primaryAction={{
-              label: `Approval Queue (${pendingRunsCount})`,
-              href: `/${lang}/finance/payroll/approval`
-            }}
-            secondaryAction={{
-              label: 'Approval History',
-              href: `/${lang}/finance/payroll/approval/history`
-            }}
-          />
-          <FeatureCard
-            title="Disbursement"
-            description="Process salary payments and disbursements"
-            icon={DollarSign}
-            primaryAction={{
-              label: 'Disburse Salaries',
-              href: `/${lang}/finance/payroll/disbursement`
-            }}
-            secondaryAction={{
-              label: 'Payment History',
-              href: `/${lang}/finance/payroll/disbursement/history`
-            }}
-          />
+          {canProcess && (
+            <FeatureCard
+              title="Process Payroll"
+              description="Start new payroll processing for current period"
+              icon={Users}
+              primaryAction={{
+                label: 'Process Payroll',
+                href: `/${lang}/finance/payroll/process`
+              }}
+              secondaryAction={{
+                label: 'Batch Process',
+                href: `/${lang}/finance/payroll/process/batch`
+              }}
+            />
+          )}
+          {canApprove && (
+            <FeatureCard
+              title="Approval Queue"
+              description="Review and approve pending payroll runs"
+              icon={CheckCircle}
+              primaryAction={{
+                label: `Approval Queue (${pendingRunsCount})`,
+                href: `/${lang}/finance/payroll/approval`
+              }}
+              secondaryAction={{
+                label: 'Approval History',
+                href: `/${lang}/finance/payroll/approval/history`
+              }}
+            />
+          )}
+          {canProcess && (
+            <FeatureCard
+              title="Disbursement"
+              description="Process salary payments and disbursements"
+              icon={DollarSign}
+              primaryAction={{
+                label: 'Disburse Salaries',
+                href: `/${lang}/finance/payroll/disbursement`
+              }}
+              secondaryAction={{
+                label: 'Payment History',
+                href: `/${lang}/finance/payroll/disbursement/history`
+              }}
+            />
+          )}
           <FeatureCard
             title="Payroll Settings"
             description="Configure tax rates, deductions, and rules"
@@ -199,38 +227,40 @@ export default async function PayrollContent({ dictionary, lang }: Props) {
         </DashboardGrid>
 
         {/* Quick Actions */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-            <CardDescription>
-              Common payroll operations
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-wrap gap-2">
-            <Button variant="outline" size="sm" asChild>
-              <Link href={`/${lang}/finance/payroll/process/current-month`}>
-                <Clock className="mr-2 h-4 w-4" />
-                Process Current Month
-              </Link>
-            </Button>
-            <Button variant="outline" size="sm" asChild>
-              <Link href={`/${lang}/finance/payroll/slips/generate`}>
-                <FileText className="mr-2 h-4 w-4" />
-                Generate Slips
-              </Link>
-            </Button>
-            <Button variant="outline" size="sm" asChild>
-              <Link href={`/${lang}/finance/payroll/reports/summary`}>
-                Payroll Summary
-              </Link>
-            </Button>
-            <Button variant="outline" size="sm" asChild>
-              <Link href={`/${lang}/finance/payroll/reports/tax`}>
-                Tax Report
-              </Link>
-            </Button>
-          </CardContent>
-        </Card>
+        {canProcess && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Quick Actions</CardTitle>
+              <CardDescription>
+                Common payroll operations
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-wrap gap-2">
+              <Button variant="outline" size="sm" asChild>
+                <Link href={`/${lang}/finance/payroll/process/current-month`}>
+                  <Clock className="mr-2 h-4 w-4" />
+                  Process Current Month
+                </Link>
+              </Button>
+              <Button variant="outline" size="sm" asChild>
+                <Link href={`/${lang}/finance/payroll/slips/generate`}>
+                  <FileText className="mr-2 h-4 w-4" />
+                  Generate Slips
+                </Link>
+              </Button>
+              <Button variant="outline" size="sm" asChild>
+                <Link href={`/${lang}/finance/payroll/reports/summary`}>
+                  Payroll Summary
+                </Link>
+              </Button>
+              <Button variant="outline" size="sm" asChild>
+                <Link href={`/${lang}/finance/payroll/reports/tax`}>
+                  Tax Report
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </PageContainer>
   )

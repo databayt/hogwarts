@@ -6,6 +6,7 @@ import { PieChart, TrendingUp, AlertTriangle, CheckCircle, DollarSign, BarChart 
 import { db } from '@/lib/db'
 import { getTenantContext } from '@/lib/tenant-context'
 import { StatsCard, FeatureCard, DashboardGrid, formatCurrency, formatPercentage } from '../lib/dashboard-components'
+import { checkCurrentUserPermission } from '../lib/permissions'
 
 interface Props {
   dictionary: Dictionary
@@ -14,6 +15,28 @@ interface Props {
 
 export default async function BudgetContent({ dictionary, lang }: Props) {
   const { schoolId } = await getTenantContext()
+
+  // Check permissions for current user
+  const canView = await checkCurrentUserPermission(schoolId, 'budget', 'view')
+  const canCreate = await checkCurrentUserPermission(schoolId, 'budget', 'create')
+  const canEdit = await checkCurrentUserPermission(schoolId, 'budget', 'edit')
+  const canApprove = await checkCurrentUserPermission(schoolId, 'budget', 'approve')
+  const canExport = await checkCurrentUserPermission(schoolId, 'budget', 'export')
+
+  // If user can't view budget, show empty state
+  if (!canView) {
+    return (
+      <PageContainer>
+        <div className="flex flex-1 flex-col gap-6">
+          <PageHeader
+            title="Budget Planning"
+            description="You don't have permission to view budget"
+            className="text-start max-w-none"
+          />
+        </div>
+      </PageContainer>
+    )
+  }
 
   let budgetsCount = 0
   let allocationsCount = 0
@@ -101,24 +124,26 @@ export default async function BudgetContent({ dictionary, lang }: Props) {
               href: `/${lang}/finance/budget/all`,
               count: budgetsCount
             }}
-            secondaryAction={{
+            secondaryAction={canCreate ? {
               label: 'Create Budget',
               href: `/${lang}/finance/budget/new`
-            }}
+            } : undefined}
           />
-          <FeatureCard
-            title="Budget Allocations"
-            description="Allocate budget by department or category"
-            icon={DollarSign}
-            primaryAction={{
-              label: 'View Allocations',
-              href: `/${lang}/finance/budget/allocations`
-            }}
-            secondaryAction={{
-              label: 'Allocate Funds',
-              href: `/${lang}/finance/budget/allocations/new`
-            }}
-          />
+          {canEdit && (
+            <FeatureCard
+              title="Budget Allocations"
+              description="Allocate budget by department or category"
+              icon={DollarSign}
+              primaryAction={{
+                label: 'View Allocations',
+                href: `/${lang}/finance/budget/allocations`
+              }}
+              secondaryAction={canCreate ? {
+                label: 'Allocate Funds',
+                href: `/${lang}/finance/budget/allocations/new`
+              } : undefined}
+            />
+          )}
           <FeatureCard
             title="Spending Tracking"
             description="Monitor budget utilization and spending"
@@ -132,45 +157,51 @@ export default async function BudgetContent({ dictionary, lang }: Props) {
               href: `/${lang}/finance/budget/tracking/realtime`
             }}
           />
-          <FeatureCard
-            title="Variance Analysis"
-            description="Analyze budget vs actual spending"
-            icon={AlertTriangle}
-            primaryAction={{
-              label: 'Variance Report',
-              href: `/${lang}/finance/budget/variance`
-            }}
-            secondaryAction={{
-              label: 'Budget Alerts',
-              href: `/${lang}/finance/budget/variance/alerts`
-            }}
-          />
-          <FeatureCard
-            title="Budget Reports"
-            description="Generate budget analysis reports"
-            icon={BarChart}
-            primaryAction={{
-              label: 'View Reports',
-              href: `/${lang}/finance/budget/reports`
-            }}
-            secondaryAction={{
-              label: 'Budget Summary',
-              href: `/${lang}/finance/budget/reports/summary`
-            }}
-          />
-          <FeatureCard
-            title="Budget Approval"
-            description="Review and approve budget requests"
-            icon={CheckCircle}
-            primaryAction={{
-              label: 'Pending Approval',
-              href: `/${lang}/finance/budget/approval`
-            }}
-            secondaryAction={{
-              label: 'Approval History',
-              href: `/${lang}/finance/budget/approval/history`
-            }}
-          />
+          {canExport && (
+            <FeatureCard
+              title="Variance Analysis"
+              description="Analyze budget vs actual spending"
+              icon={AlertTriangle}
+              primaryAction={{
+                label: 'Variance Report',
+                href: `/${lang}/finance/budget/variance`
+              }}
+              secondaryAction={{
+                label: 'Budget Alerts',
+                href: `/${lang}/finance/budget/variance/alerts`
+              }}
+            />
+          )}
+          {canExport && (
+            <FeatureCard
+              title="Budget Reports"
+              description="Generate budget analysis reports"
+              icon={BarChart}
+              primaryAction={{
+                label: 'View Reports',
+                href: `/${lang}/finance/budget/reports`
+              }}
+              secondaryAction={{
+                label: 'Budget Summary',
+                href: `/${lang}/finance/budget/reports/summary`
+              }}
+            />
+          )}
+          {canApprove && (
+            <FeatureCard
+              title="Budget Approval"
+              description="Review and approve budget requests"
+              icon={CheckCircle}
+              primaryAction={{
+                label: 'Pending Approval',
+                href: `/${lang}/finance/budget/approval`
+              }}
+              secondaryAction={{
+                label: 'Approval History',
+                href: `/${lang}/finance/budget/approval/history`
+              }}
+            />
+          )}
         </DashboardGrid>
       </div>
     </PageContainer>
