@@ -16,7 +16,7 @@ export default async function Page({ params }: Props) {
 
   return (
     <PageContainer>
-      <div className="flex flex-1 flex-col gap-4">
+      <div className="flex flex-1 flex-col gap-6">
         <PageHeader
           title={dictionary?.school?.exams?.createExam || "Create New Exam"}
           description={dictionary?.school?.exams?.createDescription || "Schedule a new examination"}

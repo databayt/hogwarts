@@ -76,7 +76,7 @@ export default async function ExamsContent({ searchParams, dictionary, lang }: P
   
   return (
     <PageContainer>
-      <div className="flex flex-1 flex-col gap-4">
+      <div className="flex flex-1 flex-col gap-6">
         <PageHeader
           title={dictionary?.school?.exams?.title || 'Exams'}
           description={dictionary?.school?.exams?.description || 'Schedule and manage your exams'}

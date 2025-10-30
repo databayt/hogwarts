@@ -93,7 +93,7 @@ export default async function QuestionBankContent({
 
   return (
     <PageContainer>
-      <div className="flex flex-1 flex-col gap-4">
+      <div className="flex flex-1 flex-col gap-6">
         <PageHeader
           title={dictionary.generate.questionBank.title}
           description={dictionary.generate.cards.questionBank.description}
