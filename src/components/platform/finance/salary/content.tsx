@@ -1,5 +1,3 @@
-import { Shell as PageContainer } from '@/components/table/shell'
-import PageHeader from '@/components/atom/page-header'
 import type { Locale } from '@/components/internationalization/config'
 import type { Dictionary } from '@/components/internationalization/dictionaries'
 import { Button } from '@/components/ui/button'
@@ -35,15 +33,9 @@ export default async function SalaryContent({ dictionary, lang }: Props) {
 
   if (!schoolId) {
     return (
-      <PageContainer>
-        <div className="flex flex-1 flex-col gap-6">
-          <PageHeader
-            title="Salary Management"
-            description="School context not found"
-            className="text-start max-w-none"
-          />
-        </div>
-      </PageContainer>
+      <div>
+        <p className="text-muted-foreground">School context not found</p>
+      </div>
     )
   }
 
@@ -56,15 +48,9 @@ export default async function SalaryContent({ dictionary, lang }: Props) {
   // If user can't view salary, show empty state
   if (!canView) {
     return (
-      <PageContainer>
-        <div className="flex flex-1 flex-col gap-6">
-          <PageHeader
-            title="Salary Management"
-            description="You don't have permission to view salary"
-            className="text-start max-w-none"
-          />
-        </div>
-      </PageContainer>
+      <div>
+        <p className="text-muted-foreground">You don't have permission to view salary</p>
+      </div>
     )
   }
 
@@ -113,15 +99,8 @@ export default async function SalaryContent({ dictionary, lang }: Props) {
   const d = dictionary?.finance?.salary
 
   return (
-    <PageContainer>
-      <div className="flex flex-1 flex-col gap-6">
-        <PageHeader
-          title={d?.title || 'Salary Management'}
-          description="Manage staff salary structures, allowances, deductions, and calculations"
-          className="text-start max-w-none"
-        />
-
-        {/* Financial Overview */}
+    <>
+      {/* Financial Overview */}
         <div className="grid gap-4 md:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -360,7 +339,6 @@ export default async function SalaryContent({ dictionary, lang }: Props) {
             </Card>
           )}
         </div>
-      </div>
-    </PageContainer>
+    </>
   )
 }

@@ -395,13 +395,13 @@ The middleware (`src/middleware.ts`) handles:
 ## 🤖 Claude Code Automation Suite (OPTIMIZED)
 
 ### Overview
-The project includes a comprehensive Claude Code automation system with **31 specialized agents** (expanded from 20), 12 workflow commands, and 6 reusable skills for maximum productivity across all development workflows.
+The project includes a comprehensive Claude Code automation system with **35 specialized agents** (expanded from 20), 22 workflow commands, and 7 reusable skills for maximum productivity across all development workflows.
 
 **Recent Expansion**: Added 10 new developer productivity & tooling agents from VoltAgent's awesome-claude-code-subagents collection, adapted for Hogwarts platform.
 
 ### Quick Reference
 
-#### 🎯 Specialized Agents (32 Total)
+#### 🎯 Specialized Agents (35 Total)
 
 **Core Orchestration** (1 agent):
 - `/agents/orchestrate` - **Master coordinator** for complex multi-agent tasks
@@ -447,9 +447,14 @@ The project includes a comprehensive Claude Code automation system with **31 spe
 - `/agents/debug` - Systematic debugging, 5 Whys technique
 - `/agents/react-reviewer` - React code review specialist
 
+**Haiku Agents (Cost Optimized)** (3 agents - NEW):
+- `/agents/formatter` - Fast code formatting and linting (3x cheaper, 2x faster)
+- `/agents/spellcheck` - Spell checking and grammar validation (3x cheaper)
+- `/agents/simple-refactor` - Simple refactoring tasks (3x cheaper)
+
 **Note**: Code formatting is automated via PostToolUse hooks, no agent needed.
 
-#### ⚡ Workflow Commands (16)
+#### ⚡ Workflow Commands (22)
 
 Quick shortcuts for common tasks:
 
@@ -466,6 +471,8 @@ Quick shortcuts for common tasks:
 - `/test <file>` - Generate and run tests for specific file
 - `/fix-all` - Auto-fix all issues (prettier + eslint + type-check)
 - `/security-scan` - Full security vulnerability audit (OWASP + auth + tenant)
+- `/snapshot [component|page]` - Visual UI testing with Playwright
+- `/e2e [workflow]` - End-to-end test generation and execution
 
 **Error Prevention & Build Safety** (NEW):
 - `/validate-prisma <file>` - **NEW** Quick Prisma query validation (field types, includes, required fields)
@@ -476,6 +483,9 @@ Quick shortcuts for common tasks:
 **Performance & Optimization**:
 - `/optimize <file>` - Performance optimization analysis
 - `/build-changed` - Build only recently modified modules
+- `/benchmark [target]` - Performance benchmarking for components and functions
+- `/lighthouse [url|route]` - Core Web Vitals and performance scoring
+- `/refactor-all [scope]` - Bulk code refactoring across codebase
 
 **Internationalization**:
 - `/i18n-check` - Verify translation completeness (Arabic & English)
@@ -591,15 +601,20 @@ The `/agents/multi-tenant` agent automatically verifies that:
 
 ### MCP Integration
 
-**Enabled MCP Servers**:
+**Enabled MCP Servers (13 Total)**:
 - **PostgreSQL** - Direct database access for query optimization and schema analysis
 - **GitHub** - Repository operations, PR/issue management
-- **Filesystem** - Enhanced file operations
-- **Memory** - Persistent context across sessions
+- **Vercel** - Deployment management, analyze logs, monitor performance
+- **Sentry** - Error monitoring, debug production issues
+- **Figma** - Access designs, export assets (requires Figma Desktop)
+- **Linear** - Issue tracking and project management
+- **Browser** - Browser automation and web scraping (Playwright)
+- **Stripe** - Payment processing, subscription management
 - **Ref Tools** - Documentation search (prevents hallucinations)
-- **Vercel** - Deployment management
-- **Linear** - Issue tracking
-- **Browser** - Playwright automation
+- **PostHog** - Product analytics, feature flags, A/B testing, user insights
+- **Notion** - Documentation sync, knowledge base integration
+- **Memory Bank** - Persistent context across sessions, knowledge retention
+- **Slack** - Team notifications, deployment alerts, error reporting
 
 ### Agent Orchestration
 
@@ -682,9 +697,9 @@ If you were using old agent names, use these mappings:
 - **`.claude/settings.json`** - Main configuration (full automation, hooks, MCP servers)
 - **`.claude/settings.local.json`** - Local overrides (not committed, DB credentials)
 - **`.mcp.json`** - MCP server configurations
-- **`.claude/agents/`** - **32 specialized agent definitions** (includes type-safety for enum validation)
-- **`.claude/commands/`** - **16 workflow command shortcuts** (added 4 error prevention commands)
-- **`.claude/skills/`** - **7 reusable skill packages** (added dictionary-validator, enhanced prisma-optimizer)
+- **`.claude/agents/`** - **35 specialized agent definitions** (includes type-safety and 3 Haiku agents)
+- **`.claude/commands/`** - **22 workflow command shortcuts** (added error prevention and testing commands)
+- **`.claude/skills/`** - **7 reusable skill packages** (added 5 new skills for comprehensive coverage)
 - **`.claude/.backup/`** - Archived old agents (architect, pattern, git, github, build, prettier)
 
 ### Metrics & Success
@@ -713,6 +728,6 @@ Expected productivity improvements:
 - **License**: MIT License
 - **Test Coverage**: 234 test files across all features
 - **MVP Status**: 100% complete, production-ready
-- **AI Automation**: **32 specialized agents** (added error prevention), **16 commands** (added 4 error prevention), **7 skills** (added dictionary-validator) for maximum productivity
+- **AI Automation**: **35 specialized agents** (including 3 Haiku agents), **22 commands** (added testing and optimization), **7 skills** (comprehensive coverage) for maximum productivity
 - **Error Prevention**: Catches 204+ error types before CI/CD with 95%+ auto-fix success rate
 - fix errors and push don't run build

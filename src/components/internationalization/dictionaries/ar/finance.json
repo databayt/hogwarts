@@ -362,6 +362,7 @@
     "navigation": {
       "dashboard": "لوحة التحكم",
       "allInvoices": "جميع الفواتير",
+      "list": "القائمة",
       "createNew": "إنشاء جديد",
       "settings": "الإعدادات",
       "onboarding": "الإعداد الأولي"

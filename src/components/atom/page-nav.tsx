@@ -20,6 +20,21 @@ interface PageNavProps extends React.HTMLAttributes<HTMLDivElement> {
 export function PageNav({ pages, defaultPage, className, ...props }: PageNavProps) {
   const pathname = usePathname()
 
+  // Helper to check if a page is active
+  const isPageActive = (pageHref: string) => {
+    // Remove trailing slash for comparison
+    const normalizedPath = pathname.replace(/\/$/, '')
+    const normalizedHref = pageHref.replace(/\/$/, '')
+
+    // For attendance overview, check if we're at the base attendance path
+    if (normalizedHref.endsWith('/attendance') && normalizedPath.endsWith('/attendance')) {
+      return true
+    }
+
+    // For other pages, check exact match
+    return normalizedPath === normalizedHref
+  }
+
   return (
     <div className={cn("border-b", className)} {...props}>
       <ScrollArea className="max-w-[600px] lg:max-w-none">
@@ -27,14 +42,14 @@ export function PageNav({ pages, defaultPage, className, ...props }: PageNavProp
           {defaultPage && (
             <PageLink
               page={defaultPage}
-              isActive={pathname === defaultPage.href}
+              isActive={isPageActive(defaultPage.href)}
             />
           )}
           {pages.map((page) => (
             <PageLink
               key={page.href}
               page={page}
-              isActive={pathname === page.href}
+              isActive={isPageActive(page.href)}
             />
           ))}
         </nav>

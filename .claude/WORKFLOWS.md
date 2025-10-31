@@ -1,14 +1,14 @@
 # Development Workflows Guide
 
-**Version**: 2.0 (Optimized)
-**Last Updated**: 2025-10-28
+**Version**: 3.0 (Expanded)
+**Last Updated**: 2025-10-31
 **Platform**: Hogwarts School Automation Platform
 
 ---
 
 ## Overview
 
-This guide documents the **automated TDD-first development workflows** for the Hogwarts platform. All workflows leverage the **20 optimized agents**, **12 commands**, and **6 skills** in the Claude Code automation suite.
+This guide documents the **automated TDD-first development workflows** for the Hogwarts platform. All workflows leverage the **35 specialized agents**, **22 commands**, and **7 skills** in the Claude Code automation suite.
 
 **Philosophy**: Write tests first, let automation handle quality gates, focus on "vibe coding".
 
@@ -1306,6 +1306,13 @@ Allowing push, but please fix errors before merging to main
 
 ## Changelog
 
+- **v3.0** (2025-10-31): Expanded agent and command suite
+  - Expanded from 20 to 35 agents (75% growth)
+  - Added 10 new commands (22 total from 12)
+  - Added 1 new skill (7 total from 6)
+  - Added 3 Haiku agents for cost optimization
+  - Added 10 developer productivity agents
+
 - **v2.0** (2025-10-28): Complete workflow automation
   - Added `/feature` command (TDD-first workflow)
   - Added PreToolUse hooks (smart quality gates)
@@ -1324,4 +1331,4 @@ Allowing push, but please fix errors before merging to main
 **Author**: Hogwarts School Automation Platform Team
 **Maintained by**: Claude Code Automation Suite
 **License**: MIT
-**Last Updated**: 2025-10-28
+**Last Updated**: 2025-10-31

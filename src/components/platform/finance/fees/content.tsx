@@ -1,5 +1,3 @@
-import { Shell as PageContainer } from '@/components/table/shell'
-import PageHeader from '@/components/atom/page-header'
 import type { Locale } from '@/components/internationalization/config'
 import type { Dictionary } from '@/components/internationalization/dictionaries'
 import { Button } from '@/components/ui/button'
@@ -35,15 +33,9 @@ export default async function FeesContent({ dictionary, lang }: Props) {
 
   if (!schoolId) {
     return (
-      <PageContainer>
-        <div className="flex flex-1 flex-col gap-6">
-          <PageHeader
-            title="Student Fees Management"
-            description="School context not found"
-            className="text-start max-w-none"
-          />
-        </div>
-      </PageContainer>
+      <div>
+        <p className="text-muted-foreground">School context not found</p>
+      </div>
     )
   }
 
@@ -57,15 +49,9 @@ export default async function FeesContent({ dictionary, lang }: Props) {
   // If user can't view fees, show empty state
   if (!canView) {
     return (
-      <PageContainer>
-        <div className="flex flex-1 flex-col gap-6">
-          <PageHeader
-            title="Student Fees Management"
-            description="You don't have permission to view fees"
-            className="text-start max-w-none"
-          />
-        </div>
-      </PageContainer>
+      <div>
+        <p className="text-muted-foreground">You don't have permission to view fees</p>
+      </div>
     )
   }
 
@@ -134,15 +120,8 @@ export default async function FeesContent({ dictionary, lang }: Props) {
   const d = dictionary?.finance?.fees
 
   return (
-    <PageContainer>
-      <div className="flex flex-1 flex-col gap-6">
-        <PageHeader
-          title={d?.title || 'Student Fees Management'}
-          description="Manage fee structures, track payments, handle scholarships and fines"
-          className="text-start max-w-none"
-        />
-
-        {/* Financial Overview */}
+    <>
+      {/* Financial Overview */}
         <div className="grid gap-4 md:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -381,7 +360,6 @@ export default async function FeesContent({ dictionary, lang }: Props) {
             </Card>
           )}
         </div>
-      </div>
-    </PageContainer>
+    </>
   )
 }

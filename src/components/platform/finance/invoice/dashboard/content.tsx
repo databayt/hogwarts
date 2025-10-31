@@ -10,8 +10,6 @@ import { format } from "date-fns";
 import { RecentInvoicesCard, StatsCards } from "./card";
 
 import { chartConfig } from "./config";
-import PageHeader from '@/components/atom/page-header'
-import { PageNav, type PageNavItem } from '@/components/atom/page-nav'
 import { type Locale } from '@/components/internationalization/config'
 import { type Dictionary } from '@/components/internationalization/dictionaries'
 
@@ -29,15 +27,6 @@ export function DashboardContent({ dictionary, lang }: Props) {
     recentInvoice: [],
     chartData: [],
   });
-
-  const d = dictionary?.finance?.invoice
-
-  // Define invoice page navigation (streamlined to 3 primary links)
-  const invoicePages: PageNavItem[] = [
-    { name: d?.navigation?.dashboard || 'Dashboard', href: `/${lang}/finance/invoice` },
-    { name: d?.navigation?.createNew || 'Create New', href: `/${lang}/finance/invoice/invoice/create` },
-    { name: d?.navigation?.settings || 'Settings', href: `/${lang}/finance/invoice/settings` },
-  ]
 
   const fetchData = async () => {
     try {
@@ -97,14 +86,7 @@ export function DashboardContent({ dictionary, lang }: Props) {
     },
   ];
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title={d?.title || 'Invoice'}
-        className="text-start max-w-none"
-      />
-      <PageNav pages={invoicePages} />
-
-      <div className="grid gap-6  lg:grid-cols-4">
+    <div className="grid gap-6 lg:grid-cols-4">
         <StatsCards
           stats={{
             totalRevenue: data?.totalRevenue ?? "-",
@@ -124,6 +106,5 @@ export function DashboardContent({ dictionary, lang }: Props) {
           columns={columns}
         />
       </div>
-    </div>
   );
 }

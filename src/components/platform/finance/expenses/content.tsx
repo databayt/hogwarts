@@ -1,5 +1,3 @@
-import { Shell as PageContainer } from '@/components/table/shell'
-import PageHeader from '@/components/atom/page-header'
 import type { Locale } from '@/components/internationalization/config'
 import type { Dictionary } from '@/components/internationalization/dictionaries'
 import { TrendingUp, Receipt, CheckCircle, AlertCircle, DollarSign, FolderOpen } from 'lucide-react'
@@ -18,15 +16,9 @@ export default async function ExpensesContent({ dictionary, lang }: Props) {
 
   if (!schoolId) {
     return (
-      <PageContainer>
-        <div className="flex flex-1 flex-col gap-6">
-          <PageHeader
-            title="Expense Management"
-            description="School context not found"
-            className="text-start max-w-none"
-          />
-        </div>
-      </PageContainer>
+      <div>
+        <p className="text-muted-foreground">School context not found</p>
+      </div>
     )
   }
 
@@ -40,15 +32,9 @@ export default async function ExpensesContent({ dictionary, lang }: Props) {
   // If user can't view expenses, show empty state
   if (!canView) {
     return (
-      <PageContainer>
-        <div className="flex flex-1 flex-col gap-6">
-          <PageHeader
-            title="Expense Management"
-            description="You don't have permission to view expenses"
-            className="text-start max-w-none"
-          />
-        </div>
-      </PageContainer>
+      <div>
+        <p className="text-muted-foreground">You don't have permission to view expenses</p>
+      </div>
     )
   }
 
@@ -81,15 +67,8 @@ export default async function ExpensesContent({ dictionary, lang }: Props) {
   const d = dictionary?.finance?.expenses
 
   return (
-    <PageContainer>
-      <div className="flex flex-1 flex-col gap-6">
-        <PageHeader
-          title={d?.title || 'Expense Management'}
-          description="Submit expenses, manage approval workflow, and track reimbursements"
-          className="text-start max-w-none"
-        />
-
-        <DashboardGrid type="stats">
+    <>
+      <DashboardGrid type="stats">
           <StatsCard
             title="Total Expenses"
             value={formatCurrency(totalExpenses)}
@@ -194,7 +173,6 @@ export default async function ExpensesContent({ dictionary, lang }: Props) {
             />
           )}
         </DashboardGrid>
-      </div>
-    </PageContainer>
+    </>
   )
 }

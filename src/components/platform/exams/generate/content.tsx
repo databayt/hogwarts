@@ -60,8 +60,7 @@ export default async function GenerateContent({ dictionary, lang }: Props) {
     <div>
       <div className="flex flex-col gap-6">
         <PageHeader
-          title={dictionary.generate.pageTitle}
-          description={dictionary.generate.pageDescription}
+          title={d?.blocks?.generate?.title || "Generate"}
           className="text-start max-w-none"
         />
 

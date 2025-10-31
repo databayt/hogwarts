@@ -1,5 +1,3 @@
-import { Shell as PageContainer } from '@/components/table/shell'
-import PageHeader from '@/components/atom/page-header'
 import type { Locale } from '@/components/internationalization/config'
 import type { Dictionary } from '@/components/internationalization/dictionaries'
 import { PieChart, TrendingUp, AlertTriangle, CheckCircle, DollarSign, BarChart } from 'lucide-react'
@@ -18,15 +16,9 @@ export default async function BudgetContent({ dictionary, lang }: Props) {
 
   if (!schoolId) {
     return (
-      <PageContainer>
-        <div className="flex flex-1 flex-col gap-6">
-          <PageHeader
-            title="Budget Planning"
-            description="School context not found"
-            className="text-start max-w-none"
-          />
-        </div>
-      </PageContainer>
+      <div>
+        <p className="text-muted-foreground">School context not found</p>
+      </div>
     )
   }
 
@@ -40,15 +32,9 @@ export default async function BudgetContent({ dictionary, lang }: Props) {
   // If user can't view budget, show empty state
   if (!canView) {
     return (
-      <PageContainer>
-        <div className="flex flex-1 flex-col gap-6">
-          <PageHeader
-            title="Budget Planning"
-            description="You don't have permission to view budget"
-            className="text-start max-w-none"
-          />
-        </div>
-      </PageContainer>
+      <div>
+        <p className="text-muted-foreground">You don't have permission to view budget</p>
+      </div>
     )
   }
 
@@ -90,15 +76,8 @@ export default async function BudgetContent({ dictionary, lang }: Props) {
   const d = dictionary?.finance?.budget
 
   return (
-    <PageContainer>
-      <div className="flex flex-1 flex-col gap-6">
-        <PageHeader
-          title={d?.title || 'Budget Planning'}
-          description="Create budgets, allocate funds, and track spending variance"
-          className="text-start max-w-none"
-        />
-
-        {/* Stats Grid - Uses semantic HTML (h6, h2, small) */}
+    <>
+      {/* Stats Grid - Uses semantic HTML (h6, h2, small) */}
         <DashboardGrid type="stats">
           <StatsCard
             title="Total Budget"
@@ -217,7 +196,6 @@ export default async function BudgetContent({ dictionary, lang }: Props) {
             />
           )}
         </DashboardGrid>
-      </div>
-    </PageContainer>
+    </>
   )
 }

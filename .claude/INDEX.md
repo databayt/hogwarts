@@ -15,15 +15,15 @@
 ├── INDEX.md                     # This file - Directory guide
 ├── settings.json                # Main configuration
 ├── settings.local.json          # Local overrides (NOT committed)
-├── agents/                      # 20 specialized agents
+├── agents/                      # 35 specialized agents
 │   ├── orchestrate.md          # Master coordinator
-│   ├── nextjs.md ... [19 more]
-├── commands/                    # 12 workflow shortcuts
+│   ├── nextjs.md ... [34 more]
+├── commands/                    # 22 workflow shortcuts
 │   ├── component.md
-│   ├── review.md ... [11 more]
-├── skills/                      # 6 reusable capabilities
+│   ├── review.md ... [21 more]
+├── skills/                      # 7 reusable capabilities
 │   ├── prisma-optimizer/
-│   ├── react-performance/ ... [5 more]
+│   ├── react-performance/ ... [6 more]
 └── .backup/                     # Archived agents (6 files)
 ```
 
@@ -49,7 +49,7 @@
 **Purpose**: Complete usage guide for Claude Code automation suite
 
 **Contents**:
-- Overview of 20 agents, 12 commands, 6 skills
+- Overview of 35 agents, 22 commands, 7 skills
 - Quick start examples
 - Agent selection guide
 - Usage patterns
@@ -110,7 +110,7 @@
 
 ---
 
-## 🤖 Agents Directory (20 files)
+## 🤖 Agents Directory (35 files)
 
 ### Core
 - `orchestrate.md` (6KB) - Master coordinator
@@ -124,29 +124,48 @@
 - `tailwind.md` - CSS utilities
 - `i18n.md` - Bilingual
 
-### Process (6)
+### Process (7)
 - `architecture.md` - Design + patterns
 - `test.md` - TDD
 - `security.md` - OWASP
 - `auth.md` - NextAuth
 - `performance.md` - Optimization
 - `typography.md` - Semantic HTML
+- `type-safety.md` - Enum completeness
 
-### Workflow (4)
+### Workflow (5)
 - `git-github.md` - Git + GitHub
+- `workflow.md` - Git workflow
 - `api.md` - Server actions
 - `multi-tenant.md` - Tenant safety
 - `database-optimizer.md` - Query optimization
+
+### Developer Productivity (10)
+- `build.md` - Build optimization
+- `deps.md` - Dependency management
+- `dx.md` - Developer experience
+- `cli.md` - CLI tools
+- `tooling.md` - Developer tools
+- `docs.md` - Documentation
+- `docs-manager.md` - Workflow docs
+- `refactor.md` - Code refactoring
+- `legacy.md` - Legacy modernization
+- `mcp.md` - MCP development
 
 ### Specialized (2)
 - `debug.md` - Debugging
 - `react-reviewer.md` - React review
 
+### Haiku Agents (3) - Cost Optimized
+- `formatter.md` - Fast formatting
+- `spellcheck.md` - Spell checking
+- `simple-refactor.md` - Simple refactoring
+
 **Read individual agents**: For specific expertise details
 
 ---
 
-## ⚡ Commands Directory (12 files)
+## ⚡ Commands Directory (22 files)
 
 Quick workflow shortcuts:
 - `component.md` - Generate component
@@ -166,7 +185,7 @@ Quick workflow shortcuts:
 
 ---
 
-## 🎨 Skills Directory (6 packages)
+## 🎨 Skills Directory (7 packages)
 
 Reusable capabilities:
 - `prisma-optimizer/` - Query optimization patterns
@@ -175,6 +194,7 @@ Reusable capabilities:
 - `test-generator/` - TDD patterns
 - `api-designer/` - RESTful patterns
 - `multi-tenant-validator/` - Tenant isolation
+- `dictionary-validator/` - i18n dictionary validation
 
 **Read skills**: To understand shared capabilities used by agents
 
@@ -257,17 +277,18 @@ Archived agents from optimization:
 
 ### File Sizes
 - **Documentation**: ~30KB (4 main docs)
-- **Agents**: ~110KB (20 agents)
-- **Commands**: ~16KB (12 commands)
-- **Skills**: ~10KB (6 skills)
-- **Total**: ~170KB
+- **Agents**: ~140KB (35 agents)
+- **Commands**: ~25KB (22 commands)
+- **Skills**: ~12KB (7 skills)
+- **Total**: ~210KB
 
-### Optimization Results
-- **Before**: 25 agents
-- **After**: 20 agents
-- **Reduction**: 20%
-- **Duplicates eliminated**: 100%
-- **Functionality lost**: 0%
+### Expansion Results
+- **Before**: 20 agents
+- **After**: 35 agents
+- **Growth**: 75% expansion
+- **New capabilities**: 15 agents (10 DX/tooling + 3 Haiku + 2 workflow)
+- **Commands added**: 10 new commands (22 total from 12)
+- **Skills added**: 1 new skill (7 total from 6)
 
 ---
 
@@ -329,8 +350,8 @@ tail .claude/*.log
 
 ---
 
-**Version**: 2.0 (Optimized)
-**Last Updated**: 2025-10-27
-**Total Agents**: 20
-**Total Commands**: 12
-**Total Skills**: 6
+**Version**: 3.0 (Expanded)
+**Last Updated**: 2025-10-31
+**Total Agents**: 35
+**Total Commands**: 22
+**Total Skills**: 7

@@ -7,11 +7,11 @@
 ## 📖 Overview
 
 This directory contains a comprehensive Claude Code automation system with:
-- **20 specialized AI agents** (optimized from 25)
-- **12 workflow commands** (shortcuts for common tasks)
-- **6 reusable skills** (shared capabilities)
+- **35 specialized AI agents** (expanded from 20, includes 3 Haiku agents)
+- **22 workflow commands** (shortcuts for common tasks)
+- **7 reusable skills** (shared capabilities)
 - **Full automation** (formatting, testing, hooks)
-- **MCP integration** (PostgreSQL, GitHub, 8+ servers)
+- **MCP integration** (13 servers: PostgreSQL, GitHub, Vercel, Sentry, and more)
 
 **Expected Impact**: 10x development velocity with zero manual formatting and automated quality gates.
 
@@ -54,7 +54,7 @@ Commands are quick shortcuts:
 
 ---
 
-## 🤖 Available Agents (20)
+## 🤖 Available Agents (35)
 
 ### Core Orchestration (1)
 - **orchestrate** - Master coordinator for complex tasks
@@ -86,9 +86,14 @@ Commands are quick shortcuts:
 - **debug** - Systematic debugging
 - **react-reviewer** - React code review
 
+### Haiku Agents (3) - Cost Optimized
+- **formatter** - Fast code formatting (3x cheaper, 2x faster)
+- **spellcheck** - Spell checking and grammar
+- **simple-refactor** - Simple refactoring tasks
+
 ---
 
-## ⚡ Workflow Commands (12)
+## ⚡ Workflow Commands (22)
 
 **Component & Page**:
 - `/component <name>` - Generate component
@@ -98,15 +103,26 @@ Commands are quick shortcuts:
 **Database**:
 - `/migration <name>` - Generate migration
 
-**Quality**:
+**Quality & Testing**:
 - `/review` - Code review
 - `/test <file>` - Run tests
 - `/fix-all` - Auto-fix all
 - `/security-scan` - Security audit
+- `/snapshot [component|page]` - Visual UI testing
+- `/e2e [workflow]` - E2E test generation
+
+**Error Prevention**:
+- `/validate-prisma <file>` - Validate Prisma queries
+- `/scan-errors [pattern]` - Error detection
+- `/pre-commit-full` - Pre-commit validation
+- `/fix-build [type]` - Auto-fix build errors
 
 **Performance**:
 - `/optimize <file>` - Optimize
 - `/build-changed` - Incremental build
+- `/benchmark [target]` - Performance benchmarking
+- `/lighthouse [url|route]` - Core Web Vitals
+- `/refactor-all [scope]` - Bulk refactoring
 
 **i18n**:
 - `/i18n-check` - Check translations
@@ -116,8 +132,9 @@ Commands are quick shortcuts:
 
 ---
 
-## 🎨 Reusable Skills (6)
+## 🎨 Reusable Skills (7)
 
+- **dictionary-validator** - i18n dictionary validation
 - **prisma-optimizer** - Query optimization
 - **react-performance** - Component optimization
 - **security-scanner** - OWASP checklist
@@ -137,9 +154,9 @@ Commands are quick shortcuts:
 - **../.mcp.json** - MCP server configurations
 
 ### Directories
-- **agents/** - 20 agent definitions
-- **commands/** - 12 command shortcuts
-- **skills/** - 6 skill packages
+- **agents/** - 35 agent definitions
+- **commands/** - 22 command shortcuts
+- **skills/** - 7 skill packages
 - **.backup/** - Archived agents
 
 ---
@@ -254,7 +271,7 @@ See **ISSUE.md** for reporting issues.
 - **Zero manual formatting**
 - **95%+ test coverage**
 - **Zero security vulnerabilities**
-- **20% fewer agents** (better selection)
+- **75% more agents** (35 total, comprehensive coverage)
 - **Clearer naming** (easier to use)
 
 ---
@@ -268,7 +285,7 @@ See **ISSUE.md** for reporting issues.
 
 ---
 
-**Version**: 2.0 (Optimized)
-**Agent Count**: 20 (from 25)
-**Optimization**: 20% reduction, 0% loss
+**Version**: 3.0 (Expanded)
+**Agent Count**: 35 (expanded from 20)
+**Enhancement**: 75% expansion with Haiku agents
 **Status**: Production-ready

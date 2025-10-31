@@ -362,6 +362,7 @@
     "navigation": {
       "dashboard": "Dashboard",
       "allInvoices": "All Invoices",
+      "list": "List",
       "createNew": "Create New",
       "settings": "Settings",
       "onboarding": "Onboarding"

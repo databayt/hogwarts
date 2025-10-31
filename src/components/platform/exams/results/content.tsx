@@ -105,8 +105,7 @@ export default async function ResultsContent({ dictionary, lang }: Props) {
     <div>
       <div className="flex flex-col gap-6">
         <PageHeader
-          title={r?.title}
-          description={r?.description}
+          title={d?.blocks?.results?.title || "Result"}
           className="text-start max-w-none"
         />
 

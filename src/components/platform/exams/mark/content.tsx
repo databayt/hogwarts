@@ -90,8 +90,7 @@ export async function MarkingContent({
     <div>
       <div className="flex flex-col gap-6">
         <PageHeader
-          title={dict.dashboard}
-          description={dict.description}
+          title={d?.blocks?.mark?.title || "Mark"}
           className="text-start max-w-none"
         />
 
