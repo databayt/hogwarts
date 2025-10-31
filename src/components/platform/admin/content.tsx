@@ -97,17 +97,8 @@ export default async function AdminContent({ dictionary, lang }: Props) {
         db.guardian.count({ where: { schoolId } }).catch(() => 0),
         db.department.count({ where: { schoolId } }).catch(() => 0),
         db.classroom.count({ where: { schoolId } }).catch(() => 0),
-        db.session.count({
-          where: {
-            expires: { gte: new Date() }
-          }
-        }).catch(() => 0),
-        db.user.count({
-          where: {
-            schoolId,
-            loginAttempts: { gt: 3 }
-          }
-        }).catch(() => 0),
+        Promise.resolve(0), // JWT-based auth, no session table
+        Promise.resolve(0), // No loginAttempts field in User model
         db.user.count({
           where: {
             schoolId,
