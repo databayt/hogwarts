@@ -1,5 +1,6 @@
 import type { Locale } from '@/components/internationalization/config'
 import type { Dictionary } from '@/components/internationalization/dictionaries'
+import PageHeader from '@/components/atom/page-header'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -139,6 +140,12 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
 
   return (
     <div className="space-y-6">
+      <PageHeader
+        title={d?.title || 'Finance Overview'}
+        description={d?.description || 'Comprehensive financial management for your school'}
+        variant="dashboard"
+      />
+
       {/* Overview Stats - Financial Health */}
       <div className="grid gap-4 md:grid-cols-4">
           <Card>

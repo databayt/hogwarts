@@ -1,5 +1,6 @@
 import type { Locale } from '@/components/internationalization/config'
 import type { Dictionary } from '@/components/internationalization/dictionaries'
+import PageHeader from '@/components/atom/page-header'
 import { Clock, Calendar, Users, CheckCircle, AlertCircle, FileText } from 'lucide-react'
 import { db } from '@/lib/db'
 import { getTenantContext } from '@/lib/tenant-context'
@@ -69,6 +70,12 @@ export default async function TimesheetContent({ dictionary, lang }: Props) {
 
   return (
     <div className="space-y-6">
+      <PageHeader
+        title={d?.title || 'Timesheet Management'}
+        description="Track staff hours, approve timesheets, and integrate with payroll"
+        variant="dashboard"
+      />
+
       {/* Stats Grid - Uses semantic HTML (h6, h2, small) */}
         <DashboardGrid type="stats">
           <StatsCard

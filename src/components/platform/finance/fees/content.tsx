@@ -1,5 +1,6 @@
 import type { Locale } from '@/components/internationalization/config'
 import type { Dictionary } from '@/components/internationalization/dictionaries'
+import PageHeader from '@/components/atom/page-header'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -121,6 +122,12 @@ export default async function FeesContent({ dictionary, lang }: Props) {
 
   return (
     <div className="space-y-6">
+      <PageHeader
+        title={d?.title || 'Student Fees Management'}
+        description="Manage fee structures, track payments, handle scholarships and fines"
+        variant="dashboard"
+      />
+
       {/* Financial Overview */}
       <div className="grid gap-4 md:grid-cols-4">
           <Card>

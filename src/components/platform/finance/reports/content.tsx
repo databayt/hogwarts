@@ -1,5 +1,6 @@
 import type { Locale } from '@/components/internationalization/config'
 import type { Dictionary } from '@/components/internationalization/dictionaries'
+import PageHeader from '@/components/atom/page-header'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { FileBarChart, TrendingUp, BarChart, PieChart, Calendar, Download } from 'lucide-react'
@@ -55,6 +56,12 @@ export default async function ReportsContent({ dictionary, lang }: Props) {
 
   return (
     <div className="space-y-6">
+      <PageHeader
+        title={d?.title || 'Financial Reports'}
+        description="Generate comprehensive financial statements and analysis reports"
+        variant="dashboard"
+      />
+
       <div className="grid gap-4 md:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

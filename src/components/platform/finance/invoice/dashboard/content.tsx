@@ -10,6 +10,7 @@ import { format } from "date-fns";
 import { RecentInvoicesCard, StatsCards } from "./card";
 
 import { chartConfig } from "./config";
+import PageHeader from '@/components/atom/page-header'
 import { type Locale } from '@/components/internationalization/config'
 import { type Dictionary } from '@/components/internationalization/dictionaries'
 
@@ -85,8 +86,17 @@ export function DashboardContent({ dictionary, lang }: Props) {
        }
     },
   ];
+
+  const d = dictionary?.finance?.invoice
+
   return (
     <div className="space-y-6">
+      <PageHeader
+        title={d?.title || 'Invoice Management'}
+        description={d?.description || 'Create and manage client invoices and billing'}
+        variant="dashboard"
+      />
+
       <div className="grid gap-6 lg:grid-cols-4">
         <StatsCards
           stats={{

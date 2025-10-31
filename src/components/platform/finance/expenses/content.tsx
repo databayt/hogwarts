@@ -1,5 +1,6 @@
 import type { Locale } from '@/components/internationalization/config'
 import type { Dictionary } from '@/components/internationalization/dictionaries'
+import PageHeader from '@/components/atom/page-header'
 import { TrendingUp, Receipt, CheckCircle, AlertCircle, DollarSign, FolderOpen } from 'lucide-react'
 import { db } from '@/lib/db'
 import { getTenantContext } from '@/lib/tenant-context'
@@ -68,6 +69,12 @@ export default async function ExpensesContent({ dictionary, lang }: Props) {
 
   return (
     <div className="space-y-6">
+      <PageHeader
+        title={d?.title || 'Expense Management'}
+        description="Submit expenses, manage approval workflow, and track reimbursements"
+        variant="dashboard"
+      />
+
       <DashboardGrid type="stats">
           <StatsCard
             title="Total Expenses"

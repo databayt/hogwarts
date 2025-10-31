@@ -1,5 +1,6 @@
 import type { Locale } from '@/components/internationalization/config'
 import type { Dictionary } from '@/components/internationalization/dictionaries'
+import PageHeader from '@/components/atom/page-header'
 import { Wallet, Users, DollarSign, TrendingUp, ArrowUpCircle, ArrowDownCircle } from 'lucide-react'
 import { db } from '@/lib/db'
 import { getTenantContext } from '@/lib/tenant-context'
@@ -72,6 +73,12 @@ export default async function WalletContent({ dictionary, lang }: Props) {
 
   return (
     <div className="space-y-6">
+      <PageHeader
+        title={d?.title || 'Wallet Management'}
+        description={d?.description || 'Manage school and parent wallets, track balances and transactions'}
+        variant="dashboard"
+      />
+
       <DashboardGrid type="stats">
           <StatsCard
             title={d?.stats?.totalBalance || 'Total Balance'}
