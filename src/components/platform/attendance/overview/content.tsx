@@ -62,10 +62,6 @@ export function AttendanceOverviewContent({ dictionary, locale = 'en' }: Attenda
   const { data: session } = useSession();
   const userRole = session?.user?.role as UserRole | undefined;
 
-  // Extract subdomain from pathname: /[lang]/s/[subdomain]/...
-  const pathParts = pathname?.split('/') || [];
-  const subdomain = pathParts[3] || 'demo';
-
   const {
     currentMethod,
     methods,
@@ -79,7 +75,7 @@ export function AttendanceOverviewContent({ dictionary, locale = 'en' }: Attenda
 
     // Navigate to method-specific page
     const methodPath = method.toLowerCase().replace('_', '-');
-    router.push(`/${locale}/s/${subdomain}/attendance/${methodPath}`);
+    router.push(`/${locale}/attendance/${methodPath}`);
   };
 
   const isMethodAvailable = (method: AttendanceMethod) => {
@@ -110,17 +106,17 @@ export function AttendanceOverviewContent({ dictionary, locale = 'en' }: Attenda
       case 'ADMIN':
         return [
           { label: 'Bulk Import', icon: Upload, action: () => handleMethodSelect('BULK_UPLOAD'), color: 'blue' },
-          { label: 'Settings', icon: Edit, action: () => router.push(`/${locale}/s/${subdomain}/attendance/settings`), color: 'gray' },
+          { label: 'Settings', icon: Edit, action: () => router.push(`/${locale}/attendance/settings`), color: 'gray' },
         ];
       case 'TEACHER':
         return [
           { label: 'Mark Attendance', icon: Edit, action: () => handleMethodSelect('MANUAL'), color: 'green' },
-          { label: 'View Reports', icon: Users, action: () => router.push(`/${locale}/s/${subdomain}/attendance/reports`), color: 'purple' },
+          { label: 'View Reports', icon: Users, action: () => router.push(`/${locale}/attendance/reports`), color: 'purple' },
         ];
       case 'STUDENT':
         return [
           { label: 'Self Check-in', icon: QrCode, action: () => handleMethodSelect('QR_CODE'), color: 'blue' },
-          { label: 'My Attendance', icon: User, action: () => router.push(`/${locale}/s/${subdomain}/attendance/my-attendance`), color: 'green' },
+          { label: 'My Attendance', icon: User, action: () => router.push(`/${locale}/attendance/my-attendance`), color: 'green' },
         ];
       default:
         return [];
