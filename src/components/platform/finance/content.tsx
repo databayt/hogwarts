@@ -208,10 +208,10 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
               </p>
             </CardContent>
           </Card>
-        </div>
+      </div>
 
-        {/* Module Activity Stats */}
-        <div className="grid gap-4 md:grid-cols-4">
+      {/* Module Activity Stats */}
+      <div className="grid gap-4 md:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
@@ -275,10 +275,10 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
               </p>
             </CardContent>
           </Card>
-        </div>
+      </div>
 
-        {/* More Features - Secondary Navigation Links */}
-        <Card>
+      {/* More Features - Secondary Navigation Links */}
+      <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               {d?.moreFeatures || 'More Features'}
@@ -326,10 +326,10 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
               })}
             </div>
           </CardContent>
-        </Card>
+      </Card>
 
-        {/* Finance Sub-Blocks Navigation */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      {/* Finance Sub-Blocks Navigation */}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {/* Invoice Block */}
           <Card className="border-primary/20 hover:border-primary/40 transition-colors">
             <CardHeader>
@@ -704,10 +704,10 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
               </div>
             </CardContent>
           </Card>
-        </div>
+      </div>
 
-        {/* Finance Workflow Guide */}
-        <Card>
+      {/* Finance Workflow Guide */}
+      <Card>
           <CardHeader>
             <CardTitle>
               {d?.workflow?.title || 'Finance Workflow Guide'}
@@ -798,8 +798,7 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
               </li>
             </ol>
           </CardContent>
-        </Card>
-      </div>
+      </Card>
     </>
   )
 }
