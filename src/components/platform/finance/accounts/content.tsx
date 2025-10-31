@@ -1,5 +1,3 @@
-import { Shell as PageContainer } from '@/components/table/shell'
-import PageHeader from '@/components/atom/page-header'
 import type { Locale } from '@/components/internationalization/config'
 import type { Dictionary } from '@/components/internationalization/dictionaries'
 import { BookOpen, FileText, BarChart, Lock, Calendar, Settings } from 'lucide-react'
@@ -18,15 +16,9 @@ export default async function AccountsContent({ dictionary, lang }: Props) {
 
   if (!schoolId) {
     return (
-      <PageContainer>
-        <div className="flex flex-1 flex-col gap-6">
-          <PageHeader
-            title="Accounting System"
-            description="School context not found"
-            className="text-start max-w-none"
-          />
-        </div>
-      </PageContainer>
+      <div>
+        <p className="text-muted-foreground">School context not found</p>
+      </div>
     )
   }
 
@@ -39,15 +31,9 @@ export default async function AccountsContent({ dictionary, lang }: Props) {
   // If user can't view accounts, show empty state
   if (!canView) {
     return (
-      <PageContainer>
-        <div className="flex flex-1 flex-col gap-6">
-          <PageHeader
-            title="Accounting System"
-            description="You don't have permission to view accounting"
-            className="text-start max-w-none"
-          />
-        </div>
-      </PageContainer>
+      <div>
+        <p className="text-muted-foreground">You don't have permission to view accounting</p>
+      </div>
     )
   }
 
@@ -76,15 +62,8 @@ export default async function AccountsContent({ dictionary, lang }: Props) {
   const d = dictionary?.finance?.accounts
 
   return (
-    <PageContainer>
-      <div className="flex flex-1 flex-col gap-6">
-        <PageHeader
-          title={d?.title || 'Accounting System'}
-          description="Double-entry bookkeeping, chart of accounts, journal entries, and general ledger"
-          className="text-start max-w-none"
-        />
-
-        {/* Stats Grid - Uses semantic HTML (h6, h2, small) */}
+    <>
+      {/* Stats Grid - Uses semantic HTML (h6, h2, small) */}
         <DashboardGrid type="stats">
           <StatsCard
             title={d?.chartOfAccounts || 'Chart of Accounts'}
@@ -203,7 +182,6 @@ export default async function AccountsContent({ dictionary, lang }: Props) {
             />
           )}
         </DashboardGrid>
-      </div>
-    </PageContainer>
+    </>
   )
 }
