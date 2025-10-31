@@ -7,7 +7,6 @@ import AddBankButton from './add-bank-button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Building2 } from 'lucide-react';
 import type { User } from 'next-auth';
-import PageHeader from '@/components/atom/page-header';
 
 interface Props {
   user: User;
@@ -31,10 +30,6 @@ export default async function MyBanksContent(props: Props) {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <PageHeader
-          title={props.dictionary.myBanks}
-          className="text-start max-w-none"
-        />
         {accounts.length > 0 && (
           <Suspense fallback={<div className="h-10 w-32 bg-muted animate-pulse rounded" />}>
             <AddBankButton dictionary={props.dictionary} />

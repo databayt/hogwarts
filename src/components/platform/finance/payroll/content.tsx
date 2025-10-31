@@ -1,6 +1,5 @@
 import type { Locale } from '@/components/internationalization/config'
 import type { Dictionary } from '@/components/internationalization/dictionaries'
-import PageHeader from '@/components/atom/page-header'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Users, DollarSign, Calendar, FileText, CheckCircle, AlertCircle, Clock, Settings } from 'lucide-react'
@@ -101,12 +100,6 @@ export default async function PayrollContent({ dictionary, lang }: Props) {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title={d?.title || 'Payroll Processing'}
-        description="Process payroll runs, generate salary slips, and manage disbursements"
-        variant="dashboard"
-      />
-
       {/* Stats Grid - Uses semantic HTML (h6, h2, small) */}
         <DashboardGrid type="stats">
           <StatsCard

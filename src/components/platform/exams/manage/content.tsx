@@ -5,7 +5,6 @@ import { examsSearchParams } from './list-params'
 import { db } from '@/lib/db'
 import { getTenantContext } from '@/lib/tenant-context'
 import { Shell as PageContainer } from '@/components/table/shell'
-import PageHeader from '@/components/atom/page-header'
 import { type Locale } from '@/components/internationalization/config'
 import { type Dictionary } from '@/components/internationalization/dictionaries'
 import { type Prisma, ExamType, ExamStatus } from '@prisma/client'
@@ -77,11 +76,6 @@ export default async function ExamsContent({ searchParams, dictionary, lang }: P
   return (
     <PageContainer>
       <div className="flex flex-1 flex-col gap-6">
-        <PageHeader
-          title={dictionary?.school?.exams?.title || 'Exams'}
-          description={dictionary?.school?.exams?.description || 'Schedule and manage your exams'}
-          className="text-start max-w-none"
-        />
         <ExamsTable initialData={data} total={total} perPage={sp.perPage} />
       </div>
     </PageContainer>

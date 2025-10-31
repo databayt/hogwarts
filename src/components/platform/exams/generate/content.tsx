@@ -1,5 +1,3 @@
-import PageHeader from "@/components/atom/page-header";
-import { PageNav, type PageNavItem } from "@/components/atom/page-nav";
 import type { Locale } from "@/components/internationalization/config";
 import type { Dictionary } from "@/components/internationalization/dictionaries";
 import { Button } from "@/components/ui/button";
@@ -30,40 +28,8 @@ export default async function GenerateContent({ dictionary, lang }: Props) {
     ]);
   }
 
-  // Define exams page navigation
-  const examsPages: PageNavItem[] = [
-    {
-      name: 'Exams',
-      href: `/${lang}/exams`
-    },
-    {
-      name: 'QBank',
-      href: `/${lang}/exams/qbank`
-    },
-    {
-      name: 'Generate',
-      href: `/${lang}/exams/generate`
-    },
-    {
-      name: 'Mark',
-      href: `/${lang}/exams/mark`
-    },
-    {
-      name: 'Result',
-      href: `/${lang}/exams/result`
-    },
-  ];
-
   return (
-    <div>
-      <div className="flex flex-col gap-6">
-        <PageHeader
-          title="Generate"
-          className="text-start max-w-none"
-        />
-
-        <PageNav pages={examsPages} />
-
+    <div className="space-y-6">
         {/* Stats Cards */}
         <div className="grid gap-4 md:grid-cols-3">
           <Card>

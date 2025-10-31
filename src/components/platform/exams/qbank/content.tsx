@@ -4,8 +4,6 @@ import { SearchParams } from "nuqs/server";
 import { questionBankSearchParams } from "./list-params";
 import { db } from "@/lib/db";
 import { getTenantContext } from "@/lib/tenant-context";
-import PageHeader from "@/components/atom/page-header";
-import { PageNav, type PageNavItem } from "@/components/atom/page-nav";
 import type { Locale } from "@/components/internationalization/config";
 import type { Dictionary } from "@/components/internationalization/dictionaries";
 import type { Prisma, QuestionType, DifficultyLevel, BloomLevel, QuestionSource } from "@prisma/client";
@@ -91,40 +89,8 @@ export default async function QuestionBankContent({
     total = count;
   }
 
-  // Define exams page navigation
-  const examsPages: PageNavItem[] = [
-    {
-      name: 'Exams',
-      href: `/${lang}/exams`
-    },
-    {
-      name: 'QBank',
-      href: `/${lang}/exams/qbank`
-    },
-    {
-      name: 'Generate',
-      href: `/${lang}/exams/generate`
-    },
-    {
-      name: 'Mark',
-      href: `/${lang}/exams/mark`
-    },
-    {
-      name: 'Result',
-      href: `/${lang}/exams/result`
-    },
-  ];
-
   return (
-    <div>
-      <div className="flex flex-col gap-6">
-        <PageHeader
-          title="QBank"
-          className="text-start max-w-none"
-        />
-
-        <PageNav pages={examsPages} />
-
+    <div className="space-y-6">
         <QuestionBankTable
           initialData={data}
           total={total}

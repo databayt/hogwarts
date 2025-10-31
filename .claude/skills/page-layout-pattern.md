@@ -1,6 +1,13 @@
 # Page Layout Pattern Skill
 
-**Purpose**: Ensure consistent page layout patterns across all platform blocks using PageHeader and PageNav components.
+**Purpose**: Ensure consistent page layout patterns across all platform blocks using PageHeader and PageNav components at the layout level ONLY.
+
+## 🚨 Critical Rules
+
+1. **PageHeader and PageNav MUST only exist in layout.tsx files**
+2. **Content files MUST NOT import or use PageHeader/PageNav**
+3. **Wrapper divs MUST use single `<div className="space-y-6">` without nesting**
+4. **Navigation arrays MUST be defined only in layout.tsx**
 
 ## Pattern: Fixed Block Title (Option A)
 
@@ -9,6 +16,7 @@ Each platform block follows a standardized layout pattern where:
 - The **layout.tsx** contains both PageHeader (with block name) and PageNav
 - **Content pages** focus purely on their specific content
 - No duplicate headers or navigation components
+- **Wrapper divs** use consistent spacing without unnecessary nesting
 
 ### Structure
 
@@ -76,7 +84,8 @@ export default async function BlockLayout({ children, params }: Props) {
 
 import type { Locale } from '@/components/internationalization/config'
 import type { Dictionary } from '@/components/internationalization/dictionaries'
-// Import components but NOT PageHeader or PageNav
+// ❌ DO NOT import PageHeader or PageNav
+// ❌ DO NOT import navigation arrays
 
 interface Props {
   dictionary: Dictionary
@@ -84,15 +93,22 @@ interface Props {
 }
 
 export default async function BlockContent({ dictionary, lang }: Props) {
-  // Your content implementation
-  // NO PageHeader here - it's in the layout
-  // NO PageNav here - it's in the layout
-
+  // ✅ CORRECT: Single wrapper div with space-y-6
   return (
     <div className="space-y-6">
-      {/* Your actual content */}
+      {/* Your actual content - NO headers or navigation */}
     </div>
   )
+
+  // ❌ WRONG: Nested wrapper divs
+  // return (
+  //   <div>
+  //     <div className="flex flex-col gap-6">
+  //       <PageHeader /> {/* NEVER do this */}
+  //       <PageNav />    {/* NEVER do this */}
+  //     </div>
+  //   </div>
+  // )
 }
 ```
 
@@ -150,6 +166,96 @@ export default async function FinanceLayout({ children, params }: Props) {
 }
 ```
 
+## 🔧 Quick Fix Guide
+
+### Step 1: Find Violations
+```bash
+# Find content files with PageHeader imports
+grep -r "import.*PageHeader" src/components/platform/*/
+
+# Find content files with PageNav imports
+grep -r "import.*PageNav" src/components/platform/*/
+
+# Find navigation array definitions in content files
+grep -r "PageNavItem\[\]" src/components/platform/*/
+```
+
+### Step 2: Fix Content Files
+
+**Before (WRONG):**
+```typescript
+// content.tsx with violations
+import PageHeader from '@/components/atom/page-header'
+import { PageNav, type PageNavItem } from '@/components/atom/page-nav'
+
+export default function Content({ dictionary, lang }: Props) {
+  const pages: PageNavItem[] = [
+    { name: 'Overview', href: '/block' },
+    // ...
+  ]
+
+  return (
+    <div>
+      <div className="flex flex-col gap-6">
+        <PageHeader title="Block Title" />
+        <PageNav pages={pages} />
+        {/* actual content */}
+      </div>
+    </div>
+  )
+}
+```
+
+**After (CORRECT):**
+```typescript
+// content.tsx fixed
+// No PageHeader or PageNav imports
+
+export default function Content({ dictionary, lang }: Props) {
+  // No navigation array definition
+
+  return (
+    <div className="space-y-6">
+      {/* actual content only */}
+    </div>
+  )
+}
+```
+
+### Step 3: Ensure Layout Has Navigation
+
+**layout.tsx should contain:**
+```typescript
+import PageHeader from '@/components/atom/page-header'
+import { PageNav, type PageNavItem } from '@/components/atom/page-nav'
+
+export default async function Layout({ children, params }: Props) {
+  const { lang } = await params
+  const dictionary = await getDictionary(lang)
+
+  const pages: PageNavItem[] = [
+    // Define ALL navigation here
+  ]
+
+  return (
+    <div className="space-y-6">
+      <PageHeader title="Block Title" />
+      <PageNav pages={pages} />
+      {children}
+    </div>
+  )
+}
+```
+
+### Common Wrapper Div Patterns
+
+| ❌ WRONG | ✅ CORRECT |
+|----------|------------|
+| `<div><div className="flex flex-col gap-6">` | `<div className="space-y-6">` |
+| `<div><div className="space-y-6">` | `<div className="space-y-6">` |
+| `<div className="flex flex-col gap-6">` | `<div className="space-y-6">` |
+| Multiple nested wrapper divs | Single wrapper div |
+
 ## Benefits
 
 1. **DRY Principle**: No duplicate headers or navigation across pages
@@ -160,35 +266,69 @@ export default async function FinanceLayout({ children, params }: Props) {
 
 ## Common Mistakes to Avoid
 
-❌ **Don't**: Add PageHeader in content files
+### ❌ Mistake 1: PageHeader/PageNav in Content Files
 ```typescript
-// Wrong - content.tsx
+// WRONG - content.tsx
+import PageHeader from '@/components/atom/page-header'
+import { PageNav } from '@/components/atom/page-nav'
+
 export default function Content() {
   return (
     <div>
-      <PageHeader title="Finance" /> {/* This is wrong! */}
-      <PageNav pages={pages} />      {/* This is wrong! */}
-      {/* content */}
+      <PageHeader title="Finance" /> {/* NEVER! */}
+      <PageNav pages={pages} />      {/* NEVER! */}
     </div>
   )
 }
 ```
 
-❌ **Don't**: Duplicate navigation definition
+### ❌ Mistake 2: Duplicate Navigation Definitions
 ```typescript
-// Wrong - defining same nav in multiple places
-const pages = [...] // Don't define in content files
+// WRONG - navigation defined in content.tsx
+const pages: PageNavItem[] = [...] // Should be in layout.tsx only
 ```
 
-✅ **Do**: Keep layout logic in layout files
+### ❌ Mistake 3: Nested Wrapper Divs
 ```typescript
-// Correct - layout.tsx handles all layout concerns
+// WRONG - unnecessary nesting
+return (
+  <div>
+    <div className="flex flex-col gap-6">
+      {/* content */}
+    </div>
+  </div>
+)
+```
+
+### ❌ Mistake 4: Inconsistent Spacing Classes
+```typescript
+// WRONG - using gap-6 instead of space-y-6
+return (
+  <div className="flex flex-col gap-6">
+    {/* content */}
+  </div>
+)
+```
+
+### ✅ Correct Implementation
+```typescript
+// CORRECT - layout.tsx has navigation
 export default async function Layout({ children }) {
+  const pages = [...] // Navigation defined here
   return (
     <div className="space-y-6">
       <PageHeader title="Block Name" />
       <PageNav pages={pages} />
       {children}
+    </div>
+  )
+}
+
+// CORRECT - content.tsx has only content
+export default function Content() {
+  return (
+    <div className="space-y-6">
+      {/* Pure content, no headers or nav */}
     </div>
   )
 }
@@ -198,12 +338,41 @@ export default async function Layout({ children }) {
 
 When migrating an existing block to this pattern:
 
-- [ ] Create or update layout.tsx with PageHeader and PageNav
-- [ ] Remove PageHeader from all content.tsx files
-- [ ] Remove PageNav from all content.tsx files
-- [ ] Ensure navigation items are defined only in layout.tsx
-- [ ] Test that navigation works correctly
-- [ ] Verify visual consistency across all pages
+### Pre-Migration Audit
+- [ ] Run grep commands to find all violations
+- [ ] List all content files that need fixing
+- [ ] Check if layout.tsx exists and has navigation
+
+### Migration Steps
+- [ ] **Step 1**: Update/create layout.tsx with PageHeader and PageNav
+- [ ] **Step 2**: Remove PageHeader imports from all content.tsx files
+- [ ] **Step 3**: Remove PageNav imports from all content.tsx files
+- [ ] **Step 4**: Delete navigation array definitions from content files
+- [ ] **Step 5**: Fix wrapper divs to use single `<div className="space-y-6">`
+- [ ] **Step 6**: Remove any nested wrapper divs
+- [ ] **Step 7**: Ensure navigation items are defined only in layout.tsx
+
+### Post-Migration Testing
+- [ ] Navigation appears on all pages
+- [ ] No duplicate headers visible
+- [ ] Correct spacing between elements
+- [ ] Navigation highlights current page
+- [ ] Build succeeds without errors
+- [ ] No TypeScript violations
+
+## 🐛 Troubleshooting
+
+### Issue: "Cannot find PageHeader/PageNav"
+**Solution**: These should only be imported in layout.tsx, not content files
+
+### Issue: "Navigation not showing"
+**Solution**: Check that layout.tsx properly defines and renders PageNav
+
+### Issue: "Extra spacing between elements"
+**Solution**: Remove nested wrapper divs, use single `<div className="space-y-6">`
+
+### Issue: "Build errors after refactoring"
+**Solution**: Ensure all imports are removed from content files and navigation arrays are only in layout.tsx
 
 ## Related Components
 

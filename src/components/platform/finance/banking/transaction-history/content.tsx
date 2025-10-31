@@ -1,6 +1,5 @@
 import { getAccounts } from '@/components/platform/finance/banking/actions/bank.actions'
 import { TransactionsTableImproved as TransactionsTable } from './table'
-import PageHeader from '@/components/atom/page-header'
 
 interface TransactionHistoryContentProps {
   user: any
@@ -42,12 +41,6 @@ export async function TransactionHistoryContent({
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title={dictionary?.transactionHistory || 'Transaction History'}
-        description={dictionary?.transactionHistoryDescription || 'View and search all your transactions'}
-        className="text-start max-w-none"
-      />
-
       <TransactionsTable
         transactions={allTransactions}
         accounts={accounts}
