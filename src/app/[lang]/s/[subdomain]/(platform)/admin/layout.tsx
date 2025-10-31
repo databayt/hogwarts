@@ -2,6 +2,7 @@ import { auth } from '@/auth'
 import { redirect } from 'next/navigation'
 import { type Locale } from '@/components/internationalization/config'
 import { getDictionary } from '@/components/internationalization/dictionaries'
+import PageHeader from '@/components/atom/page-header'
 import { PageNav, type PageNavItem } from '@/components/atom/page-nav'
 
 interface Props {
@@ -36,6 +37,10 @@ export default async function AdminLayout({ children, params }: Props) {
 
   return (
     <div className="space-y-6">
+      <PageHeader
+        title={d?.title || 'Admin'}
+        className="text-start max-w-none"
+      />
       <PageNav pages={adminPages} />
       {children}
     </div>

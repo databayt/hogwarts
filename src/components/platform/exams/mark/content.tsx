@@ -10,8 +10,6 @@ import { Plus, FileText, Clock, CheckCircle, AlertCircle } from "lucide-react"
 import Link from "next/link"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import type { Locale } from "@/components/internationalization/config"
-import PageHeader from "@/components/atom/page-header"
-import { PageNav, type PageNavItem } from "@/components/atom/page-nav"
 
 export async function MarkingContent({
   examId,
@@ -61,40 +59,8 @@ export async function MarkingContent({
 
   const dict = dictionary.marking
 
-  // Define exams page navigation
-  const examsPages: PageNavItem[] = [
-    {
-      name: 'Exams',
-      href: `/${locale}/exams`
-    },
-    {
-      name: 'QBank',
-      href: `/${locale}/exams/qbank`
-    },
-    {
-      name: 'Generate',
-      href: `/${locale}/exams/generate`
-    },
-    {
-      name: 'Mark',
-      href: `/${locale}/exams/mark`
-    },
-    {
-      name: 'Result',
-      href: `/${locale}/exams/result`
-    },
-  ];
-
   return (
-    <div>
-      <div className="flex flex-col gap-6">
-        <PageHeader
-          title="Mark"
-          className="text-start max-w-none"
-        />
-
-        <PageNav pages={examsPages} />
-
+    <div className="space-y-6">
         {/* Header Actions */}
         <div className="flex items-center justify-between">
           <div></div>
@@ -195,7 +161,6 @@ export async function MarkingContent({
             />
           </TabsContent>
         </Tabs>
-      </div>
     </div>
   )
 }
