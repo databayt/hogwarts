@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
@@ -13,12 +13,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger
-} from '@/components/ui/tabs';
-import {
   Edit,
   MapPin,
   QrCode,
@@ -26,17 +20,14 @@ import {
   CreditCard,
   Fingerprint,
   User,
+  Users,
   Smartphone,
   Bluetooth,
   Upload,
   ChevronRight,
-  Settings,
-  BarChart3,
-  FileText,
   AlertCircle,
   CheckCircle2,
   Clock,
-  Users,
   TrendingUp
 } from 'lucide-react';
 import { useAttendanceContext } from './attendance-context';
@@ -76,8 +67,6 @@ export function AttendanceHub({ dictionary, locale = 'en' }: AttendanceHubProps)
     checkMethodSupport,
     setCurrentMethod
   } = useAttendanceContext();
-
-  const [activeTab, setActiveTab] = useState<'methods' | 'stats' | 'recent'>('methods');
 
   const handleMethodSelect = (method: AttendanceMethod) => {
     setCurrentMethod(method);
@@ -165,171 +154,105 @@ export function AttendanceHub({ dictionary, locale = 'en' }: AttendanceHubProps)
       )}
 
       {/* Method Selection */}
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="methods">Tracking Methods</TabsTrigger>
-          <TabsTrigger value="stats">Statistics</TabsTrigger>
-          <TabsTrigger value="recent">Recent Activity</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="methods" className="space-y-4 mt-4">
-          {/* Currently Active Method */}
-          <Card className="border-primary">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <CardTitle>Current Method</CardTitle>
-                  <Badge variant="default">Active</Badge>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleMethodSelect(currentMethod)}
-                >
-                  Continue
-                  <ChevronRight className="h-4 w-4 ml-1" />
-                </Button>
+      <div className="space-y-4">
+        {/* Currently Active Method */}
+        <Card className="border-primary">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <CardTitle>Current Method</CardTitle>
+                <Badge variant="default">Active</Badge>
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-3">
-                <div className="p-3 bg-primary/10 rounded-lg">
-                  {METHOD_ICONS[currentMethod]}
-                </div>
-                <div>
-                  <p className="font-semibold">{getMethodDisplayName(currentMethod)}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {methods.find(m => m.method === currentMethod)?.description}
-                  </p>
-                </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleMethodSelect(currentMethod)}
+              >
+                Continue
+                <ChevronRight className="h-4 w-4 ml-1" />
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-primary/10 rounded-lg">
+                {METHOD_ICONS[currentMethod]}
               </div>
-            </CardContent>
-          </Card>
+              <div>
+                <p className="font-semibold">{getMethodDisplayName(currentMethod)}</p>
+                <p className="text-sm text-muted-foreground">
+                  {methods.find(m => m.method === currentMethod)?.description}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
-          {/* Method Grid */}
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {methods.map((method) => {
-              const isAvailable = isMethodAvailable(method.method);
-              const isCurrent = method.method === currentMethod;
+        {/* Method Grid */}
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {methods.map((method) => {
+            const isAvailable = isMethodAvailable(method.method);
+            const isCurrent = method.method === currentMethod;
 
-              return (
-                <motion.div
-                  key={method.method}
-                  whileHover={{ scale: isAvailable ? 1.02 : 1 }}
-                  whileTap={{ scale: isAvailable ? 0.98 : 1 }}
+            return (
+              <motion.div
+                key={method.method}
+                whileHover={{ scale: isAvailable ? 1.02 : 1 }}
+                whileTap={{ scale: isAvailable ? 0.98 : 1 }}
+              >
+                <Card
+                  className={cn(
+                    "cursor-pointer transition-all",
+                    isAvailable ? "hover:shadow-lg" : "opacity-50 cursor-not-allowed",
+                    isCurrent && "ring-2 ring-primary"
+                  )}
+                  onClick={() => isAvailable && !isCurrent && handleMethodSelect(method.method)}
                 >
-                  <Card
-                    className={cn(
-                      "cursor-pointer transition-all",
-                      isAvailable ? "hover:shadow-lg" : "opacity-50 cursor-not-allowed",
-                      isCurrent && "ring-2 ring-primary"
-                    )}
-                    onClick={() => isAvailable && !isCurrent && handleMethodSelect(method.method)}
-                  >
-                    <CardHeader>
-                      <div className="flex items-center justify-between">
-                        <div
-                          className={cn(
-                            "p-2 rounded-lg",
-                            isAvailable ? `bg-${method.color}-100` : "bg-gray-100"
-                          )}
-                        >
-                          {METHOD_ICONS[method.method]}
-                        </div>
-                        {!isAvailable && (
-                          <Badge variant="secondary">Unavailable</Badge>
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <div
+                        className={cn(
+                          "p-2 rounded-lg",
+                          isAvailable ? `bg-${method.color}-100` : "bg-gray-100"
                         )}
-                        {isCurrent && (
-                          <Badge variant="default">Current</Badge>
-                        )}
-                      </div>
-                      <CardTitle className="mt-4">{method.name}</CardTitle>
-                      <CardDescription>{method.description}</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-2 text-sm">
-                        {method.requiresHardware && (
-                          <div className="flex items-center gap-1 text-muted-foreground">
-                            <AlertCircle className="h-3 w-3" />
-                            <span>Requires hardware</span>
-                          </div>
-                        )}
-                        {method.supportedDevices.length > 0 && (
-                          <div className="flex flex-wrap gap-1">
-                            {method.supportedDevices.map(device => (
-                              <Badge key={device} variant="outline" className="text-xs">
-                                {device.replace('_', ' ')}
-                              </Badge>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              );
-            })}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="stats" className="mt-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Method Usage Statistics</CardTitle>
-              <CardDescription>
-                Performance and usage metrics for each attendance method
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {methods.filter(m => m.enabled).map(method => (
-                  <div key={method.method} className="flex items-center justify-between py-2">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-secondary rounded">
+                      >
                         {METHOD_ICONS[method.method]}
                       </div>
-                      <div>
-                        <p className="font-medium">{method.name}</p>
-                        <p className="text-sm text-muted-foreground">
-                          Last used: {selectedDate ? formatAttendanceDate(selectedDate) : 'Never'}
-                        </p>
-                      </div>
+                      {!isAvailable && (
+                        <Badge variant="secondary">Unavailable</Badge>
+                      )}
+                      {isCurrent && (
+                        <Badge variant="default">Current</Badge>
+                      )}
                     </div>
-                    <div className="text-right">
-                      <p className="font-semibold">0 uses</p>
-                      <p className="text-sm text-muted-foreground">0% of total</p>
+                    <CardTitle className="mt-4">{method.name}</CardTitle>
+                    <CardDescription>{method.description}</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2 text-sm">
+                      {method.requiresHardware && (
+                        <div className="flex items-center gap-1 text-muted-foreground">
+                          <AlertCircle className="h-3 w-3" />
+                          <span>Requires hardware</span>
+                        </div>
+                      )}
+                      {method.supportedDevices.length > 0 && (
+                        <div className="flex flex-wrap gap-1">
+                          {method.supportedDevices.map(device => (
+                            <Badge key={device} variant="outline" className="text-xs">
+                              {device.replace('_', ' ')}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="recent" className="mt-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent Activity</CardTitle>
-              <CardDescription>
-                Latest attendance records across all methods
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8 text-muted-foreground">
-                <Users className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                <p>No recent attendance records</p>
-                <Button
-                  variant="outline"
-                  className="mt-4"
-                  onClick={() => handleMethodSelect('MANUAL')}
-                >
-                  Start Marking Attendance
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 }
