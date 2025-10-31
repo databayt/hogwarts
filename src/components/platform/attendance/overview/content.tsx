@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
   Card,
@@ -58,8 +58,12 @@ interface AttendanceOverviewProps {
 
 export function AttendanceOverviewContent({ dictionary, locale = 'en' }: AttendanceOverviewProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const { data: session } = useSession();
   const userRole = session?.user?.role as UserRole | undefined;
+
+  // Extract subdomain from pathname: /[lang]/s/[subdomain]/...
+  const subdomain = pathname?.split('/')[3] || '';
 
   const {
     currentMethod,
