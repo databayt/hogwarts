@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { db } from '@/lib/db'
 import { getTenantContext } from '@/lib/tenant-context'
 import { checkCurrentUserPermission } from '../lib/permissions'
+import PageHeader from '@/components/atom/page-header'
 
 interface Props {
   dictionary: Dictionary
@@ -18,15 +19,13 @@ export default async function ReportsContent({ dictionary, lang }: Props) {
 
   if (!schoolId) {
     return (
-      <PageContainer>
-        <div className="flex flex-1 flex-col gap-6">
-          <PageHeader
-            title="Financial Reports"
-            description="School context not found"
-            className="text-start max-w-none"
-          />
-        </div>
-      </PageContainer>
+      <div className="space-y-6">
+        <PageHeader
+          title="Financial Reports"
+          description="School context not found"
+          className="text-start max-w-none"
+        />
+      </div>
     )
   }
 
@@ -37,15 +36,13 @@ export default async function ReportsContent({ dictionary, lang }: Props) {
   // If user can't view reports, show empty state
   if (!canView) {
     return (
-      <PageContainer>
-        <div className="flex flex-1 flex-col gap-6">
-          <PageHeader
-            title="Financial Reports"
-            description="You don't have permission to view reports"
-            className="text-start max-w-none"
-          />
-        </div>
-      </PageContainer>
+      <div className="space-y-6">
+        <PageHeader
+          title="Financial Reports"
+          description="You don't have permission to view reports"
+          className="text-start max-w-none"
+        />
+      </div>
     )
   }
 
@@ -66,13 +63,12 @@ export default async function ReportsContent({ dictionary, lang }: Props) {
   const d = dictionary?.finance?.reports
 
   return (
-    <PageContainer>
-      <div className="flex flex-1 flex-col gap-6">
-        <PageHeader
-          title={d?.title || 'Financial Reports'}
-          description="Generate comprehensive financial statements and analysis reports"
-          className="text-start max-w-none"
-        />
+    <div className="space-y-6">
+      <PageHeader
+        title={d?.title || 'Financial Reports'}
+        description="Generate comprehensive financial statements and analysis reports"
+        className="text-start max-w-none"
+      />
 
         <div className="grid gap-4 md:grid-cols-4">
           <Card>
@@ -265,7 +261,6 @@ export default async function ReportsContent({ dictionary, lang }: Props) {
             </CardContent>
           </Card>
         </div>
-      </div>
-    </PageContainer>
+    </div>
   )
 }

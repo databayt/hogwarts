@@ -5,6 +5,7 @@ import { db } from '@/lib/db'
 import { getTenantContext } from '@/lib/tenant-context'
 import { StatsCard, FeatureCard, DashboardGrid } from '../lib/dashboard-components'
 import { checkCurrentUserPermission } from '../lib/permissions'
+import PageHeader from '@/components/atom/page-header'
 
 interface Props {
   dictionary: Dictionary
@@ -16,15 +17,13 @@ export default async function TimesheetContent({ dictionary, lang }: Props) {
 
   if (!schoolId) {
     return (
-      <PageContainer>
-        <div className="flex flex-1 flex-col gap-6">
-          <PageHeader
-            title="Timesheet Management"
-            description="School context not found"
-            className="text-start max-w-none"
-          />
-        </div>
-      </PageContainer>
+      <div className="space-y-6">
+        <PageHeader
+          title="Timesheet Management"
+          description="School context not found"
+          className="text-start max-w-none"
+        />
+      </div>
     )
   }
 
@@ -38,15 +37,13 @@ export default async function TimesheetContent({ dictionary, lang }: Props) {
   // If user can't view timesheet, show empty state
   if (!canView) {
     return (
-      <PageContainer>
-        <div className="flex flex-1 flex-col gap-6">
-          <PageHeader
-            title="Timesheet Management"
-            description="You don't have permission to view timesheets"
-            className="text-start max-w-none"
-          />
-        </div>
-      </PageContainer>
+      <div className="space-y-6">
+        <PageHeader
+          title="Timesheet Management"
+          description="You don't have permission to view timesheets"
+          className="text-start max-w-none"
+        />
+      </div>
     )
   }
 
@@ -80,13 +77,12 @@ export default async function TimesheetContent({ dictionary, lang }: Props) {
   const d = dictionary?.finance?.timesheet
 
   return (
-    <PageContainer>
-      <div className="flex flex-1 flex-col gap-6">
-        <PageHeader
-          title={d?.title || 'Timesheet Management'}
-          description="Track staff hours, approve timesheets, and integrate with payroll"
-          className="text-start max-w-none"
-        />
+    <div className="space-y-6">
+      <PageHeader
+        title={d?.title || 'Timesheet Management'}
+        description="Track staff hours, approve timesheets, and integrate with payroll"
+        className="text-start max-w-none"
+      />
 
         {/* Stats Grid - Uses semantic HTML (h6, h2, small) */}
         <DashboardGrid type="stats">
@@ -207,7 +203,6 @@ export default async function TimesheetContent({ dictionary, lang }: Props) {
             }}
           />
         </DashboardGrid>
-      </div>
-    </PageContainer>
+    </div>
   )
 }
