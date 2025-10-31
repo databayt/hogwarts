@@ -62,7 +62,7 @@ export default async function AccountsContent({ dictionary, lang }: Props) {
   const d = dictionary?.finance?.accounts
 
   return (
-    <>
+    <div className="space-y-6">
       {/* Stats Grid - Uses semantic HTML (h6, h2, small) */}
         <DashboardGrid type="stats">
           <StatsCard
@@ -182,6 +182,6 @@ export default async function AccountsContent({ dictionary, lang }: Props) {
             />
           )}
         </DashboardGrid>
-    </>
+    </div>
   )
 }

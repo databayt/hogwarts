@@ -67,7 +67,7 @@ export default async function ExpensesContent({ dictionary, lang }: Props) {
   const d = dictionary?.finance?.expenses
 
   return (
-    <>
+    <div className="space-y-6">
       <DashboardGrid type="stats">
           <StatsCard
             title="Total Expenses"
@@ -173,6 +173,6 @@ export default async function ExpensesContent({ dictionary, lang }: Props) {
             />
           )}
         </DashboardGrid>
-    </>
+    </div>
   )
 }

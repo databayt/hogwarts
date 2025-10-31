@@ -5,7 +5,6 @@ import { db } from '@/lib/db'
 import { getTenantContext } from '@/lib/tenant-context'
 import { StatsCard, FeatureCard, DashboardGrid } from '../lib/dashboard-components'
 import { checkCurrentUserPermission } from '../lib/permissions'
-import PageHeader from '@/components/atom/page-header'
 
 interface Props {
   dictionary: Dictionary
@@ -17,12 +16,8 @@ export default async function TimesheetContent({ dictionary, lang }: Props) {
 
   if (!schoolId) {
     return (
-      <div className="space-y-6">
-        <PageHeader
-          title="Timesheet Management"
-          description="School context not found"
-          className="text-start max-w-none"
-        />
+      <div>
+        <p className="text-muted-foreground">School context not found</p>
       </div>
     )
   }
@@ -37,12 +32,8 @@ export default async function TimesheetContent({ dictionary, lang }: Props) {
   // If user can't view timesheet, show empty state
   if (!canView) {
     return (
-      <div className="space-y-6">
-        <PageHeader
-          title="Timesheet Management"
-          description="You don't have permission to view timesheets"
-          className="text-start max-w-none"
-        />
+      <div>
+        <p className="text-muted-foreground">You don't have permission to view timesheets</p>
       </div>
     )
   }
@@ -78,13 +69,7 @@ export default async function TimesheetContent({ dictionary, lang }: Props) {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title={d?.title || 'Timesheet Management'}
-        description="Track staff hours, approve timesheets, and integrate with payroll"
-        className="text-start max-w-none"
-      />
-
-        {/* Stats Grid - Uses semantic HTML (h6, h2, small) */}
+      {/* Stats Grid - Uses semantic HTML (h6, h2, small) */}
         <DashboardGrid type="stats">
           <StatsCard
             title="Total Hours"

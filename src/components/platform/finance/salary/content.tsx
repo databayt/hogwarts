@@ -99,9 +99,9 @@ export default async function SalaryContent({ dictionary, lang }: Props) {
   const d = dictionary?.finance?.salary
 
   return (
-    <>
+    <div className="space-y-6">
       {/* Financial Overview */}
-        <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
@@ -339,6 +339,6 @@ export default async function SalaryContent({ dictionary, lang }: Props) {
             </Card>
           )}
         </div>
-    </>
+    </div>
   )
 }

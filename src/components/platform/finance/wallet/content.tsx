@@ -5,7 +5,6 @@ import { db } from '@/lib/db'
 import { getTenantContext } from '@/lib/tenant-context'
 import { StatsCard, FeatureCard, DashboardGrid, formatCurrency } from '../lib/dashboard-components'
 import { checkCurrentUserPermission } from '../lib/permissions'
-import PageHeader from '@/components/atom/page-header'
 
 interface Props {
   dictionary: Dictionary
@@ -17,12 +16,8 @@ export default async function WalletContent({ dictionary, lang }: Props) {
 
   if (!schoolId) {
     return (
-      <div className="space-y-6">
-        <PageHeader
-          title="Wallet Management"
-          description="School context not found"
-          className="text-start max-w-none"
-        />
+      <div>
+        <p className="text-muted-foreground">School context not found</p>
       </div>
     )
   }
@@ -37,12 +32,8 @@ export default async function WalletContent({ dictionary, lang }: Props) {
   // If user can't view wallet, show empty state
   if (!canView) {
     return (
-      <div className="space-y-6">
-        <PageHeader
-          title="Wallet Management"
-          description="You don't have permission to view wallet"
-          className="text-start max-w-none"
-        />
+      <div>
+        <p className="text-muted-foreground">You don't have permission to view wallet</p>
       </div>
     )
   }
@@ -81,13 +72,7 @@ export default async function WalletContent({ dictionary, lang }: Props) {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title={d?.title || 'Wallet Management'}
-        description={d?.description || 'Manage school and parent wallets, track balances and transactions'}
-        className="text-start max-w-none"
-      />
-
-        <DashboardGrid type="stats">
+      <DashboardGrid type="stats">
           <StatsCard
             title={d?.stats?.totalBalance || 'Total Balance'}
             value={formatCurrency(totalBalance)}

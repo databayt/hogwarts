@@ -86,7 +86,8 @@ export function DashboardContent({ dictionary, lang }: Props) {
     },
   ];
   return (
-    <div className="grid gap-6 lg:grid-cols-4">
+    <div className="space-y-6">
+      <div className="grid gap-6 lg:grid-cols-4">
         <StatsCards
           stats={{
             totalRevenue: data?.totalRevenue ?? "-",
@@ -106,5 +107,6 @@ export function DashboardContent({ dictionary, lang }: Props) {
           columns={columns}
         />
       </div>
+    </div>
   );
 }
