@@ -62,8 +62,7 @@ export default function PlatformSidebar({ school, lang, ...props }: PlatformSide
           <SidebarGroup className="p-2 pb-8">
             <SidebarMenu className="space-y-1 list-none">
               {platformNav
-                // TODO: Re-enable role-based filtering when needed
-                // .filter((item) => (currentRole ? item.roles.includes(currentRole) : false))
+                .filter((item) => (currentRole ? item.roles.includes(currentRole) : false))
                 .map((item) => {
                 // Prepend locale to href to preserve language when navigating
                 const localizedHref = `/${locale}${item.href}`;

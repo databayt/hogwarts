@@ -183,7 +183,7 @@ export function QuestionCard({
       </CardContent>
 
       <CardFooter className="pt-0">
-        <Link href={`/${locale}/mark/questions/${id}`} className="w-full">
+        <Link href={`/${locale}/exams/mark/questions/${id}`} className="w-full">
           <Button variant="outline" size="sm" className="w-full">
             View Details
           </Button>

@@ -85,7 +85,7 @@ export function FeaturedQuestions({
               <Badge variant="secondary">{mostUsed.length}</Badge>
             </div>
             <Button variant="ghost" size="sm" asChild>
-              <Link href={`/${locale}/mark/questions`}>View All</Link>
+              <Link href={`/${locale}/exams/mark/questions`}>View All</Link>
             </Button>
           </div>
 
@@ -131,7 +131,7 @@ export function FeaturedQuestions({
               <Badge variant="secondary">{highestRated.length}</Badge>
             </div>
             <Button variant="ghost" size="sm" asChild>
-              <Link href={`/${locale}/mark/questions?sort=rating`}>View All</Link>
+              <Link href={`/${locale}/exams/mark/questions?sort=rating`}>View All</Link>
             </Button>
           </div>
 
@@ -168,7 +168,7 @@ export function FeaturedQuestions({
               <Badge variant="secondary">{trending.length}</Badge>
             </div>
             <Button variant="ghost" size="sm" asChild>
-              <Link href={`/${locale}/mark/questions?sort=trending`}>View All</Link>
+              <Link href={`/${locale}/exams/mark/questions?sort=trending`}>View All</Link>
             </Button>
           </div>
 
@@ -235,7 +235,7 @@ export function FeaturedQuestions({
             Start creating questions to see featured recommendations here
           </p>
           <Button asChild>
-            <Link href={`/${locale}/mark/questions/create`}>
+            <Link href={`/${locale}/exams/mark/questions/create`}>
               {dict.questionBank.createFirst}
             </Link>
           </Button>

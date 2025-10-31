@@ -111,39 +111,6 @@ export function AttendanceHub({ dictionary, locale = 'en' }: AttendanceHubProps)
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold">Attendance Hub</h2>
-          <p className="text-muted-foreground">
-            Select your preferred attendance tracking method
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            onClick={() => router.push(`/${locale}/s/subdomain/(platform)/attendance/reports`)}
-          >
-            <FileText className="h-4 w-4 mr-2" />
-            Reports
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => router.push(`/${locale}/s/subdomain/(platform)/attendance/analytics`)}
-          >
-            <BarChart3 className="h-4 w-4 mr-2" />
-            Analytics
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => router.push(`/${locale}/s/subdomain/(platform)/attendance/settings`)}
-          >
-            <Settings className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
-
       {/* Quick Stats */}
       {stats && (
         <div className="grid gap-4 md:grid-cols-5">

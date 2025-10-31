@@ -74,7 +74,7 @@ export async function createQuestion(data: FormData) {
       },
     })
 
-    revalidatePath("/mark")
+    revalidatePath("/exams/mark")
     return { success: true }
   } catch (error) {
     console.error("Create question error:", error)
@@ -109,7 +109,7 @@ export async function updateQuestion(id: string, data: FormData) {
       data: formData,
     })
 
-    revalidatePath("/mark")
+    revalidatePath("/exams/mark")
     return { success: true }
   } catch (error) {
     console.error("Update question error:", error)
@@ -133,7 +133,7 @@ export async function deleteQuestion(id: string) {
       where: { id, schoolId },
     })
 
-    revalidatePath("/mark")
+    revalidatePath("/exams/mark")
     return { success: true }
   } catch (error) {
     console.error("Delete question error:", error)
@@ -188,7 +188,7 @@ export async function createRubric(data: FormData) {
       },
     })
 
-    revalidatePath("/mark")
+    revalidatePath("/exams/mark")
     return { success: true }
   } catch (error) {
     console.error("Create rubric error:", error)
@@ -411,7 +411,7 @@ export async function autoGradeAnswer(studentAnswerId: string) {
       })
     }
 
-    revalidatePath("/mark")
+    revalidatePath("/exams/mark")
     return { success: true, ...result }
   } catch (error) {
     console.error("Auto-grade error:", error)
@@ -519,7 +519,7 @@ export async function aiGradeAnswer(studentAnswerId: string) {
       })
     }
 
-    revalidatePath("/mark")
+    revalidatePath("/exams/mark")
     return aiResult
   } catch (error) {
     console.error("AI grade error:", error)
@@ -586,7 +586,7 @@ export async function manualGrade(
       })
     }
 
-    revalidatePath("/mark")
+    revalidatePath("/exams/mark")
     return { success: true }
   } catch (error) {
     console.error("Manual grade error:", error)
@@ -640,7 +640,7 @@ export async function overrideGrade(data: FormData) {
       },
     })
 
-    revalidatePath("/mark")
+    revalidatePath("/exams/mark")
     return { success: true }
   } catch (error) {
     console.error("Override grade error:", error)
@@ -701,7 +701,7 @@ export async function bulkGradeExam(data: FormData) {
       }
     }
 
-    revalidatePath("/mark")
+    revalidatePath("/exams/mark")
     return { success: true, graded, failed, total: answers.length }
   } catch (error) {
     console.error("Bulk grade error:", error)

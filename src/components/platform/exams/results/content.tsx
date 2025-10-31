@@ -86,7 +86,7 @@ export default async function ResultsContent({ dictionary, lang }: Props) {
             className="text-start max-w-none"
           />
           <Button asChild>
-            <Link href={`/${lang}/results/analytics`}>
+            <Link href={`/${lang}/exams/result/analytics`}>
               <TrendingUp className="mr-2 h-4 w-4" />
               {r?.actions?.viewAnalytics}
             </Link>
@@ -120,7 +120,7 @@ export default async function ResultsContent({ dictionary, lang }: Props) {
                   </div>
                   <div className="flex gap-2">
                     <Button asChild variant="outline" size="sm">
-                      <Link href={`/${lang}/results/${exam.id}`}>
+                      <Link href={`/${lang}/exams/result/${exam.id}`}>
                         <FileBarChart className="mr-2 h-4 w-4" />
                         {r?.actions?.viewResults}
                       </Link>

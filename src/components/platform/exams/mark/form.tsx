@@ -99,7 +99,7 @@ export function QuestionForm({
           questionId ? dict.messages.questionUpdated : dict.messages.questionCreated
         )
         onSuccess?.()
-        router.push(`/${locale}/mark/questions`)
+        router.push(`/${locale}/exams/mark/questions`)
       } else {
         toast.error(result.error || dict.messages.error)
       }

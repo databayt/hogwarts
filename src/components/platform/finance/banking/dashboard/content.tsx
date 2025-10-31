@@ -4,6 +4,8 @@ import { DashboardHeader } from './header'
 import { DashboardMainContent } from './main-content'
 import { DashboardSidebar } from './sidebar'
 import { DashboardSkeleton } from './skeleton'
+import { checkFinancePermission } from '../../lib/permissions'
+import { getTenantContext } from '@/lib/tenant-context'
 
 interface BankingDashboardContentProps {
   user: any
@@ -18,6 +20,32 @@ export async function BankingDashboardContent({
   dictionary,
   lang,
 }: BankingDashboardContentProps) {
+  const { schoolId } = await getTenantContext()
+
+  if (!schoolId) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <p className="text-muted-foreground">
+          School context not found
+        </p>
+      </div>
+    )
+  }
+
+  // Check permissions for current user
+  const canView = await checkFinancePermission(user.id, schoolId, 'banking', 'view')
+
+  // If user can't view banking, show permission denied
+  if (!canView) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <p className="text-muted-foreground">
+          You don't have permission to view banking
+        </p>
+      </div>
+    )
+  }
+
   const currentPage = Number(searchParams?.page) || 1
 
   const accountsResult = await getAccounts({

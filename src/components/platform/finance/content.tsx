@@ -129,22 +129,28 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
 
   const d = dictionary?.finance
 
-  // Define finance page navigation
+  // Define finance page navigation (primary links shown in nav, secondary hidden)
   const financePages: PageNavItem[] = [
+    // Primary navigation (7 most important features)
     { name: 'Overview', href: `/${lang}/finance` },
     { name: 'Invoice', href: `/${lang}/finance/invoice` },
-    { name: 'Receipt', href: `/${lang}/finance/receipt` },
     { name: 'Banking', href: `/${lang}/finance/banking` },
     { name: 'Fees', href: `/${lang}/finance/fees` },
     { name: 'Salary', href: `/${lang}/finance/salary` },
     { name: 'Payroll', href: `/${lang}/finance/payroll` },
-    { name: 'Timesheet', href: `/${lang}/finance/timesheet` },
-    { name: 'Wallet', href: `/${lang}/finance/wallet` },
-    { name: 'Budget', href: `/${lang}/finance/budget` },
-    { name: 'Expenses', href: `/${lang}/finance/expenses` },
-    { name: 'Accounts', href: `/${lang}/finance/accounts` },
     { name: 'Reports', href: `/${lang}/finance/reports` },
+
+    // Secondary navigation (hidden from nav, shown in content)
+    { name: 'Receipt', href: `/${lang}/finance/receipt`, hidden: true },
+    { name: 'Timesheet', href: `/${lang}/finance/timesheet`, hidden: true },
+    { name: 'Wallet', href: `/${lang}/finance/wallet`, hidden: true },
+    { name: 'Budget', href: `/${lang}/finance/budget`, hidden: true },
+    { name: 'Expenses', href: `/${lang}/finance/expenses`, hidden: true },
+    { name: 'Accounts', href: `/${lang}/finance/accounts`, hidden: true },
   ]
+
+  // Separate secondary pages for quick access section
+  const secondaryPages = financePages.filter(page => page.hidden)
 
   return (
     <div className="space-y-6">
@@ -291,6 +297,50 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
             </CardContent>
           </Card>
         </div>
+
+        {/* More Features - Secondary Navigation Links */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              More Features
+            </CardTitle>
+            <CardDescription>
+              Additional finance management tools and utilities
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {secondaryPages.map((page) => (
+                <Button
+                  key={page.href}
+                  asChild
+                  variant="outline"
+                  className="justify-start h-auto py-3"
+                >
+                  <Link href={page.href}>
+                    {page.name === 'Receipt' && <Receipt className="mr-2 h-4 w-4" />}
+                    {page.name === 'Timesheet' && <Clock className="mr-2 h-4 w-4" />}
+                    {page.name === 'Wallet' && <Wallet className="mr-2 h-4 w-4" />}
+                    {page.name === 'Budget' && <PieChart className="mr-2 h-4 w-4" />}
+                    {page.name === 'Expenses' && <TrendingUp className="mr-2 h-4 w-4" />}
+                    {page.name === 'Accounts' && <BookOpen className="mr-2 h-4 w-4" />}
+                    <span className="flex flex-col items-start">
+                      <span className="font-medium">{page.name}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {page.name === 'Receipt' && 'Expense receipts & scanning'}
+                        {page.name === 'Timesheet' && 'Staff time tracking'}
+                        {page.name === 'Wallet' && 'School & parent wallets'}
+                        {page.name === 'Budget' && 'Budget planning & variance'}
+                        {page.name === 'Expenses' && 'Expense approval workflow'}
+                        {page.name === 'Accounts' && 'Chart of accounts & ledger'}
+                      </span>
+                    </span>
+                  </Link>
+                </Button>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Finance Sub-Blocks Navigation */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">

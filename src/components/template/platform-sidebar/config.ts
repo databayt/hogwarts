@@ -31,18 +31,16 @@ const ALL_ROLES: Role[] = [
 
 export const platformNav: PlatformNavItem[] = [
   // Admin dashboard – admin only
-  { title: "Overview", href: "/dashboard", icon: "pieChart", roles: ["ADMIN"] },
+  { title: "Overview", href: "/dashboard", icon: "pieChart", roles: ALL_ROLES },
   { title: "Admin", href: "/dashboard/admin", icon: "admin", roles: ["ADMIN"], className: "-ml-[1.5px] h-4.5 w-4.5" },
   { title: "Billing", href: "/dashboard/billing", icon: "browser", roles: ["ADMIN"] },
   { title: "Charts", href: "/dashboard/charts", icon: "barChart", roles: ["ADMIN"] },
-  { title: "Settings", href: "/dashboard/settings", icon: "cog", roles: ["ADMIN", "STAFF", "TEACHER", "STUDENT", "GUARDIAN", "ACCOUNTANT", "DEVELOPER"] },
 
   // School platform – recommended visibility
   { title: "Announcements", href: "/announcements", icon: "speaker", roles: ALL_ROLES, className: "h-4.5 w-4.5" },
   // { title: "Messages", href: "/messages", icon: "envelope", roles: ALL_ROLES },
   // { title: "Notifications", href: "/notifications", icon: "bell", roles: ALL_ROLES, className: "h-4.5 w-4.5" },
-  { title: "Invoices", href: "/invoice", icon: "invoice", roles: ["ADMIN", "ACCOUNTANT"], className: "-ml-[1px] h-4.5 w-4.5" },
-  { title: "Finance", href: "/finance", icon: "wallet", roles: ["ADMIN", "ACCOUNTANT", "DEVELOPER"] },
+  { title: "Finance", href: "/finance", icon: "wallet", roles: ALL_ROLES },
   { title: "Grades", href: "/grades", icon: "grades", roles: ["ADMIN", "STAFF", "TEACHER", "STUDENT", "GUARDIAN"], className: "-ml-[1px] h-4.5 w-4.5" },
   { title: "Subjects", href: "/subjects", icon: "subject", roles: ["ADMIN", "STAFF", "TEACHER"], className: "" },
   { title: "Parents", href: "/parents", icon: "users", roles: ["ADMIN", "STAFF"] },
@@ -57,8 +55,8 @@ export const platformNav: PlatformNavItem[] = [
   { title: "Timetable", href: "/timetable", icon: "clock", roles: ["ADMIN", "TEACHER", "STUDENT"]},
   { title: "Library", href: "/library", icon: "bookOpen", roles: ALL_ROLES },
   { title: "Stream", href: "/stream", icon: "video", roles: ALL_ROLES },
-  { title: "Settings", href: "/settings", icon: "cog", roles: ["ADMIN"] },
-  { title: "Profile", href: "/profile", icon: "cog", roles: ALL_ROLES },
+  { title: "Settings", href: "/settings", icon: "cog", roles: ALL_ROLES },
+  { title: "Profile", href: "/profile", icon: "user", roles: ALL_ROLES },
 ];
 
 

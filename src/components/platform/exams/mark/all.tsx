@@ -116,7 +116,7 @@ export function AllQuestions({ questions, dictionary, locale }: AllQuestionsProp
           </p>
         </div>
         <Button asChild>
-          <Link href={`/${locale}/mark/questions/create`}>
+          <Link href={`/${locale}/exams/mark/questions/create`}>
             <Plus className="h-4 w-4 mr-2" />
             {dict.buttons.newQuestion}
           </Link>
@@ -281,7 +281,7 @@ export function AllQuestions({ questions, dictionary, locale }: AllQuestionsProp
         <div className="text-center py-12">
           <p className="text-muted-foreground">{dict.questionBank.noQuestions}</p>
           <Button variant="outline" className="mt-4" asChild>
-            <Link href={`/${locale}/mark/questions/create`}>
+            <Link href={`/${locale}/exams/mark/questions/create`}>
               <Plus className="h-4 w-4 mr-2" />
               {dict.questionBank.createFirst}
             </Link>

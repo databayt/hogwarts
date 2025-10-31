@@ -99,13 +99,13 @@ export default async function GenerateContent({ dictionary, lang }: Props) {
               </p>
               <div className="flex gap-2">
                 <Button asChild>
-                  <Link href={`/${lang}/generate/questions`}>
+                  <Link href={`/${lang}/exams/qbank`}>
                     <BookOpen className="mr-2 h-4 w-4" />
                     {dictionary.generate.actions.viewQuestions}
                   </Link>
                 </Button>
                 <Button variant="outline" asChild>
-                  <Link href={`/${lang}/generate/questions/new`}>
+                  <Link href={`/${lang}/exams/qbank/new`}>
                     <Plus className="mr-2 h-4 w-4" />
                     {dictionary.generate.actions.addQuestion}
                   </Link>
@@ -129,7 +129,7 @@ export default async function GenerateContent({ dictionary, lang }: Props) {
                 {dictionary.generate.cards.aiGeneration.details}
               </p>
               <Button asChild variant="secondary">
-                <Link href={`/${lang}/generate/questions/ai-generate`}>
+                <Link href={`/${lang}/exams/qbank/ai-generate`}>
                   <Sparkles className="mr-2 h-4 w-4" />
                   {dictionary.generate.actions.generateWithAI}
                 </Link>
@@ -153,13 +153,13 @@ export default async function GenerateContent({ dictionary, lang }: Props) {
               </p>
               <div className="flex gap-2">
                 <Button asChild>
-                  <Link href={`/${lang}/generate/templates`}>
+                  <Link href={`/${lang}/exams/generate/templates`}>
                     <FileText className="mr-2 h-4 w-4" />
                     {dictionary.generate.actions.viewTemplates}
                   </Link>
                 </Button>
                 <Button variant="outline" asChild>
-                  <Link href={`/${lang}/generate/templates/new`}>
+                  <Link href={`/${lang}/exams/generate/templates/new`}>
                     <Plus className="mr-2 h-4 w-4" />
                     {dictionary.generate.actions.createTemplate}
                   </Link>
@@ -183,7 +183,7 @@ export default async function GenerateContent({ dictionary, lang }: Props) {
                 {dictionary.generate.cards.analytics.details}
               </p>
               <Button asChild variant="outline">
-                <Link href={`/${lang}/generate/analytics`}>
+                <Link href={`/${lang}/exams/generate/analytics`}>
                   <BarChart3 className="mr-2 h-4 w-4" />
                   {dictionary.generate.actions.viewAnalytics}
                 </Link>

@@ -90,19 +90,19 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
     },
     {
       name: 'QBank',
-      href: `/${lang}/generate/questions`
+      href: `/${lang}/exams/qbank`
     },
     {
       name: 'Generate',
-      href: `/${lang}/generate`
+      href: `/${lang}/exams/generate`
     },
     {
       name: 'Mark',
-      href: `/${lang}/mark`
+      href: `/${lang}/exams/mark`
     },
     {
       name: 'Result',
-      href: `/${lang}/results`
+      href: `/${lang}/exams/result`
     },
   ];
 

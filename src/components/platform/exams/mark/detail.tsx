@@ -136,7 +136,7 @@ export async function QuestionDetail({
 
         <div className="flex gap-2">
           <Button variant="outline" size="sm" asChild>
-            <Link href={`/${locale}/mark/questions/${questionId}/edit`}>
+            <Link href={`/${locale}/exams/mark/questions/${questionId}/edit`}>
               <Edit className="h-4 w-4 mr-2" />
               {dict.buttons.editQuestion}
             </Link>

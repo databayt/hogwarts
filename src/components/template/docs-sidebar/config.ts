@@ -149,22 +149,8 @@ export const docsConfig: DocsConfig = {
     {
       title: "Claude Code",
       items: [
-        { title: "Introduction", href: "/docs/claude-code-introduction", items: [] },
-        { title: "Configuration", href: "/docs/claude-code-configuration", items: [] },
-        { title: "Best Practices", href: "/docs/claude-code-best-practices", items: [] },
+        { title: "Complete Guide", href: "/docs/claude-code", items: [] },
         { title: "Prompts", href: "/docs/prompt", items: [] },
-        { title: "Slash Commands", href: "/docs/claude-code-slash-commands", items: [] },
-        { title: "Subagents", href: "/docs/claude-code-subagents", items: [] },
-        { title: "Skills", href: "/docs/claude-code-skills", items: [] },
-        { title: "Hooks", href: "/docs/claude-code-hooks", items: [] },
-        { title: "MCP Integration", href: "/docs/claude-code-mcp", items: [] },
-        { title: "Plugins", href: "/docs/claude-code-plugins", items: [] },
-        { title: "GitHub Integration", href: "/docs/claude-code-github-integration", items: [] },
-        { title: "GitHub Actions", href: "/docs/claude-code-github-actions", items: [] },
-        { title: "Thinking Modes", href: "/docs/claude-code-thinking-modes", items: [] },
-        { title: "Multi-Agent Workflows", href: "/docs/claude-code-multi-agent", items: [] },
-        { title: "Security", href: "/docs/claude-code-security", items: [] },
-        { title: "Troubleshooting", href: "/docs/claude-code-troubleshooting", items: [] },
       ],
     },
 

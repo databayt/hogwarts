@@ -68,7 +68,7 @@ export async function createQuestion(
       },
     });
 
-    revalidatePath("/generate/questions");
+    revalidatePath("/exams/qbank");
     return { success: true, data: { id: question.id } };
   } catch (error) {
     console.error("Create question error:", error);
@@ -114,8 +114,8 @@ export async function updateQuestion(
       data: validated,
     });
 
-    revalidatePath("/generate/questions");
-    revalidatePath(`/generate/questions/${questionId}`);
+    revalidatePath("/exams/qbank");
+    revalidatePath(`/exams/qbank/${questionId}`);
     return { success: true, data: { id: question.id } };
   } catch (error) {
     console.error("Update question error:", error);
@@ -160,7 +160,7 @@ export async function deleteQuestion(
       },
     });
 
-    revalidatePath("/generate/questions");
+    revalidatePath("/exams/qbank");
     return { success: true, data: undefined };
   } catch (error) {
     console.error("Delete question error:", error);
@@ -292,7 +292,7 @@ export async function createTemplate(
       },
     });
 
-    revalidatePath("/generate/templates");
+    revalidatePath("/exams/generate/templates");
     return { success: true, data: { id: template.id } };
   } catch (error) {
     console.error("Create template error:", error);
@@ -453,7 +453,7 @@ export async function generateExam(
     });
 
     revalidatePath("/exams");
-    revalidatePath("/generate");
+    revalidatePath("/exams/generate");
     return { success: true, data: { generatedExamId: generatedExam.id } };
   } catch (error) {
     console.error("Generate exam error:", error);
