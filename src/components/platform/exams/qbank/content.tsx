@@ -4,8 +4,8 @@ import { SearchParams } from "nuqs/server";
 import { questionBankSearchParams } from "./list-params";
 import { db } from "@/lib/db";
 import { getTenantContext } from "@/lib/tenant-context";
-import { Shell as PageContainer } from "@/components/table/shell";
 import PageHeader from "@/components/atom/page-header";
+import { PageNav, type PageNavItem } from "@/components/atom/page-nav";
 import type { Locale } from "@/components/internationalization/config";
 import type { Dictionary } from "@/components/internationalization/dictionaries";
 import type { Prisma, QuestionType, DifficultyLevel, BloomLevel, QuestionSource } from "@prisma/client";
@@ -91,14 +91,43 @@ export default async function QuestionBankContent({
     total = count;
   }
 
+  const d = dictionary?.school?.exams?.dashboard;
+
+  // Define exams page navigation
+  const examsPages: PageNavItem[] = [
+    {
+      name: d?.blocks?.manage?.title || 'Manage',
+      href: `/${lang}/exams`
+    },
+    {
+      name: d?.blocks?.qbank?.title || 'QBank',
+      href: `/${lang}/exams/qbank`
+    },
+    {
+      name: d?.blocks?.generate?.title || 'Generate',
+      href: `/${lang}/exams/generate`
+    },
+    {
+      name: d?.blocks?.mark?.title || 'Mark',
+      href: `/${lang}/exams/mark`
+    },
+    {
+      name: d?.blocks?.results?.title || 'Result',
+      href: `/${lang}/exams/result`
+    },
+  ];
+
   return (
-    <PageContainer>
-      <div className="flex flex-1 flex-col gap-6">
+    <div>
+      <div className="flex flex-col gap-6">
         <PageHeader
           title={dictionary.generate.questionBank.title}
           description={dictionary.generate.cards.questionBank.description}
           className="text-start max-w-none"
         />
+
+        <PageNav pages={examsPages} />
+
         <QuestionBankTable
           initialData={data}
           total={total}
@@ -106,6 +135,6 @@ export default async function QuestionBankContent({
           dictionary={dictionary}
         />
       </div>
-    </PageContainer>
+    </div>
   );
 }

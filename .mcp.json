@@ -57,6 +57,38 @@
         "REF_API_KEY": "${REF_API_KEY}"
       },
       "description": "Search documentation, prevent hallucinations with curated technical docs"
+    },
+    "posthog": {
+      "type": "http",
+      "url": "https://mcp.posthog.com",
+      "env": {
+        "POSTHOG_API_KEY": "${POSTHOG_API_KEY}",
+        "POSTHOG_PROJECT_ID": "${POSTHOG_PROJECT_ID}"
+      },
+      "description": "Product analytics, feature flags, A/B testing, user insights"
+    },
+    "notion": {
+      "type": "http",
+      "url": "https://mcp.notion.so",
+      "env": {
+        "NOTION_API_KEY": "${NOTION_API_KEY}"
+      },
+      "description": "Documentation sync, knowledge base integration, collaborative docs"
+    },
+    "memory-bank": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@memory-bank/mcp-server@latest"],
+      "description": "Persistent context across sessions, knowledge retention, learning from past interactions"
+    },
+    "slack": {
+      "type": "http",
+      "url": "https://mcp.slack.com",
+      "env": {
+        "SLACK_BOT_TOKEN": "${SLACK_BOT_TOKEN}",
+        "SLACK_WORKSPACE_ID": "${SLACK_WORKSPACE_ID}"
+      },
+      "description": "Team notifications, deployment alerts, error reporting, collaboration"
     }
   }
 }

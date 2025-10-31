@@ -1,5 +1,5 @@
-import { Shell as PageContainer } from "@/components/table/shell";
 import PageHeader from "@/components/atom/page-header";
+import { PageNav, type PageNavItem } from "@/components/atom/page-nav";
 import type { Locale } from "@/components/internationalization/config";
 import type { Dictionary } from "@/components/internationalization/dictionaries";
 import { Button } from "@/components/ui/button";
@@ -75,16 +75,45 @@ export default async function ResultsContent({ dictionary, lang }: Props) {
   }
 
   const r = dictionary?.results;
+  const d = dictionary?.school?.exams?.dashboard;
+
+  // Define exams page navigation
+  const examsPages: PageNavItem[] = [
+    {
+      name: d?.blocks?.manage?.title || 'Manage',
+      href: `/${lang}/exams`
+    },
+    {
+      name: d?.blocks?.qbank?.title || 'QBank',
+      href: `/${lang}/exams/qbank`
+    },
+    {
+      name: d?.blocks?.generate?.title || 'Generate',
+      href: `/${lang}/exams/generate`
+    },
+    {
+      name: d?.blocks?.mark?.title || 'Mark',
+      href: `/${lang}/exams/mark`
+    },
+    {
+      name: d?.blocks?.results?.title || 'Result',
+      href: `/${lang}/exams/result`
+    },
+  ];
 
   return (
-    <PageContainer>
-      <div className="flex flex-1 flex-col gap-6">
+    <div>
+      <div className="flex flex-col gap-6">
+        <PageHeader
+          title={r?.title}
+          description={r?.description}
+          className="text-start max-w-none"
+        />
+
+        <PageNav pages={examsPages} />
+
         <div className="flex items-center justify-between">
-          <PageHeader
-            title={r?.title}
-            description={r?.description}
-            className="text-start max-w-none"
-          />
+          <div></div>
           <Button asChild>
             <Link href={`/${lang}/exams/result/analytics`}>
               <TrendingUp className="mr-2 h-4 w-4" />
@@ -156,6 +185,6 @@ export default async function ResultsContent({ dictionary, lang }: Props) {
           </div>
         )}
       </div>
-    </PageContainer>
+    </div>
   );
 }

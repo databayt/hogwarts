@@ -1,4 +1,3 @@
-import { Shell as PageContainer } from "@/components/table/shell";
 import PageHeader from "@/components/atom/page-header";
 import { PageNav, type PageNavItem } from "@/components/atom/page-nav";
 import type { Locale } from "@/components/internationalization/config";
@@ -85,23 +84,23 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
   // Define exams page navigation
   const examsPages: PageNavItem[] = [
     {
-      name: 'Manage',
+      name: d?.blocks?.manage?.title || 'Manage',
       href: `/${lang}/exams`
     },
     {
-      name: 'QBank',
+      name: d?.blocks?.qbank?.title || 'QBank',
       href: `/${lang}/exams/qbank`
     },
     {
-      name: 'Generate',
+      name: d?.blocks?.generate?.title || 'Generate',
       href: `/${lang}/exams/generate`
     },
     {
-      name: 'Mark',
+      name: d?.blocks?.mark?.title || 'Mark',
       href: `/${lang}/exams/mark`
     },
     {
-      name: 'Result',
+      name: d?.blocks?.results?.title || 'Result',
       href: `/${lang}/exams/result`
     },
   ];
@@ -110,7 +109,7 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
     <div>
       <div className="flex flex-col gap-6">
         <PageHeader
-          title="Exams"
+          title={d?.title || "Exams"}
           className="text-start max-w-none"
         />
 

@@ -132,21 +132,21 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
   // Define finance page navigation (primary links shown in nav, secondary hidden)
   const financePages: PageNavItem[] = [
     // Primary navigation (7 most important features)
-    { name: 'Overview', href: `/${lang}/finance` },
-    { name: 'Invoice', href: `/${lang}/finance/invoice` },
-    { name: 'Banking', href: `/${lang}/finance/banking` },
-    { name: 'Fees', href: `/${lang}/finance/fees` },
-    { name: 'Salary', href: `/${lang}/finance/salary` },
-    { name: 'Payroll', href: `/${lang}/finance/payroll` },
-    { name: 'Reports', href: `/${lang}/finance/reports` },
+    { name: d?.navigation?.overview || 'Overview', href: `/${lang}/finance` },
+    { name: d?.navigation?.invoice || 'Invoice', href: `/${lang}/finance/invoice` },
+    { name: d?.navigation?.banking || 'Banking', href: `/${lang}/finance/banking` },
+    { name: d?.navigation?.fees || 'Fees', href: `/${lang}/finance/fees` },
+    { name: d?.navigation?.salary || 'Salary', href: `/${lang}/finance/salary` },
+    { name: d?.navigation?.payroll || 'Payroll', href: `/${lang}/finance/payroll` },
+    { name: d?.navigation?.reports || 'Reports', href: `/${lang}/finance/reports` },
 
     // Secondary navigation (hidden from nav, shown in content)
-    { name: 'Receipt', href: `/${lang}/finance/receipt`, hidden: true },
-    { name: 'Timesheet', href: `/${lang}/finance/timesheet`, hidden: true },
-    { name: 'Wallet', href: `/${lang}/finance/wallet`, hidden: true },
-    { name: 'Budget', href: `/${lang}/finance/budget`, hidden: true },
-    { name: 'Expenses', href: `/${lang}/finance/expenses`, hidden: true },
-    { name: 'Accounts', href: `/${lang}/finance/accounts`, hidden: true },
+    { name: d?.navigation?.receipt || 'Receipt', href: `/${lang}/finance/receipt`, hidden: true },
+    { name: d?.navigation?.timesheet || 'Timesheet', href: `/${lang}/finance/timesheet`, hidden: true },
+    { name: d?.navigation?.wallet || 'Wallet', href: `/${lang}/finance/wallet`, hidden: true },
+    { name: d?.navigation?.budget || 'Budget', href: `/${lang}/finance/budget`, hidden: true },
+    { name: d?.navigation?.expenses || 'Expenses', href: `/${lang}/finance/expenses`, hidden: true },
+    { name: d?.navigation?.accounts || 'Accounts', href: `/${lang}/finance/accounts`, hidden: true },
   ]
 
   // Separate secondary pages for quick access section
@@ -155,7 +155,7 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Finance"
+        title={d?.title || 'Finance'}
         className="text-start max-w-none"
       />
       <PageNav pages={financePages} />
@@ -165,7 +165,7 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                Total Revenue
+                {d?.stats?.totalRevenue || 'Total Revenue'}
               </CardTitle>
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
@@ -174,7 +174,7 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
                 ${(totalRevenue / 100).toLocaleString()}
               </div>
               <p className="text-xs text-muted-foreground">
-                From completed payments
+                {d?.stats?.fromCompletedPayments || 'From completed payments'}
               </p>
             </CardContent>
           </Card>
@@ -182,7 +182,7 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                Total Expenses
+                {d?.stats?.totalExpenses || 'Total Expenses'}
               </CardTitle>
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
@@ -191,7 +191,7 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
                 ${(totalExpenses / 100).toLocaleString()}
               </div>
               <p className="text-xs text-muted-foreground">
-                Approved expenses
+                {d?.stats?.approvedExpenses || 'Approved expenses'}
               </p>
             </CardContent>
           </Card>
@@ -199,7 +199,7 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                Pending Payments
+                {d?.stats?.pendingPayments || 'Pending Payments'}
               </CardTitle>
               <AlertCircle className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
@@ -208,7 +208,7 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
                 ${(pendingPayments / 100).toLocaleString()}
               </div>
               <p className="text-xs text-muted-foreground">
-                Awaiting processing
+                {d?.stats?.awaitingProcessing || 'Awaiting processing'}
               </p>
             </CardContent>
           </Card>
@@ -216,7 +216,7 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                Net Balance
+                {d?.stats?.netBalance || 'Net Balance'}
               </CardTitle>
               <Banknote className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
@@ -225,7 +225,7 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
                 ${((totalRevenue - totalExpenses) / 100).toLocaleString()}
               </div>
               <p className="text-xs text-muted-foreground">
-                Revenue minus expenses
+                {d?.stats?.revenueMinusExpenses || 'Revenue minus expenses'}
               </p>
             </CardContent>
           </Card>
@@ -236,14 +236,14 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                Invoices
+                {d?.stats?.invoices || 'Invoices'}
               </CardTitle>
               <FileText className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{invoicesCount}</div>
               <p className="text-xs text-muted-foreground">
-                {unpaidInvoices} unpaid
+                {unpaidInvoices} {d?.stats?.unpaid || 'unpaid'}
               </p>
             </CardContent>
           </Card>
@@ -251,14 +251,14 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                Bank Accounts
+                {d?.stats?.bankAccounts || 'Bank Accounts'}
               </CardTitle>
               <Building2 className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{bankAccountsCount}</div>
               <p className="text-xs text-muted-foreground">
-                Connected accounts
+                {d?.stats?.connectedAccounts || 'Connected accounts'}
               </p>
             </CardContent>
           </Card>
@@ -266,7 +266,7 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                Active Staff
+                {d?.stats?.activeStaff || 'Active Staff'}
               </CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
@@ -275,7 +275,7 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
                 {teachersWithSalaryCount}
               </div>
               <p className="text-xs text-muted-foreground">
-                With salary structures
+                {d?.stats?.withSalaryStructures || 'With salary structures'}
               </p>
             </CardContent>
           </Card>
@@ -283,7 +283,7 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                Pending Actions
+                {d?.stats?.pendingActions || 'Pending Actions'}
               </CardTitle>
               <Clock className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
@@ -292,7 +292,7 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
                 {pendingPayrollCount + pendingTimesheetsCount + pendingExpensesCount}
               </div>
               <p className="text-xs text-muted-foreground">
-                Requires approval
+                {d?.stats?.requiresApproval || 'Requires approval'}
               </p>
             </CardContent>
           </Card>
@@ -302,42 +302,49 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              More Features
+              {d?.moreFeatures || 'More Features'}
             </CardTitle>
             <CardDescription>
-              Additional finance management tools and utilities
+              {d?.moreFeaturesDescription || 'Additional finance management tools and utilities'}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {secondaryPages.map((page) => (
-                <Button
-                  key={page.href}
-                  asChild
-                  variant="outline"
-                  className="justify-start h-auto py-3"
-                >
-                  <Link href={page.href}>
-                    {page.name === 'Receipt' && <Receipt className="mr-2 h-4 w-4" />}
-                    {page.name === 'Timesheet' && <Clock className="mr-2 h-4 w-4" />}
-                    {page.name === 'Wallet' && <Wallet className="mr-2 h-4 w-4" />}
-                    {page.name === 'Budget' && <PieChart className="mr-2 h-4 w-4" />}
-                    {page.name === 'Expenses' && <TrendingUp className="mr-2 h-4 w-4" />}
-                    {page.name === 'Accounts' && <BookOpen className="mr-2 h-4 w-4" />}
-                    <span className="flex flex-col items-start">
-                      <span className="font-medium">{page.name}</span>
-                      <span className="text-xs text-muted-foreground">
-                        {page.name === 'Receipt' && 'Expense receipts & scanning'}
-                        {page.name === 'Timesheet' && 'Staff time tracking'}
-                        {page.name === 'Wallet' && 'School & parent wallets'}
-                        {page.name === 'Budget' && 'Budget planning & variance'}
-                        {page.name === 'Expenses' && 'Expense approval workflow'}
-                        {page.name === 'Accounts' && 'Chart of accounts & ledger'}
+              {secondaryPages.map((page) => {
+                const getDescription = (pageName: string) => {
+                  if (pageName === (d?.navigation?.receipt || 'Receipt')) return d?.quickAccess?.receipt || 'Expense receipts & scanning'
+                  if (pageName === (d?.navigation?.timesheet || 'Timesheet')) return d?.quickAccess?.timesheet || 'Staff time tracking'
+                  if (pageName === (d?.navigation?.wallet || 'Wallet')) return d?.quickAccess?.wallet || 'School & parent wallets'
+                  if (pageName === (d?.navigation?.budget || 'Budget')) return d?.quickAccess?.budget || 'Budget planning & variance'
+                  if (pageName === (d?.navigation?.expenses || 'Expenses')) return d?.quickAccess?.expenses || 'Expense approval workflow'
+                  if (pageName === (d?.navigation?.accounts || 'Accounts')) return d?.quickAccess?.accounts || 'Chart of accounts & ledger'
+                  return ''
+                }
+
+                return (
+                  <Button
+                    key={page.href}
+                    asChild
+                    variant="outline"
+                    className="justify-start h-auto py-3"
+                  >
+                    <Link href={page.href}>
+                      {page.name === (d?.navigation?.receipt || 'Receipt') && <Receipt className="mr-2 h-4 w-4" />}
+                      {page.name === (d?.navigation?.timesheet || 'Timesheet') && <Clock className="mr-2 h-4 w-4" />}
+                      {page.name === (d?.navigation?.wallet || 'Wallet') && <Wallet className="mr-2 h-4 w-4" />}
+                      {page.name === (d?.navigation?.budget || 'Budget') && <PieChart className="mr-2 h-4 w-4" />}
+                      {page.name === (d?.navigation?.expenses || 'Expenses') && <TrendingUp className="mr-2 h-4 w-4" />}
+                      {page.name === (d?.navigation?.accounts || 'Accounts') && <BookOpen className="mr-2 h-4 w-4" />}
+                      <span className="flex flex-col items-start">
+                        <span className="font-medium">{page.name}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {getDescription(page.name)}
+                        </span>
                       </span>
-                    </span>
-                  </Link>
-                </Button>
-              ))}
+                    </Link>
+                  </Button>
+                )
+              })}
             </div>
           </CardContent>
         </Card>
@@ -349,26 +356,26 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <FileText className="h-5 w-5 text-primary" />
-                Invoicing
+                {d?.cards?.invoicing?.title || 'Invoicing'}
               </CardTitle>
               <CardDescription>
-                Client invoicing and billing management
+                {d?.cards?.invoicing?.description || 'Client invoicing and billing management'}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               <p className="text-sm text-muted-foreground">
-                Create professional invoices, track payments, and manage client billing.
+                {d?.cards?.invoicing?.details || 'Create professional invoices, track payments, and manage client billing.'}
               </p>
               <div className="flex flex-col gap-2">
                 <Button asChild>
                   <Link href={`/${lang}/finance/invoice`}>
                     <FileText className="mr-2 h-4 w-4" />
-                    View All Invoices
+                    {d?.cards?.invoicing?.viewAll || 'View All Invoices'}
                   </Link>
                 </Button>
                 <Button variant="outline" asChild size="sm">
                   <Link href={`/${lang}/finance/invoice/new`}>
-                    Create Invoice
+                    {d?.cards?.invoicing?.create || 'Create Invoice'}
                   </Link>
                 </Button>
               </div>
@@ -724,10 +731,10 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
         <Card>
           <CardHeader>
             <CardTitle>
-              Finance Workflow Guide
+              {d?.workflow?.title || 'Finance Workflow Guide'}
             </CardTitle>
             <CardDescription>
-              Step-by-step guide to managing school finances
+              {d?.workflow?.description || 'Step-by-step guide to managing school finances'}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -738,10 +745,10 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
                 </div>
                 <div>
                   <h3 className="font-medium">
-                    Set Up Accounting System
+                    {d?.workflow?.steps?.['1']?.title || 'Set Up Accounting System'}
                   </h3>
                   <p className="text-sm text-muted-foreground">
-                    Configure your chart of accounts, fiscal year, and connect bank accounts.
+                    {d?.workflow?.steps?.['1']?.description || 'Configure your chart of accounts, fiscal year, and connect bank accounts.'}
                   </p>
                 </div>
               </li>
@@ -751,10 +758,10 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
                 </div>
                 <div>
                   <h3 className="font-medium">
-                    Configure Fee Structures
+                    {d?.workflow?.steps?.['2']?.title || 'Configure Fee Structures'}
                   </h3>
                   <p className="text-sm text-muted-foreground">
-                    Define student fee structures, payment plans, scholarships, and fines.
+                    {d?.workflow?.steps?.['2']?.description || 'Define student fee structures, payment plans, scholarships, and fines.'}
                   </p>
                 </div>
               </li>
@@ -764,10 +771,10 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
                 </div>
                 <div>
                   <h3 className="font-medium">
-                    Set Up Staff Salary
+                    {d?.workflow?.steps?.['3']?.title || 'Set Up Staff Salary'}
                   </h3>
                   <p className="text-sm text-muted-foreground">
-                    Create salary structures with allowances and deductions for all staff members.
+                    {d?.workflow?.steps?.['3']?.description || 'Create salary structures with allowances and deductions for all staff members.'}
                   </p>
                 </div>
               </li>
@@ -777,10 +784,10 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
                 </div>
                 <div>
                   <h3 className="font-medium">
-                    Track Revenue & Expenses
+                    {d?.workflow?.steps?.['4']?.title || 'Track Revenue & Expenses'}
                   </h3>
                   <p className="text-sm text-muted-foreground">
-                    Monitor student payments, process invoices, approve expenses, and reconcile banks.
+                    {d?.workflow?.steps?.['4']?.description || 'Monitor student payments, process invoices, approve expenses, and reconcile banks.'}
                   </p>
                 </div>
               </li>
@@ -790,10 +797,10 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
                 </div>
                 <div>
                   <h3 className="font-medium">
-                    Process Payroll Monthly
+                    {d?.workflow?.steps?.['5']?.title || 'Process Payroll Monthly'}
                   </h3>
                   <p className="text-sm text-muted-foreground">
-                    Review timesheets, calculate salaries, generate slips, and process disbursements.
+                    {d?.workflow?.steps?.['5']?.description || 'Review timesheets, calculate salaries, generate slips, and process disbursements.'}
                   </p>
                 </div>
               </li>
@@ -803,10 +810,10 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
                 </div>
                 <div>
                   <h3 className="font-medium">
-                    Generate Financial Reports
+                    {d?.workflow?.steps?.['6']?.title || 'Generate Financial Reports'}
                   </h3>
                   <p className="text-sm text-muted-foreground">
-                    Create P&L statements, balance sheets, cash flow reports, and analyze performance.
+                    {d?.workflow?.steps?.['6']?.description || 'Create P&L statements, balance sheets, cash flow reports, and analyze performance.'}
                   </p>
                 </div>
               </li>

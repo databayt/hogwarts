@@ -2,8 +2,169 @@
   "title": "Finance",
   "dashboard": "Finance Dashboard",
   "overview": "Overview",
+  "moreFeatures": "More Features",
+  "moreFeaturesDescription": "Additional finance management tools and utilities",
   "settings": "Settings",
   "reports": "Reports",
+  "financialHealth": "Financial Health",
+  "moduleActivity": "Module Activity Stats",
+  "navigation": {
+    "overview": "Overview",
+    "invoice": "Invoice",
+    "receipt": "Receipt",
+    "banking": "Banking",
+    "fees": "Fees",
+    "salary": "Salary",
+    "payroll": "Payroll",
+    "timesheet": "Timesheet",
+    "wallet": "Wallet",
+    "budget": "Budget",
+    "expenses": "Expenses",
+    "accounts": "Accounts",
+    "reports": "Reports"
+  },
+  "stats": {
+    "totalRevenue": "Total Revenue",
+    "totalExpenses": "Total Expenses",
+    "pendingPayments": "Pending Payments",
+    "netBalance": "Net Balance",
+    "invoices": "Invoices",
+    "bankAccounts": "Bank Accounts",
+    "activeStaff": "Active Staff",
+    "pendingActions": "Pending Actions",
+    "fromCompletedPayments": "From completed payments",
+    "approvedExpenses": "Approved expenses",
+    "awaitingProcessing": "Awaiting processing",
+    "revenueMinusExpenses": "Revenue minus expenses",
+    "unpaid": "unpaid",
+    "connectedAccounts": "Connected accounts",
+    "withSalaryStructures": "With salary structures",
+    "requiresApproval": "Requires approval"
+  },
+  "cards": {
+    "invoicing": {
+      "title": "Invoicing",
+      "description": "Client invoicing and billing management",
+      "details": "Create professional invoices, track payments, and manage client billing.",
+      "viewAll": "View All Invoices",
+      "create": "Create Invoice"
+    },
+    "receipts": {
+      "title": "Receipts",
+      "description": "Receipt generation and expense tracking",
+      "details": "Generate receipts, scan expenses with AI OCR, and track all transactions.",
+      "viewAll": "View All Receipts",
+      "upload": "Upload Receipt"
+    },
+    "banking": {
+      "title": "Banking",
+      "description": "Bank accounts and transaction management",
+      "details": "Connect bank accounts, track transactions, manage transfers, and reconcile.",
+      "viewAccounts": "View Accounts",
+      "connect": "Connect Bank"
+    },
+    "fees": {
+      "title": "Student Fees",
+      "description": "Fee structures and student payment tracking",
+      "details": "Manage fee structures, track student payments, handle scholarships and fines.",
+      "viewStructures": "View Fee Structures",
+      "trackPayments": "Track Payments"
+    },
+    "salary": {
+      "title": "Salary Management",
+      "description": "Staff salary structures and calculations",
+      "details": "Define salary structures, manage allowances and deductions, calculate pay.",
+      "viewStructures": "View Structures",
+      "calculator": "Salary Calculator"
+    },
+    "payroll": {
+      "title": "Payroll Processing",
+      "description": "Payroll runs and salary slip generation",
+      "details": "Process payroll, generate salary slips, calculate taxes, and handle disbursements.",
+      "viewRuns": "View Payroll Runs",
+      "process": "Process Payroll"
+    },
+    "timesheet": {
+      "title": "Timesheets",
+      "description": "Staff timesheet tracking and approval",
+      "details": "Track staff hours, approve timesheets, calculate overtime, and integrate with payroll.",
+      "viewAll": "View Timesheets",
+      "approvePending": "Approve Pending"
+    },
+    "wallet": {
+      "title": "Wallet Management",
+      "description": "School and parent wallet system",
+      "details": "Manage school wallet, track parent wallet balances, and handle top-ups.",
+      "viewWallets": "View Wallets",
+      "viewTransactions": "View Transactions"
+    },
+    "budget": {
+      "title": "Budget Planning",
+      "description": "Budget allocation and variance tracking",
+      "details": "Create budgets, allocate funds by department, track spending, and analyze variance.",
+      "viewBudgets": "View Budgets",
+      "varianceReport": "Variance Report"
+    },
+    "expenses": {
+      "title": "Expense Management",
+      "description": "Expense tracking and approval workflow",
+      "details": "Submit expenses, manage approval workflow, track reimbursements, and categorize.",
+      "viewExpenses": "View Expenses",
+      "approvePending": "Approve Pending"
+    },
+    "accounts": {
+      "title": "Accounting System",
+      "description": "Double-entry bookkeeping and ledger",
+      "details": "Manage chart of accounts, journal entries, general ledger, and period closing.",
+      "chartOfAccounts": "Chart of Accounts",
+      "journalEntries": "Journal Entries"
+    },
+    "reports": {
+      "title": "Financial Reports",
+      "description": "Comprehensive financial reporting",
+      "details": "Generate P&L, Balance Sheet, Cash Flow, Trial Balance, and custom reports.",
+      "viewReports": "View Reports",
+      "generate": "Generate Report"
+    }
+  },
+  "quickAccess": {
+    "receipt": "Expense receipts & scanning",
+    "timesheet": "Staff time tracking",
+    "wallet": "School & parent wallets",
+    "budget": "Budget planning & variance",
+    "expenses": "Expense approval workflow",
+    "accounts": "Chart of accounts & ledger"
+  },
+  "workflow": {
+    "title": "Finance Workflow Guide",
+    "description": "Step-by-step guide to managing school finances",
+    "steps": {
+      "1": {
+        "title": "Set Up Accounting System",
+        "description": "Configure your chart of accounts, fiscal year, and connect bank accounts."
+      },
+      "2": {
+        "title": "Configure Fee Structures",
+        "description": "Define student fee structures, payment plans, scholarships, and fines."
+      },
+      "3": {
+        "title": "Set Up Staff Salary",
+        "description": "Create salary structures with allowances and deductions for all staff members."
+      },
+      "4": {
+        "title": "Track Revenue & Expenses",
+        "description": "Monitor student payments, process invoices, approve expenses, and reconcile banks."
+      },
+      "5": {
+        "title": "Process Payroll Monthly",
+        "description": "Review timesheets, calculate salaries, generate slips, and process disbursements."
+      },
+      "6": {
+        "title": "Generate Financial Reports",
+        "description": "Create P&L statements, balance sheets, cash flow reports, and analyze performance."
+      }
+    }
+  },
   "export": "Export",
   "import": "Import",
   "refresh": "Refresh",
@@ -198,6 +359,13 @@
     "title": "Invoices",
     "invoice": "Invoice",
     "invoices": "Invoices",
+    "navigation": {
+      "dashboard": "Dashboard",
+      "allInvoices": "All Invoices",
+      "createNew": "Create New",
+      "settings": "Settings",
+      "onboarding": "Onboarding"
+    },
     "createInvoice": "Create Invoice",
     "editInvoice": "Edit Invoice",
     "deleteInvoice": "Delete Invoice",

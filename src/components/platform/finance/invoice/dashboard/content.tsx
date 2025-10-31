@@ -30,14 +30,13 @@ export function DashboardContent({ dictionary, lang }: Props) {
     chartData: [],
   });
 
-  // Define invoice page navigation
+  const d = dictionary?.finance?.invoice
+
+  // Define invoice page navigation (streamlined to 3 primary links)
   const invoicePages: PageNavItem[] = [
-    { name: 'Dashboard', href: `/${lang}/finance/invoice` },
-    { name: 'All Invoices', href: `/${lang}/finance/invoice/invoice` },
-    { name: 'List View', href: `/${lang}/finance/invoice/list` },
-    { name: 'Create New', href: `/${lang}/finance/invoice/invoice/create` },
-    { name: 'Onboarding', href: `/${lang}/finance/invoice/onboarding` },
-    { name: 'Settings', href: `/${lang}/finance/invoice/settings` },
+    { name: d?.navigation?.dashboard || 'Dashboard', href: `/${lang}/finance/invoice` },
+    { name: d?.navigation?.createNew || 'Create New', href: `/${lang}/finance/invoice/invoice/create` },
+    { name: d?.navigation?.settings || 'Settings', href: `/${lang}/finance/invoice/settings` },
   ]
 
   const fetchData = async () => {
@@ -100,7 +99,7 @@ export function DashboardContent({ dictionary, lang }: Props) {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Invoice"
+        title={d?.title || 'Invoice'}
         className="text-start max-w-none"
       />
       <PageNav pages={invoicePages} />

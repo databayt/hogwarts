@@ -10,8 +10,8 @@ import { Plus, FileText, Clock, CheckCircle, AlertCircle } from "lucide-react"
 import Link from "next/link"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import type { Locale } from "@/components/internationalization/config"
-import { Shell as PageContainer } from "@/components/table/shell"
 import PageHeader from "@/components/atom/page-header"
+import { PageNav, type PageNavItem } from "@/components/atom/page-nav"
 
 export async function MarkingContent({
   examId,
@@ -60,17 +60,46 @@ export async function MarkingContent({
   ).length
 
   const dict = dictionary.marking
+  const d = dictionary?.school?.exams?.dashboard;
+
+  // Define exams page navigation
+  const examsPages: PageNavItem[] = [
+    {
+      name: d?.blocks?.manage?.title || 'Manage',
+      href: `/${locale}/exams`
+    },
+    {
+      name: d?.blocks?.qbank?.title || 'QBank',
+      href: `/${locale}/exams/qbank`
+    },
+    {
+      name: d?.blocks?.generate?.title || 'Generate',
+      href: `/${locale}/exams/generate`
+    },
+    {
+      name: d?.blocks?.mark?.title || 'Mark',
+      href: `/${locale}/exams/mark`
+    },
+    {
+      name: d?.blocks?.results?.title || 'Result',
+      href: `/${locale}/exams/result`
+    },
+  ];
 
   return (
-    <PageContainer>
-      <div className="flex flex-1 flex-col gap-6">
-        {/* Header */}
+    <div>
+      <div className="flex flex-col gap-6">
+        <PageHeader
+          title={dict.dashboard}
+          description={dict.description}
+          className="text-start max-w-none"
+        />
+
+        <PageNav pages={examsPages} />
+
+        {/* Header Actions */}
         <div className="flex items-center justify-between">
-          <PageHeader
-            title={dict.dashboard}
-            description={dict.description}
-            className="text-start max-w-none"
-          />
+          <div></div>
           <div className="flex gap-2">
             <Button asChild variant="outline">
               <Link href={`/${locale}/exams/mark/questions`}>
@@ -169,6 +198,6 @@ export async function MarkingContent({
           </TabsContent>
         </Tabs>
       </div>
-    </PageContainer>
+    </div>
   )
 }

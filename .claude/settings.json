@@ -77,6 +77,15 @@
             "command": "BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo 'unknown'); echo \"🔍 Pre-Push Build Verification (Branch: $BRANCH)\"; echo \"\"; echo \"Running production build...\"; pnpm build 2>&1 | grep -v \"^$\" || BUILD_EXIT=$?; echo \"Checking Prettier formatting...\"; npx prettier --check \"src/**/*.{ts,tsx,js,jsx}\" --log-level error 2>&1 | grep -v \"^$\" || PRETTIER_EXIT=$?; echo \"\"; if [ \"$BRANCH\" = \"main\" ] || [ \"$BRANCH\" = \"master\" ] || [ \"$BRANCH\" = \"production\" ]; then if [ ! -z \"$BUILD_EXIT\" ] || [ ! -z \"$PRETTIER_EXIT\" ]; then echo \"❌ PUSH BLOCKED: Build or formatting checks failed on protected branch ($BRANCH)\"; echo \"Fix errors above before pushing to $BRANCH\"; exit 1; fi; else if [ ! -z \"$BUILD_EXIT\" ] || [ ! -z \"$PRETTIER_EXIT\" ]; then echo \"⚠️  WARNING: Build or formatting checks failed on feature branch ($BRANCH)\"; echo \"Allowing push, but please fix errors before merging to main\"; fi; fi; echo \"✅ Pre-Push checks passed\"; exit 0"
           }
         ]
+      },
+      {
+        "matcher": "Bash(git:merge)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo \"🔄 Pre-Merge Validation\"; echo \"Running comprehensive checks before merge...\"; echo \"\"; echo \"1. Running all tests...\"; pnpm test --run 2>&1 | grep -E \"(PASS|FAIL|Test Suites)\" || TEST_EXIT=$?; echo \"\"; echo \"2. Checking build...\"; pnpm build 2>&1 | grep -E \"(✓|✗|error|Error)\" || BUILD_EXIT=$?; echo \"\"; echo \"3. Checking for merge conflicts...\"; git diff --check || CONFLICT_EXIT=$?; echo \"\"; if [ ! -z \"$TEST_EXIT\" ] || [ ! -z \"$BUILD_EXIT\" ] || [ ! -z \"$CONFLICT_EXIT\" ]; then echo \"❌ MERGE BLOCKED: Pre-merge checks failed\"; echo \"Please fix all issues before merging\"; exit 1; fi; echo \"✅ All pre-merge checks passed\"; exit 0"
+          }
+        ]
       }
     ],
     "PostToolUse": [
@@ -95,6 +104,15 @@
           {
             "type": "command",
             "command": "npx prettier --write \"$CLAUDE_TOOL_ARGS\" --log-level silent || exit 0"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash(git:commit)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo \"📝 Post-Commit Actions\"; COMMIT_MSG=$(git log -1 --pretty=%B 2>/dev/null); if [ ! -z \"$COMMIT_MSG\" ]; then if echo \"$COMMIT_MSG\" | grep -qE '^(feat|fix|refactor|perf|docs|style|test|chore|build|ci)'; then echo \"✅ Commit message follows conventional format\"; if [ -f CHANGELOG.md ] && echo \"$COMMIT_MSG\" | grep -qE '^(feat|fix)'; then echo \"💡 Consider updating CHANGELOG.md for this $(echo $COMMIT_MSG | cut -d: -f1) commit\"; fi; else echo \"💡 Consider using conventional commit format: feat|fix|refactor|perf|docs|style|test|chore|build|ci\"; fi; fi; echo \"Commit successful! Run 'git push' when ready to share your changes.\"; exit 0"
           }
         ]
       }
@@ -117,6 +135,17 @@
           {
             "type": "command",
             "command": "echo \"\"; echo \"📊 Session Summary\"; echo \"Run: git log --oneline -5 to see recent commits\"; echo \"Run: git status to see current changes\"; echo \"\"; echo \"Thank you for using Hogwarts School Automation Platform!\""
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo \"🚨 Error Detection Hook Activated\"; TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S' 2>/dev/null || echo 'timestamp unavailable'); echo \"Event occurred at: $TIMESTAMP\"; if [ ! -d .claude ]; then mkdir -p .claude; fi; echo \"[$TIMESTAMP] Tool or operation stopped/failed\" >> .claude/error.log 2>/dev/null || true; echo \"💡 Common fixes:\"; echo \"  - TypeScript errors: Run 'pnpm tsc --noEmit' to see details\"; echo \"  - Missing dependencies: Run 'pnpm install'\"; echo \"  - Prisma errors: Run 'pnpm prisma generate'\"; echo \"  - Linting errors: Run 'pnpm lint --fix'\"; echo \"Event logged to .claude/error.log\"; exit 0"
           }
         ]
       }
