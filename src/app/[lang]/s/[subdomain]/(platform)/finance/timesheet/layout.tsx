@@ -15,12 +15,12 @@ export default async function TimesheetLayout({ children, params }: Props) {
 
   // Define timesheet page navigation
   const timesheetPages: PageNavItem[] = [
-    { name: d?.navigation?.overview || 'Overview', href: `/${lang}/finance/timesheet` },
-    { name: d?.navigation?.entry || 'Time Entry', href: `/${lang}/finance/timesheet/entry` },
-    { name: d?.navigation?.approval || 'Approval', href: `/${lang}/finance/timesheet/approval` },
-    { name: d?.navigation?.calendar || 'Calendar View', href: `/${lang}/finance/timesheet/calendar` },
-    { name: d?.navigation?.reports || 'Reports', href: `/${lang}/finance/timesheet/reports` },
-    { name: d?.navigation?.settings || 'Settings', href: `/${lang}/finance/timesheet/settings` },
+    { name: 'Overview', href: `/${lang}/finance/timesheet` },
+    { name: 'Time Entry', href: `/${lang}/finance/timesheet/entry` },
+    { name: 'Approval', href: `/${lang}/finance/timesheet/approval` },
+    { name: 'Calendar View', href: `/${lang}/finance/timesheet/calendar` },
+    { name: 'Reports', href: `/${lang}/finance/timesheet/reports` },
+    { name: 'Settings', href: `/${lang}/finance/timesheet/settings` },
   ]
 
   return (

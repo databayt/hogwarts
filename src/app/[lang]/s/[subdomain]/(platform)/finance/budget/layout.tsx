@@ -15,12 +15,12 @@ export default async function BudgetLayout({ children, params }: Props) {
 
   // Define budget page navigation
   const budgetPages: PageNavItem[] = [
-    { name: d?.navigation?.overview || 'Overview', href: `/${lang}/finance/budget` },
-    { name: d?.navigation?.planning || 'Budget Planning', href: `/${lang}/finance/budget/planning` },
-    { name: d?.navigation?.tracking || 'Budget Tracking', href: `/${lang}/finance/budget/tracking` },
-    { name: d?.navigation?.variance || 'Variance Analysis', href: `/${lang}/finance/budget/variance` },
-    { name: d?.navigation?.forecasting || 'Forecasting', href: `/${lang}/finance/budget/forecasting` },
-    { name: d?.navigation?.approval || 'Approval Workflow', href: `/${lang}/finance/budget/approval` },
+    { name: 'Overview', href: `/${lang}/finance/budget` },
+    { name: 'Budget Planning', href: `/${lang}/finance/budget/planning` },
+    { name: 'Budget Tracking', href: `/${lang}/finance/budget/tracking` },
+    { name: 'Variance Analysis', href: `/${lang}/finance/budget/variance` },
+    { name: 'Forecasting', href: `/${lang}/finance/budget/forecasting` },
+    { name: 'Approval Workflow', href: `/${lang}/finance/budget/approval` },
   ]
 
   return (

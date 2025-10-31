@@ -15,12 +15,12 @@ export default async function PayrollLayout({ children, params }: Props) {
 
   // Define payroll page navigation
   const payrollPages: PageNavItem[] = [
-    { name: d?.navigation?.overview || 'Overview', href: `/${lang}/finance/payroll` },
-    { name: d?.navigation?.processing || 'Payroll Processing', href: `/${lang}/finance/payroll/processing` },
-    { name: d?.navigation?.history || 'Payroll History', href: `/${lang}/finance/payroll/history` },
-    { name: d?.navigation?.deductions || 'Deductions', href: `/${lang}/finance/payroll/deductions` },
-    { name: d?.navigation?.benefits || 'Benefits', href: `/${lang}/finance/payroll/benefits` },
-    { name: d?.navigation?.reports || 'Reports', href: `/${lang}/finance/payroll/reports` },
+    { name: 'Overview', href: `/${lang}/finance/payroll` },
+    { name: 'Payroll Processing', href: `/${lang}/finance/payroll/processing` },
+    { name: 'Payroll History', href: `/${lang}/finance/payroll/history` },
+    { name: 'Deductions', href: `/${lang}/finance/payroll/deductions` },
+    { name: 'Benefits', href: `/${lang}/finance/payroll/benefits` },
+    { name: 'Reports', href: `/${lang}/finance/payroll/reports` },
   ]
 
   return (

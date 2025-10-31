@@ -15,11 +15,11 @@ export default async function ReceiptLayout({ children, params }: Props) {
 
   // Define receipt page navigation
   const receiptPages: PageNavItem[] = [
-    { name: d?.navigation?.overview || 'Overview', href: `/${lang}/finance/receipt` },
-    { name: d?.navigation?.generate || 'Generate Receipt', href: `/${lang}/finance/receipt/generate` },
-    { name: d?.navigation?.history || 'Receipt History', href: `/${lang}/finance/receipt/history` },
-    { name: d?.navigation?.templates || 'Templates', href: `/${lang}/finance/receipt/templates` },
-    { name: d?.navigation?.managePlans || 'Manage Plans', href: `/${lang}/finance/receipt/manage-plan` },
+    { name: 'Overview', href: `/${lang}/finance/receipt` },
+    { name: 'Generate Receipt', href: `/${lang}/finance/receipt/generate` },
+    { name: 'Receipt History', href: `/${lang}/finance/receipt/history` },
+    { name: 'Templates', href: `/${lang}/finance/receipt/templates` },
+    { name: 'Manage Plans', href: `/${lang}/finance/receipt/manage-plan` },
   ]
 
   return (

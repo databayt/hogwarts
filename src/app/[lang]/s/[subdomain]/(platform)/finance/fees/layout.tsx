@@ -15,12 +15,12 @@ export default async function FeesLayout({ children, params }: Props) {
 
   // Define fees page navigation
   const feesPages: PageNavItem[] = [
-    { name: d?.navigation?.overview || 'Overview', href: `/${lang}/finance/fees` },
-    { name: d?.navigation?.structure || 'Fee Structure', href: `/${lang}/finance/fees/structure` },
-    { name: d?.navigation?.collection || 'Fee Collection', href: `/${lang}/finance/fees/collection` },
-    { name: d?.navigation?.pending || 'Pending Fees', href: `/${lang}/finance/fees/pending` },
-    { name: d?.navigation?.scholarships || 'Scholarships', href: `/${lang}/finance/fees/scholarships` },
-    { name: d?.navigation?.reports || 'Reports', href: `/${lang}/finance/fees/reports` },
+    { name: 'Overview', href: `/${lang}/finance/fees` },
+    { name: 'Fee Structure', href: `/${lang}/finance/fees/structure` },
+    { name: 'Fee Collection', href: `/${lang}/finance/fees/collection` },
+    { name: 'Pending Fees', href: `/${lang}/finance/fees/pending` },
+    { name: 'Scholarships', href: `/${lang}/finance/fees/scholarships` },
+    { name: 'Reports', href: `/${lang}/finance/fees/reports` },
   ]
 
   return (

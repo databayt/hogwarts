@@ -15,12 +15,12 @@ export default async function SalaryLayout({ children, params }: Props) {
 
   // Define salary page navigation
   const salaryPages: PageNavItem[] = [
-    { name: d?.navigation?.overview || 'Overview', href: `/${lang}/finance/salary` },
-    { name: d?.navigation?.structure || 'Salary Structure', href: `/${lang}/finance/salary/structure` },
-    { name: d?.navigation?.slips || 'Salary Slips', href: `/${lang}/finance/salary/slips` },
-    { name: d?.navigation?.increments || 'Increments', href: `/${lang}/finance/salary/increments` },
-    { name: d?.navigation?.advances || 'Advances', href: `/${lang}/finance/salary/advances` },
-    { name: d?.navigation?.reports || 'Reports', href: `/${lang}/finance/salary/reports` },
+    { name: 'Overview', href: `/${lang}/finance/salary` },
+    { name: 'Salary Structure', href: `/${lang}/finance/salary/structure` },
+    { name: 'Salary Slips', href: `/${lang}/finance/salary/slips` },
+    { name: 'Increments', href: `/${lang}/finance/salary/increments` },
+    { name: 'Advances', href: `/${lang}/finance/salary/advances` },
+    { name: 'Reports', href: `/${lang}/finance/salary/reports` },
   ]
 
   return (

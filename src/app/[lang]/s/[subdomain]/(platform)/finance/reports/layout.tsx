@@ -15,13 +15,13 @@ export default async function ReportsLayout({ children, params }: Props) {
 
   // Define reports page navigation
   const reportsPages: PageNavItem[] = [
-    { name: d?.navigation?.overview || 'Overview', href: `/${lang}/finance/reports` },
-    { name: d?.navigation?.financial || 'Financial Statements', href: `/${lang}/finance/reports/financial` },
-    { name: d?.navigation?.cashflow || 'Cash Flow', href: `/${lang}/finance/reports/cashflow` },
-    { name: d?.navigation?.profitloss || 'Profit & Loss', href: `/${lang}/finance/reports/profitloss` },
-    { name: d?.navigation?.balanceSheet || 'Balance Sheet', href: `/${lang}/finance/reports/balance-sheet` },
-    { name: d?.navigation?.custom || 'Custom Reports', href: `/${lang}/finance/reports/custom` },
-    { name: d?.navigation?.schedule || 'Schedule Reports', href: `/${lang}/finance/reports/schedule` },
+    { name: 'Overview', href: `/${lang}/finance/reports` },
+    { name: 'Financial Statements', href: `/${lang}/finance/reports/financial` },
+    { name: 'Cash Flow', href: `/${lang}/finance/reports/cashflow` },
+    { name: 'Profit & Loss', href: `/${lang}/finance/reports/profitloss` },
+    { name: 'Balance Sheet', href: `/${lang}/finance/reports/balance-sheet` },
+    { name: 'Custom Reports', href: `/${lang}/finance/reports/custom` },
+    { name: 'Schedule Reports', href: `/${lang}/finance/reports/schedule` },
   ]
 
   return (

@@ -15,12 +15,12 @@ export default async function ExpensesLayout({ children, params }: Props) {
 
   // Define expenses page navigation
   const expensesPages: PageNavItem[] = [
-    { name: d?.navigation?.overview || 'Overview', href: `/${lang}/finance/expenses` },
-    { name: d?.navigation?.submit || 'Submit Expense', href: `/${lang}/finance/expenses/submit` },
-    { name: d?.navigation?.pending || 'Pending Approval', href: `/${lang}/finance/expenses/pending` },
-    { name: d?.navigation?.approved || 'Approved', href: `/${lang}/finance/expenses/approved` },
-    { name: d?.navigation?.reports || 'Reports', href: `/${lang}/finance/expenses/reports` },
-    { name: d?.navigation?.categories || 'Categories', href: `/${lang}/finance/expenses/categories` },
+    { name: 'Overview', href: `/${lang}/finance/expenses` },
+    { name: 'Submit Expense', href: `/${lang}/finance/expenses/submit` },
+    { name: 'Pending Approval', href: `/${lang}/finance/expenses/pending` },
+    { name: 'Approved', href: `/${lang}/finance/expenses/approved` },
+    { name: 'Reports', href: `/${lang}/finance/expenses/reports` },
+    { name: 'Categories', href: `/${lang}/finance/expenses/categories` },
   ]
 
   return (

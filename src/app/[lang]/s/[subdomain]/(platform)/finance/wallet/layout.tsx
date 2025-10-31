@@ -15,12 +15,12 @@ export default async function WalletLayout({ children, params }: Props) {
 
   // Define wallet page navigation
   const walletPages: PageNavItem[] = [
-    { name: d?.navigation?.overview || 'Overview', href: `/${lang}/finance/wallet` },
-    { name: d?.navigation?.balance || 'Balance', href: `/${lang}/finance/wallet/balance` },
-    { name: d?.navigation?.transactions || 'Transactions', href: `/${lang}/finance/wallet/transactions` },
-    { name: d?.navigation?.topUp || 'Top Up', href: `/${lang}/finance/wallet/top-up` },
-    { name: d?.navigation?.withdraw || 'Withdraw', href: `/${lang}/finance/wallet/withdraw` },
-    { name: d?.navigation?.reports || 'Reports', href: `/${lang}/finance/wallet/reports` },
+    { name: 'Overview', href: `/${lang}/finance/wallet` },
+    { name: 'Balance', href: `/${lang}/finance/wallet/balance` },
+    { name: 'Transactions', href: `/${lang}/finance/wallet/transactions` },
+    { name: 'Top Up', href: `/${lang}/finance/wallet/top-up` },
+    { name: 'Withdraw', href: `/${lang}/finance/wallet/withdraw` },
+    { name: 'Reports', href: `/${lang}/finance/wallet/reports` },
   ]
 
   return (
