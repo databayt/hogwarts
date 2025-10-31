@@ -63,7 +63,8 @@ export function AttendanceOverviewContent({ dictionary, locale = 'en' }: Attenda
   const userRole = session?.user?.role as UserRole | undefined;
 
   // Extract subdomain from pathname: /[lang]/s/[subdomain]/...
-  const subdomain = pathname?.split('/')[3] || '';
+  const pathParts = pathname?.split('/') || [];
+  const subdomain = pathParts[3] || 'demo';
 
   const {
     currentMethod,
@@ -78,11 +79,6 @@ export function AttendanceOverviewContent({ dictionary, locale = 'en' }: Attenda
 
     // Navigate to method-specific page
     const methodPath = method.toLowerCase().replace('_', '-');
-
-    // Get subdomain from current URL
-    const pathParts = window.location.pathname.split('/');
-    const subdomain = pathParts[3]; // Assuming path is /[lang]/s/[subdomain]/...
-
     router.push(`/${locale}/s/${subdomain}/attendance/${methodPath}`);
   };
 
@@ -440,11 +436,3 @@ export function AttendanceOverviewContent({ dictionary, locale = 'en' }: Attenda
   );
 }
 
-// Get subdomain helper
-function getSubdomain(): string {
-  if (typeof window !== 'undefined') {
-    const pathParts = window.location.pathname.split('/');
-    return pathParts[3] || 'demo'; // Assuming path is /[lang]/s/[subdomain]/...
-  }
-  return 'demo';
-}

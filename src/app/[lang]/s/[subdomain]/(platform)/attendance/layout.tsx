@@ -12,7 +12,7 @@ export default async function AttendanceLayout({ children, params }: Props) {
   const { lang, subdomain } = await params
   const dictionary = await getDictionary(lang)
 
-  // Define attendance page navigation
+  // Define attendance page navigation - include subdomain for internal routing
   const attendancePages: PageNavItem[] = [
     {
       name: dictionary?.school?.attendance?.overview || 'Overview',
