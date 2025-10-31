@@ -5,6 +5,7 @@ import { db } from '@/lib/db'
 import { getTenantContext } from '@/lib/tenant-context'
 import { StatsCard, FeatureCard, DashboardGrid, formatCurrency } from '../lib/dashboard-components'
 import { checkCurrentUserPermission } from '../lib/permissions'
+import PageHeader from '@/components/atom/page-header'
 
 interface Props {
   dictionary: Dictionary
@@ -16,15 +17,13 @@ export default async function WalletContent({ dictionary, lang }: Props) {
 
   if (!schoolId) {
     return (
-      <PageContainer>
-        <div className="flex flex-1 flex-col gap-6">
-          <PageHeader
-            title="Wallet Management"
-            description="School context not found"
-            className="text-start max-w-none"
-          />
-        </div>
-      </PageContainer>
+      <div className="space-y-6">
+        <PageHeader
+          title="Wallet Management"
+          description="School context not found"
+          className="text-start max-w-none"
+        />
+      </div>
     )
   }
 
@@ -38,15 +37,13 @@ export default async function WalletContent({ dictionary, lang }: Props) {
   // If user can't view wallet, show empty state
   if (!canView) {
     return (
-      <PageContainer>
-        <div className="flex flex-1 flex-col gap-6">
-          <PageHeader
-            title="Wallet Management"
-            description="You don't have permission to view wallet"
-            className="text-start max-w-none"
-          />
-        </div>
-      </PageContainer>
+      <div className="space-y-6">
+        <PageHeader
+          title="Wallet Management"
+          description="You don't have permission to view wallet"
+          className="text-start max-w-none"
+        />
+      </div>
     )
   }
 
@@ -83,13 +80,12 @@ export default async function WalletContent({ dictionary, lang }: Props) {
   const d = dictionary?.finance?.wallet as any
 
   return (
-    <PageContainer>
-      <div className="flex flex-1 flex-col gap-6">
-        <PageHeader
-          title={d?.title || 'Wallet Management'}
-          description={d?.description || 'Manage school and parent wallets, track balances and transactions'}
-          className="text-start max-w-none"
-        />
+    <div className="space-y-6">
+      <PageHeader
+        title={d?.title || 'Wallet Management'}
+        description={d?.description || 'Manage school and parent wallets, track balances and transactions'}
+        className="text-start max-w-none"
+      />
 
         <DashboardGrid type="stats">
           <StatsCard
@@ -206,7 +202,6 @@ export default async function WalletContent({ dictionary, lang }: Props) {
             />
           )}
         </DashboardGrid>
-      </div>
-    </PageContainer>
+    </div>
   )
 }
