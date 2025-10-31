@@ -1,4 +1,3 @@
-import PageHeader from '@/components/atom/page-header'
 import type { Locale } from '@/components/internationalization/config'
 import type { Dictionary } from '@/components/internationalization/dictionaries'
 import {
@@ -31,11 +30,6 @@ export default async function ReportsContent({ dictionary, lang }: Props) {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title={d?.navigation?.reports || 'Reports'}
-        className="text-start max-w-none"
-      />
-
       {/* Report Categories */}
       <div className="grid gap-6 md:grid-cols-2">
         {/* User Reports */}

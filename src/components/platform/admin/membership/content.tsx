@@ -1,4 +1,3 @@
-import PageHeader from '@/components/atom/page-header'
 import type { Locale } from '@/components/internationalization/config'
 import type { Dictionary } from '@/components/internationalization/dictionaries'
 import {
@@ -117,11 +116,6 @@ export default async function MembershipContent({ dictionary, lang }: Props) {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title={d?.navigation?.membership || 'Membership'}
-        className="text-start max-w-none"
-      />
-
       {/* Quick Stats */}
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
