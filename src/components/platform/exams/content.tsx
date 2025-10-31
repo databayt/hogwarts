@@ -84,23 +84,23 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
   // Define exams page navigation
   const examsPages: PageNavItem[] = [
     {
-      name: d?.blocks?.manage?.title || 'Manage',
+      name: 'Exams',
       href: `/${lang}/exams`
     },
     {
-      name: d?.blocks?.qbank?.title || 'QBank',
+      name: 'QBank',
       href: `/${lang}/exams/qbank`
     },
     {
-      name: d?.blocks?.generate?.title || 'Generate',
+      name: 'Generate',
       href: `/${lang}/exams/generate`
     },
     {
-      name: d?.blocks?.mark?.title || 'Mark',
+      name: 'Mark',
       href: `/${lang}/exams/mark`
     },
     {
-      name: d?.blocks?.results?.title || 'Result',
+      name: 'Result',
       href: `/${lang}/exams/result`
     },
   ];
@@ -109,7 +109,7 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
     <div>
       <div className="flex flex-col gap-6">
         <PageHeader
-          title={d?.title || "Exams"}
+          title="Exams"
           className="text-start max-w-none"
         />
 

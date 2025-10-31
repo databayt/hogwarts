@@ -60,28 +60,27 @@ export async function MarkingContent({
   ).length
 
   const dict = dictionary.marking
-  const d = dictionary?.school?.exams?.dashboard;
 
   // Define exams page navigation
   const examsPages: PageNavItem[] = [
     {
-      name: d?.blocks?.manage?.title || 'Manage',
+      name: 'Exams',
       href: `/${locale}/exams`
     },
     {
-      name: d?.blocks?.qbank?.title || 'QBank',
+      name: 'QBank',
       href: `/${locale}/exams/qbank`
     },
     {
-      name: d?.blocks?.generate?.title || 'Generate',
+      name: 'Generate',
       href: `/${locale}/exams/generate`
     },
     {
-      name: d?.blocks?.mark?.title || 'Mark',
+      name: 'Mark',
       href: `/${locale}/exams/mark`
     },
     {
-      name: d?.blocks?.results?.title || 'Result',
+      name: 'Result',
       href: `/${locale}/exams/result`
     },
   ];
@@ -90,7 +89,7 @@ export async function MarkingContent({
     <div>
       <div className="flex flex-col gap-6">
         <PageHeader
-          title={d?.blocks?.mark?.title || "Mark"}
+          title="Mark"
           className="text-start max-w-none"
         />
 
