@@ -1,6 +1,7 @@
 import type { Locale } from '@/components/internationalization/config'
 import type { Dictionary } from '@/components/internationalization/dictionaries'
 import PageHeader from '@/components/atom/page-header'
+import { PageNav, type PageNavItem } from '@/components/atom/page-nav'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { FileBarChart, TrendingUp, BarChart, PieChart, Calendar, Download } from 'lucide-react'
@@ -54,13 +55,26 @@ export default async function ReportsContent({ dictionary, lang }: Props) {
 
   const d = dictionary?.finance?.reports
 
+  // Define finance page navigation
+  const financePages: PageNavItem[] = [
+    { name: dictionary?.finance?.navigation?.overview || 'Overview', href: `/${lang}/finance` },
+    { name: dictionary?.finance?.navigation?.invoice || 'Invoice', href: `/${lang}/finance/invoice` },
+    { name: dictionary?.finance?.navigation?.banking || 'Banking', href: `/${lang}/finance/banking` },
+    { name: dictionary?.finance?.navigation?.fees || 'Fees', href: `/${lang}/finance/fees` },
+    { name: dictionary?.finance?.navigation?.salary || 'Salary', href: `/${lang}/finance/salary` },
+    { name: dictionary?.finance?.navigation?.payroll || 'Payroll', href: `/${lang}/finance/payroll` },
+    { name: dictionary?.finance?.navigation?.reports || 'Reports', href: `/${lang}/finance/reports` },
+  ]
+
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title={d?.title || 'Financial Reports'}
-        description="Generate comprehensive financial statements and analysis reports"
-        variant="dashboard"
-      />
+    <div>
+      <div className="flex flex-col gap-6">
+        <PageHeader
+          title={d?.title || 'Reports'}
+          className="text-start max-w-none"
+        />
+
+        <PageNav pages={financePages} />
 
       <div className="grid gap-4 md:grid-cols-4">
           <Card>
@@ -253,6 +267,7 @@ export default async function ReportsContent({ dictionary, lang }: Props) {
             </CardContent>
           </Card>
         </div>
+      </div>
     </div>
   )
 }

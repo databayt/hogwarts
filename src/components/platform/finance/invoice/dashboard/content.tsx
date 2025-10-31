@@ -11,6 +11,7 @@ import { RecentInvoicesCard, StatsCards } from "./card";
 
 import { chartConfig } from "./config";
 import PageHeader from '@/components/atom/page-header'
+import { PageNav, type PageNavItem } from '@/components/atom/page-nav'
 import { type Locale } from '@/components/internationalization/config'
 import { type Dictionary } from '@/components/internationalization/dictionaries'
 
@@ -89,13 +90,26 @@ export function DashboardContent({ dictionary, lang }: Props) {
 
   const d = dictionary?.finance?.invoice
 
+  // Define finance page navigation
+  const financePages: PageNavItem[] = [
+    { name: dictionary?.finance?.navigation?.overview || 'Overview', href: `/${lang}/finance` },
+    { name: dictionary?.finance?.navigation?.invoice || 'Invoice', href: `/${lang}/finance/invoice` },
+    { name: dictionary?.finance?.navigation?.banking || 'Banking', href: `/${lang}/finance/banking` },
+    { name: dictionary?.finance?.navigation?.fees || 'Fees', href: `/${lang}/finance/fees` },
+    { name: dictionary?.finance?.navigation?.salary || 'Salary', href: `/${lang}/finance/salary` },
+    { name: dictionary?.finance?.navigation?.payroll || 'Payroll', href: `/${lang}/finance/payroll` },
+    { name: dictionary?.finance?.navigation?.reports || 'Reports', href: `/${lang}/finance/reports` },
+  ]
+
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title={d?.title || 'Invoice Management'}
-        description={d?.description || 'Create and manage client invoices and billing'}
-        variant="dashboard"
-      />
+    <div>
+      <div className="flex flex-col gap-6">
+        <PageHeader
+          title={d?.title || 'Invoice'}
+          className="text-start max-w-none"
+        />
+
+        <PageNav pages={financePages} />
 
       <div className="grid gap-6 lg:grid-cols-4">
         <StatsCards
@@ -116,6 +130,7 @@ export function DashboardContent({ dictionary, lang }: Props) {
           data={data?.recentInvoice as unknown as UserInvoice[]}
           columns={columns}
         />
+      </div>
       </div>
     </div>
   );

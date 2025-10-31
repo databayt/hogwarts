@@ -1,6 +1,7 @@
 import type { Locale } from '@/components/internationalization/config'
 import type { Dictionary } from '@/components/internationalization/dictionaries'
 import PageHeader from '@/components/atom/page-header'
+import { PageNav, type PageNavItem } from '@/components/atom/page-nav'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -128,6 +129,17 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
 
   const d = dictionary?.finance
 
+  // Define finance page navigation
+  const financePages: PageNavItem[] = [
+    { name: d?.navigation?.overview || 'Overview', href: `/${lang}/finance` },
+    { name: d?.navigation?.invoice || 'Invoice', href: `/${lang}/finance/invoice` },
+    { name: d?.navigation?.banking || 'Banking', href: `/${lang}/finance/banking` },
+    { name: d?.navigation?.fees || 'Fees', href: `/${lang}/finance/fees` },
+    { name: d?.navigation?.salary || 'Salary', href: `/${lang}/finance/salary` },
+    { name: d?.navigation?.payroll || 'Payroll', href: `/${lang}/finance/payroll` },
+    { name: d?.navigation?.reports || 'Reports', href: `/${lang}/finance/reports` },
+  ]
+
   // Secondary pages for quick access section (hidden from main nav)
   const secondaryPages = [
     { name: d?.navigation?.receipt || 'Receipt', href: `/${lang}/finance/receipt` },
@@ -139,12 +151,14 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
   ]
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title={d?.title || 'Finance Overview'}
-        description={d?.description || 'Comprehensive financial management for your school'}
-        variant="dashboard"
-      />
+    <div>
+      <div className="flex flex-col gap-6">
+        <PageHeader
+          title={d?.title || 'Finance'}
+          className="text-start max-w-none"
+        />
+
+        <PageNav pages={financePages} />
 
       {/* Overview Stats - Financial Health */}
       <div className="grid gap-4 md:grid-cols-4">
@@ -806,6 +820,7 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
             </ol>
           </CardContent>
       </Card>
+      </div>
     </div>
   )
 }
