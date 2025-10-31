@@ -1,5 +1,4 @@
 import PageHeader from '@/components/atom/page-header'
-import { PageNav, type PageNavItem } from '@/components/atom/page-nav'
 import type { Locale } from '@/components/internationalization/config'
 import type { Dictionary } from '@/components/internationalization/dictionaries'
 import { Button } from '@/components/ui/button'
@@ -128,32 +127,12 @@ export default async function AdminContent({ dictionary, lang }: Props) {
 
   const d = dictionary?.admin
 
-  // Define admin page navigation (primary links shown in nav, secondary hidden)
-  const adminPages: PageNavItem[] = [
-    // Primary navigation (most important features)
-    { name: d?.navigation?.overview || 'Overview', href: `/${lang}/admin` },
-    { name: d?.navigation?.configuration || 'Configuration', href: `/${lang}/admin/configuration` },
-    { name: d?.navigation?.membership || 'Membership', href: `/${lang}/admin/membership` },
-    { name: d?.navigation?.security || 'Security', href: `/${lang}/admin/security` },
-    { name: d?.navigation?.reports || 'Reports', href: `/${lang}/admin/reports` },
-    { name: d?.navigation?.system || 'System', href: `/${lang}/admin/system` },
-
-    // Secondary navigation (hidden from nav, shown in content)
-    { name: d?.navigation?.integration || 'Integration', href: `/${lang}/admin/integration`, hidden: true },
-    { name: d?.navigation?.communication || 'Communication', href: `/${lang}/admin/communication`, hidden: true },
-    { name: d?.navigation?.subscription || 'Subscription', href: `/${lang}/admin/subscription`, hidden: true },
-  ]
-
-  // Separate secondary pages for quick access section
-  const secondaryPages = adminPages.filter(page => page.hidden)
-
   return (
     <div className="space-y-6">
       <PageHeader
-        title={d?.title || 'Administration'}
+        title={d?.title || 'Admin'}
         className="text-start max-w-none"
       />
-      <PageNav pages={adminPages} />
 
       {/* Overview Stats - System Health */}
       <div className="grid gap-4 md:grid-cols-4">
@@ -293,35 +272,39 @@ export default async function AdminContent({ dictionary, lang }: Props) {
         </CardHeader>
         <CardContent>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {secondaryPages.map((page) => {
-              const getDescription = (pageName: string) => {
-                if (pageName === (d?.navigation?.integration || 'Integration')) return d?.quickAccess?.integration || 'OAuth, email & payment gateways'
-                if (pageName === (d?.navigation?.communication || 'Communication')) return d?.quickAccess?.communication || 'Announcements & notifications'
-                if (pageName === (d?.navigation?.subscription || 'Subscription')) return d?.quickAccess?.subscription || 'Billing & subscription management'
-                return ''
-              }
-
-              return (
-                <Button
-                  key={page.href}
-                  asChild
-                  variant="outline"
-                  className="justify-start h-auto py-3"
-                >
-                  <Link href={page.href}>
-                    {page.name === (d?.navigation?.integration || 'Integration') && <Link2 className="mr-2 h-4 w-4" />}
-                    {page.name === (d?.navigation?.communication || 'Communication') && <MessageSquare className="mr-2 h-4 w-4" />}
-                    {page.name === (d?.navigation?.subscription || 'Subscription') && <CreditCard className="mr-2 h-4 w-4" />}
-                    <span className="flex flex-col items-start">
-                      <span className="font-medium">{page.name}</span>
-                      <span className="text-xs text-muted-foreground">
-                        {getDescription(page.name)}
-                      </span>
-                    </span>
-                  </Link>
-                </Button>
-              )
-            })}
+            <Button asChild variant="outline" className="justify-start h-auto py-3">
+              <Link href={`/${lang}/admin/integration`}>
+                <Link2 className="mr-2 h-4 w-4" />
+                <span className="flex flex-col items-start">
+                  <span className="font-medium">{d?.navigation?.integration || 'Integration'}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {d?.quickAccess?.integration || 'OAuth, email & payment gateways'}
+                  </span>
+                </span>
+              </Link>
+            </Button>
+            <Button asChild variant="outline" className="justify-start h-auto py-3">
+              <Link href={`/${lang}/admin/communication`}>
+                <MessageSquare className="mr-2 h-4 w-4" />
+                <span className="flex flex-col items-start">
+                  <span className="font-medium">{d?.navigation?.communication || 'Communication'}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {d?.quickAccess?.communication || 'Announcements & notifications'}
+                  </span>
+                </span>
+              </Link>
+            </Button>
+            <Button asChild variant="outline" className="justify-start h-auto py-3">
+              <Link href={`/${lang}/admin/subscription`}>
+                <CreditCard className="mr-2 h-4 w-4" />
+                <span className="flex flex-col items-start">
+                  <span className="font-medium">{d?.navigation?.subscription || 'Subscription'}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {d?.quickAccess?.subscription || 'Billing & subscription management'}
+                  </span>
+                </span>
+              </Link>
+            </Button>
           </div>
         </CardContent>
       </Card>

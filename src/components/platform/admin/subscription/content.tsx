@@ -52,8 +52,7 @@ export default async function SubscriptionContent({ dictionary, lang }: Props) {
   return (
     <div className="space-y-6">
       <PageHeader
-        title={d?.navigation?.subscription || 'Subscription & Billing'}
-        description={d?.cards?.subscription?.description || 'Subscription and billing management'}
+        title={d?.navigation?.subscription || 'Subscription'}
         className="text-start max-w-none"
       />
 

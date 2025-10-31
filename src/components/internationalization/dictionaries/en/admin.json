@@ -1,5 +1,5 @@
 {
-  "title": "Administration",
+  "title": "Admin",
   "dashboard": "Admin Dashboard",
   "overview": "Overview",
   "moreFeatures": "More Features",
@@ -10,7 +10,7 @@
   "userActivity": "User Activity",
   "navigation": {
     "overview": "Overview",
-    "configuration": "Configuration",
+    "configuration": "Config",
     "membership": "Membership",
     "system": "System",
     "integration": "Integration",

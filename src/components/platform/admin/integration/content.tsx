@@ -47,7 +47,6 @@ export default async function IntegrationContent({ dictionary, lang }: Props) {
     <div className="space-y-6">
       <PageHeader
         title={d?.navigation?.integration || 'Integration'}
-        description={d?.cards?.integration?.description || 'Third-party service connections'}
         className="text-start max-w-none"
       />
 

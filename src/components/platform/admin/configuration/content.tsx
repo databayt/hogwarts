@@ -81,8 +81,7 @@ export default async function ConfigurationContent({ dictionary, lang }: Props) 
   return (
     <div className="space-y-6">
       <PageHeader
-        title={d?.navigation?.configuration || 'Configuration'}
-        description={d?.cards?.configuration?.description || 'School settings and academic configuration'}
+        title={d?.navigation?.configuration || 'Config'}
         className="text-start max-w-none"
       />
 

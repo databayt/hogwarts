@@ -56,7 +56,6 @@ export default async function SecurityContent({ dictionary, lang }: Props) {
     <div className="space-y-6">
       <PageHeader
         title={d?.navigation?.security || 'Security'}
-        description={d?.cards?.security?.description || 'Security monitoring and policies'}
         className="text-start max-w-none"
       />
 

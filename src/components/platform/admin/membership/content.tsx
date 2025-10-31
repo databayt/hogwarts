@@ -119,7 +119,6 @@ export default async function MembershipContent({ dictionary, lang }: Props) {
     <div className="space-y-6">
       <PageHeader
         title={d?.navigation?.membership || 'Membership'}
-        description={d?.cards?.membership?.description || 'User accounts and role management'}
         className="text-start max-w-none"
       />
 

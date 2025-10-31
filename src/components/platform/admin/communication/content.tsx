@@ -55,7 +55,6 @@ export default async function CommunicationContent({ dictionary, lang }: Props) 
     <div className="space-y-6">
       <PageHeader
         title={d?.navigation?.communication || 'Communication'}
-        description={d?.cards?.communication?.description || 'System announcements and messaging'}
         className="text-start max-w-none"
       />
 

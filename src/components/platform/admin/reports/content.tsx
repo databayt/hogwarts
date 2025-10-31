@@ -32,8 +32,7 @@ export default async function ReportsContent({ dictionary, lang }: Props) {
   return (
     <div className="space-y-6">
       <PageHeader
-        title={d?.navigation?.reports || 'Reports & Analytics'}
-        description={d?.cards?.reports?.description || 'Comprehensive reporting and analytics'}
+        title={d?.navigation?.reports || 'Reports'}
         className="text-start max-w-none"
       />
 

@@ -123,7 +123,6 @@ export default async function SystemContent({ dictionary, lang }: Props) {
     <div className="space-y-6">
       <PageHeader
         title={d?.navigation?.system || 'System'}
-        description={d?.cards?.system?.description || 'Platform administration and monitoring'}
         className="text-start max-w-none"
       />
 

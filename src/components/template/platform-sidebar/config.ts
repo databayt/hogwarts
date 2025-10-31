@@ -32,7 +32,7 @@ const ALL_ROLES: Role[] = [
 export const platformNav: PlatformNavItem[] = [
   // Admin dashboard – admin only
   { title: "Overview", href: "/dashboard", icon: "pieChart", roles: ALL_ROLES },
-  { title: "Admin", href: "/dashboard/admin", icon: "admin", roles: ["ADMIN"], className: "-ml-[1.5px] h-4.5 w-4.5" },
+  { title: "Admin", href: "/admin", icon: "admin", roles: ["ADMIN", "DEVELOPER"], className: "-ml-[1.5px] h-4.5 w-4.5" },
   { title: "Billing", href: "/dashboard/billing", icon: "browser", roles: ["ADMIN"] },
   { title: "Charts", href: "/dashboard/charts", icon: "barChart", roles: ["ADMIN"] },
 
