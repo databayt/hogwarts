@@ -149,6 +149,5 @@ export default async function ResultsContent({ dictionary, lang }: Props) {
           </div>
         )}
       </div>
-    </div>
   );
 }

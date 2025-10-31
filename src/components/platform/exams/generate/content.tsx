@@ -230,6 +230,5 @@ export default async function GenerateContent({ dictionary, lang }: Props) {
           </CardContent>
         </Card>
       </div>
-    </div>
   );
 }

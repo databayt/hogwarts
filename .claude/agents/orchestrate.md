@@ -17,7 +17,7 @@ INTAKE → ANALYZE → MAP DEPENDENCIES → SELECT AGENTS →
 PLAN EXECUTION → COORDINATE → SYNTHESIZE → REPORT
 ```
 
-## Available Agents (20 specialists - Optimized)
+## Available Agents (32 specialists)
 
 **Tech Stack (7)**:
 - `/agents/nextjs` - Next.js 15, App Router, Server Components, build optimization
@@ -28,23 +28,37 @@ PLAN EXECUTION → COORDINATE → SYNTHESIZE → REPORT
 - `/agents/tailwind` - Utility-first CSS, responsive
 - `/agents/i18n` - Arabic/English, RTL/LTR
 
-**Process (6 - Consolidated)**:
-- `/agents/architecture` - System design, pattern enforcement, scalability (merged: architect + pattern)
+**Process (7)**:
+- `/agents/architecture` - System design, pattern enforcement, scalability
 - `/agents/test` - TDD, test generation, 95%+ coverage
 - `/agents/security` - OWASP, vulnerability scanning
 - `/agents/auth` - NextAuth v5, JWT, multi-tenant auth
 - `/agents/performance` - Profiling, optimization, rendering
 - `/agents/typography` - Semantic HTML enforcement
+- `/agents/type-safety` - Enum completeness, exhaustive checking
 
-**Workflow (4 - Consolidated)**:
-- `/agents/git-github` - Git workflow + GitHub integration (merged: git + github)
+**Workflow (5)**:
+- `/agents/git-github` - Git workflow + GitHub integration
+- `/agents/workflow` - Pure Git workflow management
 - `/agents/api` - Server actions, API routes, validation
 - `/agents/multi-tenant` - Tenant safety, schoolId scoping
 - `/agents/database-optimizer` - Query optimization, N+1 detection
 
+**Developer Productivity (10)**:
+- `/agents/build` - Build optimization, Turbopack, pnpm
+- `/agents/deps` - Dependency management, security
+- `/agents/dx` - Developer experience optimization
+- `/agents/cli` - CLI tool development
+- `/agents/tooling` - Developer tools, automation
+- `/agents/docs` - Documentation engineering
+- `/agents/docs-manager` - Workflow documentation
+- `/agents/refactor` - Code refactoring
+- `/agents/legacy` - Legacy modernization
+- `/agents/mcp` - MCP server development
+
 **Specialized (3)**:
-- `/agents/debug` - Systematic debugging, 5 Whys (renamed from: bug)
-- `/agents/react-reviewer` - React code review (renamed from: review)
+- `/agents/debug` - Systematic debugging, 5 Whys
+- `/agents/react-reviewer` - React code review
 - `/agents/orchestrate` - This agent (master coordinator)
 
 ## Orchestration Patterns

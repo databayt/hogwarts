@@ -98,6 +98,5 @@ export default async function QuestionBankContent({
           dictionary={dictionary}
         />
       </div>
-    </div>
   );
 }

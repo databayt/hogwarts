@@ -183,6 +183,5 @@ export default async function AccountsContent({ dictionary, lang }: Props) {
           )}
         </DashboardGrid>
       </div>
-    </div>
   )
 }

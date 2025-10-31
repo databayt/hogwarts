@@ -189,6 +189,5 @@ export default async function TimesheetContent({ dictionary, lang }: Props) {
           />
         </DashboardGrid>
       </div>
-    </div>
   )
 }

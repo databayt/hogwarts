@@ -247,6 +247,5 @@ export default async function ReportsContent({ dictionary, lang }: Props) {
           </Card>
         </div>
       </div>
-    </div>
   )
 }

@@ -392,16 +392,16 @@ The middleware (`src/middleware.ts`) handles:
 - **Security Headers**: Injects CSP, HSTS, X-Frame-Options
 - **Route Matching**: Uses exported config from `src/routes.ts` for path patterns
 
-## 🤖 Claude Code Automation Suite (OPTIMIZED)
+## 🤖 Claude Code Automation Suite (PREMIUM)
 
 ### Overview
-The project includes a comprehensive Claude Code automation system with **35 specialized agents** (expanded from 20), 22 workflow commands, and 7 reusable skills for maximum productivity across all development workflows.
+The project includes a comprehensive Claude Code automation system with **32 specialized agents** (expanded from 20), 22 workflow commands, and 7 reusable skills. Uses **Claude Opus 4.1** for orchestration and **Claude Sonnet 4.5** for all technical agents, ensuring maximum quality with no compromises.
 
 **Recent Expansion**: Added 10 new developer productivity & tooling agents from VoltAgent's awesome-claude-code-subagents collection, adapted for Hogwarts platform.
 
 ### Quick Reference
 
-#### 🎯 Specialized Agents (35 Total)
+#### 🎯 Specialized Agents (32 Total)
 
 **Core Orchestration** (1 agent):
 - `/agents/orchestrate` - **Master coordinator** for complex multi-agent tasks
@@ -446,11 +446,6 @@ The project includes a comprehensive Claude Code automation system with **35 spe
 **Specialized Tools** (2 agents):
 - `/agents/debug` - Systematic debugging, 5 Whys technique
 - `/agents/react-reviewer` - React code review specialist
-
-**Haiku Agents (Cost Optimized)** (3 agents - NEW):
-- `/agents/formatter` - Fast code formatting and linting (3x cheaper, 2x faster)
-- `/agents/spellcheck` - Spell checking and grammar validation (3x cheaper)
-- `/agents/simple-refactor` - Simple refactoring tasks (3x cheaper)
 
 **Note**: Code formatting is automated via PostToolUse hooks, no agent needed.
 
@@ -697,7 +692,7 @@ If you were using old agent names, use these mappings:
 - **`.claude/settings.json`** - Main configuration (full automation, hooks, MCP servers)
 - **`.claude/settings.local.json`** - Local overrides (not committed, DB credentials)
 - **`.mcp.json`** - MCP server configurations
-- **`.claude/agents/`** - **35 specialized agent definitions** (includes type-safety and 3 Haiku agents)
+- **`.claude/agents/`** - **32 specialized agent definitions** (includes type-safety for enum validation)
 - **`.claude/commands/`** - **22 workflow command shortcuts** (added error prevention and testing commands)
 - **`.claude/skills/`** - **7 reusable skill packages** (added 5 new skills for comprehensive coverage)
 - **`.claude/.backup/`** - Archived old agents (architect, pattern, git, github, build, prettier)
@@ -728,6 +723,6 @@ Expected productivity improvements:
 - **License**: MIT License
 - **Test Coverage**: 234 test files across all features
 - **MVP Status**: 100% complete, production-ready
-- **AI Automation**: **35 specialized agents** (including 3 Haiku agents), **22 commands** (added testing and optimization), **7 skills** (comprehensive coverage) for maximum productivity
+- **AI Automation**: **32 specialized agents**, **22 commands** (added testing and optimization), **7 skills** (comprehensive coverage) for maximum productivity
 - **Error Prevention**: Catches 204+ error types before CI/CD with 95%+ auto-fix success rate
 - fix errors and push don't run build

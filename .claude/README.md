@@ -7,13 +7,17 @@
 ## 📖 Overview
 
 This directory contains a comprehensive Claude Code automation system with:
-- **35 specialized AI agents** (expanded from 20, includes 3 Haiku agents)
+- **32 specialized AI agents** (expanded from 20)
 - **22 workflow commands** (shortcuts for common tasks)
 - **7 reusable skills** (shared capabilities)
 - **Full automation** (formatting, testing, hooks)
 - **MCP integration** (13 servers: PostgreSQL, GitHub, Vercel, Sentry, and more)
 
-**Expected Impact**: 10x development velocity with zero manual formatting and automated quality gates.
+**Premium Model Strategy**:
+- **Claude Opus 4.1** for orchestration (complex multi-agent coordination)
+- **Claude Sonnet 4.5** for all technical agents (maximum quality)
+
+**Expected Impact**: 10x development velocity with highest quality AI responses and zero compromises.
 
 ---
 
@@ -85,11 +89,6 @@ Commands are quick shortcuts:
 ### Specialized (2)
 - **debug** - Systematic debugging
 - **react-reviewer** - React code review
-
-### Haiku Agents (3) - Cost Optimized
-- **formatter** - Fast code formatting (3x cheaper, 2x faster)
-- **spellcheck** - Spell checking and grammar
-- **simple-refactor** - Simple refactoring tasks
 
 ---
 
@@ -208,6 +207,10 @@ Commands are quick shortcuts:
 | Git/GitHub | git-github | All Git ops |
 | Debugging | debug | Systematic |
 | React review | react-reviewer | Code review |
+| Documentation | docs | Technical writing |
+| Refactoring | refactor | Code improvement |
+| Dependencies | deps | Package management |
+| Build issues | build | Optimization |
 | Complex | orchestrate | Multi-agent |
 
 ---
@@ -271,8 +274,10 @@ See **ISSUE.md** for reporting issues.
 - **Zero manual formatting**
 - **95%+ test coverage**
 - **Zero security vulnerabilities**
-- **75% more agents** (35 total, comprehensive coverage)
+- **60% more agents** (32 total, comprehensive coverage)
 - **Clearer naming** (easier to use)
+- **Premium models** (Opus 4.1 + Sonnet 4.5 for maximum quality)
+- **No compromises** (highest tier models only)
 
 ---
 
@@ -286,6 +291,6 @@ See **ISSUE.md** for reporting issues.
 ---
 
 **Version**: 3.0 (Expanded)
-**Agent Count**: 35 (expanded from 20)
-**Enhancement**: 75% expansion with Haiku agents
+**Agent Count**: 32 (expanded from 20)
+**Enhancement**: 60% expansion with developer productivity agents
 **Status**: Production-ready

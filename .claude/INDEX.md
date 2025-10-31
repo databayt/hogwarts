@@ -15,7 +15,7 @@
 ├── INDEX.md                     # This file - Directory guide
 ├── settings.json                # Main configuration
 ├── settings.local.json          # Local overrides (NOT committed)
-├── agents/                      # 35 specialized agents
+├── agents/                      # 32 specialized agents
 │   ├── orchestrate.md          # Master coordinator
 │   ├── nextjs.md ... [34 more]
 ├── commands/                    # 22 workflow shortcuts
@@ -49,7 +49,7 @@
 **Purpose**: Complete usage guide for Claude Code automation suite
 
 **Contents**:
-- Overview of 35 agents, 22 commands, 7 skills
+- Overview of 32 agents, 22 commands, 7 skills
 - Quick start examples
 - Agent selection guide
 - Usage patterns
@@ -110,7 +110,7 @@
 
 ---
 
-## 🤖 Agents Directory (35 files)
+## 🤖 Agents Directory (32 files)
 
 ### Core
 - `orchestrate.md` (6KB) - Master coordinator
@@ -155,11 +155,6 @@
 ### Specialized (2)
 - `debug.md` - Debugging
 - `react-reviewer.md` - React review
-
-### Haiku Agents (3) - Cost Optimized
-- `formatter.md` - Fast formatting
-- `spellcheck.md` - Spell checking
-- `simple-refactor.md` - Simple refactoring
 
 **Read individual agents**: For specific expertise details
 
@@ -277,16 +272,16 @@ Archived agents from optimization:
 
 ### File Sizes
 - **Documentation**: ~30KB (4 main docs)
-- **Agents**: ~140KB (35 agents)
+- **Agents**: ~130KB (32 agents)
 - **Commands**: ~25KB (22 commands)
 - **Skills**: ~12KB (7 skills)
 - **Total**: ~210KB
 
 ### Expansion Results
 - **Before**: 20 agents
-- **After**: 35 agents
-- **Growth**: 75% expansion
-- **New capabilities**: 15 agents (10 DX/tooling + 3 Haiku + 2 workflow)
+- **After**: 32 agents
+- **Growth**: 60% expansion
+- **New capabilities**: 12 agents (10 DX/tooling + 2 workflow)
 - **Commands added**: 10 new commands (22 total from 12)
 - **Skills added**: 1 new skill (7 total from 6)
 
@@ -352,6 +347,6 @@ tail .claude/*.log
 
 **Version**: 3.0 (Expanded)
 **Last Updated**: 2025-10-31
-**Total Agents**: 35
+**Total Agents**: 32
 **Total Commands**: 22
 **Total Skills**: 7

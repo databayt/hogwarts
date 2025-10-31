@@ -110,7 +110,6 @@ export function DashboardContent({ dictionary, lang }: Props) {
           columns={columns}
         />
       </div>
-      </div>
     </div>
   );
 }

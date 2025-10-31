@@ -198,6 +198,5 @@ export default async function BudgetContent({ dictionary, lang }: Props) {
           )}
         </DashboardGrid>
       </div>
-    </div>
   )
 }

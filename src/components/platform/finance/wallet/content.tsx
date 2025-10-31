@@ -188,6 +188,5 @@ export default async function WalletContent({ dictionary, lang }: Props) {
           )}
         </DashboardGrid>
       </div>
-    </div>
   )
 }

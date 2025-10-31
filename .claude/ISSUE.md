@@ -203,7 +203,7 @@ ls -lh .claude/agents/*.md
 
 # Count agents
 ls .claude/agents/*.md | wc -l
-# Should show: 35
+# Should show: 32
 
 # Check specific agent exists
 ls .claude/agents/architecture.md
@@ -491,7 +491,7 @@ If you need a new command shortcut:
 ## 🎯 Known Limitations
 
 ### Current Limitations
-1. **Agent count**: 35 agents (expanded from 20, includes 3 Haiku agents for cost optimization)
+1. **Agent count**: 32 agents (expanded from 20)
 2. **MCP servers**: Require environment variables
 3. **Hooks**: Windows may need different syntax
 4. **Auto-format**: Only for .ts, .tsx, .js, .jsx files
