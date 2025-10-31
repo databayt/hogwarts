@@ -28,7 +28,6 @@ import {
 import Link from 'next/link'
 import { db } from '@/lib/db'
 import { getTenantContext } from '@/lib/tenant-context'
-import { USER_ROLES } from '@/components/platform/admin/config'
 
 interface Props {
   dictionary: Dictionary
@@ -189,14 +188,13 @@ export default async function MembershipContent({ dictionary, lang }: Props) {
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-4">
-            {Object.entries(USER_ROLES).map(([key, value]) => {
-              const count = roleDistribution[value] || 0
+            {Object.entries(roleDistribution).map(([role, count]) => {
               const percentage = totalUsers > 0 ? ((count / totalUsers) * 100).toFixed(1) : '0'
 
               return (
-                <div key={key} className="space-y-2">
+                <div key={role} className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">{value}</span>
+                    <span className="text-sm font-medium">{role}</span>
                     <span className="text-sm text-muted-foreground">{count}</span>
                   </div>
                   <div className="h-2 rounded-full bg-secondary">
