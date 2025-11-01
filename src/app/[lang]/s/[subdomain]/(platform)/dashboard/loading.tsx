@@ -1,11 +1,15 @@
 import { Skeleton } from "@/components/ui/skeleton";
-import { DashboardHeader } from "@/components/platform/dashboard/header";
+import PageHeader from "@/components/atom/page-header";
 
 export default function DashboardLoading() {
   return (
-    <>
-      <DashboardHeader heading="Dashboard" text="Current Role :" />
+    <div className="space-y-6">
+      <PageHeader
+        title="Dashboard"
+        variant="dashboard"
+        className="text-start max-w-none"
+      />
       <Skeleton className="size-full rounded-lg" />
-    </>
+    </div>
   );
 }
