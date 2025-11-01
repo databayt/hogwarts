@@ -37,6 +37,9 @@ export function BulkUploadContent({ dictionary }: BulkUploadContentProps) {
 
   const { stats } = useAttendanceContext();
 
+  // Dictionary shorthand
+  const d = dictionary?.school?.attendance?.bulkUpload;
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
@@ -45,7 +48,7 @@ export function BulkUploadContent({ dictionary }: BulkUploadContentProps) {
       if (!validTypes.includes(selectedFile.type)) {
         setUploadResult({
           success: false,
-          message: 'Invalid file type. Please upload a CSV or Excel file.',
+          message: d?.upload?.invalidType || 'Invalid file type. Please upload a CSV or Excel file.',
         });
         return;
       }
@@ -68,7 +71,7 @@ export function BulkUploadContent({ dictionary }: BulkUploadContentProps) {
       // Mock successful result
       setUploadResult({
         success: true,
-        message: 'Attendance records uploaded successfully!',
+        message: d?.results?.success || 'Attendance records uploaded successfully!',
         details: {
           total: 150,
           successful: 145,
@@ -85,7 +88,7 @@ export function BulkUploadContent({ dictionary }: BulkUploadContentProps) {
     } catch (error) {
       setUploadResult({
         success: false,
-        message: 'Upload failed. Please try again.',
+        message: d?.results?.failed || 'Upload failed. Please try again.',
       });
     } finally {
       setIsUploading(false);
@@ -115,19 +118,19 @@ export function BulkUploadContent({ dictionary }: BulkUploadContentProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5" />
-            Instructions
+            {d?.instructions?.title || 'Instructions'}
           </CardTitle>
           <CardDescription>
-            Follow these steps to bulk upload attendance records
+            {d?.instructions?.description || 'Follow these steps to bulk upload attendance records'}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <ol className="space-y-2 list-decimal list-inside">
-            <li>Download the template file using the button below</li>
-            <li>Fill in the attendance data following the format in the template</li>
-            <li>Save the file as CSV or Excel format</li>
-            <li>Upload the completed file using the upload section</li>
-            <li>Review the upload results and fix any errors if needed</li>
+            <li>{d?.instructions?.step1 || 'Download the template file using the button below'}</li>
+            <li>{d?.instructions?.step2 || 'Fill in the attendance data following the format in the template'}</li>
+            <li>{d?.instructions?.step3 || 'Save the file as CSV or Excel format'}</li>
+            <li>{d?.instructions?.step4 || 'Upload the completed file using the upload section'}</li>
+            <li>{d?.instructions?.step5 || 'Review the upload results and fix any errors if needed'}</li>
           </ol>
         </CardContent>
       </Card>
@@ -137,16 +140,16 @@ export function BulkUploadContent({ dictionary }: BulkUploadContentProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Download className="h-5 w-5" />
-            Download Template
+            {d?.template?.title || 'Download Template'}
           </CardTitle>
           <CardDescription>
-            Get a pre-formatted template to fill in attendance data
+            {d?.template?.description || 'Get a pre-formatted template to fill in attendance data'}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Button onClick={downloadTemplate} variant="outline">
             <FileSpreadsheet className="mr-2 h-4 w-4" />
-            Download CSV Template
+            {d?.template?.download || 'Download CSV Template'}
           </Button>
         </CardContent>
       </Card>
@@ -156,10 +159,10 @@ export function BulkUploadContent({ dictionary }: BulkUploadContentProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Upload className="h-5 w-5" />
-            Upload Attendance File
+            {d?.upload?.title || 'Upload Attendance File'}
           </CardTitle>
           <CardDescription>
-            Select and upload your completed attendance file
+            {d?.upload?.description || 'Select and upload your completed attendance file'}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -175,11 +178,11 @@ export function BulkUploadContent({ dictionary }: BulkUploadContentProps) {
               disabled={!file || isUploading}
             >
               {isUploading ? (
-                <>Processing...</>
+                <>{d?.upload?.processing || 'Processing...'}</>
               ) : (
                 <>
                   <Upload className="mr-2 h-4 w-4" />
-                  Upload
+                  {d?.upload?.uploadButton || 'Upload'}
                 </>
               )}
             </Button>
@@ -187,7 +190,9 @@ export function BulkUploadContent({ dictionary }: BulkUploadContentProps) {
 
           {file && (
             <div className="text-sm text-muted-foreground">
-              Selected file: {file.name} ({(file.size / 1024).toFixed(2)} KB)
+              {(d?.upload?.selectedFile || 'Selected file: {name} ({size} KB)')
+                .replace('{name}', file.name)
+                .replace('{size}', (file.size / 1024).toFixed(2))}
             </div>
           )}
 
@@ -205,13 +210,13 @@ export function BulkUploadContent({ dictionary }: BulkUploadContentProps) {
                   {uploadResult.details && (
                     <div className="space-y-2">
                       <div className="text-sm">
-                        <p>Total records: {uploadResult.details.total}</p>
-                        <p>Successful: {uploadResult.details.successful}</p>
-                        <p>Failed: {uploadResult.details.failed}</p>
+                        <p>{(d?.results?.total || 'Total records: {count}').replace('{count}', uploadResult.details.total.toString())}</p>
+                        <p>{(d?.results?.successful || 'Successful: {count}').replace('{count}', uploadResult.details.successful.toString())}</p>
+                        <p>{(d?.results?.failedCount || 'Failed: {count}').replace('{count}', uploadResult.details.failed.toString())}</p>
                       </div>
                       {uploadResult.details.errors && uploadResult.details.errors.length > 0 && (
                         <div className="mt-2">
-                          <p className="font-semibold text-sm">Errors:</p>
+                          <p className="font-semibold text-sm">{d?.results?.errors || 'Errors:'}</p>
                           <ul className="text-sm list-disc list-inside">
                             {uploadResult.details.errors.map((error, index) => (
                               <li key={index}>{error}</li>
@@ -233,10 +238,10 @@ export function BulkUploadContent({ dictionary }: BulkUploadContentProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Calendar className="h-5 w-5" />
-            Recent Bulk Uploads
+            {d?.recentUploads?.title || 'Recent Bulk Uploads'}
           </CardTitle>
           <CardDescription>
-            History of your recent bulk attendance uploads
+            {d?.recentUploads?.description || 'History of your recent bulk attendance uploads'}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -246,12 +251,14 @@ export function BulkUploadContent({ dictionary }: BulkUploadContentProps) {
                 <FileSpreadsheet className="h-4 w-4 text-muted-foreground" />
                 <div>
                   <p className="font-medium text-sm">attendance_2024_01_15.csv</p>
-                  <p className="text-xs text-muted-foreground">Uploaded 2 hours ago</p>
+                  <p className="text-xs text-muted-foreground">
+                    {(d?.recentUploads?.uploadedAgo || 'Uploaded {time} ago').replace('{time}', (d?.recentUploads?.hoursAgo || '{hours} hours ago').replace('{hours}', '2'))}
+                  </p>
                 </div>
               </div>
               <div className="text-right">
                 <p className="text-sm font-medium text-green-600">145/150</p>
-                <p className="text-xs text-muted-foreground">Records processed</p>
+                <p className="text-xs text-muted-foreground">{d?.results?.recordsProcessed || 'Records processed'}</p>
               </div>
             </div>
 
@@ -260,12 +267,14 @@ export function BulkUploadContent({ dictionary }: BulkUploadContentProps) {
                 <FileSpreadsheet className="h-4 w-4 text-muted-foreground" />
                 <div>
                   <p className="font-medium text-sm">attendance_2024_01_14.xlsx</p>
-                  <p className="text-xs text-muted-foreground">Uploaded yesterday</p>
+                  <p className="text-xs text-muted-foreground">
+                    {(d?.recentUploads?.uploadedAgo || 'Uploaded {time} ago').replace('{time}', d?.recentUploads?.yesterday || 'yesterday')}
+                  </p>
                 </div>
               </div>
               <div className="text-right">
                 <p className="text-sm font-medium text-green-600">200/200</p>
-                <p className="text-xs text-muted-foreground">Records processed</p>
+                <p className="text-xs text-muted-foreground">{d?.results?.recordsProcessed || 'Records processed'}</p>
               </div>
             </div>
 
@@ -274,12 +283,14 @@ export function BulkUploadContent({ dictionary }: BulkUploadContentProps) {
                 <FileSpreadsheet className="h-4 w-4 text-muted-foreground" />
                 <div>
                   <p className="font-medium text-sm">attendance_2024_01_12.csv</p>
-                  <p className="text-xs text-muted-foreground">Uploaded 3 days ago</p>
+                  <p className="text-xs text-muted-foreground">
+                    {(d?.recentUploads?.uploadedAgo || 'Uploaded {time} ago').replace('{time}', (d?.recentUploads?.daysAgo || '{days} days ago').replace('{days}', '3'))}
+                  </p>
                 </div>
               </div>
               <div className="text-right">
                 <p className="text-sm font-medium text-yellow-600">178/185</p>
-                <p className="text-xs text-muted-foreground">Records processed</p>
+                <p className="text-xs text-muted-foreground">{d?.results?.recordsProcessed || 'Records processed'}</p>
               </div>
             </div>
           </div>
@@ -292,28 +303,28 @@ export function BulkUploadContent({ dictionary }: BulkUploadContentProps) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Users className="h-5 w-5" />
-              Current Attendance Summary
+              {d?.summary?.title || 'Current Attendance Summary'}
             </CardTitle>
             <CardDescription>
-              Overall attendance statistics after bulk uploads
+              {d?.summary?.description || 'Overall attendance statistics after bulk uploads'}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid gap-4 md:grid-cols-4">
               <div>
-                <p className="text-sm text-muted-foreground">Total Students</p>
+                <p className="text-sm text-muted-foreground">{dictionary?.school?.attendance?.stats?.totalStudents || 'Total Students'}</p>
                 <p className="text-2xl font-bold">{stats.total}</p>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Present Today</p>
+                <p className="text-sm text-muted-foreground">{dictionary?.school?.attendance?.present || 'Present Today'}</p>
                 <p className="text-2xl font-bold text-green-600">{stats.present}</p>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Absent Today</p>
+                <p className="text-sm text-muted-foreground">{dictionary?.school?.attendance?.absent || 'Absent Today'}</p>
                 <p className="text-2xl font-bold text-red-600">{stats.absent}</p>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Late Today</p>
+                <p className="text-sm text-muted-foreground">{dictionary?.school?.attendance?.late || 'Late Today'}</p>
                 <p className="text-2xl font-bold text-yellow-600">{stats.late}</p>
               </div>
             </div>

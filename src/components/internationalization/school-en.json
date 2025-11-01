@@ -51,7 +51,119 @@
       "studentReport": "Student Report",
       "classReport": "Class Report",
       "attendanceSaved": "Attendance saved successfully",
-      "failed": "Failed"
+      "failed": "Failed",
+      "dashboards": {
+        "admin": {
+          "title": "Attendance Management Dashboard",
+          "description": "Manage school-wide attendance with advanced tracking methods"
+        },
+        "teacher": {
+          "title": "Class Attendance Tracker",
+          "description": "Mark and monitor attendance for your classes"
+        },
+        "student": {
+          "title": "Your Attendance Portal",
+          "description": "Check in and view your attendance records"
+        },
+        "guardian": {
+          "title": "Your Child's Attendance",
+          "description": "Monitor and track attendance records"
+        }
+      },
+      "quickActions": {
+        "bulkImport": "Bulk Import",
+        "settings": "Settings",
+        "markAttendance": "Mark Attendance",
+        "viewReports": "View Reports",
+        "selfCheckIn": "Self Check-in",
+        "myAttendance": "My Attendance"
+      },
+      "stats": {
+        "totalStudents": "Total Students",
+        "enrolledStudents": "Enrolled students",
+        "present": "Present",
+        "absent": "Absent",
+        "late": "Late",
+        "attendanceRate": "Attendance Rate",
+        "overallRate": "Overall rate",
+        "myAttendance": "My Attendance",
+        "thisMonth": "This month",
+        "presentDays": "Present Days",
+        "outOfDays": "Out of {total} days",
+        "lateArrivals": "Late Arrivals",
+        "nextClass": "Next Class",
+        "inMinutes": "In {minutes} minutes"
+      },
+      "methods": {
+        "currentMethod": "Current Method",
+        "active": "Active",
+        "continue": "Continue",
+        "unavailable": "Unavailable",
+        "current": "Current",
+        "requiresHardware": "Requires hardware"
+      },
+      "studentCheckIn": {
+        "qrCode": {
+          "title": "QR Code Check-in",
+          "description": "Scan the classroom QR code to mark attendance"
+        },
+        "location": {
+          "title": "Location Check-in",
+          "description": "Automatic attendance when you enter campus"
+        }
+      },
+      "bulkUpload": {
+        "title": "Bulk Upload Attendance",
+        "description": "Upload attendance records in bulk from CSV or Excel files",
+        "instructions": {
+          "title": "Instructions",
+          "description": "Follow these steps to bulk upload attendance records",
+          "step1": "Download the template file using the button below",
+          "step2": "Fill in the attendance data following the format in the template",
+          "step3": "Save the file as CSV or Excel format",
+          "step4": "Upload the completed file using the upload section",
+          "step5": "Review the upload results and fix any errors if needed"
+        },
+        "template": {
+          "title": "Download Template",
+          "description": "Get a pre-formatted template to fill in attendance data",
+          "download": "Download CSV Template"
+        },
+        "upload": {
+          "title": "Upload Attendance File",
+          "description": "Select and upload your completed attendance file",
+          "selectFile": "Select File",
+          "uploadButton": "Upload",
+          "processing": "Processing...",
+          "selectedFile": "Selected file: {name} ({size} KB)",
+          "invalidType": "Invalid file type. Please upload a CSV or Excel file."
+        },
+        "results": {
+          "success": "Attendance records uploaded successfully!",
+          "failed": "Upload failed. Please try again.",
+          "total": "Total records: {count}",
+          "successful": "Successful: {count}",
+          "failedCount": "Failed: {count}",
+          "errors": "Errors:",
+          "recordsProcessed": "Records processed"
+        },
+        "recentUploads": {
+          "title": "Recent Bulk Uploads",
+          "description": "History of your recent bulk attendance uploads",
+          "uploadedAgo": "Uploaded {time} ago",
+          "yesterday": "yesterday",
+          "daysAgo": "{days} days ago",
+          "hoursAgo": "{hours} hours ago"
+        },
+        "summary": {
+          "title": "Current Attendance Summary",
+          "description": "Overall attendance statistics after bulk uploads"
+        },
+        "accessDenied": {
+          "title": "Access Denied",
+          "description": "You do not have permission to bulk upload attendance records."
+        }
+      }
     },
     "students": {
       "title": "Students",

@@ -18,15 +18,18 @@ export default async function Page({ params }: Props) {
 
   // Check permissions - only ADMIN and TEACHER can bulk upload
   if (session?.user?.role !== 'ADMIN' && session?.user?.role !== 'TEACHER') {
+    const d = dictionary?.school?.attendance?.bulkUpload?.accessDenied;
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh]">
-        <h2>Access Denied</h2>
+        <h2>{d?.title || 'Access Denied'}</h2>
         <p className="muted">
-          You do not have permission to bulk upload attendance records.
+          {d?.description || 'You do not have permission to bulk upload attendance records.'}
         </p>
       </div>
     )
   }
+
+  const d = dictionary?.school?.attendance?.bulkUpload;
 
   return (
     <AttendanceProvider initialMethod="BULK_UPLOAD">
@@ -36,13 +39,13 @@ export default async function Page({ params }: Props) {
             <Upload className="h-6 w-6 text-blue-600" />
           </div>
           <div>
-            <h1>Bulk Upload Attendance</h1>
+            <h1>{d?.title || 'Bulk Upload Attendance'}</h1>
             <p className="muted">
-              Upload attendance records in bulk from CSV or Excel files
+              {d?.description || 'Upload attendance records in bulk from CSV or Excel files'}
             </p>
           </div>
         </div>
-        <BulkUploadContent dictionary={dictionary.school} />
+        <BulkUploadContent dictionary={dictionary} />
       </div>
     </AttendanceProvider>
   )

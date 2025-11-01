@@ -51,7 +51,119 @@
       "studentReport": "تقرير الطالب",
       "classReport": "تقرير الفصل",
       "attendanceSaved": "تم حفظ الحضور بنجاح",
-      "failed": "فشل"
+      "failed": "فشل",
+      "dashboards": {
+        "admin": {
+          "title": "لوحة إدارة الحضور",
+          "description": "إدارة الحضور على مستوى المدرسة بطرق تتبع متقدمة"
+        },
+        "teacher": {
+          "title": "متتبع حضور الفصل",
+          "description": "تسجيل ومراقبة الحضور لصفوفك"
+        },
+        "student": {
+          "title": "بوابة الحضور الخاصة بك",
+          "description": "تسجيل الوصول وعرض سجلات الحضور الخاصة بك"
+        },
+        "guardian": {
+          "title": "حضور طفلك",
+          "description": "مراقبة وتتبع سجلات الحضور"
+        }
+      },
+      "quickActions": {
+        "bulkImport": "استيراد جماعي",
+        "settings": "الإعدادات",
+        "markAttendance": "تسجيل الحضور",
+        "viewReports": "عرض التقارير",
+        "selfCheckIn": "تسجيل الدخول الذاتي",
+        "myAttendance": "حضوري"
+      },
+      "stats": {
+        "totalStudents": "إجمالي الطلاب",
+        "enrolledStudents": "الطلاب المسجلون",
+        "present": "حاضر",
+        "absent": "غائب",
+        "late": "متأخر",
+        "attendanceRate": "معدل الحضور",
+        "overallRate": "المعدل الإجمالي",
+        "myAttendance": "حضوري",
+        "thisMonth": "هذا الشهر",
+        "presentDays": "أيام الحضور",
+        "outOfDays": "من أصل {total} يوم",
+        "lateArrivals": "التأخيرات",
+        "nextClass": "الحصة القادمة",
+        "inMinutes": "خلال {minutes} دقيقة"
+      },
+      "methods": {
+        "currentMethod": "الطريقة الحالية",
+        "active": "نشط",
+        "continue": "متابعة",
+        "unavailable": "غير متاح",
+        "current": "حالي",
+        "requiresHardware": "يتطلب أجهزة"
+      },
+      "studentCheckIn": {
+        "qrCode": {
+          "title": "تسجيل دخول برمز QR",
+          "description": "امسح رمز QR الخاص بالفصل لتسجيل الحضور"
+        },
+        "location": {
+          "title": "تسجيل دخول بالموقع",
+          "description": "حضور تلقائي عند دخولك الحرم الجامعي"
+        }
+      },
+      "bulkUpload": {
+        "title": "رفع الحضور الجماعي",
+        "description": "رفع سجلات الحضور بشكل جماعي من ملفات CSV أو Excel",
+        "instructions": {
+          "title": "التعليمات",
+          "description": "اتبع هذه الخطوات لرفع سجلات الحضور بشكل جماعي",
+          "step1": "قم بتنزيل ملف النموذج باستخدام الزر أدناه",
+          "step2": "املأ بيانات الحضور باتباع التنسيق الموجود في النموذج",
+          "step3": "احفظ الملف بتنسيق CSV أو Excel",
+          "step4": "ارفع الملف المكتمل باستخدام قسم الرفع",
+          "step5": "راجع نتائج الرفع وأصلح أي أخطاء إذا لزم الأمر"
+        },
+        "template": {
+          "title": "تنزيل النموذج",
+          "description": "احصل على نموذج منسق مسبقًا لملء بيانات الحضور",
+          "download": "تنزيل نموذج CSV"
+        },
+        "upload": {
+          "title": "رفع ملف الحضور",
+          "description": "حدد وارفع ملف الحضور المكتمل",
+          "selectFile": "اختر ملف",
+          "uploadButton": "رفع",
+          "processing": "جاري المعالجة...",
+          "selectedFile": "الملف المحدد: {name} ({size} كيلوبايت)",
+          "invalidType": "نوع الملف غير صالح. يرجى رفع ملف CSV أو Excel."
+        },
+        "results": {
+          "success": "تم رفع سجلات الحضور بنجاح!",
+          "failed": "فشل الرفع. يرجى المحاولة مرة أخرى.",
+          "total": "إجمالي السجلات: {count}",
+          "successful": "ناجحة: {count}",
+          "failedCount": "فاشلة: {count}",
+          "errors": "الأخطاء:",
+          "recordsProcessed": "السجلات المعالجة"
+        },
+        "recentUploads": {
+          "title": "الرفع الجماعي الأخير",
+          "description": "سجل عمليات رفع الحضور الجماعي الأخيرة",
+          "uploadedAgo": "تم الرفع منذ {time}",
+          "yesterday": "أمس",
+          "daysAgo": "منذ {days} أيام",
+          "hoursAgo": "منذ {hours} ساعات"
+        },
+        "summary": {
+          "title": "ملخص الحضور الحالي",
+          "description": "إحصائيات الحضور الإجمالية بعد عمليات الرفع الجماعي"
+        },
+        "accessDenied": {
+          "title": "تم رفض الوصول",
+          "description": "ليس لديك إذن لرفع سجلات الحضور بشكل جماعي."
+        }
+      }
     },
     "students": {
       "title": "الطلاب",

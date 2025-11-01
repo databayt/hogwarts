@@ -70,6 +70,9 @@ export function AttendanceOverviewContent({ dictionary, locale = 'en' }: Attenda
     setCurrentMethod
   } = useAttendanceContext();
 
+  // Dictionary shorthand
+  const d = dictionary?.school?.attendance;
+
   const handleMethodSelect = (method: AttendanceMethod) => {
     setCurrentMethod(method);
 
@@ -118,18 +121,18 @@ export function AttendanceOverviewContent({ dictionary, locale = 'en' }: Attenda
     switch (userRole) {
       case 'ADMIN':
         return [
-          { label: 'Bulk Import', icon: Upload, action: () => handleMethodSelect('BULK_UPLOAD'), color: 'blue' },
-          { label: 'Settings', icon: Edit, action: () => router.push(`/${locale}/attendance/settings`), color: 'gray' },
+          { label: d?.quickActions?.bulkImport || 'Bulk Import', icon: Upload, action: () => handleMethodSelect('BULK_UPLOAD'), color: 'blue' },
+          { label: d?.quickActions?.settings || 'Settings', icon: Edit, action: () => router.push(`/${locale}/attendance/settings`), color: 'gray' },
         ];
       case 'TEACHER':
         return [
-          { label: 'Mark Attendance', icon: Edit, action: () => handleMethodSelect('MANUAL'), color: 'green' },
-          { label: 'View Reports', icon: Users, action: () => router.push(`/${locale}/attendance/reports`), color: 'purple' },
+          { label: d?.quickActions?.markAttendance || 'Mark Attendance', icon: Edit, action: () => handleMethodSelect('MANUAL'), color: 'green' },
+          { label: d?.quickActions?.viewReports || 'View Reports', icon: Users, action: () => router.push(`/${locale}/attendance/reports`), color: 'purple' },
         ];
       case 'STUDENT':
         return [
-          { label: 'Self Check-in', icon: QrCode, action: () => handleMethodSelect('QR_CODE'), color: 'blue' },
-          { label: 'My Attendance', icon: User, action: () => router.push(`/${locale}/attendance/my-attendance`), color: 'green' },
+          { label: d?.quickActions?.selfCheckIn || 'Self Check-in', icon: QrCode, action: () => handleMethodSelect('QR_CODE'), color: 'blue' },
+          { label: d?.quickActions?.myAttendance || 'My Attendance', icon: User, action: () => router.push(`/${locale}/attendance/my-attendance`), color: 'green' },
         ];
       default:
         return [];
@@ -145,16 +148,16 @@ export function AttendanceOverviewContent({ dictionary, locale = 'en' }: Attenda
         <Card className="bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20">
           <CardHeader>
             <CardTitle className="text-lg">
-              {userRole === 'ADMIN' && 'Attendance Management Dashboard'}
-              {userRole === 'TEACHER' && 'Class Attendance Tracker'}
-              {userRole === 'STUDENT' && 'Your Attendance Portal'}
-              {userRole === 'GUARDIAN' && "Your Child's Attendance"}
+              {userRole === 'ADMIN' && (d?.dashboards?.admin?.title || 'Attendance Management Dashboard')}
+              {userRole === 'TEACHER' && (d?.dashboards?.teacher?.title || 'Class Attendance Tracker')}
+              {userRole === 'STUDENT' && (d?.dashboards?.student?.title || 'Your Attendance Portal')}
+              {userRole === 'GUARDIAN' && (d?.dashboards?.guardian?.title || "Your Child's Attendance")}
             </CardTitle>
             <CardDescription>
-              {userRole === 'ADMIN' && 'Manage school-wide attendance with advanced tracking methods'}
-              {userRole === 'TEACHER' && 'Mark and monitor attendance for your classes'}
-              {userRole === 'STUDENT' && 'Check in and view your attendance records'}
-              {userRole === 'GUARDIAN' && 'Monitor and track attendance records'}
+              {userRole === 'ADMIN' && (d?.dashboards?.admin?.description || 'Manage school-wide attendance with advanced tracking methods')}
+              {userRole === 'TEACHER' && (d?.dashboards?.teacher?.description || 'Mark and monitor attendance for your classes')}
+              {userRole === 'STUDENT' && (d?.dashboards?.student?.description || 'Check in and view your attendance records')}
+              {userRole === 'GUARDIAN' && (d?.dashboards?.guardian?.description || 'Monitor and track attendance records')}
             </CardDescription>
           </CardHeader>
           {quickActions.length > 0 && (
@@ -183,19 +186,19 @@ export function AttendanceOverviewContent({ dictionary, locale = 'en' }: Attenda
         <div className="grid gap-4 md:grid-cols-5">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Students</CardTitle>
+              <CardTitle className="text-sm font-medium">{d?.stats?.totalStudents || 'Total Students'}</CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.total}</div>
               <p className="text-xs text-muted-foreground">
-                Enrolled students
+                {d?.stats?.enrolledStudents || 'Enrolled students'}
               </p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Present</CardTitle>
+              <CardTitle className="text-sm font-medium">{d?.stats?.present || 'Present'}</CardTitle>
               <CheckCircle2 className="h-4 w-4 text-green-500" />
             </CardHeader>
             <CardContent>
@@ -207,7 +210,7 @@ export function AttendanceOverviewContent({ dictionary, locale = 'en' }: Attenda
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Absent</CardTitle>
+              <CardTitle className="text-sm font-medium">{d?.stats?.absent || 'Absent'}</CardTitle>
               <AlertCircle className="h-4 w-4 text-red-500" />
             </CardHeader>
             <CardContent>
@@ -219,7 +222,7 @@ export function AttendanceOverviewContent({ dictionary, locale = 'en' }: Attenda
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Late</CardTitle>
+              <CardTitle className="text-sm font-medium">{d?.stats?.late || 'Late'}</CardTitle>
               <Clock className="h-4 w-4 text-yellow-500" />
             </CardHeader>
             <CardContent>
@@ -231,7 +234,7 @@ export function AttendanceOverviewContent({ dictionary, locale = 'en' }: Attenda
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Attendance Rate</CardTitle>
+              <CardTitle className="text-sm font-medium">{d?.stats?.attendanceRate || 'Attendance Rate'}</CardTitle>
               <TrendingUp className="h-4 w-4 text-blue-500" />
             </CardHeader>
             <CardContent>
@@ -239,7 +242,7 @@ export function AttendanceOverviewContent({ dictionary, locale = 'en' }: Attenda
                 {stats.attendanceRate.toFixed(1)}%
               </div>
               <p className="text-xs text-muted-foreground">
-                Overall rate
+                {d?.stats?.overallRate || 'Overall rate'}
               </p>
             </CardContent>
           </Card>
@@ -251,42 +254,42 @@ export function AttendanceOverviewContent({ dictionary, locale = 'en' }: Attenda
         <div className="grid gap-4 md:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">My Attendance</CardTitle>
+              <CardTitle className="text-sm font-medium">{d?.stats?.myAttendance || 'My Attendance'}</CardTitle>
               <CheckCircle2 className="h-4 w-4 text-green-500" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-green-600">95%</div>
-              <p className="text-xs text-muted-foreground">This month</p>
+              <p className="text-xs text-muted-foreground">{d?.stats?.thisMonth || 'This month'}</p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Present Days</CardTitle>
+              <CardTitle className="text-sm font-medium">{d?.stats?.presentDays || 'Present Days'}</CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">18</div>
-              <p className="text-xs text-muted-foreground">Out of 20 days</p>
+              <p className="text-xs text-muted-foreground">{d?.stats?.outOfDays?.replace('{total}', '20') || 'Out of 20 days'}</p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Late Arrivals</CardTitle>
+              <CardTitle className="text-sm font-medium">{d?.stats?.lateArrivals || 'Late Arrivals'}</CardTitle>
               <Clock className="h-4 w-4 text-yellow-500" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-yellow-600">2</div>
-              <p className="text-xs text-muted-foreground">This month</p>
+              <p className="text-xs text-muted-foreground">{d?.stats?.thisMonth || 'This month'}</p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Next Class</CardTitle>
+              <CardTitle className="text-sm font-medium">{d?.stats?.nextClass || 'Next Class'}</CardTitle>
               <TrendingUp className="h-4 w-4 text-blue-500" />
             </CardHeader>
             <CardContent>
               <div className="text-lg font-bold">Mathematics</div>
-              <p className="text-xs text-muted-foreground">In 30 minutes</p>
+              <p className="text-xs text-muted-foreground">{d?.stats?.inMinutes?.replace('{minutes}', '30') || 'In 30 minutes'}</p>
             </CardContent>
           </Card>
         </div>
@@ -300,15 +303,15 @@ export function AttendanceOverviewContent({ dictionary, locale = 'en' }: Attenda
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <CardTitle>Current Method</CardTitle>
-                  <Badge variant="default">Active</Badge>
+                  <CardTitle>{d?.methods?.currentMethod || 'Current Method'}</CardTitle>
+                  <Badge variant="default">{d?.methods?.active || 'Active'}</Badge>
                 </div>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => handleMethodSelect(currentMethod)}
                 >
-                  Continue
+                  {d?.methods?.continue || 'Continue'}
                   <ChevronRight className="h-4 w-4 ml-1" />
                 </Button>
               </div>
@@ -367,10 +370,10 @@ export function AttendanceOverviewContent({ dictionary, locale = 'en' }: Attenda
                             {METHOD_ICONS[method.method]}
                           </div>
                           {!isAvailable && (
-                            <Badge variant="secondary">Unavailable</Badge>
+                            <Badge variant="secondary">{d?.methods?.unavailable || 'Unavailable'}</Badge>
                           )}
                           {isCurrent && (
-                            <Badge variant="default">Current</Badge>
+                            <Badge variant="default">{d?.methods?.current || 'Current'}</Badge>
                           )}
                         </div>
                         <CardTitle className="mt-4">{method.name}</CardTitle>
@@ -381,7 +384,7 @@ export function AttendanceOverviewContent({ dictionary, locale = 'en' }: Attenda
                           {method.requiresHardware && (
                             <div className="flex items-center gap-1 text-muted-foreground">
                               <AlertCircle className="h-3 w-3" />
-                              <span>Requires hardware</span>
+                              <span>{d?.methods?.requiresHardware || 'Requires hardware'}</span>
                             </div>
                           )}
                           {method.supportedDevices.length > 0 && (
@@ -416,8 +419,8 @@ export function AttendanceOverviewContent({ dictionary, locale = 'en' }: Attenda
                   <QrCode className="h-6 w-6 text-purple-600" />
                 </div>
                 <div>
-                  <CardTitle>QR Code Check-in</CardTitle>
-                  <CardDescription>Scan the classroom QR code to mark attendance</CardDescription>
+                  <CardTitle>{d?.studentCheckIn?.qrCode?.title || 'QR Code Check-in'}</CardTitle>
+                  <CardDescription>{d?.studentCheckIn?.qrCode?.description || 'Scan the classroom QR code to mark attendance'}</CardDescription>
                 </div>
               </div>
             </CardHeader>
@@ -433,8 +436,8 @@ export function AttendanceOverviewContent({ dictionary, locale = 'en' }: Attenda
                   <MapPin className="h-6 w-6 text-green-600" />
                 </div>
                 <div>
-                  <CardTitle>Location Check-in</CardTitle>
-                  <CardDescription>Automatic attendance when you enter campus</CardDescription>
+                  <CardTitle>{d?.studentCheckIn?.location?.title || 'Location Check-in'}</CardTitle>
+                  <CardDescription>{d?.studentCheckIn?.location?.description || 'Automatic attendance when you enter campus'}</CardDescription>
                 </div>
               </div>
             </CardHeader>
