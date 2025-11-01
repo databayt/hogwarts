@@ -73,8 +73,21 @@ export function AttendanceOverviewContent({ dictionary, locale = 'en' }: Attenda
   const handleMethodSelect = (method: AttendanceMethod) => {
     setCurrentMethod(method);
 
-    // Navigate to method-specific page
-    const methodPath = method.toLowerCase().replace('_', '-');
+    // Navigate to method-specific page with correct path mapping
+    const methodPathMap: Record<AttendanceMethod, string> = {
+      MANUAL: 'manual',
+      GEOFENCE: 'geo', // Maps to existing 'geo' page
+      QR_CODE: 'qr-code',
+      BARCODE: 'barcode',
+      RFID: 'rfid',
+      FINGERPRINT: 'biometric',
+      FACE_RECOGNITION: 'biometric',
+      NFC: 'nfc',
+      BLUETOOTH: 'bluetooth',
+      BULK_UPLOAD: 'bulk-upload'
+    };
+
+    const methodPath = methodPathMap[method];
     router.push(`/${locale}/attendance/${methodPath}`);
   };
 
