@@ -66,10 +66,6 @@ export async function InvoiceContent({ searchParams }: Props) {
   
   return (
     <div className="flex flex-1 flex-col gap-4">
-      <div>
-        <h1 className="text-xl font-semibold">Invoices</h1>
-        <p className="text-sm text-muted-foreground">Manage and track your invoices</p>
-      </div>
       <InvoiceTable initialData={data} columns={invoiceColumns} total={total} perPage={sp.perPage} />
     </div>
   )

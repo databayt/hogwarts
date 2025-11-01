@@ -16,7 +16,7 @@ export default async function InvoiceLayout({ children, params }: Props) {
   // Define invoice page navigation
   const invoicePages: PageNavItem[] = [
     { name: 'Dashboard', href: `/${lang}/finance/invoice` },
-    { name: 'Invoice List', href: `/${lang}/finance/invoice/list` },
+    { name: 'List', href: `/${lang}/finance/invoice/list` },
     { name: 'Create Invoice', href: `/${lang}/finance/invoice/invoice/create` },
     { name: 'Settings', href: `/${lang}/finance/invoice/settings` },
     { name: 'Onboarding', href: `/${lang}/finance/invoice/onboarding` },

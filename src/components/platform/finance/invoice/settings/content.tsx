@@ -121,11 +121,7 @@ export function SettingsContent({ dictionary, lang }: Props) {
     }
   }
   return (
-    <div className="p-4">
-      <div>
-        <h1 className="font-semibold text-xl">Settings</h1>
-      </div>
-
+    <div>
       <Accordion type="single">
         {/**Invoice Logo */}
         <AccordionItem value="Invoice-Logo">
