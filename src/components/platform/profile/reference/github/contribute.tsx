@@ -2,12 +2,20 @@
 
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Clock, ThumbsUp } from 'lucide-react';
-import { Ngo } from '@/components/atom/icon';
+import { Clock, ThumbsUp, Building2 } from 'lucide-react';
+// import { Ngo } from '@/components/atom/icon'; // Commented out - icon component doesn't exist
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { fetchUserForReview } from './edit/review/action';
+// import { fetchUserForReview } from './edit/review/action'; // Commented out - action file doesn't exist
 import PDFViewer from './pdf-viewer';
+
+// Temporary replacement for Ngo icon
+const Ngo = Building2;
+
+// Temporary placeholder for fetchUserForReview (action file doesn't exist)
+const fetchUserForReview = async () => {
+  return { error: null, data: null };
+};
 
 // Helper function to format dates with Arabic month names
 const formatDateWithArabicMonth = (date: Date): string => {
