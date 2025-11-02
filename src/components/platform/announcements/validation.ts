@@ -7,12 +7,34 @@ export const announcementBaseSchema = z.object({
   classId: z.string().optional(),
   role: z.string().optional(),
   published: z.boolean(),
+  priority: z.enum(["low", "normal", "high", "urgent"]).optional(),
+  scheduledFor: z.string().datetime().optional().or(z.literal("")),
+  expiresAt: z.string().datetime().optional().or(z.literal("")),
+  pinned: z.boolean().optional(),
+  featured: z.boolean().optional(),
 }).superRefine((val, ctx) => {
   if (val.scope === "class" && !val.classId) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Class is required when scope is class", path: ["classId"] })
   }
   if (val.scope === "role" && !val.role) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Role is required when scope is role", path: ["role"] })
+  }
+  // Validate scheduled date is in the future
+  if (val.scheduledFor && val.scheduledFor !== "" && val.published === false) {
+    const scheduledDate = new Date(val.scheduledFor);
+    if (scheduledDate < new Date()) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Scheduled date must be in the future", path: ["scheduledFor"] })
+    }
+  }
+  // Validate expiration is after creation
+  if (val.expiresAt && val.expiresAt !== "") {
+    const expiresDate = new Date(val.expiresAt);
+    if (val.scheduledFor && val.scheduledFor !== "") {
+      const scheduledDate = new Date(val.scheduledFor);
+      if (expiresDate <= scheduledDate) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Expiration date must be after scheduled date", path: ["expiresAt"] })
+      }
+    }
   }
 })
 

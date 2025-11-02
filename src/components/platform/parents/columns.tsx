@@ -30,7 +30,7 @@ export const parentColumns: ColumnDef<ParentRow>[] = [
       const { openModal } = useModal();
       const onView = () => {
         const qs = typeof window !== 'undefined' ? (window.location.search || "") : "";
-        window.location.href = `/parents/${parent.id}${qs}`;
+        window.location.href = `/profile/parents/${parent.id}${qs}`;
       };
       const onEdit = () => openModal(parent.id);
       const onDelete = async () => {

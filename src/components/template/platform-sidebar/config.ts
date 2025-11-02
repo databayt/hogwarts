@@ -55,8 +55,15 @@ export const platformNav: PlatformNavItem[] = [
   { title: "Timetable", href: "/timetable", icon: "clock", roles: ["ADMIN", "TEACHER", "STUDENT"]},
   { title: "Library", href: "/library", icon: "bookOpen", roles: ALL_ROLES },
   { title: "Stream", href: "/stream", icon: "video", roles: ALL_ROLES },
+
+  // Profile links - role specific
+  { title: "My Profile", href: "/profile", icon: "user", roles: ALL_ROLES },
+  { title: "Staff Directory", href: "/profile/staff", icon: "userCheck", roles: ["ADMIN", "STAFF", "TEACHER"] },
+  { title: "Student Profiles", href: "/profile/students", icon: "graduationCap", roles: ["ADMIN", "STAFF", "TEACHER"] },
+  { title: "Teacher Profiles", href: "/profile/teachers", icon: "bookOpen", roles: ["ADMIN", "STAFF", "STUDENT", "GUARDIAN"] },
+  { title: "Parent Portal", href: "/profile/parents", icon: "users", roles: ["ADMIN", "STAFF", "TEACHER"] },
+
   { title: "Settings", href: "/settings", icon: "cog", roles: ALL_ROLES },
-  { title: "Profile", href: "/profile", icon: "user", roles: ALL_ROLES },
 ];
 
 

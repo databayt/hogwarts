@@ -167,6 +167,9 @@
     },
     "students": {
       "title": "الطلاب",
+      "overview": "نظرة عامة",
+      "manage": "إدارة",
+      "analysis": "تحليلات",
       "allStudents": "جميع الطلاب",
       "addStudent": "إضافة طالب",
       "editStudent": "تعديل طالب",

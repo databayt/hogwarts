@@ -8,19 +8,10 @@ import { reviewReceipt } from "./actions";
 import { SuccessToast, ErrorToast } from "@/components/atom/toast";
 import type { Locale } from "@/components/internationalization/config";
 import { formatCurrency, formatDate } from "@/lib/i18n-format";
+import type { ReceiptRow } from "./types";
 
-export type ReceiptRow = {
-  id: string;
-  schoolName: string;
-  invoiceNumber: string;
-  amount: number;
-  fileUrl: string | null;
-  fileName: string | null;
-  status: "pending" | "approved" | "rejected";
-  uploadedAt: string;
-  reviewedAt: string | null;
-  notes: string | null;
-};
+// Re-export for backward compatibility
+export type { ReceiptRow };
 
 export function getReceiptColumns(lang: Locale): ColumnDef<ReceiptRow>[] {
   return [

@@ -35,29 +35,6 @@ const nextConfig: NextConfig = {
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
 
-  // Turbopack optimization - automatically handles code splitting
-  experimental: {
-    // Optimize specific package imports for better tree-shaking
-    optimizePackageImports: [
-      '@/components/ui',
-      '@/components/atom',
-      'lucide-react',
-      'recharts',
-      'date-fns',
-      '@tanstack/react-table',
-      'zod',
-      'react-hook-form',
-      '@hookform/resolvers',
-    ],
-  },
-
-  // Turbopack configuration (moved from experimental as it's now stable)
-  turbopack: {
-    resolveAlias: {
-      // Add any import aliases if needed
-    },
-  },
-
   // Compiler options for production build
   compiler: {
     // Remove console.log in production (keep errors and warnings)

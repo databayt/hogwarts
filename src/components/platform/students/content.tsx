@@ -5,7 +5,6 @@ import { studentsSearchParams } from '@/components/platform/students/list-params
 import { db } from '@/lib/db'
 import { getTenantContext } from '@/lib/tenant-context'
 import type { Dictionary } from '@/components/internationalization/dictionaries'
-import PageHeader from '@/components/atom/page-header'
 
 interface Props {
   searchParams: Promise<SearchParams>;
@@ -49,16 +48,8 @@ export default async function StudentsContent({ searchParams, school, dictionary
     data = rows.map((s: any) => ({ id: s.id, name: [s.givenName, s.surname].filter(Boolean).join(' '), className: '-', status: s.userId ? 'active' : 'inactive', createdAt: (s.createdAt as Date).toISOString() }))
     total = count as number
   }
-  const dict = dictionary?.students || { title: 'Students' }
-
   return (
-    <div className="flex flex-1 flex-col gap-4">
-      <PageHeader
-        title={school?.name ? `${school.name} - ${dict.title}` : dict.title}
-        className="text-start max-w-none"
-      />
-      <StudentsTable initialData={data} total={total} dictionary={dictionary?.students} perPage={sp.perPage} />
-    </div>
+    <StudentsTable initialData={data} total={total} dictionary={dictionary?.students} perPage={sp.perPage} />
   )
 }
 

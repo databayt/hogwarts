@@ -1,0 +1,100 @@
+import createMDX from '@next/mdx';
+
+// Security headers directly included to avoid TS import issues
+const securityHeaders = [
+  {
+    key: 'X-DNS-Prefetch-Control',
+    value: 'on',
+  },
+  {
+    key: 'Strict-Transport-Security',
+    value: 'max-age=31536000; includeSubDomains',
+  },
+  {
+    key: 'X-Frame-Options',
+    value: 'SAMEORIGIN',
+  },
+  {
+    key: 'X-Content-Type-Options',
+    value: 'nosniff',
+  },
+  {
+    key: 'X-XSS-Protection',
+    value: '1; mode=block',
+  },
+  {
+    key: 'Referrer-Policy',
+    value: 'origin-when-cross-origin',
+  },
+  {
+    key: 'Permissions-Policy',
+    value: 'camera=(), microphone=(), geolocation=(self)',
+  },
+];
+
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  /* config options here */
+  pageExtensions: ['js', 'jsx', 'mdx', 'ts', 'tsx'],
+
+  // Security headers
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: securityHeaders,
+      },
+      {
+        source: '/api/:path*',
+        headers: [
+          ...securityHeaders,
+          { key: 'Cache-Control', value: 'no-store, must-revalidate' },
+        ],
+      },
+    ];
+  },
+  eslint: {
+    // Skip ESLint during production builds; run `pnpm lint` separately
+    ignoreDuringBuilds: true,
+  },
+  images: {
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    formats: ['image/webp', 'image/avif'],
+    minimumCacheTTL: 60,
+    dangerouslyAllowSVG: true,
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+  },
+
+  // Compiler options for production build
+  compiler: {
+    // Remove console.log in production (keep errors and warnings)
+    removeConsole: process.env.NODE_ENV === 'production' ? {
+      exclude: ['error', 'warn'],
+    } : false,
+  },
+
+  // Disable powered by header for security
+  poweredByHeader: false,
+
+  // Enable response compression
+  compress: true,
+
+  // Generate build ID based on git commit or timestamp
+  generateBuildId: async () => {
+    return process.env.BUILD_ID || Date.now().toString();
+  },
+
+  // Optimize production builds
+  productionBrowserSourceMaps: false,
+
+  // Strict mode for better debugging
+  reactStrictMode: true,
+};
+
+const withMDX = createMDX({
+  // Add markdown plugins here, as desired
+})
+
+// Wrap MDX and Next.js config with each other
+export default withMDX(nextConfig)

@@ -32,7 +32,8 @@
     "dark": "داكن",
     "system": "النظام",
     "platform": "منصة",
-    "brandName": "هجورتس"
+    "brandName": "هجورتس",
+    "unauthorized": "وصول غير مصرح به"
   },
   "navigation": {
     "menu": "القائمة",

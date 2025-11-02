@@ -91,11 +91,11 @@ export default async function TemplatesContent({
     <PageContainer>
       <div className="flex flex-1 flex-col gap-4">
         <PageHeader
-          title="Exam Templates"
-          description="Create reusable exam blueprints with question distribution rules"
+          title={dictionary?.generate?.templates?.title || "Exam Templates"}
+          description={dictionary?.generate?.templates?.description || "Create reusable exam blueprints with question distribution rules"}
           className="text-start max-w-none"
         />
-        <TemplatesTable initialData={data} total={total} />
+        <TemplatesTable initialData={data} total={total} dictionary={dictionary} />
       </div>
     </PageContainer>
   );

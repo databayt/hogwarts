@@ -23,12 +23,14 @@ export default async function ResultDetailContent({ dictionary, lang, examId }: 
     getExamAnalytics({ examId }),
   ]);
 
+  const r = dictionary?.results;
+
   if (!resultsResponse.success || !resultsResponse.data) {
     return (
       <PageContainer>
         <Card>
           <CardContent className="py-12 text-center">
-            <p className="text-muted-foreground">Failed to load results</p>
+            <p className="text-muted-foreground">{r?.messages?.failedToLoad || "Failed to load results"}</p>
           </CardContent>
         </Card>
       </PageContainer>
@@ -50,14 +52,14 @@ export default async function ResultDetailContent({ dictionary, lang, examId }: 
               </Link>
             </Button>
             <PageHeader
-              title={summary?.examTitle || "Exam Results"}
+              title={summary?.examTitle || (r?.labels?.examResults || "Exam Results")}
               description={`${summary?.className || ""} • ${summary?.subjectName || ""} • ${summary?.examDate ? new Date(summary.examDate).toLocaleDateString() : ""}`}
               className="text-start max-w-none"
             />
           </div>
           <Button variant="outline">
             <Download className="mr-2 h-4 w-4" />
-            Export All PDFs
+            {r?.actions?.exportAllPDFs || "Export All PDFs"}
           </Button>
         </div>
 
@@ -66,35 +68,35 @@ export default async function ResultDetailContent({ dictionary, lang, examId }: 
           <div className="grid gap-4 md:grid-cols-4">
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Total Students</CardTitle>
+                <CardTitle className="text-sm font-medium">{r?.statistics?.totalStudents || "Total Students"}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{summary.totalStudents}</div>
                 <p className="text-xs text-muted-foreground">
-                  {summary.presentStudents} present, {summary.absentStudents} absent
+                  {summary.presentStudents} {r?.labels?.present || "present"}, {summary.absentStudents} {r?.labels?.absent || "absent"}
                 </p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Pass Rate</CardTitle>
+                <CardTitle className="text-sm font-medium">{r?.statistics?.passRate || "Pass Rate"}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
                   {summary.presentStudents > 0
                     ? `${((summary.passedStudents / summary.presentStudents) * 100).toFixed(1)}%`
-                    : "N/A"}
+                    : (r?.labels?.notAvailable || "N/A")}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {summary.passedStudents} passed, {summary.failedStudents} failed
+                  {summary.passedStudents} {r?.labels?.passed || "passed"}, {summary.failedStudents} {r?.labels?.failed || "failed"}
                 </p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Average Score</CardTitle>
+                <CardTitle className="text-sm font-medium">{r?.statistics?.averageScore || "Average Score"}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
@@ -108,7 +110,7 @@ export default async function ResultDetailContent({ dictionary, lang, examId }: 
 
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Score Range</CardTitle>
+                <CardTitle className="text-sm font-medium">{r?.statistics?.scoreRange || "Score Range"}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">

@@ -80,6 +80,14 @@ model User {
   // Finance permissions
   financePermissions FinancePermission[]
 
+  // QBank automation relations
+  questionReviews QuestionReview[]
+
+  // Announcement relations
+  createdAnnouncements      Announcement[]             @relation("AnnouncementCreator")
+  announcementReads         AnnouncementRead[]         @relation("AnnouncementReads")
+  announcementNotifications AnnouncementNotification[] @relation("AnnouncementNotifications")
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

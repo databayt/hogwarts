@@ -52,7 +52,7 @@ export const getTeacherColumns = (dictionary?: Dictionary['school']['teachers'])
       const { openModal } = useModal();
       const onView = () => {
         const qs = typeof window !== 'undefined' ? (window.location.search || "") : "";
-        window.location.href = `/teachers/${teacher.id}${qs}`;
+        window.location.href = `/profile/teachers/${teacher.id}${qs}`;
       };
       const onEdit = () => openModal(teacher.id);
       const onDelete = async () => {

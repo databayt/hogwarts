@@ -107,8 +107,8 @@ export function QuestionBankTable({
             size="sm"
             className="h-8 gap-2"
             onClick={() => openModal()}
-            aria-label="Create Question"
-            title="Create Question"
+            aria-label={dictionary?.generate?.actions?.addQuestion || "Add Question"}
+            title={dictionary?.generate?.actions?.addQuestion || "Add Question"}
           >
             <Plus className="h-4 w-4" />
             <span className="hidden sm:inline">{dictionary?.generate?.actions?.addQuestion || "Add Question"}</span>
@@ -119,8 +119,8 @@ export function QuestionBankTable({
             size="sm"
             className="h-8 gap-2"
             onClick={handleAIGenerate}
-            aria-label="AI Generate"
-            title="Generate with AI"
+            aria-label={dictionary?.generate?.actions?.generateWithAI || "AI Generate"}
+            title={dictionary?.generate?.actions?.generateWithAI || "AI Generate"}
           >
             <Sparkles className="h-4 w-4" />
             <span className="hidden sm:inline">{dictionary?.generate?.actions?.generateWithAI || "AI Generate"}</span>

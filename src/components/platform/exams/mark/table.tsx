@@ -113,7 +113,7 @@ export function MarkingTable({ data, dictionary }: MarkingTableProps) {
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  No submissions to grade
+                  {dict.table.noSubmissions}
                 </TableCell>
               </TableRow>
             )}
@@ -123,8 +123,8 @@ export function MarkingTable({ data, dictionary }: MarkingTableProps) {
 
       <div className="flex items-center justify-between">
         <div className="text-sm text-muted-foreground">
-          Showing {table.getFilteredRowModel().rows.length} of {data.length}{" "}
-          submissions
+          {dict.table.showing} {table.getFilteredRowModel().rows.length} {dict.table.of} {data.length}{" "}
+          {dict.table.submissions}
         </div>
         <div className="flex items-center space-x-2">
           <Button
@@ -133,7 +133,7 @@ export function MarkingTable({ data, dictionary }: MarkingTableProps) {
             onClick={() => table.previousPage()}
             disabled={!table.getCanPreviousPage()}
           >
-            Previous
+            {dict.table.previous}
           </Button>
           <Button
             variant="outline"
@@ -141,7 +141,7 @@ export function MarkingTable({ data, dictionary }: MarkingTableProps) {
             onClick={() => table.nextPage()}
             disabled={!table.getCanNextPage()}
           >
-            Next
+            {dict.table.next}
           </Button>
         </div>
       </div>

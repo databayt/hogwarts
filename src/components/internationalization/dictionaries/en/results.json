@@ -71,13 +71,20 @@
     "remarks": "Remarks",
     "generatedOn": "Generated on",
     "academicYear": "Academic Year",
-    "result": "Result"
+    "result": "Result",
+    "notAvailable": "N/A",
+    "present": "Present",
+    "absent": "Absent",
+    "passed": "Passed",
+    "failed": "Failed",
+    "examResults": "Exam Results"
   },
 
   "actions": {
     "viewResults": "View Results",
     "viewAnalytics": "View Analytics",
     "exportAll": "Export All PDFs",
+    "exportAllPDFs": "Export All PDFs",
     "exportPDF": "Export PDF",
     "exportCSV": "Export CSV",
     "download": "Download",

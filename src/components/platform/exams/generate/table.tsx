@@ -4,20 +4,22 @@ import { useMemo } from "react";
 import { DataTable } from "@/components/table/data-table/data-table";
 import { DataTableToolbar } from "@/components/table/data-table/data-table-toolbar";
 import { useDataTable } from "@/components/table/hooks/use-data-table";
-import { templateColumns, type ExamTemplateRow } from "./columns";
+import { getTemplateColumns, type ExamTemplateRow } from "./columns";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { useModal } from "@/components/atom/modal/context";
 import Modal from "@/components/atom/modal/modal";
 import { ExamTemplateForm } from "./form";
+import type { Dictionary } from "@/components/internationalization/dictionaries";
 
 interface TemplatesTableProps {
   initialData: ExamTemplateRow[];
   total: number;
+  dictionary?: Dictionary;
 }
 
-export function TemplatesTable({ initialData, total }: TemplatesTableProps) {
-  const columns = useMemo(() => templateColumns, []);
+export function TemplatesTable({ initialData, total, dictionary }: TemplatesTableProps) {
+  const columns = useMemo(() => getTemplateColumns(dictionary), [dictionary]);
 
   const { table } = useDataTable<ExamTemplateRow>({
     data: initialData,
@@ -37,15 +39,15 @@ export function TemplatesTable({ initialData, total }: TemplatesTableProps) {
             size="sm"
             className="h-8 gap-2"
             onClick={() => openModal()}
-            aria-label="Create Template"
-            title="Create Template"
+            aria-label={dictionary?.generate?.actions?.createTemplate || "Create Template"}
+            title={dictionary?.generate?.actions?.createTemplate || "Create Template"}
           >
             <Plus className="h-4 w-4" />
-            <span className="hidden sm:inline">Create Template</span>
+            <span className="hidden sm:inline">{dictionary?.generate?.actions?.createTemplate || "Create Template"}</span>
           </Button>
         </div>
       </DataTableToolbar>
-      <Modal content={<ExamTemplateForm />} />
+      <Modal content={<ExamTemplateForm dictionary={dictionary} />} />
     </DataTable>
   );
 }

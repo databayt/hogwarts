@@ -10,6 +10,7 @@ import { useModal } from "@/components/atom/modal/context";
 import { deleteAnnouncement, toggleAnnouncementPublish } from "@/components/platform/announcements/actions";
 import { DeleteToast, ErrorToast, confirmDeleteDialog } from "@/components/atom/toast";
 import type { Dictionary } from "@/components/internationalization/dictionaries";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export type AnnouncementRow = {
   id: string;
@@ -17,6 +18,10 @@ export type AnnouncementRow = {
   scope: string;
   published: boolean;
   createdAt: string;
+  createdBy: string | null;
+  priority: string;
+  pinned: boolean;
+  featured: boolean;
 };
 
 export const getAnnouncementColumns = (dictionary: Dictionary['school']['announcements']): ColumnDef<AnnouncementRow>[] => {
@@ -85,9 +90,12 @@ export const getAnnouncementColumns = (dictionary: Dictionary['school']['announc
     cell: ({ row }) => {
       const announcement = row.original;
       const { openModal } = useModal();
+      const router = useRouter();
+      const searchParams = useSearchParams();
+
       const onView = () => {
-        const qs = typeof window !== 'undefined' ? (window.location.search || "") : "";
-        window.location.href = `/announcements/${announcement.id}${qs}`;
+        const qs = searchParams.toString();
+        router.push(`/announcements/${announcement.id}${qs ? `?${qs}` : ''}`);
       };
       const onEdit = () => openModal(announcement.id);
       const onToggle = async () => {

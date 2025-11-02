@@ -6,6 +6,8 @@ import { getCurrentDomain } from '@/components/site/utils';
 import { generateSchoolMetadata, generateDefaultMetadata } from '@/components/site/metadata';
 import { getDictionary } from '@/components/internationalization/dictionaries';
 import { type Locale } from '@/components/internationalization/config';
+import PageHeader from '@/components/atom/page-header';
+import { PageNav, type PageNavItem } from '@/components/atom/page-nav';
 
 interface StudentsProps {
   params: Promise<{ subdomain: string; lang: Locale }>;
@@ -38,10 +40,24 @@ export default async function Students({ params, searchParams }: StudentsProps) 
   }
 
   const school = result.data;
+  const dict = dictionary.school.students;
+
+  const studentPages: PageNavItem[] = [
+    { name: dict.overview || 'Overview', href: `/${lang}/s/${subdomain}/students` },
+    { name: dict.manage || 'Manage', href: `/${lang}/s/${subdomain}/students/manage` },
+    { name: dict.analysis || 'Analysis', href: `/${lang}/s/${subdomain}/students/analysis` },
+  ];
 
   return (
     <div className="school-content" data-school-id={school.id} data-subdomain={subdomain}>
-      <StudentsContent school={school} searchParams={searchParams} dictionary={dictionary.school} />
+      <div className="space-y-6">
+        <PageHeader
+          title={dict.title}
+          className="text-start max-w-none"
+        />
+        <PageNav pages={studentPages} />
+        <StudentsContent school={school} searchParams={searchParams} dictionary={dictionary.school} />
+      </div>
     </div>
   );
 }

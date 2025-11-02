@@ -89,7 +89,9 @@
     "showing": "Showing",
     "of": "of",
     "submissions": "submissions",
-    "search": "Search students, questions..."
+    "search": "Search students, questions...",
+    "previous": "Previous",
+    "next": "Next"
   },
 
   "buttons": {

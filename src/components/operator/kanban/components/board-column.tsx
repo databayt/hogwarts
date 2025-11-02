@@ -1,4 +1,3 @@
-import { Task } from '../utils/store';
 import { useDndContext, type UniqueIdentifier } from '@dnd-kit/core';
 import { SortableContext, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -10,18 +9,10 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { ColumnActions } from './column-action';
 import { TaskCard } from './task-card';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import type { Task, Column, ColumnType, ColumnDragData } from '../types';
 
-export interface Column {
-  id: UniqueIdentifier;
-  title: string;
-}
-
-export type ColumnType = 'Column';
-
-export interface ColumnDragData {
-  type: ColumnType;
-  column: Column;
-}
+// Re-export for backward compatibility
+export type { Column, ColumnType, ColumnDragData };
 
 interface BoardColumnProps {
   column: Column;

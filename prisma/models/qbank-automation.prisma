@@ -1,0 +1,2 @@
+// This file has been consolidated into qbank.prisma
+// All QBank automation models are now in prisma/models/qbank.prisma

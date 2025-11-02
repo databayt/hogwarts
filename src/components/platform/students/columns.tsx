@@ -53,7 +53,7 @@ export const getStudentColumns = (dictionary?: Dictionary['school']['students'])
       const { openModal } = useModal();
       const onView = () => {
         const qs = typeof window !== 'undefined' ? (window.location.search || "") : "";
-        window.location.href = `/students/${student.id}${qs}`;
+        window.location.href = `/profile/students/${student.id}${qs}`;
       };
       const onEdit = () => openModal(student.id);
       const onDelete = async () => {

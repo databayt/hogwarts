@@ -4,7 +4,9 @@
       "Bash(for dir in accounts banking budget expenses fees invoice payroll receipt reports salary timesheet wallet)",
       "Bash(do echo \"=== $dir ===\")",
       "Bash(done)",
-      "Bash(do echo \"=== $dir route ===\")"
+      "Bash(do echo \"=== $dir route ===\")",
+      "WebFetch(domain:www.passmedicine.com)",
+      "WebFetch(domain:www.pastest.com)"
     ],
     "deny": [],
     "ask": []

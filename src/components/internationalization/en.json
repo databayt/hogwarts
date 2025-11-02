@@ -37,7 +37,8 @@
     "dark": "Dark",
     "system": "System",
     "platform": "Platform",
-    "brandName": "Hogwarts"
+    "brandName": "Hogwarts",
+    "unauthorized": "Unauthorized access"
   },
   "navigation": {
     "menu": "Menu",

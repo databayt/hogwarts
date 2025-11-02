@@ -24,7 +24,7 @@ export async function MarkingContent({
   const schoolId = session?.user?.schoolId
 
   if (!schoolId) {
-    return <div>Unauthorized</div>
+    return <div>{dictionary.common?.unauthorized || "Unauthorized"}</div>
   }
 
   // Fetch all submissions that need grading

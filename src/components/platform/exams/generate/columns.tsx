@@ -15,95 +15,98 @@ import {
 import { useModal } from "@/components/atom/modal/context";
 import { Badge } from "@/components/ui/badge";
 import type { ExamTemplateRow } from "./types";
+import type { Dictionary } from "@/components/internationalization/dictionaries";
 
 export type { ExamTemplateRow };
 
-export const templateColumns: ColumnDef<ExamTemplateRow>[] = [
+export const getTemplateColumns = (dictionary?: Dictionary): ColumnDef<ExamTemplateRow>[] => [
   {
     accessorKey: "name",
     id: "name",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Template Name" />
+      <DataTableColumnHeader column={column} title={dictionary?.generate?.columns?.templateName || "Template Name"} />
     ),
-    meta: { label: "Template Name", variant: "text" },
+    meta: { label: dictionary?.generate?.columns?.templateName || "Template Name", variant: "text" },
     enableColumnFilter: true,
   },
   {
     accessorKey: "subjectName",
     id: "subjectName",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Subject" />
+      <DataTableColumnHeader column={column} title={dictionary?.generate?.columns?.subject || "Subject"} />
     ),
-    meta: { label: "Subject", variant: "text" },
+    meta: { label: dictionary?.generate?.columns?.subject || "Subject", variant: "text" },
     enableColumnFilter: true,
   },
   {
     accessorKey: "totalQuestions",
     id: "totalQuestions",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Questions" />
+      <DataTableColumnHeader column={column} title={dictionary?.generate?.columns?.questions || "Questions"} />
     ),
     cell: ({ getValue }) => (
       <span className="text-xs tabular-nums font-medium">
-        {getValue<number>()} questions
+        {getValue<number>()} {dictionary?.generate?.columns?.questionsUnit || "questions"}
       </span>
     ),
-    meta: { label: "Questions", variant: "text" },
+    meta: { label: dictionary?.generate?.columns?.questions || "Questions", variant: "text" },
   },
   {
     accessorKey: "duration",
     id: "duration",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Duration" />
+      <DataTableColumnHeader column={column} title={dictionary?.generate?.columns?.duration || "Duration"} />
     ),
     cell: ({ getValue }) => (
-      <span className="text-xs tabular-nums">{getValue<number>()} min</span>
+      <span className="text-xs tabular-nums">{getValue<number>()} {dictionary?.generate?.columns?.durationUnit || "min"}</span>
     ),
-    meta: { label: "Duration", variant: "text" },
+    meta: { label: dictionary?.generate?.columns?.duration || "Duration", variant: "text" },
   },
   {
     accessorKey: "totalMarks",
     id: "totalMarks",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Total Marks" />
+      <DataTableColumnHeader column={column} title={dictionary?.generate?.columns?.totalMarks || "Total Marks"} />
     ),
     cell: ({ getValue }) => (
       <span className="text-xs tabular-nums font-medium">
-        {getValue<number>()} pts
+        {getValue<number>()} {dictionary?.generate?.columns?.marksUnit || "pts"}
       </span>
     ),
-    meta: { label: "Total Marks", variant: "text" },
+    meta: { label: dictionary?.generate?.columns?.totalMarks || "Total Marks", variant: "text" },
   },
   {
     accessorKey: "timesUsed",
     id: "timesUsed",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Times Used" />
+      <DataTableColumnHeader column={column} title={dictionary?.generate?.columns?.timesUsed || "Times Used"} />
     ),
     cell: ({ getValue }) => (
       <span className="text-xs tabular-nums text-muted-foreground">
-        {getValue<number>()} times
+        {getValue<number>()} {dictionary?.generate?.columns?.timesUnit || "times"}
       </span>
     ),
-    meta: { label: "Times Used", variant: "text" },
+    meta: { label: dictionary?.generate?.columns?.timesUsed || "Times Used", variant: "text" },
   },
   {
     accessorKey: "isActive",
     id: "isActive",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Status" />
+      <DataTableColumnHeader column={column} title={dictionary?.generate?.columns?.status || "Status"} />
     ),
     cell: ({ getValue }) => (
       <Badge variant={getValue<boolean>() ? "default" : "outline"}>
-        {getValue<boolean>() ? "Active" : "Inactive"}
+        {getValue<boolean>()
+          ? (dictionary?.generate?.columns?.active || "Active")
+          : (dictionary?.generate?.columns?.inactive || "Inactive")}
       </Badge>
     ),
     meta: {
-      label: "Status",
+      label: dictionary?.generate?.columns?.status || "Status",
       variant: "select",
       options: [
-        { label: "Active", value: "true" },
-        { label: "Inactive", value: "false" },
+        { label: dictionary?.generate?.columns?.active || "Active", value: "true" },
+        { label: dictionary?.generate?.columns?.inactive || "Inactive", value: "false" },
       ],
     },
     enableColumnFilter: true,
@@ -112,18 +115,18 @@ export const templateColumns: ColumnDef<ExamTemplateRow>[] = [
     accessorKey: "createdAt",
     id: "createdAt",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Created" />
+      <DataTableColumnHeader column={column} title={dictionary?.generate?.columns?.created || "Created"} />
     ),
     cell: ({ getValue }) => (
       <span className="text-xs tabular-nums text-muted-foreground">
         {new Date(getValue<string>()).toLocaleDateString()}
       </span>
     ),
-    meta: { label: "Created", variant: "text" },
+    meta: { label: dictionary?.generate?.columns?.created || "Created", variant: "text" },
   },
   {
     id: "actions",
-    header: () => <span className="sr-only">Actions</span>,
+    header: () => <span className="sr-only">{dictionary?.generate?.columns?.actions || "Actions"}</span>,
     cell: ({ row }) => {
       const template = row.original;
       const { openModal } = useModal();
@@ -147,19 +150,21 @@ export const templateColumns: ColumnDef<ExamTemplateRow>[] = [
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="h-8 w-8 p-0">
               <MoreHorizontal className="h-4 w-4" />
-              <span className="sr-only">Open menu</span>
+              <span className="sr-only">{dictionary?.generate?.columns?.openMenu || "Open menu"}</span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+            <DropdownMenuLabel>{dictionary?.generate?.columns?.actions || "Actions"}</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={onView}>
               <Eye className="mr-2 h-4 w-4" />
-              View
+              {dictionary?.generate?.columns?.view || "View"}
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={onEdit}>Edit</DropdownMenuItem>
+            <DropdownMenuItem onClick={onEdit}>
+              {dictionary?.generate?.columns?.edit || "Edit"}
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={onUseTemplate}>
-              Use Template
+              {dictionary?.generate?.columns?.useTemplate || "Use Template"}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

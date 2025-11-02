@@ -2,9 +2,10 @@ import { create } from 'zustand';
 import { v4 as uuid } from 'uuid';
 import { persist } from 'zustand/middleware';
 import { UniqueIdentifier } from '@dnd-kit/core';
-import { Column } from '../components/board-column';
+import type { Column, Task, Status } from '../types';
 
-export type Status = 'TODO' | 'IN_PROGRESS' | 'DONE';
+// Re-export for backward compatibility
+export type { Task, Status };
 
 const defaultCols = [
   {
@@ -14,13 +15,6 @@ const defaultCols = [
 ] satisfies Column[];
 
 export type ColumnId = (typeof defaultCols)[number]['id'];
-
-export type Task = {
-  id: string;
-  title: string;
-  description?: string;
-  status: Status;
-};
 
 export type State = {
   tasks: Task[];

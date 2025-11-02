@@ -4,7 +4,7 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { requireOperator } from "@/components/operator/lib/operator-auth";
 import { revalidatePath } from "next/cache";
-import type { ReceiptRow } from "./columns";
+import type { ReceiptRow } from "./types";
 
 const reviewReceiptSchema = z.object({
   receiptId: z.string().min(1),

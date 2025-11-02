@@ -1,13 +1,14 @@
+import { unstable_cache } from "next/cache";
 import { AnnouncementsTable } from '@/components/platform/announcements/table'
 import { type AnnouncementRow } from '@/components/platform/announcements/columns'
 import { SearchParams } from 'nuqs/server'
 import { announcementsSearchParams } from '@/components/platform/announcements/list-params'
-import { db } from '@/lib/db'
 import { getTenantContext } from '@/lib/tenant-context'
 import { Shell as PageContainer } from '@/components/table/shell'
 import PageHeader from '@/components/atom/page-header'
 import type { Dictionary } from '@/components/internationalization/dictionaries'
 import type { Locale } from '@/components/internationalization/config'
+import { getAnnouncementsList } from '@/components/platform/announcements/queries'
 
 interface Props {
   searchParams: Promise<SearchParams>
@@ -15,46 +16,72 @@ interface Props {
   lang: Locale
 }
 
+/**
+ * Cached wrapper for announcements list query
+ * Cache duration: 60 seconds
+ * Cache tags: announcements-{schoolId}
+ */
+const getCachedAnnouncementsList = unstable_cache(
+  async (schoolId: string, params: any) => {
+    return getAnnouncementsList(schoolId, params);
+  },
+  ['announcements-list'],
+  {
+    revalidate: 60, // Cache for 60 seconds
+    tags: (schoolId: string) => [`announcements-${schoolId}`],
+  }
+);
+
 export default async function AnnouncementsContent({ searchParams, dictionary, lang }: Props) {
   const sp = await announcementsSearchParams.parse(await searchParams)
   const { schoolId } = await getTenantContext()
   const t = dictionary.announcements
+
   let data: AnnouncementRow[] = []
   let total = 0
+
   if (schoolId) {
-    const where: any = {
-      schoolId,
-      ...(sp.title ? { title: { contains: sp.title, mode: 'insensitive' } } : {}),
-      ...(sp.scope ? { scope: sp.scope } : {}),
-      ...(sp.published ? { published: sp.published === 'true' } : {}),
-    }
-    const skip = (sp.page - 1) * sp.perPage
-    const take = sp.perPage
-    const orderBy = (sp.sort && Array.isArray(sp.sort) && sp.sort.length)
-      ? sp.sort.map((s: any) => ({ [s.id]: s.desc ? 'desc' as const : 'asc' as const }))
-      : [{ createdAt: 'desc' as const }]
-    const [rows, count] = await Promise.all([
-      db.announcement.findMany({ where, orderBy, skip, take }),
-      db.announcement.count({ where }),
-    ])
-    data = rows.map((a: any) => ({
+    // Use shared query builder with caching
+    const { rows, count } = await getCachedAnnouncementsList(schoolId, {
+      title: sp.title,
+      scope: sp.scope,
+      published: sp.published,
+      page: sp.page,
+      perPage: sp.perPage,
+      sort: sp.sort,
+    });
+
+    // Map results to table format
+    data = rows.map((a) => ({
       id: a.id,
       title: a.title,
       scope: a.scope,
       published: a.published,
-      createdAt: (a.createdAt as Date).toISOString()
-    }))
-    total = count as number
+      createdAt: a.createdAt.toISOString(),
+      createdBy: a.createdBy,
+      priority: a.priority,
+      pinned: a.pinned,
+      featured: a.featured,
+    }));
+
+    total = count;
   }
+
   return (
     <PageContainer>
-      <div className="flex flex-1 flex-col gap-4">
+      <div className="space-y-6">
         <PageHeader
           title={t.title}
-          description={t.description}
+          variant="dashboard"
           className="text-start max-w-none"
         />
-        <AnnouncementsTable initialData={data} total={total} dictionary={t} lang={lang} perPage={sp.perPage} />
+        <AnnouncementsTable
+          initialData={data}
+          total={total}
+          dictionary={t}
+          lang={lang}
+          perPage={sp.perPage}
+        />
       </div>
     </PageContainer>
   )

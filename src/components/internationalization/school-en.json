@@ -167,6 +167,9 @@
     },
     "students": {
       "title": "Students",
+      "overview": "Overview",
+      "manage": "Manage",
+      "analysis": "Analysis",
       "allStudents": "All Students",
       "addStudent": "Add Student",
       "editStudent": "Edit Student",

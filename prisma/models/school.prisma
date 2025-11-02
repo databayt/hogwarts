@@ -185,6 +185,10 @@ model School {
   financialReports    FinancialReport[]
   financePermissions  FinancePermission[]
 
+  // QBank Automation relations
+  sourceMaterials SourceMaterial[]
+  generationJobs  GenerationJob[]
+
   createdAt             DateTime                @default(now())
   updatedAt             DateTime                @updatedAt
   QuestionBank          QuestionBank[]

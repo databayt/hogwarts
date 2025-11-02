@@ -6,23 +6,93 @@ enum AnnouncementScope {
   role
 }
 
+enum AnnouncementPriority {
+  low
+  normal
+  high
+  urgent
+}
+
 model Announcement {
-  id        String            @id @default(cuid())
+  id        String                @id @default(cuid())
   schoolId  String
   title     String
-  body      String
-  scope     AnnouncementScope @default(school)
-  classId   String?
-  class     Class?            @relation(fields: [classId], references: [id])
-  role      String?
-  published Boolean           @default(false)
+  body      String                @db.Text
+  scope     AnnouncementScope     @default(school)
+  priority  AnnouncementPriority  @default(normal)
 
-  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  // Author tracking (CRITICAL for audit trail)
+  createdBy String?
+  creator   User?                 @relation("AnnouncementCreator", fields: [createdBy], references: [id])
+
+  // Scope targeting
+  classId   String?
+  class     Class?                @relation(fields: [classId], references: [id], onDelete: Cascade)
+  role      UserRole?             // Now type-safe with UserRole enum
+
+  // Publishing workflow (CRITICAL for scheduling)
+  published    Boolean            @default(false)
+  publishedAt  DateTime?          // When actually published
+  scheduledFor DateTime?          // Future publishing
+  expiresAt    DateTime?          // Auto-archive
+
+  // Engagement tracking
+  pinned       Boolean            @default(false)
+  featured     Boolean            @default(false)
+
+  // Relationships
+  school       School             @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  readReceipts AnnouncementRead[]
+  notifications AnnouncementNotification[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // Optimized indexes for performance
   @@index([schoolId, scope])
-  @@index([schoolId, published])
+  @@index([schoolId, published, createdAt])
+  @@index([schoolId, classId])
+  @@index([schoolId, role])
+  @@index([schoolId, pinned, createdAt])
+  @@index([createdBy])
+  @@index([publishedAt])
+  @@index([expiresAt])
+  @@index([scheduledFor])
   @@map("announcements")
+}
+
+// Read tracking model (NEW)
+model AnnouncementRead {
+  id             String       @id @default(cuid())
+  announcementId String
+  userId         String
+  readAt         DateTime     @default(now())
+
+  announcement   Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+  user           User         @relation("AnnouncementReads", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([announcementId, userId])
+  @@index([userId])
+  @@index([announcementId, readAt])
+  @@map("announcement_reads")
+}
+
+// Notification tracking model (NEW)
+model AnnouncementNotification {
+  id             String       @id @default(cuid())
+  announcementId String
+  userId         String
+  sentAt         DateTime     @default(now())
+  emailSent      Boolean      @default(false)
+  emailSentAt    DateTime?
+  pushSent       Boolean      @default(false)
+  pushSentAt     DateTime?
+
+  announcement   Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+  user           User         @relation("AnnouncementNotifications", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([announcementId, userId])
+  @@index([userId, sentAt])
+  @@index([announcementId])
+  @@map("announcement_notifications")
 }

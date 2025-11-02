@@ -139,7 +139,7 @@ export default async function ResultsContent({ dictionary, lang }: Props) {
                       <p className="text-2xl font-bold">
                         {exam.averagePercentage !== null
                           ? `${exam.averagePercentage.toFixed(1)}%`
-                          : "N/A"}
+                          : (r?.labels?.notAvailable || "N/A")}
                       </p>
                     </div>
                   </div>

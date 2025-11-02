@@ -1,306 +1,576 @@
-## Founder Dashboard
-
-This dashboard is for the SaaS founder/operator. It aggregates across all schools by default and supports tenant drill-downs.
-
-### Routes
-- `/dashboard` → redirects to `/dashboard/overview`
-- `/dashboard/overview` → KPIs across all schools (total schools, active schools, users, students)
-- `/dashboard/kanban` → Kanban demo for task management
-- `/dashboard/product` → Product page (tables temporarily disabled)
-- `/dashboard/profile` → Profile
-- `/dashboard/tenants` → Tenants list (temporarily public for build/demo; will be DEVELOPER-only)
-
-### Operator (Platform) Routes
-- `/operator` → redirects to `/operator/overview`
-- `/operator/overview` → Founder/operator KPIs across all tenants
-- `/operator/tenants` → Manage tenants (activate/suspend, impersonate)
-- `/operator/domains` → Domain requests and verification (placeholder)
-- `/operator/billing` → Operator billing overview (placeholder)
-- `/operator/observability` → Logs/errors/backups/jobs (placeholder)
-- Access control: DEVELOPER only. Guarded by middleware and operator layout.
-  - Note: Temporarily disabled for public demo; guards are commented in `src/middleware.ts` and `src/app/(platform)/operator/layout.tsx`. Re-enable by uncommenting.
-
-### Sidebar
-The dashboard uses a docs-like template sidebar:
-
-- Sidebar component: `src/components/template/dashboard-sidebar/content.tsx`
-- Sidebar items: `src/components/template/dashboard-sidebar/config.ts`
-- Header: `src/components/template/dashboard-header/content.tsx` (Breadcrumbs, notifications, messages, theme, user)
-
-### Auth and Tenant
-- Uses Auth.js (NextAuth v5). Session extended in `src/auth.ts` with `schoolId`, `role`, and flags.
-- `src/lib/tenant.ts` provides `getTenantContext()` returning `{ schoolId, role, isPlatformAdmin, requestId }`.
-- Middleware protects `/dashboard/**`; `/docs/**` public.
-  - Operator guard: intended to restrict `/operator/**` to DEVELOPER via middleware; unauthorized redirects to `/403`.
-  - Temporary: guard disabled for demo; see commented code in middleware and layout.
-
-### KPIs (Overview)
-`src/app/(platform)/dashboard/overview/layout.tsx` reads counts via Prisma (client dashboard):
-- `db.school.count()` (total and active)
-- `db.user.count()`
-- `db.student.count()`
-
-Operator overview KPIs:
-- `src/app/(platform)/operator/overview/layout.tsx` aggregates the same KPIs across all tenants.
-
-### Tables
-- Shared block: `src/components/table/*` (DataTable, toolbar, filters, pagination)
-- Tenants table: `src/app/(platform)/dashboard/tenants/page.tsx`
-  - Columns: `src/components/platform/dashboard/tenants/columns.tsx`
-  - Queries: `src/components/platform/dashboard/tenants/queries.ts`
-  - Wrapper: `src/components/platform/dashboard/tenants/table.tsx`
-  - Note: Server-driven pagination/sort; filters to be added with `nuqs`.
-
-### Cleanup & Centralization
-- Removed old site demo dashboard.
-- Centralized dashboard chrome under `src/components/template/dashboard-header` and `src/components/template/dashboard-sidebar`.
-
-### Next steps
-- Implement subdomain → `schoolId` mapping in middleware.
-- Restrict `/dashboard/tenants` to DEVELOPER when roles are finalized.
-- Add audit logs with `{ requestId, schoolId, userId }`.
-- Operator guard planned: `/operator/**` restricted to DEVELOPER via middleware and layout. Currently disabled for demo.
- - Impersonation UX: banner under the header shows target school and provides a stop button. Controlled by `impersonate_schoolId` cookie.
-## Dashboards (Operator and Client)
-
-Two dashboards share one central codebase and database:
-
-- Operator Dashboard (platform team): run the SaaS - schools, billing, domains, moderation, observability.
-- Client Dashboard (per school): run the school - roles, classes, subjects, students, teachers, timetable, attendance, announcements, billing.
-
-Both follow the same patterns: shadcn/ui components, URL-to-state sync where useful, Prisma with tenant scoping, and server actions for mutations.
-
-### Architecture
-
-- Multi-tenant shared schema (Neon + Prisma). Every business table includes schoolId.
-- Tenant resolution via subdomain (for example, hogwarts.hogwarts.app) and session.
-- Central logic: shared actions, filters, table block, and role gates.
-- RBAC: Owner, Admin, Teacher, Student, Parent, Accountant (add Staff or Support for Operator).
-
-### Operator Dashboard (Platform)
-
-Scope:
-
-- Schools: list, create, suspend, plan, limits, trial countdown.
-- Domains: subdomain issuance, custom domain requests, CNAME verification.
-- Billing: invoices, manual receipts, refunds, revenue metrics.
-- Observability: logs, error reports, backups status, job queue.
-- Moderation and Support: impersonate (audited), reset domain, manage users.
-
-Implementation:
-
- - Routes under app/operator/* or app/(operator)/* with guard middleware.
-   - Implemented guard checks `req.auth.user.role === "DEVELOPER"` and otherwise redirects to `/403`.
-- Lists use the generic table block (/docs/table), filtering by any platform fields.
-- Server actions for domain approval, plan changes, suspensions.
-- Role gates: RoleGate for platform roles (for example, DEVELOPER, STAFF).
-
-Tenant safety:
-
-- Platform views can search across all schools. Mutations must specify the target schoolId and log an audit entry.
-- Impersonation creates an audit trail (who, when, why) and a time-limited session.
-
-### Operator MVP Progress and Checklist
-
-Current status vs MVP scope:
-
-- Overview KPIs
-  - Implemented: `src/app/(platform)/operator/overview/layout.tsx` shows totals for schools, active schools, users, students.
-  - Next: Add trend metrics and drill‑downs (optional post‑MVP).
-
-- Tenants
-  - Implemented: List/table, server query, activate/suspend action with revalidation.
-    - Files: `src/app/(platform)/operator/tenants/page.tsx`, `src/components/platform/operator/tenants/*`, `src/app/(platform)/operator/actions/tenants/toggle-active.ts`.
-  - Remaining (MVP):
-    - [x] Audit log for activate/suspend with `{ userId, schoolId, action, reason }`.
-    - [x] Confirm dialog (reason prompt) and server revalidation.
-    - [x] URL‑synced filters (status/plan/search) using `nuqs`.
-
-- Impersonation (Moderation/Support)
-  - Implemented: Start/stop with cookie + banner + audit log entries.
-    - Files: `src/app/(platform)/operator/actions/impersonation/*`, `src/components/platform/operator/impersonation-banner.tsx`, `prisma/models/audit.prisma`.
-  - Remaining (MVP):
-    - [x] Time‑limited impersonation (30‑min cookie) and explicit reason capture.
-    - [x] Disable sensitive actions while impersonating (except Stop) — enforced in server actions.
-
-- Domains
-  - Implemented: `DomainRequest` model (awaiting migration), operator page scaffold with actions wired (disabled until migration).
-    - Files: `prisma/models/domain.prisma`, `src/app/(platform)/operator/domains/page.tsx`, actions in `src/app/(platform)/operator/actions/domains/*`.
-  - Remaining (MVP):
-    - [ ] Run Prisma migration and enable actions (Approve/Reject/Verify) in UI.
-    - [x] Add audit logs on each action.
-    - [ ] Add Zod validations for actions.
-    - [ ] Optional: school‑side request form and status surface (client dashboard).
-
-- Billing
-  - Implemented: Placeholder route.
-  - Remaining (MVP):
-    - [ ] Add `Invoice` and `Receipt` models (schoolId, amount, status, file/url).
-    - [ ] List invoices + manual receipt review/approval actions with audit.
-    - [ ] Basic revenue metrics card(s) on overview.
-
-- Observability
-  - Implemented: AuditLog list/table (`/operator/observability`).
-    - Files: `src/app/(platform)/operator/observability/page.tsx`, `src/components/platform/operator/observability/logs-table/*`.
-  - Remaining (MVP):
-    - [ ] Filters: action, user, school, date range; pagination.
-    - [ ] Placeholders for errors/backups/jobs; wire when available.
-
-- Subdomain → tenant mapping
-  - Implemented: Middleware attaches `x-subdomain`; server resolves to `schoolId` in `getTenantContext()`.
-    - Files: `src/middleware.ts`, `src/lib/tenant.ts`.
-  - Remaining (MVP):
-    - [ ] Add `NEXT_PUBLIC_ROOT_DOMAIN` and verify mapping in all environments.
-    - [ ] Fallback/dev param `?x-school=<subdomain>` documented and gated.
-
-- Access control
-  - Implemented: Guard code present (middleware + layout) and currently disabled for public demo.
-  - Remaining (MVP):
-    - [ ] Re‑enable DEVELOPER‑only guard for `/operator/**` in `src/middleware.ts` and `src/app/(platform)/operator/layout.tsx`.
-
-Operational checklists (to reach production‑ready MVP):
-
-- Database & migrations
-  - [ ] Run `pnpm prisma generate`.
-  - [ ] Run `pnpm prisma migrate dev --name add_audit_and_domain_request`.
-  - [ ] Seed: 3 demo schools, a few `DomainRequest`, and `AuditLog` entries.
-
-- Server actions & validation
-  - [ ] Add Zod schemas for operator actions (toggle active, domains) with typed results.
-  - [ ] Add `withOperatorAuth` helper to assert DEVELOPER role and capture `{ userId, requestId }`.
-  - [ ] Rate‑limit sensitive actions (basic limiter).
-
-- UX polish
-  - [ ] Confirm modals for suspend/activate and domain actions.
-  - [ ] Disable mutations during impersonation; banner shows target school and expiry.
-
-- Observability & audit
-  - [ ] Ensure all sensitive actions write `AuditLog`.
-  - [ ] Add minimal filters/pagination to logs table.
-
-- Guards & security
-  - [ ] Re‑enable `/operator/**` guard; verify unauthorized → `/403`.
-
-- Docs
-  - [ ] Update once billing models land and actions are enabled.
-
-Quick re‑enable steps (when demo phase ends):
-
-- Uncomment operator guard block in `src/middleware.ts`.
-- Uncomment auth/role checks in `src/app/(platform)/operator/layout.tsx`.
-
-### Operator Actions
-- Toggle tenant active state: `POST /operator/actions/tenants/[tenantId]/toggle-active` (DEVELOPER only). Revalidates `/operator/tenants`.
-- Start impersonation: `POST /operator/actions/impersonation/[schoolId]/start` (DEVELOPER only). Sets cookie `impersonate_schoolId` and logs audit entry.
-- Stop impersonation: `POST /operator/actions/impersonation/stop` (DEVELOPER only). Clears cookie and logs audit entry.
-
-### Client Dashboard (Per School)
-
-Scope:
-
-- Setup: profile, branding, locale and timezone, domain request.
-- People: users and roles, parents, students, teachers.
-- Structure: classes, subjects, timetable slots.
-- Operations: attendance, announcements.
-- Billing: plan, trial, invoices, manual receipt upload.
-
-Implementation:
-
-- Subdomain-based routing: school.hogwarts.app resolves to schoolId.
-- All server queries include schoolId (inject from middleware or context).
-- Lists reuse the generic table; columns define filters via meta.variant and options.
-- Server actions for all mutations, revalidate paths after changes.
-
-RBAC examples:
-
-- Owner or Admin: full access. Teacher: classes they teach. Parent: linked students. Student: own data.
-
-### Data Flow (Both Dashboards)
-
-1) Resolve tenant and role.
-2) Parse URL for filters, sort, page.
-3) Build Prisma where and orderBy, with schoolId enforced for client dashboard; optional for operator dashboard.
-4) Fetch data and total, then compute pageCount.
-5) Render with table block; server actions mutate and revalidate.
-
-### Production Readiness
-
-- Security: least privilege, audit trails for sensitive actions (domain, billing, impersonation).
-- Tenant isolation: all client queries and unique constraints scoped by schoolId.
-- Observability: request IDs, schoolId, and user ID in logs; error tracking with release tags.
-- Backups and disaster recovery: daily backups, retention 7 and 30 days; restore drills.
-- Internationalization and RTL: Arabic and English; mirrored icons and arrows.
-- Accessibility: keyboard navigation and roles across both UIs.
-- Performance: indexes for frequent filters; pagination; avoid N+1; cache lists where safe.
-
-### Reuse and Extensibility
-
-- Reuse table, filters, operators, and toolbars for any list (students, teachers, invoices, domains).
-- Define column factories per domain; keep server query helpers tenant-aware.
-- Centralize role gates and nav items by role; show or hide features by plan.
-
-### References
-
-- Multi-tenant database: /docs/database
-- Arrangements (SaaS layers): /docs/arrangements
-- Table block: /docs/table
-- Internationalization: /docs/internationalization
-- Contributing: /docs/contribute
-
-
-### Environment & Config (Operator)
-- `NEXT_PUBLIC_ROOT_DOMAIN`: used by middleware to derive subdomain → tenant mapping (e.g., `hogwarts.app`).
-- Dev convenience param: `?x-school=<subdomain>` will be read by middleware and passed as `x-subdomain` header.
-- Impersonation cookie: `impersonate_schoolId` controls banner and context override.
-
-### Operator APIs (server actions / routes)
-- Tenants: `POST /operator/actions/tenants/[tenantId]/toggle-active`.
-- Impersonation: `POST /operator/actions/impersonation/[schoolId]/start`, `POST /operator/actions/impersonation/stop`.
-- Domains (enable after migration):
-  - Approve: `POST /operator/actions/domains/approve`
-  - Reject: `POST /operator/actions/domains/reject`
-  - Verify: `POST /operator/actions/domains/verify`
-
-### Data Models (Operator)
-- AuditLog (implemented):
-```prisma
-model AuditLog {
-  id         String   @id @default(cuid())
-  userId     String
-  schoolId   String?
-  action     String
-  reason     String?
-  ip         String?
-  userAgent  String?
-  createdAt  DateTime @default(now())
-}
-```
-- DomainRequest (scaffolded, pending migration):
-```prisma
-model DomainRequest {
-  id         String   @id @default(cuid())
-  schoolId   String
-  domain     String
-  status     String   @default("pending") // pending|approved|rejected|verified
-  notes      String?
-  verifiedAt DateTime?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  school     School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  @@unique([schoolId, domain])
-}
-```
-  - Planned: `Invoice`, `Receipt` (billing MVP).
-
-### Enable Production Guards (when demo ends)
-- Uncomment DEVELOPER guard block in `src/middleware.ts` (redirect unauthorized to `/403`).
-- Uncomment auth/role checks in `src/app/(platform)/operator/layout.tsx`.
-
-### Commands
-```bash
-pnpm prisma generate
-pnpm prisma migrate dev --name add_audit_and_domain_request
-```
-
-
-
+import {
+  // Enhanced Original Cards (5)
+  StatCard,
+  ProgressCard,
+  ListCard,
+  MultiStatCard,
+  ChartCard,
+  // Phase 1: Specialized Cards (7)
+  HeroStatCard,
+  ActionCard,
+  ComparisonCard,
+  MediaCard,
+  CollapsibleCard,
+  EmptyStateCard,
+  SkeletonCard,
+  // Phase 2: Modern 2025 Patterns (12)
+  FlipCard,
+  MetricCard,
+  NotificationCard,
+  TimelineCard,
+  ProfileCard,
+  GoalCard,
+  WeatherCard,
+  CalendarCard,
+  QuickActionCard,
+  SocialCard,
+  GlanceCard,
+  IconStatCard,
+  // Phase 3: shadcn Dashboard Patterns (8)
+  RecentSalesCard,
+  ActivityFeedCard,
+  TeamMembersCard,
+  TopPerformersCard,
+  TaskListCard,
+  DataTableCard,
+  StackedStatCard,
+  BannerCard,
+  // Layout Components
+  DashboardGrid,
+  DashboardSection,
+  DashboardShell,
+} from '@/components/atom/dashboard'
+
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Users, TrendingUp, GraduationCap, Calendar, DollarSign, Clock, CheckCircle, AlertCircle, Sun, Plus, Upload, Share, Download, Heart, MessageCircle, FileText, Award, Inbox } from 'lucide-react'
+
+# Dashboard Card Showcase
+
+This page showcases all **32 dashboard cards** available in the Hogwarts platform, organized by category.
+
+<BannerCard
+  variant="info"
+  title="Dashboard Card Library v4.0"
+  description="Complete collection of 32 reusable dashboard cards with 540% growth from original 5 cards. All cards support size variants, loading states, and semantic tokens."
+  dismissible
+/>
+
+---
+
+## Enhanced Original Cards (5)
+
+<DashboardSection title="Core Dashboard Cards" description="Enhanced with size variants, loading states, and click handlers">
+  <DashboardGrid columns={{ base: 1, md: 2, lg: 4 }}>
+    <StatCard
+      icon={<Users className="h-5 w-5" />}
+      value="4,812"
+      label="Total Students"
+      trend={{ value: 12, direction: "up" }}
+      variant="primary"
+      size="md"
+    />
+
+    <StatCard
+      icon={<GraduationCap className="h-5 w-5" />}
+      value="248"
+      label="Teachers"
+      trend={{ value: 5, direction: "up" }}
+      variant="success"
+      size="md"
+    />
+
+    <StatCard
+      icon={<Calendar className="h-5 w-5" />}
+      value="23"
+      label="Active Classes"
+      trend={{ value: 2, direction: "down" }}
+      variant="warning"
+      size="md"
+    />
+
+    <StatCard
+      icon={<DollarSign className="h-5 w-5" />}
+      value="$45,678"
+      label="Revenue"
+      trend={{ value: 23, direction: "up" }}
+      variant="success"
+      size="md"
+    />
+  </DashboardGrid>
+
+  <DashboardGrid columns={{ base: 1, md: 2 }} className="mt-4">
+    <ProgressCard
+      icon={<CheckCircle className="h-5 w-5" />}
+      label="Attendance Rate"
+      value={94}
+      max={100}
+      variant="success"
+      size="md"
+    />
+
+    <MultiStatCard
+      title="Class Overview"
+      stats={[
+        { value: 28, label: "Students", trend: { value: 2, direction: "up" } },
+        { value: "94%", label: "Attendance" },
+        { value: 12, label: "Assignments" }
+      ]}
+      columns={3}
+      size="md"
+    />
+  </DashboardGrid>
+</DashboardSection>
+
+---
+
+## Phase 1: Specialized Cards (7)
+
+<DashboardSection title="Specialized Card Variants" description="Purpose-built cards for specific use cases">
+  <DashboardGrid columns={{ base: 1, md: 2, lg: 3 }}>
+    <HeroStatCard
+      icon={<Users className="h-12 w-12" />}
+      value="4,812"
+      label="Total Students"
+      subtitle="Across all grade levels"
+      trend={{ value: 12, direction: "up" }}
+      variant="primary"
+    />
+
+    <ActionCard
+      icon={<FileText className="h-6 w-6" />}
+      title="Create Your First Exam"
+      description="Generate exam papers with AI in minutes"
+      action={<Button size="sm">Get Started</Button>}
+      variant="primary"
+    />
+
+    <ComparisonCard
+      title="Student Attendance"
+      metrics={[
+        { label: "This Week", value: 94, variant: "success" },
+        { label: "Last Week", value: 89, variant: "default" }
+      ]}
+      change={{ value: 5, direction: "up" }}
+    />
+  </DashboardGrid>
+
+  <DashboardGrid columns={{ base: 1, md: 2 }} className="mt-4">
+    <MediaCard
+      media={
+        <Avatar className="h-16 w-16">
+          <AvatarFallback>SJ</AvatarFallback>
+        </Avatar>
+      }
+      title="Sarah Johnson"
+      subtitle="Mathematics Teacher"
+      trailing={<Badge>Active</Badge>}
+    />
+
+    <EmptyStateCard
+      icon={<Inbox className="h-12 w-12" />}
+      title="No Students Yet"
+      description="Add your first student to get started with the platform"
+      action={<Button>Add Student</Button>}
+    />
+  </DashboardGrid>
+</DashboardSection>
+
+---
+
+## Phase 2: Modern 2025 Patterns (12)
+
+<DashboardSection title="Interactive & Modern Cards" description="2025 design trends: flip cards, sparklines, minimal design">
+  <DashboardGrid columns={{ base: 1, md: 2, lg: 4 }}>
+    <FlipCard
+      front={
+        <div className="space-y-2 text-center p-4">
+          <h4 className="font-semibold">Front Side</h4>
+          <p className="muted">Click to flip</p>
+        </div>
+      }
+      back={
+        <div className="space-y-2 text-center p-4">
+          <h4 className="font-semibold">Back Side</h4>
+          <p className="muted">More details here</p>
+        </div>
+      }
+      clickToFlip={true}
+      size="md"
+    />
+
+    <MetricCard
+      value="$45,678"
+      label="Total Revenue"
+      data={[120, 150, 170, 130, 190, 210]}
+      trend={{ value: 23, direction: "up" }}
+      variant="success"
+      size="md"
+    />
+
+    <NotificationCard
+      type="success"
+      title="Exam Published"
+      message="Your exam is now available to students"
+      dismissible
+    />
+
+    <GlanceCard
+      icon={<Users className="h-4 w-4" />}
+      label="Active Users"
+      value={234}
+      variant="primary"
+    />
+  </DashboardGrid>
+
+  <DashboardGrid columns={{ base: 1, md: 2, lg: 3 }} className="mt-4">
+    <ProfileCard
+      avatar={
+        <Avatar className="h-16 w-16">
+          <AvatarFallback>SJ</AvatarFallback>
+        </Avatar>
+      }
+      name="Sarah Johnson"
+      role="Mathematics Teacher"
+      info="sarah.j@school.edu"
+    />
+
+    <GoalCard
+      title="Enrollment Goal"
+      current={4812}
+      target={5000}
+      unit="students"
+    />
+
+    <WeatherCard
+      icon={<Sun className="h-16 w-16 text-chart-3" />}
+      temperature="72°F"
+      location="San Francisco"
+      condition="Sunny"
+      stats={[
+        { label: "Humidity", value: "45%" },
+        { label: "Wind", value: "12 mph" }
+      ]}
+    />
+  </DashboardGrid>
+
+  <DashboardGrid columns={{ base: 1, md: 2 }} className="mt-4">
+    <CalendarCard
+      title="Parent-Teacher Conference"
+      date="March 15, 2025"
+      time="2:00 PM - 4:00 PM"
+      location="Room 305"
+      description="Quarterly progress discussion"
+      status={<Badge>Upcoming</Badge>}
+    />
+
+    <QuickActionCard
+      title="Quick Actions"
+      actions={[
+        {
+          icon: <Plus className="h-5 w-5" />,
+          label: "Create",
+          onClick: () => {}
+        },
+        {
+          icon: <Upload className="h-5 w-5" />,
+          label: "Upload",
+          onClick: () => {}
+        },
+        {
+          icon: <Share className="h-5 w-5" />,
+          label: "Share",
+          onClick: () => {}
+        },
+        {
+          icon: <Download className="h-5 w-5" />,
+          label: "Export",
+          onClick: () => {}
+        }
+      ]}
+      columns={2}
+    />
+  </DashboardGrid>
+
+  <DashboardGrid columns={{ base: 1, md: 2, lg: 3 }} className="mt-4">
+    <SocialCard
+      title="Post Engagement"
+      metrics={[
+        { type: "likes", value: 1234, trend: { value: 12, isPositive: true } },
+        { type: "comments", value: 89 },
+        { type: "shares", value: 456 },
+        { type: "views", value: "12.5K" }
+      ]}
+    />
+
+    <IconStatCard
+      icon={<TrendingUp className="h-8 w-8" />}
+      value="87.5%"
+      label="Success Rate"
+      badge={<Badge variant="outline">Live</Badge>}
+      variant="success"
+    />
+
+    <TimelineCard
+      icon={<CheckCircle className="h-5 w-5 text-chart-2" />}
+      title="Assignment Submitted"
+      description="John Doe submitted Math Homework #5"
+      timestamp="2 hours ago"
+      showConnector={false}
+    />
+  </DashboardGrid>
+</DashboardSection>
+
+---
+
+## Phase 3: shadcn Dashboard Patterns (8)
+
+<DashboardSection title="Official shadcn/ui Patterns" description="Based on shadcn/ui and bundui dashboard examples">
+  <DashboardGrid columns={{ base: 1, md: 2 }}>
+    <RecentSalesCard
+      title="Recent Sales"
+      description="You made 265 sales this month"
+      sales={[
+        {
+          avatar: "/avatars/01.png",
+          name: "Olivia Martin",
+          email: "olivia.martin@email.com",
+          amount: "+$1,999.00"
+        },
+        {
+          name: "Jackson Lee",
+          email: "jackson.lee@email.com",
+          amount: "+$39.00"
+        },
+        {
+          name: "Isabella Nguyen",
+          email: "isabella.nguyen@email.com",
+          amount: "+$299.00"
+        }
+      ]}
+      maxItems={3}
+    />
+
+    <ActivityFeedCard
+      title="Recent Activity"
+      description="Latest updates from your team"
+      activities={[
+        {
+          title: "John Doe",
+          description: "Created a new exam paper",
+          timestamp: "2 hours ago",
+          type: "success"
+        },
+        {
+          title: "System",
+          description: "Backup completed successfully",
+          timestamp: "5 hours ago",
+          type: "success"
+        },
+        {
+          title: "Jane Smith",
+          description: "Updated student records",
+          timestamp: "1 day ago",
+          type: "default"
+        }
+      ]}
+      maxItems={3}
+      showAvatars={false}
+    />
+  </DashboardGrid>
+
+  <DashboardGrid columns={{ base: 1, md: 2, lg: 3 }} className="mt-4">
+    <TeamMembersCard
+      title="Team Members"
+      description="8 members online"
+      members={[
+        {
+          name: "Sarah Johnson",
+          role: "Mathematics Teacher",
+          status: "online"
+        },
+        {
+          name: "John Smith",
+          role: "Science Teacher",
+          status: "busy",
+          badge: <Badge variant="outline">Lead</Badge>
+        },
+        {
+          name: "Emily Davis",
+          role: "English Teacher",
+          status: "away"
+        }
+      ]}
+      maxItems={3}
+      showStatus={true}
+    />
+
+    <TopPerformersCard
+      title="Top Performers"
+      description="This month's leaders"
+      performers={[
+        {
+          rank: 1,
+          name: "Sarah Johnson",
+          subtitle: "Mathematics",
+          value: 98,
+          unit: "%",
+          progress: 98
+        },
+        {
+          rank: 2,
+          name: "John Smith",
+          subtitle: "Science",
+          value: 95,
+          unit: "%",
+          progress: 95
+        },
+        {
+          rank: 3,
+          name: "Emily Davis",
+          subtitle: "English",
+          value: 92,
+          unit: "%",
+          progress: 92
+        }
+      ]}
+      showProgress={true}
+      showMedals={true}
+      maxItems={3}
+    />
+
+    <StackedStatCard
+      title="Quick Stats"
+      stats={[
+        {
+          label: "Total Revenue",
+          value: "$45,678",
+          icon: <DollarSign className="h-4 w-4" />,
+          trend: { value: 12, direction: "up" },
+          variant: "success"
+        },
+        {
+          label: "Active Users",
+          value: 1234,
+          icon: <Users className="h-4 w-4" />,
+          trend: { value: 5, direction: "up" },
+          variant: "primary"
+        },
+        {
+          label: "Pending Tasks",
+          value: 23,
+          unit: "items",
+          icon: <Clock className="h-4 w-4" />,
+          variant: "warning"
+        }
+      ]}
+      showDividers={true}
+    />
+  </DashboardGrid>
+
+  <DashboardGrid columns={{ base: 1, md: 2 }} className="mt-4">
+    <TaskListCard
+      title="Today's Tasks"
+      description="5 of 8 completed"
+      tasks={[
+        {
+          id: "1",
+          title: "Review exam papers",
+          description: "Grade Math exam for Class 10A",
+          completed: false,
+          dueDate: "Today",
+          priority: "high"
+        },
+        {
+          id: "2",
+          title: "Prepare lesson plan",
+          completed: true,
+          priority: "medium"
+        },
+        {
+          id: "3",
+          title: "Update student records",
+          description: "Add new enrollments",
+          completed: false,
+          priority: "low"
+        }
+      ]}
+      onToggle={(id) => console.log('Toggled task:', id)}
+      showProgress={true}
+      maxItems={3}
+    />
+
+    <DataTableCard
+      title="Recent Enrollments"
+      description="Last 5 student registrations"
+      columns={[
+        { header: "Student", accessor: "name" },
+        { header: "Grade", accessor: "grade", align: "center" },
+        { header: "Date", accessor: "date", align: "right" }
+      ]}
+      data={[
+        { id: "1", name: "John Doe", grade: "10A", date: "2025-01-15" },
+        { id: "2", name: "Jane Smith", grade: "9B", date: "2025-01-14" },
+        { id: "3", name: "Mike Johnson", grade: "10A", date: "2025-01-13" }
+      ]}
+      maxRows={3}
+    />
+  </DashboardGrid>
+</DashboardSection>
+
+---
+
+## Layout Components
+
+<DashboardSection title="Layout & Organization" description="Grid, section, and shell wrappers for consistent layouts">
+  <div className="space-y-4">
+    <div className="p-4 rounded-lg border border-border bg-muted/50">
+      <h5 className="font-semibold mb-2">DashboardGrid</h5>
+      <p className="muted mb-4">Responsive grid with breakpoint control (base, md, lg, xl, 2xl)</p>
+      <DashboardGrid columns={{ base: 1, md: 2, lg: 4 }} gap={4}>
+        <div className="p-4 rounded bg-primary/10 text-center">Col 1</div>
+        <div className="p-4 rounded bg-primary/10 text-center">Col 2</div>
+        <div className="p-4 rounded bg-primary/10 text-center">Col 3</div>
+        <div className="p-4 rounded bg-primary/10 text-center">Col 4</div>
+      </DashboardGrid>
+    </div>
+
+    <div className="p-4 rounded-lg border border-border bg-muted/50">
+      <h5 className="font-semibold mb-2">DashboardSection</h5>
+      <p className="muted">Titled section wrapper with optional description and action button</p>
+    </div>
+
+    <div className="p-4 rounded-lg border border-border bg-muted/50">
+      <h5 className="font-semibold mb-2">DashboardShell</h5>
+      <p className="muted">Full page layout wrapper with spacing control (compact, default, spacious)</p>
+    </div>
+  </div>
+</DashboardSection>
+
+---
+
+## Summary
+
+### 📊 Component Count: **32 Total Cards**
+
+- **Enhanced Original (5)**: StatCard, ProgressCard, ListCard, MultiStatCard, ChartCard
+- **Phase 1 Specialized (7)**: HeroStatCard, ActionCard, ComparisonCard, MediaCard, CollapsibleCard, EmptyStateCard, SkeletonCard
+- **Phase 2 Modern 2025 (12)**: FlipCard, MetricCard, NotificationCard, TimelineCard, ProfileCard, GoalCard, WeatherCard, CalendarCard, QuickActionCard, SocialCard, GlanceCard, IconStatCard
+- **Phase 3 shadcn Patterns (8)**: RecentSalesCard, ActivityFeedCard, TeamMembersCard, TopPerformersCard, TaskListCard, DataTableCard, StackedStatCard, BannerCard
+- **Layout Components (3)**: DashboardGrid, DashboardSection, DashboardShell
+
+### ✨ Key Features
+
+- ✅ **100% Semantic Tokens** - Full theme support (light/dark mode)
+- ✅ **TypeScript** - Fully typed with strict mode
+- ✅ **Size Variants** - 4 sizes (sm, md, lg, xl)
+- ✅ **Loading States** - Built-in Skeleton loaders
+- ✅ **Interactive** - onClick handlers + hover effects
+- ✅ **i18n Ready** - Arabic (RTL) + English (LTR) support
+- ✅ **Accessible** - WCAG AA compliant
+- ✅ **540% Growth** - From 5 original cards to 32 total
+
+### 📚 Documentation
+
+Complete documentation available at `src/components/atom/dashboard/README.md` with usage examples, API reference, and best practices.

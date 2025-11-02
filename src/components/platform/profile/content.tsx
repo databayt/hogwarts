@@ -1,10 +1,20 @@
+/**
+ * Main Profile Router Component
+ * Dynamically loads the appropriate profile component based on user role
+ */
+
 "use client";
 
 import * as React from 'react'
-import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
-import { updateProfile } from '@/components/platform/profile/actions'
-import { SuccessToast, ErrorToast } from '@/components/atom/toast'
+import { useSession } from 'next-auth/react'
+import { StudentProfileContent } from './student/content'
+import { TeacherProfileContent } from './teacher/content'
+import { ParentProfileContent } from './parent/content'
+import { StaffProfileContent } from './staff/content'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Skeleton } from '@/components/ui/skeleton'
+import { AlertCircle } from 'lucide-react'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { type Locale } from '@/components/internationalization/config'
 import { type Dictionary } from '@/components/internationalization/dictionaries'
 
@@ -14,32 +24,128 @@ interface Props {
 }
 
 export function ProfileContent({ dictionary, lang }: Props) {
-  const [displayName, setDisplayName] = React.useState('')
-  const [avatarUrl, setAvatarUrl] = React.useState('')
-  const [locale, setLocale] = React.useState<'ar' | 'en'>('ar')
-  const [submitting, setSubmitting] = React.useState(false)
+  const { data: session, status } = useSession()
+  const [profileId, setProfileId] = React.useState<string | undefined>()
 
-  const onSubmit = async () => {
-    setSubmitting(true)
-    try {
-      await updateProfile({ displayName, avatarUrl, locale })
-      SuccessToast("Profile updated successfully")
-    } catch (e) {
-      ErrorToast(e instanceof Error ? e.message : 'Failed')
-    } finally {
-      setSubmitting(false)
+  // Extract user ID and role from session
+  React.useEffect(() => {
+    if (session?.user?.id) {
+      setProfileId(session.user.id)
     }
+  }, [session])
+
+  // Loading state
+  if (status === 'loading') {
+    return (
+      <div className="container mx-auto p-6 space-y-6">
+        <Skeleton className="h-48 w-full" />
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div className="lg:col-span-3">
+            <Skeleton className="h-96 w-full" />
+          </div>
+          <div className="lg:col-span-9">
+            <Skeleton className="h-96 w-full" />
+          </div>
+        </div>
+      </div>
+    )
   }
 
-  return (
-    <div className="rounded-lg border bg-card p-4 grid gap-2">
-      <div className="text-sm font-medium">Profile</div>
-      <Input placeholder="Display name" value={displayName} onChange={(e) => setDisplayName(e.target.value)} />
-      <Input placeholder="Avatar URL" value={avatarUrl} onChange={(e) => setAvatarUrl(e.target.value)} />
-      <Input placeholder="Locale (ar|en)" value={locale} onChange={(e) => setLocale(e.target.value as 'ar' | 'en')} />
-      <Button size="sm" onClick={onSubmit} disabled={submitting || !displayName}>Save</Button>
-    </div>
-  )
+  // Unauthenticated state
+  if (status === 'unauthenticated' || !session) {
+    return (
+      <div className="container mx-auto p-6">
+        <Alert>
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Authentication Required</AlertTitle>
+          <AlertDescription>
+            Please sign in to view your profile.
+          </AlertDescription>
+        </Alert>
+      </div>
+    )
+  }
+
+  // Get user role - prioritize specific roles over generic USER role
+  const userRole = session.user?.role
+
+  // Render appropriate profile based on role
+  switch (userRole) {
+    case 'STUDENT':
+      return (
+        <StudentProfileContent
+          studentId={profileId}
+          dictionary={dictionary}
+          lang={lang}
+          isOwner={true}
+        />
+      )
+
+    case 'TEACHER':
+      return (
+        <TeacherProfileContent
+          teacherId={profileId}
+          dictionary={dictionary}
+          lang={lang}
+          isOwner={true}
+        />
+      )
+
+    case 'GUARDIAN':
+      return (
+        <ParentProfileContent
+          parentId={profileId}
+          dictionary={dictionary}
+          lang={lang}
+          isOwner={true}
+        />
+      )
+
+    case 'STAFF':
+    case 'ACCOUNTANT':
+      return (
+        <StaffProfileContent
+          staffId={profileId}
+          dictionary={dictionary}
+          lang={lang}
+          isOwner={true}
+        />
+      )
+
+    case 'ADMIN':
+    case 'DEVELOPER':
+      // Admins and developers get staff profile with additional privileges
+      return (
+        <StaffProfileContent
+          staffId={profileId}
+          dictionary={dictionary}
+          lang={lang}
+          isOwner={true}
+        />
+      )
+
+    default:
+      // Fallback for USER or unknown roles
+      return (
+        <div className="container mx-auto p-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Profile Setup Required</CardTitle>
+              <CardDescription>
+                Your profile type has not been configured yet. Please contact your administrator.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2 text-sm text-muted-foreground">
+                <p>User ID: {session.user?.id}</p>
+                <p>Email: {session.user?.email}</p>
+                <p>Role: {userRole || 'Not assigned'}</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )
+  }
 }
 
 

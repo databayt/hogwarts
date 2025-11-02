@@ -31,17 +31,20 @@ import type { ExamTemplateDTO, TemplateDistribution, BloomDistribution } from ".
 import { DistributionEditor } from "./distribution-editor";
 import { calculateTotalQuestions } from "./utils";
 import type { z } from "zod";
+import type { Dictionary } from "@/components/internationalization/dictionaries";
 
 interface ExamTemplateFormProps {
   initialData?: ExamTemplateDTO;
   subjectId?: string;
   isView?: boolean;
+  dictionary?: Dictionary;
 }
 
 export function ExamTemplateForm({
   initialData,
   subjectId,
   isView = false,
+  dictionary,
 }: ExamTemplateFormProps) {
   const { closeModal } = useModal();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -86,7 +89,9 @@ export function ExamTemplateForm({
 
       if (result.success) {
         SuccessToast(
-          initialData?.id ? "Template updated!" : "Template created!"
+          initialData?.id
+            ? (dictionary?.generate?.form?.templateUpdated || "Template updated!")
+            : (dictionary?.generate?.form?.templateCreated || "Template created!")
         );
         closeModal();
         window.location.reload();
@@ -95,7 +100,7 @@ export function ExamTemplateForm({
       }
     } catch (error) {
       ErrorToast(
-        error instanceof Error ? error.message : "Failed to save template"
+        error instanceof Error ? error.message : (dictionary?.generate?.form?.failedToSave || "Failed to save template")
       );
     } finally {
       setIsSubmitting(false);
@@ -107,7 +112,9 @@ export function ExamTemplateForm({
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <div className="space-y-4">
           <h2 className="text-lg font-semibold">
-            {initialData?.id ? "Edit Template" : "Create Exam Template"}
+            {initialData?.id
+              ? (dictionary?.generate?.form?.editTemplate || "Edit Template")
+              : (dictionary?.generate?.form?.createTemplate || "Create Exam Template")}
           </h2>
 
           {/* Template Name */}
@@ -116,10 +123,10 @@ export function ExamTemplateForm({
             name="name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Template Name</FormLabel>
+                <FormLabel>{dictionary?.generate?.form?.templateName || "Template Name"}</FormLabel>
                 <FormControl>
                   <Input
-                    placeholder="e.g., Midterm Template - Mathematics"
+                    placeholder={dictionary?.generate?.form?.templateNamePlaceholder || "e.g., Midterm Template - Mathematics"}
                     disabled={isView}
                     {...field}
                   />
@@ -135,10 +142,10 @@ export function ExamTemplateForm({
             name="description"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Description (Optional)</FormLabel>
+                <FormLabel>{dictionary?.generate?.form?.description || "Description (Optional)"}</FormLabel>
                 <FormControl>
                   <Textarea
-                    placeholder="Describe this template..."
+                    placeholder={dictionary?.generate?.form?.descriptionPlaceholder || "Describe this template..."}
                     disabled={isView}
                     {...field}
                   />
@@ -154,7 +161,7 @@ export function ExamTemplateForm({
             name="subjectId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Subject</FormLabel>
+                <FormLabel>{dictionary?.generate?.form?.subject || "Subject"}</FormLabel>
                 <Select
                   onValueChange={field.onChange}
                   defaultValue={field.value}
@@ -162,7 +169,7 @@ export function ExamTemplateForm({
                 >
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select subject" />
+                      <SelectValue placeholder={dictionary?.generate?.form?.selectSubject || "Select subject"} />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
@@ -184,7 +191,7 @@ export function ExamTemplateForm({
               name="duration"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Duration (minutes)</FormLabel>
+                  <FormLabel>{dictionary?.generate?.form?.duration || "Duration (minutes)"}</FormLabel>
                   <FormControl>
                     <Input
                       type="number"
@@ -206,7 +213,7 @@ export function ExamTemplateForm({
               name="totalMarks"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Total Marks</FormLabel>
+                  <FormLabel>{dictionary?.generate?.form?.totalMarks || "Total Marks"}</FormLabel>
                   <FormControl>
                     <Input
                       type="number"
@@ -232,7 +239,7 @@ export function ExamTemplateForm({
             name="distribution"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Question Distribution</FormLabel>
+                <FormLabel>{dictionary?.generate?.form?.questionDistribution || "Question Distribution"}</FormLabel>
                 <FormControl>
                   <DistributionEditor
                     distribution={field.value as TemplateDistribution}
@@ -242,7 +249,7 @@ export function ExamTemplateForm({
                   />
                 </FormControl>
                 <FormDescription>
-                  Total Questions: {totalQuestions}
+                  {dictionary?.generate?.form?.totalQuestions || "Total Questions"}: {totalQuestions}
                 </FormDescription>
                 <FormMessage />
               </FormItem>
@@ -259,11 +266,13 @@ export function ExamTemplateForm({
               onClick={closeModal}
               disabled={isSubmitting}
             >
-              Cancel
+              {dictionary?.generate?.form?.cancel || "Cancel"}
             </Button>
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {initialData?.id ? "Update" : "Create"}
+              {initialData?.id
+                ? (dictionary?.generate?.form?.update || "Update")
+                : (dictionary?.generate?.form?.create || "Create")}
             </Button>
           </div>
         )}

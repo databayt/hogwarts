@@ -71,13 +71,20 @@
     "remarks": "ملاحظات",
     "generatedOn": "تم الإنشاء في",
     "academicYear": "السنة الدراسية",
-    "result": "النتيجة"
+    "result": "النتيجة",
+    "notAvailable": "غير متوفر",
+    "present": "حاضر",
+    "absent": "غائب",
+    "passed": "ناجح",
+    "failed": "راسب",
+    "examResults": "نتائج الامتحانات"
   },
 
   "actions": {
     "viewResults": "عرض النتائج",
     "viewAnalytics": "عرض التحليلات",
     "exportAll": "تصدير جميع ملفات PDF",
+    "exportAllPDFs": "تصدير جميع ملفات PDF",
     "exportPDF": "تصدير PDF",
     "exportCSV": "تصدير CSV",
     "download": "تحميل",
