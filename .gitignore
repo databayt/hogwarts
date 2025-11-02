@@ -40,3 +40,16 @@ env
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Windows reserved names and temp files
+nul
+CON
+PRN
+AUX
+*.log
+build.log
+.claude/error.log
+.claude/build-fix-log.md
+
+# Corrupted or temporary files
+"]*"
