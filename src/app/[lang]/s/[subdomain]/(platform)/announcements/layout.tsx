@@ -15,7 +15,7 @@ export default async function AnnouncementsLayout({ children, params }: Props) {
 
   // Define announcements page navigation
   const announcementsPages: PageNavItem[] = [
-    { name: d?.allAnnouncements || 'All', href: `/${lang}/announcements` },
+    { name: 'All', href: `/${lang}/announcements` },
     // Future navigation items can be added here:
     // { name: d?.navigation?.drafts || 'Drafts', href: `/${lang}/announcements/drafts`, hidden: true },
     // { name: d?.navigation?.scheduled || 'Scheduled', href: `/${lang}/announcements/scheduled`, hidden: true },
