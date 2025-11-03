@@ -99,13 +99,11 @@ export default async function QuestionBankContent({
   }
 
   return (
-    <div className="space-y-6">
-      <QuestionBankTable
-        initialData={data}
-        total={total}
-        perPage={sp.perPage}
-        dictionary={dictionary}
-      />
-    </div>
+    <QuestionBankTable
+      initialData={data}
+      total={total}
+      perPage={sp.perPage}
+      dictionary={dictionary}
+    />
   );
 }
