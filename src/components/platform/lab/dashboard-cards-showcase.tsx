@@ -387,9 +387,9 @@ export function DashboardCardsShowcase() {
 
           <TopPerformersCard
             performers={[
-              { rank: 1, name: "Emma Watson", value: "98", change: "+2" },
-              { rank: 2, name: "Daniel Radcliffe", value: "96", change: "0" },
-              { rank: 3, name: "Rupert Grint", value: "94", change: "-1" },
+              { rank: 1, name: "Emma Watson", value: "98" },
+              { rank: 2, name: "Daniel Radcliffe", value: "96" },
+              { rank: 3, name: "Rupert Grint", value: "94" },
             ]}
           />
 
