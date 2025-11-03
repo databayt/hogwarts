@@ -172,7 +172,7 @@ export function DashboardCardsShowcase() {
 
           <CollapsibleCard
             title="Course Modules"
-            defaultExpanded={true}
+            defaultOpen={true}
           >
             <ul className="space-y-2">
               <li className="flex items-center gap-2">
@@ -194,8 +194,11 @@ export function DashboardCardsShowcase() {
             icon={<Users className="size-12" />}
             title="No Students Yet"
             description="Start by inviting students to your course"
-            actionText="Invite Students"
-            onAction={() => console.log("Invite clicked")}
+            action={
+              <Button onClick={() => console.log("Invite clicked")}>
+                Invite Students
+              </Button>
+            }
           />
 
           <SkeletonCard layout="stat" />
@@ -349,8 +352,6 @@ export function DashboardCardsShowcase() {
             icon={<TrendingUp className="size-6" />}
             value="94.5%"
             label="Success Rate"
-            trend={{ value: 3.2, direction: "up" }}
-            variant="success"
           />
         </DashboardGrid>
       </DashboardSection>
@@ -386,9 +387,9 @@ export function DashboardCardsShowcase() {
 
           <TopPerformersCard
             performers={[
-              { rank: 1, name: "Emma Watson", score: 98, change: "+2" },
-              { rank: 2, name: "Daniel Radcliffe", score: 96, change: "0" },
-              { rank: 3, name: "Rupert Grint", score: 94, change: "-1" },
+              { rank: 1, name: "Emma Watson", value: "98", change: "+2" },
+              { rank: 2, name: "Daniel Radcliffe", value: "96", change: "0" },
+              { rank: 3, name: "Rupert Grint", value: "94", change: "-1" },
             ]}
           />
 
