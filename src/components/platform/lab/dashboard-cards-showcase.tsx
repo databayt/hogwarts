@@ -136,7 +136,6 @@ export function DashboardCardsShowcase() {
             icon={<DollarSign className="size-6" />}
             trend={{ value: 20.1, direction: "up" }}
             variant="success"
-            size="lg"
           />
 
           <ActionCard
