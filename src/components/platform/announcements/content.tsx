@@ -24,30 +24,40 @@ export default async function AnnouncementsContent({ searchParams, dictionary, l
   let total = 0
 
   if (schoolId) {
-    // Use shared query builder (caching removed due to multi-tenant complexity)
-    const { rows, count } = await getAnnouncementsList(schoolId, {
-      title: sp.title,
-      scope: sp.scope,
-      published: sp.published,
-      page: sp.page,
-      perPage: sp.perPage,
-      sort: sp.sort,
-    });
+    try {
+      // Use shared query builder (caching removed due to multi-tenant complexity)
+      const { rows, count } = await getAnnouncementsList(schoolId, {
+        title: sp.title,
+        scope: sp.scope,
+        published: sp.published,
+        page: sp.page,
+        perPage: sp.perPage,
+        sort: sp.sort,
+      });
 
-    // Map results to table format
-    data = rows.map((a) => ({
-      id: a.id,
-      title: a.title,
-      scope: a.scope,
-      published: a.published,
-      createdAt: a.createdAt.toISOString(),
-      createdBy: a.createdBy,
-      priority: a.priority,
-      pinned: a.pinned,
-      featured: a.featured,
-    }));
+      // Map results to table format with safe date serialization
+      // CRITICAL FIX: Handle null/undefined dates to prevent server-side exceptions
+      data = rows.map((a) => ({
+        id: a.id,
+        title: a.title,
+        scope: a.scope,
+        published: a.published,
+        // Safe date serialization - fallback to current time if null/undefined
+        createdAt: a.createdAt ? new Date(a.createdAt).toISOString() : new Date().toISOString(),
+        createdBy: a.createdBy,
+        priority: a.priority,
+        pinned: a.pinned,
+        featured: a.featured,
+      }));
 
-    total = count;
+      total = count;
+    } catch (error) {
+      // Log error for debugging but don't crash the page
+      console.error('[AnnouncementsContent] Error fetching announcements:', error);
+      // Return empty data - page will show "No announcements" instead of crashing
+      data = [];
+      total = 0;
+    }
   }
 
   return (

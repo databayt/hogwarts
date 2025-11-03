@@ -2,6 +2,8 @@
 
 This document provides solutions to common issues encountered in the Hogwarts platform.
 
+> **🚨 IMPORTANT**: For comprehensive guidance on server-side exceptions (Date serialization, Cache misuse, Prisma relations), see the dedicated guide: **[SERVER_SIDE_EXCEPTIONS.md](./SERVER_SIDE_EXCEPTIONS.md)**
+
 ## Table of Contents
 
 - [Server-Side Exceptions](#server-side-exceptions)
@@ -14,6 +16,8 @@ This document provides solutions to common issues encountered in the Hogwarts pl
 ## Server-Side Exceptions
 
 ### Error: "Application error: a server-side exception has occurred"
+
+> **📖 See [SERVER_SIDE_EXCEPTIONS.md](./SERVER_SIDE_EXCEPTIONS.md) for the complete prevention and resolution guide.**
 
 This generic error can have multiple causes. Follow this systematic debugging approach:
 
