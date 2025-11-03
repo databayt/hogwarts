@@ -77,7 +77,7 @@ export function DashboardCardsShowcase() {
     <DashboardShell>
       {/* Enhanced Cards Section (5 cards) */}
       <DashboardSection title="Enhanced Cards" description="5 original cards with size, loading, and onClick features">
-        <DashboardGrid cols={{ base: 1, md: 2, lg: 3, xl: 4 }}>
+        <DashboardGrid columns={{ base: 1, md: 2, lg: 3, xl: 4 }}>
           <StatCard
             value="2,543"
             label="Total Students"
@@ -120,7 +120,7 @@ export function DashboardCardsShowcase() {
 
       {/* New Variants Section (7 cards) */}
       <DashboardSection title="New Variants" description="7 specialized card types">
-        <DashboardGrid cols={{ base: 1, md: 2, lg: 3 }}>
+        <DashboardGrid columns={{ base: 1, md: 2, lg: 3 }}>
           <HeroStatCard
             value="$45,231"
             label="Total Revenue"
@@ -192,7 +192,7 @@ export function DashboardCardsShowcase() {
 
       {/* Modern 2025 Patterns Section (12 cards) */}
       <DashboardSection title="Modern 2025 Patterns" description="12 interactive and engaging card designs">
-        <DashboardGrid cols={{ base: 1, md: 2, lg: 3, xl: 4 }}>
+        <DashboardGrid columns={{ base: 1, md: 2, lg: 3, xl: 4 }}>
           <FlipCard
             front={
               <div className="flex h-full flex-col items-center justify-center gap-2">
@@ -345,7 +345,7 @@ export function DashboardCardsShowcase() {
 
       {/* shadcn Dashboard Patterns Section (8 cards) */}
       <DashboardSection title="shadcn Dashboard Patterns" description="8 advanced dashboard card patterns">
-        <DashboardGrid cols={{ base: 1, md: 2, lg: 3 }}>
+        <DashboardGrid columns={{ base: 1, md: 2, lg: 3 }}>
           <RecentSalesCard
             sales={[
               { name: "John Smith", email: "john@example.com", amount: "$1,999" },
@@ -424,7 +424,7 @@ export function DashboardCardsShowcase() {
 
       {/* Loading States Demo */}
       <DashboardSection title="Loading States" description="Skeleton loading examples">
-        <DashboardGrid cols={{ base: 1, md: 2, lg: 4 }}>
+        <DashboardGrid columns={{ base: 1, md: 2, lg: 4 }}>
           <SkeletonCard layout="stat" />
           <SkeletonCard layout="list" />
           <SkeletonCard layout="chart" />
@@ -434,7 +434,7 @@ export function DashboardCardsShowcase() {
 
       {/* Interactive States Demo */}
       <DashboardSection title="Interactive States" description="Hoverable and clickable cards">
-        <DashboardGrid cols={{ base: 1, md: 2, lg: 3 }}>
+        <DashboardGrid columns={{ base: 1, md: 2, lg: 3 }}>
           <StatCard
             value="Click Me!"
             label="Clickable Card"
