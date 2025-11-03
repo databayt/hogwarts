@@ -2,11 +2,11 @@
   "crons": [
     {
       "path": "/api/cron/publish-announcements",
-      "schedule": "*/5 * * * *"
+      "schedule": "0 9 * * *"
     },
     {
       "path": "/api/cron/expire-announcements",
-      "schedule": "0 * * * *"
+      "schedule": "0 0 * * *"
     }
   ]
 }
