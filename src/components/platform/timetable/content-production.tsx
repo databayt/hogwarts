@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useTransition } from 'react'
 import { useParams } from 'next/navigation'
-import { TimetableHeader } from './timetable-header'
 import { TimetableGrid } from './timetable-grid'
 import { ConfigDialog } from './config-dialog'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -249,16 +248,6 @@ export function TimetableContent({ dictionary }: Props) {
     <div className="space-y-6">
       <main className="min-h-screen print:bg-white print:py-4">
         <div className="max-w-4xl mx-auto print:max-w-none">
-          <TimetableHeader
-            schoolYear={getCurrentSchoolYear()}
-            school={classConfig.school}
-            grade={classConfig.grade}
-            class={classConfig.class}
-            isNextWeek={isNextWeek}
-            isWeekChangeLoading={isWeekChangeLoading}
-            onWeekChange={changeWeek}
-          />
-
           {isWeekChangeLoading ? (
             <div className="overflow-x-auto shadow-lg rounded-xl border border-border">
               <div className="min-w-full bg-background">
