@@ -4,8 +4,6 @@ import { SearchParams } from 'nuqs/server'
 import { parentsSearchParams } from '@/components/platform/parents/list-params'
 import { db } from '@/lib/db'
 import { getTenantContext } from '@/lib/tenant-context'
-import { Shell as PageContainer } from '@/components/table/shell'
-import PageHeader from '@/components/atom/page-header'
 import { type Locale } from '@/components/internationalization/config'
 import { type Dictionary } from '@/components/internationalization/dictionaries'
 
@@ -55,14 +53,8 @@ export default async function ParentsContent({ searchParams, dictionary, lang }:
     total = count as number
   }
   return (
-    <PageContainer>
-      <div className="flex flex-1 flex-col gap-4">
-        <PageHeader
-          title={dictionary?.school?.parents?.title || 'Parents'}
-          className="text-start max-w-none"
-        />
-        <ParentsTable initialData={data} total={total} perPage={sp.perPage} />
-      </div>
-    </PageContainer>
+    <div className="space-y-6">
+      <ParentsTable initialData={data} total={total} perPage={sp.perPage} />
+    </div>
   )
 }
