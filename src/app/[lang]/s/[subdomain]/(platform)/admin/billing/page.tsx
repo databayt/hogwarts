@@ -5,7 +5,6 @@ import { currentUser } from "@/components/auth/auth";
 import { getUserSubscriptionPlan } from "@/components/marketing/pricing/lib/subscription";
 import { constructMetadata } from "@/components/marketing/pricing/lib/utils";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { DashboardHeader } from "@/components/platform/dashboard/header";
 import { BillingInfo } from "@/components/marketing/pricing/billing-info";
 import { Icons } from "@/components/marketing/pricing/shared/icons";
 import { getDictionary } from "@/components/internationalization/dictionaries";
@@ -38,7 +37,7 @@ export default async function Billing({ params }: Props) {
     redirect("/login");
   }
 
-  const isPrivileged = ["DEVELOPER", "ADMIN", "ACCOUNTANT"].includes(
+  const isPrivileged = ["DEVELOPER", "ADMIN"].includes(
     String(user.role || "")
   );
 
@@ -79,12 +78,7 @@ export default async function Billing({ params }: Props) {
   }
 
   return (
-    <>
-      <DashboardHeader
-        heading="Billing"
-        text="Manage billing and your subscription plan."
-      />
-      <div className="grid gap-8">
+    <div className="grid gap-8">
         <Alert className="!pl-14">
           <Icons.warning />
           <AlertTitle>This is a demo app.</AlertTitle>
@@ -181,7 +175,6 @@ export default async function Billing({ params }: Props) {
             </div>
           </div>
         )}
-      </div>
-    </>
+    </div>
   );
 }

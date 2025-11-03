@@ -14,10 +14,10 @@ export const sidebarLinks: SidebarNavItem[] = [
       },
       { href: "/dashboard", icon: "dashboard", title: "Dashboard" },
       {
-        href: "/dashboard/billing",
+        href: "/admin/billing",
         icon: "billing",
         title: "Billing",
-        authorizeOnly: UserRole.USER,
+        authorizeOnly: UserRole.ADMIN,
       },
       { href: "/dashboard/charts", icon: "lineChart", title: "Charts" },
       {

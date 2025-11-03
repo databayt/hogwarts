@@ -11,7 +11,7 @@ export type responseAction = {
   stripeUrl?: string;
 };
 
-const billingUrl = absoluteUrl("/starter/dashboard/billing");
+const billingUrl = absoluteUrl("/starter/admin/billing");
 
 export async function openCustomerPortal(
   userStripeId: string,
