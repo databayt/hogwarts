@@ -1,5 +1,4 @@
 import { currentUser } from "@/components/auth/auth";
-import PageHeader from "@/components/atom/page-header";
 import { StudentDashboard } from "./dashboards/student-dashboard";
 import { TeacherDashboard } from "./dashboards/teacher-dashboard";
 import { ParentDashboard } from "./dashboards/parent-dashboard";
@@ -71,11 +70,6 @@ export default async function DashboardContent({ school, dictionary }: Props = {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Overview"
-        variant="dashboard"
-        className="text-start max-w-none"
-      />
       {renderDashboard()}
     </div>
   );
