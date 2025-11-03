@@ -72,7 +72,7 @@ export default async function DashboardContent({ school, dictionary }: Props = {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Dashboard"
+        title="Overview"
         variant="dashboard"
         className="text-start max-w-none"
       />
