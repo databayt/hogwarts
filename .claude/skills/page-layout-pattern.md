@@ -256,6 +256,48 @@ export default async function Layout({ children, params }: Props) {
 | `<div className="flex flex-col gap-6">` | `<div className="space-y-6">` |
 | Multiple nested wrapper divs | Single wrapper div |
 
+### ⚠️ Overflow Prevention Pattern
+
+**CRITICAL**: Pages MUST NOT have horizontal overflow caused by wide tables or sections.
+
+**Problem**: Using container wrappers (like `Shell` component with `container` class) can cause horizontal scrollbars when tables are wide.
+
+**Solution**: Remove all container wrappers from content files. Let the layout handle spacing, and use the simple `space-y-6` pattern.
+
+#### Before (❌ WRONG - Causes horizontal overflow)
+```typescript
+// content.tsx with container wrapper
+import { Shell as PageContainer } from '@/components/table/shell'
+
+export default function Content() {
+  return (
+    <PageContainer>
+      <div className="flex flex-1 flex-col gap-6">
+        <WideTable /> {/* This causes horizontal scrollbar */}
+      </div>
+    </PageContainer>
+  )
+}
+```
+
+#### After (✅ CORRECT - No overflow)
+```typescript
+// content.tsx without container wrapper
+export default function Content() {
+  return (
+    <div className="space-y-6">
+      <WideTable /> {/* Now properly contained */}
+    </div>
+  )
+}
+```
+
+#### Key Rules for Overflow Prevention:
+1. **Never use `Shell` or `container` classes in content files**
+2. **Use single `<div className="space-y-6">` wrapper** - it properly contains content
+3. **Let tables handle their own overflow** - DataTable has built-in `overflow-auto`
+4. **Test with wide content** - verify no horizontal scrollbar appears
+
 ## Benefits
 
 1. **DRY Principle**: No duplicate headers or navigation across pages
@@ -359,6 +401,7 @@ When migrating an existing block to this pattern:
 - [ ] Navigation highlights current page
 - [ ] Build succeeds without errors
 - [ ] No TypeScript violations
+- [ ] No horizontal scrollbar with wide tables/content
 
 ## 🐛 Troubleshooting
 
@@ -402,3 +445,4 @@ After implementing this pattern, verify:
 3. No duplicate headers or navigation elements
 4. Navigation highlights the current page correctly
 5. Hidden navigation items don't appear in PageNav but are accessible via direct links
+6. No horizontal scrollbar appears when testing with wide tables or content

@@ -4,7 +4,6 @@ import { SearchParams } from "nuqs/server";
 import { questionBankSearchParams } from "./list-params";
 import { db } from "@/lib/db";
 import { getTenantContext } from "@/lib/tenant-context";
-import { Shell as PageContainer } from "@/components/table/shell";
 import type { Locale } from "@/components/internationalization/config";
 import type { Dictionary } from "@/components/internationalization/dictionaries";
 import type { Prisma, QuestionType, DifficultyLevel, BloomLevel, QuestionSource } from "@prisma/client";
@@ -100,15 +99,13 @@ export default async function QuestionBankContent({
   }
 
   return (
-    <PageContainer>
-      <div className="flex flex-1 flex-col gap-6">
-        <QuestionBankTable
-          initialData={data}
-          total={total}
-          perPage={sp.perPage}
-          dictionary={dictionary}
-        />
-      </div>
-    </PageContainer>
+    <div className="space-y-6">
+      <QuestionBankTable
+        initialData={data}
+        total={total}
+        perPage={sp.perPage}
+        dictionary={dictionary}
+      />
+    </div>
   );
 }
