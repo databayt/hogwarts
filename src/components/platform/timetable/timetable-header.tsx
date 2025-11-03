@@ -98,12 +98,6 @@ export function TimetableHeader({
 
   return (
     <div className="mb-2 print:mb-8">
-      <p className="lead print:text-lg">
-        {schoolYear} School Year · {school}
-      </p>
-      <h2 className="print:text-4xl mb-4">
-        Grade {grade}, Class {classNumber} · Timetable
-      </h2>
       <div className="flex flex-wrap gap-2 mb-4 print:hidden items-center">
         <Select value={termId} onValueChange={setTermId}>
           <SelectTrigger className="w-[140px]"><SelectValue placeholder="Term" /></SelectTrigger>
