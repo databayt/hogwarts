@@ -212,7 +212,7 @@ export function TimetableContent({ dictionary }: Props) {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto py-6 space-y-6">
+      <div className="space-y-6">
         <Skeleton className="h-12 w-full" />
         <Skeleton className="h-[600px] w-full rounded-xl" />
       </div>
@@ -221,7 +221,7 @@ export function TimetableContent({ dictionary }: Props) {
 
   if (error) {
     return (
-      <div className="container mx-auto py-6">
+      <div className="space-y-6">
         <Alert variant="destructive">
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>{error}</AlertDescription>
@@ -236,7 +236,7 @@ export function TimetableContent({ dictionary }: Props) {
 
   if (!classConfig) {
     return (
-      <div className="container mx-auto py-6">
+      <div className="space-y-6">
         <Skeleton className="h-[600px] rounded-xl" />
       </div>
     )
@@ -246,7 +246,7 @@ export function TimetableContent({ dictionary }: Props) {
   const availableSubjects = getAvailableSubjects()
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
+    <div className="space-y-6">
       <main className="min-h-screen print:bg-white print:py-4">
         <div className="max-w-4xl mx-auto print:max-w-none">
           <TimetableHeader

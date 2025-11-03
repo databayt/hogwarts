@@ -4,8 +4,6 @@ import { SearchParams } from 'nuqs/server'
 import { classesSearchParams } from '@/components/platform/classes/list-params'
 import { db } from '@/lib/db'
 import { getTenantContext } from '@/lib/tenant-context'
-import { Shell as PageContainer } from '@/components/table/shell'
-import PageHeader from '@/components/atom/page-header'
 import { type Locale } from '@/components/internationalization/config'
 import { type Dictionary } from '@/components/internationalization/dictionaries'
 
@@ -71,15 +69,8 @@ export default async function ClassesContent({ searchParams, dictionary, lang }:
     total = count as number
   }
   return (
-    <PageContainer>
-      <div className="flex flex-1 flex-col gap-4">
-        <PageHeader
-          title={dictionary?.school?.classes?.title || 'Classes'}
-          description={dictionary?.school?.classes?.description || 'Manage academic classes and schedules'}
-          className="text-start max-w-none"
-        />
-        <ClassesTable initialData={data} total={total} perPage={sp.perPage} />
-      </div>
-    </PageContainer>
+    <div className="space-y-6">
+      <ClassesTable initialData={data} total={total} perPage={sp.perPage} />
+    </div>
   )
 }

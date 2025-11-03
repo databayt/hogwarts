@@ -4,8 +4,6 @@ import { SearchParams } from 'nuqs/server'
 import { eventsSearchParams } from '@/components/platform/events/list-params'
 import { db } from '@/lib/db'
 import { getTenantContext } from '@/lib/tenant-context'
-import { Shell as PageContainer } from '@/components/table/shell'
-import PageHeader from '@/components/atom/page-header'
 import { type Locale } from '@/components/internationalization/config'
 import { type Dictionary } from '@/components/internationalization/dictionaries'
 
@@ -67,15 +65,8 @@ export default async function EventsContent({ searchParams, dictionary, lang }: 
   }
   
   return (
-    <PageContainer>
-      <div className="flex flex-1 flex-col gap-4">
-        <PageHeader
-          title={dictionary?.school?.events?.title || 'Events'}
-          description={dictionary?.school?.events?.description || 'Schedule and manage your school events'}
-          className="text-start max-w-none"
-        />
-        <EventsTable initialData={data} total={total} perPage={sp.perPage} />
-      </div>
-    </PageContainer>
+    <div className="space-y-6">
+      <EventsTable initialData={data} total={total} perPage={sp.perPage} />
+    </div>
   )
 }

@@ -4,8 +4,6 @@ import { SearchParams } from 'nuqs/server'
 import { teachersSearchParams } from '@/components/platform/teachers/list-params'
 import { db } from '@/lib/db'
 import { getTenantContext } from '@/lib/tenant-context'
-import { Shell as PageContainer } from '@/components/table/shell'
-import PageHeader from '@/components/atom/page-header'
 import type { Dictionary } from '@/components/internationalization/dictionaries'
 
 interface Props {
@@ -53,14 +51,8 @@ export default async function TeachersContent({ searchParams, dictionary }: Prop
     total = count as number
   }
   return (
-    <PageContainer>
-      <div className="flex flex-1 flex-col gap-4">
-        <PageHeader
-          title={dictionary?.teachers?.title || 'Teachers'}
-          className="text-start max-w-none"
-        />
-        <TeachersTable initialData={data} total={total} dictionary={dictionary?.teachers} perPage={sp.perPage} />
-      </div>
-    </PageContainer>
+    <div className="space-y-6">
+      <TeachersTable initialData={data} total={total} dictionary={dictionary?.teachers} perPage={sp.perPage} />
+    </div>
   )
 }
