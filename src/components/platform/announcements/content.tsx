@@ -3,8 +3,6 @@ import { type AnnouncementRow } from '@/components/platform/announcements/column
 import { SearchParams } from 'nuqs/server'
 import { announcementsSearchParams } from '@/components/platform/announcements/list-params'
 import { getTenantContext } from '@/lib/tenant-context'
-import { Shell as PageContainer } from '@/components/table/shell'
-import PageHeader from '@/components/atom/page-header'
 import type { Dictionary } from '@/components/internationalization/dictionaries'
 import type { Locale } from '@/components/internationalization/config'
 import { getAnnouncementsList } from '@/components/platform/announcements/queries'
@@ -61,22 +59,15 @@ export default async function AnnouncementsContent({ searchParams, dictionary, l
   }
 
   return (
-    <PageContainer>
-      <div className="space-y-6">
-        <PageHeader
-          title={t.title}
-          variant="dashboard"
-          className="text-start max-w-none"
-        />
-        <AnnouncementsTable
-          initialData={data}
-          total={total}
-          dictionary={t}
-          lang={lang}
-          perPage={sp.perPage}
-        />
-      </div>
-    </PageContainer>
+    <div className="space-y-6">
+      <AnnouncementsTable
+        initialData={data}
+        total={total}
+        dictionary={t}
+        lang={lang}
+        perPage={sp.perPage}
+      />
+    </div>
   )
 }
 
