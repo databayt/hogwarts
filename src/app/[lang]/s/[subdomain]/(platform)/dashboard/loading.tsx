@@ -6,7 +6,6 @@ export default function DashboardLoading() {
     <div className="space-y-6">
       <PageHeader
         title="Overview"
-        variant="dashboard"
         className="text-start max-w-none"
       />
       <Skeleton className="size-full rounded-lg" />
