@@ -15,7 +15,7 @@ export default async function SubjectsLayout({ children, params }: Props) {
 
   // Define subjects page navigation
   const subjectsPages: PageNavItem[] = [
-    { name: d?.title || 'All Subjects', href: `/${lang}/subjects` },
+    { name: 'All', href: `/${lang}/subjects` },
     // Future navigation items can be added here:
     // { name: d?.navigation?.departments || 'Departments', href: `/${lang}/subjects/departments`, hidden: true },
     // { name: d?.navigation?.teachers || 'Teachers', href: `/${lang}/subjects/teachers`, hidden: true },
@@ -25,7 +25,6 @@ export default async function SubjectsLayout({ children, params }: Props) {
     <div className="space-y-6">
       <PageHeader
         title={d?.title || 'Subjects'}
-        description={d?.description || 'Manage academic subjects and their departments'}
         className="text-start max-w-none"
       />
       <PageNav pages={subjectsPages} />
