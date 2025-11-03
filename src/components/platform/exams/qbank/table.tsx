@@ -92,42 +92,44 @@ export function QuestionBankTable({
   };
 
   return (
-    <DataTable
-      table={table}
-      paginationMode="load-more"
-      hasMore={hasMore}
-      isLoading={isLoading}
-      onLoadMore={handleLoadMore}
-    >
-      <DataTableToolbar table={table}>
-        <div className="flex items-center gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="h-8 gap-2"
-            onClick={() => openModal()}
-            aria-label={dictionary?.generate?.actions?.addQuestion || "Add Question"}
-            title={dictionary?.generate?.actions?.addQuestion || "Add Question"}
-          >
-            <Plus className="h-4 w-4" />
-            <span className="hidden sm:inline">{dictionary?.generate?.actions?.addQuestion || "Add Question"}</span>
-          </Button>
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            className="h-8 gap-2"
-            onClick={handleAIGenerate}
-            aria-label={dictionary?.generate?.actions?.generateWithAI || "AI Generate"}
-            title={dictionary?.generate?.actions?.generateWithAI || "AI Generate"}
-          >
-            <Sparkles className="h-4 w-4" />
-            <span className="hidden sm:inline">{dictionary?.generate?.actions?.generateWithAI || "AI Generate"}</span>
-          </Button>
-        </div>
-      </DataTableToolbar>
-      <Modal content={<QuestionBankForm dictionary={dictionary} />} />
-    </DataTable>
+    <div className="w-full overflow-x-auto">
+      <DataTable
+        table={table}
+        paginationMode="load-more"
+        hasMore={hasMore}
+        isLoading={isLoading}
+        onLoadMore={handleLoadMore}
+      >
+        <DataTableToolbar table={table}>
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-8 gap-2"
+              onClick={() => openModal()}
+              aria-label={dictionary?.generate?.actions?.addQuestion || "Add Question"}
+              title={dictionary?.generate?.actions?.addQuestion || "Add Question"}
+            >
+              <Plus className="h-4 w-4" />
+              <span className="hidden sm:inline">{dictionary?.generate?.actions?.addQuestion || "Add Question"}</span>
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              className="h-8 gap-2"
+              onClick={handleAIGenerate}
+              aria-label={dictionary?.generate?.actions?.generateWithAI || "AI Generate"}
+              title={dictionary?.generate?.actions?.generateWithAI || "AI Generate"}
+            >
+              <Sparkles className="h-4 w-4" />
+              <span className="hidden sm:inline">{dictionary?.generate?.actions?.generateWithAI || "AI Generate"}</span>
+            </Button>
+          </div>
+        </DataTableToolbar>
+        <Modal content={<QuestionBankForm dictionary={dictionary} />} />
+      </DataTable>
+    </div>
   );
 }

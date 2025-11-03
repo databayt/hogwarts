@@ -295,8 +295,28 @@ export default function Content() {
 #### Key Rules for Overflow Prevention:
 1. **Never use `Shell` or `container` classes in content files**
 2. **Use single `<div className="space-y-6">` wrapper** - it properly contains content
-3. **Let tables handle their own overflow** - DataTable has built-in `overflow-auto`
-4. **Test with wide content** - verify no horizontal scrollbar appears
+3. **Wrap wide tables with horizontal scroll** - Use `<div className="w-full overflow-x-auto">` around tables with many columns
+4. **Test with wide content** - verify no horizontal scrollbar on page, only on table area
+
+#### Wide Table Pattern (✅ CORRECT)
+```typescript
+// table.tsx - for tables with many columns
+export function WideTable({ data }: Props) {
+  return (
+    <div className="w-full overflow-x-auto">
+      <DataTable table={table}>
+        {/* Table content */}
+      </DataTable>
+    </div>
+  )
+}
+```
+
+**Why this works:**
+- `w-full` ensures the wrapper takes full available width
+- `overflow-x-auto` creates horizontal scrollbar only for the table area
+- Page body remains scrollbar-free
+- Mobile-friendly - table scrolls within its container
 
 ## Benefits
 
