@@ -784,7 +784,7 @@ export async function getTenantSettings(tenantId: string) {
 ```typescript
 // Configure optimal connection pooling
 // lib/db.ts
-export const db = new PrismaClient({
+const db = new PrismaClient({
   datasources: {
     db: {
       url: process.env.DATABASE_URL
