@@ -1,19 +1,19 @@
-import { Skeleton } from "@/components/ui/skeleton"
-import { SkeletonPageNavWide } from "@/components/ui/skeleton-page-nav"
+import { SkeletonPageNav } from "@/components/ui/skeleton-page-nav"
 import { SkeletonCard } from "@/components/ui/skeleton-card"
+import { Skeleton } from "@/components/ui/skeleton"
 
-export default function FinanceLoading() {
+export default function Loading() {
   return (
     <div className="space-y-6">
       {/* Page header */}
       <Skeleton className="h-8 w-48" />
 
       {/* Navigation tabs */}
-      <SkeletonPageNavWide tabs={7} />
+      <SkeletonPageNav tabs={6} />
 
-      {/* Finance cards grid - 13 total cards for all finance sub-blocks */}
+      {/* Admin tools grid */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {Array.from({ length: 13 }).map((_, i) => (
+        {Array.from({ length: 12 }).map((_, i) => (
           <SkeletonCard key={i} />
         ))}
       </div>

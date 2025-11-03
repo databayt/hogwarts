@@ -1,17 +1,18 @@
-import { Skeleton } from "@/components/ui/skeleton"
+import { SkeletonPageNav } from "@/components/ui/skeleton-page-nav"
 import { SkeletonFormSection } from "@/components/ui/skeleton-form"
+import { Skeleton } from "@/components/ui/skeleton"
 
-export default function DashboardSettingsLoading() {
+export default function Loading() {
   return (
     <div className="space-y-6">
       {/* Page header */}
-      <div className="space-y-2">
-        <Skeleton className="h-8 w-48" />
-        <Skeleton className="h-4 w-64" />
-      </div>
+      <Skeleton className="h-8 w-48" />
+
+      {/* Navigation tabs */}
+      <SkeletonPageNav tabs={5} />
 
       {/* Settings sections */}
-      <div className="divide-y divide-muted pb-10">
+      <div className="space-y-8">
         <SkeletonFormSection fields={3} />
         <SkeletonFormSection fields={4} />
         <SkeletonFormSection fields={2} />
