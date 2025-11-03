@@ -5,7 +5,7 @@
  * for AI-powered question generation.
  */
 
-import * as pdf from 'pdf-parse'
+import { PDFParse } from 'pdf-parse'
 import { RecursiveCharacterTextSplitter } from '@langchain/textsplitters'
 
 export interface PDFParseResult {
@@ -37,21 +37,27 @@ export async function parsePDF(
   buffer: Buffer
 ): Promise<PDFParseResult> {
   try {
-    const data = await pdf(buffer)
+    // Use new pdf-parse v2.x API
+    const parser = new PDFParse({ data: buffer })
+    const textResult = await parser.getText()
+    const infoResult = await parser.getInfo()
+    await parser.destroy()
 
     return {
-      text: data.text,
-      pages: data.numpages,
+      text: textResult.text,
+      pages: textResult.pages.length,
       metadata: {
-        title: data.info?.Title,
-        author: data.info?.Author,
-        subject: data.info?.Subject,
-        creator: data.info?.Creator,
-        producer: data.info?.Producer,
-        creationDate: data.info?.CreationDate
-          ? new Date(data.info.CreationDate)
+        title: infoResult.info?.title,
+        author: infoResult.info?.author,
+        subject: infoResult.info?.subject,
+        creator: infoResult.info?.creator,
+        producer: infoResult.info?.producer,
+        creationDate: infoResult.info?.creationDate
+          ? new Date(infoResult.info.creationDate)
           : undefined,
-        modDate: data.info?.ModDate ? new Date(data.info.ModDate) : undefined,
+        modDate: infoResult.info?.modDate
+          ? new Date(infoResult.info.modDate)
+          : undefined,
       },
     }
   } catch (error) {

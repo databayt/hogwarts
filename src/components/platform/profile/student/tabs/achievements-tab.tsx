@@ -10,12 +10,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Progress } from '@/components/ui/progress'
 import {
   Award,
   Trophy,
   Medal,
   Star,
-  Certificate,
   Target,
   Zap,
   Shield,
@@ -26,7 +26,8 @@ import {
   Calendar,
   ExternalLink,
   CheckCircle,
-  TrendingUp
+  TrendingUp,
+  Users
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
@@ -130,7 +131,7 @@ const mockAchievements: Achievement[] = [
     date: new Date('2023-06-15'),
     issuer: 'Coursera',
     description: 'Completed Python for Data Science professional certificate',
-    icon: <Certificate className="h-4 w-4" />,
+    icon: <Award className="h-4 w-4" />,
     color: 'bg-blue-500',
     verified: true,
     certificateUrl: '#',
@@ -463,7 +464,7 @@ export function AchievementsTab({
             <CardContent className="space-y-3">
               {skillsAndInterests.certifications.map((cert, index) => (
                 <div key={index} className="flex items-start gap-3 p-3 border rounded-lg">
-                  <Certificate className="h-5 w-5 text-blue-500 mt-0.5" />
+                  <Award className="h-5 w-5 text-blue-500 mt-0.5" />
                   <div className="flex-1">
                     <div className="flex items-start justify-between">
                       <div>

@@ -50,7 +50,7 @@ src/components/file-upload/
 ### 1. Simple File Upload Button
 
 ```tsx
-import { FileUploadButton } from '@/components/file-uploader/file-uploader/file-upload-button';
+import { FileUploadButton } from '@/components/file-upload/file-upload/file-upload-button';
 
 function MyComponent() {
   const handleUpload = (metadata) => {
@@ -71,8 +71,8 @@ function MyComponent() {
 
 ```tsx
 import { useState } from 'react';
-import { FileUploader } from '@/components/file-uploader/file-uploader/file-uploader';
-import { getAcceptPattern } from '@/components/file-uploader/config/file-types';
+import { FileUploader } from '@/components/file-upload/file-upload/file-upload';
+import { getAcceptPattern } from '@/components/file-upload/config/file-types';
 
 function MyComponent() {
   const [files, setFiles] = useState<File[]>([]);
@@ -100,8 +100,8 @@ function MyComponent() {
 
 ```tsx
 import { useState } from 'react';
-import { DocumentManager } from '@/components/file-uploader/file-uploader/document-manager';
-import type { DocumentRequirement, ManagedDocument } from '@/components/file-uploader/types';
+import { DocumentManager } from '@/components/file-upload/file-upload/document-manager';
+import type { DocumentRequirement, ManagedDocument } from '@/components/file-upload/types';
 
 function StudentRegistration() {
   const [documents, setDocuments] = useState<ManagedDocument[]>([]);
@@ -137,7 +137,7 @@ function StudentRegistration() {
 ### 4. File Browser
 
 ```tsx
-import { FileBrowser } from '@/components/file-uploader/file-uploader/file-browser';
+import { FileBrowser } from '@/components/file-upload/file-upload/file-browser';
 
 function MediaLibrary() {
   const handleSelect = (files) => {
@@ -161,7 +161,7 @@ function MediaLibrary() {
 ### 5. Using the Upload Hook
 
 ```tsx
-import { useFileUpload } from '@/components/file-uploader/hooks/use-file-upload';
+import { useFileUpload } from '@/components/file-upload/hooks/use-file-upload';
 
 function MyComponent() {
   const { upload, isUploading, progress, error } = useFileUpload({
@@ -242,7 +242,7 @@ Default limits by file type:
 All uploads use server actions instead of API routes:
 
 ```typescript
-import { uploadFileAction, deleteFileAction, listFilesAction } from '@/components/file-uploader/actions';
+import { uploadFileAction, deleteFileAction, listFilesAction } from '@/components/file-upload/actions';
 
 // Upload file
 const formData = new FormData();
@@ -274,7 +274,7 @@ The system includes comprehensive validation:
 ### Size Validation
 
 ```typescript
-import { validateFile } from '@/components/file-uploader/lib/validation';
+import { validateFile } from '@/components/file-upload/lib/validation';
 
 const result = validateFile(file, {
   maxSize: 10 * 1024 * 1024, // 10MB
@@ -289,7 +289,7 @@ if (!result.valid) {
 ### Image Dimension Validation
 
 ```typescript
-import { validateImageDimensions } from '@/components/file-uploader/lib/validation';
+import { validateImageDimensions } from '@/components/file-upload/lib/validation';
 
 const result = await validateImageDimensions(file, {
   dimensions: {
@@ -305,7 +305,7 @@ const result = await validateImageDimensions(file, {
 ### Security Validation
 
 ```typescript
-import { validateSecurity } from '@/components/file-uploader/lib/validation';
+import { validateSecurity } from '@/components/file-upload/lib/validation';
 
 // Blocks executable files and dangerous types
 const result = validateSecurity(file);
@@ -321,7 +321,7 @@ import {
   formatDuration,
   sanitizeFilename,
   generateUniqueFilename,
-} from '@/components/file-uploader/lib/formatters';
+} from '@/components/file-upload/lib/formatters';
 
 formatBytes(1536000); // "1.46 MB"
 formatDuration(125); // "2:05"
@@ -332,7 +332,7 @@ generateUniqueFilename('document.pdf', 'school_123'); // "school_123_document_12
 ### File Type Detection
 
 ```typescript
-import { detectCategory, getFileTypeLabel } from '@/components/file-uploader/config/file-types';
+import { detectCategory, getFileTypeLabel } from '@/components/file-upload/config/file-types';
 
 detectCategory('image/jpeg'); // "image"
 getFileTypeLabel('application/pdf'); // "PDF Document"
@@ -352,7 +352,7 @@ getFileTypeLabel('application/pdf'); // "PDF Document"
 
 Old code:
 ```tsx
-import { FileUploader } from '@/components/operator/file-uploader';
+import { FileUploader } from '@/components/operator/file-upload';
 
 <FileUploader
   value={files}
@@ -364,7 +364,7 @@ import { FileUploader } from '@/components/operator/file-uploader';
 
 New code:
 ```tsx
-import { FileUploader } from '@/components/file-uploader/file-uploader/file-uploader';
+import { FileUploader } from '@/components/file-upload/file-upload/file-upload';
 
 <FileUploader
   value={files}
@@ -376,7 +376,7 @@ import { FileUploader } from '@/components/file-uploader/file-uploader/file-uplo
 
 Or use the simpler button variant:
 ```tsx
-import { FileUploadButton } from '@/components/file-uploader/file-uploader/file-upload-button';
+import { FileUploadButton } from '@/components/file-upload/file-upload/file-upload-button';
 
 <FileUploadButton
   accept="image"

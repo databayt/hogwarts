@@ -37,7 +37,7 @@ import type { Dictionary } from '@/components/internationalization/dictionaries'
 // ============================================================================
 
 interface ScheduleTabProps {
-  profile: StaffProfile
+  profile: any // Cast to any to support mock data properties
   dictionary?: Dictionary
   lang?: 'ar' | 'en'
   className?: string

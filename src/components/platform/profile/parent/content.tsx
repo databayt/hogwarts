@@ -366,7 +366,7 @@ export function ParentProfileContent({
             <TabsContent value="overview" className="space-y-6">
               {/* GitHub-style contribution graph */}
               <ContributionGraph
-                data={profile.contributionData || []}
+                data={(profile.contributionData || []) as any}
                 dictionary={dictionary}
                 lang={lang}
                 onDayClick={(date) => console.log('Day clicked:', date)}

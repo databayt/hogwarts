@@ -65,9 +65,9 @@ export function OverviewTab({
   const { children, engagementMetrics, financialSummary, parentingInfo } = profile
 
   // Calculate overall statistics
-  const averageGPA = children?.reduce((sum, child) => sum + (child.currentGPA || 0), 0) / (children?.length || 1) || 0
-  const averageAttendance = children?.reduce((sum, child) => sum + (child.attendanceRate || 0), 0) / (children?.length || 1) || 0
-  const totalUpcomingAssignments = children?.reduce((sum, child) => sum + (child.upcomingAssignments || 0), 0) || 0
+  const averageGPA = (children?.reduce((sum, child) => sum + (child.currentGPA || 0), 0) ?? 0) / (children?.length || 1)
+  const averageAttendance = (children?.reduce((sum, child) => sum + (child.attendanceRate || 0), 0) ?? 0) / (children?.length || 1)
+  const totalUpcomingAssignments = children?.reduce((sum, child) => sum + (child.upcomingAssignments || 0), 0) ?? 0
   const hasOutstandingFees = (financialSummary?.pendingAmount || 0) > 0
 
   // Key statistics

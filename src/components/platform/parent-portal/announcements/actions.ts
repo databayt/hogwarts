@@ -62,7 +62,7 @@ export async function getParentAnnouncements() {
           {
             AND: [
               { scope: 'role' },
-              { role: 'PARENT' }
+              { role: 'PARENT' as any }
             ]
           },
           // Class-specific announcements for their children

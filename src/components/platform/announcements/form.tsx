@@ -45,12 +45,12 @@ export function AnnouncementCreateForm({ dictionary, lang }: AnnouncementCreateF
     const load = async () => {
       if (!currentId) return;
       const res = await getAnnouncement({ id: currentId });
-      const a = res.announcement as any;
-      if (!a) return;
+      if (!res.success || !res.data) return;
+      const a = res.data;
       form.reset({
         title: a.title ?? "",
         body: a.body ?? "",
-        scope: a.scope ?? "school",
+        scope: (a.scope as 'school' | 'class' | 'role') ?? "school",
         classId: a.classId ?? "",
         role: a.role ?? "",
         published: a.published ?? false,

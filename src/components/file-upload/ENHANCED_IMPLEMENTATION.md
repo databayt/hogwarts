@@ -69,7 +69,7 @@ Complete schema with:
 
 ```tsx
 // app/[lang]/s/[subdomain]/files/upload/page.tsx
-import { EnhancedFileUploader } from '@/components/file-uploader/enhanced/enhanced-file-uploader';
+import { EnhancedFileUploader } from '@/components/file-upload/enhanced/enhanced-file-upload';
 import { auth } from '@/auth';
 
 export default async function FileUploadPage() {
@@ -184,7 +184,7 @@ import {
   listFiles,
   deleteFile,
   getStorageAnalytics
-} from '@/components/file-uploader/enhanced/actions';
+} from '@/components/file-upload/enhanced/actions';
 
 // Upload a file
 const formData = new FormData();
@@ -335,8 +335,8 @@ const analytics = await getStorageAnalytics();
 
 ```tsx
 // components/dashboard/storage-widget.tsx
-import { getStorageAnalytics } from '@/components/file-uploader/enhanced/actions';
-import { StorageQuota } from '@/components/file-uploader/file-uploader/storage-quota';
+import { getStorageAnalytics } from '@/components/file-upload/enhanced/actions';
+import { StorageQuota } from '@/components/file-upload/file-upload/storage-quota';
 
 export async function StorageWidget({ schoolId }: { schoolId: string }) {
   const analytics = await getStorageAnalytics();
@@ -360,7 +360,7 @@ export async function StorageWidget({ schoolId }: { schoolId: string }) {
 // __tests__/file-upload.test.tsx
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { EnhancedFileUploader } from '@/components/file-uploader/enhanced/enhanced-file-uploader';
+import { EnhancedFileUploader } from '@/components/file-upload/enhanced/enhanced-file-upload';
 
 describe('EnhancedFileUploader', () => {
   it('should handle file upload', async () => {
@@ -447,10 +447,10 @@ pnpm prisma migrate dev
 3. **Update imports**:
 ```typescript
 // Old
-import { FileUploader } from '@/components/operator/file-uploader';
+import { FileUploader } from '@/components/operator/file-upload';
 
 // New
-import { EnhancedFileUploader } from '@/components/file-uploader/enhanced/enhanced-file-uploader';
+import { EnhancedFileUploader } from '@/components/file-upload/enhanced/enhanced-file-upload';
 ```
 
 4. **Update component usage** (see examples above)

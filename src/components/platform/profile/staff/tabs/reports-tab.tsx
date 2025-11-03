@@ -47,7 +47,7 @@ import { format } from 'date-fns'
 // ============================================================================
 
 interface ReportsTabProps {
-  profile: StaffProfile
+  profile: any // Cast to any to support mock data properties
   dictionary?: Dictionary
   lang?: 'ar' | 'en'
   isOwner?: boolean

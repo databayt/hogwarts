@@ -15,7 +15,7 @@ import {
   assertAnnouncementPermission,
   validateAnnouncementScope
 } from "@/components/platform/announcements/authorization";
-import type { Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 
 // ============================================================================
 // Types
@@ -111,7 +111,7 @@ export async function createAnnouncement(
         body: parsed.body,
         scope: parsed.scope,
         classId: parsed.classId || null,
-        role: parsed.role || null,
+        role: (parsed.role as any) || null,
         published: parsed.published,
         priority: parsed.priority || "normal",
         scheduledFor: parsed.scheduledFor ? new Date(parsed.scheduledFor) : null,
@@ -139,7 +139,7 @@ export async function createAnnouncement(
     if (error instanceof z.ZodError) {
       return {
         success: false,
-        error: `Validation error: ${error.errors.map(e => e.message).join(", ")}`
+        error: `Validation error: ${error.issues.map(e => e.message).join(", ")}`
       };
     }
 
@@ -202,11 +202,14 @@ export async function updateAnnouncement(
     }
 
     // Build update data object
-    const data: Prisma.AnnouncementUpdateInput = {};
+    const data: any = {};
     if (typeof rest.title !== "undefined") data.title = rest.title;
     if (typeof rest.body !== "undefined") data.body = rest.body;
     if (typeof rest.scope !== "undefined") data.scope = rest.scope;
-    if (typeof rest.classId !== "undefined") data.classId = rest.classId || null;
+    if (typeof rest.classId !== "undefined") {
+      // Use Prisma relation API instead of foreign key
+      data.class = rest.classId ? { connect: { id: rest.classId } } : { disconnect: true };
+    }
     if (typeof rest.role !== "undefined") data.role = rest.role || null;
     if (typeof rest.published !== "undefined") {
       data.published = rest.published;
@@ -245,7 +248,7 @@ export async function updateAnnouncement(
     if (error instanceof z.ZodError) {
       return {
         success: false,
-        error: `Validation error: ${error.errors.map(e => e.message).join(", ")}`
+        error: `Validation error: ${error.issues.map(e => e.message).join(", ")}`
       };
     }
 
@@ -323,7 +326,7 @@ export async function deleteAnnouncement(
     if (error instanceof z.ZodError) {
       return {
         success: false,
-        error: `Validation error: ${error.errors.map(e => e.message).join(", ")}`
+        error: `Validation error: ${error.issues.map(e => e.message).join(", ")}`
       };
     }
 
@@ -410,7 +413,7 @@ export async function toggleAnnouncementPublish(
     if (error instanceof z.ZodError) {
       return {
         success: false,
-        error: `Validation error: ${error.errors.map(e => e.message).join(", ")}`
+        error: `Validation error: ${error.issues.map(e => e.message).join(", ")}`
       };
     }
 
@@ -495,7 +498,7 @@ export async function getAnnouncement(
     if (error instanceof z.ZodError) {
       return {
         success: false,
-        error: `Validation error: ${error.errors.map(e => e.message).join(", ")}`
+        error: `Validation error: ${error.issues.map(e => e.message).join(", ")}`
       };
     }
 
@@ -532,10 +535,10 @@ export async function getAnnouncements(
     const sp = getAnnouncementsSchema.parse(input ?? {});
 
     // Build where clause with proper types
-    const where: Prisma.AnnouncementWhereInput = {
+    const where: any = {
       schoolId,
       ...(sp.title && {
-        title: { contains: sp.title, mode: Prisma.QueryMode.insensitive },
+        title: { contains: sp.title, mode: 'insensitive' },
       }),
       ...(sp.scope && { scope: sp.scope }),
       ...(sp.published && { published: sp.published === "true" }),
@@ -592,7 +595,7 @@ export async function getAnnouncements(
     if (error instanceof z.ZodError) {
       return {
         success: false,
-        error: `Validation error: ${error.errors.map(e => e.message).join(", ")}`
+        error: `Validation error: ${error.issues.map(e => e.message).join(", ")}`
       };
     }
 

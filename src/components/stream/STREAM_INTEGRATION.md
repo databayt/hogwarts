@@ -90,7 +90,7 @@ Copy stream-specific shared components:
 
 ```bash
 cp -r components/rich-text-editor <YOUR_PROJECT>/components/
-cp -r components/file-uploader <YOUR_PROJECT>/components/
+cp -r components/file-upload <YOUR_PROJECT>/components/
 cp components/general/EmptyState.tsx <YOUR_PROJECT>/components/general/
 ```
 

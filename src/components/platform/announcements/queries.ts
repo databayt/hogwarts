@@ -4,7 +4,7 @@
  */
 
 import { db } from "@/lib/db";
-import type { Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 
 // ============================================================================
 // Types
@@ -273,7 +273,7 @@ export async function getRoleAnnouncements(
   role: string,
   includeSchoolWide = true
 ) {
-  const where: Prisma.AnnouncementWhereInput = {
+  const where: any = {
     schoolId,
     published: true,
     OR: [

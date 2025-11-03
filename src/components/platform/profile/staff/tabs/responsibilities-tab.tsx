@@ -38,7 +38,7 @@ import type { Dictionary } from '@/components/internationalization/dictionaries'
 // ============================================================================
 
 interface ResponsibilitiesTabProps {
-  profile: StaffProfile
+  profile: any // Cast to any to support mock data properties
   dictionary?: Dictionary
   lang?: 'ar' | 'en'
   className?: string
@@ -321,7 +321,7 @@ export function ResponsibilitiesTab({
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {responsibilities.primary.map((resp, index) => (
+              {responsibilities.primary.map((resp: string, index: number) => (
                 <div key={index} className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
                   <CheckCircle className="h-4 w-4 text-green-500 mt-0.5" />
                   <p className="text-sm flex-1">{resp}</p>
@@ -337,7 +337,7 @@ export function ResponsibilitiesTab({
                 <CardTitle className="text-base">Secondary Responsibilities</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                {responsibilities.secondary.map((resp, index) => (
+                {responsibilities.secondary.map((resp: string, index: number) => (
                   <div key={index} className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
                     <Clock className="h-4 w-4 text-blue-500 mt-0.5" />
                     <p className="text-sm flex-1">{resp}</p>
@@ -356,7 +356,7 @@ export function ResponsibilitiesTab({
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {mockDepartmentGoals.map((goal) => (
+              {mockDepartmentGoals.map((goal: any) => (
                 <div key={goal.id} className="border rounded-lg p-4">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1">
@@ -396,7 +396,7 @@ export function ResponsibilitiesTab({
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {mockCommittees.map((committee) => (
+              {mockCommittees.map((committee: any) => (
                 <div key={committee.id} className="border rounded-lg p-4">
                   <div className="flex items-start justify-between mb-3">
                     <div>
@@ -427,7 +427,7 @@ export function ResponsibilitiesTab({
                   <div>
                     <p className="text-sm font-medium mb-2">Responsibilities</p>
                     <div className="space-y-1">
-                      {committee.responsibilities.map((resp, idx) => (
+                      {committee.responsibilities.map((resp: string, idx: number) => (
                         <div key={idx} className="flex items-start gap-2">
                           <div className="w-1.5 h-1.5 bg-primary rounded-full mt-1.5" />
                           <p className="text-sm text-muted-foreground">{resp}</p>
@@ -455,7 +455,7 @@ export function ResponsibilitiesTab({
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {mockProjects.map((project) => (
+              {mockProjects.map((project: any) => (
                 <div key={project.id} className="border rounded-lg p-4">
                   <div className="flex items-start justify-between mb-3">
                     <div>
@@ -491,7 +491,7 @@ export function ResponsibilitiesTab({
                   <div className="mt-3 pt-3 border-t">
                     <p className="text-xs text-muted-foreground mb-2">Team Members</p>
                     <div className="flex flex-wrap gap-1">
-                      {project.team.map((member, idx) => (
+                      {project.team.map((member: any, idx: number) => (
                         <Badge key={idx} variant="secondary" className="text-xs">
                           {member}
                         </Badge>
@@ -513,7 +513,7 @@ export function ResponsibilitiesTab({
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {mockProcesses.map((process) => (
+              {mockProcesses.map((process: any) => (
                 <div key={process.id} className="border rounded-lg p-4">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-start gap-3">

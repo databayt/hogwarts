@@ -106,7 +106,7 @@ export async function markAnnouncementAsRead(
     if (error instanceof z.ZodError) {
       return {
         success: false,
-        error: `Validation error: ${error.errors.map((e) => e.message).join(", ")}`,
+        error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
       };
     }
 
@@ -192,7 +192,7 @@ export async function markMultipleAnnouncementsAsRead(
     if (error instanceof z.ZodError) {
       return {
         success: false,
-        error: `Validation error: ${error.errors.map((e) => e.message).join(", ")}`,
+        error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
       };
     }
 

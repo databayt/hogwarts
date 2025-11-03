@@ -115,7 +115,7 @@ export function ChildrenTab({
   isOwner = false,
   className
 }: ChildrenTabProps) {
-  const [selectedChild, setSelectedChild] = useState(profile.children || [][0]?.id)
+  const [selectedChild, setSelectedChild] = useState((profile.children || [])[0]?.id)
   const { children, parentingInfo } = profile
 
   const getActivityIcon = (type: ChildActivity['type']) => {
@@ -163,7 +163,7 @@ export function ChildrenTab({
 
         const performance = mockPerformance[child.id] || []
         const activities = mockActivities[child.id] || []
-        const medicalInfo = parentingInfo?.medicalInfo[`${child.givenName || "N/A"} ${child.surname || ""}`]
+        const medicalInfo = parentingInfo?.medicalInfo?.[`${child.givenName || "N/A"} ${child.surname || ""}`]
 
         return (
           <div key={child.id} className="space-y-6">
@@ -186,7 +186,7 @@ export function ChildrenTab({
                           <Badge variant="secondary">{child.enrollmentStatus}</Badge>
                           <Badge variant="outline">{child.academicStatus}</Badge>
                           <span className="text-sm text-muted-foreground">
-                            Age: {new Date().getFullYear() - child.birthDate || new Date().getFullYear()}
+                            Age: {child.birthDate ? new Date().getFullYear() - new Date(child.birthDate).getFullYear() : 'N/A'}
                           </span>
                         </div>
                       </div>

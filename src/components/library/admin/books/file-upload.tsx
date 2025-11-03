@@ -1,6 +1,6 @@
 "use client";
 
-import { Uploader } from "@/components/file-uploader/Uploader";
+import { Uploader } from "@/components/file-upload/Uploader";
 
 interface Props {
   value: string;

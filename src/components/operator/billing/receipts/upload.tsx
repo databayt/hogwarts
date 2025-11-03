@@ -1,14 +1,14 @@
 "use client";
 
 import * as React from "react";
-import { FileUploader } from "@/components/file-uploader/file-uploader/file-uploader";
+import { FileUploader } from "@/components/file-upload/file-uploader/file-uploader";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { uploadReceipt } from "@/components/operator/billing/receipts/actions";
 import { SuccessToast, ErrorToast } from "@/components/atom/toast";
-import { uploadFileAction } from "@/components/file-uploader/actions";
+import { uploadFileAction } from "@/components/file-upload/actions";
 import type { Locale } from "@/components/internationalization/config";
 import type { getDictionary } from "@/components/internationalization/dictionaries";
 import { useSession } from "next-auth/react";

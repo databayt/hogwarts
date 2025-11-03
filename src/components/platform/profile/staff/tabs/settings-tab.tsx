@@ -48,7 +48,8 @@ import {
   Settings2,
   UserCog,
   BellRing,
-  ShieldCheck
+  ShieldCheck,
+  Calendar
 } from 'lucide-react'
 
 // ============================================================================
@@ -56,7 +57,7 @@ import {
 // ============================================================================
 
 interface SettingsTabProps {
-  profile: StaffProfile
+  profile: any // Cast to any to support mock data properties (settings, staffInfo)
   dictionary?: Dictionary
   lang?: 'ar' | 'en'
   isOwner?: boolean
@@ -825,6 +826,3 @@ export function SettingsTab({
     </div>
   )
 }
-
-// Add missing import for Calendar
-import { Calendar } from 'lucide-react'

@@ -5,9 +5,9 @@ import { Upload, X, File, Video, Image as ImageIcon, Loader2 } from "lucide-reac
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
-import { uploadFileAction } from "@/components/file-uploader/actions";
+import { uploadFileAction } from "@/components/file-upload/actions";
 import { useSession } from "next-auth/react";
-import { FILE_SIZE_LIMITS } from "@/components/file-uploader/config/storage-config";
+import { FILE_SIZE_LIMITS } from "@/components/file-upload/config/storage-config";
 
 interface FileUploadProps {
   value?: string;

@@ -21,7 +21,7 @@ import { useFieldArray } from "react-hook-form";
 import { useState } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { uploadFileAction } from "@/components/file-uploader/actions";
+import { uploadFileAction } from "@/components/file-upload/actions";
 import { useSession } from "next-auth/react";
 
 interface DocumentUploadStepProps {

@@ -1,7 +1,7 @@
 /**
  * Uploader Component
  * Simplified wrapper around centralized FileUploadButton
- * @deprecated Use FileUploadButton from @/components/file-uploader/file-uploader instead
+ * @deprecated Use FileUploadButton from @/components/file-upload/file-upload instead
  */
 
 "use client";
@@ -18,7 +18,7 @@ interface UploaderProps {
 /**
  * @deprecated This component is deprecated. Use FileUploadButton directly:
  * ```tsx
- * import { FileUploadButton } from '@/components/file-uploader/file-uploader/file-upload-button';
+ * import { FileUploadButton } from '@/components/file-upload/file-upload/file-upload-button';
  *
  * <FileUploadButton
  *   accept="image"

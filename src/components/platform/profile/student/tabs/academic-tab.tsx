@@ -217,7 +217,7 @@ export function AcademicTab({
       case 'pending':
         return 'outline'
       case 'late':
-        return 'warning'
+        return 'destructive'
       case 'missing':
       case 'dropped':
         return 'destructive'

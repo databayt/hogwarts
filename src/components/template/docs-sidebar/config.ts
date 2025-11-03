@@ -94,7 +94,7 @@ export const docsConfig: DocsConfig = {
     {
       title: "Components",
       items: [
-        { title: "File Uploader", href: "/docs/file-uploader", items: [] },
+        { title: "File Uploader", href: "/docs/file-upload", items: [] },
         { title: "Tables", href: "/docs/tables", items: [] },
         { title: "Typography", href: "/docs/typography", items: [] },
       ],

@@ -47,8 +47,8 @@ export function AnnouncementsTable({
       const nextPage = currentPage + 1;
       const result = await getAnnouncements({ page: nextPage, perPage });
 
-      if (result.rows.length > 0) {
-        setData(prev => [...prev, ...result.rows]);
+      if (result.success && result.data.rows.length > 0) {
+        setData(prev => [...prev, ...result.data.rows as any]);
         setCurrentPage(nextPage);
       }
     } catch (error) {

@@ -190,7 +190,6 @@ export function StackedStatCard({
                       value={stat.trend.value}
                       direction={stat.trend.direction}
                       showIcon
-                      size="sm"
                     />
                   )}
                 </div>

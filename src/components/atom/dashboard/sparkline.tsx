@@ -16,7 +16,7 @@ interface SparklineProps extends BaseComponentProps {
    * Visual variant
    * @default "primary"
    */
-  variant?: "default" | "primary" | "success" | "warning" | "danger"
+  variant?: "default" | "primary" | "success" | "warning" | "danger" | "muted"
   /**
    * Height of the sparkline in pixels
    * @default 32
@@ -30,6 +30,7 @@ const variantStyles = {
   success: "stroke-chart-2 fill-chart-2/10",
   warning: "stroke-chart-3 fill-chart-3/10",
   danger: "stroke-destructive fill-destructive/10",
+  muted: "stroke-muted-foreground fill-muted-foreground/10",
 }
 
 /**

@@ -45,7 +45,7 @@ import type { Dictionary } from '@/components/internationalization/dictionaries'
 // ============================================================================
 
 interface TasksTabProps {
-  profile: StaffProfile
+  profile: any // Cast to any to support mock data properties
   dictionary?: Dictionary
   lang?: 'ar' | 'en'
   isOwner?: boolean
@@ -411,7 +411,7 @@ export function TasksTab({
 
         <TabsContent value="kanban" className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            {(['todo', 'in-progress', 'review', 'completed'] as TaskStatus[]).map((status) => (
+            {(['todo', 'in-progress', 'review', 'completed'] as const).map((status) => (
               <Card key={status} className="h-fit">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-sm flex items-center justify-between">

@@ -38,7 +38,7 @@ import type { Dictionary } from '@/components/internationalization/dictionaries'
 // ============================================================================
 
 interface OverviewTabProps {
-  profile: StaffProfile
+  profile: any // Cast to any to support mock data properties (staffInfo, workMetrics, responsibilities, schedule)
   dictionary?: Dictionary
   lang?: 'ar' | 'en'
   className?: string
@@ -240,7 +240,7 @@ export function OverviewTab({
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {responsibilities.primary.map((resp, index) => (
+            {responsibilities.primary.map((resp: string, index: number) => (
               <div key={index} className="flex items-start gap-2">
                 <div className="w-2 h-2 bg-primary rounded-full mt-1.5" />
                 <p className="text-sm">{resp}</p>
@@ -251,7 +251,7 @@ export function OverviewTab({
             <div className="mt-4">
               <p className="text-sm font-medium mb-2">Committee Memberships</p>
               <div className="flex flex-wrap gap-2">
-                {responsibilities.committees.map((committee, index) => (
+                {responsibilities.committees.map((committee: string, index: number) => (
                   <Badge key={index} variant="secondary">
                     {committee}
                   </Badge>
@@ -341,7 +341,7 @@ export function OverviewTab({
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-2">
-              {staffInfo.skills.map((skill, index) => (
+              {staffInfo.skills.map((skill: string, index: number) => (
                 <Badge key={index} variant="secondary">
                   {skill}
                 </Badge>
@@ -359,7 +359,7 @@ export function OverviewTab({
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {staffInfo.certifications?.map((cert, index) => (
+            {staffInfo.certifications?.map((cert: any, index: number) => (
               <div key={index} className="p-3 rounded-lg bg-muted/50">
                 <p className="font-medium text-sm">{cert.name}</p>
                 <p className="text-xs text-muted-foreground">{cert.issuer}</p>
@@ -406,7 +406,7 @@ export function OverviewTab({
             <p className="text-sm text-muted-foreground mb-2">Working Days</p>
             <div className="flex gap-2">
               {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, index) => {
-                const isWorkingDay = schedule.workingDays.some(wd =>
+                const isWorkingDay = schedule.workingDays.some((wd: string) =>
                   wd.toLowerCase().startsWith(day.toLowerCase())
                 )
                 return (

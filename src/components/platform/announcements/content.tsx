@@ -25,10 +25,10 @@ const getCachedAnnouncementsList = unstable_cache(
   async (schoolId: string, params: any) => {
     return getAnnouncementsList(schoolId, params);
   },
-  ['announcements-list'],
+  ['announcements-list'], // schoolId will be part of cache key via params
   {
     revalidate: 60, // Cache for 60 seconds
-    tags: (schoolId: string) => [`announcements-${schoolId}`],
+    tags: ['announcements'], // Static tag for cache invalidation
   }
 );
 

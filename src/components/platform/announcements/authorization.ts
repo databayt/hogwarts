@@ -70,14 +70,14 @@ export function checkAnnouncementPermission(
     }
   }
 
-  // ACCOUNTANT and STAFF can read but not modify
+  // ACCOUNTANT and STAFF can read (handled above) but not modify
   if (role === 'ACCOUNTANT' || role === 'STAFF') {
-    return action === 'read'
+    return false // Read already handled, deny all other actions
   }
 
-  // STUDENT, GUARDIAN, and USER roles are read-only
+  // STUDENT, GUARDIAN, and USER roles are read-only (handled above)
   if (role === 'STUDENT' || role === 'GUARDIAN' || role === 'USER') {
-    return action === 'read'
+    return false // Read already handled, deny all other actions
   }
 
   // Default: deny access

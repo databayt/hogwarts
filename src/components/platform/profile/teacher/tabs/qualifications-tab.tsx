@@ -357,17 +357,17 @@ export function QualificationsTab({
               <div key={qual.id} className="border rounded-lg p-4 hover:bg-muted/50 transition-colors">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <h4 className="font-semibold">{qual.degree}</h4>
+                    <h4 className="font-semibold">{qual.qualificationType}</h4>
                     <p className="text-sm text-muted-foreground">{qual.institution}</p>
                     <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
                       <span className="flex items-center gap-1">
                         <Calendar className="h-3 w-3" />
-                        {qual.yearOfCompletion}
+                        {qual.dateObtained ? new Date(qual.dateObtained).getFullYear() : 'N/A'}
                       </span>
-                      {qual.specialization && (
+                      {qual.major && (
                         <span className="flex items-center gap-1">
                           <BookOpen className="h-3 w-3" />
-                          {qual.specialization}
+                          {qual.major}
                         </span>
                       )}
                     </div>
@@ -399,7 +399,7 @@ export function QualificationsTab({
                 <div className="flex items-start justify-between">
                   <div>
                     <h4 className="font-semibold">{exp.position}</h4>
-                    <p className="text-sm text-muted-foreground">{exp.organizationName}</p>
+                    <p className="text-sm text-muted-foreground">{exp.institution}</p>
                     <div className="flex items-center gap-2 mt-2">
                       <Badge variant="secondary" className="text-xs">
                         {format(exp.startDate, 'MMM yyyy')} - {exp.endDate ? format(exp.endDate, 'MMM yyyy') : 'Present'}
@@ -411,8 +411,8 @@ export function QualificationsTab({
                         }
                       </span>
                     </div>
-                    {exp.responsibilities && (
-                      <p className="text-sm mt-2 text-muted-foreground">{exp.responsibilities}</p>
+                    {exp.description && (
+                      <p className="text-sm mt-2 text-muted-foreground">{exp.description}</p>
                     )}
                   </div>
                 </div>

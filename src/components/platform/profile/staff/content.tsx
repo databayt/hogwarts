@@ -56,7 +56,7 @@ interface TabConfig {
 // Mock Data (temporary until API is ready)
 // ============================================================================
 
-const generateMockStaffProfile = (): StaffProfile => ({
+const generateMockStaffProfile = (): any => ({
   id: 'staff-1',
   type: UserProfileType.STAFF,
   userId: 'user-4',
@@ -172,7 +172,7 @@ const generateMockStaffProfile = (): StaffProfile => ({
         date: new Date('2020-03-10')
       }
     ]
-  },
+  } as any,
 
   responsibilities: {
     primary: [
@@ -199,7 +199,7 @@ const generateMockStaffProfile = (): StaffProfile => ({
     reportsGenerated: 48,
     documentsProcessed: 567,
     meetingsAttended: 89
-  },
+  } as any,
 
   schedule: {
     workingHours: '8:30 AM - 5:00 PM',
@@ -208,7 +208,7 @@ const generateMockStaffProfile = (): StaffProfile => ({
     currentAvailability: 'available',
     upcomingLeave: [],
     officeLocation: 'Admin Building, Room 204'
-  },
+  } as any,
 
   contributionData: {
     totalContributions: 345,
