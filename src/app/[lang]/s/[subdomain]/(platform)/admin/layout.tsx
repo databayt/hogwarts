@@ -33,7 +33,7 @@ export default async function AdminLayout({ children, params }: Props) {
     { name: d?.navigation?.integration || 'Integration', href: `/${lang}/admin/integration`, hidden: true },
     { name: d?.navigation?.communication || 'Communication', href: `/${lang}/admin/communication`, hidden: true },
     { name: d?.navigation?.subscription || 'Subscription', href: `/${lang}/admin/subscription`, hidden: true },
-    { name: d?.navigation?.billing || 'Billing', href: `/${lang}/admin/billing` },
+    { name: 'Billing', href: `/${lang}/admin/billing` },
   ]
 
   return (
