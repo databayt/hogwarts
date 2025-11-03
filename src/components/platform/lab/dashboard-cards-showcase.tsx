@@ -112,8 +112,17 @@ export function DashboardCardsShowcase() {
 
           <ChartCard
             title="Revenue Growth"
-            data={[30, 40, 35, 50, 49, 60, 70, 91, 85, 95, 100, 110]}
-            variant="primary"
+            chart={
+              <div className="h-48 flex items-end gap-1">
+                {[30, 40, 35, 50, 49, 60, 70, 91, 85, 95, 100, 110].map((value, i) => (
+                  <div
+                    key={i}
+                    className="flex-1 bg-primary/20 rounded-t transition-all hover:bg-primary/40"
+                    style={{ height: `${value}%` }}
+                  />
+                ))}
+              </div>
+            }
           />
         </DashboardGrid>
       </DashboardSection>
