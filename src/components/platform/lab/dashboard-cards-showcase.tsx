@@ -28,6 +28,7 @@ import {
   Phone,
   Settings,
 } from "lucide-react"
+import { Button } from "@/components/ui/button"
 
 import {
   // Enhanced Cards (5)
@@ -142,8 +143,11 @@ export function DashboardCardsShowcase() {
             title="Create New Course"
             description="Start building your next amazing course"
             icon={<BookOpen className="size-5" />}
-            buttonText="Get Started"
-            onClick={() => console.log("Create course clicked")}
+            action={
+              <Button onClick={() => console.log("Create course clicked")}>
+                Get Started
+              </Button>
+            }
           />
 
           <ComparisonCard
@@ -462,8 +466,11 @@ export function DashboardCardsShowcase() {
             title="Action Required"
             description="Click the button to perform an action"
             icon={<AlertCircle className="size-5" />}
-            buttonText="Take Action"
-            onClick={() => alert("Action button clicked!")}
+            action={
+              <Button onClick={() => alert("Action button clicked!")}>
+                Take Action
+              </Button>
+            }
             variant="warning"
           />
         </DashboardGrid>
