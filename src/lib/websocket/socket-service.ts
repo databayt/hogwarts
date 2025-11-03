@@ -20,6 +20,27 @@ export interface SocketEvents {
   'device:connected': (data: { deviceId: string; type: string }) => void;
   'device:disconnected': (data: { deviceId: string }) => void;
 
+  // Notification events
+  'notification:new': (data: { id: string; type: string; title: string; body: string; priority: string; actorId?: string }) => void;
+  'notification:read': (data: { notificationId: string }) => void;
+  'notification:deleted': (data: { notificationId: string }) => void;
+  'notification:count': (data: { unread: number }) => void;
+
+  // Messaging events (NEW)
+  'message:new': (data: { id: string; conversationId: string; senderId: string; content: string; contentType: string; createdAt: string }) => void;
+  'message:updated': (data: { messageId: string; content: string; editedAt: string }) => void;
+  'message:deleted': (data: { messageId: string; deletedAt: string }) => void;
+  'message:read': (data: { messageId: string; userId: string; readAt: string }) => void;
+  'message:reaction': (data: { messageId: string; userId: string; emoji: string }) => void;
+  'conversation:new': (data: { id: string; type: string; title: string | null; participantIds: string[] }) => void;
+  'conversation:updated': (data: { conversationId: string; updates: Record<string, unknown> }) => void;
+  'conversation:archived': (data: { conversationId: string; userId: string }) => void;
+  'conversation:participant_added': (data: { conversationId: string; userId: string; role: string }) => void;
+  'conversation:participant_removed': (data: { conversationId: string; userId: string }) => void;
+  'typing:start': (data: { conversationId: string; userId: string; username: string }) => void;
+  'typing:stop': (data: { conversationId: string; userId: string }) => void;
+  'conversation:invite': (data: { inviteId: string; conversationId: string; inviteeId: string }) => void;
+
   // System events
   'notification': (data: { type: string; message: string }) => void;
   'error': (data: { error: string }) => void;
@@ -239,6 +260,76 @@ class SocketService {
       this.emit('device:disconnected', data);
     });
 
+    // Notification events
+    this.socket.on('notification:new', (data) => {
+      this.emit('notification:new', data);
+    });
+
+    this.socket.on('notification:read', (data) => {
+      this.emit('notification:read', data);
+    });
+
+    this.socket.on('notification:deleted', (data) => {
+      this.emit('notification:deleted', data);
+    });
+
+    this.socket.on('notification:count', (data) => {
+      this.emit('notification:count', data);
+    });
+
+    // Messaging events (NEW)
+    this.socket.on('message:new', (data) => {
+      this.emit('message:new', data);
+    });
+
+    this.socket.on('message:updated', (data) => {
+      this.emit('message:updated', data);
+    });
+
+    this.socket.on('message:deleted', (data) => {
+      this.emit('message:deleted', data);
+    });
+
+    this.socket.on('message:read', (data) => {
+      this.emit('message:read', data);
+    });
+
+    this.socket.on('message:reaction', (data) => {
+      this.emit('message:reaction', data);
+    });
+
+    this.socket.on('conversation:new', (data) => {
+      this.emit('conversation:new', data);
+    });
+
+    this.socket.on('conversation:updated', (data) => {
+      this.emit('conversation:updated', data);
+    });
+
+    this.socket.on('conversation:archived', (data) => {
+      this.emit('conversation:archived', data);
+    });
+
+    this.socket.on('conversation:participant_added', (data) => {
+      this.emit('conversation:participant_added', data);
+    });
+
+    this.socket.on('conversation:participant_removed', (data) => {
+      this.emit('conversation:participant_removed', data);
+    });
+
+    this.socket.on('typing:start', (data) => {
+      this.emit('typing:start', data);
+    });
+
+    this.socket.on('typing:stop', (data) => {
+      this.emit('typing:stop', data);
+    });
+
+    this.socket.on('conversation:invite', (data) => {
+      this.emit('conversation:invite', data);
+    });
+
     // Re-attach custom listeners
     this.listeners.forEach((callbacks, event) => {
       callbacks.forEach(callback => {
@@ -296,6 +387,115 @@ class SocketService {
    */
   sendDeviceScan(data: { method: string; identifier: string; deviceId: string }): void {
     this.send('device:scan', data);
+  }
+
+  /**
+   * Subscribe to user notifications
+   */
+  subscribeToNotifications(userId: string): void {
+    this.joinRoom(`user:${userId}`);
+    this.send('subscribe:notifications', { userId });
+  }
+
+  /**
+   * Unsubscribe from user notifications
+   */
+  unsubscribeFromNotifications(userId: string): void {
+    this.leaveRoom(`user:${userId}`);
+    this.send('unsubscribe:notifications', { userId });
+  }
+
+  /**
+   * Mark notification as read (send to server)
+   */
+  markNotificationRead(notificationId: string): void {
+    this.send('notification:mark_read', { notificationId });
+  }
+
+  /**
+   * Mark all notifications as read (send to server)
+   */
+  markAllNotificationsRead(userId: string): void {
+    this.send('notification:mark_all_read', { userId });
+  }
+
+  /**
+   * Subscribe to conversation messages
+   */
+  subscribeToConversation(conversationId: string): void {
+    this.joinRoom(`conversation:${conversationId}`);
+    this.send('subscribe:conversation', { conversationId });
+  }
+
+  /**
+   * Unsubscribe from conversation messages
+   */
+  unsubscribeFromConversation(conversationId: string): void {
+    this.leaveRoom(`conversation:${conversationId}`);
+    this.send('unsubscribe:conversation', { conversationId });
+  }
+
+  /**
+   * Send typing indicator start
+   */
+  sendTypingStart(conversationId: string): void {
+    this.send('typing:start', { conversationId });
+  }
+
+  /**
+   * Send typing indicator stop
+   */
+  sendTypingStop(conversationId: string): void {
+    this.send('typing:stop', { conversationId });
+  }
+
+  /**
+   * Send message via Socket.IO
+   */
+  sendMessage(data: {
+    conversationId: string;
+    content: string;
+    contentType?: string;
+    replyToId?: string;
+  }): void {
+    this.send('message:send', data);
+  }
+
+  /**
+   * Mark message as read via Socket.IO
+   */
+  markMessageRead(messageId: string): void {
+    this.send('message:mark_read', { messageId });
+  }
+
+  /**
+   * Add reaction to message via Socket.IO
+   */
+  addMessageReaction(messageId: string, emoji: string): void {
+    this.send('message:add_reaction', { messageId, emoji });
+  }
+
+  /**
+   * Remove reaction from message via Socket.IO
+   */
+  removeMessageReaction(reactionId: string): void {
+    this.send('message:remove_reaction', { reactionId });
+  }
+
+  /**
+   * Subscribe to user's conversations
+   */
+  subscribeToConversations(userId: string): void {
+    this.joinRoom(`user_conversations:${userId}`);
+    this.send('subscribe:conversations', { userId });
+  }
+
+  /**
+   * Unsubscribe from user's conversations
+   */
+  unsubscribeFromConversations(userId: string): void {
+    this.leaveRoom(`user_conversations:${userId}`);
+    this.send('unsubscribe:conversations', { userId });
   }
 }
 

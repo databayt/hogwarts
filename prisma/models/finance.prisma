@@ -18,11 +18,11 @@
 // ============================================
 
 enum AccountType {
-  ASSET      // Bank accounts, cash, receivables, inventory
-  LIABILITY  // Payables, loans, deferred revenue
-  EQUITY     // Capital, retained earnings
-  REVENUE    // Income from fees, services
-  EXPENSE    // Operating costs, salaries, utilities
+  ASSET // Bank accounts, cash, receivables, inventory
+  LIABILITY // Payables, loans, deferred revenue
+  EQUITY // Capital, retained earnings
+  REVENUE // Income from fees, services
+  EXPENSE // Operating costs, salaries, utilities
 }
 
 enum BalanceType {
@@ -45,11 +45,11 @@ model ChartOfAccount {
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
 
-  school         School           @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  parent         ChartOfAccount?  @relation("AccountHierarchy", fields: [parentId], references: [id], onUpdate: NoAction, onDelete: NoAction)
-  children       ChartOfAccount[] @relation("AccountHierarchy")
-  ledgerEntries  LedgerEntry[]
-  balances       AccountBalance[]
+  school            School            @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  parent            ChartOfAccount?   @relation("AccountHierarchy", fields: [parentId], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  children          ChartOfAccount[]  @relation("AccountHierarchy")
+  ledgerEntries     LedgerEntry[]
+  balances          AccountBalance[]
   expenseCategories ExpenseCategory[]
 
   @@unique([schoolId, code])
@@ -71,9 +71,9 @@ model FiscalYear {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
-  school          School            @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  journalEntries  JournalEntry[]
-  budgets         Budget[]
+  school           School            @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  journalEntries   JournalEntry[]
+  budgets          Budget[]
   financialReports FinancialReport[]
 
   @@unique([schoolId, name])
@@ -101,17 +101,17 @@ model JournalEntry {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
-  school        School        @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  fiscalYear    FiscalYear    @relation(fields: [fiscalYearId], references: [id])
+  school        School         @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  fiscalYear    FiscalYear     @relation(fields: [fiscalYearId], references: [id])
   ledgerEntries LedgerEntry[]
-  reversalEntry JournalEntry? @relation("JournalReversal", fields: [reversalEntryId], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  reversalEntry JournalEntry?  @relation("JournalReversal", fields: [reversalEntryId], references: [id], onUpdate: NoAction, onDelete: NoAction)
   reversedBy    JournalEntry[] @relation("JournalReversal")
 
   // Relations to source modules
-  userInvoices  UserInvoice[]
-  payments      Payment[]
-  payrollRuns   PayrollRun[]
-  expenses      Expense[]
+  userInvoices       UserInvoice[]
+  payments           Payment[]
+  payrollRuns        PayrollRun[]
+  expenses           Expense[]
   walletTransactions WalletTransaction[]
 
   @@index([schoolId, entryDate])
@@ -167,33 +167,33 @@ enum InvoiceStatus {
 }
 
 model UserInvoice {
-  id             String       @id @default(cuid())
+  id             String             @id @default(cuid())
   invoice_no     String
   invoice_date   DateTime
   due_date       DateTime
-  currency       String       @default("USD")
+  currency       String             @default("USD")
   from           UserInvoiceAddress @relation("FromAddress", fields: [fromAddressId], references: [id])
-  fromAddressId  String       @unique
+  fromAddressId  String             @unique
   to             UserInvoiceAddress @relation("ToAddress", fields: [toAddressId], references: [id])
-  toAddressId    String       @unique
+  toAddressId    String             @unique
   items          UserInvoiceItem[]
   sub_total      Float
   discount       Float?
   tax_percentage Float?
   total          Float
-  notes          String?      @db.Text
-  status         InvoiceStatus @default(UNPAID)
+  notes          String?            @db.Text
+  status         InvoiceStatus      @default(UNPAID)
   userId         String
-  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user           User               @relation(fields: [userId], references: [id], onDelete: Cascade)
   schoolId       String
-  school         School       @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  school         School             @relation(fields: [schoolId], references: [id], onDelete: Cascade)
 
   // Accounting integration
   journalEntryId String?
   journalEntry   JournalEntry? @relation(fields: [journalEntryId], references: [id])
 
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([schoolId, invoice_no])
   @@index([userId])
@@ -358,11 +358,11 @@ model BankAccount {
   updatedAt        DateTime @updatedAt
 
   // Relations
-  school            School        @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  user              User          @relation("UserBankAccounts", fields: [userId], references: [id], onDelete: Cascade)
+  school            School               @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  user              User                 @relation("UserBankAccounts", fields: [userId], references: [id], onDelete: Cascade)
   transactions      Transaction[]
-  sentTransfers     Transfer[]    @relation("SentTransfers")
-  receivedTransfers Transfer[]    @relation("ReceivedTransfers")
+  sentTransfers     Transfer[]           @relation("SentTransfers")
+  receivedTransfers Transfer[]           @relation("ReceivedTransfers")
   reconciliations   BankReconciliation[]
 
   @@unique([schoolId, accountId])
@@ -866,21 +866,21 @@ enum DeductionType {
 }
 
 model SalaryStructure {
-  id          String      @id @default(cuid())
-  schoolId    String
-  teacherId   String // Teacher or Staff ID
+  id            String       @id @default(cuid())
+  schoolId      String
+  teacherId     String // Teacher or Staff ID
   effectiveFrom DateTime
   effectiveTo   DateTime?
-  baseSalary    Decimal     @db.Decimal(10, 2)
-  currency      String      @default("USD")
+  baseSalary    Decimal      @db.Decimal(10, 2)
+  currency      String       @default("USD")
   payFrequency  PayFrequency
-  isActive      Boolean     @default(true)
-  notes         String?     @db.Text
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  isActive      Boolean      @default(true)
+  notes         String?      @db.Text
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
 
-  school      School           @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  teacher     Teacher          @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  school      School            @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  teacher     Teacher           @relation(fields: [teacherId], references: [id], onDelete: Cascade)
   allowances  SalaryAllowance[]
   deductions  SalaryDeduction[]
   salarySlips SalarySlip[]
@@ -945,20 +945,20 @@ enum SlipStatus {
 }
 
 model PayrollRun {
-  id             String        @id @default(cuid())
-  schoolId       String
-  runNumber      String        @unique
-  payPeriodStart DateTime
-  payPeriodEnd   DateTime
-  payDate        DateTime
-  status         PayrollStatus @default(DRAFT)
-  totalGross     Decimal       @db.Decimal(12, 2)
-  totalDeductions Decimal      @db.Decimal(12, 2)
-  totalNet       Decimal       @db.Decimal(12, 2)
-  processedBy    String?
-  processedAt    DateTime?
-  approvedBy     String?
-  approvedAt     DateTime?
+  id              String        @id @default(cuid())
+  schoolId        String
+  runNumber       String        @unique
+  payPeriodStart  DateTime
+  payPeriodEnd    DateTime
+  payDate         DateTime
+  status          PayrollStatus @default(DRAFT)
+  totalGross      Decimal       @db.Decimal(12, 2)
+  totalDeductions Decimal       @db.Decimal(12, 2)
+  totalNet        Decimal       @db.Decimal(12, 2)
+  processedBy     String?
+  processedAt     DateTime?
+  approvedBy      String?
+  approvedAt      DateTime?
 
   // Accounting integration
   journalEntryId String?
@@ -977,12 +977,12 @@ model PayrollRun {
 }
 
 model SalarySlip {
-  id            String   @id @default(cuid())
-  schoolId      String
-  payrollRunId  String
-  structureId   String
-  teacherId     String
-  slipNumber    String   @unique
+  id             String   @id @default(cuid())
+  schoolId       String
+  payrollRunId   String
+  structureId    String
+  teacherId      String
+  slipNumber     String   @unique
   payPeriodStart DateTime
   payPeriodEnd   DateTime
   payDate        DateTime
@@ -1016,10 +1016,10 @@ model SalarySlip {
   notes     String?    @db.Text
   createdAt DateTime   @default(now())
 
-  school      School          @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  payrollRun  PayrollRun      @relation(fields: [payrollRunId], references: [id], onDelete: Cascade)
-  structure   SalaryStructure @relation(fields: [structureId], references: [id])
-  teacher     Teacher         @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  school     School          @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  payrollRun PayrollRun      @relation(fields: [payrollRunId], references: [id], onDelete: Cascade)
+  structure  SalaryStructure @relation(fields: [structureId], references: [id])
+  teacher    Teacher         @relation(fields: [teacherId], references: [id], onDelete: Cascade)
 
   @@index([schoolId, payrollRunId])
   @@index([schoolId, teacherId])
@@ -1065,26 +1065,26 @@ model TimesheetPeriod {
 }
 
 model TimesheetEntry {
-  id            String      @id @default(cuid())
-  schoolId      String
-  periodId      String
-  teacherId     String
-  entryDate     DateTime
-  hoursWorked   Decimal     @db.Decimal(5, 2)
-  overtimeHours Decimal     @default(0) @db.Decimal(5, 2)
-  leaveHours    Decimal     @default(0) @db.Decimal(5, 2)
-  leaveType     String?
-  notes         String?     @db.Text
-  status        EntryStatus @default(DRAFT)
-  submittedBy   String?
-  submittedAt   DateTime?
-  approvedBy    String?
-  approvedAt    DateTime?
-  rejectedBy    String?
-  rejectedAt    DateTime?
-  rejectionReason String?   @db.Text
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  id              String      @id @default(cuid())
+  schoolId        String
+  periodId        String
+  teacherId       String
+  entryDate       DateTime
+  hoursWorked     Decimal     @db.Decimal(5, 2)
+  overtimeHours   Decimal     @default(0) @db.Decimal(5, 2)
+  leaveHours      Decimal     @default(0) @db.Decimal(5, 2)
+  leaveType       String?
+  notes           String?     @db.Text
+  status          EntryStatus @default(DRAFT)
+  submittedBy     String?
+  submittedAt     DateTime?
+  approvedBy      String?
+  approvedAt      DateTime?
+  rejectedBy      String?
+  rejectedAt      DateTime?
+  rejectionReason String?     @db.Text
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
 
   school  School          @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   period  TimesheetPeriod @relation(fields: [periodId], references: [id], onDelete: Cascade)
@@ -1114,15 +1114,15 @@ enum TransactionType {
 }
 
 model Wallet {
-  id        String     @id @default(cuid())
-  schoolId  String
+  id         String     @id @default(cuid())
+  schoolId   String
   walletType WalletType
-  ownerId   String // schoolId for SCHOOL, userId for PARENT/STUDENT
-  balance   Decimal    @default(0) @db.Decimal(10, 2)
-  currency  String     @default("USD")
-  isActive  Boolean    @default(true)
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
+  ownerId    String // schoolId for SCHOOL, userId for PARENT/STUDENT
+  balance    Decimal    @default(0) @db.Decimal(10, 2)
+  currency   String     @default("USD")
+  isActive   Boolean    @default(true)
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
 
   school       School              @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   transactions WalletTransaction[]
@@ -1229,22 +1229,22 @@ enum ExpenseStatus {
 }
 
 model ExpenseCategory {
-  id               String  @id @default(cuid())
+  id               String   @id @default(cuid())
   schoolId         String
   name             String
-  description      String? @db.Text
+  description      String?  @db.Text
   accountId        String? // Link to chart of accounts
   parentId         String?
-  isActive         Boolean @default(true)
-  requiresApproval Boolean @default(true)
+  isActive         Boolean  @default(true)
+  requiresApproval Boolean  @default(true)
   createdAt        DateTime @default(now())
 
-  school       School            @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  account      ChartOfAccount?   @relation(fields: [accountId], references: [id])
-  parent       ExpenseCategory?  @relation("CategoryHierarchy", fields: [parentId], references: [id], onUpdate: NoAction, onDelete: NoAction)
-  children     ExpenseCategory[] @relation("CategoryHierarchy")
-  expenses     Expense[]
-  allocations  BudgetAllocation[]
+  school      School             @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  account     ChartOfAccount?    @relation(fields: [accountId], references: [id])
+  parent      ExpenseCategory?   @relation("CategoryHierarchy", fields: [parentId], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  children    ExpenseCategory[]  @relation("CategoryHierarchy")
+  expenses    Expense[]
+  allocations BudgetAllocation[]
 
   @@unique([schoolId, name])
   @@index([schoolId, isActive])
@@ -1252,26 +1252,26 @@ model ExpenseCategory {
 }
 
 model Expense {
-  id             String        @id @default(cuid())
-  schoolId       String
-  expenseNumber  String        @unique
-  categoryId     String
-  amount         Decimal       @db.Decimal(10, 2)
-  expenseDate    DateTime
-  vendor         String?
-  description    String        @db.Text
-  paymentMethod  String?
-  receiptUrl     String?
-  budgetId       String?
-  status         ExpenseStatus @default(PENDING)
-  submittedBy    String
-  submittedAt    DateTime
-  approvedBy     String?
-  approvedAt     DateTime?
-  rejectedBy     String?
-  rejectedAt     DateTime?
-  rejectionReason String?      @db.Text
-  paidAt         DateTime?
+  id              String        @id @default(cuid())
+  schoolId        String
+  expenseNumber   String        @unique
+  categoryId      String
+  amount          Decimal       @db.Decimal(10, 2)
+  expenseDate     DateTime
+  vendor          String?
+  description     String        @db.Text
+  paymentMethod   String?
+  receiptUrl      String?
+  budgetId        String?
+  status          ExpenseStatus @default(PENDING)
+  submittedBy     String
+  submittedAt     DateTime
+  approvedBy      String?
+  approvedAt      DateTime?
+  rejectedBy      String?
+  rejectedAt      DateTime?
+  rejectionReason String?       @db.Text
+  paidAt          DateTime?
 
   // Accounting integration
   journalEntryId String?
@@ -1280,8 +1280,8 @@ model Expense {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  school   School          @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  category ExpenseCategory @relation(fields: [categoryId], references: [id])
+  school   School           @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  category ExpenseCategory  @relation(fields: [categoryId], references: [id])
   receipts ExpenseReceipt[]
 
   @@index([schoolId, expenseDate])
@@ -1314,7 +1314,7 @@ enum FinancialReportStatus {
 }
 
 model FinancialReport {
-  id           String               @id @default(cuid())
+  id           String                @id @default(cuid())
   schoolId     String
   reportType   FinancialReportType
   reportName   String
@@ -1340,11 +1340,11 @@ model FinancialReport {
 // ============================================
 
 model FinancePermission {
-  id       String @id @default(cuid())
-  schoolId String
-  userId   String
-  module   String // "invoice", "payroll", "budget", "expenses", "accounts", etc.
-  action   String // "view", "create", "edit", "delete", "approve", "process"
+  id        String   @id @default(cuid())
+  schoolId  String
+  userId    String
+  module    String // "invoice", "payroll", "budget", "expenses", "accounts", etc.
+  action    String // "view", "create", "edit", "delete", "approve", "process"
   createdAt DateTime @default(now())
 
   school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)

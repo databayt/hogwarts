@@ -35,9 +35,9 @@ model Teacher {
   accessCards AccessCard[]
 
   // Finance relations (NEW)
-  salaryStructures  SalaryStructure[]
-  salarySlips       SalarySlip[]
-  timesheetEntries  TimesheetEntry[]
+  salaryStructures SalaryStructure[]
+  salarySlips      SalarySlip[]
+  timesheetEntries TimesheetEntry[]
 
   // Auth relationship
   userId String? @unique

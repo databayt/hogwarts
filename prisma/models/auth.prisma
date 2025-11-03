@@ -72,10 +72,10 @@ model User {
   themes UserTheme[]
 
   // Quiz relations
-  quizGames          QuizGame[]
-  quizCategoryStats  QuizCategoryStats[]
-  quizAchievements   QuizAchievement[]
-  quizLeaderboards   QuizLeaderboard[]
+  quizGames         QuizGame[]
+  quizCategoryStats QuizCategoryStats[]
+  quizAchievements  QuizAchievement[]
+  quizLeaderboards  QuizLeaderboard[]
 
   // Finance permissions
   financePermissions FinancePermission[]
@@ -87,6 +87,25 @@ model User {
   createdAnnouncements      Announcement[]             @relation("AnnouncementCreator")
   announcementReads         AnnouncementRead[]         @relation("AnnouncementReads")
   announcementNotifications AnnouncementNotification[] @relation("AnnouncementNotifications")
+
+  // Notification relations
+  notifications             Notification[]             @relation("UserNotifications")
+  notificationActors        Notification[]             @relation("NotificationActors")
+  notificationPreferences   NotificationPreference[]   @relation("UserNotificationPreferences")
+  notificationBatches       NotificationBatch[]        @relation("NotificationBatchCreator")
+  notificationSubscriptions NotificationSubscription[] @relation("UserNotificationSubscriptions")
+  notificationSummaries     NotificationSummary[]      @relation("UserNotificationSummaries")
+
+  // Messaging relations
+  conversationParticipants    ConversationParticipant[] @relation("ConversationParticipants")
+  messagesSent                Message[]                 @relation("MessagesSent")
+  messageReactions            MessageReaction[]         @relation("MessageReactions")
+  messageReadReceipts         MessageReadReceipt[]      @relation("MessageReadReceipts")
+  typingIndicators            TypingIndicator[]         @relation("TypingIndicators")
+  messageDrafts               MessageDraft[]            @relation("MessageDrafts")
+  pinnedMessages              PinnedMessage[]           @relation("PinnedMessages")
+  conversationInvitesSent     ConversationInvite[]      @relation("ConversationInvitesSent")
+  conversationInvitesReceived ConversationInvite[]      @relation("ConversationInvitesReceived")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

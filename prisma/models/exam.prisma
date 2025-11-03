@@ -29,24 +29,24 @@ enum ExamStatus {
 
 // Auto-Marking Enums
 enum GradingMethod {
-  AUTO        // Fully automated (MCQ, T/F, Fill Blank)
+  AUTO // Fully automated (MCQ, T/F, Fill Blank)
   AI_ASSISTED // AI grading with teacher review (Short Answer, Essay)
-  MANUAL      // Teacher grades manually
+  MANUAL // Teacher grades manually
 }
 
 enum SubmissionType {
   DIGITAL // Answered directly in platform
-  UPLOAD  // Uploaded file (PDF/image)
-  OCR     // Scanned and processed via OCR
+  UPLOAD // Uploaded file (PDF/image)
+  OCR // Scanned and processed via OCR
 }
 
 enum MarkingStatus {
   NOT_STARTED // No grading yet
   IN_PROGRESS // Partially graded
   AUTO_GRADED // Auto-graded, pending review
-  AI_GRADED   // AI-graded, pending review
-  REVIEWED    // Teacher reviewed
-  COMPLETED   // Finalized
+  AI_GRADED // AI-graded, pending review
+  REVIEWED // Teacher reviewed
+  COMPLETED // Finalized
 }
 
 // ========== BASIC EXAM MANAGEMENT (MANAGE BLOCK) ==========
@@ -60,9 +60,9 @@ model Exam {
   classId      String
   subjectId    String
   examDate     DateTime
-  startTime    String     // Format: "HH:MM" (e.g., "09:00")
-  endTime      String     // Format: "HH:MM" (e.g., "11:00")
-  duration     Int        // Duration in minutes
+  startTime    String // Format: "HH:MM" (e.g., "09:00")
+  endTime      String // Format: "HH:MM" (e.g., "11:00")
+  duration     Int // Duration in minutes
   totalMarks   Int
   passingMarks Int
   examType     ExamType
@@ -76,7 +76,7 @@ model Exam {
   subject        Subject         @relation(fields: [subjectId], references: [id], onDelete: Cascade)
   examResults    ExamResult[]
   results        Result[]
-  generatedExam  GeneratedExam?  // Auto-generated exam (one-to-one)
+  generatedExam  GeneratedExam? // Auto-generated exam (one-to-one)
   studentAnswers StudentAnswer[] // Auto-marking system
   markingResults MarkingResult[] // Auto-marking system
 
@@ -116,7 +116,7 @@ model ExamResult {
 model GradeBoundary {
   id        String   @id @default(cuid())
   schoolId  String
-  grade     String   // A+, A, B+, B, C+, C, D, F
+  grade     String // A+, A, B+, B, C+, C, D, F
   minScore  Decimal  @db.Decimal(5, 2)
   maxScore  Decimal  @db.Decimal(5, 2)
   gpaValue  Decimal  @db.Decimal(3, 2) // GPA equivalent (e.g., 4.0, 3.7)
@@ -178,17 +178,17 @@ model RubricCriterion {
 model StudentAnswer {
   id             String         @id @default(cuid())
   schoolId       String
-  examId         String         // Links to Exam
-  questionId     String         // Links to QuestionBank
+  examId         String // Links to Exam
+  questionId     String // Links to QuestionBank
   studentId      String
   submissionType SubmissionType
 
   // Answer content
   answerText        String?  @db.Text // Digital answer
   selectedOptionIds String[] // For MCQ (array of indices)
-  uploadUrl         String?  // Uploaded file URL
+  uploadUrl         String? // Uploaded file URL
   ocrText           String?  @db.Text // Extracted text from OCR
-  ocrConfidence     Float?   // OCR accuracy confidence (0-1)
+  ocrConfidence     Float? // OCR accuracy confidence (0-1)
 
   // Timestamps
   submittedAt DateTime?
@@ -227,12 +227,12 @@ model MarkingResult {
 
   // AI grading
   aiScore      Decimal? @db.Decimal(5, 2)
-  aiConfidence Float?   // AI confidence score (0-1)
+  aiConfidence Float? // AI confidence score (0-1)
   aiReasoning  String?  @db.Text // AI explanation
 
   // Teacher feedback
   feedback String?   @db.Text
-  gradedBy String?   // Teacher ID
+  gradedBy String? // Teacher ID
   gradedAt DateTime?
 
   // Flags
@@ -269,7 +269,7 @@ model GradeOverride {
   previousScore Decimal  @db.Decimal(5, 2)
   newScore      Decimal  @db.Decimal(5, 2)
   reason        String   @db.Text
-  overriddenBy  String   // Teacher ID
+  overriddenBy  String // Teacher ID
   overriddenAt  DateTime @default(now())
 
   school        School        @relation(fields: [schoolId], references: [id], onDelete: Cascade)
@@ -295,16 +295,16 @@ model Result {
   // Scoring
   score      Decimal @db.Decimal(6, 2)
   maxScore   Decimal @db.Decimal(6, 2)
-  percentage Float   // Auto-calculated
-  grade      String  // Letter grade (A+, A, B+, etc.)
+  percentage Float // Auto-calculated
+  grade      String // Letter grade (A+, A, B+, etc.)
 
   // Metadata
-  title       String?   // Title if standalone grade entry
+  title       String? // Title if standalone grade entry
   description String?   @db.Text
   feedback    String?   @db.Text
   submittedAt DateTime?
   gradedAt    DateTime
-  gradedBy    String?   // Teacher ID who entered the grade
+  gradedBy    String? // Teacher ID who entered the grade
 
   // Relations
   school     School      @relation(fields: [schoolId], references: [id], onDelete: Cascade)
@@ -337,8 +337,8 @@ model ReportCard {
   // Overall performance
   overallGrade  String?
   overallGPA    Decimal? @db.Decimal(3, 2)
-  rank          Int?     // Student rank in class
-  totalStudents Int?     // Total students in class for rank context
+  rank          Int? // Student rank in class
+  totalStudents Int? // Total students in class for rank context
 
   // Attendance summary
   daysPresent Int?

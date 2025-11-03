@@ -1,0 +1,315 @@
+// Notifications System
+
+// Notification types covering all platform events
+enum NotificationType {
+  message // New direct/group message
+  message_mention // User mentioned in message
+  assignment_created // New assignment posted
+  assignment_due // Assignment due reminder
+  assignment_graded // Assignment graded
+  grade_posted // New grade posted
+  attendance_marked // Attendance marked
+  attendance_alert // Absence alert for guardians
+  fee_due // Fee payment due
+  fee_overdue // Overdue fee payment
+  fee_paid // Fee payment received
+  announcement // New announcement
+  event_reminder // Calendar event reminder
+  class_cancelled // Class cancellation
+  class_rescheduled // Class rescheduled
+  system_alert // System-wide alert
+  account_created // Account created
+  password_reset // Password reset request
+  login_alert // Unusual login detected
+  document_shared // Document shared with user
+  report_ready // Report generated
+}
+
+// Notification priority levels
+enum NotificationPriority {
+  low // Non-urgent information
+  normal // Standard notifications
+  high // Important updates
+  urgent // Critical alerts requiring immediate attention
+}
+
+// Delivery channels for notifications
+enum NotificationChannel {
+  in_app // In-app notification center
+  email // Email delivery
+  push // Push notification (future)
+  sms // SMS delivery (future)
+}
+
+// Main notification model
+model Notification {
+  id       String @id @default(cuid())
+  schoolId String // Multi-tenant scoping (CRITICAL)
+
+  // Recipient
+  userId String
+  user   User   @relation("UserNotifications", fields: [userId], references: [id], onDelete: Cascade)
+
+  // Content
+  type     NotificationType
+  priority NotificationPriority @default(normal)
+  title    String               @db.VarChar(255)
+  body     String               @db.Text
+
+  // Metadata for deep linking and context
+  metadata Json? // { entityType: "assignment", entityId: "123", url: "/assignments/123" }
+
+  // Actor (who triggered the notification, optional)
+  actorId String?
+  actor   User?   @relation("NotificationActors", fields: [actorId], references: [id], onDelete: SetNull)
+
+  // Read status tracking
+  read   Boolean   @default(false)
+  readAt DateTime?
+
+  // Multi-channel delivery tracking
+  channels NotificationChannel[]
+
+  // Email delivery
+  emailSent   Boolean   @default(false)
+  emailSentAt DateTime?
+  emailError  String?   @db.Text
+
+  // Push delivery (future)
+  pushSent   Boolean   @default(false)
+  pushSentAt DateTime?
+  pushError  String?   @db.Text
+
+  // SMS delivery (future)
+  smsSent   Boolean   @default(false)
+  smsSentAt DateTime?
+  smsError  String?   @db.Text
+
+  // Expiration for auto-cleanup
+  expiresAt DateTime?
+
+  // Relationships
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  createdAt               DateTime                  @default(now())
+  updatedAt               DateTime                  @updatedAt
+  NotificationDeliveryLog NotificationDeliveryLog[]
+
+  // Optimized indexes for performance
+  @@index([schoolId, userId, read, createdAt(sort: Desc)]) // Main query pattern
+  @@index([userId, type, read]) // Filter by type
+  @@index([schoolId, type, createdAt]) // Analytics
+  @@index([actorId]) // Actor lookup
+  @@index([expiresAt]) // Cleanup job
+  @@index([emailSent, emailSentAt]) // Email queue
+  @@index([pushSent, pushSentAt]) // Push queue
+  @@index([smsSent, smsSentAt]) // SMS queue
+  @@map("notifications")
+}
+
+// User notification preferences per type and channel
+model NotificationPreference {
+  id       String @id @default(cuid())
+  schoolId String // Multi-tenant scoping (CRITICAL)
+  userId   String
+
+  // Preference settings
+  type    NotificationType // Specific notification type
+  channel NotificationChannel // Delivery channel
+  enabled Boolean             @default(true)
+
+  // Quiet hours (optional)
+  quietHoursStart Int? // Hour 0-23 (e.g., 22 for 10 PM)
+  quietHoursEnd   Int? // Hour 0-23 (e.g., 8 for 8 AM)
+
+  // Digest settings (optional)
+  digestEnabled   Boolean @default(false)
+  digestFrequency String? // "daily", "weekly"
+
+  // Relationships
+  user   User   @relation("UserNotificationPreferences", fields: [userId], references: [id], onDelete: Cascade)
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Unique constraint: one preference per user-type-channel combination
+  @@unique([userId, type, channel])
+  @@index([schoolId, userId])
+  @@index([userId, enabled])
+  @@map("notification_preferences")
+}
+
+// Notification templates for consistent messaging
+model NotificationTemplate {
+  id       String  @id @default(cuid())
+  schoolId String? // null for platform-wide templates
+
+  // Template identification
+  type    NotificationType    @unique
+  channel NotificationChannel
+
+  // Template content (supports {{variable}} placeholders)
+  titleEn String @db.VarChar(255)
+  titleAr String @db.VarChar(255)
+  bodyEn  String @db.Text
+  bodyAr  String @db.Text
+
+  // Email-specific (optional)
+  emailSubjectEn String? @db.VarChar(255)
+  emailSubjectAr String? @db.VarChar(255)
+  emailBodyEn    String? @db.Text
+  emailBodyAr    String? @db.Text
+
+  // Active status
+  active Boolean @default(true)
+
+  // Relationships
+  school School? @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([schoolId, type])
+  @@index([type, channel, active])
+  @@map("notification_templates")
+}
+
+// Notification batches for bulk operations
+model NotificationBatch {
+  id       String @id @default(cuid())
+  schoolId String // Multi-tenant scoping (CRITICAL)
+
+  // Batch metadata
+  type  NotificationType
+  title String           @db.VarChar(255)
+  body  String           @db.Text
+
+  // Targeting
+  targetRole    UserRole? // Send to all users with this role
+  targetClassId String? // Send to all students in this class
+  targetUserIds String[] // Specific user IDs
+
+  // Processing status
+  status      String @default("pending") // pending, processing, completed, failed
+  totalCount  Int    @default(0)
+  sentCount   Int    @default(0)
+  failedCount Int    @default(0)
+
+  // Scheduling
+  scheduledFor DateTime?
+  processedAt  DateTime?
+
+  // Error tracking
+  errors Json? // Array of error messages
+
+  // Created by
+  createdBy String
+  creator   User   @relation("NotificationBatchCreator", fields: [createdBy], references: [id], onDelete: Cascade)
+
+  // Relationships
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  createdAt               DateTime                  @default(now())
+  updatedAt               DateTime                  @updatedAt
+  NotificationDeliveryLog NotificationDeliveryLog[]
+
+  @@index([schoolId, status])
+  @@index([scheduledFor])
+  @@index([createdBy])
+  @@map("notification_batches")
+}
+
+// Notification delivery logs for audit and debugging
+model NotificationDeliveryLog {
+  id             String  @id @default(cuid())
+  notificationId String? // null if batch notification
+  batchId        String? // null if individual notification
+
+  // Delivery details
+  channel        NotificationChannel
+  recipientEmail String?
+  recipientPhone String?
+
+  // Status
+  status        String // sent, failed, bounced, delivered, opened, clicked
+  statusMessage String? @db.Text
+
+  // Provider details (e.g., Resend, Twilio)
+  provider   String?
+  providerId String? // External provider's message ID
+
+  // Delivery timestamps
+  sentAt      DateTime?
+  deliveredAt DateTime?
+  openedAt    DateTime?
+  clickedAt   DateTime?
+
+  // Relationships
+  notification Notification?      @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+  batch        NotificationBatch? @relation(fields: [batchId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([notificationId])
+  @@index([batchId])
+  @@index([channel, status])
+  @@index([providerId])
+  @@map("notification_delivery_logs")
+}
+
+// Notification subscriptions for event-based notifications
+model NotificationSubscription {
+  id       String @id @default(cuid())
+  schoolId String // Multi-tenant scoping (CRITICAL)
+  userId   String
+
+  // Subscription target
+  entityType String // "assignment", "class", "announcement", etc.
+  entityId   String // ID of the entity
+
+  // Active status
+  active Boolean @default(true)
+
+  // Relationships
+  user   User   @relation("UserNotificationSubscriptions", fields: [userId], references: [id], onDelete: Cascade)
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Unique constraint: one subscription per user-entity combination
+  @@unique([userId, entityType, entityId])
+  @@index([schoolId, userId])
+  @@index([entityType, entityId, active])
+  @@map("notification_subscriptions")
+}
+
+// Notification summaries for digest emails
+model NotificationSummary {
+  id       String @id @default(cuid())
+  schoolId String // Multi-tenant scoping (CRITICAL)
+  userId   String
+
+  // Summary period
+  periodStart DateTime
+  periodEnd   DateTime
+  frequency   String // "daily", "weekly"
+
+  // Summary data (aggregated counts by type)
+  summary Json // { message: 5, assignment_graded: 3, ... }
+
+  // Delivery status
+  sent   Boolean   @default(false)
+  sentAt DateTime?
+
+  // Relationships
+  user   User   @relation("UserNotificationSummaries", fields: [userId], references: [id], onDelete: Cascade)
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([schoolId, userId, periodEnd])
+  @@index([sent, sentAt])
+  @@map("notification_summaries")
+}

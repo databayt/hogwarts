@@ -6,7 +6,13 @@
       "Bash(done)",
       "Bash(do echo \"=== $dir route ===\")",
       "WebFetch(domain:www.passmedicine.com)",
-      "WebFetch(domain:www.pastest.com)"
+      "WebFetch(domain:www.pastest.com)",
+      "mcp__github__get_file_contents",
+      "Bash(for dir in */)",
+      "Bash(do dirname=\"$dir%/\")",
+      "Bash(if [ ! -f \"$dir/loading.tsx\" ])",
+      "Bash(then echo \"$dirname\")",
+      "Bash(fi)"
     ],
     "deny": [],
     "ask": []

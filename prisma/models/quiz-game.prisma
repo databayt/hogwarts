@@ -16,56 +16,56 @@ enum QuizGameStatus {
 
 // Quiz Game Session
 model QuizGame {
-  id             String          @id @default(cuid())
-  schoolId       String
-  userId         String
-  topic          String
-  description    String?         @db.Text
-  gameType       QuizGameType    @default(PRACTICE)
-  status         QuizGameStatus  @default(IN_PROGRESS)
+  id          String         @id @default(cuid())
+  schoolId    String
+  userId      String
+  topic       String
+  description String?        @db.Text
+  gameType    QuizGameType   @default(PRACTICE)
+  status      QuizGameStatus @default(IN_PROGRESS)
 
   // Question configuration
-  totalQuestions  Int
-  questionType    QuestionType?  // Filter by question type (optional)
-  difficulty      DifficultyLevel? // Filter by difficulty (optional)
-  bloomLevel      BloomLevel?    // Filter by Bloom's taxonomy (optional)
+  totalQuestions Int
+  questionType   QuestionType? // Filter by question type (optional)
+  difficulty     DifficultyLevel? // Filter by difficulty (optional)
+  bloomLevel     BloomLevel? // Filter by Bloom's taxonomy (optional)
 
   // Scoring
-  correctAnswers  Int            @default(0)
-  wrongAnswers    Int            @default(0)
-  skippedAnswers  Int            @default(0)
-  totalScore      Decimal        @default(0) @db.Decimal(8, 2)
-  maxScore        Decimal        @db.Decimal(8, 2)
-  percentage      Float?
+  correctAnswers Int     @default(0)
+  wrongAnswers   Int     @default(0)
+  skippedAnswers Int     @default(0)
+  totalScore     Decimal @default(0) @db.Decimal(8, 2)
+  maxScore       Decimal @db.Decimal(8, 2)
+  percentage     Float?
 
   // Timing
-  timeStarted     DateTime       @default(now())
-  timeEnded       DateTime?
-  timeLimitMinutes Int?          // Optional time limit
-  totalTimeSpent  Int?           // Total seconds spent
+  timeStarted      DateTime  @default(now())
+  timeEnded        DateTime?
+  timeLimitMinutes Int? // Optional time limit
+  totalTimeSpent   Int? // Total seconds spent
 
   // AI Generation
-  aiGenerated     Boolean        @default(false)
-  aiProvider      String?        // "openai", "anthropic", etc.
-  aiModel         String?        // "gpt-3.5-turbo", "claude-3", etc.
+  aiGenerated Boolean @default(false)
+  aiProvider  String? // "openai", "anthropic", etc.
+  aiModel     String? // "gpt-3.5-turbo", "claude-3", etc.
 
   // Analytics
   averageTimePerQuestion Float? // Average seconds per question
-  streak          Int            @default(0) // Current correct answer streak
-  maxStreak       Int            @default(0) // Maximum streak achieved
+  streak                 Int    @default(0) // Current correct answer streak
+  maxStreak              Int    @default(0) // Maximum streak achieved
 
   // Gamification
-  pointsEarned    Int            @default(0)
-  badgesEarned    String[]       // Badge IDs
+  pointsEarned Int      @default(0)
+  badgesEarned String[] // Badge IDs
 
   // Relations
-  school          School              @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  user            User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-  questions       QuizGameQuestion[]
-  achievements    QuizAchievement[]
+  school       School             @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  user         User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  questions    QuizGameQuestion[]
+  achievements QuizAchievement[]
 
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([schoolId, userId])
   @@index([schoolId, status])
@@ -78,38 +78,38 @@ model QuizGame {
 
 // Individual Question in a Quiz Game
 model QuizGameQuestion {
-  id              String    @id @default(cuid())
-  schoolId        String
-  gameId          String
-  questionId      String    // Links to QuestionBank
-  order           Int       // Question order in the game
+  id         String @id @default(cuid())
+  schoolId   String
+  gameId     String
+  questionId String // Links to QuestionBank
+  order      Int // Question order in the game
 
   // User Response
-  userAnswer      String?   @db.Text
-  selectedOptions String[]  // For MCQ: selected option IDs
+  userAnswer      String?  @db.Text
+  selectedOptions String[] // For MCQ: selected option IDs
   isCorrect       Boolean?
-  isSkipped       Boolean   @default(false)
+  isSkipped       Boolean  @default(false)
 
   // Scoring
-  pointsEarned    Decimal   @default(0) @db.Decimal(5, 2)
-  maxPoints       Decimal   @db.Decimal(5, 2)
+  pointsEarned Decimal @default(0) @db.Decimal(5, 2)
+  maxPoints    Decimal @db.Decimal(5, 2)
 
   // Timing
-  timeSpent       Int?      // Seconds spent on this question
-  startedAt       DateTime  @default(now())
-  answeredAt      DateTime?
+  timeSpent  Int? // Seconds spent on this question
+  startedAt  DateTime  @default(now())
+  answeredAt DateTime?
 
   // Feedback
-  feedback        String?   @db.Text
-  aiGrading       Json?     // AI grading details for open-ended
+  feedback  String? @db.Text
+  aiGrading Json? // AI grading details for open-ended
 
   // Relations
-  school          School       @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  game            QuizGame     @relation(fields: [gameId], references: [id], onDelete: Cascade)
-  question        QuestionBank @relation(fields: [questionId], references: [id], onDelete: Restrict)
+  school   School       @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  game     QuizGame     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  question QuestionBank @relation(fields: [questionId], references: [id], onDelete: Restrict)
 
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([gameId, order])
   @@index([schoolId, gameId])
@@ -120,26 +120,26 @@ model QuizGameQuestion {
 
 // Quiz Categories for Organization
 model QuizCategory {
-  id          String   @id @default(cuid())
+  id          String  @id @default(cuid())
   schoolId    String
   name        String
-  description String?  @db.Text
-  icon        String?  // Icon name or emoji
-  color       String?  // Hex color code
+  description String? @db.Text
+  icon        String? // Icon name or emoji
+  color       String? // Hex color code
   imageUrl    String?
-  isActive    Boolean  @default(true)
+  isActive    Boolean @default(true)
 
   // Subject mapping (optional)
-  subjectId   String?
+  subjectId String?
 
   // Relations
-  school      School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  subject     Subject? @relation(fields: [subjectId], references: [id], onDelete: SetNull)
-  stats       QuizCategoryStats[]
+  school  School              @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  subject Subject?            @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+  stats   QuizCategoryStats[]
 
-  createdBy   String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdBy String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([schoolId, name])
   @@index([schoolId, isActive])
@@ -149,33 +149,33 @@ model QuizCategory {
 
 // User Statistics per Category
 model QuizCategoryStats {
-  id              String   @id @default(cuid())
-  schoolId        String
-  userId          String
-  categoryId      String
+  id         String @id @default(cuid())
+  schoolId   String
+  userId     String
+  categoryId String
 
   // Performance
-  attempts        Int      @default(0)
-  completed       Int      @default(0)
-  totalScore      Decimal  @default(0) @db.Decimal(10, 2)
-  averageScore    Float?
-  bestScore       Decimal? @db.Decimal(8, 2)
+  attempts     Int      @default(0)
+  completed    Int      @default(0)
+  totalScore   Decimal  @default(0) @db.Decimal(10, 2)
+  averageScore Float?
+  bestScore    Decimal? @db.Decimal(8, 2)
 
   // Timing
-  totalTimeSpent  Int      @default(0) // Total seconds
-  averageTime     Float?   // Average seconds per quiz
+  totalTimeSpent Int    @default(0) // Total seconds
+  averageTime    Float? // Average seconds per quiz
 
   // Streaks
-  currentStreak   Int      @default(0)
-  longestStreak   Int      @default(0)
+  currentStreak Int @default(0)
+  longestStreak Int @default(0)
 
   // Relations
-  school          School        @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  category        QuizCategory  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  school   School       @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  user     User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category QuizCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
 
-  lastAttempt     DateTime?
-  updatedAt       DateTime      @updatedAt
+  lastAttempt DateTime?
+  updatedAt   DateTime  @updatedAt
 
   @@unique([userId, categoryId])
   @@index([schoolId, userId])
@@ -186,23 +186,23 @@ model QuizCategoryStats {
 
 // Gamification: Achievements/Badges
 model QuizAchievement {
-  id              String   @id @default(cuid())
-  schoolId        String
-  userId          String
-  gameId          String?  // Optional: specific game that earned it
+  id       String  @id @default(cuid())
+  schoolId String
+  userId   String
+  gameId   String? // Optional: specific game that earned it
 
-  achievementType String   // "first_quiz", "perfect_score", "speed_demon", etc.
+  achievementType String // "first_quiz", "perfect_score", "speed_demon", etc.
   name            String
-  description     String?  @db.Text
+  description     String? @db.Text
   icon            String?
-  points          Int      @default(0)
+  points          Int     @default(0)
 
   // Relations
-  school          School    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  game            QuizGame? @relation(fields: [gameId], references: [id], onDelete: SetNull)
+  school School    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  user   User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  game   QuizGame? @relation(fields: [gameId], references: [id], onDelete: SetNull)
 
-  earnedAt        DateTime  @default(now())
+  earnedAt DateTime @default(now())
 
   @@index([schoolId, userId])
   @@index([schoolId, achievementType])
@@ -211,29 +211,29 @@ model QuizAchievement {
 
 // Leaderboard (optional - for competitive features)
 model QuizLeaderboard {
-  id          String   @id @default(cuid())
-  schoolId    String
-  userId      String
+  id       String @id @default(cuid())
+  schoolId String
+  userId   String
 
   // Scores
-  totalGames  Int      @default(0)
-  totalScore  Decimal  @default(0) @db.Decimal(10, 2)
+  totalGames   Int     @default(0)
+  totalScore   Decimal @default(0) @db.Decimal(10, 2)
   averageScore Float?
 
   // Rankings
-  rank        Int?
-  classRank   Int?
+  rank      Int?
+  classRank Int?
 
   // Period
-  period      String   // "daily", "weekly", "monthly", "all_time"
+  period      String // "daily", "weekly", "monthly", "all_time"
   periodStart DateTime
   periodEnd   DateTime
 
   // Relations
-  school      School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  updatedAt   DateTime @updatedAt
+  updatedAt DateTime @updatedAt
 
   @@unique([schoolId, userId, period, periodStart])
   @@index([schoolId, period, rank])

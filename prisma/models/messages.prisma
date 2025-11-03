@@ -1,0 +1,313 @@
+// Messaging System
+
+// Conversation types
+enum ConversationType {
+  direct // 1-on-1 conversation
+  group // Group chat (multiple participants)
+  class // Class-wide communication
+  department // Department-wide communication
+  announcement // One-way broadcast (admin to group)
+}
+
+// Message delivery status
+enum MessageStatus {
+  sending // Message being sent
+  sent // Message sent to server
+  delivered // Message delivered to recipient(s)
+  read // Message read by recipient(s)
+  failed // Message failed to send
+}
+
+// Participant role in conversation
+enum ParticipantRole {
+  owner // Creator of the conversation
+  admin // Can manage participants and settings
+  member // Regular participant
+  guest // Limited access (future)
+}
+
+// Conversations (threads)
+model Conversation {
+  id       String @id @default(cuid())
+  schoolId String // Multi-tenant scoping (CRITICAL)
+
+  // Conversation metadata
+  type   ConversationType
+  title  String?          @db.VarChar(255) // null for direct conversations
+  avatar String? // Group avatar URL (optional)
+
+  // Direct conversation participants (for type=direct only)
+  // For quick lookup without joining participants table
+  directParticipant1Id String?
+  directParticipant2Id String?
+
+  // Group/Class targeting (for type=class or department)
+  classId      String?
+  departmentId String?
+
+  // Settings
+  isLocked   Boolean @default(false) // Prevent new messages
+  isArchived Boolean @default(false)
+
+  // Last activity for sorting
+  lastMessageAt DateTime? @default(now())
+
+  // Relationships
+  school       School                    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  participants ConversationParticipant[]
+  messages     Message[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Optimized indexes for performance
+  @@index([schoolId, type, lastMessageAt(sort: Desc)]) // Main query pattern
+  @@index([schoolId, classId]) // Class conversations
+  @@index([schoolId, departmentId]) // Department conversations
+  @@index([directParticipant1Id, directParticipant2Id, type]) // Direct conversation lookup
+  @@map("conversations")
+}
+
+// Conversation participants
+model ConversationParticipant {
+  id             String @id @default(cuid())
+  conversationId String
+  userId         String
+
+  // Participant role
+  role ParticipantRole @default(member)
+
+  // Read tracking
+  lastReadAt  DateTime?
+  unreadCount Int       @default(0)
+
+  // Notifications
+  isMuted Boolean @default(false)
+
+  // Active status (for leaving/removing participants)
+  isActive Boolean   @default(true)
+  leftAt   DateTime?
+
+  // Relationships
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user         User         @relation("ConversationParticipants", fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Unique constraint: one participant entry per user-conversation
+  @@unique([conversationId, userId])
+  @@index([userId, isActive])
+  @@index([conversationId, role])
+  @@map("conversation_participants")
+}
+
+// Messages
+model Message {
+  id             String @id @default(cuid())
+  conversationId String
+  senderId       String
+
+  // Content
+  content     String @db.Text
+  contentType String @default("text") // text, image, file, system
+
+  // Delivery status
+  status MessageStatus @default(sending)
+
+  // Reply/Thread (optional)
+  replyToId String?
+  replyTo   Message? @relation("MessageReplies", fields: [replyToId], references: [id], onDelete: SetNull)
+
+  // Edited flag
+  isEdited Boolean   @default(false)
+  editedAt DateTime?
+
+  // Deleted flag (soft delete)
+  isDeleted Boolean   @default(false)
+  deletedAt DateTime?
+
+  // System message flag
+  isSystem Boolean @default(false) // For "User joined", "Title changed", etc.
+
+  // Metadata (for system messages or rich content)
+  metadata Json? // { mentions: ["userId1"], links: ["url1"], etc. }
+
+  // Relationships
+  conversation Conversation         @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       User                 @relation("MessagesSent", fields: [senderId], references: [id], onDelete: Cascade)
+  replies      Message[]            @relation("MessageReplies")
+  attachments  MessageAttachment[]
+  reactions    MessageReaction[]
+  readReceipts MessageReadReceipt[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Optimized indexes for performance
+  @@index([conversationId, createdAt(sort: Desc)]) // Main query pattern
+  @@index([senderId, createdAt]) // User's messages
+  @@index([replyToId]) // Thread lookup
+  @@index([conversationId, isSystem]) // Filter system messages
+  @@map("messages")
+}
+
+// Message attachments (files, images, documents)
+model MessageAttachment {
+  id        String @id @default(cuid())
+  messageId String
+
+  // File metadata
+  fileName String @db.VarChar(255)
+  fileUrl  String @db.Text
+  fileSize Int // Size in bytes
+  fileType String @db.VarChar(100) // MIME type
+  width    Int? // For images
+  height   Int? // For images
+
+  // Thumbnail for images/videos
+  thumbnail String? @db.Text
+
+  // Upload status
+  uploaded Boolean @default(false)
+
+  // Relationships
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([messageId])
+  @@map("message_attachments")
+}
+
+// Message reactions (emoji reactions)
+model MessageReaction {
+  id        String @id @default(cuid())
+  messageId String
+  userId    String
+
+  // Reaction emoji
+  emoji String @db.VarChar(10) // Unicode emoji
+
+  // Relationships
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user    User    @relation("MessageReactions", fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  // Unique constraint: one reaction per user-message-emoji
+  @@unique([messageId, userId, emoji])
+  @@index([messageId])
+  @@index([userId])
+  @@map("message_reactions")
+}
+
+// Message read receipts
+model MessageReadReceipt {
+  id        String @id @default(cuid())
+  messageId String
+  userId    String
+
+  // Read timestamp
+  readAt DateTime @default(now())
+
+  // Relationships
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user    User    @relation("MessageReadReceipts", fields: [userId], references: [id], onDelete: Cascade)
+
+  // Unique constraint: one receipt per user-message
+  @@unique([messageId, userId])
+  @@index([messageId])
+  @@index([userId, readAt])
+  @@map("message_read_receipts")
+}
+
+// Typing indicators (real-time)
+model TypingIndicator {
+  id             String @id @default(cuid())
+  conversationId String
+  userId         String
+
+  // Typing state (managed by Socket.IO)
+  isTyping Boolean @default(true)
+
+  // Auto-expire after 5 seconds
+  expiresAt DateTime
+
+  // Relationships
+  user User @relation("TypingIndicators", fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Unique constraint: one indicator per user-conversation
+  @@unique([conversationId, userId])
+  @@index([conversationId, expiresAt])
+  @@map("typing_indicators")
+}
+
+// Message drafts (auto-save)
+model MessageDraft {
+  id             String @id @default(cuid())
+  conversationId String
+  userId         String
+
+  // Draft content
+  content String @db.Text
+
+  // Reply context (optional)
+  replyToId String?
+
+  // Relationships
+  user User @relation("MessageDrafts", fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Unique constraint: one draft per user-conversation
+  @@unique([conversationId, userId])
+  @@index([userId])
+  @@map("message_drafts")
+}
+
+// Pinned messages (for quick access)
+model PinnedMessage {
+  id        String @id @default(cuid())
+  messageId String
+  userId    String // Who pinned it
+
+  // Relationships
+  user User @relation("PinnedMessages", fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([messageId, userId])
+  @@index([userId])
+  @@map("pinned_messages")
+}
+
+// Conversation invites (for joining group conversations)
+model ConversationInvite {
+  id             String @id @default(cuid())
+  conversationId String
+  inviterId      String // Who sent the invite
+  inviteeId      String // Who is invited
+
+  // Invite status
+  status String @default("pending") // pending, accepted, declined, expired
+
+  // Expiration (optional)
+  expiresAt DateTime?
+
+  // Relationships
+  inviter User @relation("ConversationInvitesSent", fields: [inviterId], references: [id], onDelete: Cascade)
+  invitee User @relation("ConversationInvitesReceived", fields: [inviteeId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([conversationId, inviteeId])
+  @@index([inviteeId, status])
+  @@index([expiresAt])
+  @@map("conversation_invites")
+}

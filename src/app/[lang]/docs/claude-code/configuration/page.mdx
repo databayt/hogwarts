@@ -287,6 +287,90 @@ Reduces output verbosity (when available):
 }
 ```
 
+## CLI Shortcuts & Aliases
+
+### PowerShell Alias (Windows)
+
+Create a shortcut to start Claude Code with bypass permissions mode using just `c`:
+
+**Step 1: Create or edit your PowerShell profile**
+
+```powershell
+# Check if profile exists
+Test-Path $PROFILE
+
+# Create profile if it doesn't exist
+New-Item -Path $PROFILE -ItemType File -Force
+```
+
+**Step 2: Add the alias function**
+
+Open your profile in a text editor:
+
+```powershell
+notepad $PROFILE
+```
+
+Add this line:
+
+```powershell
+function c { claude --dangerously-skip-permissions $args }
+```
+
+**Step 3: Reload the profile**
+
+```powershell
+# Reload in current session
+. $PROFILE
+
+# Or restart PowerShell
+```
+
+**Usage**:
+
+```powershell
+# Start Claude Code with bypass permissions
+c
+
+# Pass additional arguments
+c --model opus
+```
+
+### Git Bash / WSL Alias (Linux/Unix)
+
+Add to your `~/.bashrc` or `~/.zshrc`:
+
+```bash
+alias c='claude --dangerously-skip-permissions'
+```
+
+Reload the configuration:
+
+```bash
+source ~/.bashrc  # or ~/.zshrc
+```
+
+### Command Prompt Alias (cmd.exe)
+
+Create a batch file `c.bat` in a directory that's in your PATH (e.g., `C:\Windows\System32` or a custom bin folder):
+
+```batch
+@echo off
+claude --dangerously-skip-permissions %*
+```
+
+Make sure the directory is in your PATH environment variable.
+
+### Safety Considerations
+
+The `--dangerously-skip-permissions` flag bypasses all permission prompts. Use this alias only when:
+
+- You trust the project you're working on
+- You understand the operations Claude will perform
+- You're in a controlled development environment
+
+For production or sensitive projects, use the full command without the bypass flag.
+
 ## Platform-Specific Settings
 
 ### Hogwarts Configuration
