@@ -4,8 +4,6 @@ import { SearchParams } from 'nuqs/server'
 import { subjectsSearchParams } from '@/components/platform/subjects/list-params'
 import { db } from '@/lib/db'
 import { getTenantContext } from '@/lib/tenant-context'
-import { Shell as PageContainer } from '@/components/table/shell'
-import PageHeader from '@/components/atom/page-header'
 import { type Locale } from '@/components/internationalization/config'
 import { type Dictionary } from '@/components/internationalization/dictionaries'
 
@@ -56,15 +54,8 @@ export default async function SubjectsContent({ searchParams, dictionary, lang }
     total = count as number
   }
   return (
-    <PageContainer>
-      <div className="flex flex-1 flex-col gap-4">
-        <PageHeader
-          title={dictionary?.school?.subjects?.title || 'Subjects'}
-          description={dictionary?.school?.subjects?.description || 'Manage academic subjects and their departments'}
-          className="text-start max-w-none"
-        />
-        <SubjectsTable initialData={data} total={total} perPage={sp.perPage} />
-      </div>
-    </PageContainer>
+    <div className="space-y-6">
+      <SubjectsTable initialData={data} total={total} perPage={sp.perPage} />
+    </div>
   )
 }
