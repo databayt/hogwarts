@@ -1,4 +1,3 @@
-import { unstable_cache } from "next/cache";
 import { AnnouncementsTable } from '@/components/platform/announcements/table'
 import { type AnnouncementRow } from '@/components/platform/announcements/columns'
 import { SearchParams } from 'nuqs/server'
@@ -16,26 +15,6 @@ interface Props {
   lang: Locale
 }
 
-/**
- * Get cached announcements list with proper cache key scoping
- * @param schoolId - School ID for multi-tenant isolation
- * @param params - Query parameters
- * @returns Cached announcements list
- */
-async function getCachedAnnouncementsList(schoolId: string, params: any) {
-  // Create cache function with schoolId in the key for proper tenant isolation
-  const cachedFn = unstable_cache(
-    async () => getAnnouncementsList(schoolId, params),
-    ['announcements-list', schoolId, JSON.stringify(params)], // Include schoolId and params in cache key
-    {
-      revalidate: 60, // Cache for 60 seconds
-      tags: [`announcements-${schoolId}`], // Tenant-specific tag for cache invalidation
-    }
-  );
-
-  return cachedFn();
-}
-
 export default async function AnnouncementsContent({ searchParams, dictionary, lang }: Props) {
   const sp = await announcementsSearchParams.parse(await searchParams)
   const { schoolId } = await getTenantContext()
@@ -45,8 +24,8 @@ export default async function AnnouncementsContent({ searchParams, dictionary, l
   let total = 0
 
   if (schoolId) {
-    // Use shared query builder with caching
-    const { rows, count } = await getCachedAnnouncementsList(schoolId, {
+    // Use shared query builder (caching removed due to multi-tenant complexity)
+    const { rows, count } = await getAnnouncementsList(schoolId, {
       title: sp.title,
       scope: sp.scope,
       published: sp.published,

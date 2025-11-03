@@ -41,54 +41,70 @@ pnpm dev
 
 #### 2. Common Causes & Solutions
 
-##### A. Multi-Tenant Cache Key Bug (FIXED: 2025-11-03)
+##### A. Multi-Tenant Cache Bug (FIXED: 2025-11-03)
 
-**Problem**: `unstable_cache` not including `schoolId` in cache key, causing:
-- Cross-tenant data leakage
-- Incorrect cached data being served
-- Serialization errors from mismatched data structures
+**Problem**: Announcements page throwing server-side exceptions (Digest: 970203480, 1091438202)
+
+**Root Cause**: Incorrect usage of Next.js `unstable_cache` API in multi-tenant context:
+- Creating new cached function instance on every request
+- Attempting to serialize complex params with `JSON.stringify`
+- Cache not properly scoped by `schoolId`
+- Pattern violates Next.js caching best practices
 
 **Example of BROKEN code**:
 ```typescript
-// ❌ BAD: All schools share same cache
-const getCachedData = unstable_cache(
-  async (schoolId: string, params: any) => {
-    return getData(schoolId, params);
-  },
-  ['data-list'], // schoolId NOT in key!
-  {
-    revalidate: 60,
-    tags: ['data'], // Static tag
-  }
-);
-```
-
-**CORRECT implementation**:
-```typescript
-// ✅ GOOD: Each school has isolated cache
+// ❌ BAD: Creates new cache function on every call
 async function getCachedData(schoolId: string, params: any) {
   const cachedFn = unstable_cache(
     async () => getData(schoolId, params),
-    ['data-list', schoolId, JSON.stringify(params)], // Include schoolId and params
+    ['data-list', schoolId, JSON.stringify(params)], // JSON.stringify can fail
     {
       revalidate: 60,
-      tags: [`data-${schoolId}`], // Tenant-specific tag
+      tags: [`data-${schoolId}`],
     }
   );
-
-  return cachedFn();
+  return cachedFn(); // New function created every time!
 }
 ```
 
-**Why this matters**:
-1. **Security**: Without schoolId in cache key, School A could see School B's data
-2. **Data Integrity**: Cached data structure might not match expected structure
-3. **Debugging**: Intermittent errors that are hard to reproduce
+**Issues with this approach**:
+1. **Cache Pollution**: New function instance created on every request
+2. **Serialization Errors**: `JSON.stringify(params)` fails with complex objects (sort arrays, functions, etc.)
+3. **Performance**: Cache creation overhead negates caching benefits
+4. **Debugging**: Intermittent errors that are hard to reproduce
 
-**How to fix** (for any similar issues):
-1. Always include `schoolId` in cache key array
-2. Use tenant-specific cache tags: `${resource}-${schoolId}`
-3. Test with multiple school accounts to verify isolation
+**SOLUTION: Remove premature caching**:
+```typescript
+// ✅ GOOD: Direct query with proper database indexes
+export default async function Content({ searchParams }) {
+  const sp = await searchParamsCache.parse(searchParams);
+  const { schoolId } = await getTenantContext();
+
+  // Direct query - database is fast with proper indexes
+  const { rows, count } = await getDataList(schoolId, {
+    ...sp
+  });
+
+  return <DataTable data={rows} total={count} />;
+}
+```
+
+**Why this is better**:
+1. **Simplicity**: No complex caching logic to debug
+2. **Reliability**: No serialization or cache key issues
+3. **Performance**: Database queries are fast with proper indexes
+4. **Multi-tenant Safety**: Query function handles schoolId filtering
+
+**When to use `unstable_cache`**:
+- Module-level expensive computations
+- Static data that rarely changes
+- NOT for per-request, tenant-scoped database queries
+
+**Prevention**:
+1. Use database query optimization (indexes) instead of application-level caching
+2. If caching is needed, use module-level `unstable_cache` declarations
+3. Never create cache functions inside request handlers
+4. Test caching logic with multiple concurrent requests
 
 ##### B. Invalid Prisma Relations
 
