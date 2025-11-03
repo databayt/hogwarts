@@ -52,13 +52,26 @@ export function useBreadcrumbs() {
 
     // If no exact match, fall back to generating breadcrumbs from the path
     const segments = pathname.split('/').filter(Boolean);
-		// Filter out language segments (en, ar)
-		const filteredSegments = segments.filter(segment => segment !== 'en' && segment !== 'ar');
-		const items = filteredSegments.map((segment, index) => {
-      const path = `/${filteredSegments.slice(0, index + 1).join('/')}`;
-			const isIdSegment = index === filteredSegments.length - 1 && /^(?:[a-z0-9]{10,}|\w{6,})$/i.test(segment);
+		// Filter out language segments (en, ar) and subdomain segments (s, subdomain)
+		const filteredSegments = segments.filter(segment => segment !== 'en' && segment !== 'ar' && segment !== 's');
+		// Remove subdomain segment (typically after 's')
+		const sIndex = segments.indexOf('s');
+		const finalSegments = sIndex >= 0 && segments[sIndex + 1] ?
+			filteredSegments.filter((_, index) => {
+				const originalIndex = segments.indexOf(filteredSegments[index]);
+				return originalIndex !== sIndex + 1;
+			}) : filteredSegments;
+
+		const items = finalSegments.map((segment, index) => {
+      const path = `/${finalSegments.slice(0, index + 1).join('/')}`;
+			const isIdSegment = index === finalSegments.length - 1 && /^(?:[a-z0-9]{10,}|\w{6,})$/i.test(segment);
+			// Special handling for dashboard -> Overview
+			let title = isIdSegment && dynamicTitle ? dynamicTitle : segment.charAt(0).toUpperCase() + segment.slice(1);
+			if (segment === 'dashboard') {
+				title = 'Overview';
+			}
 			return {
-				title: isIdSegment && dynamicTitle ? dynamicTitle : segment.charAt(0).toUpperCase() + segment.slice(1),
+				title,
 				link: path
 			};
 		});
