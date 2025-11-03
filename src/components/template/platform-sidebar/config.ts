@@ -33,7 +33,6 @@ export const platformNav: PlatformNavItem[] = [
   // Admin dashboard – admin only
   { title: "Overview", href: "/dashboard", icon: "pieChart", roles: ALL_ROLES },
   { title: "Admin", href: "/admin", icon: "admin", roles: ["ADMIN", "DEVELOPER"], className: "-ml-[1.5px] h-4.5 w-4.5" },
-  { title: "Billing", href: "/admin/billing", icon: "browser", roles: ["ADMIN", "DEVELOPER"] },
   { title: "Charts", href: "/dashboard/charts", icon: "barChart", roles: ["ADMIN"] },
 
   // School platform – recommended visibility
