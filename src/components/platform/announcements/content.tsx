@@ -17,20 +17,24 @@ interface Props {
 }
 
 /**
- * Cached wrapper for announcements list query
- * Cache duration: 60 seconds
- * Cache tags: announcements-{schoolId}
+ * Get cached announcements list with proper cache key scoping
+ * @param schoolId - School ID for multi-tenant isolation
+ * @param params - Query parameters
+ * @returns Cached announcements list
  */
-const getCachedAnnouncementsList = unstable_cache(
-  async (schoolId: string, params: any) => {
-    return getAnnouncementsList(schoolId, params);
-  },
-  ['announcements-list'], // schoolId will be part of cache key via params
-  {
-    revalidate: 60, // Cache for 60 seconds
-    tags: ['announcements'], // Static tag for cache invalidation
-  }
-);
+async function getCachedAnnouncementsList(schoolId: string, params: any) {
+  // Create cache function with schoolId in the key for proper tenant isolation
+  const cachedFn = unstable_cache(
+    async () => getAnnouncementsList(schoolId, params),
+    ['announcements-list', schoolId, JSON.stringify(params)], // Include schoolId and params in cache key
+    {
+      revalidate: 60, // Cache for 60 seconds
+      tags: [`announcements-${schoolId}`], // Tenant-specific tag for cache invalidation
+    }
+  );
+
+  return cachedFn();
+}
 
 export default async function AnnouncementsContent({ searchParams, dictionary, lang }: Props) {
   const sp = await announcementsSearchParams.parse(await searchParams)
