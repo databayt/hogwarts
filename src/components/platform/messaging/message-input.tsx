@@ -6,7 +6,7 @@ import type { MessageDTO } from "./types"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { toast } from "@/hooks/use-toast"
+import { toast } from "@/components/ui/use-toast"
 
 export interface MessageInputProps {
   conversationId: string

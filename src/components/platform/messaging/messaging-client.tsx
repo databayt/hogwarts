@@ -15,7 +15,7 @@ import {
   markMessageAsRead,
   markConversationAsRead,
 } from "./actions"
-import { toast } from "@/hooks/use-toast"
+import { toast } from "@/components/ui/use-toast"
 import socketService from "@/lib/websocket/socket-service"
 
 export interface MessagingClientProps {
