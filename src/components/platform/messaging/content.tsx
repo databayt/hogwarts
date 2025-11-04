@@ -4,6 +4,17 @@ import { getTenantContext } from "@/lib/tenant-context"
 import { getConversationsList, getConversation, getMessagesList } from "./queries"
 import { MessagingClient } from "./messaging-client"
 
+// Helper function to safely serialize dates
+function safeSerializeDate(date: Date | null | undefined): string {
+  if (!date) return new Date().toISOString()
+  try {
+    return new Date(date).toISOString()
+  } catch (error) {
+    console.error('[safeSerializeDate] Invalid date:', date, error)
+    return new Date().toISOString()
+  }
+}
+
 export interface MessagingContentProps {
   locale?: "ar" | "en"
   conversationId?: string
@@ -32,37 +43,97 @@ export async function MessagingContent({
   const userId = session.user.id
 
   // Fetch conversations list
-  const conversationsResult = await getConversationsList(schoolId, userId, {
-    page: 1,
-    perPage: 50,
-  })
+  let conversationsData: any[] = []
+  let activeConversationData: any = null
+  let messagesData: any[] = []
 
-  // Fetch active conversation and messages if conversationId provided
-  let activeConversation = null
-  let messages: any[] = []
+  try {
+    const conversationsResult = await getConversationsList(schoolId, userId, {
+      page: 1,
+      perPage: 50,
+    })
 
-  if (conversationId) {
-    try {
-      activeConversation = await getConversation(schoolId, userId, conversationId)
+    // Serialize conversations
+    conversationsData = conversationsResult.rows.map((conv: any) => ({
+      ...conv,
+      createdAt: safeSerializeDate(conv.createdAt),
+      updatedAt: safeSerializeDate(conv.updatedAt),
+      lastMessageAt: safeSerializeDate(conv.lastMessageAt),
+      participants: conv.participants?.map((p: any) => ({
+        ...p,
+        joinedAt: safeSerializeDate(p.joinedAt),
+        lastReadAt: safeSerializeDate(p.lastReadAt),
+        mutedUntil: safeSerializeDate(p.mutedUntil),
+      })) || [],
+      createdBy: conv.createdBy ? {
+        ...conv.createdBy,
+      } : null,
+    }))
 
-      if (activeConversation) {
-        const messagesResult = await getMessagesList(schoolId, {
-          conversationId,
-          page: 1,
-          perPage: 50,
-        })
-        messages = messagesResult.rows
+    // Fetch active conversation and messages if conversationId provided
+    if (conversationId) {
+      try {
+        const activeConversation = await getConversation(schoolId, userId, conversationId)
+
+        if (activeConversation) {
+          // Serialize active conversation
+          activeConversationData = {
+            ...activeConversation,
+            createdAt: safeSerializeDate(activeConversation.createdAt),
+            updatedAt: safeSerializeDate(activeConversation.updatedAt),
+            lastMessageAt: safeSerializeDate(activeConversation.lastMessageAt),
+            participants: activeConversation.participants?.map((p: any) => ({
+              ...p,
+              joinedAt: safeSerializeDate(p.joinedAt),
+              lastReadAt: safeSerializeDate(p.lastReadAt),
+              mutedUntil: safeSerializeDate(p.mutedUntil),
+            })) || [],
+          }
+
+          const messagesResult = await getMessagesList(schoolId, {
+            conversationId,
+            page: 1,
+            perPage: 50,
+          })
+
+          // Serialize messages
+          messagesData = messagesResult.rows.map((msg: any) => ({
+            ...msg,
+            createdAt: safeSerializeDate(msg.createdAt),
+            updatedAt: safeSerializeDate(msg.updatedAt),
+            editedAt: safeSerializeDate(msg.editedAt),
+            deletedAt: safeSerializeDate(msg.deletedAt),
+            attachments: msg.attachments?.map((a: any) => ({
+              ...a,
+              uploadedAt: safeSerializeDate(a.uploadedAt),
+            })) || [],
+            reactions: msg.reactions?.map((r: any) => ({
+              ...r,
+              createdAt: safeSerializeDate(r.createdAt),
+            })) || [],
+            readReceipts: msg.readReceipts?.map((rr: any) => ({
+              ...rr,
+              readAt: safeSerializeDate(rr.readAt),
+            })) || [],
+            replyTo: msg.replyTo ? {
+              ...msg.replyTo,
+              createdAt: safeSerializeDate(msg.replyTo.createdAt),
+            } : null,
+          }))
+        }
+      } catch (error) {
+        console.error("[MessagingContent] Error fetching conversation:", error)
       }
-    } catch (error) {
-      console.error("Error fetching conversation:", error)
     }
+  } catch (error) {
+    console.error("[MessagingContent] Error fetching conversations:", error)
   }
 
   return (
     <MessagingClient
-      initialConversations={conversationsResult.rows as any}
-      initialActiveConversation={activeConversation as any}
-      initialMessages={messages as any}
+      initialConversations={conversationsData}
+      initialActiveConversation={activeConversationData}
+      initialMessages={messagesData}
       currentUserId={userId}
       locale={locale}
     />

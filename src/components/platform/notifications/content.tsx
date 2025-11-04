@@ -12,6 +12,17 @@ import { Bell, Filter, Settings } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 
+// Helper function to safely serialize dates
+function safeSerializeDate(date: Date | null | undefined): string {
+  if (!date) return new Date().toISOString()
+  try {
+    return new Date(date).toISOString()
+  } catch (error) {
+    console.error('[safeSerializeDate] Invalid date:', date, error)
+    return new Date().toISOString()
+  }
+}
+
 interface NotificationCenterContentProps {
   locale?: "ar" | "en"
   searchParams?: {
@@ -162,6 +173,10 @@ export async function NotificationCenterContent({
           <NotificationCenterClient
             initialNotifications={notifications.map(n => ({
               ...n,
+              createdAt: safeSerializeDate(n.createdAt),
+              updatedAt: safeSerializeDate(n.updatedAt),
+              readAt: n.readAt ? safeSerializeDate(n.readAt) : null,
+              emailSentAt: n.emailSentAt ? safeSerializeDate(n.emailSentAt) : null,
               metadata: n.metadata as Record<string, unknown> | null
             }))}
             locale={locale}

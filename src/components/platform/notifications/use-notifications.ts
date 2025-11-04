@@ -82,7 +82,7 @@ export function useNotifications(
         // Optimistic update
         setRecentNotifications((prev) =>
           prev.map((n) =>
-            n.id === notificationId ? { ...n, read: true, readAt: new Date() } : n
+            n.id === notificationId ? { ...n, read: true, readAt: new Date().toISOString() } : n
           )
         )
         setUnreadCount((prev) => Math.max(0, prev - 1))
@@ -110,7 +110,7 @@ export function useNotifications(
     try {
       // Optimistic update
       setRecentNotifications((prev) =>
-        prev.map((n) => ({ ...n, read: true, readAt: new Date() }))
+        prev.map((n) => ({ ...n, read: true, readAt: new Date().toISOString() }))
       )
       const previousCount = unreadCount
       setUnreadCount(0)
@@ -174,8 +174,8 @@ export function useNotifications(
           channels: [],
           emailSent: false,
           emailSentAt: null,
-          createdAt: new Date(),
-          updatedAt: new Date(),
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
         }
 
         // Add to recent notifications
@@ -206,7 +206,7 @@ export function useNotifications(
         setRecentNotifications((prev) =>
           prev.map((n) =>
             n.id === data.notificationId
-              ? { ...n, read: true, readAt: new Date() }
+              ? { ...n, read: true, readAt: new Date().toISOString() }
               : n
           )
         )

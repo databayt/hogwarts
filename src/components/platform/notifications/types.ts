@@ -8,7 +8,7 @@ import type {
   NotificationPreference,
 } from "@prisma/client"
 
-// DTO types for API responses
+// DTO types for API responses (dates are serialized as ISO strings for client components)
 export type NotificationDTO = {
   id: string
   schoolId: string
@@ -26,12 +26,12 @@ export type NotificationDTO = {
     image: string | null
   } | null
   read: boolean
-  readAt: Date | null
+  readAt: string | null
   channels: NotificationChannel[]
   emailSent: boolean
-  emailSentAt: Date | null
-  createdAt: Date
-  updatedAt: Date
+  emailSentAt: string | null
+  createdAt: string
+  updatedAt: string
 }
 
 // Table row type for data tables

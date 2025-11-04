@@ -170,7 +170,7 @@ export function NotificationCard({
                   <span>•</span>
                 </>
               )}
-              <time dateTime={notification.createdAt.toISOString()}>
+              <time dateTime={notification.createdAt}>
                 {timeAgo}
               </time>
             </div>

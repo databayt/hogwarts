@@ -60,7 +60,7 @@ export function NotificationCenterClient({
     // Optimistic update
     setAllNotifications((prev) =>
       prev.map((n) =>
-        n.id === notificationId ? { ...n, read: true, readAt: new Date() } : n
+        n.id === notificationId ? { ...n, read: true, readAt: new Date().toISOString() } : n
       )
     )
 
@@ -81,7 +81,7 @@ export function NotificationCenterClient({
   const handleMarkAllAsRead = async () => {
     // Optimistic update
     setAllNotifications((prev) =>
-      prev.map((n) => ({ ...n, read: true, readAt: new Date() }))
+      prev.map((n) => ({ ...n, read: true, readAt: new Date().toISOString() }))
     )
 
     // Server update via hook
