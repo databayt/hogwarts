@@ -309,12 +309,5 @@ export const getDictionary = async (locale: Locale) => {
 // Type Helpers
 // ============================================================================
 
+// Main dictionary type (used throughout the app)
 export type Dictionary = Awaited<ReturnType<typeof getDictionary>>;
-export type MarketingDictionary = Awaited<ReturnType<typeof getMarketingDictionary>>;
-export type PlatformCoreDictionary = Awaited<ReturnType<typeof getPlatformCoreDictionary>>;
-export type StreamDictionary = Awaited<ReturnType<typeof getStreamDictionary>>;
-export type LibraryDictionary = Awaited<ReturnType<typeof getLibraryDictionary>>;
-export type BankingDictionary = Awaited<ReturnType<typeof getBankingDictionary>>;
-export type FinanceDictionary = Awaited<ReturnType<typeof getFinanceDictionary>>;
-export type AdminDictionary = Awaited<ReturnType<typeof getAdminDictionary>>;
-export type ExamDictionary = Awaited<ReturnType<typeof getExamDictionary>>;
