@@ -338,11 +338,301 @@ Our demo environment includes comprehensive, realistic data across all modules:
 
 1. **Use Filters**: All tables support advanced filtering - try it!
 2. **Export Data**: Test CSV/Excel export on any data table
-3. **Switch Languages**: Toggle between Arabic and English
+3. **Switch Languages**: Toggle between Arabic (RTL) and English (LTR)
 4. **Mobile View**: Access on mobile to see responsive design
-5. **Dark Mode**: Try the dark theme from settings
+5. **Test All Roles**: Log in as different users to see permission differences
 6. **Print**: Generate and print various reports
-7. **Search**: Use global search to find anything quickly
+7. **Search**: Use global search (Ctrl+K) to find anything quickly
+8. **Follow the Guides**: Use the detailed module documentation for step-by-step walkthroughs
+
+---
+
+## 🛠️ Troubleshooting
+
+### Common Issues & Solutions
+
+#### **Login Issues**
+
+**Problem**: "Invalid email or password"
+- **Solution**: Verify you're using the correct email format:
+  - Admin: `admin@demo.school` (NOT `admin@demo.databayt.org`)
+  - All passwords: `1234`
+  - Ensure no extra spaces in email/password
+
+**Problem**: "School not found" or "Invalid subdomain"
+- **Solution**:
+  - Correct URL: `https://demo.ed.databayt.org`
+  - Subdomain must be: `demo`
+  - Do not use: `http://` (must be `https://`)
+
+**Problem**: "Session expired" or logged out unexpectedly
+- **Solution**:
+  - Clear browser cookies for `ed.databayt.org`
+  - Log in again
+  - Session timeout: 24 hours
+
+---
+
+#### **Data Issues**
+
+**Problem**: "No data found" or empty tables
+- **Solution**:
+  - Verify demo was seeded: Check [Demo Data Overview](#-demo-data-overview) section
+  - Run seed command: `pnpm db:seed` (for local setup)
+  - Contact admin if on hosted demo
+
+**Problem**: "Student/teacher not found"
+- **Solution**:
+  - Use email format from credentials section above
+  - Student emails: `{firstname}.{lastname}.{number}@demo.school`
+  - Check: Are you logged in with correct role? (e.g., teachers can only see their classes)
+
+**Problem**: Data seems outdated or missing
+- **Solution**:
+  - Demo data resets monthly (first Monday)
+  - Check reset date
+  - If just reset, data will be fresh
+
+---
+
+#### **Module-Specific Issues**
+
+**Attendance**:
+- **Problem**: Cannot mark attendance
+  - **Solution**: Verify you're a teacher assigned to that class, check if attendance already marked for today
+- **Problem**: QR code not scanning
+  - **Solution**: Ensure camera permissions enabled, use mobile device, check lighting
+
+**Exams**:
+- **Problem**: Cannot see exam results
+  - **Solution**: Teacher must publish results first, check exam status (draft vs published)
+- **Problem**: Auto-grading not working
+  - **Solution**: Only MCQ, T/F, Fill Blank, Matching auto-grade; Short Answer and Essay require manual grading
+
+**Finance**:
+- **Problem**: Payment not processing
+  - **Solution**: Demo uses test mode, payments simulated (not real), check invoice status
+- **Problem**: Balance incorrect
+  - **Solution**: Verify all invoices processed, check for pending transactions
+
+**Library**:
+- **Problem**: Cannot borrow book - "Already borrowed maximum"
+  - **Solution**: Student limit: 3 books, return existing books first
+- **Problem**: Book shows "Available" but cannot borrow
+  - **Solution**: Book may be reserved for class/course, contact librarian
+
+**LMS**:
+- **Problem**: Cannot access paid course after payment
+  - **Solution**: Payment confirmation may take time, contact admin to manually enroll
+- **Problem**: Lesson video won't play
+  - **Solution**: Check video URL, ensure valid YouTube/Vimeo link, check internet connection
+- **Problem**: Progress not saving
+  - **Solution**: Enable cookies, refresh page, log out and back in
+
+**Communication**:
+- **Problem**: Announcement not received by students
+  - **Solution**: Check scope (school vs class vs individual), verify student email settings
+- **Problem**: Email notifications not sending
+  - **Solution**: Demo environment simulates emails (not sent), check in-app notifications instead
+
+---
+
+#### **Performance Issues**
+
+**Problem**: Slow loading or timeouts
+- **Solution**:
+  - Check internet connection
+  - Clear browser cache
+  - Try different browser (Chrome, Firefox, Safari recommended)
+  - Reduce data filters/date ranges
+  - Contact support if persistent
+
+**Problem**: Page not responding
+- **Solution**:
+  - Refresh page (F5)
+  - Clear cache and hard reload (Ctrl+Shift+R)
+  - Check browser console for errors (F12)
+  - Try incognito/private mode
+
+---
+
+#### **Language & Display Issues**
+
+**Problem**: Layout broken in Arabic (RTL)
+- **Solution**:
+  - Verify browser supports RTL
+  - Clear cache
+  - Use modern browser (Chrome 90+, Firefox 88+, Safari 14+)
+
+**Problem**: Language not switching
+- **Solution**:
+  - Click language switcher (globe icon)
+  - Check URL includes `/ar/` or `/en/`
+  - Clear cookies and try again
+
+**Problem**: Text not displaying correctly (Arabic characters broken)
+- **Solution**:
+  - Check font loading (Tajawal for Arabic)
+  - Disable browser extensions
+  - Verify UTF-8 encoding
+
+---
+
+#### **Permission Issues**
+
+**Problem**: "Permission denied" or "Unauthorized"
+- **Solution**:
+  - Verify logged in with correct role
+  - Teachers: Can only access their assigned classes
+  - Students: Can only see their own data
+  - Parents: Can only see their children's data
+  - Admins: Have full access
+
+**Problem**: Cannot create/edit/delete
+- **Solution**:
+  - Check role permissions:
+    - Teachers can create assignments, announcements for their classes
+    - Only admins can manage users, school settings
+    - Students can only submit, not create
+
+---
+
+#### **Mobile Issues**
+
+**Problem**: Mobile layout broken
+- **Solution**:
+  - Ensure using responsive design
+  - Rotate to portrait mode
+  - Update mobile browser
+  - Clear mobile browser cache
+
+**Problem**: QR code scanner not working on mobile
+- **Solution**:
+  - Grant camera permissions
+  - Use native camera app to scan
+  - Ensure good lighting
+  - Try different mobile browser
+
+---
+
+#### **Browser Compatibility**
+
+**Supported Browsers**:
+- ✅ Chrome 90+ (Recommended)
+- ✅ Firefox 88+
+- ✅ Safari 14+
+- ✅ Edge 90+
+- ❌ Internet Explorer (Not supported)
+
+**Problem**: Features not working in older browsers
+- **Solution**: Update browser to latest version
+
+---
+
+### Getting Help
+
+#### **Self-Help Resources**:
+1. **Documentation**: Check [Module Guides](#-documentation-navigation) for detailed instructions
+2. **FAQ**: Common questions answered in each module guide
+3. **Video Tutorials**: Watch walkthroughs (if available)
+
+#### **Contact Support**:
+- **Email**: support@databayt.org
+- **Response Time**: 24-48 hours
+- **Include**:
+  - Description of issue
+  - Steps to reproduce
+  - Screenshots (if applicable)
+  - Browser and OS version
+  - User role and email used
+
+#### **Report Bugs**:
+- **GitHub Issues**: [https://github.com/databayt/hogwarts/issues](https://github.com/databayt/hogwarts/issues)
+- **Provide**:
+  - Detailed description
+  - Expected vs actual behavior
+  - Steps to reproduce
+  - Browser console errors (F12 → Console)
+
+---
+
+### Known Limitations
+
+**Demo Environment Limitations**:
+1. **Email/SMS**: Notifications simulated, not actually sent
+2. **Payments**: Test mode only, no real transactions
+3. **File Uploads**: Limited to 5MB per file
+4. **Data Reset**: Monthly reset (first Monday)
+5. **Concurrent Users**: Max 100 users simultaneously
+6. **External Integrations**: Some disabled for demo safety
+7. **Performance**: May be slower than production with dedicated resources
+8. **Custom Domains**: Demo uses `demo.ed.databayt.org` only
+
+**Feature Gaps** (in demo):
+- No real payment gateway integration
+- No SMS provider integration
+- No email SMTP configured (simulated)
+- Limited to Sudan (SDG currency, Arabic/English)
+- Some advanced reports disabled
+
+---
+
+## 🔍 Testing Checklist
+
+Use this checklist to verify demo functionality:
+
+### Core Functions
+- [ ] Login as admin, teacher, student, parent
+- [ ] View dashboard for each role
+- [ ] Switch between Arabic and English
+- [ ] Use global search (Ctrl+K)
+- [ ] Navigate all main modules
+
+### Students Module
+- [ ] View student list (admin)
+- [ ] Search and filter students
+- [ ] View individual student profile
+- [ ] Check student grades and attendance
+
+### Attendance Module
+- [ ] Mark attendance (teacher)
+- [ ] View attendance reports (admin)
+- [ ] Check at-risk students (<75%)
+- [ ] Test QR code check-in (if mobile)
+
+### Exams Module
+- [ ] Browse Question Bank
+- [ ] Create new exam (admin/teacher)
+- [ ] Take exam (student)
+- [ ] View exam results
+- [ ] Verify auto-grading for MCQ/T/F
+
+### Finance Module
+- [ ] View financial dashboard
+- [ ] Check invoice status
+- [ ] Generate financial reports
+- [ ] Simulate payment (parent)
+
+### Library Module
+- [ ] Browse library catalog
+- [ ] Search books
+- [ ] Borrow book (student)
+- [ ] Return book (librarian/admin)
+
+### LMS Module
+- [ ] Browse course catalog
+- [ ] Enroll in free course (student)
+- [ ] Watch lesson video
+- [ ] Track progress
+- [ ] Create course (teacher)
+
+### Communication Module
+- [ ] Create announcement (admin/teacher)
+- [ ] Read announcements (all roles)
+- [ ] Send message to teacher (parent)
+- [ ] Respond to parent message (teacher)
+
+---
 
 ## 🔧 Demo Limitations
 

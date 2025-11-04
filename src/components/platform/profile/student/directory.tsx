@@ -462,7 +462,7 @@ export function StudentDirectoryContent({
                   <Badge className={cn(getStatusColor(student.status))}>
                     {student.status}
                   </Badge>
-                  <Link href={`/profile/students/${student.id}`}>
+                  <Link href={`/profile/${student.id}`}>
                     <Button size="sm" variant="ghost">
                       View
                       <ChevronRight className="h-4 w-4 ml-1" />

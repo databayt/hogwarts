@@ -109,6 +109,7 @@ export async function getParents(input: Partial<z.infer<typeof getParentsSchema>
   ]);
   const mapped = (rows as Array<any>).map((p) => ({
     id: p.id as string,
+    userId: p.userId as string | null,
     name: [p.givenName, p.surname].filter(Boolean).join(" "),
     emailAddress: p.emailAddress || "-",
     status: p.userId ? "active" : "inactive",

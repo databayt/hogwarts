@@ -1,10 +1,10 @@
 import { z } from "zod"
-import { ConversationType, ConversationParticipantRole, MessageStatus } from "@prisma/client"
+import { ConversationType, ParticipantRole, MessageStatus } from "@prisma/client"
 import { FILE_UPLOAD_CONFIG, DEFAULT_SETTINGS } from "./config"
 
 // Base enums
 export const conversationTypeSchema = z.nativeEnum(ConversationType)
-export const participantRoleSchema = z.nativeEnum(ConversationParticipantRole)
+export const participantRoleSchema = z.nativeEnum(ParticipantRole)
 export const messageStatusSchema = z.nativeEnum(MessageStatus)
 
 // Create conversation schema

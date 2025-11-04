@@ -23,6 +23,7 @@ enum ParticipantRole {
   owner // Creator of the conversation
   admin // Can manage participants and settings
   member // Regular participant
+  read_only // Read-only access (observers)
   guest // Limited access (future)
 }
 
@@ -32,9 +33,11 @@ model Conversation {
   schoolId String // Multi-tenant scoping (CRITICAL)
 
   // Conversation metadata
-  type   ConversationType
-  title  String?          @db.VarChar(255) // null for direct conversations
-  avatar String? // Group avatar URL (optional)
+  type        ConversationType
+  title       String?          @db.VarChar(255) // null for direct conversations
+  description String?          @db.Text // Optional description for group conversations
+  avatar      String? // Group avatar URL (optional)
+  createdById String? // Creator of the conversation
 
   // Direct conversation participants (for type=direct only)
   // For quick lookup without joining participants table
@@ -56,6 +59,7 @@ model Conversation {
   school       School                    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   participants ConversationParticipant[]
   messages     Message[]
+  invites      ConversationInvite[]      @relation("ConversationInvites")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -75,14 +79,16 @@ model ConversationParticipant {
   userId         String
 
   // Participant role
-  role ParticipantRole @default(member)
+  role     ParticipantRole @default(member)
+  nickname String? @db.VarChar(100) // Custom nickname in this conversation
 
   // Read tracking
   lastReadAt  DateTime?
   unreadCount Int       @default(0)
 
   // Notifications
-  isMuted Boolean @default(false)
+  isMuted  Boolean @default(false)
+  isPinned Boolean @default(false) // Pin conversation to top
 
   // Active status (for leaving/removing participants)
   isActive Boolean   @default(true)
@@ -134,12 +140,13 @@ model Message {
   metadata Json? // { mentions: ["userId1"], links: ["url1"], etc. }
 
   // Relationships
-  conversation Conversation         @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  sender       User                 @relation("MessagesSent", fields: [senderId], references: [id], onDelete: Cascade)
-  replies      Message[]            @relation("MessageReplies")
-  attachments  MessageAttachment[]
-  reactions    MessageReaction[]
-  readReceipts MessageReadReceipt[]
+  conversation   Conversation         @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender         User                 @relation("MessagesSent", fields: [senderId], references: [id], onDelete: Cascade)
+  replies        Message[]            @relation("MessageReplies")
+  attachments    MessageAttachment[]
+  reactions      MessageReaction[]
+  readReceipts   MessageReadReceipt[]
+  pinnedMessages PinnedMessage[]      @relation("PinnedMessage")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -169,7 +176,8 @@ model MessageAttachment {
   thumbnail String? @db.Text
 
   // Upload status
-  uploaded Boolean @default(false)
+  uploaded   Boolean  @default(false)
+  uploadedAt DateTime @default(now())
 
   // Relationships
   message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
@@ -229,7 +237,8 @@ model TypingIndicator {
   userId         String
 
   // Typing state (managed by Socket.IO)
-  isTyping Boolean @default(true)
+  isTyping  Boolean  @default(true)
+  startedAt DateTime @default(now()) // When user started typing
 
   // Auto-expire after 5 seconds
   expiresAt DateTime
@@ -272,17 +281,22 @@ model MessageDraft {
 
 // Pinned messages (for quick access)
 model PinnedMessage {
-  id        String @id @default(cuid())
-  messageId String
-  userId    String // Who pinned it
+  id             String @id @default(cuid())
+  conversationId String // Conversation this pin belongs to
+  messageId      String
+  pinnedById     String // Who pinned it
+  pinnedAt       DateTime @default(now()) // When it was pinned
 
   // Relationships
-  user User @relation("PinnedMessages", fields: [userId], references: [id], onDelete: Cascade)
+  message  Message @relation("PinnedMessage", fields: [messageId], references: [id], onDelete: Cascade)
+  pinnedBy User    @relation("PinnedMessages", fields: [pinnedById], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
 
-  @@unique([messageId, userId])
-  @@index([userId])
+  @@unique([messageId, pinnedById])
+  @@index([messageId])
+  @@index([pinnedById])
+  @@index([conversationId])
   @@map("pinned_messages")
 }
 
@@ -300,8 +314,9 @@ model ConversationInvite {
   expiresAt DateTime?
 
   // Relationships
-  inviter User @relation("ConversationInvitesSent", fields: [inviterId], references: [id], onDelete: Cascade)
-  invitee User @relation("ConversationInvitesReceived", fields: [inviteeId], references: [id], onDelete: Cascade)
+  conversation Conversation @relation("ConversationInvites", fields: [conversationId], references: [id], onDelete: Cascade)
+  inviter      User         @relation("ConversationInvitesSent", fields: [inviterId], references: [id], onDelete: Cascade)
+  invitee      User         @relation("ConversationInvitesReceived", fields: [inviteeId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

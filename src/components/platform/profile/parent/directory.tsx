@@ -451,7 +451,7 @@ export function ParentDirectoryContent({
                   <span className="text-xs text-muted-foreground">
                     Last contact: {format(parent.lastContact, 'MMM dd')}
                   </span>
-                  <Link href={`/profile/parents/${parent.id}`}>
+                  <Link href={`/profile/${parent.id}`}>
                     <Button size="sm" variant="ghost">
                       View
                       <ChevronRight className="h-4 w-4 ml-1" />

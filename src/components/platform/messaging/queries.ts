@@ -7,20 +7,13 @@ import type {
   SortParam,
   ConversationQueryParams,
   MessageQueryParams,
+  ConversationSortParams,
+  MessageSortParams,
 } from "./types"
 
 // Type aliases for cleaner code
 type ConversationListFilters = ConversationFilters
 type MessageListFilters = MessageFilters
-
-// Pagination and sorting helpers
-export type ConversationSortParams = {
-  sort?: SortParam[]
-}
-
-export type MessageSortParams = {
-  sort?: SortParam[]
-}
 
 // Select types for optimized queries
 export const conversationListSelect = {
@@ -173,6 +166,7 @@ export const conversationDetailSelect = {
   pinnedMessages: {
     select: {
       id: true,
+      conversationId: true,
       messageId: true,
       pinnedById: true,
       pinnedBy: {
@@ -418,8 +412,10 @@ export async function getConversationStats(schoolId: string, userId: string) {
         conversation: {
           schoolId,
         },
-        lastReadAt: {
-          lt: db.conversation.fields.lastMessageAt,
+        NOT: {
+          conversation: {
+            lastMessageAt: null,
+          },
         },
       },
     }),
@@ -481,14 +477,7 @@ export async function getMessageStats(schoolId: string, userId: string) {
         participants: {
           some: {
             userId,
-            OR: [
-              { lastReadAt: null },
-              {
-                lastReadAt: {
-                  lt: db.message.fields.createdAt,
-                },
-              },
-            ],
+            lastReadAt: null,
           },
         },
       },
@@ -585,12 +574,10 @@ export async function getConversationParticipants(conversationId: string) {
       userId: true,
       role: true,
       nickname: true,
-      joinedAt: true,
+      createdAt: true,
       lastReadAt: true,
       isMuted: true,
-      mutedUntil: true,
       isPinned: true,
-      metadata: true,
       user: {
         select: {
           id: true,
@@ -617,6 +604,7 @@ export async function getPinnedMessages(conversationId: string) {
     },
     select: {
       id: true,
+      conversationId: true,
       messageId: true,
       pinnedById: true,
       pinnedBy: {

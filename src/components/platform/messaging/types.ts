@@ -1,6 +1,6 @@
 import type {
   ConversationType,
-  ConversationParticipantRole,
+  ParticipantRole,
   MessageStatus,
   Conversation,
   ConversationParticipant,
@@ -45,7 +45,9 @@ export type ConversationParticipantDTO = {
     image: string | null
     role: string
   }
-  role: ConversationParticipantRole
+  role: ParticipantRole
+  nickname: string | null
+  isPinned: boolean
   lastReadAt: Date | null
   isMuted: boolean
   unreadCount: number
@@ -73,9 +75,11 @@ export type MessageDTO = {
     id: string
     content: string
     senderId: string
+    isDeleted: boolean
     sender: {
       id: string
       username: string | null
+      email: string | null
     }
   } | null
   isEdited: boolean
@@ -95,8 +99,11 @@ export type MessageDTO = {
 export type MessageAttachmentDTO = {
   id: string
   messageId: string
+  url: string
   fileUrl: string
+  name: string
   fileName: string
+  size: number
   fileSize: number
   fileType: string
   thumbnailUrl: string | null
@@ -359,6 +366,8 @@ export type ConversationContext = {
   id: string
   type: ConversationType
   participantIds: string[]
+  createdById?: string | null
+  description?: string | null
 }
 
 export type MessageContext = {
@@ -384,3 +393,6 @@ export type MessagingAction =
   | "pin_message"
   | "create_invite"
   | "send_broadcast"
+
+// Re-export Prisma enums for convenience
+export { ConversationType, ParticipantRole, MessageStatus } from "@prisma/client"

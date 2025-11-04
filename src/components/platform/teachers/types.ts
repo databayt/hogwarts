@@ -16,6 +16,7 @@ export type TeacherDTO = {
 
 export type TeacherRow = {
   id: string;
+  userId: string | null;
   name: string;
   emailAddress: string;
   status: string;

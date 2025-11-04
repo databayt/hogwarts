@@ -41,7 +41,7 @@ export function TeachersTable({ initialData, total, dictionary, perPage = 20 }: 
       const result = await getTeachers({ page: nextPage, perPage });
 
       if (result.rows.length > 0) {
-        setData(prev => [...prev, ...result.rows]);
+        setData(prev => [...prev, ...result.rows as any]);
         setCurrentPage(nextPage);
       }
     } catch (error) {

@@ -152,6 +152,7 @@ export async function getStudents(input: Partial<z.infer<typeof getStudentsSchem
   ]);
   const mapped = (rows as Array<any>).map((s) => ({
     id: s.id as string,
+    userId: s.userId as string | null,
     name: [s.givenName, s.surname].filter(Boolean).join(" "),
     className: "-",
     status: s.userId ? "active" : "inactive",

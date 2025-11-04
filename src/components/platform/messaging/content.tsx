@@ -24,14 +24,17 @@ export async function MessagingContent({
     )
   }
 
-  const { schoolId } = await getTenantContext()
+  const tenantContext = await getTenantContext()
+  if (!tenantContext.schoolId) {
+    return <div>No school context found</div>
+  }
+  const schoolId = tenantContext.schoolId
   const userId = session.user.id
 
   // Fetch conversations list
   const conversationsResult = await getConversationsList(schoolId, userId, {
     page: 1,
     perPage: 50,
-    sort: "lastMessage",
   })
 
   // Fetch active conversation and messages if conversationId provided
@@ -43,10 +46,10 @@ export async function MessagingContent({
       activeConversation = await getConversation(schoolId, userId, conversationId)
 
       if (activeConversation) {
-        const messagesResult = await getMessagesList(schoolId, userId, conversationId, {
+        const messagesResult = await getMessagesList(schoolId, {
+          conversationId,
           page: 1,
           perPage: 50,
-          sort: "oldest",
         })
         messages = messagesResult.rows
       }
@@ -57,9 +60,9 @@ export async function MessagingContent({
 
   return (
     <MessagingClient
-      initialConversations={conversationsResult.rows}
-      initialActiveConversation={activeConversation}
-      initialMessages={messages}
+      initialConversations={conversationsResult.rows as any}
+      initialActiveConversation={activeConversation as any}
+      initialMessages={messages as any}
       currentUserId={userId}
       locale={locale}
     />

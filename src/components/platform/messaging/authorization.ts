@@ -4,7 +4,7 @@ import type {
   MessageContext,
   MessagingAction,
 } from "./types"
-import type { ConversationType, ConversationParticipantRole } from "@prisma/client"
+import type { ConversationType, ParticipantRole } from "@prisma/client"
 import { CONVERSATION_CREATION_PERMISSIONS, canUserCreateConversationType } from "./config"
 
 /**
@@ -30,7 +30,7 @@ export function checkMessagingPermission(
   action: MessagingAction,
   conversation?: ConversationContext,
   message?: MessageContext,
-  participantRole?: ConversationParticipantRole
+  participantRole?: ParticipantRole
 ): boolean {
   const { role, userId } = auth
 
@@ -126,7 +126,7 @@ export function assertMessagingPermission(
   action: MessagingAction,
   conversation?: ConversationContext,
   message?: MessageContext,
-  participantRole?: ConversationParticipantRole
+  participantRole?: ParticipantRole
 ): void {
   if (!checkMessagingPermission(auth, action, conversation, message, participantRole)) {
     throw new Error(`Permission denied: ${action}`)
@@ -179,7 +179,7 @@ export function validateConversationType(
  * Check if user can send messages in conversation
  */
 export function canSendMessage(
-  participantRole?: ConversationParticipantRole
+  participantRole?: ParticipantRole
 ): boolean {
   if (!participantRole) return false
   return participantRole !== "read_only"
@@ -189,7 +189,7 @@ export function canSendMessage(
  * Check if user can manage participants
  */
 export function canManageParticipants(
-  participantRole?: ConversationParticipantRole
+  participantRole?: ParticipantRole
 ): boolean {
   if (!participantRole) return false
   return participantRole === "owner" || participantRole === "admin"
@@ -199,7 +199,7 @@ export function canManageParticipants(
  * Check if user can edit conversation settings
  */
 export function canEditConversation(
-  participantRole?: ConversationParticipantRole
+  participantRole?: ParticipantRole
 ): boolean {
   if (!participantRole) return false
   return participantRole === "owner"
@@ -209,7 +209,7 @@ export function canEditConversation(
  * Check if user can delete messages
  */
 export function canDeleteMessages(
-  participantRole?: ConversationParticipantRole
+  participantRole?: ParticipantRole
 ): boolean {
   if (!participantRole) return false
   return participantRole === "owner" || participantRole === "admin"
@@ -219,7 +219,7 @@ export function canDeleteMessages(
  * Check if user can pin messages
  */
 export function canPinMessages(
-  participantRole?: ConversationParticipantRole
+  participantRole?: ParticipantRole
 ): boolean {
   if (!participantRole) return false
   return participantRole === "owner" || participantRole === "admin"
@@ -337,14 +337,15 @@ export const ROLE_HIERARCHY = {
   admin: 3,
   member: 2,
   read_only: 1,
+  guest: 0,
 } as const
 
 /**
  * Check if role has higher or equal hierarchy
  */
 export function hasHigherOrEqualRole(
-  role1: ConversationParticipantRole,
-  role2: ConversationParticipantRole
+  role1: ParticipantRole,
+  role2: ParticipantRole
 ): boolean {
   return ROLE_HIERARCHY[role1] >= ROLE_HIERARCHY[role2]
 }
@@ -353,9 +354,9 @@ export function hasHigherOrEqualRole(
  * Check if user can change another participant's role
  */
 export function canChangeParticipantRole(
-  currentUserRole: ConversationParticipantRole,
-  targetUserRole: ConversationParticipantRole,
-  newRole: ConversationParticipantRole
+  currentUserRole: ParticipantRole,
+  targetUserRole: ParticipantRole,
+  newRole: ParticipantRole
 ): boolean {
   // Must have higher role than target
   if (!hasHigherOrEqualRole(currentUserRole, targetUserRole)) return false
@@ -428,7 +429,7 @@ export function validateMessageContent(
  * File upload authorization
  */
 export function canUploadFile(
-  participantRole: ConversationParticipantRole,
+  participantRole: ParticipantRole,
   conversationType: ConversationType
 ): boolean {
   // Read-only participants cannot upload

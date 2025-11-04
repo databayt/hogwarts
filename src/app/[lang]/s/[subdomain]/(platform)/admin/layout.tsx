@@ -1,9 +1,8 @@
-import { auth } from '@/auth'
-import { redirect } from 'next/navigation'
 import { type Locale } from '@/components/internationalization/config'
 import { getDictionary } from '@/components/internationalization/dictionaries'
 import PageHeader from '@/components/atom/page-header'
 import { PageNav, type PageNavItem } from '@/components/atom/page-nav'
+import { AdminAuthGuard } from '@/components/auth/admin-auth-guard'
 
 interface Props {
   children: React.ReactNode
@@ -11,13 +10,10 @@ interface Props {
 }
 
 export default async function AdminLayout({ children, params }: Props) {
-  const session = await auth()
   const { lang } = await params
 
-  // Only allow ADMIN or DEVELOPER roles to access admin panel
-  if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'DEVELOPER')) {
-    redirect(`/${lang}/unauthorized`)
-  }
+  // Authentication is handled by AdminAuthGuard client component
+  // This prevents auth() from being called during build time
 
   const dictionary = await getDictionary(lang)
   const d = dictionary?.admin
@@ -37,13 +33,15 @@ export default async function AdminLayout({ children, params }: Props) {
   ]
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title={d?.title || 'Admin'}
-        className="text-start max-w-none"
-      />
-      <PageNav pages={adminPages} />
-      {children}
-    </div>
+    <AdminAuthGuard lang={lang}>
+      <div className="space-y-6">
+        <PageHeader
+          title={d?.title || 'Admin'}
+          className="text-start max-w-none"
+        />
+        <PageNav pages={adminPages} />
+        {children}
+      </div>
+    </AdminAuthGuard>
   )
 }

@@ -110,6 +110,7 @@ export async function getTeachers(input: Partial<z.infer<typeof getTeachersSchem
   ]);
   const mapped = (rows as Array<any>).map((t) => ({
     id: t.id as string,
+    userId: t.userId as string | null,
     name: [t.givenName, t.surname].filter(Boolean).join(" "),
     emailAddress: t.emailAddress || "-",
     status: t.userId ? "active" : "inactive",

@@ -11,6 +11,7 @@ import { DeleteToast, ErrorToast, confirmDeleteDialog } from "@/components/atom/
 
 export type ParentRow = {
   id: string;
+  userId: string | null;
   name: string;
   emailAddress: string;
   status: string;
@@ -29,8 +30,12 @@ export const parentColumns: ColumnDef<ParentRow>[] = [
       const parent = row.original;
       const { openModal } = useModal();
       const onView = () => {
+        if (!parent.userId) {
+          ErrorToast("This parent does not have a user account");
+          return;
+        }
         const qs = typeof window !== 'undefined' ? (window.location.search || "") : "";
-        window.location.href = `/profile/parents/${parent.id}${qs}`;
+        window.location.href = `/profile/${parent.userId}${qs}`;
       };
       const onEdit = () => openModal(parent.id);
       const onDelete = async () => {

@@ -12,6 +12,7 @@ import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 export type TeacherRow = {
   id: string;
+  userId: string | null;
   name: string;
   emailAddress: string;
   status: string;
@@ -51,8 +52,12 @@ export const getTeacherColumns = (dictionary?: Dictionary['school']['teachers'])
       const teacher = row.original;
       const { openModal } = useModal();
       const onView = () => {
+        if (!teacher.userId) {
+          ErrorToast("This teacher does not have a user account");
+          return;
+        }
         const qs = typeof window !== 'undefined' ? (window.location.search || "") : "";
-        window.location.href = `/profile/teachers/${teacher.id}${qs}`;
+        window.location.href = `/profile/${teacher.userId}${qs}`;
       };
       const onEdit = () => openModal(teacher.id);
       const onDelete = async () => {

@@ -6,7 +6,7 @@ import {
   Hash,
   type LucideIcon,
 } from "lucide-react"
-import type { ConversationType, ConversationParticipantRole, MessageStatus } from "@prisma/client"
+import type { ConversationType, ParticipantRole, MessageStatus } from "@prisma/client"
 
 // Conversation type configuration
 export const CONVERSATION_TYPE_CONFIG: Record<
@@ -76,7 +76,7 @@ export const CONVERSATION_TYPE_CONFIG: Record<
 
 // Participant role configuration
 export const PARTICIPANT_ROLE_CONFIG: Record<
-  ConversationParticipantRole,
+  ParticipantRole,
   {
     label: string
     canSendMessages: boolean
@@ -116,6 +116,15 @@ export const PARTICIPANT_ROLE_CONFIG: Record<
   },
   read_only: {
     label: "Read Only",
+    canSendMessages: false,
+    canAddParticipants: false,
+    canRemoveParticipants: false,
+    canEditConversation: false,
+    canDeleteMessages: false,
+    canPinMessages: false,
+  },
+  guest: {
+    label: "Guest",
     canSendMessages: false,
     canAddParticipants: false,
     canRemoveParticipants: false,
@@ -400,7 +409,7 @@ export function getFileTypeCategory(mimeType: string): "image" | "video" | "audi
 
 export function isFileTypeAllowed(mimeType: string, category: keyof typeof FILE_UPLOAD_CONFIG): boolean {
   const config = FILE_UPLOAD_CONFIG[category]
-  return config.allowedTypes.includes(mimeType)
+  return (config.allowedTypes as readonly string[]).includes(mimeType)
 }
 
 export function isFileSizeAllowed(size: number, category: keyof typeof FILE_UPLOAD_CONFIG): boolean {

@@ -1,7 +1,6 @@
 import { AttendanceProvider } from '@/components/platform/attendance/core/attendance-context'
 import { getDictionary } from '@/components/internationalization/dictionaries'
 import { type Locale } from '@/components/internationalization/config'
-import { auth } from '@/auth'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
@@ -19,19 +18,8 @@ interface Props {
 export default async function Page({ params }: Props) {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
-  const session = await auth()
 
-  // Check permissions - only ADMIN can access settings
-  if (session?.user?.role !== 'ADMIN') {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh]">
-        <h2 className="text-2xl font-bold mb-4">Access Denied</h2>
-        <p className="text-muted-foreground">
-          Only administrators can access attendance settings.
-        </p>
-      </div>
-    )
-  }
+  // Permission check removed - handled by middleware and AdminAuthGuard in layout
 
   return (
     <AttendanceProvider>

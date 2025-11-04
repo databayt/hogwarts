@@ -438,7 +438,7 @@ export function TeacherDirectoryContent({
                   <Badge className={cn(getStatusColor(teacher.status))}>
                     {teacher.status.replace('-', ' ')}
                   </Badge>
-                  <Link href={`/profile/teachers/${teacher.id}`}>
+                  <Link href={`/profile/${teacher.id}`}>
                     <Button size="sm" variant="ghost">
                       View
                       <ChevronRight className="h-4 w-4 ml-1" />

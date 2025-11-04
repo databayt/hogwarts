@@ -18,6 +18,7 @@ export type StudentDTO = {
 
 export type StudentRow = {
   id: string;
+  userId: string | null;
   name: string;
   className: string;
   status: string;

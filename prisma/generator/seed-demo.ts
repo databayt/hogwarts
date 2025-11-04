@@ -1579,6 +1579,353 @@ async function ensureQuestionBank(schoolId: string, subjects: any[]) {
   return allQuestions;
 }
 
+// Admission System Seeding
+async function ensureAdmissions(schoolId: string) {
+  // Create Admission Campaign for 2025-2026
+  const campaign = await prisma.admissionCampaign.upsert({
+    where: {
+      schoolId_name: {
+        schoolId,
+        name: "Academic Year 2025-2026 Admissions"
+      }
+    },
+    update: {},
+    create: {
+      schoolId,
+      name: "Academic Year 2025-2026 Admissions",
+      academicYear: "2025-2026",
+      startDate: new Date("2025-03-01"),
+      endDate: new Date("2025-05-31"),
+      status: AdmissionStatus.OPEN,
+      description: "Open admissions for Academic Year 2025-2026 across all grades (7-12)",
+      applicationFee: "500.00",
+      totalSeats: 180, // 30 per grade × 6 grades
+      requiredDocuments: {
+        list: [
+          "Birth Certificate",
+          "Previous School Transfer Certificate",
+          "Previous Year Marksheet",
+          "Recent Photograph (2)",
+          "Address Proof",
+          "Parent ID Proof"
+        ]
+      },
+      eligibilityCriteria: {
+        minAge: 12,
+        maxAge: 18,
+        minPreviousPercentage: 50
+      }
+    }
+  });
+
+  // Create 15 Sample Applications with varied statuses
+  const applicationsData = [
+    // 5 Admitted (already enrolled as students)
+    { status: AdmissionApplicationStatus.ADMITTED, firstName: "Layla", lastName: "Hassan", grade: "Grade 7", meritRank: 1, score: 95 },
+    { status: AdmissionApplicationStatus.ADMITTED, firstName: "Kareem", lastName: "Ahmed", grade: "Grade 8", meritRank: 2, score: 93 },
+    { status: AdmissionApplicationStatus.ADMITTED, firstName: "Nadia", lastName: "Ibrahim", grade: "Grade 9", meritRank: 3, score: 91 },
+    { status: AdmissionApplicationStatus.ADMITTED, firstName: "Tariq", lastName: "Osman", grade: "Grade 10", meritRank: 4, score: 90 },
+    { status: AdmissionApplicationStatus.ADMITTED, firstName: "Amira", lastName: "Khalid", grade: "Grade 11", meritRank: 5, score: 88 },
+
+    // 3 Selected (offered admission, awaiting confirmation)
+    { status: AdmissionApplicationStatus.SELECTED, firstName: "Yousif", lastName: "Mohamed", grade: "Grade 7", meritRank: 6, score: 87 },
+    { status: AdmissionApplicationStatus.SELECTED, firstName: "Salma", lastName: "Ali", grade: "Grade 8", meritRank: 7, score: 85 },
+    { status: AdmissionApplicationStatus.SELECTED, firstName: "Hamza", lastName: "Omar", grade: "Grade 9", meritRank: 8, score: 84 },
+
+    // 3 Shortlisted (interview scheduled)
+    { status: AdmissionApplicationStatus.INTERVIEW_SCHEDULED, firstName: "Rashid", lastName: "Hassan", grade: "Grade 10", meritRank: 9, score: 82 },
+    { status: AdmissionApplicationStatus.INTERVIEW_SCHEDULED, firstName: "Zainab", lastName: "Mustafa", grade: "Grade 11", meritRank: 10, score: 81 },
+    { status: AdmissionApplicationStatus.SHORTLISTED, firstName: "Malik", lastName: "Salih", grade: "Grade 12", meritRank: 11, score: 80 },
+
+    // 2 Under Review
+    { status: AdmissionApplicationStatus.UNDER_REVIEW, firstName: "Amal", lastName: "Kamal", grade: "Grade 7", meritRank: null, score: null },
+    { status: AdmissionApplicationStatus.UNDER_REVIEW, firstName: "Bilal", lastName: "Tariq", grade: "Grade 8", meritRank: null, score: null },
+
+    // 1 Waitlisted
+    { status: AdmissionApplicationStatus.WAITLISTED, firstName: "Huda", lastName: "Nabil", grade: "Grade 9", meritRank: 26, score: 75, waitlist: 1 },
+
+    // 1 Rejected
+    { status: AdmissionApplicationStatus.REJECTED, firstName: "Samir", lastName: "Bashir", grade: "Grade 10", meritRank: null, score: 45 },
+  ];
+
+  for (let i = 0; i < applicationsData.length; i++) {
+    const app = applicationsData[i];
+    const appNumber = `2025ADM${String(i + 1).padStart(4, '0')}`;
+
+    const existing = await prisma.application.findUnique({
+      where: {
+        schoolId_applicationNumber: {
+          schoolId,
+          applicationNumber: appNumber
+        }
+      }
+    });
+
+    if (!existing) {
+      await prisma.application.create({
+        data: {
+          schoolId,
+          campaignId: campaign.id,
+          applicationNumber: appNumber,
+          firstName: app.firstName,
+          lastName: app.lastName,
+          middleName: "",
+          dateOfBirth: new Date(2010, 5, 15 + i),
+          gender: i % 2 === 0 ? "MALE" : "FEMALE",
+          nationality: "Sudanese",
+          religion: "Islam",
+          email: `${app.firstName.toLowerCase()}.${app.lastName.toLowerCase()}@applicant.demo`,
+          phone: `+249-1${String(11111000 + i).padStart(8, '0')}`,
+          address: `${100 + i} Main Street`,
+          city: "Khartoum",
+          state: "Khartoum",
+          postalCode: "11111",
+          country: "Sudan",
+          fatherName: `Father of ${app.firstName}`,
+          fatherPhone: `+249-9${String(11111000 + i).padStart(8, '0')}`,
+          fatherEmail: `father.${app.lastName.toLowerCase()}@demo.school`,
+          motherName: `Mother of ${app.firstName}`,
+          motherPhone: `+249-9${String(22222000 + i).padStart(8, '0')}`,
+          motherEmail: `mother.${app.lastName.toLowerCase()}@demo.school`,
+          previousSchool: i > 4 ? "Previous School Name" : null,
+          previousClass: i > 4 ? `Grade ${7 + (i % 6) - 1}` : null,
+          previousPercentage: i > 4 ? (70 + (i % 20)).toString() : null,
+          applyingForClass: app.grade,
+          status: app.status,
+          submittedAt: new Date(2025, 2, 15 + i), // Submitted in March 2025
+          reviewedAt: app.status !== AdmissionApplicationStatus.UNDER_REVIEW ? new Date(2025, 3, 1 + i) : null,
+          entranceScore: app.score ? app.score.toString() : null,
+          meritScore: app.score ? app.score.toString() : null,
+          meritRank: app.meritRank,
+          waitlistNumber: app.waitlist || null,
+          admissionOffered: app.status === AdmissionApplicationStatus.SELECTED || app.status === AdmissionApplicationStatus.ADMITTED,
+          offerDate: app.status === AdmissionApplicationStatus.SELECTED || app.status === AdmissionApplicationStatus.ADMITTED ? new Date(2025, 3, 10 + i) : null,
+          offerExpiryDate: app.status === AdmissionApplicationStatus.SELECTED ? new Date(2025, 3, 25 + i) : null,
+          admissionConfirmed: app.status === AdmissionApplicationStatus.ADMITTED,
+          confirmationDate: app.status === AdmissionApplicationStatus.ADMITTED ? new Date(2025, 3, 15 + i) : null,
+          applicationFeePaid: true,
+          paymentDate: new Date(2025, 2, 15 + i)
+        }
+      });
+    }
+  }
+
+  console.log("✅ Admission campaign and applications seeded");
+}
+
+// Task Management Seeding
+async function ensureTasks(schoolId: string) {
+  const tasks = [
+    // Admin Tasks
+    { code: "TASK-001", title: "Review budget for Q2 2025", status: "todo", label: "enhancement", priority: "high", hours: 4 },
+    { code: "TASK-002", title: "Approve teacher leave requests", status: "in_progress", label: "feature", priority: "medium", hours: 1 },
+    { code: "TASK-003", title: "Update school policies document", status: "done", label: "documentation", priority: "low", hours: 3 },
+    { code: "TASK-004", title: "Schedule parent-teacher conferences", status: "todo", label: "feature", priority: "high", hours: 2 },
+    { code: "TASK-005", title: "Resolve student transfer request", status: "in_progress", label: "feature", priority: "medium", hours: 2 },
+
+    // Teacher Tasks
+    { code: "TASK-006", title: "Grade midterm exam papers - Grade 10", status: "in_progress", label: "feature", priority: "high", hours: 5 },
+    { code: "TASK-007", title: "Prepare lesson plan for next week", status: "todo", label: "feature", priority: "medium", hours: 3 },
+    { code: "TASK-008", title: "Update attendance records for March", status: "done", label: "feature", priority: "medium", hours: 1 },
+    { code: "TASK-009", title: "Create assignment for Chapter 6", status: "todo", label: "feature", priority: "medium", hours: 2 },
+    { code: "TASK-010", title: "Respond to parent inquiry about grades", status: "in_progress", label: "feature", priority: "high", hours: 0.5 },
+
+    // System Tasks
+    { code: "TASK-011", title: "Backup database (automated)", status: "done", label: "feature", priority: "high", hours: 0 },
+    { code: "TASK-012", title: "Generate monthly reports", status: "todo", label: "feature", priority: "medium", hours: 0 },
+    { code: "TASK-013", title: "Send attendance alerts to parents", status: "done", label: "feature", priority: "medium", hours: 0 },
+    { code: "TASK-014", title: "Process fee payment reminders", status: "in_progress", label: "feature", priority: "high", hours: 0 },
+    { code: "TASK-015", title: "Update student progress reports", status: "todo", label: "feature", priority: "low", hours: 0 },
+
+    // Maintenance Tasks
+    { code: "TASK-016", title: "Fix library book checkout issue", status: "done", label: "bug", priority: "high", hours: 2 },
+    { code: "TASK-017", title: "Update LMS course content", status: "in_progress", label: "enhancement", priority: "medium", hours: 4 },
+    { code: "TASK-018", title: "Review and archive old announcements", status: "todo", label: "feature", priority: "low", hours: 1 },
+    { code: "TASK-019", title: "Configure QR code attendance system", status: "done", label: "feature", priority: "high", hours: 3 },
+    { code: "TASK-020", title: "Prepare annual report for board meeting", status: "todo", label: "documentation", priority: "high", hours: 8 },
+  ];
+
+  for (const task of tasks) {
+    const existing = await prisma.task.findUnique({
+      where: { code: task.code }
+    });
+
+    if (!existing) {
+      await prisma.task.create({
+        data: {
+          code: task.code,
+          title: task.title,
+          status: task.status as any,
+          label: task.label as any,
+          priority: task.priority as any,
+          estimatedHours: task.hours,
+          schoolId
+        }
+      });
+    }
+  }
+
+  console.log("✅ Task management data seeded (20 tasks)");
+}
+
+// Legal & Compliance Seeding
+async function ensureLegal(schoolId: string) {
+  // Create 3 Legal Documents
+  const documents = [
+    {
+      type: "terms",
+      version: "1.0.0",
+      title: "Terms of Service",
+      content: `# Terms of Service
+
+Welcome to Hogwarts School Management System.
+
+## 1. Acceptance of Terms
+By accessing and using this platform, you accept and agree to be bound by the terms and provision of this agreement.
+
+## 2. User Responsibilities
+- Maintain confidentiality of your account
+- Use the platform only for lawful purposes
+- Respect intellectual property rights
+
+## 3. Privacy & Data Protection
+Your privacy is important to us. Please review our Privacy Policy.
+
+## 4. Limitation of Liability
+The school shall not be liable for any indirect, incidental, special damages.
+
+## 5. Changes to Terms
+We reserve the right to modify these terms at any time.
+
+Effective Date: January 1, 2025
+Version: 1.0.0`
+    },
+    {
+      type: "privacy",
+      version: "1.0.0",
+      title: "Privacy Policy",
+      content: `# Privacy Policy
+
+Last Updated: January 1, 2025
+
+## Information We Collect
+- Personal identification information (name, email, phone)
+- Academic records and performance data
+- Attendance and behavioral records
+
+## How We Use Your Information
+- Provide educational services
+- Communicate with students and parents
+- Improve our platform and services
+
+## Data Security
+We implement appropriate security measures to protect your personal information.
+
+## Your Rights
+- Access your personal data
+- Request correction or deletion
+- Withdraw consent at any time
+
+## Contact Us
+For privacy concerns, contact: privacy@demo.school`
+    },
+    {
+      type: "data-processing",
+      version: "1.0.0",
+      title: "Data Processing Agreement",
+      content: `# Data Processing Agreement
+
+## Purpose
+This agreement governs the processing of personal data by Hogwarts School.
+
+## Data Processing Principles
+- Lawfulness, fairness, and transparency
+- Purpose limitation
+- Data minimization
+- Accuracy
+- Storage limitation
+- Integrity and confidentiality
+
+## Data Subject Rights
+Students and parents have the right to:
+- Access their data
+- Rectify inaccurate data
+- Erase data (right to be forgotten)
+- Restrict processing
+- Data portability
+- Object to processing
+
+## Security Measures
+We implement technical and organizational measures to ensure data security.
+
+Effective Date: January 1, 2025`
+    }
+  ];
+
+  for (const doc of documents) {
+    const existing = await prisma.legalDocument.findUnique({
+      where: {
+        schoolId_type_version: {
+          schoolId,
+          type: doc.type,
+          version: doc.version
+        }
+      }
+    });
+
+    if (!existing) {
+      await prisma.legalDocument.create({
+        data: {
+          schoolId,
+          type: doc.type,
+          version: doc.version,
+          content: doc.content,
+          effectiveFrom: new Date("2025-01-01"),
+          isActive: true,
+          requiresExplicit: true
+        }
+      });
+    }
+  }
+
+  // Create consent tracking for some users
+  const adminUser = await prisma.user.findFirst({
+    where: { schoolId, role: UserRole.ADMIN }
+  });
+
+  if (adminUser) {
+    for (const doc of documents) {
+      const existing = await prisma.legalConsent.findUnique({
+        where: {
+          schoolId_userId_documentType_documentVersion: {
+            schoolId,
+            userId: adminUser.id,
+            documentType: doc.type,
+            documentVersion: doc.version
+          }
+        }
+      });
+
+      if (!existing) {
+        await prisma.legalConsent.create({
+          data: {
+            schoolId,
+            userId: adminUser.id,
+            documentType: doc.type,
+            documentVersion: doc.version,
+            consentType: "explicit",
+            ipAddress: "192.168.1.1",
+            userAgent: "Mozilla/5.0 (Demo Browser)",
+            consentedAt: new Date("2025-01-02")
+          }
+        });
+      }
+    }
+  }
+
+  console.log("✅ Legal documents and consent tracking seeded");
+}
+
 async function main() {
   console.log("🌱 Starting comprehensive demo seed...");
   console.log("📋 School: Demo International School");
@@ -1629,15 +1976,23 @@ async function main() {
   // Seed Question Bank for Exams
   await ensureQuestionBank(school.id, subjects);
 
+  // NEW: Seed additional modules
+  await ensureAdmissions(school.id);
+  await ensureTasks(school.id);
+  await ensureLegal(school.id);
+
   console.log("");
   console.log("✅✅✅ Demo seed completed successfully!");
   console.log("");
   // Get final counts
   const questionBankCount = await prisma.questionBank.count({ where: { schoolId: school.id } });
+  const admissionApplications = await prisma.application.count({ where: { schoolId: school.id } });
+  const taskCount = await prisma.task.count({ where: { schoolId: school.id } });
+  const legalDocsCount = await prisma.legalDocument.count({ where: { schoolId: school.id } });
 
   console.log("📊 Summary:");
   console.log(`   - School: ${school.name}`);
-  console.log(`   - Domain: ${school.domain} → demo.databayt.org`);
+  console.log(`   - Domain: ${school.domain} → demo.ed.databayt.org`);
   console.log(`   - Teachers: ${teachers.length}`);
   console.log(`   - Students: ${students.length}`);
   console.log(`   - Classes: ${classes.length}`);
@@ -1646,14 +2001,17 @@ async function main() {
   console.log(`   - Exams: 12`);
   console.log(`   - Question Bank: ${questionBankCount} questions`);
   console.log(`   - LMS Courses: 10 (with chapters and lessons)`);
+  console.log(`   - Admission Applications: ${admissionApplications}`);
+  console.log(`   - Tasks: ${taskCount}`);
+  console.log(`   - Legal Documents: ${legalDocsCount}`);
   console.log("");
   console.log("🔐 Demo Credentials (password: 1234):");
-  console.log("   - admin@demo.databayt.org");
-  console.log("   - teacher@demo.databayt.org");
-  console.log("   - student@demo.databayt.org");
-  console.log("   - parent@demo.databayt.org");
+  console.log("   - admin@demo.school");
+  console.log("   - teacher: aisha.hassan@demo.school (+ 24 more)");
+  console.log("   - student: ahmed.mohammed.001@demo.school (+ 149 more)");
+  console.log("   - parent: abdullah.mohammed@demo.school (+ 299 more)");
   console.log("");
-  console.log("🚀 Access demo at: https://demo.databayt.org");
+  console.log("🚀 Access demo at: https://demo.ed.databayt.org");
 }
 
 main()

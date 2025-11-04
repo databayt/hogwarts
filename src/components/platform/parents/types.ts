@@ -16,6 +16,7 @@ export type ParentDTO = {
 
 export type ParentRow = {
   id: string;
+  userId: string | null;
   name: string;
   emailAddress: string;
   status: string;
