@@ -924,7 +924,14 @@
       "enable2FA": "تفعيل المصادقة الثنائية",
       "disable2FA": "تعطيل المصادقة الثنائية",
       "sessions": "الجلسات النشطة",
-      "logoutAllDevices": "تسجيل الخروج من جميع الأجهزة"
+      "logoutAllDevices": "تسجيل الخروج من جميع الأجهزة",
+      "navigation": {
+        "overview": "نظرة عامة",
+        "students": "الطلاب",
+        "teachers": "المعلمون",
+        "parents": "أولياء الأمور",
+        "staff": "الموظفون"
+      }
     },
     "onboarding": {
       "title": "إعداد المدرسة",
