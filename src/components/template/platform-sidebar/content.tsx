@@ -59,7 +59,7 @@ export default function PlatformSidebar({ school, lang, ...props }: PlatformSide
       </SidebarHeader> */}
       <SidebarContent className="border-0 bg-transparent">
         <ScrollArea className="h-full" dir={isRTL ? "rtl" : "ltr"}>
-          <SidebarGroup className="p-2 pb-8">
+          <SidebarGroup className="p-2 pb-16">
             <SidebarMenu className="space-y-1 list-none">
               {platformNav
                 .filter((item) => (currentRole ? item.roles.includes(currentRole) : false))
