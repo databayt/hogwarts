@@ -13,7 +13,8 @@
       "Bash(if [ ! -f \"$dir/loading.tsx\" ])",
       "Bash(then echo \"$dirname\")",
       "Bash(fi)",
-      "WebFetch(domain:ed.databayt.org)"
+      "WebFetch(domain:ed.databayt.org)",
+      "Bash(nul)"
     ],
     "deny": [],
     "ask": []

@@ -64,6 +64,209 @@ const adminDictionaries = {
   "ar": () => import("./dictionaries/ar/admin.json").then((module) => module.default),
 } as const;
 
+// ============================================================================
+// Route-Specific Dictionary Loaders (Optimized)
+// ============================================================================
+
+/**
+ * Marketing pages - only general translations
+ * Used for: home page, landing pages, public pages
+ */
+export const getMarketingDictionary = async (locale: Locale) => {
+  try {
+    const general = await (generalDictionaries[locale]?.() ?? generalDictionaries["en"]());
+    return general;
+  } catch (error) {
+    console.warn(`Failed to load marketing dictionary for locale: ${locale}`);
+    return await generalDictionaries["en"]();
+  }
+};
+
+/**
+ * Platform core pages - general + school + operator
+ * Used for: dashboard, attendance, basic platform features
+ */
+export const getPlatformCoreDictionary = async (locale: Locale) => {
+  try {
+    const [general, school, operator] = await Promise.all([
+      generalDictionaries[locale]?.() ?? generalDictionaries["en"](),
+      schoolDictionaries[locale]?.() ?? schoolDictionaries["en"](),
+      operatorDictionaries[locale]?.() ?? operatorDictionaries["en"](),
+    ]);
+    return { ...general, ...school, ...operator };
+  } catch (error) {
+    console.warn(`Failed to load platform core dictionary for locale: ${locale}`);
+    const [general, school, operator] = await Promise.all([
+      generalDictionaries["en"](),
+      schoolDictionaries["en"](),
+      operatorDictionaries["en"](),
+    ]);
+    return { ...general, ...school, ...operator };
+  }
+};
+
+/**
+ * Stream pages - platform core + stream
+ * Used for: course/stream management pages
+ */
+export const getStreamDictionary = async (locale: Locale) => {
+  try {
+    const [general, school, operator, stream] = await Promise.all([
+      generalDictionaries[locale]?.() ?? generalDictionaries["en"](),
+      schoolDictionaries[locale]?.() ?? schoolDictionaries["en"](),
+      operatorDictionaries[locale]?.() ?? operatorDictionaries["en"](),
+      streamDictionaries[locale]?.() ?? streamDictionaries["en"](),
+    ]);
+    return { ...general, ...school, ...operator, ...stream };
+  } catch (error) {
+    console.warn(`Failed to load stream dictionary for locale: ${locale}`);
+    const [general, school, operator, stream] = await Promise.all([
+      generalDictionaries["en"](),
+      schoolDictionaries["en"](),
+      operatorDictionaries["en"](),
+      streamDictionaries["en"](),
+    ]);
+    return { ...general, ...school, ...operator, ...stream };
+  }
+};
+
+/**
+ * Library pages - platform core + library
+ * Used for: library management pages
+ */
+export const getLibraryDictionary = async (locale: Locale) => {
+  try {
+    const [general, school, operator, library] = await Promise.all([
+      generalDictionaries[locale]?.() ?? generalDictionaries["en"](),
+      schoolDictionaries[locale]?.() ?? schoolDictionaries["en"](),
+      operatorDictionaries[locale]?.() ?? operatorDictionaries["en"](),
+      libraryDictionaries[locale]?.() ?? libraryDictionaries["en"](),
+    ]);
+    return { ...general, ...school, ...operator, library };
+  } catch (error) {
+    console.warn(`Failed to load library dictionary for locale: ${locale}`);
+    const [general, school, operator, library] = await Promise.all([
+      generalDictionaries["en"](),
+      schoolDictionaries["en"](),
+      operatorDictionaries["en"](),
+      libraryDictionaries["en"](),
+    ]);
+    return { ...general, ...school, ...operator, library };
+  }
+};
+
+/**
+ * Banking pages - platform core + banking
+ * Used for: banking/accounts pages
+ */
+export const getBankingDictionary = async (locale: Locale) => {
+  try {
+    const [general, school, operator, banking] = await Promise.all([
+      generalDictionaries[locale]?.() ?? generalDictionaries["en"](),
+      schoolDictionaries[locale]?.() ?? schoolDictionaries["en"](),
+      operatorDictionaries[locale]?.() ?? operatorDictionaries["en"](),
+      bankingDictionaries[locale]?.() ?? bankingDictionaries["en"](),
+    ]);
+    return { ...general, ...school, ...operator, banking };
+  } catch (error) {
+    console.warn(`Failed to load banking dictionary for locale: ${locale}`);
+    const [general, school, operator, banking] = await Promise.all([
+      generalDictionaries["en"](),
+      schoolDictionaries["en"](),
+      operatorDictionaries["en"](),
+      bankingDictionaries["en"](),
+    ]);
+    return { ...general, ...school, ...operator, banking };
+  }
+};
+
+/**
+ * Finance pages - platform core + finance
+ * Used for: finance/accounting pages
+ */
+export const getFinanceDictionary = async (locale: Locale) => {
+  try {
+    const [general, school, operator, finance] = await Promise.all([
+      generalDictionaries[locale]?.() ?? generalDictionaries["en"](),
+      schoolDictionaries[locale]?.() ?? schoolDictionaries["en"](),
+      operatorDictionaries[locale]?.() ?? operatorDictionaries["en"](),
+      financeDictionaries[locale]?.() ?? financeDictionaries["en"](),
+    ]);
+    return { ...general, ...school, ...operator, finance };
+  } catch (error) {
+    console.warn(`Failed to load finance dictionary for locale: ${locale}`);
+    const [general, school, operator, finance] = await Promise.all([
+      generalDictionaries["en"](),
+      schoolDictionaries["en"](),
+      operatorDictionaries["en"](),
+      financeDictionaries["en"](),
+    ]);
+    return { ...general, ...school, ...operator, finance };
+  }
+};
+
+/**
+ * Admin pages - platform core + admin
+ * Used for: admin/settings pages
+ */
+export const getAdminDictionary = async (locale: Locale) => {
+  try {
+    const [general, school, operator, admin] = await Promise.all([
+      generalDictionaries[locale]?.() ?? generalDictionaries["en"](),
+      schoolDictionaries[locale]?.() ?? schoolDictionaries["en"](),
+      operatorDictionaries[locale]?.() ?? operatorDictionaries["en"](),
+      adminDictionaries[locale]?.() ?? adminDictionaries["en"](),
+    ]);
+    return { ...general, ...school, ...operator, admin };
+  } catch (error) {
+    console.warn(`Failed to load admin dictionary for locale: ${locale}`);
+    const [general, school, operator, admin] = await Promise.all([
+      generalDictionaries["en"](),
+      schoolDictionaries["en"](),
+      operatorDictionaries["en"](),
+      adminDictionaries["en"](),
+    ]);
+    return { ...general, ...school, ...operator, admin };
+  }
+};
+
+/**
+ * Exam pages - platform core + marking + generate + results
+ * Used for: exam management, marking, results pages
+ */
+export const getExamDictionary = async (locale: Locale) => {
+  try {
+    const [general, school, operator, marking, generate, results] = await Promise.all([
+      generalDictionaries[locale]?.() ?? generalDictionaries["en"](),
+      schoolDictionaries[locale]?.() ?? schoolDictionaries["en"](),
+      operatorDictionaries[locale]?.() ?? operatorDictionaries["en"](),
+      markingDictionaries[locale]?.() ?? markingDictionaries["en"](),
+      generateDictionaries[locale]?.() ?? generateDictionaries["en"](),
+      resultsDictionaries[locale]?.() ?? resultsDictionaries["en"](),
+    ]);
+    return { ...general, ...school, ...operator, marking, generate, results };
+  } catch (error) {
+    console.warn(`Failed to load exam dictionary for locale: ${locale}`);
+    const [general, school, operator, marking, generate, results] = await Promise.all([
+      generalDictionaries["en"](),
+      schoolDictionaries["en"](),
+      operatorDictionaries["en"](),
+      markingDictionaries["en"](),
+      generateDictionaries["en"](),
+      resultsDictionaries["en"](),
+    ]);
+    return { ...general, ...school, ...operator, marking, generate, results };
+  }
+};
+
+// ============================================================================
+// Full Dictionary Loader (Default)
+// ============================================================================
+
+/**
+ * Full dictionary - loads all translations
+ * Use route-specific loaders above for better performance when needed
+ */
 export const getDictionary = async (locale: Locale) => {
   try {
     // Load all dictionaries
@@ -102,5 +305,16 @@ export const getDictionary = async (locale: Locale) => {
   }
 };
 
-// Type helper for component props
+// ============================================================================
+// Type Helpers
+// ============================================================================
+
 export type Dictionary = Awaited<ReturnType<typeof getDictionary>>;
+export type MarketingDictionary = Awaited<ReturnType<typeof getMarketingDictionary>>;
+export type PlatformCoreDictionary = Awaited<ReturnType<typeof getPlatformCoreDictionary>>;
+export type StreamDictionary = Awaited<ReturnType<typeof getStreamDictionary>>;
+export type LibraryDictionary = Awaited<ReturnType<typeof getLibraryDictionary>>;
+export type BankingDictionary = Awaited<ReturnType<typeof getBankingDictionary>>;
+export type FinanceDictionary = Awaited<ReturnType<typeof getFinanceDictionary>>;
+export type AdminDictionary = Awaited<ReturnType<typeof getAdminDictionary>>;
+export type ExamDictionary = Awaited<ReturnType<typeof getExamDictionary>>;
