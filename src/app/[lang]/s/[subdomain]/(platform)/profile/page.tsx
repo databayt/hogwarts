@@ -12,6 +12,12 @@ export default async function Page({ params }: Props) {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
 
+  // Verify dictionary has required data
+  if (!dictionary) {
+    console.error('[Profile Page] Dictionary is undefined')
+    throw new Error('Failed to load dictionary')
+  }
+
   return <ProfileContent dictionary={dictionary} lang={lang} />
 }
 

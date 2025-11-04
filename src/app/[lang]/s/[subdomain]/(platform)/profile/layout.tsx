@@ -11,31 +11,34 @@ interface Props {
 export default async function ProfileLayout({ children, params }: Props) {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
-  const d = dictionary?.profile
 
-  // Define navigation items for profile section
+  // Safe access to profile dictionary with fallbacks
+  const profileDict = dictionary?.profile
+  const profileNav = profileDict?.navigation
+
+  // Define navigation items for profile section with safe fallbacks
   const profilePages: PageNavItem[] = [
     {
-      name: d?.navigation?.overview || 'Overview',
+      name: profileNav?.overview ?? 'Overview',
       href: `/${lang}/profile`,
     },
     {
-      name: d?.navigation?.students || 'Students',
+      name: profileNav?.students ?? 'Students',
       href: `/${lang}/profile/students`,
       hidden: true,
     },
     {
-      name: d?.navigation?.teachers || 'Teachers',
+      name: profileNav?.teachers ?? 'Teachers',
       href: `/${lang}/profile/teachers`,
       hidden: true,
     },
     {
-      name: d?.navigation?.parents || 'Parents',
+      name: profileNav?.parents ?? 'Parents',
       href: `/${lang}/profile/parents`,
       hidden: true,
     },
     {
-      name: d?.navigation?.staff || 'Staff',
+      name: profileNav?.staff ?? 'Staff',
       href: `/${lang}/profile/staff`,
       hidden: true,
     },
@@ -44,7 +47,7 @@ export default async function ProfileLayout({ children, params }: Props) {
   return (
     <div className="space-y-6">
       <PageHeader
-        title={d?.title || 'Profile'}
+        title={profileDict?.title ?? 'Profile'}
         className="text-start max-w-none"
       />
       <PageNav pages={profilePages} />
