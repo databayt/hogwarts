@@ -63,7 +63,7 @@ export function ConversationCard({
 
   const avatarUrl = conversation.type === "direct" && otherUser
     ? otherUser.image || undefined
-    : conversation.avatarUrl || undefined
+    : conversation.avatar || undefined
 
   const avatarFallback = displayName?.[0]?.toUpperCase() || "C"
 

@@ -1,0 +1,1436 @@
+# Advanced Features Guide
+
+This guide covers advanced features of the Hogwarts platform for power users, administrators, and technical staff.
+
+---
+
+## Table of Contents
+
+1. **Multi-Language Support** - Arabic/English bilingual platform with RTL/LTR
+2. **Question Bank Management** - Comprehensive exam question management
+3. **Auto-Marking System** - Automated grading and instant feedback
+4. **Analytics & Reporting** - Data-driven insights and decision making
+
+---
+
+## 1. Multi-Language Support
+
+The Hogwarts platform is fully bilingual, supporting **Arabic (RTL)** and **English (LTR)** with seamless switching.
+
+### Language Architecture
+
+**Supported Languages**:
+- **Arabic** (ar) - Right-to-Left (RTL) - Default
+- **English** (en) - Left-to-Right (LTR)
+
+**Translation Coverage**:
+- **800+ translation keys** covering all platform features
+- **100% coverage** of UI elements, messages, and content
+- **Dynamic content** in both languages (names, descriptions, etc.)
+
+**Routing Pattern**:
+```
+URL Structure:
+https://demo.ed.databayt.org/ar/... (Arabic)
+https://demo.ed.databayt.org/en/... (English)
+
+All routes include [lang] dynamic segment:
+/[lang]/s/[subdomain]/(platform)/...
+```
+
+### Using Multi-Language Features
+
+#### Switching Languages (5 min walkthrough)
+
+1. **Locate Language Switcher**:
+   - Top navigation bar, right side (LTR) or left side (RTL)
+   - Globe icon with current language label
+   - Shows: "العربية" (Arabic) or "English"
+
+2. **Switch Language**:
+   - Click globe icon
+   - Dropdown appears with options:
+     ```
+     ( ) العربية (Arabic)
+     (•) English
+     ```
+   - Select desired language
+   - Page refreshes with new language
+
+3. **What Changes**:
+   - **UI Elements**: All buttons, labels, menus translate
+   - **Direction**: Layout flips (RTL ↔ LTR)
+   - **Fonts**: Tajawal (Arabic) ↔ Inter (English)
+   - **Navigation**: Sidebar position flips
+   - **Forms**: Label positioning adjusts
+   - **Tables**: Column alignment changes
+   - **URL**: `/ar/...` ↔ `/en/...`
+
+4. **What Stays Same**:
+   - **User-generated content**: Student names, custom descriptions
+   - **Numbers**: Always displayed in same format
+   - **Dates**: Format adjusts (Arabic: ٢٠٢٥/٣/١٥, English: 15/03/2025)
+
+#### RTL vs LTR Demonstration
+
+**RTL (Arabic) Layout**:
+```
+[Logo]                    [Search] [Notifications] [Profile] [العربية]
+─────────────────────────────────────────────────────────────────────
+                                                    [Dashboard] [القائمة]
+                                                             |
+                                          Content Area ← | Sidebar
+                                                             |
+```
+
+**LTR (English) Layout**:
+```
+[English] [Profile] [Notifications] [Search]                    [Logo]
+─────────────────────────────────────────────────────────────────────
+[Menu] [Dashboard]
+      |
+Sidebar | → Content Area
+      |
+```
+
+#### Language-Specific Features
+
+**Arabic-Specific**:
+- **Arabic Fonts**: Tajawal font family optimized for readability
+- **Number System**: Arabic-Indic numerals option (١٢٣ vs 123)
+- **Date Format**: Hijri calendar support (optional)
+- **Text Direction**: Proper RTL text flow
+- **Pluralization**: Arabic plural rules (2, 3-10, 11+)
+
+**English-Specific**:
+- **Sans-serif Font**: Inter font family
+- **Standard Numerals**: Western Arabic numerals (123)
+- **Gregorian Calendar**: Standard date format
+- **LTR Flow**: Left-to-right reading direction
+
+#### Translation Management (Admin Only)
+
+**Access Translation Manager**:
+```
+Settings → System → Translations
+```
+
+**View Translation Keys**:
+```
+Translation Keys: 800+
+
+Modules:
+- Common: 150 keys (buttons, labels, actions)
+- Authentication: 45 keys
+- Students: 120 keys
+- Attendance: 80 keys
+- Exams: 95 keys
+- Finance: 110 keys
+- Library: 55 keys
+- LMS: 75 keys
+- Communication: 40 keys
+- [... other modules]
+
+Search: [_____________] 🔍
+Filter by: [All] [Missing] [Outdated]
+```
+
+**Add/Edit Translation**:
+```
+Key: student.enrollment.form.submit
+English: "Enroll Student"
+Arabic: "تسجيل طالب"
+
+Context: Button text for student enrollment form
+Module: Students
+Status: ✓ Translated
+
+[Save] [Cancel]
+```
+
+**Export/Import Translations**:
+- Export as JSON for external translation
+- Import translated files
+- Bulk update translations
+- Version control integration
+
+#### Best Practices for Multilingual Content
+
+**DO**:
+- Use translation keys for all UI text
+- Test both RTL and LTR layouts
+- Keep translations concise (fit in both languages)
+- Use culturally appropriate examples
+- Respect text expansion (Arabic often longer than English)
+
+**DON'T**:
+- Hardcode text in components
+- Assume LTR direction
+- Use directional terms ("left", "right") in code
+- Ignore font differences
+- Forget to translate new features
+
+#### Demo: Multilingual Experience
+
+**Test Scenario**: Student views grades in both languages
+
+**Arabic View** (`/ar/s/demo/platform/grades`):
+```
+الدرجات
+
+الربع الثالث ٢٠٢٥ - الصف العاشر
+
+المادة                الدرجة    الحالة
+الرياضيات             ٨٨% (ب+)  جيد
+الفيزياء              ٨٥% (ب)   جيد
+اللغة الإنجليزية      ٩٠% (أ-)  ممتاز
+[...]
+
+المعدل التراكمي: ٣.٤/٤.٠
+```
+
+**English View** (`/en/s/demo/platform/grades`):
+```
+Grades
+
+Quarter 3, 2025 - Grade 10
+
+Subject            Grade      Status
+Mathematics        88% (B+)   Good
+Physics            85% (B)    Good
+English            90% (A-)   Excellent
+[...]
+
+Overall GPA: 3.4/4.0
+```
+
+**Notice**:
+- Complete translation of headers and labels
+- Subject names translated
+- Status badges translated
+- Number format consistent
+- Layout direction reversed
+- Fonts different (Tajawal vs Inter)
+
+---
+
+## 2. Question Bank Management
+
+A powerful system for managing exam questions with advanced features for reusability and organization.
+
+### Question Bank Overview
+
+**Demo Data**:
+- **31 questions** across 9 subjects
+- **6 question types**: MCQ, T/F, Short Answer, Essay, Fill Blank, Matching
+- **3 difficulty levels**: Easy, Medium, Hard
+- **6 Bloom levels**: Remember, Understand, Apply, Analyze, Evaluate, Create
+- **Tagging system**: Organize by topic, grade, chapter
+
+### Question Types Explained
+
+#### 1. Multiple Choice (MCQ)
+
+**Structure**:
+```
+Question Text: "What is the capital of Sudan?"
+Options:
+  A) Cairo (incorrect)
+  B) Khartoum (correct) ✓
+  C) Nairobi (incorrect)
+  D) Addis Ababa (incorrect)
+
+Points: 2
+Time Estimate: 2 minutes
+Difficulty: Easy
+Bloom Level: Remember
+Tags: ["geography", "sudan", "capitals", "grade-9"]
+```
+
+**Auto-Grading**: ✓ Yes - Instant scoring
+**Use Cases**: Knowledge recall, concept testing, quick assessments
+
+#### 2. True/False
+
+**Structure**:
+```
+Question Text: "Sudan is located in East Africa."
+Options:
+  True (incorrect)
+  False (correct) ✓
+
+Explanation: "Sudan is in Northeast Africa, not East Africa."
+
+Points: 1
+Time Estimate: 1 minute
+Difficulty: Easy
+Bloom Level: Remember
+Tags: ["geography", "sudan", "grade-9"]
+```
+
+**Auto-Grading**: ✓ Yes - Instant scoring
+**Use Cases**: Fact verification, concept understanding
+
+#### 3. Short Answer
+
+**Structure**:
+```
+Question Text: "Explain Newton's First Law of Motion in your own words."
+
+Sample Answer: "An object at rest stays at rest, and an object in
+motion stays in motion at constant velocity, unless acted upon by
+an external force. This is also known as the law of inertia."
+
+Points: 5
+Time Estimate: 5 minutes
+Difficulty: Medium
+Bloom Level: Understand
+Tags: ["physics", "motion", "newton-laws", "grade-10"]
+```
+
+**Auto-Grading**: ✗ No - Requires manual grading
+**Grading Support**: Sample answer provided for reference
+**Use Cases**: Conceptual understanding, explanations
+
+#### 4. Essay Question
+
+**Structure**:
+```
+Question Text: "Discuss the impact of the Nile River on Sudanese
+civilization throughout history."
+
+Sample Answer: [300-500 word sample response]
+
+Grading Rubric:
+- Historical Accuracy (5 points)
+- Depth of Analysis (5 points)
+- Organization & Structure (3 points)
+- Grammar & Writing (2 points)
+
+Total Points: 15
+Time Estimate: 20 minutes
+Difficulty: Hard
+Bloom Level: Analyze
+Tags: ["history", "sudan", "nile", "essay", "grade-11"]
+```
+
+**Auto-Grading**: ✗ No - Requires manual grading
+**Grading Support**: Rubric provided for consistent scoring
+**Use Cases**: Critical thinking, analysis, extended responses
+
+#### 5. Fill in the Blank
+
+**Structure**:
+```
+Question Text: "The chemical symbol for Gold is ____."
+
+Accepted Answers: ["Au", "AU", "au"]
+Case Sensitive: No
+Allow Partial Credit: No
+
+Explanation: "Gold's chemical symbol is Au, from the Latin 'aurum'."
+
+Points: 1
+Time Estimate: 1 minute
+Difficulty: Easy
+Bloom Level: Remember
+Tags: ["chemistry", "periodic-table", "elements", "grade-9"]
+```
+
+**Auto-Grading**: ✓ Yes - Matches against accepted answers
+**Flexibility**: Multiple accepted spellings/formats
+**Use Cases**: Terminology, formulas, specific facts
+
+#### 6. Matching
+
+**Structure**:
+```
+Question Text: "Match each scientist with their discovery."
+
+Left Column (Items):
+  A) Isaac Newton
+  B) Albert Einstein
+  C) Marie Curie
+  D) Charles Darwin
+
+Right Column (Matches):
+  1) Theory of Relativity
+  2) Laws of Motion
+  3) Radioactivity
+  4) Evolution by Natural Selection
+
+Correct Pairs:
+  A → 2, B → 1, C → 3, D → 4
+
+Points: 4 (1 per match)
+Time Estimate: 3 minutes
+Difficulty: Medium
+Bloom Level: Remember
+Tags: ["science", "history", "scientists", "grade-10"]
+```
+
+**Auto-Grading**: ✓ Yes - Validates correct pairings
+**Scoring**: Partial credit for correct matches
+**Use Cases**: Relationships, associations, categorization
+
+### Creating Questions (10 min walkthrough)
+
+#### Access Question Bank:
+```
+Sidebar → Exams → Question Bank
+Or: /[lang]/s/demo/platform/exams/question-bank
+```
+
+#### Create New Question:
+
+1. **Click "Add Question" Button**
+
+2. **Select Question Type**:
+   - Choose from 6 types (MCQ, T/F, Short Answer, etc.)
+
+3. **Fill Basic Information**:
+   ```
+   Subject: Select from dropdown (Mathematics, Physics, etc.)
+   Question Text: [Rich text editor - supports formatting, images]
+
+   Example:
+   "Calculate the area of a circle with radius 5cm.
+    Use π = 3.14"
+   ```
+
+4. **Configure Question Details**:
+   ```
+   Difficulty: ( ) Easy (•) Medium ( ) Hard
+   Bloom Level: (•) Apply
+   Points: 5
+   Time Estimate: 5 minutes
+   ```
+
+5. **Add Options** (for MCQ/T/F):
+   ```
+   Option A: [Text field] "15.7 cm²"
+   [✓] Correct Answer
+
+   Option B: [Text field] "31.4 cm²"
+   [ ] Correct Answer
+
+   Option C: [Text field] "78.5 cm²"
+   [ ] Correct Answer
+
+   Option D: [Text field] "157 cm²"
+   [ ] Correct Answer
+
+   [Add Option] (for more than 4)
+   ```
+
+6. **Add Explanation** (optional but recommended):
+   ```
+   Explanation:
+   "Formula: A = πr²
+    A = 3.14 × (5)²
+    A = 3.14 × 25
+    A = 78.5 cm²"
+   ```
+
+7. **Add Tags**:
+   ```
+   Tags: [geometry] [circle] [area] [grade-9] [chapter-12]
+
+   Type to add tags, press Enter
+   Suggestions: [perimeter] [volume] [surface-area]
+   ```
+
+8. **Set Source**:
+   ```
+   Source: ( ) Manual (•) Textbook ( ) AI Generated
+
+   Reference: "Geometry Textbook, Page 145, Exercise 12"
+   ```
+
+9. **Preview Question**:
+   - Click "Preview" to see student view
+   - Verify formatting, options, correctness
+
+10. **Save Question**:
+    - Click "Save to Question Bank"
+    - Toast: "Question added successfully!"
+    - Question appears in bank with filters
+
+### Organizing Questions
+
+#### Filtering Questions:
+```
+Question Bank (31 questions)
+
+Filters:
+Subject: [All Subjects ▼]
+Type: [All Types ▼]
+Difficulty: [All Levels ▼]
+Bloom Level: [All Levels ▼]
+Tags: [_______________] 🔍
+Source: [All Sources ▼]
+
+Search: [_____________] 🔍
+
+Results: 31 questions
+```
+
+#### Bulk Operations:
+```
+[✓] Select All (or individual checkboxes)
+
+Bulk Actions:
+- Add Tags
+- Change Difficulty
+- Assign to Exam
+- Export as PDF/JSON
+- Delete Selected
+
+Selected: 5 questions
+[Apply Action ▼]
+```
+
+#### Advanced Features:
+
+**1. Question Analytics**:
+```
+Per-Question Statistics:
+
+Question: "Solve for x: 2x + 5 = 15"
+
+Usage:
+- Used in: 3 exams
+- Total Attempts: 75 students
+- Average Score: 92%
+- Correct Rate: 69/75 (92%)
+
+Performance:
+- Easy for students: ✓ (>85% correct)
+- Time Taken: Avg 2.5 min (estimate: 3 min)
+
+Item Analysis:
+- Discrimination Index: 0.45 (Good)
+- Difficulty Index: 0.92 (Easy)
+
+Recommendations:
+- Question performs well
+- Consider as warm-up question
+- No revisions needed
+```
+
+**2. Question Versioning**:
+- Create multiple versions of same question
+- Track changes and history
+- Restore previous versions
+- Useful for preventing cheating (randomize versions)
+
+**3. Question Sharing**:
+- Share questions across departments
+- Import questions from other schools (if permitted)
+- Contribute to shared question pools
+- Review community-contributed questions
+
+### AI-Powered Question Generation
+
+**Feature**: Generate questions automatically using AI (future feature in demo)
+
+**How It Works**:
+```
+1. Select topic/chapter
+2. Specify:
+   - Number of questions: 10
+   - Difficulty distribution: 3 Easy, 5 Medium, 2 Hard
+   - Question types: 6 MCQ, 2 Short Answer, 2 Essay
+   - Bloom level focus: Apply, Analyze
+3. Click "Generate Questions"
+4. AI creates questions based on textbook/curriculum
+5. Review and edit generated questions
+6. Save approved questions to bank
+```
+
+**Benefits**:
+- Save time creating exams
+- Ensure coverage of learning objectives
+- Generate variations for multiple exam forms
+- Maintain quality with manual review
+
+---
+
+## 3. Auto-Marking System
+
+Automated grading for objective questions with instant feedback.
+
+### How Auto-Marking Works
+
+**Supported Question Types**:
+- ✓ **Multiple Choice** - Compares selected option with correct answer
+- ✓ **True/False** - Binary comparison
+- ✓ **Fill in the Blank** - Matches against accepted answers (flexible)
+- ✓ **Matching** - Validates all pairings (partial credit available)
+
+**Not Auto-Graded** (Require Manual Grading):
+- ✗ **Short Answer** - Subjective evaluation needed
+- ✗ **Essay** - Complex rubric grading required
+
+### Auto-Marking Process Flow
+
+**Student Takes Exam**:
+```
+1. Student selects answers for MCQ/T/F questions
+2. Student submits exam
+3. System immediately grades objective questions
+4. Subjective questions marked as "Pending Grading"
+5. Student sees instant results for auto-graded portions
+6. Teacher grades subjective questions manually
+7. Final grade published after manual grading complete
+```
+
+### Auto-Marking Configuration
+
+#### Setting Up Exam for Auto-Marking:
+
+**Create Exam**:
+```
+Exam: "Chapter 5 Quiz - Linear Equations"
+
+Questions:
+- Q1-Q5: Multiple Choice (auto-graded) - 10 points
+- Q6-Q8: True/False (auto-graded) - 3 points
+- Q9: Short Answer (manual) - 5 points
+- Q10: Essay (manual) - 10 points
+
+Total Points: 28
+Auto-Graded Points: 13 (46%)
+Manual Graded Points: 15 (54%)
+
+Auto-Marking Settings:
+[✓] Enable auto-grading for objective questions
+[✓] Show instant results to students (objective only)
+[ ] Show correct answers immediately (not recommended)
+[✓] Require teacher review before publishing final grades
+```
+
+**Key Settings**:
+- **Enable auto-grading**: Must be checked for auto-marking
+- **Instant results**: Students see auto-graded scores immediately
+- **Show correct answers**: Control when students see correct options
+- **Teacher review**: Require manual review even for auto-graded
+
+### Student Experience with Auto-Marking
+
+#### During Exam:
+
+**Question Display**:
+```
+Question 1 of 10 (2 points)
+
+Solve for x: 2x + 5 = 15
+
+( ) A) x = 5
+( ) B) x = 10
+( ) C) x = 20
+( ) D) x = 15
+
+[Previous] [Next] [Flag for Review]
+
+Time Remaining: 25:30
+```
+
+**Submit Exam**:
+```
+Submit Exam?
+
+You have answered:
+- 10/10 questions (100%)
+- 0 flagged for review
+
+Auto-graded questions: 8
+Manual grading required: 2
+
+Once submitted, you cannot edit answers.
+
+[Cancel] [Submit Exam]
+```
+
+#### After Submission:
+
+**Instant Results** (Auto-Graded Portion):
+```
+Exam Submitted Successfully!
+
+Your Results (Preliminary):
+
+Auto-Graded Questions:
+- Multiple Choice (Q1-Q5): 8/10 (80%)
+- True/False (Q6-Q8): 3/3 (100%)
+
+Auto-Graded Subtotal: 11/13 (85%)
+
+Pending Manual Grading:
+- Short Answer (Q9): Pending
+- Essay (Q10): Pending
+
+Manual Grading Total: 0/15 (Pending)
+
+Overall: 11/28 (39% - Incomplete)
+
+Note: Your final grade will be updated after teacher grades
+remaining questions.
+
+[View Detailed Results] [Close]
+```
+
+**Detailed Results View**:
+```
+Question 1: Solve for x: 2x + 5 = 15
+Your Answer: A) x = 5 ✓ Correct
+Points: 2/2
+
+Question 2: Factor x² - 9
+Your Answer: C) (x-3)(x+3) ✗ Incorrect
+Correct Answer: B) (x+3)(x-3) [Note: order matters in factoring]
+Points: 0/2
+
+[... more questions]
+
+Question 9: Short Answer - Explain Newton's First Law
+Your Answer: [Text submitted]
+Status: Pending Teacher Review
+Points: ?/5
+
+Question 10: Essay - Impact of Nile River
+Your Answer: [Essay submitted]
+Status: Pending Teacher Review
+Points: ?/10
+```
+
+### Teacher Experience with Auto-Marking
+
+#### Review Auto-Graded Exam:
+
+**Navigate to Exam Results**:
+```
+Exams → Chapter 5 Quiz → Results
+
+Summary:
+- Total Students: 25
+- Completed: 23 (2 absent)
+- Auto-Graded (13 pts): Average 11.2 (86%)
+- Manual Grading (15 pts): 0 graded, 23 pending
+
+[Start Manual Grading]
+```
+
+**Manual Grading Interface**:
+```
+Grade Subjective Questions
+
+Student: Ahmed Mohammed (2025DEMO0001)
+
+Auto-Graded Results: 11/13 (85%)
+
+Manual Grading Required:
+
+Q9: Short Answer (5 points)
+Question: "Explain Newton's First Law of Motion in your own words."
+
+Student Answer:
+"Objects stay at rest or in motion unless a force acts on them.
+This is the law of inertia."
+
+Sample Answer:
+"An object at rest stays at rest, and an object in motion stays
+in motion at constant velocity, unless acted upon by an external
+force. This is also known as the law of inertia."
+
+Your Grade: [___/5]
+Feedback: [Text area]
+"Good understanding, but could be more specific about constant
+velocity. 4/5."
+
+[Save & Next Student]
+
+Q10: Essay (10 points)
+[Similar interface with rubric]
+```
+
+**After Manual Grading**:
+```
+Final Grade Calculation:
+
+Ahmed Mohammed:
+- Auto-Graded: 11/13 (85%)
+- Manual Graded: 4/5 + 8/10 = 12/15 (80%)
+- Total: 23/28 (82%, B)
+
+[Publish Grade] [Add Comments] [Next Student]
+```
+
+### Auto-Marking for Fill-in-the-Blank
+
+**Flexible Matching**:
+```
+Question: "The chemical symbol for Gold is ____."
+
+Accepted Answers Configuration:
+Primary Answer: "Au"
+Alternatives: ["AU", "au", "gold"]
+
+Matching Rules:
+[ ] Case Sensitive
+[✓] Trim Whitespace
+[✓] Allow Partial Spelling (80% match)
+[ ] Phonetic Matching
+
+Examples of Student Answers:
+"Au" → ✓ Correct (exact match)
+"AU" → ✓ Correct (case insensitive)
+"au" → ✓ Correct (case insensitive)
+" Au " → ✓ Correct (whitespace trimmed)
+"gold" → ✓ Correct (alternative answer)
+"Ag" → ✗ Incorrect
+"A" → ✗ Incorrect (partial, but <80%)
+```
+
+### Auto-Marking Analytics
+
+**System Performance**:
+```
+Auto-Marking Statistics (Last 30 Days)
+
+Total Exams Auto-Graded: 48 exams
+Total Questions Auto-Graded: 2,400 questions
+Total Students: 150
+
+Accuracy:
+- Auto-Grading Errors: 0 (0%)
+- Manual Overrides: 5 (0.2%)
+
+Time Savings:
+- Average Manual Grading Time: 2 min/question
+- Time Saved: 80 hours (2,400 questions × 2 min)
+
+Student Satisfaction:
+- Instant Feedback: 95% positive
+- Grade Accuracy: 99.8%
+```
+
+**Question Performance**:
+```
+Most Difficult Questions (Auto-Graded):
+1. Q: "Factor x² - 16" - 45% correct
+2. Q: "Solve 3x - 7 = 11" - 62% correct
+3. Q: "pH of neutral solution" - 71% correct
+
+Easiest Questions:
+1. Q: "DNA stands for..." - 98% correct
+2. Q: "Capital of Sudan" - 96% correct
+3. Q: "2 + 2 = ?" - 100% correct
+```
+
+### Best Practices for Auto-Marking
+
+**DO**:
+- Use auto-marking for objective, fact-based questions
+- Provide clear, unambiguous answer options
+- Include explanations for incorrect answers
+- Review auto-graded results periodically for anomalies
+- Set multiple accepted answers for fill-in-the-blank
+- Use rubrics for manual grading consistency
+
+**DON'T**:
+- Rely solely on auto-marking (mix with subjective questions)
+- Show correct answers immediately (reduces learning)
+- Skip manual review of flagged questions
+- Use vague or ambiguous question wording
+- Penalize students for minor spelling variations
+- Ignore student feedback about incorrect auto-grades
+
+---
+
+## 4. Analytics & Reporting
+
+Data-driven insights to improve teaching, learning, and school operations.
+
+### Analytics Dashboard Overview
+
+**Main Dashboard**:
+```
+Analytics Overview
+
+Quick Stats:
+- Total Students: 150
+- Average Attendance: 87%
+- Average GPA: 3.2/4.0
+- Active Courses: 10
+
+Trends (Last 30 Days):
+- Attendance: ↑ +2%
+- Grade Average: ↑ +0.1
+- Enrollment: → Stable
+- Financial Collection: ↓ -5%
+
+[View Detailed Reports]
+```
+
+### Student Analytics
+
+#### Individual Student Dashboard:
+```
+Student: Ahmed Mohammed (2025DEMO0001)
+
+Academic Performance:
+GPA: 3.4/4.0 (B+ average)
+Trend: ↑ Improving (+0.2 from last quarter)
+Class Rank: 15/25 (60th percentile)
+
+Attendance:
+Overall: 89% (40/45 days)
+Trend: → Stable
+At-Risk: No (>75% threshold)
+
+Behavioral:
+Disciplinary Incidents: 0
+Late Submissions: 2
+Participation Score: 8/10
+
+Engagement:
+LMS Activity: 15 hours (avg: 10 hours)
+Library Visits: 5 times
+Extracurricular: Soccer team, Math club
+
+Recent Activity:
+- Submitted Physics Lab Report (85%)
+- Completed Chapter 6 Math Quiz (92%)
+- Borrowed library book: "Advanced Calculus"
+
+Predictions:
+- Final GPA Projection: 3.5/4.0 (if trend continues)
+- At-Risk Subjects: Chemistry (78% - recommend tutoring)
+
+[Generate Full Report] [Schedule Intervention]
+```
+
+#### Cohort Analytics:
+```
+Grade 10 - Section A (25 students)
+
+Academic Summary:
+Average GPA: 3.3/4.0
+Distribution:
+- A (3.7-4.0): 6 students (24%)
+- B (3.0-3.6): 12 students (48%)
+- C (2.0-2.9): 5 students (20%)
+- D (1.0-1.9): 2 students (8%)
+- F (<1.0): 0 students (0%)
+
+Subject Performance:
+Best Subject: English (avg 88%)
+Weakest Subject: Chemistry (avg 76%)
+
+Attendance:
+Average: 88%
+At-Risk Students: 3 (<75%)
+
+Comparison to School Average:
+GPA: +0.1 (above average)
+Attendance: +1% (above average)
+
+[View Individual Students] [Export Report]
+```
+
+### Teacher Analytics
+
+**Teacher Performance Dashboard**:
+```
+Teacher: Aisha Hassan (Mathematics)
+
+Classes Taught: 3 (Grade 7A, 8B, 9C)
+Total Students: 75
+
+Student Outcomes:
+Average Grade: 85% (B)
+Pass Rate: 96% (72/75)
+Student Satisfaction: 4.5/5.0
+
+Class Attendance:
+Average: 92% (above school avg of 87%)
+Consistent attendance: 68/75 students (>90%)
+
+Assignment Grading:
+Average Turnaround: 3 days (target: <5 days)
+Pending Grading: 5 assignments (7%)
+Feedback Quality: 4.7/5.0 (student-rated)
+
+Engagement:
+LMS Course Created: Yes (1 course, 15 lessons)
+Announcements Sent: 24 (avg 2/week)
+Parent Communication: 18 messages
+
+Professional Development:
+Workshops Attended: 3 (last 6 months)
+Certifications: Advanced Math Pedagogy
+
+Peer Comparison:
+Grade Average: +3% vs dept average
+Student Satisfaction: +0.3 vs dept average
+
+Recommendations:
+- Top performer in math department
+- Consider mentor role for new teachers
+- Share best practices in faculty meetings
+
+[View Class Details] [Generate Report]
+```
+
+### Exam Analytics
+
+**Exam Performance Analysis**:
+```
+Exam: Chapter 5 Quiz - Linear Equations
+
+Basic Stats:
+- Total Students: 25
+- Completed: 23 (2 absent)
+- Average Score: 21.5/28 (77%, C+)
+- Median Score: 22/28 (79%)
+- Highest: 27/28 (96%)
+- Lowest: 14/28 (50%)
+
+Score Distribution:
+A (90-100%): 5 students (22%)
+B (80-89%): 8 students (35%)
+C (70-79%): 6 students (26%)
+D (60-69%): 3 students (13%)
+F (<60%): 1 student (4%)
+
+[Score Distribution Chart - Bell Curve]
+
+Question Analysis:
+Q1 (MCQ): 92% correct - Easy, good discrimination
+Q2 (MCQ): 78% correct - Medium, acceptable
+Q3 (T/F): 96% correct - Very easy, low discrimination
+Q4 (MCQ): 45% correct - Hard, review in class ⚠️
+Q5 (MCQ): 83% correct - Medium, good
+[... more questions]
+
+Item Analysis:
+Q4: "Factor x² - 16"
+- Correct Answer: D) (x+4)(x-4)
+- Most Common Wrong Answer: B) (x+4)(x+4) - 35%
+- Issue: Students confuse difference of squares with perfect square
+- Recommendation: Re-teach difference of squares concept
+
+Time Analysis:
+Average Completion Time: 25 minutes (allotted: 30 min)
+Fastest: 15 minutes (Ahmed - 96%)
+Slowest: 30 minutes (Hassan - 50%)
+
+Correlation Analysis:
+- Time vs Score: Weak negative correlation (-0.15)
+  → Faster students don't necessarily score higher
+- Study Time vs Score: Moderate positive correlation (0.45)
+  → Students who studied more scored better
+- Previous Quiz vs This Quiz: Strong positive correlation (0.78)
+  → Past performance predicts current performance
+
+Recommendations:
+1. Re-teach Q4 topic (difference of squares)
+2. Provide additional practice for 4 struggling students
+3. Quiz difficulty appropriate for grade level
+4. Consider adding 2-3 more challenging questions
+
+[Export Detailed Report] [Share with Department]
+```
+
+### Financial Analytics
+
+**Financial Dashboard**:
+```
+Financial Overview - March 2025
+
+Revenue:
+Total Revenue: SDG 150,000
+Breakdown:
+- Tuition: SDG 120,000 (80%)
+- Fees: SDG 20,000 (13%)
+- LMS Courses: SDG 5,000 (3%)
+- Other: SDG 5,000 (4%)
+
+Collection:
+Invoiced: SDG 180,000
+Collected: SDG 150,000 (83%)
+Pending: SDG 20,000 (11%)
+Overdue: SDG 10,000 (6%)
+
+Collection Rate Trend:
+Jan: 85%
+Feb: 82%
+Mar: 83%
+Target: 85%
+Status: Below target by 2%
+
+Expenses:
+Total: SDG 95,000
+Breakdown:
+- Salaries: SDG 60,000 (63%)
+- Utilities: SDG 15,000 (16%)
+- Supplies: SDG 10,000 (11%)
+- Maintenance: SDG 5,000 (5%)
+- Other: SDG 5,000 (5%)
+
+Profitability:
+Gross Profit: SDG 55,000
+Net Margin: 37%
+Target Margin: 35%
+Status: ✓ Above target
+
+Trends (YoY):
+Revenue: ↑ +12%
+Expenses: ↑ +8%
+Profit Margin: ↑ +3%
+
+[View Detailed P&L] [Cash Flow] [Budget vs Actual]
+```
+
+### Attendance Analytics
+
+**Attendance Dashboard**:
+```
+Attendance Overview - March 2025
+
+School-Wide:
+Average Attendance: 87%
+Total Student-Days: 3,000
+Present: 2,610 (87%)
+Absent: 270 (9%)
+Late: 90 (3%)
+Excused: 30 (1%)
+
+Daily Trend:
+[Line Chart showing attendance by day]
+Mon: 88%, Tue: 85%, Wed: 89%, Thu: 86%, Fri: 87%
+Pattern: Slight dip on Tuesdays
+
+Monthly Trend:
+[Line Chart - last 6 months]
+Oct: 89%, Nov: 88%, Dec: 85%, Jan: 86%, Feb: 88%, Mar: 87%
+Trend: Stable, slight dip in winter months
+
+By Grade Level:
+Grade 7: 91% (best)
+Grade 8: 89%
+Grade 9: 88%
+Grade 10: 85%
+Grade 11: 84%
+Grade 12: 82% (needs improvement)
+
+Trend: Attendance decreases with grade level
+
+At-Risk Students:
+Total: 15 students (<75% attendance)
+Grade Distribution:
+- Grade 10: 5 students
+- Grade 11: 6 students
+- Grade 12: 4 students
+
+Top Reasons for Absence:
+1. Illness (45%)
+2. Family circumstances (20%)
+3. Transportation issues (15%)
+4. Unexcused (15%)
+5. Other (5%)
+
+Interventions:
+- 8 parent meetings scheduled
+- 3 students in attendance monitoring program
+- 2 students referred to counseling
+
+[View At-Risk List] [Generate Report] [Schedule Interventions]
+```
+
+### Custom Reports
+
+**Report Builder**:
+```
+Create Custom Report
+
+Report Type:
+( ) Student Performance
+( ) Teacher Effectiveness
+( ) Financial Summary
+(•) Custom Query
+
+Data Sources:
+[✓] Students
+[✓] Grades
+[✓] Attendance
+[ ] Financial
+[ ] Library
+[ ] LMS
+
+Filters:
+Grade Level: [Grade 10 ▼]
+Date Range: [March 1 - March 31, 2025]
+Include: [All Students ▼]
+
+Fields to Include:
+[✓] Student Name
+[✓] Student ID
+[✓] GPA
+[✓] Attendance Rate
+[ ] Financial Status
+[✓] Disciplinary Incidents
+
+Grouping:
+Group By: [Section ▼]
+Sort By: [GPA (Desc) ▼]
+
+Output Format:
+( ) PDF
+(•) Excel (XLSX)
+( ) CSV
+( ) JSON
+
+[Preview Report] [Generate & Download]
+```
+
+### Predictive Analytics
+
+**AI-Powered Insights** (Future Feature):
+```
+Predictive Models
+
+At-Risk Student Prediction:
+Model Accuracy: 87%
+Current Predictions:
+- 12 students at risk of failing (>50% probability)
+- 8 students at risk of dropout (>30% probability)
+
+Recommended Actions:
+1. Ahmed Mohammed (Chemistry risk: 75%)
+   → Schedule tutoring, monitor closely
+2. Fatima Ali (Attendance risk: 65%)
+   → Parent meeting, attendance intervention
+[... more students]
+
+Grade Predictions:
+End-of-Year GPA Projections:
+- Class Average: 3.3/4.0 (current: 3.2)
+- Top Performers: 8 students (A average projected)
+- At-Risk: 5 students (below C average)
+
+Financial Forecasting:
+Next Month Collection Prediction: SDG 145,000 (±10%)
+Confidence: 82%
+Based on:
+- Historical collection patterns
+- Current outstanding invoices
+- Payment trends
+
+[View Detailed Models] [Adjust Parameters]
+```
+
+### Dashboard Customization
+
+**Personalized Dashboards**:
+```
+Customize Your Dashboard
+
+Available Widgets:
+- Quick Stats (students, attendance, grades)
+- Grade Distribution Chart
+- Attendance Trends
+- Financial Overview
+- Recent Activity Feed
+- At-Risk Students List
+- Upcoming Events
+- Task List
+- Announcements
+- Custom Charts
+
+Your Layout:
+[Drag and drop widgets to arrange]
+
+Refresh Rate:
+(•) Real-time
+( ) Every 5 minutes
+( ) Manual only
+
+[Save Layout] [Reset to Default]
+```
+
+---
+
+## Advanced Tips & Tricks
+
+### Power User Shortcuts
+
+**Keyboard Shortcuts**:
+```
+Global:
+- Ctrl+K: Quick search
+- Ctrl+N: New [context-aware]
+- Ctrl+S: Save
+- Esc: Close modal/cancel
+
+Navigation:
+- G then D: Go to Dashboard
+- G then S: Go to Students
+- G then A: Go to Attendance
+- G then E: Go to Exams
+- G then F: Go to Finance
+
+Quick Actions:
+- T: Take attendance (from class page)
+- C: Create announcement (from dashboard)
+- Q: Quick search students
+```
+
+### Bulk Data Import
+
+**CSV Import Feature**:
+```
+Settings → Import Data
+
+Supported Entities:
+- Students (with bulk enrollment)
+- Teachers
+- Guardians
+- Classes
+- Question Bank Questions
+- Financial Transactions
+
+CSV Format Requirements:
+- UTF-8 encoding
+- Header row required
+- Date format: YYYY-MM-DD
+- Max file size: 10MB
+
+Example Student Import CSV:
+```csv
+student_id,first_name,last_name,email,grade,section,date_of_birth
+2025DEMO0151,Omar,Ahmed,omar.ahmed@demo.school,10,A,2010-05-15
+2025DEMO0152,Layla,Hassan,layla.hassan@demo.school,10,A,2010-07-20
+```
+
+[Download Template] [Upload CSV] [Validate Data]
+
+Validation:
+- Check for duplicates: ✓
+- Verify required fields: ✓
+- Validate formats: ✓
+- Preview import: ✓
+
+[Import 150 Records]
+```
+
+### API Access for Integrations
+
+**Developer API** (for advanced users):
+```
+Settings → API → Generate API Key
+
+Your API Key: [sk_demo_xxxxxxxxxx]
+[Copy] [Regenerate] [Revoke]
+
+API Endpoints:
+GET /api/students - List students
+POST /api/attendance - Mark attendance
+GET /api/grades/{studentId} - Get grades
+POST /api/exams - Create exam
+[View Full API Documentation]
+
+Rate Limits:
+- 1000 requests/hour
+- 100 requests/minute
+
+Example API Call:
+```bash
+curl -X GET https://demo.ed.databayt.org/api/students \
+  -H "Authorization: Bearer sk_demo_xxxxxxxxxx" \
+  -H "Content-Type: application/json"
+```
+
+Response:
+```json
+{
+  "data": [
+    {
+      "id": "2025DEMO0001",
+      "name": "Ahmed Mohammed",
+      "grade": 10,
+      "gpa": 3.4
+    }
+  ],
+  "total": 150
+}
+```
+```
+
+---
+
+## Troubleshooting Advanced Features
+
+### Multi-Language Issues
+
+**Problem**: Text not translating
+- Check translation key exists in dictionary
+- Clear browser cache
+- Verify language switcher cookie
+
+**Problem**: RTL layout broken
+- Check CSS dir attribute
+- Verify Tailwind RTL utilities
+- Test in different browsers
+
+### Question Bank Issues
+
+**Problem**: Questions not appearing in exam builder
+- Verify question is published (not draft)
+- Check subject/tag filters
+- Ensure question has valid format
+
+**Problem**: Auto-marking incorrect
+- Review correct answer configuration
+- Check for multiple correct answers
+- Verify case sensitivity settings
+
+### Analytics Issues
+
+**Problem**: Dashboard not loading
+- Check date range filters
+- Reduce data scope (single grade/class)
+- Clear cache and refresh
+
+**Problem**: Export failing
+- Check file size limits
+- Try different export format
+- Filter data to reduce size
+
+---
+
+## Related Documentation
+
+- **[Exam System Demo](/docs/demo/modules/exams)** - Question Bank, auto-marking, results
+- **[Student Management Demo](/docs/demo/modules/students)** - Enrollment, analytics
+- **[Attendance System Demo](/docs/demo/modules/attendance)** - Tracking, analytics, alerts
+- **[Finance System Demo](/docs/demo/modules/finance)** - Financial reports, analytics
+- **[Role-Based Walkthroughs](/docs/demo/walkthroughs/role-guides)** - User guides for all roles
+- **[Demo Home](/docs/demo)** - Main demo documentation hub
+
+---
+
+## Support
+
+**Need Advanced Help?**:
+- Technical Support: tech@databayt.org
+- API Documentation: https://ed.databayt.org/api-docs
+- Developer Forum: https://forum.databayt.org
+
+---
+
+**End of Advanced Features Guide**
+
+*Last Updated: January 2025*
+*Version: 1.0.0*

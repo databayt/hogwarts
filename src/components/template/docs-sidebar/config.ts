@@ -178,6 +178,14 @@ export const docsConfig: DocsConfig = {
     {
       title: "Business",
       items: [
+        {
+          title: "PRD",
+          href: "/docs/prd",
+          items: [
+            { title: "Epic Breakdown", href: "/docs/epics", items: [] },
+            { title: "Validation Report", href: "/docs/validation", items: [] },
+          ]
+        },
         { title: "Roadmap", href: "/docs/roadmap", items: [] },
         { title: "Milestones", href: "/docs/milestones", items: [] },
         { title: "Investors - Executive Summary", href: "/docs/investors-executive-summary", items: [] },

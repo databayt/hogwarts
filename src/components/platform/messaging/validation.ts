@@ -11,10 +11,8 @@ export const messageStatusSchema = z.nativeEnum(MessageStatus)
 export const createConversationSchema = z.object({
   type: conversationTypeSchema,
   title: z.string().min(1, "Title is required").max(255, "Title must be less than 255 characters").optional(),
-  description: z.string().max(1000, "Description must be less than 1000 characters").optional(),
-  avatarUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")),
+  avatar: z.string().url("Must be a valid URL").optional().or(z.literal("")),
   participantIds: z.array(z.string()).min(1, "At least one participant is required"),
-  metadata: z.record(z.string(), z.unknown()).optional(),
 }).superRefine((val, ctx) => {
   // Direct conversations must have exactly 2 participants
   if (val.type === "direct" && val.participantIds.length !== 1) {
@@ -48,9 +46,7 @@ export const createConversationSchema = z.object({
 export const updateConversationSchema = z.object({
   conversationId: z.string().min(1, "Conversation ID is required"),
   title: z.string().min(1).max(255).optional(),
-  description: z.string().max(1000).optional(),
-  avatarUrl: z.string().url().optional().or(z.literal("")),
-  metadata: z.record(z.string(), z.unknown()).optional(),
+  avatar: z.string().url().optional().or(z.literal("")),
 })
 
 // Archive conversation schema

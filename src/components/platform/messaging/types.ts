@@ -21,20 +21,11 @@ export type ConversationDTO = {
   schoolId: string
   type: ConversationType
   title: string | null
-  description: string | null
-  avatarUrl: string | null
+  avatar: string | null
   directParticipant1Id: string | null
   directParticipant2Id: string | null
-  metadata: Record<string, unknown> | null
   lastMessageAt: Date
   isArchived: boolean
-  createdById: string
-  createdBy: {
-    id: string
-    username: string | null
-    email: string | null
-    image: string | null
-  } | null
   createdAt: Date
   updatedAt: Date
   participantCount: number
@@ -55,13 +46,13 @@ export type ConversationParticipantDTO = {
     role: string
   }
   role: ConversationParticipantRole
-  nickname: string | null
-  joinedAt: Date
   lastReadAt: Date | null
   isMuted: boolean
-  mutedUntil: Date | null
-  isPinned: boolean
-  metadata: Record<string, unknown> | null
+  unreadCount: number
+  isActive: boolean
+  leftAt: Date | null
+  createdAt: Date
+  updatedAt: Date
 }
 
 export type MessageDTO = {
@@ -204,7 +195,7 @@ export type ConversationListItem = {
   id: string
   type: ConversationType
   title: string | null
-  avatarUrl: string | null
+  avatar: string | null
   lastMessageAt: Date
   unreadCount: number
   isArchived: boolean
@@ -310,10 +301,8 @@ export type MessageQueryParams = MessageFilters &
 export type CreateConversationPayload = {
   type: ConversationType
   title?: string
-  description?: string
-  avatarUrl?: string
+  avatar?: string
   participantIds: string[]
-  metadata?: Record<string, unknown>
 }
 
 export type CreateMessagePayload = {
@@ -369,7 +358,6 @@ export type MessagingAuthContext = {
 export type ConversationContext = {
   id: string
   type: ConversationType
-  createdById: string
   participantIds: string[]
 }
 

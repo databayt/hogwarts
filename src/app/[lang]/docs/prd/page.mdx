@@ -1,162 +1,332 @@
-# Product Requirements Document (PRD)
-
 export const metadata = {
-  title: 'Product Requirements Document',
-  description: 'Comprehensive PRD for Hogwarts School Automation Platform following BMAD-METHOD',
+  title: 'Hogwarts - Product Requirements Document',
+  description: 'Comprehensive PRD for Hogwarts School Automation Platform - The world\'s most accessible school management system',
 }
 
-## Overview
+# Hogwarts - Product Requirements Document
 
-This section provides access to the comprehensive **Product Requirements Document (PRD)** for the Hogwarts School Automation Platform. The PRD follows the **BMAD-METHOD** (Battle-tested Multi-Agent Development) workflow, ensuring complete requirements coverage, epic breakdown, and implementation readiness.
-
----
-
-## Documents
-
-### 📋 PRD.md
-**Location:** `/PRD.md` (project root)
-**Size:** 25,000+ words
-**Last Updated:** January 2024
-
-The main product requirements document capturing:
-- **Executive Summary**: Vision, mission, and "What Makes This Special"
-- **Project Classification**: SaaS B2B, EdTech K-12, Level 4 complexity
-- **Success Criteria**: Meaningful metrics (80% time savings, 85% parent satisfaction)
-- **Product Scope**: MVP (Months 1-12), Growth (Months 13-24), Vision (Year 3+)
-- **200+ Functional Requirements**: Detailed FRs organized by capability
-- **Non-Functional Requirements**: Performance, security, scalability, accessibility
-- **Domain Context**: FERPA, GDPR, COPPA compliance for education sector
-
-[View PRD.md →](/PRD.md)
+**Author:** Product Team
+**Date:** January 2024
+**Version:** 1.0
 
 ---
 
-### 🎯 epics.md
-**Location:** `/epics.md` (project root)
-**Size:** 12,000+ words
-**Last Updated:** January 2024
+## Executive Summary
 
-Epic and story breakdown for implementation:
-- **12 Epics**: Foundation to Launch (12-18 month timeline)
-- **190+ Stories**: Vertically sliced, no forward dependencies
-- **Detailed Story Format**: User story + acceptance criteria + technical notes + testing
-- **Epic 1 (Foundation)**: 15 fully detailed stories
-- **Epic 2 (Authentication)**: 18 stories with partial detail
-- **Epics 3-12**: Outlined with summary
+The global education sector manages over 2 million schools serving 1.5 billion students, yet 78% still rely on paper-based or fragmented digital systems. This inefficiency costs the industry $12B annually in wasted administrative processes, with each administrator losing 40 hours monthly to manual tasks. Meanwhile, 65% of parents express dissatisfaction with school communication, and manual attendance/grade tracking suffers from a 23% error rate.
 
-[View epics.md →](/epics.md)
+Hogwarts is envisioned as the world's most comprehensive, accessible, and user-friendly school management platform—a true operating system for educational institutions. We will revolutionize school administration by providing an all-in-one, cloud-based solution that serves schools, teachers, students, and parents globally.
 
----
+### What Makes This Special
 
-### ✅ validation-report.md
-**Location:** `/validation-report.md` (project root)
-**Size:** 8,000+ words
-**Last Updated:** January 2024
+Hogwarts isn't just another school management system—it's a **magical transformation** of educational operations:
 
-BMAD-METHOD 85-point validation results:
-- **Overall Score**: 78/85 (91.8%) - ⚠️ GOOD - Minor fixes needed
-- **Critical Failures**: 0 (All critical checks passed)
-- **Status**: ✅ READY TO PROCEED TO ARCHITECTURE PHASE
-- **Strengths**: Outstanding vision, perfect sequencing, multi-tenant architecture
-- **Areas for Improvement**: FR traceability matrix, Epic 3-12 story expansion
+<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 my-6">
+  <div className="rounded-lg border bg-card p-6">
+    <h4>Truly Unified Platform</h4>
+    <p className="muted">Unlike competitors offering fragmented modules, Hogwarts provides seamless integration from student enrollment to financial management in one cohesive experience.</p>
+  </div>
 
-[View validation-report.md →](/validation-report.md)
+  <div className="rounded-lg border bg-card p-6">
+    <h4>Arabic-First Design</h4>
+    <p className="muted">The only major platform built for Arabic from day one with native RTL support, opening the underserved MENA market (420M people, 95,000 schools).</p>
+  </div>
 
----
+  <div className="rounded-lg border bg-card p-6">
+    <h4>Modern Architecture, Legacy-Free</h4>
+    <p className="muted">Built on Next.js 15 + React 19 + TypeScript with true multi-tenancy, we're 10x faster to develop and infinitely more scalable than legacy platforms stuck on outdated tech stacks.</p>
+  </div>
 
-## Key Highlights
+  <div className="rounded-lg border bg-card p-6">
+    <h4>Enterprise Features at SMB Prices</h4>
+    <p className="muted">Advanced capabilities like double-entry bookkeeping, comprehensive payroll, and AI-powered analytics typically reserved for expensive enterprise systems—offered at 1/10th the cost.</p>
+  </div>
 
-### What Makes Hogwarts Special
+  <div className="rounded-lg border bg-card p-6">
+    <h4>Open-Source Heart</h4>
+    <p className="muted">Community-driven development with transparent codebase, allowing schools to customize, contribute, and truly own their data.</p>
+  </div>
+</div>
 
-1. **Truly Unified Platform**: Unlike competitors offering fragmented modules, Hogwarts provides seamless integration from student enrollment to financial management.
-
-2. **Arabic-First Design**: The only major platform built for Arabic from day one with native RTL support, opening the underserved MENA market (420M people, 95,000 schools).
-
-3. **Modern Architecture, Legacy-Free**: Built on Next.js 15 + React 19 + TypeScript with true multi-tenancy, 10x faster to develop than legacy platforms.
-
-4. **Enterprise Features at SMB Prices**: Advanced capabilities like double-entry bookkeeping and AI analytics at 1/10th the cost of enterprise systems.
-
-5. **Open-Source Heart**: Community-driven development with transparent codebase.
+**The Magic**: Imagine a world where school administrators spend their time improving education instead of fighting with software, where parents feel connected to their children's learning journey, and where teachers have the tools to truly personalize instruction. That's the Hogwarts promise.
 
 ---
 
-## Success Metrics
+## Project Classification
 
-The PRD defines meaningful, measurable success criteria:
+**Technical Type:** SaaS B2B Multi-Tenant Web Application
+**Domain:** Education Technology (EdTech) - K-12 School Management
+**Complexity:** Level 4 (Enterprise-scale system, 200+ functional requirements, highly regulated domain)
 
-| Metric | Baseline | Target | Impact |
-|--------|----------|--------|--------|
-| **Admin Time Savings** | 40 hrs/month lost to manual tasks | 8 hrs/month (80% reduction) | Redirect time to strategic planning |
-| **Parental Engagement** | 65% dissatisfaction | 85% satisfaction (NPS) | Reduced support burden |
-| **Data Accuracy** | 23% error rate | &lt;1% error rate | Reliable compliance data |
-| **Operational Cost** | $15K-$50K/year (multiple systems) | $6K-$20K/year (60% reduction) | Reallocate to education programs |
-| **Teacher Time** | 11 hrs/week on admin | 4 hrs/week (64% reduction) | More time for instruction |
+**Project Context:**
+- **Target Users:** School administrators, teachers, students, parents, accountants, staff across 2M+ schools globally
+- **Market Size:** $28B school management systems market, growing at 16.3% CAGR to reach $52B by 2032
+- **Regulatory Environment:** FERPA (US), GDPR (EU), COPPA, regional data privacy laws, accessibility standards (WCAG 2.1 AA)
+- **Technology Landscape:** Cloud-first, mobile-native, AI-powered, API-first architecture
 
----
+### Domain Context
 
-## Implementation Timeline
+The K-12 education sector operates under unique constraints that shape every aspect of this product:
 
-### MVP - Months 1-12 (Epics 1-10)
+**Regulatory Compliance:**
+- **FERPA** (Family Educational Rights and Privacy Act): Strict student data privacy requirements in the US
+- **COPPA** (Children's Online Privacy Protection Act): Parental consent for children under 13
+- **GDPR**: European data protection standards, right to be forgotten
+- **State/Regional Mandates**: Varying curriculum standards, reporting requirements, and operational policies
 
-**Deliverables:**
-- Multi-tenant architecture with subdomain isolation
-- Complete authentication & RBAC system (8 roles)
-- Student & teacher management
-- Attendance tracking (daily & period-wise)
-- Class & subject management with timetable
-- Assessment & grading system
-- Fee collection & invoicing
-- Parent portal & communication
-- Basic reporting & analytics
+**Accessibility Requirements:**
+- **WCAG 2.1 AA compliance** mandatory for public schools
+- **Multilingual support** for diverse student populations
+- **RTL (Right-to-Left) language** support for Arabic, Hebrew, Persian markets
+- **Offline capabilities** for schools in areas with poor connectivity
 
-**Milestone:** Schools can operate daily without any other software
+**Educational Standards:**
+- Integration with national curriculum frameworks
+- Standardized assessment reporting (NAPLAN, NCEA, SATs, etc.)
+- Academic calendar variations (semester, trimester, quarter systems)
+- Grade level structures varying by country
 
----
+**Security & Safety:**
+- **Child safety** protocols for online interactions
+- **Data encryption** at rest and in transit
+- **Multi-tenant data isolation** to prevent cross-school data leaks
+- **Audit trails** for all sensitive operations
+- **Role-based access control** with granular permissions
 
-### Growth - Months 13-24 (Post-MVP)
+**Financial Complexity:**
+- Multi-currency support for international schools
+- Complex fee structures (tuition, transport, meals, activities)
+- Scholarship and financial aid management
+- Compliance with non-profit accounting standards
+- Integration with payment gateways (Stripe, PayPal, regional providers)
 
-**Q1 2024:**
-- AI-Powered Analytics
-- Advanced Gradebook
-- Mobile Apps (iOS + Android)
-
-**Q2 2024:**
-- Digital Classroom (video conferencing, LMS)
-- Curriculum Planning
-- Online Assessment Tools
-
-**Q3 2024:**
-- Multi-language expansion (French, Spanish, Hindi, Mandarin)
-- Regional compliance (GDPR certification, FERPA)
-- Local payment methods (UPI, M-Pesa, Alipay)
-
-**Q4 2024:**
-- AI Teaching Assistant
-- Predictive Analytics
-- Smart Scheduling
+This domain complexity means that every feature must be designed with security, compliance, accessibility, and educational best practices at its core.
 
 ---
 
-### Vision - Year 3+ (2025+)
+## Success Criteria
+
+Success for Hogwarts is measured not by vanity metrics like total users, but by genuine transformation of educational operations and stakeholder satisfaction.
+
+### Primary Success Metrics
+
+<div className="overflow-x-auto my-6">
+  <table>
+    <thead>
+      <tr>
+        <th>Metric</th>
+        <th>Baseline</th>
+        <th>Target</th>
+        <th>Measurement</th>
+        <th>Impact</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Administrator Time Savings</strong></td>
+        <td>40 hours/month lost to manual tasks</td>
+        <td>8 hours/month (80% reduction)</td>
+        <td>Time-tracking surveys (quarterly)</td>
+        <td>Administrators redirect saved time to strategic planning and student support</td>
+      </tr>
+      <tr>
+        <td><strong>Parental Engagement</strong></td>
+        <td>65% parent dissatisfaction</td>
+        <td>85% parent satisfaction (NPS)</td>
+        <td>NPS surveys sent quarterly</td>
+        <td>Parents feel informed and connected, reducing support burden on schools</td>
+      </tr>
+      <tr>
+        <td><strong>Data Accuracy</strong></td>
+        <td>23% error rate in manual tracking</td>
+        <td>&lt;1% error rate</td>
+        <td>Audit reports comparing manual vs. system records</td>
+        <td>Reliable data for informed decision-making and compliance</td>
+      </tr>
+      <tr>
+        <td><strong>School Operational Cost Reduction</strong></td>
+        <td>$15,000-$50,000/year on fragmented systems</td>
+        <td>60% reduction ($6,000-$20,000/year)</td>
+        <td>Cost comparison at 12-month mark</td>
+        <td>Schools reallocate savings to educational programs</td>
+      </tr>
+      <tr>
+        <td><strong>Teacher Satisfaction</strong></td>
+        <td>11 hours/week on administrative tasks</td>
+        <td>4 hours/week (64% reduction)</td>
+        <td>Teacher surveys and time logs</td>
+        <td>Teachers have more time for instruction and student interaction</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+### Business Metrics
+
+**Year 1 Targets:**
+- **100 schools** actively using platform (0.01% market penetration)
+- **$240K ARR** (Annual Recurring Revenue)
+- **98% customer satisfaction** (CSAT score)
+- **<3% monthly churn** rate
+- **50+ GitHub stars** (community engagement)
+
+**Year 3 Targets:**
+- **2,500 schools** globally (0.25% market penetration)
+- **$6M ARR**
+- **85+ NPS score**
+- **<1.5% monthly churn**
+- **5,000+ GitHub stars**, 200+ contributors
+
+**Year 5 Targets:**
+- **15,000 schools** across 50+ countries (1.5% market penetration)
+- **$36M ARR**
+- **IPO-ready** metrics (30% EBITDA margin, 95%+ gross margin)
+
+### Impact Milestones
+
+Beyond numbers, success means:
+- **Zero student data breaches** - impeccable security track record
+- **1M+ students** having better educational experiences
+- **100+ community-contributed features** - vibrant open-source ecosystem
+- **Government partnerships** in 10+ countries endorsing the platform
+- **Industry recognition** as the #1 open-source school management system
+
+---
+
+## Product Scope
+
+### MVP - Minimum Viable Product (Months 1-12)
+
+The MVP delivers core administrative functionality that makes schools operational from day one. For complete details, see the [full PRD documentation](https://github.com/hogwarts/docs/blob/main/PRD.md).
+
+**Core Capabilities:**
+- ✅ Multi-tenant architecture with subdomain-based school isolation
+- ✅ 8-role RBAC system (Developer, Admin, Teacher, Student, Guardian, Accountant, Staff, User)
+- ✅ OAuth authentication (Google, Facebook) + email/password
+- ✅ Two-factor authentication for enhanced security
+- ✅ Complete student management (enrollment, profiles, health records, achievements)
+- ✅ Teacher & staff management (qualifications, workload, departments)
+- ✅ Subject & class management with timetable builder
+- ✅ Attendance system (daily, period-wise, QR code check-in)
+- ✅ Assessment & grading (assignments, gradebook, report cards)
+- ✅ Fee management (structures, invoicing, payment tracking)
+- ✅ Communication (announcements, parent portal, email notifications)
+- ✅ Basic reporting & analytics
+- ✅ Arabic/English bilingual support (RTL/LTR)
+- ✅ Mobile-responsive design
+
+**MVP Success Criteria:**
+A school can enroll students, manage classes, track attendance, grade assignments, collect fees, and communicate with parents—all within a single, intuitive platform—without needing any other software.
+
+---
+
+### Growth Features (Months 13-24, Post-MVP)
+
+Once MVP validates core value, Growth phase expands capabilities and market reach:
+
+**Advanced Features:**
+- 🔄 AI-powered predictive analytics (attendance, performance forecasting)
+- 🔄 Digital classroom & LMS (video conferencing, online quizzes, discussion forums)
+- 🔄 Comprehensive finance module (double-entry bookkeeping, payroll, financial statements)
+- 🔄 Examination management (question bank, automated exam generation, online proctoring)
+- 🔄 Library management (book inventory, borrowing system)
+- 🔄 Native mobile applications (React Native iOS/Android)
+- 🔄 Internationalization expansion (French, Spanish, Hindi, Mandarin)
+- 🔄 Regional compliance certifications (GDPR, additional payment gateways)
+
+---
+
+### Vision (Year 3+, Future Innovations)
+
+Long-term vision features that position Hogwarts as the definitive education platform:
 
 **Strategic Initiatives:**
-- Marketplace & ecosystem (third-party apps)
-- Blockchain credentials & digital badges
-- VR/AR learning experiences
-- District-level management (multi-school administration)
-- Government partnerships & policy management
-- IPO preparation ($1M MRR, 5,000 schools)
+- 🚀 AI Teaching Assistant (24/7 student support chatbot)
+- 🚀 Personalized learning paths (adaptive curriculum based on student performance)
+- 🚀 Marketplace & ecosystem (third-party apps, content marketplace)
+- 🚀 Blockchain credentials (tamper-proof academic records, digital badges)
+- 🚀 VR/AR learning experiences (virtual labs, historical recreations)
+- 🚀 District-level management (multi-school administration for governments)
+- 🚀 Global teacher collaboration network
 
 ---
 
-## Architecture Principles
+## Domain-Specific Requirements
 
-### Multi-Tenant by Design
+### Education Sector Constraints
 
-**Critical:** Every database operation MUST be scoped by `schoolId`:
+**Regulatory Compliance Stack:**
+- **FERPA**: Student data privacy, parental consent, audit trails
+- **GDPR**: Right to access, right to be forgotten, data portability, breach notification (72 hours)
+- **COPPA**: Parental consent for children under 13, limited data collection
+- **WCAG 2.1 AA**: Keyboard navigation, screen reader support, color contrast (4.5:1), text resizing (200%)
 
+**Educational Standards Integration:**
+- Support for varying academic calendars (semester, trimester, quarter systems)
+- Integration with national curriculum frameworks
+- Standardized assessment reporting formats
+- Multi-grade level structures (varies by country)
+
+**Child Safety Protocols:**
+- Content moderation for student-generated content
+- Controlled communication channels (teacher ↔ student, guardian ↔ teacher)
+- Emergency contact management with quick access
+- Incident reporting workflows with mandatory documentation
+
+---
+
+## Innovation & Novel Patterns
+
+> ⚠️ **TBD - Coming Soon**
+>
+> This section will detail Hogwarts' innovative approaches to EdTech challenges, including:
+> - Real-time collaborative lesson planning with AI assistance
+> - Predictive intervention systems for at-risk students
+> - Novel multi-tenant architecture patterns for education sector
+> - Gamification strategies for student engagement
+>
+> _To be expanded in future PRD iterations._
+
+### Validation Approach
+
+**Technical Validation:**
+- Multi-tenant isolation testing (automated test suite verifying no cross-tenant data leaks)
+- Performance benchmarking (10,000 concurrent users per school)
+- Security penetration testing (annual third-party audits)
+- Accessibility compliance audits (quarterly WCAG 2.1 AA checks)
+
+**User Validation:**
+- Pilot program with 20+ schools (alpha testing)
+- Quarterly NPS surveys to parents and teachers
+- Usability testing with diverse user groups (tech-savvy students, administrators with minimal computer experience)
+- A/B testing for critical user flows (enrollment, attendance marking, fee payment)
+
+---
+
+## SaaS B2B Specific Requirements
+
+Hogwarts operates as a multi-tenant SaaS platform serving schools as business customers.
+
+### Multi-Tenancy Architecture
+
+**Subdomain-Based Tenant Isolation:**
+```
+Production:     school.databayt.org → /[lang]/s/school/...
+Preview:        tenant---branch.vercel.app → /[lang]/s/tenant/...
+Development:    subdomain.localhost:3000 → /[lang]/s/subdomain/...
+Custom Domain:  www.theirschool.com (CNAME) → Hogwarts platform
+```
+
+**Data Isolation Strategy:**
+- Every database model includes mandatory `schoolId` field
+- All Prisma queries MUST include `where: { schoolId }` filter
+- Unique constraints scoped per tenant: `@@unique([schoolId, email])`
+- Automated test suite verifies no cross-tenant data leaks
+- Audit trails log `schoolId` + `requestId` for every operation
+
+**Critical Code Pattern:**
 ```typescript
-// ❌ WRONG - No tenant scoping
+// ❌ WRONG - No tenant scoping (security vulnerability)
 await prisma.student.findMany()
 
 // ✅ CORRECT - Scoped by schoolId
@@ -165,164 +335,297 @@ await prisma.student.findMany({
 })
 ```
 
-**Tenant Isolation Strategy:**
-- Subdomain routing: `school.databayt.org` → `/[lang]/s/school/...`
-- Database scoping: All models include `schoolId` field
-- Unique constraints: `@@unique([email, schoolId])` allows same email across schools
-- Session context: JWT includes `schoolId` from subdomain
+### Subscription & Billing
+
+**Subscription Tiers:**
+
+<div className="overflow-x-auto my-6">
+  <table>
+    <thead>
+      <tr>
+        <th>Tier</th>
+        <th>Price</th>
+        <th>Features</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>FREE</strong></td>
+        <td>Up to 100 students</td>
+        <td>All core features, community support, Hogwarts branding, email support, 1 GB file storage</td>
+      </tr>
+      <tr>
+        <td><strong>PROFESSIONAL</strong></td>
+        <td>$1.50/student/month</td>
+        <td>All Free + priority support, custom branding, 10 GB storage, advanced analytics, API access (100 req/hr)</td>
+      </tr>
+      <tr>
+        <td><strong>ENTERPRISE</strong></td>
+        <td>$1.00/student/month</td>
+        <td>All Professional + white-label, dedicated account manager, phone support, SLA (99.9%), unlimited storage, unlimited API, custom integrations, SSO (SAML)</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+**Billing Integration:**
+- Payment processor: Stripe Subscriptions API
+- Billing cycle: Monthly (annual option with 15% discount)
+- Metered billing: Per-student pricing updated monthly based on active student count
+- Trial period: 14-day free trial (no credit card required)
+- Grace period: 7 days after failed payment before service suspension
+
+### Role-Based Access Control (RBAC)
+
+**8 User Roles:**
+
+1. **DEVELOPER** (Platform Admin) - Access all schools, platform configuration, monitoring
+2. **ADMIN** (School Administrator) - Full access within school, manage users, configure settings
+3. **TEACHER** - Manage assigned classes, grade assignments, mark attendance
+4. **STUDENT** - View own grades, attendance, submit assignments
+5. **GUARDIAN** (Parent) - View linked students' data, communicate with teachers, pay fees
+6. **ACCOUNTANT** - Manage finances, generate financial reports (no academic data access)
+7. **STAFF** (Non-teaching) - Limited operational module access (library, transport, hostel)
+8. **USER** (Default) - Minimal access, pending role assignment by admin
+
+**Permission Matrix:**
+- Granular permissions: Each feature has view/create/edit/delete/approve permissions
+- Department-based access: Teachers only see students in their department/classes
+- Data visibility rules: Students see only their own data; guardians see only linked students
+
+### API & Integrations
+
+**RESTful API (v1):**
+- Authentication: API keys (per school) with rate limiting
+- Rate limits: Free (100 req/hr), Professional (1,000 req/hr), Enterprise (unlimited)
+- Documentation: OpenAPI 3.0 spec with Swagger UI
+- Webhooks: Real-time notifications (`student.enrolled`, `payment.received`, `grade.updated`)
+
+**Single Sign-On (SSO):**
+- SAML 2.0: Enterprise customers (Okta, Azure AD, OneLogin)
+- OAuth 2.0: Google Workspace, Microsoft 365
+- SCIM: Automated user provisioning
+
+**Third-Party Integrations:**
+- Google Workspace (Classroom, Calendar, Drive, Meet)
+- Microsoft 365 (Teams, OneDrive, Outlook)
+- Zoom, Canvas/Blackboard, QuickBooks/Xero, Stripe, Twilio, SendGrid/Resend
 
 ---
 
-### Technology Stack
+## User Experience Principles
 
-**Framework & Language:**
-- Next.js 15.4.4 (App Router) with React 19.1.0
-- TypeScript 5.x (strict mode)
-- Turbopack (development + production builds)
+Hogwarts is built for diverse users—from tech-savvy young students to administrators with minimal computer experience.
 
-**Database & ORM:**
-- PostgreSQL (Neon serverless)
-- Prisma 6.14.0 with 28 model files
-- Connection pooling (max 100 connections)
+### Visual Personality
 
-**Authentication:**
-- NextAuth v5 (Auth.js 5.0.0-beta.29)
-- JWT strategy with 24-hour sessions
-- OAuth providers: Google, Facebook
+**Design Language:**
+- **Modern & Clean**: Minimalist interface with generous white space
+- **Educational & Friendly**: Approachable colors, rounded corners, soft shadows
+- **Professional**: Suitable for both elementary schools and high schools
+- **Trustworthy**: Convey security and reliability through consistent design
 
-**UI & Styling:**
-- Tailwind CSS 4 (utility-first)
-- shadcn/ui components (New York style, Radix UI primitives)
-- Semantic typography system (no hardcoded text/font classes)
+**Color Palette:**
+- **Primary**: Blue (#3B82F6) - Trust, stability, education
+- **Secondary**: Amber (#F59E0B) - Energy, optimism, achievement
+- **Success**: Green (#10B981) - Positive outcomes, growth
+- **Warning**: Orange (#F97316) - Attention, reminders
+- **Error**: Red (#EF4444) - Critical issues, validation errors
 
-**Testing:**
-- Vitest 2.0.6 + React Testing Library
-- Playwright 1.55.0 for E2E testing
-- 95%+ coverage target
+**Typography:**
+- **Arabic**: Tajawal (optimized for RTL rendering)
+- **English**: Inter (modern, clean, excellent web rendering)
+- **Semantic HTML**: Use `<h1>-<h6>`, `<p>`, `<small>` with theme CSS variables
+- **Never hardcode**: No `text-*` or `font-*` classes; rely on typography.css
 
-**Deployment:**
-- Vercel (serverless functions, edge network)
-- CI/CD via GitHub Actions
-- Sentry for error tracking
+### Key Interactions
+
+**Navigation:**
+- Sidebar navigation (role-based menu, collapsed on mobile)
+- Breadcrumbs showing current location
+- Global search bar for quick access
+- Keyboard shortcuts for power users
+
+**Data Entry:**
+- Smart forms with auto-save drafts
+- Inline validation with immediate feedback
+- Bulk actions (select multiple rows for batch operations)
+- Drag-and-drop (timetable builder, file uploads)
+- Auto-complete for predictive text
+
+**Feedback & Confirmation:**
+- Toast notifications (success, error, warning)
+- Loading states (skeleton screens, progress bars, spinners)
+- Confirmation dialogs for destructive actions
+- 5-second undo window for non-destructive actions
+
+**Accessibility:**
+- WCAG 2.1 AA compliant (keyboard navigation, screen reader support)
+- Visible focus indicators
+- Alt text for all images
+- Color contrast minimum 4.5:1 for text
+- Layout adapts to 200% zoom
+
+**Bilingual Experience:**
+- Language toggle in header (persistent across sessions)
+- RTL/LTR aware layouts (menus mirror for Arabic)
+- Mixed content support (Arabic text in English interface and vice versa)
+- Date/number localization per locale
 
 ---
 
-## Regulatory Compliance
+## Functional Requirements
 
-### Education Sector Requirements
+> **Note**: The complete functional requirements catalog contains 200+ detailed FRs organized into 12 epics. Below is a high-level summary. For full requirements with acceptance criteria, test cases, and multi-tenant safety considerations, see the [Epic Breakdown documentation](/docs/epics).
 
-**FERPA (Family Educational Rights and Privacy Act):**
-- Strict student data privacy
-- Parental consent for data access
-- Right to review and amend records
-- Audit logs for all data access
+### FR-001 to FR-020: User Management & Authentication
+User registration (email/password, OAuth) • Login flows • Two-factor authentication • Password reset • Session management • User profiles • Role-based menu display • User invitation system • Bulk user import (CSV) • User status management • Audit log viewing • Password policy enforcement • Session timeout • Login activity log • Email verification • Account lockout policy
 
-**GDPR (General Data Protection Regulation):**
-- Right to access (export user data)
-- Right to be forgotten (delete user accounts)
-- Data portability (export in machine-readable format)
-- Consent management for data processing
-- Data breach notification within 72 hours
+### FR-021 to FR-040: Student Management
+Student enrollment • Comprehensive profile management (personal, academic, health, documents, achievements, disciplinary) • Search and filtering • Batch actions • Document upload • Health records tracking • Achievement tracking • Disciplinary records • Guardian links • Class enrollment • Status transitions • Attendance summary • Grade summary • Fee summary • Export (individual and bulk) • Previous education records • Emergency contact • Photo management • Batch management
 
-**COPPA (Children's Online Privacy Protection Act):**
-- Parental consent before collecting data from children under 13
-- Clear privacy policies for minors
-- Limited data collection (necessity principle)
+### FR-041 to FR-060: Teacher & Staff Management
+Teacher profile creation • Class assignments • Department assignment • Workload management • Attendance tracking and leave management • Qualifications management • Performance reviews • Subject expertise tracking • Teacher dashboard • Communication with guardians • Non-teaching staff management • ID card generation • Contract management • Emergency contact • Professional development tracking • Timetable view • Substitution management • Export and reports
 
-**WCAG 2.1 AA (Web Content Accessibility Guidelines):**
-- Keyboard navigation for all features
-- Screen reader support (semantic HTML, ARIA labels)
-- Color contrast ratios (4.5:1 for text, 3:1 for large text)
-- Text resizing to 200% without horizontal scroll
-- Captions/transcripts for multimedia content
+### FR-061 to FR-080: Class & Subject Management
+Subject creation • Class creation • Student enrollment in classes • Teacher assignment to classes • Class schedule configuration • Class capacity limits • Class analytics dashboard • Class announcements • Resource sharing • Gradebook access • Attendance sheet • Timetable view • Waitlist management • Class sections management • Class merging and splitting • Subject prerequisites • Subject categories and tags • Class archive • Class roster export
+
+### FR-081 to FR-100: Attendance System
+Daily attendance marking • Period-wise attendance • Attendance status types (Present, Absent, Late, Excused) • Attendance notes and reasons • Bulk attendance marking • Attendance correction • Student-level reporting • Class-level reporting • School-level reporting • Alerts and notifications • Excuse submission (guardian) • QR code check-in • Late arrival threshold • Early dismissal tracking • Make-up session tracking • Export • Calendar integration • Policy configuration
+
+### FR-101 to FR-300: Additional Modules
+> ⚠️ **Sections TBD - Coming Soon**
+>
+> - **FR-101 to FR-130**: Assessment & Grading
+> - **FR-131 to FR-160**: Fee Management
+> - **FR-161 to FR-200**: Finance Module (Double-entry bookkeeping, payroll, financial statements)
+> - **FR-201 to FR-230**: Communication & Announcements
+> - **FR-231 to FR-260**: Reporting & Analytics
+> - **FR-261 to FR-300**: Administration & Settings
+>
+> _Detailed requirements to be expanded in future PRD iterations. See full PRD.md for partial documentation._
+
+---
+
+## Non-Functional Requirements
+
+### Performance
+
+**Why it matters**: Schools have hundreds of concurrent users during peak hours (morning attendance, lunch, dismissal). Slow page loads frustrate users and delay critical operations.
+
+**Measurable Criteria:**
+- Page load time: Initial < 2s (3G network), subsequent < 500ms (cached assets)
+- API response time: 95th percentile < 500ms, 99th percentile < 1s
+- Database queries: No N+1 queries, query time < 100ms for 95%
+- Concurrent users: Support 10,000 concurrent users per school without degradation
+- Turbopack build time: Development < 3s, production < 60s
+- Time to First Byte (TTFB): < 200ms via edge caching
+
+---
+
+### Security
+
+**Why it matters**: We handle sensitive student data, financial information, and must comply with FERPA/GDPR. A breach would be catastrophic.
+
+**Requirements:**
+- **Data Encryption**: At rest (AES-256), in transit (TLS 1.3)
+- **Authentication**: Bcrypt password hashing (cost 12), JWT tokens (24-hour expiry), 2FA (TOTP), rate limiting (5 attempts/15 minutes)
+- **Authorization**: RBAC enforced on every route, multi-tenant data isolation (`schoolId` in all queries), automated cross-tenant leak tests
+- **Input Validation**: Zod validation (server-side), SQL injection protection (Prisma parameterized queries), XSS prevention (React auto-escaping, CSP headers)
+- **Security Headers**: CSP, HSTS, X-Frame-Options: DENY, X-Content-Type-Options: nosniff
+- **Audit Logging**: All data modifications logged (user, timestamp, IP), 7-year retention, immutable append-only trail
+- **Vulnerability Management**: Dependabot, monthly security scans, annual penetration testing, bug bounty program
+
+---
+
+### Scalability
+
+**Why it matters**: We aim to serve 15,000+ schools globally within 5 years. System must scale horizontally without code changes.
+
+**Requirements:**
+- **Database Scaling**: Prisma connection pooling (max 100), Neon Serverless PostgreSQL (auto-scales), read replicas for reporting
+- **Application Scaling**: Vercel serverless functions (auto-scale to 1000s of instances), stateless architecture, edge caching (Vercel Edge Network)
+- **File Storage**: S3-compatible object storage (Cloudflare R2), CDN for file delivery
+- **Multi-Region Support** (Growth): Data residency (EU, US, Asia), region-aware routing, cross-region replication
+- **Load Testing**: Quarterly tests simulating 50K concurrent users, target 99.9% success rate at 10x expected load
+
+---
+
+### Accessibility
+
+**Why it matters**: Public schools are legally required to meet WCAG 2.1 AA standards. Inclusive design serves all users.
+
+**Requirements:**
+- **WCAG 2.1 AA Compliance**: Keyboard navigation (no mouse required), tab navigation with visible focus indicators, screen reader support (semantic HTML, ARIA labels), captions/transcripts for video
+- **Color Contrast**: Text ≥ 4.5:1, large text (18pt+) ≥ 3:1, no information by color alone (use icons + text)
+- **Text Resizing**: Layout adapts to 200% zoom without horizontal scroll
+- **Keyboard Shortcuts**: Common actions (Ctrl+S to save, Esc to close modal), shortcuts documented
+- **Forms**: Labels for all inputs, descriptive error messages, required fields clearly marked
+- **Testing**: Automated checks in CI/CD (axe-core), manual testing with screen readers (NVDA, JAWS), quarterly audits
+
+---
+
+### Integration
+
+**Why it matters**: Schools use diverse tools. Integrations reduce friction and increase value.
+
+**Requirements:**
+- **RESTful API v1**: OpenAPI 3.0 spec, API key authentication, rate limiting (100-10,000 req/hr by tier), versioned endpoints (`/api/v1/students`), consistent JSON error format
+- **Webhooks**: Event subscriptions (`student.enrolled`, `payment.received`, `grade.updated`), webhook signing (HMAC-SHA256), retry logic with exponential backoff
+- **OAuth 2.0 Client**: Google Workspace (Classroom, Calendar, Drive, Meet), Microsoft 365 (Teams, OneDrive, Outlook)
+- **SSO (Enterprise)**: SAML 2.0 (Okta, Azure AD, OneLogin), SCIM for user provisioning
+- **Payment Gateways**: Stripe (primary), regional gateways (UPI, M-Pesa, Alipay)
+- **Email Service**: Resend (primary), SendGrid (fallback), React Email components
+- **SMS Service**: Twilio
+- **File Storage**: S3-compatible APIs (AWS S3, Cloudflare R2, DigitalOcean Spaces)
+
+---
+
+## Implementation Planning
+
+### Epic Breakdown Required
+
+The functional requirements above must be decomposed into epics and bite-sized user stories suitable for implementation within Claude Code's context window limits (~200K tokens).
+
+**Recommended Epic Structure:**
+
+1. **Epic 1: Foundation & Authentication** (FR-001 to FR-020)
+2. **Epic 2: School Configuration** (School setup, year levels, departments)
+3. **Epic 3: Student Management Core** (FR-021 to FR-040)
+4. **Epic 4: Teacher & Staff Management** (FR-041 to FR-060)
+5. **Epic 5: Class & Subject Management** (FR-061 to FR-080)
+6. **Epic 6: Attendance System** (FR-081 to FR-100)
+7. **Epic 7: Assessment & Grading** (FR-101 to FR-130) - TBD
+8. **Epic 8: Fee Management** (FR-131 to FR-160) - TBD
+9. **Epic 9: Finance Module** (FR-161 to FR-230) - TBD
+10. **Epic 10: Communication & Announcements** (FR-231 to FR-250) - TBD
+11. **Epic 11: Reporting & Analytics** (FR-251 to FR-270) - TBD
+12. **Epic 12: Administration & Settings** (FR-271 to FR-300) - TBD
+
+**Next Step:** See the [Epic Breakdown documentation](/docs/epics) for detailed implementation breakdown with acceptance criteria, vertical slicing, and sequential story ordering.
+
+---
+
+## References
+
+- **Product Brief**: Internal planning documents
+- **Domain Research**: EdTech market analysis, competitor research (15+ platforms analyzed)
+- **Regulatory Documents**: FERPA guidelines, GDPR compliance checklist, COPPA requirements
+- **Technical Research**: Next.js 15 docs, Prisma 6 best practices, NextAuth v5 migration guide
+- **User Research**: Interviews with 20+ school administrators and teachers (pilot program)
 
 ---
 
 ## Next Steps
 
-### 1. Review PRD
-- Read `PRD.md` for complete requirements
-- Understand success criteria and scope
-- Review functional and non-functional requirements
-
-### 2. Review Epics
-- Read `epics.md` for implementation breakdown
-- Study Epic 1 (Foundation) detailed stories
-- Understand epic dependencies and sequencing
-
-### 3. Review Validation Report
-- Read `validation-report.md` for quality assessment
-- Note areas for improvement (FR traceability, Epic 3-12 expansion)
-- Review recommended fixes
-
-### 4. Proceed to Architecture
-Once PRD and epics are reviewed and validated:
-```bash
-# Run architecture workflow
-workflow create-architecture
-```
-
-### 5. Begin Implementation
-Start with Epic 1 (Foundation & Infrastructure):
-- 15 detailed stories ready for implementation
-- Multi-tenant architecture foundation
-- Deployable after Epic 1 completion
+1. **Epic & Story Breakdown** - See: [Epic Breakdown](/docs/epics)
+2. **Validation Report** - See: [Validation Report](/docs/validation)
+3. **Architecture** - See: [Architecture Documentation](/docs/architecture)
+4. **UX Design** - See: [Pattern Documentation](/docs/pattern)
+5. **API Documentation** - See: [API Reference](/docs/api)
 
 ---
 
-## Document Generation
+_This PRD captures the essence of Hogwarts - **transforming educational operations through magical technology, making school management intuitive, accessible, and delightful for every stakeholder.**_
 
-These documents were created following the **BMAD-METHOD** (Battle-tested Multi-Agent Development) workflow:
-
-**Workflow Used:** `workflow create-prd`
-
-**Process:**
-1. ✅ **Research & Discovery**: Competitor analysis, domain research, platform analysis
-2. ✅ **PRD Creation**: 11-step BMAD-METHOD process with 200+ functional requirements
-3. ✅ **Epic Breakdown**: 12 epics with 190+ vertically sliced stories
-4. ✅ **Validation**: 85-point BMAD checklist (scored 78/85, 91.8%)
-5. ✅ **Documentation**: This page for easy access
-
-**Quality Assurance:**
-- ✅ No template variables unfilled
-- ✅ Meaningful, measurable success criteria
-- ✅ Complete domain context (FERPA, GDPR, COPPA)
-- ✅ Multi-tenant architecture from day one
-- ✅ Vertical slicing (no horizontal layer stories)
-- ✅ No forward dependencies (all backward only)
-- ✅ 0 critical validation failures
-
----
-
-## Additional Resources
-
-### Related Documentation
-- [Architecture Overview](/docs/architecture) - System design and patterns
-- [Multi-Tenant Architecture](/docs/architecture-multi-tenant) - Tenant isolation strategy
-- [Technology Stack](/docs/stack) - Detailed tech stack explanation
-- [Contributing Guide](/docs/contribute) - How to contribute to the project
-- [Roadmap 2024-2025](/docs/roadmap) - Product roadmap and milestones
-
-### External References
-- [BMAD-METHOD](https://github.com/bmad-code-org/BMAD-METHOD) - Development methodology used
-- [Next.js 15 Docs](https://nextjs.org/docs) - Framework documentation
-- [Prisma Docs](https://www.prisma.io/docs) - ORM documentation
-- [NextAuth v5](https://authjs.dev) - Authentication library
-- [FERPA Guidelines](https://www2.ed.gov/policy/gen/guid/fpco/ferpa/index.html) - Student privacy law
-- [GDPR Compliance](https://gdpr.eu) - Data protection regulation
-
----
-
-## Feedback & Questions
-
-Have questions about the PRD or implementation plan?
-
-- **GitHub Issues**: [Open an issue](https://github.com/hogwarts/app/issues)
-- **Email**: product@hogwarts.app
-- **Discord**: [Join our community](https://discord.gg/hogwarts)
-
----
-
-**Last Updated:** January 2024
-**Version:** 1.0
-**Status:** ✅ Validated & Ready for Architecture Phase
+_Created through collaborative discovery between Product Team and AI facilitator._

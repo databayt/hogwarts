@@ -1,0 +1,2197 @@
+# Learning & Communication Systems Demo
+
+This guide covers three interconnected systems that enhance the learning experience and facilitate communication across the Hogwarts platform: **Library Management**, **Learning Management System (LMS)**, and **Communication & Announcements**.
+
+---
+
+## Overview
+
+### Library Management System
+The library module provides complete book inventory management, borrowing tracking, and catalog management.
+
+**Demo Data Summary**:
+- **Total Books**: 100 books across 7 genres
+- **Genres**: Fiction, Non-Fiction, Science, History, Mathematics, Literature, Reference
+- **Availability**: All books currently available (no borrowings in demo)
+- **ISBN Management**: Full ISBN tracking for catalog management
+- **Publisher Tracking**: Publisher and publication year metadata
+
+**Key Features**:
+- Book catalog with search and filters
+- ISBN-based inventory management
+- Genre categorization
+- Availability tracking
+- Borrowing and return workflows
+- Late fee calculation
+- Reading history and statistics
+- Popular books analytics
+
+---
+
+### Learning Management System (LMS)
+A comprehensive online learning platform for course delivery, video content, and student progress tracking.
+
+**Demo Data Summary**:
+- **Total Courses**: 10 courses (mix of free and paid)
+- **Course Structure**: Each course has 3 chapters
+- **Total Lessons**: 150 lessons (10 courses × 3 chapters × 5 lessons)
+- **Content Types**: Video lessons with descriptions and resources
+- **Pricing**: Mix of free courses and paid courses (SDG 50-200)
+- **Course Status**: Published courses ready for enrollment
+
+**Course Catalog**:
+1. **Introduction to Computer Science** - Free
+2. **Advanced Mathematics** - SDG 200
+3. **Physics Fundamentals** - SDG 150
+4. **English Literature** - Free
+5. **Arabic Language Mastery** - Free
+6. **Chemistry Basics** - SDG 100
+7. **Biology Essentials** - SDG 100
+8. **History of Sudan** - Free
+9. **Islamic Studies** - Free
+10. **Art and Design** - SDG 50
+
+**Key Features**:
+- Course catalog with search and filters
+- Chapter-based course structure
+- Video lessons with progress tracking
+- Course enrollment management
+- Free and paid course support
+- Student progress tracking
+- Completion certificates
+- Course analytics and insights
+
+---
+
+### Communication & Announcements
+System-wide and targeted communication tools for administrators, teachers, and students.
+
+**Demo Data Summary**:
+- **Total Announcements**: 5 announcements
+- **Announcement Types**: School-wide and class-specific
+- **Scopes**: School (4), Class (1)
+- **Recent Topics**: Parent-Teacher Meeting, Exam Schedule, Library Arrivals, Holiday Notice, Sports Day
+
+**Announcement List**:
+1. **Parent-Teacher Meeting** (School-wide) - Meeting schedule announcement
+2. **Exam Schedule Released** (School-wide) - Final exam information
+3. **Library New Arrivals** (School-wide) - New books available
+4. **Holiday Notice** (School-wide) - School closure dates
+5. **Important Class Update** (Class-specific) - Targeted to specific class
+
+**Key Features**:
+- Multi-scope announcements (school, grade, class, individual)
+- Rich text editor for content formatting
+- Attachment support for documents
+- Read status tracking
+- Priority levels (urgent, important, normal)
+- Scheduled announcements
+- Targeted audience selection
+- Notification system integration
+- Announcement archive
+
+---
+
+## Getting Started
+
+### Demo Access Credentials
+
+All passwords in the demo environment are: **`1234`**
+
+**Administrator Access**:
+- Email: `admin@demo.school` or `jamila.ahmed@demo.school`
+- Role: Full system access
+- Permissions: Library management, LMS administration, announcements
+
+**Teacher Access**:
+- Email: Any teacher from 25 seeded teachers (e.g., `aisha.hassan@demo.school`)
+- Role: Course creation, class announcements
+- Permissions: LMS content creation, class-level announcements
+
+**Student Access**:
+- Email: Any student (e.g., `ahmed.mohammed.001@demo.school`)
+- Student ID: `2025DEMO0001` to `2025DEMO0150`
+- Role: Course enrollment, library borrowing
+- Permissions: View announcements, borrow books, enroll in courses
+
+---
+
+## Library Management Walkthroughs
+
+### 1. Browse Library Catalog (3 minutes)
+
+**Objective**: Explore the library's book collection with search and filters.
+
+**Steps**:
+
+1. **Login as Administrator**:
+   ```
+   Email: admin@demo.school
+   Password: 1234
+   ```
+
+2. **Navigate to Library**:
+   - Click "Library" in the main navigation
+   - Or go to: `/[lang]/s/demo/platform/library`
+
+3. **View Book Catalog**:
+   - You'll see a table with 100 books
+   - Columns: Title, Author, ISBN, Genre, Status, Actions
+   - All books show "Available" status (green badge)
+
+4. **Use Search**:
+   - Enter "Science" in the search box
+   - Results filter to show only science genre books (~14 books)
+   - Clear search to see all books again
+
+5. **Apply Filters**:
+   - **Genre Filter**: Select "Fiction" from dropdown
+   - Results show ~14 fiction books
+   - **Status Filter**: Select "Available"
+   - All books are currently available
+
+6. **View Book Details**:
+   - Click on any book title (e.g., "Book Title 1")
+   - See full details:
+     - Title, Author, ISBN
+     - Genre, Language
+     - Publisher, Publication Year
+     - Description and Summary
+     - Availability status
+     - Current borrower (if borrowed)
+     - Borrowing history
+
+7. **Sort Books**:
+   - Click column headers to sort:
+     - Title (A-Z)
+     - Genre
+     - Status
+
+**Expected Results**:
+- 100 books displayed in organized table
+- Filters work instantly
+- Search is responsive
+- All books marked as "Available"
+- Book details show complete metadata
+
+**Demo Data Points**:
+- Books are evenly distributed across 7 genres
+- ISBNs follow format: `978-X-XXXX-XXXX-X`
+- All books have English language
+- Publication years range across multiple years
+
+---
+
+### 2. Manage Book Inventory (5 minutes)
+
+**Objective**: Add, edit, and manage library books.
+
+**Steps**:
+
+1. **Login as Administrator**:
+   ```
+   Email: admin@demo.school
+   Password: 1234
+   ```
+
+2. **Navigate to Library Management**:
+   - Go to Library section
+   - Click "Add Book" button (top right)
+
+3. **Add New Book**:
+   ```
+   Title: "The Art of Problem Solving"
+   Author: "Dr. Ahmed Khaled"
+   ISBN: 978-1-2345-6789-0
+   Genre: Mathematics
+   Language: English
+   Publisher: Academic Press
+   Publication Year: 2023
+   Total Copies: 3
+   Available Copies: 3
+   Description: A comprehensive guide to mathematical problem solving
+   Summary: Covers algebra, geometry, and number theory
+   ```
+
+4. **Save Book**:
+   - Click "Save Book"
+   - Toast notification: "Book added successfully"
+   - New book appears in catalog
+
+5. **Edit Existing Book**:
+   - Find "Book Title 1" in catalog
+   - Click "Edit" action button (pencil icon)
+   - Update fields:
+     ```
+     Title: "Advanced Physics: Vol 1"
+     Author: "Prof. Sara Ibrahim"
+     Total Copies: 5
+     ```
+   - Click "Save Changes"
+   - Toast: "Book updated successfully"
+
+6. **View Book Statistics**:
+   - Check dashboard stats (top of page):
+     - Total Books: 101 (after adding new book)
+     - Available: 101
+     - Borrowed: 0
+     - Overdue: 0
+
+7. **Bulk Actions**:
+   - Select multiple books using checkboxes
+   - Click "Bulk Actions" dropdown
+   - Options: Delete, Update Status, Export
+   - For demo: Select 3 books → Export as CSV
+   - File downloads with book data
+
+**Expected Results**:
+- New book successfully added to catalog
+- Book edits save and display correctly
+- Statistics update in real-time
+- Bulk actions work for multiple selections
+- Form validation prevents invalid data
+
+**Demo Notes**:
+- ISBN must be unique (enforced at database level)
+- Available copies cannot exceed total copies
+- Genre must be from predefined list
+
+---
+
+### 3. Book Borrowing Workflow (7 minutes)
+
+**Objective**: Complete the full borrowing and return cycle.
+
+**Steps**:
+
+1. **Login as Librarian/Administrator**:
+   ```
+   Email: admin@demo.school
+   Password: 1234
+   ```
+
+2. **Navigate to Borrowing**:
+   - Library → Borrowing Section
+   - Or click "Issue Book" button
+
+3. **Issue Book to Student**:
+   ```
+   Student: Search "Ahmed Mohammed" (ID: 2025DEMO0001)
+   Book: Search "Book Title 1"
+   Due Date: Set to 14 days from today (default)
+   Notes: "For Math research project"
+   ```
+   - Click "Issue Book"
+   - Toast: "Book issued successfully to Ahmed Mohammed"
+   - Book status changes from "Available" to "Borrowed"
+
+4. **View Active Borrowings**:
+   - Navigate to "Active Borrowings" tab
+   - See list showing:
+     - Student Name: Ahmed Mohammed
+     - Student ID: 2025DEMO0001
+     - Book: Book Title 1
+     - Issue Date: Today's date
+     - Due Date: Today + 14 days
+     - Status: Active (green badge)
+     - Actions: Return, Renew
+
+5. **Renew Borrowing**:
+   - Click "Renew" action on Ahmed's borrowing
+   - Extension modal appears:
+     ```
+     Current Due Date: [Original due date]
+     New Due Date: [Original + 14 days]
+     Renewal Count: 1 of 3 allowed
+     ```
+   - Click "Confirm Renewal"
+   - Toast: "Borrowing renewed successfully"
+   - Due date updated, renewal count increments
+
+6. **Return Book**:
+   - Click "Return" action on Ahmed's borrowing
+   - Return modal appears:
+     ```
+     Book: Book Title 1
+     Borrower: Ahmed Mohammed
+     Issue Date: [Date]
+     Due Date: [Date]
+     Return Date: Today (auto-filled)
+     Late Days: 0 (if on time)
+     Late Fee: SDG 0.00
+     Condition: Select "Good" (dropdown)
+     Notes: Optional notes
+     ```
+   - Select condition: "Good"
+   - Click "Confirm Return"
+   - Toast: "Book returned successfully"
+   - Book status changes back to "Available"
+   - Available copies increment
+
+7. **View Borrowing History**:
+   - Navigate to "Borrowing History" tab
+   - See completed transaction:
+     - Student: Ahmed Mohammed
+     - Book: Book Title 1
+     - Issue Date, Return Date
+     - Duration: X days
+     - Status: Returned (gray badge)
+     - Condition: Good
+
+8. **Handle Overdue Books**:
+   - Navigate to "Overdue Books" tab
+   - (Currently empty in demo)
+   - In real scenario:
+     - Lists books past due date
+     - Shows days overdue
+     - Calculates late fees
+     - Send reminder notifications
+
+9. **Student View (Bonus)**:
+   - Logout and login as student:
+     ```
+     Email: ahmed.mohammed.001@demo.school
+     Password: 1234
+     ```
+   - Navigate to "My Library"
+   - See sections:
+     - **Currently Borrowed**: Books you have
+     - **Borrowing History**: Past borrowings
+     - **Available to Borrow**: Catalog
+   - Can request books (requires approval)
+
+**Expected Results**:
+- Book successfully issued with due date
+- Borrowing appears in active list
+- Renewal extends due date correctly
+- Return process updates status and availability
+- History maintains complete audit trail
+- Late fee calculation works correctly
+- Student can view their borrowing status
+
+**Demo Data Points**:
+- Default borrowing period: 14 days
+- Maximum renewals: 3 times
+- Late fee: SDG 2.00 per day (configurable)
+- Students can borrow up to 3 books simultaneously
+- Teachers can borrow up to 5 books
+
+---
+
+### 4. Library Analytics & Reports (5 minutes)
+
+**Objective**: View library usage statistics and generate reports.
+
+**Steps**:
+
+1. **Login as Administrator**:
+   ```
+   Email: admin@demo.school
+   Password: 1234
+   ```
+
+2. **Navigate to Library Dashboard**:
+   - Library → Dashboard
+   - View KPI cards at top:
+
+3. **Current Statistics** (Demo Values):
+   ```
+   Total Books: 100
+   Available: 100 (100%)
+   Borrowed: 0 (0%)
+   Overdue: 0 (0%)
+
+   Total Students: 150
+   Active Borrowers: 0 (0% - no borrowings yet)
+
+   This Month:
+   - New Borrowings: 0
+   - Returns: 0
+   - Late Fees Collected: SDG 0.00
+   ```
+
+4. **View Popular Books** (Once Borrowing Data Exists):
+   - Section shows most borrowed books
+   - Metrics: Title, Times Borrowed, Current Status
+   - Chart visualization of top 10 books
+
+5. **Genre Distribution**:
+   - Pie chart showing books by genre:
+     ```
+     Fiction: 14 books (14%)
+     Non-Fiction: 14 books (14%)
+     Science: 14 books (14%)
+     History: 14 books (14%)
+     Mathematics: 14 books (14%)
+     Literature: 16 books (16%)
+     Reference: 14 books (14%)
+     ```
+
+6. **Borrowing Trends** (With Data):
+   - Line chart showing borrowings over time
+   - Metrics: Daily, Weekly, Monthly views
+   - Filters: Date range, Grade level, Genre
+
+7. **Generate Reports**:
+   - Click "Generate Report" button
+   - Select report type:
+     - **Inventory Report**: All books with current status
+     - **Borrowing Report**: All active borrowings
+     - **Overdue Report**: Books past due date
+     - **Student Activity**: Per-student borrowing history
+     - **Popular Books**: Most borrowed books
+     - **Financial Report**: Late fees collected
+   - Select date range
+   - Click "Download Report"
+   - Report downloads as PDF or Excel
+
+8. **Search Borrowing History**:
+   - Use filters:
+     - Student name/ID
+     - Book title
+     - Date range
+     - Status (Active, Returned, Overdue)
+   - Export filtered results
+
+**Expected Results**:
+- Dashboard displays real-time statistics
+- Charts visualize data effectively
+- Reports generate accurately
+- Export functionality works
+- Filters refine data quickly
+
+**Demo Limitations**:
+- No borrowing data initially, so trends are empty
+- After creating borrowings in Walkthrough #3, data populates
+- Popular books chart requires multiple borrowings
+
+---
+
+## Learning Management System (LMS) Walkthroughs
+
+### 5. Browse Course Catalog (3 minutes)
+
+**Objective**: Explore available courses and view course details.
+
+**Steps**:
+
+1. **Login as Student**:
+   ```
+   Email: ahmed.mohammed.001@demo.school
+   Password: 1234
+   ```
+
+2. **Navigate to LMS**:
+   - Click "Learning" or "Courses" in main navigation
+   - Or go to: `/[lang]/s/demo/platform/lms`
+
+3. **View Course Catalog**:
+   - Grid view of 10 courses with cards
+   - Each card shows:
+     - Course thumbnail image
+     - Course title
+     - Brief description
+     - Price (or "Free" badge)
+     - Instructor name
+     - Duration estimate
+     - Enrollment button
+
+4. **Browse Course Categories**:
+   ```
+   Free Courses (4):
+   - Introduction to Computer Science
+   - English Literature
+   - Arabic Language Mastery
+   - History of Sudan
+   - Islamic Studies (5 total free)
+
+   Paid Courses (5):
+   - Advanced Mathematics (SDG 200)
+   - Physics Fundamentals (SDG 150)
+   - Chemistry Basics (SDG 100)
+   - Biology Essentials (SDG 100)
+   - Art and Design (SDG 50)
+   ```
+
+5. **Use Search and Filters**:
+   - **Search**: Enter "Science"
+   - Results: Computer Science, Physics, Chemistry, Biology
+   - **Filter by Price**:
+     - Select "Free" → Shows 5 free courses
+     - Select "Paid" → Shows 5 paid courses
+   - **Filter by Subject**:
+     - Science, Mathematics, Languages, Arts, etc.
+   - **Sort Options**:
+     - Newest First
+     - Price: Low to High
+     - Price: High to Low
+     - Most Popular
+
+6. **View Course Details**:
+   - Click on "Introduction to Computer Science"
+   - Detailed page shows:
+     ```
+     Course Title: Introduction to Computer Science
+     Instructor: [Teacher Name]
+     Price: Free
+     Status: Published
+
+     Description: Comprehensive introduction covering programming, algorithms...
+
+     Course Structure:
+       Chapter 1: Introduction
+         - Lesson 1: What is Computer Science?
+         - Lesson 2: History of Computing
+         - Lesson 3: Binary Number Systems
+         - Lesson 4: Algorithms Basics
+         - Lesson 5: Programming Fundamentals
+
+       Chapter 2: Programming Basics
+         - Lesson 1-5: [Titles]
+
+       Chapter 3: Data Structures
+         - Lesson 1-5: [Titles]
+
+     Total Lessons: 15 (3 chapters × 5 lessons)
+     Estimated Duration: Variable per lesson
+
+     Enrollment Button: "Enroll Now" (for free) or "Purchase Course" (paid)
+     ```
+
+7. **Preview Lessons** (For Free Courses):
+   - Some lessons marked as "Preview Available"
+   - Click "Preview Lesson"
+   - Opens lesson video player
+   - Can view content without enrollment
+
+**Expected Results**:
+- 10 courses displayed in organized grid
+- Search and filters work smoothly
+- Course details are comprehensive
+- Free courses clearly labeled
+- Course structure visible before enrollment
+
+**Demo Data Points**:
+- 10 total courses across multiple subjects
+- Each course has 3 chapters
+- Each chapter has 5 lessons (15 lessons per course)
+- Total of 150 lessons across all courses
+- Mix of free (50%) and paid (50%) courses
+
+---
+
+### 6. Enroll in Course & Access Content (10 minutes)
+
+**Objective**: Complete enrollment process and access course content.
+
+**Steps**:
+
+1. **Login as Student**:
+   ```
+   Email: ahmed.mohammed.001@demo.school
+   Password: 1234
+   ```
+
+2. **Enroll in Free Course**:
+   - Navigate to Course Catalog
+   - Click "Introduction to Computer Science"
+   - Click "Enroll Now" button
+   - Confirmation modal:
+     ```
+     Course: Introduction to Computer Science
+     Price: Free
+     Instructor: [Name]
+
+     By enrolling, you agree to course terms.
+
+     [Cancel] [Confirm Enrollment]
+     ```
+   - Click "Confirm Enrollment"
+   - Toast: "Successfully enrolled in Introduction to Computer Science"
+   - Button changes to "Go to Course" or "Continue Learning"
+
+3. **Access Course Content**:
+   - Click "Go to Course"
+   - Redirects to course learning interface
+   - Layout:
+     ```
+     Left Sidebar:
+       - Course Title
+       - Progress Bar (0% initially)
+       - Chapter 1: Introduction
+         → Lesson 1: What is Computer Science? [Start]
+         → Lesson 2: History of Computing [Locked]
+         → Lesson 3: Binary Number Systems [Locked]
+         → Lesson 4: Algorithms Basics [Locked]
+         → Lesson 5: Programming Fundamentals [Locked]
+       - Chapter 2: Programming Basics [Locked]
+       - Chapter 3: Data Structures [Locked]
+
+     Main Content Area:
+       - Lesson Video Player
+       - Lesson Title
+       - Lesson Description
+       - Resources/Attachments
+       - Navigation: [Previous] [Next Lesson]
+
+     Right Sidebar (Optional):
+       - Course Progress
+       - Instructor Info
+       - Course Resources
+     ```
+
+4. **Watch Lesson Video**:
+   - Video player controls:
+     - Play/Pause
+     - Volume
+     - Playback Speed (0.5x, 1x, 1.25x, 1.5x, 2x)
+     - Quality Settings
+     - Fullscreen
+     - Progress Bar
+   - (Demo: Videos are placeholders/sample content)
+   - Click play to start lesson
+   - Progress automatically tracked
+
+5. **Complete Lesson**:
+   - Watch video (or skip to end for demo)
+   - "Mark as Complete" button appears
+   - Click "Mark as Complete"
+   - Toast: "Lesson 1 completed!"
+   - Lesson checkbox becomes checked (green)
+   - Next lesson unlocks automatically
+   - Progress bar updates: "1/15 lessons (7%)"
+
+6. **Navigate Between Lessons**:
+   - Click "Next Lesson" button
+   - Or click "Lesson 2" in sidebar
+   - New lesson loads:
+     ```
+     Lesson 2: History of Computing
+     Video: [Player]
+     Description: Explore the evolution of computers...
+     Resources: None
+     ```
+   - Complete Lesson 2 → Progress: 2/15 (13%)
+
+7. **Access Course Resources**:
+   - Some lessons have downloadable resources
+   - Click "Resources" tab/section
+   - Download:
+     - Lecture Slides (PDF)
+     - Code Examples (ZIP)
+     - Reading Materials (PDF)
+   - (Demo: Resources are sample/placeholder files)
+
+8. **Track Progress**:
+   - Progress bar shows completion percentage
+   - Completed lessons: Green checkmark
+   - Current lesson: Blue highlight
+   - Locked lessons: Gray lock icon
+   - Overall course progress visible at top
+
+9. **Enroll in Paid Course**:
+   - Go back to Course Catalog
+   - Select "Advanced Mathematics" (SDG 200)
+   - Click "Purchase Course"
+   - Payment modal:
+     ```
+     Course: Advanced Mathematics
+     Price: SDG 200.00
+
+     Payment Method:
+     ( ) Credit/Debit Card
+     ( ) School Wallet (if enabled)
+     ( ) Bank Transfer
+
+     [Cancel] [Proceed to Payment]
+     ```
+   - For demo: Select "School Wallet"
+   - Click "Proceed to Payment"
+   - (Demo: Payment may fail if wallet not funded)
+   - Alternative: Admin can enroll students manually
+
+10. **View My Courses**:
+    - Navigate to "My Courses" section
+    - Shows all enrolled courses:
+      ```
+      Active Courses:
+      - Introduction to Computer Science (7% complete)
+      - [Any other enrollments]
+
+      Card per course shows:
+      - Thumbnail
+      - Title
+      - Progress Bar (7%)
+      - Last Accessed: [Date/Time]
+      - [Continue Learning] button
+      ```
+
+**Expected Results**:
+- Free enrollment is instant and seamless
+- Course content loads correctly
+- Video player works smoothly
+- Progress tracking is accurate
+- Lessons unlock sequentially after completion
+- "My Courses" displays all enrollments with progress
+
+**Demo Data Points**:
+- Each course has 15 lessons (3 chapters × 5 lessons)
+- Lessons unlock sequentially (linear progression)
+- Progress saved automatically
+- Can resume from last watched lesson
+
+---
+
+### 7. Instructor: Create & Manage Course (15 minutes)
+
+**Objective**: Create a new course with chapters and lessons as a teacher.
+
+**Steps**:
+
+1. **Login as Teacher**:
+   ```
+   Email: aisha.hassan@demo.school
+   Password: 1234
+   ```
+
+2. **Navigate to Instructor Dashboard**:
+   - Click "Teaching" or "My Courses" (teacher view)
+   - Or go to: `/[lang]/s/demo/platform/lms/instructor`
+   - See sections:
+     - My Courses (courses you teach)
+     - Course Analytics
+     - Student Progress
+     - Create New Course
+
+3. **Create New Course**:
+   - Click "Create New Course" button
+   - Form appears:
+     ```
+     Course Details:
+
+     Title: "Web Development Fundamentals"
+     Slug: "web-dev-fundamentals" (auto-generated from title)
+     Short Description: "Learn HTML, CSS, and JavaScript basics"
+     Full Description: [Rich text editor]
+       "A comprehensive introduction to web development covering
+        HTML structure, CSS styling, and JavaScript programming.
+        Perfect for beginners with no prior experience."
+
+     Course Settings:
+
+     Price: SDG 100.00
+     ( ) Free Course (check to make free)
+
+     Thumbnail Image: [Upload or URL]
+     URL: /placeholder-course-thumb.jpg
+
+     Status: ( ) Draft  (•) Published
+
+     Prerequisites: "Basic computer skills"
+     Difficulty Level: Beginner
+     Estimated Duration: "8 weeks"
+     Language: English
+
+     [Cancel] [Save Course]
+     ```
+   - Fill out all fields
+   - Click "Save Course"
+   - Toast: "Course created successfully!"
+   - Redirects to course management page
+
+4. **Add Chapters**:
+   - Course management page shows:
+     ```
+     Course: Web Development Fundamentals
+     Status: Published
+     Enrollments: 0
+
+     Course Structure:
+     (Empty - no chapters yet)
+
+     [Add Chapter] button
+     ```
+   - Click "Add Chapter" button
+   - Chapter form modal:
+     ```
+     Chapter Details:
+
+     Title: "HTML Basics"
+     Description: "Learn HTML elements and document structure"
+     Order: 1 (auto-assigned)
+
+     [Cancel] [Save Chapter]
+     ```
+   - Click "Save Chapter"
+   - Chapter card appears in course structure
+
+5. **Add Lessons to Chapter**:
+   - Chapter card shows:
+     ```
+     Chapter 1: HTML Basics
+     Lessons: 0
+     [Add Lesson] [Edit Chapter] [Delete]
+     ```
+   - Click "Add Lesson"
+   - Lesson form modal:
+     ```
+     Lesson Details:
+
+     Title: "Introduction to HTML"
+     Description: "What is HTML and why it matters"
+
+     Video Content:
+     ( ) Video URL: [Enter YouTube or Vimeo URL]
+     ( ) Upload Video: [File picker]
+     Selected: Video URL
+     URL: https://www.youtube.com/watch?v=example
+
+     Lesson Content (Text): [Rich text editor]
+     "HTML stands for HyperText Markup Language..."
+
+     Duration: 10 minutes
+     Order: 1
+
+     Resources (Optional):
+     - Add PDF, ZIP, or links
+
+     Settings:
+     [✓] Free Preview (allow non-enrolled students to view)
+     [ ] Require Quiz Completion
+
+     [Cancel] [Save Lesson]
+     ```
+   - Click "Save Lesson"
+   - Lesson appears under chapter
+
+6. **Add Multiple Lessons**:
+   - Repeat for 4 more lessons in Chapter 1:
+     ```
+     Lesson 2: HTML Elements and Tags
+     Lesson 3: HTML Attributes
+     Lesson 4: Lists and Tables
+     Lesson 5: Forms and Inputs
+     ```
+   - Chapter now shows: "Lessons: 5"
+
+7. **Add More Chapters**:
+   - Click "Add Chapter" again
+   - Add Chapter 2:
+     ```
+     Title: "CSS Styling"
+     Description: "Learn to style web pages with CSS"
+     ```
+   - Add 5 lessons to Chapter 2:
+     ```
+     Lesson 1: Introduction to CSS
+     Lesson 2: CSS Selectors
+     Lesson 3: Colors and Backgrounds
+     Lesson 4: Box Model
+     Lesson 5: Flexbox Layout
+     ```
+   - Add Chapter 3:
+     ```
+     Title: "JavaScript Basics"
+     Description: "Learn programming with JavaScript"
+     ```
+   - Add 5 lessons to Chapter 3:
+     ```
+     Lesson 1: JavaScript Introduction
+     Lesson 2: Variables and Data Types
+     Lesson 3: Functions
+     Lesson 4: DOM Manipulation
+     Lesson 5: Events and Interactivity
+     ```
+
+8. **Reorder Chapters/Lessons**:
+   - Course structure shows drag handles (⋮⋮)
+   - Drag chapters to reorder
+   - Drag lessons within chapters to reorder
+   - Order updates automatically
+   - Toast: "Order updated"
+
+9. **Edit Course Settings**:
+   - Click "Edit Course" button (top right)
+   - Update any course details
+   - Change price: SDG 100 → SDG 75 (discount!)
+   - Update description
+   - Change thumbnail
+   - Click "Save Changes"
+
+10. **Publish Course**:
+    - If course was Draft:
+      - Click "Publish Course" button
+      - Confirmation modal:
+        ```
+        Ready to publish "Web Development Fundamentals"?
+
+        Requirements Check:
+        [✓] At least 1 chapter
+        [✓] At least 5 lessons total
+        [✓] Course description complete
+        [✓] Thumbnail image uploaded
+
+        Once published, students can enroll.
+
+        [Cancel] [Publish Course]
+        ```
+      - Click "Publish Course"
+      - Toast: "Course published successfully!"
+      - Status changes to "Published"
+      - Course appears in public catalog
+
+11. **View Course Analytics**:
+    - Navigate to "Course Analytics" tab
+    - See metrics:
+      ```
+      Web Development Fundamentals:
+
+      Enrollment Metrics:
+      - Total Enrollments: 0 (new course)
+      - Active Students: 0
+      - Completion Rate: N/A
+
+      Revenue (if paid):
+      - Total Revenue: SDG 0.00
+      - Average Price: SDG 75.00
+
+      Engagement:
+      - Total Views: 0
+      - Average Progress: N/A
+      - Most Popular Lesson: N/A
+
+      (Metrics populate as students enroll)
+      ```
+
+12. **Manage Enrollments**:
+    - Navigate to "Students" tab
+    - See list of enrolled students (once enrolled)
+    - View individual student progress
+    - Manually enroll students (as admin/instructor)
+    - Unenroll students if needed
+
+**Expected Results**:
+- Course created successfully with complete details
+- Chapters and lessons added in organized structure
+- Drag-and-drop reordering works smoothly
+- Course publishes and appears in catalog
+- Analytics dashboard displays metrics
+- Instructor has full control over course management
+
+**Demo Notes**:
+- Teachers can only manage their own courses
+- Administrators can manage all courses
+- Published courses appear in student catalog immediately
+- Draft courses are hidden from students
+
+---
+
+### 8. LMS Course Progress & Completion (5 minutes)
+
+**Objective**: Track student progress and issue completion certificates.
+
+**Steps**:
+
+1. **Login as Student**:
+   ```
+   Email: ahmed.mohammed.001@demo.school
+   Password: 1234
+   ```
+
+2. **Resume Course**:
+   - Go to "My Courses"
+   - Click "Continue Learning" on "Introduction to Computer Science"
+   - Course loads at last watched lesson
+
+3. **Complete All Lessons in Chapter 1**:
+   - Complete Lessons 3, 4, 5 (if not done)
+   - Mark each as complete
+   - Chapter 1 progress: 5/5 (100%)
+   - Chapter 1 shows green checkmark
+   - Chapter 2 unlocks automatically
+
+4. **Continue Through All Chapters**:
+   - Complete all lessons in Chapter 2 (5 lessons)
+   - Progress: 10/15 (67%)
+   - Complete all lessons in Chapter 3 (5 lessons)
+   - Progress: 15/15 (100%)
+
+5. **Course Completion**:
+   - After completing final lesson:
+   - Congratulations modal appears:
+     ```
+     🎉 Congratulations!
+
+     You've completed:
+     "Introduction to Computer Science"
+
+     Completion Date: [Today's Date]
+     Final Score: N/A (no quizzes)
+     Time Spent: [Hours]
+
+     Your certificate is ready!
+
+     [View Certificate] [Close]
+     ```
+   - Click "View Certificate"
+
+6. **Download Certificate**:
+   - Certificate page displays:
+     ```
+     [School Logo]
+
+     CERTIFICATE OF COMPLETION
+
+     This is to certify that
+
+     Ahmed Mohammed
+     Student ID: 2025DEMO0001
+
+     has successfully completed the course
+
+     "Introduction to Computer Science"
+
+     Completion Date: [Date]
+     Instructor: [Teacher Name]
+     Course Duration: 15 lessons
+
+     [School Seal]          [Instructor Signature]
+
+     [Download PDF] [Share Certificate]
+     ```
+   - Click "Download PDF"
+   - Certificate downloads as PDF file
+
+7. **View Course Certificate in Profile**:
+   - Navigate to "My Profile" or "My Achievements"
+   - See "Certificates" section
+   - Lists all earned certificates:
+     ```
+     Course Certificates:
+     - Introduction to Computer Science
+       Completed: [Date]
+       [View Certificate]
+     ```
+
+8. **Instructor View of Student Progress**:
+   - Logout and login as teacher:
+     ```
+     Email: aisha.hassan@demo.school
+     Password: 1234
+     ```
+   - Navigate to course management
+   - Click "Students" tab
+   - See Ahmed Mohammed's entry:
+     ```
+     Student: Ahmed Mohammed (2025DEMO0001)
+     Enrollment Date: [Date]
+     Progress: 15/15 lessons (100%)
+     Status: Completed
+     Completion Date: [Date]
+     Time Spent: [Hours]
+     Certificate Issued: Yes
+
+     [View Details] [Download Certificate]
+     ```
+
+9. **View Lesson-Level Analytics**:
+   - Click "View Details" on Ahmed's enrollment
+   - See detailed breakdown:
+     ```
+     Chapter 1: Introduction (100%)
+       ✓ Lesson 1: Completed on [Date] - 10 min
+       ✓ Lesson 2: Completed on [Date] - 8 min
+       ✓ Lesson 3: Completed on [Date] - 12 min
+       ✓ Lesson 4: Completed on [Date] - 15 min
+       ✓ Lesson 5: Completed on [Date] - 9 min
+
+     Chapter 2: Programming Basics (100%)
+       [Similar breakdown]
+
+     Chapter 3: Data Structures (100%)
+       [Similar breakdown]
+
+     Total Time: 2 hours 15 minutes
+     Average Lesson Time: 9 minutes
+     Completion Rate: 100%
+     ```
+
+**Expected Results**:
+- Progress tracking is accurate and real-time
+- Completion triggers certificate generation
+- Certificate is professionally formatted
+- PDF download works correctly
+- Instructor can view detailed student analytics
+- Certificates appear in student profile
+
+**Demo Data Points**:
+- Progress tracked per lesson
+- Certificates auto-generated on 100% completion
+- Time tracking per lesson (if implemented)
+- Certificate includes school branding
+
+---
+
+## Communication & Announcements Walkthroughs
+
+### 9. Create and Manage Announcements (7 minutes)
+
+**Objective**: Create announcements targeted to different audiences.
+
+**Steps**:
+
+1. **Login as Administrator**:
+   ```
+   Email: admin@demo.school
+   Password: 1234
+   ```
+
+2. **Navigate to Announcements**:
+   - Click "Announcements" or "Communication" in main navigation
+   - Or go to: `/[lang]/s/demo/platform/announcements`
+
+3. **View Existing Announcements**:
+   - List view showing 5 demo announcements:
+     ```
+     1. Parent-Teacher Meeting
+        Scope: School
+        Created: [Date]
+        Author: Admin
+        Status: Published
+
+     2. Exam Schedule Released
+        Scope: School
+        Created: [Date]
+        Author: Admin
+        Status: Published
+
+     3. Important Class Update
+        Scope: Class (Grade 7A)
+        Created: [Date]
+        Author: Teacher
+        Status: Published
+
+     4. Library New Arrivals
+        Scope: School
+        Created: [Date]
+        Author: Admin
+        Status: Published
+
+     5. Holiday Notice
+        Scope: School
+        Created: [Date]
+        Author: Admin
+        Status: Published
+     ```
+
+4. **Create School-Wide Announcement**:
+   - Click "Create Announcement" button
+   - Form appears:
+     ```
+     Announcement Details:
+
+     Title: "Mid-Term Break Schedule"
+
+     Body: [Rich text editor]
+     "Dear Students and Parents,
+
+     We would like to inform you that the mid-term break will be
+     from March 15-22, 2025.
+
+     School will resume on March 23, 2025.
+
+     Please plan accordingly.
+
+     Best regards,
+     School Administration"
+
+     Scope: (Select audience)
+     (•) School (All users)
+     ( ) Grade (Select grades)
+     ( ) Class (Select classes)
+     ( ) Individual (Select users)
+
+     Priority Level:
+     ( ) Normal
+     (•) Important
+     ( ) Urgent
+
+     Attachments: [Upload files - optional]
+     - Add calendar file (.ics)
+     - Add PDF notice
+
+     Schedule:
+     ( ) Publish Immediately
+     ( ) Schedule for Later: [Date/Time picker]
+     Selected: Publish Immediately
+
+     Notifications:
+     [✓] Send Email Notification
+     [✓] Send In-App Notification
+     [✓] Send SMS (if configured)
+
+     [Save as Draft] [Publish Announcement]
+     ```
+   - Fill out all fields as shown
+   - Click "Publish Announcement"
+   - Toast: "Announcement published successfully!"
+   - Announcement appears at top of list
+
+5. **Create Grade-Level Announcement**:
+   - Click "Create Announcement"
+   - Fill form:
+     ```
+     Title: "Grade 10 Science Fair Reminder"
+     Body: "Don't forget to submit your science projects by Friday!"
+     Scope: Grade → Select "Grade 10"
+     Priority: Normal
+     ```
+   - Click "Publish"
+   - Announcement visible only to Grade 10 students
+
+6. **Create Class-Specific Announcement**:
+   - Click "Create Announcement"
+   - Fill form:
+     ```
+     Title: "Physics Class Rescheduled"
+     Body: "Tomorrow's physics class moved from 9:00 AM to 11:00 AM."
+     Scope: Class → Select "Grade 10 - Section A - Physics"
+     Priority: Important
+     ```
+   - Click "Publish"
+   - Announcement visible only to selected class
+
+7. **Create Individual Announcement**:
+   - Click "Create Announcement"
+   - Fill form:
+     ```
+     Title: "Important: Meeting Request"
+     Body: "Please see me during office hours regarding your assignment."
+     Scope: Individual → Select "Ahmed Mohammed (2025DEMO0001)"
+     Priority: Urgent
+     ```
+   - Click "Publish"
+   - Announcement visible only to Ahmed Mohammed
+
+8. **Schedule Future Announcement**:
+   - Click "Create Announcement"
+   - Fill form:
+     ```
+     Title: "Final Exam Reminder"
+     Body: "Final exams start next Monday. Good luck!"
+     Scope: School
+     Priority: Important
+     Schedule: Schedule for Later
+       Date: [3 days from now]
+       Time: 8:00 AM
+     ```
+   - Click "Schedule Announcement"
+   - Toast: "Announcement scheduled for [Date/Time]"
+   - Shows in "Scheduled" tab with countdown
+
+9. **Edit Announcement**:
+   - Find "Mid-Term Break Schedule" announcement
+   - Click "Edit" action button (pencil icon)
+   - Update body text: Add "Classes resume on March 23 at 8:00 AM sharp."
+   - Click "Update Announcement"
+   - Toast: "Announcement updated"
+   - Updated content displays immediately
+
+10. **Delete Announcement**:
+    - Find an old/test announcement
+    - Click "Delete" action button (trash icon)
+    - Confirmation modal:
+      ```
+      Delete Announcement?
+
+      Title: [Announcement Title]
+
+      This will permanently delete the announcement.
+      [X] users have already read this announcement.
+
+      This action cannot be undone.
+
+      [Cancel] [Delete Announcement]
+      ```
+    - Click "Delete Announcement"
+    - Toast: "Announcement deleted"
+    - Announcement removed from list
+
+11. **View Announcement Analytics**:
+    - Click on any announcement to view details
+    - See analytics:
+      ```
+      Mid-Term Break Schedule
+      Published: [Date/Time]
+      Scope: School (All users)
+      Priority: Important
+
+      Engagement Metrics:
+      - Total Recipients: 176 (25 teachers + 150 students + 1 admin)
+      - Read: 145 (82%)
+      - Unread: 31 (18%)
+      - Email Sent: 176
+      - Email Opened: 120 (68%)
+
+      Read Status by Role:
+      - Teachers: 24/25 (96%)
+      - Students: 120/150 (80%)
+      - Admin: 1/1 (100%)
+
+      Read Over Time: [Line chart]
+
+      [Export Report]
+      ```
+
+**Expected Results**:
+- Announcements created successfully for all scope types
+- Rich text editor formats content properly
+- Priority levels display with correct badges/colors
+- Scheduled announcements publish at correct time
+- Edit and delete functions work correctly
+- Analytics provide useful engagement insights
+- Notifications sent to appropriate recipients
+
+**Demo Data Points**:
+- 5 initial demo announcements
+- 4 school-wide, 1 class-specific
+- Mix of priority levels
+- All published (no drafts initially)
+
+---
+
+### 10. Student View: Read Announcements (3 minutes)
+
+**Objective**: View and interact with announcements as a student.
+
+**Steps**:
+
+1. **Login as Student**:
+   ```
+   Email: ahmed.mohammed.001@demo.school
+   Password: 1234
+   ```
+
+2. **View Notification Badge**:
+   - Bell icon in top navigation bar
+   - Red badge showing unread count: "5"
+   - Indicates 5 unread announcements
+
+3. **Open Notifications Panel**:
+   - Click bell icon
+   - Dropdown panel appears:
+     ```
+     Notifications (5 unread)
+
+     [Tab: All] [Tab: Unread] [Tab: Important]
+
+     🔔 Mid-Term Break Schedule (Important)
+        School Administration - 2 hours ago
+        [Mark as Read] [View]
+
+     📢 Exam Schedule Released
+        School Administration - 1 day ago
+        [Mark as Read] [View]
+
+     📚 Library New Arrivals
+        School Administration - 3 days ago
+        [Mark as Read] [View]
+
+     🏫 Holiday Notice
+        School Administration - 5 days ago
+        [Mark as Read] [View]
+
+     📝 Parent-Teacher Meeting
+        School Administration - 1 week ago
+        [Mark as Read] [View]
+
+     [Mark All as Read] [View All Announcements]
+     ```
+
+4. **Read Announcement**:
+   - Click "View" on "Mid-Term Break Schedule"
+   - Full announcement page opens:
+     ```
+     Mid-Term Break Schedule
+
+     From: School Administration
+     Date: [Date/Time]
+     Scope: School (All users)
+     Priority: Important
+
+     Dear Students and Parents,
+
+     We would like to inform you that the mid-term break will be
+     from March 15-22, 2025.
+
+     School will resume on March 23, 2025.
+
+     Please plan accordingly.
+
+     Best regards,
+     School Administration
+
+     Attachments:
+     📎 break-schedule.pdf (125 KB) [Download]
+     📅 break-calendar.ics (2 KB) [Download]
+
+     [Mark as Read] [Back to Announcements]
+     ```
+   - Click "Mark as Read"
+   - Notification badge decreases: "5" → "4"
+
+5. **Navigate to Announcements Page**:
+   - Click "View All Announcements" in notification panel
+   - Redirects to full announcements page
+   - See list of all announcements relevant to student:
+     ```
+     All Announcements
+
+     Filters:
+     [All] [Unread] [Important] [Urgent]
+     Search: [_______________] 🔍
+
+     Announcement List:
+
+     📌 Important: Meeting Request (Urgent)
+        Individual - Just now
+        Status: Unread
+        [View]
+
+     🔔 Mid-Term Break Schedule (Important)
+        School - 2 hours ago
+        Status: Read ✓
+        [View]
+
+     📝 Physics Class Rescheduled (Important)
+        Class: Grade 10A Physics - 1 day ago
+        Status: Unread
+        [View]
+
+     📢 Exam Schedule Released
+        School - 1 day ago
+        Status: Unread
+        [View]
+
+     📚 Library New Arrivals
+        School - 3 days ago
+        Status: Unread
+        [View]
+
+     [Load More]
+     ```
+
+6. **Filter Announcements**:
+   - Click "Unread" filter
+   - List shows only unread announcements (4 items)
+   - Click "Important" filter
+   - List shows only important/urgent (3 items)
+   - Click "All" to see everything again
+
+7. **Search Announcements**:
+   - Enter "exam" in search box
+   - Results filter to show:
+     - Exam Schedule Released
+     - (Any other exam-related announcements)
+   - Clear search to see all
+
+8. **Download Attachments**:
+   - Open "Mid-Term Break Schedule" announcement
+   - Click "Download" on attachment:
+     - `break-schedule.pdf` downloads
+     - `break-calendar.ics` downloads (can import to calendar)
+
+9. **Mark Multiple as Read**:
+   - Go back to notifications panel
+   - Click "Mark All as Read" button
+   - All unread announcements marked as read
+   - Badge shows "0"
+   - Toast: "All announcements marked as read"
+
+10. **View Archived Announcements**:
+    - On announcements page, scroll to bottom
+    - Click "View Archived" link
+    - See older announcements (older than 30 days)
+    - Can still view and search archived items
+
+**Expected Results**:
+- Notification badge displays accurate unread count
+- Announcements display in reverse chronological order
+- Filters and search work correctly
+- Read/unread status updates immediately
+- Attachments download successfully
+- Archived announcements accessible but separated
+
+**Demo Data Points**:
+- Students see school-wide, grade-level, class-level, and individual announcements
+- Announcements students don't have permission to see are hidden
+- Teachers see announcements for classes they teach
+- Administrators see all announcements
+
+---
+
+### 11. Teacher: Class Announcements (5 minutes)
+
+**Objective**: Create and manage class-specific announcements as a teacher.
+
+**Steps**:
+
+1. **Login as Teacher**:
+   ```
+   Email: aisha.hassan@demo.school
+   Password: 1234
+   ```
+
+2. **Navigate to My Classes**:
+   - Click "Classes" or "Teaching" in navigation
+   - See list of classes you teach:
+     ```
+     My Classes:
+     - Grade 7A - Mathematics (25 students)
+     - Grade 8B - Mathematics (25 students)
+     - Grade 9C - Mathematics (25 students)
+     ```
+
+3. **Create Class Announcement from Class Page**:
+   - Click "Grade 7A - Mathematics"
+   - Class detail page shows tabs:
+     - Students
+     - Assignments
+     - Attendance
+     - Announcements ← Click this
+     - Settings
+   - Announcements tab shows:
+     ```
+     Class Announcements: Grade 7A Mathematics
+
+     [Create Announcement] button
+
+     Existing Announcements: (if any)
+     ```
+
+4. **Create Announcement**:
+   - Click "Create Announcement"
+   - Pre-filled form:
+     ```
+     Title: "Homework Reminder: Chapter 5 Exercises"
+
+     Body:
+     "Dear Students,
+
+     Please complete exercises 1-10 on page 87 for tomorrow's class.
+
+     Bring your textbooks and calculators.
+
+     See you tomorrow!
+     Mrs. Aisha Hassan"
+
+     Scope: Class (pre-selected: Grade 7A - Mathematics)
+     [Disabled - cannot change scope from class page]
+
+     Priority: Normal
+
+     Notifications:
+     [✓] Send Email to Students
+     [✓] Send In-App Notification
+     [ ] Send Email to Parents (optional)
+
+     [Publish] [Save as Draft]
+     ```
+   - Click "Publish"
+   - Toast: "Announcement sent to 25 students in Grade 7A Mathematics"
+   - Announcement appears in class announcements list
+
+5. **Quick Announcement Shortcut**:
+   - From any class page, look for "Quick Announcement" widget
+   - Enter message in text area:
+     ```
+     "Reminder: Quiz on Friday covering chapters 4-5!"
+     ```
+   - Click "Send" button
+   - Toast: "Quick announcement sent!"
+   - Announcement created with default settings (Normal priority, immediate publish)
+
+6. **View Announcement Engagement**:
+   - In class announcements list, click on announcement
+   - See student-level read status:
+     ```
+     Homework Reminder: Chapter 5 Exercises
+
+     Sent: 10 minutes ago
+     Recipients: 25 students
+
+     Read Status:
+     ✓ Ahmed Mohammed - Read 5 min ago
+     ✓ Fatima Ali - Read 8 min ago
+     ✗ Hassan Ibrahim - Unread
+     ✗ Zainab Omar - Unread
+     [... 21 more students]
+
+     Summary: 15/25 read (60%)
+
+     [Send Reminder to Unread]
+     ```
+
+7. **Send Reminder**:
+   - Click "Send Reminder to Unread" button
+   - Confirmation:
+     ```
+     Send reminder to 10 unread students?
+
+     This will send a follow-up notification.
+
+     [Cancel] [Send Reminder]
+     ```
+   - Click "Send Reminder"
+   - Toast: "Reminder sent to 10 students"
+   - Notification sent to students who haven't read
+
+8. **Create Announcement with Parent Copy**:
+   - Create new announcement
+   - Fill form:
+     ```
+     Title: "Important: Parent-Teacher Conference"
+     Body: "We will hold parent-teacher conferences next week..."
+     Scope: Class (Grade 7A Mathematics)
+     Priority: Important
+     Notifications:
+     [✓] Send Email to Students
+     [✓] Send In-App Notification
+     [✓] Send Email to Parents ← Enabled
+     ```
+   - Click "Publish"
+   - Toast: "Announcement sent to 25 students and 50 parents"
+   - Parents receive email/notification about conference
+
+9. **Schedule Class Announcement**:
+   - Create announcement
+   - Fill form:
+     ```
+     Title: "Exam Day Reminder"
+     Body: "Don't forget our math exam tomorrow at 9 AM!"
+     Scope: Class
+     Priority: Important
+     Schedule: Schedule for Later
+       Date: Tomorrow
+       Time: 7:00 AM (2 hours before exam)
+     ```
+   - Click "Schedule"
+   - Announcement scheduled, will send at 7 AM tomorrow
+
+10. **Manage Multiple Class Announcements**:
+    - Navigate to global Announcements page (not class-specific)
+    - See all your announcements across all classes:
+      ```
+      My Announcements:
+
+      Grade 7A Mathematics (3 announcements)
+      - Homework Reminder
+      - Quiz on Friday
+      - Parent-Teacher Conference
+
+      Grade 8B Mathematics (2 announcements)
+      - [Announcements for this class]
+
+      Grade 9C Mathematics (1 announcement)
+      - [Announcements for this class]
+
+      Filter by Class: [Dropdown]
+      ```
+
+**Expected Results**:
+- Teachers can create announcements for their classes only
+- Scope is auto-set to class when creating from class page
+- Student-level read tracking is accurate
+- Reminder functionality works for unread students
+- Parent notifications send correctly when enabled
+- Scheduled announcements publish at correct time
+- Teachers see consolidated view of all their announcements
+
+**Demo Notes**:
+- Teachers can only create announcements for classes they teach
+- Administrators can create announcements for any scope
+- Class announcements visible only to students in that class
+- Parents see announcements if "notify parents" is enabled
+
+---
+
+## Integration Scenarios
+
+### 12. Cross-Module Integration (5 minutes)
+
+**Objective**: Understand how Library, LMS, and Announcements integrate with other platform modules.
+
+**Integration Points**:
+
+#### **Library + Student Management**:
+- Student borrowing limits based on student status (active/suspended)
+- Disciplinary action: Suspend library privileges
+- Guardian notifications for overdue books
+- Borrowing history linked to student profile
+
+**Example Workflow**:
+1. Student borrows book (Library module)
+2. Due date passes without return
+3. System generates overdue notice (Communication)
+4. Guardian receives email notification
+5. Late fee added to student financial account (Finance module)
+6. If multiple overdue: Library privileges suspended (Student Management)
+
+---
+
+#### **LMS + Finance**:
+- Paid course purchases
+- Payment processing integration
+- Student wallet for course purchases
+- Revenue tracking for course sales
+- Enrollment refunds
+
+**Example Workflow**:
+1. Student views paid course (LMS)
+2. Clicks "Purchase Course" (SDG 100)
+3. Payment modal integrates with Finance module
+4. Student pays via:
+   - School wallet (deduct SDG 100)
+   - Credit card (payment gateway)
+   - Bank transfer (manual approval)
+5. Payment confirmed → Student automatically enrolled
+6. Invoice generated (Finance module)
+7. Receipt sent to student email (Communication)
+8. Revenue recorded in financial reports
+
+---
+
+#### **Announcements + All Modules**:
+- System-generated announcements from any module
+- Examples:
+  - **Attendance**: "Your child was absent on [date]"
+  - **Exams**: "Exam results published for [exam name]"
+  - **Finance**: "Invoice due in 3 days"
+  - **Library**: "Book due tomorrow: [book title]"
+  - **LMS**: "New lesson available in [course name]"
+  - **Assignments**: "Assignment due tomorrow: [assignment title]"
+
+**Example Workflow**:
+1. Teacher publishes exam results (Exam module)
+2. System automatically creates announcement:
+   ```
+   Title: "Exam Results Published: Midterm Mathematics"
+   Body: "Your midterm exam results are now available."
+   Scope: Class (Grade 10A Mathematics)
+   Priority: Important
+   ```
+3. Announcement sent to all students in class
+4. Students receive in-app + email notification
+5. Parents receive email (if enabled)
+6. Students click notification → Redirects to exam results page
+
+---
+
+#### **Library + LMS Resource Integration**:
+- Link library books to course lessons
+- Course reading lists
+- Reserve books for courses
+- Track book usage by course
+
+**Example Workflow**:
+1. Instructor creates LMS course "History of Sudan"
+2. Adds lesson "Ancient Nubian Kingdoms"
+3. Links library book: "Sudan: Ancient History" as required reading
+4. Book marked as "Reserved for Course" in library
+5. Students enrolled in course see book in "Recommended Resources"
+6. Students can borrow book directly from course page
+7. Borrowing tracked against course completion metrics
+
+---
+
+## Advanced Features
+
+### 13. Bulk Operations (3 minutes)
+
+**Library Bulk Operations**:
+```
+Bulk Add Books:
+- Import CSV with book data
+- Fields: Title, Author, ISBN, Genre, Copies, etc.
+- Validates ISBN uniqueness
+- Creates multiple books in one action
+
+Bulk Update:
+- Select multiple books
+- Update status, genre, or copies simultaneously
+
+Bulk Delete:
+- Select books
+- Confirm deletion
+- Removes from catalog
+```
+
+**LMS Bulk Operations**:
+```
+Bulk Enroll Students:
+- Select course
+- Upload CSV with student IDs
+- System enrolls all students
+- Sends enrollment confirmation emails
+
+Bulk Issue Certificates:
+- Select completed students
+- Generate and send certificates to all
+
+Bulk Content Import:
+- Import course structure from CSV/JSON
+- Creates chapters and lessons in bulk
+```
+
+**Announcement Bulk Operations**:
+```
+Bulk Announcement to Multiple Classes:
+- Select multiple classes
+- Create one announcement
+- System duplicates to each class scope
+
+Scheduled Bulk Announcements:
+- Schedule multiple announcements at once
+- Recurring announcements (weekly, monthly)
+```
+
+---
+
+### 14. Reporting & Analytics (5 minutes)
+
+**Library Reports**:
+```
+Available Reports:
+1. Inventory Report
+   - All books with current status
+   - Filter by genre, status, availability
+
+2. Borrowing Activity Report
+   - Borrowings by date range
+   - Group by student, class, or grade
+   - Metrics: Total borrowed, returned, overdue
+
+3. Popular Books Report
+   - Most borrowed books
+   - Borrowing frequency
+   - Genre popularity trends
+
+4. Overdue Books Report
+   - All overdue books
+   - Days overdue
+   - Calculated late fees
+   - Student contact information
+
+5. Financial Report
+   - Late fees collected
+   - Outstanding fees
+   - Revenue by month
+
+6. Student Activity Report
+   - Per-student borrowing history
+   - Reading patterns
+   - Overdue history
+
+Export Formats: PDF, Excel (XLSX), CSV
+```
+
+**LMS Analytics**:
+```
+Available Analytics:
+1. Course Performance Dashboard
+   - Enrollment trends (line chart)
+   - Completion rates (bar chart)
+   - Revenue by course (if paid)
+   - Popular courses ranking
+
+2. Student Progress Report
+   - Individual student progress
+   - Time spent per course/lesson
+   - Completion dates
+   - Certificate status
+
+3. Instructor Performance
+   - Courses taught
+   - Total enrollments
+   - Average completion rate
+   - Student satisfaction (if ratings enabled)
+
+4. Engagement Metrics
+   - Active students (logged in last 7 days)
+   - Lesson views
+   - Average time per lesson
+   - Drop-off points (where students stop)
+
+5. Revenue Analytics (Paid Courses)
+   - Total revenue by course
+   - Revenue trends over time
+   - Average revenue per student
+   - Payment method breakdown
+
+6. Content Analytics
+   - Most viewed lessons
+   - Least viewed lessons
+   - Lesson completion rates
+   - Video watch time
+
+Export: PDF Reports, Excel Data, CSV
+```
+
+**Communication Analytics**:
+```
+Available Metrics:
+1. Announcement Engagement
+   - Total sent
+   - Read rate by announcement
+   - Average read time
+   - Read rate by role (teacher, student, parent)
+
+2. Notification Delivery
+   - Email delivery rate
+   - Email open rate
+   - In-app notification read rate
+   - SMS delivery (if enabled)
+
+3. Scope Analysis
+   - Announcements by scope (school, grade, class, individual)
+   - Effectiveness by scope
+   - Optimal timing analysis
+
+4. Trend Analysis
+   - Announcements over time
+   - Peak engagement times
+   - Day-of-week patterns
+
+Export: PDF, Excel, CSV
+```
+
+---
+
+## Troubleshooting
+
+### Common Issues & Solutions
+
+#### **Library Module**:
+
+**Issue**: Cannot borrow book - "Already borrowed maximum books"
+- **Cause**: Student has reached borrowing limit (3 books for students)
+- **Solution**: Return existing books first, or admin can increase limit
+
+**Issue**: Book shows as "Available" but cannot borrow
+- **Cause**: Book reserved for specific class/course
+- **Solution**: Check if book is reserved, or contact librarian
+
+**Issue**: Late fee calculation incorrect
+- **Cause**: Due date or late fee rate misconfigured
+- **Solution**: Admin checks Settings → Library → Late Fee Rate (default: SDG 2/day)
+
+---
+
+#### **LMS Module**:
+
+**Issue**: Cannot access paid course after payment
+- **Cause**: Payment not confirmed or enrollment failed
+- **Solution**: Check Finance → Invoices for payment status, or contact admin to manually enroll
+
+**Issue**: Lesson video won't play
+- **Cause**: Invalid video URL or format not supported
+- **Solution**: Instructor checks video URL, ensure YouTube/Vimeo link is correct, or re-upload video
+
+**Issue**: Progress not saving
+- **Cause**: Browser cookies blocked or session expired
+- **Solution**: Enable cookies, refresh page, log out and log back in
+
+**Issue**: Certificate not generating after completion
+- **Cause**: Not all lessons marked complete, or quiz requirements not met
+- **Solution**: Check course progress, ensure 100% completion, complete any required quizzes
+
+---
+
+#### **Communication Module**:
+
+**Issue**: Announcement not received by students
+- **Cause**: Scope misconfigured or notification settings disabled
+- **Solution**: Check announcement scope, verify student email settings, check notification preferences
+
+**Issue**: Email notifications not sending
+- **Cause**: Email server not configured or student email invalid
+- **Solution**: Admin checks Settings → Email → SMTP Configuration, verify student emails in database
+
+**Issue**: Cannot create announcement - "Permission denied"
+- **Cause**: User role lacks permission to create announcements
+- **Solution**: Teachers can only announce to their classes, other scopes require admin role
+
+**Issue**: Scheduled announcement didn't send
+- **Cause**: Server cron job not running or timezone misconfigured
+- **Solution**: Admin checks server cron jobs, verify timezone in Settings → General → Timezone
+
+---
+
+## Demo Data Reset
+
+To reset demo data and start fresh:
+
+```bash
+# Drop existing demo data
+pnpm db:seed -- --reset
+
+# Re-seed with fresh demo data
+pnpm db:seed
+
+# Verify data:
+# - Library: 100 books
+# - LMS: 10 courses, 30 chapters, 150 lessons
+# - Announcements: 5 announcements
+```
+
+**Note**: Resetting will delete all custom data created during testing.
+
+---
+
+## API Integration Examples
+
+For developers integrating with these modules:
+
+### Library API Endpoints
+
+```typescript
+// Get all books
+GET /api/library/books
+Query Params: ?genre=Science&status=available&limit=10
+
+// Get book by ID
+GET /api/library/books/:bookId
+
+// Create borrowing
+POST /api/library/borrowings
+Body: { studentId, bookId, dueDate, notes }
+
+// Return book
+PUT /api/library/borrowings/:borrowingId/return
+Body: { returnDate, condition, notes }
+
+// Get student borrowing history
+GET /api/library/borrowings/student/:studentId
+```
+
+### LMS API Endpoints
+
+```typescript
+// Get all courses
+GET /api/lms/courses
+Query Params: ?price=free&subject=science&limit=10
+
+// Get course with content
+GET /api/lms/courses/:courseId
+Includes: chapters, lessons
+
+// Enroll student
+POST /api/lms/enrollments
+Body: { studentId, courseId, paymentId? }
+
+// Update lesson progress
+PUT /api/lms/progress/:enrollmentId/lessons/:lessonId
+Body: { completed: true, timeSpent: 600 }
+
+// Get student progress
+GET /api/lms/progress/student/:studentId/:courseId
+
+// Issue certificate
+POST /api/lms/certificates
+Body: { enrollmentId }
+```
+
+### Announcements API Endpoints
+
+```typescript
+// Get all announcements (scoped by user)
+GET /api/announcements
+Query Params: ?scope=school&priority=important&unread=true
+
+// Create announcement
+POST /api/announcements
+Body: {
+  title, body, scope, scopeId?,
+  priority, attachments?,
+  scheduledAt?, notifyEmail, notifyApp, notifySms
+}
+
+// Mark as read
+PUT /api/announcements/:announcementId/read
+
+// Get engagement analytics
+GET /api/announcements/:announcementId/analytics
+```
+
+---
+
+## Related Documentation
+
+- **[Student Management Demo](/docs/demo/modules/students)** - Student enrollment, guardians, health records
+- **[Attendance System Demo](/docs/demo/modules/attendance)** - 4 attendance methods, analytics, alerts
+- **[Exam System Demo](/docs/demo/modules/exams)** - Question Bank, auto-marking, results
+- **[Finance System Demo](/docs/demo/modules/finance)** - Complete financial management
+- **[Demo Home](/docs/demo)** - Main demo documentation hub
+- **[PRD: Library Module](/docs/prd#library-management)** - Complete requirements
+- **[PRD: LMS Module](/docs/prd#learning-management-system)** - LMS specifications
+- **[PRD: Communication](/docs/prd#communication-tools)** - Communication requirements
+
+---
+
+## Support & Feedback
+
+**Demo Environment**:
+- URL: `https://demo.ed.databayt.org`
+- Subdomain: `demo`
+- Admin Email: `admin@demo.school`
+- Password: `1234` (all accounts)
+
+**Need Help?**:
+- Email: support@databayt.org
+- Documentation: https://ed.databayt.org/docs
+- GitHub Issues: https://github.com/databayt/hogwarts/issues
+
+**Demo Limitations**:
+- Data resets monthly
+- Some features may be disabled for demo safety
+- Email notifications throttled
+- File uploads limited to 5MB
+
+---
+
+## Next Steps
+
+After exploring Library, LMS, and Communication systems:
+
+1. **Integrate with Other Modules**:
+   - Connect library books to LMS courses
+   - Set up automated announcements for events
+   - Link financial transactions with course purchases
+
+2. **Customize Settings**:
+   - Configure library policies (borrowing limits, due dates, late fees)
+   - Set up course pricing and discount codes
+   - Customize announcement templates
+
+3. **Train Staff**:
+   - Librarian training on borrowing workflows
+   - Teacher training on course creation and class announcements
+   - Administrator training on system-wide communication
+
+4. **Explore Advanced Features**:
+   - Set up recurring announcements
+   - Create course bundles and learning paths
+   - Implement library reservation system
+
+5. **Review Analytics**:
+   - Monitor library usage trends
+   - Analyze course completion rates
+   - Measure announcement engagement
+
+---
+
+**End of Learning & Communication Systems Demo Guide**
+
+*Last Updated: January 2025*
+*Version: 1.0.0*
+*Demo Data Version: 2025.1*

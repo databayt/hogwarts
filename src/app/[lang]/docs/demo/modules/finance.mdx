@@ -1,0 +1,970 @@
+# Finance System Demo
+
+Complete guide to the comprehensive financial management system with double-entry accounting, payroll, banking, budgets, and automated invoicing.
+
+## Overview
+
+The Demo School has a **production-ready financial system** with:
+- ✅ **Complete Accounting**: Double-entry bookkeeping with chart of accounts
+- ✅ **Fee Management**: 6 fee structures (one per grade), 80% collection rate
+- ✅ **Invoice System**: Automated generation, tracking, and reminders
+- ✅ **Banking**: Multi-account support, reconciliation, transfers
+- ✅ **Expense Tracking**: Categories, approval workflows, receipt scanning
+- ✅ **Budget Management**: Department budgets with variance tracking
+- ✅ **Payroll System**: Salary structures, deductions, tax calculations
+- ✅ **Timesheet**: Staff hours tracking, overtime calculations
+- ✅ **Wallet System**: School, parent, and student wallets
+- ✅ **Financial Reports**: P&L, Balance Sheet, Cash Flow, Budget vs Actual
+
+## Quick Access
+
+**Demo Financial Data**:
+- **Total Revenue**: SDG 1,200,000 (from 150 students × SDG 8,000 avg fees)
+- **Collection Rate**: 80% (SDG 960,000 collected, SDG 240,000 outstanding)
+- **Total Expenses**: SDG 750,000 (salaries: 60%, operations: 25%, other: 15%)
+- **Net Profit**: SDG 210,000 (18% margin)
+- **Cash Balance**: SDG 180,000 (3 months operating expenses)
+- **Overdue Invoices**: 15% of outstanding (SDG 36,000)
+
+## Financial Module Architecture
+
+### 13 Sub-Modules:
+1. **Fees** - Fee structures and assignments
+2. **Invoice** - Automated invoicing (6 sub-modules: create, list, view, paid, pending, overdue)
+3. **Receipt** - Payment receipts and tracking
+4. **Banking** - Multi-account management (4 sub-modules: accounts, transactions, reconciliation, transfers)
+5. **Expenses** - Expense tracking and approval
+6. **Accounts** - Chart of accounts (assets, liabilities, equity, revenue, expenses)
+7. **Budget** - Department budgets and variance analysis
+8. **Payroll** - Salary processing and distribution
+9. **Salary** - Salary structures and adjustments
+10. **Timesheet** - Staff hours and attendance
+11. **Wallet** - Digital wallet system
+12. **Reports** - Financial statements and analytics
+13. **Dashboard** - Financial overview and KPIs
+
+---
+
+## Feature Walkthroughs
+
+### 1. Fee Structure Management (10 minutes)
+
+**Access**: `/en/s/demo/platform/finance/fees`
+
+**Demo Fee Structures** (6 total, one per grade):
+```
+Grade 7:  SDG 7,500 /year (tuition + books + activities)
+Grade 8:  SDG 7,500 /year
+Grade 9:  SDG 8,000 /year
+Grade 10: SDG 8,000 /year
+Grade 11: SDG 8,500 /year
+Grade 12: SDG 8,500 /year
+
+Average: SDG 8,000 /year
+Total Potential Revenue: 150 students × SDG 8,000 = SDG 1,200,000
+```
+
+**Create Fee Structure**:
+1. Navigate to Finance → Fees → "Create Fee Structure"
+2. Fill form:
+   - **Name**: "Grade 10 Academic Year 2024-2025"
+   - **Year Level**: Grade 10
+   - **Amount**: SDG 8,000
+   - **Frequency**: Annual (or split: 3 installments × SDG 2,667)
+   - **Components**:
+     - Tuition: SDG 6,000
+     - Books & Materials: SDG 1,000
+     - Activities & Events: SDG 500
+     - Technology Fee: SDG 500
+   - **Due Dates**:
+     - 1st installment: September 1 (33%)
+     - 2nd installment: January 1 (33%)
+     - 3rd installment: April 1 (34%)
+   - **Discounts Available**:
+     - Sibling: 10% off (if 2+ children)
+     - Early payment: 5% off (if paid in full by Aug 15)
+     - Scholarship: Variable (need-based or merit)
+3. Save → Fee structure created
+
+**Assign to Students**:
+1. **Bulk Assignment**:
+   - Select fee structure
+   - Click "Assign to Year Level"
+   - Choose Grade 10 → All 25 students assigned
+2. **Individual Assignment**:
+   - Student profile → Fees tab
+   - Add fee structure → Apply discounts if eligible
+3. **Automatic Assignment**:
+   - New students → Auto-assign grade-appropriate fees
+
+**Demo Data**:
+- All 150 students have fee assignments
+- 80% have made at least one payment
+- 20% have zero payments (overdue)
+- Average payment: SDG 6,400 (80% of SDG 8,000)
+
+---
+
+### 2. Invoice Generation & Management (15 minutes)
+
+**Access**: `/en/s/demo/platform/finance/invoice`
+
+**Invoice Lifecycle**:
+Draft → Sent → Viewed → Paid → Closed
+            ↓
+         Overdue (if past due date)
+
+**Auto-Generate Invoices** (Monthly):
+1. System runs on 1st of month (automated job)
+2. For each student:
+   - Check fee assignments
+   - Calculate amount due (next installment)
+   - Generate invoice number: `INV-2025-0001`
+   - Create invoice record
+   - Send email to guardian with PDF attachment
+3. Guardians receive:
+   ```
+   Invoice #INV-2025-0123
+   Student: Ahmed Mohamed Ali (Grade 10)
+
+   Items:
+   - Tuition (2nd installment): SDG 2,000
+   - Books: SDG 333
+   - Activities: SDG 167
+   - Technology: SDG 167
+
+   Subtotal: SDG 2,667
+   Discount (Sibling 10%): -SDG 267
+   Total Due: SDG 2,400
+
+   Due Date: January 15, 2025
+
+   Pay Online: [Link]
+   ```
+4. Tracking: Invoice status changes automatically
+   - Sent → Viewed (when guardian opens email)
+   - Viewed → Paid (when payment received)
+   - Paid → Closed (reconciled)
+
+**Manual Invoice Creation**:
+1. Navigate to Finance → Invoice → Create
+2. Select student
+3. Add line items:
+   - Description: "Lab Equipment Damage Fee"
+   - Amount: SDG 200
+   - Tax: 0%
+4. Set due date: Next week
+5. Generate & Send → Email sent immediately
+
+**Invoice Sub-Modules**:
+- **All Invoices**: Complete list with filters
+- **Paid Invoices**: Track revenue
+- **Pending Invoices**: Not yet paid (80% of demo invoices initially)
+- **Overdue Invoices**: Past due date (15% of pending = SDG 36,000)
+- **Draft Invoices**: Not sent yet
+- **Individual Invoice View**: Detailed view with payment history
+
+**Demo Testing**:
+```bash
+# View invoices:
+1. Finance → Invoice → All
+2. Total: 450 invoices (150 students × 3 installments)
+3. Paid: 360 (80%)
+4. Pending: 68 (15%)
+5. Overdue: 22 (5%)
+
+# View specific invoice:
+1. Invoice → #INV-2025-0001
+2. Student: Ahmed Mohamed Ali
+3. Amount: SDG 2,400
+4. Status: Paid (Jan 10, 2025)
+5. Payment Method: Online (Stripe)
+6. Receipt: #REC-2025-0001
+```
+
+---
+
+### 3. Receipt Generation (5 minutes)
+
+**Access**: `/en/s/demo/platform/finance/receipt`
+
+**Auto-Generate on Payment**:
+1. Parent pays invoice online (Stripe)
+2. Payment webhook triggers receipt generation
+3. Receipt created:
+   ```
+   RECEIPT #REC-2025-0001
+   Date: January 10, 2025
+
+   Received from: Mr. Mohamed Ali
+   Student: Ahmed Mohamed Ali (2025DEMO0001)
+
+   Payment for: Invoice #INV-2025-0123
+   Amount Paid: SDG 2,400
+   Payment Method: Credit Card (ending ****1234)
+
+   Paid in Full ✅
+   Outstanding Balance: SDG 0
+
+   Thank you for your payment!
+
+   Demo International School
+   [School Logo]
+   ```
+4. Receipt emailed to guardian automatically
+5. Stored in system for reprinting
+
+**Manual Receipt**:
+1. Navigate to Finance → Payments → Record Payment
+2. Select student → Select invoice
+3. Amount: SDG 2,400 (or partial payment)
+4. Payment method: Cash, Check, Bank Transfer
+5. Receipt number: Auto-generated
+6. Save → Receipt created, invoice updated
+
+**Receipt Features**:
+- **Professional PDF**: School logo, contact info, signature
+- **Reprint Anytime**: Access from student profile or payment history
+- **Batch Download**: Export all receipts for tax filing
+- **Email Delivery**: Automatic or on-demand
+
+---
+
+### 4. Banking System (15 minutes)
+
+**Access**: `/en/s/demo/platform/finance/banking`
+
+**Multi-Account Support**:
+Demo school has 3 bank accounts:
+```
+1. Operating Account (Bank of Khartoum)
+   - Balance: SDG 150,000
+   - Purpose: Day-to-day operations (salaries, expenses)
+
+2. Savings Account (National Bank of Sudan)
+   - Balance: SDG 30,000
+   - Purpose: Emergency fund (3 months expenses)
+
+3. Tuition Collection Account (Faisal Islamic Bank)
+   - Balance: SDG 180,000
+   - Purpose: Fee payments from parents
+```
+
+**4A. Bank Account Management**:
+1. Navigate to Finance → Banking → Accounts
+2. View all accounts with balances
+3. Add new account:
+   - Bank name, account number, type (checking, savings)
+   - Opening balance
+4. Transactions automatically update balance
+
+**4B. Bank Transactions**:
+1. Navigate to Finance → Banking → Transactions
+2. See all transactions across accounts:
+   ```
+   Date       | Account    | Type    | Amount      | Balance
+   -----------|------------|---------|-------------|-------------
+   Jan 15     | Operating  | Debit   | -SDG 45,000 | SDG 150,000 (Salary payment)
+   Jan 10     | Tuition    | Credit  | +SDG 2,400  | SDG 180,000 (Parent payment)
+   Jan 5      | Operating  | Debit   | -SDG 5,000  | SDG 195,000 (Utilities)
+   ```
+3. Filter by: Account, date range, type (credit/debit)
+4. Export: CSV for accounting software
+
+**4C. Bank Reconciliation**:
+1. Navigate to Finance → Banking → Reconciliation
+2. Upload bank statement (CSV or PDF)
+3. System matches transactions:
+   - ✅ Matched: 95% (auto-matched by amount + date)
+   - ⚠️ Unmatched: 5% (requires manual review)
+4. Review unmatched:
+   - Transaction in bank: SDG 2,450
+   - Transaction in system: SDG 2,400
+   - Difference: SDG 50 (bank fee)
+   - Action: Add "Bank Fee" expense entry → Reconcile
+5. Mark as reconciled → Period closed
+
+**4D. Bank Transfers**:
+1. Navigate to Finance → Banking → Transfers
+2. Transfer between accounts:
+   - From: Tuition Collection Account
+   - To: Operating Account
+   - Amount: SDG 50,000
+   - Purpose: "Monthly operating capital transfer"
+3. Confirm → Creates two transactions:
+   - Debit from Tuition: -SDG 50,000
+   - Credit to Operating: +SDG 50,000
+4. Balance updated instantly
+
+**Demo Testing**:
+```bash
+# View banking overview:
+1. Finance → Banking → Accounts
+2. Total Balance: SDG 360,000 (across 3 accounts)
+3. Click Operating Account → See transactions
+4. Last transaction: Salary payment (Jan 15, -SDG 45,000)
+
+# Perform transfer:
+1. Banking → Transfers → New
+2. From Tuition → To Operating
+3. Amount: SDG 20,000
+4. Confirm → Balances updated immediately
+```
+
+---
+
+### 5. Expense Tracking & Approval (10 minutes)
+
+**Access**: `/en/s/demo/platform/finance/expenses`
+
+**Expense Categories**:
+```
+1. Salaries & Benefits: 60% (SDG 450,000)
+2. Utilities: 10% (SDG 75,000)
+   - Electricity, water, internet
+3. Supplies & Materials: 8% (SDG 60,000)
+   - Office supplies, cleaning, lab materials
+4. Maintenance: 7% (SDG 52,500)
+   - Building repairs, equipment servicing
+5. Professional Services: 5% (SDG 37,500)
+   - Legal, accounting, consulting
+6. Other: 10% (SDG 75,000)
+   - Insurance, licenses, miscellaneous
+```
+
+**Submit Expense**:
+1. Navigate to Finance → Expenses → Submit
+2. Fill form:
+   - **Date**: January 10, 2025
+   - **Category**: Supplies & Materials
+   - **Description**: "Whiteboard markers for classrooms"
+   - **Amount**: SDG 500
+   - **Payment Method**: Cash / Credit Card / Reimbursement
+   - **Vendor**: "ABC Office Supplies"
+   - **Receipt**: Upload photo/PDF (OCR extracts amount automatically)
+   - **Budget Code**: "DEPT-ADMIN-SUPPLIES"
+3. Submit → Status: Pending Approval
+
+**Approval Workflow**:
+```
+Submitted → Department Head Approval → Accountant Review → Admin Final Approval → Paid
+             (if >SDG 1,000)           (all expenses)      (if >SDG 5,000)
+```
+
+**Accountant Review**:
+1. Navigate to Finance → Expenses → Pending
+2. See submitted expense
+3. Review:
+   - Receipt attached? ✅
+   - Amount matches receipt? ✅
+   - Category appropriate? ✅
+   - Budget available? ✅ (SDG 10,000 remaining in Supplies budget)
+4. Approve → Status: Approved
+5. Payment processed (if reimbursement: added to next payroll)
+
+**Expense Reports**:
+- **By Category**: See spending breakdown
+- **By Department**: Track departmental expenses
+- **By Month**: Monitor trends
+- **Budget vs Actual**: Variance analysis
+
+**Demo Data**:
+- Total Expenses: SDG 750,000 (for full academic year)
+- Largest expense: Salaries (SDG 450,000)
+- Most frequent: Utilities (monthly: SDG 6,250)
+
+---
+
+### 6. Chart of Accounts (5 minutes)
+
+**Access**: `/en/s/demo/platform/finance/accounts`
+
+**Account Structure** (Double-Entry Bookkeeping):
+```
+ASSETS (What school owns)
+  1000 - Cash
+    1010 - Operating Account
+    1020 - Savings Account
+    1030 - Tuition Collection
+  1100 - Accounts Receivable (outstanding fees from parents)
+  1200 - Inventory (books, supplies)
+  1300 - Property & Equipment (buildings, furniture, computers)
+
+LIABILITIES (What school owes)
+  2000 - Accounts Payable (unpaid vendor bills)
+  2100 - Salaries Payable (unpaid staff salaries)
+  2200 - Loans Payable (bank loans)
+
+EQUITY (Owner's investment)
+  3000 - Retained Earnings (accumulated profits)
+  3100 - Current Year Earnings (this year's profit/loss)
+
+REVENUE (Income)
+  4000 - Tuition Revenue
+  4100 - Other Revenue (fundraising, events, rentals)
+
+EXPENSES (Costs)
+  5000 - Salaries & Benefits
+  5100 - Utilities
+  5200 - Supplies
+  5300 - Maintenance
+  5400 - Professional Services
+```
+
+**Double-Entry Example**:
+```
+Transaction: Parent pays SDG 2,400 tuition
+
+Entry 1: Debit Cash +SDG 2,400 (asset increases)
+Entry 2: Credit Accounts Receivable -SDG 2,400 (liability decreases)
+
+Result: Cash up, Outstanding fees down (balanced)
+```
+
+**View Account Details**:
+1. Click account: "1010 - Operating Account"
+2. See all transactions:
+   - Opening balance: SDG 100,000
+   - Debits: +SDG 960,000 (tuition payments)
+   - Credits: -SDG 810,000 (salaries, expenses)
+   - Closing balance: SDG 250,000
+3. Export ledger: PDF or CSV
+
+---
+
+### 7. Budget Management (10 minutes)
+
+**Access**: `/en/s/demo/platform/finance/budget`
+
+**Annual Budget** (2024-2025):
+```
+REVENUE BUDGET:
+  Tuition: SDG 1,200,000 (150 students × SDG 8,000)
+  Other Income: SDG 50,000 (events, rentals)
+  Total Revenue: SDG 1,250,000
+
+EXPENSE BUDGET:
+  Salaries: SDG 480,000 (25 staff × SDG 19,200 avg)
+  Utilities: SDG 78,000
+  Supplies: SDG 65,000
+  Maintenance: SDG 55,000
+  Professional Services: SDG 40,000
+  Other: SDG 82,000
+  Total Expenses: SDG 800,000
+
+NET INCOME BUDGET: SDG 450,000 (36% margin)
+```
+
+**Department Budgets**:
+```
+Academic Department: SDG 200,000
+  - Teacher Salaries: SDG 180,000
+  - Supplies: SDG 20,000
+
+Administration: SDG 150,000
+  - Admin Salaries: SDG 120,000
+  - Office Supplies: SDG 30,000
+
+Facilities: SDG 100,000
+  - Maintenance: SDG 55,000
+  - Utilities: SDG 45,000
+
+Finance: SDG 50,000
+  - Accountant Salary: SDG 40,000
+  - Professional Services: SDG 10,000
+```
+
+**Budget vs Actual Report** (Mid-Year):
+```
+Category          | Budget      | Actual      | Variance    | % Used
+------------------|-------------|-------------|-------------|--------
+Salaries          | SDG 480,000 | SDG 450,000 | -SDG 30,000 | 94% ✅
+Utilities         | SDG 78,000  | SDG 75,000  | -SDG 3,000  | 96% ✅
+Supplies          | SDG 65,000  | SDG 70,000  | +SDG 5,000  | 108% ⚠️ (over budget!)
+Maintenance       | SDG 55,000  | SDG 52,500  | -SDG 2,500  | 95% ✅
+
+Total Expenses    | SDG 800,000 | SDG 750,000 | -SDG 50,000 | 94% ✅
+```
+
+**Variance Analysis**:
+- **Over Budget (Supplies)**: Unexpected lab equipment purchase → Reallocate from Maintenance budget
+- **Under Budget (Salaries)**: One teacher on unpaid leave → Transfer savings to Supplies to cover overage
+- **Net Result**: Still within overall budget ✅
+
+---
+
+### 8. Payroll System (15 minutes)
+
+**Access**: `/en/s/demo/platform/finance/payroll`
+
+**Salary Structures** (25 staff):
+```
+Teachers (20 staff):
+  - Base: SDG 18,000 /year
+  - Qualification Bonus: +SDG 1,200 (if Master's degree)
+  - Total Average: SDG 19,200 /year
+  - Monthly: SDG 1,600
+
+Admin Staff (3 staff):
+  - Principal: SDG 30,000 /year (SDG 2,500 /month)
+  - Accountant: SDG 24,000 /year (SDG 2,000 /month)
+  - Admin Assistant: SDG 15,000 /year (SDG 1,250 /month)
+
+Support Staff (2 staff):
+  - Librarian: SDG 18,000 /year (SDG 1,500 /month)
+  - Janitor: SDG 12,000 /year (SDG 1,000 /month)
+
+Total Payroll: SDG 480,000 /year (SDG 40,000 /month)
+```
+
+**Process Monthly Payroll**:
+1. Navigate to Finance → Payroll → Run Payroll
+2. Select month: January 2025
+3. System calculates:
+   ```
+   For each employee:
+   - Base salary
+   - Bonuses (performance, qualification)
+   - Deductions:
+     * Income Tax (5% on amount >SDG 10,000)
+     * Social Security (2%)
+     * Absences (if any unpaid leave)
+   - Net Pay = Gross Pay - Deductions
+   ```
+4. Review payroll summary:
+   ```
+   Total Gross: SDG 40,000
+   Total Deductions: SDG 2,800
+   Total Net: SDG 37,200
+   ```
+5. Approve → Bank file generated for direct deposit
+6. Upload to bank → Salaries deposited next business day
+
+**Payroll Slip** (Auto-generated and emailed):
+```
+PAY SLIP - January 2025
+Employee: Ahmed Hassan (Teacher)
+
+EARNINGS:
+  Base Salary: SDG 1,600
+  Qualification Bonus: SDG 100
+  Gross Pay: SDG 1,700
+
+DEDUCTIONS:
+  Income Tax (5%): SDG 85
+  Social Security (2%): SDG 34
+  Total Deductions: SDG 119
+
+NET PAY: SDG 1,581
+Payment Method: Direct Deposit
+Account: ****5678
+Date: January 31, 2025
+```
+
+---
+
+### 9. Timesheet & Attendance (7 minutes)
+
+**Access**: `/en/s/demo/platform/finance/timesheet`
+
+**Staff Timesheet Tracking**:
+1. Teachers clock in/out daily:
+   - Monday: In 7:45 AM, Out 3:15 PM (7.5 hours)
+   - Tuesday: In 7:50 AM, Out 3:20 PM (7.5 hours)
+   - Wednesday: In 8:05 AM, Out 3:10 PM (7 hours, -15 min late)
+   - Thursday: In 7:40 AM, Out 4:30 PM (8.75 hours, +1.25 overtime)
+   - Friday: In 7:55 AM, Out 3:00 PM (7 hours)
+2. Weekly Total: 37.75 hours
+3. Overtime: 1.75 hours × 1.5 rate = 2.625 hours paid
+
+**Overtime Calculation**:
+- Regular hours: 40 hours /week (salary covers this)
+- Overtime rate: 1.5× (time-and-a-half)
+- Example: Teacher works 45 hours → 5 hours overtime
+  - Base hourly: SDG 1,600 ÷ 160 hours = SDG 10 /hour
+  - Overtime: 5 hours × SDG 15 = SDG 75 extra
+
+**Leave Tracking**:
+- Sick Leave: 10 days /year (paid)
+- Annual Leave: 20 days /year (paid)
+- Unpaid Leave: Deducted from salary
+- Example: Teacher takes 3 unpaid leave days
+  - Daily rate: SDG 1,600 ÷ 22 working days = SDG 72.73 /day
+  - Deduction: 3 days × SDG 72.73 = SDG 218.19
+
+**Integration with Payroll**:
+- Overtime added to payroll automatically
+- Unpaid leave deducted
+- Accurate payment based on actual hours worked
+
+---
+
+### 10. Wallet System (10 minutes)
+
+**Access**: `/en/s/demo/platform/finance/wallet`
+
+**Three Wallet Types**:
+
+**A. School Wallet**:
+- Balance: SDG 180,000 (operating capital)
+- Purpose: Internal transactions, refunds, petty cash
+- Topped up from bank transfers
+
+**B. Parent Wallet**:
+- Parent deposits money → Used for:
+  - Student canteen purchases
+  - Library fines
+  - Event tickets
+  - Miscellaneous fees
+- Example: Parent deposits SDG 500 → Student buys lunch (SDG 50 × 10 days = SDG 500)
+
+**C. Student Wallet**:
+- Linked to parent wallet OR allowance from school
+- Usage:
+  - Canteen: Buy meals, snacks
+  - Library: Pay fines if book overdue
+  - Events: Purchase tickets for school events
+  - Printing: Print assignments (SDG 1 /page)
+- Balance: SDG 0-500 typical
+- History: Track all transactions
+
+**Wallet Transaction Example**:
+```
+Parent Wallet (Mr. Mohamed):
+Balance: SDG 1,000
+
+Transaction 1: Transfer to Ahmed's wallet
+  Date: Jan 1
+  Amount: -SDG 500
+  Balance: SDG 500
+
+Student Wallet (Ahmed):
+  Balance: SDG 500
+
+Transaction 2: Canteen purchase
+  Date: Jan 2
+  Description: Lunch (sandwich + juice)
+  Amount: -SDG 50
+  Balance: SDG 450
+
+Transaction 3: Library fine
+  Date: Jan 5
+  Description: Overdue book (2 days)
+  Amount: -SDG 10
+  Balance: SDG 440
+```
+
+**Wallet Top-Up**:
+1. Parent logs in → Dashboard → Wallet
+2. Click "Add Funds"
+3. Amount: SDG 500
+4. Payment: Online (Stripe) or Bank Transfer
+5. Funds available immediately (online) or 24-48 hours (bank)
+
+**Wallet Reports**:
+- Parent sees: All child transactions
+- Student sees: Own balance and history
+- School sees: All wallet activity for accounting
+
+---
+
+### 11. Financial Reports & Statements (15 minutes)
+
+**Access**: `/en/s/demo/platform/finance/reports`
+
+**Report Types**:
+
+**A. Profit & Loss Statement** (Income Statement):
+```
+Demo International School
+Profit & Loss Statement
+Academic Year 2024-2025 (Jan 1 - Dec 31, 2025)
+
+REVENUE:
+  Tuition Revenue:           SDG 960,000 (80% collected)
+  Other Revenue:            SDG 40,000
+  Total Revenue:            SDG 1,000,000
+
+EXPENSES:
+  Salaries & Benefits:      SDG 450,000 (45%)
+  Utilities:                SDG 75,000 (7.5%)
+  Supplies:                 SDG 60,000 (6%)
+  Maintenance:              SDG 52,500 (5.25%)
+  Professional Services:    SDG 37,500 (3.75%)
+  Other Expenses:           SDG 75,000 (7.5%)
+  Total Expenses:           SDG 750,000
+
+NET INCOME (Profit):        SDG 250,000 (25% margin)
+```
+
+**B. Balance Sheet**:
+```
+Demo International School
+Balance Sheet
+As of December 31, 2025
+
+ASSETS:
+  Current Assets:
+    Cash:                   SDG 360,000
+    Accounts Receivable:    SDG 240,000 (uncollected fees)
+    Inventory:              SDG 30,000
+  Total Current Assets:     SDG 630,000
+
+  Fixed Assets:
+    Buildings:              SDG 2,000,000
+    Furniture & Equipment:  SDG 200,000
+    Less: Depreciation:     -SDG 150,000
+  Total Fixed Assets:       SDG 2,050,000
+
+  TOTAL ASSETS:             SDG 2,680,000
+
+LIABILITIES:
+  Current Liabilities:
+    Accounts Payable:       SDG 50,000
+    Salaries Payable:       SDG 40,000
+  Total Current Liabilities: SDG 90,000
+
+  Long-term Liabilities:
+    Bank Loan:              SDG 500,000
+  Total Liabilities:        SDG 590,000
+
+EQUITY:
+  Retained Earnings:        SDG 1,840,000
+  Current Year Earnings:    SDG 250,000
+  Total Equity:             SDG 2,090,000
+
+TOTAL LIABILITIES + EQUITY: SDG 2,680,000
+```
+
+**C. Cash Flow Statement**:
+```
+Demo International School
+Cash Flow Statement
+Academic Year 2024-2025
+
+OPERATING ACTIVITIES:
+  Cash from tuition:        +SDG 960,000
+  Cash from other revenue:  +SDG 40,000
+  Cash paid for salaries:   -SDG 450,000
+  Cash paid for expenses:   -SDG 300,000
+  Net Cash from Operations: SDG 250,000
+
+INVESTING ACTIVITIES:
+  Purchase of equipment:    -SDG 50,000
+  Net Cash from Investing:  -SDG 50,000
+
+FINANCING ACTIVITIES:
+  Loan repayment:           -SDG 50,000
+  Net Cash from Financing:  -SDG 50,000
+
+NET CHANGE IN CASH:         SDG 150,000
+Beginning Cash:             SDG 210,000
+Ending Cash:                SDG 360,000
+```
+
+**D. Budget vs Actual**:
+- Shows variance for each category
+- Highlights over/under budget items
+- Provides variance percentage
+
+**E. Fee Collection Report**:
+```
+Fee Collection Summary
+As of January 15, 2025
+
+Total Students: 150
+Total Fees Assigned: SDG 1,200,000
+
+Collected: SDG 960,000 (80%)
+  - Cash: SDG 192,000 (20%)
+  - Online: SDG 768,000 (80%)
+
+Outstanding: SDG 240,000 (20%)
+  - Current: SDG 204,000 (85% of outstanding)
+  - Overdue: SDG 36,000 (15% of outstanding)
+
+Collection Rate by Grade:
+  - Grade 7: 85%
+  - Grade 8: 82%
+  - Grade 9: 80%
+  - Grade 10: 78%
+  - Grade 11: 76%
+  - Grade 12: 79%
+```
+
+**Export Options**:
+- PDF: Professional formatted reports
+- Excel: Raw data for analysis
+- CSV: Import to accounting software (QuickBooks, Xero)
+
+---
+
+### 12. Financial Dashboard (5 minutes)
+
+**Access**: `/en/s/demo/platform/finance` (Dashboard home)
+
+**Key Performance Indicators** (KPIs):
+```
+Revenue:
+  📈 Total Revenue: SDG 1,000,000
+  📊 Collection Rate: 80%
+  💰 Outstanding: SDG 240,000
+
+Expenses:
+  💸 Total Expenses: SDG 750,000
+  🎯 Budget Used: 94%
+  ⚠️ Over Budget Categories: 1 (Supplies)
+
+Profitability:
+  ✅ Net Profit: SDG 250,000
+  📊 Profit Margin: 25%
+  📈 vs Last Year: +12%
+
+Cash Position:
+  💵 Cash Balance: SDG 360,000
+  📅 Runway: 5.8 months
+  🏦 Across 3 accounts
+```
+
+**Trend Charts**:
+1. **Revenue vs Expenses** (line chart, 12 months)
+2. **Cash Flow** (bar chart, monthly)
+3. **Collection Rate** (percentage, monthly trend)
+4. **Expense Breakdown** (pie chart, by category)
+
+**Quick Actions**:
+- Generate Invoice
+- Record Payment
+- Submit Expense
+- Run Payroll
+- View Reports
+
+**Alerts**:
+- 🔴 **22 Overdue Invoices** (SDG 36,000) - Send reminders
+- 🟡 **Supplies 8% Over Budget** - Review spending
+- 🟢 **Cash Healthy** (5.8 months runway)
+
+---
+
+## Common Tasks
+
+### Scenario 1: Process Monthly Billing Cycle
+**Time**: 30 minutes
+
+1. **Generate Invoices** (15 min):
+   - System auto-generates on 1st of month
+   - Review 150 invoices → All correct
+   - Send batch emails → 150 guardians notified
+2. **Monitor Payments** (ongoing):
+   - Week 1: 40% paid
+   - Week 2: 65% paid
+   - Week 3: 80% paid
+3. **Send Reminders** (5 min):
+   - Week 3: Automated reminders to 20% unpaid
+   - Include late fee warning (5% after 30 days)
+4. **Process Payments** (10 min):
+   - Record manual payments (cash/check)
+   - Generate receipts
+   - Update outstanding balances
+
+**Result**: 80% collection rate, SDG 960,000 collected
+
+---
+
+### Scenario 2: Year-End Financial Closing
+**Time**: 2 hours
+
+1. **Reconcile All Accounts** (45 min):
+   - Bank reconciliation (3 accounts)
+   - Match all transactions
+   - Resolve discrepancies
+2. **Generate Financial Statements** (30 min):
+   - P&L Statement
+   - Balance Sheet
+   - Cash Flow Statement
+3. **Audit Preparation** (30 min):
+   - Export all reports
+   - Compile supporting documents
+   - Create audit trail
+4. **Board Presentation** (15 min):
+   - Summarize financial performance
+   - Highlight achievements (25% margin!)
+   - Present budget for next year
+
+---
+
+## Tips & Best Practices
+
+### For Accountants
+- **Daily Reconciliation**: Review bank transactions daily
+- **Weekly Collections Review**: Monitor fee collection rates
+- **Monthly Budget Review**: Check budget vs actual, adjust if needed
+- **Quarterly Audit**: Internal audit of all accounts
+
+### For Administrators
+- **Monitor KPIs**: Check dashboard weekly (collection rate, cash balance)
+- **Approve Expenses Promptly**: Don't delay reimbursements
+- **Review Financial Reports**: Monthly P&L and Balance Sheet
+- **Plan for Cash Flow**: Maintain 3-6 months operating expenses
+
+### For Parents
+- **Pay on Time**: Avoid late fees (5% after 30 days)
+- **Use Online Payment**: Faster and more secure than cash
+- **Check Wallet Balance**: Ensure student has funds for canteen
+- **Download Receipts**: Keep for tax purposes
+
+---
+
+## Troubleshooting
+
+### Issue: Invoice not generating
+**Solution**:
+- Verify fee structure assigned to student
+- Check student status (must be ACTIVE)
+- Review invoice generation settings (enabled?)
+
+### Issue: Payment not reflecting
+**Solution**:
+- Check payment status in Stripe/bank
+- Verify webhook configuration (for online payments)
+- Manual reconciliation: Match payment to invoice
+
+### Issue: Payroll calculation incorrect
+**Solution**:
+- Review timesheet hours (overtime calculated correctly?)
+- Check deductions (tax rate, social security)
+- Verify salary structure (base + bonuses)
+
+---
+
+## Related Documentation
+
+- [Student Module](/en/docs/demo/modules/students) - Fee assignments to students
+- [Invoice System](/en/docs/demo/advanced/invoicing) - Advanced invoicing features
+- [Accounting Guide](/en/docs/demo/advanced/accounting) - Double-entry bookkeeping
+
+---
+
+## Demo Data Summary
+
+- **Total Revenue**: SDG 1,200,000 (potential), SDG 960,000 (collected 80%)
+- **Total Expenses**: SDG 750,000
+- **Net Profit**: SDG 210,000 (21% margin after uncollected)
+- **Cash Balance**: SDG 360,000 (across 3 bank accounts)
+- **Invoices**: 450 total (150 students × 3 installments)
+  - Paid: 360 (80%)
+  - Pending: 68 (15%)
+  - Overdue: 22 (5%)
+- **Payroll**: 25 staff, SDG 40,000 /month, SDG 480,000 /year
+- **Expenses**: SDG 750,000 (60% salaries, 40% operations)
+
+**Test Credentials**:
+```
+Accountant: accountant@demo.databayt.org / 1234
+Admin: admin@demo.databayt.org / 1234
+Parent: parent@demo.databayt.org / 1234
+```
+
+---
+
+**Last Updated**: January 2025 | **Demo Version**: 1.0 | **Coverage**: 100% of Finance System PRD features (13 modules)

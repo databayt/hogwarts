@@ -12,7 +12,8 @@
       "Bash(do dirname=\"$dir%/\")",
       "Bash(if [ ! -f \"$dir/loading.tsx\" ])",
       "Bash(then echo \"$dirname\")",
-      "Bash(fi)"
+      "Bash(fi)",
+      "WebFetch(domain:ed.databayt.org)"
     ],
     "deny": [],
     "ask": []

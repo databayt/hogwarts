@@ -102,10 +102,7 @@ export async function createConversation(
         schoolId,
         type: parsed.type,
         title: parsed.title,
-        description: parsed.description,
-        avatarUrl: parsed.avatarUrl,
-        metadata: (parsed.metadata as any) || null,
-        createdById: authContext.userId,
+        avatar: parsed.avatar,
         directParticipant1Id:
           parsed.type === "direct" ? authContext.userId : undefined,
         directParticipant2Id:
@@ -182,6 +179,7 @@ export async function updateConversation(
     )
 
     // Check permission
+    const owner = conversation.participants.find((p) => p.role === "owner")
     try {
       assertMessagingPermission(
         authContext,
@@ -189,7 +187,7 @@ export async function updateConversation(
         {
           id: conversation.id,
           type: conversation.type,
-          createdById: conversation.createdById || "",
+          createdById: owner?.userId || "",
           participantIds: conversation.participants.map((p) => p.userId),
         },
         undefined,
@@ -207,9 +205,7 @@ export async function updateConversation(
       where: { id: parsed.conversationId },
       data: {
         title: parsed.title,
-        description: parsed.description,
-        avatarUrl: parsed.avatarUrl,
-        metadata: (parsed.metadata as any) || undefined,
+        avatar: parsed.avatar,
       },
     })
 
@@ -262,15 +258,11 @@ export async function archiveConversation(
       return { success: false, error: "Not a participant in this conversation" }
     }
 
-    // Archive for this user (via participant record)
-    await db.conversationParticipant.updateMany({
-      where: {
-        conversationId: parsed.conversationId,
-        userId: authContext.userId,
-      },
+    // Archive the conversation itself
+    await db.conversation.update({
+      where: { id: parsed.conversationId },
       data: {
-        // We'll track archived status via metadata or separate field
-        metadata: { archived: true } as any,
+        isArchived: true,
       },
     })
 
@@ -325,6 +317,7 @@ export async function sendMessage(
     )
 
     // Check permission
+    const owner = conversation.participants.find((p) => p.role === "owner")
     try {
       assertMessagingPermission(
         authContext,
@@ -332,7 +325,7 @@ export async function sendMessage(
         {
           id: conversation.id,
           type: conversation.type,
-          createdById: conversation.createdById || "",
+          createdById: owner?.userId || "",
           participantIds: conversation.participants.map((p) => p.userId),
         },
         undefined,
