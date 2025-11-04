@@ -16,13 +16,13 @@ export function ModeSwitcher() {
     <Button
       variant="link"
       size="icon"
-      className="h-8 w-8 px-0 cursor-pointer"
+      className="h-8 w-8 px-0"
       onClick={toggleTheme}
     >
       {resolvedTheme === "dark" ? (
-        <SunIcon className="h-4 w-4" />
+        <SunIcon className="h-4 w-4 cursor-pointer" />
       ) : (
-        <MoonIcon className="h-4 w-4" />
+        <MoonIcon className="h-4 w-4 cursor-pointer" />
       )}
       <span className="sr-only">Toggle theme</span>
     </Button>

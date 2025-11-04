@@ -24,6 +24,7 @@ import { platformSearchConfig } from "@/components/atom/generic-command-menu/pla
 import { useCurrentRole } from "@/components/auth/use-current-role";
 import { usePathname } from "next/navigation";
 import type { Role } from "@/components/atom/generic-command-menu/types";
+import Link from "next/link";
 
 interface PlatformHeaderProps {
   school?: School;
@@ -33,9 +34,15 @@ interface PlatformHeaderProps {
 export default function PlatformHeader({ school, lang }: PlatformHeaderProps = {}) {
   const breadcrumbItems = useBreadcrumbs();
   const { dictionary } = useDictionary();
-  const { isRTL } = useLocale();
+  const { isRTL, locale } = useLocale();
   const role = useCurrentRole() as Role | undefined;
   const pathname = usePathname();
+
+  // Extract subdomain from pathname
+  const pathSegments = pathname.split('/').filter(Boolean);
+  const subdomain = pathSegments[2] || '';
+  const messagesUrl = `/${locale}/s/${subdomain}/messages`;
+  const notificationsUrl = `/${locale}/s/${subdomain}/notifications`;
 
   return (
     <div className="sticky top-0 z-40 bg-background -mx-2">
@@ -89,13 +96,17 @@ export default function PlatformHeader({ school, lang }: PlatformHeaderProps = {
           />
           <LanguageSwitcher variant="toggle" />
           <ModeSwitcher />
-          <Button variant="link" size="icon" className="size-7">
-            <Bell className="h-4 w-4" />
-            <span className="sr-only">Notifications</span>
+          <Button variant="link" size="icon" className="size-7" asChild>
+            <Link href={notificationsUrl}>
+              <Bell className="h-4 w-4 cursor-pointer" />
+              <span className="sr-only">Notifications</span>
+            </Link>
           </Button>
-          <Button variant="link" size="icon" className="size-7">
-            <Mail className="h-4 w-4" />
-            <span className="sr-only">Messages</span>
+          <Button variant="link" size="icon" className="size-7" asChild>
+            <Link href={messagesUrl}>
+              <Mail className="h-4 w-4 cursor-pointer" />
+              <span className="sr-only">Messages</span>
+            </Link>
           </Button>
           <UserButton />
         </div>

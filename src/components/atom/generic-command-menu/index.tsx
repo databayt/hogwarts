@@ -171,7 +171,7 @@ export function GenericCommandMenu({
           onClick={() => setOpen(true)}
           {...props}
         >
-          <Search className="h-4 w-4" />
+          <Search className="h-4 w-4 cursor-pointer" />
           <span className="sr-only">{commandMenuDict?.search || "Search"}</span>
         </Button>
       ) : (
