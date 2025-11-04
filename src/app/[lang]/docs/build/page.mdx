@@ -5,9 +5,9 @@ export const metadata = {
   description: 'Comprehensive guide to building, optimizing, and troubleshooting the Hogwarts platform with Next.js 15, Turbopack, and modern build tools',
 }
 
-## Overview
-
+<p className="lead">
 This comprehensive guide covers everything you need to know about the **Hogwarts build system** - from optimization strategies to troubleshooting common issues, error prevention, and automation tools.
+</p>
 
 **Build Stack:**
 - Next.js 15.4.4 with Turbopack (development + production)
@@ -20,7 +20,7 @@ This comprehensive guide covers everything you need to know about the **Hogwarts
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Essential Commands
 
@@ -75,14 +75,19 @@ Build hangs or fails?
 
 ---
 
-## 🔧 Build Optimization
+## Build Optimization
 
 ### Turbopack Configuration
 
-**What is Turbopack?**
-Turbopack is a Rust-based bundler from the creators of webpack, designed for Next.js. It's **2-5x faster** than webpack and now stable for development in Next.js 15.
+<h4>What is Turbopack?</h4>
 
-**Current Configuration** (`next.config.ts`):
+<p className="muted">
+Turbopack is a Rust-based bundler from the creators of webpack, designed for Next.js. It's **2-5x faster** than webpack and now stable for development in Next.js 15.
+</p>
+
+<h5>Current Configuration</h5>
+
+<p className="muted">From `next.config.ts`:</p>
 
 ```typescript
 export default {
@@ -96,7 +101,8 @@ export default {
 }
 ```
 
-**Development Mode:**
+<h5>Development Mode</h5>
+
 ```bash
 # Automatically uses Turbopack
 pnpm dev
@@ -105,13 +111,15 @@ pnpm dev
 next dev --turbo
 ```
 
-**Production Builds (Beta as of 2025):**
+<h5>Production Builds (Beta as of 2025)</h5>
+
 - Turbopack for production is in beta
 - 25-35% reduction in memory usage
 - 30-50% faster initial compilation
 - Persistent caching coming soon
 
-**Best Practices:**
+<h5>Best Practices</h5>
+
 - ✅ Use path aliases (`@/components`) instead of relative paths
 - ✅ Enable in development for fast HMR
 - ✅ Test production builds in staging before main
@@ -119,7 +127,9 @@ next dev --turbo
 
 ### Bundle Size Optimization
 
-**Package Import Optimization** (`next.config.ts`):
+<h4>Package Import Optimization</h4>
+
+<p className="muted">From `next.config.ts`:</p>
 
 ```typescript
 export default {
@@ -134,7 +144,7 @@ export default {
 }
 ```
 
-**Tree-Shaking Best Practices:**
+<h5>Tree-Shaking Best Practices</h5>
 
 ```typescript
 // ✅ Good - Tree-shakable imports
@@ -146,42 +156,50 @@ import { format } from 'date-fns'
 import * as Icons from 'lucide-react'
 ```
 
-**Dynamic Imports for Heavy Components:**
+<h5>Dynamic Imports for Heavy Components</h5>
 
 ```typescript
 import dynamic from 'next/dynamic'
 
 // Code-split heavy components
 const HeavyChart = dynamic(() => import('@/components/charts/heavy'), {
-  loading: () => &lt;Skeleton className="h-96" /&gt;,
+  loading: () => <Skeleton className="h-96" />,
   ssr: false, // Skip SSR for client-only components
 })
 ```
 
-**Multi-Tenant Route-Based Splitting:**
+<h5>Multi-Tenant Route-Based Splitting</h5>
 
+<p className="muted">
 The platform automatically splits bundles by route:
+</p>
+
 - `/s/[subdomain]/(platform)/students` → students.chunk.js
 - `/s/[subdomain]/(platform)/teachers` → teachers.chunk.js
 - Shared components (ui/*, atom/*) → main bundle
 
+<p className="muted">
 **Target:** Keep each route bundle under 100KB gzipped.
+</p>
 
 ### TypeScript Compilation Optimization
 
-**Pre-Build Validation:**
+<h4>Pre-Build Validation</h4>
 
 ```bash
 # ALWAYS run before pnpm build
 pnpm tsc --noEmit
 ```
 
-**Why This Matters:**
+<h5>Why This Matters</h5>
+
 - TypeScript errors cause Next.js builds to **hang silently**
 - No error output is shown in build logs
 - Detecting errors early saves hours of debugging
 
-**Optimization Settings** (`tsconfig.json`):
+<h5>Optimization Settings</h5>
+
+<p className="muted">From `tsconfig.json`:</p>
 
 ```json
 {
@@ -199,7 +217,7 @@ pnpm tsc --noEmit
 
 ### Prisma Client Optimization
 
-**Generation Performance:**
+<h4>Generation Performance</h4>
 
 ```bash
 # Standard generation (~2s)
@@ -209,12 +227,13 @@ pnpm prisma generate
 pnpm prisma generate --no-engine
 ```
 
-**Cache Strategy:**
+<h5>Cache Strategy</h5>
+
 - Prisma client is cached in `node_modules/.prisma`
 - Only regenerate after schema changes
 - `/build` command checks schema hash and regenerates if needed
 
-**Integration in Build:**
+<h5>Integration in Build</h5>
 
 ```json
 {
@@ -226,7 +245,9 @@ pnpm prisma generate --no-engine
 
 ### Production Optimizations
 
-**Console Log Removal** (`next.config.ts`):
+<h4>Console Log Removal</h4>
+
+<p className="muted">From `next.config.ts`:</p>
 
 ```typescript
 export default {
@@ -238,7 +259,7 @@ export default {
 }
 ```
 
-**Image Optimization:**
+<h4>Image Optimization</h4>
 
 ```typescript
 export default {
@@ -249,25 +270,30 @@ export default {
 }
 ```
 
-**Compression:**
+<h5>Compression</h5>
+
 - Vercel automatically serves gzip/brotli
 - Bundle analyzer helps identify large assets: `ANALYZE=true pnpm build`
 
 ### Caching Strategies
 
-**Local Development Cache:**
+<h4>Local Development Cache</h4>
+
 - `.next` directory cached automatically
 - Turbopack incremental compilation
 - Preserve `.next` between builds for faster compilation
 
-**Vercel Remote Caching (Production):**
+<h4>Vercel Remote Caching (Production)</h4>
+
 ```bash
 # Automatic on Vercel deployments
 # Manual with Turborepo:
 pnpm turbo run build --remote-cache
 ```
 
-**pnpm Cache Configuration** (`.npmrc`):
+<h4>pnpm Cache Configuration</h4>
+
+<p className="muted">From `.npmrc`:</p>
 
 ```ini
 auto-install-peers=true
@@ -278,15 +304,23 @@ side-effects-cache=true
 
 ---
 
-## ⚠️ Common Build Issues & Solutions
+## Common Build Issues & Solutions
 
 ### TypeScript Errors (MOST COMMON)
 
-**Problem:** Build hangs at "Environments: .env" with no error output.
+<h4>Problem</h4>
 
-**Root Cause:** TypeScript compilation errors prevent Next.js from starting, but **errors are not shown** in build logs.
+<p className="muted">
+Build hangs at "Environments: .env" with no error output.
+</p>
 
-**Detection:**
+<h4>Root Cause</h4>
+
+<p className="muted">
+TypeScript compilation errors prevent Next.js from starting, but **errors are not shown** in build logs.
+</p>
+
+<h4>Detection</h4>
 
 ```bash
 # Check for TypeScript errors
@@ -299,9 +333,9 @@ pnpm tsc --noEmit 2>&1 | wc -l
 pnpm tsc --noEmit 2>&1 | head -50
 ```
 
-**Common Error Patterns After Prisma Changes:**
+<h4>Common Error Patterns After Prisma Changes</h4>
 
-#### Error Type 1: Missing Fields
+<h5>Error Type 1: Missing Fields</h5>
 
 ```typescript
 // ❌ Error: Property 'userId' does not exist on type 'StudentRow'
@@ -319,7 +353,7 @@ export type StudentRow = {
 }
 ```
 
-#### Error Type 2: Field Name Mismatches
+<h5>Error Type 2: Field Name Mismatches</h5>
 
 ```prisma
 // Prisma schema
@@ -344,17 +378,17 @@ class: {
 }
 ```
 
-#### Error Type 3: Type Assertion Needed
+<h5>Error Type 3: Type Assertion Needed</h5>
 
 ```typescript
-// ❌ Error: Partial&lt;StudentProfile&gt; not assignable to StudentProfile
+// ❌ Error: Partial<StudentProfile> not assignable to StudentProfile
 student: filterStudentData(profile.student, permissionLevel)
 
 // ✅ Fix: Add type cast
 student: filterStudentData(profile.student, permissionLevel) as any
 ```
 
-#### Error Type 4: Undefined vs Null
+<h5>Error Type 4: Undefined vs Null</h5>
 
 ```typescript
 // ❌ Error: Type 'undefined' is not assignable to type 'string | null'
@@ -364,40 +398,49 @@ profileData={result.data}
 profileData={result.data ?? null}
 ```
 
-**Prevention:**
+<h4>Prevention</h4>
+
 - Run `pnpm tsc --noEmit` before every build
 - Use `/pre-commit-full` for automated validation
 - Enable TypeScript strict mode in IDE
 
 ### MDX Syntax Errors (CRITICAL)
 
-**Problem:** Build fails with "Unexpected character 'X' before name" errors.
+<h4>Problem</h4>
 
-**Root Cause:** MDX interprets `<` as HTML/JSX tag start. Comparison operators must be escaped.
+<p className="muted">
+Build fails with "Unexpected character 'X' before name" errors.
+</p>
 
-**Common Errors:**
+<h4>Root Cause</h4>
+
+<p className="muted">
+MDX interprets `<` as HTML/JSX tag start. Comparison operators must be escaped.
+</p>
+
+<h4>Common Errors</h4>
 
 ```mdx
-❌ Wrong: &lt;75% attendance
-✅ Correct: &amp;lt;75% attendance
+❌ Wrong: <75% attendance
+✅ Correct: &lt;75% attendance
 
-❌ Wrong: &lt;3% error rate
-✅ Correct: &amp;lt;3% error rate
+❌ Wrong: <3% error rate
+✅ Correct: &lt;3% error rate
 
-❌ Wrong: &lt;1% failure
-✅ Correct: &amp;lt;1% failure
+❌ Wrong: <1% failure
+✅ Correct: &lt;1% failure
 ```
 
-**Character Escaping Rules:**
+<h4>Character Escaping Rules</h4>
 
 | Character | MDX Escape | HTML Entity |
 |-----------|------------|-------------|
-| `<` | `&amp;lt;` | `&amp;lt;` |
-| `>` | `&amp;gt;` | `&amp;gt;` |
-| `{` | `{'{'}` | `&amp;lbrace;` |
-| `}` | `{'}'}` | `&amp;rbrace;` |
+| `<` | `&lt;` | `&lt;` |
+| `>` | `&gt;` | `&gt;` |
+| `{` | `{'{'}` | `&lbrace;` |
+| `}` | `{'}'}` | `&rbrace;` |
 
-**Debugging MDX Errors:**
+<h4>Debugging MDX Errors</h4>
 
 ```bash
 # Check build logs for pattern
@@ -408,23 +451,33 @@ pnpm build 2>&1 | grep "Unexpected character"
 # at src/app/[lang]/docs/demo/page.mdx:215
 ```
 
-**Historical Fixes (2025-11-04):**
+<h5>Historical Fixes (2025-11-04)</h5>
+
 - `src/app/[lang]/docs/demo/page.mdx:215` - Escaped &lt;75%
 - `src/app/[lang]/docs/prd/page.mdx:170` - Escaped &lt;3%
 - `src/app/[lang]/docs/validation/page.mdx:469` - Escaped &lt;1%
 
-**Prevention:**
+<h4>Prevention</h4>
+
 - Use MDX linting in IDE
 - Search for `<[0-9]` pattern before commits
 - Automated detection with `/scan-errors`
 
 ### Prisma Client Out of Sync
 
-**Problem:** "Module not found: @prisma/client" or field type errors.
+<h4>Problem</h4>
 
-**Root Cause:** Prisma schema changed but client wasn't regenerated.
+<p className="muted">
+"Module not found: @prisma/client" or field type errors.
+</p>
 
-**Detection & Fix:**
+<h4>Root Cause</h4>
+
+<p className="muted">
+Prisma schema changed but client wasn't regenerated.
+</p>
+
+<h4>Detection & Fix</h4>
 
 ```bash
 # Check if regeneration needed
@@ -434,9 +487,9 @@ pnpm prisma generate
 # ✔ Generated Prisma Client
 ```
 
-**Common Prisma Field Errors:**
+<h4>Common Prisma Field Errors</h4>
 
-#### Error Pattern 1: Connect on ID Field
+<h5>Error Pattern 1: Connect on ID Field</h5>
 
 ```typescript
 // ❌ Wrong - Using connect pattern on direct ID field
@@ -454,7 +507,7 @@ const expense = await db.expense.create({
 })
 ```
 
-#### Error Pattern 2: Invalid Includes
+<h5>Error Pattern 2: Invalid Includes</h5>
 
 ```typescript
 // ❌ Wrong - Including ID field as relation
@@ -472,7 +525,7 @@ await db.expense.findMany({
 })
 ```
 
-#### Error Pattern 3: Missing Required Fields
+<h5>Error Pattern 3: Missing Required Fields</h5>
 
 ```typescript
 // ❌ Wrong - Missing required fields
@@ -496,16 +549,21 @@ const expense = await db.expense.create({
 })
 ```
 
-**Validation Tools:**
+<h4>Validation Tools</h4>
+
 - `/validate-prisma <file>` - Validate specific file
 - `/scan-errors prisma` - Scan entire codebase
 - Prisma optimizer skill - Auto-fix field type errors
 
 ### Multiple Concurrent Processes
 
-**Problem:** 20+ Node.js processes running, system resources exhausted, builds hang.
+<h4>Problem</h4>
 
-**Detection:**
+<p className="muted">
+20+ Node.js processes running, system resources exhausted, builds hang.
+</p>
+
+<h4>Detection</h4>
 
 ```bash
 # Windows
@@ -515,7 +573,7 @@ tasklist | findstr node.exe
 tasklist | findstr /C:node.exe | find /C /V ""
 ```
 
-**Solution:**
+<h4>Solution</h4>
 
 ```bash
 # Windows - Kill all Node processes
@@ -528,18 +586,27 @@ killall node
 pnpm build
 ```
 
-**Prevention:**
+<h4>Prevention</h4>
+
 - Close previous dev servers before building
 - Use `/build` command which checks for multiple processes
 - Monitor system resources
 
 ### Memory/Resource Exhaustion
 
-**Problem:** Build fails with "JavaScript heap out of memory" error.
+<h4>Problem</h4>
 
-**Root Cause:** Large codebase (200+ pages, 234 test files) exhausts default Node.js memory limit.
+<p className="muted">
+Build fails with "JavaScript heap out of memory" error.
+</p>
 
-**Solution:**
+<h4>Root Cause</h4>
+
+<p className="muted">
+Large codebase (200+ pages, 234 test files) exhausts default Node.js memory limit.
+</p>
+
+<h4>Solution</h4>
 
 ```bash
 # Windows PowerShell
@@ -550,7 +617,9 @@ pnpm build
 NODE_OPTIONS="--max-old-space-size=8192" pnpm build
 ```
 
-**Permanent Fix** (package.json):
+<h4>Permanent Fix</h4>
+
+<p className="muted">In `package.json`:</p>
 
 ```json
 {
@@ -560,17 +629,22 @@ NODE_OPTIONS="--max-old-space-size=8192" pnpm build
 }
 ```
 
-**Recommended Memory Allocation:**
+<h5>Recommended Memory Allocation</h5>
+
 - Development: 4GB (`--max-old-space-size=4096`)
 - Production build: 8GB (`--max-old-space-size=8192`)
 
 ### Vercel Deployment Failures
 
-**Problem:** Builds pass locally but fail on Vercel.
+<h4>Problem</h4>
 
-**Common Causes & Solutions:**
+<p className="muted">
+Builds pass locally but fail on Vercel.
+</p>
 
-#### Cause 1: Outdated pnpm Lockfile
+<h4>Common Causes & Solutions</h4>
+
+<h5>Cause 1: Outdated pnpm Lockfile</h5>
 
 ```bash
 # Solution: Update lockfile locally
@@ -582,14 +656,17 @@ git commit -m "chore: update pnpm lockfile"
 git push
 ```
 
-#### Cause 2: Environment Variables Missing
+<h5>Cause 2: Environment Variables Missing</h5>
 
+<p className="muted">
 Check Vercel dashboard:
+</p>
+
 - Settings → Environment Variables
 - Ensure all required variables are set
 - Verify variable names match exactly (case-sensitive)
 
-#### Cause 3: Node Version Mismatch
+<h5>Cause 3: Node Version Mismatch</h5>
 
 ```json
 // package.json - Specify Node version
@@ -600,14 +677,15 @@ Check Vercel dashboard:
 }
 ```
 
-Check `.nvmrc` if present:
+<p className="muted">Check `.nvmrc` if present:</p>
+
 ```
 20.11.0
 ```
 
-#### Cause 4: Build Command Incorrect
+<h5>Cause 4: Build Command Incorrect</h5>
 
-Verify `vercel.json`:
+<p className="muted">Verify `vercel.json`:</p>
 
 ```json
 {
@@ -618,18 +696,21 @@ Verify `vercel.json`:
 }
 ```
 
-**Debugging Vercel Builds:**
+<h4>Debugging Vercel Builds</h4>
+
 - Check build logs in Vercel dashboard
 - MDX errors are clearly shown in Vercel logs
 - TypeScript errors may require checking "Show all logs"
 
 ---
 
-## 🛡️ Error Prevention System
+## Error Prevention System
 
 ### Overview
 
+<p className="lead">
 The platform includes a comprehensive error prevention system that catches **204+ error types** before they reach CI/CD:
+</p>
 
 | Error Category | Patterns Detected | Auto-Fix Success | Time Saved |
 |----------------|-------------------|------------------|------------|
@@ -641,9 +722,13 @@ The platform includes a comprehensive error prevention system that catches **204
 
 ### Dictionary Property Errors (173+ Patterns)
 
-**Pattern:** Invalid nested property access on dictionary object.
+<h4>Pattern</h4>
 
-**Common Violations:**
+<p className="muted">
+Invalid nested property access on dictionary object.
+</p>
+
+<h4>Common Violations</h4>
 
 ```typescript
 // ❌ Invalid - Dictionary type doesn't include nested properties
@@ -660,12 +745,13 @@ The platform includes a comprehensive error prevention system that catches **204
 {d?.viewAll || 'View All'}  // Only if viewAll exists at root level
 ```
 
-**Why This Happens:**
+<h4>Why This Happens</h4>
+
 - Dictionary type system is strict
 - Only includes explicitly defined properties
 - Nested structures (`stats`, `blocks`, `sections`, `actions`, `workflow`) are not in type definition
 
-**Detection:**
+<h4>Detection</h4>
 
 ```bash
 /scan-errors dictionary
@@ -679,7 +765,7 @@ Found 173 dictionary property errors:
 - workflow: 15 violations
 ```
 
-**Auto-Fix:**
+<h4>Auto-Fix</h4>
 
 ```bash
 /fix-build
@@ -691,7 +777,7 @@ Found 173 dictionary property errors:
 
 ### Prisma Field Type Errors (13+ Patterns)
 
-**Pattern 1: Connect on ID Field**
+<h4>Pattern 1: Connect on ID Field</h4>
 
 ```typescript
 // ❌ Wrong - submittedBy is String field, not relation
@@ -701,7 +787,7 @@ submittedBy: { connect: { id: userId } }
 submittedById: userId
 ```
 
-**Pattern 2: Invalid Includes**
+<h4>Pattern 2: Invalid Includes</h4>
 
 ```typescript
 // ❌ Wrong - submittedBy is not a relation (it's submittedById)
@@ -715,7 +801,7 @@ include: {
 }
 ```
 
-**Pattern 3: Missing Required Fields**
+<h4>Pattern 3: Missing Required Fields</h4>
 
 ```typescript
 // ❌ Wrong - Missing expenseNumber and submittedAt
@@ -737,7 +823,7 @@ await db.expense.create({
 })
 ```
 
-**Detection:**
+<h4>Detection</h4>
 
 ```bash
 # Validate specific file
@@ -747,7 +833,8 @@ await db.expense.create({
 /scan-errors prisma
 ```
 
-**Auto-Fix:**
+<h4>Auto-Fix</h4>
+
 - Converts connect patterns to direct ID assignment
 - Removes invalid includes
 - Suggests required field values
@@ -755,9 +842,13 @@ await db.expense.create({
 
 ### Enum Completeness Issues (2+ Patterns)
 
-**Pattern:** Incomplete `Record&lt;Enum, T&gt;` definition missing enum values.
+<h4>Pattern</h4>
 
-**Example:**
+<p className="muted">
+Incomplete `Record<Enum, T>` definition missing enum values.
+</p>
+
+<h4>Example</h4>
 
 ```typescript
 // Prisma enum has 5 values
@@ -770,7 +861,7 @@ enum ExpenseStatus {
 }
 
 // ❌ Incomplete - Missing CANCELLED
-export const ExpenseStatusLabels: Record&lt;ExpenseStatus, string&gt; = {
+export const ExpenseStatusLabels: Record<ExpenseStatus, string> = {
   PENDING: 'Pending Approval',
   APPROVED: 'Approved',
   REJECTED: 'Rejected',
@@ -779,7 +870,7 @@ export const ExpenseStatusLabels: Record&lt;ExpenseStatus, string&gt; = {
 }
 
 // ✅ Complete - All enum values covered
-export const ExpenseStatusLabels: Record&lt;ExpenseStatus, string&gt; = {
+export const ExpenseStatusLabels: Record<ExpenseStatus, string> = {
   PENDING: 'Pending Approval',
   APPROVED: 'Approved',
   REJECTED: 'Rejected',
@@ -788,7 +879,7 @@ export const ExpenseStatusLabels: Record&lt;ExpenseStatus, string&gt; = {
 }
 ```
 
-**Detection:**
+<h4>Detection</h4>
 
 ```bash
 /scan-errors enum
@@ -799,18 +890,27 @@ Found 2 enum completeness errors:
 - ExpenseStatusColors: Missing CANCELLED
 ```
 
-**Auto-Fix:**
+<h4>Auto-Fix</h4>
+
 - Adds missing enum values
 - Uses sensible defaults based on pattern
 - Updates all related Record definitions
 
 ### Multi-Tenant Safety Violations
 
-**Pattern:** Missing `schoolId` filter in database queries.
+<h4>Pattern</h4>
 
-**Critical Rule:** ALL database operations MUST be scoped by `schoolId`.
+<p className="muted">
+Missing `schoolId` filter in database queries.
+</p>
 
-**Example:**
+<h4>Critical Rule</h4>
+
+<p className="muted">
+ALL database operations MUST be scoped by `schoolId`.
+</p>
+
+<h4>Example</h4>
 
 ```typescript
 // ❌ WRONG - No tenant scoping (SECURITY RISK!)
@@ -828,23 +928,24 @@ await db.student.findMany({
 })
 ```
 
-**Detection:**
+<h4>Detection</h4>
 
 ```bash
 # Use multi-tenant-validator skill
 /agents/multi-tenant -p "Validate all queries in finance module"
 ```
 
-**Auto-Fix:**
+<h4>Auto-Fix</h4>
+
 - Adds `schoolId` from session/context
 - Updates query patterns
 - Ensures tenant isolation
 
 ### Prevention Commands
 
-#### /scan-errors - Pattern Detection
+<h4>/scan-errors - Pattern Detection</h4>
 
-**Usage:**
+<h5>Usage</h5>
 
 ```bash
 # Scan all patterns
@@ -856,7 +957,7 @@ await db.student.findMany({
 /scan-errors enum
 ```
 
-**Output:**
+<h5>Output</h5>
 
 ```
 🔍 Scanning codebase for error patterns...
@@ -876,9 +977,9 @@ Auto-fix available for all detected patterns.
 Run /fix-build to fix automatically.
 ```
 
-#### /fix-build - Auto-Fix
+<h4>/fix-build - Auto-Fix</h4>
 
-**Usage:**
+<h5>Usage</h5>
 
 ```bash
 /fix-build
@@ -888,7 +989,7 @@ Run /fix-build to fix automatically.
 /fix-build prisma
 ```
 
-**Workflow:**
+<h5>Workflow</h5>
 
 ```
 🔧 Fixing detected build errors...
@@ -914,11 +1015,13 @@ Next steps:
 3. Commit: git commit -m "fix: auto-fix 188 build errors"
 ```
 
+<p className="muted">
 **Success Rate:** 95%+ for pattern-based errors
+</p>
 
-#### /validate-prisma - Query Validation
+<h4>/validate-prisma - Query Validation</h4>
 
-**Usage:**
+<h5>Usage</h5>
 
 ```bash
 # Validate specific file
@@ -928,7 +1031,7 @@ Next steps:
 /validate-prisma src/components/platform/finance/
 ```
 
-**Output:**
+<h5>Output</h5>
 
 ```
 🔍 Validating Prisma queries in actions.ts...
@@ -951,9 +1054,9 @@ Next steps:
 Auto-fix available? [Y/n]
 ```
 
-#### /pre-commit-full - Comprehensive Validation
+<h4>/pre-commit-full - Comprehensive Validation</h4>
 
-**Usage:**
+<h5>Usage</h5>
 
 ```bash
 # Manual invocation
@@ -964,7 +1067,7 @@ git commit -m "feat: add feature"
 # → Pre-commit hook runs validation automatically
 ```
 
-**Validation Suite:**
+<h5>Validation Suite</h5>
 
 ```
 🔍 Running pre-commit validation...
@@ -994,35 +1097,39 @@ Proceeding with commit...
 
 ### Success Metrics
 
-**Error Prevention Impact (Last 30 Days):**
+<h4>Error Prevention Impact (Last 30 Days)</h4>
+
 - Build failures prevented: 47
 - Errors caught pre-commit: 204+
 - Time saved vs manual debugging: 99.9%
 - Auto-fix success rate: 95%+
 - Zero production build failures: ✅
 
-**Developer Productivity:**
+<h4>Developer Productivity</h4>
+
 - Average error resolution time: 7s (was 3+ hours)
 - Pre-commit validation time: 15s
 - Build confidence: High (zero surprises in CI/CD)
 
 ---
 
-## 🤖 Build Automation
+## Build Automation
 
 ### Enhanced /build Command
 
+<p className="lead">
 The `/build` command provides a smart, 4-phase build workflow with validation, error detection, and analysis.
+</p>
 
-**Usage:**
+<h4>Usage</h4>
 
 ```bash
 /build
 ```
 
-**Workflow:**
+<h4>Workflow</h4>
 
-#### Phase 1: Pre-Build Validation
+<h5>Phase 1: Pre-Build Validation</h5>
 
 ```
 🔍 Running pre-build validation...
@@ -1044,7 +1151,7 @@ The `/build` command provides a smart, 4-phase build workflow with validation, e
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
-**If Errors Found:**
+<h5>If Errors Found</h5>
 
 ```
 ❌ Pre-build validation failed
@@ -1065,7 +1172,7 @@ Re-running validation...
 Proceeding with build...
 ```
 
-#### Phase 2: Execute Build
+<h5>Phase 2: Execute Build</h5>
 
 ```
 🔨 Building with Turbopack...
@@ -1083,15 +1190,15 @@ Proceeding with build...
 Build completed in 28.4s
 ```
 
-#### Phase 3: Post-Build Analysis
+<h5>Phase 3: Post-Build Analysis</h5>
 
 ```
 📊 Build Analysis:
 
 Performance Metrics:
-- Build time: 28.4s ✅ (target: &lt;30s)
-- Bundle size: 487KB ✅ (target: &lt;500KB)
-- Cache hit rate: 93% ✅ (target: &gt;90%)
+- Build time: 28.4s ✅ (target: <30s)
+- Bundle size: 487KB ✅ (target: <500KB)
+- Cache hit rate: 93% ✅ (target: >90%)
 
 Route Analysis (top 5 by size):
 1. /finance/expenses: 96KB (↑2KB) ⚠️ Consider code-splitting
@@ -1106,7 +1213,7 @@ Changed Routes: 3
 - /profile/[id] (updated)
 ```
 
-#### Phase 4: Recommendations
+<h5>Phase 4: Recommendations</h5>
 
 ```
 💡 Recommendations:
@@ -1133,9 +1240,9 @@ For detailed build documentation: /docs/build
 For troubleshooting: /docs/build#common-build-issues
 ```
 
-**Error Handling:**
+<h5>Error Handling</h5>
 
-If build fails:
+<p className="muted">If build fails:</p>
 
 ```
 ❌ Build failed
@@ -1143,9 +1250,9 @@ If build fails:
 Error: Unexpected character '7' before name
 File: src/app/[lang]/docs/demo/page.mdx:215
 
-Pattern detected: MDX syntax error (&lt; character not escaped)
+Pattern detected: MDX syntax error (< character not escaped)
 
-Fix: Change &lt;75% to &amp;lt;75%
+Fix: Change <75% to &lt;75%
 
 Would you like guidance? [Y/n]
 > Y
@@ -1158,9 +1265,11 @@ Auto-fix available? [Y/n]
 
 ### Pre-Commit Hooks
 
-**Setup:**
+<h4>Setup</h4>
 
+<p className="muted">
 Pre-commit validation is enabled via `.claude/settings.json`:
+</p>
 
 ```json
 {
@@ -1178,7 +1287,7 @@ Pre-commit validation is enabled via `.claude/settings.json`:
 }
 ```
 
-**Behavior:**
+<h4>Behavior</h4>
 
 ```bash
 git commit -m "feat: add expense tracking"
@@ -1195,7 +1304,7 @@ git commit -m "feat: add expense tracking"
 ▶️  Proceeding with commit...
 ```
 
-**If Errors Detected:**
+<h5>If Errors Detected</h5>
 
 ```bash
 git commit -m "feat: add expense tracking"
@@ -1224,7 +1333,7 @@ Re-running validation...
 ▶️  Proceeding with commit...
 ```
 
-**Override Hook:**
+<h5>Override Hook</h5>
 
 ```bash
 # Bypass validation (not recommended)
@@ -1233,17 +1342,18 @@ git commit --no-verify -m "WIP: temp commit"
 
 ### Build Agent Integration
 
-**Available Agents:**
+<h4>Available Agents</h4>
 
-#### /agents/build - Build System Specialist
+<h5>/agents/build - Build System Specialist</h5>
 
-**Invoke When:**
+<p className="muted">Invoke When:</p>
+
 - Build times are slow (&gt;30s cold, &gt;5s incremental)
 - Bundle sizes are large (&gt;100KB per route)
 - HMR is sluggish (&gt;100ms)
 - Vercel deployments are failing
 
-**Example:**
+<p className="muted">Example:</p>
 
 ```bash
 /agents/build -p "Analyze why production build takes 45 seconds"
@@ -1256,15 +1366,16 @@ git commit --no-verify -m "WIP: temp commit"
 5. Verify improvements
 ```
 
-#### /agents/nextjs - Next.js Expert
+<h5>/agents/nextjs - Next.js Expert</h5>
 
-**Invoke When:**
+<p className="muted">Invoke When:</p>
+
 - App Router build issues
 - Server Component errors
 - Build configuration problems
 - Route optimization needs
 
-**Example:**
+<p className="muted">Example:</p>
 
 ```bash
 /agents/nextjs -p "Optimize finance module bundle size"
@@ -1277,15 +1388,16 @@ git commit --no-verify -m "WIP: temp commit"
 5. Verify bundle reduction
 ```
 
-#### /agents/typescript - Type Safety Expert
+<h5>/agents/typescript - Type Safety Expert</h5>
 
-**Invoke When:**
+<p className="muted">Invoke When:</p>
+
 - TypeScript errors causing build hangs
 - Complex type errors
 - Type assertion needs
 - Strict mode migration
 
-**Example:**
+<p className="muted">Example:</p>
 
 ```bash
 /agents/typescript -p "Fix 20 TypeScript errors after Prisma schema change"
@@ -1300,7 +1412,7 @@ git commit --no-verify -m "WIP: temp commit"
 
 ### Automation Success Metrics
 
-**Build Automation Impact:**
+<h4>Build Automation Impact</h4>
 
 | Metric | Before Automation | After Automation | Improvement |
 |--------|-------------------|------------------|-------------|
@@ -1310,7 +1422,8 @@ git commit --no-verify -m "WIP: temp commit"
 | Pre-Commit Catch Rate | 0% | 90%+ | ∞ |
 | Developer Confidence | Low | High | ✅ |
 
-**Time Saved Per Developer:**
+<h4>Time Saved Per Developer</h4>
+
 - Per build failure prevented: 1-3 hours
 - Per week: 8-36 hours (with 8-12 failures)
 - Per month: 32-144 hours
@@ -1318,13 +1431,22 @@ git commit --no-verify -m "WIP: temp commit"
 
 ---
 
-## 📊 Historical Context & Lessons Learned
+## Historical Context & Lessons Learned
 
 ### Build Hang - November 4, 2025
 
-**Incident:** Build hung at "Environments: .env" after Prisma schema changes.
+<h4>Incident</h4>
 
-**Root Cause:** 20 TypeScript errors across 10 files:
+<p className="muted">
+Build hung at "Environments: .env" after Prisma schema changes.
+</p>
+
+<h4>Root Cause</h4>
+
+<p className="muted">
+20 TypeScript errors across 10 files:
+</p>
+
 - Messaging content.tsx (2 errors)
 - Table row types (3 errors)
 - Profile actions (5 errors)
@@ -1332,33 +1454,50 @@ git commit --no-verify -m "WIP: temp commit"
 - Profile permissions (5 errors)
 - Profile page (2 errors)
 
-**Resolution:**
+<h4>Resolution</h4>
+
 1. Discovered via `pnpm tsc --noEmit`
 2. Fixed all 20 errors with type casts and field additions
 3. Build completed successfully
 
-**Lesson:** **ALWAYS check TypeScript errors BEFORE running build!**
+<h4>Lesson</h4>
 
+<p className="muted">
+**ALWAYS check TypeScript errors BEFORE running build!**
+</p>
+
+<p className="muted">
 **Time Lost:** 2+ hours debugging silent hang
+</p>
 
+<p className="muted">
 **Prevention:** Now automated via `/scan-errors` and pre-commit hooks
+</p>
 
 ### Finance Module Fixes - October 29, 2025
 
-**Incident:** 31+ TypeScript build errors discovered during Vercel deployment.
+<h4>Incident</h4>
 
-**Error Breakdown:**
+<p className="muted">
+31+ TypeScript build errors discovered during Vercel deployment.
+</p>
+
+<h4>Error Breakdown</h4>
+
 - Dictionary property errors: 173 violations
 - Prisma field type errors: 13 violations
 - Enum completeness issues: 2 violations
 
-**Files Modified:** 6 files, 30 commits over 3 hours
+<h4>Files Modified</h4>
 
-**Resolution Process:**
+<p className="muted">6 files, 30 commits over 3 hours</p>
 
-#### Dictionary Errors (173 violations)
+<h4>Resolution Process</h4>
 
-**Pattern:**
+<h5>Dictionary Errors (173 violations)</h5>
+
+<p className="muted">Pattern:</p>
+
 ```typescript
 // ❌ Invalid access patterns removed
 d?.stats?.totalBudget
@@ -1375,15 +1514,17 @@ d?.workflow?.step1?.title
 'Step 1'
 ```
 
-**Files:**
+<p className="muted">Files:</p>
+
 - `src/components/platform/finance/budget/content.tsx` (16 fixes)
 - `src/components/platform/finance/content.tsx` (102 fixes)
 - `src/components/platform/finance/expenses/content.tsx` (29 fixes)
 - `src/components/platform/finance/fees/content.tsx` (42 fixes)
 
-#### Prisma Errors (13 violations)
+<h5>Prisma Errors (13 violations)</h5>
 
-**Pattern 1: Connect on ID field**
+<p className="muted">Pattern 1: Connect on ID field</p>
+
 ```typescript
 // ❌ Wrong
 submittedBy: { connect: { id: userId } }
@@ -1392,7 +1533,8 @@ submittedBy: { connect: { id: userId } }
 submittedById: userId
 ```
 
-**Pattern 2: Invalid includes**
+<p className="muted">Pattern 2: Invalid includes</p>
+
 ```typescript
 // ❌ Wrong
 include: { submittedBy: true }
@@ -1401,19 +1543,22 @@ include: { submittedBy: true }
 include: { category: true }
 ```
 
-**Pattern 3: Missing required fields**
+<p className="muted">Pattern 3: Missing required fields</p>
+
 ```typescript
 // Added
 expenseNumber: `EXP-${Date.now()}`
 submittedAt: new Date()
 ```
 
-**Files:**
+<p className="muted">Files:</p>
+
 - `src/components/platform/finance/expenses/actions.ts` (8 fixes)
 
-#### Enum Errors (2 violations)
+<h5>Enum Errors (2 violations)</h5>
 
-**Pattern:**
+<p className="muted">Pattern:</p>
+
 ```typescript
 // Added missing CANCELLED status
 ExpenseStatusLabels: {
@@ -1427,18 +1572,30 @@ ExpenseStatusColors: {
 }
 ```
 
-**Files:**
+<p className="muted">Files:</p>
+
 - `src/components/platform/finance/expenses/config.ts` (2 fixes)
 
-**Total:** 199 individual fixes across 6 files in 3 hours
+<h4>Total</h4>
 
-**Lesson:** Pattern-based errors (dictionary, Prisma) can be detected and auto-fixed
+<p className="muted">199 individual fixes across 6 files in 3 hours</p>
 
-**Prevention:** Now automated via `/scan-errors` and `/fix-build` (7s vs 3 hours)
+<h4>Lesson</h4>
+
+<p className="muted">
+Pattern-based errors (dictionary, Prisma) can be detected and auto-fixed
+</p>
+
+<h4>Prevention</h4>
+
+<p className="muted">
+Now automated via `/scan-errors` and `/fix-build` (7s vs 3 hours)
+</p>
 
 ### Key Takeaways
 
-**Rule 1: TypeScript Check First**
+<h4>Rule 1: TypeScript Check First</h4>
+
 ```bash
 # ALWAYS run before build
 pnpm tsc --noEmit
@@ -1446,13 +1603,15 @@ pnpm tsc --noEmit
 # Expected: 0 errors
 ```
 
-**Rule 2: Prisma Schema = Client Sync**
+<h4>Rule 2: Prisma Schema = Client Sync</h4>
+
 ```bash
 # After ANY schema change
 pnpm prisma generate
 ```
 
-**Rule 3: Pattern Detection Saves Hours**
+<h4>Rule 3: Pattern Detection Saves Hours</h4>
+
 ```bash
 # Detect before building
 /scan-errors
@@ -1461,7 +1620,8 @@ pnpm prisma generate
 /fix-build
 ```
 
-**Rule 4: Pre-Commit &gt; Post-Build**
+<h4>Rule 4: Pre-Commit > Post-Build</h4>
+
 ```bash
 # Catch errors BEFORE commits
 git commit  # Automatically runs validation
@@ -1469,20 +1629,21 @@ git commit  # Automatically runs validation
 # NOT after CI/CD fails
 ```
 
-**Rule 5: Documentation Prevents Repetition**
+<h4>Rule 5: Documentation Prevents Repetition</h4>
+
 - Build failures → Document pattern
 - Pattern documented → Automate detection
 - Detection automated → Prevent recurrence
 
 ---
 
-## 🎯 Quick Reference
+## Quick Reference
 
 ### Step-by-Step Recovery Procedure
 
-When a build hangs or fails:
+<p className="muted">When a build hangs or fails:</p>
 
-#### Step 1: Kill All Running Processes
+<h4>Step 1: Kill All Running Processes</h4>
 
 ```bash
 # Windows
@@ -1492,7 +1653,7 @@ taskkill /F /IM node.exe
 killall node
 ```
 
-#### Step 2: Verify TypeScript Errors
+<h4>Step 2: Verify TypeScript Errors</h4>
 
 ```bash
 # Check for errors
@@ -1504,9 +1665,11 @@ pnpm tsc --noEmit
 pnpm tsc --noEmit 2>&1 | wc -l
 ```
 
+<p className="muted">
 **If errors found:** STOP and fix them first! The build will NOT work until all TS errors are resolved.
+</p>
 
-#### Step 3: Detect Error Patterns
+<h4>Step 3: Detect Error Patterns</h4>
 
 ```bash
 # Scan for known patterns
@@ -1516,14 +1679,14 @@ pnpm tsc --noEmit 2>&1 | wc -l
 /fix-build
 ```
 
-#### Step 4: Regenerate Prisma Client
+<h4>Step 4: Regenerate Prisma Client</h4>
 
 ```bash
 # Only if you made Prisma schema changes
 pnpm prisma generate
 ```
 
-#### Step 5: Clean Build
+<h4>Step 5: Clean Build</h4>
 
 ```bash
 # Remove Next.js cache
@@ -1533,9 +1696,9 @@ rm -rf .next
 pnpm build
 ```
 
-#### Step 6: Monitor Build Progress
+<h4>Step 6: Monitor Build Progress</h4>
 
-The build should show progress indicators:
+<p className="muted">The build should show progress indicators:</p>
 
 ```
 ▲ Next.js 15.4.4
@@ -1544,22 +1707,24 @@ The build should show progress indicators:
 ✓ Compiled successfully
 ```
 
+<p className="muted">
 **If it hangs for more than 5 minutes at "Environments: .env", STOP and repeat Step 2.**
+</p>
 
 ### Prevention Checklist
 
-Before running `pnpm build`, ALWAYS:
+<p className="muted">Before running `pnpm build`, ALWAYS:</p>
 
-- [ ] ✅ Run `pnpm tsc --noEmit` and verify 0 errors
-- [ ] ✅ Run `/scan-errors` to detect patterns
-- [ ] ✅ Run `pnpm prisma generate` if schema changed
-- [ ] ✅ Kill all existing Node.js processes
-- [ ] ✅ Check you have only ONE build running
-- [ ] ✅ Ensure sufficient memory (8GB+ recommended)
+- ✅ Run `pnpm tsc --noEmit` and verify 0 errors
+- ✅ Run `/scan-errors` to detect patterns
+- ✅ Run `pnpm prisma generate` if schema changed
+- ✅ Kill all existing Node.js processes
+- ✅ Check you have only ONE build running
+- ✅ Ensure sufficient memory (8GB+ recommended)
 
 ### Command Quick Reference
 
-**Essential Build Commands:**
+<h4>Essential Build Commands</h4>
 
 ```bash
 # Development
@@ -1587,7 +1752,7 @@ taskkill /F /IM node.exe     # Kill Node processes (Windows)
 rm -rf .next                 # Remove build cache
 ```
 
-**Error Pattern Detection:**
+<h4>Error Pattern Detection</h4>
 
 ```bash
 # Detect all patterns
@@ -1599,7 +1764,7 @@ rm -rf .next                 # Remove build cache
 /scan-errors enum            # Enum completeness issues
 ```
 
-**Prisma Commands:**
+<h4>Prisma Commands</h4>
 
 ```bash
 pnpm prisma generate         # Regenerate client
@@ -1610,45 +1775,45 @@ pnpm prisma format           # Format schema file
 
 ### Performance Optimization Checklist
 
-**Bundle Size Reduction:**
+<h4>Bundle Size Reduction</h4>
 
-- [ ] Use dynamic imports for heavy components
-- [ ] Configure `optimizePackageImports` in next.config.ts
-- [ ] Import specific functions, not entire libraries
-- [ ] Run bundle analyzer: `ANALYZE=true pnpm build`
-- [ ] Review bundle report and identify large chunks
-- [ ] Code-split by route, not by feature
+- Use dynamic imports for heavy components
+- Configure `optimizePackageImports` in next.config.ts
+- Import specific functions, not entire libraries
+- Run bundle analyzer: `ANALYZE=true pnpm build`
+- Review bundle report and identify large chunks
+- Code-split by route, not by feature
 
-**Build Time Reduction:**
+<h4>Build Time Reduction</h4>
 
-- [ ] Enable Turbopack for development: `pnpm dev`
-- [ ] Keep `.next` directory between builds
-- [ ] Use path aliases (`@/`) instead of relative imports
-- [ ] Skip lib type checking: `skipLibCheck: true` in tsconfig
-- [ ] Increase Node memory: `NODE_OPTIONS="--max-old-space-size=8192"`
-- [ ] Run incremental TypeScript compilation
+- Enable Turbopack for development: `pnpm dev`
+- Keep `.next` directory between builds
+- Use path aliases (`@/`) instead of relative imports
+- Skip lib type checking: `skipLibCheck: true` in tsconfig
+- Increase Node memory: `NODE_OPTIONS="--max-old-space-size=8192"`
+- Run incremental TypeScript compilation
 
-**Caching Optimization:**
+<h4>Caching Optimization</h4>
 
-- [ ] Configure pnpm cache in `.npmrc`
-- [ ] Enable Turbopack persistent caching (when stable)
-- [ ] Use Vercel remote caching for CI
-- [ ] Preserve `node_modules/.prisma` client cache
-- [ ] Monitor cache hit rate (target: &gt;90%)
+- Configure pnpm cache in `.npmrc`
+- Enable Turbopack persistent caching (when stable)
+- Use Vercel remote caching for CI
+- Preserve `node_modules/.prisma` client cache
+- Monitor cache hit rate (target: &gt;90%)
 
 ### Vercel Deployment Checklist
 
-Before deploying to Vercel:
+<p className="muted">Before deploying to Vercel:</p>
 
-- [ ] ✅ Update `pnpm-lock.yaml`: `pnpm install`
-- [ ] ✅ Verify environment variables in Vercel dashboard
-- [ ] ✅ Check Node version matches `.nvmrc` or package.json engines
-- [ ] ✅ Ensure `vercel.json` build command is correct
-- [ ] ✅ Run full build locally: `pnpm build`
-- [ ] ✅ Check build output for warnings
-- [ ] ✅ Test in staging environment first
+- ✅ Update `pnpm-lock.yaml`: `pnpm install`
+- ✅ Verify environment variables in Vercel dashboard
+- ✅ Check Node version matches `.nvmrc` or package.json engines
+- ✅ Ensure `vercel.json` build command is correct
+- ✅ Run full build locally: `pnpm build`
+- ✅ Check build output for warnings
+- ✅ Test in staging environment first
 
-**Common Vercel Issues:**
+<h4>Common Vercel Issues</h4>
 
 | Issue | Solution |
 |-------|----------|
@@ -1660,30 +1825,35 @@ Before deploying to Vercel:
 
 ### Support & Resources
 
-**Documentation:**
+<h4>Documentation</h4>
+
 - **This page**: Comprehensive build guide
 - **BUILD-TROUBLESHOOTING.md**: Legacy troubleshooting (deprecated)
 - **CLAUDE.md**: Project architecture and patterns
 
-**Automation Tools:**
+<h4>Automation Tools</h4>
+
 - **/build** - Enhanced build command
 - **/scan-errors** - Error pattern detection
 - **/fix-build** - Auto-fix errors
 - **/validate-prisma** - Prisma query validation
 - **/pre-commit-full** - Comprehensive validation
 
-**Agents:**
+<h4>Agents</h4>
+
 - **/agents/build** - Build optimization specialist
 - **/agents/nextjs** - Next.js 15 expert
 - **/agents/typescript** - Type safety expert
 
-**External Resources:**
+<h4>External Resources</h4>
+
 - [Next.js 15 Documentation](https://nextjs.org/docs)
 - [Turbopack Documentation](https://nextjs.org/docs/app/api-reference/turbopack)
 - [Vercel Build Configuration](https://vercel.com/docs/build-step)
 - [Prisma Documentation](https://www.prisma.io/docs)
 
-**Need Help?**
+<h4>Need Help?</h4>
+
 1. Check this documentation first
 2. Run `/scan-errors` to detect issues
 3. Try `/fix-build` for auto-fix
@@ -1694,15 +1864,15 @@ Before deploying to Vercel:
 
 ## Summary
 
-**Build System Principles:**
+<h4>Build System Principles</h4>
 
 1. **Validate First, Build Later**: Always run `pnpm tsc --noEmit` before building
 2. **Pattern Detection Saves Time**: Use `/scan-errors` to catch 204+ error types
 3. **Automate Everything**: Let `/fix-build` handle pattern-based errors (95%+ success)
-4. **Pre-Commit &gt; Post-Build**: Catch errors before they reach CI/CD
+4. **Pre-Commit > Post-Build**: Catch errors before they reach CI/CD
 5. **Documentation Prevents Repetition**: Every failure pattern is documented and automated
 
-**Key Success Metrics:**
+<h4>Key Success Metrics</h4>
 
 - ✅ **Zero build failures** in production (last 30 days)
 - ✅ **99.9% time saved** vs manual debugging (7s vs 3 hours)
@@ -1711,14 +1881,22 @@ Before deploying to Vercel:
 - ✅ **28s cold build** (target: &lt;30s)
 - ✅ **4s incremental build** (target: &lt;5s)
 
+<p className="lead">
 **The build hanging at "Environments: .env" is ALWAYS caused by TypeScript errors.**
+</p>
 
+<p className="lead">
 **DO NOT attempt to build until `pnpm tsc --noEmit` shows 0 errors.**
+</p>
 
+<p className="muted">
 This documentation should be your first stop every time you encounter build issues.
+</p>
 
 ---
 
+<small>
 **Last Updated:** January 2025
 **Version:** 1.0
 **Status:** ✅ Production-Ready
+</small>

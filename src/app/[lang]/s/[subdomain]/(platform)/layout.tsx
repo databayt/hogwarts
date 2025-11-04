@@ -39,7 +39,7 @@ export default async function PlatformLayout({
             <PlatformHeader school={school} lang={lang} />
             <div className="flex pt-6">
               <PlatformSidebar school={school} lang={lang} side={isRTL ? 'right' : 'left'} />
-              <div className="w-full pb-10">{children}</div>
+              <div className="w-full pb-10 overflow-x-hidden px-4">{children}</div>
             </div>
           </div>
         </ModalProvider>

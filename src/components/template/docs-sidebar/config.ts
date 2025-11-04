@@ -23,7 +23,7 @@ interface DocsConfig {
 export const docsConfig: DocsConfig = {
   mainNav: [
     {
-      title: "Welcome",
+      title: "Introduction",
       href: "/docs",
     },
     {
@@ -40,7 +40,7 @@ export const docsConfig: DocsConfig = {
     {
       title: "Getting Started",
       items: [
-        { title: "Welcome", href: "/docs", items: [] },
+        { title: "Introduction", href: "/docs", items: [] },
         { title: "Quick Start", href: "/docs/quick-start", items: [] },
         { title: "Demo", href: "/docs/demo", items: [] },
         { title: "Requirements", href: "/docs/requirements", items: [] },
@@ -87,6 +87,7 @@ export const docsConfig: DocsConfig = {
         { title: "Attendance", href: "/docs/attendance", items: [] },
         { title: "Attendance Deployment", href: "/docs/attendance-deployment", items: [] },
         { title: "Arrangements", href: "/docs/arrangements", items: [] },
+        { title: "Exam Management", href: "/docs/exam", items: [] },
       ],
     },
 
@@ -94,9 +95,12 @@ export const docsConfig: DocsConfig = {
     {
       title: "Components",
       items: [
-        { title: "File Uploader", href: "/docs/file-upload", items: [] },
+        { title: "Dashboard Cards", href: "/docs/dashboard", items: [] },
+        { title: "File Uploader", href: "/docs/file-uploader", items: [] },
         { title: "Tables", href: "/docs/tables", items: [] },
         { title: "Typography", href: "/docs/typography", items: [] },
+        { title: "Semantic Tokens", href: "/docs/semantic-tokens", items: [] },
+        { title: "Theme System", href: "/docs/theme", items: [] },
       ],
     },
 
@@ -139,6 +143,7 @@ export const docsConfig: DocsConfig = {
     {
       title: "Development",
       items: [
+        { title: "Build System", href: "/docs/build", items: [] },
         { title: "ESLint", href: "/docs/eslint", items: [] },
         { title: "Prettier", href: "/docs/prettier", items: [] },
         { title: "Code of Conduct", href: "/docs/code-of-conduct", items: [] },
@@ -188,6 +193,7 @@ export const docsConfig: DocsConfig = {
         },
         { title: "Roadmap", href: "/docs/roadmap", items: [] },
         { title: "Milestones", href: "/docs/milestones", items: [] },
+        { title: "Competitors Analysis", href: "/docs/competitors", items: [] },
         { title: "Investors - Executive Summary", href: "/docs/investors-executive-summary", items: [] },
       ],
     },

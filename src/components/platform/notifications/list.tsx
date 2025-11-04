@@ -36,14 +36,14 @@ export function NotificationList({
   const [filter, setFilter] = useState<"all" | "unread">("all")
   const [typeFilter, setTypeFilter] = useState<NotificationType | "all">("all")
 
-  // Filter notifications
-  const filteredNotifications = notifications.filter((notification) => {
+  // Filter notifications with defensive check
+  const filteredNotifications = (notifications ?? []).filter((notification) => {
     if (filter === "unread" && notification.read) return false
     if (typeFilter !== "all" && notification.type !== typeFilter) return false
     return true
   })
 
-  const unreadCount = notifications.filter((n) => !n.read).length
+  const unreadCount = (notifications ?? []).filter((n) => !n.read).length
 
   if (loading) {
     return (
@@ -53,7 +53,7 @@ export function NotificationList({
     )
   }
 
-  if (notifications.length === 0) {
+  if ((notifications?.length ?? 0) === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center">
         <Bell className="h-12 w-12 text-muted-foreground mb-4" />
@@ -140,7 +140,7 @@ export function NotificationListScrollable({
   onMarkAllRead,
   maxHeight = 400,
 }: NotificationListProps & { maxHeight?: number }) {
-  const unreadCount = notifications.filter((n) => !n.read).length
+  const unreadCount = (notifications ?? []).filter((n) => !n.read).length
 
   return (
     <div className="w-full">
@@ -170,14 +170,14 @@ export function NotificationListScrollable({
 
       {/* Scrollable List */}
       <ScrollArea className="h-full" style={{ maxHeight }}>
-        {notifications.length === 0 ? (
+        {(notifications?.length ?? 0) === 0 ? (
           <div className="flex flex-col items-center justify-center py-8 text-center px-4">
             <Bell className="h-8 w-8 text-muted-foreground mb-2" />
             <p className="text-sm text-muted-foreground">No notifications</p>
           </div>
         ) : (
           <div className="p-2 space-y-1">
-            {notifications.map((notification) => (
+            {(notifications ?? []).map((notification) => (
               <NotificationCardCompact
                 key={notification.id}
                 notification={notification}
@@ -191,7 +191,7 @@ export function NotificationListScrollable({
       </ScrollArea>
 
       {/* Footer */}
-      {notifications.length > 0 && (
+      {(notifications?.length ?? 0) > 0 && (
         <div className="px-4 py-3 border-t">
           <Button variant="ghost" size="sm" className="w-full" asChild>
             <a href="/notifications">View all notifications</a>
@@ -211,8 +211,8 @@ export function NotificationListGrouped({
   onRead,
   onDelete,
 }: Omit<NotificationListProps, "onMarkAllRead" | "compact">) {
-  // Group by date
-  const grouped = notifications.reduce(
+  // Group by date with defensive check
+  const grouped = (notifications ?? []).reduce(
     (acc, notification) => {
       const date = new Date(notification.createdAt)
       const today = new Date()
