@@ -64,6 +64,12 @@ const adminDictionaries = {
   "ar": () => import("./dictionaries/ar/admin.json").then((module) => module.default),
 } as const;
 
+// Profile module dictionaries
+const profileDictionaries = {
+  "en": () => import("./dictionaries/en/profile.json").then((module) => module.default),
+  "ar": () => import("./dictionaries/ar/profile.json").then((module) => module.default),
+} as const;
+
 // ============================================================================
 // Route-Specific Dictionary Loaders (Optimized)
 // ============================================================================
@@ -270,7 +276,7 @@ export const getExamDictionary = async (locale: Locale) => {
 export const getDictionary = async (locale: Locale) => {
   try {
     // Load all dictionaries
-    const [general, school, stream, operator, library, banking, marking, generate, results, finance, admin] = await Promise.all([
+    const [general, school, stream, operator, library, banking, marking, generate, results, finance, admin, profile] = await Promise.all([
       generalDictionaries[locale]?.() ?? generalDictionaries["en"](),
       schoolDictionaries[locale]?.() ?? schoolDictionaries["en"](),
       streamDictionaries[locale]?.() ?? streamDictionaries["en"](),
@@ -281,14 +287,15 @@ export const getDictionary = async (locale: Locale) => {
       generateDictionaries[locale]?.() ?? generateDictionaries["en"](),
       resultsDictionaries[locale]?.() ?? resultsDictionaries["en"](),
       financeDictionaries[locale]?.() ?? financeDictionaries["en"](),
-      adminDictionaries[locale]?.() ?? adminDictionaries["en"]()
+      adminDictionaries[locale]?.() ?? adminDictionaries["en"](),
+      profileDictionaries[locale]?.() ?? profileDictionaries["en"]()
     ]);
 
-    // Merge dictionaries with library, banking, marking, generate, results, finance, and admin nested under their respective keys
-    return { ...general, ...school, ...stream, ...operator, library, banking, marking, generate, results, finance, admin };
+    // Merge dictionaries with library, banking, marking, generate, results, finance, admin, and profile nested under their respective keys
+    return { ...general, ...school, ...stream, ...operator, library, banking, marking, generate, results, finance, admin, profile };
   } catch (error) {
     console.warn(`Failed to load dictionary for locale: ${locale}. Falling back to en.`);
-    const [general, school, stream, operator, library, banking, marking, generate, results, finance, admin] = await Promise.all([
+    const [general, school, stream, operator, library, banking, marking, generate, results, finance, admin, profile] = await Promise.all([
       generalDictionaries["en"](),
       schoolDictionaries["en"](),
       streamDictionaries["en"](),
@@ -299,9 +306,10 @@ export const getDictionary = async (locale: Locale) => {
       generateDictionaries["en"](),
       resultsDictionaries["en"](),
       financeDictionaries["en"](),
-      adminDictionaries["en"]()
+      adminDictionaries["en"](),
+      profileDictionaries["en"]()
     ]);
-    return { ...general, ...school, ...stream, ...operator, library, banking, marking, generate, results, finance, admin };
+    return { ...general, ...school, ...stream, ...operator, library, banking, marking, generate, results, finance, admin, profile };
   }
 };
 

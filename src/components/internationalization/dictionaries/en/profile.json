@@ -1,0 +1,11 @@
+{
+  "title": "Profile",
+  "subtitle": "Manage your profile and preferences",
+  "navigation": {
+    "overview": "Overview",
+    "students": "Students",
+    "teachers": "Teachers",
+    "parents": "Parents",
+    "staff": "Staff"
+  }
+}
