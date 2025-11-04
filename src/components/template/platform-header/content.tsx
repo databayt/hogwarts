@@ -38,10 +38,9 @@ export default function PlatformHeader({ school, lang }: PlatformHeaderProps = {
   const role = useCurrentRole() as Role | undefined;
   const pathname = usePathname();
 
-  // Use school domain (subdomain) for navigation
-  const subdomain = school?.domain || '';
-  const messagesUrl = `/${locale}/s/${subdomain}/messages`;
-  const notificationsUrl = `/${locale}/s/${subdomain}/notifications`;
+  // Prepend locale to href (middleware handles subdomain rewriting)
+  const messagesUrl = `/${locale}/messages`;
+  const notificationsUrl = `/${locale}/notifications`;
 
   return (
     <div className="sticky top-0 z-40 bg-background -mx-2">
