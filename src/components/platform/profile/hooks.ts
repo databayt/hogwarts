@@ -502,6 +502,9 @@ export function useProfileTheme(): UseProfileThemeReturn {
   const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>('light')
 
   useEffect(() => {
+    // Only run on client side
+    if (typeof window === 'undefined') return
+
     // Get saved theme from localStorage
     const savedTheme = localStorage.getItem('profileTheme') as typeof theme
     if (savedTheme) {
@@ -526,7 +529,11 @@ export function useProfileTheme(): UseProfileThemeReturn {
 
   const setTheme = useCallback((newTheme: typeof theme) => {
     setThemeState(newTheme)
-    localStorage.setItem('profileTheme', newTheme)
+
+    // Only access localStorage on client side
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('profileTheme', newTheme)
+    }
 
     // Update profile settings via API
     fetch('/api/profile/current/settings', {
