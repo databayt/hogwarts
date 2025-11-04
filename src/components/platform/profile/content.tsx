@@ -15,15 +15,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Skeleton } from '@/components/ui/skeleton'
 import { AlertCircle } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { type Locale } from '@/components/internationalization/config'
-import { type Dictionary } from '@/components/internationalization/dictionaries'
+import { useDictionary } from '@/components/internationalization/use-dictionary'
+import { useLocale } from '@/components/internationalization/use-locale'
 
-interface Props {
-  dictionary: Dictionary
-  lang: Locale
-}
-
-export function ProfileContent({ dictionary, lang }: Props) {
+export function ProfileContent() {
+  const { dictionary, isLoading: isDictionaryLoading } = useDictionary()
+  const { locale } = useLocale()
   const { data: session, status } = useSession()
   const [profileId, setProfileId] = React.useState<string | undefined>()
 
@@ -34,8 +31,8 @@ export function ProfileContent({ dictionary, lang }: Props) {
     }
   }, [session])
 
-  // Loading state
-  if (status === 'loading') {
+  // Loading state (dictionary or session)
+  if (status === 'loading' || isDictionaryLoading || !dictionary) {
     return (
       <div className="container mx-auto p-6 space-y-6">
         <Skeleton className="h-48 w-full" />
@@ -76,7 +73,7 @@ export function ProfileContent({ dictionary, lang }: Props) {
         <StudentProfileContent
           studentId={profileId}
           dictionary={dictionary}
-          lang={lang}
+          lang={locale}
           isOwner={true}
         />
       )
@@ -86,7 +83,7 @@ export function ProfileContent({ dictionary, lang }: Props) {
         <TeacherProfileContent
           teacherId={profileId}
           dictionary={dictionary}
-          lang={lang}
+          lang={locale}
           isOwner={true}
         />
       )
@@ -96,7 +93,7 @@ export function ProfileContent({ dictionary, lang }: Props) {
         <ParentProfileContent
           parentId={profileId}
           dictionary={dictionary}
-          lang={lang}
+          lang={locale}
           isOwner={true}
         />
       )
@@ -107,7 +104,7 @@ export function ProfileContent({ dictionary, lang }: Props) {
         <StaffProfileContent
           staffId={profileId}
           dictionary={dictionary}
-          lang={lang}
+          lang={locale}
           isOwner={true}
         />
       )
@@ -119,7 +116,7 @@ export function ProfileContent({ dictionary, lang }: Props) {
         <StaffProfileContent
           staffId={profileId}
           dictionary={dictionary}
-          lang={lang}
+          lang={locale}
           isOwner={true}
         />
       )
