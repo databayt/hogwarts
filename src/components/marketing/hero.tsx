@@ -41,12 +41,12 @@ const Hero = ({ dictionary, lang }: HeroProps) => {
               {heroDict.appointment}
             </Link>
             <Link
-              href={siteConfig.links.github}
+              href="https://demo.databayt.org"
               target="_blank"
               rel="noreferrer"
               className={cn(buttonVariants({ variant: "outline", size: "lg" }), "w-full sm:w-auto")}
             >
-              {heroDict.services}
+              Live Demo
             </Link>
           </div>
         </div>

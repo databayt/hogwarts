@@ -6,6 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { Users, FileText, Bell, CheckCircle, AlertTriangle, TrendingUp } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { getDashboardSummary } from "./actions";
+import { DashboardShowcase } from "../dashboard-showcase";
 
 interface Props {
   user: any;
@@ -373,6 +374,9 @@ export async function AdminDashboard({ user, dictionary }: Props) {
           </div>
         </CardContent>
       </Card>
+
+      {/* Dashboard Card Component Showcase */}
+      <DashboardShowcase />
     </div>
   );
 }
