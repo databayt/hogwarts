@@ -203,7 +203,7 @@ function StudentSidebarContent({ profile }: { profile: StudentProfile }) {
       </Card>
 
       {/* Skills */}
-      {skillsAndInterests.skills.length > 0 && (
+      {skillsAndInterests?.skills?.length > 0 && (
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
@@ -212,7 +212,7 @@ function StudentSidebarContent({ profile }: { profile: StudentProfile }) {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            {skillsAndInterests.skills.slice(0, 5).map((skill, index) => (
+            {skillsAndInterests?.skills?.slice(0, 5).map((skill, index) => (
               <div key={index}>
                 <div className="flex justify-between text-sm mb-1">
                   <span className="flex items-center gap-1">
@@ -227,9 +227,9 @@ function StudentSidebarContent({ profile }: { profile: StudentProfile }) {
                 />
               </div>
             ))}
-            {skillsAndInterests.skills.length > 5 && (
+            {(skillsAndInterests?.skills?.length ?? 0) > 5 && (
               <Button variant="ghost" size="sm" className="w-full">
-                View all {skillsAndInterests.skills.length} skills
+                View all {skillsAndInterests?.skills?.length ?? 0} skills
                 <ChevronRight className="h-4 w-4 ml-1" />
               </Button>
             )}
@@ -238,7 +238,7 @@ function StudentSidebarContent({ profile }: { profile: StudentProfile }) {
       )}
 
       {/* Languages */}
-      {skillsAndInterests.languages.length > 0 && (
+      {skillsAndInterests?.languages?.length > 0 && (
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
@@ -260,7 +260,7 @@ function StudentSidebarContent({ profile }: { profile: StudentProfile }) {
       )}
 
       {/* Interests & Hobbies */}
-      {(skillsAndInterests.interests.length > 0 || skillsAndInterests.hobbies.length > 0) && (
+      {((skillsAndInterests?.interests?.length ?? 0) > 0 || (skillsAndInterests?.hobbies?.length ?? 0) > 0) && (
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
@@ -269,7 +269,7 @@ function StudentSidebarContent({ profile }: { profile: StudentProfile }) {
             </CardTitle>
           </CardHeader>
           <CardContent className="flex flex-wrap gap-2">
-            {[...skillsAndInterests.interests, ...skillsAndInterests.hobbies].map((item, index) => (
+            {[...(skillsAndInterests?.interests ?? []), ...(skillsAndInterests?.hobbies ?? [])].map((item, index) => (
               <Badge key={index} variant="secondary" className="gap-1">
                 {getHobbyIcon(item)}
                 {item}
@@ -280,7 +280,7 @@ function StudentSidebarContent({ profile }: { profile: StudentProfile }) {
       )}
 
       {/* Certifications */}
-      {skillsAndInterests.certifications.length > 0 && (
+      {(skillsAndInterests?.certifications?.length ?? 0) > 0 && (
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
@@ -289,7 +289,7 @@ function StudentSidebarContent({ profile }: { profile: StudentProfile }) {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {skillsAndInterests.certifications.slice(0, 3).map((cert, index) => (
+            {skillsAndInterests?.certifications?.slice(0, 3).map((cert, index) => (
               <div key={index} className="space-y-1">
                 <p className="text-sm font-medium">{cert.name}</p>
                 <p className="text-xs text-muted-foreground">{cert.issuer}</p>
@@ -298,7 +298,7 @@ function StudentSidebarContent({ profile }: { profile: StudentProfile }) {
                 )}
               </div>
             ))}
-            {skillsAndInterests.certifications.length > 3 && (
+            {(skillsAndInterests?.certifications?.length ?? 0) > 3 && (
               <Button variant="ghost" size="sm" className="w-full">
                 View all certifications
                 <ChevronRight className="h-4 w-4 ml-1" />
@@ -389,7 +389,7 @@ function TeacherSidebarContent({ profile }: { profile: TeacherProfile }) {
       </Card>
 
       {/* Specializations */}
-      {professionalInfo.specializations.length > 0 && (
+      {(professionalInfo?.specializations?.length ?? 0) > 0 && (
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
@@ -398,7 +398,7 @@ function TeacherSidebarContent({ profile }: { profile: TeacherProfile }) {
             </CardTitle>
           </CardHeader>
           <CardContent className="flex flex-wrap gap-2">
-            {professionalInfo.specializations.map((spec, index) => (
+            {professionalInfo?.specializations?.map((spec, index) => (
               <Badge key={index} variant="secondary">
                 {spec}
               </Badge>
@@ -408,7 +408,7 @@ function TeacherSidebarContent({ profile }: { profile: TeacherProfile }) {
       )}
 
       {/* Research Interests */}
-      {professionalInfo.researchInterests && professionalInfo.researchInterests.length > 0 && (
+      {(professionalInfo?.researchInterests?.length ?? 0) > 0 && (
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
@@ -417,7 +417,7 @@ function TeacherSidebarContent({ profile }: { profile: TeacherProfile }) {
             </CardTitle>
           </CardHeader>
           <CardContent className="flex flex-wrap gap-2">
-            {professionalInfo.researchInterests.map((interest, index) => (
+            {professionalInfo?.researchInterests?.map((interest, index) => (
               <Badge key={index} variant="outline">
                 {interest}
               </Badge>
@@ -427,7 +427,7 @@ function TeacherSidebarContent({ profile }: { profile: TeacherProfile }) {
       )}
 
       {/* Office Hours */}
-      {schedule.officeHours && schedule.officeHours.length > 0 && (
+      {(schedule?.officeHours?.length ?? 0) > 0 && (
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
@@ -436,7 +436,7 @@ function TeacherSidebarContent({ profile }: { profile: TeacherProfile }) {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            {schedule.officeHours.map((hour, index) => {
+            {schedule?.officeHours?.map((hour, index) => {
               const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
               return (
                 <div key={index} className="text-sm">
@@ -505,11 +505,11 @@ function ParentSidebarContent({ profile }: { profile: ParentProfile }) {
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-medium flex items-center gap-2">
             <GraduationCap className="h-4 w-4" />
-            Children ({childrenOverview.length})
+            Children ({childrenOverview?.length ?? 0})
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          {childrenOverview.map((child, index) => (
+          {childrenOverview?.map((child, index) => (
             <div key={index} className="space-y-1 p-2 rounded-lg bg-muted/50">
               <p className="font-medium text-sm">{child.name}</p>
               <div className="flex justify-between text-xs text-muted-foreground">
@@ -628,7 +628,7 @@ function StaffSidebarContent({ profile }: { profile: StaffProfile }) {
       </Card>
 
       {/* Responsibilities */}
-      {staffInfo.responsibilities.length > 0 && (
+      {(staffInfo?.responsibilities?.length ?? 0) > 0 && (
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
@@ -638,14 +638,14 @@ function StaffSidebarContent({ profile }: { profile: StaffProfile }) {
           </CardHeader>
           <CardContent>
             <ul className="space-y-1 text-sm">
-              {staffInfo.responsibilities.slice(0, 5).map((resp, index) => (
+              {staffInfo?.responsibilities?.slice(0, 5).map((resp, index) => (
                 <li key={index} className="flex items-start gap-1">
                   <span className="text-muted-foreground">•</span>
                   <span>{resp}</span>
                 </li>
               ))}
             </ul>
-            {staffInfo.responsibilities.length > 5 && (
+            {(staffInfo?.responsibilities?.length ?? 0) > 5 && (
               <Button variant="ghost" size="sm" className="w-full mt-2">
                 View all responsibilities
                 <ChevronRight className="h-4 w-4 ml-1" />
