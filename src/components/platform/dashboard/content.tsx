@@ -8,6 +8,7 @@ import { PrincipalDashboard } from "./dashboards/principal-dashboard";
 import { AccountantDashboard } from "./dashboards/accountant-dashboard";
 import { TenantLoginRedirect } from "@/components/auth/tenant-login-redirect";
 import { CookieDebug } from "@/components/auth/cookie-debug";
+import { DashboardAtomShowcase } from "./atom-showcase";
 import type { School } from "@/components/site/types";
 import type { Dictionary } from "@/components/internationalization/dictionaries";
 
@@ -71,6 +72,11 @@ export default async function DashboardContent({ school, dictionary }: Props = {
   return (
     <div className="space-y-6">
       {renderDashboard()}
+
+      {/* Atom Components Showcase */}
+      <div className="mt-12">
+        <DashboardAtomShowcase />
+      </div>
     </div>
   );
 }
