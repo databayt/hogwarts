@@ -44,10 +44,10 @@ export function LanguageSwitcher({
       <Button
         variant="link"
         size="icon"
-        className={cn("h-8 w-8 px-0", className)}
+        className={cn("h-8 w-8 px-0 cursor-pointer hover:opacity-70 transition-opacity", className)}
         onClick={() => handleLocaleChange(nextLocale)}
       >
-        <Languages className="h-4 w-4 cursor-pointer" />
+        <Languages className="h-4 w-4" />
         <span className="sr-only">Switch language</span>
       </Button>
     );

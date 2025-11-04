@@ -38,9 +38,8 @@ export default function PlatformHeader({ school, lang }: PlatformHeaderProps = {
   const role = useCurrentRole() as Role | undefined;
   const pathname = usePathname();
 
-  // Extract subdomain from pathname
-  const pathSegments = pathname.split('/').filter(Boolean);
-  const subdomain = pathSegments[2] || '';
+  // Use school domain (subdomain) for navigation
+  const subdomain = school?.domain || '';
   const messagesUrl = `/${locale}/s/${subdomain}/messages`;
   const notificationsUrl = `/${locale}/s/${subdomain}/notifications`;
 
@@ -96,15 +95,15 @@ export default function PlatformHeader({ school, lang }: PlatformHeaderProps = {
           />
           <LanguageSwitcher variant="toggle" />
           <ModeSwitcher />
-          <Button variant="link" size="icon" className="size-7" asChild>
+          <Button variant="link" size="icon" className="size-7 cursor-pointer hover:opacity-70 transition-opacity" asChild>
             <Link href={notificationsUrl}>
-              <Bell className="h-4 w-4 cursor-pointer" />
+              <Bell className="h-4 w-4" />
               <span className="sr-only">Notifications</span>
             </Link>
           </Button>
-          <Button variant="link" size="icon" className="size-7" asChild>
+          <Button variant="link" size="icon" className="size-7 cursor-pointer hover:opacity-70 transition-opacity" asChild>
             <Link href={messagesUrl}>
-              <Mail className="h-4 w-4 cursor-pointer" />
+              <Mail className="h-4 w-4" />
               <span className="sr-only">Messages</span>
             </Link>
           </Button>

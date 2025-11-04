@@ -167,11 +167,11 @@ export function GenericCommandMenu({
         <Button
           variant="link"
           size="icon"
-          className="size-7"
+          className="size-7 cursor-pointer hover:opacity-70 transition-opacity"
           onClick={() => setOpen(true)}
           {...props}
         >
-          <Search className="h-4 w-4 cursor-pointer" />
+          <Search className="h-4 w-4" />
           <span className="sr-only">{commandMenuDict?.search || "Search"}</span>
         </Button>
       ) : (
