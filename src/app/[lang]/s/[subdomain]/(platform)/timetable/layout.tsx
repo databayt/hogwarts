@@ -15,7 +15,15 @@ export default async function TimetableLayout({ children, params }: Props) {
 
   // Define timetable page navigation
   const timetablePages: PageNavItem[] = [
-    { name: 'All', href: `/${lang}/timetable` },
+    { name: d?.navigation?.all || 'All', href: `/${lang}/timetable` },
+    { name: d?.navigation?.generate || 'Generate', href: `/${lang}/timetable/generate` },
+    { name: d?.navigation?.conflicts || 'Conflicts', href: `/${lang}/timetable/conflicts` },
+    { name: d?.navigation?.byClass || 'By Class', href: `/${lang}/timetable/by-class` },
+    { name: d?.navigation?.byTeacher || 'By Teacher', href: `/${lang}/timetable/by-teacher` },
+    { name: d?.navigation?.byRoom || 'By Room', href: `/${lang}/timetable/by-room` },
+    { name: d?.navigation?.templates || 'Templates', href: `/${lang}/timetable/templates` },
+    { name: d?.navigation?.analytics || 'Analytics', href: `/${lang}/timetable/analytics` },
+    { name: d?.navigation?.settings || 'Settings', href: `/${lang}/timetable/settings` },
   ]
 
   return (

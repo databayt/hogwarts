@@ -1,5 +1,41 @@
 import { z } from "zod";
+import { getValidationMessages } from "@/components/internationalization/helpers";
+import type { Dictionary } from "@/components/internationalization/dictionaries";
 import { STAND_OUT_CONSTANTS } from "./config";
+
+// ============================================================================
+// Schema Factory Functions (i18n-enabled)
+// ============================================================================
+
+export function createStandOutValidation(dictionary: Dictionary) {
+  const v = getValidationMessages(dictionary);
+
+  return z.object({
+    description: z
+      .string()
+      .max(500, { message: v.maxLength(500) })
+      .optional(),
+    features: z
+      .array(z.string())
+      .max(STAND_OUT_CONSTANTS.MAX_FEATURES, {
+        message: v.get('maxFeaturesLimit', { max: STAND_OUT_CONSTANTS.MAX_FEATURES })
+      })
+      .default([]),
+    uniqueSellingPoints: z
+      .array(z.string())
+      .optional(),
+    specialPrograms: z
+      .array(z.string())
+      .optional(),
+    achievements: z
+      .array(z.string())
+      .optional(),
+  });
+}
+
+// ============================================================================
+// Legacy Schemas (for backward compatibility - will be deprecated)
+// ============================================================================
 
 export const standOutValidation = z.object({
   description: z

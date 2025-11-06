@@ -1,4 +1,6 @@
 import { z } from "zod";
+import { getValidationMessages } from "@/components/internationalization/helpers";
+import type { Dictionary } from "@/components/internationalization/dictionaries";
 import type {
   OnboardingStep,
   SchoolType,
@@ -318,3 +320,266 @@ export type CapacityStepData = z.infer<typeof capacityStepValidation>;
 export type BrandingStepData = z.infer<typeof brandingStepValidation>;
 export type PriceStepData = z.infer<typeof priceStepValidation>;
 export type LegalStepData = z.infer<typeof legalStepValidation>;
+
+// ============================================================================
+// Schema Factory Functions (i18n-enabled)
+// ============================================================================
+
+export function createDomainSchema(dictionary: Dictionary) {
+  const v = getValidationMessages(dictionary);
+  return z
+    .string()
+    .min(3, { message: v.get('domainMinLength') })
+    .max(63, { message: v.maxLength(63) })
+    .regex(/^[a-z0-9-]+$/, { message: v.get('domainInvalidFormat') })
+    .regex(/^[a-z0-9]/, { message: v.get('domainMustStartWithLetterOrNumber') })
+    .regex(/[a-z0-9]$/, { message: v.get('domainMustEndWithLetterOrNumber') })
+    .refine(val => !val.includes('--'), { message: v.get('domainNoConsecutiveHyphens') });
+}
+
+export function createEmailSchema(dictionary: Dictionary) {
+  const v = getValidationMessages(dictionary);
+  return z.string().email({ message: v.email() });
+}
+
+export function createUrlSchema(dictionary: Dictionary) {
+  const v = getValidationMessages(dictionary);
+  return z
+    .string()
+    .url({ message: v.get('validUrlRequired') })
+    .optional()
+    .or(z.literal(""));
+}
+
+export function createPhoneSchema(dictionary: Dictionary) {
+  const v = getValidationMessages(dictionary);
+  return z
+    .string()
+    .regex(/^\+?[\d\s\-\(\)]+$/, { message: v.get('validPhoneRequired') })
+    .optional()
+    .or(z.literal(""));
+}
+
+export function createOnboardingValidation(dictionary: Dictionary) {
+  const v = getValidationMessages(dictionary);
+
+  return z.object({
+    // Basic information
+    name: z
+      .string()
+      .min(2, { message: v.minLength(2) })
+      .max(100, { message: v.maxLength(100) })
+      .trim()
+      .optional(),
+
+    description: z
+      .string()
+      .min(10, { message: v.minLength(10) })
+      .max(500, { message: v.maxLength(500) })
+      .trim()
+      .optional(),
+
+    address: z
+      .string()
+      .min(5, { message: v.get('addressRequired') })
+      .max(200, { message: v.maxLength(200) })
+      .trim()
+      .optional(),
+
+    city: z
+      .string()
+      .min(2, { message: v.get('cityRequired') })
+      .max(50, { message: v.maxLength(50) })
+      .trim()
+      .optional(),
+
+    state: z
+      .string()
+      .min(2, { message: v.get('stateRequired') })
+      .max(50, { message: v.maxLength(50) })
+      .trim()
+      .optional(),
+
+    country: z
+      .string()
+      .min(2, { message: v.get('countryRequired') })
+      .max(50, { message: v.maxLength(50) })
+      .trim()
+      .optional(),
+
+    domain: createDomainSchema(dictionary).optional(),
+    website: createUrlSchema(dictionary),
+
+    // Contact information
+    email: createEmailSchema(dictionary).optional(),
+    phone: createPhoneSchema(dictionary),
+
+    // Capacity
+    maxStudents: z
+      .number()
+      .int({ message: v.get('mustBeWholeNumber') })
+      .min(1, { message: v.get('atLeastOneStudent') })
+      .max(10000, { message: v.get('maxStudentsLimit') })
+      .optional(),
+
+    maxTeachers: z
+      .number()
+      .int({ message: v.get('mustBeWholeNumber') })
+      .min(1, { message: v.get('atLeastOneTeacher') })
+      .max(1000, { message: v.get('maxTeachersLimit') })
+      .optional(),
+
+    maxClasses: z
+      .number()
+      .int({ message: v.get('mustBeWholeNumber') })
+      .min(1, { message: v.get('atLeastOneClass') })
+      .max(500, { message: v.get('maxClassesLimit') })
+      .optional(),
+
+    maxFacilities: z
+      .number()
+      .int({ message: v.get('mustBeWholeNumber') })
+      .min(0, { message: v.get('nonNegative') })
+      .max(100, { message: v.get('maxFacilitiesLimit') })
+      .optional(),
+
+    // School details
+    schoolLevel: schoolTypeSchema.optional(),
+    schoolType: schoolCategorySchema.optional(),
+    planType: z.string().optional(),
+
+    // Pricing
+    tuitionFee: z
+      .number()
+      .min(0, { message: v.get('nonNegative') })
+      .max(100000, { message: v.get('tuitionFeeTooHigh') })
+      .optional(),
+
+    registrationFee: z
+      .number()
+      .min(0, { message: v.get('nonNegative') })
+      .max(10000, { message: v.get('registrationFeeTooHigh') })
+      .optional(),
+
+    applicationFee: z
+      .number()
+      .min(0, { message: v.get('nonNegative') })
+      .max(1000, { message: v.get('applicationFeeTooHigh') })
+      .optional(),
+
+    currency: currencySchema.optional(),
+    paymentSchedule: paymentScheduleSchema.optional(),
+
+    // Branding
+    logo: z
+      .string()
+      .url({ message: v.get('logoMustBeValidUrl') })
+      .optional()
+      .or(z.literal("")),
+
+    primaryColor: z
+      .string()
+      .regex(/^#[0-9A-F]{6}$/i, { message: v.get('validHexColorRequired') })
+      .optional(),
+
+    borderRadius: borderRadiusSchema.optional(),
+    shadow: shadowSizeSchema.optional(),
+
+    // Status fields
+    draft: z.boolean().optional(),
+    isPublished: z.boolean().optional(),
+    isComplete: z.boolean().optional(),
+
+    // Metadata
+    id: z.string().uuid().optional(),
+    createdAt: z.date().optional(),
+    updatedAt: z.date().optional(),
+  });
+}
+
+export function createTitleStepValidation(dictionary: Dictionary) {
+  const baseSchema = createOnboardingValidation(dictionary);
+  return baseSchema.pick({
+    name: true,
+  }).required({
+    name: true,
+  });
+}
+
+export function createDescriptionStepValidation(dictionary: Dictionary) {
+  const baseSchema = createOnboardingValidation(dictionary);
+  return baseSchema.pick({
+    description: true,
+    schoolLevel: true,
+    schoolType: true,
+  }).required({
+    description: true,
+  });
+}
+
+export function createLocationStepValidation(dictionary: Dictionary) {
+  const baseSchema = createOnboardingValidation(dictionary);
+  return baseSchema.pick({
+    address: true,
+    city: true,
+    state: true,
+    country: true,
+  }).required({
+    address: true,
+    city: true,
+    state: true,
+  });
+}
+
+export function createCapacityStepValidation(dictionary: Dictionary) {
+  const baseSchema = createOnboardingValidation(dictionary);
+  return baseSchema.pick({
+    maxStudents: true,
+    maxTeachers: true,
+    maxClasses: true,
+  }).required({
+    maxStudents: true,
+    maxTeachers: true,
+  });
+}
+
+export function createBrandingStepValidation(dictionary: Dictionary) {
+  const baseSchema = createOnboardingValidation(dictionary);
+  return baseSchema.pick({
+    logo: true,
+    primaryColor: true,
+    borderRadius: true,
+    shadow: true,
+  });
+}
+
+export function createPriceStepValidation(dictionary: Dictionary) {
+  const baseSchema = createOnboardingValidation(dictionary);
+  return baseSchema.pick({
+    tuitionFee: true,
+    registrationFee: true,
+    applicationFee: true,
+    currency: true,
+    paymentSchedule: true,
+  }).required({
+    tuitionFee: true,
+    currency: true,
+    paymentSchedule: true,
+  });
+}
+
+export function createLegalStepValidation(dictionary: Dictionary) {
+  const v = getValidationMessages(dictionary);
+
+  return z.object({
+    termsAccepted: z.boolean().refine(val => val === true, {
+      message: v.get('termsAcceptanceRequired'),
+    }),
+    privacyAccepted: z.boolean().refine(val => val === true, {
+      message: v.get('privacyAcceptanceRequired'),
+    }),
+    dataProcessingAccepted: z.boolean().refine(val => val === true, {
+      message: v.get('dataProcessingConsentRequired'),
+    }),
+  });
+}

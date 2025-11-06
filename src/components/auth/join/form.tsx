@@ -1,7 +1,7 @@
 "use client";
 
 import * as z from "zod";
-import { useState, useTransition } from "react";
+import { useState, useTransition, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
@@ -22,7 +22,7 @@ import {
   CardContent,
   CardHeader,
 } from "@/components/ui/card";
-import { RegisterSchema } from "../validation";
+import { createRegisterSchema } from "../validation";
 import { register } from "./action";
 import { FormError } from "../error/form-error";
 import { FormSuccess } from "../form-success";
@@ -40,6 +40,9 @@ export const RegisterForm = (props: Props) => {
   const [error, setError] = useState<string | undefined>("");
   const [success, setSuccess] = useState<string | undefined>("");
   const [isPending, startTransition] = useTransition();
+
+  // Create localized schema (memoized)
+  const RegisterSchema = useMemo(() => createRegisterSchema(dictionary), [dictionary]);
 
   const form = useForm<z.infer<typeof RegisterSchema>>({
     resolver: zodResolver(RegisterSchema),
@@ -77,7 +80,7 @@ export const RegisterForm = (props: Props) => {
             <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-6">
               <div className="relative text-center muted after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-border">
                 <span className="relative z-10 bg-background px-2 text-muted-foreground">
-                  Or continue with
+                  {dictionary?.auth?.orContinueWith || "Or continue with"}
                 </span>
               </div>
 
@@ -91,7 +94,7 @@ export const RegisterForm = (props: Props) => {
                         <Input
                           {...field}
                           disabled={isPending}
-                          placeholder="Name"
+                          placeholder={dictionary?.common?.search || "Name"}
                         />
                       </FormControl>
                       <FormMessage />
@@ -107,7 +110,7 @@ export const RegisterForm = (props: Props) => {
                         <Input
                           {...field}
                           disabled={isPending}
-                          placeholder="Email"
+                          placeholder={dictionary?.auth?.email || "Email"}
                           type="email"
                         />
                       </FormControl>
@@ -124,7 +127,7 @@ export const RegisterForm = (props: Props) => {
                         <Input
                           {...field}
                           disabled={isPending}
-                          placeholder="Password"
+                          placeholder={dictionary?.auth?.password || "Password"}
                           type="password"
                         />
                       </FormControl>
@@ -136,18 +139,18 @@ export const RegisterForm = (props: Props) => {
                 <FormError message={error} />
                 <FormSuccess message={success} />
 
-                <Button 
-                  disabled={isPending} 
-                  type="submit" 
+                <Button
+                  disabled={isPending}
+                  type="submit"
                   className="w-full h-11"
                 >
-                  Join
+                  {dictionary?.auth?.signUp || "Join"}
                 </Button>
               </div>
 
               <div className="text-center muted">
                 <Link href="/login" className="hover:underline underline-offset-4">
-                  Already have an account?
+                  {dictionary?.auth?.alreadyHaveAccount || "Already have an account?"}
                 </Link>
               </div>
             </form>

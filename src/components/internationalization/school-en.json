@@ -15,7 +15,39 @@
       "yourSchool": "Your School",
       "dashboardComingSoon": "Dashboard Coming Soon",
       "workingOnDashboard": "We're working on a personalized dashboard for your role. Check back soon for updates!",
-      "unknown": "Unknown"
+      "unknown": "Unknown",
+      "quickActions": {
+        "generateReports": "Generate Reports",
+        "approveRequests": "Approve Requests",
+        "sendAnnouncements": "Send Announcements",
+        "userManagement": "User Management",
+        "settings": "Settings",
+        "analytics": "Analytics",
+        "viewReports": "View Reports",
+        "staffManagement": "Staff Management",
+        "announcements": "Announcements",
+        "performance": "Performance",
+        "events": "Events",
+        "viewTimetable": "View Timetable",
+        "lessonPlans": "Lesson Plans",
+        "library": "Library",
+        "attendance": "Attendance",
+        "viewChildren": "View Children",
+        "checkGrades": "Check Grades",
+        "messageTeachers": "Message Teachers",
+        "fees": "Fees",
+        "manageInvoices": "Manage Invoices",
+        "generateReceipts": "Generate Receipts",
+        "financialReports": "Financial Reports",
+        "feeManagement": "Fee Management",
+        "approvePayments": "Approve Payments",
+        "budgetTracking": "Budget Tracking",
+        "myTasks": "My Tasks",
+        "mySchedule": "My Schedule",
+        "messages": "Messages",
+        "reports": "Reports",
+        "directory": "Directory"
+      }
     },
     "attendance": {
       "title": "Attendance",
@@ -167,6 +199,15 @@
     },
     "students": {
       "title": "Students",
+      "navigation": {
+        "all": "All",
+        "enroll": "Enroll",
+        "yearLevels": "Year Levels",
+        "guardians": "Guardians",
+        "performance": "Performance",
+        "reports": "Reports",
+        "settings": "Settings"
+      },
       "overview": "Overview",
       "manage": "Manage",
       "analysis": "Analysis",
@@ -197,10 +238,42 @@
       "suspended": "Suspended",
       "importStudents": "Import Students",
       "exportStudents": "Export Students",
-      "bulkActions": "Bulk Actions"
+      "bulkActions": "Bulk Actions",
+      "enroll": {
+        "title": "Enroll New Student",
+        "description": "Student enrollment form will be implemented here."
+      },
+      "yearLevels": {
+        "title": "Year Levels",
+        "description": "Students organized by year level will be displayed here."
+      },
+      "guardians": {
+        "title": "Guardians",
+        "description": "Guardian management and relationships will be managed here."
+      },
+      "performance": {
+        "title": "Student Performance",
+        "description": "Performance analytics, grade trends, and academic metrics will be displayed here."
+      },
+      "reports": {
+        "title": "Student Reports",
+        "description": "Report cards, transcripts, and progress reports will be generated here."
+      },
+      "settings": {
+        "title": "Student Settings",
+        "description": "Grading scales, promotion rules, and module configurations will be available here."
+      }
     },
     "teachers": {
       "title": "Teachers",
+      "navigation": {
+        "all": "All",
+        "add": "Add",
+        "departments": "Departments",
+        "performance": "Performance",
+        "schedule": "Schedule",
+        "settings": "Settings"
+      },
       "allTeachers": "All Teachers",
       "addTeacher": "Add Teacher",
       "editTeacher": "Edit Teacher",
@@ -224,11 +297,31 @@
       "inactive": "Inactive",
       "assignClasses": "Assign Classes",
       "schedule": "Schedule",
-      "performance": "Performance"
+      "performance": "Performance",
+      "add": {
+        "title": "Add New Teacher",
+        "description": "Teacher creation form will be implemented here."
+      },
+      "departments": {
+        "title": "Departments",
+        "description": "Department management will be implemented here."
+      },
+      "settings": {
+        "title": "Teacher Settings",
+        "description": "Module settings and configurations will be available here."
+      }
     },
     "classes": {
       "title": "Classes",
       "description": "Manage academic classes and schedules",
+      "navigation": {
+        "all": "All",
+        "create": "Create",
+        "subjects": "Subjects",
+        "schedule": "Schedule",
+        "capacity": "Capacity",
+        "settings": "Settings"
+      },
       "allClasses": "All Classes",
       "addClass": "Add Class",
       "editClass": "Edit Class",
@@ -243,7 +336,15 @@
       "schedule": "Schedule",
       "assignTeacher": "Assign Teacher",
       "assignStudents": "Assign Students",
-      "viewTimetable": "View Timetable"
+      "viewTimetable": "View Timetable",
+      "create": {
+        "title": "Create New Class",
+        "description": "Class creation form will be implemented here."
+      },
+      "settings": {
+        "title": "Class Settings",
+        "description": "Class size limits, assignment rules, and module configurations will be available here."
+      }
     },
     "subjects": {
       "title": "Subjects",
@@ -264,6 +365,17 @@
     },
     "timetable": {
       "title": "Timetable",
+      "navigation": {
+        "all": "All",
+        "generate": "Generate",
+        "conflicts": "Conflicts",
+        "byClass": "By Class",
+        "byTeacher": "By Teacher",
+        "byRoom": "By Room",
+        "templates": "Templates",
+        "analytics": "Analytics",
+        "settings": "Settings"
+      },
       "viewTimetable": "View Timetable",
       "createTimetable": "Create Timetable",
       "editTimetable": "Edit Timetable",
@@ -289,7 +401,39 @@
       "conflictDetected": "Conflict Detected",
       "noConflicts": "No Conflicts",
       "printTimetable": "Print Timetable",
-      "exportTimetable": "Export Timetable"
+      "exportTimetable": "Export Timetable",
+      "generate": {
+        "title": "Generate Timetable",
+        "description": "Automated timetable generation with conflict detection."
+      },
+      "conflicts": {
+        "title": "Timetable Conflicts",
+        "description": "Detect and resolve scheduling conflicts."
+      },
+      "byClass": {
+        "title": "Timetable by Class",
+        "description": "View timetables filtered by class."
+      },
+      "byTeacher": {
+        "title": "Timetable by Teacher",
+        "description": "View timetables filtered by teacher."
+      },
+      "byRoom": {
+        "title": "Timetable by Room",
+        "description": "View room allocation and timetables filtered by room."
+      },
+      "templates": {
+        "title": "Timetable Templates",
+        "description": "Save and reuse timetable patterns."
+      },
+      "analytics": {
+        "title": "Timetable Analytics",
+        "description": "Teacher workload and room utilization analytics."
+      },
+      "settings": {
+        "title": "Timetable Settings",
+        "description": "Configure periods, bells, scheduling constraints, and module settings."
+      }
     },
     "announcements": {
       "title": "Announcements",
@@ -547,14 +691,80 @@
     },
     "lessons": {
       "title": "Lessons",
-      "description": "Plan and manage your lessons"
+      "description": "Plan and manage your lessons",
+      "navigation": {
+        "all": "All",
+        "create": "Create",
+        "curriculum": "Curriculum",
+        "resources": "Resources",
+        "templates": "Templates",
+        "analytics": "Analytics",
+        "settings": "Settings"
+      },
+      "create": {
+        "title": "Create Lesson Plan",
+        "description": "Lesson plan creation form will be implemented here."
+      },
+      "curriculum": {
+        "title": "Curriculum Mapping",
+        "description": "Curriculum standards alignment and mapping will be managed here."
+      },
+      "resources": {
+        "title": "Lesson Resources",
+        "description": "Resource library with materials and attachments will be managed here."
+      },
+      "templates": {
+        "title": "Lesson Templates",
+        "description": "Reusable lesson plan templates will be managed here."
+      },
+      "analytics": {
+        "title": "Lesson Analytics",
+        "description": "Usage analytics and lesson effectiveness metrics will be displayed here."
+      },
+      "settings": {
+        "title": "Lesson Settings",
+        "description": "Template defaults, sharing permissions, and module configurations will be available here."
+      }
     },
     "events": {
       "title": "Events",
       "description": "Schedule and manage your school events",
+      "navigation": {
+        "all": "All",
+        "create": "Create",
+        "calendar": "Calendar",
+        "categories": "Categories",
+        "attendance": "Attendance",
+        "recurring": "Recurring",
+        "settings": "Settings"
+      },
       "locationTBD": "TBD",
       "organizerTBD": "TBD",
-      "audienceTBD": "All"
+      "audienceTBD": "All",
+      "create": {
+        "title": "Create New Event",
+        "description": "Event creation form will be implemented here."
+      },
+      "calendar": {
+        "title": "Event Calendar",
+        "description": "Monthly and weekly calendar view of all events will be displayed here."
+      },
+      "categories": {
+        "title": "Event Categories",
+        "description": "Manage event categories like academic, sports, cultural events."
+      },
+      "attendance": {
+        "title": "Event Attendance",
+        "description": "Track event attendance and RSVP status."
+      },
+      "recurring": {
+        "title": "Recurring Events",
+        "description": "Manage recurring event patterns and schedules."
+      },
+      "settings": {
+        "title": "Event Settings",
+        "description": "Event types, notification rules, and module configurations will be available here."
+      }
     },
     "assignments": {
       "title": "Assignments",

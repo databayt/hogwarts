@@ -15,7 +15,12 @@ export default async function TeachersLayout({ children, params }: Props) {
 
   // Define teachers page navigation
   const teachersPages: PageNavItem[] = [
-    { name: 'All', href: `/${lang}/teachers` },
+    { name: d?.navigation?.all || 'All', href: `/${lang}/teachers` },
+    { name: d?.navigation?.add || 'Add', href: `/${lang}/teachers/add` },
+    { name: d?.navigation?.departments || 'Departments', href: `/${lang}/teachers/departments` },
+    { name: d?.navigation?.performance || 'Performance', href: `/${lang}/teachers/performance` },
+    { name: d?.navigation?.schedule || 'Schedule', href: `/${lang}/teachers/schedule` },
+    { name: d?.navigation?.settings || 'Settings', href: `/${lang}/teachers/settings` },
   ]
 
   return (

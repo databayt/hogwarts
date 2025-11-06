@@ -3,21 +3,47 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { toast } from "sonner";
 import { createStudent, getStudent, updateStudent } from "@/components/platform/students/actions";
-import { studentCreateSchema } from "@/components/platform/students/validation";
+import { createStudentCreateSchema } from "@/components/platform/students/validation";
 import { Form } from "@/components/ui/form";
 import { useModal } from "@/components/atom/modal/context";
 import { useRouter } from "next/navigation";
 import { InformationStep } from "./information";
 import { EnrollmentStep } from "./enrollment";
 import { StudentFormFooter } from "./footer";
+import { getToastMessages } from "@/components/internationalization/helpers";
+import type { Dictionary } from "@/components/internationalization/dictionaries";
 
-export function StudentCreateForm() {
+interface StudentCreateFormProps {
+  dictionary?: Dictionary['school']['students'];
+}
+
+export function StudentCreateForm({ dictionary }: StudentCreateFormProps) {
   const { modal, closeModal } = useModal();
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
+
+  // Create localized schema (memoized)
+  const studentCreateSchema = useMemo(() => {
+    if (!dictionary) {
+      // Fallback to legacy schema if dictionary not available
+      const { studentCreateSchema: legacySchema } = require("./validation");
+      return legacySchema;
+    }
+    // Create full dictionary object for schema factory
+    const fullDict = { messages: dictionary as any } as Dictionary;
+    return createStudentCreateSchema(fullDict);
+  }, [dictionary]);
+
+  // Get toast messages
+  const t = useMemo(() => {
+    if (!dictionary) return null;
+    const fullDict = { messages: dictionary as any } as Dictionary;
+    return getToastMessages(fullDict);
+  }, [dictionary]);
+
   const form = useForm<z.infer<typeof studentCreateSchema>>({
     resolver: zodResolver(studentCreateSchema),
     defaultValues: {
@@ -59,11 +85,17 @@ export function StudentCreateForm() {
       ? await updateStudent({ id: currentId, ...values })
       : await createStudent(values);
     if (res?.success) {
-      toast.success("Student created");
+      const successMsg = currentId
+        ? (t?.success?.student?.updated() || "Student updated successfully")
+        : (t?.success?.student?.created() || "Student created successfully");
+      toast.success(successMsg);
       closeModal();
       router.refresh();
     } else {
-      toast.error("Failed to create student");
+      const errorMsg = currentId
+        ? (t?.error?.student?.updateFailed() || "Failed to update student")
+        : (t?.error?.student?.createFailed() || "Failed to create student");
+      toast.error(errorMsg);
     }
   }
 

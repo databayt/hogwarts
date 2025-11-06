@@ -1,4 +1,69 @@
 import z from "zod"
+import { getValidationMessages } from "@/components/internationalization/helpers"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+
+// ============================================================================
+// Schema Factory Functions (i18n-enabled)
+// ============================================================================
+
+export function createOnboardingSchema(dictionary: Dictionary) {
+  const v = getValidationMessages(dictionary);
+
+  return z.object({
+    firstName: z
+      .string()
+      .min(3, { message: v.get('firstNameRequired') })
+      .max(50, { message: v.maxLength(50) }),
+    lastName: z
+      .string()
+      .min(3, { message: v.get('lastNameRequired') })
+      .max(50, { message: v.maxLength(50) }),
+    currency: z.string({ message: v.get('currencyRequired') }).optional(),
+  });
+}
+
+export function createInvoiceSchema(dictionary: Dictionary) {
+  const v = getValidationMessages(dictionary);
+
+  return z.object({
+    invoice_no: z.string().min(1, { message: v.get('invoiceNumberRequired') }),
+    invoice_date: z.date({ message: v.get('dateRequired') }),
+    due_date: z.date({ message: v.get('dueDateRequired') }),
+    currency: z.string().min(1, { message: v.get('currencyRequired') }),
+    from: z.object({
+      name: z.string().min(3, { message: v.get('nameRequired') }).max(100, { message: v.maxLength(100) }),
+      email: z.string().email({ message: v.email() }),
+      address1: z.string().min(5, { message: v.get('addressRequired') }),
+      address2: z.string().optional(),
+      address3: z.string().optional(),
+    }),
+    to: z.object({
+      name: z.string().min(3, { message: v.get('nameRequired') }).max(100, { message: v.maxLength(100) }),
+      email: z.string().email({ message: v.email() }),
+      address1: z.string().min(5, { message: v.get('addressRequired') }),
+      address2: z.string().optional(),
+      address3: z.string().optional(),
+    }),
+    items: z.array(
+      z.object({
+        item_name: z.string().min(3, { message: v.get('nameRequired') }).max(100, { message: v.maxLength(100) }),
+        quantity: z.number().min(0, { message: v.get('quantityCantBeNegative') }),
+        price: z.number().min(0, { message: v.get('pricePositive') }),
+        total: z.number().min(0, { message: v.get('totalRequired') }),
+      })
+    ).min(1, { message: v.get('atLeastOne') }),
+    sub_total: z.number().min(0, { message: v.get('nonNegative') }),
+    discount: z.number().min(0, { message: v.get('nonNegative') }).optional(),
+    tax_percentage: z.number().min(0, { message: v.get('nonNegative') }).optional(),
+    total: z.number().min(0, { message: v.get('totalRequired') }),
+    notes: z.string().optional(),
+    status: z.enum(["UNPAID", "PAID", "OVERDUE", "CANCELLED"]).optional(),
+  });
+}
+
+// ============================================================================
+// Legacy Schemas (for backward compatibility - will be deprecated)
+// ============================================================================
 
 export const onboardingSchema = z.object({
   firstName: z

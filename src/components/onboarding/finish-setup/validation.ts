@@ -1,4 +1,6 @@
 import { z } from "zod";
+import { getValidationMessages } from "@/components/internationalization/helpers";
+import type { Dictionary } from "@/components/internationalization/dictionaries";
 import { FINISH_SETUP_CONSTANTS } from "./config";
 
 export const finishSetupValidation = z.object({
@@ -31,17 +33,22 @@ export const setupSummaryValidation = z.object({
 });
 
 export function validateSetupCompletion(
-  completionPercentage: number
+  completionPercentage: number,
+  dictionary?: Dictionary
 ): { isValid: boolean; errors: Record<string, string> } {
+  const v = dictionary ? getValidationMessages(dictionary) : null;
+
   if (completionPercentage < FINISH_SETUP_CONSTANTS.MIN_COMPLETION_PERCENTAGE) {
     return {
       isValid: false,
       errors: {
-        completion: `Setup must be at least ${FINISH_SETUP_CONSTANTS.MIN_COMPLETION_PERCENTAGE}% complete`
+        completion: v?.get('setupMinCompletionPercentage', {
+          min: FINISH_SETUP_CONSTANTS.MIN_COMPLETION_PERCENTAGE
+        }) || `Setup must be at least ${FINISH_SETUP_CONSTANTS.MIN_COMPLETION_PERCENTAGE}% complete`
       }
     };
   }
-  
+
   return { isValid: true, errors: {} };
 }
 

@@ -1,18 +1,18 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import {
   Calendar,
   Clock,
-  BookOpen,
   Award,
   FileText,
-  CalendarDays,
   MessageSquare,
 } from "lucide-react";
 import type { Dictionary } from "@/components/internationalization/dictionaries";
 import { getStudentDashboardData } from "../actions";
+import { QuickActions } from "../quick-actions";
+import { getQuickActionsByRole } from "../quick-actions-config";
+import { getTenantContext } from "@/lib/tenant-context";
 
 interface StudentDashboardProps {
   user: {
@@ -22,14 +22,25 @@ interface StudentDashboardProps {
     schoolId?: string | null;
   };
   dictionary?: Dictionary["school"];
+  locale?: string;
 }
 
 export async function StudentDashboard({
   user,
   dictionary,
+  locale = "en",
 }: StudentDashboardProps) {
   // Fetch real data from server action
   const data = await getStudentDashboardData();
+
+  // Get tenant context for subdomain
+  const { schoolId } = await getTenantContext();
+
+  // Get school subdomain for URL construction
+  const school = schoolId ? await (async () => {
+    const { db } = await import("@/lib/db");
+    return db.school.findUnique({ where: { id: schoolId }, select: { domain: true } });
+  })() : null;
 
   // Get dashboard dictionary
   const dashDict = dictionary?.studentDashboard || {
@@ -144,31 +155,10 @@ export async function StudentDashboard({
       </div>
 
       {/* Quick Actions */}
-      <Card>
-        <CardHeader>
-          <CardTitle>{dashDict.quickActions.title}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-2">
-            <Button variant="outline" size="sm">
-              <FileText className="mr-2 h-4 w-4" />
-              {dashDict.quickActions.submitAssignment}
-            </Button>
-            <Button variant="outline" size="sm">
-              <Award className="mr-2 h-4 w-4" />
-              {dashDict.quickActions.checkGrades}
-            </Button>
-            <Button variant="outline" size="sm">
-              <CalendarDays className="mr-2 h-4 w-4" />
-              {dashDict.quickActions.viewTimetable}
-            </Button>
-            <Button variant="outline" size="sm">
-              <MessageSquare className="mr-2 h-4 w-4" />
-              {dashDict.quickActions.messages}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      <QuickActions
+        actions={getQuickActionsByRole("STUDENT", dictionary, school?.domain)}
+        locale={locale}
+      />
 
       {/* Main Content Grid */}
       <div className="grid gap-6 md:grid-cols-2">

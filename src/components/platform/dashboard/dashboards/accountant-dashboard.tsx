@@ -2,16 +2,24 @@ import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { db } from "@/lib/db";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { QuickActions, type QuickAction } from "@/components/platform/dashboard/quick-actions";
+import { QuickActions } from "@/components/platform/dashboard/quick-actions";
+import { getQuickActionsByRole } from "@/components/platform/dashboard/quick-actions-config";
 import { Progress } from "@/components/ui/progress";
-import { DollarSign, CreditCard, FileText, TrendingUp, AlertTriangle, Calendar, Calculator, Receipt } from "lucide-react";
+import { DollarSign, CreditCard, FileText, TrendingUp, AlertTriangle, Calendar } from "lucide-react";
+import { getTenantContext } from "@/lib/tenant-context";
 
 interface Props {
   user: any;
   dictionary?: Dictionary["school"];
+  locale?: string;
 }
 
-export async function AccountantDashboard({ user, dictionary }: Props) {
+export async function AccountantDashboard({ user, dictionary, locale = "en" }: Props) {
+  // Get tenant context for subdomain
+  const { schoolId } = await getTenantContext();
+
+  // Get school subdomain for URL construction
+  const school = schoolId ? await db.school.findUnique({ where: { id: schoolId }, select: { domain: true } }) : null;
   // Fetch real data from database
   const [totalInvoices, paidInvoices, unpaidInvoices] = user.schoolId
     ? await Promise.all([
@@ -140,33 +148,10 @@ export async function AccountantDashboard({ user, dictionary }: Props) {
       </div>
 
       {/* Quick Actions */}
-      <div className="space-y-3">
-        <h2>Quick Actions</h2>
-        <QuickActions
-          actions={[
-            {
-              icon: CreditCard,
-              label: "Process Payments",
-              href: "/payments/process",
-            },
-            {
-              icon: Receipt,
-              label: "Generate Invoices",
-              href: "/invoices/new",
-            },
-            {
-              icon: FileText,
-              label: "Run Reports",
-              href: "/reports/financial",
-            },
-            {
-              icon: Calculator,
-              label: "Reconcile Accounts",
-              href: "/accounting/reconcile",
-            },
-          ] as QuickAction[]}
-        />
-      </div>
+      <QuickActions
+        actions={getQuickActionsByRole("ACCOUNTANT", dictionary, school?.domain)}
+        locale={locale}
+      />
 
       {/* Main Content Grid */}
       <div className="grid gap-6 md:grid-cols-2">

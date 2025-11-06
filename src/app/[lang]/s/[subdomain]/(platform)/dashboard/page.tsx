@@ -23,6 +23,6 @@ export default async function DashboardPage({ params }: Props) {
   const dictionary = await getDictionary(lang);
 
   // Note: School data is already provided by the layout via SchoolProvider
-  // We don't need to fetch it again here - just pass the dictionary
-  return <DashboardContent dictionary={dictionary.school} />;
+  // We don't need to fetch it again here - just pass the dictionary and locale
+  return <DashboardContent dictionary={dictionary.school} locale={lang} />;
 }

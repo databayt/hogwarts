@@ -15,7 +15,12 @@ export default async function ClassesLayout({ children, params }: Props) {
 
   // Define classes page navigation
   const classesPages: PageNavItem[] = [
-    { name: 'All', href: `/${lang}/classes` },
+    { name: d?.navigation?.all || 'All', href: `/${lang}/classes` },
+    { name: d?.navigation?.create || 'Create', href: `/${lang}/classes/create` },
+    { name: d?.navigation?.subjects || 'Subjects', href: `/${lang}/classes/subjects` },
+    { name: d?.navigation?.schedule || 'Schedule', href: `/${lang}/classes/schedule` },
+    { name: d?.navigation?.capacity || 'Capacity', href: `/${lang}/classes/capacity` },
+    { name: d?.navigation?.settings || 'Settings', href: `/${lang}/classes/settings` },
   ]
 
   return (

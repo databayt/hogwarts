@@ -2,7 +2,7 @@
 
 import * as z from "zod";
 import { useForm } from "react-hook-form";
-import { useState, useTransition } from "react";
+import { useState, useTransition, useMemo } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 
@@ -21,7 +21,7 @@ import {
   CardContent,
   CardHeader,
 } from "@/components/ui/card";
-import { ResetSchema } from "../validation";
+import { createResetSchema } from "../validation";
 import { reset } from "./action";
 import { FormError } from "../error/form-error";
 import { FormSuccess } from "../form-success";
@@ -38,6 +38,9 @@ export const ResetForm = (props: Props) => {
   const [error, setError] = useState<string | undefined>("");
   const [success, setSuccess] = useState<string | undefined>("");
   const [isPending, startTransition] = useTransition();
+
+  // Create localized schema (memoized)
+  const ResetSchema = useMemo(() => createResetSchema(dictionary), [dictionary]);
 
   const form = useForm<z.infer<typeof ResetSchema>>({
     resolver: zodResolver(ResetSchema),
@@ -76,7 +79,7 @@ export const ResetForm = (props: Props) => {
                         <Input
                           {...field}
                           disabled={isPending}
-                          placeholder="Email"
+                          placeholder={dictionary?.auth?.email || "Email"}
                           type="email"
                         />
                       </FormControl>
@@ -88,18 +91,18 @@ export const ResetForm = (props: Props) => {
                 <FormError message={error} />
                 <FormSuccess message={success} />
 
-                <Button 
-                  disabled={isPending} 
-                  type="submit" 
+                <Button
+                  disabled={isPending}
+                  type="submit"
                   className="w-full h-11"
                 >
-                  Reset password
+                  {dictionary?.auth?.resetPassword || "Reset password"}
                 </Button>
               </div>
 
               <div className="text-center muted">
                 <Link href="/login" className="hover:underline underline-offset-4">
-                  Back to login
+                  {dictionary?.common?.back || "Back to login"}
                 </Link>
               </div>
             </form>

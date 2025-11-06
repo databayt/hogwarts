@@ -1,7 +1,6 @@
 import type { Dictionary } from "@/components/internationalization/dictionaries";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import {
   TrendingUp,
@@ -9,7 +8,6 @@ import {
   Users,
   FileText,
   Calendar,
-  CheckCircle,
   Award,
   BarChart3,
   DollarSign,
@@ -17,13 +15,25 @@ import {
 } from "lucide-react";
 import { getPrincipalDashboardData } from "../actions/principal";
 import { DashboardSectionError } from "../error-boundary";
+import { QuickActions } from "../quick-actions";
+import { getQuickActionsByRole } from "../quick-actions-config";
+import { getTenantContext } from "@/lib/tenant-context";
 
 interface PrincipalDashboardProps {
   user: any;
   dictionary: Dictionary["school"];
+  locale?: string;
 }
 
-export async function PrincipalDashboard({ user, dictionary }: PrincipalDashboardProps) {
+export async function PrincipalDashboard({ user, dictionary, locale = "en" }: PrincipalDashboardProps) {
+  // Get tenant context for subdomain
+  const { schoolId } = await getTenantContext();
+
+  // Get school subdomain for URL construction
+  const school = schoolId ? await (async () => {
+    const { db } = await import("@/lib/db");
+    return db.school.findUnique({ where: { id: schoolId }, select: { domain: true } });
+  })() : null;
   // Helper variable for dictionary access
   const t = dictionary.principalDashboard;
 
@@ -158,31 +168,10 @@ export async function PrincipalDashboard({ user, dictionary }: PrincipalDashboar
       )}
 
       {/* Quick Actions */}
-      <Card>
-        <CardHeader>
-          <CardTitle>{t.quickActions.title}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-2">
-            <Button variant="outline" size="sm">
-              <FileText className="mr-2 h-4 w-4" />
-              {t.quickActions.reviewReports}
-            </Button>
-            <Button variant="outline" size="sm">
-              <CheckCircle className="mr-2 h-4 w-4" />
-              {t.quickActions.approveBudgets}
-            </Button>
-            <Button variant="outline" size="sm">
-              <Calendar className="mr-2 h-4 w-4" />
-              {t.quickActions.viewCalendars}
-            </Button>
-            <Button variant="outline" size="sm">
-              <Users className="mr-2 h-4 w-4" />
-              {t.quickActions.sendCommunications}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      <QuickActions
+        actions={getQuickActionsByRole("PRINCIPAL", dictionary, school?.domain)}
+        locale={locale}
+      />
 
       {/* Main Content Grid */}
       <div className="grid gap-6 md:grid-cols-2">

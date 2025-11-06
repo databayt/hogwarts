@@ -24,13 +24,14 @@ import {
   FormItem,
   FormMessage,
 } from "@/components/ui/form";
-import { LoginSchema } from "../validation";
+import { createLoginSchema } from "../validation";
 import { login } from "./action";
 import { FormError } from "../error/form-error";
 import { FormSuccess } from "../form-success";
 import { Social } from "../social";
 import { Suspense } from "react";
 import type { Dictionary } from "@/components/internationalization/dictionaries";
+import { useMemo } from "react";
 
 interface LoginFormProps extends React.ComponentPropsWithoutRef<"div"> {
   dictionary?: Dictionary;
@@ -44,8 +45,12 @@ export const LoginForm = ({
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl");
   const tenant = searchParams.get("tenant");
+
+  // Get localized error messages
+  const oauthError = dictionary?.messages?.errors?.auth?.emailAlreadyExists
+    || "Email already in use with different provider!";
   const urlError = searchParams.get("error") === "OAuthAccountNotLinked"
-    ? "Email already in use with different provider!"
+    ? oauthError
     : "";
 
   const [showTwoFactor, setShowTwoFactor] = useState(false);
@@ -56,17 +61,32 @@ export const LoginForm = ({
   // Handle tenant redirect after successful login
   useEffect(() => {
     const tenant = searchParams.get('tenant');
-    
+
     if (tenant && success) {
       // Redirect back to tenant subdomain after successful login
       const tenantUrl = process.env.NODE_ENV === 'production'
         ? `https://${tenant}.databayt.org/dashboard`
         : `http://${tenant}.localhost:3000/dashboard`;
-      
+
       console.log('🔄 Redirecting to tenant after login:', tenantUrl);
       window.location.href = tenantUrl;
     }
   }, [success, searchParams]);
+
+  // Create localized schema (memoized to prevent recreation on every render)
+  const LoginSchema = useMemo(() => {
+    if (!dictionary) {
+      // Fallback to legacy schema if dictionary not available
+      return createLoginSchema({
+        messages: {
+          validation: { email: "Email is required", passwordRequired: "Password is required" },
+          toast: { success: {}, error: {}, warning: {}, info: {} },
+          errors: { server: {}, auth: {}, tenant: {}, resource: {}, file: {}, payment: {}, integration: {} }
+        }
+      } as any);
+    }
+    return createLoginSchema(dictionary);
+  }, [dictionary]);
 
   const form = useForm<z.infer<typeof LoginSchema>>({
     resolver: zodResolver(LoginSchema),
@@ -109,7 +129,7 @@ export const LoginForm = ({
             setShowTwoFactor(true);
           }
         })
-        .catch(() => setError("Something went wrong"));
+        .catch(() => setError(dictionary?.messages?.toast?.error?.generic || "Something went wrong"));
     });
   };
 

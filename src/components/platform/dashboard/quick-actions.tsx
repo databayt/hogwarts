@@ -1,97 +1,76 @@
 "use client";
 
 import React from "react";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { LucideIcon } from "lucide-react";
 import Link from "next/link";
 
 /**
  * QuickActions Component
- * Displays a grid of quick action buttons for dashboard
- * Following React 19 best practices - no manual memoization
+ * Displays a grid of quick action items for dashboard
+ * - No outer cards, just action items
+ * - Icon and text in columns (icon on top, text below)
+ * - Full width, responsive grid
+ * - Role-specific and reusable
  */
 
 export interface QuickAction {
   icon: LucideIcon;
   label: string;
-  description?: string;
   href?: string;
   onClick?: () => void;
-  variant?: "ghost" | "outline" | "secondary" | "default";
 }
 
 interface QuickActionsProps {
   actions: QuickAction[];
+  locale?: string;
   className?: string;
 }
 
-export function QuickActions({ actions, className }: QuickActionsProps) {
+export function QuickActions({ actions, locale = "en", className }: QuickActionsProps) {
   return (
-    <div
-      className={cn(
-        "grid gap-4",
-        "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4",
-        className
-      )}
-    >
-      {actions.map((action, index) => {
-        const Icon = action.icon;
-        const ButtonContent = (
-          <>
-            <Icon className="h-8 w-8 mb-2" aria-hidden="true" />
-            <span className="text-sm font-medium">{action.label}</span>
-            {action.description && (
-              <span className="text-xs text-muted-foreground mt-1">
-                {action.description}
-              </span>
-            )}
-          </>
-        );
-
-        if (action.href) {
-          return (
-            <Button
-              key={`${action.label}-${index}`}
-              variant={action.variant || "ghost"}
-              className="h-auto flex flex-col items-center justify-center p-4 w-full"
-              asChild
-            >
-              <Link href={action.href}>
-                {ButtonContent}
-              </Link>
-            </Button>
+    <div className={cn("w-full", className)}>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+        {actions.map((action, index) => {
+          const Icon = action.icon;
+          const baseClasses = cn(
+            "flex flex-col items-center justify-center gap-2 rounded-lg border bg-card p-4 transition-all",
+            "hover:bg-accent hover:shadow-sm hover:scale-[1.02]",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+            "cursor-pointer"
           );
-        }
 
-        return (
-          <Button
-            key={`${action.label}-${index}`}
-            variant={action.variant || "ghost"}
-            className="h-auto flex flex-col items-center justify-center p-4 w-full"
-            onClick={action.onClick}
-          >
-            {ButtonContent}
-          </Button>
-        );
-      })}
-    </div>
-  );
-}
+          const content = (
+            <>
+              <Icon className="h-6 w-6 text-muted-foreground" aria-hidden="true" />
+              <span className="text-center text-xs font-medium leading-tight">{action.label}</span>
+            </>
+          );
 
-/**
- * QuickActionsCard Component
- * Wraps QuickActions in a card (optional usage)
- */
-interface QuickActionsCardProps extends QuickActionsProps {
-  title?: string;
-}
+          if (action.href) {
+            return (
+              <Link
+                key={`${action.label}-${index}`}
+                href={`/${locale}${action.href}`}
+                className={baseClasses}
+              >
+                {content}
+              </Link>
+            );
+          }
 
-export function QuickActionsCard({ title, ...props }: QuickActionsCardProps) {
-  return (
-    <div className="space-y-4">
-      {title && <h2>{title}</h2>}
-      <QuickActions {...props} />
+          return (
+            <button
+              key={`${action.label}-${index}`}
+              onClick={action.onClick}
+              className={baseClasses}
+              type="button"
+            >
+              {content}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }

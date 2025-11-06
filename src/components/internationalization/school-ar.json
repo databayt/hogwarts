@@ -15,7 +15,39 @@
       "yourSchool": "مدرستك",
       "dashboardComingSoon": "لوحة التحكم قريباً",
       "workingOnDashboard": "نحن نعمل على لوحة تحكم شخصية لدورك. تحقق قريباً للحصول على التحديثات!",
-      "unknown": "غير معروف"
+      "unknown": "غير معروف",
+      "quickActions": {
+        "generateReports": "إنشاء التقارير",
+        "approveRequests": "الموافقة على الطلبات",
+        "sendAnnouncements": "إرسال الإعلانات",
+        "userManagement": "إدارة المستخدمين",
+        "settings": "الإعدادات",
+        "analytics": "التحليلات",
+        "viewReports": "عرض التقارير",
+        "staffManagement": "إدارة الموظفين",
+        "announcements": "الإعلانات",
+        "performance": "الأداء",
+        "events": "الأحداث",
+        "viewTimetable": "عرض الجدول الزمني",
+        "lessonPlans": "خطط الدروس",
+        "library": "المكتبة",
+        "attendance": "الحضور",
+        "viewChildren": "عرض الأبناء",
+        "checkGrades": "فحص الدرجات",
+        "messageTeachers": "مراسلة المعلمين",
+        "fees": "الرسوم",
+        "manageInvoices": "إدارة الفواتير",
+        "generateReceipts": "إنشاء الإيصالات",
+        "financialReports": "التقارير المالية",
+        "feeManagement": "إدارة الرسوم",
+        "approvePayments": "الموافقة على المدفوعات",
+        "budgetTracking": "تتبع الميزانية",
+        "myTasks": "مهامي",
+        "mySchedule": "جدولي",
+        "messages": "الرسائل",
+        "reports": "التقارير",
+        "directory": "الدليل"
+      }
     },
     "attendance": {
       "title": "الحضور",
@@ -167,6 +199,15 @@
     },
     "students": {
       "title": "الطلاب",
+      "navigation": {
+        "all": "الكل",
+        "enroll": "تسجيل",
+        "yearLevels": "المستويات الدراسية",
+        "guardians": "أولياء الأمور",
+        "performance": "الأداء",
+        "reports": "التقارير",
+        "settings": "الإعدادات"
+      },
       "overview": "نظرة عامة",
       "manage": "إدارة",
       "analysis": "تحليلات",
@@ -197,10 +238,42 @@
       "suspended": "موقوف",
       "importStudents": "استيراد الطلاب",
       "exportStudents": "تصدير الطلاب",
-      "bulkActions": "عمليات جماعية"
+      "bulkActions": "عمليات جماعية",
+      "enroll": {
+        "title": "تسجيل طالب جديد",
+        "description": "سيتم تنفيذ نموذج تسجيل الطالب هنا."
+      },
+      "yearLevels": {
+        "title": "المستويات الدراسية",
+        "description": "سيتم عرض الطلاب منظمين حسب المستوى الدراسي هنا."
+      },
+      "guardians": {
+        "title": "أولياء الأمور",
+        "description": "سيتم إدارة أولياء الأمور والعلاقات هنا."
+      },
+      "performance": {
+        "title": "أداء الطلاب",
+        "description": "سيتم عرض تحليلات الأداء واتجاهات الدرجات والمقاييس الأكاديمية هنا."
+      },
+      "reports": {
+        "title": "تقارير الطلاب",
+        "description": "سيتم إنشاء بطاقات التقارير والنصوص وتقارير التقدم هنا."
+      },
+      "settings": {
+        "title": "إعدادات الطلاب",
+        "description": "ستكون مقاييس التقدير وقواعد الترقية وتكوينات الوحدة متاحة هنا."
+      }
     },
     "teachers": {
       "title": "المعلمون",
+      "navigation": {
+        "all": "الكل",
+        "add": "إضافة",
+        "departments": "الأقسام",
+        "performance": "الأداء",
+        "schedule": "الجدول",
+        "settings": "الإعدادات"
+      },
       "allTeachers": "جميع المعلمين",
       "addTeacher": "إضافة معلم",
       "editTeacher": "تعديل معلم",
@@ -224,11 +297,31 @@
       "inactive": "غير نشط",
       "assignClasses": "تعيين الفصول",
       "schedule": "الجدول",
-      "performance": "الأداء"
+      "performance": "الأداء",
+      "add": {
+        "title": "إضافة معلم جديد",
+        "description": "سيتم تنفيذ نموذج إضافة المعلم هنا."
+      },
+      "departments": {
+        "title": "الأقسام",
+        "description": "سيتم تنفيذ إدارة الأقسام هنا."
+      },
+      "settings": {
+        "title": "إعدادات المعلمين",
+        "description": "ستكون الإعدادات والتكوينات متاحة هنا."
+      }
     },
     "classes": {
       "title": "الفصول",
       "description": "إدارة الفصول الدراسية والجداول",
+      "navigation": {
+        "all": "الكل",
+        "create": "إنشاء",
+        "subjects": "المواد",
+        "schedule": "الجدول",
+        "capacity": "السعة",
+        "settings": "الإعدادات"
+      },
       "allClasses": "جميع الفصول",
       "addClass": "إضافة فصل",
       "editClass": "تعديل فصل",
@@ -243,7 +336,15 @@
       "schedule": "الجدول",
       "assignTeacher": "تعيين معلم",
       "assignStudents": "تعيين طلاب",
-      "viewTimetable": "عرض الجدول الدراسي"
+      "viewTimetable": "عرض الجدول الدراسي",
+      "create": {
+        "title": "إنشاء فصل جديد",
+        "description": "سيتم تنفيذ نموذج إنشاء الفصل هنا."
+      },
+      "settings": {
+        "title": "إعدادات الفصول",
+        "description": "ستكون حدود حجم الفصل وقواعد الواجبات وتكوينات الوحدة متاحة هنا."
+      }
     },
     "subjects": {
       "title": "المواد",
@@ -264,6 +365,17 @@
     },
     "timetable": {
       "title": "الجدول الدراسي",
+      "navigation": {
+        "all": "الكل",
+        "generate": "إنشاء",
+        "conflicts": "التعارضات",
+        "byClass": "حسب الفصل",
+        "byTeacher": "حسب المعلم",
+        "byRoom": "حسب الغرفة",
+        "templates": "القوالب",
+        "analytics": "التحليلات",
+        "settings": "الإعدادات"
+      },
       "viewTimetable": "عرض الجدول",
       "createTimetable": "إنشاء جدول",
       "editTimetable": "تعديل الجدول",
@@ -289,7 +401,39 @@
       "conflictDetected": "تم اكتشاف تعارض",
       "noConflicts": "لا يوجد تعارضات",
       "printTimetable": "طباعة الجدول",
-      "exportTimetable": "تصدير الجدول"
+      "exportTimetable": "تصدير الجدول",
+      "generate": {
+        "title": "إنشاء جدول دراسي",
+        "description": "إنشاء جدول تلقائي مع كشف التعارضات."
+      },
+      "conflicts": {
+        "title": "تعارضات الجدول",
+        "description": "اكتشاف وحل تعارضات الجدولة."
+      },
+      "byClass": {
+        "title": "الجدول حسب الفصل",
+        "description": "عرض الجداول مصنفة حسب الفصل."
+      },
+      "byTeacher": {
+        "title": "الجدول حسب المعلم",
+        "description": "عرض الجداول مصنفة حسب المعلم."
+      },
+      "byRoom": {
+        "title": "الجدول حسب الغرفة",
+        "description": "عرض تخصيص الغرف والجداول مصنفة حسب الغرفة."
+      },
+      "templates": {
+        "title": "قوالب الجدول",
+        "description": "حفظ وإعادة استخدام أنماط الجدول."
+      },
+      "analytics": {
+        "title": "تحليلات الجدول",
+        "description": "تحليلات عبء العمل للمعلمين واستخدام الغرف."
+      },
+      "settings": {
+        "title": "إعدادات الجدول",
+        "description": "تكوين الحصص والأجراس وقيود الجدولة وإعدادات الوحدة."
+      }
     },
     "announcements": {
       "title": "الإعلانات",
@@ -547,14 +691,80 @@
     },
     "lessons": {
       "title": "الدروس",
-      "description": "تخطيط وإدارة الدروس"
+      "description": "تخطيط وإدارة الدروس",
+      "navigation": {
+        "all": "الكل",
+        "create": "إنشاء",
+        "curriculum": "المنهج",
+        "resources": "الموارد",
+        "templates": "القوالب",
+        "analytics": "التحليلات",
+        "settings": "الإعدادات"
+      },
+      "create": {
+        "title": "إنشاء خطة درس",
+        "description": "سيتم تنفيذ نموذج إنشاء خطة الدرس هنا."
+      },
+      "curriculum": {
+        "title": "خريطة المنهج",
+        "description": "سيتم إدارة مواءمة وخريطة معايير المنهج هنا."
+      },
+      "resources": {
+        "title": "موارد الدروس",
+        "description": "سيتم إدارة مكتبة الموارد مع المواد والمرفقات هنا."
+      },
+      "templates": {
+        "title": "قوالب الدروس",
+        "description": "سيتم إدارة قوالب خطط الدروس القابلة لإعادة الاستخدام هنا."
+      },
+      "analytics": {
+        "title": "تحليلات الدروس",
+        "description": "سيتم عرض تحليلات الاستخدام ومقاييس فعالية الدروس هنا."
+      },
+      "settings": {
+        "title": "إعدادات الدروس",
+        "description": "ستكون الإعدادات الافتراضية للقوالب وأذونات المشاركة وتكوينات الوحدة متاحة هنا."
+      }
     },
     "events": {
       "title": "الفعاليات",
       "description": "جدولة وإدارة فعاليات المدرسة",
+      "navigation": {
+        "all": "الكل",
+        "create": "إنشاء",
+        "calendar": "التقويم",
+        "categories": "التصنيفات",
+        "attendance": "الحضور",
+        "recurring": "متكررة",
+        "settings": "الإعدادات"
+      },
       "locationTBD": "سيحدد لاحقاً",
       "organizerTBD": "سيحدد لاحقاً",
-      "audienceTBD": "الجميع"
+      "audienceTBD": "الجميع",
+      "create": {
+        "title": "إنشاء فعالية جديدة",
+        "description": "سيتم تنفيذ نموذج إنشاء الفعالية هنا."
+      },
+      "calendar": {
+        "title": "تقويم الفعاليات",
+        "description": "سيتم عرض جميع الفعاليات في عرض التقويم الشهري والأسبوعي هنا."
+      },
+      "categories": {
+        "title": "تصنيفات الفعاليات",
+        "description": "إدارة تصنيفات الفعاليات مثل الأكاديمية والرياضية والثقافية."
+      },
+      "attendance": {
+        "title": "حضور الفعاليات",
+        "description": "تتبع حضور الفعاليات وحالة التأكيد."
+      },
+      "recurring": {
+        "title": "الفعاليات المتكررة",
+        "description": "إدارة أنماط وجداول الفعاليات المتكررة."
+      },
+      "settings": {
+        "title": "إعدادات الفعاليات",
+        "description": "ستكون أنواع الفعاليات وقواعد الإشعارات وتكوينات الوحدة متاحة هنا."
+      }
     },
     "assignments": {
       "title": "الواجبات",

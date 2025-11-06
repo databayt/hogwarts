@@ -2,16 +2,24 @@ import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { db } from "@/lib/db";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Users, Search, FileText, Settings, Clock, AlertTriangle, CheckCircle, Building } from "lucide-react";
+import { Users, FileText, Clock, AlertTriangle, CheckCircle, Building } from "lucide-react";
+import { QuickActions } from "../quick-actions";
+import { getQuickActionsByRole } from "../quick-actions-config";
+import { getTenantContext } from "@/lib/tenant-context";
 
 interface StaffDashboardProps {
   user: any;
   dictionary?: Dictionary["school"];
+  locale?: string;
 }
 
-export async function StaffDashboard({ user, dictionary }: StaffDashboardProps) {
+export async function StaffDashboard({ user, dictionary, locale = "en" }: StaffDashboardProps) {
+  // Get tenant context for subdomain
+  const { schoolId } = await getTenantContext();
+
+  // Get school subdomain for URL construction
+  const school = schoolId ? await db.school.findUnique({ where: { id: schoolId }, select: { domain: true } }) : null;
   // Fetch real data from database
   const announcements = await db.announcement.findMany({
     where: {
@@ -126,31 +134,10 @@ export async function StaffDashboard({ user, dictionary }: StaffDashboardProps) 
       </div>
 
       {/* Quick Actions */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-2">
-            <Button variant="outline" size="sm">
-              <Search className="mr-2 h-4 w-4" />
-              Student Lookup
-            </Button>
-            <Button variant="outline" size="sm">
-              <FileText className="mr-2 h-4 w-4" />
-              Generate Report
-            </Button>
-            <Button variant="outline" size="sm">
-              <Settings className="mr-2 h-4 w-4" />
-              Process Request
-            </Button>
-            <Button variant="outline" size="sm">
-              <Users className="mr-2 h-4 w-4" />
-              Update Records
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      <QuickActions
+        actions={getQuickActionsByRole("STAFF", dictionary, school?.domain)}
+        locale={locale}
+      />
 
       {/* Main Content Grid */}
       <div className="grid gap-6 md:grid-cols-2">

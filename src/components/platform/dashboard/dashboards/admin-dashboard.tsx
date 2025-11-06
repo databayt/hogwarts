@@ -1,22 +1,34 @@
 import type { Dictionary } from "@/components/internationalization/dictionaries";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Users, FileText, Bell, CheckCircle, AlertTriangle, TrendingUp } from "lucide-react";
+import { Users, FileText, AlertTriangle, TrendingUp } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { getDashboardSummary } from "./actions";
+import { QuickActions } from "../quick-actions";
+import { getQuickActionsByRole } from "../quick-actions-config";
+import { getTenantContext } from "@/lib/tenant-context";
 // TODO: Fix dashboard-showcase prop mismatches (36+ TypeScript errors)
 // import { DashboardShowcase } from "../dashboard-showcase";
 
 interface Props {
   user: any;
   dictionary?: Dictionary["school"];
+  locale?: string;
 }
 
-export async function AdminDashboard({ user, dictionary }: Props) {
+export async function AdminDashboard({ user, dictionary, locale = "en" }: Props) {
   // Fetch real data from server actions
   const dashboardData = await getDashboardSummary();
+
+  // Get tenant context for subdomain
+  const { schoolId } = await getTenantContext();
+
+  // Get school subdomain for URL construction
+  const school = schoolId ? await (async () => {
+    const { db } = await import("@/lib/db");
+    return db.school.findUnique({ where: { id: schoolId }, select: { domain: true } });
+  })() : null;
 
   // Destructure real data
   const {
@@ -123,31 +135,10 @@ export async function AdminDashboard({ user, dictionary }: Props) {
       </div>
 
       {/* Quick Actions */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-2">
-            <Button variant="outline" size="sm">
-              <FileText className="mr-2 h-4 w-4" />
-              Generate Reports
-            </Button>
-            <Button variant="outline" size="sm">
-              <CheckCircle className="mr-2 h-4 w-4" />
-              Approve Requests
-            </Button>
-            <Button variant="outline" size="sm">
-              <Bell className="mr-2 h-4 w-4" />
-              Send Announcements
-            </Button>
-            <Button variant="outline" size="sm">
-              <Users className="mr-2 h-4 w-4" />
-              User Management
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      <QuickActions
+        actions={getQuickActionsByRole("ADMIN", dictionary, school?.domain)}
+        locale={locale}
+      />
 
       {/* Main Content Grid */}
       <div className="grid gap-6 md:grid-cols-2">

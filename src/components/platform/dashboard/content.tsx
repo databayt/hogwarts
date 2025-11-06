@@ -22,9 +22,10 @@ type ExtendedUser = {
 interface Props {
   school?: School; // Make school prop optional
   dictionary?: Dictionary['school']; // Add dictionary prop
+  locale?: string; // Add locale prop
 }
 
-export default async function DashboardContent({ school, dictionary }: Props = {}) {
+export default async function DashboardContent({ school, dictionary, locale = "en" }: Props = {}) {
   const user = await currentUser() as ExtendedUser | null;
 
   // If no user, show login component
@@ -50,19 +51,19 @@ export default async function DashboardContent({ school, dictionary }: Props = {
     const userRole = user.role || 'USER';
     switch (userRole) {
       case "STUDENT":
-        return <StudentDashboard user={user} dictionary={dictionary!} />;
+        return <StudentDashboard user={user} dictionary={dictionary!} locale={locale} />;
       case "TEACHER":
-        return <TeacherDashboard user={user} dictionary={dictionary!} />;
+        return <TeacherDashboard user={user} dictionary={dictionary!} locale={locale} />;
       case "GUARDIAN":
-        return <ParentDashboard user={user} dictionary={dictionary!} />;
+        return <ParentDashboard user={user} dictionary={dictionary!} locale={locale} />;
       case "STAFF":
-        return <StaffDashboard user={user} dictionary={dictionary!} />;
+        return <StaffDashboard user={user} dictionary={dictionary!} locale={locale} />;
       case "ADMIN":
-        return <AdminDashboard user={user} dictionary={dictionary!} />;
+        return <AdminDashboard user={user} dictionary={dictionary!} locale={locale} />;
       case "PRINCIPAL":
-        return <PrincipalDashboard user={user} dictionary={dictionary!} />;
+        return <PrincipalDashboard user={user} dictionary={dictionary!} locale={locale} />;
       case "ACCOUNTANT":
-        return <AccountantDashboard user={user} dictionary={dictionary!} />;
+        return <AccountantDashboard user={user} dictionary={dictionary!} locale={locale} />;
       default:
         return <DefaultDashboard user={user} dictionary={dictionary!} />;
     }

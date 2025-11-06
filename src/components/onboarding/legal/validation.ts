@@ -1,4 +1,30 @@
 import { z } from 'zod';
+import { getValidationMessages } from '@/components/internationalization/helpers';
+import type { Dictionary } from '@/components/internationalization/dictionaries';
+
+// ============================================================================
+// Schema Factory Functions (i18n-enabled)
+// ============================================================================
+
+export function createLegalSchema(dictionary: Dictionary) {
+  const v = getValidationMessages(dictionary);
+
+  return z.object({
+    operationalStatus: z.enum(['existing-licensed', 'new-seeking-registration'], {
+      message: v.get('operationalStatusRequired')
+    }),
+    hasCCTV: z.boolean().default(false),
+    hasEmergencyAlarm: z.boolean().default(false),
+    hasTransportation: z.boolean().default(false),
+    complianceAcknowledged: z.boolean().refine(val => val === true, {
+      message: v.get('complianceAcknowledgmentRequired'),
+    }),
+  });
+}
+
+// ============================================================================
+// Legacy Schemas (for backward compatibility - will be deprecated)
+// ============================================================================
 
 export const legalSchema = z.object({
   operationalStatus: z.enum(['existing-licensed', 'new-seeking-registration']).describe("Please select operational status"),

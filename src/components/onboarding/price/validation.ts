@@ -1,4 +1,6 @@
 import { z } from 'zod'
+import { getValidationMessages } from '@/components/internationalization/helpers'
+import type { Dictionary } from '@/components/internationalization/dictionaries'
 
 const CurrencyEnum = ['USD', 'EUR', 'GBP', 'CAD', 'AUD'] as const
 const PaymentScheduleEnum = ['monthly', 'quarterly', 'semester', 'annual'] as const
@@ -6,7 +8,34 @@ const PaymentScheduleEnum = ['monthly', 'quarterly', 'semester', 'annual'] as co
 type Currency = typeof CurrencyEnum[number]
 type PaymentSchedule = typeof PaymentScheduleEnum[number]
 
-// Updated for school pricing context
+// ============================================================================
+// Schema Factory Functions (i18n-enabled)
+// ============================================================================
+
+export function createSchoolPriceSchema(dictionary: Dictionary) {
+  const v = getValidationMessages(dictionary);
+
+  return z.object({
+    tuitionFee: z.number()
+      .min(0, { message: v.get('tuitionFeeNonNegative') })
+      .max(50000, { message: v.get('tuitionFeeMaxLimit') }),
+    registrationFee: z.number()
+      .min(0, { message: v.get('registrationFeeNonNegative') })
+      .max(5000, { message: v.get('registrationFeeMaxLimit') })
+      .optional(),
+    applicationFee: z.number()
+      .min(0, { message: v.get('applicationFeeNonNegative') })
+      .max(1000, { message: v.get('applicationFeeMaxLimit') })
+      .optional(),
+    currency: z.enum(CurrencyEnum, { message: v.get('currencyRequired') }),
+    paymentSchedule: z.enum(PaymentScheduleEnum, { message: v.get('paymentScheduleRequired') }),
+  });
+}
+
+// ============================================================================
+// Legacy Schemas (for backward compatibility - will be deprecated)
+// ============================================================================
+
 export const schoolPriceSchema = z.object({
   tuitionFee: z.number()
     .min(0, "Tuition fee cannot be negative")

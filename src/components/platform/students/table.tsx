@@ -90,7 +90,7 @@ export function StudentsTable({ initialData, total, dictionary, perPage = 20 }: 
           <ExportButton />
         </div>
       </DataTableToolbar>
-      <Modal content={<StudentCreateForm />} />
+      <Modal content={<StudentCreateForm dictionary={dictionary} />} />
     </DataTable>
   );
 }

@@ -1,4 +1,33 @@
 import { z } from 'zod'
+import { getValidationMessages } from '@/components/internationalization/helpers'
+import type { Dictionary } from '@/components/internationalization/dictionaries'
+
+// ============================================================================
+// Schema Factory Functions (i18n-enabled)
+// ============================================================================
+
+export function createCapacitySchema(dictionary: Dictionary) {
+  const v = getValidationMessages(dictionary);
+
+  return z.object({
+    studentCount: z.number()
+      .min(1, { message: v.get('atLeastOneStudent') })
+      .max(10000, { message: v.get('maxStudentsLimit') }),
+    teachers: z.number()
+      .min(1, { message: v.get('atLeastOneTeacher') })
+      .max(500, { message: v.get('maxTeachersLimit') }),
+    classrooms: z.number()
+      .min(1, { message: v.get('atLeastOneClassroom') })
+      .max(100, { message: v.get('maxClassroomsLimit') }),
+    facilities: z.number()
+      .min(1, { message: v.get('atLeastOneFacility') })
+      .max(50, { message: v.get('maxFacilitiesLimit') }),
+  });
+}
+
+// ============================================================================
+// Legacy Schemas (for backward compatibility - will be deprecated)
+// ============================================================================
 
 export const capacitySchema = z.object({
   studentCount: z.number()
