@@ -682,31 +682,20 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
         // If we're on the main domain (ed.databayt.org), check for callback URL first
         if (originalHost === 'ed.databayt.org') {
           // Don't immediately redirect to dashboard - check if we have a callback URL
-          log('🏢 MAIN DOMAIN DETECTED:', { 
+          log('🏢 MAIN DOMAIN DETECTED:', {
             host: originalHost,
             hasCallbackUrl: !!callbackUrl,
             callbackUrl,
             environment: process.env.NODE_ENV,
             source: 'main_domain_detection'
           });
-          
+
           // If we have a callback URL, use it
           if (callbackUrl) {
             log('✅ Using callback URL on main domain:', callbackUrl);
             // Continue to validate and use the callback URL below
-          } else {
-            // Only default to dashboard if no callback URL
-            const mainDomainDashboard = process.env.NODE_ENV === "production"
-              ? 'https://ed.databayt.org/dashboard'
-              : 'http://localhost:3000/dashboard';
-            
-            log('🏢 MAIN DOMAIN DEFAULT REDIRECT (no callback):', { 
-              host: originalHost,
-              redirectUrl: mainDomainDashboard
-            });
-            
-            return mainDomainDashboard;
           }
+          // No else block - let smart subdomain redirect (lines 885-954) handle users without callbackUrl
         }
         
         // Additional safety check: if host contains 'ed.databayt.org' in any form, treat as main domain
