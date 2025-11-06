@@ -6,7 +6,7 @@
 "use client"
 
 import React, { useState, useMemo } from 'react'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Tabs, TabsContent } from '@/components/ui/tabs'
 import { ProfileHeader } from '../shared/profile-header'
 import { ProfileHeaderCompact } from '../shared/profile-header-compact'
 import { ProfileGitHubLayout } from '../shared/profile-github-layout'
@@ -25,16 +25,7 @@ import { cn } from '@/lib/utils'
 import type { StaffProfile, ConnectionStatus } from '../types'
 import { UserProfileType } from '../types'
 import type { Dictionary } from '@/components/internationalization/dictionaries'
-import {
-  LayoutGrid,
-  Briefcase,
-  Calendar,
-  CheckSquare,
-  FileText,
-  Settings,
-  Shield,
-  Clock
-} from 'lucide-react'
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
 
 // ============================================================================
 // Types
@@ -51,7 +42,6 @@ interface StaffProfileContentProps {
 interface TabConfig {
   id: string
   label: string
-  icon: React.ReactNode
   badge?: number
 }
 
@@ -279,12 +269,12 @@ export function StaffProfileContent({
 
   // Tab configuration
   const tabs: TabConfig[] = [
-    { id: 'overview', label: 'Overview', icon: <LayoutGrid className="h-4 w-4" /> },
-    { id: 'responsibilities', label: 'Responsibilities', icon: <Briefcase className="h-4 w-4" /> },
-    { id: 'schedule', label: 'Schedule', icon: <Calendar className="h-4 w-4" /> },
-    { id: 'tasks', label: 'Tasks', icon: <CheckSquare className="h-4 w-4" />, badge: 12 },
-    { id: 'reports', label: 'Reports', icon: <FileText className="h-4 w-4" /> },
-    { id: 'settings', label: 'Settings', icon: <Settings className="h-4 w-4" /> }
+    { id: 'overview', label: 'Overview' },
+    { id: 'responsibilities', label: 'Responsibilities' },
+    { id: 'schedule', label: 'Schedule' },
+    { id: 'tasks', label: 'Tasks', badge: 12 },
+    { id: 'reports', label: 'Reports' },
+    { id: 'settings', label: 'Settings' }
   ]
 
   // Handle loading and error states
@@ -313,25 +303,34 @@ export function StaffProfileContent({
   // Tabs content component (reusable for both layouts)
   const tabsContent = (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-      <TabsList className="grid grid-cols-3 lg:grid-cols-6 w-full">
-        {tabs.map(tab => (
-          <TabsTrigger
-            key={tab.id}
-            value={tab.id}
-            className="relative"
-          >
-            <span className="flex items-center gap-2">
-              {tab.icon}
-              <span className="hidden sm:inline">{tab.label}</span>
-              {tab.badge && (
-                <span className="ml-1 px-1.5 py-0.5 text-xs bg-primary/10 text-primary rounded-full">
-                  {tab.badge}
-                </span>
-              )}
-            </span>
-          </TabsTrigger>
-        ))
-      }</TabsList>
+      {/* PageNav-style navigation */}
+      <div className="border-b">
+        <ScrollArea className="max-w-[600px] lg:max-w-none">
+          <nav className="flex items-center gap-6 rtl:flex-row-reverse">
+            {tabs.map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={cn(
+                  "relative px-1 pb-3 text-sm font-medium transition-colors hover:text-primary whitespace-nowrap",
+                  activeTab === tab.id ? "text-primary" : "text-muted-foreground"
+                )}
+              >
+                {tab.label}
+                {tab.badge && (
+                  <span className="ml-1.5 px-1.5 py-0.5 text-xs bg-primary/10 text-primary rounded-full">
+                    {tab.badge}
+                  </span>
+                )}
+                {activeTab === tab.id && (
+                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+                )}
+              </button>
+            ))}
+          </nav>
+          <ScrollBar orientation="horizontal" className="invisible" />
+        </ScrollArea>
+      </div>
 
       <TabsContent value="overview" className="space-y-6">
         {/* GitHub-style contribution graph */}
