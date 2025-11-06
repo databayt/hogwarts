@@ -527,6 +527,185 @@ Build components from bottom up:
 3. **Features** (`src/components/<feature>/*`) - Business logic + UI
 4. **Pages** (`src/app/<route>/page.tsx`) - Import feature content
 
+### Icon System
+
+The platform includes a comprehensive icon management system following Anthropic design guidelines.
+
+**Quick Commands**:
+```bash
+/icon-add              # Add new icon to system
+/icon-generate         # Generate icon with AI
+/icon-validate [scope] # Validate icons against design system
+```
+
+**Skill**: `icon-manager` - Comprehensive icon management capabilities
+
+#### Design System Requirements
+
+**ViewBox Formats**:
+- Standard: `0 0 1000 1000`
+- Wide: `0 0 1680 1260` or `0 0 1681 1261`
+
+**Color Palette** (STRICT - only these two colors):
+- Light: `#FAF9F5` (backgrounds, fills)
+- Dark: `#141413` (foreground, details)
+
+**Structure**:
+- Root `<svg>` element with `fill="none"`
+- All `<path>` elements must have explicit `fill` attribute
+- No gradients, patterns, inline styles, or external references
+
+**Categories**:
+1. **Hands** - Hand gestures, positions, interactions
+2. **People** - Human figures, avatars
+3. **Objects** - Physical items, shapes, documents
+4. **Abstract** - Abstract forms, patterns, geometric
+5. **Letters** - Typography, characters
+6. **Scenes** - Complex illustrations with multiple elements
+
+**Naming Convention**: `{Category}-{Description}.svg`
+
+#### Icon Structure
+
+```
+public/icons/                   # Icon storage (51 icons)
+  ├── Hands-Gesture-01.svg     # Semantic names
+  ├── Scene-Complex-01.svg
+  ├── .backup/                 # Backups of renamed files
+  ├── icon-renaming-mapping.md # Analysis and mapping
+  └── rename-log.txt
+
+src/components/icons/           # Icon system code
+  ├── types.ts                 # TypeScript types
+  ├── registry.ts              # Icon registry (all icons)
+  ├── icon-wrapper.tsx         # Wrapper component
+  ├── utils.ts                 # Utility functions
+  ├── constants.ts             # Design system constants
+  └── README.md
+
+src/app/[lang]/docs/icons/
+  └── page.mdx                 # IconBrowser documentation
+
+.claude/commands/
+  ├── icon-add.md              # Add icon command
+  ├── icon-generate.md         # Generate icon command
+  └── icon-validate.md         # Validate icon command
+
+.claude/skills/
+  └── icon-manager.md          # Comprehensive skill
+```
+
+#### Icon Registry
+
+All icons are registered in `src/components/icons/registry.ts`:
+
+```typescript
+export const iconRegistry: Record<string, IconRegistryEntry> = {
+  "hands-gesture-01": {
+    name: "hands-gesture-01",
+    category: "Hands",
+    path: "/icons/Hands-Gesture-01.svg",
+    keywords: ["hand", "gesture", "point"],
+    viewBox: "0 0 1000 1000",
+    verified: true
+  }
+}
+```
+
+#### Usage
+
+**Import icon from registry**:
+```typescript
+import { iconRegistry } from '@/components/icons/registry'
+
+const icon = iconRegistry['hands-gesture-01']
+// Use icon.path in Image component
+```
+
+**Use IconWrapper component**:
+```tsx
+import { IconWrapper } from '@/components/icons/icon-wrapper'
+
+<IconWrapper
+  name="hands-gesture-01"
+  size={24}
+  className="text-foreground"
+/>
+```
+
+#### Adding New Icons
+
+**Option 1: Use /icon-add command**
+```bash
+# Interactive workflow
+/icon-add
+
+# Follow prompts to:
+# 1. Provide icon source (file/URL/generate)
+# 2. Validate compliance
+# 3. Auto-fix issues
+# 4. Save with semantic name
+# 5. Update registry
+```
+
+**Option 2: Manual process**
+1. Create SVG following design requirements
+2. Save to `public/icons/{Category}-{Description}.svg`
+3. Add entry to `src/components/icons/registry.ts`
+4. Run `/icon-validate` to verify compliance
+
+#### Validation
+
+**Validate all icons**:
+```bash
+/icon-validate
+```
+
+**Validate specific category**:
+```bash
+/icon-validate category:Hands
+```
+
+**Validation checks**:
+- ✅ ViewBox dimensions (1000x1000 or 1680x1260)
+- ✅ Color compliance (only #FAF9F5 and #141413)
+- ✅ Structure (root fill="none", paths have fill)
+- ✅ Naming convention ({Category}-{Description}.svg)
+- ✅ Registry entry exists
+
+**Auto-fix capability**:
+- ViewBox scaling
+- Color replacement
+- Structure fixes
+- Naming normalization
+
+#### Current Icon Inventory
+
+**Total**: 51 icons (3 already named + 48 renamed)
+**Compliance**: 96% (48 fully compliant, 2 minor issues, 1 major issue)
+
+**Distribution**:
+- Hands: 15 icons (29%)
+- Scenes: 12 icons (24%)
+- Letters: 8 icons (16%)
+- People: 6 icons (12%)
+- Abstract: 5 icons (10%)
+- Objects: 2 icons (4%)
+
+#### Documentation
+
+- **User Docs**: `/docs/icons` - IconBrowser with searchable gallery
+- **Analysis**: `public/icons/icon-renaming-mapping.md` - Complete mapping
+- **Commands**: `.claude/commands/icon-*.md` - Slash commands
+- **Skill**: `.claude/skills/icon-manager.md` - Management capabilities
+
+#### MCP Integration
+
+**SVG Tools MCP** configured in `.mcp.json`:
+- Type: stdio (SVGO integration)
+- Capabilities: Optimization, validation, processing
+- Design system config included
+
 ### Multi-Tenant Architecture
 
 **Critical**: Every database operation MUST be scoped by `schoolId`:

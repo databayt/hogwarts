@@ -89,6 +89,29 @@
         "SLACK_WORKSPACE_ID": "${SLACK_WORKSPACE_ID}"
       },
       "description": "Team notifications, deployment alerts, error reporting, collaboration"
+    },
+    "svg-tools": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "svgo"],
+      "description": "SVG optimization, validation, and processing (SVGO integration)",
+      "config": {
+        "viewBox": "0 0 1000 1000",
+        "colors": {
+          "light": "#FAF9F5",
+          "dark": "#141413"
+        },
+        "removeAttrs": {
+          "attrs": ["fill:svg"]
+        }
+      }
     }
+  },
+  "iconSystem": {
+    "designSystem": "anthropic",
+    "categories": ["Hands", "People", "Objects", "Abstract", "Letters", "Scenes"],
+    "namingConvention": "{Category}-{Description}.svg",
+    "outputDir": "public/icons",
+    "registryPath": "src/components/icons/registry.ts"
   }
 }
