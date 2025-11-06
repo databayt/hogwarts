@@ -534,6 +534,7 @@ export function TeacherProfileContent({
           onMessage={() => console.log('Message')}
           onShare={() => console.log('Share')}
           onFollow={() => console.log('Follow')}
+          showExperience={true}
         />
 
         {/* Main Content */}

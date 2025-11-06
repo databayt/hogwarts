@@ -16,7 +16,9 @@ import {
   Share2,
   MoreVertical,
   CheckCircle,
-  Star
+  Star,
+  Briefcase,
+  Calendar
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
@@ -56,6 +58,7 @@ interface ProfileHeaderCompactProps {
   onShare?: () => void
   onFollow?: () => void
   className?: string
+  showExperience?: boolean
 }
 
 // ============================================================================
@@ -73,7 +76,8 @@ export function ProfileHeaderCompact({
   onMessage,
   onShare,
   onFollow,
-  className
+  className,
+  showExperience = false
 }: ProfileHeaderCompactProps) {
 
   // Get initials from display name
@@ -160,110 +164,182 @@ export function ProfileHeaderCompact({
     }
   }
 
-  return (
-    <div className={cn('flex items-center gap-4 px-6 py-4 border-b border-border/40', className)}>
-      {/* Avatar */}
-      <Avatar className="h-16 w-16 border border-muted">
-        <AvatarImage src={profile.avatar || undefined} alt={profile.displayName} />
-        <AvatarFallback className="text-lg bg-muted">
-          {getInitials(profile.displayName)}
-        </AvatarFallback>
-      </Avatar>
+  // Get experience data if available
+  const getExperienceData = () => {
+    const anyProfile = profile as any
 
-      {/* Info */}
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 flex-wrap">
-          <h1 className="text-lg font-semibold truncate">
-            {profile.displayName}
-          </h1>
-          <span className="text-base text-muted-foreground">
-            {profile.email?.split('@')[0] || profile.type.toLowerCase()}
-          </span>
-          {profile.completionPercentage === 100 && (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger>
-                  <CheckCircle className="h-4 w-4 text-blue-500" />
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Verified Profile</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+    // For staff profile
+    if (anyProfile.staffInfo) {
+      return {
+        title: anyProfile.staffInfo.designation || 'Staff Member',
+        organization: anyProfile.staffInfo.department || '',
+        years: anyProfile.staffInfo.yearsOfService || 0,
+        certifications: anyProfile.staffInfo.certifications || []
+      }
+    }
+
+    // For teacher profile
+    if (anyProfile.professionalInfo) {
+      return {
+        title: anyProfile.professionalInfo.designation || 'Teacher',
+        organization: anyProfile.teacher?.departments?.[0]?.name || '',
+        years: anyProfile.professionalInfo.totalExperience || 0,
+        certifications: anyProfile.professionalInfo.certifications || []
+      }
+    }
+
+    return null
+  }
+
+  const experienceData = showExperience ? getExperienceData() : null
+
+  return (
+    <div className={cn('flex flex-col gap-4 px-6 py-4 border-b border-border/40', className)}>
+      {/* Top row: Avatar + Info + Experience + Actions */}
+      <div className="flex items-start gap-4">
+        {/* Avatar */}
+        <Avatar className="h-24 w-24 border border-muted flex-shrink-0">
+          <AvatarImage src={profile.avatar || undefined} alt={profile.displayName} />
+          <AvatarFallback className="text-xl bg-muted">
+            {getInitials(profile.displayName)}
+          </AvatarFallback>
+        </Avatar>
+
+        {/* Info */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h1 className="text-lg font-semibold truncate">
+              {profile.displayName}
+            </h1>
+            <span className="text-base text-muted-foreground">
+              {profile.email?.split('@')[0] || profile.type.toLowerCase()}
+            </span>
+            {profile.completionPercentage === 100 && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger>
+                    <CheckCircle className="h-4 w-4 text-blue-500" />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Verified Profile</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+          </div>
+
+          {/* Bio */}
+          {profile.bio && (
+            <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+              {profile.bio}
+            </p>
           )}
+
+          {/* Compact Stats */}
+          <div className="flex items-center gap-3 mt-2 text-sm">
+            <span className="text-muted-foreground">
+              <strong className="text-foreground">{profile.activityStats.totalConnections}</strong> followers
+            </span>
+            <span className="text-muted-foreground">·</span>
+            <span className="text-muted-foreground">
+              <strong className="text-foreground">{Math.floor(profile.activityStats.totalConnections * 0.7)}</strong> following
+            </span>
+            <span className="text-muted-foreground">·</span>
+            <span className="text-muted-foreground">
+              <strong className="text-foreground">{profile.activityStats.contributionStreak}</strong> day streak
+            </span>
+          </div>
         </div>
 
-        {/* Bio (truncated) */}
-        {profile.bio && (
-          <p className="text-sm text-muted-foreground mt-1 line-clamp-1">
-            {profile.bio}
-          </p>
+        {/* Experience Section (when enabled) */}
+        {experienceData && (
+          <div className="flex-shrink-0 w-64 p-3 bg-muted/30 rounded-lg border border-border/40">
+            <div className="flex items-start gap-2">
+              <Briefcase className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+              <div className="flex-1 min-w-0 space-y-2">
+                <div>
+                  <p className="text-sm font-medium truncate">{experienceData.title}</p>
+                  {experienceData.organization && (
+                    <p className="text-xs text-muted-foreground truncate">{experienceData.organization}</p>
+                  )}
+                </div>
+
+                {experienceData.years > 0 && (
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <Calendar className="h-3 w-3" />
+                    <span>{experienceData.years} years experience</span>
+                  </div>
+                )}
+
+                {experienceData.certifications.length > 0 && (
+                  <div className="space-y-1">
+                    {experienceData.certifications.slice(0, 2).map((cert: any, index: number) => (
+                      <div key={index} className="text-xs">
+                        <p className="font-medium truncate">{cert.name}</p>
+                        <p className="text-muted-foreground truncate">{cert.issuer}</p>
+                      </div>
+                    ))}
+                    {experienceData.certifications.length > 2 && (
+                      <p className="text-xs text-muted-foreground">
+                        +{experienceData.certifications.length - 2} more
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
         )}
 
-        {/* Compact Stats */}
-        <div className="flex items-center gap-3 mt-2 text-sm">
-          <span className="text-muted-foreground">
-            <strong className="text-foreground">{profile.activityStats.totalConnections}</strong> followers
-          </span>
-          <span className="text-muted-foreground">·</span>
-          <span className="text-muted-foreground">
-            <strong className="text-foreground">{Math.floor(profile.activityStats.totalConnections * 0.7)}</strong> following
-          </span>
-          <span className="text-muted-foreground">·</span>
-          <span className="text-muted-foreground">
-            <strong className="text-foreground">{profile.activityStats.contributionStreak}</strong> day streak
-          </span>
-        </div>
-      </div>
-
-      {/* Actions */}
-      <div className="flex items-center gap-2">
-        {renderConnectionButton()}
-        {!isOwner && (
+        {/* Actions */}
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {renderConnectionButton()}
+          {!isOwner && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onFollow}
+            >
+              <Star className="h-4 w-4" />
+            </Button>
+          )}
           <Button
             variant="outline"
             size="sm"
-            onClick={onFollow}
+            className="px-2"
+            onClick={onShare}
           >
-            <Star className="h-4 w-4" />
+            <Share2 className="h-4 w-4" />
           </Button>
-        )}
-        <Button
-          variant="outline"
-          size="sm"
-          className="px-2"
-          onClick={onShare}
-        >
-          <Share2 className="h-4 w-4" />
-        </Button>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm" className="px-2">
-              <MoreVertical className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Profile Actions</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              Copy Profile Link
-            </DropdownMenuItem>
-            <DropdownMenuItem>
-              Export as PDF
-            </DropdownMenuItem>
-            {!isOwner && (
-              <>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem className="text-destructive">
-                  Block User
-                </DropdownMenuItem>
-                <DropdownMenuItem className="text-destructive">
-                  Report Profile
-                </DropdownMenuItem>
-              </>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="px-2">
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Profile Actions</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>
+                Copy Profile Link
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                Export as PDF
+              </DropdownMenuItem>
+              {!isOwner && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem className="text-destructive">
+                    Block User
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="text-destructive">
+                    Report Profile
+                  </DropdownMenuItem>
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
     </div>
   )
