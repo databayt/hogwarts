@@ -251,7 +251,15 @@ export async function getRecentActivities() {
       timestamp: a.createdAt,
       user: "Teacher",
     })),
-  ].sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime()).slice(0, 10);
+  ]
+    .filter((activity) => activity.timestamp != null) // Filter out null/undefined timestamps
+    .sort((a, b) => {
+      // Safe date comparison with fallback
+      const timeA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+      const timeB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+      return timeB - timeA;
+    })
+    .slice(0, 10);
 
   return activities;
 }

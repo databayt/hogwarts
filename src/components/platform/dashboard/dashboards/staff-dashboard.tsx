@@ -18,8 +18,16 @@ export async function StaffDashboard({ user, dictionary, locale = "en" }: StaffD
   // Get tenant context for subdomain
   const { schoolId } = await getTenantContext();
 
-  // Get school subdomain for URL construction
-  const school = schoolId ? await db.school.findUnique({ where: { id: schoolId }, select: { domain: true } }) : null;
+  // Get school subdomain for URL construction with error handling
+  let school = null;
+  try {
+    if (schoolId) {
+      school = await db.school.findUnique({ where: { id: schoolId }, select: { domain: true } });
+    }
+  } catch (error) {
+    console.error('[StaffDashboard] Error fetching school domain:', error);
+  }
+
   // Fetch real data from database
   const announcements = await db.announcement.findMany({
     where: {

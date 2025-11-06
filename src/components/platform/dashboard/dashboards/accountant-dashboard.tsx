@@ -18,8 +18,16 @@ export async function AccountantDashboard({ user, dictionary, locale = "en" }: P
   // Get tenant context for subdomain
   const { schoolId } = await getTenantContext();
 
-  // Get school subdomain for URL construction
-  const school = schoolId ? await db.school.findUnique({ where: { id: schoolId }, select: { domain: true } }) : null;
+  // Get school subdomain for URL construction with error handling
+  let school = null;
+  try {
+    if (schoolId) {
+      school = await db.school.findUnique({ where: { id: schoolId }, select: { domain: true } });
+    }
+  } catch (error) {
+    console.error('[AccountantDashboard] Error fetching school domain:', error);
+  }
+
   // Fetch real data from database
   const [totalInvoices, paidInvoices, unpaidInvoices] = user.schoolId
     ? await Promise.all([

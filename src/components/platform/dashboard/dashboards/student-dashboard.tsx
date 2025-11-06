@@ -30,17 +30,37 @@ export async function StudentDashboard({
   dictionary,
   locale = "en",
 }: StudentDashboardProps) {
-  // Fetch real data from server action
-  const data = await getStudentDashboardData();
+  // Fetch real data from server action with error handling
+  let data;
+  try {
+    data = await getStudentDashboardData();
+  } catch (error) {
+    console.error('[StudentDashboard] Error fetching dashboard data:', error);
+    return (
+      <div className="space-y-6">
+        <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
+          <h3 className="mb-4">Unable to Load Dashboard</h3>
+          <p className="text-muted-foreground">
+            There was an error loading the dashboard data. Please try refreshing the page.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   // Get tenant context for subdomain
   const { schoolId } = await getTenantContext();
 
-  // Get school subdomain for URL construction
-  const school = schoolId ? await (async () => {
-    const { db } = await import("@/lib/db");
-    return db.school.findUnique({ where: { id: schoolId }, select: { domain: true } });
-  })() : null;
+  // Get school subdomain for URL construction with error handling
+  let school = null;
+  try {
+    if (schoolId) {
+      const { db } = await import("@/lib/db");
+      school = await db.school.findUnique({ where: { id: schoolId }, select: { domain: true } });
+    }
+  } catch (error) {
+    console.error('[StudentDashboard] Error fetching school domain:', error);
+  }
 
   // Get dashboard dictionary
   const dashDict = dictionary?.studentDashboard || {

@@ -18,17 +18,39 @@ interface Props {
 }
 
 export async function AdminDashboard({ user, dictionary, locale = "en" }: Props) {
-  // Fetch real data from server actions
-  const dashboardData = await getDashboardSummary();
+  // Fetch real data from server actions with error handling
+  let dashboardData;
+  try {
+    dashboardData = await getDashboardSummary();
+  } catch (error) {
+    console.error('[AdminDashboard] Error fetching dashboard data:', error);
+    // Return early with error message instead of crashing
+    return (
+      <div className="space-y-6">
+        <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
+          <h3 className="mb-4">Unable to Load Dashboard</h3>
+          <p className="text-muted-foreground">
+            There was an error loading the dashboard data. Please try refreshing the page.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   // Get tenant context for subdomain
   const { schoolId } = await getTenantContext();
 
-  // Get school subdomain for URL construction
-  const school = schoolId ? await (async () => {
-    const { db } = await import("@/lib/db");
-    return db.school.findUnique({ where: { id: schoolId }, select: { domain: true } });
-  })() : null;
+  // Get school subdomain for URL construction with error handling
+  let school = null;
+  try {
+    if (schoolId) {
+      const { db } = await import("@/lib/db");
+      school = await db.school.findUnique({ where: { id: schoolId }, select: { domain: true } });
+    }
+  } catch (error) {
+    console.error('[AdminDashboard] Error fetching school domain:', error);
+    // Continue without school domain - QuickActions will work without it
+  }
 
   // Destructure real data
   const {

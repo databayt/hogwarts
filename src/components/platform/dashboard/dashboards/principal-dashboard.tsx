@@ -30,11 +30,17 @@ export async function PrincipalDashboard({ user, dictionary, locale = "en" }: Pr
   // Get tenant context for subdomain
   const { schoolId } = await getTenantContext();
 
-  // Get school subdomain for URL construction
-  const school = schoolId ? await (async () => {
-    const { db } = await import("@/lib/db");
-    return db.school.findUnique({ where: { id: schoolId }, select: { domain: true } });
-  })() : null;
+  // Get school subdomain for URL construction with error handling
+  let school = null;
+  try {
+    if (schoolId) {
+      const { db } = await import("@/lib/db");
+      school = await db.school.findUnique({ where: { id: schoolId }, select: { domain: true } });
+    }
+  } catch (error) {
+    console.error('[PrincipalDashboard] Error fetching school domain:', error);
+  }
+
   // Helper variable for dictionary access
   const t = dictionary.principalDashboard;
 
