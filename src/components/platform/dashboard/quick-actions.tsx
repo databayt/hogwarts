@@ -2,7 +2,7 @@
 
 import React from "react";
 import { cn } from "@/lib/utils";
-import type { LucideIcon } from "lucide-react";
+import * as LucideIcons from "lucide-react";
 import Link from "next/link";
 
 /**
@@ -15,11 +15,31 @@ import Link from "next/link";
  */
 
 export interface QuickAction {
-  icon: LucideIcon;
+  iconName: string; // Icon name as string (e.g., "FileText", "Users")
   label: string;
   href?: string;
   onClick?: () => void;
 }
+
+// Map icon names to Lucide icon components
+const iconMap: Record<string, React.ComponentType<{ className?: string; "aria-hidden"?: boolean }>> = {
+  Users: LucideIcons.Users,
+  FileText: LucideIcons.FileText,
+  Bell: LucideIcons.Bell,
+  CheckCircle: LucideIcons.CheckCircle,
+  Calendar: LucideIcons.Calendar,
+  BookOpen: LucideIcons.BookOpen,
+  Award: LucideIcons.Award,
+  CalendarDays: LucideIcons.CalendarDays,
+  MessageSquare: LucideIcons.MessageSquare,
+  ClipboardList: LucideIcons.ClipboardList,
+  DollarSign: LucideIcons.DollarSign,
+  Settings: LucideIcons.Settings,
+  UserPlus: LucideIcons.UserPlus,
+  BarChart3: LucideIcons.BarChart3,
+  Clock: LucideIcons.Clock,
+  FolderOpen: LucideIcons.FolderOpen,
+};
 
 interface QuickActionsProps {
   actions: QuickAction[];
@@ -32,7 +52,8 @@ export function QuickActions({ actions, locale = "en", className }: QuickActions
     <div className={cn("w-full", className)}>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
         {actions.map((action, index) => {
-          const Icon = action.icon;
+          // Get icon component from map, fallback to FileText if not found
+          const Icon = iconMap[action.iconName] || LucideIcons.FileText;
           const baseClasses = cn(
             "flex flex-col items-center justify-center gap-2 rounded-lg border bg-card p-4 transition-all",
             "hover:bg-accent hover:shadow-sm hover:scale-[1.02]",
@@ -42,7 +63,7 @@ export function QuickActions({ actions, locale = "en", className }: QuickActions
 
           const content = (
             <>
-              <Icon className="h-6 w-6 text-muted-foreground" aria-hidden="true" />
+              <Icon className="h-6 w-6 text-muted-foreground" aria-hidden={true} />
               <span className="text-center text-xs font-medium leading-tight">{action.label}</span>
             </>
           );

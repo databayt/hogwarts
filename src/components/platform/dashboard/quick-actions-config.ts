@@ -1,21 +1,3 @@
-import {
-  Users,
-  FileText,
-  Bell,
-  CheckCircle,
-  Calendar,
-  BookOpen,
-  Award,
-  CalendarDays,
-  MessageSquare,
-  ClipboardList,
-  DollarSign,
-  Settings,
-  UserPlus,
-  BarChart3,
-  Clock,
-  FolderOpen,
-} from "lucide-react";
 import type { QuickAction } from "./quick-actions";
 import type { Dictionary } from "@/components/internationalization/dictionaries";
 
@@ -34,32 +16,32 @@ export function getQuickActionsByRole(
     case "ADMIN":
       return [
         {
-          icon: FileText,
+          iconName: "FileText",
           label: dictionary?.dashboard?.quickActions?.generateReports || "Generate Reports",
           href: `${baseUrl}/reports`,
         },
         {
-          icon: CheckCircle,
+          iconName: "CheckCircle",
           label: dictionary?.dashboard?.quickActions?.approveRequests || "Approve Requests",
           href: `${baseUrl}/approvals`,
         },
         {
-          icon: Bell,
+          iconName: "Bell",
           label: dictionary?.dashboard?.quickActions?.sendAnnouncements || "Send Announcements",
           href: `${baseUrl}/announcements/create`,
         },
         {
-          icon: Users,
+          iconName: "Users",
           label: dictionary?.dashboard?.quickActions?.userManagement || "User Management",
           href: `${baseUrl}/users`,
         },
         {
-          icon: Settings,
+          iconName: "Settings",
           label: dictionary?.dashboard?.quickActions?.settings || "Settings",
           href: `${baseUrl}/settings`,
         },
         {
-          icon: BarChart3,
+          iconName: "BarChart3",
           label: dictionary?.dashboard?.quickActions?.analytics || "Analytics",
           href: `${baseUrl}/analytics`,
         },
@@ -68,32 +50,32 @@ export function getQuickActionsByRole(
     case "PRINCIPAL":
       return [
         {
-          icon: FileText,
+          iconName: "FileText",
           label: dictionary?.dashboard?.quickActions?.viewReports || "View Reports",
           href: `${baseUrl}/reports`,
         },
         {
-          icon: Users,
+          iconName: "Users",
           label: dictionary?.dashboard?.quickActions?.staffManagement || "Staff Management",
           href: `${baseUrl}/staff`,
         },
         {
-          icon: Bell,
+          iconName: "Bell",
           label: dictionary?.dashboard?.quickActions?.announcements || "Announcements",
           href: `${baseUrl}/announcements`,
         },
         {
-          icon: CheckCircle,
+          iconName: "CheckCircle",
           label: dictionary?.dashboard?.quickActions?.approveRequests || "Approve Requests",
           href: `${baseUrl}/approvals`,
         },
         {
-          icon: BarChart3,
+          iconName: "BarChart3",
           label: dictionary?.dashboard?.quickActions?.performance || "Performance",
           href: `${baseUrl}/performance`,
         },
         {
-          icon: Calendar,
+          iconName: "Calendar",
           label: dictionary?.dashboard?.quickActions?.events || "Events",
           href: `${baseUrl}/events`,
         },
@@ -102,32 +84,32 @@ export function getQuickActionsByRole(
     case "TEACHER":
       return [
         {
-          icon: Users,
+          iconName: "Users",
           label: dictionary?.teacherDashboard?.quickActions?.takeAttendance || "Take Attendance",
           href: `${baseUrl}/attendance/mark`,
         },
         {
-          icon: FileText,
+          iconName: "FileText",
           label: dictionary?.teacherDashboard?.quickActions?.enterGrades || "Enter Grades",
           href: `${baseUrl}/grades/enter`,
         },
         {
-          icon: BookOpen,
+          iconName: "BookOpen",
           label: dictionary?.teacherDashboard?.quickActions?.createAssignment || "Create Assignment",
           href: `${baseUrl}/assignments/create`,
         },
         {
-          icon: MessageSquare,
+          iconName: "MessageSquare",
           label: dictionary?.teacherDashboard?.quickActions?.messageParents || "Message Parents",
           href: `${baseUrl}/messages`,
         },
         {
-          icon: Calendar,
+          iconName: "Calendar",
           label: dictionary?.dashboard?.quickActions?.viewTimetable || "View Timetable",
           href: `${baseUrl}/timetable`,
         },
         {
-          icon: ClipboardList,
+          iconName: "ClipboardList",
           label: dictionary?.dashboard?.quickActions?.lessonPlans || "Lesson Plans",
           href: `${baseUrl}/lessons`,
         },
@@ -136,32 +118,32 @@ export function getQuickActionsByRole(
     case "STUDENT":
       return [
         {
-          icon: FileText,
+          iconName: "FileText",
           label: dictionary?.studentDashboard?.quickActions?.submitAssignment || "Submit Assignment",
           href: `${baseUrl}/assignments`,
         },
         {
-          icon: Award,
+          iconName: "Award",
           label: dictionary?.studentDashboard?.quickActions?.checkGrades || "Check Grades",
           href: `${baseUrl}/grades`,
         },
         {
-          icon: CalendarDays,
+          iconName: "CalendarDays",
           label: dictionary?.studentDashboard?.quickActions?.viewTimetable || "View Timetable",
           href: `${baseUrl}/timetable`,
         },
         {
-          icon: MessageSquare,
+          iconName: "MessageSquare",
           label: dictionary?.studentDashboard?.quickActions?.messages || "Messages",
           href: `${baseUrl}/messages`,
         },
         {
-          icon: BookOpen,
+          iconName: "BookOpen",
           label: dictionary?.dashboard?.quickActions?.library || "Library",
           href: `${baseUrl}/library`,
         },
         {
-          icon: Clock,
+          iconName: "Clock",
           label: dictionary?.dashboard?.quickActions?.attendance || "Attendance",
           href: `${baseUrl}/attendance`,
         },
@@ -170,32 +152,32 @@ export function getQuickActionsByRole(
     case "GUARDIAN":
       return [
         {
-          icon: Users,
+          iconName: "Users",
           label: dictionary?.dashboard?.quickActions?.viewChildren || "View Children",
           href: `${baseUrl}/children`,
         },
         {
-          icon: Award,
+          iconName: "Award",
           label: dictionary?.dashboard?.quickActions?.checkGrades || "Check Grades",
           href: `${baseUrl}/grades`,
         },
         {
-          icon: Calendar,
+          iconName: "Calendar",
           label: dictionary?.dashboard?.quickActions?.attendance || "Attendance",
           href: `${baseUrl}/attendance`,
         },
         {
-          icon: MessageSquare,
+          iconName: "MessageSquare",
           label: dictionary?.dashboard?.quickActions?.messageTeachers || "Message Teachers",
           href: `${baseUrl}/messages`,
         },
         {
-          icon: DollarSign,
+          iconName: "DollarSign",
           label: dictionary?.dashboard?.quickActions?.fees || "Fees",
           href: `${baseUrl}/finance/fees`,
         },
         {
-          icon: Bell,
+          iconName: "Bell",
           label: dictionary?.dashboard?.quickActions?.announcements || "Announcements",
           href: `${baseUrl}/announcements`,
         },
@@ -204,32 +186,32 @@ export function getQuickActionsByRole(
     case "ACCOUNTANT":
       return [
         {
-          icon: DollarSign,
+          iconName: "DollarSign",
           label: dictionary?.dashboard?.quickActions?.manageInvoices || "Manage Invoices",
           href: `${baseUrl}/finance/invoice`,
         },
         {
-          icon: FileText,
+          iconName: "FileText",
           label: dictionary?.dashboard?.quickActions?.generateReceipts || "Generate Receipts",
           href: `${baseUrl}/finance/receipt`,
         },
         {
-          icon: BarChart3,
+          iconName: "BarChart3",
           label: dictionary?.dashboard?.quickActions?.financialReports || "Financial Reports",
           href: `${baseUrl}/finance/reports`,
         },
         {
-          icon: Users,
+          iconName: "Users",
           label: dictionary?.dashboard?.quickActions?.feeManagement || "Fee Management",
           href: `${baseUrl}/finance/fees`,
         },
         {
-          icon: CheckCircle,
+          iconName: "CheckCircle",
           label: dictionary?.dashboard?.quickActions?.approvePayments || "Approve Payments",
           href: `${baseUrl}/finance/approvals`,
         },
         {
-          icon: FolderOpen,
+          iconName: "FolderOpen",
           label: dictionary?.dashboard?.quickActions?.budgetTracking || "Budget Tracking",
           href: `${baseUrl}/finance/budget`,
         },
@@ -238,32 +220,32 @@ export function getQuickActionsByRole(
     case "STAFF":
       return [
         {
-          icon: ClipboardList,
+          iconName: "ClipboardList",
           label: dictionary?.dashboard?.quickActions?.myTasks || "My Tasks",
           href: `${baseUrl}/tasks`,
         },
         {
-          icon: Calendar,
+          iconName: "Calendar",
           label: dictionary?.dashboard?.quickActions?.mySchedule || "My Schedule",
           href: `${baseUrl}/schedule`,
         },
         {
-          icon: MessageSquare,
+          iconName: "MessageSquare",
           label: dictionary?.dashboard?.quickActions?.messages || "Messages",
           href: `${baseUrl}/messages`,
         },
         {
-          icon: Bell,
+          iconName: "Bell",
           label: dictionary?.dashboard?.quickActions?.announcements || "Announcements",
           href: `${baseUrl}/announcements`,
         },
         {
-          icon: FileText,
+          iconName: "FileText",
           label: dictionary?.dashboard?.quickActions?.reports || "Reports",
           href: `${baseUrl}/reports`,
         },
         {
-          icon: Users,
+          iconName: "Users",
           label: dictionary?.dashboard?.quickActions?.directory || "Directory",
           href: `${baseUrl}/directory`,
         },
@@ -272,17 +254,17 @@ export function getQuickActionsByRole(
     default:
       return [
         {
-          icon: Bell,
+          iconName: "Bell",
           label: dictionary?.dashboard?.quickActions?.announcements || "Announcements",
           href: `${baseUrl}/announcements`,
         },
         {
-          icon: MessageSquare,
+          iconName: "MessageSquare",
           label: dictionary?.dashboard?.quickActions?.messages || "Messages",
           href: `${baseUrl}/messages`,
         },
         {
-          icon: Settings,
+          iconName: "Settings",
           label: dictionary?.dashboard?.quickActions?.settings || "Settings",
           href: `${baseUrl}/settings`,
         },
