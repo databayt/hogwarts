@@ -50,23 +50,25 @@ interface QuickActionsProps {
 export function QuickActions({ actions, locale = "en", className }: QuickActionsProps) {
   return (
     <div className={cn("w-full", className)}>
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-        {actions.map((action, index) => {
-          // Get icon component from map, fallback to FileText if not found
-          const Icon = iconMap[action.iconName] || LucideIcons.FileText;
-          const baseClasses = cn(
-            "flex flex-col items-center justify-center gap-2 rounded-lg border bg-card p-4 transition-all",
-            "hover:bg-accent hover:shadow-sm hover:scale-[1.02]",
-            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-            "cursor-pointer"
-          );
+      {/* Outer card wrapper */}
+      <div className="rounded-lg border bg-card p-6">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+          {actions.map((action, index) => {
+            // Get icon component from map, fallback to FileText if not found
+            const Icon = iconMap[action.iconName] || LucideIcons.FileText;
+            const baseClasses = cn(
+              "flex flex-col items-start justify-start gap-3 rounded-lg p-4 transition-all",
+              "hover:bg-accent hover:scale-[1.02]",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+              "cursor-pointer"
+            );
 
-          const content = (
-            <>
-              <Icon className="h-6 w-6 text-muted-foreground" aria-hidden={true} />
-              <span className="text-center text-xs font-medium leading-tight">{action.label}</span>
-            </>
-          );
+            const content = (
+              <>
+                <Icon className="h-8 w-8 text-muted-foreground" aria-hidden={true} />
+                <span className="text-sm font-medium">{action.label}</span>
+              </>
+            );
 
           if (action.href) {
             return (
@@ -91,6 +93,7 @@ export function QuickActions({ actions, locale = "en", className }: QuickActions
             </button>
           );
         })}
+        </div>
       </div>
     </div>
   );
