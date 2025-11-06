@@ -16,14 +16,17 @@ import { getNotificationDictionary } from "@/components/internationalization/dic
 import type { Locale } from "@/components/internationalization/config"
 
 // Helper function to safely serialize dates
-// Returns null for null/undefined instead of current date
-function safeSerializeDate(date: Date | null | undefined): string | null {
-  if (!date) return null
+// Returns current date as fallback for null/undefined/invalid dates
+function safeSerializeDate(date: Date | null | undefined): string {
+  if (!date) {
+    console.warn('[safeSerializeDate] Null/undefined date, using current time as fallback')
+    return new Date().toISOString()
+  }
   try {
     return new Date(date).toISOString()
   } catch (error) {
     console.error('[safeSerializeDate] Invalid date:', date, error)
-    return null
+    return new Date().toISOString()
   }
 }
 
@@ -67,17 +70,36 @@ export async function NotificationCenterContent({
     search: searchParams.search,
   }
 
-  // Fetch notifications and stats in parallel
-  const [notificationsResult, stats] = await Promise.all([
-    getNotificationsList(schoolId, session.user.id, {
-      page,
-      perPage,
-      ...filters,
-    }),
-    getNotificationStats(schoolId, session.user.id),
-  ])
+  // Fetch notifications and stats with error handling
+  let notifications: any[] = []
+  let totalCount = 0
+  let stats = {
+    total: 0,
+    unread: 0,
+    today: 0,
+    thisWeek: 0,
+    byType: {} as Record<any, number>,
+    byPriority: {} as Record<any, number>,
+  }
 
-  const { rows: notifications, count: totalCount } = notificationsResult
+  try {
+    const [notificationsResult, statsResult] = await Promise.all([
+      getNotificationsList(schoolId, session.user.id, {
+        page,
+        perPage,
+        ...filters,
+      }),
+      getNotificationStats(schoolId, session.user.id),
+    ])
+
+    notifications = notificationsResult.rows
+    totalCount = notificationsResult.count
+    stats = statsResult
+  } catch (error) {
+    console.error('[NotificationCenterContent] Error fetching notifications:', error)
+    // Continue with empty data - shows "No notifications" instead of crash
+  }
+
   const totalPages = Math.ceil(totalCount / perPage)
 
   return (
@@ -178,13 +200,13 @@ export async function NotificationCenterContent({
         </CardHeader>
         <CardContent>
           <NotificationCenterClient
-            initialNotifications={notifications.map(n => ({
+            initialNotifications={(notifications ?? []).map(n => ({
               ...n,
-              createdAt: safeSerializeDate(n.createdAt),
-              updatedAt: safeSerializeDate(n.updatedAt),
-              readAt: n.readAt ? safeSerializeDate(n.readAt) : null,
-              emailSentAt: n.emailSentAt ? safeSerializeDate(n.emailSentAt) : null,
-              metadata: n.metadata as Record<string, unknown> | null
+              createdAt: safeSerializeDate(n?.createdAt),
+              updatedAt: safeSerializeDate(n?.updatedAt),
+              readAt: n?.readAt ? safeSerializeDate(n.readAt) : null,
+              emailSentAt: n?.emailSentAt ? safeSerializeDate(n.emailSentAt) : null,
+              metadata: (n?.metadata as Record<string, unknown> | null) ?? null
             })) as NotificationDTO[]}
             locale={locale}
             dictionary={dict.notifications}
