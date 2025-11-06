@@ -4,6 +4,7 @@ import React from "react";
 import { cn } from "@/lib/utils";
 import * as LucideIcons from "lucide-react";
 import Link from "next/link";
+import { Card, CardContent } from "@/components/ui/card";
 
 /**
  * QuickActions Component
@@ -51,24 +52,25 @@ export function QuickActions({ actions, locale = "en", className }: QuickActions
   return (
     <div className={cn("w-full", className)}>
       {/* Outer card wrapper */}
-      <div className="rounded-lg border bg-card p-6">
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-          {actions.map((action, index) => {
-            // Get icon component from map, fallback to FileText if not found
-            const Icon = iconMap[action.iconName] || LucideIcons.FileText;
-            const baseClasses = cn(
-              "flex flex-col items-start justify-start gap-3 rounded-lg p-4 transition-all",
-              "hover:bg-accent hover:scale-[1.02]",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-              "cursor-pointer"
-            );
+      <Card>
+        <CardContent className="pt-6">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+            {actions.map((action, index) => {
+              // Get icon component from map, fallback to FileText if not found
+              const Icon = iconMap[action.iconName] || LucideIcons.FileText;
+              const baseClasses = cn(
+                "flex flex-col items-center justify-center gap-3 rounded-lg p-4 transition-all",
+                "hover:bg-accent hover:scale-[1.02]",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                "cursor-pointer"
+              );
 
-            const content = (
-              <>
-                <Icon className="h-8 w-8 text-muted-foreground" aria-hidden={true} />
-                <span className="text-sm font-medium">{action.label}</span>
-              </>
-            );
+              const content = (
+                <>
+                  <Icon className="h-8 w-8 text-muted-foreground" aria-hidden={true} />
+                  <span className="text-sm font-medium text-muted-foreground">{action.label}</span>
+                </>
+              );
 
           if (action.href) {
             return (
@@ -93,8 +95,9 @@ export function QuickActions({ actions, locale = "en", className }: QuickActions
             </button>
           );
         })}
-        </div>
-      </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
