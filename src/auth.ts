@@ -4,6 +4,51 @@ import { db } from "@/lib/db"
 import authConfig from "./auth.config"
 import { DEFAULT_LOGIN_REDIRECT } from "@/routes"
 import { cookies } from "next/headers"
+import { getToken } from "next-auth/jwt"
+
+/**
+ * Helper: Get school domain from database by schoolId
+ * Returns null if schoolId is null/undefined or school not found
+ */
+async function getSchoolDomain(schoolId: string | null | undefined): Promise<string | null> {
+  if (!schoolId) return null;
+
+  try {
+    const school = await db.school.findUnique({
+      where: { id: schoolId },
+      select: { domain: true }
+    });
+
+    return school?.domain || null;
+  } catch (error) {
+    console.error('Error fetching school domain:', error);
+    return null;
+  }
+}
+
+/**
+ * Helper: Construct environment-aware school URL
+ * Development: http://{subdomain}.localhost:3000{path}
+ * Production: https://{subdomain}.databayt.org{path}
+ */
+function constructSchoolUrl(subdomain: string, path: string = '/dashboard'): string {
+  const isDev = process.env.NODE_ENV === 'development';
+
+  if (isDev) {
+    return `http://${subdomain}.localhost:3000${path}`;
+  } else {
+    return `https://${subdomain}.databayt.org${path}`;
+  }
+}
+
+/**
+ * Helper: Extract locale from URL (ar or en)
+ * Returns 'ar' as default if not found
+ */
+function extractLocaleFromUrl(url: string): string {
+  const match = url.match(/^\/(ar|en)\//);
+  return match ? match[1] : 'ar'; // Default to Arabic
+}
 
 export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(db),
@@ -823,24 +868,95 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
         isSameOrigin: url.startsWith("http") ? new URL(url).origin === baseUrl : false
       });
       
-      // Default behavior - redirect to dashboard on current domain
-      if (url.startsWith("/")) {
-        // Special case: if URL is exactly "/" (home page), respect it (for logout)
-        if (url === "/") {
-          const homeUrl = baseUrl; // Just the base URL without any path
-          log('🏠 Redirecting to home page (logout):', {
-            reason: 'URL is exactly /',
-            originalUrl: url,
-            finalUrl: homeUrl
-          });
-          log('=====================================');
-          log('🔄 REDIRECT CALLBACK END');
-          log('=====================================\n');
-          return homeUrl;
+      // Special case: if URL is exactly "/" (home page), respect it (for logout)
+      if (url === "/") {
+        const homeUrl = baseUrl;
+        log('🏠 Redirecting to home page (logout):', {
+          reason: 'URL is exactly /',
+          originalUrl: url,
+          finalUrl: homeUrl
+        });
+        log('=====================================');
+        log('🔄 REDIRECT CALLBACK END');
+        log('=====================================\n');
+        return homeUrl;
+      }
+
+      // 🎯 SMART SUBDOMAIN REDIRECT BASED ON USER'S SCHOOL
+      log('\n🎯 SMART SUBDOMAIN REDIRECT - Getting user school info...');
+
+      try {
+        // Get JWT token to access user data
+        const token = await getToken({
+          req: {
+            headers: {
+              cookie: (await cookies()).toString()
+            }
+          } as any,
+          secret: process.env.AUTH_SECRET
+        });
+
+        log('🔑 Token data:', {
+          hasToken: !!token,
+          schoolId: token?.schoolId,
+          role: token?.role,
+          email: token?.email
+        });
+
+        if (token) {
+          const userSchoolId = token.schoolId as string | null | undefined;
+          const userRole = token.role as string | undefined;
+
+          // Platform admin (DEVELOPER role or no schoolId) → main domain
+          if (!userSchoolId || userRole === 'DEVELOPER') {
+            const mainDashboard = `${baseUrl}/dashboard`;
+            log('👑 Platform admin detected - redirecting to main domain:', {
+              reason: 'No schoolId or DEVELOPER role',
+              role: userRole,
+              schoolId: userSchoolId,
+              finalUrl: mainDashboard
+            });
+            log('=====================================');
+            log('🔄 REDIRECT CALLBACK END');
+            log('=====================================\n');
+            return mainDashboard;
+          }
+
+          // Regular user → lookup school domain and redirect to subdomain
+          log('👤 Regular user detected - looking up school domain...');
+          const schoolDomain = await getSchoolDomain(userSchoolId);
+
+          if (schoolDomain) {
+            // Extract locale from URL or default to Arabic
+            const locale = extractLocaleFromUrl(url);
+            const schoolUrl = constructSchoolUrl(schoolDomain, `/${locale}/dashboard`);
+
+            log('🏫 School subdomain redirect:', {
+              schoolId: userSchoolId,
+              schoolDomain,
+              locale,
+              finalUrl: schoolUrl
+            });
+            log('=====================================');
+            log('🔄 REDIRECT CALLBACK END');
+            log('=====================================\n');
+            return schoolUrl;
+          } else {
+            log('⚠️ School domain not found for schoolId:', userSchoolId);
+            log('Falling back to main domain');
+          }
+        } else {
+          log('⚠️ No token found - user might not be authenticated yet');
         }
-        
+      } catch (error) {
+        log('❌ Error in smart subdomain redirect:', error);
+        log('Falling back to default behavior');
+      }
+
+      // Fallback: Default behavior - redirect to dashboard on current domain
+      if (url.startsWith("/")) {
         const finalUrl = `${baseUrl}/dashboard`;
-        log('📍 Relative URL - defaulting to dashboard:', {
+        log('📍 Fallback - Relative URL, defaulting to dashboard:', {
           reason: 'URL starts with /',
           originalUrl: url,
           finalUrl
@@ -851,9 +967,8 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
         return finalUrl;
       }
       else if (new URL(url).origin === baseUrl) {
-        // If it's the same origin, redirect to dashboard
         const dashboardUrl = `${baseUrl}/dashboard`;
-        log('📍 Same origin - defaulting to dashboard:', {
+        log('📍 Fallback - Same origin, defaulting to dashboard:', {
           reason: 'Same origin as baseUrl',
           originalUrl: url,
           finalUrl: dashboardUrl
@@ -863,9 +978,9 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
         log('=====================================\n');
         return dashboardUrl;
       }
-      
+
       const externalDashboard = `${baseUrl}/dashboard`;
-      log('📍 External URL - defaulting to dashboard:', {
+      log('📍 Fallback - External URL, defaulting to dashboard:', {
         reason: 'External URL',
         originalUrl: url,
         finalUrl: externalDashboard
