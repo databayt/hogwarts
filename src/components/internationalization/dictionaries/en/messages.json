@@ -369,6 +369,7 @@
       "accountDisabled": "Your account has been disabled",
       "accountLocked": "Account locked due to multiple failed attempts",
       "emailNotVerified": "Please verify your email",
+      "emailAlreadyExists": "Email already in use with different provider",
       "sessionExpired": "Your session has expired. Please log in again",
       "invalidToken": "Invalid or expired token",
       "twoFactorRequired": "Two-factor authentication required",
