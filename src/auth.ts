@@ -873,9 +873,15 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
 
       // 🎯 SMART SUBDOMAIN REDIRECT BASED ON USER'S SCHOOL
       log('\n🎯 SMART SUBDOMAIN REDIRECT - Getting user school info...');
+      console.log('[AUTH-REDIRECT] 🎯 SMART SUBDOMAIN REDIRECT STARTING', {
+        url,
+        baseUrl,
+        timestamp: new Date().toISOString()
+      });
 
       try {
         // Get JWT token to access user data
+        console.log('[AUTH-REDIRECT] 🔑 Attempting to get JWT token...');
         const token = await getToken({
           req: {
             headers: {
@@ -883,6 +889,14 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
             }
           } as any,
           secret: process.env.AUTH_SECRET
+        });
+
+        console.log('[AUTH-REDIRECT] 🔑 Token retrieved:', {
+          hasToken: !!token,
+          schoolId: token?.schoolId,
+          role: token?.role,
+          email: token?.email,
+          tokenKeys: token ? Object.keys(token) : []
         });
 
         log('🔑 Token data:', {
@@ -896,9 +910,22 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
           const userSchoolId = token.schoolId as string | null | undefined;
           const userRole = token.role as string | undefined;
 
+          console.log('[AUTH-REDIRECT] 👤 User data extracted:', {
+            userSchoolId,
+            userRole,
+            hasSchoolId: !!userSchoolId,
+            isDeveloper: userRole === 'DEVELOPER'
+          });
+
           // Platform admin (DEVELOPER role or no schoolId) → main domain
           if (!userSchoolId || userRole === 'DEVELOPER') {
             const mainDashboard = `${baseUrl}/dashboard`;
+            console.log('[AUTH-REDIRECT] 👑 Platform admin detected - redirecting to main domain:', {
+              reason: 'No schoolId or DEVELOPER role',
+              role: userRole,
+              schoolId: userSchoolId,
+              finalUrl: mainDashboard
+            });
             log('👑 Platform admin detected - redirecting to main domain:', {
               reason: 'No schoolId or DEVELOPER role',
               role: userRole,
@@ -912,13 +939,32 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
           }
 
           // Regular user → lookup school domain and redirect to subdomain
+          console.log('[AUTH-REDIRECT] 👤 Regular user detected - looking up school domain for schoolId:', userSchoolId);
           log('👤 Regular user detected - looking up school domain...');
           const schoolDomain = await getSchoolDomain(userSchoolId);
+
+          console.log('[AUTH-REDIRECT] 🏫 School domain lookup result:', {
+            userSchoolId,
+            schoolDomain,
+            foundSchool: !!schoolDomain
+          });
 
           if (schoolDomain) {
             // Extract locale from URL or default to Arabic
             const locale = extractLocaleFromUrl(url);
             const schoolUrl = constructSchoolUrl(schoolDomain, `/${locale}/dashboard`);
+
+            console.log('[AUTH-REDIRECT] ✅ School subdomain redirect SUCCESS:', {
+              schoolId: userSchoolId,
+              schoolDomain,
+              locale,
+              finalUrl: schoolUrl,
+              urlBreakdown: {
+                subdomain: schoolDomain,
+                path: `/${locale}/dashboard`,
+                fullUrl: schoolUrl
+              }
+            });
 
             log('🏫 School subdomain redirect:', {
               schoolId: userSchoolId,
@@ -931,13 +977,20 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
             log('=====================================\n');
             return schoolUrl;
           } else {
+            console.error('[AUTH-REDIRECT] ⚠️ School domain NOT FOUND for schoolId:', userSchoolId);
             log('⚠️ School domain not found for schoolId:', userSchoolId);
             log('Falling back to main domain');
           }
         } else {
+          console.error('[AUTH-REDIRECT] ⚠️ No token found - user might not be authenticated yet');
           log('⚠️ No token found - user might not be authenticated yet');
         }
       } catch (error) {
+        console.error('[AUTH-REDIRECT] ❌ ERROR in smart subdomain redirect:', {
+          error: error instanceof Error ? error.message : String(error),
+          stack: error instanceof Error ? error.stack : undefined,
+          errorType: error?.constructor?.name
+        });
         log('❌ Error in smart subdomain redirect:', error);
         log('Falling back to default behavior');
       }
