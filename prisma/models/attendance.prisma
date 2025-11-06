@@ -35,17 +35,17 @@ enum IdentifierType {
 }
 
 model Attendance {
-  id        String           @id @default(cuid())
-  schoolId  String
-  studentId String
-  classId   String
-  date      DateTime         @db.Date
-  status    AttendanceStatus
-  notes     String?
-  markedBy  String? // Teacher ID who marked attendance
-  markedAt  DateTime         @default(now())
-  method    AttendanceMethod @default(MANUAL) // How attendance was marked
-  deviceId  String? // Device used for marking (optional)
+  id           String           @id @default(cuid())
+  schoolId     String
+  studentId    String
+  classId      String
+  date         DateTime         @db.Date
+  status       AttendanceStatus
+  notes        String?
+  markedBy     String? // Teacher ID who marked attendance
+  markedAt     DateTime         @default(now())
+  method       AttendanceMethod @default(MANUAL) // How attendance was marked
+  deviceId     String? // Device used for marking (optional)
   checkInTime  DateTime? // Exact check-in time
   checkOutTime DateTime? // Exact check-out time
   location     Json? // Location data if applicable
@@ -85,8 +85,8 @@ model StudentIdentifier {
   createdAt  DateTime       @default(now())
   updatedAt  DateTime       @updatedAt
 
-  school     School         @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  student    Student        @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  school  School  @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
   @@unique([schoolId, type, value])
   @@index([studentId])
@@ -114,8 +114,8 @@ model QRCodeSession {
   invalidatedAt DateTime?
   invalidatedBy String?
 
-  school  School    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  class   Class     @relation(fields: [classId], references: [id], onDelete: Cascade)
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  class  Class  @relation(fields: [classId], references: [id], onDelete: Cascade)
 
   @@index([classId])
   @@index([expiresAt])

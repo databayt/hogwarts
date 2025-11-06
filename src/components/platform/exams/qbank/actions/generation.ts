@@ -68,7 +68,7 @@ export async function generateExam(
 
     // Get distribution from template or use custom
     let distribution = validated.customDistribution;
-    let templateId = validated.templateId;
+    const templateId = validated.templateId;
 
     if (templateId && !distribution) {
       const template = await db.examTemplate.findFirst({

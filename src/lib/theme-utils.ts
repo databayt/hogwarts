@@ -353,7 +353,7 @@ export function ensureContrast(
   background: string,
   targetRatio: number = 4.5
 ): string {
-  let fg = parseOKLCH(foreground)
+  const fg = parseOKLCH(foreground)
   const bg = parseOKLCH(background)
 
   if (!fg || !bg) return foreground

@@ -41,7 +41,7 @@ export default async function MembershipContent({ dictionary, lang }: Props) {
   let activeUsers = 0
   let inactiveUsers = 0
   let pendingVerification = 0
-  let roleDistribution: Record<string, number> = {}
+  const roleDistribution: Record<string, number> = {}
   let recentUsers: any[] = []
   let blockedUsers = 0
   let usersWithTwoFactor = 0

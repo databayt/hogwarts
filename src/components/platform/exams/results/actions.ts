@@ -435,9 +435,9 @@ export async function generateStudentPDF(
     const brandingCacheKey = cacheKeys.schoolBranding(schoolId);
     const boundariesCacheKey = cacheKeys.gradeBoundaries(schoolId);
 
-    let cachedSchool = schoolCache.get(schoolCacheKey);
-    let cachedBranding = schoolBrandingCache.get(brandingCacheKey);
-    let cachedBoundaries = gradeBoundaryCache.get(boundariesCacheKey);
+    const cachedSchool = schoolCache.get(schoolCacheKey);
+    const cachedBranding = schoolBrandingCache.get(brandingCacheKey);
+    const cachedBoundaries = gradeBoundaryCache.get(boundariesCacheKey);
 
     // Fetch all necessary data, using cache where available
     const [examData, school, boundaries] = await Promise.all([

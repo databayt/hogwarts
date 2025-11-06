@@ -108,11 +108,11 @@ model User {
   conversationInvitesReceived ConversationInvite[]      @relation("ConversationInvitesReceived")
 
   // File upload relations
-  uploadedFiles       FileMetadata[]     @relation("UploadedFiles")
-  fileVersions        FileVersion[]      @relation("FileVersions")
-  filePermissions     FilePermission[]   @relation("FilePermissions")
-  grantedPermissions  FilePermission[]   @relation("GrantedPermissions")
-  fileAuditLogs       FileAuditLog[]     @relation("FileAuditLogs")
+  uploadedFiles      FileMetadata[]   @relation("UploadedFiles")
+  fileVersions       FileVersion[]    @relation("FileVersions")
+  filePermissions    FilePermission[] @relation("FilePermissions")
+  grantedPermissions FilePermission[] @relation("GrantedPermissions")
+  fileAuditLogs      FileAuditLog[]   @relation("FileAuditLogs")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

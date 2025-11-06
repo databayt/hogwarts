@@ -35,7 +35,7 @@ export default async function SecurityContent({ dictionary, lang }: Props) {
   let activeSessions = 0
   let failedLogins = 0
   let twoFactorUsers = 0
-  let blockedIPs = 0
+  const blockedIPs = 0
 
   if (schoolId) {
     try {

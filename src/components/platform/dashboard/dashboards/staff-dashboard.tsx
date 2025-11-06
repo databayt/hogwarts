@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Users, FileText, Clock, AlertTriangle, CheckCircle, Building } from "lucide-react";
+import { Users, FileText, Clock, AlertTriangle, CheckCircle, Building, Settings } from "lucide-react";
 import { QuickActions } from "../quick-actions";
 import { getQuickActionsByRole } from "../quick-actions-config";
 import { getTenantContext } from "@/lib/tenant-context";

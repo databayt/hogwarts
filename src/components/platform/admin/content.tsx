@@ -60,7 +60,7 @@ export default async function AdminContent({ dictionary, lang }: Props) {
   let totalClassrooms = 0
   let activeSessions = 0
   let failedLogins = 0
-  let systemHealthScore = 95 // Mock value for now
+  const systemHealthScore = 95 // Mock value for now
   let pendingApprovals = 0
   let activeIntegrations = 0
   let totalAnnouncements = 0

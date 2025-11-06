@@ -7,46 +7,46 @@
 
 /// Core file metadata - tracks all uploaded files
 model FileMetadata {
-  id           String   @id @default(cuid())
+  id String @id @default(cuid())
 
   // File identification
-  filename     String   // Sanitized filename (safe for storage)
-  originalName String   // User's original filename
-  mimeType     String   // MIME type (e.g., image/jpeg, application/pdf)
-  size         BigInt   // File size in bytes
-  hash         String?  @unique // SHA-256 hash for deduplication
+  filename     String // Sanitized filename (safe for storage)
+  originalName String // User's original filename
+  mimeType     String // MIME type (e.g., image/jpeg, application/pdf)
+  size         BigInt // File size in bytes
+  hash         String? @unique // SHA-256 hash for deduplication
 
   // Categorization
-  category     FileCategory // IMAGE, VIDEO, DOCUMENT, AUDIO, ARCHIVE, OTHER
-  type         String?      // Logical type: avatar, logo, certificate, receipt, etc.
+  category FileCategory // IMAGE, VIDEO, DOCUMENT, AUDIO, ARCHIVE, OTHER
+  type     String? // Logical type: avatar, logo, certificate, receipt, etc.
 
   // Storage details
   storageProvider StorageProvider // VERCEL_BLOB, AWS_S3, CLOUDFLARE_R2
   storageTier     StorageTier     @default(HOT) // HOT, WARM, COLD (for cost optimization)
-  storageKey      String          // Full path/key in storage provider
-  storageRegion   String?         // AWS region or storage location
-  publicUrl       String?         // Public URL (if accessLevel is PUBLIC)
-  privateUrl      String?         // Signed/authenticated URL
-  thumbnailUrl    String?         // Generated thumbnail URL (for images/videos)
+  storageKey      String // Full path/key in storage provider
+  storageRegion   String? // AWS region or storage location
+  publicUrl       String? // Public URL (if accessLevel is PUBLIC)
+  privateUrl      String? // Signed/authenticated URL
+  thumbnailUrl    String? // Generated thumbnail URL (for images/videos)
 
   // Multi-tenant isolation (CRITICAL)
-  schoolId     String  // Tenant isolation - ALWAYS required for business data
-  uploadedById String  // User who uploaded the file
-  folder       String  @default("/") // Logical folder path (e.g., /students/123/documents)
+  schoolId     String // Tenant isolation - ALWAYS required for business data
+  uploadedById String // User who uploaded the file
+  folder       String @default("/") // Logical folder path (e.g., /students/123/documents)
 
   // Access control
   accessLevel AccessLevel @default(PRIVATE) // PRIVATE, SCHOOL, PUBLIC
 
   // File-specific metadata
-  width     Int?   // Image width in pixels
-  height    Int?   // Image height in pixels
+  width     Int? // Image width in pixels
+  height    Int? // Image height in pixels
   duration  Float? // Video/audio duration in seconds
-  pageCount Int?   // Number of pages (for PDFs)
-  metadata  Json?  // Additional metadata (EXIF, video codec, etc.)
+  pageCount Int? // Number of pages (for PDFs)
+  metadata  Json? // Additional metadata (EXIF, video codec, etc.)
 
   // Status and lifecycle
-  status    FileStatus @default(ACTIVE) // ACTIVE, ARCHIVED, DELETED, QUARANTINED
-  deletedAt DateTime?  // Soft delete timestamp
+  status     FileStatus @default(ACTIVE) // ACTIVE, ARCHIVED, DELETED, QUARANTINED
+  deletedAt  DateTime? // Soft delete timestamp
   archivedAt DateTime? // Archive timestamp (for cold storage migration)
 
   // Usage tracking
@@ -61,21 +61,20 @@ model FileMetadata {
   // Relations
   school          School               @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   uploadedBy      User                 @relation("UploadedFiles", fields: [uploadedById], references: [id])
-  versions        FileVersion[]        // File versioning history
-  permissions     FilePermission[]     // Per-user/role access control
-  chunks          FileChunk[]          // Chunked upload tracking
+  versions        FileVersion[] // File versioning history
+  permissions     FilePermission[] // Per-user/role access control
+  chunks          FileChunk[] // Chunked upload tracking
   transformations FileTransformation[] // Generated thumbnails, optimizations
-  auditLogs       FileAuditLog[]       // Complete audit trail
+  auditLogs       FileAuditLog[] // Complete audit trail
 
   // Indexes for performance
-  @@index([schoolId, folder])       // Query files by school and folder
-  @@index([schoolId, category])     // Query files by school and category
+  @@index([schoolId, folder]) // Query files by school and folder
+  @@index([schoolId, category]) // Query files by school and category
   @@index([schoolId, uploadedById]) // Query user's files
-  @@index([hash])                   // Deduplication lookups
-  @@index([status])                 // Filter by status
-  @@index([createdAt])              // Sort by upload date
-  @@index([storageProvider])        // Query by storage provider
-
+  @@index([hash]) // Deduplication lookups
+  @@index([status]) // Filter by status
+  @@index([createdAt]) // Sort by upload date
+  @@index([storageProvider]) // Query by storage provider
   @@map("file_metadata")
 }
 
@@ -86,14 +85,14 @@ model FileMetadata {
 /// File version history - supports "Save As" and rollback functionality
 model FileVersion {
   id         String   @id @default(cuid())
-  fileId     String   // Parent file
-  version    Int      // Version number (1, 2, 3, ...)
-  size       BigInt   // Size of this version
-  storageKey String   // Storage location for this version
-  hash       String?  // SHA-256 hash of this version
-  metadata   Json?    // Version-specific metadata
-  comment    String?  // Optional version comment
-  uploadedBy String   // User who created this version
+  fileId     String // Parent file
+  version    Int // Version number (1, 2, 3, ...)
+  size       BigInt // Size of this version
+  storageKey String // Storage location for this version
+  hash       String? // SHA-256 hash of this version
+  metadata   Json? // Version-specific metadata
+  comment    String? // Optional version comment
+  uploadedBy String // User who created this version
   createdAt  DateTime @default(now())
 
   // Relations
@@ -102,7 +101,6 @@ model FileVersion {
 
   @@unique([fileId, version]) // Ensure version numbers are unique per file
   @@index([fileId])
-
   @@map("file_versions")
 }
 
@@ -113,13 +111,13 @@ model FileVersion {
 /// Fine-grained access control for files
 model FilePermission {
   id        String     @id @default(cuid())
-  fileId    String     // File this permission applies to
-  userId    String?    // Specific user (null = applies to all)
-  role      UserRole?  // Or specific role
+  fileId    String // File this permission applies to
+  userId    String? // Specific user (null = applies to all)
+  role      UserRole? // Or specific role
   action    FileAction // VIEW, DOWNLOAD, EDIT, DELETE, SHARE
-  expiresAt DateTime?  // Optional expiration date
+  expiresAt DateTime? // Optional expiration date
   createdAt DateTime   @default(now())
-  createdBy String     // User who granted this permission
+  createdBy String // User who granted this permission
 
   // Relations
   file      FileMetadata @relation(fields: [fileId], references: [id], onDelete: Cascade)
@@ -128,7 +126,6 @@ model FilePermission {
 
   @@index([fileId])
   @@index([userId])
-
   @@map("file_permissions")
 }
 
@@ -140,25 +137,24 @@ model FilePermission {
 /// Enables resumable uploads and parallel chunk processing
 model FileChunk {
   id          String      @id @default(cuid())
-  uploadId    String      // Unique session ID for this chunked upload
-  fileId      String?     // Linked to FileMetadata after completion
-  chunkNumber Int         // Chunk sequence number (0, 1, 2, ...)
-  totalChunks Int         // Total number of chunks expected
-  size        BigInt      // Size of this chunk in bytes
-  hash        String      // SHA-256 hash of this chunk (for verification)
-  storageKey  String      // Temporary storage location for this chunk
+  uploadId    String // Unique session ID for this chunked upload
+  fileId      String? // Linked to FileMetadata after completion
+  chunkNumber Int // Chunk sequence number (0, 1, 2, ...)
+  totalChunks Int // Total number of chunks expected
+  size        BigInt // Size of this chunk in bytes
+  hash        String // SHA-256 hash of this chunk (for verification)
+  storageKey  String // Temporary storage location for this chunk
   status      ChunkStatus @default(PENDING) // PENDING, UPLOADING, COMPLETED, FAILED
-  uploadedAt  DateTime?   // When this chunk was successfully uploaded
+  uploadedAt  DateTime? // When this chunk was successfully uploaded
   createdAt   DateTime    @default(now())
 
   // Relations
   file FileMetadata? @relation(fields: [fileId], references: [id], onDelete: Cascade)
 
   @@unique([uploadId, chunkNumber]) // Ensure chunk numbers are unique per upload
-  @@index([uploadId])               // Query all chunks for an upload
-  @@index([fileId])                 // Query chunks for a completed file
-  @@index([status])                 // Find pending/failed chunks
-
+  @@index([uploadId]) // Query all chunks for an upload
+  @@index([fileId]) // Query chunks for a completed file
+  @@index([status]) // Find pending/failed chunks
   @@map("file_chunks")
 }
 
@@ -168,25 +164,24 @@ model FileChunk {
 
 /// Tracks generated thumbnails, resized images, and optimized versions
 model FileTransformation {
-  id        String   @id @default(cuid())
-  fileId    String   // Parent file
-  type      String   // thumbnail, resize, crop, optimize, webp, avif, etc.
-  width     Int?     // Target width
-  height    Int?     // Target height
-  format    String?  // Output format (jpeg, png, webp, avif)
-  quality   Int?     // Compression quality (1-100)
-  size      BigInt   // Size of transformed file
-  storageKey String  // Storage location
-  url       String   // Public URL for this transformation
-  metadata  Json?    // Transformation parameters
-  createdAt DateTime @default(now())
+  id         String   @id @default(cuid())
+  fileId     String // Parent file
+  type       String // thumbnail, resize, crop, optimize, webp, avif, etc.
+  width      Int? // Target width
+  height     Int? // Target height
+  format     String? // Output format (jpeg, png, webp, avif)
+  quality    Int? // Compression quality (1-100)
+  size       BigInt // Size of transformed file
+  storageKey String // Storage location
+  url        String // Public URL for this transformation
+  metadata   Json? // Transformation parameters
+  createdAt  DateTime @default(now())
 
   // Relations
   file FileMetadata @relation(fields: [fileId], references: [id], onDelete: Cascade)
 
   @@index([fileId, type]) // Query transformations by type
   @@index([fileId])
-
   @@map("file_transformations")
 }
 
@@ -197,23 +192,22 @@ model FileTransformation {
 /// Complete audit log of all file operations
 model FileAuditLog {
   id        String     @id @default(cuid())
-  fileId    String     // File this action was performed on
-  userId    String     // User who performed the action
+  fileId    String // File this action was performed on
+  userId    String // User who performed the action
   action    FileAction // UPLOAD, VIEW, DOWNLOAD, EDIT, DELETE, SHARE, RESTORE, ARCHIVE
-  ipAddress String?    // User's IP address
-  userAgent String?    // User's browser/client
-  metadata  Json?      // Additional context (e.g., share link details, delete reason)
+  ipAddress String? // User's IP address
+  userAgent String? // User's browser/client
+  metadata  Json? // Additional context (e.g., share link details, delete reason)
   createdAt DateTime   @default(now())
 
   // Relations
   file FileMetadata @relation(fields: [fileId], references: [id], onDelete: Cascade)
   user User         @relation("FileAuditLogs", fields: [userId], references: [id])
 
-  @@index([fileId])    // Query audit log for a file
-  @@index([userId])    // Query user's actions
+  @@index([fileId]) // Query audit log for a file
+  @@index([userId]) // Query user's actions
   @@index([createdAt]) // Time-based queries
-  @@index([action])    // Query by action type
-
+  @@index([action]) // Query by action type
   @@map("file_audit_logs")
 }
 
@@ -228,7 +222,7 @@ model UploadQuota {
 
   // Storage limits
   totalStorageLimit BigInt @default(10737418240) // 10GB default (in bytes)
-  usedStorage       BigInt @default(0)           // Current usage in bytes
+  usedStorage       BigInt @default(0) // Current usage in bytes
 
   // File size limits
   maxFileSize BigInt @default(5368709120) // 5GB max per file (in bytes)
@@ -239,15 +233,15 @@ model UploadQuota {
   dailyResetAt     DateTime @default(now())
 
   // Rate limits (number of operations)
-  uploadsPerHour Int @default(100)  // Max 100 uploads per hour
+  uploadsPerHour Int @default(100) // Max 100 uploads per hour
   uploadsPerDay  Int @default(1000) // Max 1000 uploads per day
 
   // File count limits
   maxFiles     Int @default(10000) // Max number of files
-  currentFiles Int @default(0)     // Current file count
+  currentFiles Int @default(0) // Current file count
 
   // Quota warnings
-  warningThreshold Float    @default(0.8) // Warn at 80% usage
+  warningThreshold Float     @default(0.8) // Warn at 80% usage
   lastWarningAt    DateTime?
   quotaExceededAt  DateTime? // When quota was exceeded
 
@@ -259,7 +253,6 @@ model UploadQuota {
   school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
 
   @@index([schoolId])
-
   @@map("upload_quotas")
 }
 
@@ -269,24 +262,24 @@ model UploadQuota {
 
 /// File category classification
 enum FileCategory {
-  IMAGE    // JPG, PNG, WebP, SVG, etc.
-  VIDEO    // MP4, WebM, MOV, etc.
+  IMAGE // JPG, PNG, WebP, SVG, etc.
+  VIDEO // MP4, WebM, MOV, etc.
   DOCUMENT // PDF, DOC, XLS, PPT, etc.
-  AUDIO    // MP3, WAV, OGG, etc.
-  ARCHIVE  // ZIP, RAR, 7Z, etc.
-  OTHER    // Anything else
+  AUDIO // MP3, WAV, OGG, etc.
+  ARCHIVE // ZIP, RAR, 7Z, etc.
+  OTHER // Anything else
 }
 
 /// Storage provider type
 enum StorageProvider {
-  VERCEL_BLOB   // Vercel Blob Storage (hot storage, fast)
-  AWS_S3        // AWS S3 (warm/cold storage, cheaper)
+  VERCEL_BLOB // Vercel Blob Storage (hot storage, fast)
+  AWS_S3 // AWS S3 (warm/cold storage, cheaper)
   CLOUDFLARE_R2 // Cloudflare R2 (S3-compatible, no egress fees)
 }
 
 /// Storage tier for cost optimization
 enum StorageTier {
-  HOT  // Frequent access (< 30 days), Vercel Blob
+  HOT // Frequent access (< 30 days), Vercel Blob
   WARM // Regular access (30-90 days), S3 Standard
   COLD // Rare access (> 90 days), S3 Glacier/R2
 }
@@ -294,34 +287,34 @@ enum StorageTier {
 /// File access level
 enum AccessLevel {
   PRIVATE // Only uploader and explicitly granted users
-  SCHOOL  // All members of the school
-  PUBLIC  // Anyone with the link
+  SCHOOL // All members of the school
+  PUBLIC // Anyone with the link
 }
 
 /// File lifecycle status
 enum FileStatus {
-  ACTIVE      // Normal, available
-  ARCHIVED    // Moved to cold storage
-  DELETED     // Soft deleted (can be restored)
+  ACTIVE // Normal, available
+  ARCHIVED // Moved to cold storage
+  DELETED // Soft deleted (can be restored)
   QUARANTINED // Flagged for security review
 }
 
 /// File operation types (for permissions and audit logs)
 enum FileAction {
-  UPLOAD   // Upload new file
-  VIEW     // View file metadata
+  UPLOAD // Upload new file
+  VIEW // View file metadata
   DOWNLOAD // Download file
-  EDIT     // Edit file or metadata
-  DELETE   // Delete file
-  SHARE    // Generate share link
-  RESTORE  // Restore deleted file
-  ARCHIVE  // Move to cold storage
+  EDIT // Edit file or metadata
+  DELETE // Delete file
+  SHARE // Generate share link
+  RESTORE // Restore deleted file
+  ARCHIVE // Move to cold storage
 }
 
 /// Chunk upload status
 enum ChunkStatus {
-  PENDING   // Not yet uploaded
+  PENDING // Not yet uploaded
   UPLOADING // Currently uploading
   COMPLETED // Successfully uploaded
-  FAILED    // Upload failed
+  FAILED // Upload failed
 }

@@ -80,7 +80,7 @@ model ConversationParticipant {
 
   // Participant role
   role     ParticipantRole @default(member)
-  nickname String? @db.VarChar(100) // Custom nickname in this conversation
+  nickname String?         @db.VarChar(100) // Custom nickname in this conversation
 
   // Read tracking
   lastReadAt  DateTime?
@@ -281,7 +281,7 @@ model MessageDraft {
 
 // Pinned messages (for quick access)
 model PinnedMessage {
-  id             String @id @default(cuid())
+  id             String   @id @default(cuid())
   conversationId String // Conversation this pin belongs to
   messageId      String
   pinnedById     String // Who pinned it

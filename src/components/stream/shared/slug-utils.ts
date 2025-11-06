@@ -41,7 +41,7 @@ export async function generateUniqueCourseSlug(
   let slug = baseSlug;
   let counter = 1;
 
-  // eslint-disable-next-line no-constant-condition
+   
   while (true) {
     const existing = await db.streamCourse.findFirst({
       where: {

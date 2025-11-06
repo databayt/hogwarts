@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { QuickActions } from "@/components/platform/dashboard/quick-actions";
 import { getQuickActionsByRole } from "@/components/platform/dashboard/quick-actions-config";
 import { Progress } from "@/components/ui/progress";
-import { DollarSign, CreditCard, FileText, TrendingUp, AlertTriangle, Calendar } from "lucide-react";
+import { DollarSign, CreditCard, FileText, TrendingUp, AlertTriangle, Calendar, Receipt } from "lucide-react";
 import { getTenantContext } from "@/lib/tenant-context";
 
 interface Props {

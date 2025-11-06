@@ -11,7 +11,8 @@ import {
   Award,
   BarChart3,
   DollarSign,
-  Target
+  Target,
+  CheckCircle
 } from "lucide-react";
 import { getPrincipalDashboardData } from "../actions/principal";
 import { DashboardSectionError } from "../error-boundary";

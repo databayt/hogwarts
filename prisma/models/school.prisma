@@ -201,8 +201,8 @@ model School {
   conversations Conversation[]
 
   // File upload relations
-  fileMetadata  FileMetadata[]
-  uploadQuotas  UploadQuota[]
+  fileMetadata FileMetadata[]
+  uploadQuotas UploadQuota[]
 
   createdAt             DateTime                @default(now())
   updatedAt             DateTime                @updatedAt

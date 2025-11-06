@@ -442,7 +442,7 @@ export const getExamResultsSecured = secureResultAction.read(
       }
 
       // Build query based on user role
-      let whereClause: any = {
+      const whereClause: any = {
         examId,
         schoolId: context.schoolId,
       };

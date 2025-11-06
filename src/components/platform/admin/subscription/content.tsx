@@ -32,7 +32,7 @@ export default async function SubscriptionContent({ dictionary, lang }: Props) {
   const d = dictionary?.admin
 
   let activeSubscriptions = 0
-  let totalRevenue = 0
+  const totalRevenue = 0
   let subscriptionTiers = 0
 
   if (schoolId) {
