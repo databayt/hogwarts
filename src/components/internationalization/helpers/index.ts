@@ -387,11 +387,6 @@ export function getErrorMessages(dictionary: Dictionary) {
 }
 
 // ============================================================================
-// Export all utilities
+// Note: ValidationHelper, ToastHelper, and ErrorHelper are already exported
+// at their class definitions above (lines 45, 166, 274)
 // ============================================================================
-
-export {
-  ValidationHelper,
-  ToastHelper,
-  ErrorHelper,
-};
