@@ -4,7 +4,7 @@ import { type Dictionary } from '@/components/internationalization/dictionaries'
 
 interface Props {
   searchParams: Promise<SearchParams>
-  dictionary: Dictionary
+  dictionary: Dictionary['school']
 }
 
 export default async function TimetableConflictsContent({ searchParams, dictionary }: Props) {

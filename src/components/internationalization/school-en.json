@@ -296,8 +296,6 @@
       "onLeave": "On Leave",
       "inactive": "Inactive",
       "assignClasses": "Assign Classes",
-      "schedule": "Schedule",
-      "performance": "Performance",
       "add": {
         "title": "Add New Teacher",
         "description": "Teacher creation form will be implemented here."
@@ -305,6 +303,14 @@
       "departments": {
         "title": "Departments",
         "description": "Department management will be implemented here."
+      },
+      "performance": {
+        "title": "Teacher Performance",
+        "description": "Performance metrics and evaluation will be displayed here."
+      },
+      "schedule": {
+        "title": "Teacher Schedule",
+        "description": "Teaching schedule and timetable will be shown here."
       },
       "settings": {
         "title": "Teacher Settings",
@@ -330,13 +336,22 @@
       "section": "Section",
       "classTeacher": "Class Teacher",
       "room": "Room",
-      "capacity": "Capacity",
       "enrolledStudents": "Enrolled Students",
-      "subjects": "Subjects",
-      "schedule": "Schedule",
       "assignTeacher": "Assign Teacher",
       "assignStudents": "Assign Students",
       "viewTimetable": "View Timetable",
+      "capacity": {
+        "title": "Class Capacity Analysis",
+        "description": "Enrollment vs. capacity analytics for all classes will be displayed here."
+      },
+      "subjects": {
+        "title": "Class Subjects",
+        "description": "Subject assignments and curriculum management for classes will be available here."
+      },
+      "schedule": {
+        "title": "Class Schedule",
+        "description": "Weekly schedule and timing configurations for classes will be shown here."
+      },
       "create": {
         "title": "Create New Class",
         "description": "Class creation form will be implemented here."

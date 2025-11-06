@@ -9,7 +9,7 @@ import { type Dictionary } from '@/components/internationalization/dictionaries'
 
 interface Props {
   searchParams: Promise<SearchParams>
-  dictionary: Dictionary
+  dictionary: Dictionary['school']
   lang: Locale
 }
 

@@ -5,7 +5,7 @@ import { type Dictionary } from '@/components/internationalization/dictionaries'
 import { type Locale } from '@/components/internationalization/config'
 
 interface Props {
-  dictionary: Dictionary
+  dictionary: Dictionary['school']
   lang: Locale
 }
 
