@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import { Menu, X } from "lucide-react"
 import type { ConversationDTO, MessageDTO } from "./types"
 import { ConversationList } from "./conversation-list"
 import { ChatInterface, ChatInterfaceSkeleton } from "./chat-interface"
@@ -16,6 +17,8 @@ import {
   markConversationAsRead,
 } from "./actions"
 import { toast } from "@/components/ui/use-toast"
+import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 import socketService from "@/lib/websocket/socket-service"
 
 export interface MessagingClientProps {
@@ -40,6 +43,7 @@ export function MessagingClient({
   )
   const [messages, setMessages] = useState<MessageDTO[]>(initialMessages)
   const [isConnected, setIsConnected] = useState(false)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
 
   // Connect to Socket.IO
   useEffect(() => {
@@ -107,6 +111,8 @@ export function MessagingClient({
 
   const handleConversationClick = (conversationId: string) => {
     router.push(`/messages?conversation=${conversationId}`)
+    // Close sidebar on mobile/tablet when conversation is selected
+    setIsSidebarOpen(false)
   }
 
   const handleNewConversation = () => {
@@ -220,50 +226,122 @@ export function MessagingClient({
   }
 
   return (
-    <div className="flex h-[calc(100vh-4rem)]">
+    <div className="relative flex h-[calc(100vh-4rem)] bg-background">
+      {/* Mobile/Tablet: Overlay backdrop */}
+      {isSidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
       {/* Conversations sidebar */}
-      <ConversationList
-        conversations={conversations}
-        currentUserId={currentUserId}
-        locale={locale}
-        activeConversationId={activeConversation?.id}
-        onConversationClick={handleConversationClick}
-        onNewConversation={handleNewConversation}
-        onArchive={handleArchiveConversation}
-        onDelete={handleDeleteConversation}
-        onPin={handlePinConversation}
-        onMute={handleMuteConversation}
-        className="w-80 flex-shrink-0"
-      />
+      {/* Mobile (<640px): Hidden unless sidebar open OR no active conversation */}
+      {/* Tablet (640-767px): Overlay when open */}
+      {/* Desktop (≥768px): Always visible, 430px fixed width */}
+      <div
+        className={cn(
+          // Base styles
+          "flex-shrink-0 bg-background border-r border-border",
+          // Mobile: full width overlay OR show when no conversation
+          "fixed md:relative z-50 md:z-0",
+          "h-full w-full sm:w-96 md:w-[430px]",
+          // Mobile: show sidebar if open OR if no active conversation
+          activeConversation
+            ? isSidebarOpen
+              ? "translate-x-0"
+              : "-translate-x-full md:translate-x-0"
+            : "translate-x-0",
+          // Tablet: slide in from left when open
+          "transition-transform duration-300 ease-in-out"
+        )}
+      >
+        {/* Close button for mobile/tablet overlay */}
+        <div className="md:hidden absolute top-4 right-4 z-10">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setIsSidebarOpen(false)}
+            className="h-8 w-8"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+
+        <ConversationList
+          conversations={conversations}
+          currentUserId={currentUserId}
+          locale={locale}
+          activeConversationId={activeConversation?.id}
+          onConversationClick={handleConversationClick}
+          onNewConversation={handleNewConversation}
+          onArchive={handleArchiveConversation}
+          onDelete={handleDeleteConversation}
+          onPin={handlePinConversation}
+          onMute={handleMuteConversation}
+        />
+      </div>
 
       {/* Chat interface */}
-      <div className="flex-1">
-        {activeConversation ? (
-          <ChatInterface
-            conversation={activeConversation}
-            initialMessages={messages}
-            currentUserId={currentUserId}
-            locale={locale}
-            onSendMessage={handleSendMessage}
-            onEditMessage={handleEditMessage}
-            onDeleteMessage={handleDeleteMessage}
-            onReactToMessage={handleReactToMessage}
-            onRemoveReaction={handleRemoveReaction}
-          />
-        ) : (
-          <div className="flex items-center justify-center h-full bg-muted/20">
-            <div className="text-center space-y-2">
-              <p className="text-muted-foreground">
-                {locale === "ar" ? "اختر محادثة للبدء" : "Select a conversation to start"}
-              </p>
-              <p className="text-sm text-muted-foreground">
-                {locale === "ar"
-                  ? "اختر محادثة من القائمة أو ابدأ محادثة جديدة"
-                  : "Choose a conversation from the list or start a new one"}
-              </p>
+      {/* Mobile: Hidden when no conversation OR sidebar is open */}
+      {/* Desktop: Always visible, takes remaining space */}
+      <div
+        className={cn(
+          "flex-1 flex flex-col",
+          // Mobile: hide when no active conversation
+          !activeConversation && "hidden md:flex"
+        )}
+      >
+        {/* Mobile/Tablet: Menu button to toggle sidebar (only show when conversation is active) */}
+        {activeConversation && (
+          <div className="md:hidden border-b border-border px-4 py-3 flex items-center gap-3 bg-background">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsSidebarOpen(true)}
+              className="h-8 w-8 flex-shrink-0"
+            >
+              <Menu className="h-5 w-5" />
+            </Button>
+            <div className="flex-1 min-w-0">
+              <h2 className="font-semibold text-foreground truncate">
+                {activeConversation.type === "direct"
+                  ? activeConversation.participants?.find(p => p.userId !== currentUserId)?.user?.username || (locale === "ar" ? "مستخدم" : "User")
+                  : activeConversation.title || (locale === "ar" ? "محادثة" : "Conversation")}
+              </h2>
             </div>
           </div>
         )}
+
+        {/* Chat content */}
+        <div className="flex-1 overflow-hidden">
+          {activeConversation ? (
+            <ChatInterface
+              conversation={activeConversation}
+              initialMessages={messages}
+              currentUserId={currentUserId}
+              locale={locale}
+              onSendMessage={handleSendMessage}
+              onEditMessage={handleEditMessage}
+              onDeleteMessage={handleDeleteMessage}
+              onReactToMessage={handleReactToMessage}
+              onRemoveReaction={handleRemoveReaction}
+            />
+          ) : (
+            <div className="flex items-center justify-center h-full bg-muted/20">
+              <div className="text-center space-y-2 px-4">
+                <p className="text-foreground font-medium">
+                  {locale === "ar" ? "اختر محادثة للبدء" : "Select a conversation to start"}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {locale === "ar"
+                    ? "اختر محادثة من القائمة أو ابدأ محادثة جديدة"
+                    : "Choose a conversation from the list or start a new one"}
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )

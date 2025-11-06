@@ -16,11 +16,23 @@ export async function processBarcodeScan(data: z.infer<typeof barcodeScanSchema>
       throw new Error('Unauthorized');
     }
 
-    const { barcode, format, scannedAt, deviceId } = data;
+    const { barcode, classId, format, scannedAt, deviceId } = data;
     const schoolId = session.user.schoolId;
 
     if (!schoolId) {
       throw new Error('School ID is required');
+    }
+
+    // Validate that the class exists and belongs to the school
+    const classExists = await db.class.findFirst({
+      where: {
+        id: classId,
+        schoolId
+      }
+    });
+
+    if (!classExists) {
+      throw new Error('Invalid class ID or class not found');
     }
 
     // Find student by barcode
@@ -47,7 +59,7 @@ export async function processBarcodeScan(data: z.infer<typeof barcodeScanSchema>
           deviceId,
           success: false,
           errorMessage: 'Barcode not found in system',
-          metadata: { barcode, format },
+          metadata: { barcode, format, classId },
           timestamp: new Date(scannedAt)
         }
       });
@@ -59,10 +71,6 @@ export async function processBarcodeScan(data: z.infer<typeof barcodeScanSchema>
     if (studentIdentifier.expiresAt && new Date(studentIdentifier.expiresAt) < new Date()) {
       throw new Error('Card has expired');
     }
-
-    // Get current class (would need to determine this based on schedule/context)
-    // For now, we'll require classId to be passed
-    const classId = 'current-class-id'; // This should be determined from context
 
     // Check if attendance already marked
     const existingAttendance = await db.attendance.findFirst({

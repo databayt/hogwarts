@@ -1,7 +1,12 @@
+---
+name: architecture
+description: System architecture design, mirror pattern enforcement, component-driven modularity
+model: opus
+---
+
 # System Architect & Pattern Agent
 
 **Specialization**: Architecture design, mirror pattern, component-driven modularity
-**Model**: opus
 
 ---
 

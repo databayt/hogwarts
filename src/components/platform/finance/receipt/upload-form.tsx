@@ -1,6 +1,7 @@
 /**
  * Receipt Upload Form Component
  * Follows Hogwarts client component pattern
+ * Migrated to use enhanced FileUploader component
  */
 
 'use client'
@@ -9,158 +10,124 @@ import * as React from 'react'
 import { useRouter } from 'next/navigation'
 import { uploadReceipt } from './actions'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
-import { Upload, FileText, Loader2 } from 'lucide-react'
+import { Upload, Loader2 } from 'lucide-react'
+import { FileUploader, ACCEPT_IMAGES, ACCEPT_DOCUMENTS, type UploadedFileResult } from '@/components/file-upload/enhanced/file-uploader'
 
 interface UploadFormProps {
   locale?: string
 }
 
+// Combine image and PDF acceptance
+const RECEIPT_ACCEPT = {
+  ...ACCEPT_IMAGES,
+  'application/pdf': ['.pdf'],
+}
+
 export function UploadForm({ locale = 'en' }: UploadFormProps) {
   const router = useRouter()
-  const [isUploading, setIsUploading] = React.useState(false)
-  const [selectedFile, setSelectedFile] = React.useState<File | null>(null)
-  const fileInputRef = React.useRef<HTMLInputElement>(null)
+  const [isProcessing, setIsProcessing] = React.useState(false)
+  const [uploadedFiles, setUploadedFiles] = React.useState<UploadedFileResult[]>([])
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (file) {
-      // Validate file type
-      const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf']
-      if (!validTypes.includes(file.type)) {
-        toast.error('Invalid file type. Please upload an image (JPEG, PNG, WEBP) or PDF.')
-        return
-      }
-
-      // Validate file size (10MB max)
-      if (file.size > 10 * 1024 * 1024) {
-        toast.error('File size must be less than 10MB.')
-        return
-      }
-
-      setSelectedFile(file)
-    }
+  const handleUploadComplete = (files: UploadedFileResult[]) => {
+    setUploadedFiles(files)
+    toast.success('File uploaded successfully! Ready to process.')
   }
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
+  const handleUploadError = (error: string) => {
+    toast.error(error)
+  }
 
-    if (!selectedFile) {
-      toast.error('Please select a file to upload.')
+  const handleProcess = async () => {
+    if (uploadedFiles.length === 0) {
+      toast.error('Please upload a file first.')
       return
     }
 
-    setIsUploading(true)
+    setIsProcessing(true)
 
     try {
+      // For now, we pass the fileId to the action
+      // The action will need to be updated to accept fileId instead of FormData
+      // This is a TODO for Phase 4 completion
+      const fileId = uploadedFiles[0].fileId
       const formData = new FormData()
-      formData.append('file', selectedFile)
+      formData.append('fileId', fileId)
 
       const result = await uploadReceipt(formData)
 
       if (result.success && result.data) {
-        toast.success('Receipt uploaded successfully! AI extraction in progress...')
-        setSelectedFile(null)
-        if (fileInputRef.current) {
-          fileInputRef.current.value = ''
-        }
+        toast.success('Receipt processed successfully! AI extraction in progress...')
+        setUploadedFiles([])
         // Redirect to receipt detail page (relative to current route)
         router.push(`${result.data.receiptId}`)
         router.refresh()
       } else {
-        toast.error(result.error || 'Upload failed. Please try again.')
+        toast.error(result.error || 'Processing failed. Please try again.')
       }
     } catch (error) {
       toast.error('An unexpected error occurred. Please try again.')
-      console.error('Upload error:', error)
+      console.error('Processing error:', error)
     } finally {
-      setIsUploading(false)
+      setIsProcessing(false)
     }
-  }
-
-  const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
-    event.preventDefault()
-    const file = event.dataTransfer.files?.[0]
-    if (file) {
-      setSelectedFile(file)
-    }
-  }
-
-  const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
-    event.preventDefault()
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div
-        className="border-2 border-dashed rounded-lg p-8 text-center hover:border-primary/50 transition-colors"
-        onDrop={handleDrop}
-        onDragOver={handleDragOver}
-      >
-        {selectedFile ? (
+    <div className="space-y-4">
+      {/* File Upload Section */}
+      {uploadedFiles.length === 0 ? (
+        <FileUploader
+          category="DOCUMENT"
+          folder="receipts"
+          accept={RECEIPT_ACCEPT}
+          maxFiles={1}
+          multiple={false}
+          maxSize={10 * 1024 * 1024} // 10MB max
+          optimizeImages={false} // Don't optimize receipts, keep original
+          onUploadComplete={handleUploadComplete}
+          onUploadError={handleUploadError}
+        />
+      ) : (
+        <div className="border-2 border-dashed rounded-lg p-8 text-center border-primary/50">
           <div className="space-y-2">
-            <FileText className="h-12 w-12 mx-auto text-primary" />
-            <p className="text-sm font-medium">{selectedFile.name}</p>
+            <div className="h-12 w-12 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
+              <Upload className="h-6 w-6 text-primary" />
+            </div>
+            <p className="text-sm font-medium">File uploaded successfully</p>
             <p className="text-xs text-muted-foreground">
-              {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+              Ready to process with AI extraction
             </p>
             <Button
               type="button"
               variant="outline"
               size="sm"
-              onClick={() => {
-                setSelectedFile(null)
-                if (fileInputRef.current) {
-                  fileInputRef.current.value = ''
-                }
-              }}
+              onClick={() => setUploadedFiles([])}
             >
               Change File
             </Button>
           </div>
-        ) : (
-          <div className="space-y-2">
-            <Upload className="h-12 w-12 mx-auto text-muted-foreground" />
-            <div>
-              <Label htmlFor="file-upload" className="cursor-pointer">
-                <span className="text-primary hover:underline">Choose a file</span>
-                {' or drag and drop'}
-              </Label>
-              <Input
-                ref={fileInputRef}
-                id="file-upload"
-                type="file"
-                accept="image/jpeg,image/png,image/webp,application/pdf"
-                onChange={handleFileChange}
-                className="hidden"
-              />
-            </div>
-            <p className="text-xs text-muted-foreground">
-              PNG, JPG, WEBP or PDF (max 10MB)
-            </p>
-          </div>
-        )}
-      </div>
+        </div>
+      )}
 
+      {/* Process Button */}
       <Button
-        type="submit"
-        disabled={!selectedFile || isUploading}
+        onClick={handleProcess}
+        disabled={uploadedFiles.length === 0 || isProcessing}
         className="w-full"
       >
-        {isUploading ? (
+        {isProcessing ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Uploading...
+            Processing Receipt...
           </>
         ) : (
           <>
             <Upload className="mr-2 h-4 w-4" />
-            Upload Receipt
+            Process Receipt
           </>
         )}
       </Button>
-    </form>
+    </div>
   )
 }

@@ -4,7 +4,7 @@
  */
 
 import { db } from "@/lib/db"
-import { Prisma, NotificationType, NotificationPriority } from "@prisma/client"
+import { Prisma, NotificationType, NotificationPriority, NotificationChannel } from "@prisma/client"
 
 // ============================================================================
 // Types
@@ -133,12 +133,12 @@ export function buildNotificationWhere(
   }
 
   // Type filter
-  if (filters.type) {
+  if (filters.type && Object.values(NotificationType).includes(filters.type as NotificationType)) {
     where.type = filters.type as NotificationType
   }
 
   // Priority filter
-  if (filters.priority) {
+  if (filters.priority && Object.values(NotificationPriority).includes(filters.priority as NotificationPriority)) {
     where.priority = filters.priority as NotificationPriority
   }
 
@@ -473,14 +473,14 @@ export async function getNotificationPreference(
   schoolId: string,
   userId: string,
   type: NotificationType,
-  channel: string
+  channel: NotificationChannel
 ) {
   return db.notificationPreference.findFirst({
     where: {
       schoolId,
       userId,
       type,
-      channel: channel as any,
+      channel,
     },
     select: notificationPreferenceSelect,
   })
@@ -498,7 +498,7 @@ export async function shouldSendNotification(
   schoolId: string,
   userId: string,
   type: NotificationType,
-  channel: string
+  channel: NotificationChannel
 ): Promise<boolean> {
   const preference = await getNotificationPreference(
     schoolId,

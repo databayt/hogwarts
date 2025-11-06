@@ -54,9 +54,17 @@
   "alwaysThinkingEnabled": true,
   "env": {
     "PROJECT_NAME": "Hogwarts School Automation Platform",
-    "PROJECT_TYPE": "nextjs",
+    "PROJECT_TYPE": "nextjs-prisma-multiTenant",
     "MULTI_TENANT": "true",
-    "I18N_LANGUAGES": "en,ar"
+    "I18N_LANGUAGES": "en,ar",
+    "BMAD_ENABLED": "true",
+    "AUTOMATION_LEVEL": "maximum",
+    "TDD_ENFORCE": "true",
+    "ORCHESTRATOR_MODEL": "claude-opus-4-1-20250805",
+    "DEFAULT_MODEL": "claude-sonnet-4-5-20250929",
+    "COVERAGE_TARGET": "95",
+    "ERROR_PATTERNS": "204",
+    "AGENT_COUNT": "33"
   },
   "hooks": {
     "PreToolUse": [
@@ -123,7 +131,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo Hogwarts School Automation Platform - Multi-tenant Next.js + React + Prisma"
+            "command": "echo '🚀 HOGWARTS SCHOOL AUTOMATION PLATFORM'; echo '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'; echo 'Stack: Next.js 15 + React 19 + Prisma + TypeScript'; echo 'BMAD Method: Story-Centric Development'; echo '33 Specialized Agents | 22 Commands | 7 Skills'; echo ''; BRANCH=$(git branch --show-current 2>/dev/null); CHANGES=$(git status --porcelain 2>/dev/null | wc -l); echo \"📊 Repository: $BRANCH branch | $CHANGES changes\"; if [ -f .bmad/stories/stories/*.md ]; then IN_PROGRESS=$(grep -l 'IN_PROGRESS' .bmad/stories/stories/*.md 2>/dev/null | wc -l); echo \"📝 Active Stories: $IN_PROGRESS in progress\"; fi; echo ''; echo '⚡ Quick Commands:'; echo '  /plan    - Generate PRD and architecture'; echo '  /story   - Create implementation stories'; echo '  /cycle   - Execute story loop with TDD'; echo '  /ship    - Deploy with validation'; echo '  /fix     - Auto-fix all issues'; echo '  /review  - Comprehensive code review'; echo ''; exit 0"
           }
         ]
       }
@@ -134,7 +142,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo \"\"; echo \"📊 Session Summary\"; echo \"Run: git log --oneline -5 to see recent commits\"; echo \"Run: git status to see current changes\"; echo \"\"; echo \"Thank you for using Hogwarts School Automation Platform!\""
+            "command": "echo ''; echo '═══════════════════════════════════════'; echo '📊 SESSION SUMMARY'; echo '═══════════════════════════════════════'; COMMITS=$(git log --since='8 hours ago' --oneline 2>/dev/null | wc -l); FILES_CHANGED=$(git diff --stat HEAD@{8.hours.ago} 2>/dev/null | tail -1 | cut -d' ' -f2); echo \"📝 Commits: $COMMITS | Files: ${FILES_CHANGED:-0}\"; if [ -f .bmad/metrics/coverage-latest.json ]; then COVERAGE=$(cat .bmad/metrics/coverage-latest.json 2>/dev/null | jq -r '.total.lines.pct' 2>/dev/null || echo 'N/A'); echo \"🧪 Test Coverage: ${COVERAGE}%\"; fi; echo ''; echo '💡 Next Steps:'; echo '  - Review changes: git diff'; echo '  - Commit work: git commit -m \"message\"'; echo '  - Push changes: git push'; echo '  - Deploy: /ship staging'; echo ''; echo '🚀 Thank you for using BMAD-Enhanced Claude Code!'; echo '═══════════════════════════════════════'; exit 0"
           }
         ]
       }

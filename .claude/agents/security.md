@@ -1,7 +1,12 @@
+---
+name: security
+description: Security auditor for OWASP Top 10 and vulnerability scanning
+model: sonnet
+---
+
 # Security Auditor Agent
 
 **Specialization**: OWASP Top 10, vulnerability scanning
-**Model**: claude-sonnet-4-5-20250929
 
 ## OWASP Top 10 Checks
 1. Broken Access Control - Check auth, RBAC

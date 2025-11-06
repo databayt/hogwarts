@@ -1,8 +1,13 @@
+---
+name: orchestrate
+description: Master orchestrator for strategic multi-agent coordination
+model: opus
+---
+
 # Master Orchestrator Agent
 
 **Version**: 2.0
 **Purpose**: Strategic multi-agent coordination and workflow orchestration
-**Model**: opus
 
 ---
 

@@ -40,6 +40,13 @@ export const RATE_LIMITS = {
   STREAM_UPLOAD: { windowMs: 60 * 1000, maxRequests: 10 },  // 10 uploads per minute
   STREAM_ENROLLMENT: { windowMs: 60 * 1000, maxRequests: 5 },  // 5 enrollments per minute
   STREAM_API: { windowMs: 60 * 1000, maxRequests: 60 },  // 60 requests per minute
+
+  // Messaging endpoints - prevent spam
+  MESSAGE_SEND: { windowMs: 60 * 1000, maxRequests: 10 },  // 10 messages per minute per user
+  MESSAGE_BURST: { windowMs: 10 * 1000, maxRequests: 5 },  // 5 messages per 10 seconds (burst protection)
+  MESSAGE_FILE_UPLOAD: { windowMs: 10 * 60 * 1000, maxRequests: 10 },  // 10 files per 10 minutes
+  MESSAGE_REACTION: { windowMs: 60 * 1000, maxRequests: 30 },  // 30 reactions per minute
+  MESSAGE_TYPING: { windowMs: 10 * 1000, maxRequests: 3 },  // 3 typing indicators per 10 seconds
 } as const;
 
 /**
@@ -225,4 +232,212 @@ export async function rateLimit(
   }
   
   return null; // No rate limit exceeded
+}
+
+/**
+ * Messaging-specific rate limiting functions
+ * Uses user ID and conversation ID for more granular control
+ */
+
+interface MessageRateLimitResult {
+  allowed: boolean;
+  limit: number;
+  remaining: number;
+  resetTime: number;
+  retryAfter?: number; // Seconds until next allowed request
+}
+
+/**
+ * Check rate limit for message sending
+ * Applies both per-user and burst protection limits
+ */
+export function checkMessageSendRateLimit(
+  userId: string,
+  conversationId: string,
+  schoolId: string
+): MessageRateLimitResult {
+  const now = Date.now();
+
+  // Check per-user message limit (10 messages per minute)
+  const userKey = `message:user:${userId}:school:${schoolId}`;
+  const userResult = checkRateLimitByKey(userKey, RATE_LIMITS.MESSAGE_SEND);
+
+  if (!userResult.allowed) {
+    return {
+      allowed: false,
+      limit: userResult.limit,
+      remaining: userResult.remaining,
+      resetTime: userResult.resetTime,
+      retryAfter: Math.ceil((userResult.resetTime - now) / 1000)
+    };
+  }
+
+  // Check burst protection (5 messages per 10 seconds in same conversation)
+  const burstKey = `message:burst:${userId}:${conversationId}`;
+  const burstResult = checkRateLimitByKey(burstKey, RATE_LIMITS.MESSAGE_BURST);
+
+  if (!burstResult.allowed) {
+    return {
+      allowed: false,
+      limit: burstResult.limit,
+      remaining: burstResult.remaining,
+      resetTime: burstResult.resetTime,
+      retryAfter: Math.ceil((burstResult.resetTime - now) / 1000)
+    };
+  }
+
+  // Both limits passed
+  return {
+    allowed: true,
+    limit: Math.min(userResult.limit, burstResult.limit),
+    remaining: Math.min(userResult.remaining, burstResult.remaining),
+    resetTime: Math.max(userResult.resetTime, burstResult.resetTime)
+  };
+}
+
+/**
+ * Check rate limit for file uploads in messages
+ */
+export function checkMessageFileUploadRateLimit(
+  userId: string,
+  schoolId: string
+): MessageRateLimitResult {
+  const now = Date.now();
+  const key = `message:file:${userId}:school:${schoolId}`;
+  const result = checkRateLimitByKey(key, RATE_LIMITS.MESSAGE_FILE_UPLOAD);
+
+  return {
+    allowed: result.allowed,
+    limit: result.limit,
+    remaining: result.remaining,
+    resetTime: result.resetTime,
+    retryAfter: result.allowed ? undefined : Math.ceil((result.resetTime - now) / 1000)
+  };
+}
+
+/**
+ * Check rate limit for message reactions
+ */
+export function checkMessageReactionRateLimit(
+  userId: string,
+  schoolId: string
+): MessageRateLimitResult {
+  const now = Date.now();
+  const key = `message:reaction:${userId}:school:${schoolId}`;
+  const result = checkRateLimitByKey(key, RATE_LIMITS.MESSAGE_REACTION);
+
+  return {
+    allowed: result.allowed,
+    limit: result.limit,
+    remaining: result.remaining,
+    resetTime: result.resetTime,
+    retryAfter: result.allowed ? undefined : Math.ceil((result.resetTime - now) / 1000)
+  };
+}
+
+/**
+ * Check rate limit for typing indicators
+ */
+export function checkTypingIndicatorRateLimit(
+  userId: string,
+  conversationId: string
+): MessageRateLimitResult {
+  const now = Date.now();
+  const key = `message:typing:${userId}:${conversationId}`;
+  const result = checkRateLimitByKey(key, RATE_LIMITS.MESSAGE_TYPING);
+
+  return {
+    allowed: result.allowed,
+    limit: result.limit,
+    remaining: result.remaining,
+    resetTime: result.resetTime,
+    retryAfter: result.allowed ? undefined : Math.ceil((result.resetTime - now) / 1000)
+  };
+}
+
+/**
+ * Internal helper to check rate limit by key
+ */
+function checkRateLimitByKey(
+  key: string,
+  config: RateLimitConfig
+): { allowed: boolean; limit: number; remaining: number; resetTime: number } {
+  const now = Date.now();
+  const windowStart = now - config.windowMs;
+
+  // Clean up expired entries
+  cleanupExpiredEntries(windowStart);
+
+  const entry = rateLimitStore.get(key);
+  const resetTime = now + config.windowMs;
+
+  if (!entry || entry.resetTime <= now) {
+    // First request or window expired
+    rateLimitStore.set(key, { count: 1, resetTime });
+    return {
+      allowed: true,
+      limit: config.maxRequests,
+      remaining: config.maxRequests - 1,
+      resetTime
+    };
+  }
+
+  if (entry.count >= config.maxRequests) {
+    // Rate limit exceeded
+    return {
+      allowed: false,
+      limit: config.maxRequests,
+      remaining: 0,
+      resetTime: entry.resetTime
+    };
+  }
+
+  // Increment count
+  entry.count++;
+  rateLimitStore.set(key, entry);
+
+  return {
+    allowed: true,
+    limit: config.maxRequests,
+    remaining: config.maxRequests - entry.count,
+    resetTime: entry.resetTime
+  };
+}
+
+/**
+ * Create a user-friendly rate limit error message
+ */
+export function createRateLimitErrorMessage(result: MessageRateLimitResult): string {
+  if (result.allowed) {
+    return '';
+  }
+
+  const retryInSeconds = result.retryAfter || 0;
+
+  if (retryInSeconds <= 10) {
+    return `Rate limit exceeded. Please wait ${retryInSeconds} seconds before sending another message.`;
+  }
+
+  const retryInMinutes = Math.ceil(retryInSeconds / 60);
+  return `Rate limit exceeded. Please wait ${retryInMinutes} minute${retryInMinutes > 1 ? 's' : ''} before sending another message.`;
+}
+
+/**
+ * Clear rate limit for testing purposes
+ */
+export function clearMessageRateLimit(userId: string, conversationId?: string, schoolId?: string): void {
+  const keysToDelete: string[] = [];
+
+  if (conversationId) {
+    keysToDelete.push(`message:burst:${userId}:${conversationId}`);
+    keysToDelete.push(`message:typing:${userId}:${conversationId}`);
+  }
+
+  if (schoolId) {
+    keysToDelete.push(`message:user:${userId}:school:${schoolId}`);
+    keysToDelete.push(`message:file:${userId}:school:${schoolId}`);
+    keysToDelete.push(`message:reaction:${userId}:school:${schoolId}`);
+  }
+
+  keysToDelete.forEach(key => rateLimitStore.delete(key));
 }

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import NewsLetter from "./newsletter";
 import { footerSections } from "./config";
-import { Logo } from "@/components/atom/icons";
+import { Icons } from "@/components/atom/icons";
 
 export function MarketingFooter() {
     return (
@@ -44,7 +44,9 @@ export function MarketingFooter() {
                 <div className="pt-8 border-t border-primary/20">
                     <div className="flex flex-col lg:flex-row items-start lg:items-center gap-4 lg:gap-10">
                         <Link href="/" className="hidden items-center gap-2 md:flex">
-                            <Logo width={32} height={32} className="text-foreground" />
+                            <div className="w-8 h-8">
+                                <Icons.logo className="text-foreground" />
+                            </div>
                             <h1 className="text-2xl font-bold">Databayt</h1>
                         </Link>
                         <div className="w-full lg:w-[75%] text-xs text-primary/70 ">

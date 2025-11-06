@@ -1,7 +1,12 @@
+---
+name: typography
+description: Typography expert for semantic HTML and typography system
+model: sonnet
+---
+
 # Typography Expert Agent
 
 **Specialization**: Semantic HTML, typography system
-**Model**: claude-sonnet-4-5-20250929
 
 ## Typography System
 **CRITICAL**: NO hardcoded text-* or font-* classes!

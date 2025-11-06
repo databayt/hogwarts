@@ -184,7 +184,7 @@ export function EnhancedFileUploader({
       // Auto-upload if enabled
       if (autoUpload && newFiles.length > 0) {
         for (const file of newFiles) {
-          await uploadFile(file, category);
+          await uploadFile(file, (category || 'OTHER') as any);
         }
       }
     },
@@ -222,7 +222,7 @@ export function EnhancedFileUploader({
       return;
     }
 
-    const results = await uploadMultiple(filesToUpload, category);
+    const results = await uploadMultiple(filesToUpload, (category || 'OTHER') as any);
     const successfulIds = results
       .filter((r): r is { success: true; fileId: string } => r.success && 'fileId' in r)
       .map((r) => r.fileId);
@@ -514,7 +514,7 @@ export function EnhancedFileUploader({
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Use Existing</AlertDialogCancel>
-            <AlertDialogAction onClick={() => duplicateFile && uploadFile(duplicateFile, category)}>
+            <AlertDialogAction onClick={() => duplicateFile && uploadFile(duplicateFile, (category || 'OTHER') as any)}>
               Upload Copy
             </AlertDialogAction>
           </AlertDialogFooter>

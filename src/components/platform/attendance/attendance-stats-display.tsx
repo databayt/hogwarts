@@ -1,0 +1,318 @@
+"use client";
+
+import * as React from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
+import {
+  TrendingUp,
+  TrendingDown,
+  Calendar,
+  Users,
+  CheckCircle,
+  XCircle,
+  Clock,
+  Award,
+  AlertTriangle
+} from 'lucide-react';
+import { calculateAttendancePercentage, getClassAttendanceStats, getAtRiskStudents } from './attendance-stats';
+import type { AttendanceStats } from './attendance-stats';
+import { cn } from '@/lib/utils';
+
+interface AttendanceStatsCardProps {
+  studentId?: string;
+  classId?: string;
+  date?: string;
+  dictionary?: any;
+}
+
+export function AttendancePercentageCard({ studentId, classId, dictionary }: AttendanceStatsCardProps) {
+  const [stats, setStats] = React.useState<AttendanceStats | null>(null);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    if (!studentId) return;
+
+    const loadStats = async () => {
+      try {
+        const result = await calculateAttendancePercentage({
+          studentId,
+          classId
+        });
+        setStats(result);
+      } catch (error) {
+        console.error('Failed to load attendance stats:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadStats();
+  }, [studentId, classId]);
+
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm font-medium">
+            {dictionary?.attendancePercentage || 'Attendance Rate'}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="animate-pulse">
+            <div className="h-8 bg-muted rounded mb-2" />
+            <div className="h-2 bg-muted rounded" />
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!stats) return null;
+
+  const getPercentageColor = (percentage: number) => {
+    if (percentage >= 95) return 'text-green-600';
+    if (percentage >= 80) return 'text-blue-600';
+    if (percentage >= 70) return 'text-yellow-600';
+    return 'text-red-600';
+  };
+
+  const getBadgeVariant = (percentage: number): "default" | "secondary" | "destructive" | "outline" => {
+    if (percentage >= 95) return 'default';
+    if (percentage >= 80) return 'secondary';
+    if (percentage >= 70) return 'outline';
+    return 'destructive';
+  };
+
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-sm font-medium">
+            {dictionary?.attendancePercentage || 'Attendance Rate'}
+          </CardTitle>
+          <Badge variant={getBadgeVariant(stats.percentage)}>
+            {stats.percentage}%
+          </Badge>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <span className={cn("text-2xl font-bold", getPercentageColor(stats.percentage))}>
+              {stats.percentage}%
+            </span>
+            {stats.streak > 0 && (
+              <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                <TrendingUp className="h-4 w-4 text-green-500" />
+                {stats.streak} {dictionary?.dayStreak || 'day streak'}
+              </div>
+            )}
+          </div>
+          <Progress value={stats.percentage} className="h-2" />
+          <div className="grid grid-cols-2 gap-2 text-xs">
+            <div className="flex items-center gap-1">
+              <CheckCircle className="h-3 w-3 text-green-500" />
+              <span>{stats.presentDays} {dictionary?.present || 'Present'}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <XCircle className="h-3 w-3 text-red-500" />
+              <span>{stats.absentDays} {dictionary?.absent || 'Absent'}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <Clock className="h-3 w-3 text-yellow-500" />
+              <span>{stats.lateDays} {dictionary?.late || 'Late'}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <Calendar className="h-3 w-3 text-muted-foreground" />
+              <span>{stats.totalDays} {dictionary?.totalDays || 'Total Days'}</span>
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+export function ClassAttendanceStatsCard({ classId, date, dictionary }: AttendanceStatsCardProps) {
+  const [stats, setStats] = React.useState<any>(null);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    if (!classId || !date) return;
+
+    const loadStats = async () => {
+      try {
+        const result = await getClassAttendanceStats({
+          classId,
+          date
+        });
+        setStats(result);
+      } catch (error) {
+        console.error('Failed to load class stats:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadStats();
+  }, [classId, date]);
+
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>{dictionary?.classAttendance || 'Class Attendance'}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="animate-pulse space-y-2">
+            <div className="h-4 bg-muted rounded w-3/4" />
+            <div className="h-4 bg-muted rounded w-1/2" />
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!stats) return null;
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{dictionary?.classAttendance || 'Class Attendance'}</CardTitle>
+        <CardDescription>{stats.className}</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-1">
+            <p className="text-sm text-muted-foreground">
+              {dictionary?.attendanceRate || 'Attendance Rate'}
+            </p>
+            <div className="flex items-baseline gap-1">
+              <span className="text-2xl font-bold">{stats.attendanceRate}%</span>
+            </div>
+          </div>
+          <div className="space-y-1">
+            <p className="text-sm text-muted-foreground">
+              {dictionary?.totalStudents || 'Total Students'}
+            </p>
+            <div className="flex items-baseline gap-1">
+              <span className="text-2xl font-bold">{stats.totalStudents}</span>
+            </div>
+          </div>
+        </div>
+        <div className="mt-4 flex items-center gap-4 text-sm">
+          <div className="flex items-center gap-1">
+            <div className="h-2 w-2 rounded-full bg-green-500" />
+            <span>{stats.presentCount} {dictionary?.present || 'Present'}</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="h-2 w-2 rounded-full bg-red-500" />
+            <span>{stats.absentCount} {dictionary?.absent || 'Absent'}</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="h-2 w-2 rounded-full bg-yellow-500" />
+            <span>{stats.lateCount} {dictionary?.late || 'Late'}</span>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+export function AtRiskStudentsCard({ classId, threshold = 80, dictionary }: { classId?: string; threshold?: number; dictionary?: any }) {
+  const [students, setStudents] = React.useState<any[]>([]);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    const loadAtRiskStudents = async () => {
+      try {
+        const result = await getAtRiskStudents({
+          classId,
+          threshold
+        });
+        setStudents(result);
+      } catch (error) {
+        console.error('Failed to load at-risk students:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadAtRiskStudents();
+  }, [classId, threshold]);
+
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <AlertTriangle className="h-5 w-5 text-yellow-500" />
+            {dictionary?.atRiskStudents || 'At-Risk Students'}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="animate-pulse space-y-2">
+            <div className="h-4 bg-muted rounded" />
+            <div className="h-4 bg-muted rounded" />
+            <div className="h-4 bg-muted rounded" />
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (students.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Award className="h-5 w-5 text-green-500" />
+            {dictionary?.excellentAttendance || 'Excellent Attendance'}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">
+            {dictionary?.noAtRiskStudents || `All students have attendance above ${threshold}%`}
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <AlertTriangle className="h-5 w-5 text-yellow-500" />
+          {dictionary?.atRiskStudents || 'At-Risk Students'}
+        </CardTitle>
+        <CardDescription>
+          {dictionary?.belowThreshold || `Students with attendance below ${threshold}%`}
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-2">
+          {students.slice(0, 5).map((student) => (
+            <div key={student.studentId} className="flex items-center justify-between rounded-lg border p-2">
+              <div>
+                <p className="text-sm font-medium">{student.studentName}</p>
+                <p className="text-xs text-muted-foreground">
+                  {student.absentDays} {dictionary?.daysAbsent || 'days absent'}
+                </p>
+              </div>
+              <Badge variant="destructive">
+                {student.percentage}%
+              </Badge>
+            </div>
+          ))}
+          {students.length > 5 && (
+            <p className="text-sm text-muted-foreground text-center">
+              {dictionary?.andMore || `And ${students.length - 5} more...`}
+            </p>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}

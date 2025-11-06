@@ -70,6 +70,12 @@ const profileDictionaries = {
   "ar": () => import("./dictionaries/ar/profile.json").then((module) => module.default),
 } as const;
 
+// Notifications module dictionaries
+const notificationsDictionaries = {
+  "en": () => import("./dictionaries/en/notifications.json").then((module) => module.default),
+  "ar": () => import("./dictionaries/ar/notifications.json").then((module) => module.default),
+} as const;
+
 // ============================================================================
 // Route-Specific Dictionary Loaders (Optimized)
 // ============================================================================
@@ -265,6 +271,31 @@ export const getExamDictionary = async (locale: Locale) => {
   }
 };
 
+/**
+ * Notification pages - platform core + notifications
+ * Used for: notification center, notification preferences
+ */
+export const getNotificationDictionary = async (locale: Locale) => {
+  try {
+    const [general, school, operator, notifications] = await Promise.all([
+      generalDictionaries[locale]?.() ?? generalDictionaries["en"](),
+      schoolDictionaries[locale]?.() ?? schoolDictionaries["en"](),
+      operatorDictionaries[locale]?.() ?? operatorDictionaries["en"](),
+      notificationsDictionaries[locale]?.() ?? notificationsDictionaries["en"](),
+    ]);
+    return { ...general, ...school, ...operator, notifications };
+  } catch (error) {
+    console.warn(`Failed to load notification dictionary for locale: ${locale}`);
+    const [general, school, operator, notifications] = await Promise.all([
+      generalDictionaries["en"](),
+      schoolDictionaries["en"](),
+      operatorDictionaries["en"](),
+      notificationsDictionaries["en"](),
+    ]);
+    return { ...general, ...school, ...operator, notifications };
+  }
+};
+
 // ============================================================================
 // Full Dictionary Loader (Default)
 // ============================================================================
@@ -276,7 +307,7 @@ export const getExamDictionary = async (locale: Locale) => {
 export const getDictionary = async (locale: Locale) => {
   try {
     // Load all dictionaries
-    const [general, school, stream, operator, library, banking, marking, generate, results, finance, admin, profile] = await Promise.all([
+    const [general, school, stream, operator, library, banking, marking, generate, results, finance, admin, profile, notifications] = await Promise.all([
       generalDictionaries[locale]?.() ?? generalDictionaries["en"](),
       schoolDictionaries[locale]?.() ?? schoolDictionaries["en"](),
       streamDictionaries[locale]?.() ?? streamDictionaries["en"](),
@@ -288,14 +319,15 @@ export const getDictionary = async (locale: Locale) => {
       resultsDictionaries[locale]?.() ?? resultsDictionaries["en"](),
       financeDictionaries[locale]?.() ?? financeDictionaries["en"](),
       adminDictionaries[locale]?.() ?? adminDictionaries["en"](),
-      profileDictionaries[locale]?.() ?? profileDictionaries["en"]()
+      profileDictionaries[locale]?.() ?? profileDictionaries["en"](),
+      notificationsDictionaries[locale]?.() ?? notificationsDictionaries["en"]()
     ]);
 
-    // Merge dictionaries with library, banking, marking, generate, results, finance, admin, and profile nested under their respective keys
-    return { ...general, ...school, ...stream, ...operator, library, banking, marking, generate, results, finance, admin, profile };
+    // Merge dictionaries with library, banking, marking, generate, results, finance, admin, profile, and notifications nested under their respective keys
+    return { ...general, ...school, ...stream, ...operator, library, banking, marking, generate, results, finance, admin, profile, notifications };
   } catch (error) {
     console.warn(`Failed to load dictionary for locale: ${locale}. Falling back to en.`);
-    const [general, school, stream, operator, library, banking, marking, generate, results, finance, admin, profile] = await Promise.all([
+    const [general, school, stream, operator, library, banking, marking, generate, results, finance, admin, profile, notifications] = await Promise.all([
       generalDictionaries["en"](),
       schoolDictionaries["en"](),
       streamDictionaries["en"](),
@@ -307,9 +339,10 @@ export const getDictionary = async (locale: Locale) => {
       resultsDictionaries["en"](),
       financeDictionaries["en"](),
       adminDictionaries["en"](),
-      profileDictionaries["en"]()
+      profileDictionaries["en"](),
+      notificationsDictionaries["en"]()
     ]);
-    return { ...general, ...school, ...stream, ...operator, library, banking, marking, generate, results, finance, admin, profile };
+    return { ...general, ...school, ...stream, ...operator, library, banking, marking, generate, results, finance, admin, profile, notifications };
   }
 };
 

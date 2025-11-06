@@ -89,6 +89,7 @@ export const qrCodeGenerationSchema = z.object({
 // Barcode scan schema
 export const barcodeScanSchema = z.object({
   barcode: z.string().min(1, 'Barcode is required'),
+  classId: z.string().min(1, 'Class ID is required'),
   format: z.string().optional(),
   scannedAt: z.string().or(z.date()),
   deviceId: z.string().min(1)

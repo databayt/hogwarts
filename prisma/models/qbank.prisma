@@ -139,6 +139,7 @@ model QuestionBank {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // Performance indexes
   @@index([schoolId, subjectId])
   @@index([schoolId, difficulty, bloomLevel])
   @@index([schoolId, questionType])
@@ -146,6 +147,12 @@ model QuestionBank {
   @@index([schoolId, source])
   @@index([schoolId, generationJobId])
   @@index([validationScore])
+  @@index([schoolId, subjectId, questionType]) // Composite for subject questions by type
+  @@index([schoolId, subjectId, difficulty]) // Composite for difficulty filtering
+  @@index([schoolId, tags]) // For tag-based searches
+  @@index([createdAt]) // For sorting
+  @@index([schoolId, subjectId, bloomLevel]) // Composite for Bloom's taxonomy queries
+  // @@fulltext([questionText]) // Full-text search on question content (not supported in PostgreSQL via Prisma)
   @@map("question_bank")
 }
 
@@ -170,9 +177,13 @@ model QuestionAnalytics {
   lastUsed  DateTime?
   updatedAt DateTime  @updatedAt
 
+  // Performance indexes
   @@index([schoolId, questionId])
   @@index([schoolId, timesUsed])
   @@index([schoolId, successRate])
+  @@index([avgScore]) // For identifying problematic questions
+  @@index([perceivedDifficulty]) // For difficulty analysis
+  @@index([lastUsed]) // For usage frequency analysis
   @@map("question_analytics")
 }
 
@@ -209,9 +220,13 @@ model ExamTemplate {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // Performance indexes
   @@index([schoolId, subjectId])
   @@index([schoolId, isActive])
   @@index([schoolId, createdBy])
+  @@index([schoolId, subjectId, isActive]) // Composite for active subject templates
+  @@index([createdAt]) // For sorting
+  // @@fulltext([name, description]) // Full-text search on template info (not supported in PostgreSQL via Prisma)
   @@map("exam_templates")
 }
 
@@ -238,9 +253,12 @@ model GeneratedExam {
   createdAt   DateTime @default(now())
 
   @@unique([examId]) // One generated exam per exam
+  // Performance indexes
   @@index([schoolId, examId])
   @@index([schoolId, templateId])
   @@index([schoolId, generatedBy])
+  @@index([createdAt]) // For sorting by generation date
+  @@index([schoolId, isRandomized]) // For filtering random vs fixed exams
   @@map("generated_exams")
 }
 
@@ -263,8 +281,11 @@ model GeneratedExamQuestion {
 
   @@unique([generatedExamId, order])
   @@unique([generatedExamId, questionId]) // No duplicate questions in same exam
+  // Performance indexes
   @@index([schoolId, generatedExamId])
   @@index([schoolId, questionId])
+  @@index([order]) // For question sequencing
+  @@index([points]) // For points distribution analysis
   @@map("generated_exam_questions")
 }
 
@@ -317,9 +338,15 @@ model SourceMaterial {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // Performance indexes
   @@index([schoolId, examType, subject])
   @@index([status])
   @@index([examType])
+  @@index([schoolId, type, status]) // Composite for source type filtering
+  @@index([schoolId, subject, status]) // Composite for subject materials
+  @@index([qualityScore]) // For quality-based selection
+  @@index([timesUsed]) // For usage analytics
+  // @@fulltext([title]) // Full-text search on title (not supported in PostgreSQL via Prisma)
   @@map("source_materials")
 }
 
@@ -399,9 +426,14 @@ model GenerationJob {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // Performance indexes
   @@index([schoolId, status])
   @@index([examType])
   @@index([status, createdAt])
+  @@index([schoolId, status, createdAt]) // Composite for job queue
+  @@index([schoolId, examType, status]) // Composite for exam type jobs
+  @@index([triggeredBy]) // For user job tracking
+  @@index([completedAt]) // For completion analysis
   @@map("generation_jobs")
 }
 
@@ -434,8 +466,12 @@ model QuestionReview {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // Performance indexes
   @@index([status])
   @@index([reviewedBy])
   @@index([status, createdAt])
+  @@index([status, reviewedAt]) // For review completion tracking
+  @@index([qualityRating]) // For quality analysis
+  @@index([accuracyRating]) // For accuracy analysis
   @@map("question_reviews")
 }

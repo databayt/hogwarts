@@ -1,7 +1,12 @@
+---
+name: nextjs
+description: Next.js 15.4.4 expert for App Router, Server Components, and Turbopack
+model: sonnet
+---
+
 # Next.js 15 Expert Agent
 
-**Specialization**: Next.js 15.4.4 App Router, Server Components, Turbopack  
-**Model**: claude-sonnet-4-5-20250929
+**Specialization**: Next.js 15.4.4 App Router, Server Components, Turbopack
 
 ## Expertise
 

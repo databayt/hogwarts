@@ -1,5 +1,6 @@
 'use client'
 
+import { memo } from "react"
 import { Clock } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { TimetableCell } from "./timetable-cell"
@@ -21,7 +22,7 @@ interface TimetableGridProps {
   availableSubjects?: string[]
 }
 
-export function TimetableGrid({
+function TimetableGridComponent({
   periods,
   timetableData,
   onTeacherInfoSave,
@@ -124,4 +125,25 @@ export function TimetableGrid({
       </div>
     </div>
   )
-} 
+}
+
+// Memoized export to prevent unnecessary re-renders
+// Only re-render if props actually change
+export const TimetableGrid = memo(TimetableGridComponent, (prevProps, nextProps) => {
+  // Custom comparison for optimal performance
+  return (
+    // Compare periods array (checking length and content)
+    prevProps.periods.length === nextProps.periods.length &&
+    JSON.stringify(prevProps.periods) === JSON.stringify(nextProps.periods) &&
+    // Compare timetable data
+    JSON.stringify(prevProps.timetableData) === JSON.stringify(nextProps.timetableData) &&
+    // Compare other primitive props
+    prevProps.showAllSubjects === nextProps.showAllSubjects &&
+    // Compare arrays
+    JSON.stringify(prevProps.availableSubjects) === JSON.stringify(nextProps.availableSubjects) &&
+    // Functions should be stable (referentially equal)
+    prevProps.onTeacherInfoSave === nextProps.onTeacherInfoSave &&
+    prevProps.getTeacherInfo === nextProps.getTeacherInfo &&
+    prevProps.onSubjectChange === nextProps.onSubjectChange
+  )
+}) 

@@ -1,7 +1,12 @@
+---
+name: prisma
+description: Prisma ORM expert for PostgreSQL and query optimization with MCP
+model: sonnet
+---
+
 # Prisma Database Expert Agent
 
 **Specialization**: Prisma ORM 6.14.0, PostgreSQL, query optimization
-**Model**: claude-sonnet-4-5-20250929
 **MCP**: Uses PostgreSQL MCP for direct database access
 
 ## Expertise

@@ -8,6 +8,8 @@
 import React, { useState, useMemo } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ProfileHeader } from '../shared/profile-header'
+import { ProfileHeaderCompact } from '../shared/profile-header-compact'
+import { ProfileGitHubLayout } from '../shared/profile-github-layout'
 import { ProfileSidebar } from '../shared/profile-sidebar'
 import { ContributionGraph } from '../shared/contribution-graph'
 import { ActivityTimeline } from '../shared/activity-timeline'
@@ -18,6 +20,7 @@ import { PaymentsTab } from './tabs/payments-tab'
 import { CommunicationTab } from './tabs/communication-tab'
 import { DocumentsTab } from './tabs/documents-tab'
 import { useProfile, useProfileActivity, useProfileContributions } from '../hooks'
+import { useSidebar } from '@/components/ui/sidebar'
 import { cn } from '@/lib/utils'
 import type { ParentProfile, ConnectionStatus } from '../types'
 import { UserProfileType } from '../types'
@@ -274,6 +277,7 @@ export function ParentProfileContent({
   className
 }: ParentProfileContentProps) {
   const [activeTab, setActiveTab] = useState('overview')
+  const { open: sidebarOpen } = useSidebar()
 
   // Use mock data for now (replace with real API calls)
   const profile = useMemo(() => generateMockParentProfile(), [])
@@ -313,10 +317,131 @@ export function ParentProfileContent({
     )
   }
 
+  // Tabs content component (reusable for both layouts)
+  const tabsContent = (
+    <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+      <TabsList className="grid grid-cols-3 lg:grid-cols-6 w-full">
+        {tabs.map(tab => (
+          <TabsTrigger
+            key={tab.id}
+            value={tab.id}
+            className="relative"
+          >
+            <span className="flex items-center gap-2">
+              {tab.icon}
+              <span className="hidden sm:inline">{tab.label}</span>
+              {tab.badge && (
+                <span className="ml-1 px-1.5 py-0.5 text-xs bg-primary/10 text-primary rounded-full">
+                  {tab.badge}
+                </span>
+              )}
+            </span>
+          </TabsTrigger>
+        ))
+      }</TabsList>
+
+      <TabsContent value="overview" className="space-y-6">
+        {/* GitHub-style contribution graph */}
+        <ContributionGraph
+          data={(profile.contributionData || []) as any}
+          dictionary={dictionary}
+          lang={lang}
+          onDayClick={(date) => console.log('Day clicked:', date)}
+        />
+
+        {/* Recent Activity */}
+        <ActivityTimeline
+          activities={profile.recentActivity}
+          dictionary={dictionary}
+          lang={lang}
+          onActivityClick={(activity) => console.log('Activity clicked:', activity)}
+          maxItems={10}
+        />
+
+        {/* Overview Tab Content */}
+        <OverviewTab
+          profile={profile}
+          dictionary={dictionary}
+          lang={lang}
+        />
+      </TabsContent>
+
+      <TabsContent value="children">
+        <ChildrenTab
+          profile={profile}
+          dictionary={dictionary}
+          lang={lang}
+          isOwner={isOwner}
+        />
+      </TabsContent>
+
+      <TabsContent value="academic">
+        <AcademicTab
+          profile={profile}
+          dictionary={dictionary}
+          lang={lang}
+        />
+      </TabsContent>
+
+      <TabsContent value="payments">
+        <PaymentsTab
+          profile={profile}
+          dictionary={dictionary}
+          lang={lang}
+          isOwner={isOwner}
+        />
+      </TabsContent>
+
+      <TabsContent value="communication">
+        <CommunicationTab
+          profile={profile}
+          dictionary={dictionary}
+          lang={lang}
+          isOwner={isOwner}
+        />
+      </TabsContent>
+
+      <TabsContent value="documents">
+        <DocumentsTab
+          profile={profile}
+          dictionary={dictionary}
+          lang={lang}
+          isOwner={isOwner}
+        />
+      </TabsContent>
+    </Tabs>
+  )
+
+  // Sidebar ON: Compact horizontal layout
+  if (sidebarOpen) {
+    return (
+      <div className={cn('space-y-0', className)}>
+        {/* Compact Profile Header */}
+        <ProfileHeaderCompact
+          profile={profile}
+          dictionary={dictionary}
+          lang={lang}
+          isOwner={isOwner}
+          connectionStatus={isOwner ? undefined : 'none'}
+          onEdit={() => console.log('Edit profile')}
+          onConnect={() => console.log('Connect')}
+          onMessage={() => console.log('Message')}
+          onShare={() => console.log('Share')}
+          onFollow={() => console.log('Follow')}
+        />
+
+        {/* Main Content */}
+        <div className="p-6 space-y-6">
+          {tabsContent}
+        </div>
+      </div>
+    )
+  }
+
+  // Sidebar OFF: Full GitHub layout
   return (
-    <div className={cn('space-y-6', className)}>
-      {/* Profile Header */}
-      <ProfileHeader
+    <div className={cn('', className)}>
+      <ProfileGitHubLayout
         profile={profile}
         dictionary={dictionary}
         lang={lang}
@@ -327,114 +452,9 @@ export function ParentProfileContent({
         onMessage={() => console.log('Message')}
         onShare={() => console.log('Share')}
         onFollow={() => console.log('Follow')}
-      />
-
-      {/* Main Content Area */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left Sidebar - Profile Details */}
-        <div className="lg:col-span-3">
-          <ProfileSidebar
-            profile={profile}
-            dictionary={dictionary}
-            lang={lang}
-          />
-        </div>
-
-        {/* Main Content - Tabs */}
-        <div className="lg:col-span-9">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid grid-cols-3 lg:grid-cols-6 w-full">
-              {tabs.map(tab => (
-                <TabsTrigger
-                  key={tab.id}
-                  value={tab.id}
-                  className="relative"
-                >
-                  <span className="flex items-center gap-2">
-                    {tab.icon}
-                    <span className="hidden sm:inline">{tab.label}</span>
-                    {tab.badge && (
-                      <span className="ml-1 px-1.5 py-0.5 text-xs bg-primary/10 text-primary rounded-full">
-                        {tab.badge}
-                      </span>
-                    )}
-                  </span>
-                </TabsTrigger>
-              ))
-            }</TabsList>
-
-            <TabsContent value="overview" className="space-y-6">
-              {/* GitHub-style contribution graph */}
-              <ContributionGraph
-                data={(profile.contributionData || []) as any}
-                dictionary={dictionary}
-                lang={lang}
-                onDayClick={(date) => console.log('Day clicked:', date)}
-              />
-
-              {/* Recent Activity */}
-              <ActivityTimeline
-                activities={profile.recentActivity}
-                dictionary={dictionary}
-                lang={lang}
-                onActivityClick={(activity) => console.log('Activity clicked:', activity)}
-                maxItems={10}
-              />
-
-              {/* Overview Tab Content */}
-              <OverviewTab
-                profile={profile}
-                dictionary={dictionary}
-                lang={lang}
-              />
-            </TabsContent>
-
-            <TabsContent value="children">
-              <ChildrenTab
-                profile={profile}
-                dictionary={dictionary}
-                lang={lang}
-                isOwner={isOwner}
-              />
-            </TabsContent>
-
-            <TabsContent value="academic">
-              <AcademicTab
-                profile={profile}
-                dictionary={dictionary}
-                lang={lang}
-              />
-            </TabsContent>
-
-            <TabsContent value="payments">
-              <PaymentsTab
-                profile={profile}
-                dictionary={dictionary}
-                lang={lang}
-                isOwner={isOwner}
-              />
-            </TabsContent>
-
-            <TabsContent value="communication">
-              <CommunicationTab
-                profile={profile}
-                dictionary={dictionary}
-                lang={lang}
-                isOwner={isOwner}
-              />
-            </TabsContent>
-
-            <TabsContent value="documents">
-              <DocumentsTab
-                profile={profile}
-                dictionary={dictionary}
-                lang={lang}
-                isOwner={isOwner}
-              />
-            </TabsContent>
-          </Tabs>
-        </div>
-      </div>
+      >
+        {tabsContent}
+      </ProfileGitHubLayout>
     </div>
   )
 }

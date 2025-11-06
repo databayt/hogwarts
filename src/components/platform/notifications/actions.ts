@@ -114,7 +114,7 @@ export async function createNotification(
         priority: parsed.priority || "normal",
         title: parsed.title,
         body: parsed.body,
-        metadata: (parsed.metadata as any) || null,
+        metadata: (parsed.metadata || null) as any,
         actorId: parsed.actorId || authContext.userId,
         channels: parsed.channels || ["in_app"],
         expiresAt,
@@ -269,14 +269,11 @@ export async function markAllNotificationsAsRead(
     }
 
     // Build where clause
-    const where: any = {
+    const where = {
       schoolId,
       userId: parsed.userId,
       read: false,
-    }
-
-    if (parsed.type) {
-      where.type = parsed.type
+      ...(parsed.type && { type: parsed.type }),
     }
 
     // Mark all as read
@@ -449,7 +446,7 @@ export async function createNotificationBatch(
         type: parsed.type,
         title: parsed.title,
         body: parsed.body,
-        targetRole: parsed.targetRole as any,
+        targetRole: (parsed.targetRole || null) as any,
         targetClassId: parsed.targetClassId || null,
         targetUserIds: parsed.targetUserIds || [],
         scheduledFor: parsed.scheduledFor

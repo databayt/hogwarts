@@ -36,9 +36,9 @@ export function PageNav({ pages, defaultPage, className, ...props }: PageNavProp
   }
 
   return (
-    <div className={cn("border-b", className)} {...props}>
+    <div className={cn("border-b border-border/40", className)} {...props}>
       <ScrollArea className="max-w-[600px] lg:max-w-none">
-        <nav className="flex items-center gap-6 rtl:flex-row-reverse">
+        <nav className="flex items-center gap-4 lg:gap-6 rtl:flex-row-reverse -mb-px">
           {defaultPage && (
             <PageLink
               page={defaultPage}
@@ -75,14 +75,13 @@ function PageLink({
       href={page.href}
       key={page.href}
       className={cn(
-        "relative px-1 pb-3 text-sm font-medium transition-colors hover:text-primary whitespace-nowrap",
-        isActive ? "text-primary" : "text-muted-foreground"
+        "relative px-2 py-4 text-sm font-medium transition-colors whitespace-nowrap",
+        isActive
+          ? "text-foreground border-b-2 border-primary"
+          : "text-muted-foreground hover:text-foreground hover:border-b-2 hover:border-border"
       )}
     >
       {page.name}
-      {isActive && (
-        <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
-      )}
     </Link>
   )
 }

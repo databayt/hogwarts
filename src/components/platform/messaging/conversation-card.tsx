@@ -92,16 +92,28 @@ export function ConversationCard({
     <div
       onClick={() => onClick?.(conversation.id)}
       className={cn(
-        "flex items-start gap-3 p-3 rounded-lg cursor-pointer transition-colors hover:bg-accent/50 group relative",
+        "relative flex items-center gap-3 px-4 py-3",
+        "cursor-pointer transition-all duration-200",
+        "border-b border-border",
+        // iMessage-style hover and active states
+        "hover:bg-accent",
         isActive && "bg-accent",
-        hasUnread && "bg-accent/20",
-        isPinned && "border-l-2 border-l-primary",
         className
       )}
     >
+      {/* iMessage-style unread indicator (purple dot on left) */}
+      {hasUnread && (
+        <div className="absolute left-2 top-1/2 -translate-y-1/2">
+          <div className="h-2 w-2 rounded-full bg-chart-5 animate-pulse" />
+        </div>
+      )}
+
       {/* Avatar */}
-      <div className="relative flex-shrink-0">
-        <Avatar className="h-12 w-12">
+      <div className="relative flex-shrink-0 ml-2">
+        <Avatar className={cn(
+          "transition-all",
+          hasUnread ? "h-12 w-12 sm:h-14 sm:w-14" : "h-11 w-11 sm:h-12 sm:w-12"
+        )}>
           <AvatarImage src={avatarUrl} alt={displayName} />
           <AvatarFallback className="bg-muted text-muted-foreground">
             {avatarFallback}
@@ -121,47 +133,43 @@ export function ConversationCard({
 
       {/* Content */}
       <div className="flex-1 min-w-0">
-        <div className="flex items-start justify-between gap-2 mb-1">
+        <div className="flex items-center justify-between gap-2 mb-0.5">
           <div className="flex items-center gap-2 min-w-0 flex-1">
             <h3 className={cn(
-              "font-medium truncate",
-              hasUnread ? "text-foreground" : "text-foreground"
+              "truncate text-foreground",
+              hasUnread ? "font-bold" : "font-semibold"
             )}>
               {displayName}
             </h3>
             {isMuted && (
-              <VolumeX className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+              <VolumeX className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
             )}
           </div>
 
           {lastMessageTime && (
             <span className={cn(
               "text-xs flex-shrink-0",
-              hasUnread ? "text-primary font-medium" : "text-muted-foreground"
+              hasUnread ? "text-foreground font-semibold" : "text-muted-foreground"
             )}>
               {lastMessageTime}
             </span>
           )}
         </div>
 
-        <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
           <p className={cn(
-            "text-sm truncate",
-            hasUnread ? "font-medium text-foreground" : "text-muted-foreground"
+            "text-sm truncate flex-1",
+            hasUnread ? "font-semibold text-foreground" : "text-muted-foreground"
           )}>
             {conversation.lastMessage?.senderId === currentUserId && (
-              <span className="text-muted-foreground">
+              <span className={cn(
+                hasUnread ? "text-foreground/70" : "text-muted-foreground"
+              )}>
                 {locale === "ar" ? "أنت: " : "You: "}
               </span>
             )}
             {lastMessagePreview}
           </p>
-
-          {hasUnread && (
-            <Badge variant="default" className="flex-shrink-0 h-5 min-w-[20px] px-1.5">
-              {conversation.unreadCount! > 99 ? "99+" : conversation.unreadCount}
-            </Badge>
-          )}
         </div>
 
         {/* Participant count for group conversations */}

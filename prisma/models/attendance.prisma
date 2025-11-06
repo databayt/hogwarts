@@ -9,6 +9,31 @@ enum AttendanceStatus {
   HOLIDAY
 }
 
+enum AttendanceMethod {
+  MANUAL
+  GEOFENCE
+  QR_CODE
+  BARCODE
+  RFID
+  FINGERPRINT
+  FACE_RECOGNITION
+  NFC
+  BLUETOOTH
+  BULK_UPLOAD
+}
+
+enum IdentifierType {
+  BARCODE
+  QR_CODE
+  RFID_CARD
+  NFC_TAG
+  FINGERPRINT
+  FACE_ID
+  BLUETOOTH_MAC
+  STUDENT_ID // Traditional student ID number
+  MOBILE_DEVICE // Device ID for app-based tracking
+}
+
 model Attendance {
   id        String           @id @default(cuid())
   schoolId  String
@@ -19,6 +44,12 @@ model Attendance {
   notes     String?
   markedBy  String? // Teacher ID who marked attendance
   markedAt  DateTime         @default(now())
+  method    AttendanceMethod @default(MANUAL) // How attendance was marked
+  deviceId  String? // Device used for marking (optional)
+  checkInTime  DateTime? // Exact check-in time
+  checkOutTime DateTime? // Exact check-out time
+  location     Json? // Location data if applicable
+  confidence   Float? // Accuracy/confidence score for biometric methods
 
   school  School  @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
@@ -28,5 +59,66 @@ model Attendance {
   updatedAt DateTime @updatedAt
 
   @@unique([schoolId, studentId, classId, date]) // Unique attendance per student per class per date per school
+  @@index([date])
+  @@index([status])
+  @@index([studentId])
+  @@index([classId])
+  @@index([method])
   @@map("attendances")
+}
+
+// Student identification methods (cards, biometrics, etc.)
+model StudentIdentifier {
+  id         String         @id @default(cuid())
+  schoolId   String
+  studentId  String
+  type       IdentifierType
+  value      String // Card number, fingerprint hash, face encoding, etc.
+  metadata   Json? // Additional data specific to the identifier type
+  isActive   Boolean        @default(true)
+  isPrimary  Boolean        @default(false)
+  issuedAt   DateTime       @default(now())
+  issuedBy   String? // User ID who issued this identifier
+  expiresAt  DateTime?
+  lastUsedAt DateTime?
+  usageCount Int            @default(0)
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  school     School         @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  student    Student        @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([schoolId, type, value])
+  @@index([studentId])
+  @@index([type])
+  @@index([isActive])
+  @@index([expiresAt])
+  @@map("student_identifiers")
+}
+
+// QR Code tracking for attendance sessions
+model QRCodeSession {
+  id            String    @id @default(cuid())
+  schoolId      String
+  classId       String
+  code          String    @unique
+  payload       Json // Encrypted payload data
+  generatedBy   String // User ID who generated
+  generatedAt   DateTime  @default(now())
+  expiresAt     DateTime
+  isActive      Boolean   @default(true)
+  scanCount     Int       @default(0)
+  maxScans      Int? // Maximum allowed scans
+  scannedBy     Json      @default("[]") // Array of student IDs who scanned
+  configuration Json? // QR code specific settings
+  invalidatedAt DateTime?
+  invalidatedBy String?
+
+  school  School    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  class   Class     @relation(fields: [classId], references: [id], onDelete: Cascade)
+
+  @@index([classId])
+  @@index([expiresAt])
+  @@index([isActive])
+  @@map("qr_code_sessions")
 }

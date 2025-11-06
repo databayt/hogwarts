@@ -112,8 +112,8 @@ export function MarksEntryForm({ examId }: Props) {
         examId,
         marks: data.marks,
       });
-      if (result.success) {
-        toast.success(`Saved marks for ${result.count} students`);
+      if (result.success && result.data) {
+        toast.success(`Saved marks for ${result.data.count} students`);
       }
     } catch (error) {
       toast.error("Failed to save marks");

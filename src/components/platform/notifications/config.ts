@@ -18,179 +18,140 @@ import {
 } from "lucide-react"
 
 // Notification type configurations
+// Note: Icons use semantic color tokens for consistency and theme compatibility
 export const NOTIFICATION_TYPE_CONFIG: Record<
   NotificationType,
   {
     icon: LucideIcon
-    color: string // Semantic color token
     requiresAction: boolean
   }
 > = {
   message: {
     icon: MessageSquare,
-    color: "text-blue-600",
     requiresAction: true,
   },
   message_mention: {
     icon: MessageSquare,
-    color: "text-purple-600",
     requiresAction: true,
   },
   assignment_created: {
     icon: BookOpen,
-    color: "text-indigo-600",
     requiresAction: true,
   },
   assignment_due: {
     icon: Calendar,
-    color: "text-orange-600",
     requiresAction: true,
   },
   assignment_graded: {
     icon: FileText,
-    color: "text-green-600",
     requiresAction: false,
   },
   grade_posted: {
     icon: FileText,
-    color: "text-green-600",
     requiresAction: false,
   },
   attendance_marked: {
     icon: UserCheck,
-    color: "text-teal-600",
     requiresAction: false,
   },
   attendance_alert: {
     icon: AlertTriangle,
-    color: "text-red-600",
     requiresAction: true,
   },
   fee_due: {
     icon: DollarSign,
-    color: "text-amber-600",
     requiresAction: true,
   },
   fee_overdue: {
     icon: AlertTriangle,
-    color: "text-red-600",
     requiresAction: true,
   },
   fee_paid: {
     icon: DollarSign,
-    color: "text-green-600",
     requiresAction: false,
   },
   announcement: {
     icon: Megaphone,
-    color: "text-blue-600",
     requiresAction: false,
   },
   event_reminder: {
     icon: Calendar,
-    color: "text-purple-600",
     requiresAction: false,
   },
   class_cancelled: {
     icon: AlertTriangle,
-    color: "text-red-600",
     requiresAction: false,
   },
   class_rescheduled: {
     icon: Calendar,
-    color: "text-orange-600",
     requiresAction: false,
   },
   system_alert: {
     icon: Bell,
-    color: "text-red-600",
     requiresAction: true,
   },
   account_created: {
     icon: Shield,
-    color: "text-green-600",
     requiresAction: false,
   },
   password_reset: {
     icon: Shield,
-    color: "text-orange-600",
     requiresAction: true,
   },
   login_alert: {
     icon: Shield,
-    color: "text-red-600",
     requiresAction: true,
   },
   document_shared: {
     icon: FileText,
-    color: "text-blue-600",
     requiresAction: true,
   },
   report_ready: {
     icon: FileText,
-    color: "text-green-600",
     requiresAction: true,
   },
 }
 
 // Priority configurations
+// Note: Labels should come from dictionary, colors use semantic tokens
 export const PRIORITY_CONFIG: Record<
   NotificationPriority,
   {
-    label: string
-    color: string
     badgeVariant: "default" | "secondary" | "destructive" | "outline"
   }
 > = {
   low: {
-    label: "Low",
-    color: "text-muted-foreground",
     badgeVariant: "secondary",
   },
   normal: {
-    label: "Normal",
-    color: "text-foreground",
     badgeVariant: "default",
   },
   high: {
-    label: "High",
-    color: "text-orange-600",
     badgeVariant: "outline",
   },
   urgent: {
-    label: "Urgent",
-    color: "text-destructive",
     badgeVariant: "destructive",
   },
 }
 
 // Channel configurations
+// Note: Labels and descriptions should come from dictionary
 export const CHANNEL_CONFIG: Record<
   NotificationChannel,
   {
-    label: string
-    description: string
     enabled: boolean // Whether it's currently implemented
   }
 > = {
   in_app: {
-    label: "In-App",
-    description: "Notifications within the application",
     enabled: true,
   },
   email: {
-    label: "Email",
-    description: "Email notifications",
     enabled: true,
   },
   push: {
-    label: "Push",
-    description: "Browser push notifications (coming soon)",
     enabled: false,
   },
   sms: {
-    label: "SMS",
-    description: "Text message notifications (coming soon)",
     enabled: false,
   },
 }
@@ -287,20 +248,19 @@ export const DEFAULT_QUIET_HOURS = {
 }
 
 // Digest frequency options
-export const DIGEST_FREQUENCY_OPTIONS = [
-  { label: "Daily", value: "daily" },
-  { label: "Weekly", value: "weekly" },
-] as const
+// Note: Labels should come from dictionary (dictionary.preferences.digest.daily/weekly)
+export const DIGEST_FREQUENCY_OPTIONS = ["daily", "weekly"] as const
 
 // Filter options for notification center
-export const NOTIFICATION_FILTERS = {
-  all: "All",
-  unread: "Unread",
-  messages: "Messages",
-  assignments: "Assignments",
-  grades: "Grades",
-  attendance: "Attendance",
-  fees: "Fees",
-  announcements: "Announcements",
-  system: "System",
-} as const
+// Note: Labels should come from dictionary (dictionary.filters.*)
+export const NOTIFICATION_FILTER_TYPES = [
+  "all",
+  "unread",
+  "messages",
+  "assignments",
+  "grades",
+  "attendance",
+  "fees",
+  "announcements",
+  "system",
+] as const

@@ -1,17 +1,15 @@
 "use client";
 
 import * as React from "react";
-import { FileUploader } from "@/components/file-upload/file-uploader/file-uploader";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { uploadReceipt } from "@/components/operator/billing/receipts/actions";
 import { SuccessToast, ErrorToast } from "@/components/atom/toast";
-import { uploadFileAction } from "@/components/file-upload/actions";
+import { FileUploader, ACCEPT_IMAGES, type UploadedFileResult } from "@/components/file-upload/enhanced/file-uploader";
 import type { Locale } from "@/components/internationalization/config";
 import type { getDictionary } from "@/components/internationalization/dictionaries";
-import { useSession } from "next-auth/react";
 
 type Props = {
   invoices: Array<{ id: string; number: string }>;
@@ -19,50 +17,48 @@ type Props = {
   lang: Locale;
 };
 
+// Combined PDF and image acceptance
+const RECEIPT_ACCEPT = {
+  ...ACCEPT_IMAGES,
+  'application/pdf': ['.pdf'],
+};
+
 export function ReceiptUpload({ invoices, dictionary, lang }: Props) {
-  const { data: session } = useSession();
   const [invoiceId, setInvoiceId] = React.useState(invoices[0]?.id ?? "");
   const [amount, setAmount] = React.useState(0);
-  const [files, setFiles] = React.useState<File[]>([]);
+  const [uploadedFiles, setUploadedFiles] = React.useState<UploadedFileResult[]>([]);
   const [submitting, setSubmitting] = React.useState(false);
-  const [uploading, setUploading] = React.useState(false);
 
   const t = dictionary.operator;
 
+  const handleUploadComplete = (files: UploadedFileResult[]) => {
+    setUploadedFiles(files);
+  };
+
+  const handleUploadError = (error: string) => {
+    ErrorToast(error);
+  };
+
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const file = files[0];
-    if (!file) return ErrorToast("Select a file");
+    if (uploadedFiles.length === 0) return ErrorToast("Select a file");
 
     setSubmitting(true);
-    setUploading(true);
 
     try {
-      // Upload file to storage using centralized system
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("folder", `${session?.user?.schoolId}/financial/receipts`);
-      formData.append("category", "document");
-      formData.append("type", "receipt");
-
-      const uploadResult = await uploadFileAction(formData);
-
-      if (!uploadResult.success || !uploadResult.metadata) {
-        ErrorToast(uploadResult.error || "Failed to upload file");
-        return;
-      }
+      const uploadedFile = uploadedFiles[0];
 
       // Save receipt record with uploaded file URL
       const result = await uploadReceipt({
         invoiceId,
         amount,
-        fileName: uploadResult.metadata.originalName,
-        fileUrl: uploadResult.metadata.url,
+        fileName: uploadedFile.fileId,
+        fileUrl: uploadedFile.cdnUrl || uploadedFile.url,
       });
 
       if (result.success) {
         SuccessToast("Receipt uploaded successfully");
-        setFiles([]);
+        setUploadedFiles([]);
         setAmount(0);
       } else {
         ErrorToast(result.error?.message || "Failed to upload receipt");
@@ -71,7 +67,6 @@ export function ReceiptUpload({ invoices, dictionary, lang }: Props) {
       ErrorToast(e instanceof Error ? e.message : "Failed to upload receipt");
     } finally {
       setSubmitting(false);
-      setUploading(false);
     }
   };
 
@@ -97,40 +92,23 @@ export function ReceiptUpload({ invoices, dictionary, lang }: Props) {
         </div>
         <div className="md:col-span-3">
           <FileUploader
-            value={files}
-            onValueChange={setFiles}
-            accept={{ 'application/pdf': ['.pdf'], 'image/jpeg': ['.jpg', '.jpeg'], 'image/png': ['.png'] }}
+            category="DOCUMENT"
+            folder="operator/receipts"
+            accept={RECEIPT_ACCEPT}
             maxFiles={1}
-            maxSize={5 * 1024 * 1024}
-            disabled={uploading}
+            multiple={false}
+            maxSize={5 * 1024 * 1024} // 5MB
+            optimizeImages={false}
+            onUploadComplete={handleUploadComplete}
+            onUploadError={handleUploadError}
           />
         </div>
         <div className="md:col-span-3">
-          <Button size="sm" disabled={submitting || files.length === 0 || !invoiceId}>
-            {uploading ? "Uploading..." : t.common.actions.submit}
+          <Button size="sm" disabled={submitting || uploadedFiles.length === 0 || !invoiceId}>
+            {submitting ? "Submitting..." : t.common.actions.submit}
           </Button>
         </div>
       </form>
     </Card>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

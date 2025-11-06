@@ -80,10 +80,16 @@ model Exam {
   studentAnswers StudentAnswer[] // Auto-marking system
   markingResults MarkingResult[] // Auto-marking system
 
+  // Performance indexes
   @@index([schoolId, examDate])
   @@index([schoolId, classId])
   @@index([schoolId, subjectId])
   @@index([schoolId, status])
+  @@index([schoolId, examType])
+  @@index([schoolId, examDate, status]) // Composite for upcoming exams
+  @@index([schoolId, classId, examDate]) // Composite for class schedule
+  @@index([schoolId, subjectId, examType]) // Composite for subject exams
+  @@index([createdAt]) // For sorting
   @@map("exams")
 }
 
@@ -107,8 +113,13 @@ model ExamResult {
   student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
   @@unique([examId, studentId])
+  // Performance indexes
   @@index([schoolId, examId])
   @@index([schoolId, studentId])
+  @@index([schoolId, examId, marksObtained]) // For ranking queries
+  @@index([schoolId, examId, percentage]) // For performance analysis
+  @@index([schoolId, studentId, createdAt]) // For student history
+  @@index([isAbsent]) // For filtering absent students
   @@map("exam_results")
 }
 
@@ -202,11 +213,16 @@ model StudentAnswer {
   markingResult MarkingResult?
 
   @@unique([examId, questionId, studentId])
+  // Performance indexes
   @@index([schoolId, examId])
   @@index([schoolId, studentId])
   @@index([schoolId, questionId])
   @@index([schoolId, examId, submittedAt])
   @@index([schoolId, submissionType])
+  @@index([schoolId, examId, studentId]) // Composite for student exam answers
+  @@index([schoolId, examId, questionId]) // Composite for exam question answers
+  @@index([uploadUrl]) // For OCR processing queries
+  @@index([ocrText]) // For OCR status queries
   @@map("student_answers")
 }
 
@@ -249,6 +265,7 @@ model MarkingResult {
   student       Student         @relation(fields: [studentId], references: [id], onDelete: Cascade)
   overrides     GradeOverride[]
 
+  // Performance indexes
   @@index([schoolId, examId])
   @@index([schoolId, studentId])
   @@index([schoolId, status])
@@ -257,6 +274,10 @@ model MarkingResult {
   @@index([schoolId, gradedBy])
   @@index([schoolId, examId, status])
   @@index([schoolId, status, needsReview])
+  @@index([schoolId, examId, studentId]) // Composite for student exam marks
+  @@index([schoolId, questionId, studentId]) // Composite for question performance
+  @@index([gradedAt]) // For recent grading queries
+  @@index([aiConfidence]) // For AI grading confidence analysis
   @@map("marking_results")
 }
 
@@ -317,12 +338,17 @@ model Result {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // Performance indexes
   @@index([schoolId, studentId])
   @@index([schoolId, classId])
   @@index([schoolId, assignmentId])
   @@index([schoolId, examId])
   @@index([schoolId, subjectId])
   @@index([schoolId, gradedAt])
+  @@index([schoolId, studentId, subjectId]) // Composite for student subject results
+  @@index([schoolId, classId, subjectId]) // Composite for class subject results
+  @@index([percentage]) // For performance analysis
+  @@index([grade]) // For grade distribution queries
   @@map("results")
 }
 

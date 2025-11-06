@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
   Upload,
   FileSpreadsheet,
@@ -16,14 +16,17 @@ import {
   Users
 } from 'lucide-react';
 import { useAttendanceContext } from '../core/attendance-context';
+import { FileUploader, ACCEPT_DOCUMENTS, type UploadedFileResult } from '@/components/file-upload/enhanced/file-uploader';
+import { toast } from 'sonner';
 
 interface BulkUploadContentProps {
   dictionary?: any;
 }
 
 export function BulkUploadContent({ dictionary }: BulkUploadContentProps) {
-  const [file, setFile] = useState<File | null>(null);
+  const [uploadedFile, setUploadedFile] = useState<UploadedFileResult | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [showUploader, setShowUploader] = useState(false);
   const [uploadResult, setUploadResult] = useState<{
     success: boolean;
     message: string;
@@ -40,38 +43,35 @@ export function BulkUploadContent({ dictionary }: BulkUploadContentProps) {
   // Dictionary shorthand
   const d = dictionary?.school?.attendance?.bulkUpload;
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0];
-    if (selectedFile) {
-      // Validate file type
-      const validTypes = ['text/csv', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'];
-      if (!validTypes.includes(selectedFile.type)) {
-        setUploadResult({
-          success: false,
-          message: d?.upload?.invalidType || 'Invalid file type. Please upload a CSV or Excel file.',
-        });
-        return;
-      }
-      setFile(selectedFile);
+  const handleUploadComplete = (files: UploadedFileResult[]) => {
+    if (files.length > 0) {
+      setUploadedFile(files[0]);
+      setShowUploader(false);
       setUploadResult(null);
+      toast.success('File uploaded successfully');
     }
   };
 
-  const handleUpload = async () => {
-    if (!file) return;
+  const handleUploadError = (error: string) => {
+    toast.error(error);
+  };
+
+  const handleProcess = async () => {
+    if (!uploadedFile) return;
 
     setIsUploading(true);
     setUploadResult(null);
 
-    // Simulate upload process
+    // Process the uploaded file
     try {
-      // In real implementation, this would call an API endpoint
+      // In real implementation, this would call an API endpoint with the file URL
+      // await processBulkAttendance({ fileUrl: uploadedFile.cdnUrl || uploadedFile.url });
       await new Promise(resolve => setTimeout(resolve, 2000));
 
       // Mock successful result
       setUploadResult({
         success: true,
-        message: d?.results?.success || 'Attendance records uploaded successfully!',
+        message: d?.results?.success || 'Attendance records processed successfully!',
         details: {
           total: 150,
           successful: 145,
@@ -85,10 +85,11 @@ export function BulkUploadContent({ dictionary }: BulkUploadContentProps) {
           ]
         }
       });
+      setUploadedFile(null);
     } catch (error) {
       setUploadResult({
         success: false,
-        message: d?.results?.failed || 'Upload failed. Please try again.',
+        message: d?.results?.failed || 'Processing failed. Please try again.',
       });
     } finally {
       setIsUploading(false);
@@ -166,33 +167,50 @@ export function BulkUploadContent({ dictionary }: BulkUploadContentProps) {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex gap-4 items-center">
-            <Input
-              type="file"
-              accept=".csv,.xlsx,.xls"
-              onChange={handleFileChange}
-              disabled={isUploading}
-            />
-            <Button
-              onClick={handleUpload}
-              disabled={!file || isUploading}
-            >
-              {isUploading ? (
-                <>{d?.upload?.processing || 'Processing...'}</>
-              ) : (
-                <>
-                  <Upload className="mr-2 h-4 w-4" />
-                  {d?.upload?.uploadButton || 'Upload'}
-                </>
-              )}
-            </Button>
-          </div>
-
-          {file && (
-            <div className="text-sm text-muted-foreground">
-              {(d?.upload?.selectedFile || 'Selected file: {name} ({size} KB)')
-                .replace('{name}', file.name)
-                .replace('{size}', (file.size / 1024).toFixed(2))}
+          {uploadedFile ? (
+            <div className="space-y-4">
+              <Alert>
+                <FileSpreadsheet className="h-4 w-4" />
+                <AlertDescription className="flex items-center justify-between">
+                  <span>{d?.upload?.fileUploaded || 'File uploaded successfully: '}{uploadedFile.fileId}</span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowUploader(true)}
+                  >
+                    {d?.upload?.changeFile || 'Change File'}
+                  </Button>
+                </AlertDescription>
+              </Alert>
+              <Button
+                onClick={handleProcess}
+                disabled={isUploading}
+                className="w-full"
+              >
+                {isUploading ? (
+                  <>{d?.upload?.processing || 'Processing...'}</>
+                ) : (
+                  <>
+                    <Upload className="mr-2 h-4 w-4" />
+                    {d?.upload?.processButton || 'Process Attendance Data'}
+                  </>
+                )}
+              </Button>
+            </div>
+          ) : (
+            <div className="border-2 border-dashed rounded-lg p-8 text-center">
+              <FileSpreadsheet className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+              <p className="text-sm text-muted-foreground mb-4">
+                {d?.upload?.selectFile || 'Upload your completed attendance file (CSV or Excel)'}
+              </p>
+              <Button
+                variant="outline"
+                onClick={() => setShowUploader(true)}
+                disabled={isUploading}
+              >
+                <Upload className="mr-2 h-4 w-4" />
+                {d?.upload?.selectButton || 'Select File'}
+              </Button>
             </div>
           )}
 
@@ -331,6 +349,31 @@ export function BulkUploadContent({ dictionary }: BulkUploadContentProps) {
           </CardContent>
         </Card>
       )}
+
+      {/* File Upload Dialog */}
+      <Dialog open={showUploader} onOpenChange={setShowUploader}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>{d?.upload?.dialogTitle || 'Upload Attendance File'}</DialogTitle>
+          </DialogHeader>
+          <FileUploader
+            category="DOCUMENT"
+            folder="attendance/bulk-uploads"
+            accept={{
+              ...ACCEPT_DOCUMENTS,
+              'text/csv': ['.csv'],
+              'application/vnd.ms-excel': ['.xls'],
+              'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
+            }}
+            maxFiles={1}
+            multiple={false}
+            maxSize={100 * 1024 * 1024} // 100MB for bulk data
+            optimizeImages={false}
+            onUploadComplete={handleUploadComplete}
+            onUploadError={handleUploadError}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

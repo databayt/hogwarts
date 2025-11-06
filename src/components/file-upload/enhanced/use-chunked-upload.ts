@@ -10,9 +10,10 @@ import { toast } from 'sonner';
 import {
   initiateChunkedUpload,
   uploadChunk,
-  uploadFileEnhanced,
-} from './actions';
-import type { FileCategory } from '../types';
+  completeChunkedUpload,
+} from './chunked-actions';
+import { uploadFileEnhanced } from './actions';
+import type { FileCategory, AccessLevel } from '@prisma/client';
 
 interface ChunkedUploadOptions {
   chunkSize?: number; // Default 5MB
@@ -85,9 +86,8 @@ export function useChunkedUpload(options: ChunkedUploadOptions = {}) {
         uploadChunk({
           uploadId,
           chunkNumber,
-          totalChunks,
           chunkData,
-          hash,
+          chunkHash: hash,
         })
       );
     },
@@ -95,7 +95,7 @@ export function useChunkedUpload(options: ChunkedUploadOptions = {}) {
   );
 
   const uploadFile = useCallback(
-    async (file: File, category: FileCategory = 'other') => {
+    async (file: File, category: FileCategory = 'OTHER') => {
       const filename = file.name;
       const startTime = Date.now();
       let uploadedBytes = 0;
@@ -116,7 +116,6 @@ export function useChunkedUpload(options: ChunkedUploadOptions = {}) {
         if (file.size <= chunkSize) {
           const formData = new FormData();
           formData.append('file', file);
-          formData.append('category', category);
 
           const result = await uploadFileEnhanced(formData);
 
@@ -130,7 +129,9 @@ export function useChunkedUpload(options: ChunkedUploadOptions = {}) {
                 status: 'completed',
               },
             }));
-            onSuccess?.(result.metadata.id);
+            if (result.fileId) {
+              onSuccess?.(result.fileId);
+            }
           } else {
             throw new Error(result.error);
           }
@@ -140,20 +141,23 @@ export function useChunkedUpload(options: ChunkedUploadOptions = {}) {
         // For large files, use chunked upload
         const totalChunks = Math.ceil(file.size / chunkSize);
 
+        // Calculate file hash
+        const fileBuffer = await file.arrayBuffer();
+        const finalHash = await calculateHash(fileBuffer);
+
         // Initiate chunked upload session
         const initResult = await initiateChunkedUpload({
           filename: file.name,
+          mimeType: file.type,
           totalSize: file.size,
           totalChunks,
-          category,
         });
 
-        if (!initResult.success || !('uploadId' in initResult) || !('fileId' in initResult)) {
-          throw new Error(initResult.success ? 'Invalid chunked upload response' : initResult.error);
+        if (!initResult.success || !initResult.uploadId || !initResult.sessionId) {
+          throw new Error(initResult.error || 'Invalid chunked upload response');
         }
 
-        const uploadId: string = initResult.uploadId as string;
-        const fileId: string = initResult.fileId as string;
+        const uploadId: string = initResult.uploadId;
 
         // Create abort controller for this upload
         const abortController = new AbortController();
@@ -205,6 +209,16 @@ export function useChunkedUpload(options: ChunkedUploadOptions = {}) {
           }
         }
 
+        // Complete the chunked upload
+        const completeResult = await completeChunkedUpload({
+          uploadId,
+          finalHash,
+        });
+
+        if (!completeResult.success) {
+          throw new Error(completeResult.error || 'Failed to complete upload');
+        }
+
         // Mark as completed
         setProgress(prev => ({
           ...prev,
@@ -216,10 +230,12 @@ export function useChunkedUpload(options: ChunkedUploadOptions = {}) {
           },
         }));
 
-        onSuccess?.(fileId);
+        if (completeResult.fileId) {
+          onSuccess?.(completeResult.fileId);
+        }
         toast.success(`${filename} uploaded successfully`);
 
-        return { success: true, fileId };
+        return { success: true, fileId: completeResult.fileId, url: completeResult.url };
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Upload failed';
 
@@ -245,7 +261,7 @@ export function useChunkedUpload(options: ChunkedUploadOptions = {}) {
   );
 
   const uploadMultiple = useCallback(
-    async (files: File[], category: FileCategory = 'other') => {
+    async (files: File[], category: FileCategory = 'OTHER') => {
       setIsUploading(true);
 
       const results = [];

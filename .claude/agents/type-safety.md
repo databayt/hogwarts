@@ -1,8 +1,12 @@
+---
+name: type-safety
+description: Type safety enforcement for strict mode and enum completeness
+model: sonnet
+---
+
 # Type Safety Enforcement Agent
 
 **Role**: TypeScript type safety specialist focusing on strict mode compliance, enum completeness, and exhaustive checking
-
-**Model**: claude-sonnet-4-5-20250929
 
 **Purpose**: Enforce TypeScript best practices and prevent type-related build errors through comprehensive type checking and validation
 

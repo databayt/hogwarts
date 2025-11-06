@@ -9,10 +9,12 @@ import { Bell, CheckCheck, Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { NotificationDTO } from "./types"
 import { NotificationType, NotificationPriority } from "@prisma/client"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 interface NotificationListProps {
   notifications: NotificationDTO[]
   locale?: "ar" | "en"
+  dictionary: Dictionary["notifications"]
   onRead?: (notificationId: string) => void
   onDelete?: (notificationId: string) => void
   onMarkAllRead?: () => void
@@ -25,6 +27,7 @@ interface NotificationListProps {
 export function NotificationList({
   notifications,
   locale = "en",
+  dictionary,
   onRead,
   onDelete,
   onMarkAllRead,
@@ -57,9 +60,9 @@ export function NotificationList({
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center">
         <Bell className="h-12 w-12 text-muted-foreground mb-4" />
-        <h3 className="font-medium text-foreground mb-1">No notifications</h3>
-        <p className="text-sm text-muted-foreground">
-          {emptyMessage || "You're all caught up!"}
+        <h3>{dictionary.empty.noNotifications}</h3>
+        <p className="muted">
+          {emptyMessage || dictionary.empty.noNotificationsDescription}
         </p>
       </div>
     )
@@ -72,9 +75,9 @@ export function NotificationList({
         <div className="flex items-center justify-between">
           <Tabs value={filter} onValueChange={(v) => setFilter(v as typeof filter)}>
             <TabsList>
-              <TabsTrigger value="all">All</TabsTrigger>
+              <TabsTrigger value="all">{dictionary.tabs.all}</TabsTrigger>
               <TabsTrigger value="unread">
-                Unread {unreadCount > 0 && `(${unreadCount})`}
+                {dictionary.tabs.unread} {unreadCount > 0 && `(${unreadCount})`}
               </TabsTrigger>
             </TabsList>
           </Tabs>
@@ -87,7 +90,7 @@ export function NotificationList({
               className="gap-2"
             >
               <CheckCheck className="h-4 w-4" />
-              Mark all as read
+              {dictionary.markAllAsRead}
             </Button>
           )}
         </div>
@@ -96,10 +99,10 @@ export function NotificationList({
       {/* Notification List */}
       {filteredNotifications.length === 0 ? (
         <div className="py-8 text-center">
-          <p className="text-sm text-muted-foreground">
+          <p className="muted">
             {filter === "unread"
-              ? "No unread notifications"
-              : "No notifications match the filter"}
+              ? dictionary.empty.noUnread
+              : dictionary.empty.noResults}
           </p>
         </div>
       ) : (
@@ -110,6 +113,7 @@ export function NotificationList({
                 key={notification.id}
                 notification={notification}
                 locale={locale}
+                dictionary={dictionary}
                 onRead={onRead}
                 onDelete={onDelete}
               />
@@ -118,6 +122,7 @@ export function NotificationList({
                 key={notification.id}
                 notification={notification}
                 locale={locale}
+                dictionary={dictionary}
                 onRead={onRead}
                 onDelete={onDelete}
               />
@@ -135,6 +140,7 @@ export function NotificationList({
 export function NotificationListScrollable({
   notifications,
   locale,
+  dictionary,
   onRead,
   onDelete,
   onMarkAllRead,
@@ -148,10 +154,14 @@ export function NotificationListScrollable({
       <div className="px-4 py-3 border-b">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="font-semibold">Notifications</h3>
+            <h3>{dictionary.notificationCenter}</h3>
             {unreadCount > 0 && (
-              <p className="text-xs text-muted-foreground">
-                {unreadCount} unread
+              <p className="muted">
+                <small>
+                  {unreadCount > 1
+                    ? dictionary.unreadCount_other.replace('{{count}}', unreadCount.toString())
+                    : dictionary.unreadCount_one.replace('{{count}}', '1')}
+                </small>
               </p>
             )}
           </div>
@@ -160,9 +170,9 @@ export function NotificationListScrollable({
               variant="ghost"
               size="sm"
               onClick={onMarkAllRead}
-              className="h-8 text-xs"
+              className="h-8"
             >
-              Mark all as read
+              <small>{dictionary.markAllAsRead}</small>
             </Button>
           )}
         </div>
@@ -173,7 +183,7 @@ export function NotificationListScrollable({
         {(notifications?.length ?? 0) === 0 ? (
           <div className="flex flex-col items-center justify-center py-8 text-center px-4">
             <Bell className="h-8 w-8 text-muted-foreground mb-2" />
-            <p className="text-sm text-muted-foreground">No notifications</p>
+            <p className="muted">{dictionary.empty.noNotifications}</p>
           </div>
         ) : (
           <div className="p-2 space-y-1">
@@ -182,6 +192,7 @@ export function NotificationListScrollable({
                 key={notification.id}
                 notification={notification}
                 locale={locale}
+                dictionary={dictionary}
                 onRead={onRead}
                 onDelete={onDelete}
               />
@@ -194,7 +205,7 @@ export function NotificationListScrollable({
       {(notifications?.length ?? 0) > 0 && (
         <div className="px-4 py-3 border-t">
           <Button variant="ghost" size="sm" className="w-full" asChild>
-            <a href="/notifications">View all notifications</a>
+            <a href="/notifications">{dictionary.viewAll}</a>
           </Button>
         </div>
       )}
@@ -208,6 +219,7 @@ export function NotificationListScrollable({
 export function NotificationListGrouped({
   notifications,
   locale,
+  dictionary,
   onRead,
   onDelete,
 }: Omit<NotificationListProps, "onMarkAllRead" | "compact">) {
@@ -240,23 +252,31 @@ export function NotificationListGrouped({
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center">
         <Bell className="h-12 w-12 text-muted-foreground mb-4" />
-        <h3 className="font-medium text-foreground mb-1">No notifications</h3>
-        <p className="text-sm text-muted-foreground">You're all caught up!</p>
+        <h3>{dictionary.empty.noNotifications}</h3>
+        <p className="muted">{dictionary.empty.noNotificationsDescription}</p>
       </div>
     )
+  }
+
+  // Map group keys to dictionary labels
+  const groupLabels: Record<string, string> = {
+    "Today": dictionary.grouping.today,
+    "Yesterday": dictionary.grouping.yesterday,
+    "Older": dictionary.grouping.older,
   }
 
   return (
     <div className="space-y-6">
       {sortedGroups.map((group) => (
         <div key={group} className="space-y-2">
-          <h4 className="text-sm font-medium text-muted-foreground">{group}</h4>
+          <h4 className="text-sm font-medium text-muted-foreground">{groupLabels[group]}</h4>
           <div className="space-y-2">
             {grouped[group].map((notification) => (
               <NotificationCard
                 key={notification.id}
                 notification={notification}
                 locale={locale}
+                dictionary={dictionary}
                 onRead={onRead}
                 onDelete={onDelete}
               />

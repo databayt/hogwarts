@@ -1,0 +1,75 @@
+## Icon System
+
+A comprehensive, feature-based icon system for the Hogwarts platform. Built with TypeScript, organized by category, and designed for optimal developer experience.
+
+The icon system provides 55+ carefully crafted icons organized into logical categories, with three flexible usage patterns to fit any use case. All icons support theming via `currentColor`, automatic dark mode, and full TypeScript support.
+
+### Features
+
+- **55+ Icons** organized into 9 categories
+- **Three Usage Patterns** - Namespace, Individual, and Dynamic
+- **Full Type Safety** with TypeScript
+- **Tree-Shaking Support** for optimal bundle sizes
+- **Theme Integration** - Automatic dark/light mode support
+- **Copy-to-Clipboard** - Quickly copy icon code
+- **Searchable** - Find icons by name, category, or tags
+- **Customizable** - Size, color, and className support
+
+### Quick Start
+
+```tsx
+import { Icons } from "@/components/icons"
+
+// Namespace pattern (recommended)
+<Icons.github className="w-6 h-6" />
+
+// Individual imports (tree-shaking)
+import { GitHubIcon } from "@/components/icons"
+<GitHubIcon className="w-6 h-6" />
+
+// Dynamic loading
+import { Icon } from "@/components/icons"
+<Icon name="github" className="w-6 h-6" />
+```
+
+### Icon Browser
+
+Browse, search, and copy icons below:
+
+import IconBrowser from "@/components/docs/icons/content"
+
+<IconBrowser />
+
+### Categories
+
+Our icons are organized into the following categories:
+
+- **System** (12 icons) - Core UI icons for buttons, navigation, and interface elements
+- **Integrations** (17 icons) - Technology logos and integration icons
+- **Content** (5 icons) - Documentation, reports, and content-related icons
+- **Apps** (6 icons) - Application-specific icons
+- **Productivity** (3 icons) - Rules, prompts, and productivity features
+- **Development** (4 icons) - Developer tools and MCP icons
+- **Programming** (3 icons) - Programming language icons
+- **Ratings** (4 icons) - Visual rating indicators
+- **Shapes** (1 icon) - Basic geometric shapes
+
+### Adding New Icons
+
+Three methods to add icons:
+
+#### 1. Automated (Recommended)
+```bash
+/icon-add <url> <name> <category>
+```
+
+#### 2. SVG Maker MCP
+Generate custom icons with AI assistance through the MCP server integration.
+
+#### 3. Manual
+1. Create icon in `src/components/icons/categories/<category>.tsx`
+2. Export icon component following the naming convention
+3. Add to Icons namespace in `index.tsx`
+4. Update config.ts with metadata
+
+See the [Icon System README](https://github.com/your-repo/tree/main/src/components/icons) for detailed documentation.

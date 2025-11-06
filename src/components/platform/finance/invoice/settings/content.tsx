@@ -7,13 +7,16 @@ import {
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import imabebase64 from "./imagebase64";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { SuccessToast, ErrorToast } from "@/components/atom/toast";
 import { type Locale } from '@/components/internationalization/config'
 import { type Dictionary } from '@/components/internationalization/dictionaries'
+import { FileUploader, ACCEPT_IMAGES, type UploadedFileResult } from "@/components/file-upload/enhanced/file-uploader";
+import { toast } from "sonner";
+import { Upload, Trash2 } from "lucide-react";
 
 type TSignatureData = {
   name: string;
@@ -26,15 +29,17 @@ interface Props {
 }
 
 export function SettingsContent({ dictionary, lang }: Props) {
-  const [logo, setLogo] = useState<string>();
+  const [logo, setLogo] = useState<string>("");
   const [signatureData, setSignatureData] = useState<TSignatureData>({
     name: "",
     image: "",
   });
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [showLogoUploader, setShowLogoUploader] = useState(false);
+  const [showSignatureUploader, setShowSignatureUploader] = useState(false);
   const router = useRouter();
 
-  //handle on change signature : ex.g name
+  //handle on change signature name
   const onChangeSignature = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
 
@@ -46,39 +51,35 @@ export function SettingsContent({ dictionary, lang }: Props) {
     });
   };
 
-  //handle on change signature image
-  const handleSignatureImage = async (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const files = e.target.files;
-
-    if (!files || files.length < 0) return;
-
-    const file = files[0];
-
-    //image to base64
-    const image = await imabebase64(file);
-
-    setSignatureData((preve) => {
-      return {
-        ...preve,
-        image: image,
-      };
-    });
+  // Handle logo upload completion
+  const handleLogoUploadComplete = (files: UploadedFileResult[]) => {
+    if (files.length > 0) {
+      const url = files[0].cdnUrl || files[0].url;
+      setLogo(url);
+      setShowLogoUploader(false);
+      toast.success("Logo uploaded successfully");
+    }
   };
 
-  //handle on change logo
-  const handleOnChangeLogo = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
+  const handleLogoUploadError = (error: string) => {
+    toast.error(error);
+  };
 
-    if (!files || files.length < 0) return;
+  // Handle signature image upload completion
+  const handleSignatureUploadComplete = (files: UploadedFileResult[]) => {
+    if (files.length > 0) {
+      const url = files[0].cdnUrl || files[0].url;
+      setSignatureData((prev) => ({
+        ...prev,
+        image: url,
+      }));
+      setShowSignatureUploader(false);
+      toast.success("Signature uploaded successfully");
+    }
+  };
 
-    const file = files[0];
-
-    //image to base64
-    const image = await imabebase64(file);
-
-    setLogo(image);
+  const handleSignatureUploadError = (error: string) => {
+    toast.error(error);
   };
 
   const fetchData = async () => {
@@ -129,31 +130,45 @@ export function SettingsContent({ dictionary, lang }: Props) {
             Invoice Logo
           </AccordionTrigger>
           <AccordionContent>
-            <form className="w-full grid gap-2" onSubmit={(e)=>handleSubmit(e,{ logo })}>
-              <Input
-                type="file"
-                className="max-w-sm w-full"
-                onChange={handleOnChangeLogo}
-                required
-                disabled={isLoading}
-              />
+            <form className="w-full grid gap-4" onSubmit={(e)=>handleSubmit(e,{ logo })}>
               <div className="w-full max-w-xs">
                 {logo ? (
-                  <Image
-                    className="aspect-video h-20 border-2 border-dotted max-h-20 object-scale-down"
-                    src={logo}
-                    width={250}
-                    height={96}
-                    alt="Invoice logo"
-                  />
+                  <div className="relative">
+                    <Image
+                      className="aspect-video h-20 border-2 border-dotted max-h-20 object-scale-down rounded-lg"
+                      src={logo}
+                      width={250}
+                      height={96}
+                      alt="Invoice logo"
+                    />
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="icon"
+                      className="absolute -top-2 -right-2 h-6 w-6"
+                      onClick={() => setLogo("")}
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  </div>
                 ) : (
                   <div className="aspect-video h-20 border-2 border-dotted flex justify-center items-center rounded-lg">
-                    <p className="text-center text-muted-foreground">No Data</p>
+                    <p className="text-center text-muted-foreground">No Logo</p>
                   </div>
                 )}
               </div>
-              <Button className="w-fit" disabled={isLoading}>
-                {isLoading ? "Please wait..." : "save"}
+              <Button
+                type="button"
+                variant="outline"
+                className="w-fit"
+                onClick={() => setShowLogoUploader(true)}
+                disabled={isLoading}
+              >
+                <Upload className="h-4 w-4 mr-2" />
+                {logo ? "Change Logo" : "Upload Logo"}
+              </Button>
+              <Button className="w-fit" disabled={isLoading || !logo}>
+                {isLoading ? "Please wait..." : "Save"}
               </Button>
             </form>
           </AccordionContent>
@@ -162,11 +177,10 @@ export function SettingsContent({ dictionary, lang }: Props) {
         {/***Signature in invoice */}
         <AccordionItem value="Signature-invoice">
           <AccordionTrigger className="font-semibold text-base cursor-pointer">
-            {" "}
             Invoice Signature
           </AccordionTrigger>
           <AccordionContent>
-            <form className="w-full grid gap-2" onSubmit={(e)=>handleSubmit(e,{ signature : signatureData })}>
+            <form className="w-full grid gap-4" onSubmit={(e)=>handleSubmit(e,{ signature : signatureData })}>
               <Input
                 type="text"
                 placeholder="Enter your signature name"
@@ -175,34 +189,89 @@ export function SettingsContent({ dictionary, lang }: Props) {
                 name="name"
                 disabled={isLoading}
               />
-              <Input
-                type="file"
-                className="max-w-sm w-full"
-                onChange={handleSignatureImage}
-                disabled={isLoading}
-              />
               <div className="w-full max-w-xs">
                 {signatureData.image ? (
-                  <Image
-                    className="aspect-video h-20 border-2 border-dotted max-h-20 object-scale-down"
-                    src={signatureData.image}
-                    width={250}
-                    height={96}
-                    alt="Signature sign"
-                  />
+                  <div className="relative">
+                    <Image
+                      className="aspect-video h-20 border-2 border-dotted max-h-20 object-scale-down rounded-lg"
+                      src={signatureData.image}
+                      width={250}
+                      height={96}
+                      alt="Signature sign"
+                    />
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="icon"
+                      className="absolute -top-2 -right-2 h-6 w-6"
+                      onClick={() => setSignatureData(prev => ({ ...prev, image: "" }))}
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  </div>
                 ) : (
                   <div className="aspect-video h-20 border-2 border-dotted flex justify-center items-center rounded-lg">
-                    <p className="text-center text-muted-foreground">No Data</p>
+                    <p className="text-center text-muted-foreground">No Signature</p>
                   </div>
                 )}
               </div>
-              <Button className="w-fit" disabled={isLoading}>
-                {isLoading ? "Please wait..." : "save"}
+              <Button
+                type="button"
+                variant="outline"
+                className="w-fit"
+                onClick={() => setShowSignatureUploader(true)}
+                disabled={isLoading}
+              >
+                <Upload className="h-4 w-4 mr-2" />
+                {signatureData.image ? "Change Signature" : "Upload Signature"}
+              </Button>
+              <Button className="w-fit" disabled={isLoading || !signatureData.image || !signatureData.name}>
+                {isLoading ? "Please wait..." : "Save"}
               </Button>
             </form>
           </AccordionContent>
         </AccordionItem>
       </Accordion>
+
+      {/* Logo Upload Dialog */}
+      <Dialog open={showLogoUploader} onOpenChange={setShowLogoUploader}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Upload Invoice Logo</DialogTitle>
+          </DialogHeader>
+          <FileUploader
+            category="IMAGE"
+            folder="finance/invoice-logos"
+            accept={ACCEPT_IMAGES}
+            maxFiles={1}
+            multiple={false}
+            maxSize={5 * 1024 * 1024} // 5MB
+            optimizeImages={true}
+            onUploadComplete={handleLogoUploadComplete}
+            onUploadError={handleLogoUploadError}
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* Signature Upload Dialog */}
+      <Dialog open={showSignatureUploader} onOpenChange={setShowSignatureUploader}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Upload Signature</DialogTitle>
+          </DialogHeader>
+          <FileUploader
+            category="IMAGE"
+            folder="finance/signatures"
+            accept={ACCEPT_IMAGES}
+            maxFiles={1}
+            multiple={false}
+            maxSize={2 * 1024 * 1024} // 2MB
+            optimizeImages={true}
+            onUploadComplete={handleSignatureUploadComplete}
+            onUploadError={handleSignatureUploadError}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -1,5 +1,4 @@
 import { type Locale } from '@/components/internationalization/config'
-import PageHeader from '@/components/atom/page-header'
 import { PageNav, type PageNavItem } from '@/components/atom/page-nav'
 import { getDictionary } from '@/components/internationalization/dictionaries'
 
@@ -45,12 +44,8 @@ export default async function ProfileLayout({ children, params }: Props) {
   ]
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title={profileDict?.title ?? 'Profile'}
-        className="text-start max-w-none"
-      />
-      <PageNav pages={profilePages} />
+    <div className="flex flex-col">
+      <PageNav pages={profilePages} className="mb-6" />
       {children}
     </div>
   )

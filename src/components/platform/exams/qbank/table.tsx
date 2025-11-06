@@ -46,7 +46,7 @@ export function QuestionBankTable({
       if (questions.length > 0) {
         const newRows: QuestionBankRow[] = questions
           .slice(currentPage * perPage, (currentPage + 1) * perPage)
-          .map((q) => ({
+          .map((q: any) => ({
             id: q.id,
             questionText: q.questionText,
             questionType: q.questionType,

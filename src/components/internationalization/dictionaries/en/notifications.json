@@ -1,0 +1,282 @@
+{
+  "title": "Notifications",
+  "subtitle": "Stay updated with all your school activities",
+  "description": "View and manage your notifications",
+  "notificationCenter": "Notification Center",
+  "markAllAsRead": "Mark all as read",
+  "viewAll": "View all notifications",
+  "preferences": {
+    "title": "Notification Preferences",
+    "description": "Manage how you receive notifications",
+    "globalSettings": "Global Settings",
+    "enableAll": "Enable all notifications",
+    "disableAll": "Disable all notifications",
+    "channels": {
+      "inApp": "In-app",
+      "email": "Email",
+      "push": "Push",
+      "sms": "SMS"
+    },
+    "channelSettings": "Channel Settings",
+    "deliveryMethods": "Delivery Methods",
+    "quietHours": {
+      "title": "Quiet Hours",
+      "description": "Don't send notifications during these hours",
+      "enable": "Enable quiet hours",
+      "enableDescription": "Mute notifications during specified hours",
+      "startTime": "Start time",
+      "endTime": "End time"
+    },
+    "quietHoursDescription": "Don't send notifications during these hours",
+    "quietHoursStart": "Start time",
+    "quietHoursEnd": "End time",
+    "frequency": "Notification Frequency",
+    "frequencyOptions": {
+      "realtime": "Real-time (as they happen)",
+      "hourly": "Hourly digest",
+      "daily": "Daily digest",
+      "weekly": "Weekly digest"
+    },
+    "minimumPriority": "Minimum Priority",
+    "minimumPriorityDescription": "Only show notifications with this priority or higher",
+    "savePreferences": "Save preferences",
+    "resetToDefaults": "Reset to defaults",
+    "savedSuccessfully": "Preferences saved successfully",
+    "saveFailed": "Failed to save preferences",
+    "digest": {
+      "title": "Email Digest",
+      "description": "Receive notifications as a summary email",
+      "enable": "Enable email digest",
+      "enableDescription": "Get notifications bundled together",
+      "frequency": "Digest frequency",
+      "frequencyDescription": "How often to receive digest emails",
+      "daily": "Daily",
+      "weekly": "Weekly"
+    },
+    "notificationTypes": {
+      "title": "Notification Types",
+      "description": "Choose which notifications you want to receive"
+    },
+    "actionRequired": "Action required"
+  },
+  "noNotifications": "No notifications yet",
+  "noNotificationsDescription": "When you receive notifications, they will appear here",
+  "unreadCount_one": "{{count}} unread notification",
+  "unreadCount_other": "{{count}} unread notifications",
+  "newNotification": "New notification",
+  "tabs": {
+    "all": "All",
+    "unread": "Unread",
+    "read": "Read",
+    "archived": "Archived"
+  },
+  "actions": {
+    "markAsRead": "Mark as read",
+    "markAsUnread": "Mark as unread",
+    "archive": "Archive",
+    "delete": "Delete",
+    "viewDetails": "View details",
+    "dismiss": "Dismiss",
+    "undo": "Undo",
+    "retry": "Retry",
+    "settings": "Settings"
+  },
+  "types": {
+    "message": "New message",
+    "message_mention": "Mentioned you",
+    "assignment_created": "New assignment",
+    "assignment_due": "Assignment due soon",
+    "assignment_graded": "Assignment graded",
+    "grade_posted": "New grade posted",
+    "attendance_marked": "Attendance marked",
+    "attendance_alert": "Absence alert",
+    "fee_due": "Fee payment due",
+    "fee_overdue": "Fee payment overdue",
+    "fee_paid": "Fee payment received",
+    "announcement": "New announcement",
+    "event_reminder": "Event reminder",
+    "class_cancelled": "Class cancelled",
+    "class_rescheduled": "Class rescheduled",
+    "system_alert": "System alert",
+    "account_created": "Account created",
+    "password_reset": "Password reset",
+    "login_alert": "Login alert",
+    "document_shared": "Document shared",
+    "report_ready": "Report ready",
+    "exam_scheduled": "Exam scheduled",
+    "exam_result": "Exam result available",
+    "library_due": "Library book due",
+    "general": "General notification"
+  },
+  "priorities": {
+    "low": "Low priority",
+    "normal": "Normal priority",
+    "high": "High priority",
+    "urgent": "Urgent",
+    "badge": {
+      "low": "Low",
+      "normal": "Normal",
+      "high": "High",
+      "urgent": "Urgent"
+    }
+  },
+  "channels": {
+    "in_app": "In-app",
+    "email": "Email",
+    "push": "Push notification",
+    "sms": "SMS",
+    "descriptions": {
+      "in_app": "Show notifications in the app",
+      "email": "Send notifications via email",
+      "push": "Send push notifications to your device",
+      "sms": "Send SMS notifications (coming soon)"
+    }
+  },
+  "grouping": {
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "thisWeek": "This week",
+    "lastWeek": "Last week",
+    "thisMonth": "This month",
+    "older": "Older",
+    "andOthers": "and {{count}} others",
+    "andOther": "and 1 other"
+  },
+  "timeAgo": {
+    "justNow": "Just now",
+    "minutesAgo_one": "{{count}} minute ago",
+    "minutesAgo_other": "{{count}} minutes ago",
+    "hoursAgo_one": "{{count}} hour ago",
+    "hoursAgo_other": "{{count}} hours ago",
+    "daysAgo_one": "{{count}} day ago",
+    "daysAgo_other": "{{count}} days ago",
+    "weeksAgo_one": "{{count}} week ago",
+    "weeksAgo_other": "{{count}} weeks ago",
+    "monthsAgo_one": "{{count}} month ago",
+    "monthsAgo_other": "{{count}} months ago"
+  },
+  "filters": {
+    "filterBy": "Filter by",
+    "allTypes": "All types",
+    "allPriorities": "All priorities",
+    "dateRange": "Date range",
+    "clearFilters": "Clear filters",
+    "applyFilters": "Apply filters"
+  },
+  "bulk": {
+    "selectAll": "Select all",
+    "deselectAll": "Deselect all",
+    "selectedCount_one": "{{count}} selected",
+    "selectedCount_other": "{{count}} selected",
+    "markSelectedAsRead": "Mark selected as read",
+    "archiveSelected": "Archive selected",
+    "deleteSelected": "Delete selected"
+  },
+  "empty": {
+    "noNotifications": "No notifications",
+    "noNotificationsDescription": "You're all caught up!",
+    "noUnread": "No unread notifications",
+    "noUnreadDescription": "You've read all your notifications",
+    "noResults": "No notifications found",
+    "noResultsDescription": "Try adjusting your filters"
+  },
+  "errors": {
+    "loadFailed": "Failed to load notifications",
+    "markAsReadFailed": "Failed to mark as read",
+    "deleteFailed": "Failed to delete notification",
+    "archiveFailed": "Failed to archive notification",
+    "updatePreferencesFailed": "Failed to update preferences",
+    "connectionLost": "Connection lost. Trying to reconnect...",
+    "reconnected": "Reconnected successfully",
+    "tryAgain": "Please try again",
+    "title": "Error",
+    "savePreferencesFailed": "Failed to save preferences"
+  },
+  "success": {
+    "markedAsRead": "Marked as read",
+    "markedAsUnread": "Marked as unread",
+    "archived": "Archived successfully",
+    "deleted": "Deleted successfully",
+    "preferencesUpdated": "Preferences updated",
+    "allMarkedAsRead": "All notifications marked as read",
+    "preferencesSaved": "Preferences saved successfully",
+    "preferencesSavedDescription": "Your notification preferences have been updated"
+  },
+  "confirmations": {
+    "deleteNotification": "Delete notification?",
+    "deleteNotificationDescription": "This action cannot be undone. This will permanently delete the notification.",
+    "deleteMultiple": "Delete {{count}} notifications?",
+    "deleteMultipleDescription": "This action cannot be undone. This will permanently delete the selected notifications.",
+    "confirmDelete": "Delete",
+    "cancel": "Cancel",
+    "archiveAll": "Archive all notifications?",
+    "archiveAllDescription": "This will move all read notifications to the archive."
+  },
+  "connection": {
+    "connecting": "Connecting...",
+    "connected": "Connected",
+    "disconnected": "Disconnected",
+    "reconnecting": "Reconnecting...",
+    "offline": "You're offline",
+    "offlineDescription": "Notifications will sync when you're back online"
+  },
+  "settings": {
+    "soundEnabled": "Enable sound",
+    "soundEnabledDescription": "Play sound for new notifications",
+    "desktopNotifications": "Desktop notifications",
+    "desktopNotificationsDescription": "Show desktop notifications when the app is in the background",
+    "emailDigest": "Email digest",
+    "emailDigestDescription": "Receive a daily summary via email",
+    "markAsReadOnView": "Mark as read on view",
+    "markAsReadOnViewDescription": "Automatically mark notifications as read when you view them",
+    "groupNotifications": "Group similar notifications",
+    "groupNotificationsDescription": "Combine related notifications together"
+  },
+  "statistics": {
+    "totalReceived": "Total received",
+    "totalRead": "Total read",
+    "totalUnread": "Total unread",
+    "averageResponseTime": "Average response time",
+    "mostActiveDay": "Most active day",
+    "thisWeek": "This week",
+    "thisMonth": "This month",
+    "allTime": "All time"
+  },
+  "pushPermission": {
+    "title": "Enable push notifications",
+    "description": "Get instant notifications even when you're not using the app",
+    "benefits": {
+      "title": "Never miss important updates:",
+      "attendance": "Attendance reminders",
+      "assignments": "Assignment due dates",
+      "announcements": "Emergency announcements",
+      "messages": "Important messages"
+    },
+    "enableButton": "Enable notifications",
+    "skipButton": "Not now",
+    "blocked": "Notifications blocked",
+    "blockedDescription": "You have blocked notifications in your browser settings. To enable them, click the lock icon in the address bar.",
+    "denied": "Permission denied",
+    "deniedDescription": "You have denied notification permissions. To enable them, please update your browser settings."
+  },
+  "accessibility": {
+    "openNotificationCenter": "Open notification center",
+    "closeNotificationCenter": "Close notification center",
+    "notificationCount": "{{count}} unread notifications",
+    "newNotificationAnnouncement": "New notification from {{actor}}: {{title}}",
+    "markAsReadButton": "Mark notification as read",
+    "deleteButton": "Delete notification",
+    "unreadNotification": "Unread notification",
+    "readNotification": "Read notification",
+    "unreadCount": "{{count}} unread notifications",
+    "notificationsBell": "Notifications bell",
+    "connected": "Connected to notifications",
+    "disconnected": "Disconnected from notifications"
+  },
+  "common": {
+    "showing": "Showing",
+    "of": "of",
+    "reset": "Reset",
+    "save": "Save"
+  }
+}

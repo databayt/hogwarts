@@ -8,10 +8,12 @@ import { ConfigDialog } from './config-dialog'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
-import { AlertTriangle, RefreshCw } from 'lucide-react'
+import { AlertTriangle, RefreshCw, Shield, Eye } from 'lucide-react'
 import type { Dictionary } from '@/components/internationalization/dictionaries'
 import type { LegacyTimetableData } from './types'
 import { getWeeklyTimetable, getTermsForSelection } from './actions'
+import { useTimetablePermissions } from './use-timetable-permissions'
+import { SessionProvider } from 'next-auth/react'
 
 interface Props {
   dictionary?: Dictionary['school']
@@ -71,9 +73,21 @@ function generatePeriods(timetableData: LegacyTimetableData | null, classConfig:
   return periods
 }
 
-export function TimetableContent({ dictionary }: Props) {
+function TimetableContentInner({ dictionary }: Props) {
   const params = useParams()
   const subdomain = params?.subdomain as string
+
+  // Get permissions and role info
+  const {
+    role,
+    permissions,
+    viewType,
+    isAdmin,
+    canEdit,
+    canExport,
+    canConfigure,
+    readOnlyMode
+  } = useTimetablePermissions()
 
   const [isLoading, setIsLoading] = useState(true)
   const [isPending, startTransition] = useTransition()
@@ -247,6 +261,24 @@ export function TimetableContent({ dictionary }: Props) {
 
   return (
     <div className="space-y-6">
+      {/* Role indicator badge */}
+      {role && (
+        <div className="flex items-center gap-2 p-2 bg-muted/50 rounded-lg print:hidden">
+          <Shield className="h-4 w-4" />
+          <span className="text-sm font-medium">
+            Viewing as: {role}
+          </span>
+          {readOnlyMode && (
+            <>
+              <Eye className="h-4 w-4 ml-2" />
+              <span className="text-sm text-muted-foreground">
+                Read-only mode
+              </span>
+            </>
+          )}
+        </div>
+      )}
+
       <main className="min-h-screen print:bg-white print:py-4">
         <div className="max-w-4xl mx-auto print:max-w-none">
           <TimetableHeader
@@ -270,9 +302,9 @@ export function TimetableContent({ dictionary }: Props) {
               <TimetableGrid
                 periods={periods}
                 timetableData={timetableData}
-                onTeacherInfoSave={saveTeacherInfo}
+                onTeacherInfoSave={canEdit ? saveTeacherInfo : () => {}}
                 getTeacherInfo={getTeacherInfo}
-                onSubjectChange={handleSubjectChange}
+                onSubjectChange={canEdit ? handleSubjectChange : undefined}
                 showAllSubjects={classConfig.showAllSubjects}
                 availableSubjects={availableSubjects}
               />
@@ -286,18 +318,43 @@ export function TimetableContent({ dictionary }: Props) {
                   Updated: {new Date(timetableData.update_date).toLocaleString()}
                 </p>
               )}
+
+              {/* Admin controls - only shown to admins */}
+              {isAdmin && (
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowConfig(true)}
+                  >
+                    Configure Settings
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
 
-          <ConfigDialog
-            open={showConfig}
-            onOpenChange={setShowConfig}
-            classConfig={classConfig}
-            onConfigChange={setTempConfig}
-            onSave={handleConfigSave}
-          />
+          {/* Config dialog - only accessible by admins */}
+          {canConfigure && (
+            <ConfigDialog
+              open={showConfig}
+              onOpenChange={setShowConfig}
+              classConfig={classConfig}
+              onConfigChange={setTempConfig}
+              onSave={handleConfigSave}
+            />
+          )}
         </div>
       </main>
     </div>
+  )
+}
+
+// Export wrapped component with SessionProvider for auth context
+export function TimetableContent({ dictionary }: Props) {
+  return (
+    <SessionProvider>
+      <TimetableContentInner dictionary={dictionary} />
+    </SessionProvider>
   )
 }

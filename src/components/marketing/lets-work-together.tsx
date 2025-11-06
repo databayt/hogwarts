@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { GitHub, Discord } from "@/components/atom/icons"
+import { Icons } from "@/components/atom/icons"
 import Link from "next/link"
 import type { Dictionary } from '@/components/internationalization/dictionaries'
 
@@ -35,15 +35,19 @@ export default function LetsWorkTogether({ dictionary }: LetsWorkTogetherProps) 
                 rel="noopener noreferrer"
                 className="hover:opacity-80 transition-opacity"
               >
-                <GitHub width={30} height={30} />
+                <div className="w-[30px] h-[30px]">
+                  <Icons.gitHub />
+                </div>
               </Link>
-              <Link 
-                href="https://discord.gg/uPa4gGG62c" 
-                target="_blank" 
+              <Link
+                href="https://discord.gg/uPa4gGG62c"
+                target="_blank"
                 rel="noopener noreferrer"
                 className="hover:opacity-80 transition-opacity"
               >
-                <Discord width={35} height={35} />
+                <div className="w-[35px] h-[35px]">
+                  <Icons.discord />
+                </div>
               </Link>
             </div>
           </div>

@@ -25,7 +25,19 @@ model Timetable {
   @@unique([schoolId, termId, dayOfWeek, periodId, classId, weekOffset])
   @@unique([schoolId, termId, dayOfWeek, periodId, teacherId, weekOffset])
   @@unique([schoolId, termId, dayOfWeek, periodId, classroomId, weekOffset])
+
+  // Performance indexes for common queries
   @@index([schoolId, termId, dayOfWeek])
   @@index([schoolId, termId, periodId])
+  @@index([schoolId, termId, weekOffset])
+  @@index([schoolId, termId, teacherId])
+  @@index([schoolId, termId, classId])
+  @@index([schoolId, termId, classroomId])
+
+  // Composite indexes for specific query patterns
+  @@index([schoolId, termId, dayOfWeek, periodId])
+  @@index([schoolId, termId, teacherId, dayOfWeek])
+  @@index([schoolId, termId, classId, dayOfWeek])
+
   @@map("timetables")
 }

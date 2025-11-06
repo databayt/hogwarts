@@ -1,67 +1,6 @@
 // Enhanced attendance tracking models for multi-method support
-
-// Extended Attendance model with method tracking
-// Note: The base Attendance model exists in attendance.prisma
-// These are additional fields that should be added to the existing model:
-// - method: AttendanceMethod (tracking how attendance was marked)
-// - deviceId: String? (device used for marking)
-// - checkInTime: DateTime? (exact check-in time)
-// - checkOutTime: DateTime? (exact check-out time)
-// - location: Json? (location data if applicable)
-// - confidence: Float? (accuracy/confidence score for biometric methods)
-
-enum AttendanceMethod {
-  MANUAL
-  GEOFENCE
-  QR_CODE
-  BARCODE
-  RFID
-  FINGERPRINT
-  FACE_RECOGNITION
-  NFC
-  BLUETOOTH
-  BULK_UPLOAD
-}
-
-// Student identification methods (cards, biometrics, etc.)
-model StudentIdentifier {
-  id         String         @id @default(cuid())
-  schoolId   String
-  school     School         @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  studentId  String
-  student    Student        @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  type       IdentifierType
-  value      String // Card number, fingerprint hash, face encoding, etc.
-  metadata   Json? // Additional data specific to the identifier type
-  isActive   Boolean        @default(true)
-  isPrimary  Boolean        @default(false)
-  issuedAt   DateTime       @default(now())
-  issuedBy   String? // User ID who issued this identifier
-  expiresAt  DateTime?
-  lastUsedAt DateTime?
-  usageCount Int            @default(0)
-  createdAt  DateTime       @default(now())
-  updatedAt  DateTime       @updatedAt
-
-  @@unique([schoolId, type, value])
-  @@index([studentId])
-  @@index([type])
-  @@index([isActive])
-  @@index([expiresAt])
-  @@map("student_identifiers")
-}
-
-enum IdentifierType {
-  BARCODE
-  QR_CODE
-  RFID_CARD
-  NFC_TAG
-  FINGERPRINT
-  FACE_ID
-  BLUETOOTH_MAC
-  STUDENT_ID // Traditional student ID number
-  MOBILE_DEVICE // Device ID for app-based tracking
-}
+// Note: Base models (Attendance, StudentIdentifier, QRCodeSession) and enums
+// (AttendanceMethod, IdentifierType) are defined in attendance.prisma
 
 // Attendance devices registry
 model AttendanceDevice {
@@ -180,32 +119,6 @@ enum AttendanceEventType {
   DEVICE_UNREGISTER
   MANUAL_OVERRIDE
   BULK_IMPORT
-}
-
-// QR Code tracking
-model QRCodeSession {
-  id            String    @id @default(cuid())
-  schoolId      String
-  school        School    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  classId       String
-  class         Class     @relation(fields: [classId], references: [id], onDelete: Cascade)
-  code          String    @unique
-  payload       Json // Encrypted payload data
-  generatedBy   String // User ID who generated
-  generatedAt   DateTime  @default(now())
-  expiresAt     DateTime
-  isActive      Boolean   @default(true)
-  scanCount     Int       @default(0)
-  maxScans      Int? // Maximum allowed scans
-  scannedBy     Json[] // Array of student IDs who scanned
-  configuration Json? // QR code specific settings
-  invalidatedAt DateTime?
-  invalidatedBy String?
-
-  @@index([classId])
-  @@index([expiresAt])
-  @@index([isActive])
-  @@map("qr_code_sessions")
 }
 
 // Biometric templates storage

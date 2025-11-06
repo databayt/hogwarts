@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { createExam, getExam, updateExam } from "./actions";
 import { examCreateSchema } from "./validation";
+import { type ExamFormData } from "./types";
 import { Form } from "@/components/ui/form";
 import { useModal } from "@/components/atom/modal/context";
 import { useRouter } from "next/navigation";
@@ -19,9 +20,9 @@ export function ExamCreateForm() {
   const { modal, closeModal } = useModal();
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
-  
-  const form = useForm<z.infer<typeof examCreateSchema>>({
-    resolver: zodResolver(examCreateSchema),
+
+  const form = useForm<ExamFormData>({
+    resolver: zodResolver(examCreateSchema) as any,
     defaultValues: {
       title: "",
       description: "",
@@ -35,6 +36,7 @@ export function ExamCreateForm() {
       passingMarks: 40,
       examType: "MIDTERM",
       instructions: "",
+      forceCreate: false,
     },
   });
 
@@ -67,9 +69,13 @@ export function ExamCreateForm() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentId]);
 
-  async function onSubmit(values: z.infer<typeof examCreateSchema>) {
+  async function onSubmit(values: ExamFormData) {
     const res = currentId
-      ? await updateExam({ id: currentId, ...values })
+      ? await updateExam({
+          id: currentId,
+          ...values,
+          forceUpdate: values.forceCreate, // Map forceCreate to forceUpdate for updates
+        })
       : await createExam(values);
       
     if (res?.success) {
@@ -83,34 +89,34 @@ export function ExamCreateForm() {
 
   const handleNext = async () => {
     if (currentStep === 1) {
-      const step1Fields = ['title', 'classId', 'subjectId', 'examType'] as const;
+      const step1Fields = ['title', 'classId', 'subjectId', 'examType'] as Array<keyof ExamFormData>;
       const step1Valid = await form.trigger(step1Fields);
       if (step1Valid) {
         setCurrentStep(2);
       }
     } else if (currentStep === 2) {
-      const step2Fields = ['examDate', 'startTime', 'endTime', 'duration', 'totalMarks', 'passingMarks'] as const;
+      const step2Fields = ['examDate', 'startTime', 'endTime', 'duration', 'totalMarks', 'passingMarks'] as Array<keyof ExamFormData>;
       const step2Valid = await form.trigger(step2Fields);
       if (step2Valid) {
         setCurrentStep(3);
       }
     } else if (currentStep === 3) {
-      await form.handleSubmit(onSubmit)();
+      await (form.handleSubmit as any)(onSubmit)();
     }
   };
 
   const handleSaveCurrentStep = async () => {
     if (currentId) {
       // For editing, save current step data
-      const currentStepFields = currentStep === 1 
-        ? ['title', 'classId', 'subjectId', 'examType'] as const
+      const currentStepFields = (currentStep === 1
+        ? ['title', 'classId', 'subjectId', 'examType']
         : currentStep === 2
-        ? ['examDate', 'startTime', 'endTime', 'duration', 'totalMarks', 'passingMarks'] as const
-        : ['instructions'] as const;
-      
+        ? ['examDate', 'startTime', 'endTime', 'duration', 'totalMarks', 'passingMarks']
+        : ['instructions']) as Array<keyof ExamFormData>;
+
       const stepValid = await form.trigger(currentStepFields);
       if (stepValid) {
-        await form.handleSubmit(onSubmit)();
+        await (form.handleSubmit as any)(onSubmit)();
       }
     } else {
       // For creating, just go to next step
@@ -131,11 +137,11 @@ export function ExamCreateForm() {
   const renderCurrentStep = () => {
     switch (currentStep) {
       case 1:
-        return <BasicInformationStep form={form} isView={isView} />;
+        return <BasicInformationStep form={form as any} isView={isView} />;
       case 2:
-        return <ScheduleMarksStep form={form} isView={isView} />;
+        return <ScheduleMarksStep form={form as any} isView={isView} />;
       case 3:
-        return <InstructionsDetailsStep form={form} isView={isView} />;
+        return <InstructionsDetailsStep form={form as any} isView={isView} />;
       default:
         return null;
     }
@@ -164,14 +170,14 @@ export function ExamCreateForm() {
             </div>
           </div>
 
-          <ExamFormFooter 
+          <ExamFormFooter
             currentStep={currentStep}
             isView={isView}
             currentId={currentId}
             onBack={handleBack}
             onNext={handleNext}
             onSaveCurrentStep={handleSaveCurrentStep}
-            form={form}
+            form={form as any}
           />
         </form>
       </Form>

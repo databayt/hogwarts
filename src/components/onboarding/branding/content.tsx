@@ -2,13 +2,13 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { Upload, Palette, Square, Circle } from 'lucide-react';
 import Image from 'next/image';
 import { useListing } from '@/components/onboarding/use-listing';
 import { useHostValidation } from '@/components/onboarding/host-validation-context';
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { COLOR_OPTIONS, RADIUS_OPTIONS, SHADOW_OPTIONS } from "./config";
+import { FileUploader, ACCEPT_IMAGES, type UploadedFileResult } from "@/components/file-upload/enhanced/file-uploader";
 
 interface Props {
   dictionary?: any;
@@ -24,6 +24,7 @@ export default function BrandingContent({ dictionary }: Props) {
   const [primaryColor, setPrimaryColor] = useState<string>('#0f172a'); // Default dark color
   const [borderRadius, setBorderRadius] = useState<'none' | 'sm' | 'md' | 'lg'>('md');
   const [shadow, setShadow] = useState<'none' | 'sm' | 'md' | 'lg'>('md');
+  const [showUploader, setShowUploader] = useState(false);
 
   // Get the ID from the URL params
   const id = params?.id as string;
@@ -62,15 +63,21 @@ export default function BrandingContent({ dictionary }: Props) {
     }
   };
 
-  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setLogo(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+  const handleUploadComplete = (files: UploadedFileResult[]) => {
+    // Use the CDN URL if available, otherwise fall back to the regular URL
+    if (files.length > 0) {
+      const uploadedFile = files[0];
+      const logoUrl = uploadedFile.cdnUrl || uploadedFile.url;
+      setLogo(logoUrl);
+      setShowUploader(false);
+
+      // Auto-save the logo URL
+      updateListingData({ logoUrl });
     }
+  };
+
+  const handleUploadError = (error: string) => {
+    console.error('Upload error:', error);
   };
 
   // Set custom navigation in context
@@ -137,8 +144,8 @@ export default function BrandingContent({ dictionary }: Props) {
                     size="sm"
                     className={cn(
                       "px-2 min-w-[40px] w-[40px] text-xs transition-all",
-                      borderRadius === option.id 
-                        ? "border-2 border-foreground bg-background opacity-100" 
+                      borderRadius === option.id
+                        ? "border-2 border-foreground bg-background opacity-100"
                         : "opacity-70 hover:opacity-90"
                     )}
                   >
@@ -162,8 +169,8 @@ export default function BrandingContent({ dictionary }: Props) {
                     size="sm"
                     className={cn(
                       "px-2 min-w-[40px] w-[40px] text-xs transition-all",
-                      shadow === option.id 
-                        ? "border-2 border-foreground bg-background opacity-100" 
+                      shadow === option.id
+                        ? "border-2 border-foreground bg-background opacity-100"
                         : "opacity-70 hover:opacity-90"
                     )}
                   >
@@ -175,12 +182,80 @@ export default function BrandingContent({ dictionary }: Props) {
           </div>
         </div>
 
-                  {/* Right side - Logo Upload and Preview */}
-          <div>
-            {logo === undefined ? (
-              // Initial large upload box
-              <div className={cn(
-                "border border-dashed border-muted-foreground text-center bg-muted h-[300px] flex flex-col justify-center",
+        {/* Right side - Logo Upload and Preview */}
+        <div>
+          {!logo && !showUploader ? (
+            // Initial large upload box
+            <div className={cn(
+              "border border-dashed border-muted-foreground text-center bg-muted h-[300px] flex flex-col justify-center",
+              {
+                'rounded-none': borderRadius === 'none',
+                'rounded-sm': borderRadius === 'sm',
+                'rounded-md': borderRadius === 'md',
+                'rounded-lg': borderRadius === 'lg',
+                'shadow-none': shadow === 'none',
+                'shadow-sm': shadow === 'sm',
+                'shadow-md': shadow === 'md',
+                'shadow-lg': shadow === 'lg',
+              }
+            )}>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <h6>{dict.uploadSchoolLogo || "Upload your school logo"}</h6>
+                  <small className="block text-muted-foreground">
+                    {dict.logoFileTypes || "SVG, PNG, JPG (max. 800x800px)"}
+                  </small>
+                  <div className="flex flex-col items-center gap-1">
+                    <Button
+                      onClick={() => setShowUploader(true)}
+                      className={cn("mt-2", {
+                        'rounded-none': borderRadius === 'none',
+                        'rounded-sm': borderRadius === 'sm',
+                        'rounded-md': borderRadius === 'md',
+                        'rounded-lg': borderRadius === 'lg',
+                        'shadow-none': shadow === 'none',
+                        'shadow-sm': shadow === 'sm',
+                        'shadow-md': shadow === 'md',
+                        'shadow-lg': shadow === 'lg',
+                      })}
+                      style={{
+                        backgroundColor: primaryColor,
+                        '--theme-primary': primaryColor
+                      } as React.CSSProperties}
+                    >
+                      {dict.chooseFile || "Choose file"}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : showUploader ? (
+            // File uploader component
+            <div className="space-y-4">
+              <FileUploader
+                category="IMAGE"
+                folder="school-logos"
+                accept={ACCEPT_IMAGES}
+                maxFiles={1}
+                multiple={false}
+                maxSize={5 * 1024 * 1024} // 5MB max for logos
+                optimizeImages={true}
+                onUploadComplete={handleUploadComplete}
+                onUploadError={handleUploadError}
+              />
+              <Button
+                variant="outline"
+                onClick={() => setShowUploader(false)}
+                className="w-full"
+              >
+                {dict.cancel || "Cancel"}
+              </Button>
+            </div>
+          ) : (
+            // Logo preview
+            <div
+              className={cn(
+                "border border-dashed border-muted-foreground rounded-lg h-[300px] relative overflow-hidden",
                 {
                   'rounded-none': borderRadius === 'none',
                   'rounded-sm': borderRadius === 'sm',
@@ -191,20 +266,20 @@ export default function BrandingContent({ dictionary }: Props) {
                   'shadow-md': shadow === 'md',
                   'shadow-lg': shadow === 'lg',
                 }
-              )}>
-                <div className="space-y-4">
-
-
-                  <div className="space-y-2">
-                    <h6>{dict.uploadSchoolLogo || "Upload your school logo"}</h6>
-                    <small className="block text-muted-foreground">
-                      {dict.logoFileTypes || "SVG, PNG, JPG (max. 800x800px)"}
-                    </small>
-                    <div className="flex flex-col items-center gap-1">
-                      <Button
-                        asChild
-                        className={cn("mt-2", {
-                                            'rounded-none': borderRadius === 'none',
+              )}
+            >
+              {logo && (
+                <Image
+                  src={logo}
+                  alt="School logo"
+                  fill
+                  className="object-contain p-4"
+                />
+              )}
+              <Button
+                size="icon"
+                className={cn("absolute top-2 right-2", {
+                  'rounded-none': borderRadius === 'none',
                   'rounded-sm': borderRadius === 'sm',
                   'rounded-md': borderRadius === 'md',
                   'rounded-lg': borderRadius === 'lg',
@@ -212,78 +287,21 @@ export default function BrandingContent({ dictionary }: Props) {
                   'shadow-sm': shadow === 'sm',
                   'shadow-md': shadow === 'md',
                   'shadow-lg': shadow === 'lg',
-                        })}
-                        style={{ 
-                          backgroundColor: primaryColor,
-                          '--theme-primary': primaryColor
-                        } as React.CSSProperties}
-                      >
-                        <label htmlFor="logo-upload" className="cursor-pointer px-4 py-2">
-                          {dict.chooseFile || "Choose file"}
-                        </label>
-                      </Button>
-                      <input
-                        id="logo-upload"
-                        type="file"
-                        accept="image/*"
-                        onChange={handleLogoUpload}
-                        className="hidden"
-                      />
-                      {logo && (
-                        <small className="text-muted-foreground">
-                          {dict.fileSelected || "File selected"}
-                        </small>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              // Logo preview
-                              <div
-                className={cn(
-                  "border border-dashed border-muted-foreground rounded-lg h-[300px] relative overflow-hidden",
-                  {
-                    'rounded-none': borderRadius === 'none',
-                    'rounded-sm': borderRadius === 'sm',
-                    'rounded-md': borderRadius === 'md',
-                    'rounded-lg': borderRadius === 'lg',
-                    'shadow-none': shadow === 'none',
-                    'shadow-sm': shadow === 'sm',
-                    'shadow-md': shadow === 'md',
-                    'shadow-lg': shadow === 'lg',
-                  }
-                )}
+                })}
+                onClick={() => {
+                  setLogo(undefined);
+                  setShowUploader(true);
+                }}
+                style={{
+                  backgroundColor: primaryColor,
+                  '--theme-primary': primaryColor
+                } as React.CSSProperties}
               >
-                <Image
-                  src={logo}
-                  alt="School logo"
-                  fill
-                  className="object-contain p-4"
-                />
-                <Button
-                  size="icon"
-                  className={cn("absolute top-2 right-2", {
-                    'rounded-none': borderRadius === 'none',
-                    'rounded-sm': borderRadius === 'sm',
-                    'rounded-md': borderRadius === 'md',
-                    'rounded-lg': borderRadius === 'lg',
-                    'shadow-none': shadow === 'none',
-                    'shadow-sm': shadow === 'sm',
-                    'shadow-md': shadow === 'md',
-                    'shadow-lg': shadow === 'lg',
-                  })}
-                  onClick={() => setLogo(undefined)}
-                  style={{ 
-                    backgroundColor: primaryColor,
-                    '--theme-primary': primaryColor
-                  } as React.CSSProperties}
-                >
-                  ×
-                </Button>
-              </div>
-            )}
-          </div>
+                ×
+              </Button>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

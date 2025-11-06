@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from "react"
+import { useState, memo } from "react"
 import { cn } from "@/lib/utils"
 import { TeacherInfoPopup } from "./teacher-info-popup"
 import { SubjectSelector } from "./subject-selector"
@@ -18,7 +18,7 @@ interface TimetableCellProps {
   availableSubjects?: string[]
 }
 
-export function TimetableCell({
+function TimetableCellComponent({
   subject,
   index,
   periodIdx,
@@ -124,4 +124,25 @@ export function TimetableCell({
       )}
     </>
   )
-} 
+}
+
+// Memoized export to prevent unnecessary re-renders
+// Only re-render if props actually change
+export const TimetableCell = memo(TimetableCellComponent, (prevProps, nextProps) => {
+  // Custom comparison function for better performance
+  return (
+    prevProps.subject === nextProps.subject &&
+    prevProps.index === nextProps.index &&
+    prevProps.periodIdx === nextProps.periodIdx &&
+    prevProps.showAllSubjects === nextProps.showAllSubjects &&
+    // Deep comparison for arrays
+    JSON.stringify(prevProps.availableSubjects) === JSON.stringify(nextProps.availableSubjects) &&
+    // Check if specific timetable data for this cell changed
+    JSON.stringify(prevProps.timetableData?.timetable?.[prevProps.index]?.[prevProps.periodIdx]) ===
+    JSON.stringify(nextProps.timetableData?.timetable?.[nextProps.index]?.[nextProps.periodIdx]) &&
+    // Functions are stable (referentially equal)
+    prevProps.onTeacherInfoSave === nextProps.onTeacherInfoSave &&
+    prevProps.getTeacherInfo === nextProps.getTeacherInfo &&
+    prevProps.onSubjectChange === nextProps.onSubjectChange
+  )
+}) 

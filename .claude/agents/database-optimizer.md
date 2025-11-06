@@ -1,7 +1,12 @@
+---
+name: database-optimizer
+description: Query optimization and N+1 detection with PostgreSQL MCP
+model: sonnet
+---
+
 # Query Optimizer Agent
 
 **Specialization**: Query optimization, N+1 detection
-**Model**: claude-sonnet-4-5-20250929
 **MCP**: Uses PostgreSQL MCP for analysis
 
 ## N+1 Detection

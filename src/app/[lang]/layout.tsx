@@ -90,6 +90,52 @@ export default async function LocaleLayout({
             `,
           }}
         />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              try {
+                // Restore custom theme CSS variables before React hydration to prevent flicker
+                const root = document.documentElement;
+                const mode = root.classList.contains('dark') ? 'dark' : 'light';
+
+                // Try to get theme from Zustand store first
+                let themeStyles = null;
+                const editorStorage = localStorage.getItem('theme-editor-storage');
+
+                if (editorStorage) {
+                  try {
+                    const parsed = JSON.parse(editorStorage);
+                    if (parsed?.state?.themeState?.styles?.[mode]) {
+                      themeStyles = parsed.state.themeState.styles[mode];
+                    }
+                  } catch (e) {}
+                }
+
+                // Fallback to simple theme storage
+                if (!themeStyles) {
+                  const simpleTheme = localStorage.getItem('user-theme-styles');
+                  if (simpleTheme) {
+                    try {
+                      themeStyles = JSON.parse(simpleTheme);
+                    } catch (e) {}
+                  }
+                }
+
+                // Apply theme styles as CSS variables
+                if (themeStyles && typeof themeStyles === 'object') {
+                  Object.entries(themeStyles).forEach(([key, value]) => {
+                    if (value && typeof value === 'string') {
+                      // Direct mapping - key is the CSS variable name
+                      root.style.setProperty('--' + key, value);
+                    }
+                  });
+                }
+              } catch (e) {
+                // Silently fail to avoid breaking the page
+              }
+            `,
+          }}
+        />
       </head>
       <body
         className={`${fontClass} ${GeistSans.variable} ${tajawal.variable} antialiased layout-container`}

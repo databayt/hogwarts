@@ -31,6 +31,7 @@ import { NOTIFICATION_TYPE_CONFIG } from "./config"
 import { updateNotificationPreferences } from "./actions"
 import type { NotificationChannel, NotificationType } from "@prisma/client"
 import { Badge } from "@/components/ui/badge"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 const preferencesFormSchema = z.object({
   preferences: z.array(
@@ -61,10 +62,14 @@ interface NotificationPreferencesFormProps {
     digestEnabled?: boolean
     digestFrequency?: "daily" | "weekly" | null
   }>
+  locale?: "ar" | "en"
+  dictionary: Dictionary["notifications"]
 }
 
 export function NotificationPreferencesForm({
   initialPreferences = [],
+  locale = "en",
+  dictionary,
 }: NotificationPreferencesFormProps) {
   const [isLoading, setIsLoading] = useState(false)
 
@@ -134,19 +139,19 @@ export function NotificationPreferencesForm({
 
       if (result.success) {
         toast({
-          title: "Preferences saved",
-          description: "Your notification preferences have been updated successfully.",
+          title: dictionary.success.preferencesSaved,
+          description: dictionary.success.preferencesSavedDescription,
         })
       } else {
         toast({
-          title: "Error",
+          title: dictionary.errors.title,
           description: result.error,
         })
       }
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to save preferences. Please try again.",
+        title: dictionary.errors.title,
+        description: dictionary.errors.savePreferencesFailed,
       })
     } finally {
       setIsLoading(false)
@@ -168,10 +173,10 @@ export function NotificationPreferencesForm({
           <CardHeader>
             <div className="flex items-center gap-2">
               <Clock className="h-5 w-5" />
-              <CardTitle>Quiet Hours</CardTitle>
+              <CardTitle>{dictionary.preferences.quietHours.title}</CardTitle>
             </div>
             <CardDescription>
-              Pause notifications during specific hours
+              {dictionary.preferences.quietHours.description}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -181,9 +186,9 @@ export function NotificationPreferencesForm({
               render={({ field }) => (
                 <FormItem className="flex items-center justify-between">
                   <div>
-                    <FormLabel>Enable Quiet Hours</FormLabel>
+                    <FormLabel>{dictionary.preferences.quietHours.enable}</FormLabel>
                     <FormDescription>
-                      Don't send notifications during quiet hours
+                      {dictionary.preferences.quietHours.enableDescription}
                     </FormDescription>
                   </div>
                   <FormControl>
@@ -203,7 +208,7 @@ export function NotificationPreferencesForm({
                   name="quietHoursStart"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Start Time</FormLabel>
+                      <FormLabel>{dictionary.preferences.quietHours.startTime}</FormLabel>
                       <Select
                         onValueChange={(value) => field.onChange(parseInt(value))}
                         defaultValue={String(field.value)}
@@ -231,7 +236,7 @@ export function NotificationPreferencesForm({
                   name="quietHoursEnd"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>End Time</FormLabel>
+                      <FormLabel>{dictionary.preferences.quietHours.endTime}</FormLabel>
                       <Select
                         onValueChange={(value) => field.onChange(parseInt(value))}
                         defaultValue={String(field.value)}
@@ -263,10 +268,10 @@ export function NotificationPreferencesForm({
           <CardHeader>
             <div className="flex items-center gap-2">
               <Mail className="h-5 w-5" />
-              <CardTitle>Notification Digest</CardTitle>
+              <CardTitle>{dictionary.preferences.digest.title}</CardTitle>
             </div>
             <CardDescription>
-              Receive a summary of notifications instead of individual alerts
+              {dictionary.preferences.digest.description}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -276,9 +281,9 @@ export function NotificationPreferencesForm({
               render={({ field }) => (
                 <FormItem className="flex items-center justify-between">
                   <div>
-                    <FormLabel>Enable Digest</FormLabel>
+                    <FormLabel>{dictionary.preferences.digest.enable}</FormLabel>
                     <FormDescription>
-                      Get a summary email instead of individual notifications
+                      {dictionary.preferences.digest.enableDescription}
                     </FormDescription>
                   </div>
                   <FormControl>
@@ -297,7 +302,7 @@ export function NotificationPreferencesForm({
                 name="digestFrequency"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Frequency</FormLabel>
+                    <FormLabel>{dictionary.preferences.digest.frequency}</FormLabel>
                     <Select
                       onValueChange={field.onChange}
                       defaultValue={field.value}
@@ -308,12 +313,12 @@ export function NotificationPreferencesForm({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="daily">Daily</SelectItem>
-                        <SelectItem value="weekly">Weekly</SelectItem>
+                        <SelectItem value="daily">{dictionary.preferences.digest.daily}</SelectItem>
+                        <SelectItem value="weekly">{dictionary.preferences.digest.weekly}</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormDescription>
-                      How often should we send digest emails?
+                      {dictionary.preferences.digest.frequencyDescription}
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -326,9 +331,9 @@ export function NotificationPreferencesForm({
         {/* Notification Type Preferences */}
         <Card>
           <CardHeader>
-            <CardTitle>Notification Types</CardTitle>
+            <CardTitle>{dictionary.preferences.notificationTypes.title}</CardTitle>
             <CardDescription>
-              Choose which notifications you want to receive and how
+              {dictionary.preferences.notificationTypes.description}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -343,17 +348,17 @@ export function NotificationPreferencesForm({
 
                     <div className="flex items-start gap-3">
                       <div className="flex-shrink-0 mt-1">
-                        <Icon className={`h-5 w-5 ${config.color}`} />
+                        <Icon className="h-5 w-5 text-muted-foreground" />
                       </div>
 
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-2">
                           <h4 className="text-sm font-medium">
-                            {pref.type.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}
+                            {dictionary.types[pref.type as NotificationType]}
                           </h4>
                           {config.requiresAction && (
                             <Badge variant="outline" className="text-xs">
-                              Action Required
+                              {dictionary.preferences.actionRequired}
                             </Badge>
                           )}
                         </div>
@@ -376,7 +381,7 @@ export function NotificationPreferencesForm({
                                     </FormControl>
                                     <FormLabel className="flex items-center gap-1 text-xs font-normal cursor-pointer">
                                       <ChannelIcon className="h-3.5 w-3.5" />
-                                      {channel === "inApp" ? "In-App" : channel.charAt(0).toUpperCase() + channel.slice(1)}
+                                      {dictionary.preferences.channels[channel]}
                                     </FormLabel>
                                   </FormItem>
                                 )}
@@ -401,11 +406,11 @@ export function NotificationPreferencesForm({
             onClick={() => form.reset()}
             disabled={isLoading}
           >
-            Reset
+            {dictionary.common.reset}
           </Button>
           <Button type="submit" disabled={isLoading}>
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Save Preferences
+            {dictionary.common.save}
           </Button>
         </div>
       </form>

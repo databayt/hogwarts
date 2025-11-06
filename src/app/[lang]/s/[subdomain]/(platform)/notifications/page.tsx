@@ -1,5 +1,5 @@
 import { Suspense } from "react"
-import { getDictionary } from "@/components/internationalization/dictionaries"
+import { getNotificationDictionary } from "@/components/internationalization/dictionaries"
 import type { Locale } from "@/components/internationalization/config"
 import { NotificationCenterContent, NotificationCenterSkeleton } from "@/components/platform/notifications/content"
 
@@ -21,10 +21,11 @@ interface NotificationsPageProps {
 
 export async function generateMetadata({ params }: NotificationsPageProps) {
   const { lang } = await params
+  const dict = await getNotificationDictionary(lang)
 
   return {
-    title: `Notifications | Hogwarts`,
-    description: "View and manage your notifications",
+    title: `${dict.notifications.title} | Hogwarts`,
+    description: dict.notifications.subtitle,
   }
 }
 

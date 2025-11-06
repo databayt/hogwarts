@@ -13,15 +13,18 @@ import { cn } from "@/lib/utils"
 import { useNotificationBell } from "./use-notifications"
 import { NotificationListScrollable } from "./list"
 import { useRouter } from "next/navigation"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 interface NotificationBellIconProps {
   locale?: "ar" | "en"
+  dictionary: Dictionary["notifications"]
   className?: string
   showConnectionStatus?: boolean
 }
 
 export function NotificationBellIcon({
   locale = "en",
+  dictionary,
   className,
   showConnectionStatus = false,
 }: NotificationBellIconProps) {
@@ -75,7 +78,11 @@ export function NotificationBellIcon({
             variant="ghost"
             size="icon"
             className="relative"
-            aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ""}`}
+            aria-label={
+              unreadCount > 0
+                ? dictionary.accessibility.unreadCount.replace('{{count}}', unreadCount.toString())
+                : dictionary.accessibility.notificationsBell
+            }
           >
             <Bell className="h-5 w-5" />
 
@@ -96,7 +103,7 @@ export function NotificationBellIcon({
                   "absolute bottom-0 right-0 h-2 w-2 rounded-full border-2 border-background",
                   isConnected ? "bg-green-500" : "bg-muted-foreground"
                 )}
-                aria-label={isConnected ? "Connected" : "Disconnected"}
+                aria-label={isConnected ? dictionary.accessibility.connected : dictionary.accessibility.disconnected}
               />
             )}
           </Button>
@@ -110,6 +117,7 @@ export function NotificationBellIcon({
           <NotificationListScrollable
             notifications={recentNotifications}
             locale={locale}
+            dictionary={dictionary}
             onRead={handleNotificationRead}
             onDelete={handleNotificationDelete}
             onMarkAllRead={unreadCount > 0 ? handleMarkAllAsRead : undefined}
@@ -126,6 +134,7 @@ export function NotificationBellIcon({
  */
 export function NotificationBellIconCompact({
   locale = "en",
+  dictionary,
   className,
 }: Omit<NotificationBellIconProps, "showConnectionStatus">) {
   const router = useRouter()
@@ -141,7 +150,11 @@ export function NotificationBellIconCompact({
       size="icon"
       className={cn("relative", className)}
       onClick={handleClick}
-      aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ""}`}
+      aria-label={
+        unreadCount > 0
+          ? dictionary.accessibility.unreadCount.replace('{{count}}', unreadCount.toString())
+          : dictionary.accessibility.notificationsBell
+      }
     >
       <Bell className="h-5 w-5" />
 

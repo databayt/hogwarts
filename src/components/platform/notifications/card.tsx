@@ -13,10 +13,12 @@ import { NOTIFICATION_TYPE_CONFIG, PRIORITY_CONFIG } from "./config"
 import { markNotificationAsRead, deleteNotification } from "./actions"
 import { useRouter } from "next/navigation"
 import { toast } from "@/components/ui/use-toast"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 interface NotificationCardProps {
   notification: NotificationDTO
   locale?: "ar" | "en"
+  dictionary: Dictionary["notifications"]
   onRead?: (notificationId: string) => void
   onDelete?: (notificationId: string) => void
   compact?: boolean
@@ -25,6 +27,7 @@ interface NotificationCardProps {
 export function NotificationCard({
   notification,
   locale = "en",
+  dictionary,
   onRead,
   onDelete,
   compact = false,
@@ -48,9 +51,12 @@ export function NotificationCard({
 
     if (result.success) {
       onRead?.(notification.id)
+      toast({
+        title: dictionary.success.markedAsRead,
+      })
     } else {
       toast({
-        title: "Error",
+        title: dictionary.errors.markAsReadFailed,
         description: result.error,
       })
     }
@@ -66,9 +72,12 @@ export function NotificationCard({
 
     if (result.success) {
       onDelete?.(notification.id)
+      toast({
+        title: dictionary.success.deleted,
+      })
     } else {
       toast({
-        title: "Error",
+        title: dictionary.errors.deleteFailed,
         description: result.error,
       })
     }
@@ -120,7 +129,7 @@ export function NotificationCard({
               "h-5 w-5",
               notification.priority === "urgent"
                 ? "text-destructive"
-                : config.color
+                : "text-muted-foreground"
             )}
           />
         </div>
@@ -142,8 +151,8 @@ export function NotificationCard({
 
             {/* Priority Badge */}
             {notification.priority !== "normal" && !compact && (
-              <Badge variant={priorityConfig.badgeVariant} className="text-xs">
-                {priorityConfig.label}
+              <Badge variant={priorityConfig.badgeVariant}>
+                <small>{dictionary.priorities.badge[notification.priority]}</small>
               </Badge>
             )}
           </div>
@@ -151,7 +160,7 @@ export function NotificationCard({
           {/* Body */}
           <p
             className={cn(
-              "text-sm text-muted-foreground",
+              "muted",
               compact ? "line-clamp-1" : "line-clamp-2"
             )}
           >
@@ -161,18 +170,20 @@ export function NotificationCard({
           {/* Footer */}
           <div className="flex items-center justify-between mt-2">
             {/* Actor & Time */}
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              {notification.actor && (
-                <>
-                  <span className="truncate max-w-[120px]">
-                    {notification.actor.username || notification.actor.email}
-                  </span>
-                  <span>•</span>
-                </>
-              )}
-              <time dateTime={notification.createdAt}>
-                {timeAgo}
-              </time>
+            <div className="flex items-center gap-2">
+              <small className="text-muted-foreground">
+                {notification.actor && (
+                  <>
+                    <span className="truncate max-w-[120px]">
+                      {notification.actor.username || notification.actor.email}
+                    </span>
+                    <span className="mx-1">•</span>
+                  </>
+                )}
+                <time dateTime={notification.createdAt}>
+                  {timeAgo}
+                </time>
+              </small>
             </div>
 
             {/* Actions */}
@@ -185,9 +196,10 @@ export function NotificationCard({
                     className="h-7 px-2"
                     onClick={handleMarkAsRead}
                     disabled={isLoading}
+                    aria-label={dictionary.accessibility.markAsReadButton}
                   >
                     <Check className="h-3.5 w-3.5" />
-                    <span className="sr-only">Mark as read</span>
+                    <span className="sr-only">{dictionary.actions.markAsRead}</span>
                   </Button>
                 )}
                 <Button
@@ -196,9 +208,10 @@ export function NotificationCard({
                   className="h-7 px-2 text-destructive hover:text-destructive"
                   onClick={handleDelete}
                   disabled={isDeleting}
+                  aria-label={dictionary.accessibility.deleteButton}
                 >
                   <Trash2 className="h-3.5 w-3.5" />
-                  <span className="sr-only">Delete</span>
+                  <span className="sr-only">{dictionary.actions.delete}</span>
                 </Button>
               </div>
             )}
@@ -222,6 +235,7 @@ export function NotificationCard({
 export function NotificationCardCompact({
   notification,
   locale,
+  dictionary,
   onRead,
   onDelete,
 }: Omit<NotificationCardProps, "compact">) {
@@ -229,6 +243,7 @@ export function NotificationCardCompact({
     <NotificationCard
       notification={notification}
       locale={locale}
+      dictionary={dictionary}
       onRead={onRead}
       onDelete={onDelete}
       compact

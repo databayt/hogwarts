@@ -1,7 +1,12 @@
+---
+name: multi-tenant
+description: Multi-tenant safety and tenant isolation with schoolId scoping
+model: sonnet
+---
+
 # Multi-Tenant Safety Agent
 
 **Specialization**: Tenant isolation, schoolId scoping
-**Model**: claude-sonnet-4-5-20250929
 
 ## Critical Rule
 **EVERY** business query MUST include schoolId:

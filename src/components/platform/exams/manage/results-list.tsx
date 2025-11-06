@@ -1,4 +1,5 @@
 import { getExamResults } from "./actions";
+import type { ExamResultRow } from "./actions/types";
 import {
   Table,
   TableBody,
@@ -21,7 +22,8 @@ interface Props {
 }
 
 export async function ExamResultsList({ examId }: Props) {
-  const { results } = await getExamResults({ examId });
+  const response = await getExamResults({ examId });
+  const results = response.success && response.data ? response.data : [];
 
   if (results.length === 0) {
     return (
@@ -62,7 +64,7 @@ export async function ExamResultsList({ examId }: Props) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {results.map((result, index) => (
+              {results.map((result: ExamResultRow, index: number) => (
                 <TableRow key={result.id}>
                   <TableCell className="font-medium">#{index + 1}</TableCell>
                   <TableCell>{result.studentId || "-"}</TableCell>

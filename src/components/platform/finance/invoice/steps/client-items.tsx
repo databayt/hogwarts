@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 import { CURRENCY_OPTIONS } from "../config";
 import { z } from "zod";
 import { InvoiceSchemaZod } from "../validation";
-import { Trash } from "@/components/atom/icons";
+import { Icons } from "@/components/atom/icons";
 import { Plus } from "lucide-react";
 
 interface ClientItemsStepProps {
@@ -218,7 +218,7 @@ export function ClientItemsStep({ isView, currentId }: ClientItemsStepProps) {
                   onClick={() => handleRemoveItem(index)}
                   className=""
                 >
-                  <Trash className="h-6 w-6 text-red-500 ml-2" />
+                  <Icons.trash className="h-6 w-6 text-red-500 ml-2" />
                 </button>
               </div>
             </div>

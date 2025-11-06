@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { format } from "date-fns"
 import { ar, enUS } from "date-fns/locale"
-import { Check, CheckCheck, MoreVertical, Reply, Smile, Pencil, Trash2, Copy } from "lucide-react"
+import { Check, CheckCheck, MoreVertical, Reply, Smile, Pencil, Trash2, Copy, Clock } from "lucide-react"
 import type { MessageDTO } from "./types"
 import { cn } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -31,6 +31,14 @@ export interface MessageBubbleProps {
   onRemoveReaction?: (reactionId: string) => void
 }
 
+export interface MessageBubbleOptimizedProps extends MessageBubbleProps {
+  showAvatar?: boolean
+  showSenderName?: boolean
+  showTimestamp?: boolean
+  isFirstInGroup?: boolean
+  isLastInGroup?: boolean
+}
+
 export function MessageBubble({
   message,
   currentUserId,
@@ -42,11 +50,17 @@ export function MessageBubble({
   onDelete,
   onReact,
   onRemoveReaction,
-}: MessageBubbleProps) {
+  showAvatar = true,
+  showSenderName = true,
+  showTimestamp = true,
+  isFirstInGroup = true,
+  isLastInGroup = true,
+}: MessageBubbleOptimizedProps) {
   const [showReactions, setShowReactions] = useState(false)
   const isOwnMessage = message.senderId === currentUserId
   const isDeleted = message.isDeleted
   const isEdited = message.isEdited && !isDeleted
+  const isPending = message.status === "sending"
   const dateLocale = locale === "ar" ? ar : enUS
 
   const handleCopy = async () => {
@@ -84,66 +98,77 @@ export function MessageBubble({
   return (
     <div
       className={cn(
-        "group flex gap-3 mb-4",
-        isOwnMessage ? "flex-row-reverse" : "flex-row",
-        compact && "mb-2"
+        "group flex w-full px-4",
+        isOwnMessage ? "justify-end" : "justify-start",
+        isLastInGroup ? "py-1" : "py-0.5",
+        // Add smooth appear animation
+        "animate-in fade-in slide-in-from-bottom-2 duration-200"
       )}
     >
-      {/* Avatar */}
-      {showSender && !compact && (
-        <Avatar className="h-8 w-8 flex-shrink-0">
-          <AvatarImage src={message.sender.image || undefined} alt={message.sender.username || ""} />
-          <AvatarFallback className="bg-muted text-muted-foreground">
-            {message.sender.username?.[0]?.toUpperCase() || message.sender.email?.[0]?.toUpperCase() || "U"}
-          </AvatarFallback>
-        </Avatar>
-      )}
+      <div className={cn(
+        "flex gap-2",
+        isOwnMessage ? "flex-row-reverse" : "flex-row",
+        "max-w-[65%] sm:max-w-[70%]"
+      )}>
+        {/* Avatar - only show for received messages on last message in group */}
+        {!isOwnMessage && showAvatar && isLastInGroup && (
+          <Avatar className="h-6 w-6 sm:h-7 sm:w-7 flex-shrink-0 self-end">
+            <AvatarImage src={message.sender.image || undefined} alt={message.sender.username || ""} />
+            <AvatarFallback className="bg-muted text-muted-foreground text-xs">
+              {message.sender.username?.[0]?.toUpperCase() || message.sender.email?.[0]?.toUpperCase() || "U"}
+            </AvatarFallback>
+          </Avatar>
+        )}
 
-      <div className={cn("flex flex-col gap-1 max-w-[70%]", isOwnMessage ? "items-end" : "items-start")}>
-        {/* Sender name and timestamp */}
-        {showSender && !compact && (
-          <div className={cn("flex items-center gap-2 text-sm", isOwnMessage && "flex-row-reverse")}>
-            <span className="font-medium text-foreground">
+        {/* Spacer when no avatar to maintain alignment */}
+        {!isOwnMessage && (!showAvatar || !isLastInGroup) && (
+          <div className="h-6 w-6 sm:h-7 sm:w-7 flex-shrink-0" />
+        )}
+
+        <div className={cn(
+          "flex flex-col gap-0.5",
+          isOwnMessage ? "items-end" : "items-start"
+        )}>
+          {/* Sender name - only show for received messages on first message in group */}
+          {!isOwnMessage && showSenderName && isFirstInGroup && (
+            <span className="text-xs font-semibold text-muted-foreground px-3 mb-0.5">
               {message.sender.username || message.sender.email}
             </span>
-            <span className="text-xs text-muted-foreground">
-              {format(new Date(message.createdAt), "p", { locale: dateLocale })}
-            </span>
-          </div>
-        )}
+          )}
 
-        {/* Reply context */}
-        {message.replyTo && (
+          {/* Reply context */}
+          {message.replyTo && (
+            <div
+              className={cn(
+                "text-xs px-3 py-1.5 rounded-lg bg-muted/50 border-l-2 border-primary mb-1",
+                "max-w-full"
+              )}
+            >
+              <p className="font-medium text-muted-foreground text-[10px] uppercase tracking-wide mb-0.5">
+                {message.replyTo.sender.username || message.replyTo.sender.email}
+              </p>
+              <p className="text-muted-foreground truncate">
+                {message.replyTo.isDeleted
+                  ? locale === "ar"
+                    ? "تم حذف الرسالة"
+                    : "Message deleted"
+                  : message.replyTo.content}
+              </p>
+            </div>
+          )}
+
+          {/* Message bubble - iMessage style with asymmetric tail */}
           <div
             className={cn(
-              "text-xs p-2 rounded bg-muted/50 border-l-2 border-primary mb-1",
-              isOwnMessage ? "self-end" : "self-start"
+              "relative px-3 py-2 break-words shadow-sm",
+              // iMessage-style rounded corners with asymmetric tail
+              isOwnMessage
+                ? "rounded-[18px] rounded-tr-[4px] bg-primary text-primary-foreground"
+                : "rounded-[18px] rounded-tl-[4px] bg-muted text-foreground border border-border",
+              isDeleted && "opacity-60 italic",
+              isPending && "opacity-70" // Optimistic message (pending)
             )}
           >
-            <p className="font-medium text-muted-foreground">
-              {message.replyTo.sender.username || message.replyTo.sender.email}
-            </p>
-            <p className="text-muted-foreground truncate">
-              {message.replyTo.isDeleted
-                ? locale === "ar"
-                  ? "تم حذف الرسالة"
-                  : "Message deleted"
-                : message.replyTo.content}
-            </p>
-          </div>
-        )}
-
-        {/* Message bubble */}
-        <div
-          className={cn(
-            "relative px-4 py-2 rounded-2xl break-words",
-            isOwnMessage
-              ? "bg-primary text-primary-foreground"
-              : "bg-muted text-foreground",
-            isDeleted && "opacity-60 italic",
-            compact ? "px-3 py-1.5 text-sm" : ""
-          )}
-        >
           {/* Message content */}
           {isDeleted ? (
             <span className="text-muted-foreground">
@@ -174,28 +199,39 @@ export function MessageBubble({
                 </div>
               )}
 
-              {/* Message status indicators */}
-              <div className="flex items-center gap-1 mt-1 justify-end">
-                {isEdited && (
-                  <span className="text-xs opacity-70">
-                    {locale === "ar" ? "معدلة" : "edited"}
-                  </span>
-                )}
-                {isOwnMessage && (
-                  <span className="text-xs opacity-70">
-                    {message.status === "sent" && <Check className="h-3 w-3" />}
-                    {message.status === "delivered" && <CheckCheck className="h-3 w-3" />}
-                    {message.status === "read" && <CheckCheck className="h-3 w-3 text-primary-foreground" />}
-                  </span>
-                )}
-                {compact && (
-                  <span className="text-xs opacity-70">
+              {/* Timestamp and status - only on last message in group */}
+              {showTimestamp && isLastInGroup && (
+                <div className={cn(
+                  "flex items-center gap-1 mt-1",
+                  isOwnMessage ? "justify-end" : "justify-start"
+                )}>
+                  {isEdited && (
+                    <span className={cn(
+                      "text-[10px]",
+                      isOwnMessage ? "text-primary-foreground/70" : "text-muted-foreground"
+                    )}>
+                      {locale === "ar" ? "معدلة" : "edited"}
+                    </span>
+                  )}
+                  <span className={cn(
+                    "text-[10px]",
+                    isOwnMessage ? "text-primary-foreground/70" : "text-muted-foreground"
+                  )}>
                     {format(new Date(message.createdAt), "p", { locale: dateLocale })}
                   </span>
-                )}
-              </div>
+                  {isOwnMessage && (
+                    <span className="text-primary-foreground/70">
+                      {message.status === "sending" && <Clock className="h-3 w-3 animate-pulse" />}
+                      {message.status === "sent" && <Check className="h-3 w-3" />}
+                      {message.status === "delivered" && <CheckCheck className="h-3 w-3" />}
+                      {message.status === "read" && <CheckCheck className="h-3 w-3" />}
+                    </span>
+                  )}
+                </div>
+              )}
             </>
           )}
+          </div>
 
           {/* Actions menu */}
           {!isDeleted && (

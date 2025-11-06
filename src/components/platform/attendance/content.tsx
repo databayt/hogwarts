@@ -11,6 +11,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input'
 import { getAttendanceList, getClassesForSelection, getAttendanceReportCsv } from '@/components/platform/attendance/actions'
 import type { Dictionary } from '@/components/internationalization/dictionaries'
+import { AttendanceErrorBoundary } from './error-boundary'
+import { AttendanceTableSkeleton } from './loading-skeleton'
+import { AttendanceEmptyState, NoClassesEmptyState, NoStudentsEmptyState } from './empty-state'
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
@@ -89,27 +92,47 @@ export function AttendanceContent({ dictionary }: Props) {
     return () => window.removeEventListener('keydown', onKey)
   }, [onSubmit])
   return (
-    <div className="grid gap-3">
-      <div className="rounded-lg border bg-card p-4">
-        <div className="mb-2 text-sm text-muted-foreground">{dict.title}</div>
-        <div className="flex flex-wrap items-center gap-2 mb-2">
-          <Select value={classId} onValueChange={setClassId}>
-            <SelectTrigger className="h-8 w-56"><SelectValue placeholder={dict.selectClass} /></SelectTrigger>
-            <SelectContent>
-              {classes.map((c) => (<SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>))}
-            </SelectContent>
-          </Select>
-          <Input type="date" className="h-8 w-44" value={date} onChange={(e) => setDate(e.target.value)} />
-          <div className="ml-auto flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => setRows((r) => r.map((x) => ({ ...x, status: 'present' })))}>{dict.allPresent || "All Present"}</Button>
-            <Button variant="outline" size="sm" onClick={() => setRows((r) => r.map((x) => ({ ...x, status: 'absent' })))}>{dict.allAbsent || "All Absent"}</Button>
-            <Button variant="outline" size="sm" onClick={() => setRows((r) => r.map((x) => ({ ...x, status: 'late' })))}>{ dict.allLate || "All Late"}</Button>
+    <AttendanceErrorBoundary>
+      {isLoading && !rows.length ? (
+        <AttendanceTableSkeleton rows={10} />
+      ) : classes.length === 0 && !isLoading ? (
+        <NoClassesEmptyState dictionary={dictionary?.attendance} />
+      ) : (
+        <div className="grid gap-3">
+          <div className="rounded-lg border bg-card p-4">
+            <div className="mb-2 text-sm text-muted-foreground">{dict.title}</div>
+            <div className="flex flex-wrap items-center gap-2 mb-2">
+              <Select value={classId} onValueChange={setClassId} disabled={isLoading}>
+                <SelectTrigger className="h-8 w-56"><SelectValue placeholder={dict.selectClass} /></SelectTrigger>
+                <SelectContent>
+                  {classes.map((c) => (<SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>))}
+                </SelectContent>
+              </Select>
+              <Input
+                type="date"
+                className="h-8 w-44"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                disabled={isLoading}
+              />
+              <div className="ml-auto flex items-center gap-2">
+                <Button variant="outline" size="sm" onClick={() => setRows((r) => r.map((x) => ({ ...x, status: 'present' })))} disabled={isLoading || rows.length === 0}>{dict.allPresent || "All Present"}</Button>
+                <Button variant="outline" size="sm" onClick={() => setRows((r) => r.map((x) => ({ ...x, status: 'absent' })))} disabled={isLoading || rows.length === 0}>{dict.allAbsent || "All Absent"}</Button>
+                <Button variant="outline" size="sm" onClick={() => setRows((r) => r.map((x) => ({ ...x, status: 'late' })))} disabled={isLoading || rows.length === 0}>{ dict.allLate || "All Late"}</Button>
+              </div>
+            </div>
+            <Button size="sm" onClick={onSubmit} disabled={submitting || isLoading || !Object.keys(changed).length}>
+              {submitting ? 'Saving...' : (dict.saveAttendance || "Save Attendance")}
+            </Button>
           </div>
+          {rows.length === 0 && classId && !isLoading ? (
+            <NoStudentsEmptyState dictionary={dictionary?.attendance} />
+          ) : (
+            <AttendanceTable data={rows} columns={getAttendanceColumns(dictionary?.attendance)} onChangeStatus={onChangeStatus} />
+          )}
         </div>
-        <Button size="sm" onClick={onSubmit} disabled={submitting || !Object.keys(changed).length}>{dict.saveAttendance || "Save Attendance"}</Button>
-      </div>
-      <AttendanceTable data={rows} columns={getAttendanceColumns(dictionary?.attendance)} onChangeStatus={onChangeStatus} />
-    </div>
+      )}
+    </AttendanceErrorBoundary>
   )
 }
 

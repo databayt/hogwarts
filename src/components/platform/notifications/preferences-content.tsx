@@ -5,6 +5,8 @@ import { getUserNotificationPreferences } from "./queries"
 import { NotificationPreferencesForm } from "./preferences-form"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Settings } from "lucide-react"
+import { getNotificationDictionary } from "@/components/internationalization/dictionaries"
+import type { Locale } from "@/components/internationalization/config"
 
 interface NotificationPreferencesContentProps {
   locale?: "ar" | "en"
@@ -22,6 +24,9 @@ export async function NotificationPreferencesContent({
   if (!schoolId) {
     redirect(`/${locale}/dashboard`)
   }
+
+  // Load dictionary
+  const dict = await getNotificationDictionary(locale as Locale)
 
   // Fetch user's current preferences
   const rawPreferences = await getUserNotificationPreferences(
@@ -51,7 +56,11 @@ export async function NotificationPreferencesContent({
       </div>
 
       {/* Preferences Form */}
-      <NotificationPreferencesForm initialPreferences={preferences} />
+      <NotificationPreferencesForm
+        initialPreferences={preferences}
+        locale={locale}
+        dictionary={dict.notifications}
+      />
 
       {/* Help Card */}
       <Card>

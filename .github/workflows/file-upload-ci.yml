@@ -193,7 +193,7 @@ jobs:
 
       - name: Run upload performance tests
         run: |
-          k6 run tests/performance/file-upload.js \
+          k6 run src/test/performance/file-upload.js \
             --out cloud \
             --out json=performance-results.json
 

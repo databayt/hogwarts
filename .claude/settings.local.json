@@ -14,7 +14,9 @@
       "Bash(then echo \"$dirname\")",
       "Bash(fi)",
       "WebFetch(domain:ed.databayt.org)",
-      "Bash(nul)"
+      "Bash(nul)",
+      "Bash(unzip:*)",
+      "Bash(wc:*)"
     ],
     "deny": [],
     "ask": []

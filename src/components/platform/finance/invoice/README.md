@@ -1,44 +1,121 @@
-# Invoice Components
+# Invoice Module
 
 ## Overview
-The invoice components provide a comprehensive invoicing and billing management system for the Hogwarts platform. This module handles invoice creation, management, payment tracking, and financial reporting with multi-tenant support.
+The Invoice Module provides comprehensive invoice management with role-based access control, automated billing cycles, recurring invoices, bulk generation, and payment tracking integration.
 
 ## Features
 
-- **Data Table**: Full-featured data table with sorting, pagination, and filtering
-- **Search & Filter**: Search by invoice number, client name, and status
-- **Add Button**: Quick access to create new invoices via modal
-- **Actions**: View, edit, and delete invoices with confirmation dialogs
-- **Status Management**: Visual status badges for different invoice states
-- **Multi-tenant**: Secure data isolation by school ID
+### Core Capabilities
+- **RBAC-Enhanced Operations**: Role-based permissions for all invoice actions
+- **Invoice Lifecycle Management**: Draft → Pending → Sent → Partially Paid → Paid → Overdue
+- **Recurring Invoices**: Template-based automatic generation
+- **Bulk Invoice Generation**: Create invoices for multiple students at once
+- **Payment Reminders**: Automated and manual reminder system
+- **Credit Notes**: Support for refunds and adjustments
+- **Double-Entry Integration**: Automatic journal entry creation
+- **Multi-Currency Support**: Handle different currencies
+- **Discounts & Scholarships**: Automatic application based on student profiles
+
+### Dashboard Metrics
+- Total invoices by status
+- Collection rate and trends
+- Outstanding amounts
+- Overdue tracking
+- Payment velocity
+
+## Role-Based Access Control (RBAC)
+
+### Permission Matrix
+
+| Role | View Own | View All | Create | Edit | Delete | Approve | Export |
+|------|----------|----------|---------|------|--------|---------|--------|
+| DEVELOPER | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| ADMIN | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| ACCOUNTANT | ✓ | ✓ | ✓ | ✓ | - | ✓ | ✓ |
+| TEACHER | ✓ | - | - | - | - | - | - |
+| STUDENT | ✓ | - | - | - | - | - | - |
+| GUARDIAN | ✓ | - | - | - | - | - | - |
+| STAFF | ✓ | - | - | - | - | - | - |
+
+### Role-Specific Views
+
+#### Admin & Accountant
+- Full dashboard with all KPIs
+- Bulk generation tools
+- Recurring invoice management
+- Payment reminder controls
+- Export and reporting
+
+#### Teachers & Staff
+- View own salary invoices
+- Download invoice PDFs
+- View payment history
+
+#### Students & Guardians
+- View fee invoices
+- Check payment status
+- Download receipts
+- View payment history
 
 ## Components
 
-### `content.tsx`
-Main content component that:
-- Fetches invoice data with search parameters
-- Handles authentication and school context
-- Renders the invoice table with proper pagination
+### Main Components
+```
+invoice/
+├── content-enhanced.tsx    # Main invoice dashboard with RBAC
+├── actions-enhanced.ts      # RBAC-aware server actions
+├── bulk-generate.tsx        # Bulk invoice generation UI
+├── recurring-template.tsx   # Recurring invoice templates
+├── payment-reminder.tsx     # Payment reminder management
+├── credit-note.tsx          # Credit note creation
+├── columns.tsx              # Data table columns
+├── table.tsx                # Invoice data table
+├── form.tsx                 # Invoice creation/edit form
+├── validation.ts            # Zod schemas
+└── types.ts                 # TypeScript definitions
+```
 
-### `table.tsx`
-Data table component featuring:
-- Search and filter toolbar
-- Add button for creating new invoices
-- Modal integration for forms
-- Responsive design with proper accessibility
+### Server Actions (actions-enhanced.ts)
 
-### `columns.tsx`
-Table column definitions with:
-- Invoice number, client name, total, status, due date, created date
-- Sortable and filterable columns
-- Action menu with view, edit, delete options
-- Status badges with color coding
+#### RBAC-Enhanced CRUD
+```typescript
+getInvoicesWithRBAC(page, limit, filters)  // Role-aware invoice fetching
+createInvoiceWithRBAC(data)                // Create with permission check
+updateInvoiceWithRBAC(id, data)            // Update with permission check
+deleteInvoiceWithRBAC(id)                  // Delete with permission check
+```
 
-### `actions.ts`
-Server actions for:
-- `getInvoicesWithFilters`: Fetch invoices with search/filter support
-- `deleteInvoice`: Delete invoices with proper validation
-- Full CRUD operations for invoice management
+#### Bulk Operations
+```typescript
+generateBulkInvoices({
+  invoiceType: "TUITION_FEE",
+  targetGroup: "BY_CLASS",
+  classIds: ["class1", "class2"],
+  dueDate: new Date(),
+  termId: "term1",
+  sendNotifications: true
+})
+```
+
+#### Recurring Invoices
+```typescript
+createRecurringTemplate({
+  name: "Monthly Tuition",
+  frequency: "MONTHLY",
+  dayOfMonth: 1,
+  template: {...}
+})
+processRecurringInvoices()  // Run by cron job
+```
+
+#### Payment Reminders
+```typescript
+sendPaymentReminders({
+  invoiceIds: ["inv1", "inv2"],
+  includePastDue: true,
+  reminderType: "EMAIL"
+})
+```
 
 ### `list-params.ts`
 Search parameter configuration:
@@ -230,24 +307,77 @@ Each step validates independently before proceeding.
 - `sendInvoiceEmail` - Email invoice to client
 - `updateInvoiceStatus` - Update payment status
 
+## Invoice Lifecycle
+
+```mermaid
+graph LR
+    Draft --> Pending
+    Pending --> Sent
+    Sent --> PartiallyPaid
+    Sent --> Paid
+    Sent --> Overdue
+    PartiallyPaid --> Paid
+    PartiallyPaid --> Overdue
+    Overdue --> Paid
+    Paid --> Refunded
+```
+
 ## Database Schema
 
+### Main Tables
 ```prisma
-model Invoice {
-  id           String   @id @default(cuid())
-  schoolId     String
-  number       String
-  clientName   String
-  clientEmail  String?
-  items        Json
-  total        Decimal
-  status       InvoiceStatus
-  dueDate      DateTime
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+model UserInvoice {
+  id               String   @id @default(cuid())
+  schoolId         String
+  invoiceNumber    String
+  userId           String   // Student/Parent/Staff
+  type             InvoiceType
+  status           InvoiceStatus
+  amount           Decimal
+  paidAmount       Decimal  @default(0)
+  dueDate          DateTime
+  termId           String?
+  feeStructureId   String?
+  isRecurring      Boolean  @default(false)
+  templateId       String?
+  items            Json
+  notes            String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
-  @@index([schoolId])
-  @@unique([schoolId, number])
+  @@index([schoolId, status])
+  @@index([schoolId, userId])
+  @@index([schoolId, dueDate])
+  @@unique([schoolId, invoiceNumber])
+}
+
+model InvoiceTemplate {
+  id               String   @id @default(cuid())
+  schoolId         String
+  name             String
+  description      String?
+  frequency        RecurringFrequency
+  dayOfMonth       Int?
+  isActive         Boolean  @default(true)
+  template         Json
+  lastGenerated    DateTime?
+  nextGeneration   DateTime?
+  createdAt        DateTime @default(now())
+
+  @@index([schoolId, isActive])
+}
+
+model InvoiceReminder {
+  id               String   @id @default(cuid())
+  schoolId         String
+  invoiceId        String
+  reminderType     ReminderType
+  escalationLevel  Int      @default(1)
+  sentAt           DateTime @default(now())
+  sentTo           String
+  status           String
+
+  @@index([schoolId, invoiceId])
 }
 ```
 

@@ -3,17 +3,7 @@ import { auth } from "@/auth"
 import { getTenantContext } from "@/lib/tenant-context"
 import { getConversationsList, getConversation, getMessagesList } from "./queries"
 import { MessagingClient } from "./messaging-client"
-
-// Helper function to safely serialize dates
-function safeSerializeDate(date: Date | null | undefined): string {
-  if (!date) return new Date().toISOString()
-  try {
-    return new Date(date).toISOString()
-  } catch (error) {
-    console.error('[safeSerializeDate] Invalid date:', date, error)
-    return new Date().toISOString()
-  }
-}
+import { serializeConversations, serializeConversation, serializeMessages } from "./serialization"
 
 export interface MessagingContentProps {
   locale?: "ar" | "en"
@@ -53,22 +43,8 @@ export async function MessagingContent({
       perPage: 50,
     })
 
-    // Serialize conversations
-    conversationsData = conversationsResult.rows.map((conv: any) => ({
-      ...conv,
-      createdAt: safeSerializeDate(conv.createdAt),
-      updatedAt: safeSerializeDate(conv.updatedAt),
-      lastMessageAt: safeSerializeDate(conv.lastMessageAt),
-      participants: conv.participants?.map((p: any) => ({
-        ...p,
-        joinedAt: safeSerializeDate(p.joinedAt),
-        lastReadAt: safeSerializeDate(p.lastReadAt),
-        mutedUntil: safeSerializeDate(p.mutedUntil),
-      })) || [],
-      createdBy: conv.createdBy ? {
-        ...conv.createdBy,
-      } : null,
-    }))
+    // Serialize conversations using centralized utility
+    conversationsData = serializeConversations(conversationsResult.rows)
 
     // Fetch active conversation and messages if conversationId provided
     if (conversationId) {
@@ -76,19 +52,8 @@ export async function MessagingContent({
         const activeConversation = await getConversation(schoolId, userId, conversationId)
 
         if (activeConversation) {
-          // Serialize active conversation
-          activeConversationData = {
-            ...activeConversation,
-            createdAt: safeSerializeDate(activeConversation.createdAt),
-            updatedAt: safeSerializeDate(activeConversation.updatedAt),
-            lastMessageAt: safeSerializeDate(activeConversation.lastMessageAt),
-            participants: activeConversation.participants?.map((p: any) => ({
-              ...p,
-              joinedAt: safeSerializeDate(p.joinedAt),
-              lastReadAt: safeSerializeDate(p.lastReadAt),
-              mutedUntil: safeSerializeDate(p.mutedUntil),
-            })) || [],
-          }
+          // Serialize active conversation using centralized utility
+          activeConversationData = serializeConversation(activeConversation)
 
           const messagesResult = await getMessagesList(schoolId, {
             conversationId,
@@ -96,30 +61,8 @@ export async function MessagingContent({
             perPage: 50,
           })
 
-          // Serialize messages
-          messagesData = messagesResult.rows.map((msg: any) => ({
-            ...msg,
-            createdAt: safeSerializeDate(msg.createdAt),
-            updatedAt: safeSerializeDate(msg.updatedAt),
-            editedAt: safeSerializeDate(msg.editedAt),
-            deletedAt: safeSerializeDate(msg.deletedAt),
-            attachments: msg.attachments?.map((a: any) => ({
-              ...a,
-              uploadedAt: safeSerializeDate(a.uploadedAt),
-            })) || [],
-            reactions: msg.reactions?.map((r: any) => ({
-              ...r,
-              createdAt: safeSerializeDate(r.createdAt),
-            })) || [],
-            readReceipts: msg.readReceipts?.map((rr: any) => ({
-              ...rr,
-              readAt: safeSerializeDate(rr.readAt),
-            })) || [],
-            replyTo: msg.replyTo ? {
-              ...msg.replyTo,
-              createdAt: safeSerializeDate(msg.replyTo.createdAt),
-            } : null,
-          }))
+          // Serialize messages using centralized utility
+          messagesData = serializeMessages(messagesResult.rows)
         }
       } catch (error) {
         console.error("[MessagingContent] Error fetching conversation:", error)
@@ -142,9 +85,9 @@ export async function MessagingContent({
 
 export function MessagingContentSkeleton({ locale = "en" }: { locale?: "ar" | "en" }) {
   return (
-    <div className="flex h-full">
-      {/* Sidebar skeleton */}
-      <div className="w-80 border-r border-border p-4 space-y-4">
+    <div className="flex h-full bg-background">
+      {/* Sidebar skeleton - responsive */}
+      <div className="w-full sm:w-96 md:w-[430px] flex-shrink-0 border-r border-border p-4 space-y-4">
         <div className="h-10 bg-muted animate-pulse rounded" />
         <div className="h-10 bg-muted animate-pulse rounded" />
         {Array.from({ length: 8 }).map((_, i) => (
@@ -158,8 +101,8 @@ export function MessagingContentSkeleton({ locale = "en" }: { locale?: "ar" | "e
         ))}
       </div>
 
-      {/* Chat skeleton */}
-      <div className="flex-1 flex items-center justify-center">
+      {/* Chat skeleton - hidden on mobile, visible on desktop */}
+      <div className="hidden md:flex flex-1 items-center justify-center bg-muted/20">
         <p className="text-muted-foreground">
           {locale === "ar" ? "اختر محادثة للبدء" : "Select a conversation to start"}
         </p>

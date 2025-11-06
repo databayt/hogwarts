@@ -200,6 +200,10 @@ model School {
   // Messaging relations
   conversations Conversation[]
 
+  // File upload relations
+  fileMetadata  FileMetadata[]
+  uploadQuotas  UploadQuota[]
+
   createdAt             DateTime                @default(now())
   updatedAt             DateTime                @updatedAt
   QuestionBank          QuestionBank[]

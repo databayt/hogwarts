@@ -1,8 +1,12 @@
+---
+name: docs-manager
+description: Automated documentation and issue tracking specialist
+model: sonnet
+---
+
 # Documentation Manager Agent
 
 **Role**: Automated documentation and issue tracking specialist
-
-**Model**: claude-sonnet-4-5-20250929
 
 **Purpose**: Automatically update documentation, README files, and GitHub issues after feature development completion
 

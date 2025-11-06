@@ -5,6 +5,7 @@ import { getTenantContext } from "@/lib/tenant-context"
 import { db } from "@/lib/db"
 import { revalidatePath, revalidateTag } from "next/cache"
 import { z } from "zod"
+import { checkMessageSendRateLimit, createRateLimitErrorMessage } from "@/lib/rate-limit"
 import {
   createConversationSchema,
   updateConversationSchema,
@@ -300,6 +301,20 @@ export async function sendMessage(
 
     const parsed = createMessageSchema.parse(input)
 
+    // Check rate limit before processing
+    const rateLimitResult = checkMessageSendRateLimit(
+      authContext.userId,
+      parsed.conversationId,
+      schoolId
+    )
+
+    if (!rateLimitResult.allowed) {
+      return {
+        success: false,
+        error: createRateLimitErrorMessage(rateLimitResult)
+      }
+    }
+
     // Get conversation
     const conversation = await getConversation(
       schoolId,
@@ -370,6 +385,77 @@ export async function sendMessage(
         error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
       }
     }
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to send message",
+    }
+  }
+}
+
+/**
+ * Message form state for useActionState pattern
+ */
+export type MessageFormState = {
+  success: boolean
+  error?: string
+  messageId?: string
+}
+
+/**
+ * Send a message from a form (useActionState pattern)
+ *
+ * This action is designed for React 19's useActionState hook.
+ * It accepts prevState and formData, and returns the new state.
+ *
+ * @example
+ * ```tsx
+ * const [state, formAction] = useActionState(sendMessageFromForm, { success: false })
+ *
+ * <form action={formAction}>
+ *   <input type="hidden" name="conversationId" value={conversationId} />
+ *   <textarea name="content" />
+ *   <input type="hidden" name="replyToId" value={replyToId} />
+ *   <button type="submit">Send</button>
+ * </form>
+ * ```
+ */
+export async function sendMessageFromForm(
+  prevState: MessageFormState,
+  formData: FormData
+): Promise<MessageFormState> {
+  try {
+    // Extract form data
+    const conversationId = formData.get("conversationId") as string
+    const content = formData.get("content") as string
+    const replyToId = formData.get("replyToId") as string | null
+
+    // Validate required fields
+    if (!conversationId) {
+      return { success: false, error: "Conversation ID is required" }
+    }
+
+    if (!content || !content.trim()) {
+      return { success: false, error: "Message content is required" }
+    }
+
+    // Call the existing sendMessage action
+    const result = await sendMessage({
+      conversationId,
+      content: content.trim(),
+      contentType: "text",
+      replyToId: replyToId || undefined,
+    })
+
+    if (!result.success) {
+      return { success: false, error: result.error }
+    }
+
+    return {
+      success: true,
+      messageId: result.data.id,
+    }
+  } catch (error) {
+    console.error("[sendMessageFromForm] Error:", error)
     return {
       success: false,
       error: error instanceof Error ? error.message : "Failed to send message",
@@ -812,6 +898,71 @@ export async function removeReaction(
   }
 }
 
+/**
+ * Load more messages with cursor-based pagination (efficient for large conversations)
+ *
+ * This replaces offset-based pagination for better performance:
+ * - No need to scan through skipped rows
+ * - Consistent performance regardless of page depth
+ * - Works well with real-time data
+ *
+ * @param conversationId - Conversation ID
+ * @param cursor - Message ID to start from (optional)
+ * @param take - Number of messages to fetch (default: 50)
+ * @param direction - 'before' (load older) or 'after' (load newer)
+ */
+export async function loadMoreMessages(input: {
+  conversationId: string
+  cursor?: string
+  take?: number
+  direction?: 'before' | 'after'
+}): Promise<ActionResponse<{
+  items: any[]
+  hasMore: boolean
+  nextCursor: string | null
+  prevCursor: string | null
+}>> {
+  try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
+    // Check if user is participant in this conversation
+    const isParticipant = await isConversationParticipant(
+      input.conversationId,
+      authContext.userId
+    )
+
+    if (!isParticipant) {
+      return { success: false, error: "Not a participant in this conversation" }
+    }
+
+    // Import the cursor-based query and serialization utility
+    const { getMessagesWithCursor } = await import("./queries")
+    const { serializeMessagesPaginated } = await import("./serialization")
+
+    // Fetch messages with cursor
+    const result = await getMessagesWithCursor(input.conversationId, {
+      cursor: input.cursor,
+      take: input.take ?? 50,
+      direction: input.direction ?? 'before',
+    })
+
+    // Serialize dates for client components
+    const serialized = serializeMessagesPaginated(result)
+
+    return { success: true, data: serialized }
+  } catch (error) {
+    console.error("[loadMoreMessages] Error:", error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to load messages",
+    }
+  }
+}
+
 // Export all actions
 export const messagingActions = {
   createConversation,
@@ -826,4 +977,5 @@ export const messagingActions = {
   removeParticipant,
   addReaction,
   removeReaction,
+  loadMoreMessages,
 } as const

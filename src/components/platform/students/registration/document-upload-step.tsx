@@ -2,11 +2,11 @@
 
 import { UseFormReturn } from "react-hook-form";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   Upload,
   FileText,
@@ -15,14 +15,13 @@ import {
   Eye,
   CheckCircle,
   AlertCircle,
-  File
 } from "lucide-react";
 import { useFieldArray } from "react-hook-form";
 import { useState } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { uploadFileAction } from "@/components/file-upload/actions";
-import { useSession } from "next-auth/react";
+import { FileUploader, ACCEPT_IMAGES, ACCEPT_DOCUMENTS, type UploadedFileResult } from "@/components/file-upload/enhanced/file-uploader";
+import { toast } from "sonner";
 
 interface DocumentUploadStepProps {
   form: UseFormReturn<any>;
@@ -43,9 +42,9 @@ const documentTypes = [
 ];
 
 export function DocumentUploadStep({ form, dictionary }: DocumentUploadStepProps) {
-  const { data: session } = useSession();
-  const [uploadingFile, setUploadingFile] = useState<string | null>(null);
-  const [profilePhotoPreview, setProfilePhotoPreview] = useState<string | null>(null);
+  const [showProfileUploader, setShowProfileUploader] = useState(false);
+  const [showDocumentUploader, setShowDocumentUploader] = useState<number | null>(null);
+  const [profilePhotoUrl, setProfilePhotoUrl] = useState<string>("");
 
   const { fields: documents, append: addDocument, remove: removeDocument } = useFieldArray({
     control: form.control,
@@ -55,76 +54,37 @@ export function DocumentUploadStep({ form, dictionary }: DocumentUploadStepProps
   const studentType = form.watch("studentType");
   const isTransferStudent = studentType === "TRANSFER" || studentType === "INTERNATIONAL";
 
-  // Upload file using centralized system
-  const handleFileUpload = async (file: File, fieldName: string) => {
-    setUploadingFile(fieldName);
-
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("folder", `${session?.user?.schoolId}/students/documents`);
-      formData.append("category", file.type.startsWith("image/") ? "image" : "document");
-      formData.append("type", "student_record");
-
-      const result = await uploadFileAction(formData);
-
-      setUploadingFile(null);
-
-      if (result.success && result.metadata) {
-        return {
-          url: result.metadata.url,
-          name: result.metadata.originalName,
-          size: result.metadata.size,
-          mimeType: result.metadata.mimeType,
-        };
-      } else {
-        throw new Error(result.error || "Upload failed");
-      }
-    } catch (error) {
-      setUploadingFile(null);
-      throw error;
+  // Profile photo upload handlers
+  const handleProfilePhotoComplete = (files: UploadedFileResult[]) => {
+    if (files.length > 0) {
+      const url = files[0].cdnUrl || files[0].url;
+      setProfilePhotoUrl(url);
+      form.setValue("profilePhotoUrl", url);
+      setShowProfileUploader(false);
+      toast.success("Profile photo uploaded successfully");
     }
   };
 
-  const handleProfilePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (!file.type.startsWith("image/")) {
-      form.setError("profilePhotoUrl", {
-        message: "Please upload an image file",
-      });
-      return;
-    }
-
-    if (file.size > 5 * 1024 * 1024) { // 5MB limit
-      form.setError("profilePhotoUrl", {
-        message: "File size must be less than 5MB",
-      });
-      return;
-    }
-
-    const uploadResult = await handleFileUpload(file, "profilePhoto");
-    form.setValue("profilePhotoUrl", uploadResult.url);
-    setProfilePhotoPreview(uploadResult.url);
+  const handleProfilePhotoError = (error: string) => {
+    toast.error(error);
   };
 
-  const handleDocumentUpload = async (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (file.size > 10 * 1024 * 1024) { // 10MB limit
-      form.setError(`documents.${index}.fileUrl`, {
-        message: "File size must be less than 10MB",
-      });
-      return;
+  // Document upload handlers
+  const handleDocumentUploadComplete = (files: UploadedFileResult[], index: number) => {
+    if (files.length > 0) {
+      const file = files[0];
+      const url = file.cdnUrl || file.url;
+      form.setValue(`documents.${index}.fileUrl`, url);
+      form.setValue(`documents.${index}.fileSize`, 0); // Size not available from result
+      form.setValue(`documents.${index}.mimeType`, ""); // MimeType not available
+      form.setValue(`documents.${index}.documentName`, file.fileId);
+      setShowDocumentUploader(null);
+      toast.success("Document uploaded successfully");
     }
+  };
 
-    const uploadResult = await handleFileUpload(file, `document-${index}`);
-    form.setValue(`documents.${index}.fileUrl`, uploadResult.url);
-    form.setValue(`documents.${index}.fileSize`, uploadResult.size);
-    form.setValue(`documents.${index}.mimeType`, uploadResult.mimeType);
-    form.setValue(`documents.${index}.documentName`, uploadResult.name);
+  const handleDocumentUploadError = (error: string) => {
+    toast.error(error);
   };
 
   const formatFileSize = (bytes: number) => {
@@ -153,11 +113,11 @@ export function DocumentUploadStep({ form, dictionary }: DocumentUploadStepProps
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center gap-6">
-            {profilePhotoPreview ? (
+          {profilePhotoUrl || form.watch("profilePhotoUrl") ? (
+            <div className="flex items-center gap-6">
               <div className="relative">
                 <img
-                  src={profilePhotoPreview}
+                  src={profilePhotoUrl || form.watch("profilePhotoUrl")}
                   alt="Profile"
                   className="h-32 w-32 rounded-lg object-cover border"
                 />
@@ -168,44 +128,69 @@ export function DocumentUploadStep({ form, dictionary }: DocumentUploadStepProps
                   className="absolute -top-2 -right-2"
                   onClick={() => {
                     form.setValue("profilePhotoUrl", "");
-                    setProfilePhotoPreview(null);
+                    setProfilePhotoUrl("");
                   }}
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </div>
-            ) : (
-              <div className="h-32 w-32 rounded-lg border-2 border-dashed border-muted-foreground/25 flex items-center justify-center">
-                <Image className="h-8 w-8 text-muted-foreground/50" />
+              <div className="flex-1">
+                <p className="text-sm text-muted-foreground">Profile photo uploaded successfully</p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="mt-2"
+                  onClick={() => setShowProfileUploader(true)}
+                >
+                  Change Photo
+                </Button>
               </div>
-            )}
-
-            <div className="flex-1">
-              <FormField
-                control={form.control}
-                name="profilePhotoUrl"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Upload Photo</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleProfilePhotoChange}
-                        disabled={uploadingFile === "profilePhoto"}
-                      />
-                    </FormControl>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Passport size photo, Max 5MB (JPG, PNG)
-                    </p>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
             </div>
-          </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="flex items-center gap-6">
+                <div className="h-32 w-32 rounded-lg border-2 border-dashed border-muted-foreground/25 flex items-center justify-center">
+                  <Image className="h-8 w-8 text-muted-foreground/50" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm text-muted-foreground mb-2">
+                    Passport size photo, Max 5MB (JPG, PNG)
+                  </p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowProfileUploader(true)}
+                  >
+                    <Upload className="h-4 w-4 mr-2" />
+                    Upload Photo
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
+
+      {/* Profile Photo Upload Dialog */}
+      <Dialog open={showProfileUploader} onOpenChange={setShowProfileUploader}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Upload Profile Photo</DialogTitle>
+          </DialogHeader>
+          <FileUploader
+            category="IMAGE"
+            folder="students/photos"
+            accept={ACCEPT_IMAGES}
+            maxFiles={1}
+            multiple={false}
+            maxSize={5 * 1024 * 1024} // 5MB
+            optimizeImages={true}
+            onUploadComplete={handleProfilePhotoComplete}
+            onUploadError={handleProfilePhotoError}
+          />
+        </DialogContent>
+      </Dialog>
 
       {/* Required Documents Notice */}
       {isTransferStudent && (
@@ -294,20 +279,37 @@ export function DocumentUploadStep({ form, dictionary }: DocumentUploadStepProps
                       <FormLabel>Upload File</FormLabel>
                       <FormControl>
                         <div className="flex items-center gap-2">
-                          <Input
-                            type="file"
-                            accept=".pdf,.jpg,.jpeg,.png"
-                            onChange={(e) => handleDocumentUpload(e, index)}
-                            disabled={uploadingFile === `document-${index}`}
-                          />
-                          {field.value && (
+                          {field.value ? (
+                            <>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => window.open(field.value, "_blank")}
+                                className="flex-1"
+                              >
+                                <Eye className="h-4 w-4 mr-2" />
+                                View File
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setShowDocumentUploader(index)}
+                              >
+                                <Upload className="h-4 w-4 mr-2" />
+                                Change
+                              </Button>
+                            </>
+                          ) : (
                             <Button
                               type="button"
                               variant="outline"
-                              size="sm"
-                              onClick={() => window.open(field.value, "_blank")}
+                              onClick={() => setShowDocumentUploader(index)}
+                              className="w-full"
                             >
-                              <Eye className="h-4 w-4" />
+                              <Upload className="h-4 w-4 mr-2" />
+                              Upload File
                             </Button>
                           )}
                         </div>
@@ -376,6 +378,31 @@ export function DocumentUploadStep({ form, dictionary }: DocumentUploadStepProps
           </div>
         </CardContent>
       </Card>
+
+      {/* Document Upload Dialog */}
+      <Dialog open={showDocumentUploader !== null} onOpenChange={(open) => !open && setShowDocumentUploader(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Upload Document</DialogTitle>
+          </DialogHeader>
+          {showDocumentUploader !== null && (
+            <FileUploader
+              category="DOCUMENT"
+              folder="students/documents"
+              accept={{
+                ...ACCEPT_IMAGES,
+                ...ACCEPT_DOCUMENTS,
+              }}
+              maxFiles={1}
+              multiple={false}
+              maxSize={10 * 1024 * 1024} // 10MB
+              optimizeImages={false}
+              onUploadComplete={(files) => handleDocumentUploadComplete(files, showDocumentUploader)}
+              onUploadError={handleDocumentUploadError}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

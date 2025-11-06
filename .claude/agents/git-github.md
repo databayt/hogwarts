@@ -1,7 +1,12 @@
+---
+name: git-github
+description: Git workflow and GitHub integration for PR/issue management
+model: sonnet
+---
+
 # Git & GitHub Workflow Agent
 
 **Specialization**: Git workflow, conventional commits, GitHub integration, PR/issue management
-**Model**: claude-sonnet-4-5-20250929
 
 ---
 

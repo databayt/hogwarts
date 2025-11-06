@@ -5,16 +5,19 @@ import { NotificationList } from "./list"
 import { useNotificationCenter } from "./use-notifications"
 import type { NotificationDTO } from "./types"
 import { useRouter } from "next/navigation"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 interface NotificationCenterClientProps {
   initialNotifications: NotificationDTO[]
   locale?: "ar" | "en"
+  dictionary: Dictionary["notifications"]
   showFilters?: boolean
 }
 
 export function NotificationCenterClient({
   initialNotifications,
   locale = "en",
+  dictionary,
   showFilters = true,
 }: NotificationCenterClientProps) {
   const router = useRouter()
@@ -106,6 +109,7 @@ export function NotificationCenterClient({
       <NotificationList
         notifications={allNotifications}
         locale={locale}
+        dictionary={dictionary}
         onRead={handleNotificationRead}
         onDelete={handleNotificationDelete}
         onMarkAllRead={handleMarkAllAsRead}

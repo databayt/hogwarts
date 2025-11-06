@@ -1,0 +1,282 @@
+{
+  "title": "الإشعارات",
+  "subtitle": "ابق على اطلاع بجميع أنشطة مدرستك",
+  "description": "عرض وإدارة إشعاراتك",
+  "notificationCenter": "مركز الإشعارات",
+  "markAllAsRead": "تعليم الكل كمقروء",
+  "viewAll": "عرض جميع الإشعارات",
+  "preferences": {
+    "title": "تفضيلات الإشعارات",
+    "description": "إدارة كيفية تلقي الإشعارات",
+    "globalSettings": "الإعدادات العامة",
+    "enableAll": "تفعيل جميع الإشعارات",
+    "disableAll": "تعطيل جميع الإشعارات",
+    "channels": {
+      "inApp": "داخل التطبيق",
+      "email": "البريد الإلكتروني",
+      "push": "إشعار فوري",
+      "sms": "رسالة نصية"
+    },
+    "channelSettings": "إعدادات القنوات",
+    "deliveryMethods": "طرق التوصيل",
+    "quietHours": {
+      "title": "ساعات الهدوء",
+      "description": "عدم إرسال إشعارات خلال هذه الساعات",
+      "enable": "تفعيل ساعات الهدوء",
+      "enableDescription": "كتم الإشعارات خلال الساعات المحددة",
+      "startTime": "وقت البداية",
+      "endTime": "وقت النهاية"
+    },
+    "quietHoursDescription": "عدم إرسال إشعارات خلال هذه الساعات",
+    "quietHoursStart": "وقت البداية",
+    "quietHoursEnd": "وقت النهاية",
+    "frequency": "تكرار الإشعارات",
+    "frequencyOptions": {
+      "realtime": "فوري (عند حدوثها)",
+      "hourly": "ملخص كل ساعة",
+      "daily": "ملخص يومي",
+      "weekly": "ملخص أسبوعي"
+    },
+    "minimumPriority": "الحد الأدنى للأولوية",
+    "minimumPriorityDescription": "عرض الإشعارات بهذه الأولوية أو أعلى فقط",
+    "savePreferences": "حفظ التفضيلات",
+    "resetToDefaults": "إعادة تعيين إلى الافتراضي",
+    "savedSuccessfully": "تم حفظ التفضيلات بنجاح",
+    "saveFailed": "فشل حفظ التفضيلات",
+    "digest": {
+      "title": "ملخص البريد الإلكتروني",
+      "description": "تلقي الإشعارات كرسالة ملخصة",
+      "enable": "تفعيل الملخص",
+      "enableDescription": "تجميع الإشعارات معاً",
+      "frequency": "تكرار الملخص",
+      "frequencyDescription": "عدد مرات تلقي رسائل الملخص",
+      "daily": "يومي",
+      "weekly": "أسبوعي"
+    },
+    "notificationTypes": {
+      "title": "أنواع الإشعارات",
+      "description": "اختر الإشعارات التي تريد تلقيها"
+    },
+    "actionRequired": "يتطلب إجراء"
+  },
+  "noNotifications": "لا توجد إشعارات بعد",
+  "noNotificationsDescription": "عندما تتلقى إشعارات، ستظهر هنا",
+  "unreadCount_one": "إشعار واحد غير مقروء",
+  "unreadCount_other": "{{count}} إشعارات غير مقروءة",
+  "newNotification": "إشعار جديد",
+  "tabs": {
+    "all": "الكل",
+    "unread": "غير مقروءة",
+    "read": "مقروءة",
+    "archived": "مؤرشفة"
+  },
+  "actions": {
+    "markAsRead": "تعليم كمقروء",
+    "markAsUnread": "تعليم كغير مقروء",
+    "archive": "أرشفة",
+    "delete": "حذف",
+    "viewDetails": "عرض التفاصيل",
+    "dismiss": "إخفاء",
+    "undo": "تراجع",
+    "retry": "إعادة المحاولة",
+    "settings": "الإعدادات"
+  },
+  "types": {
+    "message": "رسالة جديدة",
+    "message_mention": "تمت الإشارة إليك",
+    "assignment_created": "واجب جديد",
+    "assignment_due": "موعد تسليم الواجب قريب",
+    "assignment_graded": "تم تقييم الواجب",
+    "grade_posted": "تم نشر درجة جديدة",
+    "attendance_marked": "تم تسجيل الحضور",
+    "attendance_alert": "تنبيه غياب",
+    "fee_due": "رسوم مستحقة الدفع",
+    "fee_overdue": "رسوم متأخرة",
+    "fee_paid": "تم استلام الدفعة",
+    "announcement": "إعلان جديد",
+    "event_reminder": "تذكير بحدث",
+    "class_cancelled": "تم إلغاء الحصة",
+    "class_rescheduled": "تم إعادة جدولة الحصة",
+    "system_alert": "تنبيه النظام",
+    "account_created": "تم إنشاء الحساب",
+    "password_reset": "إعادة تعيين كلمة المرور",
+    "login_alert": "تنبيه تسجيل الدخول",
+    "document_shared": "تمت مشاركة مستند",
+    "report_ready": "التقرير جاهز",
+    "exam_scheduled": "تم جدولة امتحان",
+    "exam_result": "نتيجة الامتحان متاحة",
+    "library_due": "موعد إرجاع كتاب المكتبة",
+    "general": "إشعار عام"
+  },
+  "priorities": {
+    "low": "أولوية منخفضة",
+    "normal": "أولوية عادية",
+    "high": "أولوية عالية",
+    "urgent": "عاجل",
+    "badge": {
+      "low": "منخفض",
+      "normal": "عادي",
+      "high": "عالي",
+      "urgent": "عاجل"
+    }
+  },
+  "channels": {
+    "in_app": "داخل التطبيق",
+    "email": "البريد الإلكتروني",
+    "push": "إشعارات الدفع",
+    "sms": "رسالة نصية",
+    "descriptions": {
+      "in_app": "عرض الإشعارات في التطبيق",
+      "email": "إرسال الإشعارات عبر البريد الإلكتروني",
+      "push": "إرسال إشعارات الدفع إلى جهازك",
+      "sms": "إرسال إشعارات نصية (قريباً)"
+    }
+  },
+  "grouping": {
+    "today": "اليوم",
+    "yesterday": "أمس",
+    "thisWeek": "هذا الأسبوع",
+    "lastWeek": "الأسبوع الماضي",
+    "thisMonth": "هذا الشهر",
+    "older": "أقدم",
+    "andOthers": "و {{count}} آخرين",
+    "andOther": "وواحد آخر"
+  },
+  "timeAgo": {
+    "justNow": "الآن",
+    "minutesAgo_one": "منذ دقيقة واحدة",
+    "minutesAgo_other": "منذ {{count}} دقائق",
+    "hoursAgo_one": "منذ ساعة واحدة",
+    "hoursAgo_other": "منذ {{count}} ساعات",
+    "daysAgo_one": "منذ يوم واحد",
+    "daysAgo_other": "منذ {{count}} أيام",
+    "weeksAgo_one": "منذ أسبوع واحد",
+    "weeksAgo_other": "منذ {{count}} أسابيع",
+    "monthsAgo_one": "منذ شهر واحد",
+    "monthsAgo_other": "منذ {{count}} أشهر"
+  },
+  "filters": {
+    "filterBy": "تصفية حسب",
+    "allTypes": "جميع الأنواع",
+    "allPriorities": "جميع الأولويات",
+    "dateRange": "النطاق الزمني",
+    "clearFilters": "مسح التصفية",
+    "applyFilters": "تطبيق التصفية"
+  },
+  "bulk": {
+    "selectAll": "تحديد الكل",
+    "deselectAll": "إلغاء تحديد الكل",
+    "selectedCount_one": "تم تحديد واحد",
+    "selectedCount_other": "تم تحديد {{count}}",
+    "markSelectedAsRead": "تعليم المحدد كمقروء",
+    "archiveSelected": "أرشفة المحدد",
+    "deleteSelected": "حذف المحدد"
+  },
+  "empty": {
+    "noNotifications": "لا توجد إشعارات",
+    "noNotificationsDescription": "أنت مطّلع على كل شيء!",
+    "noUnread": "لا توجد إشعارات غير مقروءة",
+    "noUnreadDescription": "لقد قرأت جميع إشعاراتك",
+    "noResults": "لم يتم العثور على إشعارات",
+    "noResultsDescription": "حاول تعديل التصفية"
+  },
+  "errors": {
+    "loadFailed": "فشل تحميل الإشعارات",
+    "markAsReadFailed": "فشل تعليمها كمقروءة",
+    "deleteFailed": "فشل حذف الإشعار",
+    "archiveFailed": "فشلت الأرشفة",
+    "updatePreferencesFailed": "فشل تحديث التفضيلات",
+    "connectionLost": "فقد الاتصال. جارٍ إعادة الاتصال...",
+    "reconnected": "تم إعادة الاتصال بنجاح",
+    "tryAgain": "يرجى المحاولة مرة أخرى",
+    "title": "خطأ",
+    "savePreferencesFailed": "فشل حفظ التفضيلات"
+  },
+  "success": {
+    "markedAsRead": "تم التعليم كمقروء",
+    "markedAsUnread": "تم التعليم كغير مقروء",
+    "archived": "تمت الأرشفة بنجاح",
+    "deleted": "تم الحذف بنجاح",
+    "preferencesUpdated": "تم تحديث التفضيلات",
+    "allMarkedAsRead": "تم تعليم جميع الإشعارات كمقروءة",
+    "preferencesSaved": "تم حفظ التفضيلات بنجاح",
+    "preferencesSavedDescription": "تم تحديث تفضيلات الإشعارات الخاصة بك"
+  },
+  "confirmations": {
+    "deleteNotification": "حذف الإشعار؟",
+    "deleteNotificationDescription": "لا يمكن التراجع عن هذا الإجراء. سيؤدي ذلك إلى حذف الإشعار نهائياً.",
+    "deleteMultiple": "حذف {{count}} إشعارات؟",
+    "deleteMultipleDescription": "لا يمكن التراجع عن هذا الإجراء. سيؤدي ذلك إلى حذف الإشعارات المحددة نهائياً.",
+    "confirmDelete": "حذف",
+    "cancel": "إلغاء",
+    "archiveAll": "أرشفة جميع الإشعارات؟",
+    "archiveAllDescription": "سيؤدي هذا إلى نقل جميع الإشعارات المقروءة إلى الأرشيف."
+  },
+  "connection": {
+    "connecting": "جارٍ الاتصال...",
+    "connected": "متصل",
+    "disconnected": "غير متصل",
+    "reconnecting": "جارٍ إعادة الاتصال...",
+    "offline": "أنت غير متصل بالإنترنت",
+    "offlineDescription": "ستتم مزامنة الإشعارات عند عودة الاتصال"
+  },
+  "settings": {
+    "soundEnabled": "تفعيل الصوت",
+    "soundEnabledDescription": "تشغيل صوت للإشعارات الجديدة",
+    "desktopNotifications": "إشعارات سطح المكتب",
+    "desktopNotificationsDescription": "عرض إشعارات سطح المكتب عندما يكون التطبيق في الخلفية",
+    "emailDigest": "ملخص البريد الإلكتروني",
+    "emailDigestDescription": "تلقي ملخص يومي عبر البريد الإلكتروني",
+    "markAsReadOnView": "التعليم كمقروء عند المشاهدة",
+    "markAsReadOnViewDescription": "تعليم الإشعارات تلقائياً كمقروءة عند مشاهدتها",
+    "groupNotifications": "تجميع الإشعارات المتشابهة",
+    "groupNotificationsDescription": "دمج الإشعارات ذات الصلة معاً"
+  },
+  "statistics": {
+    "totalReceived": "إجمالي المستلمة",
+    "totalRead": "إجمالي المقروءة",
+    "totalUnread": "إجمالي غير المقروءة",
+    "averageResponseTime": "متوسط وقت الاستجابة",
+    "mostActiveDay": "اليوم الأكثر نشاطاً",
+    "thisWeek": "هذا الأسبوع",
+    "thisMonth": "هذا الشهر",
+    "allTime": "كل الوقت"
+  },
+  "pushPermission": {
+    "title": "تفعيل إشعارات الدفع",
+    "description": "احصل على إشعارات فورية حتى عندما لا تستخدم التطبيق",
+    "benefits": {
+      "title": "لا تفوّت التحديثات المهمة:",
+      "attendance": "تذكيرات الحضور",
+      "assignments": "مواعيد تسليم الواجبات",
+      "announcements": "الإعلانات الطارئة",
+      "messages": "الرسائل المهمة"
+    },
+    "enableButton": "تفعيل الإشعارات",
+    "skipButton": "ليس الآن",
+    "blocked": "الإشعارات محظورة",
+    "blockedDescription": "لقد حظرت الإشعارات في إعدادات المتصفح. لتفعيلها، انقر على أيقونة القفل في شريط العنوان.",
+    "denied": "تم رفض الإذن",
+    "deniedDescription": "لقد رفضت أذونات الإشعارات. لتفعيلها، يرجى تحديث إعدادات المتصفح."
+  },
+  "accessibility": {
+    "openNotificationCenter": "فتح مركز الإشعارات",
+    "closeNotificationCenter": "إغلاق مركز الإشعارات",
+    "notificationCount": "{{count}} إشعارات غير مقروءة",
+    "newNotificationAnnouncement": "إشعار جديد من {{actor}}: {{title}}",
+    "markAsReadButton": "تعليم الإشعار كمقروء",
+    "deleteButton": "حذف الإشعار",
+    "unreadNotification": "إشعار غير مقروء",
+    "readNotification": "إشعار مقروء",
+    "unreadCount": "{{count}} إشعارات غير مقروءة",
+    "notificationsBell": "جرس الإشعارات",
+    "connected": "متصل بالإشعارات",
+    "disconnected": "غير متصل بالإشعارات"
+  },
+  "common": {
+    "showing": "عرض",
+    "of": "من",
+    "reset": "إعادة تعيين",
+    "save": "حفظ"
+  }
+}

@@ -50,10 +50,13 @@ export const examBaseSchema = z.object({
   }
 })
 
-export const examCreateSchema = examBaseSchema
+export const examCreateSchema = examBaseSchema.extend({
+  forceCreate: z.boolean().default(false), // Allow creation despite conflicts
+})
 
 export const examUpdateSchema = examBaseSchema.partial().extend({
   id: z.string().min(1, "Required"),
+  forceUpdate: z.boolean().optional().default(false), // Allow update despite conflicts
 })
 
 export const sortItemSchema = z.object({ id: z.string(), desc: z.boolean().optional() })

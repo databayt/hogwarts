@@ -7,7 +7,7 @@ import {
   MessageSquare, Send, Paperclip, Search, Phone, Video, MoreVertical,
   Users, User, Bell, BellOff, Archive, Star, Trash2, Reply, Forward,
   Check, CheckCheck, Clock, AlertCircle, Image as ImageIcon, FileText,
-  Smile, AtSign, Hash, Filter, Plus, X, ChevronDown
+  Smile, AtSign, Hash, Filter, Plus, X, ChevronDown, Upload as UploadIcon
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -52,6 +52,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
+import { FileUploader, ACCEPT_ALL, type UploadedFileResult } from "@/components/file-upload/enhanced/file-uploader";
 
 interface User {
   id: string;
@@ -102,7 +103,7 @@ interface CommunicationHubProps {
   conversations: Conversation[];
   messages: Record<string, Message[]>; // conversationId -> messages
   users: User[];
-  onSendMessage: (conversationId: string, content: string, attachments?: File[]) => Promise<void>;
+  onSendMessage: (conversationId: string, content: string, attachments?: UploadedFileResult[]) => Promise<void>;
   onCreateConversation: (participants: string[], name?: string, type?: 'direct' | 'group') => Promise<string>;
   onMarkAsRead: (conversationId: string, messageId: string) => Promise<void>;
   onDeleteMessage?: (messageId: string) => Promise<void>;
@@ -129,10 +130,10 @@ export function CommunicationHub({
   const [newChatDialogOpen, setNewChatDialogOpen] = useState(false);
   const [selectedParticipants, setSelectedParticipants] = useState<string[]>([]);
   const [groupName, setGroupName] = useState('');
-  const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
+  const [attachedFiles, setAttachedFiles] = useState<UploadedFileResult[]>([]);
+  const [showFileUploader, setShowFileUploader] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Get current conversation
   const currentConversation = useMemo(() => {
@@ -232,9 +233,14 @@ export function CommunicationHub({
     }
   };
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
+  const handleUploadComplete = (files: UploadedFileResult[]) => {
     setAttachedFiles(prev => [...prev, ...files]);
+    setShowFileUploader(false);
+    toast.success(`${files.length} file(s) added`);
+  };
+
+  const handleUploadError = (error: string) => {
+    toast.error(error);
   };
 
   const removeAttachment = (index: number) => {
@@ -527,7 +533,7 @@ export function CommunicationHub({
                       className="flex items-center gap-1 bg-muted px-2 py-1 rounded"
                     >
                       <FileText className="h-3 w-3" />
-                      <span className="text-xs">{file.name}</span>
+                      <span className="text-xs">{file.fileId}</span>
                       <button onClick={() => removeAttachment(index)}>
                         <X className="h-3 w-3" />
                       </button>
@@ -536,17 +542,10 @@ export function CommunicationHub({
                 </div>
               )}
               <div className="flex items-center gap-2">
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  multiple
-                  onChange={handleFileSelect}
-                  className="hidden"
-                />
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => fileInputRef.current?.click()}
+                  onClick={() => setShowFileUploader(true)}
                 >
                   <Paperclip className="h-4 w-4" />
                 </Button>
@@ -683,6 +682,29 @@ export function CommunicationHub({
               Start Conversation
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* File Upload Dialog */}
+      <Dialog open={showFileUploader} onOpenChange={setShowFileUploader}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Attach Files</DialogTitle>
+            <DialogDescription>
+              Upload files to attach to your message
+            </DialogDescription>
+          </DialogHeader>
+          <FileUploader
+            category="OTHER"
+            folder={`messages/${selectedConversation}`}
+            accept={ACCEPT_ALL}
+            maxFiles={5}
+            multiple={true}
+            maxSize={50 * 1024 * 1024} // 50MB per file
+            optimizeImages={true}
+            onUploadComplete={handleUploadComplete}
+            onUploadError={handleUploadError}
+          />
         </DialogContent>
       </Dialog>
     </div>

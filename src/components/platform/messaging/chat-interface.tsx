@@ -1,10 +1,11 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useOptimistic } from "react"
 import { Users, Phone, Video, MoreVertical, Info } from "lucide-react"
 import type { ConversationDTO, MessageDTO, TypingIndicatorDTO } from "./types"
 import { MessageList, MessageListSkeleton } from "./message-list"
 import { MessageInput } from "./message-input"
+import type { UploadedFileResult } from "@/components/file-upload/enhanced/file-uploader"
 import { CONVERSATION_TYPE_CONFIG } from "./config"
 import { cn } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -29,7 +30,7 @@ export interface ChatInterfaceProps {
   onDeleteMessage: (messageId: string) => Promise<void>
   onReactToMessage: (messageId: string, emoji: string) => Promise<void>
   onRemoveReaction: (reactionId: string) => Promise<void>
-  onFileUpload?: (file: File) => Promise<void>
+  onFileUpload?: (files: UploadedFileResult[]) => void
   onLoadMoreMessages?: () => Promise<void>
   onViewParticipants?: () => void
   onViewDetails?: () => void
@@ -59,6 +60,47 @@ export function ChatInterface({
   const [editingMessage, setEditingMessage] = useState<MessageDTO | null>(null)
   const [typingUsers, setTypingUsers] = useState<TypingIndicatorDTO[]>([])
   const [isLoadingMessages, setIsLoadingMessages] = useState(false)
+
+  // Optimistic updates layer (React 19 pattern)
+  const [optimisticMessages, addOptimisticMessage] = useOptimistic(
+    messages,
+    (state, newMessage: MessageDTO) => [...state, newMessage]
+  )
+
+  // Handle optimistic message sending
+  const handleOptimisticSend = useCallback((content: string, replyToId?: string) => {
+    const optimisticMessage: MessageDTO = {
+      id: `temp-${Date.now()}`, // Temporary ID
+      conversationId: conversation.id,
+      senderId: currentUserId,
+      sender: {
+        id: currentUserId,
+        username: null,
+        email: null,
+        image: null,
+      },
+      content,
+      contentType: "text",
+      status: "sending", // Special status for optimistic messages
+      replyToId: replyToId || null,
+      replyTo: replyToId ? messages.find(m => m.id === replyToId) || null : null,
+      isEdited: false,
+      editedAt: null,
+      isDeleted: false,
+      deletedAt: null,
+      isSystem: false,
+      metadata: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      attachments: [],
+      reactions: [],
+      readReceipts: [],
+      readCount: 0,
+    }
+
+    // Add to optimistic state
+    addOptimisticMessage(optimisticMessage)
+  }, [conversation.id, currentUserId, messages, addOptimisticMessage])
 
   const config = CONVERSATION_TYPE_CONFIG[conversation.type]
   const Icon = config.icon
@@ -116,7 +158,20 @@ export function ChatInterface({
           readReceipts: [],
           readCount: 0,
         }
-        setMessages(prev => [...prev, newMessage])
+
+        // Replace optimistic message or add new message
+        setMessages(prev => {
+          // If this is from current user, it might be replacing an optimistic message
+          if (data.senderId === currentUserId) {
+            // Find and remove any temporary message with matching content
+            const withoutOptimistic = prev.filter(msg =>
+              !msg.id.startsWith('temp-') || msg.content !== newMessage.content
+            )
+            return [...withoutOptimistic, newMessage]
+          }
+          // From another user, just add it
+          return [...prev, newMessage]
+        })
 
         // Mark as read if from another user
         if (data.senderId !== currentUserId) {
@@ -351,7 +406,7 @@ export function ChatInterface({
 
       {/* Messages */}
       <MessageList
-        messages={messages}
+        messages={optimisticMessages}
         currentUserId={currentUserId}
         locale={locale}
         isLoading={isLoadingMessages}
@@ -371,11 +426,11 @@ export function ChatInterface({
           conversationId={conversation.id}
           locale={locale}
           replyTo={replyTo}
-          onSend={handleSendMessage}
           onCancelReply={() => setReplyTo(null)}
           onFileUpload={onFileUpload}
           onTypingStart={handleTypingStart}
           onTypingStop={handleTypingStop}
+          onOptimisticSend={handleOptimisticSend}
         />
       ) : (
         <div className="p-4 text-center text-sm text-muted-foreground bg-muted/50">

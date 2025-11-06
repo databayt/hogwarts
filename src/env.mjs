@@ -19,6 +19,38 @@ export const env = createEnv({
     SENTRY_DSN: z.string().optional(),
     SENTRY_ORG: z.string().optional(),
     SENTRY_PROJECT: z.string().optional(),
+    UPSTASH_REDIS_REST_URL: z.string().url().optional(),
+    UPSTASH_REDIS_REST_TOKEN: z.string().min(1).optional(),
+
+    // File Upload & Storage
+    BLOB_READ_WRITE_TOKEN: z.string().min(1).optional(), // Vercel Blob
+    AWS_ACCESS_KEY_ID: z.string().optional().transform(val => val === '' ? undefined : val), // AWS S3
+    AWS_SECRET_ACCESS_KEY: z.string().optional().transform(val => val === '' ? undefined : val),
+    AWS_REGION: z.string().optional().transform(val => val === '' ? undefined : val),
+    AWS_S3_BUCKET: z.string().optional().transform(val => val === '' ? undefined : val),
+    CLOUDFLARE_R2_ACCESS_KEY_ID: z.string().min(1).optional(), // Cloudflare R2
+    CLOUDFLARE_R2_SECRET_ACCESS_KEY: z.string().min(1).optional(),
+    CLOUDFLARE_R2_BUCKET: z.string().optional(),
+    CLOUDFLARE_R2_ENDPOINT: z.string().url().optional(),
+    CLOUDFLARE_ACCOUNT_ID: z.string().optional(),
+
+    // CDN Configuration
+    CDN_ENABLED: z.string().optional(),
+    CDN_DOMAIN: z.string().optional(),
+    CDN_SIGNED_URLS: z.string().optional(),
+    CDN_SIGNED_URL_EXPIRY: z.string().optional(),
+    CDN_SIGNED_URL_SECRET: z.string().min(1).optional(),
+
+    // Storage Tier Configuration
+    STORAGE_HOT_MAX_SIZE: z.string().optional(),
+    STORAGE_WARM_MAX_SIZE: z.string().optional(),
+    STORAGE_HOT_MAX_AGE: z.string().optional(),
+    STORAGE_WARM_MAX_AGE: z.string().optional(),
+    STORAGE_HOT_MIN_ACCESS: z.string().optional(),
+    STORAGE_WARM_MIN_ACCESS: z.string().optional(),
+    STORAGE_HOT_MAX_IDLE: z.string().optional(),
+    STORAGE_WARM_MAX_IDLE: z.string().optional(),
+    USE_CLOUDFLARE_R2: z.string().optional(),
   },
   client: {
     NEXT_PUBLIC_APP_URL: z.string().min(1),
@@ -47,6 +79,39 @@ export const env = createEnv({
     SENTRY_DSN: process.env.SENTRY_DSN,
     SENTRY_ORG: process.env.SENTRY_ORG,
     SENTRY_PROJECT: process.env.SENTRY_PROJECT,
+    UPSTASH_REDIS_REST_URL: process.env.UPSTASH_REDIS_REST_URL,
+    UPSTASH_REDIS_REST_TOKEN: process.env.UPSTASH_REDIS_REST_TOKEN,
+
+    // File Upload & Storage
+    BLOB_READ_WRITE_TOKEN: process.env.BLOB_READ_WRITE_TOKEN,
+    AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID,
+    AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY,
+    AWS_REGION: process.env.AWS_REGION,
+    AWS_S3_BUCKET: process.env.AWS_S3_BUCKET,
+    CLOUDFLARE_R2_ACCESS_KEY_ID: process.env.CLOUDFLARE_R2_ACCESS_KEY_ID,
+    CLOUDFLARE_R2_SECRET_ACCESS_KEY: process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY,
+    CLOUDFLARE_R2_BUCKET: process.env.CLOUDFLARE_R2_BUCKET,
+    CLOUDFLARE_R2_ENDPOINT: process.env.CLOUDFLARE_R2_ENDPOINT,
+    CLOUDFLARE_ACCOUNT_ID: process.env.CLOUDFLARE_ACCOUNT_ID,
+
+    // CDN Configuration
+    CDN_ENABLED: process.env.CDN_ENABLED,
+    CDN_DOMAIN: process.env.CDN_DOMAIN,
+    CDN_SIGNED_URLS: process.env.CDN_SIGNED_URLS,
+    CDN_SIGNED_URL_EXPIRY: process.env.CDN_SIGNED_URL_EXPIRY,
+    CDN_SIGNED_URL_SECRET: process.env.CDN_SIGNED_URL_SECRET,
+
+    // Storage Tier Configuration
+    STORAGE_HOT_MAX_SIZE: process.env.STORAGE_HOT_MAX_SIZE,
+    STORAGE_WARM_MAX_SIZE: process.env.STORAGE_WARM_MAX_SIZE,
+    STORAGE_HOT_MAX_AGE: process.env.STORAGE_HOT_MAX_AGE,
+    STORAGE_WARM_MAX_AGE: process.env.STORAGE_WARM_MAX_AGE,
+    STORAGE_HOT_MIN_ACCESS: process.env.STORAGE_HOT_MIN_ACCESS,
+    STORAGE_WARM_MIN_ACCESS: process.env.STORAGE_WARM_MIN_ACCESS,
+    STORAGE_HOT_MAX_IDLE: process.env.STORAGE_HOT_MAX_IDLE,
+    STORAGE_WARM_MAX_IDLE: process.env.STORAGE_WARM_MAX_IDLE,
+    USE_CLOUDFLARE_R2: process.env.USE_CLOUDFLARE_R2,
+
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
     NEXT_PUBLIC_ROOT_DOMAIN: process.env.NEXT_PUBLIC_ROOT_DOMAIN,
     STRIPE_API_KEY: process.env.STRIPE_API_KEY,

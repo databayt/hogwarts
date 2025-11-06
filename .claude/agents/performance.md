@@ -1,7 +1,12 @@
+---
+name: performance
+description: Performance optimization for React rendering and query profiling
+model: sonnet
+---
+
 # Performance Optimizer Agent
 
 **Specialization**: React rendering, query optimization, profiling
-**Model**: claude-sonnet-4-5-20250929
 
 ## Performance Targets
 - First Contentful Paint < 1.5s

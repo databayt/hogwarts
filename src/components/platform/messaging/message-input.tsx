@@ -1,12 +1,16 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useRef, useEffect, useActionState, useState } from "react"
+import { useFormStatus } from "react-dom"
 import { Paperclip, Send, Smile, X } from "lucide-react"
 import type { MessageDTO } from "./types"
+import { sendMessageFromForm, type MessageFormState } from "./actions"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "@/components/ui/use-toast"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { FileUploader, ACCEPT_ALL, type UploadedFileResult } from "@/components/file-upload/enhanced/file-uploader"
 
 export interface MessageInputProps {
   conversationId: string
@@ -15,14 +19,33 @@ export interface MessageInputProps {
   replyTo?: MessageDTO | null
   disabled?: boolean
   maxLength?: number
-  onSend: (content: string, replyToId?: string) => Promise<void>
   onCancelReply?: () => void
-  onFileUpload?: (file: File) => Promise<void>
+  /** Called when files are uploaded successfully with file IDs and URLs */
+  onFileUpload?: (files: UploadedFileResult[]) => void
   onTypingStart?: () => void
   onTypingStop?: () => void
+  onOptimisticSend?: (content: string, replyToId?: string) => void
   className?: string
 }
 
+/**
+ * MessageInput with React 19 useActionState pattern
+ *
+ * **Modern Patterns**:
+ * - useActionState for form state management (no useState for content/loading)
+ * - useFormStatus for loading states
+ * - Uncontrolled inputs with ref
+ * - Form auto-reset on success
+ * - Direct server action integration
+ *
+ * **Retained Features**:
+ * - Emoji picker
+ * - File upload
+ * - Typing indicators
+ * - Reply context
+ * - Auto-resize textarea
+ * - Character count
+ */
 export function MessageInput({
   conversationId,
   locale = "en",
@@ -30,111 +53,124 @@ export function MessageInput({
   replyTo,
   disabled = false,
   maxLength = 4000,
-  onSend,
   onCancelReply,
   onFileUpload,
   onTypingStart,
   onTypingStop,
+  onOptimisticSend,
   className,
 }: MessageInputProps) {
-  const [content, setContent] = useState("")
-  const [isSending, setIsSending] = useState(false)
-  const [isTyping, setIsTyping] = useState(false)
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false)
+  const formRef = useRef<HTMLFormElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const [showFileUpload, setShowFileUpload] = useState(false)
+
+  const [state, formAction] = useActionState<MessageFormState, FormData>(
+    sendMessageFromForm,
+    { success: false }
+  )
+
+  // Wrap formAction to add optimistic message before submission
+  const handleFormAction = async (formData: FormData) => {
+    const content = formData.get("content") as string
+    const replyToId = formData.get("replyToId") as string | null
+
+    // Add optimistic message
+    if (content?.trim()) {
+      onOptimisticSend?.(content.trim(), replyToId || undefined)
+    }
+
+    // Call the actual server action
+    return formAction(formData)
+  }
 
   const defaultPlaceholder = locale === "ar" ? "اكتب رسالة..." : "Type a message..."
 
-  // Auto-resize textarea
+  // Auto-reset form on successful send
   useEffect(() => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = "auto"
-      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`
-    }
-  }, [content])
+    if (state.success && state.messageId) {
+      formRef.current?.reset()
+      onCancelReply?.()
+      textareaRef.current?.focus()
 
-  // Handle typing indicators
-  useEffect(() => {
-    if (content && !isTyping) {
-      setIsTyping(true)
-      onTypingStart?.()
-    }
-
-    if (typingTimeoutRef.current) {
-      clearTimeout(typingTimeoutRef.current)
-    }
-
-    typingTimeoutRef.current = setTimeout(() => {
-      if (isTyping) {
-        setIsTyping(false)
-        onTypingStop?.()
+      // Reset textarea height
+      if (textareaRef.current) {
+        textareaRef.current.style.height = "auto"
       }
-    }, 3000)
 
-    return () => {
+      // Stop typing indicator
       if (typingTimeoutRef.current) {
         clearTimeout(typingTimeoutRef.current)
       }
+      onTypingStop?.()
     }
-  }, [content])
+  }, [state.success, state.messageId, onCancelReply, onTypingStop])
 
-  const handleSend = async () => {
-    const trimmedContent = content.trim()
-    if (!trimmedContent || isSending) return
-
-    setIsSending(true)
-    try {
-      await onSend(trimmedContent, replyTo?.id)
-      setContent("")
-      onCancelReply?.()
-      textareaRef.current?.focus()
-    } catch (error) {
+  // Show error toast
+  useEffect(() => {
+    if (!state.success && state.error) {
       toast({
         title: locale === "ar" ? "خطأ" : "Error",
-        description: locale === "ar" ? "فشل إرسال الرسالة" : "Failed to send message",
+        description: state.error,
       })
-    } finally {
-      setIsSending(false)
-      if (isTyping) {
-        setIsTyping(false)
-        onTypingStop?.()
+    }
+  }, [state.success, state.error, locale])
+
+  const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    // Auto-resize
+    e.target.style.height = "auto"
+    e.target.style.height = `${e.target.scrollHeight}px`
+
+    // Typing indicators
+    const hasContent = e.target.value.trim().length > 0
+
+    if (hasContent) {
+      onTypingStart?.()
+
+      // Clear existing timeout
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current)
       }
+
+      // Set new timeout (3 seconds of inactivity)
+      typingTimeoutRef.current = setTimeout(() => {
+        onTypingStop?.()
+      }, 3000)
+    } else {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current)
+      }
+      onTypingStop?.()
     }
   }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault()
-      handleSend()
+
+      // Get form data and validate
+      const content = textareaRef.current?.value.trim()
+      if (!content) return
+
+      // Submit form (optimistic message will be added by handleFormAction)
+      formRef.current?.requestSubmit()
     }
   }
 
-  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
+  const handleUploadComplete = (files: UploadedFileResult[]) => {
+    onFileUpload?.(files)
+    setShowFileUpload(false)
+    toast({
+      title: locale === "ar" ? "نجح" : "Success",
+      description: locale === "ar" ? `تم رفع ${files.length} ملف` : `Uploaded ${files.length} file(s)`,
+    })
+  }
 
-    // Validate file size (50MB max)
-    if (file.size > 50 * 1024 * 1024) {
-      toast({
-        title: locale === "ar" ? "خطأ" : "Error",
-        description: locale === "ar" ? "حجم الملف كبير جداً (الحد الأقصى 50 ميجابايت)" : "File too large (max 50MB)",
-      })
-      return
-    }
-
-    try {
-      await onFileUpload?.(file)
-      if (fileInputRef.current) {
-        fileInputRef.current.value = ""
-      }
-    } catch (error) {
-      toast({
-        title: locale === "ar" ? "خطأ" : "Error",
-        description: locale === "ar" ? "فشل رفع الملف" : "Failed to upload file",
-      })
-    }
+  const handleUploadError = (error: string) => {
+    toast({
+      title: locale === "ar" ? "خطأ" : "Error",
+      description: error,
+    })
   }
 
   const handleEmojiClick = (emoji: string) => {
@@ -143,10 +179,14 @@ export function MessageInput({
 
     const start = textarea.selectionStart
     const end = textarea.selectionEnd
-    const newContent = content.substring(0, start) + emoji + content.substring(end)
+    const currentValue = textarea.value || ""
+    const newValue = currentValue.substring(0, start) + emoji + currentValue.substring(end)
 
-    setContent(newContent)
-    setShowEmojiPicker(false)
+    textarea.value = newValue
+
+    // Trigger change event for auto-resize and typing indicators
+    const event = new Event("change", { bubbles: true })
+    textarea.dispatchEvent(event)
 
     // Reset cursor position
     setTimeout(() => {
@@ -165,7 +205,15 @@ export function MessageInput({
   ]
 
   return (
-    <div className={cn("border-t border-border bg-background", className)}>
+    <form
+      ref={formRef}
+      action={handleFormAction}
+      className={cn("border-t border-border bg-background", className)}
+    >
+      {/* Hidden inputs */}
+      <input type="hidden" name="conversationId" value={conversationId} />
+      {replyTo && <input type="hidden" name="replyToId" value={replyTo.id} />}
+
       {/* Reply context */}
       {replyTo && (
         <div className="flex items-center justify-between px-4 py-2 bg-muted/50 border-b border-border">
@@ -182,6 +230,7 @@ export function MessageInput({
             </p>
           </div>
           <Button
+            type="button"
             variant="ghost"
             size="icon"
             onClick={onCancelReply}
@@ -194,18 +243,12 @@ export function MessageInput({
 
       {/* Input area */}
       <div className="flex items-end gap-2 p-4">
-        {/* File upload */}
-        <input
-          ref={fileInputRef}
-          type="file"
-          className="hidden"
-          onChange={handleFileSelect}
-          disabled={disabled}
-        />
+        {/* File upload button */}
         <Button
+          type="button"
           variant="ghost"
           size="icon"
-          onClick={() => fileInputRef.current?.click()}
+          onClick={() => setShowFileUpload(true)}
           disabled={disabled}
           className="flex-shrink-0"
         >
@@ -216,11 +259,11 @@ export function MessageInput({
         <div className="flex-1 relative">
           <Textarea
             ref={textareaRef}
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
+            name="content"
+            onChange={handleTextareaChange}
             onKeyDown={handleKeyDown}
             placeholder={placeholder || defaultPlaceholder}
-            disabled={disabled || isSending}
+            disabled={disabled}
             maxLength={maxLength}
             rows={1}
             className={cn(
@@ -228,66 +271,120 @@ export function MessageInput({
               locale === "ar" && "text-right"
             )}
           />
-          {/* Character count */}
-          {content.length > maxLength * 0.8 && (
-            <div
-              className={cn(
-                "absolute bottom-2 text-xs text-muted-foreground",
-                locale === "ar" ? "left-2" : "right-2"
-              )}
-            >
-              {content.length}/{maxLength}
-            </div>
-          )}
         </div>
 
-        {/* Emoji picker toggle */}
-        <div className="relative flex-shrink-0">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-            disabled={disabled}
-          >
-            <Smile className="h-5 w-5" />
-          </Button>
-
-          {/* Emoji picker */}
-          {showEmojiPicker && (
-            <>
-              {/* Backdrop */}
-              <div
-                className="fixed inset-0 z-10"
-                onClick={() => setShowEmojiPicker(false)}
-              />
-              {/* Picker */}
-              <div className="absolute bottom-full right-0 mb-2 p-2 bg-background border border-border rounded-lg shadow-lg z-20 w-64">
-                <div className="grid grid-cols-8 gap-1 max-h-48 overflow-y-auto">
-                  {commonEmojis.map((emoji) => (
-                    <button
-                      key={emoji}
-                      onClick={() => handleEmojiClick(emoji)}
-                      className="p-2 hover:bg-muted rounded transition-colors text-xl"
-                    >
-                      {emoji}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </>
-          )}
-        </div>
+        {/* Emoji picker */}
+        <EmojiPickerButton
+          emojis={commonEmojis}
+          onEmojiClick={handleEmojiClick}
+          disabled={disabled}
+        />
 
         {/* Send button */}
-        <Button
-          onClick={handleSend}
-          disabled={!content.trim() || disabled || isSending}
-          size="icon"
-          className="flex-shrink-0"
-        >
-          <Send className="h-5 w-5" />
-        </Button>
+        <SubmitButton locale={locale} disabled={disabled} />
       </div>
+
+      {/* File upload dialog */}
+      <Dialog open={showFileUpload} onOpenChange={setShowFileUpload}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>
+              {locale === "ar" ? "رفع الملفات" : "Upload Files"}
+            </DialogTitle>
+          </DialogHeader>
+          <FileUploader
+            category="OTHER"
+            folder={`messages/${conversationId}`}
+            accept={ACCEPT_ALL}
+            maxFiles={5}
+            multiple={true}
+            maxSize={50 * 1024 * 1024} // 50MB max
+            optimizeImages={true}
+            onUploadComplete={handleUploadComplete}
+            onUploadError={handleUploadError}
+          />
+        </DialogContent>
+      </Dialog>
+    </form>
+  )
+}
+
+/**
+ * Submit button with useFormStatus for loading state
+ */
+function SubmitButton({ locale, disabled }: { locale?: "ar" | "en"; disabled?: boolean }) {
+  const { pending } = useFormStatus()
+
+  return (
+    <Button
+      type="submit"
+      disabled={disabled || pending}
+      size="icon"
+      className="flex-shrink-0"
+    >
+      {pending ? (
+        <div className="h-5 w-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+      ) : (
+        <Send className="h-5 w-5" />
+      )}
+    </Button>
+  )
+}
+
+/**
+ * Emoji picker button with dropdown
+ */
+function EmojiPickerButton({
+  emojis,
+  onEmojiClick,
+  disabled,
+}: {
+  emojis: string[]
+  onEmojiClick: (emoji: string) => void
+  disabled?: boolean
+}) {
+  const [showPicker, setShowPicker] = useState(false)
+
+  return (
+    <div className="relative flex-shrink-0">
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        onClick={() => setShowPicker(!showPicker)}
+        disabled={disabled}
+      >
+        <Smile className="h-5 w-5" />
+      </Button>
+
+      {/* Emoji picker */}
+      {showPicker && (
+        <>
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 z-10"
+            onClick={() => setShowPicker(false)}
+          />
+          {/* Picker */}
+          <div className="absolute bottom-full right-0 mb-2 p-2 bg-background border border-border rounded-lg shadow-lg z-20 w-64">
+            <div className="grid grid-cols-8 gap-1 max-h-48 overflow-y-auto">
+              {emojis.map((emoji) => (
+                <button
+                  key={emoji}
+                  type="button"
+                  onClick={() => {
+                    onEmojiClick(emoji)
+                    setShowPicker(false)
+                  }}
+                  className="p-2 hover:bg-muted rounded transition-colors text-xl"
+                >
+                  {emoji}
+                </button>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
     </div>
   )
 }

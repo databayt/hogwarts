@@ -22,9 +22,9 @@ interface Props {
 }
 
 export async function ExamAnalyticsDashboard({ examId }: Props) {
-  const { analytics } = await getExamAnalytics({ examId });
+  const response = await getExamAnalytics({ examId });
 
-  if (!analytics) {
+  if (!response.success || !response.data) {
     return (
       <Card>
         <CardContent className="py-12">
@@ -34,6 +34,7 @@ export async function ExamAnalyticsDashboard({ examId }: Props) {
     );
   }
 
+  const analytics = response.data;
   const {
     examTitle,
     totalMarks,
@@ -179,13 +180,14 @@ export async function ExamAnalyticsDashboard({ examId }: Props) {
               {Object.entries(gradeDistribution)
                 .sort(([a], [b]) => b.localeCompare(a))
                 .map(([grade, count]) => {
-                  const percentage = presentStudents > 0 ? (count / presentStudents) * 100 : 0;
+                  const countNum = typeof count === 'number' ? count : 0;
+                  const percentage = presentStudents > 0 ? (countNum / presentStudents) * 100 : 0;
                   return (
                     <div key={grade} className="space-y-2">
                       <div className="flex items-center justify-between">
                         <span className="text-sm font-medium">Grade {grade}</span>
                         <span className="text-sm text-muted-foreground">
-                          {count} students ({percentage.toFixed(1)}%)
+                          {countNum} students ({percentage.toFixed(1)}%)
                         </span>
                       </div>
                       <Progress value={percentage} />
