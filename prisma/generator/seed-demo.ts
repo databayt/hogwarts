@@ -111,11 +111,11 @@ async function ensureDemoUsers(schoolId: string) {
 
   // Fixed demo credentials
   const demoAccounts = [
-    { email: "admin@demo.databayt.org", role: UserRole.ADMIN },
-    { email: "accountant@demo.databayt.org", role: UserRole.ACCOUNTANT },
-    { email: "teacher@demo.databayt.org", role: UserRole.TEACHER },
-    { email: "student@demo.databayt.org", role: UserRole.STUDENT },
-    { email: "parent@demo.databayt.org", role: UserRole.GUARDIAN },
+    { email: "admin@databayt.org", role: UserRole.ADMIN },
+    { email: "accountant@databayt.org", role: UserRole.ACCOUNTANT },
+    { email: "teacher@databayt.org", role: UserRole.TEACHER },
+    { email: "student@databayt.org", role: UserRole.STUDENT },
+    { email: "parent@databayt.org", role: UserRole.GUARDIAN },
   ];
 
   for (const account of demoAccounts) {
@@ -2006,12 +2006,16 @@ async function main() {
   console.log(`   - Legal Documents: ${legalDocsCount}`);
   console.log("");
   console.log("🔐 Demo Credentials (password: 1234):");
-  console.log("   - admin@demo.school");
-  console.log("   - teacher: aisha.hassan@demo.school (+ 24 more)");
-  console.log("   - student: ahmed.mohammed.001@demo.school (+ 149 more)");
-  console.log("   - parent: abdullah.mohammed@demo.school (+ 299 more)");
+  console.log("   - admin@databayt.org");
+  console.log("   - accountant@databayt.org");
+  console.log("   - teacher@databayt.org");
+  console.log("   - student@databayt.org");
+  console.log("   - parent@databayt.org");
+  console.log("   + 25 teachers (e.g., aisha.hassan@demo.databayt.org)");
+  console.log("   + 150 students (e.g., ahmed.mohammed.001@demo.databayt.org)");
+  console.log("   + 300 parents/guardians");
   console.log("");
-  console.log("🚀 Access demo at: https://demo.ed.databayt.org");
+  console.log("🚀 Access demo at: https://demo.databayt.org");
 }
 
 main()
