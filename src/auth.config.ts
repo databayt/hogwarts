@@ -64,22 +64,43 @@ export default {
     }),
     Credentials({
       async authorize(credentials) {
+        console.log('[CREDENTIALS-AUTH] 🔐 Starting credentials authorization');
         const validatedFields = LoginSchema.safeParse(credentials);
 
         if (validatedFields.success) {
           const { email, password } = validatedFields.data;
-          
+          console.log('[CREDENTIALS-AUTH] ✅ Validation successful, email:', email);
+
           const user = await getUserByEmail(email);
-          if (!user || !user.password) return null;
+          console.log('[CREDENTIALS-AUTH] 👤 User lookup result:', {
+            found: !!user,
+            hasPassword: !!user?.password,
+            userId: user?.id,
+            userSchoolId: user?.schoolId,
+            userRole: user?.role
+          });
+
+          if (!user || !user.password) {
+            console.log('[CREDENTIALS-AUTH] ❌ User not found or no password');
+            return null;
+          }
 
           const passwordsMatch = await bcrypt.compare(
             password,
             user.password,
           );
 
-          if (passwordsMatch) return user;
+          console.log('[CREDENTIALS-AUTH] 🔑 Password match:', passwordsMatch);
+
+          if (passwordsMatch) {
+            console.log('[CREDENTIALS-AUTH] ✅ Authorization successful, returning user');
+            return user;
+          }
+        } else {
+          console.log('[CREDENTIALS-AUTH] ❌ Validation failed');
         }
 
+        console.log('[CREDENTIALS-AUTH] ❌ Authorization failed');
         return null;
       }
     })
