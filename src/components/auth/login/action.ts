@@ -93,11 +93,64 @@ export const login = async (
     }
   }
 
+  // Smart subdomain redirect: Redirect users to their school's subdomain
+  let finalRedirectUrl = callbackUrl || DEFAULT_LOGIN_REDIRECT;
+
+  if (existingUser.schoolId && existingUser.role !== 'DEVELOPER') {
+    console.log('[LOGIN-ACTION] 🎯 Implementing smart subdomain redirect for user:', {
+      userId: existingUser.id,
+      email: existingUser.email,
+      schoolId: existingUser.schoolId,
+      role: existingUser.role
+    });
+
+    try {
+      const school = await db.school.findUnique({
+        where: { id: existingUser.schoolId },
+        select: { domain: true }
+      });
+
+      console.log('[LOGIN-ACTION] 🏫 School lookup result:', {
+        schoolId: existingUser.schoolId,
+        domain: school?.domain
+      });
+
+      if (school?.domain) {
+        const isDev = process.env.NODE_ENV === 'development';
+        const subdomain = school.domain;
+
+        // Extract locale from callbackUrl or default to 'ar'
+        const locale = callbackUrl?.match(/^\/(ar|en)\//) ? callbackUrl.match(/^\/(ar|en)\//)?.[1] : 'ar';
+        const path = `/${locale}/dashboard`;
+
+        finalRedirectUrl = isDev
+          ? `http://${subdomain}.localhost:3000${path}`
+          : `https://${subdomain}.databayt.org${path}`;
+
+        console.log('[LOGIN-ACTION] ✅ Smart redirect URL constructed:', {
+          subdomain,
+          locale,
+          path,
+          finalUrl: finalRedirectUrl
+        });
+      }
+    } catch (error) {
+      console.error('[LOGIN-ACTION] ❌ Error looking up school for redirect:', error);
+      // Fall back to default redirect if school lookup fails
+    }
+  } else {
+    console.log('[LOGIN-ACTION] 👑 Platform admin or no schoolId - using default redirect:', {
+      role: existingUser.role,
+      schoolId: existingUser.schoolId,
+      redirectUrl: finalRedirectUrl
+    });
+  }
+
   try {
     await signIn("credentials", {
       email,
       password,
-      redirectTo: callbackUrl || DEFAULT_LOGIN_REDIRECT,
+      redirectTo: finalRedirectUrl,
     })
   } catch (error) {
     if (error instanceof AuthError) {
