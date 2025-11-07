@@ -57,8 +57,8 @@ export function QuickActions({ actions, locale = "en", className }: QuickActions
           const Icon = iconMap[action.iconName] || LucideIcons.FileText;
 
           const content = (
-            <Card className="h-full">
-              <CardContent className="flex flex-col items-center justify-center gap-2 p-4">
+            <Card className="aspect-square">
+              <CardContent className="flex flex-col items-center justify-center gap-2 p-4 h-full">
                 <Icon className="h-6 w-6" aria-hidden={true} />
                 <span className="text-sm font-medium text-center">{action.label}</span>
               </CardContent>
