@@ -520,7 +520,10 @@
       "roleAccountant": "Accountant"
     },
     "parents": {
-      "title": "Parents/Guardians",
+      "title": "Parents",
+      "overview": "Overview",
+      "manage": "Manage",
+      "analysis": "Analysis",
       "allParents": "All Parents",
       "addParent": "Add Parent",
       "editParent": "Edit Parent",

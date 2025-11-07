@@ -521,6 +521,9 @@
     },
     "parents": {
       "title": "أولياء الأمور",
+      "overview": "نظرة عامة",
+      "manage": "إدارة",
+      "analysis": "تحليل",
       "allParents": "جميع أولياء الأمور",
       "addParent": "إضافة ولي أمر",
       "editParent": "تعديل ولي أمر",
