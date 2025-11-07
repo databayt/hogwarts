@@ -1,490 +1,347 @@
 export const metadata = {
-  title: 'MVP Implementation Checklist - Hogwarts',
-  description: 'Developer onboarding guide for Hogwarts School Automation Platform - Core MVP assessment checklist',
+  title: 'MVP - Hogwarts',
+  description: 'MVP implementation checklist for Hogwarts School Automation Platform',
 }
 
-# MVP Implementation Checklist
+# MVP
 
-<p className="lead">
-  Multi-tenant school management system. 6 core epics, 98 stories. Production-ready with testing gaps.
-</p>
+## Epics
 
----
+- Epic 1: Foundation & Infrastructure [15 stories]
+- Epic 2: Authentication & Authorization [18 stories]
+- Epic 3: School Configuration [12 stories]
+- Epic 4: Student Management [20 stories]
+- Epic 5: Teacher & Staff Management [15 stories]
+- Epic 6: Class & Subject Management [18 stories]
 
-## Quick Start
-
-### Tech Stack
-
-- **Next.js 15.4.4** - App Router + Turbopack
-- **React 19.1.0** - Server Components
-- **TypeScript 5.x** - Strict mode
-- **Prisma 6.14.0** - PostgreSQL (Neon)
-- **NextAuth v5** - JWT, OAuth (Google/Facebook), 2FA
-- **Tailwind CSS 4** - RTL/LTR support
-- **shadcn/ui** - Radix UI primitives
-
-### Run Locally
-
-```bash
-pnpm install              # Install dependencies
-pnpm prisma generate      # Generate Prisma client
-pnpm db:seed             # Seed database
-pnpm dev                 # Start dev server (localhost:3000)
-```
-
-### Critical Rules
-
-1. **ALWAYS include `schoolId` in queries** - Multi-tenant isolation
-2. **Use Server Actions pattern** - See examples below
-3. **Follow Mirror Pattern** - Routes mirror components
-4. **Validate twice** - Client (UX) + Server (security)
+**Total: 98 stories**
 
 ---
 
-## Core MVP Scope (6 Epics)
+## Epic 1: Foundation & Infrastructure
 
-**Total: 98 core stories across 6 essential epics**
-
-### Epic Progress Assessment
-
-Use these checklists to assess current implementation status during your first week.
-
-#### Epic 1: Foundation & Infrastructure [_/15]
 **Goal:** Multi-tenant architecture, subdomain routing, core setup
 
 - [ ] Multi-tenant database schema with `schoolId` scoping
-- [ ] Subdomain routing working (`school.databayt.org`)
-- [ ] Next.js 15 + React 19 + Prisma 6 configured
-- [ ] CI/CD pipeline with automated tests
-- [ ] Error monitoring (Sentry) operational
-- [ ] Internationalization (Arabic/English) functional
-- [ ] Development/staging/production environments
+  - **Acceptance Criteria:** All business models include required `schoolId` field with `@@index([schoolId])`, unique constraints scoped by `schoolId`
 
-**Key Files:**
-- `src/middleware.ts` - Subdomain rewriting
-- `src/lib/tenant-context.ts` - Get `schoolId` from context
-- `prisma/schema.prisma` - Multi-tenant models
-- `.github/workflows/` - CI/CD configuration
+- [ ] Subdomain routing working (`school.databayt.org`)
+  - **Acceptance Criteria:** Middleware rewrites `school.databayt.org` to `/[lang]/s/school/...`, works in production/preview/development
+
+- [ ] Next.js 15 + React 19 + Prisma 6 configured
+  - **Acceptance Criteria:** `package.json` shows correct versions, app builds and runs without errors, Turbopack enabled
+
+- [ ] CI/CD pipeline with automated tests
+  - **Acceptance Criteria:** GitHub Actions runs tests on PR, auto-deploys to Vercel on merge to main, pipeline completes in <5 minutes
+
+- [ ] Error monitoring (Sentry) operational
+  - **Acceptance Criteria:** Sentry captures errors with source maps, error boundaries catch UI errors, alerts configured
+
+- [ ] Internationalization (Arabic/English) functional
+  - **Acceptance Criteria:** Language switcher changes locale, 800+ translation keys work, RTL/LTR layouts render correctly
+
+- [ ] Development/staging/production environments
+  - **Acceptance Criteria:** Three environments configured in Vercel, environment variables set per environment, database per environment
+
+- [ ] Database singleton pattern implemented
+  - **Acceptance Criteria:** Prisma client uses global caching, dev hot-reload safe, no multiple client instances
+
+- [ ] Testing infrastructure (Vitest, Playwright)
+  - **Acceptance Criteria:** `pnpm test` runs Vitest, `pnpm test:e2e` runs Playwright, both configured with proper paths
+
+- [ ] Multi-tenant test suite with isolation verification
+  - **Acceptance Criteria:** Tests verify no cross-tenant data leaks, test fixtures for 2+ schools, automated tests pass
+
+- [ ] Middleware for subdomain rewriting
+  - **Acceptance Criteria:** `src/middleware.ts` extracts subdomain and rewrites to tenant-scoped routes, handles edge cases
+
+- [ ] Tenant context helper functional
+  - **Acceptance Criteria:** `getTenantContext()` returns `{ schoolId, subdomain }`, works in Server Components and Server Actions
+
+- [ ] Environment configuration type-safe
+  - **Acceptance Criteria:** Using `@t3-oss/env-nextjs`, all env vars typed, build fails if required vars missing
+
+- [ ] Tailwind CSS 4 with RTL/LTR support
+  - **Acceptance Criteria:** shadcn/ui configured, RTL utilities work for Arabic, custom color palette applied
+
+- [ ] Layout structure with font configuration
+  - **Acceptance Criteria:** Root layout loads fonts (Tajawal/Inter), locale-aware layout works, platform layout has sidebar
 
 ---
 
-#### Epic 2: Authentication & Authorization [_/18]
+## Epic 2: Authentication & Authorization
+
 **Goal:** User management, 8-role RBAC, secure authentication
 
 - [ ] NextAuth v5 configured with JWT strategy
-- [ ] Email/password auth with bcrypt hashing
-- [ ] OAuth providers (Google, Facebook) working
-- [ ] Two-factor authentication (2FA) functional
-- [ ] 8 roles implemented (DEVELOPER, ADMIN, TEACHER, STUDENT, GUARDIAN, ACCOUNTANT, STAFF, USER)
-- [ ] Role-based access control enforced on routes
-- [ ] Password reset flow complete
-- [ ] Session management with auto-renewal
-- [ ] User profile management
+  - **Acceptance Criteria:** `src/auth.ts` configured, JWT tokens generated, 24-hour session expiry, callbacks extend session
 
-**Key Files:**
-- `src/auth.ts` - NextAuth configuration
-- `src/auth.config.ts` - Auth callbacks
-- `src/middleware.ts` - Route protection
-- `prisma/models/auth.prisma` - User, Account, Session models
+- [ ] Email/password auth with bcrypt hashing
+  - **Acceptance Criteria:** Users can register/login with email/password, passwords hashed with bcrypt (cost 12), credentials provider configured
+
+- [ ] OAuth providers (Google, Facebook) working
+  - **Acceptance Criteria:** Google OAuth flow completes, Facebook OAuth flow completes, accounts linked to users
+
+- [ ] Two-factor authentication (2FA) functional
+  - **Acceptance Criteria:** Users can enable 2FA, TOTP codes verified, backup codes generated, login requires 2FA when enabled
+
+- [ ] DEVELOPER role implemented
+  - **Acceptance Criteria:** Platform admin role with no `schoolId`, can access all schools, special permissions granted
+
+- [ ] ADMIN role implemented
+  - **Acceptance Criteria:** School admin with full school access, can manage users, configure settings, access all modules
+
+- [ ] TEACHER role implemented
+  - **Acceptance Criteria:** Can manage assigned classes, mark attendance, grade assignments, view own schedule
+
+- [ ] STUDENT role implemented
+  - **Acceptance Criteria:** Can view own grades/attendance/assignments, submit work, view own profile only
+
+- [ ] GUARDIAN role implemented
+  - **Acceptance Criteria:** Can view linked students' data, communicate with teachers, pay fees, receive notifications
+
+- [ ] ACCOUNTANT role implemented
+  - **Acceptance Criteria:** Can manage finances, generate reports, no access to academic data, view fee records
+
+- [ ] STAFF role implemented
+  - **Acceptance Criteria:** Limited operational access, module-specific permissions, no student data access
+
+- [ ] USER role (default) implemented
+  - **Acceptance Criteria:** Minimal access until admin assigns proper role, can view profile, pending role assignment
+
+- [ ] Role-based access control enforced on routes
+  - **Acceptance Criteria:** Middleware blocks unauthorized routes, role-based menu renders correctly, API checks permissions
+
+- [ ] Password reset flow complete
+  - **Acceptance Criteria:** Reset email sent with token, token expires after 1 hour, new password saved and hashed
+
+- [ ] Session management with auto-renewal
+  - **Acceptance Criteria:** Sessions renew before expiry, logout clears session, session includes `schoolId` and role
+
+- [ ] User profile management
+  - **Acceptance Criteria:** Users can update name/email/photo, changes persist, profile page displays data
+
+- [ ] User invitation system
+  - **Acceptance Criteria:** Admins can invite users via email, invitation links expire, users complete registration
+
+- [ ] Audit logging for sensitive operations
+  - **Acceptance Criteria:** All mutations logged with user/timestamp/schoolId, 7-year retention, immutable logs
 
 ---
 
-#### Epic 3: School Configuration [_/12]
+## Epic 3: School Configuration
+
 **Goal:** School setup, academic structure, year levels
 
 - [ ] School profile creation and management
-- [ ] Academic year setup with terms/periods
-- [ ] Year level/grade configuration
-- [ ] Department management
-- [ ] School branding (logo, colors)
-- [ ] Timezone configuration
-- [ ] School settings page functional
+  - **Acceptance Criteria:** School form saves name/address/contact, data persists in database, `schoolId` generated
 
-**Key Files:**
-- `src/components/platform/settings/` - School configuration
-- `prisma/models/school.prisma` - School model
+- [ ] School information display
+  - **Acceptance Criteria:** School info renders on settings page, shows all fields, editable by admin
+
+- [ ] Academic year setup with start/end dates
+  - **Acceptance Criteria:** Admin can create academic year, start/end dates validated, current year marked active
+
+- [ ] Term/period configuration
+  - **Acceptance Criteria:** Admin can define terms (semester/trimester/quarter), dates non-overlapping, linked to academic year
+
+- [ ] Year level/grade configuration
+  - **Acceptance Criteria:** Admin can add grades (1-12), custom grade names supported, order configurable
+
+- [ ] Department management
+  - **Acceptance Criteria:** CRUD operations for departments, teachers assigned to departments, departments listed
+
+- [ ] School branding (logo upload)
+  - **Acceptance Criteria:** Admin can upload logo (PNG/JPG), logo saved to storage, logo displays in header
+
+- [ ] Color picker for school colors
+  - **Acceptance Criteria:** Admin can select primary/secondary colors, colors applied to theme, preview works
+
+- [ ] Timezone configuration
+  - **Acceptance Criteria:** Admin can select timezone, dates/times formatted per timezone, saved in school settings
+
+- [ ] School settings page functional
+  - **Acceptance Criteria:** Settings page accessible to admin, all configuration options available, changes persist
+
+- [ ] School setup wizard for onboarding
+  - **Acceptance Criteria:** Multi-step wizard guides new schools, collects essential data, redirects to dashboard on completion
+
+- [ ] Logo preview and management
+  - **Acceptance Criteria:** Uploaded logo shows preview, admin can replace logo, logo displays throughout app
 
 ---
 
-#### Epic 4: Student Management [_/20]
+## Epic 4: Student Management
+
 **Goal:** Student lifecycle from enrollment to graduation
 
 - [ ] Student enrollment form working
-- [ ] Comprehensive profiles (personal, academic, health)
-- [ ] Search and filtering functional
-- [ ] Guardian relationships
-- [ ] Document upload (certificates, records)
-- [ ] Health records tracking
-- [ ] Achievement tracking
-- [ ] Photo management
-- [ ] Batch operations (import/export CSV)
-- [ ] Status transitions (enrolled, transferred, graduated)
+  - **Acceptance Criteria:** Form validates required fields, saves to database with `schoolId`, redirects to student profile
 
-**Key Files:**
-- `src/components/platform/students/` - Student components
-- `src/app/[lang]/s/[subdomain]/(platform)/students/` - Student routes
-- `prisma/models/students.prisma` - Student model
+- [ ] Student profile page structure (7 tabs)
+  - **Acceptance Criteria:** Profile has Personal/Academic/Health/Documents/Achievements/Disciplinary/Fees tabs, navigation works
+
+- [ ] Personal information tab complete
+  - **Acceptance Criteria:** Displays name/DOB/gender/contact, editable, shows photo, guardian links visible
+
+- [ ] Academic information tab complete
+  - **Acceptance Criteria:** Shows current grade/classes/subjects, enrollment history, academic status
+
+- [ ] Health records tab complete
+  - **Acceptance Criteria:** Medical conditions listed, allergies tracked, medications recorded, emergency protocols
+
+- [ ] Documents tab with upload capability
+  - **Acceptance Criteria:** Upload birth certificate/IDs/records, files stored, download/preview works
+
+- [ ] Achievements tab with tracking
+  - **Acceptance Criteria:** Awards/honors listed, date/description recorded, viewable by student/guardian
+
+- [ ] Disciplinary records tab
+  - **Acceptance Criteria:** Incidents logged, severity categorized, actions taken recorded, admin only access
+
+- [ ] Fees tab with payment history
+  - **Acceptance Criteria:** Outstanding fees shown, payment history listed, receipts downloadable
+
+- [ ] Student search functionality
+  - **Acceptance Criteria:** Search by name/ID/email, results filtered by `schoolId`, real-time search works
+
+- [ ] Advanced filtering system
+  - **Acceptance Criteria:** Filter by grade/status/class, multiple filters combine, URL-synced state
+
+- [ ] Guardian relationships and linking
+  - **Acceptance Criteria:** Multiple guardians per student, relationship type specified, contact info visible
+
+- [ ] Document upload and management
+  - **Acceptance Criteria:** Drag-and-drop upload, file type validation, delete/replace documents
+
+- [ ] Photo upload and display
+  - **Acceptance Criteria:** Student photo upload works, image cropped/resized, displays in profile/lists
+
+- [ ] Batch operations (bulk actions)
+  - **Acceptance Criteria:** Select multiple students, bulk status update, bulk class enrollment, progress shown
+
+- [ ] Student export (individual)
+  - **Acceptance Criteria:** Export single student to PDF, includes all tabs, formatted report
+
+- [ ] Student export (bulk CSV)
+  - **Acceptance Criteria:** Export filtered students to CSV, all fields included, scoped by `schoolId`
+
+- [ ] Status transitions (enrolled/transferred/graduated)
+  - **Acceptance Criteria:** Status changes logged, workflow enforced, historical data retained
+
+- [ ] Previous education records
+  - **Acceptance Criteria:** Prior schools recorded, transcripts attached, dates validated
+
+- [ ] Emergency contact management
+  - **Acceptance Criteria:** Multiple emergency contacts, priority order, quick access for admin
 
 ---
 
-#### Epic 5: Teacher & Staff Management [_/15]
+## Epic 5: Teacher & Staff Management
+
 **Goal:** Teacher profiles, qualifications, workload tracking
 
-- [ ] Teacher profile creation
-- [ ] Qualifications management
-- [ ] Department assignments
-- [ ] Subject expertise tracking
-- [ ] Workload calculator
-- [ ] Class assignments
-- [ ] Teacher dashboard
-- [ ] Non-teaching staff management
+- [ ] Teacher profile creation form
+  - **Acceptance Criteria:** Form captures name/email/qualifications, role set to TEACHER, `schoolId` included
 
-**Key Files:**
-- `src/components/platform/teachers/` - Teacher components
-- `src/components/platform/staff/` - Staff components
-- `prisma/models/staff.prisma` - Teacher/Staff models
+- [ ] Teacher profile display page
+  - **Acceptance Criteria:** Shows personal info/qualifications/assignments, editable by admin, viewable by teacher
+
+- [ ] Qualifications management
+  - **Acceptance Criteria:** Degrees listed with institution/year, certifications tracked, documents attached
+
+- [ ] Certifications tracking
+  - **Acceptance Criteria:** Teaching certificates recorded, expiry dates tracked, renewal reminders
+
+- [ ] Department assignment
+  - **Acceptance Criteria:** Teacher assigned to 1+ departments, department shown in profile, filtered lists work
+
+- [ ] Subject expertise tracking
+  - **Acceptance Criteria:** Teacher linked to subjects they can teach, expertise level specified, used in assignment
+
+- [ ] Workload calculator
+  - **Acceptance Criteria:** Total teaching hours calculated, class count shown, alerts for overload
+
+- [ ] Class assignments
+  - **Acceptance Criteria:** Teacher assigned to classes, subject specified, schedule conflicts detected
+
+- [ ] Teacher dashboard
+  - **Acceptance Criteria:** Dashboard shows assigned classes/schedule/upcoming tasks, quick actions available
+
+- [ ] Leave request system
+  - **Acceptance Criteria:** Teachers submit leave requests, admin approves/rejects, status tracked
+
+- [ ] Substitution management
+  - **Acceptance Criteria:** Substitute teachers assigned for absences, notifications sent, schedule updated
+
+- [ ] Contract management
+  - **Acceptance Criteria:** Contract start/end dates recorded, renewal tracked, document attached
+
+- [ ] Professional development tracking
+  - **Acceptance Criteria:** Training/workshops logged, certificates attached, hours tracked
+
+- [ ] Teacher timetable view
+  - **Acceptance Criteria:** Weekly schedule displayed, classes shown with times/rooms, print/export works
+
+- [ ] Non-teaching staff management
+  - **Acceptance Criteria:** Staff profiles created, STAFF role assigned, module access configured
 
 ---
 
-#### Epic 6: Class & Subject Management [_/18]
+## Epic 6: Class & Subject Management
+
 **Goal:** Academic organization, timetable, class scheduling
 
-- [ ] Subject catalog with curriculum
-- [ ] Class creation with capacity management
+- [ ] Subject catalog creation
+  - **Acceptance Criteria:** Subjects created with code/name/description, scoped by `schoolId`, listed in catalog
+
+- [ ] Subject management (CRUD operations)
+  - **Acceptance Criteria:** Create/read/update/delete subjects, validation works, used in class creation
+
+- [ ] Class creation with details
+  - **Acceptance Criteria:** Class created with subject/grade/section, capacity set, academic year linked
+
+- [ ] Class capacity management
+  - **Acceptance Criteria:** Max students enforced, enrollment blocked when full, waitlist optional
+
 - [ ] Student enrollment in classes
+  - **Acceptance Criteria:** Students added to classes, enrollment date recorded, status tracked
+
+- [ ] Student-class conflict detection
+  - **Acceptance Criteria:** Alerts if student already in another section, schedule conflicts detected
+
+- [ ] Teacher assignment to classes
+  - **Acceptance Criteria:** Teacher assigned as primary instructor, subject match validated, one teacher per class
+
 - [ ] Teacher-subject allocation
-- [ ] Timetable builder (drag-and-drop)
-- [ ] Conflict detection
+  - **Acceptance Criteria:** Teacher expertise matched to subject, workload considered, allocation saved
+
+- [ ] Visual timetable builder
+  - **Acceptance Criteria:** Drag-and-drop interface for scheduling, weekly grid view, changes persist
+
+- [ ] Drag-and-drop scheduling
+  - **Acceptance Criteria:** Drag classes to time slots, conflicts highlighted, auto-save works
+
 - [ ] Period-wise scheduling
+  - **Acceptance Criteria:** Schedule divided into periods, duration configurable, period names customizable
+
+- [ ] Break management in schedule
+  - **Acceptance Criteria:** Breaks inserted between periods, lunch break configured, no classes during breaks
+
+- [ ] Room allocation
+  - **Acceptance Criteria:** Rooms assigned to classes, room capacity checked, double-booking prevented
+
+- [ ] Conflict detection for scheduling
+  - **Acceptance Criteria:** Teacher conflicts detected, room conflicts detected, student conflicts detected
+
 - [ ] Class sections management
-- [ ] Resource sharing
-- [ ] Class analytics
+  - **Acceptance Criteria:** Multiple sections per subject/grade, section names unique, independent enrollment
 
-**Key Files:**
-- `src/components/platform/classes/` - Class components
-- `src/components/platform/subjects/` - Subject components
-- `src/components/platform/timetable/` - Timetable builder
-- `prisma/models/classrooms.prisma` - Class models
+- [ ] Class analytics dashboard
+  - **Acceptance Criteria:** Enrollment trends shown, attendance stats displayed, performance metrics visible
 
----
+- [ ] Resource sharing within class
+  - **Acceptance Criteria:** Teachers share materials with class, students access resources, upload/download works
 
-## Optional Epics (Phase 2)
-
-These epics are implemented but can be considered Phase 2 enhancements:
-
-### Epic 7: Attendance System [_/16]
-Daily attendance, period-wise tracking, QR codes, analytics
-
-### Epic 8: Fee Management [_/18]
-Fee structures, invoicing, payment tracking, receipts
-
----
-
-## Technical Patterns Reference
-
-### Server Actions Pattern
-
-**CRITICAL:** All server actions MUST follow this pattern:
-
-```typescript
-// actions.ts
-"use server"
-
-import { getTenantContext } from "@/lib/tenant-context"
-import { db } from "@/lib/db"
-import { revalidatePath } from "next/cache"
-import { schema } from "./validation"
-
-export async function createEntity(input: FormData) {
-  // 1. Get schoolId (MANDATORY)
-  const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error("Missing school context")
-
-  // 2. Validate input
-  const validated = schema.parse(Object.fromEntries(input))
-
-  // 3. Execute with schoolId scope
-  const result = await db.entity.create({
-    data: { ...validated, schoolId }  // ALWAYS include schoolId
-  })
-
-  // 4. Revalidate cache
-  revalidatePath('/entity')
-
-  return { success: true, id: result.id }
-}
-```
-
-### Multi-Tenant Safety Checklist
-
-Every feature MUST verify:
-
-- [ ] All queries include `where: { schoolId }`
-- [ ] Create/update operations include `schoolId`
-- [ ] Unique constraints scoped by `schoolId`
-- [ ] Session includes `schoolId` from context
-- [ ] No hardcoded school references
-- [ ] Automated test verifies isolation
-
-### Mirror Pattern Structure
-
-```
-src/app/[lang]/s/[subdomain]/(platform)/<feature>/
-  └── page.tsx               # Imports from components
-
-src/components/platform/<feature>/
-  ├── content.tsx            # Server component (main UI)
-  ├── actions.ts             # "use server" functions
-  ├── validation.ts          # Zod schemas
-  ├── types.ts               # TypeScript types
-  ├── form.tsx               # Client component
-  ├── table.tsx              # Client component (data table)
-  └── columns.tsx            # Column definitions
-```
-
-### Data Table Pattern
-
-```typescript
-// table.tsx - Client component
-"use client"
-
-import { useDataTable } from "@/hooks/use-data-table"
-import { columns } from "./columns"
-
-export function EntityTable({ data }) {
-  const table = useDataTable({
-    data,
-    columns,
-    // URL-synced state with nuqs
-  })
-
-  return <DataTable table={table} />
-}
-```
-
----
-
-## Technical Debt Inventory
-
-### 🔴 Critical Priority
-
-**E2E Test Coverage Gap**
-- **Current:** ~0 E2E tests (Playwright configured but unused)
-- **Impact:** No automated user flow validation
-- **Action:** Create E2E test suite covering critical paths
-- **Priority Test Scenarios:**
-  1. Student enrollment flow
-  2. Teacher assignment to class
-  3. Attendance marking
-  4. Fee payment processing
-  5. Multi-tenant isolation verification
-
-**Estimated Effort:** 2-3 weeks for core coverage
-
----
-
-### 🟡 Medium Priority
-
-**61 TODO/FIXME Items Across Codebase**
-
-**By Category:**
-1. **Photo/Document Management** (12 TODOs)
-   - Student photo upload optimization
-   - Document attachment enhancements
-   - File storage quota management
-
-2. **Finance Enhancements** (18 TODOs)
-   - Invoice PDF generation improvements
-   - Bank reconciliation automation
-   - Receipt template customization
-
-3. **Exam System** (15 TODOs)
-   - Conflict detection optimization
-   - Results analytics enhancement
-   - Question bank quality scoring
-
-4. **UI Polish** (10 TODOs)
-   - Icon updates
-   - Messaging UI improvements
-   - Mobile responsiveness tweaks
-
-5. **Read Tracking** (6 TODOs)
-   - Announcement read receipt optimization
-   - Notification delivery status
-
-**Estimated Effort:** 4-6 weeks for all categories
-
----
-
-### 🟢 Low Priority
-
-**Documentation Updates**
-- Some READMEs mention "In Progress" for completed features
-- Update feature completion status
-
-**Finance Module Simplification**
-- 12 finance sub-modules may be over-engineered for basic MVP
-- Consider consolidating for simpler maintenance
-
-**Estimated Effort:** 1-2 weeks
-
----
-
-## API & Integration Points
-
-### Authentication Endpoints
-
-```typescript
-// NextAuth v5 API routes
-POST /api/auth/signin           // Login
-POST /api/auth/signout          // Logout
-GET  /api/auth/session          // Get current session
-POST /api/auth/callback/google  // OAuth callback
-POST /api/auth/callback/facebook
-```
-
-### Server Actions Pattern (Primary API)
-
-**No traditional REST API** - Uses Next.js Server Actions exclusively:
-
-```typescript
-// Import and call directly in client components
-import { createStudent } from "@/components/platform/students/actions"
-
-const result = await createStudent(formData)
-```
-
-### Key Data Models
-
-**Core Entities:** (27 Prisma models in `prisma/models/`)
-- `School` - Tenant root entity
-- `User` - Authentication + RBAC
-- `Student` - Student records
-- `Teacher` - Teacher profiles
-- `Class` - Class organization
-- `Subject` - Subject catalog
-- `Attendance` - Attendance tracking
-- `Grade` - Assessment records
-- `Fee` - Fee management
-
-**All models include:**
-- `schoolId` (required, indexed)
-- `@@unique` constraints scoped by `schoolId`
-- Timestamps (`createdAt`, `updatedAt`)
-
-### File Upload
-
-**Pattern:** Direct upload to storage (implementation varies)
-- Student photos
-- Document attachments
-- Report exports
-
----
-
-## Testing Coverage Gaps
-
-### Current Status
-
-**Unit Tests:** 14 test files
-- `src/components/platform/operator/**/*.test.ts` - Operator features
-- `src/components/platform/timetable/**/*.test.ts` - Timetable logic
-- `src/components/platform/attendance/**/*.test.ts` - Attendance actions
-- `src/components/platform/announcements/**/*.test.ts` - Announcement actions
-
-**Coverage:** ~10% of features have unit tests
-
-**E2E Tests:** 0-1 test files
-- Playwright configured for 5 browsers
-- No comprehensive E2E test suite
-
----
-
-### Priority Test Scenarios Needed
-
-**Critical User Flows (E2E):**
-1. [ ] Student enrollment end-to-end
-2. [ ] Teacher creates class and adds students
-3. [ ] Attendance marking (daily + period-wise)
-4. [ ] Grade assignment submission and grading
-5. [ ] Fee invoice generation and payment
-6. [ ] Multi-tenant isolation (no cross-school data leaks)
-7. [ ] Role-based access control (RBAC verification)
-8. [ ] Parent portal (view student data)
-
-**Integration Tests:**
-1. [ ] Authentication flows (email, OAuth, 2FA)
-2. [ ] School onboarding wizard
-3. [ ] Bulk student import (CSV)
-4. [ ] Report generation (PDF exports)
-5. [ ] Notification delivery
-
-**Unit Test Gaps:**
-- Students component (~5% coverage)
-- Teachers component (~5% coverage)
-- Classes component (~5% coverage)
-- Finance module (0% coverage)
-- Communication module (minimal coverage)
-
----
-
-## First Week Action Items
-
-Your team's first week checklist:
-
-### Day 1-2: Environment Setup
-- [ ] Clone repo and install dependencies
-- [ ] Set up local PostgreSQL database
-- [ ] Configure environment variables
-- [ ] Run migrations and seed data
-- [ ] Verify app runs locally
-
-### Day 3-4: Codebase Audit
-- [ ] Review architecture patterns (above)
-- [ ] Audit Epic 1-6 completion status (fill checkboxes)
-- [ ] Identify top 3 technical debt priorities
-- [ ] Review 61 TODOs and categorize urgency
-- [ ] Map feature directory structure
-
-### Day 5: Testing Strategy
-- [ ] Review existing test coverage (14 test files)
-- [ ] Create E2E testing plan (8 critical scenarios)
-- [ ] Estimate effort for test coverage goals
-- [ ] Set up Playwright test environment
-
----
-
-## Next Steps
-
-<div className="grid gap-6 md:grid-cols-2 my-8">
-  <div className="rounded-lg border bg-card p-6">
-    <h4>Product Requirements</h4>
-    <p className="muted">Read the complete PRD for detailed feature specifications</p>
-    <p><a href="/docs/prd">View PRD →</a></p>
-  </div>
-
-  <div className="rounded-lg border bg-card p-6">
-    <h4>Epic Breakdown</h4>
-    <p className="muted">Explore the detailed user stories for each epic</p>
-    <p><a href="/docs/epics">View Epics →</a></p>
-  </div>
-
-  <div className="rounded-lg border bg-card p-6">
-    <h4>Architecture Guide</h4>
-    <p className="muted">Understand the technical architecture and patterns</p>
-    <p><a href="/docs/architecture">View Architecture →</a></p>
-  </div>
-
-  <div className="rounded-lg border bg-card p-6">
-    <h4>CLAUDE.md</h4>
-    <p className="muted">Essential commands, workflows, and development guidelines</p>
-    <p><a href="https://github.com/databayt/hogwarts/blob/main/CLAUDE.md">View Guide →</a></p>
-  </div>
-</div>
-
----
-
-<div className="rounded-lg border bg-muted p-6 my-8">
-  <p className="muted">
-    <strong>Document Purpose:</strong> This checklist is designed for a team of 4 developers newly assigned to the Hogwarts project. Use it to assess current implementation status, identify technical debt, and plan your first sprint. All checkboxes should be filled during your first week audit.
-  </p>
-</div>
+- [ ] Class roster export
+  - **Acceptance Criteria:** Export class student list to PDF/CSV, includes photos/contact, scoped by class
