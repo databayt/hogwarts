@@ -2,7 +2,7 @@
 
 **The comprehensive reference for Claude Code in the Hogwarts platform**
 
-Last updated: 2025-10-31 | Version: 3.0 | **Premium Models: Opus 4.1 + Sonnet 4.5 | 32 Agents, 22 Commands**
+Last updated: 2025-11-07 | Version: 3.1 | **MVP 100% Complete** | **Opus 4.1 + Sonnet 4.5 | 33 Agents, 22 Commands**
 
 ---
 
@@ -31,9 +31,23 @@ Last updated: 2025-10-31 | Version: 3.0 | **Premium Models: Opus 4.1 + Sonnet 4.
 
 Welcome to the comprehensive guide for Claude Code - Anthropic's agentic coding tool integrated into the Hogwarts school automation platform.
 
+### Current Status
+
+**🎉 MVP 100% Complete** - 6 core epics (98 stories) implemented and production-deployed:
+- ✅ Foundation & Infrastructure (15 stories)
+- ✅ Authentication & Authorization (18 stories)
+- ✅ School Configuration (12 stories)
+- ✅ Student Management (20 stories)
+- ✅ Teacher & Staff Management (15 stories)
+- ✅ Class & Subject Management (18 stories)
+
+**Production:** [ed.databayt.org](https://ed.databayt.org) | **Docs:** [/docs/mvp](/docs/mvp)
+
 ### What is Claude Code?
 
 Claude Code is an AI-powered development assistant that understands your codebase, executes routine tasks, explains complex code, and handles git workflows through natural language commands. It combines the intelligence of Claude with specialized tools designed for software development.
+
+> **BMAD Method Integration:** This implementation follows the [BMAD-METHOD](https://github.com/bmad-code-org/BMAD-METHOD) for scale-adaptive planning, story-centric development, and continuous automation. See [BMAD Guide](/docs/claude-code/bmad-guide) for details.
 
 ### Key Features
 
@@ -60,12 +74,14 @@ Unlike simple code completion, Claude Code can:
 - Create commits and pull requests
 
 #### Hogwarts-Specific Automation
-This project includes **32 specialized agents**, **16 workflow commands**, and **7 reusable skills** tailored for:
+This project includes **33 specialized agents**, **22 workflow commands**, and **7 reusable skills** tailored for:
 - Next.js 15 + React 19 development
 - Prisma database operations
-- Multi-tenant safety enforcement
-- Arabic/English i18n support
-- **Error prevention (204+ types) ⭐ NEW**
+- Multi-tenant safety enforcement (schoolId scoping)
+- Arabic/English i18n support (RTL/LTR)
+- **Error prevention (204+ types with 95% auto-fix)**
+- **BMAD-method story-centric development**
+- **Production-ready MVP deployment**
 
 ### Installation
 
@@ -121,7 +137,7 @@ claude /init
 
 This creates a `.claude/` directory with:
 - `settings.json` - Main configuration
-- `agents/` - 32 specialized agents
+- `agents/` - 33 specialized agents
 - `commands/` - 16 workflow commands
 - `skills/` - 7 reusable capabilities
 
@@ -206,7 +222,7 @@ Claude Code uses a layered configuration approach:
 .claude/
 ├── settings.json              # Main configuration (committed)
 ├── settings.local.json        # Local overrides (gitignored)
-├── agents/                    # 32 specialized agents
+├── agents/                    # 33 specialized agents
 ├── commands/                  # 16 workflow commands
 └── skills/                    # 7 reusable skills
 ```
@@ -499,7 +515,7 @@ Specialized AI assistants with domain expertise for specific technologies, proce
 
 ### Overview
 
-The Hogwarts platform includes **32 specialized agents** organized into 6 categories:
+The Hogwarts platform includes **33 specialized agents** organized into 6 categories:
 
 | Category | Count | Purpose |
 |----------|-------|---------|
@@ -510,7 +526,7 @@ The Hogwarts platform includes **32 specialized agents** organized into 6 catego
 | Developer Productivity & Tooling | 10 | Build, deps, DX, CLI tools |
 | Specialized Tools | 2 | Debugging, React review |
 
-**Total**: 32 agents
+**Total**: 33 agents
 
 ### Core Orchestration (1 agent)
 
@@ -4767,7 +4783,7 @@ https://github.com/anthropics/claude-code/issues
 <a name="reference"></a>
 ## 14. Quick Reference
 
-### All 32 Agents
+### All 33 agents
 
 | Agent | Purpose | When to Use |
 |-------|---------|-------------|
@@ -4882,7 +4898,7 @@ D:/repo/hogwarts/
 ├── .claude/
 │   ├── settings.json              # Main configuration
 │   ├── settings.local.json        # Local overrides (gitignored)
-│   ├── agents/                    # 32 specialized agents
+│   ├── agents/                    # 33 specialized agents
 │   │   ├── orchestrate.md
 │   │   ├── nextjs.md
 │   │   ├── type-safety.md ⭐
@@ -5219,7 +5235,7 @@ A: https://github.com/anthropics/claude-code/issues
 
 This comprehensive guide covers all aspects of Claude Code in the Hogwarts platform:
 
-- **32 specialized agents** for every domain
+- **33 specialized agents** for every domain
 - **16 workflow commands** for quick actions
 - **7 reusable skills** for shared capabilities
 - **Error Prevention System** catching 204+ error types ⭐
