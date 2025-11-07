@@ -51,33 +51,26 @@ interface QuickActionsProps {
 export function QuickActions({ actions, locale = "en", className }: QuickActionsProps) {
   return (
     <div className={cn("w-full", className)}>
-      {/* Outer card wrapper */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-            {actions.map((action, index) => {
-              // Get icon component from map, fallback to FileText if not found
-              const Icon = iconMap[action.iconName] || LucideIcons.FileText;
-              const baseClasses = cn(
-                "flex flex-col items-center justify-center gap-3 rounded-lg p-4 transition-all",
-                "hover:bg-accent hover:scale-[1.02]",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                "cursor-pointer"
-              );
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+        {actions.map((action, index) => {
+          // Get icon component from map, fallback to FileText if not found
+          const Icon = iconMap[action.iconName] || LucideIcons.FileText;
 
-              const content = (
-                <>
-                  <Icon className="h-8 w-8 text-muted-foreground" aria-hidden={true} />
-                  <span className="text-sm font-medium text-muted-foreground">{action.label}</span>
-                </>
-              );
+          const content = (
+            <Card className="h-full">
+              <CardContent className="flex flex-col items-center justify-center gap-3 p-6">
+                <Icon className="h-6 w-6" aria-hidden={true} />
+                <span className="text-sm font-medium text-center">{action.label}</span>
+              </CardContent>
+            </Card>
+          );
 
           if (action.href) {
             return (
               <Link
                 key={`${action.label}-${index}`}
                 href={`/${locale}${action.href}`}
-                className={baseClasses}
+                className="block transition-all hover:scale-[1.02]"
               >
                 {content}
               </Link>
@@ -88,16 +81,14 @@ export function QuickActions({ actions, locale = "en", className }: QuickActions
             <button
               key={`${action.label}-${index}`}
               onClick={action.onClick}
-              className={baseClasses}
+              className="block w-full transition-all hover:scale-[1.02]"
               type="button"
             >
               {content}
             </button>
           );
         })}
-          </div>
-        </CardContent>
-      </Card>
+      </div>
     </div>
   );
 }
