@@ -67,6 +67,39 @@ export const metadata = {
 - [ ] Layout structure with font configuration
   - **Acceptance Criteria:** Root layout loads fonts (Tajawal/Inter), locale-aware layout works, platform layout has sidebar
 
+**Key Files:**
+- `src/middleware.ts` - Subdomain routing and i18n
+- `src/lib/tenant-context.ts` - Tenant context helper
+- `src/lib/db.ts` - Prisma client singleton
+- `src/env.mjs` - Type-safe environment configuration
+- `prisma/schema.prisma` - Database schema
+- `prisma/models/*.prisma` - 27 individual model files
+- `.github/workflows/*.yml` - CI/CD pipelines
+- `vitest.config.ts` - Vitest configuration
+- `playwright.config.ts` - Playwright configuration
+- `tailwind.config.ts` - Tailwind CSS configuration
+- `src/styles/typography.css` - Typography system
+- `src/app/[lang]/layout.tsx` - Root layout with fonts
+
+**Documentation:**
+- `README.md` - Project overview and setup
+- `CLAUDE.md` - Essential development guidelines
+- `/docs/architecture` - System architecture
+- `/docs/build` - Build system documentation
+- `/docs/stack` - Tech stack details
+
+**Claude Code Resources:**
+- `.claude/settings.json` - Claude Code configuration
+- `.claude/commands/*.md` - 22 custom slash commands
+- `.claude/prompts/agents/*.md` - 33 specialized agents
+- `.claude/prompts/skills/*.md` - 7 reusable skills
+
+**Inspiration & Best Practices:**
+- [Dashboard Examples](/docs/inspiration#dashboard) - shadcn dashboard patterns
+- [Table/List Patterns](/docs/inspiration#table-lists) - Data table best practices
+- [Form Patterns](/docs/inspiration#forms) - Form design and validation
+- [Awesome shadcn](/docs/awesome-shadcn) - Curated component blocks
+
 ---
 
 ## Epic 2: Authentication & Authorization
@@ -127,6 +160,23 @@ export const metadata = {
 - [ ] Audit logging for sensitive operations
   - **Acceptance Criteria:** All mutations logged with user/timestamp/schoolId, 7-year retention, immutable logs
 
+**Key Files:**
+- `src/auth.ts` - NextAuth v5 configuration
+- `src/auth.config.ts` - Authentication callbacks
+- `src/middleware.ts` - Route protection
+- `src/routes.ts` - Route definitions and protection
+- `prisma/models/auth.prisma` - User, Account, Session, VerificationToken models
+- `src/app/[lang]/(auth)/*` - Authentication pages (login, register, reset)
+- `src/components/auth/*` - Auth UI components
+
+**Documentation:**
+- `/docs/api-authentication` - API authentication guide
+- `.github/ISSUE_TEMPLATE/security.md` - Security issue template
+
+**Inspiration & Best Practices:**
+- [Auth UI Patterns](/docs/inspiration#auth) - Login/register design
+- [Form Patterns](/docs/inspiration#forms) - Form validation
+
 ---
 
 ## Epic 3: School Configuration
@@ -168,6 +218,19 @@ export const metadata = {
 
 - [ ] Logo preview and management
   - **Acceptance Criteria:** Uploaded logo shows preview, admin can replace logo, logo displays throughout app
+
+**Key Files:**
+- `src/components/platform/settings/*` - School settings components
+- `src/app/[lang]/s/[subdomain]/(platform)/settings/*` - Settings routes
+- `prisma/models/school.prisma` - School model
+- `prisma/models/branding.prisma` - Branding configuration
+
+**Documentation:**
+- `/docs/add-school` - School onboarding guide
+
+**Inspiration & Best Practices:**
+- [Onboarding Patterns](/docs/inspiration#onboarding) - Multi-step wizard design
+- [Form Patterns](/docs/inspiration#forms) - Settings forms
 
 ---
 
@@ -235,6 +298,22 @@ export const metadata = {
 - [ ] Emergency contact management
   - **Acceptance Criteria:** Multiple emergency contacts, priority order, quick access for admin
 
+**Key Files:**
+- `src/components/platform/students/*` - Student components
+- `src/app/[lang]/s/[subdomain]/(platform)/students/*` - Student routes
+- `prisma/models/students.prisma` - Student model
+- `prisma/models/admission.prisma` - Admission workflow
+
+**Documentation:**
+- `/docs/features-students` - Student management features
+- `.github/ISSUE_TEMPLATE/feature_request.md` - Feature request template
+
+**Inspiration & Best Practices:**
+- [Table Patterns](/docs/inspiration#table-lists) - Student lists
+- [Form Patterns](/docs/inspiration#forms) - Enrollment forms
+- [File Upload](/docs/inspiration#file-storage--management) - Document management
+- [School Management Examples](/docs/inspiration#school) - Real-world implementations
+
 ---
 
 ## Epic 5: Teacher & Staff Management
@@ -285,6 +364,16 @@ export const metadata = {
 
 - [ ] Non-teaching staff management
   - **Acceptance Criteria:** Staff profiles created, STAFF role assigned, module access configured
+
+**Key Files:**
+- `src/components/platform/teachers/*` - Teacher components
+- `src/components/platform/staff/*` - Staff components
+- `src/app/[lang]/s/[subdomain]/(platform)/teachers/*` - Teacher routes
+- `prisma/models/staff.prisma` - Teacher and Staff models
+
+**Inspiration & Best Practices:**
+- [Dashboard Examples](/docs/inspiration#dashboard) - Teacher dashboard
+- [Table Patterns](/docs/inspiration#table-lists) - Teacher lists
 
 ---
 
@@ -345,3 +434,23 @@ export const metadata = {
 
 - [ ] Class roster export
   - **Acceptance Criteria:** Export class student list to PDF/CSV, includes photos/contact, scoped by class
+
+**Key Files:**
+- `src/components/platform/classes/*` - Class components
+- `src/components/platform/subjects/*` - Subject components
+- `src/components/platform/timetable/*` - Timetable builder
+- `src/app/[lang]/s/[subdomain]/(platform)/classes/*` - Class routes
+- `src/app/[lang]/s/[subdomain]/(platform)/subjects/*` - Subject routes
+- `src/app/[lang]/s/[subdomain]/(platform)/timetable/*` - Timetable routes
+- `prisma/models/classrooms.prisma` - Class models
+- `prisma/models/subjects.prisma` - Subject models
+- `prisma/models/timetable.prisma` - Timetable models
+- `prisma/models/schedule.prisma` - Schedule models
+
+**Documentation:**
+- `/docs/timetable` - Timetable builder guide
+
+**Inspiration & Best Practices:**
+- [Dashboard Examples](/docs/inspiration#dashboard) - Class analytics
+- [Table Patterns](/docs/inspiration#table-lists) - Class rosters
+- [School Management Examples](/docs/inspiration#school) - Timetable implementations
