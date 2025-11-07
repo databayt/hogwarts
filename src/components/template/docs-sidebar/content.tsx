@@ -65,7 +65,7 @@ export function DocsSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) 
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
               <Link href="/docs" className="flex items-center" onClick={handleLinkClick}>
-                <span className="font-medium text-base text-foreground -ml-1">Documentation</span>
+                <span className="font-medium text-base text-foreground px-1">Documentation</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -79,7 +79,7 @@ export function DocsSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) 
                 const isActive = pathname === item.href
 
                 return (
-                  <SidebarMenuItem key={item.href} className="py-1">
+                  <SidebarMenuItem key={item.href} className="py-0.5">
                     <SidebarMenuButton
                       asChild
                       size="sm"
