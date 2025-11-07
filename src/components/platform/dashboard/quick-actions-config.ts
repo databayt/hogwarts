@@ -27,7 +27,7 @@ export function getQuickActionsByRole(
         },
         {
           iconName: "Bell",
-          label: "Announcements",
+          label: "Announce",
           href: `${baseUrl}/announcements/create`,
         },
         {
@@ -61,7 +61,7 @@ export function getQuickActionsByRole(
         },
         {
           iconName: "Bell",
-          label: "Announcements",
+          label: "Announce",
           href: `${baseUrl}/announcements`,
         },
         {
@@ -178,7 +178,7 @@ export function getQuickActionsByRole(
         },
         {
           iconName: "Bell",
-          label: "Announcements",
+          label: "Announce",
           href: `${baseUrl}/announcements`,
         },
       ];
@@ -236,7 +236,7 @@ export function getQuickActionsByRole(
         },
         {
           iconName: "Bell",
-          label: "Announcements",
+          label: "Announce",
           href: `${baseUrl}/announcements`,
         },
         {
@@ -255,7 +255,7 @@ export function getQuickActionsByRole(
       return [
         {
           iconName: "Bell",
-          label: "Announcements",
+          label: "Announce",
           href: `${baseUrl}/announcements`,
         },
         {

@@ -58,7 +58,7 @@ export function QuickActions({ actions, locale = "en", className }: QuickActions
 
           const content = (
             <Card className="h-full">
-              <CardContent className="flex flex-col items-center justify-center gap-3 p-6">
+              <CardContent className="flex flex-col items-center justify-center gap-2 p-4">
                 <Icon className="h-6 w-6" aria-hidden={true} />
                 <span className="text-sm font-medium text-center">{action.label}</span>
               </CardContent>
@@ -70,7 +70,7 @@ export function QuickActions({ actions, locale = "en", className }: QuickActions
               <Link
                 key={`${action.label}-${index}`}
                 href={`/${locale}${action.href}`}
-                className="block transition-all hover:scale-[1.02]"
+                className="block"
               >
                 {content}
               </Link>
@@ -81,7 +81,7 @@ export function QuickActions({ actions, locale = "en", className }: QuickActions
             <button
               key={`${action.label}-${index}`}
               onClick={action.onClick}
-              className="block w-full transition-all hover:scale-[1.02]"
+              className="block w-full"
               type="button"
             >
               {content}
