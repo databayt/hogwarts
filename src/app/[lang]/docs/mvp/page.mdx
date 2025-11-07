@@ -1,720 +1,483 @@
 export const metadata = {
-  title: 'Hogwarts MVP - Minimum Viable Product',
-  description: 'Complete overview of Hogwarts School Automation Platform MVP - 100% complete, production-ready, serving real schools',
+  title: 'MVP Implementation Checklist - Hogwarts',
+  description: 'Developer onboarding guide for Hogwarts School Automation Platform - Core MVP assessment checklist',
 }
 
-# Hogwarts MVP - Minimum Viable Product
+# MVP Implementation Checklist
 
 <p className="lead">
-  A comprehensive, production-ready school management platform that transforms educational operations from day one.
+  Multi-tenant school management system. 6 core epics, 98 stories. Production-ready with testing gaps.
 </p>
 
 ---
 
-## Executive Summary
+## Quick Start
 
-The Hogwarts MVP represents a **complete transformation** of school administration—from enrollment to graduation, from attendance to assessments, from fee management to parent communication. Built over 12-18 months with modern technology and battle-tested in real schools, this isn't just a minimum viable product; it's a **maximum value platform**.
+### Tech Stack
 
-<div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 my-8">
-  <div className="rounded-lg border bg-card p-6">
-    <h4>Status</h4>
-    <p className="muted">100% complete, production-ready, actively serving schools</p>
-  </div>
+- **Next.js 15.4.4** - App Router + Turbopack
+- **React 19.1.0** - Server Components
+- **TypeScript 5.x** - Strict mode
+- **Prisma 6.14.0** - PostgreSQL (Neon)
+- **NextAuth v5** - JWT, OAuth (Google/Facebook), 2FA
+- **Tailwind CSS 4** - RTL/LTR support
+- **shadcn/ui** - Radix UI primitives
 
-  <div className="rounded-lg border bg-card p-6">
-    <h4>Timeline</h4>
-    <p className="muted">12-18 months from conception to production deployment</p>
-  </div>
+### Run Locally
 
-  <div className="rounded-lg border bg-card p-6">
-    <h4>Implementation</h4>
-    <p className="muted">12 epics, 190+ user stories, vertical slicing approach</p>
-  </div>
-</div>
+```bash
+pnpm install              # Install dependencies
+pnpm prisma generate      # Generate Prisma client
+pnpm db:seed             # Seed database
+pnpm dev                 # Start dev server (localhost:3000)
+```
 
-**MVP Success Criteria:**
+### Critical Rules
 
-> A school can enroll students, manage classes, track attendance, grade assignments, collect fees, and communicate with parents—all within a single, intuitive platform—without needing any other software.
-
-**Result:** This goal has been achieved and validated with real schools.
-
----
-
-## What Makes This MVP Special
-
-Hogwarts isn't just another school management system—it's a magical transformation of educational operations:
-
-<div className="grid gap-6 md:grid-cols-2 my-8">
-  <div className="rounded-lg border bg-card p-6">
-    <h4>Truly Unified Platform</h4>
-    <p className="muted">Unlike competitors offering fragmented modules, Hogwarts provides seamless integration from student enrollment to financial management in one cohesive experience. No more juggling multiple systems or manual data entry between disconnected tools.</p>
-  </div>
-
-  <div className="rounded-lg border bg-card p-6">
-    <h4>Arabic-First Design</h4>
-    <p className="muted">The only major platform built for Arabic from day one with native RTL support, opening the underserved MENA market (420M people, 95,000 schools). Full bilingual support with 800+ translation keys ensures perfect localization.</p>
-  </div>
-
-  <div className="rounded-lg border bg-card p-6">
-    <h4>Modern Architecture, Legacy-Free</h4>
-    <p className="muted">Built on Next.js 15 + React 19 + TypeScript with true multi-tenancy, we're 10x faster to develop and infinitely more scalable than legacy platforms stuck on outdated tech stacks. Zero technical debt from day one.</p>
-  </div>
-
-  <div className="rounded-lg border bg-card p-6">
-    <h4>Enterprise Features at SMB Prices</h4>
-    <p className="muted">Advanced capabilities like multi-tenant architecture, comprehensive RBAC, OAuth authentication, and real-time analytics typically reserved for expensive enterprise systems—offered at 1/10th the cost.</p>
-  </div>
-
-  <div className="rounded-lg border bg-card p-6">
-    <h4>Open-Source Heart</h4>
-    <p className="muted">Community-driven development with transparent codebase, allowing schools to customize, contribute, and truly own their data. No vendor lock-in, full transparency.</p>
-  </div>
-
-  <div className="rounded-lg border bg-card p-6">
-    <h4>Mobile-First, Always</h4>
-    <p className="muted">Fully responsive design that works beautifully on any device. Parents check grades on phones, teachers take attendance on tablets, administrators manage operations from anywhere.</p>
-  </div>
-</div>
+1. **ALWAYS include `schoolId` in queries** - Multi-tenant isolation
+2. **Use Server Actions pattern** - See examples below
+3. **Follow Mirror Pattern** - Routes mirror components
+4. **Validate twice** - Client (UX) + Server (security)
 
 ---
 
-## Core Capabilities
+## Core MVP Scope (6 Epics)
 
-The MVP delivers a comprehensive set of features that make schools operational from day one:
+**Total: 98 core stories across 6 essential epics**
 
-### Foundation & Security
+### Epic Progress Assessment
 
-<div className="rounded-lg border bg-card p-6 my-6">
-  <h4>Multi-Tenant Architecture</h4>
-  <p className="muted mb-4">Enterprise-grade tenant isolation with subdomain-based routing ensures complete data separation between schools.</p>
+Use these checklists to assess current implementation status during your first week.
 
-  <ul className="space-y-2 text-sm text-muted-foreground">
-    <li>✅ Each school operates on its own subdomain (e.g., <code>schoolname.databayt.org</code>)</li>
-    <li>✅ Complete data isolation with mandatory <code>schoolId</code> scoping on all queries</li>
-    <li>✅ Zero cross-tenant data leaks (verified through automated test suite)</li>
-    <li>✅ Automatic subdomain provisioning during onboarding</li>
-  </ul>
-</div>
+#### Epic 1: Foundation & Infrastructure [_/15]
+**Goal:** Multi-tenant architecture, subdomain routing, core setup
 
-<div className="rounded-lg border bg-card p-6 my-6">
-  <h4>8-Role RBAC System</h4>
-  <p className="muted mb-4">Granular role-based access control ensures users only see and do what they're authorized for.</p>
+- [ ] Multi-tenant database schema with `schoolId` scoping
+- [ ] Subdomain routing working (`school.databayt.org`)
+- [ ] Next.js 15 + React 19 + Prisma 6 configured
+- [ ] CI/CD pipeline with automated tests
+- [ ] Error monitoring (Sentry) operational
+- [ ] Internationalization (Arabic/English) functional
+- [ ] Development/staging/production environments
 
-  <ul className="space-y-2 text-sm text-muted-foreground">
-    <li>✅ <strong>DEVELOPER</strong>: Platform administrator with cross-school access</li>
-    <li>✅ <strong>ADMIN</strong>: School administrator with full school management capabilities</li>
-    <li>✅ <strong>TEACHER</strong>: Classroom management, attendance, grading</li>
-    <li>✅ <strong>STUDENT</strong>: View grades, attendance, assignments</li>
-    <li>✅ <strong>GUARDIAN</strong>: Monitor children's progress, pay fees, receive updates</li>
-    <li>✅ <strong>ACCOUNTANT</strong>: Financial management and reporting</li>
-    <li>✅ <strong>STAFF</strong>: Support staff with limited access</li>
-    <li>✅ <strong>USER</strong>: Default role for new registrations</li>
-  </ul>
-</div>
-
-<div className="rounded-lg border bg-card p-6 my-6">
-  <h4>Authentication & Security</h4>
-  <p className="muted mb-4">NextAuth v5 with multiple authentication methods and enterprise security features.</p>
-
-  <ul className="space-y-2 text-sm text-muted-foreground">
-    <li>✅ OAuth authentication (Google, Facebook)</li>
-    <li>✅ Email/password with bcrypt hashing</li>
-    <li>✅ Two-factor authentication (2FA) for enhanced security</li>
-    <li>✅ JWT-based sessions with 24-hour expiry</li>
-    <li>✅ Password reset with email verification</li>
-    <li>✅ Session management with automatic renewal</li>
-  </ul>
-</div>
-
-### Student Management
-
-<div className="rounded-lg border bg-card p-6 my-6">
-  <h4>Complete Student Lifecycle</h4>
-  <p className="muted mb-4">From admission to graduation, manage every aspect of student information.</p>
-
-  <ul className="space-y-2 text-sm text-muted-foreground">
-    <li>✅ Student profiles with comprehensive personal information</li>
-    <li>✅ Enrollment management with admission workflow</li>
-    <li>✅ Health records and medical information</li>
-    <li>✅ Academic achievements and awards tracking</li>
-    <li>✅ Guardian relationships with multiple contacts per student</li>
-    <li>✅ Student document management (certificates, IDs, etc.)</li>
-    <li>✅ Transfer and withdrawal processes</li>
-    <li>✅ Bulk import/export capabilities</li>
-  </ul>
-</div>
-
-### Teacher & Staff Management
-
-<div className="rounded-lg border bg-card p-6 my-6">
-  <h4>Teacher Profiles & Workflows</h4>
-  <p className="muted mb-4">Comprehensive teacher management with workload tracking and performance monitoring.</p>
-
-  <ul className="space-y-2 text-sm text-muted-foreground">
-    <li>✅ Teacher profiles with qualifications and certifications</li>
-    <li>✅ Subject specialization tracking</li>
-    <li>✅ Teaching workload management</li>
-    <li>✅ Department assignment and organization</li>
-    <li>✅ Staff directory with contact information</li>
-    <li>✅ Performance evaluation tracking</li>
-  </ul>
-</div>
-
-### Academic Management
-
-<div className="rounded-lg border bg-card p-6 my-6">
-  <h4>Subject & Class Management</h4>
-  <p className="muted mb-4">Flexible academic organization with intelligent timetable builder.</p>
-
-  <ul className="space-y-2 text-sm text-muted-foreground">
-    <li>✅ Subject catalog with customizable curriculum</li>
-    <li>✅ Class creation with capacity management</li>
-    <li>✅ Student-class assignment with conflict detection</li>
-    <li>✅ Teacher-subject allocation</li>
-    <li>✅ Visual timetable builder with drag-and-drop</li>
-    <li>✅ Period-wise scheduling with break management</li>
-    <li>✅ Room allocation and resource management</li>
-  </ul>
-</div>
-
-### Attendance System
-
-<div className="rounded-lg border bg-card p-6 my-6">
-  <h4>Daily & Period-Wise Tracking</h4>
-  <p className="muted mb-4">Flexible attendance system with multiple capture methods and automated reporting.</p>
-
-  <ul className="space-y-2 text-sm text-muted-foreground">
-    <li>✅ Daily attendance marking with bulk operations</li>
-    <li>✅ Period-wise attendance for secondary schools</li>
-    <li>✅ QR code-based check-in for automated tracking</li>
-    <li>✅ Absence reason categorization</li>
-    <li>✅ Late arrival and early departure tracking</li>
-    <li>✅ Automatic parent notifications for absences</li>
-    <li>✅ Attendance reports with trend analysis</li>
-    <li>✅ Integration with class schedules</li>
-  </ul>
-</div>
-
-### Assessment & Grading
-
-<div className="rounded-lg border bg-card p-6 my-6">
-  <h4>Complete Grading System</h4>
-  <p className="muted mb-4">Flexible assessment framework supporting multiple grading methods and report cards.</p>
-
-  <ul className="space-y-2 text-sm text-muted-foreground">
-    <li>✅ Assignment creation with rubrics and due dates</li>
-    <li>✅ Digital gradebook with real-time updates</li>
-    <li>✅ Multiple assessment types (homework, quizzes, exams, projects)</li>
-    <li>✅ Weighted grading with customizable calculation methods</li>
-    <li>✅ Grade scaling and curve adjustments</li>
-    <li>✅ Report card generation with customizable templates</li>
-    <li>✅ Progress tracking and trend analysis</li>
-    <li>✅ Teacher comments and feedback system</li>
-  </ul>
-</div>
-
-### Fee Management
-
-<div className="rounded-lg border bg-card p-6 my-6">
-  <h4>Complete Financial Operations</h4>
-  <p className="muted mb-4">Comprehensive fee management with invoicing, payment tracking, and reporting.</p>
-
-  <ul className="space-y-2 text-sm text-muted-foreground">
-    <li>✅ Flexible fee structure definition (tuition, transport, meals, activities)</li>
-    <li>✅ Automated invoice generation</li>
-    <li>✅ Payment tracking with multiple payment methods</li>
-    <li>✅ Receipt generation and management</li>
-    <li>✅ Payment reminders and overdue notifications</li>
-    <li>✅ Scholarship and discount management</li>
-    <li>✅ Financial reports and analytics</li>
-    <li>✅ Parent portal for online payments</li>
-  </ul>
-</div>
-
-### Communication
-
-<div className="rounded-lg border bg-card p-6 my-6">
-  <h4>Multi-Channel Communication</h4>
-  <p className="muted mb-4">Keep parents informed and engaged with automated notifications and announcements.</p>
-
-  <ul className="space-y-2 text-sm text-muted-foreground">
-    <li>✅ School-wide announcements</li>
-    <li>✅ Class-specific notifications</li>
-    <li>✅ Individual parent messaging</li>
-    <li>✅ Email notifications for important events</li>
-    <li>✅ Parent portal with real-time updates</li>
-    <li>✅ Emergency broadcast system</li>
-    <li>✅ Event calendar and reminders</li>
-    <li>✅ Controlled communication channels for child safety</li>
-  </ul>
-</div>
-
-### Reporting & Analytics
-
-<div className="rounded-lg border bg-card p-6 my-6">
-  <h4>Data-Driven Insights</h4>
-  <p className="muted mb-4">Comprehensive dashboards and reports to inform decision-making.</p>
-
-  <ul className="space-y-2 text-sm text-muted-foreground">
-    <li>✅ Administrator dashboard with key metrics</li>
-    <li>✅ Teacher dashboard with class performance</li>
-    <li>✅ Student progress reports</li>
-    <li>✅ Attendance trend analysis</li>
-    <li>✅ Financial reports and forecasting</li>
-    <li>✅ Custom report builder</li>
-    <li>✅ Data export in multiple formats (CSV, PDF, Excel)</li>
-  </ul>
-</div>
-
-### Internationalization
-
-<div className="rounded-lg border bg-card p-6 my-6">
-  <h4>Arabic/English Bilingual Support</h4>
-  <p className="muted mb-4">Full RTL/LTR support with comprehensive translations.</p>
-
-  <ul className="space-y-2 text-sm text-muted-foreground">
-    <li>✅ 800+ translation keys covering entire platform</li>
-    <li>✅ Native RTL support for Arabic with proper text alignment</li>
-    <li>✅ LTR support for English with optimized typography</li>
-    <li>✅ Language switcher accessible throughout the app</li>
-    <li>✅ Locale-aware date and number formatting</li>
-    <li>✅ Custom fonts: Tajawal (Arabic), Inter (English)</li>
-  </ul>
-</div>
+**Key Files:**
+- `src/middleware.ts` - Subdomain rewriting
+- `src/lib/tenant-context.ts` - Get `schoolId` from context
+- `prisma/schema.prisma` - Multi-tenant models
+- `.github/workflows/` - CI/CD configuration
 
 ---
 
-## Epic Breakdown for MVP
+#### Epic 2: Authentication & Authorization [_/18]
+**Goal:** User management, 8-role RBAC, secure authentication
 
-The MVP was implemented through 12 carefully sequenced epics, each delivering end-to-end value:
+- [ ] NextAuth v5 configured with JWT strategy
+- [ ] Email/password auth with bcrypt hashing
+- [ ] OAuth providers (Google, Facebook) working
+- [ ] Two-factor authentication (2FA) functional
+- [ ] 8 roles implemented (DEVELOPER, ADMIN, TEACHER, STUDENT, GUARDIAN, ACCOUNTANT, STAFF, USER)
+- [ ] Role-based access control enforced on routes
+- [ ] Password reset flow complete
+- [ ] Session management with auto-renewal
+- [ ] User profile management
 
-<div className="overflow-x-auto my-8">
-  <table>
-    <thead>
-      <tr>
-        <th>Epic</th>
-        <th>Name</th>
-        <th>Goal</th>
-        <th>Stories</th>
-        <th>Complexity</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><strong>1</strong></td>
-        <td>Foundation & Infrastructure</td>
-        <td>Establish core multi-tenant architecture</td>
-        <td>15</td>
-        <td>High</td>
-      </tr>
-      <tr>
-        <td><strong>2</strong></td>
-        <td>Authentication & Authorization</td>
-        <td>Complete user management and RBAC</td>
-        <td>18</td>
-        <td>High</td>
-      </tr>
-      <tr>
-        <td><strong>3</strong></td>
-        <td>School Configuration</td>
-        <td>School setup and academic structure</td>
-        <td>12</td>
-        <td>Medium</td>
-      </tr>
-      <tr>
-        <td><strong>4</strong></td>
-        <td>Student Management</td>
-        <td>Comprehensive student lifecycle</td>
-        <td>20</td>
-        <td>Medium</td>
-      </tr>
-      <tr>
-        <td><strong>5</strong></td>
-        <td>Teacher & Staff Management</td>
-        <td>Teacher profiles and workflows</td>
-        <td>15</td>
-        <td>Medium</td>
-      </tr>
-      <tr>
-        <td><strong>6</strong></td>
-        <td>Class & Subject Management</td>
-        <td>Academic organization</td>
-        <td>18</td>
-        <td>Medium</td>
-      </tr>
-      <tr>
-        <td><strong>7</strong></td>
-        <td>Attendance System</td>
-        <td>Daily and period-wise tracking</td>
-        <td>16</td>
-        <td>Medium</td>
-      </tr>
-      <tr>
-        <td><strong>8</strong></td>
-        <td>Assessment & Grading</td>
-        <td>Assignments, grades, reports</td>
-        <td>22</td>
-        <td>High</td>
-      </tr>
-      <tr>
-        <td><strong>9</strong></td>
-        <td>Fee Management</td>
-        <td>Fee structures and payments</td>
-        <td>18</td>
-        <td>High</td>
-      </tr>
-      <tr>
-        <td><strong>10</strong></td>
-        <td>Communication</td>
-        <td>Announcements and parent portal</td>
-        <td>12</td>
-        <td>Medium</td>
-      </tr>
-      <tr>
-        <td><strong>11</strong></td>
-        <td>Reporting & Analytics</td>
-        <td>Dashboards and insights</td>
-        <td>14</td>
-        <td>Medium</td>
-      </tr>
-      <tr>
-        <td><strong>12</strong></td>
-        <td>Polish & Launch</td>
-        <td>Performance, security, documentation</td>
-        <td>10</td>
-        <td>High</td>
-      </tr>
-      <tr>
-        <td colspan="3"><strong>Total</strong></td>
-        <td><strong>190</strong></td>
-        <td></td>
-      </tr>
-    </tbody>
-  </table>
-</div>
-
-### Implementation Philosophy
-
-<div className="grid gap-6 md:grid-cols-2 my-8">
-  <div className="rounded-lg border bg-card p-6">
-    <h4>Vertical Slicing</h4>
-    <p className="muted">Each story delivers end-to-end value from database to UI, ensuring deployable increments at every step. No horizontal layer stories that don't provide user value.</p>
-  </div>
-
-  <div className="rounded-lg border bg-card p-6">
-    <h4>No Forward Dependencies</h4>
-    <p className="muted">Stories only depend on previous epics, never future ones. This ensures linear progress without blocking dependencies or rework.</p>
-  </div>
-
-  <div className="rounded-lg border bg-card p-6">
-    <h4>Multi-Tenant Safety</h4>
-    <p className="muted">Every story includes tenant isolation verification with automated tests ensuring no cross-school data leaks.</p>
-  </div>
-
-  <div className="rounded-lg border bg-card p-6">
-    <h4>Deployable Incrementally</h4>
-    <p className="muted">Each epic completion results in a deployable increment that provides value to schools, enabling early feedback and validation.</p>
-  </div>
-</div>
-
-### Timeline
-
-<div className="rounded-lg border bg-card p-6 my-8">
-  <h4>12-18 Month Development Cycle</h4>
-
-  <ul className="space-y-4 mt-4">
-    <li>
-      <p><strong>Months 1-3:</strong> Foundation & Infrastructure</p>
-      <p className="muted">Establish multi-tenant architecture, authentication system, and core database schema. Deploy initial subdomain routing.</p>
-    </li>
-    <li>
-      <p><strong>Months 4-6:</strong> Core User Management</p>
-      <p className="muted">Implement RBAC system, school configuration, and student/teacher management. First pilot schools onboarded.</p>
-    </li>
-    <li>
-      <p><strong>Months 7-9:</strong> Academic Operations</p>
-      <p className="muted">Build class management, timetable builder, and attendance system. Schools can begin daily operations.</p>
-    </li>
-    <li>
-      <p><strong>Months 10-12:</strong> Assessment & Finance</p>
-      <p className="muted">Implement grading system and fee management. Schools achieve full operational capability.</p>
-    </li>
-    <li>
-      <p><strong>Months 13-15:</strong> Communication & Analytics</p>
-      <p className="muted">Add parent portal, announcements, and comprehensive reporting. Enhanced engagement and insights.</p>
-    </li>
-    <li>
-      <p><strong>Months 16-18:</strong> Polish & Production</p>
-      <p className="muted">Performance optimization, security hardening, comprehensive documentation, and production launch.</p>
-    </li>
-  </ul>
-</div>
+**Key Files:**
+- `src/auth.ts` - NextAuth configuration
+- `src/auth.config.ts` - Auth callbacks
+- `src/middleware.ts` - Route protection
+- `prisma/models/auth.prisma` - User, Account, Session models
 
 ---
 
-## Success Criteria
+#### Epic 3: School Configuration [_/12]
+**Goal:** School setup, academic structure, year levels
 
-### MVP Validation
+- [ ] School profile creation and management
+- [ ] Academic year setup with terms/periods
+- [ ] Year level/grade configuration
+- [ ] Department management
+- [ ] School branding (logo, colors)
+- [ ] Timezone configuration
+- [ ] School settings page functional
 
-The MVP has successfully met all primary success criteria:
-
-<div className="overflow-x-auto my-8">
-  <table>
-    <thead>
-      <tr>
-        <th>Metric</th>
-        <th>Baseline</th>
-        <th>Target</th>
-        <th>Status</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><strong>Administrator Time Savings</strong></td>
-        <td>40 hours/month on manual tasks</td>
-        <td>8 hours/month (80% reduction)</td>
-        <td>✅ Achieved</td>
-      </tr>
-      <tr>
-        <td><strong>Parental Engagement</strong></td>
-        <td>65% dissatisfaction</td>
-        <td>85% satisfaction (NPS)</td>
-        <td>✅ Achieved</td>
-      </tr>
-      <tr>
-        <td><strong>Data Accuracy</strong></td>
-        <td>23% error rate</td>
-        <td>&lt;1% error rate</td>
-        <td>✅ Achieved</td>
-      </tr>
-      <tr>
-        <td><strong>Cost Reduction</strong></td>
-        <td>$15,000-$50,000/year</td>
-        <td>60% reduction</td>
-        <td>✅ Achieved</td>
-      </tr>
-      <tr>
-        <td><strong>Teacher Time Savings</strong></td>
-        <td>11 hours/week on admin</td>
-        <td>4 hours/week (64% reduction)</td>
-        <td>✅ Achieved</td>
-      </tr>
-    </tbody>
-  </table>
-</div>
-
-### Business Impact
-
-<div className="grid gap-6 md:grid-cols-3 my-8">
-  <div className="rounded-lg border bg-card p-6">
-    <h4>Zero Data Breaches</h4>
-    <p className="muted">Impeccable security track record with no student data leaks since launch</p>
-  </div>
-
-  <div className="rounded-lg border bg-card p-6">
-    <h4>98% Satisfaction</h4>
-    <p className="muted">Customer satisfaction score exceeding industry benchmarks</p>
-  </div>
-
-  <div className="rounded-lg border bg-card p-6">
-    <h4>Production-Ready</h4>
-    <p className="muted">Actively serving real schools with high reliability and performance</p>
-  </div>
-</div>
+**Key Files:**
+- `src/components/platform/settings/` - School configuration
+- `prisma/models/school.prisma` - School model
 
 ---
 
-## Technical Architecture Highlights
+#### Epic 4: Student Management [_/20]
+**Goal:** Student lifecycle from enrollment to graduation
 
-### Modern Tech Stack
+- [ ] Student enrollment form working
+- [ ] Comprehensive profiles (personal, academic, health)
+- [ ] Search and filtering functional
+- [ ] Guardian relationships
+- [ ] Document upload (certificates, records)
+- [ ] Health records tracking
+- [ ] Achievement tracking
+- [ ] Photo management
+- [ ] Batch operations (import/export CSV)
+- [ ] Status transitions (enrolled, transferred, graduated)
 
-<div className="rounded-lg border bg-card p-6 my-6">
-  <h4>Built with Best-in-Class Technologies</h4>
-
-  <ul className="space-y-2 mt-4 text-sm text-muted-foreground">
-    <li><strong>Next.js 15.4.4</strong> - App Router with Turbopack for blazing-fast builds</li>
-    <li><strong>React 19.1.0</strong> - Server Components and concurrent features</li>
-    <li><strong>TypeScript 5.x</strong> - Type safety across entire codebase</li>
-    <li><strong>Prisma 6.14.0</strong> - Type-safe database ORM with PostgreSQL</li>
-    <li><strong>NextAuth v5</strong> - Enterprise authentication with OAuth support</li>
-    <li><strong>Tailwind CSS 4</strong> - Utility-first styling with RTL/LTR support</li>
-    <li><strong>shadcn/ui</strong> - Beautiful, accessible component library</li>
-  </ul>
-</div>
-
-### Security Features
-
-<div className="grid gap-6 md:grid-cols-2 my-8">
-  <div className="rounded-lg border bg-card p-6">
-    <h4>Multi-Tenant Isolation</h4>
-    <p className="muted">Complete data separation with mandatory schoolId scoping on all database queries, verified through automated test suite</p>
-  </div>
-
-  <div className="rounded-lg border bg-card p-6">
-    <h4>Authentication & Authorization</h4>
-    <p className="muted">JWT-based sessions, bcrypt password hashing, 2FA support, and granular RBAC with 8 distinct roles</p>
-  </div>
-
-  <div className="rounded-lg border bg-card p-6">
-    <h4>Data Protection</h4>
-    <p className="muted">Encryption at rest and in transit, audit trails for sensitive operations, FERPA and GDPR compliance ready</p>
-  </div>
-
-  <div className="rounded-lg border bg-card p-6">
-    <h4>Secure Development</h4>
-    <p className="muted">TypeScript strict mode, automated security scanning, pre-commit validation, and comprehensive error prevention system</p>
-  </div>
-</div>
-
-### Performance Targets
-
-<div className="overflow-x-auto my-8">
-  <table>
-    <thead>
-      <tr>
-        <th>Metric</th>
-        <th>Target</th>
-        <th>Status</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><strong>Cold Build Time</strong></td>
-        <td>&lt;30 seconds</td>
-        <td>✅ 28s</td>
-      </tr>
-      <tr>
-        <td><strong>Incremental Build</strong></td>
-        <td>&lt;5 seconds</td>
-        <td>✅ 4s</td>
-      </tr>
-      <tr>
-        <td><strong>Hot Module Replacement</strong></td>
-        <td>&lt;100ms</td>
-        <td>✅ 85ms</td>
-      </tr>
-      <tr>
-        <td><strong>Bundle Size (per route)</strong></td>
-        <td>&lt;100KB</td>
-        <td>✅ 92KB</td>
-      </tr>
-      <tr>
-        <td><strong>Cache Hit Rate</strong></td>
-        <td>&gt;90%</td>
-        <td>✅ 93%</td>
-      </tr>
-    </tbody>
-  </table>
-</div>
+**Key Files:**
+- `src/components/platform/students/` - Student components
+- `src/app/[lang]/s/[subdomain]/(platform)/students/` - Student routes
+- `prisma/models/students.prisma` - Student model
 
 ---
 
-## What's NOT in MVP
+#### Epic 5: Teacher & Staff Management [_/15]
+**Goal:** Teacher profiles, qualifications, workload tracking
 
-The following features are intentionally excluded from MVP and planned for post-MVP growth phases:
+- [ ] Teacher profile creation
+- [ ] Qualifications management
+- [ ] Department assignments
+- [ ] Subject expertise tracking
+- [ ] Workload calculator
+- [ ] Class assignments
+- [ ] Teacher dashboard
+- [ ] Non-teaching staff management
 
-### Post-MVP Features (Months 13-24)
+**Key Files:**
+- `src/components/platform/teachers/` - Teacher components
+- `src/components/platform/staff/` - Staff components
+- `prisma/models/staff.prisma` - Teacher/Staff models
 
-<div className="space-y-4 my-8">
-  <div className="rounded-lg border bg-card p-6">
-    <h4>AI-Powered Analytics</h4>
-    <p className="muted">Predictive analytics for attendance patterns, performance forecasting, and early intervention for at-risk students</p>
-  </div>
+---
 
-  <div className="rounded-lg border bg-card p-6">
-    <h4>Digital Classroom & LMS</h4>
-    <p className="muted">Video conferencing integration, online quizzes, discussion forums, and assignment submission with plagiarism detection</p>
-  </div>
+#### Epic 6: Class & Subject Management [_/18]
+**Goal:** Academic organization, timetable, class scheduling
 
-  <div className="rounded-lg border bg-card p-6">
-    <h4>Comprehensive Finance Module</h4>
-    <p className="muted">Double-entry bookkeeping, payroll management, financial statements, budgeting, and expense tracking</p>
-  </div>
+- [ ] Subject catalog with curriculum
+- [ ] Class creation with capacity management
+- [ ] Student enrollment in classes
+- [ ] Teacher-subject allocation
+- [ ] Timetable builder (drag-and-drop)
+- [ ] Conflict detection
+- [ ] Period-wise scheduling
+- [ ] Class sections management
+- [ ] Resource sharing
+- [ ] Class analytics
 
-  <div className="rounded-lg border bg-card p-6">
-    <h4>Examination Management</h4>
-    <p className="muted">Question bank, automated exam generation, online proctoring, and standardized test integration</p>
-  </div>
+**Key Files:**
+- `src/components/platform/classes/` - Class components
+- `src/components/platform/subjects/` - Subject components
+- `src/components/platform/timetable/` - Timetable builder
+- `prisma/models/classrooms.prisma` - Class models
 
-  <div className="rounded-lg border bg-card p-6">
-    <h4>Library Management</h4>
-    <p className="muted">Book inventory, borrowing system, digital library, and reading analytics</p>
-  </div>
+---
 
-  <div className="rounded-lg border bg-card p-6">
-    <h4>Native Mobile Applications</h4>
-    <p className="muted">React Native iOS and Android apps for enhanced mobile experience (currently mobile-responsive web)</p>
-  </div>
+## Optional Epics (Phase 2)
 
-  <div className="rounded-lg border bg-card p-6">
-    <h4>Additional Languages</h4>
-    <p className="muted">French, Spanish, Hindi, Mandarin, and other language support beyond current Arabic/English</p>
-  </div>
+These epics are implemented but can be considered Phase 2 enhancements:
 
-  <div className="rounded-lg border bg-card p-6">
-    <h4>Advanced Integrations</h4>
-    <p className="muted">Learning management systems, student information systems, government reporting portals, and payment gateways</p>
-  </div>
-</div>
+### Epic 7: Attendance System [_/16]
+Daily attendance, period-wise tracking, QR codes, analytics
 
-### Vision Features (Year 3+)
+### Epic 8: Fee Management [_/18]
+Fee structures, invoicing, payment tracking, receipts
 
-<div className="space-y-4 my-8">
-  <div className="rounded-lg border bg-muted p-6">
-    <p className="muted">
-      <strong>Long-term innovations:</strong> AI teaching assistant, personalized learning paths, marketplace ecosystem, blockchain credentials, VR/AR learning experiences, district-level management, and global teacher collaboration network.
-    </p>
-  </div>
-</div>
+---
+
+## Technical Patterns Reference
+
+### Server Actions Pattern
+
+**CRITICAL:** All server actions MUST follow this pattern:
+
+```typescript
+// actions.ts
+"use server"
+
+import { getTenantContext } from "@/lib/tenant-context"
+import { db } from "@/lib/db"
+import { revalidatePath } from "next/cache"
+import { schema } from "./validation"
+
+export async function createEntity(input: FormData) {
+  // 1. Get schoolId (MANDATORY)
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) throw new Error("Missing school context")
+
+  // 2. Validate input
+  const validated = schema.parse(Object.fromEntries(input))
+
+  // 3. Execute with schoolId scope
+  const result = await db.entity.create({
+    data: { ...validated, schoolId }  // ALWAYS include schoolId
+  })
+
+  // 4. Revalidate cache
+  revalidatePath('/entity')
+
+  return { success: true, id: result.id }
+}
+```
+
+### Multi-Tenant Safety Checklist
+
+Every feature MUST verify:
+
+- [ ] All queries include `where: { schoolId }`
+- [ ] Create/update operations include `schoolId`
+- [ ] Unique constraints scoped by `schoolId`
+- [ ] Session includes `schoolId` from context
+- [ ] No hardcoded school references
+- [ ] Automated test verifies isolation
+
+### Mirror Pattern Structure
+
+```
+src/app/[lang]/s/[subdomain]/(platform)/<feature>/
+  └── page.tsx               # Imports from components
+
+src/components/platform/<feature>/
+  ├── content.tsx            # Server component (main UI)
+  ├── actions.ts             # "use server" functions
+  ├── validation.ts          # Zod schemas
+  ├── types.ts               # TypeScript types
+  ├── form.tsx               # Client component
+  ├── table.tsx              # Client component (data table)
+  └── columns.tsx            # Column definitions
+```
+
+### Data Table Pattern
+
+```typescript
+// table.tsx - Client component
+"use client"
+
+import { useDataTable } from "@/hooks/use-data-table"
+import { columns } from "./columns"
+
+export function EntityTable({ data }) {
+  const table = useDataTable({
+    data,
+    columns,
+    // URL-synced state with nuqs
+  })
+
+  return <DataTable table={table} />
+}
+```
+
+---
+
+## Technical Debt Inventory
+
+### 🔴 Critical Priority
+
+**E2E Test Coverage Gap**
+- **Current:** ~0 E2E tests (Playwright configured but unused)
+- **Impact:** No automated user flow validation
+- **Action:** Create E2E test suite covering critical paths
+- **Priority Test Scenarios:**
+  1. Student enrollment flow
+  2. Teacher assignment to class
+  3. Attendance marking
+  4. Fee payment processing
+  5. Multi-tenant isolation verification
+
+**Estimated Effort:** 2-3 weeks for core coverage
+
+---
+
+### 🟡 Medium Priority
+
+**61 TODO/FIXME Items Across Codebase**
+
+**By Category:**
+1. **Photo/Document Management** (12 TODOs)
+   - Student photo upload optimization
+   - Document attachment enhancements
+   - File storage quota management
+
+2. **Finance Enhancements** (18 TODOs)
+   - Invoice PDF generation improvements
+   - Bank reconciliation automation
+   - Receipt template customization
+
+3. **Exam System** (15 TODOs)
+   - Conflict detection optimization
+   - Results analytics enhancement
+   - Question bank quality scoring
+
+4. **UI Polish** (10 TODOs)
+   - Icon updates
+   - Messaging UI improvements
+   - Mobile responsiveness tweaks
+
+5. **Read Tracking** (6 TODOs)
+   - Announcement read receipt optimization
+   - Notification delivery status
+
+**Estimated Effort:** 4-6 weeks for all categories
+
+---
+
+### 🟢 Low Priority
+
+**Documentation Updates**
+- Some READMEs mention "In Progress" for completed features
+- Update feature completion status
+
+**Finance Module Simplification**
+- 12 finance sub-modules may be over-engineered for basic MVP
+- Consider consolidating for simpler maintenance
+
+**Estimated Effort:** 1-2 weeks
+
+---
+
+## API & Integration Points
+
+### Authentication Endpoints
+
+```typescript
+// NextAuth v5 API routes
+POST /api/auth/signin           // Login
+POST /api/auth/signout          // Logout
+GET  /api/auth/session          // Get current session
+POST /api/auth/callback/google  // OAuth callback
+POST /api/auth/callback/facebook
+```
+
+### Server Actions Pattern (Primary API)
+
+**No traditional REST API** - Uses Next.js Server Actions exclusively:
+
+```typescript
+// Import and call directly in client components
+import { createStudent } from "@/components/platform/students/actions"
+
+const result = await createStudent(formData)
+```
+
+### Key Data Models
+
+**Core Entities:** (27 Prisma models in `prisma/models/`)
+- `School` - Tenant root entity
+- `User` - Authentication + RBAC
+- `Student` - Student records
+- `Teacher` - Teacher profiles
+- `Class` - Class organization
+- `Subject` - Subject catalog
+- `Attendance` - Attendance tracking
+- `Grade` - Assessment records
+- `Fee` - Fee management
+
+**All models include:**
+- `schoolId` (required, indexed)
+- `@@unique` constraints scoped by `schoolId`
+- Timestamps (`createdAt`, `updatedAt`)
+
+### File Upload
+
+**Pattern:** Direct upload to storage (implementation varies)
+- Student photos
+- Document attachments
+- Report exports
+
+---
+
+## Testing Coverage Gaps
+
+### Current Status
+
+**Unit Tests:** 14 test files
+- `src/components/platform/operator/**/*.test.ts` - Operator features
+- `src/components/platform/timetable/**/*.test.ts` - Timetable logic
+- `src/components/platform/attendance/**/*.test.ts` - Attendance actions
+- `src/components/platform/announcements/**/*.test.ts` - Announcement actions
+
+**Coverage:** ~10% of features have unit tests
+
+**E2E Tests:** 0-1 test files
+- Playwright configured for 5 browsers
+- No comprehensive E2E test suite
+
+---
+
+### Priority Test Scenarios Needed
+
+**Critical User Flows (E2E):**
+1. [ ] Student enrollment end-to-end
+2. [ ] Teacher creates class and adds students
+3. [ ] Attendance marking (daily + period-wise)
+4. [ ] Grade assignment submission and grading
+5. [ ] Fee invoice generation and payment
+6. [ ] Multi-tenant isolation (no cross-school data leaks)
+7. [ ] Role-based access control (RBAC verification)
+8. [ ] Parent portal (view student data)
+
+**Integration Tests:**
+1. [ ] Authentication flows (email, OAuth, 2FA)
+2. [ ] School onboarding wizard
+3. [ ] Bulk student import (CSV)
+4. [ ] Report generation (PDF exports)
+5. [ ] Notification delivery
+
+**Unit Test Gaps:**
+- Students component (~5% coverage)
+- Teachers component (~5% coverage)
+- Classes component (~5% coverage)
+- Finance module (0% coverage)
+- Communication module (minimal coverage)
+
+---
+
+## First Week Action Items
+
+Your team's first week checklist:
+
+### Day 1-2: Environment Setup
+- [ ] Clone repo and install dependencies
+- [ ] Set up local PostgreSQL database
+- [ ] Configure environment variables
+- [ ] Run migrations and seed data
+- [ ] Verify app runs locally
+
+### Day 3-4: Codebase Audit
+- [ ] Review architecture patterns (above)
+- [ ] Audit Epic 1-6 completion status (fill checkboxes)
+- [ ] Identify top 3 technical debt priorities
+- [ ] Review 61 TODOs and categorize urgency
+- [ ] Map feature directory structure
+
+### Day 5: Testing Strategy
+- [ ] Review existing test coverage (14 test files)
+- [ ] Create E2E testing plan (8 critical scenarios)
+- [ ] Estimate effort for test coverage goals
+- [ ] Set up Playwright test environment
 
 ---
 
 ## Next Steps
 
-### Explore the Details
-
 <div className="grid gap-6 md:grid-cols-2 my-8">
   <div className="rounded-lg border bg-card p-6">
     <h4>Product Requirements</h4>
-    <p className="muted mb-4">Read the complete PRD for detailed feature specifications, market analysis, and strategic vision</p>
-    <p><a href="/docs/PRD">View PRD →</a></p>
+    <p className="muted">Read the complete PRD for detailed feature specifications</p>
+    <p><a href="/docs/prd">View PRD →</a></p>
   </div>
 
   <div className="rounded-lg border bg-card p-6">
     <h4>Epic Breakdown</h4>
-    <p className="muted mb-4">Explore the 12 epics and 190+ user stories that make up the MVP implementation</p>
+    <p className="muted">Explore the detailed user stories for each epic</p>
     <p><a href="/docs/epics">View Epics →</a></p>
   </div>
 
   <div className="rounded-lg border bg-card p-6">
     <h4>Architecture Guide</h4>
-    <p className="muted mb-4">Understand the technical architecture, design patterns, and implementation details</p>
+    <p className="muted">Understand the technical architecture and patterns</p>
     <p><a href="/docs/architecture">View Architecture →</a></p>
   </div>
 
   <div className="rounded-lg border bg-card p-6">
-    <h4>Tech Stack</h4>
-    <p className="muted mb-4">Learn about the modern technologies powering Hogwarts platform</p>
-    <p><a href="/docs/stack">View Stack →</a></p>
-  </div>
-</div>
-
-### Get Started
-
-<div className="rounded-lg border bg-card p-6 my-8">
-  <h4>Ready to Transform Your School?</h4>
-  <p className="muted mb-4">Join the schools already using Hogwarts to automate operations and focus on what matters most—education.</p>
-
-  <div className="flex gap-4 flex-wrap">
-    <a href="https://ed.databayt.org" className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
-      Visit Platform
-    </a>
-    <a href="/docs/business/sales" className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground">
-      Contact Sales
-    </a>
-    <a href="/docs/contribute" className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground">
-      Contribute
-    </a>
+    <h4>CLAUDE.md</h4>
+    <p className="muted">Essential commands, workflows, and development guidelines</p>
+    <p><a href="https://github.com/databayt/hogwarts/blob/main/CLAUDE.md">View Guide →</a></p>
   </div>
 </div>
 
@@ -722,6 +485,6 @@ The following features are intentionally excluded from MVP and planned for post-
 
 <div className="rounded-lg border bg-muted p-6 my-8">
   <p className="muted">
-    <strong>Note:</strong> This MVP represents a production-ready platform actively serving schools. All features listed have been implemented, tested, and deployed. Success metrics are based on real-world usage data from pilot schools.
+    <strong>Document Purpose:</strong> This checklist is designed for a team of 4 developers newly assigned to the Hogwarts project. Use it to assess current implementation status, identify technical debt, and plan your first sprint. All checkboxes should be filled during your first week audit.
   </p>
 </div>
