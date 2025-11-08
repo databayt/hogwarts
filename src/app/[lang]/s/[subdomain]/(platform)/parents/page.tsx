@@ -56,7 +56,7 @@ export default async function Parents({ params, searchParams }: ParentsProps) {
           className="text-start max-w-none"
         />
         <PageNav pages={parentPages} />
-        <ParentsContent school={school} searchParams={searchParams} dictionary={dictionary.school} />
+        <ParentsContent searchParams={searchParams} dictionary={dictionary} lang={lang} />
       </div>
     </div>
   );
