@@ -49,6 +49,7 @@ export const docsConfig: DocsConfig = {
         { title: "Competitors", href: "/docs/competitors", items: [] },
         { title: "Awesome shadcn", href: "/docs/awesome-shadcn", items: [] },
         { title: "Inspiration", href: "/docs/inspiration", items: [] },
+        { title: "Shared Economy", href: "/docs/shared-economy", items: [] },
       ],
     },
 
