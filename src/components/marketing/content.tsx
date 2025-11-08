@@ -24,7 +24,6 @@ export default function HomeContent(props: Props) {
   const { dictionary, lang } = props;
   return (
     <main className="flex min-h-screen flex-col">
-        <h1>dfshdgsh</h1>
       <Hero dictionary={dictionary} lang={lang} />
       {/* <Gallery />
       <Stack />
