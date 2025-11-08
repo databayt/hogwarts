@@ -56,7 +56,7 @@ This document explores **fair contribution valuation** for Hogwarts, ensuring ev
 - Review quality score: 5 points per substantive comment
 - Mentoring factor: 10 points if reviewer teaches (not just rejects)
 - Catch critical bugs: 50 points per security/data loss bug caught
-- Anti-spam: Reviews <50 words or just "LGTM" = 0 points
+- Anti-spam: Reviews less than 50 words or just "LGTM" = 0 points
 
 ---
 
@@ -119,7 +119,7 @@ This document explores **fair contribution valuation** for Hogwarts, ensuring ev
 
 #### Sybil Attack Prevention
 
-- Require verified identity (GitHub account >6 months, verified email)
+- Require verified identity (GitHub account over 6 months, verified email)
 - Contribution velocity limits (max 100 commits/day reviewed)
 - Peer validation: Large contributions need 2+ maintainer reviews
 
@@ -131,7 +131,7 @@ This document explores **fair contribution valuation** for Hogwarts, ensuring ev
 
 #### Collusion Detection
 
-- If 2+ contributors only review each other (>80% overlap), flag for human review
+- If 2+ contributors only review each other (over 80% overlap), flag for human review
 - Circular endorsement: A reviews B, B reviews A = reduced multiplier (0.7x)
 
 ---
@@ -295,7 +295,7 @@ If (Contribution Value < $45/hour):
 
 #### Safeguards
 
-- No single contributor can have >10% voting power (decentralization)
+- No single contributor can have more than 10% voting power (decentralization)
 - Founding team voting power decays 10%/year (prevents eternal control)
 - Emergency brake: If 100+ contributors object, change is paused for review
 - Independent arbitration: External mediator for major disputes (DAO-style)
