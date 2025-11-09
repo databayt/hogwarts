@@ -75,7 +75,7 @@ interface RecentSalesCardProps {
  * Perfect for displaying recent financial transactions, customer purchases, or payment history.
  * Shows avatar, name, email, and amount in a clean list format.
  *
- * Based on shadcn/ui dashboard example pattern.
+ * Based on shadcn/ui lab example pattern.
  *
  * @example
  * ```tsx

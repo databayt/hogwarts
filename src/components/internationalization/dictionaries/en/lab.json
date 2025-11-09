@@ -1,0 +1,122 @@
+{
+  "lab": {
+    "title": "Dashboard Components Lab",
+    "description": "Interactive showcase of 32 dashboard card components",
+    "filters": {
+      "all": "All Components",
+      "search": "Search components...",
+      "category": "Filter by category"
+    },
+    "categories": {
+      "enhanced": "Enhanced Cards",
+      "variants": "New Variants",
+      "modern": "Modern 2025 Patterns",
+      "shadcn": "shadcn Dashboard Patterns",
+      "states": "Loading & Interactive States"
+    },
+    "sections": {
+      "enhanced": {
+        "title": "Enhanced Cards",
+        "description": "5 original cards with size, loading, and onClick features",
+        "count": "5 components"
+      },
+      "variants": {
+        "title": "New Variants",
+        "description": "7 specialized card types",
+        "count": "7 components"
+      },
+      "modern": {
+        "title": "Modern 2025 Patterns",
+        "description": "12 interactive and engaging card designs",
+        "count": "12 components"
+      },
+      "shadcn": {
+        "title": "shadcn Dashboard Patterns",
+        "description": "8 advanced dashboard card patterns",
+        "count": "8 components"
+      },
+      "loading": {
+        "title": "Loading States",
+        "description": "Skeleton loading examples",
+        "count": "4 components"
+      },
+      "interactive": {
+        "title": "Interactive States",
+        "description": "Hoverable and clickable cards",
+        "count": "3 components"
+      }
+    },
+    "cards": {
+      "totalStudents": "Total Students",
+      "courseCompletion": "Course Completion",
+      "recentActivities": "Recent Activities",
+      "totalRevenue": "Total Revenue",
+      "createCourse": "Create New Course",
+      "createCourseDesc": "Start building your next amazing course",
+      "getStarted": "Get Started",
+      "performanceMetrics": "Performance Metrics",
+      "currentMonth": "Current Month",
+      "lastMonth": "Last Month",
+      "difference": "Difference",
+      "featuredCourse": "Featured Course",
+      "courseModules": "Course Modules",
+      "noStudentsYet": "No Students Yet",
+      "noStudentsDesc": "Start by inviting students to your course",
+      "inviteStudents": "Invite Students",
+      "revenueBreakdown": "Revenue Breakdown",
+      "subscriptions": "Subscriptions",
+      "oneTime": "One-time",
+      "activeStudents": "Active Students",
+      "newAssignment": "New Assignment",
+      "assignmentDue": "Math homework is due tomorrow",
+      "courseCreated": "Course Created",
+      "firstStudent": "First Student Enrolled",
+      "assignmentPosted": "Assignment Posted",
+      "seniorTeacher": "Senior Teacher",
+      "completionGoal": "Course Completion",
+      "students": "students",
+      "teamMeeting": "Team Meeting",
+      "monthlySync": "Monthly team sync and planning session",
+      "conferenceRoom": "Conference Room A",
+      "addStudent": "Add Student",
+      "newCourse": "New Course",
+      "sendNotice": "Send Notice",
+      "settings": "Settings",
+      "socialEngagement": "Social Engagement",
+      "followers": "Followers",
+      "courses": "Courses",
+      "certificates": "Certificates",
+      "rating": "Rating",
+      "successRate": "Success Rate",
+      "recentSales": "Recent Sales",
+      "recentActivity": "Recent Activity",
+      "teamMembers": "Team Members",
+      "topPerformers": "Top Performers",
+      "taskList": "Task List",
+      "studentPerformance": "Student Performance",
+      "overallStats": "Overall Statistics",
+      "allComplete": "Success!",
+      "allCompleteDesc": "All students have completed the course requirements",
+      "clickMe": "Click Me!",
+      "clickableCard": "Clickable Card",
+      "hoverMe": "Hover Me!",
+      "hoverableCard": "Hoverable Card",
+      "actionRequired": "Action Required",
+      "actionRequiredDesc": "Click the button to perform an action",
+      "takeAction": "Take Action",
+      "name": "Name",
+      "score": "Score",
+      "grade": "Grade",
+      "reviewAssignments": "Review assignments",
+      "prepareLectureNotes": "Prepare lecture notes",
+      "gradeExams": "Grade exams",
+      "today": "Today",
+      "tomorrow": "Tomorrow",
+      "activeCourses": "Active Courses",
+      "avgRating": "Avg. Rating",
+      "completion": "Completion",
+      "online": "online",
+      "offline": "offline"
+    }
+  }
+}

@@ -99,7 +99,7 @@ export function ActionCard({
 
           {/* Content */}
           <div className="flex-1 space-y-1">
-            <h4 className="font-semibold text-foreground">{title}</h4>
+            <h4>{title}</h4>
             <p className="muted">{description}</p>
           </div>
 

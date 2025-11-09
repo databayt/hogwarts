@@ -13,6 +13,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - [Automation & Agents](#automation--agents)
 - [Build System](#build-system)
 - [Testing](#testing)
+- [UI Factory System](#ui-factory-system)
 - [Common Gotchas](#common-gotchas)
 
 ---
@@ -819,6 +820,428 @@ import { IconWrapper } from '@/components/icons/icon-wrapper'
 
 <IconWrapper name="hands-gesture-01" size={24} />
 ```
+
+---
+
+## UI Factory System
+
+**AI-Powered Component Generation** following shadcn/ui patterns with full automation.
+
+> 📚 **Complete Documentation**: See [UI_FACTORY.md](./UI_FACTORY.md) for comprehensive guide including:
+> - Installation & Setup
+> - All Commands (`/ui-add`, `/ui-generate`, `/ui-validate`, `/ui-copy-showcase`)
+> - Quality Standards & Validation System
+> - Radix UI Primitives Reference
+> - Pre-commit Hooks
+> - Troubleshooting & Examples
+
+### Philosophy
+
+The UI Factory follows shadcn/ui's **copy-paste architecture**:
+- Components are copied to your codebase (not installed as dependencies)
+- Full control over source code and styling
+- No hidden dependencies or version lock-in
+- Built on Radix UI primitives for accessibility
+- Styled with Tailwind CSS and semantic tokens
+
+### Architecture Layers
+
+1. **Structure & Behavior** - Headless components (Radix UI)
+2. **Visual Presentation** - Tailwind utility classes + CSS variables
+3. **Composition** - Flexible, customizable through props
+4. **Accessibility** - WCAG 2.1 AA compliance built-in
+
+### Quick Start
+
+```bash
+# Add a component from shadcn registry
+/ui-add button
+
+# Generate custom component with AI
+/ui-generate "create a pricing card with three tiers"
+
+# Validate UI quality
+/ui-validate
+
+# Copy shadcn showcase components
+/ui-copy-showcase
+```
+
+### Component Organization
+
+```
+src/components/
+├── ui/           # shadcn/ui primitives (Button, Card, Input)
+├── atom/         # Composed components
+│   └── lab/      # shadcn showcase components
+├── platform/     # Feature components
+└── marketing/    # Landing page components
+```
+
+### MCP Integration
+
+The shadcn MCP server enables natural language component installation:
+
+**Configuration** (`.mcp.json`):
+```json
+{
+  "mcpServers": {
+    "shadcn": {
+      "command": "npx",
+      "args": ["shadcn@latest", "mcp"]
+    }
+  }
+}
+```
+
+**Usage Examples:**
+- "Show me all available components"
+- "Add a login form"
+- "Install @shadcn/pricing-card"
+- "Find me a data table component"
+
+### Commands
+
+#### `/ui-add <component>`
+Adds a component from the shadcn registry.
+
+```bash
+/ui-add button          # Add button component
+/ui-add form input      # Add multiple components
+/ui-add @custom/header  # From custom registry
+```
+
+#### `/ui-generate <prompt>`
+AI-powered component generation following all quality standards.
+
+```bash
+/ui-generate "multi-step form with progress indicator"
+/ui-generate "responsive navbar with dropdown menu"
+/ui-generate "dashboard stat cards with charts"
+```
+
+**Automatic Quality Checks:**
+- ✅ Semantic HTML compliance
+- ✅ Semantic token usage (95%+)
+- ✅ TypeScript strict mode
+- ✅ Accessibility (ARIA, keyboard navigation)
+- ✅ Internationalization ready
+- ✅ Responsive design (mobile-first)
+- ✅ Test coverage
+
+#### `/ui-validate [file]`
+Validates UI components against quality standards.
+
+```bash
+/ui-validate                          # Validate all components
+/ui-validate src/components/ui/*      # Validate UI directory
+/ui-validate src/components/atom/card # Validate specific component
+```
+
+**Checks:**
+- Semantic token violations
+- Typography violations
+- Accessibility issues
+- Missing internationalization
+- Tailwind best practices
+- Component composition patterns
+
+#### `/ui-copy-showcase`
+Copies all shadcn showcase components to `src/components/atom/lab/`.
+
+### Agents
+
+#### `ui-factory`
+Master agent for UI development and component generation.
+
+**Capabilities:**
+- Component design and architecture
+- shadcn/ui pattern implementation
+- Accessibility compliance
+- Responsive design
+- Test generation
+
+**Usage:**
+```bash
+# Generate complex UI
+/agents/ui-factory "build a file upload component with drag-and-drop, progress bars, and preview"
+
+# Refactor existing component
+/agents/ui-factory "refactor the Header component to use shadcn patterns"
+```
+
+#### `shadcn-expert`
+Specialized agent for shadcn/ui best practices.
+
+**Focus Areas:**
+- Radix UI primitive usage
+- Component composition
+- Tailwind patterns
+- Theme integration
+- Registry configuration
+
+### Skills
+
+#### `component-generator`
+Generates production-ready components.
+
+**Process:**
+1. Analyze requirements
+2. Select appropriate Radix primitives
+3. Design component API
+4. Implement with semantic tokens
+5. Add TypeScript types
+6. Generate tests
+7. Create documentation
+
+**Template:**
+```tsx
+"use client"
+
+import * as React from "react"
+import { cn } from "@/lib/utils"
+
+interface ComponentProps {
+  // Typed props
+}
+
+export function Component({ ...props }: ComponentProps) {
+  return (
+    // Implementation with semantic tokens
+  )
+}
+```
+
+#### `ui-validator`
+Validates components against quality standards.
+
+**Validation Rules:**
+1. **Semantic Tokens** - No hardcoded colors
+2. **Typography** - Semantic HTML only
+3. **Accessibility** - ARIA attributes, keyboard nav
+4. **Internationalization** - No hardcoded strings
+5. **TypeScript** - Strict mode compliance
+6. **Testing** - 95%+ coverage
+
+### Component Quality Standards
+
+#### 1. Semantic Token Usage (Mandatory)
+
+```tsx
+// ❌ WRONG - Hardcoded colors
+<div className="bg-white dark:bg-gray-900 text-black">
+
+// ✅ CORRECT - Semantic tokens
+<div className="bg-background text-foreground">
+```
+
+**Token Categories:**
+- **Backgrounds**: `bg-background`, `bg-card`, `bg-muted`, `bg-accent`
+- **Text**: `text-foreground`, `text-muted-foreground`
+- **Borders**: `border-border`, `border-input`
+- **Actions**: `bg-primary`, `bg-secondary`, `bg-destructive`
+
+#### 2. Semantic HTML (Mandatory)
+
+```tsx
+// ❌ WRONG - Typography utilities
+<div className="text-3xl font-bold">Title</div>
+
+// ✅ CORRECT - Semantic HTML
+<h2>Title</h2>
+```
+
+#### 3. Accessibility (WCAG 2.1 AA)
+
+```tsx
+// Required attributes
+<button
+  aria-label="Close menu"
+  aria-expanded={isOpen}
+  aria-controls="menu-content"
+>
+
+// Keyboard navigation
+const handleKeyDown = (e: React.KeyboardEvent) => {
+  if (e.key === 'Escape') close()
+  if (e.key === 'Enter' || e.key === ' ') toggle()
+}
+```
+
+#### 4. Internationalization
+
+```tsx
+import { useDictionary } from '@/components/internationalization/use-dictionary'
+
+export function Component() {
+  const { dictionary } = useDictionary()
+
+  return <button>{dictionary?.ui?.save || 'Save'}</button>
+}
+```
+
+#### 5. Responsive Design
+
+```tsx
+// Mobile-first approach
+<div className="w-full px-4 sm:px-6 md:px-8 lg:px-12">
+  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    {/* Content */}
+  </div>
+</div>
+```
+
+### Radix UI Primitives
+
+**Available Primitives:**
+- **Dialog** - Modals, alerts, confirmations
+- **Dropdown Menu** - Context menus, action menus
+- **Popover** - Tooltips, popovers, dropdowns
+- **Select** - Custom select inputs
+- **Checkbox** - Toggle states
+- **Radio Group** - Single selection
+- **Tabs** - Navigation tabs
+- **Accordion** - Collapsible sections
+- **Slider** - Range inputs
+- **Switch** - Boolean toggles
+- **Toast** - Notifications
+
+**Pattern:**
+```tsx
+import * as Dialog from "@radix-ui/react-dialog"
+
+<Dialog.Root>
+  <Dialog.Trigger asChild>
+    <button>Open</button>
+  </Dialog.Trigger>
+  <Dialog.Portal>
+    <Dialog.Overlay className="bg-background/80 backdrop-blur-sm" />
+    <Dialog.Content className="bg-card border border-border">
+      <Dialog.Title>Title</Dialog.Title>
+      <Dialog.Description>Description</Dialog.Description>
+    </Dialog.Content>
+  </Dialog.Portal>
+</Dialog.Root>
+```
+
+### Pre-Commit Quality Hooks
+
+Automatic validation before commits:
+
+```json
+{
+  "hooks": {
+    "pre-commit": [
+      "ui-token-check",     // Validate semantic tokens
+      "ui-html-check",      // Validate semantic HTML
+      "ui-a11y-check",      // Accessibility audit
+      "ui-i18n-check",      // Internationalization check
+      "ui-test-check"       // Component test coverage
+    ]
+  }
+}
+```
+
+### Registry Configuration
+
+**components.json:**
+```json
+{
+  "$schema": "https://ui.shadcn.com/schema.json",
+  "style": "new-york",
+  "rsc": true,
+  "tsx": true,
+  "tailwind": {
+    "config": "tailwind.config.ts",
+    "css": "src/styles/globals.css",
+    "baseColor": "slate",
+    "cssVariables": true
+  },
+  "aliases": {
+    "components": "@/components",
+    "utils": "@/lib/utils",
+    "ui": "@/components/ui",
+    "lib": "@/lib",
+    "hooks": "@/hooks"
+  },
+  "registries": {
+    "@shadcn": "https://ui.shadcn.com/r/{name}.json",
+    "@custom": {
+      "url": "https://registry.company.com/{name}.json",
+      "headers": {
+        "Authorization": "Bearer ${REGISTRY_TOKEN}"
+      }
+    }
+  }
+}
+```
+
+### Component Lifecycle
+
+1. **Generate** - `/ui-generate` or `/ui-add`
+2. **Validate** - `/ui-validate` (automatic in pre-commit)
+3. **Test** - `/test` generates comprehensive tests
+4. **Document** - Auto-generated JSDoc comments
+5. **Review** - `/review` for quality assurance
+6. **Deploy** - Included in build pipeline
+
+### Performance Patterns
+
+```tsx
+// 1. Lazy loading
+const HeavyComponent = lazy(() => import('./heavy-component'))
+
+// 2. Memoization
+const MemoizedComponent = memo(Component)
+
+// 3. Virtualization for long lists
+import { useVirtualizer } from '@tanstack/react-virtual'
+
+// 4. Debounced search
+import { useDebouncedValue } from '@/hooks/use-debounced-value'
+```
+
+### Anti-Patterns to Avoid
+
+❌ **Don't:**
+- Modify shadcn/ui components directly (copy and customize)
+- Use hardcoded colors or `dark:` classes
+- Nest components too deeply (max 3 levels)
+- Create components with too many props (>10)
+- Skip accessibility attributes
+- Hardcode text (always use dictionary)
+- Use `div` for text content
+
+✅ **Do:**
+- Copy components and customize locally
+- Use semantic tokens for all colors
+- Favor composition over deep nesting
+- Keep components focused (single responsibility)
+- Include ARIA attributes
+- Internationalize all text
+- Use semantic HTML
+
+### Troubleshooting
+
+**Issue**: Component doesn't respond to theme changes
+**Solution**: Replace hardcoded colors with semantic tokens
+
+**Issue**: TypeScript errors after adding component
+**Solution**: Run `pnpm tsc --noEmit` and fix type issues
+
+**Issue**: Component not accessible
+**Solution**: Run `/ui-validate` and add missing ARIA attributes
+
+**Issue**: Build fails after adding component
+**Solution**: Check imports, ensure "use client" directive if needed
+
+### Success Metrics
+
+- **100% semantic token adoption** - No hardcoded colors
+- **Zero accessibility violations** - WCAG 2.1 AA compliance
+- **95%+ test coverage** - All components tested
+- **Sub-100ms interactions** - Optimized performance
+- **RTL/LTR support** - Full internationalization
 
 ---
 

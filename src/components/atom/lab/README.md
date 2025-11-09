@@ -771,7 +771,7 @@ import {
   ChartCard,
   ListCard,
   ActionCard,
-} from '@/components/atom/dashboard'
+} from '@/components/atom/lab'
 
 export default function AdminDashboard() {
   const { data, isLoading } = useDashboardData()

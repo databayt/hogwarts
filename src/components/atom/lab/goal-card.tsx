@@ -101,7 +101,7 @@ export function GoalCard({
         ) : (
           <div className="space-y-4">
             {/* Title */}
-            <h5 className="font-medium text-foreground text-center">{title}</h5>
+            <h5 className="text-center">{title}</h5>
 
             {/* Circular Progress Visual */}
             <div className="relative flex items-center justify-center">
@@ -134,13 +134,13 @@ export function GoalCard({
                 />
               </svg>
               <div className="absolute inset-0 flex items-center justify-center">
-                <h3 className="font-bold text-foreground">{percentage}%</h3>
+                <h3>{percentage}%</h3>
               </div>
             </div>
 
             {/* Stats */}
             <div className="space-y-1 text-center">
-              <p className="font-medium text-foreground">
+              <p>
                 {current.toLocaleString()} / {target.toLocaleString()}
                 {unit && ` ${unit}`}
               </p>

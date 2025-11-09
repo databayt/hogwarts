@@ -1,0 +1,122 @@
+{
+  "lab": {
+    "title": "معمل مكونات لوحة التحكم",
+    "description": "عرض تفاعلي لـ 32 مكون بطاقة لوحة التحكم",
+    "filters": {
+      "all": "جميع المكونات",
+      "search": "البحث عن المكونات...",
+      "category": "تصفية حسب الفئة"
+    },
+    "categories": {
+      "enhanced": "البطاقات المحسنة",
+      "variants": "المتغيرات الجديدة",
+      "modern": "أنماط 2025 الحديثة",
+      "shadcn": "أنماط لوحة التحكم shadcn",
+      "states": "حالات التحميل والتفاعل"
+    },
+    "sections": {
+      "enhanced": {
+        "title": "البطاقات المحسنة",
+        "description": "5 بطاقات أصلية مع ميزات الحجم والتحميل والنقر",
+        "count": "5 مكونات"
+      },
+      "variants": {
+        "title": "المتغيرات الجديدة",
+        "description": "7 أنواع بطاقات متخصصة",
+        "count": "7 مكونات"
+      },
+      "modern": {
+        "title": "أنماط 2025 الحديثة",
+        "description": "12 تصميم بطاقة تفاعلي وجذاب",
+        "count": "12 مكونًا"
+      },
+      "shadcn": {
+        "title": "أنماط لوحة التحكم shadcn",
+        "description": "8 أنماط بطاقات لوحة تحكم متقدمة",
+        "count": "8 مكونات"
+      },
+      "loading": {
+        "title": "حالات التحميل",
+        "description": "أمثلة تحميل الهيكل العظمي",
+        "count": "4 مكونات"
+      },
+      "interactive": {
+        "title": "الحالات التفاعلية",
+        "description": "بطاقات قابلة للتحويم والنقر",
+        "count": "3 مكونات"
+      }
+    },
+    "cards": {
+      "totalStudents": "إجمالي الطلاب",
+      "courseCompletion": "إنجاز الدورة",
+      "recentActivities": "الأنشطة الأخيرة",
+      "totalRevenue": "إجمالي الإيرادات",
+      "createCourse": "إنشاء دورة جديدة",
+      "createCourseDesc": "ابدأ في بناء دورتك المذهلة التالية",
+      "getStarted": "ابدأ",
+      "performanceMetrics": "مقاييس الأداء",
+      "currentMonth": "الشهر الحالي",
+      "lastMonth": "الشهر الماضي",
+      "difference": "الفرق",
+      "featuredCourse": "الدورة المميزة",
+      "courseModules": "وحدات الدورة",
+      "noStudentsYet": "لا يوجد طلاب بعد",
+      "noStudentsDesc": "ابدأ بدعوة الطلاب إلى دورتك",
+      "inviteStudents": "دعوة الطلاب",
+      "revenueBreakdown": "تفصيل الإيرادات",
+      "subscriptions": "الاشتراكات",
+      "oneTime": "مرة واحدة",
+      "activeStudents": "الطلاب النشطون",
+      "newAssignment": "مهمة جديدة",
+      "assignmentDue": "واجب الرياضيات مستحق غدًا",
+      "courseCreated": "تم إنشاء الدورة",
+      "firstStudent": "تم تسجيل أول طالب",
+      "assignmentPosted": "تم نشر المهمة",
+      "seniorTeacher": "مدرس كبير",
+      "completionGoal": "إنجاز الدورة",
+      "students": "طلاب",
+      "teamMeeting": "اجتماع الفريق",
+      "monthlySync": "مزامنة الفريق الشهرية وجلسة التخطيط",
+      "conferenceRoom": "غرفة المؤتمرات أ",
+      "addStudent": "إضافة طالب",
+      "newCourse": "دورة جديدة",
+      "sendNotice": "إرسال إشعار",
+      "settings": "الإعدادات",
+      "socialEngagement": "التفاعل الاجتماعي",
+      "followers": "المتابعون",
+      "courses": "الدورات",
+      "certificates": "الشهادات",
+      "rating": "التقييم",
+      "successRate": "معدل النجاح",
+      "recentSales": "المبيعات الأخيرة",
+      "recentActivity": "النشاط الأخير",
+      "teamMembers": "أعضاء الفريق",
+      "topPerformers": "الأفضل أداءً",
+      "taskList": "قائمة المهام",
+      "studentPerformance": "أداء الطالب",
+      "overallStats": "الإحصائيات الإجمالية",
+      "allComplete": "نجاح!",
+      "allCompleteDesc": "أكمل جميع الطلاب متطلبات الدورة",
+      "clickMe": "انقر علي!",
+      "clickableCard": "بطاقة قابلة للنقر",
+      "hoverMe": "مرر علي!",
+      "hoverableCard": "بطاقة قابلة للتحويم",
+      "actionRequired": "مطلوب إجراء",
+      "actionRequiredDesc": "انقر على الزر لتنفيذ إجراء",
+      "takeAction": "اتخذ إجراء",
+      "name": "الاسم",
+      "score": "الدرجة",
+      "grade": "التقدير",
+      "reviewAssignments": "مراجعة المهام",
+      "prepareLectureNotes": "تحضير ملاحظات المحاضرة",
+      "gradeExams": "تقييم الامتحانات",
+      "today": "اليوم",
+      "tomorrow": "غدًا",
+      "activeCourses": "الدورات النشطة",
+      "avgRating": "متوسط التقييم",
+      "completion": "الإنجاز",
+      "online": "متصل",
+      "offline": "غير متصل"
+    }
+  }
+}

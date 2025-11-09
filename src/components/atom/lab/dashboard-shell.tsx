@@ -25,12 +25,12 @@ interface DashboardShellProps {
 /**
  * DashboardShell - Full page layout wrapper
  *
- * Provides consistent padding, spacing, and max-width for dashboard pages.
- * Use this as the top-level wrapper for all dashboard content.
+ * Provides consistent padding, spacing, and max-width for lab pages.
+ * Use this as the top-level wrapper for all lab content.
  *
  * @example
  * ```tsx
- * // In a dashboard page component
+ * // In a lab page component
  * export default function AdminDashboard() {
  *   return (
  *     <DashboardShell>
@@ -74,7 +74,7 @@ export function DashboardShell({
   return (
     <div
       className={cn(
-        "w-full",
+        "w-full px-4 sm:px-6 md:px-8",
         spacingClasses[spacing],
         maxWidthClasses[maxWidth],
         className

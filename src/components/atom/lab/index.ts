@@ -1,7 +1,7 @@
 /**
  * Dashboard Atomic Components
  *
- * A collection of reusable atomic components for building dashboard UIs.
+ * A collection of reusable atomic components for building lab UIs.
  * Components follow a four-level hierarchy:
  * 1. Base Atoms - Smallest reusable units
  * 2. Composite Atoms - Combine 2-3 base atoms
@@ -10,7 +10,7 @@
  *
  * All components use 100% semantic tokens for theming.
  *
- * @version 4.0.0 - Added shadcn dashboard patterns (24 → 32 cards)
+ * @version 4.0.0 - Added shadcn lab patterns (24 → 32 cards)
  */
 
 // ============================================================================

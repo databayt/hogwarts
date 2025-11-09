@@ -29,9 +29,9 @@ const variantStyles = {
   default: "bg-muted text-foreground",
   primary: "bg-primary/10 text-primary",
   muted: "bg-muted/50 text-muted-foreground",
-  success: "bg-green-500/10 text-green-600 dark:text-green-500",
-  warning: "bg-yellow-500/10 text-yellow-600 dark:text-yellow-500",
-  danger: "bg-red-500/10 text-red-600 dark:text-red-500",
+  success: "bg-chart-2/10 text-chart-2",
+  warning: "bg-chart-3/10 text-chart-3",
+  danger: "bg-destructive/10 text-destructive",
 }
 
 /**

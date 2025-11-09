@@ -114,7 +114,7 @@ export function CalendarCard({
           <div className="space-y-3">
             {/* Header */}
             <div className="flex items-start justify-between gap-2">
-              <h5 className="font-semibold text-foreground line-clamp-2">{title}</h5>
+              <h5 className="line-clamp-2">{title}</h5>
               {status}
             </div>
 

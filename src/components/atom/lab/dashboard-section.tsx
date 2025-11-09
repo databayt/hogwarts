@@ -33,8 +33,8 @@ interface DashboardSectionProps {
 /**
  * DashboardSection - Titled section with optional action
  *
- * Groups related dashboard cards under a consistent header.
- * Perfect for organizing different areas of a dashboard
+ * Groups related lab cards under a consistent header.
+ * Perfect for organizing different areas of a lab
  * (e.g., "Overview", "Recent Activity", "Quick Stats").
  *
  * @example
@@ -65,7 +65,7 @@ export function DashboardSection({
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-1">
-          <h3 className="font-semibold text-foreground">{title}</h3>
+          <h3>{title}</h3>
           {description && <p className="muted">{description}</p>}
         </div>
         {action && <div className="shrink-0">{action}</div>}

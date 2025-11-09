@@ -74,7 +74,7 @@ export function EmptyStateCard({
 
           {/* Content */}
           <div className="space-y-2 max-w-sm">
-            <h4 className="font-semibold text-foreground">{title}</h4>
+            <h4>{title}</h4>
             <p className="muted">{description}</p>
           </div>
 

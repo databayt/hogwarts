@@ -34,7 +34,7 @@ interface FlipCardProps {
  * FlipCard - Interactive 3D flip card with front/back
  *
  * Perfect for stat cards with additional details, interactive dashboards,
- * or showcasing data with context. Inspired by modern dashboard trends.
+ * or showcasing data with context. Inspired by modern lab trends.
  *
  * @example
  * ```tsx

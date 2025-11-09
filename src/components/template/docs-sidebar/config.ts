@@ -45,6 +45,7 @@ export const docsConfig: DocsConfig = {
         { title: "MVP", href: "/docs/mvp", items: [] },
         { title: "Epics", href: "/docs/epics", items: [] },
         { title: "Architecture", href: "/docs/architecture", items: [] },
+        { title: "UI Factory", href: "/docs/ui-factory", items: [] },
         { title: "Demo", href: "/docs/demo", items: [] },
         { title: "Competitors", href: "/docs/competitors", items: [] },
         { title: "Awesome shadcn", href: "/docs/awesome-shadcn", items: [] },
@@ -76,7 +77,7 @@ export const docsConfig: DocsConfig = {
     //   title: "Operator",
     //   items: [
     //     { title: "Overview", href: "/docs/operator", items: [] },
-    //     { title: "Dashboard", href: "/docs/operator-dashboard", items: [] },
+    //     { title: "Dashboard", href: "/docs/operator-lab", items: [] },
     //   ],
     // },
 
@@ -84,8 +85,8 @@ export const docsConfig: DocsConfig = {
     //   title: "Platform",
     //   items: [
     //     { title: "Overview", href: "/docs/platform", items: [] },
-    //     { title: "Dashboard", href: "/docs/platform-dashboard", items: [] },
-    //     { title: "Admin Dashboard", href: "/docs/admin-dashboard", items: [] },
+    //     { title: "Dashboard", href: "/docs/platform-lab", items: [] },
+    //     { title: "Admin Dashboard", href: "/docs/admin-lab", items: [] },
     //   ],
     // },
 
@@ -104,7 +105,7 @@ export const docsConfig: DocsConfig = {
     // {
     //   title: "Components",
     //   items: [
-    //     { title: "Dashboard Cards", href: "/docs/dashboard", items: [] },
+    //     { title: "Dashboard Cards", href: "/docs/lab", items: [] },
     //     { title: "File Uploader", href: "/docs/file-uploader", items: [] },
     //     { title: "Tables", href: "/docs/tables", items: [] },
     //     { title: "Typography", href: "/docs/typography", items: [] },

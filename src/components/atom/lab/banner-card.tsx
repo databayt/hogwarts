@@ -146,7 +146,7 @@ export function BannerCard({
 
           {/* Content */}
           <div className="flex-1 min-w-0 space-y-2">
-            <h5 className="font-semibold text-foreground leading-tight">{title}</h5>
+            <h5 className="leading-tight">{title}</h5>
             {description && <p className="muted">{description}</p>}
             {action && <div className="pt-1">{action}</div>}
           </div>

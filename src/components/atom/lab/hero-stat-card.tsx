@@ -58,7 +58,7 @@ interface HeroStatCardProps {
 /**
  * HeroStatCard - Large prominent KPI display card
  *
- * Perfect for highlighting the most important metric on a dashboard.
+ * Perfect for highlighting the most important metric on a lab.
  * 1.5x larger than StatCard with prominent value and optional subtitle.
  *
  * @example

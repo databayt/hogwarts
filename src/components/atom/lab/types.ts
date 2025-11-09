@@ -1,4 +1,4 @@
-// Shared TypeScript types for dashboard atomic components
+// Shared TypeScript types for lab atomic components
 
 import * as React from "react"
 

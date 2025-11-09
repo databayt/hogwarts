@@ -4,9 +4,9 @@
   "rsc": true,
   "tsx": true,
   "tailwind": {
-    "config": "",
-    "css": "src/app/globals.css",
-    "baseColor": "neutral",
+    "config": "tailwind.config.ts",
+    "css": "src/styles/globals.css",
+    "baseColor": "slate",
     "cssVariables": true,
     "prefix": ""
   },
@@ -17,5 +17,8 @@
     "lib": "@/lib",
     "hooks": "@/hooks"
   },
-  "iconLibrary": "lucide"
+  "iconLibrary": "lucide",
+  "registries": {
+    "@shadcn": "https://ui.shadcn.com/r/{name}.json"
+  }
 }

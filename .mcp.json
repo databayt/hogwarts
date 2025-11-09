@@ -90,6 +90,12 @@
       },
       "description": "Team notifications, deployment alerts, error reporting, collaboration"
     },
+    "shadcn": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["shadcn@latest", "mcp"],
+      "description": "shadcn/ui component registry - discover, install, and generate UI components with natural language"
+    },
     "svg-tools": {
       "type": "stdio",
       "command": "npx",

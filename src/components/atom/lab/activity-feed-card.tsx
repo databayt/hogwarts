@@ -208,12 +208,12 @@ export function ActivityFeedCard({
                 )}
                 <div className="flex-1 min-w-0 space-y-1">
                   <div className="flex items-start justify-between gap-2">
-                    <p className="font-medium text-foreground leading-none">
+                    <p className="leading-none">
                       {activity.title}
                     </p>
-                    <time className="muted text-xs shrink-0 whitespace-nowrap">
+                    <small className="muted shrink-0 whitespace-nowrap">
                       {activity.timestamp}
-                    </time>
+                    </small>
                   </div>
                   <p className="muted line-clamp-2">{activity.description}</p>
                 </div>

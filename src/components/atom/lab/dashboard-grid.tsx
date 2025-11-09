@@ -24,7 +24,7 @@ interface DashboardGridProps {
 }
 
 /**
- * DashboardGrid - Responsive grid container for dashboard cards
+ * DashboardGrid - Responsive grid container for lab cards
  *
  * Provides a consistent, responsive grid layout with customizable
  * column breakpoints. Uses Tailwind's grid system with semantic spacing.

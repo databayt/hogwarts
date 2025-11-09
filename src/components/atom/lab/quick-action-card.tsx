@@ -58,7 +58,7 @@ interface QuickActionCardProps {
 /**
  * QuickActionCard - Grid of quick action buttons
  *
- * Perfect for dashboard shortcuts, frequently used actions, or navigation tiles.
+ * Perfect for lab shortcuts, frequently used actions, or navigation tiles.
  * Displays actions in a responsive grid with icons and labels.
  *
  * @example
