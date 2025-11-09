@@ -16,7 +16,8 @@
       "WebFetch(domain:ed.databayt.org)",
       "Bash(nul)",
       "Bash(unzip:*)",
-      "Bash(wc:*)"
+      "Bash(wc:*)",
+      "WebFetch(domain:help.figma.com)"
     ],
     "deny": [],
     "ask": []

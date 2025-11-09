@@ -96,6 +96,27 @@
       "args": ["shadcn@latest", "mcp"],
       "description": "shadcn/ui component registry - discover, install, and generate UI components with natural language"
     },
+    "a11y": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["a11y-mcp"],
+      "description": "Accessibility audits with axe-core for WCAG 2.1 AA compliance - automates UI Factory quality gate #3"
+    },
+    "storybook": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "storybook-mcp"],
+      "env": {
+        "STORYBOOK_URL": "http://localhost:6006/index.json"
+      },
+      "description": "Component documentation and visual testing - auto-generate stories and capture screenshots"
+    },
+    "design-system-analyzer": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@yajihum/design-system-mcp"],
+      "description": "Analyze React components and design tokens for accurate component properties and styling recommendations"
+    },
     "svg-tools": {
       "type": "stdio",
       "command": "npx",

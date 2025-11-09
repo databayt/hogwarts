@@ -11,6 +11,7 @@
 - [Overview](#overview)
 - [Quick Start](#quick-start)
 - [Installation](#installation)
+- [MCP Integration](#mcp-integration)
 - [Commands](#commands)
 - [Quality Standards](#quality-standards)
 - [Component Lifecycle](#component-lifecycle)
@@ -137,6 +138,225 @@ cat components.json
 4. **Enable Pre-commit Hooks**
 
 The UI quality validation hook is automatically enabled via `.claude/settings.json`.
+
+---
+
+## MCP Integration
+
+The UI Factory is enhanced with specialized MCP servers that automate quality validation, accessibility testing, and component documentation.
+
+### Configured MCP Servers
+
+#### 1. **a11y-mcp** - Accessibility Testing ⭐ CRITICAL
+
+Automates Quality Gate #3 (Accessibility) with WCAG 2.1 AA compliance checking.
+
+**Capabilities:**
+- Automated accessibility audits using axe-core
+- WCAG 2.1 AA compliance verification
+- HTML snippet analysis with violations
+- Agentic loop for auto-fixing a11y issues
+- Detailed accessibility reports
+
+**Usage:**
+```bash
+# Ask Claude to audit a page or component
+"Audit the accessibility of the button component"
+"Check WCAG compliance for src/components/ui/dialog.tsx"
+"Scan http://localhost:3000/dashboard for accessibility issues"
+```
+
+**Tools Available:**
+- `audit_webpage(url, includeHtml?, tags?)` - Detailed accessibility check
+- `get_summary(url)` - Overview of accessibility concerns
+
+**Integration with UI Factory:**
+- Automatically validates components during `/ui-generate`
+- Runs as part of `/ui-validate` quality checks
+- Pre-commit hook integration for accessibility gates
+
+#### 2. **storybook-mcp** - Component Documentation
+
+Automates component documentation and visual verification through Storybook integration.
+
+**Capabilities:**
+- Auto-generate Storybook stories for components
+- Extract component props and metadata
+- Capture component screenshots for AI analysis
+- Visual component catalog management
+- Custom tool creation for Storybook pages
+
+**Configuration:**
+```json
+{
+  "env": {
+    "STORYBOOK_URL": "http://localhost:6006/index.json"
+  }
+}
+```
+
+**Usage:**
+```bash
+# Start Storybook (if not running)
+pnpm storybook
+
+# Ask Claude to work with Storybook
+"Show me all components in Storybook"
+"Get props for the Button component"
+"Generate a story for the new PricingCard component"
+"Take screenshots of all button variants"
+```
+
+**Tools Available:**
+- `getComponentList()` - List all Storybook components
+- `getComponentsProps(components[])` - Get detailed props for multiple components
+- Custom tools for extracting information from Storybook pages
+
+**Integration with UI Factory:**
+- Automatically generates stories during `/ui-generate`
+- Validates component variants in `/ui-validate`
+- Provides visual documentation for generated components
+
+#### 3. **design-system-analyzer** - Component Analysis
+
+Analyzes React components and design tokens for accurate styling recommendations.
+
+**Capabilities:**
+- React component file analysis
+- Design token validation and extraction
+- Component property recommendations
+- Styling consistency checks
+- Design system compliance verification
+
+**Usage:**
+```bash
+# Ask Claude to analyze components
+"Analyze the design tokens in src/components/ui/button.tsx"
+"Check if the Card component uses semantic tokens correctly"
+"Extract all design tokens from the UI directory"
+```
+
+**Integration with UI Factory:**
+- Validates semantic token usage (Quality Gate #1)
+- Provides component styling recommendations
+- Ensures design system consistency
+
+### MCP-Enhanced Workflows
+
+#### Generate Component with Full Quality Automation
+
+```bash
+/ui-generate "multi-step form with progress indicator"
+```
+
+**Behind the scenes:**
+1. **shadcn MCP** - Selects appropriate Radix UI primitives
+2. **Component Generation** - Creates TypeScript component
+3. **a11y MCP** - Validates WCAG 2.1 AA compliance
+4. **design-system-analyzer** - Verifies semantic token usage
+5. **storybook-mcp** - Generates Storybook story
+6. **Auto-fix** - AI agent fixes violations in agentic loop
+7. **Quality Report** - Comprehensive validation results
+
+**Result:** Production-ready component in seconds with 95%+ quality score.
+
+#### Accessibility-First Development
+
+```bash
+# Generate component
+/ui-generate "pricing card with three tiers"
+
+# Ask Claude for accessibility audit
+"Audit the accessibility of the new pricing card component"
+
+# Auto-fix in agentic loop
+"Fix all accessibility violations and re-audit"
+```
+
+**The a11y MCP:**
+1. Scans component for violations
+2. Reports specific WCAG failures
+3. Provides fix suggestions
+4. AI agent applies fixes
+5. Re-audits to verify compliance
+6. Iterates until 100% compliant
+
+#### Storybook Documentation Automation
+
+```bash
+# Generate component
+/ui-generate "file upload with drag-and-drop"
+
+# Auto-generate Storybook documentation
+"Create a comprehensive Storybook story for the file upload component with all variants"
+
+# Capture visual examples
+"Take screenshots of all file upload states for documentation"
+```
+
+**The storybook MCP:**
+1. Analyzes component props
+2. Generates story with all variants
+3. Adds interactive controls
+4. Captures visual examples
+5. Updates component catalog
+
+### Quality Gates with MCP Automation
+
+| Gate | MCP Server | Automation Level |
+|------|------------|------------------|
+| 1. Semantic Tokens | design-system-analyzer | 95% automated |
+| 2. Semantic HTML | Built-in validator | 90% automated |
+| 3. Accessibility | **a11y-mcp** | **100% automated** |
+| 4. Internationalization | Built-in validator | 60% automated |
+| 5. TypeScript | Built-in TypeScript | 50% automated |
+| 6. Testing | Built-in test generator | 30% automated |
+| 7. Documentation | **storybook-mcp** | **95% automated** |
+
+### MCP Server Status
+
+Check configured MCP servers:
+
+```bash
+# List all active MCP servers
+# The following MCPs are configured for UI Factory:
+# - shadcn (component registry)
+# - a11y (accessibility testing)
+# - storybook (documentation)
+# - design-system-analyzer (component analysis)
+# - figma (design-to-code, if Figma Desktop is running)
+# - browser (Playwright for E2E testing)
+```
+
+### Troubleshooting MCP Integration
+
+**Issue: "a11y MCP not responding"**
+
+```bash
+# Test the MCP server directly
+npx a11y-mcp
+
+# Or ask Claude to verify
+"Test the a11y MCP connection"
+```
+
+**Issue: "Storybook URL not found"**
+
+```bash
+# Ensure Storybook is running
+pnpm storybook
+
+# Verify the URL in .mcp.json matches
+# Default: http://localhost:6006/index.json
+```
+
+**Issue: "Design System Analyzer fails"**
+
+```bash
+# The analyzer may require specific dependencies
+# Ask Claude to troubleshoot
+"Debug the design-system-analyzer MCP server"
+```
 
 ---
 
