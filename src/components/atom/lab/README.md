@@ -4,16 +4,25 @@ A comprehensive collection of reusable atomic components for building modern, re
 
 ## 📊 Overview
 
-**Version 4.0.0** - Expanded to **32 card templates** with shadcn dashboard patterns
+**Version 5.0.0** - **68 components** in flat structure with shadcn/ui v4 showcase
 
 ### Component Hierarchy
 
 ```
-1. Base Atoms (8)       → Smallest reusable units
-2. Composite Atoms (4)  → Combine 2-3 base atoms
-3. Card Templates (32)  → Complete card components
-4. Layout Components (3) → Grid and section wrappers
+1. Base Atoms (8)              → Smallest reusable units
+2. Composite Atoms (4)         → Combine 2-3 base atoms
+3. Card Templates (32)         → Complete card components
+4. Layout Components (3)       → Grid and section wrappers
+5. shadcn/ui v4 Components (21) → Official showcase components
 ```
+
+### 🗂️ Flat Structure
+
+All **68 components** live at the same level under `src/components/atom/lab/` - no nested directories!
+
+- **shadcn components** use `shadcn-` prefix for clear identification
+- **Import pattern**: `import { ShadcnFieldDemo } from '@/components/atom/lab'`
+- **Simplified imports**: No deep paths, all exports from main index.ts
 
 ### ✨ Key Features
 
@@ -1022,6 +1031,54 @@ Use dedicated `SkeletonCard` for custom layouts:
 
 ---
 
+## 🎨 shadcn/ui v4 Components (21)
+
+Official components from shadcn/ui v4 repository, adapted with `shadcn-` prefix.
+
+### Field Components (5)
+- **ShadcnFieldDemo** - Payment form with card details and billing
+- **ShadcnFieldCheckbox** - Horizontal checkbox with label
+- **ShadcnFieldChoiceCard** - Radio group with descriptive cards
+- **ShadcnFieldSlider** - Range slider with dynamic value display
+- **ShadcnFieldHear** - Multi-select checkbox group with pill styling
+
+### Input Groups (4)
+- **ShadcnInputGroupDemo** - Various input patterns (search, URL, textarea, verified)
+- **ShadcnInputGroupButton** - Secure URL input with info popover
+- **ShadcnInputGroupTextarea** - Code editor interface with actions
+- **ShadcnEmptyInputGroup** - 404 error state with search
+
+### Button Groups (4)
+- **ShadcnButtonGroupDemo** - Email actions with dropdown menus
+- **ShadcnButtonGroupInputGroup** - Messaging interface with voice mode
+- **ShadcnButtonGroupNested** - Nested button groups with navigation
+- **ShadcnButtonGroupPopover** - AI assistant interface with popover
+
+### Display (3)
+- **ShadcnItemDemo** - List item patterns for settings/notifications
+- **ShadcnItemAvatar** - User list with avatars and actions
+- **ShadcnEmptyAvatarGroup** - Empty team state with invite CTA
+
+### Feedback (2)
+- **ShadcnSpinnerBadge** - Loading badges with spinner variants
+- **ShadcnSpinnerEmpty** - Loading state with cancellation
+
+### Settings (1)
+- **ShadcnAppearanceSettings** - Compute environment configuration
+
+### Forms (1)
+- **ShadcnNotionPromptForm** - AI prompt interface with mentions and sources
+
+### Usage Example
+```tsx
+import { ShadcnFieldDemo, ShadcnButtonGroupDemo } from '@/components/atom/lab'
+
+<ShadcnFieldDemo />
+<ShadcnButtonGroupDemo />
+```
+
+---
+
 ## 📊 Component Summary
 
 | Category | Component | Purpose | Key Props |
@@ -1066,7 +1123,8 @@ Use dedicated `SkeletonCard` for custom layouts:
 
 ## ✅ Quality Metrics Achieved
 
-- **Component Count**: 5 → 32 card templates (540% increase) ✅
+- **Component Count**: 5 → 68 total components (1260% increase) ✅
+- **Flat Structure**: 100% flat, no nested directories ✅
 - **Semantic Token Adoption**: 95% → 99%+ ✅
 - **Typography Compliance**: 100% semantic HTML ✅
 - **i18n Coverage**: 100% AR/EN support ✅

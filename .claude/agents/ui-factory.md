@@ -40,7 +40,7 @@ Generate production-ready UI components that:
 ### 2. Architecture Design
 ```typescript
 // Component structure
-interface ComponentProps {
+interface Props {
   // Required props
   children: React.ReactNode
 
@@ -67,7 +67,7 @@ import * as React from "react"
 import { cn } from "@/lib/utils"
 import { useDictionary } from "@/components/internationalization/use-dictionary"
 
-interface ComponentNameProps {
+interface Props {
   // TypeScript interface
 }
 
@@ -87,7 +87,7 @@ export function ComponentName({
   variant = "default",
   className,
   ...props
-}: ComponentNameProps) {
+}: Props) {
   const { dictionary } = useDictionary()
 
   return (

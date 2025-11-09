@@ -1,34 +1,54 @@
 "use client"
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useState } from "react"
+import { Eye, Plus } from "lucide-react"
+import PageHeader from "@/components/atom/page-header"
+import { Button } from "@/components/ui/button"
 import { DashboardCardsShowcase } from "@/components/platform/lab/dashboard-cards-showcase"
-import { ShadcnShowcase } from "@/components/atom/lab/shadcn-showcase/shadcn-showcase"
+import { ShadcnShowcase } from "@/components/atom/lab/shadcn-showcase"
+
+type ViewMode = "browse" | "add"
 
 export default function LabPage() {
+  const [viewMode, setViewMode] = useState<ViewMode>("browse")
+
   return (
     <div className="container mx-auto space-y-6 p-6">
-      <div className="space-y-2">
-        <h1 className="text-4xl font-bold">Component Lab</h1>
-        <p className="text-lg text-muted-foreground">
-          Explore our comprehensive component library with dashboard cards and
-          shadcn/ui v4 components.
-        </p>
+      {/* Page Header */}
+      <PageHeader
+        title="Atom"
+        description="A collection of reusable UI components built with shadcn/ui and Radix primitives"
+        variant="dashboard"
+      />
+
+      {/* View Mode Toggle Buttons */}
+      <div className="flex items-center gap-2">
+        <Button
+          variant={viewMode === "browse" ? "default" : "outline"}
+          onClick={() => setViewMode("browse")}
+          className="gap-2"
+        >
+          <Eye className="size-4" />
+          Browse Atom
+        </Button>
+        <Button
+          variant={viewMode === "add" ? "default" : "outline"}
+          onClick={() => setViewMode("add")}
+          className="gap-2"
+        >
+          <Plus className="size-4" />
+          Add Atom
+        </Button>
       </div>
 
-      <Tabs defaultValue="dashboard" className="w-full">
-        <TabsList className="grid w-full max-w-md grid-cols-2">
-          <TabsTrigger value="dashboard">Dashboard Cards</TabsTrigger>
-          <TabsTrigger value="shadcn">shadcn/ui v4</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="dashboard" className="mt-6">
+      {/* Content based on view mode */}
+      <div className="mt-6">
+        {viewMode === "browse" ? (
           <DashboardCardsShowcase />
-        </TabsContent>
-
-        <TabsContent value="shadcn" className="mt-6">
+        ) : (
           <ShadcnShowcase />
-        </TabsContent>
-      </Tabs>
+        )}
+      </div>
     </div>
   )
 }
