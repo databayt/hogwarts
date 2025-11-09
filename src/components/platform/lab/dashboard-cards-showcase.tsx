@@ -71,7 +71,7 @@ import {
   DashboardShell,
   DashboardSection,
   DashboardGrid,
-} from "@/components/atom/dashboard"
+} from "@/components/atom/lab"
 
 export function DashboardCardsShowcase() {
   return (
