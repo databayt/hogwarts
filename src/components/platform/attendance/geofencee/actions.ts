@@ -453,7 +453,7 @@ export async function getGeofences(): Promise<
 /**
  * Get live student locations (last 5 minutes by default)
  * Only accessible by ADMIN and TEACHER roles
- * Used for live map view in admin dashboard
+ * Used for live map view in admin lab
  */
 export async function getLiveStudentLocations(maxAgeMinutes: number = 5): Promise<
   ActionResult<

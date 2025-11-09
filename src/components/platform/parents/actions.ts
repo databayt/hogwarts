@@ -20,7 +20,7 @@ export async function createParent(input: z.infer<typeof parentCreateSchema>) {
       userId: parsed.userId || null,
     },
   });
-  revalidatePath("/dashboard/parents");
+  revalidatePath("/lab/parents");
   return { success: true as const, id: row.id as string };
 }
 
@@ -36,7 +36,7 @@ export async function updateParent(input: z.infer<typeof parentUpdateSchema>) {
   if (typeof rest.userId !== "undefined") data.userId = rest.userId || null;
   
   await (db as any).guardian.updateMany({ where: { id, schoolId }, data });
-  revalidatePath("/dashboard/parents");
+  revalidatePath("/lab/parents");
   return { success: true as const };
 }
 
@@ -45,7 +45,7 @@ export async function deleteParent(input: { id: string }) {
   if (!schoolId) throw new Error("Missing school context");
   const { id } = z.object({ id: z.string().min(1) }).parse(input);
   await (db as any).guardian.deleteMany({ where: { id, schoolId } });
-  revalidatePath("/dashboard/parents");
+  revalidatePath("/lab/parents");
   return { success: true as const };
 }
 

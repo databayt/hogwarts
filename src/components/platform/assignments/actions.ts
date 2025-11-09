@@ -26,7 +26,7 @@ export async function createAssignment(input: z.infer<typeof assignmentCreateSch
       status: "DRAFT",
     },
   });
-  revalidatePath("/dashboard/assignments");
+  revalidatePath("/lab/assignments");
   return { success: true as const, id: row.id as string };
 }
 
@@ -46,7 +46,7 @@ export async function updateAssignment(input: z.infer<typeof assignmentUpdateSch
   if (typeof rest.instructions !== "undefined") data.instructions = rest.instructions || null;
   
   await (db as any).assignment.updateMany({ where: { id, schoolId }, data });
-  revalidatePath("/dashboard/assignments");
+  revalidatePath("/lab/assignments");
   return { success: true as const };
 }
 
@@ -55,7 +55,7 @@ export async function deleteAssignment(input: { id: string }) {
   if (!schoolId) throw new Error("Missing school context");
   const { id } = z.object({ id: z.string().min(1) }).parse(input);
   await (db as any).assignment.deleteMany({ where: { id, schoolId } });
-  revalidatePath("/dashboard/assignments");
+  revalidatePath("/lab/assignments");
   return { success: true as const };
 }
 

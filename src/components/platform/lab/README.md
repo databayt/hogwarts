@@ -74,7 +74,7 @@ The showcase also demonstrates the layout components:
 ## Usage Example
 
 ```tsx
-import { StatCard } from "@/components/atom/dashboard"
+import { StatCard } from "@/components/atom/lab"
 
 <StatCard
   value="2,543"

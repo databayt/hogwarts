@@ -117,7 +117,7 @@ const LegalContent = (props: Props) => {
     }
   }, [hostingType, isSubmitting, enableNext]);
 
-  // Handle dashboard navigation from modal
+  // Handle lab navigation from modal
   const handleGoToDashboard = () => {
     if (schoolData?.domain) {
       // Construct the subdomain URL
@@ -125,7 +125,7 @@ const LegalContent = (props: Props) => {
       const baseDomain = window.location.hostname.replace('ed.', '');
       const schoolUrl = `${protocol}//${schoolData.domain}.${baseDomain}/dashboard`;
 
-      // Redirect to the school's subdomain dashboard
+      // Redirect to the school's subdomain lab
       window.location.href = schoolUrl;
     }
   };

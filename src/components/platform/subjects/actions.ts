@@ -18,7 +18,7 @@ export async function createSubject(input: z.infer<typeof subjectCreateSchema>) 
       departmentId: parsed.departmentId,
     },
   });
-  revalidatePath("/dashboard/subjects");
+  revalidatePath("/lab/subjects");
   return { success: true as const, id: row.id as string };
 }
 
@@ -32,7 +32,7 @@ export async function updateSubject(input: z.infer<typeof subjectUpdateSchema>) 
   if (typeof rest.departmentId !== "undefined") data.departmentId = rest.departmentId;
   
   await (db as any).subject.updateMany({ where: { id, schoolId }, data });
-  revalidatePath("/dashboard/subjects");
+  revalidatePath("/lab/subjects");
   return { success: true as const };
 }
 
@@ -41,7 +41,7 @@ export async function deleteSubject(input: { id: string }) {
   if (!schoolId) throw new Error("Missing school context");
   const { id } = z.object({ id: z.string().min(1) }).parse(input);
   await (db as any).subject.deleteMany({ where: { id, schoolId } });
-  revalidatePath("/dashboard/subjects");
+  revalidatePath("/lab/subjects");
   return { success: true as const };
 }
 

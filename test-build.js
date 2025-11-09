@@ -9,8 +9,8 @@ exec('npx tsc --noEmit', (error, stdout, stderr) => {
     process.exit(1);
   }
   console.log('✅ No TypeScript errors');
-  console.log('Checking for dashboard-cards-showcase specifically...');
-  exec('npx tsc --noEmit 2>&1 | grep dashboard-cards-showcase || echo "✅ No errors in dashboard-cards-showcase"', (err, out) => {
+  console.log('Checking for lab-cards-showcase specifically...');
+  exec('npx tsc --noEmit 2>&1 | grep lab-cards-showcase || echo "✅ No errors in lab-cards-showcase"', (err, out) => {
     console.log(out);
   });
 });

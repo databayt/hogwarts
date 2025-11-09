@@ -13,7 +13,7 @@ interface ErrorBoundaryState {
 }
 
 /**
- * Error boundary component for dashboard
+ * Error boundary component for lab
  * Catches errors and displays user-friendly error messages
  */
 export class DashboardErrorBoundary extends React.Component<
@@ -133,7 +133,7 @@ export function DefaultErrorFallback({
 }
 
 /**
- * Error fallback for specific dashboard sections
+ * Error fallback for specific lab sections
  */
 export function DashboardSectionError({
   title = "Section unavailable",
@@ -166,7 +166,7 @@ export function DashboardSectionError({
 }
 
 /**
- * Hook for error handling in dashboard components
+ * Hook for error handling in lab components
  */
 export function useDashboardError() {
   const [error, setError] = React.useState<Error | null>(null);

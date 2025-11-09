@@ -334,7 +334,7 @@ const analytics = await getStorageAnalytics();
 ### Dashboard Integration
 
 ```tsx
-// components/dashboard/storage-widget.tsx
+// components/lab/storage-widget.tsx
 import { getStorageAnalytics } from '@/components/file-upload/enhanced/actions';
 import { StorageQuota } from '@/components/file-upload/file-upload/storage-quota';
 

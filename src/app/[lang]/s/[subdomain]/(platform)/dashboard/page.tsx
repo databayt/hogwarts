@@ -14,7 +14,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   return {
     title: dictionary.school.dashboard.title || "Dashboard",
-    description: dictionary.school.dashboard.welcome || "School management dashboard",
+    description: dictionary.school.dashboard.welcome || "School management lab",
   };
 }
 

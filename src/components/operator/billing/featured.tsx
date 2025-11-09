@@ -270,7 +270,7 @@ export function BillingOverviewStats({ invoices }: { invoices: InvoiceWithSchool
 }
 
 /**
- * Comprehensive billing dashboard
+ * Comprehensive billing lab
  */
 export function BillingDashboard({ invoices }: { invoices: InvoiceWithSchool[] }) {
   const totalAmount = invoices.reduce((sum, inv) => sum + inv.amountDue, 0);

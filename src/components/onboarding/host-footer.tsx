@@ -153,7 +153,7 @@ const HostFooter: React.FC<HostFooterProps> = ({
     
     // If we're on the legal step (last step), navigate to listings
     if (currentStepSlug === 'legal') {
-      console.log("🏁 [HOST FOOTER] Last step - navigating to dashboard");
+      console.log("🏁 [HOST FOOTER] Last step - navigating to lab");
       router.push('/dashboard');
       return;
     }

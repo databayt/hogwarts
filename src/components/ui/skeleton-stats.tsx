@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils"
 /**
  * SkeletonStats Component
  *
- * Skeleton for statistics/metrics row (dashboard KPIs).
+ * Skeleton for statistics/metrics row (lab KPIs).
  * Renders a responsive grid of stat cards.
  *
  * Pattern matches:

@@ -1,0 +1,476 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "version": "1.0.0",
+  "description": "Interactive flowchart workflow for UI component generation with enforced quality gates",
+  "workflows": {
+    "interactive-component": {
+      "id": "interactive-component",
+      "name": "Interactive Component Generation",
+      "description": "Step-by-step guided component creation with validation gates",
+      "steps": [
+        {
+          "id": "component-type",
+          "name": "Component Type Selection",
+          "type": "select-single",
+          "required": true,
+          "blocking": false,
+          "prompt": "What type of component are you creating?",
+          "options": [
+            {
+              "value": "ui-primitive",
+              "label": "UI Primitive",
+              "description": "Base component from shadcn/ui (Button, Input, Card, etc.)",
+              "next": "primitive-selection"
+            },
+            {
+              "value": "atom",
+              "label": "Atom/Composite",
+              "description": "Composed component using 2+ UI primitives",
+              "next": "component-name"
+            },
+            {
+              "value": "feature",
+              "label": "Feature Component",
+              "description": "Business logic component with server actions",
+              "next": "component-name"
+            },
+            {
+              "value": "page",
+              "label": "Page Component",
+              "description": "Full Next.js page with routing",
+              "next": "page-route"
+            }
+          ],
+          "validation": {
+            "type": "enum",
+            "values": ["ui-primitive", "atom", "feature", "page"]
+          }
+        },
+        {
+          "id": "primitive-selection",
+          "name": "Primitive Selection",
+          "type": "select-single",
+          "required": true,
+          "blocking": false,
+          "condition": {
+            "field": "component-type",
+            "operator": "equals",
+            "value": "ui-primitive"
+          },
+          "prompt": "Which primitive are you adding?",
+          "description": "Components from shadcn/ui registry",
+          "options": [
+            {"value": "button", "label": "Button", "description": "Interactive button with variants"},
+            {"value": "card", "label": "Card", "description": "Container for content"},
+            {"value": "input", "label": "Input", "description": "Form input field"},
+            {"value": "select", "label": "Select", "description": "Dropdown selection"},
+            {"value": "dialog", "label": "Dialog", "description": "Modal dialog"},
+            {"value": "form", "label": "Form", "description": "Form with validation"},
+            {"value": "table", "label": "Table", "description": "Data table"},
+            {"value": "tabs", "label": "Tabs", "description": "Tabbed interface"},
+            {"value": "tooltip", "label": "Tooltip", "description": "Hover tooltip"},
+            {"value": "dropdown-menu", "label": "Dropdown Menu", "description": "Action menu"}
+          ],
+          "next": "primitive-install",
+          "validation": {
+            "type": "non-empty"
+          }
+        },
+        {
+          "id": "primitive-install",
+          "name": "Install Primitive",
+          "type": "action",
+          "action": "install-shadcn-primitive",
+          "condition": {
+            "field": "component-type",
+            "operator": "equals",
+            "value": "ui-primitive"
+          },
+          "next": "post-install-validation"
+        },
+        {
+          "id": "component-name",
+          "name": "Component Name",
+          "type": "text-input",
+          "required": true,
+          "blocking": false,
+          "condition": {
+            "field": "component-type",
+            "operator": "in",
+            "value": ["atom", "feature"]
+          },
+          "prompt": "Enter component name (PascalCase):",
+          "placeholder": "MultiStepForm",
+          "validation": {
+            "type": "combined",
+            "rules": [
+              {
+                "type": "regex",
+                "pattern": "^[A-Z][a-zA-Z0-9]*$",
+                "message": "Must be PascalCase (e.g., MultiStepForm)"
+              },
+              {
+                "type": "unique-file",
+                "checkPaths": [
+                  "src/components/ui/{input}.tsx",
+                  "src/components/atom/{input}.tsx",
+                  "src/components/platform/{input}/"
+                ],
+                "message": "Component already exists"
+              },
+              {
+                "type": "length",
+                "min": 3,
+                "max": 50,
+                "message": "Name must be between 3-50 characters"
+              }
+            ]
+          },
+          "next": "requirements-selection"
+        },
+        {
+          "id": "page-route",
+          "name": "Page Route",
+          "type": "text-input",
+          "required": true,
+          "blocking": false,
+          "condition": {
+            "field": "component-type",
+            "operator": "equals",
+            "value": "page"
+          },
+          "prompt": "Enter page route path:",
+          "placeholder": "students/profile",
+          "validation": {
+            "type": "combined",
+            "rules": [
+              {
+                "type": "regex",
+                "pattern": "^[a-z0-9/-]+$",
+                "message": "Must be lowercase with hyphens and slashes only"
+              },
+              {
+                "type": "unique-file",
+                "checkPaths": [
+                  "src/app/[lang]/s/[subdomain]/(platform)/{input}/page.tsx"
+                ],
+                "message": "Page already exists"
+              }
+            ]
+          },
+          "next": "requirements-selection"
+        },
+        {
+          "id": "requirements-selection",
+          "name": "Requirements Selection",
+          "type": "select-multiple",
+          "required": false,
+          "blocking": false,
+          "condition": {
+            "field": "component-type",
+            "operator": "in",
+            "value": ["atom", "feature", "page"]
+          },
+          "prompt": "Select component requirements (optional):",
+          "options": [
+            {"value": "form-validation", "label": "Form Validation (Zod)", "implies": ["zod-schema"]},
+            {"value": "server-actions", "label": "Server Actions", "implies": ["multi-tenant-safety"]},
+            {"value": "data-table", "label": "Data Table (@tanstack/react-table)", "implies": ["columns"]},
+            {"value": "file-upload", "label": "File Upload", "implies": []},
+            {"value": "multi-step", "label": "Multi-step Navigation", "implies": ["state-management"]},
+            {"value": "real-time", "label": "Real-time Updates (SWR)", "implies": []},
+            {"value": "animations", "label": "Animations (Framer Motion)", "implies": []},
+            {"value": "charts", "label": "Charts (Recharts)", "implies": []}
+          ],
+          "next": "radix-selection"
+        },
+        {
+          "id": "radix-selection",
+          "name": "Radix Primitive Selection",
+          "type": "select-multiple",
+          "required": false,
+          "blocking": false,
+          "condition": {
+            "field": "component-type",
+            "operator": "in",
+            "value": ["atom", "feature"]
+          },
+          "prompt": "Select Radix UI primitives needed (optional):",
+          "description": "Select interactive primitives for accessibility",
+          "options": [
+            {"value": "dialog", "label": "Dialog", "description": "Modals, alerts"},
+            {"value": "dropdown-menu", "label": "Dropdown Menu", "description": "Action menus"},
+            {"value": "popover", "label": "Popover", "description": "Contextual content"},
+            {"value": "select", "label": "Select", "description": "Custom select inputs"},
+            {"value": "tabs", "label": "Tabs", "description": "Navigation tabs"},
+            {"value": "accordion", "label": "Accordion", "description": "Collapsible sections"},
+            {"value": "checkbox", "label": "Checkbox", "description": "Toggle states"},
+            {"value": "radio-group", "label": "Radio Group", "description": "Single selection"},
+            {"value": "switch", "label": "Switch", "description": "Boolean toggles"},
+            {"value": "slider", "label": "Slider", "description": "Range inputs"},
+            {"value": "toast", "label": "Toast", "description": "Notifications"}
+          ],
+          "next": "accessibility-checklist"
+        },
+        {
+          "id": "accessibility-checklist",
+          "name": "Accessibility Requirements (BLOCKING)",
+          "type": "checklist",
+          "required": true,
+          "blocking": true,
+          "prompt": "Confirm accessibility requirements (ALL REQUIRED):",
+          "description": "WCAG 2.1 AA compliance - component will not be generated until all items are confirmed",
+          "items": [
+            {
+              "id": "aria-labels",
+              "label": "ARIA labels defined for all interactive elements",
+              "required": true,
+              "autoCheck": false
+            },
+            {
+              "id": "keyboard-nav",
+              "label": "Keyboard navigation implemented (Enter, Space, Arrows, Escape, Tab)",
+              "required": true,
+              "autoCheck": false
+            },
+            {
+              "id": "focus-management",
+              "label": "Focus management and focus trap (for modals/dialogs)",
+              "required": true,
+              "autoCheck": false
+            },
+            {
+              "id": "color-contrast",
+              "label": "Color contrast ≥4.5:1 (text) and ≥3:1 (UI elements)",
+              "required": true,
+              "autoCheck": false
+            },
+            {
+              "id": "touch-targets",
+              "label": "Touch targets ≥44x44px for all interactive elements",
+              "required": true,
+              "autoCheck": false
+            },
+            {
+              "id": "screen-reader",
+              "label": "Screen reader compatible (tested with NVDA/JAWS)",
+              "required": true,
+              "autoCheck": false
+            }
+          ],
+          "validation": {
+            "type": "all-checked",
+            "message": "All accessibility requirements must be confirmed. This is non-negotiable for WCAG 2.1 AA compliance."
+          },
+          "next": "i18n-setup"
+        },
+        {
+          "id": "i18n-setup",
+          "name": "Internationalization Setup (BLOCKING)",
+          "type": "conditional-input",
+          "required": true,
+          "blocking": true,
+          "prompt": "Does this component display text to users?",
+          "condition_prompt": "Yes, it displays text",
+          "input": {
+            "type": "text-input",
+            "prompt": "Enter dictionary keys needed (comma-separated):",
+            "placeholder": "ui.save,ui.cancel,ui.confirm,forms.stepNext",
+            "description": "Keys must exist in dictionaries.ts for both Arabic and English",
+            "validation": {
+              "type": "combined",
+              "rules": [
+                {
+                  "type": "regex",
+                  "pattern": "^[a-zA-Z0-9.,_]+$",
+                  "message": "Keys must be alphanumeric with dots, commas, underscores only"
+                },
+                {
+                  "type": "dictionary-keys-exist",
+                  "dictionaryPath": "src/components/internationalization/dictionaries.ts",
+                  "message": "One or more keys don't exist in dictionary. Add them first or use existing keys."
+                }
+              ]
+            }
+          },
+          "next": "test-generation"
+        },
+        {
+          "id": "test-generation",
+          "name": "Test Generation (TDD - AUTO)",
+          "type": "action",
+          "description": "Generating tests BEFORE implementation (TDD enforced)",
+          "action": "generate-tests",
+          "parameters": {
+            "testTypes": ["unit", "integration", "accessibility", "e2e"],
+            "coverageTarget": 95,
+            "framework": "vitest",
+            "e2eFramework": "playwright"
+          },
+          "output": {
+            "testsGenerated": true,
+            "testFiles": [],
+            "coverageEstimate": 0
+          },
+          "next": "implementation"
+        },
+        {
+          "id": "implementation",
+          "name": "Component Implementation (AUTO)",
+          "type": "action",
+          "description": "Invoking agents for component generation",
+          "action": "generate-component",
+          "agentSequence": [
+            {"agent": "shadcn", "step": "Select base primitives and patterns"},
+            {"agent": "react", "step": "Implement component logic and hooks"},
+            {"agent": "typescript", "step": "Generate strict TypeScript types"},
+            {"agent": "tailwind", "step": "Apply semantic token styling"},
+            {"agent": "i18n", "step": "Integrate dictionary keys"},
+            {"agent": "ui-factory", "step": "Finalize and validate structure"}
+          ],
+          "next": "validation-gates"
+        },
+        {
+          "id": "validation-gates",
+          "name": "Quality Gates Validation (BLOCKING)",
+          "type": "validation",
+          "required": true,
+          "blocking": true,
+          "description": "Running 7 quality gates - component must pass all",
+          "gates": [
+            {
+              "id": "semantic-tokens",
+              "name": "Semantic Tokens",
+              "severity": "critical",
+              "threshold": 95,
+              "autoFix": true,
+              "skill": "ui-validator",
+              "check": "semantic-tokens"
+            },
+            {
+              "id": "semantic-html",
+              "name": "Semantic HTML",
+              "severity": "critical",
+              "threshold": 100,
+              "autoFix": true,
+              "skill": "ui-validator",
+              "check": "semantic-html"
+            },
+            {
+              "id": "accessibility",
+              "name": "Accessibility (WCAG 2.1 AA)",
+              "severity": "high",
+              "threshold": 100,
+              "autoFix": false,
+              "skill": "ui-validator",
+              "check": "accessibility"
+            },
+            {
+              "id": "internationalization",
+              "name": "Internationalization",
+              "severity": "high",
+              "threshold": 100,
+              "autoFix": true,
+              "skill": "ui-validator",
+              "check": "i18n"
+            },
+            {
+              "id": "typescript",
+              "name": "TypeScript Strict Mode",
+              "severity": "medium",
+              "threshold": 100,
+              "autoFix": false,
+              "skill": "ui-validator",
+              "check": "typescript"
+            },
+            {
+              "id": "testing",
+              "name": "Test Coverage",
+              "severity": "medium",
+              "threshold": 95,
+              "autoFix": false,
+              "skill": "ui-validator",
+              "check": "testing"
+            },
+            {
+              "id": "documentation",
+              "name": "Documentation (JSDoc)",
+              "severity": "low",
+              "threshold": 100,
+              "autoFix": true,
+              "skill": "ui-validator",
+              "check": "documentation"
+            }
+          ],
+          "validation": {
+            "type": "all-gates-pass",
+            "allowAutoFix": true,
+            "maxAutoFixAttempts": 3,
+            "failureAction": "manual-review"
+          },
+          "next": "commit-component"
+        },
+        {
+          "id": "commit-component",
+          "name": "Git Commit (AUTO)",
+          "type": "action",
+          "description": "Creating conventional commit",
+          "action": "git-commit",
+          "parameters": {
+            "messageTemplate": "feat({scope}): add {componentName} {componentType}\n\n{description}\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>",
+            "scope": "ui",
+            "runPreCommitHooks": true
+          },
+          "next": "completion"
+        },
+        {
+          "id": "completion",
+          "name": "Completion",
+          "type": "summary",
+          "description": "Component generation complete",
+          "output": {
+            "success": true,
+            "filesCreated": [],
+            "validationScore": 0,
+            "nextSteps": [
+              "Review generated files",
+              "Test component in dev environment",
+              "Import and use in parent component"
+            ]
+          }
+        }
+      ],
+      "metadata": {
+        "estimatedDuration": "3-5 minutes",
+        "requiredSkills": ["ui-validator", "component-generator"],
+        "requiredAgents": ["ui-factory", "shadcn", "react", "typescript", "tailwind", "i18n"],
+        "blockingSteps": ["accessibility-checklist", "i18n-setup", "validation-gates"],
+        "tddEnforced": true
+      }
+    }
+  },
+  "configuration": {
+    "validationEngine": {
+      "enableAutoFix": true,
+      "maxAutoFixAttempts": 3,
+      "blockOnCritical": true,
+      "blockOnHigh": true,
+      "blockOnMedium": false,
+      "blockOnLow": false
+    },
+    "interactiveMode": {
+      "showProgress": true,
+      "showStepNumbers": true,
+      "allowSkipOptional": true,
+      "allowBack": true,
+      "confirmBeforeActions": false
+    },
+    "outputFormat": {
+      "verbose": true,
+      "showTimings": true,
+      "colorized": true,
+      "saveReport": true,
+      "reportPath": ".claude/reports/ui-factory-{timestamp}.json"
+    }
+  }
+}

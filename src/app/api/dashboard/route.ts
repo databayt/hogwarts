@@ -48,7 +48,7 @@ export async function GET() {
 //             paidRevenue : item.status === "PAID" ? item.total : 0
 //         }
 //     })
-//     // console.log("dashboard api")
+//     // console.log("lab api")
 //     // console.log("data",data)
 //     return NextResponse.json({
 //         message : "Success",

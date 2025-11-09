@@ -43,7 +43,7 @@ export async function createStudent(input: z.infer<typeof studentCreateSchema>) 
       userId: normalizedUserId,
     },
   });
-  revalidatePath("/dashboard/students");
+  revalidatePath("/lab/students");
   return { success: true as const, id: row.id as string };
 }
 
@@ -80,7 +80,7 @@ export async function updateStudent(input: z.infer<typeof studentUpdateSchema>) 
   if (typeof rest.dateOfBirth !== "undefined") data.dateOfBirth = new Date(rest.dateOfBirth);
   if (typeof rest.enrollmentDate !== "undefined") data.enrollmentDate = new Date(rest.enrollmentDate);
   await (db as any).student.updateMany({ where: { id, schoolId }, data });
-  revalidatePath("/dashboard/students");
+  revalidatePath("/lab/students");
   return { success: true as const };
 }
 
@@ -89,7 +89,7 @@ export async function deleteStudent(input: { id: string }) {
   if (!schoolId) throw new Error("Missing school context");
   const { id } = z.object({ id: z.string().min(1) }).parse(input);
   await (db as any).student.deleteMany({ where: { id, schoolId } });
-  revalidatePath("/dashboard/students");
+  revalidatePath("/lab/students");
   return { success: true as const };
 }
 

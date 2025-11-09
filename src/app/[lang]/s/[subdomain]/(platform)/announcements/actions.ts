@@ -14,7 +14,7 @@ export async function createAnnouncement(input: z.infer<typeof announcementCreat
   await db.announcement.create(
     { data: { schoolId, title: parsed.title, body: parsed.body, scope: parsed.scope as unknown as Prisma.AnnouncementCreateInput["scope"], classId: parsed.classId ?? null, role: parsed.role ?? null } } as unknown as Prisma.AnnouncementCreateArgs
   )
-  revalidatePath('/dashboard/announcements')
+  revalidatePath('/lab/announcements')
   return { success: true as const }
 }
 
@@ -24,7 +24,7 @@ export async function toggleAnnouncementPublish(input: { id: string; publish: bo
   const parsed = z.object({ id: z.string().min(1), publish: z.boolean() }).parse(input)
   // Ensure tenant safety using updateMany with tenant-scoped where clause
   await db.announcement.updateMany({ where: { id: parsed.id, schoolId }, data: { published: parsed.publish } })
-  revalidatePath('/dashboard/announcements')
+  revalidatePath('/lab/announcements')
   return { success: true as const }
 }
 
@@ -33,7 +33,7 @@ export async function deleteAnnouncement(input: { id: string }) {
   if (!schoolId) throw new Error('Missing school context')
   const parsed = z.object({ id: z.string().min(1) }).parse(input)
   await db.announcement.deleteMany({ where: { id: parsed.id, schoolId } })
-  revalidatePath('/dashboard/announcements')
+  revalidatePath('/lab/announcements')
   return { success: true as const }
 }
 
@@ -48,7 +48,7 @@ export async function updateAnnouncement(input: Partial<z.infer<typeof announcem
   const parsed = schema.parse(input)
   const { id, ...data } = parsed
   await db.announcement.updateMany({ where: { id, schoolId }, data: data as unknown as Prisma.AnnouncementUpdateManyMutationInput })
-  revalidatePath('/dashboard/announcements')
+  revalidatePath('/lab/announcements')
   return { success: true as const }
 }
 

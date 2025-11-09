@@ -161,7 +161,7 @@ function AreaChartSkeleton() {
 /**
  * SkeletonChartGrid Component
  *
- * Grid of multiple charts (dashboard analytics).
+ * Grid of multiple charts (lab analytics).
  *
  * @example
  * ```tsx

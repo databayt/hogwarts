@@ -7,6 +7,6 @@ interface Props {
 
 export default async function Staff({ params }: Props) {
   const { lang } = await params;
-  // Redirect to dashboard or show staff list
+  // Redirect to lab or show staff list
   redirect(`/${lang}/dashboard`);
 }

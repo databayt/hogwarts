@@ -49,7 +49,7 @@ export default function CongratulationsContent(props: Props) {
       const baseDomain = window.location.hostname.replace('ed.', '');
       const schoolUrl = `${protocol}//${schoolData.domain}.${baseDomain}/dashboard`;
       
-      // Redirect to the school's subdomain dashboard
+      // Redirect to the school's subdomain lab
       window.location.href = schoolUrl;
     }
   };

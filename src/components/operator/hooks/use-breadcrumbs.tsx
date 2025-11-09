@@ -65,7 +65,7 @@ export function useBreadcrumbs() {
 		const items = finalSegments.map((segment, index) => {
       const path = `/${finalSegments.slice(0, index + 1).join('/')}`;
 			const isIdSegment = index === finalSegments.length - 1 && /^(?:[a-z0-9]{10,}|\w{6,})$/i.test(segment);
-			// Special handling for dashboard -> Overview
+			// Special handling for lab -> Overview
 			let title = isIdSegment && dynamicTitle ? dynamicTitle : segment.charAt(0).toUpperCase() + segment.slice(1);
 			if (segment === 'dashboard') {
 				title = 'Overview';

@@ -28,7 +28,7 @@ export async function createLesson(input: z.infer<typeof lessonCreateSchema>) {
       status: "PLANNED",
     },
   });
-  revalidatePath("/dashboard/lessons");
+  revalidatePath("/lab/lessons");
   return { success: true as const, id: row.id as string };
 }
 
@@ -52,7 +52,7 @@ export async function updateLesson(input: z.infer<typeof lessonUpdateSchema>) {
   if (typeof rest.notes !== "undefined") data.notes = rest.notes || null;
 
   await db.lesson.updateMany({ where: { id, schoolId }, data });
-  revalidatePath("/dashboard/lessons");
+  revalidatePath("/lab/lessons");
   return { success: true as const };
 }
 
@@ -61,7 +61,7 @@ export async function deleteLesson(input: { id: string }) {
   if (!schoolId) throw new Error("Missing school context");
   const { id } = z.object({ id: z.string().min(1) }).parse(input);
   await db.lesson.deleteMany({ where: { id, schoolId } });
-  revalidatePath("/dashboard/lessons");
+  revalidatePath("/lab/lessons");
   return { success: true as const };
 }
 

@@ -31,7 +31,7 @@ export async function createEvent(input: z.infer<typeof eventCreateSchema>) {
       status: "PLANNED",
     },
   });
-  revalidatePath("/dashboard/events");
+  revalidatePath("/lab/events");
   return { success: true as const, id: row.id as string };
 }
 
@@ -57,7 +57,7 @@ export async function updateEvent(input: z.infer<typeof eventUpdateSchema>) {
   if (typeof rest.notes !== "undefined") data.notes = rest.notes || null;
   
   await (db as any).event.updateMany({ where: { id, schoolId }, data });
-  revalidatePath("/dashboard/events");
+  revalidatePath("/lab/events");
   return { success: true as const };
 }
 
@@ -66,7 +66,7 @@ export async function deleteEvent(input: { id: string }) {
   if (!schoolId) throw new Error("Missing school context");
   const { id } = z.object({ id: z.string().min(1) }).parse(input);
   await (db as any).event.deleteMany({ where: { id, schoolId } });
-  revalidatePath("/dashboard/events");
+  revalidatePath("/lab/events");
   return { success: true as const };
 }
 

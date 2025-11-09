@@ -1,7 +1,7 @@
 /**
  * Reusable Dashboard Components for Finance Block
  *
- * These components consolidate the repeated dashboard patterns across all finance sub-blocks,
+ * These components consolidate the repeated lab patterns across all finance sub-blocks,
  * reducing code duplication by ~67% while maintaining consistency and using semantic HTML.
  */
 
@@ -102,7 +102,7 @@ export function FeatureCard({
 
 /**
  * DashboardGrid Component
- * Responsive grid layout for dashboard sections
+ * Responsive grid layout for lab sections
  */
 interface DashboardGridProps {
   children: ReactNode
@@ -119,7 +119,7 @@ export function DashboardGrid({ children, type }: DashboardGridProps) {
 
 /**
  * Dashboard Stats Type Definition
- * Standard interface for dashboard statistics across all finance modules
+ * Standard interface for lab statistics across all finance modules
  */
 export interface DashboardStats {
   // Core counts
@@ -139,7 +139,7 @@ export interface DashboardStats {
 /**
  * useDashboardStats Hook Pattern
  *
- * This is a pattern/template for creating module-specific dashboard data fetching.
+ * This is a pattern/template for creating module-specific lab data fetching.
  * Each finance sub-block should create its own version following this structure:
  *
  * @example

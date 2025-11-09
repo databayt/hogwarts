@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 
 /**
  * Notification Service
- * Real-time notification system for dashboard alerts
+ * Real-time notification system for lab alerts
  */
 
 export type NotificationType = "info" | "success" | "warning" | "error" | "critical";
@@ -48,7 +48,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
   // Load notifications from localStorage on mount
   useEffect(() => {
-    const stored = localStorage.getItem("dashboard-notifications");
+    const stored = localStorage.getItem("lab-notifications");
     if (stored) {
       try {
         const parsed = JSON.parse(stored);
@@ -66,7 +66,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
   // Save notifications to localStorage whenever they change
   useEffect(() => {
-    localStorage.setItem("dashboard-notifications", JSON.stringify(notifications));
+    localStorage.setItem("lab-notifications", JSON.stringify(notifications));
   }, [notifications]);
 
   const addNotification = useCallback(

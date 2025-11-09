@@ -163,7 +163,7 @@ export interface DatabaseMetrics {
 }
 
 /**
- * Metrics summary for dashboard
+ * Metrics summary for lab
  */
 export interface MetricsSummary {
   system: SystemMetrics;

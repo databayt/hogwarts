@@ -262,7 +262,7 @@ export async function createStudent(input: z.infer<typeof studentCreateSchema>) 
     },
   })
 
-  revalidatePath("/dashboard/students")
+  revalidatePath("/lab/students")
   return { success: true as const, id: row.id as string }
 }
 
@@ -326,7 +326,7 @@ export async function updateStudent(input: z.infer<typeof studentUpdateSchema>) 
 
   await db.student.updateMany({ where: { id, schoolId }, data })
 
-  revalidatePath("/dashboard/students")
+  revalidatePath("/lab/students")
   return { success: true as const }
 }
 

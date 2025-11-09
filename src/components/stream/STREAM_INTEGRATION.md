@@ -238,7 +238,7 @@ export const streamRoutes = {
 
   // Protected routes (require authentication)
   protected: [
-    '/stream/dashboard',
+    '/stream/lab',
     '/stream/payment/success',
     '/stream/payment/cancel',
   ],
@@ -265,8 +265,8 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Protect stream dashboard
-  if (pathname.startsWith('/stream/dashboard')) {
+  // Protect stream lab
+  if (pathname.startsWith('/stream/lab')) {
     // Check authentication
   }
 
@@ -290,9 +290,9 @@ Update your main navigation to include stream links:
 ```typescript
 // components/navigation.tsx or similar
 const navigation = [
-  { name: 'Dashboard', href: '/dashboard' },
+  { name: 'Dashboard', href: '/lab' },
   { name: 'Courses', href: '/stream/courses' }, // Add this
-  { name: 'My Learning', href: '/stream/dashboard' }, // Add this
+  { name: 'My Learning', href: '/stream/lab' }, // Add this
   // ... other links
 ];
 
@@ -309,8 +309,8 @@ const adminNavigation = [
 If using a custom dashboard layout:
 
 ```typescript
-// app/stream/dashboard/layout.tsx (create if needed)
-import { DashboardAppSidebar } from "@/components/stream/dashboard/dashboard-app-sidebar";
+// app/stream/lab/layout.tsx (create if needed)
+import { DashboardAppSidebar } from "@/components/stream/lab/lab-app-sidebar";
 
 export default function StreamDashboardLayout({
   children,

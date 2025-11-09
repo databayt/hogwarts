@@ -3,7 +3,7 @@
 import { db } from "@/lib/db";
 import { auth } from "@/auth";
 
-// Get teacher dashboard data
+// Get teacher lab data
 export async function getTeacherDashboardData() {
   const session = await auth();
   const userId = session?.user?.id;
@@ -250,7 +250,7 @@ export async function getTeacherDashboardData() {
   };
 }
 
-// Get student dashboard data
+// Get student lab data
 export async function getStudentDashboardData() {
   const session = await auth();
   const userId = session?.user?.id;
@@ -489,7 +489,7 @@ export async function getStudentDashboardData() {
   };
 }
 
-// Get parent dashboard data
+// Get parent lab data
 export async function getParentDashboardData() {
   const session = await auth();
   const guardianId = session?.user?.id;

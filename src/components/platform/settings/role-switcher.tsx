@@ -186,7 +186,7 @@ export function RoleSwitcher({
 
       SuccessToast(`Switched to ${selectedRole} role`);
 
-      // Redirect to dashboard with the new role
+      // Redirect to lab with the new role
       setTimeout(() => {
         router.push("/dashboard");
         router.refresh();
@@ -252,7 +252,7 @@ export function RoleSwitcher({
               <AlertTriangle className="h-4 w-4 text-purple-600" />
               <AlertTitle>{dictionary?.settings?.roleSwitcher?.developerModeActive || "Developer Mode Active"}</AlertTitle>
               <AlertDescription>
-                {dictionary?.settings?.roleSwitcher?.switchNote || "You can now switch between all roles to test different dashboard views and features. Changes are temporary and for testing purposes only."}
+                {dictionary?.settings?.roleSwitcher?.switchNote || "You can now switch between all roles to test different lab views and features. Changes are temporary and for testing purposes only."}
               </AlertDescription>
             </Alert>
           )}
@@ -267,7 +267,7 @@ export function RoleSwitcher({
             {dictionary?.settings?.roleSwitcher?.title || "Role Switcher"}
           </CardTitle>
           <CardDescription>
-            {dictionary?.settings?.roleSwitcher?.description || "Switch between different roles to test dashboard views and features"}
+            {dictionary?.settings?.roleSwitcher?.description || "Switch between different roles to test lab views and features"}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">

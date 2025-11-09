@@ -403,10 +403,10 @@ export function getQuickActionsForFinanceRole(role: string) {
       action: FinanceActions.VIEW_OWN
     },
     viewDashboard: {
-      id: 'view-dashboard',
+      id: 'view-lab',
       label: 'Dashboard',
       icon: 'TrendingUp',
-      href: '/finance/dashboard',
+      href: '/finance/lab',
       module: FinanceModules.DASHBOARD,
       action: FinanceActions.VIEW
     }

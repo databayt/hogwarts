@@ -3,7 +3,7 @@
 /**
  * Featured tenants component
  *
- * Displays highlighted or featured tenants for the operator dashboard.
+ * Displays highlighted or featured tenants for the operator lab.
  */
 
 import { TenantCard, TenantStatsCard, TenantBillingCard } from "./card";

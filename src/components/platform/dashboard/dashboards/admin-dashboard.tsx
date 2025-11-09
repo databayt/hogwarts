@@ -8,8 +8,8 @@ import { getDashboardSummary } from "./actions";
 import { QuickActions } from "../quick-actions";
 import { getQuickActionsByRole } from "../quick-actions-config";
 import { getTenantContext } from "@/lib/tenant-context";
-// TODO: Fix dashboard-showcase prop mismatches (36+ TypeScript errors)
-// import { DashboardShowcase } from "../dashboard-showcase";
+// TODO: Fix lab-showcase prop mismatches (36+ TypeScript errors)
+// import { DashboardShowcase } from "../lab-showcase";
 
 interface Props {
   user: any;
@@ -23,7 +23,7 @@ export async function AdminDashboard({ user, dictionary, locale = "en" }: Props)
   try {
     dashboardData = await getDashboardSummary();
   } catch (error) {
-    console.error('[AdminDashboard] Error fetching dashboard data:', error);
+    console.error('[AdminDashboard] Error fetching lab data:', error);
     // Return early with error message instead of crashing
     return (
       <div className="space-y-6">

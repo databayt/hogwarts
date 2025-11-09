@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 
 /**
  * QuickActions Component
- * Displays a grid of quick action items for dashboard
+ * Displays a grid of quick action items for lab
  * - No outer cards, just action items
  * - Icon and text in columns (icon on top, text below)
  * - Full width, responsive grid

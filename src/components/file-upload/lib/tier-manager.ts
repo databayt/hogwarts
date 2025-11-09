@@ -280,7 +280,7 @@ export function batchEvaluateTierChanges(
 }
 
 /**
- * Get tier statistics for dashboard
+ * Get tier statistics for lab
  */
 export interface TierStats {
   tier: StorageTier;

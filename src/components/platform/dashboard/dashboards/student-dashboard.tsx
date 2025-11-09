@@ -35,7 +35,7 @@ export async function StudentDashboard({
   try {
     data = await getStudentDashboardData();
   } catch (error) {
-    console.error('[StudentDashboard] Error fetching dashboard data:', error);
+    console.error('[StudentDashboard] Error fetching lab data:', error);
     return (
       <div className="space-y-6">
         <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
@@ -62,7 +62,7 @@ export async function StudentDashboard({
     console.error('[StudentDashboard] Error fetching school domain:', error);
   }
 
-  // Get dashboard dictionary
+  // Get lab dictionary
   const dashDict = dictionary?.studentDashboard || {
     stats: {
       attendance: "Attendance",

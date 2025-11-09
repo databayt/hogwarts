@@ -10,7 +10,7 @@ Generate comprehensive E2E tests for user workflows using Playwright
 ## Examples
 ```bash
 /e2e student-enrollment           # Generate enrollment flow tests
-/e2e /dashboard                   # Generate dashboard interaction tests
+/e2e /lab                   # Generate lab interaction tests
 /e2e login --multi-tenant         # Test multi-tenant login flows
 /e2e payment --all-scenarios      # Generate payment scenarios
 ```

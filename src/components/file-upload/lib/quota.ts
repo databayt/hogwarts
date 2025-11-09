@@ -326,7 +326,7 @@ export async function recalculateUsage(schoolId: string): Promise<void> {
 }
 
 /**
- * Get quota statistics for dashboard
+ * Get quota statistics for lab
  */
 export async function getQuotaStats(schoolId: string) {
   const status = await getQuotaStatus(schoolId);

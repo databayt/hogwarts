@@ -11,7 +11,7 @@ export async function updateSchoolSettings(input: z.infer<typeof schoolSettingsS
   if (!schoolId) throw new Error('Missing school context')
   const parsed = schoolSettingsSchema.parse(input)
   await db.school.update({ where: { id: schoolId }, data: { name: parsed.name, timezone: parsed.timezone, locale: parsed.locale, logoUrl: parsed.logoUrl || null } } as any)
-  revalidatePath('/dashboard/settings')
+  revalidatePath('/lab/settings')
   return { success: true as const }
 }
 

@@ -708,7 +708,7 @@ const dictionaries = {
   "en": {
     common: () => import("./en/common.json").then(m => m.default),
     auth: () => import("./en/auth.json").then(m => m.default),
-    dashboard: () => import("./en/dashboard.json").then(m => m.default),
+    dashboard: () => import("./en/lab.json").then(m => m.default),
   },
   // ... other locales
 } as const;
@@ -862,7 +862,7 @@ export function ClientComponent({
 ```typescript
 // ✅ CORRECT: Clear, hierarchical dictionary keys
 {
-  "dashboard": {
+  "lab": {
     "user": {
       "profile": "User Profile",
       "settings": "Settings"

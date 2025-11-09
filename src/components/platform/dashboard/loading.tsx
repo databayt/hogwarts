@@ -2,7 +2,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
 /**
- * Loading skeleton for dashboard cards
+ * Loading skeleton for lab cards
  * Provides consistent loading experience across all dashboards
  */
 export function DashboardCardSkeleton() {
@@ -21,7 +21,7 @@ export function DashboardCardSkeleton() {
 }
 
 /**
- * Loading skeleton for dashboard grid
+ * Loading skeleton for lab grid
  * Shows 4 cards in a grid layout
  */
 export function DashboardGridSkeleton() {
@@ -76,7 +76,7 @@ export function TableSkeleton({ rows = 5 }: { rows?: number }) {
 }
 
 /**
- * Full dashboard loading state
+ * Full lab loading state
  */
 export function DashboardLoadingSkeleton() {
   return (
@@ -124,7 +124,7 @@ export function DashboardLoadingSkeleton() {
 /**
  * Loading state with custom message
  */
-export function LoadingMessage({ message = "Loading dashboard..." }: { message?: string }) {
+export function LoadingMessage({ message = "Loading lab..." }: { message?: string }) {
   return (
     <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />

@@ -14,7 +14,7 @@ export default function OperatorError({
 }) {
   useEffect(() => {
     // Log the error to an error reporting service
-    console.error("Operator dashboard error:", error);
+    console.error("Operator lab error:", error);
   }, [error]);
 
   return (

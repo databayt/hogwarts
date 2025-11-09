@@ -5,7 +5,7 @@ import { getTenantContext } from "@/lib/tenant-context";
 import { subDays, startOfMonth, endOfMonth } from "date-fns";
 
 /**
- * Dashboard Actions - Server-side data fetching for real-time dashboard metrics
+ * Dashboard Actions - Server-side data fetching for real-time lab metrics
  * Following the mirror-pattern and server-first architecture
  */
 
@@ -267,7 +267,7 @@ export async function getRecentActivities() {
 // ==================== DASHBOARD SUMMARY ====================
 
 /**
- * Aggregate function to fetch all dashboard data in one call
+ * Aggregate function to fetch all lab data in one call
  * Optimized to reduce round-trips to database
  */
 export async function getDashboardSummary() {

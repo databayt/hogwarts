@@ -147,7 +147,7 @@ export interface BankAccountWithInstitution extends BankAccount {
 }
 
 /**
- * Account overview for dashboard
+ * Account overview for lab
  */
 export interface AccountOverview {
   data: BankAccountWithTransactions[]

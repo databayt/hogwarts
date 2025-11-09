@@ -23,7 +23,7 @@ export async function markAttendance(input: z.infer<typeof markAttendanceSchema>
       update: { status: statusMap[rec.status] },
     })
   }
-  revalidatePath('/dashboard/attendance')
+  revalidatePath('/lab/attendance')
   return { success: true as const }
 }
 

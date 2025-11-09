@@ -681,7 +681,7 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
         
         // If we're on the main domain (ed.databayt.org), check for callback URL first
         if (originalHost === 'ed.databayt.org') {
-          // Don't immediately redirect to dashboard - check if we have a callback URL
+          // Don't immediately redirect to lab - check if we have a callback URL
           log('🏢 MAIN DOMAIN DETECTED:', {
             host: originalHost,
             hasCallbackUrl: !!callbackUrl,
@@ -995,10 +995,10 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
         log('Falling back to default behavior');
       }
 
-      // Fallback: Default behavior - redirect to dashboard on current domain
+      // Fallback: Default behavior - redirect to lab on current domain
       if (url.startsWith("/")) {
         const finalUrl = `${baseUrl}/dashboard`;
-        log('📍 Fallback - Relative URL, defaulting to dashboard:', {
+        log('📍 Fallback - Relative URL, defaulting to lab:', {
           reason: 'URL starts with /',
           originalUrl: url,
           finalUrl
@@ -1010,7 +1010,7 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
       }
       else if (new URL(url).origin === baseUrl) {
         const dashboardUrl = `${baseUrl}/dashboard`;
-        log('📍 Fallback - Same origin, defaulting to dashboard:', {
+        log('📍 Fallback - Same origin, defaulting to lab:', {
           reason: 'Same origin as baseUrl',
           originalUrl: url,
           finalUrl: dashboardUrl
@@ -1022,7 +1022,7 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
       }
 
       const externalDashboard = `${baseUrl}/dashboard`;
-      log('📍 Fallback - External URL, defaulting to dashboard:', {
+      log('📍 Fallback - External URL, defaulting to lab:', {
         reason: 'External URL',
         originalUrl: url,
         finalUrl: externalDashboard

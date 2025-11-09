@@ -31,7 +31,7 @@ export default function DashboardSidebar({ ...props }: React.ComponentProps<type
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              {/* <Link href="/dashboard/overview" className="flex items-center" onClick={handleLinkClick}>
+              {/* <Link href="/lab/overview" className="flex items-center" onClick={handleLinkClick}>
                 <div className="flex flex-col leading-none">
                   <span className="font-medium text-base text-foreground -ml-1">Hogwarts Admin</span>
                 </div>

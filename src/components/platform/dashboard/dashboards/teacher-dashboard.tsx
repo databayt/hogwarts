@@ -28,7 +28,7 @@ export async function TeacherDashboard({
   try {
     data = await getTeacherDashboardData();
   } catch (error) {
-    console.error('[TeacherDashboard] Error fetching dashboard data:', error);
+    console.error('[TeacherDashboard] Error fetching lab data:', error);
     return (
       <div className="space-y-6">
         <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
@@ -55,7 +55,7 @@ export async function TeacherDashboard({
     console.error('[TeacherDashboard] Error fetching school domain:', error);
   }
 
-  // Get dashboard dictionary
+  // Get lab dictionary
   const dashDict = dictionary?.teacherDashboard || {
     stats: {
       todaysClasses: "Today's Classes",

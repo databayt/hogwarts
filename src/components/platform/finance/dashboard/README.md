@@ -122,7 +122,7 @@ dashboard/
 
 ```tsx
 // In your page.tsx
-import { FinanceDashboardContent } from "@/components/platform/finance/dashboard/content"
+import { FinanceDashboardContent } from "@/components/platform/finance/lab/content"
 
 export default function FinanceDashboardPage() {
   return <FinanceDashboardContent />
@@ -153,10 +153,10 @@ export default function FinanceDashboardPage() {
 ## Testing
 ```bash
 # Run tests
-pnpm test src/components/platform/finance/dashboard
+pnpm test src/components/platform/finance/lab
 
 # Test specific component
-pnpm test src/components/platform/finance/dashboard/kpi-card.test.tsx
+pnpm test src/components/platform/finance/lab/kpi-card.test.tsx
 ```
 
 ## Known Limitations

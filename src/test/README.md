@@ -1407,7 +1407,7 @@ test.describe('Authentication', () => {
     // Submit form
     await page.click('button[type="submit"]')
 
-    // Verify redirect to dashboard
+    // Verify redirect to lab
     await expect(page).toHaveURL(/\/dashboard/)
     await expect(page.getByText('Welcome back')).toBeVisible()
   })

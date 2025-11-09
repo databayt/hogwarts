@@ -36,8 +36,8 @@
 
 ### **3. Smart Redirects**
 ```typescript
-// If you're on ed.databayt.org → always redirect to /dashboard
-// If you're on tenant subdomain → redirect back to tenant dashboard
+// If you're on ed.databayt.org → always redirect to /lab
+// If you're on tenant subdomain → redirect back to tenant lab
 // No more Configuration errors or random redirects
 ```
 
@@ -63,7 +63,7 @@ export const auth = NextAuth({
         return tenantUrl;
       }
       
-      // ALWAYS redirect to dashboard on main domain
+      // ALWAYS redirect to lab on main domain
       return `${baseUrl}/dashboard`;
     }
   },
@@ -123,7 +123,7 @@ export function TenantLoginRedirect({ subdomain }: { subdomain: string }) {
 
 ### **✅ Step 4: Dashboard Content Updated**
 ```typescript
-// src/components/platform/dashboard/content.tsx - UPDATED
+// src/components/platform/lab/content.tsx - UPDATED
 // Shows login component when no user is authenticated
 
 if (!user) {

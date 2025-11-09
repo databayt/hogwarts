@@ -91,7 +91,7 @@ export async function getDashboardStats() {
     }
   } catch (error) {
     console.error(error)
-    return { success: false, error: "Failed to fetch dashboard stats" }
+    return { success: false, error: "Failed to fetch lab stats" }
   }
 }
 

@@ -495,7 +495,7 @@ export interface ParentProfile extends BaseProfile {
 }
 
 /**
- * Child overview for parent dashboard
+ * Child overview for parent lab
  */
 export interface ChildOverview {
   studentId: string

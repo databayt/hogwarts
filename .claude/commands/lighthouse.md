@@ -9,7 +9,7 @@ Run Lighthouse CI for performance, accessibility, best practices, and SEO audits
 
 ## Examples
 ```bash
-/lighthouse /dashboard              # Audit dashboard page
+/lighthouse /lab              # Audit lab page
 /lighthouse https://ed.databayt.org # Audit production URL
 /lighthouse all --mobile            # Audit all routes mobile
 /lighthouse /students --budget      # Check performance budget
@@ -137,7 +137,7 @@ const i18nAudits = {
 #### Education-Specific Metrics
 ```typescript
 const educationMetrics = {
-  dashboardLoad: 'Time to interactive dashboard',
+  dashboardLoad: 'Time to interactive lab',
   studentListRender: 'Large table render time',
   formValidation: 'Complex form interaction',
   reportGeneration: 'PDF generation time'

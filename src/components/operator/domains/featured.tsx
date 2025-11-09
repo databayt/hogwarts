@@ -276,7 +276,7 @@ export function DomainOverviewStats({ domains }: { domains: DomainRequestWithSch
 }
 
 /**
- * Comprehensive domain dashboard
+ * Comprehensive domain lab
  */
 export function DomainDashboard({ domains }: { domains: DomainRequestWithSchool[] }) {
   return (

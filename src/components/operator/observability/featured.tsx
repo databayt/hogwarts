@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * Featured logs and metrics dashboard
+ * Featured logs and metrics lab
  */
 
 import { LogCard, MetricCard, HealthStatusCard } from "./card";

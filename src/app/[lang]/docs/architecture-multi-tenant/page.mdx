@@ -538,7 +538,7 @@ export function TenantNavigation() {
   const { tenant, permissions } = useTenantContext();
   
   const navigationItems = [
-    { href: '/dashboard', label: 'Dashboard', icon: HomeIcon },
+    { href: '/lab', label: 'Dashboard', icon: HomeIcon },
     { href: '/students', label: 'Students', icon: UsersIcon, required: 'STUDENT_READ' },
     { href: '/teachers', label: 'Teachers', icon: AcademicCapIcon, required: 'TEACHER_READ' },
     { href: '/timetable', label: 'Timetable', icon: CalendarIcon, required: 'TIMETABLE_READ' },

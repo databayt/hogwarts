@@ -109,7 +109,7 @@ test('dark mode', async ({ page }) => {
 ### Critical Page Snapshots
 ```bash
 # Snapshot key pages
-/snapshot /dashboard /students /teachers /exams
+/snapshot /lab /students /teachers /exams
 ```
 
 ### Multi-Language Snapshots

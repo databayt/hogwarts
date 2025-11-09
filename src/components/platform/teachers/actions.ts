@@ -21,7 +21,7 @@ export async function createTeacher(input: z.infer<typeof teacherCreateSchema>) 
       emailAddress: parsed.emailAddress,
     },
   });
-  revalidatePath("/dashboard/teachers");
+  revalidatePath("/lab/teachers");
   return { success: true as const, id: row.id as string };
 }
 
@@ -37,7 +37,7 @@ export async function updateTeacher(input: z.infer<typeof teacherUpdateSchema>) 
   if (typeof rest.emailAddress !== "undefined") data.emailAddress = rest.emailAddress;
   
   await (db as any).teacher.updateMany({ where: { id, schoolId }, data });
-  revalidatePath("/dashboard/teachers");
+  revalidatePath("/lab/teachers");
   return { success: true as const };
 }
 
@@ -46,7 +46,7 @@ export async function deleteTeacher(input: { id: string }) {
   if (!schoolId) throw new Error("Missing school context");
   const { id } = z.object({ id: z.string().min(1) }).parse(input);
   await (db as any).teacher.deleteMany({ where: { id, schoolId } });
-  revalidatePath("/dashboard/teachers");
+  revalidatePath("/lab/teachers");
   return { success: true as const };
 }
 

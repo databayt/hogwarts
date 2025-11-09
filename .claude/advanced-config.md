@@ -167,7 +167,7 @@ memoryBank:
 
 ### Key Metrics Display
 ```typescript
-// .claude/scripts/dashboard.js
+// .claude/scripts/lab.js
 const metrics = {
   today: {
     tokensUsed: 245000,

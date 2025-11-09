@@ -321,7 +321,7 @@ export function BarGraph() {
 
 ### Unit Tests
 ```bash
-pnpm test src/components/operator/dashboard/**/*.test.tsx
+pnpm test src/components/operator/lab/**/*.test.tsx
 ```
 
 ### Test Coverage Areas
@@ -368,9 +368,9 @@ describe('Chart Components', () => {
 ```typescript
 // Redis caching for expensive queries
 const CACHE_KEYS = {
-  metrics: 'dashboard:metrics:{period}',
-  charts: 'dashboard:charts:{type}:{period}',
-  recent: 'dashboard:recent-sales'
+  metrics: 'lab:metrics:{period}',
+  charts: 'lab:charts:{type}:{period}',
+  recent: 'lab:recent-sales'
 };
 
 const CACHE_TTL = {
@@ -439,7 +439,7 @@ useEffect(() => {
 ### Server-Sent Events
 ```typescript
 // Alternative SSE implementation
-const eventSource = new EventSource('/api/operator/dashboard/stream');
+const eventSource = new EventSource('/api/operator/lab/stream');
 
 eventSource.onmessage = (event) => {
   const data = JSON.parse(event.data);

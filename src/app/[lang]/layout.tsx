@@ -67,7 +67,7 @@ export default async function LocaleLayout({
   const isSubdomain = !!subdomain; // True if x-subdomain header exists
 
   // Use dynamic font (font-sans) for subdomain pages to allow theme system to work
-  // Use hardcoded fonts for marketing/dashboard pages
+  // Use hardcoded fonts for marketing/lab pages
   const fontClass = isSubdomain
     ? 'font-sans'
     : (isRTL ? tajawal.className : GeistSans.className);

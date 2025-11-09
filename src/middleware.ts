@@ -158,9 +158,9 @@ export async function middleware(req: NextRequest) {
     return response;
   }
 
-  // If user is logged in and accessing auth routes, redirect to dashboard
+  // If user is logged in and accessing auth routes, redirect to lab
   if (isLoggedIn && authRoutes.includes(pathnameWithoutLocale)) {
-    logger.debug('ALREADY LOGGED IN - Redirecting to dashboard', {
+    logger.debug('ALREADY LOGGED IN - Redirecting to lab', {
       ...baseContext,
       pathnameWithoutLocale,
       userId: session?.user?.id

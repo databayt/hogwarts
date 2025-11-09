@@ -253,7 +253,7 @@ model GeoFence {
   polygonGeoJSON String?   @db.Text // GeoJSON string for complex shapes
 
   isActive    Boolean      @default(true)
-  color       String?      @default("#3b82f6") // For dashboard visualization
+  color       String?      @default("#3b82f6") // For lab visualization
 
   school      School       @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   events      GeoAttendanceEvent[]
@@ -1201,7 +1201,7 @@ test.describe('Geofence Tracking', () => {
     await context.grantPermissions(['geolocation'])
     await context.setGeolocation({ latitude: 24.7136, longitude: 46.6753 })
 
-    // Navigate to student dashboard
+    // Navigate to student lab
     await page.goto('/student/attendance')
 
     // Enable tracking

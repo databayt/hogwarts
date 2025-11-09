@@ -35,7 +35,7 @@ export async function ParentDashboard({
   try {
     data = await getParentDashboardData();
   } catch (error) {
-    console.error('[ParentDashboard] Error fetching dashboard data:', error);
+    console.error('[ParentDashboard] Error fetching lab data:', error);
     return (
       <div className="space-y-6">
         <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
@@ -62,7 +62,7 @@ export async function ParentDashboard({
     console.error('[ParentDashboard] Error fetching school domain:', error);
   }
 
-  // Get dashboard dictionary
+  // Get lab dictionary
   const dashDict = dictionary?.parentDashboard || {
     stats: {
       children: "Children",

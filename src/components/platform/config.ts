@@ -19,7 +19,7 @@ export const sidebarLinks: SidebarNavItem[] = [
         title: "Billing",
         authorizeOnly: UserRole.ADMIN,
       },
-      { href: "/dashboard/charts", icon: "lineChart", title: "Charts" },
+      { href: "/lab/charts", icon: "lineChart", title: "Charts" },
       {
         href: "/admin/orders",
         icon: "package",
@@ -28,7 +28,7 @@ export const sidebarLinks: SidebarNavItem[] = [
         authorizeOnly: UserRole.ADMIN,
       },
       {
-        href: "#/dashboard/posts",
+        href: "#/lab/posts",
         icon: "post",
         title: "User Posts",
         authorizeOnly: UserRole.USER,
@@ -39,7 +39,7 @@ export const sidebarLinks: SidebarNavItem[] = [
   {
     title: "OPTIONS",
     items: [
-      { href: "/dashboard/settings", icon: "settings", title: "Settings" },
+      { href: "/lab/settings", icon: "settings", title: "Settings" },
       { href: "/", icon: "home", title: "Homepage" },
       { href: "/docs", icon: "bookOpen", title: "Documentation" },
       {

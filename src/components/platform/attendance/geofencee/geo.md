@@ -105,7 +105,7 @@ model GeoFence {
   polygonGeoJSON String?   @db.Text
 
   isActive    Boolean      @default(true)
-  color       String?      @default("#3b82f6") // For dashboard visualization
+  color       String?      @default("#3b82f6") // For lab visualization
 
   school      School       @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   events      GeoAttendanceEvent[]

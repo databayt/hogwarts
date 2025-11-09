@@ -274,7 +274,7 @@ const data = await db.announcement.findMany({
 pnpm type-check
 
 # 2. Check environment variables
-# Ensure all required vars are set in Vercel dashboard
+# Ensure all required vars are set in Vercel lab
 
 # 3. Update lockfile
 pnpm install

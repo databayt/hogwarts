@@ -38,7 +38,7 @@ export function OrgSwitcher({
     if (onTenantSwitch) {
       onTenantSwitch(tenant.id);
     }
-    // Default behavior: navigate to tenant-aware dashboard (subdomain or path-based)
+    // Default behavior: navigate to tenant-aware lab (subdomain or path-based)
     // Replace with subdomain routing if configured; placeholder path-based switch:
     // TODO: connect to subdomain router when available
   };

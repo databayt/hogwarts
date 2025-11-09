@@ -50,7 +50,7 @@ export async function PrincipalDashboard({ user, dictionary, locale = "en" }: Pr
   try {
     dashboardData = await getPrincipalDashboardData();
   } catch (error) {
-    console.error("Error fetching principal dashboard data:", error);
+    console.error("Error fetching principal lab data:", error);
     return (
       <DashboardSectionError
         title={t.dashboardUnavailable}

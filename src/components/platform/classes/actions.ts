@@ -32,7 +32,7 @@ export async function createClass(input: z.infer<typeof classCreateSchema>) {
       prerequisiteId: parsed.prerequisiteId || null,
     },
   });
-  revalidatePath("/dashboard/classes");
+  revalidatePath("/lab/classes");
   return { success: true as const, id: row.id as string };
 }
 
@@ -59,7 +59,7 @@ export async function updateClass(input: z.infer<typeof classUpdateSchema>) {
   if (typeof rest.prerequisiteId !== "undefined") data.prerequisiteId = rest.prerequisiteId || null;
 
   await db.class.updateMany({ where: { id, schoolId }, data });
-  revalidatePath("/dashboard/classes");
+  revalidatePath("/lab/classes");
   return { success: true as const };
 }
 
@@ -68,7 +68,7 @@ export async function deleteClass(input: { id: string }) {
   if (!schoolId) throw new Error("Missing school context");
   const { id } = z.object({ id: z.string().min(1) }).parse(input);
   await db.class.deleteMany({ where: { id, schoolId } });
-  revalidatePath("/dashboard/classes");
+  revalidatePath("/lab/classes");
   return { success: true as const };
 }
 

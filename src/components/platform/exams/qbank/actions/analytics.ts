@@ -171,7 +171,7 @@ export async function batchUpdateAnalytics(
 }
 
 /**
- * Get analytics dashboard data
+ * Get analytics lab data
  */
 export async function getAnalyticsDashboard(): Promise<
   ActionResponse<DashboardAnalytics>

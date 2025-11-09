@@ -19,7 +19,7 @@ export async function FinanceDashboardContent() {
 
   const userRole = session.user.role || 'USER'
 
-  // Fetch all dashboard data in parallel
+  // Fetch all lab data in parallel
   const [stats, transactions, alerts, quickActions] = await Promise.all([
     getDashboardStats('month'),
     getRecentTransactions(5),

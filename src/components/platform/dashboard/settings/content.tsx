@@ -43,7 +43,7 @@ export default async function SettingsContent({ dictionary, lang }: SettingsCont
           <UserRoleForm user={{ id: user.id, role: user.role as UserRole }} />
         </div>
 
-        {/* Role Switcher for testing different dashboard views */}
+        {/* Role Switcher for testing different lab views */}
         <RoleSwitcher
           currentRole={user.role as UserRole}
           currentUserId={user.id}

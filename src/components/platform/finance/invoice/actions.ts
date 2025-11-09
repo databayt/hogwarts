@@ -686,7 +686,7 @@ export async function getDashboardStats() {
     return { success: true, data: { totalRevenue, totalInvoices, paidInvoices, unpaidInvoices, recentInvoices, chartData } }
   } catch (error) {
     console.error(error)
-    return { success: false, error: "Failed to fetch dashboard stats" }
+    return { success: false, error: "Failed to fetch lab stats" }
   }
 }
 

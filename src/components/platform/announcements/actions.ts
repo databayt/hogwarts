@@ -52,7 +52,7 @@ type AnnouncementListResult = {
 // Constants
 // ============================================================================
 
-const ANNOUNCEMENTS_PATH = "/announcements"; // Remove hardcoded dashboard prefix
+const ANNOUNCEMENTS_PATH = "/announcements"; // Remove hardcoded lab prefix
 
 // ============================================================================
 // Mutations

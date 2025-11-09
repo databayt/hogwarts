@@ -187,7 +187,7 @@ export async function getCriticalAlerts() {
       type: "Financial",
       message: alert.message,
       severity: alert.severity,
-      action: "Review financial dashboard",
+      action: "Review financial lab",
       timestamp: new Date(),
     });
   });

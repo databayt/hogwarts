@@ -16,7 +16,7 @@ export async function updateUserRole(userId: string, data: FormData) {
   }
 
   await db.user.update({ where: { id: userId }, data: { role: parsed.data.role } });
-  revalidatePath("/dashboard/settings");
+  revalidatePath("/lab/settings");
   return { status: "success" as const };
 }
 

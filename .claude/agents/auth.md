@@ -36,7 +36,7 @@ session.user = {
 ```typescript
 // middleware.ts
 export default auth((req) => {
-  if (!req.auth && req.nextUrl.pathname.startsWith('/dashboard')) {
+  if (!req.auth && req.nextUrl.pathname.startsWith('/lab')) {
     return Response.redirect('/login')
   }
 })

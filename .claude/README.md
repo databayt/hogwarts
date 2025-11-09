@@ -50,7 +50,7 @@ Commands are quick shortcuts:
 
 ```bash
 /component StudentCard        # Generate component with tests
-/page /dashboard/students     # Create Next.js page
+/page /lab/students     # Create Next.js page
 /review                       # Comprehensive code review
 /security-scan                # Full security audit
 /deploy staging               # Deploy to staging

@@ -4,7 +4,7 @@ import { type Locale } from "@/components/internationalization/config";
 
 export const metadata = {
   title: "Dashboard",
-  description: "Operator dashboard overview"
+  description: "Operator lab overview"
 };
 
 interface Props {

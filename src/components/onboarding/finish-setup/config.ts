@@ -64,7 +64,7 @@ export const COMPLETION_MESSAGES = {
 export const NEXT_STEPS = [
   {
     title: 'Access Your School Dashboard',
-    description: 'Start managing your school with our comprehensive dashboard',
+    description: 'Start managing your school with our comprehensive lab',
     action: 'dashboard',
   },
   {

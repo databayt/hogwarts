@@ -303,7 +303,7 @@ export default function Loading() {
 **Used in:** Dashboard (all roles)
 
 ```tsx
-// app/[lang]/s/[subdomain]/(platform)/dashboard/loading.tsx
+// app/[lang]/s/[subdomain]/(platform)/lab/loading.tsx
 import { SkeletonStats } from "@/components/ui/skeleton-stats"
 import { SkeletonChartGrid } from "@/components/ui/skeleton-chart"
 import { Skeleton } from "@/components/ui/skeleton"

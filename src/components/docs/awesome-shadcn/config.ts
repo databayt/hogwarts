@@ -338,7 +338,7 @@ export const awesomeShadcn: AwesomeShadcnItem[] = [
     id: "admin",
     title: "Admin",
     description:
-      "Admin dashboard UI template built with Shadcn (Next.js/Vite variants noted). Includes multiple page examples and a cohesive design system.",
+      "Admin lab UI template built with Shadcn (Next.js/Vite variants noted). Includes multiple page examples and a cohesive design system.",
     link: "https://www.shadcntemplates.com/theme/satnaing-shadcn-admin/",
     repository: "https://github.com/satnaing/shadcn-admin",
     tags: ["templates", "enhanced"]
@@ -686,7 +686,7 @@ export const awesomeShadcn: AwesomeShadcnItem[] = [
     tags: ["templates", "landing", "modern"]
   },
   {
-    id: "shadcn-dashboard",
+    id: "shadcn-lab",
     title: "ShadcnDashboard",
     description:
       "Admin Dashboard Starter with Nextjs 15 and Shadcn ui. Complete admin panel template with modern design and functionality.",
@@ -752,7 +752,7 @@ export const awesomeShadcn: AwesomeShadcnItem[] = [
     id: "finance-forge",
     title: "Finance Forge",
     description:
-      "Finance SaaS dashboard with customizable widgets and Recharts visualizations. Built with Next.js 14, Hono.js, Drizzle ORM, Clerk authentication, and mobile-friendly TanStack tables.",
+      "Finance SaaS lab with customizable widgets and Recharts visualizations. Built with Next.js 14, Hono.js, Drizzle ORM, Clerk authentication, and mobile-friendly TanStack tables.",
     link: "https://finance-forge-mocha.vercel.app/",
     repository: "https://github.com/collinskchirchir/finance-forge",
     tags: ["templates", "finance", "saas", "dashboard", "enhanced", "modern"]
@@ -821,7 +821,7 @@ export const awesomeShadcn: AwesomeShadcnItem[] = [
     tags: ["components", "ai", "specialized", "enhanced"]
   },
   {
-    id: "shadcn-crm-dashboard",
+    id: "shadcn-crm-lab",
     title: "ShadcnCrmDashboard",
     description:
       "Transform how you connect with customers. Piper brings AI-powered insights, automation, and a delightful interface to your CRM.",
@@ -983,10 +983,10 @@ export const awesomeShadcn: AwesomeShadcnItem[] = [
     tags: ["templates", "portfolio", "modern"]
   },
   {
-    id: "shadcn-dashboard-simple",
+    id: "shadcn-lab-simple",
     title: "ShadcnDashboardSimple",
     description:
-      "A Simple Shadcn Dashboard. Clean and minimal dashboard template.",
+      "A Simple Shadcn Dashboard. Clean and minimal lab template.",
     link: "https://shadcn-dashboard.netlify.app",
     repository: "https://github.com/shadcn-dashboard/shadcn-dashboard",
     tags: ["templates", "dashboard", "modern"]
@@ -1001,7 +1001,7 @@ export const awesomeShadcn: AwesomeShadcnItem[] = [
     tags: ["components", "specialized", "enhanced"]
   },
   {
-    id: "shadcn-nextjs-dashboard",
+    id: "shadcn-nextjs-lab",
     title: "ShadcnNextjsDashboard",
     description:
       "Admin Dashboard UI built with Shadcn and NextJS. Complete admin panel template.",
@@ -1037,10 +1037,10 @@ export const awesomeShadcn: AwesomeShadcnItem[] = [
     tags: ["templates", "enhanced", "modern"]
   },
   {
-    id: "next-dashboard",
+    id: "next-lab",
     title: "NextDashboard",
     description:
-      "Admin dashboard on NextJS and Shadcn UI. Professional admin interface template.",
+      "Admin lab on NextJS and Shadcn UI. Professional admin interface template.",
     link: "https://next-dashboard-liart.vercel.app/",
     repository: "https://github.com/next-dashboard-liart/next-dashboard-liart",
     tags: ["templates", "dashboard", "modern"]

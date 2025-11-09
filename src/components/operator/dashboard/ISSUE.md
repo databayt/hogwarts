@@ -70,7 +70,7 @@ const BarGraph = dynamic(() => import('./bar-graph'), {
 
 **Solution**:
 ```typescript
-// dashboard/error.tsx
+// lab/error.tsx
 'use client';
 
 export default function DashboardError({
@@ -116,10 +116,10 @@ const getCachedMetrics = unstable_cache(
     ]);
     return { totalSchools, activeSchools };
   },
-  ['dashboard-metrics'],
+  ['lab-metrics'],
   {
     revalidate: 60, // Cache for 1 minute
-    tags: ['dashboard']
+    tags: ['lab']
   }
 );
 ```
@@ -129,7 +129,7 @@ const getCachedMetrics = unstable_cache(
 
 **Implement**: WebSocket or Server-Sent Events
 ```typescript
-// lib/dashboard-stream.ts
+// lib/lab-stream.ts
 export function createDashboardStream() {
   return new ReadableStream({
     start(controller) {
@@ -324,7 +324,7 @@ Dashboard queries can overwhelm the database
 const dashboardLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
   max: 60, // 60 requests per minute
-  message: 'Too many dashboard requests'
+  message: 'Too many lab requests'
 });
 ```
 

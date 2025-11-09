@@ -67,7 +67,7 @@ export function SkeletonCardCompact() {
 /**
  * SkeletonStatCard Component
  *
- * Stats card variant for dashboard metrics and key performance indicators.
+ * Stats card variant for lab metrics and key performance indicators.
  * Matches the typical stat card with label, value, and trend indicator.
  *
  * @example

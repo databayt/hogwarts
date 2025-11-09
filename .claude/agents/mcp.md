@@ -287,7 +287,7 @@ generate_report_card(studentId, term)
 // Export attendance data
 export_attendance(schoolId, dateRange, format)
 
-// Generate analytics dashboard
+// Generate analytics lab
 generate_dashboard(schoolId, metrics)
 ```
 

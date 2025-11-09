@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * Featured invoices dashboard component
+ * Featured invoices lab component
  *
  * Displays key invoice metrics and important invoices.
  */
