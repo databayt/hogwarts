@@ -1,0 +1,188 @@
+/*
+  COMPREHENSIVE SEED - Master Orchestrator
+  Port Sudan International School - Complete Database Seeding
+
+  This master seed orchestrates all seeding modules in the correct sequence:
+  1. Core Data (schools, users, students, teachers, subjects, classes)
+  2. Finance Module (accounting, payroll, banking, budgets)
+  3. Question Bank (questions, exam templates, rubrics)
+  4. Advanced Features (notifications, messages, quiz games)
+  5. Compliance (legal, subscriptions, tasks)
+
+  Run with: pnpm db:seed:comprehensive
+*/
+
+import { exec } from "child_process";
+import { promisify } from "util";
+
+const execAsync = promisify(exec);
+
+const SEEDS = [
+  {
+    name: "Core Data",
+    file: "prisma/generator/seed.ts",
+    description: "Schools, users, 100 students, 30 teachers, 23 subjects, classes, books, announcements",
+    emoji: "🏫",
+  },
+  {
+    name: "Finance Module",
+    file: "prisma/generator/seed-finance.ts",
+    description: "Accounting, payroll (360 salary slips), banking, budgets, expenses",
+    emoji: "💰",
+  },
+  {
+    name: "Question Bank",
+    file: "prisma/generator/seed-qbank.ts",
+    description: "500+ questions, exam templates, rubrics (Arabic/English bilingual)",
+    emoji: "📝",
+  },
+  {
+    name: "Advanced Features",
+    file: "prisma/generator/seed-advanced.ts",
+    description: "Notifications, messages, quiz games, conversations",
+    emoji: "🚀",
+  },
+  {
+    name: "Compliance & Governance",
+    file: "prisma/generator/seed-compliance.ts",
+    description: "Legal consents, GDPR compliance, subscriptions, admin tasks",
+    emoji: "⚖️",
+  },
+];
+
+async function runSeed(seed: typeof SEEDS[0], index: number) {
+  console.log(`\n${"=".repeat(80)}`);
+  console.log(`${seed.emoji} [${index + 1}/${SEEDS.length}] ${seed.name}`);
+  console.log(`📋 ${seed.description}`);
+  console.log(`${"=".repeat(80)}\n`);
+
+  const startTime = Date.now();
+
+  try {
+    const { stdout, stderr } = await execAsync(`tsx ${seed.file}`);
+
+    if (stdout) console.log(stdout);
+    if (stderr) console.error(stderr);
+
+    const duration = ((Date.now() - startTime) / 1000).toFixed(2);
+    console.log(`\n✅ ${seed.name} completed in ${duration}s`);
+
+    return { success: true, duration: parseFloat(duration) };
+  } catch (error: any) {
+    console.error(`\n❌ ${seed.name} FAILED:`);
+    console.error(error.message);
+    if (error.stdout) console.log(error.stdout);
+    if (error.stderr) console.error(error.stderr);
+
+    return { success: false, duration: 0, error: error.message };
+  }
+}
+
+async function main() {
+  console.log(`
+╔═══════════════════════════════════════════════════════════════════════════╗
+║                                                                           ║
+║   🌱 COMPREHENSIVE DATABASE SEED - Demo International School (demo.databayt.org) ║
+║                                                                           ║
+║   This will seed ALL data across 100+ models:                            ║
+║   • Core: 100 students, 30 teachers, 23 subjects                         ║
+║   • Finance: Full accounting, payroll, banking system                    ║
+║   • Education: 500+ questions, exam templates, rubrics                   ║
+║   • Engagement: Notifications, messages, quiz games                      ║
+║   • Governance: Legal compliance, subscriptions, tasks                   ║
+║                                                                           ║
+║   Expected Duration: 2-3 minutes                                         ║
+║   Expected Records: ~3,000+ database entries                             ║
+║                                                                           ║
+╚═══════════════════════════════════════════════════════════════════════════╝
+  `);
+
+  console.log(`⏰ Start Time: ${new Date().toLocaleString()}\n`);
+
+  const results = [];
+  let totalDuration = 0;
+
+  for (let i = 0; i < SEEDS.length; i++) {
+    const result = await runSeed(SEEDS[i], i);
+    results.push({ ...SEEDS[i], ...result });
+    totalDuration += result.duration;
+
+    // Stop if a seed fails
+    if (!result.success) {
+      console.log(`\n⚠️  Seeding stopped at ${SEEDS[i].name} due to failure.`);
+      break;
+    }
+  }
+
+  // Summary Report
+  console.log(`\n\n${"=".repeat(80)}`);
+  console.log(`📊 COMPREHENSIVE SEED SUMMARY`);
+  console.log(`${"=".repeat(80)}\n`);
+
+  const successCount = results.filter((r) => r.success).length;
+  const failCount = results.filter((r) => !r.success).length;
+
+  results.forEach((result, index) => {
+    const status = result.success ? "✅" : "❌";
+    const duration = result.duration ? `${result.duration.toFixed(2)}s` : "N/A";
+    console.log(`${status} [${index + 1}] ${result.name.padEnd(30)} - ${duration}`);
+    if (!result.success) {
+      console.log(`   Error: ${result.error}`);
+    }
+  });
+
+  console.log(`\n${"─".repeat(80)}`);
+  console.log(`Total Seeds: ${results.length}`);
+  console.log(`Successful: ${successCount} ✅`);
+  console.log(`Failed: ${failCount} ❌`);
+  console.log(`Total Duration: ${totalDuration.toFixed(2)}s`);
+  console.log(`⏰ End Time: ${new Date().toLocaleString()}`);
+  console.log(`${"─".repeat(80)}\n`);
+
+  if (successCount === SEEDS.length) {
+    console.log(`
+╔═══════════════════════════════════════════════════════════════════════════╗
+║                                                                           ║
+║   🎉 CONGRATULATIONS! All seeds completed successfully!                   ║
+║                                                                           ║
+║   Your database is now populated with comprehensive demo data:           ║
+║   • 100 Students (Grades 7-12, Sudanese names)                          ║
+║   • 30 Teachers (with full payroll records)                              ║
+║   • 23 Subjects (including Islamic Studies & Arabic variants)            ║
+║   • 24 Library Books (12 English + 12 Arabic/Islamic literature)         ║
+║   • 30 Announcements (including Islamic events)                          ║
+║   • 500+ Questions (bilingual: Arabic & English)                         ║
+║   • Complete Finance System (accounting, payroll, banking)               ║
+║   • 200 Notifications, 500 Messages, 50 Conversations                    ║
+║   • 10 Quiz Games with Arabic/Islamic content                            ║
+║   • Full GDPR Compliance (300+ legal consents)                           ║
+║   • Active Enterprise Subscription with billing history                  ║
+║                                                                           ║
+║   🚀 Your school management system is ready to use!                       ║
+║                                                                           ║
+╚═══════════════════════════════════════════════════════════════════════════╝
+    `);
+  } else {
+    console.log(`
+╔═══════════════════════════════════════════════════════════════════════════╗
+║                                                                           ║
+║   ⚠️  SEEDING INCOMPLETE                                                   ║
+║                                                                           ║
+║   Some seeds failed to complete. Please review the errors above and:    ║
+║   1. Check database connection                                           ║
+║   2. Verify Prisma schema is up to date (pnpm prisma generate)          ║
+║   3. Run individual seeds to identify specific issues                    ║
+║   4. Check the error messages for details                                ║
+║                                                                           ║
+╚═══════════════════════════════════════════════════════════════════════════╝
+    `);
+  }
+
+  process.exit(failCount > 0 ? 1 : 0);
+}
+
+main().catch((error) => {
+  console.error("\n❌ FATAL ERROR:");
+  console.error(error);
+  process.exit(1);
+});

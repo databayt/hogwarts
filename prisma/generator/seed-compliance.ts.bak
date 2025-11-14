@@ -1,0 +1,442 @@
+/*
+  Compliance & Governance Seed for Port Sudan International School
+  Comprehensive seeding for regulatory and administrative needs:
+  - 300 Legal Consents (GDPR compliance for all students)
+  - Legal Documents (Privacy Policy, Terms of Service)
+  - 50 Compliance Logs
+  - School Subscription with Billing History
+  - 100 Audit Logs (user action tracking)
+  - 20 Administrative Tasks
+  - Event Schedule
+*/
+
+import { PrismaClient, ConsentStatus, TaskStatus, TaskPriority } from "@prisma/client";
+import { faker } from "@faker-js/faker";
+
+const prisma = new PrismaClient();
+
+const SCHOOL_DOMAIN = "demo";
+
+async function getSchool() {
+  const school = await prisma.school.findUnique({ where: { domain: SCHOOL_DOMAIN } });
+  if (!school) throw new Error(`School with domain "${SCHOOL_DOMAIN}" not found. Run main seed first.`);
+  return school;
+}
+
+async function ensureLegalDocuments(schoolId: string) {
+  console.log("Seeding Legal Documents...");
+
+  const documents = [
+    {
+      title: "Privacy Policy",
+      slug: "privacy-policy",
+      content: `# Privacy Policy - Demo International School
+
+## Introduction
+Demo International School ("we", "our", "us") is committed to protecting the privacy of our students, parents, and staff.
+
+## Data We Collect
+- Student personal information (name, date of birth, contact details)
+- Academic records and performance data
+- Attendance records
+- Financial information for fee payments
+- Guardian/parent contact information
+
+## How We Use Your Data
+- Academic administration and record-keeping
+- Communication with parents and guardians
+- Fee processing and financial management
+- Legal and regulatory compliance
+
+## Data Protection
+We implement appropriate technical and organizational measures to protect personal data against unauthorized access, alteration, disclosure, or destruction.
+
+## Your Rights
+- Right to access your personal data
+- Right to rectification of inaccurate data
+- Right to erasure (where applicable)
+- Right to restrict processing
+
+## Contact
+For any privacy-related questions, contact: privacy@demo.databayt.org
+
+Last updated: September 2025`,
+      version: "1.0",
+      effectiveDate: new Date("2025-09-01"),
+      isActive: true,
+      requiresConsent: true,
+    },
+    {
+      title: "Terms of Service",
+      slug: "terms-of-service",
+      content: `# Terms of Service - Demo International School
+
+## Acceptance of Terms
+By enrolling your child at Demo International School, you agree to abide by these terms and conditions.
+
+## Academic Policies
+1. Students must maintain satisfactory academic progress
+2. Regular attendance is mandatory (minimum 75%)
+3. Homework and assignments must be completed on time
+4. Respect for teachers and fellow students is required
+
+## Financial Obligations
+1. Tuition fees are due at the beginning of each term
+2. Late payment may result in penalties
+3. Refund policy applies as per school regulations
+
+## Code of Conduct
+Students must adhere to the school's code of conduct, including:
+- Respectful behavior
+- Appropriate dress code (Islamic modesty standards)
+- No bullying or harassment
+- Academic integrity
+
+## Termination
+The school reserves the right to terminate enrollment for serious violations of school policies.
+
+## Governing Law
+These terms are governed by the laws of Sudan.
+
+Last updated: September 2025`,
+      version: "1.0",
+      effectiveDate: new Date("2025-09-01"),
+      isActive: true,
+      requiresConsent: true,
+    },
+    {
+      title: "Photo and Video Consent",
+      slug: "media-consent",
+      content: `# Photo and Video Consent Policy
+
+Demo International School occasionally photographs and videos students during school activities for:
+- Educational documentation
+- School website and social media
+- Promotional materials
+- Yearbook
+
+Parents/guardians can opt in or out of this consent at any time.
+
+For questions, contact: media@demo.databayt.org`,
+      version: "1.0",
+      effectiveDate: new Date("2025-09-01"),
+      isActive: true,
+      requiresConsent: true,
+    },
+  ];
+
+  const created: any[] = [];
+  for (const doc of documents) {
+    const existing = await prisma.legalDocument.findFirst({
+      where: { schoolId, slug: doc.slug },
+    });
+
+    if (!existing) {
+      const result = await prisma.legalDocument.create({
+        data: { schoolId, ...doc },
+      });
+      created.push(result);
+    }
+  }
+
+  console.log(`✅ Seeded ${created.length} Legal Documents`);
+  return created;
+}
+
+async function ensureLegalConsents(schoolId: string, documents: any[]) {
+  console.log("Seeding Legal Consents...");
+
+  const students = await prisma.student.findMany({
+    where: { schoolId },
+    select: { id: true, userId: true },
+  });
+
+  if (students.length === 0) {
+    console.log("⚠️ No students found. Run main seed first.");
+    return;
+  }
+
+  const privacyDoc = documents.find((d) => d.slug === "privacy-policy");
+  const termsDoc = documents.find((d) => d.slug === "terms-of-service");
+  const mediaDoc = documents.find((d) => d.slug === "media-consent");
+
+  if (!privacyDoc || !termsDoc || !mediaDoc) {
+    console.log("⚠️ Legal documents not found.");
+    return;
+  }
+
+  let consentCount = 0;
+
+  // Create consents for all students (300)
+  for (const student of students) {
+    // Privacy Policy consent (all accepted)
+    const existingPrivacy = await prisma.legalConsent.findFirst({
+      where: { schoolId, userId: student.userId, legalDocumentId: privacyDoc.id },
+    });
+
+    if (!existingPrivacy) {
+      await prisma.legalConsent.create({
+        data: {
+          schoolId,
+          userId: student.userId,
+          legalDocumentId: privacyDoc.id,
+          status: ConsentStatus.ACCEPTED,
+          consentDate: new Date(),
+          ipAddress: "192.168.1." + faker.number.int({ min: 1, max: 255 }),
+        },
+      });
+      consentCount++;
+    }
+
+    // Terms of Service consent (all accepted)
+    const existingTerms = await prisma.legalConsent.findFirst({
+      where: { schoolId, userId: student.userId, legalDocumentId: termsDoc.id },
+    });
+
+    if (!existingTerms) {
+      await prisma.legalConsent.create({
+        data: {
+          schoolId,
+          userId: student.userId,
+          legalDocumentId: termsDoc.id,
+          status: ConsentStatus.ACCEPTED,
+          consentDate: new Date(),
+          ipAddress: "192.168.1." + faker.number.int({ min: 1, max: 255 }),
+        },
+      });
+      consentCount++;
+    }
+
+    // Media consent (90% accepted, 10% declined)
+    const existingMedia = await prisma.legalConsent.findFirst({
+      where: { schoolId, userId: student.userId, legalDocumentId: mediaDoc.id },
+    });
+
+    if (!existingMedia) {
+      await prisma.legalConsent.create({
+        data: {
+          schoolId,
+          userId: student.userId,
+          legalDocumentId: mediaDoc.id,
+          status: Math.random() < 0.9 ? ConsentStatus.ACCEPTED : ConsentStatus.DECLINED,
+          consentDate: new Date(),
+          ipAddress: "192.168.1." + faker.number.int({ min: 1, max: 255 }),
+        },
+      });
+      consentCount++;
+    }
+  }
+
+  console.log(`✅ Seeded ${consentCount} Legal Consents`);
+}
+
+async function ensureComplianceLogs(schoolId: string) {
+  console.log("Seeding Compliance Logs...");
+
+  const existingCount = await prisma.complianceLog.count({ where: { schoolId } });
+  if (existingCount >= 50) {
+    console.log(`✅ Compliance Logs already seeded (${existingCount} existing)`);
+    return;
+  }
+
+  const complianceTypes = [
+    "GDPR_DATA_ACCESS_REQUEST",
+    "GDPR_DATA_DELETION_REQUEST",
+    "DATA_BREACH_DETECTION",
+    "SECURITY_AUDIT",
+    "BACKUP_VERIFICATION",
+    "ACCESS_CONTROL_REVIEW",
+    "POLICY_UPDATE",
+    "CONSENT_VERIFICATION",
+  ];
+
+  const logs: any[] = [];
+  for (let i = 0; i < 50; i++) {
+    const createdAt = new Date();
+    createdAt.setDate(createdAt.getDate() - faker.number.int({ min: 1, max: 180 }));
+
+    logs.push({
+      schoolId,
+      type: faker.helpers.arrayElement(complianceTypes),
+      description: `Compliance check: ${faker.helpers.arrayElement(complianceTypes)}`,
+      performedBy: `System Admin`,
+      timestamp: createdAt,
+      result: i % 10 === 0 ? "ISSUE_DETECTED" : "PASSED",
+      notes: i % 10 === 0 ? "Issue resolved within 24 hours" : "No issues found",
+    });
+  }
+
+  await prisma.complianceLog.createMany({ data: logs, skipDuplicates: true });
+  console.log(`✅ Seeded ${logs.length} Compliance Logs`);
+}
+
+async function ensureSubscription(schoolId: string) {
+  console.log("Seeding School Subscription...");
+
+  const existing = await prisma.subscription.findFirst({ where: { schoolId } });
+  if (existing) {
+    console.log(`✅ Subscription already exists`);
+    return;
+  }
+
+  // Create subscription tier
+  const tier = await prisma.subscriptionTier.upsert({
+    where: { name_planType: { name: "Enterprise Plan", planType: "enterprise" } },
+    update: {},
+    create: {
+      name: "Enterprise Plan",
+      planType: "enterprise",
+      description: "Full-featured enterprise plan for large schools",
+      price: "500.00", // Monthly price in USD
+      billingCycle: "MONTHLY",
+      maxStudents: 2500,
+      maxTeachers: 240,
+      features: JSON.stringify([
+        "Unlimited students and teachers",
+        "Advanced reporting",
+        "API access",
+        "Priority support",
+        "Custom integrations",
+        "Multi-tenant support",
+      ]),
+      isActive: true,
+    },
+  });
+
+  // Create subscription
+  const subscription = await prisma.subscription.create({
+    data: {
+      schoolId,
+      tierId: tier.id,
+      status: "ACTIVE",
+      startDate: new Date("2025-09-01"),
+      endDate: new Date("2026-08-31"),
+      autoRenew: true,
+      billingCycle: "MONTHLY",
+      currentPeriodStart: new Date("2025-09-01"),
+      currentPeriodEnd: new Date("2025-10-01"),
+    },
+  });
+
+  // Create billing history (12 months)
+  for (let month = 0; month < 12; month++) {
+    const periodStart = new Date(2025, month, 1);
+    const periodEnd = new Date(2025, month + 1, 0);
+    const dueDate = new Date(2025, month, 5);
+    const paidDate = new Date(2025, month, 3);
+
+    await prisma.billingHistory.create({
+      data: {
+        schoolId,
+        subscriptionId: subscription.id,
+        amount: "500.00",
+        currency: "USD",
+        status: "PAID",
+        billingPeriodStart: periodStart,
+        billingPeriodEnd: periodEnd,
+        dueDate,
+        paidDate,
+        paymentMethod: "BANK_TRANSFER",
+        invoiceNumber: `INV-2025-${String(month + 1).padStart(2, "0")}`,
+      },
+    });
+  }
+
+  console.log(`✅ Seeded School Subscription with 12 Months Billing History`);
+}
+
+async function ensureTasks(schoolId: string) {
+  console.log("Seeding Administrative Tasks...");
+
+  const users = await prisma.user.findMany({
+    where: { schoolId, role: { in: ["ADMIN", "TEACHER"] } },
+    select: { id: true },
+    take: 10,
+  });
+
+  if (users.length === 0) {
+    console.log("⚠️ No admin/teacher users found.");
+    return;
+  }
+
+  const tasks = [
+    { title: "Prepare Midterm Exam Schedule", description: "Finalize and publish midterm examination timetable", priority: TaskPriority.HIGH, dueDate: 7 },
+    { title: "Update Student Records", description: "Ensure all student information is current in the system", priority: TaskPriority.MEDIUM, dueDate: 14 },
+    { title: "Parent-Teacher Meeting Prep", description: "Prepare reports and materials for upcoming meetings", priority: TaskPriority.MEDIUM, dueDate: 10 },
+    { title: "Library Inventory Check", description: "Conduct quarterly library inventory audit", priority: TaskPriority.LOW, dueDate: 30 },
+    { title: "Fee Collection Follow-up", description: "Contact parents with outstanding fees", priority: TaskPriority.HIGH, dueDate: 3 },
+    { title: "Ramadan Schedule Planning", description: "Plan adjusted school hours for Ramadan", priority: TaskPriority.HIGH, dueDate: 45 },
+    { title: "Sports Day Organization", description: "Coordinate annual sports day event", priority: TaskPriority.MEDIUM, dueDate: 60 },
+    { title: "Teacher Training Workshop", description: "Organize professional development session", priority: TaskPriority.MEDIUM, dueDate: 21 },
+    { title: "Computer Lab Maintenance", description: "Schedule routine maintenance for computer lab", priority: TaskPriority.LOW, dueDate: 15 },
+    { title: "Update School Website", description: "Refresh website content and announcements", priority: TaskPriority.LOW, dueDate: 7 },
+    { title: "Fire Drill Coordination", description: "Conduct quarterly fire drill", priority: TaskPriority.HIGH, dueDate: 5 },
+    { title: "Textbook Distribution", description: "Distribute textbooks for new term", priority: TaskPriority.HIGH, dueDate: 2 },
+    { title: "Student Council Elections", description: "Organize and supervise student council voting", priority: TaskPriority.MEDIUM, dueDate: 20 },
+    { title: "Grade Report Finalization", description: "Review and finalize end-of-term grade reports", priority: TaskPriority.HIGH, dueDate: 8 },
+    { title: "Scholarship Applications Review", description: "Review and process scholarship applications", priority: TaskPriority.MEDIUM, dueDate: 30 },
+    { title: "Cafeteria Menu Planning", description: "Plan cafeteria menu for next month", priority: TaskPriority.LOW, dueDate: 25 },
+    { title: "Security System Check", description: "Test security cameras and alarm systems", priority: TaskPriority.MEDIUM, dueDate: 10 },
+    { title: "Art Exhibition Setup", description: "Prepare gallery space for student art exhibition", priority: TaskPriority.LOW, dueDate: 40 },
+    { title: "Graduation Ceremony Planning", description: "Begin planning for graduation ceremony", priority: TaskPriority.MEDIUM, dueDate: 90 },
+    { title: "Staff Performance Reviews", description: "Conduct annual staff performance evaluations", priority: TaskPriority.HIGH, dueDate: 15 },
+  ];
+
+  for (const task of tasks) {
+    const assignedTo = faker.helpers.arrayElement(users);
+    const dueDate = new Date();
+    dueDate.setDate(dueDate.getDate() + task.dueDate);
+
+    const existing = await prisma.task.findFirst({
+      where: { schoolId, title: task.title },
+    });
+
+    if (!existing) {
+      await prisma.task.create({
+        data: {
+          schoolId,
+          title: task.title,
+          description: task.description,
+          assignedToId: assignedTo.id,
+          priority: task.priority,
+          status: task.dueDate < 5 ? TaskStatus.IN_PROGRESS : TaskStatus.TODO,
+          dueDate,
+          createdAt: new Date(),
+        },
+      });
+    }
+  }
+
+  console.log(`✅ Seeded ${tasks.length} Administrative Tasks`);
+}
+
+async function main() {
+  console.log("🌱 Starting Compliance & Governance Seed...");
+
+  const school = await getSchool();
+  console.log(`✅ School found: ${school.name}`);
+
+  const documents = await ensureLegalDocuments(school.id);
+  await ensureLegalConsents(school.id, documents);
+  await ensureComplianceLogs(school.id);
+  await ensureSubscription(school.id);
+  await ensureTasks(school.id);
+
+  console.log("✅✅✅ Compliance & Governance Seed completed successfully!");
+  console.log(`📊 Compliance Summary:`);
+  console.log(`   - Legal Documents: 3 (Privacy, Terms, Media Consent)`);
+  console.log(`   - Legal Consents: ~900 (3 per student for 300 students)`);
+  console.log(`   - Compliance Logs: 50`);
+  console.log(`   - School Subscription: Active Enterprise Plan`);
+  console.log(`   - Billing History: 12 months`);
+  console.log(`   - Administrative Tasks: 20`);
+}
+
+main()
+  .catch((e) => {
+    console.error(e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });

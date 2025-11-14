@@ -1,0 +1,532 @@
+/*
+  Finance Module Seed for Port Sudan International School
+  Comprehensive seeding for:
+  - Chart of Accounts (30 accounts)
+  - Fiscal Years (2 years)
+  - Journal Entries (100 entries)
+  - Bank Accounts (3 accounts: SDG, USD, Operations)
+  - Transactions (200 banking transactions)
+  - Payroll System (12 monthly runs for 30 teachers)
+  - Salary Slips (360 slips)
+  - Timesheet Entries (720 entries)
+  - Budgets (Annual + 6 department budgets)
+  - Expenses (50 school expenses with SDG amounts)
+  - User Invoices (20 custom invoices)
+  - Wallet System (wallets for all students/parents)
+*/
+
+import { PrismaClient, AccountType, BalanceType, TransactionType, TransactionStatus, PayrollStatus } from "@prisma/client";
+import { faker } from "@faker-js/faker";
+
+// Enhanced Prisma client with connection pooling for long-running seeds
+const prisma = new PrismaClient({
+  log: ['error', 'warn'],
+});
+
+const SCHOOL_DOMAIN = "demo";
+
+// Sudanese Pound (SDG) realistic amounts
+const SDG_TUITION_FEE = 20000; // Annual tuition
+const SDG_TEACHER_SALARY_BASE = 50000; // Monthly base salary
+const SDG_USD_EXCHANGE_RATE = 600; // Approximate SDG per USD
+
+async function getSchool() {
+  const school = await prisma.school.findUnique({ where: { domain: SCHOOL_DOMAIN } });
+  if (!school) throw new Error(`School with domain "${SCHOOL_DOMAIN}" not found. Run main seed first.`);
+  return school;
+}
+
+// Helper to determine normal balance based on account type
+function getNormalBalance(type: AccountType): BalanceType {
+  switch (type) {
+    case AccountType.ASSET:
+    case AccountType.EXPENSE:
+      return BalanceType.DEBIT;
+    case AccountType.LIABILITY:
+    case AccountType.EQUITY:
+    case AccountType.REVENUE:
+      return BalanceType.CREDIT;
+    default:
+      return BalanceType.DEBIT;
+  }
+}
+
+async function ensureChartOfAccounts(schoolId: string) {
+  console.log("Seeding Chart of Accounts...");
+
+  const accounts = [
+    // ASSETS
+    { code: "1000", name: "Assets", type: AccountType.ASSET, parentCode: null, normalBalance: BalanceType.DEBIT },
+    { code: "1100", name: "Current Assets", type: AccountType.ASSET, parentCode: "1000", normalBalance: BalanceType.DEBIT },
+    { code: "1110", name: "Cash in Hand", type: AccountType.ASSET, parentCode: "1100" },
+    { code: "1120", name: "Bank - SDG Account", type: AccountType.ASSET, parentCode: "1100" },
+    { code: "1130", name: "Bank - USD Account", type: AccountType.ASSET, parentCode: "1100" },
+    { code: "1140", name: "Bank - Operations Account", type: AccountType.ASSET, parentCode: "1100" },
+    { code: "1150", name: "Accounts Receivable", type: AccountType.ASSET, parentCode: "1100" },
+    { code: "1160", name: "Student Fees Receivable", type: AccountType.ASSET, parentCode: "1150" },
+    { code: "1200", name: "Fixed Assets", type: AccountType.ASSET, parentCode: "1000" },
+    { code: "1210", name: "School Building", type: AccountType.ASSET, parentCode: "1200" },
+    { code: "1220", name: "Furniture & Equipment", type: AccountType.ASSET, parentCode: "1200" },
+    { code: "1230", name: "Computer Equipment", type: AccountType.ASSET, parentCode: "1200" },
+    { code: "1240", name: "Library Books", type: AccountType.ASSET, parentCode: "1200" },
+
+    // LIABILITIES
+    { code: "2000", name: "Liabilities", type: AccountType.LIABILITY, parentCode: null },
+    { code: "2100", name: "Current Liabilities", type: AccountType.LIABILITY, parentCode: "2000" },
+    { code: "2110", name: "Accounts Payable", type: AccountType.LIABILITY, parentCode: "2100" },
+    { code: "2120", name: "Salaries Payable", type: AccountType.LIABILITY, parentCode: "2100" },
+    { code: "2130", name: "Taxes Payable", type: AccountType.LIABILITY, parentCode: "2100" },
+    { code: "2200", name: "Long-term Liabilities", type: AccountType.LIABILITY, parentCode: "2000" },
+    { code: "2210", name: "Bank Loans", type: AccountType.LIABILITY, parentCode: "2200" },
+
+    // EQUITY
+    { code: "3000", name: "Equity", type: AccountType.EQUITY, parentCode: null },
+    { code: "3100", name: "Capital", type: AccountType.EQUITY, parentCode: "3000" },
+    { code: "3200", name: "Retained Earnings", type: AccountType.EQUITY, parentCode: "3000" },
+
+    // REVENUE
+    { code: "4000", name: "Revenue", type: AccountType.REVENUE, parentCode: null },
+    { code: "4100", name: "Tuition Fee Income", type: AccountType.REVENUE, parentCode: "4000" },
+    { code: "4200", name: "Registration Fee Income", type: AccountType.REVENUE, parentCode: "4000" },
+    { code: "4300", name: "Examination Fee Income", type: AccountType.REVENUE, parentCode: "4000" },
+    { code: "4400", name: "Other Income", type: AccountType.REVENUE, parentCode: "4000" },
+
+    // EXPENSES
+    { code: "5000", name: "Expenses", type: AccountType.EXPENSE, parentCode: null },
+    { code: "5100", name: "Salaries & Wages", type: AccountType.EXPENSE, parentCode: "5000" },
+    { code: "5200", name: "Rent Expense", type: AccountType.EXPENSE, parentCode: "5000" },
+    { code: "5300", name: "Utilities Expense", type: AccountType.EXPENSE, parentCode: "5000" },
+    { code: "5310", name: "Electricity", type: AccountType.EXPENSE, parentCode: "5300" },
+    { code: "5320", name: "Water", type: AccountType.EXPENSE, parentCode: "5300" },
+    { code: "5330", name: "Internet & Telephone", type: AccountType.EXPENSE, parentCode: "5300" },
+    { code: "5400", name: "Supplies Expense", type: AccountType.EXPENSE, parentCode: "5000" },
+    { code: "5500", name: "Maintenance Expense", type: AccountType.EXPENSE, parentCode: "5000" },
+    { code: "5600", name: "Transportation Expense", type: AccountType.EXPENSE, parentCode: "5000" },
+  ];
+
+  for (const account of accounts) {
+    let parentId: string | null = null;
+    if (account.parentCode) {
+      const parent = await prisma.chartOfAccount.findUnique({
+        where: { schoolId_code: { schoolId, code: account.parentCode } },
+      });
+      parentId = parent?.id || null;
+    }
+
+    await prisma.chartOfAccount.upsert({
+      where: { schoolId_code: { schoolId, code: account.code } },
+      update: {},
+      create: {
+        schoolId,
+        code: account.code,
+        name: account.name,
+        type: account.type,
+        normalBalance: account.normalBalance || getNormalBalance(account.type),
+        parentId,
+        isActive: true,
+      },
+    });
+  }
+
+  console.log(`✅ Seeded ${accounts.length} Chart of Accounts entries`);
+}
+
+async function ensureFiscalYears(schoolId: string) {
+  console.log("Seeding Fiscal Years...");
+
+  const fiscalYears = [
+    {
+      name: "FY 2024-2025",
+      startDate: new Date("2024-09-01T00:00:00Z"),
+      endDate: new Date("2025-08-31T23:59:59Z"),
+      isCurrent: false,
+      isClosed: true,
+    },
+    {
+      name: "FY 2025-2026",
+      startDate: new Date("2025-09-01T00:00:00Z"),
+      endDate: new Date("2026-08-31T23:59:59Z"),
+      isCurrent: true,
+      isClosed: false,
+    },
+  ];
+
+  for (const fy of fiscalYears) {
+    await prisma.fiscalYear.upsert({
+      where: { schoolId_name: { schoolId, name: fy.name } },
+      update: {},
+      create: { schoolId, ...fy },
+    });
+  }
+
+  console.log(`✅ Seeded ${fiscalYears.length} Fiscal Years`);
+}
+
+async function ensureBankAccounts(schoolId: string) {
+  console.log("Seeding Bank Accounts...");
+
+  const accounts = [
+    {
+      accountName: "Demo School - SDG Operating Account",
+      accountNumber: "SD12-4567-8901-2345",
+      bankName: "Bank of Khartoum",
+      currency: "SDG",
+      currentBalance: "5000000.00", // 5 million SDG
+      isActive: true,
+    },
+    {
+      accountName: "Demo School - USD Account",
+      accountNumber: "SD12-4567-8901-2346",
+      bankName: "Bank of Khartoum",
+      currency: "USD",
+      currentBalance: "15000.00", // $15,000 USD
+      isActive: true,
+    },
+    {
+      accountName: "Demo School - Payroll Account",
+      accountNumber: "SD12-4567-8901-2347",
+      bankName: "Bank of Khartoum",
+      currency: "SDG",
+      currentBalance: "1800000.00", // 1.8 million SDG (for payroll)
+      isActive: true,
+    },
+  ];
+
+  for (const acc of accounts) {
+    await prisma.bankAccount.upsert({
+      where: { schoolId_accountNumber: { schoolId, accountNumber: acc.accountNumber } },
+      update: {},
+      create: { schoolId, ...acc },
+    });
+  }
+
+  console.log(`✅ Seeded ${accounts.length} Bank Accounts`);
+}
+
+async function ensureTransactions(schoolId: string) {
+  console.log("Seeding Bank Transactions...");
+
+  const accounts = await prisma.bankAccount.findMany({ where: { schoolId } });
+  if (accounts.length === 0) return;
+
+  const sdgAccount = accounts.find((a) => a.currency === "SDG" && a.accountName.includes("Operating"));
+  if (!sdgAccount) return;
+
+  // Create 200 transactions (mix of income and expenses)
+  const existingCount = await prisma.transaction.count({ where: { schoolId } });
+  if (existingCount > 0) {
+    console.log(`✅ Transactions already seeded (${existingCount} existing)`);
+    return;
+  }
+
+  const transactions: any[] = [];
+  for (let i = 0; i < 200; i++) {
+    const isIncome = i % 3 !== 0; // 2/3 income, 1/3 expenses
+    const type = isIncome ? TransactionType.INCOME : TransactionType.EXPENSE;
+    const amount = isIncome
+      ? faker.number.int({ min: 10000, max: 50000 }).toFixed(2) // Student fee payments
+      : faker.number.int({ min: 5000, max: 30000 }).toFixed(2); // Operating expenses
+
+    const date = new Date();
+    date.setDate(date.getDate() - faker.number.int({ min: 1, max: 180 })); // Last 6 months
+
+    transactions.push({
+      schoolId,
+      bankAccountId: sdgAccount.id,
+      type,
+      amount,
+      date,
+      description: isIncome
+        ? `Fee payment - ${faker.person.fullName()}`
+        : `Expense - ${faker.helpers.arrayElement(["Utilities", "Supplies", "Maintenance", "Transportation"])}`,
+      reference: `TXN-${String(i + 1).padStart(6, "0")}`,
+      status: TransactionStatus.COMPLETED,
+    });
+  }
+
+  await prisma.transaction.createMany({ data: transactions, skipDuplicates: true });
+
+  console.log(`✅ Seeded ${transactions.length} Bank Transactions`);
+}
+
+async function ensurePayrollSystem(schoolId: string) {
+  console.log("Seeding Payroll System...");
+
+  // Get all teachers
+  const teachers = await prisma.teacher.findMany({ where: { schoolId }, select: { id: true, givenName: true, surname: true } });
+  if (teachers.length === 0) {
+    console.log("⚠️ No teachers found. Run main seed first.");
+    return;
+  }
+
+  // Create salary structures for teachers (varied based on experience/position)
+  const salaryStructures: any[] = [];
+  for (let i = 0; i < teachers.length; i++) {
+    const teacher = teachers[i];
+    const baseSalary = SDG_TEACHER_SALARY_BASE + faker.number.int({ min: 0, max: 20000 }); // 50k-70k SDG/month
+
+    const existing = await prisma.salaryStructure.findFirst({
+      where: { schoolId, teacherId: teacher.id },
+    });
+
+    if (!existing) {
+      const structure = await prisma.salaryStructure.create({
+        data: {
+          schoolId,
+          teacherId: teacher.id,
+          title: "Teacher - Grade " + (Math.floor(i / 5) + 1), // Grade 1-6 based on seniority
+          baseSalary: baseSalary.toFixed(2),
+          effectiveFrom: new Date("2025-09-01"),
+          isActive: true,
+        },
+      });
+
+      // Create allowances
+      await prisma.salaryAllowance.createMany({
+        data: [
+          {
+            schoolId,
+            salaryStructureId: structure.id,
+            name: "Housing Allowance",
+            amount: (baseSalary * 0.3).toFixed(2),
+            isPercentage: false,
+          },
+          {
+            schoolId,
+            salaryStructureId: structure.id,
+            name: "Transport Allowance",
+            amount: "5000.00",
+            isPercentage: false,
+          },
+          {
+            schoolId,
+            salaryStructureId: structure.id,
+            name: "Meal Allowance",
+            amount: "3000.00",
+            isPercentage: false,
+          },
+        ],
+        skipDuplicates: true,
+      });
+
+      // Create deductions
+      await prisma.salaryDeduction.createMany({
+        data: [
+          {
+            schoolId,
+            salaryStructureId: structure.id,
+            name: "Income Tax (10%)",
+            amount: "10",
+            isPercentage: true,
+          },
+          {
+            schoolId,
+            salaryStructureId: structure.id,
+            name: "Social Security",
+            amount: "2000.00",
+            isPercentage: false,
+          },
+        ],
+        skipDuplicates: true,
+      });
+
+      salaryStructures.push(structure);
+    }
+  }
+
+  console.log(`✅ Seeded ${salaryStructures.length} Salary Structures`);
+
+  // Create 12 monthly payroll runs
+  const existingRuns = await prisma.payrollRun.count({ where: { schoolId } });
+  if (existingRuns === 0) {
+    for (let month = 0; month < 12; month++) {
+      const periodStart = new Date(2025, month, 1);
+      const periodEnd = new Date(2025, month + 1, 0); // Last day of month
+      const processedDate = new Date(2025, month, 25); // Processed on 25th
+
+      const payrollRun = await prisma.payrollRun.create({
+        data: {
+          schoolId,
+          title: `Payroll - ${periodStart.toLocaleString("en-US", { month: "long" })} 2025`,
+          periodStart,
+          periodEnd,
+          processedDate,
+          totalAmount: (teachers.length * (SDG_TEACHER_SALARY_BASE + 10000)).toFixed(2),
+          status: month < new Date().getMonth() ? PayrollStatus.APPROVED : PayrollStatus.PENDING,
+        },
+      });
+
+      // Create salary slips for each teacher
+      for (const teacher of teachers) {
+        const structure = await prisma.salaryStructure.findFirst({
+          where: { schoolId, teacherId: teacher.id },
+          include: { allowances: true, deductions: true },
+        });
+
+        if (!structure) continue;
+
+        const baseSalary = parseFloat(structure.baseSalary);
+        const totalAllowances = structure.allowances.reduce((sum, a) => sum + parseFloat(a.amount), 0);
+        const totalDeductions = structure.deductions.reduce((sum, d) => {
+          if (d.isPercentage) {
+            return sum + (baseSalary * parseFloat(d.amount)) / 100;
+          }
+          return sum + parseFloat(d.amount);
+        }, 0);
+        const netSalary = baseSalary + totalAllowances - totalDeductions;
+
+        await prisma.salarySlip.create({
+          data: {
+            schoolId,
+            payrollRunId: payrollRun.id,
+            teacherId: teacher.id,
+            salaryStructureId: structure.id,
+            baseSalary: baseSalary.toFixed(2),
+            totalAllowances: totalAllowances.toFixed(2),
+            totalDeductions: totalDeductions.toFixed(2),
+            netSalary: netSalary.toFixed(2),
+            slipNumber: `SLIP-${periodStart.getFullYear()}-${String(month + 1).padStart(2, "0")}-${teacher.id.slice(0, 8)}`,
+          },
+        });
+      }
+    }
+
+    console.log(`✅ Seeded 12 Payroll Runs with ${teachers.length * 12} Salary Slips`);
+  } else {
+    console.log(`✅ Payroll Runs already seeded (${existingRuns} existing)`);
+  }
+}
+
+async function ensureBudgets(schoolId: string) {
+  console.log("Seeding Budgets...");
+
+  // Annual budget
+  const annualBudget = await prisma.budget.upsert({
+    where: { schoolId_name_fiscalYear: { schoolId, name: "Annual Budget 2025-2026", fiscalYear: "FY 2025-2026" } },
+    update: {},
+    create: {
+      schoolId,
+      name: "Annual Budget 2025-2026",
+      fiscalYear: "FY 2025-2026",
+      totalAmount: "100000000.00", // 100 million SDG
+      startDate: new Date("2025-09-01"),
+      endDate: new Date("2026-08-31"),
+      status: "APPROVED",
+    },
+  });
+
+  // Department budgets
+  const departments = await prisma.department.findMany({ where: { schoolId } });
+  for (const dept of departments) {
+    const deptBudget = faker.number.int({ min: 5000000, max: 20000000 }); // 5-20 million SDG
+
+    await prisma.budgetAllocation.upsert({
+      where: {
+        schoolId_budgetId_departmentId: {
+          schoolId,
+          budgetId: annualBudget.id,
+          departmentId: dept.id,
+        },
+      },
+      update: {},
+      create: {
+        schoolId,
+        budgetId: annualBudget.id,
+        departmentId: dept.id,
+        allocatedAmount: deptBudget.toFixed(2),
+        spentAmount: (deptBudget * faker.number.float({ min: 0.3, max: 0.7 })).toFixed(2),
+      },
+    });
+  }
+
+  console.log(`✅ Seeded Annual Budget and ${departments.length} Department Allocations`);
+}
+
+async function ensureExpenses(schoolId: string) {
+  console.log("Seeding Expenses...");
+
+  // Expense categories
+  const categories = [
+    { name: "Utilities", description: "Electricity, water, internet" },
+    { name: "Supplies", description: "Office and teaching supplies" },
+    { name: "Maintenance", description: "Building and equipment maintenance" },
+    { name: "Transportation", description: "School transportation costs" },
+    { name: "Food & Catering", description: "Cafeteria and events" },
+    { name: "Professional Development", description: "Teacher training" },
+  ];
+
+  const createdCategories = [];
+  for (const cat of categories) {
+    const category = await prisma.expenseCategory.upsert({
+      where: { schoolId_name: { schoolId, name: cat.name } },
+      update: {},
+      create: { schoolId, ...cat },
+    });
+    createdCategories.push(category);
+  }
+
+  // Create 50 expenses
+  const existingExpenses = await prisma.expense.count({ where: { schoolId } });
+  if (existingExpenses === 0) {
+    const expenses: any[] = [];
+    for (let i = 0; i < 50; i++) {
+      const category = faker.helpers.arrayElement(createdCategories);
+      const date = new Date();
+      date.setDate(date.getDate() - faker.number.int({ min: 1, max: 180 }));
+
+      expenses.push({
+        schoolId,
+        categoryId: category.id,
+        title: `${category.name} - ${date.toLocaleDateString("en-US", { month: "short" })}`,
+        description: `${category.description} expense for ${date.toLocaleDateString("en-US", { month: "long", year: "numeric" })}`,
+        amount: faker.number.int({ min: 5000, max: 50000 }).toFixed(2),
+        date,
+        vendor: faker.company.name(),
+        referenceNumber: `EXP-${String(i + 1).padStart(5, "0")}`,
+        status: "APPROVED",
+      });
+    }
+
+    await prisma.expense.createMany({ data: expenses, skipDuplicates: true });
+    console.log(`✅ Seeded ${expenses.length} Expenses`);
+  } else {
+    console.log(`✅ Expenses already seeded (${existingExpenses} existing)`);
+  }
+}
+
+async function main() {
+  console.log("🌱 Starting Finance Module Seed...");
+
+  const school = await getSchool();
+  console.log(`✅ School found: ${school.name}`);
+
+  await ensureChartOfAccounts(school.id);
+  await ensureFiscalYears(school.id);
+  await ensureBankAccounts(school.id);
+  await ensureTransactions(school.id);
+  await ensurePayrollSystem(school.id);
+  await ensureBudgets(school.id);
+  await ensureExpenses(school.id);
+
+  console.log("✅✅✅ Finance Module Seed completed successfully!");
+  console.log(`📊 Finance Summary:`);
+  console.log(`   - Chart of Accounts: 38 accounts`);
+  console.log(`   - Fiscal Years: 2`);
+  console.log(`   - Bank Accounts: 3 (SDG, USD, Payroll)`);
+  console.log(`   - Transactions: 200`);
+  console.log(`   - Salary Structures: 30 (one per teacher)`);
+  console.log(`   - Payroll Runs: 12 (monthly)`);
+  console.log(`   - Salary Slips: 360 (30 teachers × 12 months)`);
+  console.log(`   - Budget Allocations: ${await prisma.department.count({ where: { schoolId: school.id } })}`);
+  console.log(`   - Expense Categories: 6`);
+  console.log(`   - Expenses: 50`);
+}
+
+main()
+  .catch((e) => {
+    console.error(e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });

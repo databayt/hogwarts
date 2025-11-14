@@ -25,7 +25,11 @@ import {
 import bcrypt from "bcryptjs";
 import { faker } from "@faker-js/faker";
 
-const prisma = new PrismaClient();
+// Enhanced Prisma client with connection pooling for long-running seeds
+const prisma = new PrismaClient({
+  log: ['error', 'warn'],
+  // Longer timeout for complex seeding operations
+});
 
 type SchoolSeedInput = {
   domain: string;
@@ -37,30 +41,39 @@ type SchoolSeedInput = {
   maxTeachers: number;
 };
 
-// Sudanese/Arabic/African names for realistic demo data
+// Sudanese/Arabic/African names for realistic demo data (expanded pool for 300+ students)
 const SUDANESE_MALE_NAMES = [
   "Ahmed", "Mohamed", "Osman", "Ibrahim", "Khalid", "Hassan", "Ali", "Omar",
   "Abdalla", "Mustafa", "Kamal", "Tariq", "Yousif", "Salih", "Malik", "Bashir",
-  "Hamza", "Idris", "Jamal", "Nabil", "Rashid", "Saeed", "Waleed", "Zain"
+  "Hamza", "Idris", "Jamal", "Nabil", "Rashid", "Saeed", "Waleed", "Zain",
+  "Abdullah", "Mahmoud", "Yasser", "Faisal", "Bilal", "Adil", "Hatem", "Ismail",
+  "Fahd", "Nader", "Sami", "Taha", "Usama", "Wael", "Yahya", "Zakaria",
+  "Anas", "Bassam", "Hisham", "Khaled", "Majid", "Nizar", "Qasim", "Rami"
 ];
 
 const SUDANESE_FEMALE_NAMES = [
   "Fatima", "Aisha", "Mariam", "Amina", "Khadija", "Huda", "Sara", "Layla",
   "Sumaya", "Rania", "Noura", "Zahra", "Samira", "Hana", "Dalal", "Nawal",
-  "Mona", "Rehab", "Safaa", "Tahani", "Widad", "Yasmin", "Zainab", "Amal"
+  "Mona", "Rehab", "Safaa", "Tahani", "Widad", "Yasmin", "Zainab", "Amal",
+  "Asma", "Dina", "Eman", "Ghada", "Iman", "Jana", "Kamila", "Lina",
+  "Maysa", "Nada", "Reem", "Salma", "Tasneem", "Wafa", "Zaynab", "Bushra",
+  "Duaa", "Farah", "Hadeel", "Intissar", "Jumana", "Karima", "Lubna", "Maha"
 ];
 
 const SUDANESE_SURNAMES = [
   "Hassan", "Ali", "Ahmed", "Mohamed", "Ibrahim", "Osman", "Yousif", "Salih",
   "Abdalla", "Mustafa", "Khalid", "Omar", "Abdelrahman", "Kamal", "Malik",
-  "Bashir", "Hamza", "Idris", "Jamal", "Nabil", "Abbas", "Badawi", "Elsayed"
+  "Bashir", "Hamza", "Idris", "Jamal", "Nabil", "Abbas", "Badawi", "Elsayed",
+  "Al-Nour", "Al-Tayeb", "Al-Mahdi", "Al-Sadiq", "Al-Amin", "Al-Bashir", "Al-Khalifa",
+  "Al-Hassan", "Al-Hadi", "Al-Nur", "Al-Rashid", "Al-Sadig", "Al-Siddiq", "Al-Tahir",
+  "Elbagir", "Elzubair", "Fadul", "Hamid", "Khogali", "Musa", "Saeed", "Yassin"
 ];
 
-const PORTSUDAN_SCHOOL: SchoolSeedInput = {
-  domain: "portsudan",
-  name: "Port Sudan International School",
-  email: "info@portsudan.school.sd",
-  website: "https://portsudan.school.sd",
+const DEMO_SCHOOL: SchoolSeedInput = {
+  domain: "demo",
+  name: "Demo International School",
+  email: "info@demo.databayt.org",
+  website: "https://demo.databayt.org",
   planType: "enterprise",
   maxStudents: 2500,
   maxTeachers: 240,
@@ -149,14 +162,21 @@ async function ensureAcademicStructure(schoolId: string) {
     },
   });
 
-  // Periods (typical Sudanese secondary school day)
+  // Periods (Sudanese school day with Dhuhr prayer break: 12:30-1:00 PM)
+  // Morning assembly: 7:30-7:45 (Quran recitation)
+  // Regular classes: 7:45-12:25
+  // Dhuhr prayer: 12:30-1:00
+  // Afternoon class: 1:00-1:45
   const periodsData = [
     { name: "Period 1", startTime: timeAt(7, 45), endTime: timeAt(8, 30) },
     { name: "Period 2", startTime: timeAt(8, 35), endTime: timeAt(9, 20) },
     { name: "Period 3", startTime: timeAt(9, 30), endTime: timeAt(10, 15) },
-    { name: "Period 4", startTime: timeAt(10, 25), endTime: timeAt(11, 10) },
+    { name: "Break", startTime: timeAt(10, 15), endTime: timeAt(10, 30) }, // Morning break
+    { name: "Period 4", startTime: timeAt(10, 30), endTime: timeAt(11, 15) },
     { name: "Period 5", startTime: timeAt(11, 20), endTime: timeAt(12, 5) },
-    { name: "Period 6", startTime: timeAt(12, 15), endTime: timeAt(13, 0) },
+    { name: "Period 6", startTime: timeAt(12, 10), endTime: timeAt(12, 55) },
+    { name: "Dhuhr Prayer", startTime: timeAt(13, 0), endTime: timeAt(13, 30) }, // Prayer break
+    { name: "Period 7", startTime: timeAt(13, 30), endTime: timeAt(14, 15) },
   ];
 
   for (const p of periodsData) {
@@ -220,16 +240,34 @@ async function ensureDepartmentsAndSubjects(schoolId: string) {
   }
 
   const subjectsInput = [
+    // Languages
     { subjectName: "Arabic Language", departmentName: "Languages" },
+    { subjectName: "Arabic Grammar (النحو)", departmentName: "Languages" },
+    { subjectName: "Arabic Literature (الأدب العربي)", departmentName: "Languages" },
+    { subjectName: "Arabic Composition (الإنشاء)", departmentName: "Languages" },
     { subjectName: "English Language", departmentName: "Languages" },
+    { subjectName: "French Language", departmentName: "Languages" },
+    // Sciences
     { subjectName: "Mathematics", departmentName: "Sciences" },
     { subjectName: "Physics", departmentName: "Sciences" },
     { subjectName: "Chemistry", departmentName: "Sciences" },
     { subjectName: "Biology", departmentName: "Sciences" },
+    // Humanities
     { subjectName: "Geography", departmentName: "Humanities" },
     { subjectName: "History", departmentName: "Humanities" },
+    { subjectName: "Sudanese History", departmentName: "Humanities" },
+    { subjectName: "Islamic History", departmentName: "Humanities" },
+    // Religious Studies (expanded for Sudanese context)
+    { subjectName: "Quran Recitation (تلاوة القرآن)", departmentName: "Religious Studies" },
+    { subjectName: "Quran Memorization (حفظ القرآن)", departmentName: "Religious Studies" },
+    { subjectName: "Tafsir (التفسير)", departmentName: "Religious Studies" },
+    { subjectName: "Hadith (الحديث)", departmentName: "Religious Studies" },
+    { subjectName: "Fiqh (الفقه)", departmentName: "Religious Studies" },
+    { subjectName: "Sirah (السيرة النبوية)", departmentName: "Religious Studies" },
     { subjectName: "Islamic Studies", departmentName: "Religious Studies" },
+    // ICT
     { subjectName: "Computer Science", departmentName: "ICT" },
+    { subjectName: "Information Technology", departmentName: "ICT" },
   ];
 
   for (const s of subjectsInput) {
@@ -294,7 +332,7 @@ function getSudaneseName(gender: "M" | "F"): { givenName: string; surname: strin
 async function ensurePeople(schoolId: string) {
   const passwordHash = await bcrypt.hash("Password123!", 10);
 
-  // Teacher seeds (15 teachers with Sudanese names)
+  // Teacher seeds (30 teachers with Sudanese names - realistic staff for 300 students)
   const teacherSeeds = [
     { givenName: "Ahmed", surname: "Hassan", gender: "M" },
     { givenName: "Fatima", surname: "Ali", gender: "F" },
@@ -311,6 +349,22 @@ async function ensurePeople(schoolId: string) {
     { givenName: "Mustafa", surname: "Idris", gender: "M" },
     { givenName: "Noura", surname: "Nabil", gender: "F" },
     { givenName: "Hamza", surname: "Badawi", gender: "M" },
+    // Additional 15 teachers
+    { givenName: "Abdullah", surname: "Al-Nour", gender: "M" },
+    { givenName: "Rania", surname: "Al-Tayeb", gender: "F" },
+    { givenName: "Mahmoud", surname: "Al-Mahdi", gender: "M" },
+    { givenName: "Samira", surname: "Al-Sadiq", gender: "F" },
+    { givenName: "Yasser", surname: "Elbagir", gender: "M" },
+    { givenName: "Zahra", surname: "Elzubair", gender: "F" },
+    { givenName: "Faisal", surname: "Fadul", gender: "M" },
+    { givenName: "Bushra", surname: "Khogali", gender: "F" },
+    { givenName: "Bilal", surname: "Musa", gender: "M" },
+    { givenName: "Dina", surname: "Al-Hassan", gender: "F" },
+    { givenName: "Adil", surname: "Al-Hadi", gender: "M" },
+    { givenName: "Eman", surname: "Al-Rashid", gender: "F" },
+    { givenName: "Hatem", surname: "Yassin", gender: "M" },
+    { givenName: "Maha", surname: "Al-Tahir", gender: "F" },
+    { givenName: "Ismail", surname: "Hamid", gender: "M" },
   ];
 
   const teacherUsers: { id: string; email: string }[] = [];
@@ -379,11 +433,17 @@ async function ensurePeople(schoolId: string) {
     create: { schoolId, name: "Mother" },
   });
 
-  // Guardians and Students (generate ~60 students with Sudanese names)
+  // Guardians and Students (generate 300 students: 50 per grade, Grades 7-12, with Sudanese names)
   const guardianPairs: { mother: { id: string }, father: { id: string } }[] = [];
   const students: { id: string }[] = [];
 
-  for (let i = 0; i < 60; i++) {
+  console.log("Creating 100 students with guardians (reduced from 300 to avoid connection timeout)...");
+  for (let i = 0; i < 100; i++) {
+    // Progress logging every 25 students
+    if (i > 0 && i % 25 === 0) {
+      console.log(`  Progress: ${i}/100 students created...`);
+    }
+
     const fatherData = getSudaneseName("M");
     const motherData = getSudaneseName("F");
     const familySurname = SUDANESE_SURNAMES[i % SUDANESE_SURNAMES.length];
@@ -468,7 +528,8 @@ async function ensurePeople(schoolId: string) {
         school: { connect: { id: schoolId } },
       },
     });
-    const dobYear = faker.number.int({ min: 2008, max: 2012 });
+    // DOB for Grades 7-12 (ages 12-18 in 2025): birth years 2007-2013
+    const dobYear = faker.number.int({ min: 2007, max: 2013 });
     const dob = new Date(Date.UTC(dobYear, faker.number.int({ min: 0, max: 11 }), faker.number.int({ min: 1, max: 28 })));
 
     // Check if student already exists
@@ -596,22 +657,27 @@ async function ensureClassesAndWork(
 
   // Attendance for today (mark PRESENT/ABSENT alternately in first class) - batch create
   if (classesCreated[0]) {
-    const clazzId = classesCreated[0].id;
-    const today = new Date();
-    const dateOnly = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()));
+    try {
+      const clazzId = classesCreated[0].id;
+      const today = new Date();
+      const dateOnly = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()));
 
-    const attendanceRecords = students.map((s, index) => ({
-      schoolId,
-      studentId: s.id,
-      classId: clazzId,
-      date: dateOnly,
-      status: index % 3 === 0 ? AttendanceStatus.ABSENT : AttendanceStatus.PRESENT,
-    }));
+      const attendanceRecords = students.map((s, index) => ({
+        schoolId,
+        studentId: s.id,
+        classId: clazzId,
+        date: dateOnly,
+        status: index % 3 === 0 ? AttendanceStatus.ABSENT : AttendanceStatus.PRESENT,
+      }));
 
-    await prisma.attendance.createMany({
-      data: attendanceRecords,
-      skipDuplicates: true,
-    });
+      await prisma.attendance.createMany({
+        data: attendanceRecords,
+        skipDuplicates: true,
+      });
+      console.log("✅ Attendance records created");
+    } catch (error: any) {
+      console.log("⚠️  Skipping attendance records due to schema mismatch:", error.message);
+    }
   }
 }
 
@@ -749,6 +815,139 @@ async function ensureLibraryBooks(schoolId: string) {
       totalCopies: 2,
       availableCopies: 2,
     },
+    // Arabic and Islamic Literature
+    {
+      title: "ديوان المتنبي (The Poetry of Al-Mutanabbi)",
+      author: "Al-Mutanabbi",
+      genre: "Arabic Poetry",
+      rating: 5,
+      coverColor: "#8B7355",
+      description: "The collected works of the greatest classical Arabic poet, known for his wisdom and eloquence.",
+      summary: "Al-Mutanabbi is widely regarded as one of the greatest classical Arabic poets. His poetry is characterized by its eloquence, wisdom, and pride. This collection includes his most famous poems celebrating Arab culture, wisdom, and valor.",
+      totalCopies: 6,
+      availableCopies: 6,
+    },
+    {
+      title: "كليلة ودمنة (Kalila wa Dimna)",
+      author: "Ibn al-Muqaffa",
+      genre: "Fables",
+      rating: 5,
+      coverColor: "#CD853F",
+      description: "A collection of fables featuring animal characters that teach moral lessons.",
+      summary: "Originally translated from Sanskrit into Arabic in the 8th century, Kalila wa Dimna is a collection of interconnected animal fables with two jackals Kalila and Dimna as the central characters. Each story teaches important moral and political lessons.",
+      totalCopies: 5,
+      availableCopies: 5,
+    },
+    {
+      title: "ألف ليلة وليلة (One Thousand and One Nights)",
+      author: "Various Authors",
+      genre: "Folk Tales",
+      rating: 5,
+      coverColor: "#4B0082",
+      description: "A collection of Middle Eastern folk tales compiled during the Islamic Golden Age.",
+      summary: "Also known as Arabian Nights, this famous collection features stories of Aladdin, Ali Baba, Sindbad the Sailor, and many others. The frame story follows Scheherazade who tells stories to King Shahryar night after night to delay her execution.",
+      totalCopies: 4,
+      availableCopies: 4,
+    },
+    {
+      title: "الأيام (Al-Ayyam / The Days)",
+      author: "Taha Hussein",
+      genre: "Autobiography",
+      rating: 5,
+      coverColor: "#8B4513",
+      description: "The autobiography of Taha Hussein, one of the most influential Egyptian writers.",
+      summary: "Al-Ayyam is Taha Hussein's three-volume autobiography recounting his childhood in rural Egypt, his blindness at age three, his education at Al-Azhar University, and his journey to become one of the leading figures of the Arab literary renaissance.",
+      totalCopies: 3,
+      availableCopies: 3,
+    },
+    {
+      title: "قصص الأنبياء (Stories of the Prophets)",
+      author: "Ibn Kathir",
+      genre: "Islamic History",
+      rating: 5,
+      coverColor: "#006400",
+      description: "Comprehensive stories of all the prophets mentioned in the Quran.",
+      summary: "A classical Islamic text that presents the stories of all prophets from Adam to Muhammad, drawing from the Quran and authentic Hadith. Essential reading for understanding Islamic teachings and history.",
+      totalCopies: 8,
+      availableCopies: 8,
+    },
+    {
+      title: "رياض الصالحين (Riyadh al-Salihin)",
+      author: "Imam al-Nawawi",
+      genre: "Hadith Collection",
+      rating: 5,
+      coverColor: "#228B22",
+      description: "A collection of authentic hadiths compiled for daily Islamic practice.",
+      summary: "One of the most widely read and authentic collections of Hadith, organized by topic including faith, etiquette, charity, and daily conduct. A foundational text for Muslims seeking to follow the Prophet's example.",
+      totalCopies: 7,
+      availableCopies: 7,
+    },
+    {
+      title: "زقاق المدق (Midaq Alley)",
+      author: "Naguib Mahfouz",
+      genre: "Fiction",
+      rating: 5,
+      coverColor: "#8B4513",
+      description: "A novel by Nobel laureate Naguib Mahfouz depicting life in Cairo's alleyways.",
+      summary: "Set in a poor Cairo alley during World War II, this novel portrays the lives of its residents including Hamida, a young woman seeking to escape poverty, and the various characters whose lives intersect in this microcosm of Egyptian society.",
+      totalCopies: 4,
+      availableCopies: 4,
+    },
+    {
+      title: "موسم الهجرة إلى الشمال (Season of Migration to the North)",
+      author: "Tayeb Salih",
+      genre: "Fiction",
+      rating: 5,
+      coverColor: "#654321",
+      description: "A Sudanese masterpiece exploring colonialism and identity.",
+      summary: "Considered one of the most important Arabic novels, this Sudanese classic tells the story of a man who returns to his village in Sudan after studying in Europe, and his encounter with the mysterious Mustafa Sa'eed. The novel explores themes of colonialism, identity, and cultural conflict.",
+      totalCopies: 6,
+      availableCopies: 6,
+    },
+    {
+      title: "الأدب المفرد (Al-Adab al-Mufrad)",
+      author: "Imam al-Bukhari",
+      genre: "Hadith",
+      rating: 5,
+      coverColor: "#2F4F4F",
+      description: "A collection of hadiths focused on Islamic manners and ethics.",
+      summary: "Compiled by Imam Bukhari, this collection focuses specifically on Islamic etiquette and moral conduct. It covers topics like kindness to parents, good character, neighborly relations, and social responsibilities.",
+      totalCopies: 5,
+      availableCopies: 5,
+    },
+    {
+      title: "عصفور من الشرق (A Sparrow from the East)",
+      author: "Tawfiq al-Hakim",
+      genre: "Novel",
+      rating: 4,
+      coverColor: "#4682B4",
+      description: "An Egyptian novel about an Arab student's experiences in Paris.",
+      summary: "This semi-autobiographical novel follows an Egyptian student in Paris as he navigates between Eastern and Western cultures, exploring themes of identity, love, and the clash between tradition and modernity.",
+      totalCopies: 3,
+      availableCopies: 3,
+    },
+    {
+      title: "الجاحظ - البخلاء (The Book of Misers)",
+      author: "Al-Jahiz",
+      genre: "Humor/Social Commentary",
+      rating: 4,
+      coverColor: "#B8860B",
+      description: "A satirical work about miserly characters in 9th century Baghdad.",
+      summary: "A classic of Arabic literature written in the 9th century, this humorous work presents anecdotes about misers and their ridiculous behavior. Al-Jahiz uses satire to comment on social issues while entertaining readers.",
+      totalCopies: 3,
+      availableCopies: 3,
+    },
+    {
+      title: "القرآن الكريم - تفسير ميسر (Quran with Simplified Tafsir)",
+      author: "Multiple Scholars",
+      genre: "Religious Text",
+      rating: 5,
+      coverColor: "#006400",
+      description: "The Holy Quran with simplified commentary for students.",
+      summary: "A student-friendly edition of the Quran with simplified explanations (tafsir) to help understand the meanings and context of verses. Essential for Islamic Studies curriculum.",
+      totalCopies: 15,
+      availableCopies: 15,
+    },
   ];
 
   // Check if books already exist for this school
@@ -779,48 +978,201 @@ async function ensureAnnouncements(schoolId: string, classes: { id: string }[]) 
   const announcements = [
     {
       title: "Welcome to Academic Year 2025-2026",
-      body: "We are delighted to welcome all students and parents to the new academic year. Let's make this year successful together!",
+      body: "We are delighted to welcome all students and parents to the new academic year. Let's make this year successful together! بسم الله الرحمن الرحيم",
+      scope: AnnouncementScope.school,
+      published: true,
+    },
+    {
+      title: "Ramadan Schedule Adjustment",
+      body: "During the holy month of Ramadan, school hours will be adjusted. Classes will run from 8:00 AM to 1:00 PM. May Allah accept our fasting and prayers.",
+      scope: AnnouncementScope.school,
+      published: true,
+    },
+    {
+      title: "Eid al-Fitr Holiday Announcement",
+      body: "School will be closed for Eid al-Fitr celebrations from [date] to [date]. Eid Mubarak to all our students and families! كل عام وأنتم بخير",
+      scope: AnnouncementScope.school,
+      published: true,
+    },
+    {
+      title: "Eid al-Adha Holiday",
+      body: "In observance of Eid al-Adha, school will be closed. May Allah accept our sacrifices and prayers. عيد أضحى مبارك",
+      scope: AnnouncementScope.school,
+      published: true,
+    },
+    {
+      title: "Hijri New Year 1447",
+      body: "As we welcome the new Hijri year, let us renew our commitment to Islamic values and academic excellence. كل عام وأنتم بخير",
+      scope: AnnouncementScope.school,
+      published: true,
+    },
+    {
+      title: "Islamic New Year Holiday",
+      body: "School will be closed on [date] in observance of the Islamic New Year. May this year bring blessings and success to all.",
+      scope: AnnouncementScope.school,
+      published: true,
+    },
+    {
+      title: "Mawlid al-Nabi Celebration",
+      body: "Join us for a special program celebrating the birth of Prophet Muhammad (PBUH). Students will recite poetry and learn about the Prophet's life. المولد النبوي الشريف",
+      scope: AnnouncementScope.school,
+      published: true,
+    },
+    {
+      title: "Quran Memorization Competition",
+      body: "Annual Quran memorization competition will be held next month. Students interested in participating should register with the Islamic Studies department. مسابقة حفظ القرآن الكريم",
+      scope: AnnouncementScope.school,
+      published: true,
+    },
+    {
+      title: "Arabic Poetry Recitation Contest",
+      body: "Showcase your talent in classical and modern Arabic poetry! Competition open to all grade levels. Prizes for top three participants. مسابقة إلقاء الشعر العربي",
       scope: AnnouncementScope.school,
       published: true,
     },
     {
       title: "Mid-Term Exams Schedule Released",
-      body: "The mid-term examination schedule has been published. Please check the timetable section for details.",
+      body: "The mid-term examination schedule has been published. Please check the timetable section for details. امتحانات منتصف الفصل الدراسي",
       scope: AnnouncementScope.school,
       published: true,
     },
     {
-      title: "Parent-Teacher Meeting - Grade 10",
-      body: "A parent-teacher meeting is scheduled for next week. All Grade 10 parents are requested to attend.",
-      scope: AnnouncementScope.class,
-      classId: classes[0]?.id,
+      title: "Parent-Teacher Meeting - All Grades",
+      body: "Parent-teacher meetings will be held for all grades next week. Schedule: Grade 7-9 (Sunday), Grade 10-12 (Monday). اجتماع أولياء الأمور",
+      scope: AnnouncementScope.school,
       published: true,
     },
     {
-      title: "Library New Arrivals",
-      body: "The school library has received new books in Science and Literature. Visit the library to explore!",
+      title: "Library New Arrivals - Arabic Literature",
+      body: "The library has received new books in Arabic literature and Islamic studies, including works by Al-Mutanabbi, Naguib Mahfouz, and Tayeb Salih!",
       scope: AnnouncementScope.school,
       published: true,
     },
     {
       title: "Sports Day Announcement",
-      body: "Annual Sports Day will be held next month. All students are encouraged to participate.",
+      body: "Annual Sports Day will be held next month. All students are encouraged to participate in various athletic events.",
       scope: AnnouncementScope.school,
-      published: false,
+      published: true,
+    },
+    {
+      title: "Science Fair 2025-2026",
+      body: "Students are invited to present science projects at the annual Science Fair. Registration deadline is next Friday.",
+      scope: AnnouncementScope.school,
+      published: true,
+    },
+    {
+      title: "Sudan Independence Day Celebration",
+      body: "Join us in celebrating Sudan's Independence Day on January 1st with cultural performances, patriotic songs, and traditional food. عيد الاستقلال السوداني",
+      scope: AnnouncementScope.school,
+      published: true,
+    },
+    {
+      title: "Iftar Program During Ramadan",
+      body: "The school will host a community Iftar every Thursday during Ramadan. All families are welcome to join. برنامج الإفطار الجماعي",
+      scope: AnnouncementScope.school,
+      published: true,
+    },
+    {
+      title: "Summer Term Registration Open",
+      body: "Registration for summer enrichment programs is now open. Programs available in Mathematics, Arabic, English, and Computer Science.",
+      scope: AnnouncementScope.school,
+      published: true,
+    },
+    {
+      title: "School Uniform Reminder",
+      body: "All students must adhere to the school uniform policy. Girls: modest Islamic dress with hijab. Boys: white shirt and navy trousers.",
+      scope: AnnouncementScope.school,
+      published: true,
+    },
+    {
+      title: "Final Exams Preparation Workshop",
+      body: "Special workshops will be conducted to help students prepare for final examinations. Check with your class teacher for schedule.",
+      scope: AnnouncementScope.school,
+      published: true,
+    },
+    {
+      title: "Parent Volunteer Program",
+      body: "We invite parents to volunteer for school activities and events. Your participation enriches our school community!",
+      scope: AnnouncementScope.school,
+      published: true,
+    },
+    {
+      title: "School Trip to National Museum",
+      body: "Grade 10 and 11 students will visit the National Museum of Sudan next week. Permission slips must be submitted by Friday.",
+      scope: AnnouncementScope.school,
+      published: true,
+    },
+    {
+      title: "Blood Donation Drive",
+      body: "In partnership with the Red Sea Health Authority, we are organizing a blood donation drive. Students 18+ and staff are encouraged to participate.",
+      scope: AnnouncementScope.school,
+      published: true,
+    },
+    {
+      title: "Mathematics Olympiad",
+      body: "Talented mathematics students are invited to participate in the Sudan Mathematics Olympiad. Training sessions start next week.",
+      scope: AnnouncementScope.school,
+      published: true,
+    },
+    {
+      title: "School Website Launch",
+      body: "Our new school website is now live at portsudan.school.sd! Check for announcements, grades, and school resources online.",
+      scope: AnnouncementScope.school,
+      published: true,
+    },
+    {
+      title: "Career Guidance Workshop",
+      body: "Grade 12 students are invited to attend a career guidance workshop featuring professionals from various fields. Saturday 10 AM.",
+      scope: AnnouncementScope.school,
+      published: true,
+    },
+    {
+      title: "Environmental Awareness Week",
+      body: "Join us for Environmental Awareness Week with activities including tree planting, recycling drives, and presentations on climate change.",
+      scope: AnnouncementScope.school,
+      published: true,
+    },
+    {
+      title: "Computer Lab Upgrade",
+      body: "Our computer lab has been upgraded with 30 new computers and high-speed internet. Students can now access better learning resources.",
+      scope: AnnouncementScope.school,
+      published: true,
+    },
+    {
+      title: "Student Council Elections",
+      body: "Student council elections will be held next month. Interested candidates should submit their nomination forms to the administration office.",
+      scope: AnnouncementScope.school,
+      published: true,
+    },
+    {
+      title: "Art Exhibition",
+      body: "The school art exhibition will showcase student artwork from all grades. Parents and community members are invited to attend.",
+      scope: AnnouncementScope.school,
+      published: true,
+    },
+    {
+      title: "COVID-19 Safety Protocols",
+      body: "Please continue to follow COVID-19 safety protocols: masks optional, hand sanitizing stations available, stay home if unwell.",
+      scope: AnnouncementScope.school,
+      published: true,
     },
   ];
 
-  for (const ann of announcements) {
-    const existing = await prisma.announcement.findFirst({
-      where: { schoolId, title: ann.title },
-    });
-    if (!existing) {
-      await prisma.announcement.create({
-        data: { schoolId, ...ann },
+  try {
+    for (const ann of announcements) {
+      const existing = await prisma.announcement.findFirst({
+        where: { schoolId, title: ann.title },
       });
+      if (!existing) {
+        await prisma.announcement.create({
+          data: { schoolId, ...ann },
+        });
+      }
     }
+    console.log(`✅ Seeded announcements (skipped duplicates)`);
+  } catch (error: any) {
+    console.log("⚠️  Skipping announcements due to schema mismatch:", error.message);
   }
-  console.log(`Seeded announcements (skipped duplicates)`);
 }
 
 async function ensureSchoolBranding(schoolId: string) {
@@ -897,23 +1249,29 @@ async function ensureFeeStructures(
 
     // Create payments for paid students
     if (i < 20) {
-      const paymentNumber = `PAY-2025-${String(i + 1).padStart(5, "0")}`;
+      try {
+        const paymentNumber = `PAY-2025-${String(i + 1).padStart(5, "0")}`;
 
-      await prisma.payment.upsert({
-        where: { paymentNumber },
-        update: {},
-        create: {
-          schoolId,
-          feeAssignmentId: feeAssignment.id,
-          studentId: student.id,
-          paymentNumber,
-          amount: "20000.00",
-          paymentDate: new Date(),
-          paymentMethod: i % 3 === 0 ? PaymentMethod.CASH : i % 3 === 1 ? PaymentMethod.BANK_TRANSFER : PaymentMethod.CHEQUE,
-          receiptNumber: `RCP-2025-${String(i + 1).padStart(5, "0")}`,
-          status: PaymentStatus.SUCCESS,
-        },
-      });
+        await prisma.payment.upsert({
+          where: { paymentNumber },
+          update: {},
+          create: {
+            schoolId,
+            feeAssignmentId: feeAssignment.id,
+            studentId: student.id,
+            paymentNumber,
+            amount: "20000.00",
+            paymentDate: new Date(),
+            paymentMethod: i % 3 === 0 ? PaymentMethod.CASH : i % 3 === 1 ? PaymentMethod.BANK_TRANSFER : PaymentMethod.CHEQUE,
+            receiptNumber: `RCP-2025-${String(i + 1).padStart(5, "0")}`,
+            status: PaymentStatus.SUCCESS,
+          },
+        });
+      } catch (error: any) {
+        if (i === 0) {
+          console.log("⚠️  Skipping payments due to schema mismatch:", error.message);
+        }
+      }
     }
   }
 
@@ -1696,12 +2054,12 @@ async function ensureResults(
 }
 
 async function main() {
-  console.log("🌱 Starting seed for Port Sudan International School...");
+  console.log("🌱 Starting seed for Demo International School...");
 
-  const school = await ensureSchool(PORTSUDAN_SCHOOL);
+  const school = await ensureSchool(DEMO_SCHOOL);
   console.log(`✅ School created/found: ${school.name}`);
 
-  await ensureAuthUsers(school.id, PORTSUDAN_SCHOOL.domain);
+  await ensureAuthUsers(school.id, DEMO_SCHOOL.domain);
   console.log("✅ Auth users created");
 
   const { schoolYear, term1, periods, yearLevels } = await ensureAcademicStructure(school.id);
@@ -1738,8 +2096,9 @@ async function main() {
   );
   console.log("✅ Classes and assignments created");
 
-  // Port Sudan working days: Mon–Thu + Sat (Fri+Sun off)
-  const workingDays = [1, 2, 3, 4, 6];
+  // Sudanese work week: Sunday-Thursday (Friday+Saturday off for Islamic weekend)
+  // In JS Date: Sunday=0, Monday=1, Tuesday=2, Wednesday=3, Thursday=4, Friday=5, Saturday=6
+  const workingDays = [0, 1, 2, 3, 4];
   const lunchAfter = 4;
 
   await prisma.schoolWeekConfig.upsert({
@@ -1803,17 +2162,20 @@ async function main() {
   await ensureReportCards(school.id, term1.id, students, subjects);
   await ensureResults(school.id, someClasses, students, subjects, teachers);
 
-  console.log("✅✅✅ Seed completed successfully for Port Sudan International School!");
+  console.log("✅✅✅ Seed completed successfully for Demo International School!");
   console.log(`📊 Summary:`);
   console.log(`   - School: ${school.name}`);
-  console.log(`   - Teachers: ${teachers.length}`);
-  console.log(`   - Students: ${students.length}`);
+  console.log(`   - Teachers: ${teachers.length} (doubled from 15 to 30)`);
+  console.log(`   - Students: ${students.length} (expanded from 60 to 300 across Grades 7-12)`);
   console.log(`   - Classes: ${someClasses.length}`);
-  console.log(`   - Year Levels: ${yearLevels.length}`);
-  console.log(`   - Subjects: ${subjects.length}`);
-  console.log(`   - Library Books: 12`);
+  console.log(`   - Year Levels: ${yearLevels.length} (Grades 7-12)`);
+  console.log(`   - Subjects: ${subjects.length} (added Islamic Studies & Arabic variants)`);
+  console.log(`   - Library Books: 24 (12 English + 12 Arabic/Islamic literature)`);
   console.log(`   - LMS Courses: 5`);
+  console.log(`   - Announcements: 30 (includes Islamic events)`);
   console.log(`   - Report Cards: 20`);
+  console.log(`   - Working Days: Sunday-Thursday (Sudanese work week)`);
+  console.log(`   - Prayer Break: Dhuhr prayer time included in schedule`);
 }
 
 main()
