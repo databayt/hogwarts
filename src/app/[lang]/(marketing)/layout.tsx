@@ -5,7 +5,7 @@ import { type Locale } from "@/components/internationalization/config";
 
 interface MarketingLayoutProps {
   children: React.ReactNode;
-  params: Promise<{ lang: Locale }>
+  params: Promise<{ lang: string }>
 }
 
 export default async function MarketingLayout({
@@ -13,7 +13,7 @@ export default async function MarketingLayout({
   params
 }: MarketingLayoutProps) {
   const { lang } = await params;
-  const dictionary = await getDictionary(lang);
+  const dictionary = await getDictionary(lang as Locale);
 
   return (
     <div data-slot="site-layout">

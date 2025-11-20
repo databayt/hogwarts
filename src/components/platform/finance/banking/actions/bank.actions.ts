@@ -176,7 +176,7 @@ export async function createBankAccount({
     syncTransactions({ accountId: bankAccount.id }).catch(console.error)
 
     // Revalidate all related caches
-    revalidateTag(CACHE_TAGS.accounts)
+    revalidateTag(CACHE_TAGS.accounts, "max")
     revalidatePath(`/[lang]/banking`)
     revalidatePath(`/[lang]/banking/my-banks`)
 
@@ -277,8 +277,8 @@ export async function syncTransactions({
     }
 
     // Revalidate transaction-related caches
-    revalidateTag(CACHE_TAGS.transactions)
-    revalidateTag(CACHE_TAGS.accounts)
+    revalidateTag(CACHE_TAGS.transactions, "max")
+    revalidateTag(CACHE_TAGS.accounts, "max")
 
     return { success: true, count: transactions.length }
   } catch (error) {

@@ -124,8 +124,8 @@ export async function createConversation(
     })
 
     revalidatePath(MESSAGES_PATH)
-    revalidateTag(`conversations-${schoolId}`)
-    revalidateTag(`conversations-${authContext.userId}`)
+    revalidateTag(`conversations-${schoolId}`, "max")
+    revalidateTag(`conversations-${authContext.userId}`, "max")
 
     return { success: true, data: { id: conversation.id } }
   } catch (error) {
@@ -211,8 +211,8 @@ export async function updateConversation(
     })
 
     revalidatePath(MESSAGES_PATH)
-    revalidateTag(`conversations-${schoolId}`)
-    revalidateTag(`conversation-${parsed.conversationId}`)
+    revalidateTag(`conversations-${schoolId}`, "max")
+    revalidateTag(`conversation-${parsed.conversationId}`, "max")
 
     return { success: true, data: undefined }
   } catch (error) {
@@ -268,8 +268,8 @@ export async function archiveConversation(
     })
 
     revalidatePath(MESSAGES_PATH)
-    revalidateTag(`conversations-${schoolId}`)
-    revalidateTag(`conversation-${parsed.conversationId}`)
+    revalidateTag(`conversations-${schoolId}`, "max")
+    revalidateTag(`conversation-${parsed.conversationId}`, "max")
 
     return { success: true, data: undefined }
   } catch (error) {
@@ -373,8 +373,8 @@ export async function sendMessage(
     })
 
     revalidatePath(MESSAGES_PATH)
-    revalidateTag(`messages-${parsed.conversationId}`)
-    revalidateTag(`conversation-${parsed.conversationId}`)
+    revalidateTag(`messages-${parsed.conversationId}`, "max")
+    revalidateTag(`conversation-${parsed.conversationId}`, "max")
 
     return { success: true, data: { id: message.id } }
   } catch (error) {
@@ -513,8 +513,8 @@ export async function editMessage(
     })
 
     revalidatePath(MESSAGES_PATH)
-    revalidateTag(`messages-${message.conversationId}`)
-    revalidateTag(`message-${parsed.messageId}`)
+    revalidateTag(`messages-${message.conversationId}`, "max")
+    revalidateTag(`message-${parsed.messageId}`, "max")
 
     return { success: true, data: undefined }
   } catch (error) {
@@ -579,8 +579,8 @@ export async function deleteMessage(
     })
 
     revalidatePath(MESSAGES_PATH)
-    revalidateTag(`messages-${message.conversationId}`)
-    revalidateTag(`message-${parsed.messageId}`)
+    revalidateTag(`messages-${message.conversationId}`, "max")
+    revalidateTag(`message-${parsed.messageId}`, "max")
 
     return { success: true, data: undefined }
   } catch (error) {
@@ -636,7 +636,7 @@ export async function markMessageAsRead(
       },
     })
 
-    revalidateTag(`message-${parsed.messageId}`)
+    revalidateTag(`message-${parsed.messageId}`, "max")
 
     return { success: true, data: undefined }
   } catch (error) {
@@ -674,7 +674,7 @@ export async function markConversationAsRead(
       },
     })
 
-    revalidateTag(`conversation-${parsed.conversationId}`)
+    revalidateTag(`conversation-${parsed.conversationId}`, "max")
 
     return { success: true, data: undefined }
   } catch (error) {
@@ -738,7 +738,7 @@ export async function addParticipant(
     })
 
     revalidatePath(MESSAGES_PATH)
-    revalidateTag(`conversation-${parsed.conversationId}`)
+    revalidateTag(`conversation-${parsed.conversationId}`, "max")
 
     return { success: true, data: undefined }
   } catch (error) {
@@ -789,7 +789,7 @@ export async function removeParticipant(
     })
 
     revalidatePath(MESSAGES_PATH)
-    revalidateTag(`conversation-${parsed.conversationId}`)
+    revalidateTag(`conversation-${parsed.conversationId}`, "max")
 
     return { success: true, data: undefined }
   } catch (error) {
@@ -853,7 +853,7 @@ export async function addReaction(
       update: {},
     })
 
-    revalidateTag(`message-${parsed.messageId}`)
+    revalidateTag(`message-${parsed.messageId}`, "max")
 
     return { success: true, data: undefined }
   } catch (error) {

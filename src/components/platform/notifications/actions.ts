@@ -123,8 +123,8 @@ export async function createNotification(
 
     // Revalidate cache
     revalidatePath(NOTIFICATIONS_PATH)
-    revalidateTag(`notifications-${schoolId}`)
-    revalidateTag(`notifications-${parsed.userId}`)
+    revalidateTag(`notifications-${schoolId}`, "max")
+    revalidateTag(`notifications-${parsed.userId}`, "max")
 
     return { success: true, data: { id: row.id } }
   } catch (error) {
@@ -218,8 +218,8 @@ export async function markNotificationAsRead(
     })
 
     revalidatePath(NOTIFICATIONS_PATH)
-    revalidateTag(`notifications-${schoolId}`)
-    revalidateTag(`notifications-${authContext.userId}`)
+    revalidateTag(`notifications-${schoolId}`, "max")
+    revalidateTag(`notifications-${authContext.userId}`, "max")
 
     return { success: true, data: undefined }
   } catch (error) {
@@ -286,8 +286,8 @@ export async function markAllNotificationsAsRead(
     })
 
     revalidatePath(NOTIFICATIONS_PATH)
-    revalidateTag(`notifications-${schoolId}`)
-    revalidateTag(`notifications-${authContext.userId}`)
+    revalidateTag(`notifications-${schoolId}`, "max")
+    revalidateTag(`notifications-${authContext.userId}`, "max")
 
     return { success: true, data: { count: result.count } }
   } catch (error) {
@@ -367,8 +367,8 @@ export async function deleteNotification(
     })
 
     revalidatePath(NOTIFICATIONS_PATH)
-    revalidateTag(`notifications-${schoolId}`)
-    revalidateTag(`notifications-${authContext.userId}`)
+    revalidateTag(`notifications-${schoolId}`, "max")
+    revalidateTag(`notifications-${authContext.userId}`, "max")
 
     return { success: true, data: undefined }
   } catch (error) {
@@ -458,7 +458,7 @@ export async function createNotificationBatch(
     })
 
     revalidatePath(NOTIFICATIONS_PATH)
-    revalidateTag(`notifications-${schoolId}`)
+    revalidateTag(`notifications-${schoolId}`, "max")
 
     // Note: Actual notification creation would be handled by a background job
     // For now, we return the batch ID and count of 0
@@ -562,7 +562,7 @@ export async function updateNotificationPreferences(
     }
 
     revalidatePath(NOTIFICATIONS_PATH)
-    revalidateTag(`notification-preferences-${authContext.userId}`)
+    revalidateTag(`notification-preferences-${authContext.userId}`, "max")
 
     return { success: true, data: { count } }
   } catch (error) {
@@ -649,7 +649,7 @@ export async function subscribeToEntityNotifications(
     })
 
     revalidatePath(NOTIFICATIONS_PATH)
-    revalidateTag(`notification-subscriptions-${authContext.userId}`)
+    revalidateTag(`notification-subscriptions-${authContext.userId}`, "max")
 
     return { success: true, data: { id: subscription.id } }
   } catch (error) {
@@ -708,7 +708,7 @@ export async function unsubscribeFromEntityNotifications(
     })
 
     revalidatePath(NOTIFICATIONS_PATH)
-    revalidateTag(`notification-subscriptions-${authContext.userId}`)
+    revalidateTag(`notification-subscriptions-${authContext.userId}`, "max")
 
     return { success: true, data: undefined }
   } catch (error) {

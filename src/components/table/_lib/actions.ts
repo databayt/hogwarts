@@ -75,9 +75,9 @@ export async function createTask(input: CreateTaskSchema) {
       }
     });
 
-    revalidateTag("tasks");
-    revalidateTag("task-status-counts");
-    revalidateTag("task-priority-counts");
+    revalidateTag("tasks", "max");
+    revalidateTag("task-status-counts", "max");
+    revalidateTag("task-priority-counts", "max");
 
     return {
       data: null,
@@ -110,12 +110,12 @@ export async function updateTask(input: UpdateTaskSchema & { id: string }) {
       },
     });
 
-    revalidateTag("tasks");
+    revalidateTag("tasks", "max");
     if (data.status === input.status) {
-      revalidateTag("task-status-counts");
+      revalidateTag("task-status-counts", "max");
     }
     if (data.priority === input.priority) {
-      revalidateTag("task-priority-counts");
+      revalidateTag("task-priority-counts", "max");
     }
 
     return {
@@ -152,12 +152,12 @@ export async function updateTasks(input: {
       data: updateData,
     });
 
-    revalidateTag("tasks");
+    revalidateTag("tasks", "max");
     if (input.status !== undefined) {
-      revalidateTag("task-status-counts");
+      revalidateTag("task-status-counts", "max");
     }
     if (input.priority !== undefined) {
-      revalidateTag("task-priority-counts");
+      revalidateTag("task-priority-counts", "max");
     }
 
     return {
@@ -188,9 +188,9 @@ export async function deleteTask(input: { id: string }) {
       });
     });
 
-    revalidateTag("tasks");
-    revalidateTag("task-status-counts");
-    revalidateTag("task-priority-counts");
+    revalidateTag("tasks", "max");
+    revalidateTag("task-status-counts", "max");
+    revalidateTag("task-priority-counts", "max");
 
     return {
       data: null,
@@ -222,9 +222,9 @@ export async function deleteTasks(input: { ids: string[] }) {
       });
     });
 
-    revalidateTag("tasks");
-    revalidateTag("task-status-counts");
-    revalidateTag("task-priority-counts");
+    revalidateTag("tasks", "max");
+    revalidateTag("task-status-counts", "max");
+    revalidateTag("task-priority-counts", "max");
 
     return {
       data: null,

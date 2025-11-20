@@ -5,12 +5,12 @@ import { getDictionary } from '@/components/internationalization/dictionaries'
 
 interface Props {
   children: React.ReactNode
-  params: Promise<{ lang: Locale; subdomain: string }>
+  params: Promise<{ lang: string; subdomain: string }>
 }
 
 export default async function AttendanceLayout({ children, params }: Props) {
   const { lang, subdomain } = await params
-  const dictionary = await getDictionary(lang)
+  const dictionary = await getDictionary(lang as Locale)
 
   // Define attendance page navigation - WITHOUT subdomain (middleware handles it)
   const attendancePages: PageNavItem[] = [

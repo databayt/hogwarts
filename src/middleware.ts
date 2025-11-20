@@ -79,26 +79,48 @@ export async function middleware(req: NextRequest) {
   // Get pathname without locale for route checking
   const pathnameWithoutLocale = stripLocaleFromPathname(url.pathname);
 
-  // Get session for authentication check
-  const session = await auth();
-  const isLoggedIn = !!session?.user;
+  // Determine if route needs authentication BEFORE querying database
+  const isPublicRoute = publicRoutes.includes(pathnameWithoutLocale);
+  const isOnboardingRoute = pathnameWithoutLocale.startsWith('/onboarding');
+  const isDocsRoute = pathnameWithoutLocale.startsWith('/docs');
+  const isAuthRoute = authRoutes.includes(pathnameWithoutLocale);
+  // Stream routes can be at /stream or /s/[subdomain]/stream
+  const isStreamPublicRoute = pathnameWithoutLocale.startsWith('/stream') || pathnameWithoutLocale.includes('/stream');
 
-  // Debug logging for subdomain handling
-  logger.debug('MIDDLEWARE REQUEST', {
-    ...baseContext,
-    pathnameWithoutLocale,
-    currentLocale,
-    search: url.search,
-    referer,
-    isBot: userAgent.includes('bot'),
-    userId: session?.user?.id,
-    schoolId: session?.user?.schoolId
-  });
+  // Skip expensive auth check for public routes
+  const needsAuth = !isPublicRoute && !isDocsRoute && !isStreamPublicRoute && !isAuthRoute;
 
-  // Allow auth routes to be handled normally (don't rewrite for subdomains)
-  if (authRoutes.includes(pathnameWithoutLocale)) {
-    logger.debug('AUTH ROUTE - No rewrite', { ...baseContext, pathname: pathnameWithoutLocale });
+  // Conditional debug logging (only when enabled)
+  if (process.env.LOG_MIDDLEWARE === 'true') {
+    logger.debug('MIDDLEWARE REQUEST', {
+      ...baseContext,
+      pathnameWithoutLocale,
+      currentLocale,
+      search: url.search,
+      referer,
+      isBot: userAgent.includes('bot'),
+      needsAuth
+    });
+  }
 
+  // Handle auth routes (login, register, etc.)
+  if (isAuthRoute) {
+    // Check if user is already logged in (need auth check for this)
+    const session = await auth();
+    const isLoggedIn = !!session?.user;
+
+    if (process.env.LOG_MIDDLEWARE === 'true') {
+      logger.debug('AUTH ROUTE', { ...baseContext, pathname: pathnameWithoutLocale, isLoggedIn });
+    }
+
+    // If already logged in, redirect to dashboard
+    if (isLoggedIn) {
+      const response = NextResponse.redirect(new URL(`/${currentLocale}/dashboard`, req.url));
+      response.headers.set('x-request-id', requestId);
+      return response;
+    }
+
+    // Not logged in, allow access to auth pages
     // Add locale to auth routes if not present
     if (!pathnameHasLocale) {
       url.pathname = `/${currentLocale}${pathnameWithoutLocale}`;
@@ -112,15 +134,38 @@ export async function middleware(req: NextRequest) {
     return response;
   }
 
-  // Authentication protection for protected routes
-  const isPublicRoute = publicRoutes.includes(pathnameWithoutLocale);
-  const isOnboardingRoute = pathnameWithoutLocale.startsWith('/onboarding');
-  const isDocsRoute = pathnameWithoutLocale.startsWith('/docs');
-  // Stream routes can be at /stream or /s/[subdomain]/stream
-  const isStreamPublicRoute = pathnameWithoutLocale.startsWith('/stream') || pathnameWithoutLocale.includes('/stream');
+  // Handle public routes without auth check (major performance win!)
+  if (!needsAuth) {
+    // Add locale if missing
+    if (!pathnameHasLocale) {
+      url.pathname = `/${currentLocale}${pathnameWithoutLocale}`;
+      const response = NextResponse.redirect(url);
+      response.headers.set('x-request-id', requestId);
+      return response;
+    }
+
+    const response = NextResponse.next();
+    response.headers.set('x-request-id', requestId);
+    return response;
+  }
+
+  // Only check authentication for protected routes
+  const session = await auth();
+  const isLoggedIn = !!session?.user;
+
+  // Enhanced logging with session info (only for protected routes)
+  if (process.env.LOG_MIDDLEWARE === 'true') {
+    logger.debug('PROTECTED ROUTE - Auth checked', {
+      ...baseContext,
+      pathnameWithoutLocale,
+      isLoggedIn,
+      userId: session?.user?.id,
+      schoolId: session?.user?.schoolId
+    });
+  }
 
   // Redirect to login if accessing protected routes without authentication
-  if (!isLoggedIn && !isPublicRoute && !isDocsRoute && !isStreamPublicRoute) {
+  if (!isLoggedIn) {
     const callbackUrl = url.pathname + url.search;
     logger.info('UNAUTHORIZED ACCESS - Redirecting to login', {
       ...baseContext,
@@ -139,36 +184,8 @@ export async function middleware(req: NextRequest) {
     return response;
   }
 
-  // Special handling for onboarding routes - require authentication
-  if (isOnboardingRoute && !isLoggedIn) {
-    const callbackUrl = url.pathname + url.search;
-    logger.info('ONBOARDING ACCESS DENIED - Redirecting to login', {
-      ...baseContext,
-      pathnameWithoutLocale,
-      userId: session?.user?.id,
-      callbackUrl
-    });
-
-    const loginUrl = new URL(`/${currentLocale}/login`, req.url);
-    // Preserve the full onboarding path
-    loginUrl.searchParams.set('callbackUrl', callbackUrl);
-    loginUrl.searchParams.set('message', 'Please sign in to continue with school setup');
-    const response = NextResponse.redirect(loginUrl);
-    response.headers.set('x-request-id', requestId);
-    return response;
-  }
-
-  // If user is logged in and accessing auth routes, redirect to lab
-  if (isLoggedIn && authRoutes.includes(pathnameWithoutLocale)) {
-    logger.debug('ALREADY LOGGED IN - Redirecting to lab', {
-      ...baseContext,
-      pathnameWithoutLocale,
-      userId: session?.user?.id
-    });
-    const response = NextResponse.redirect(new URL(`/${currentLocale}/dashboard`, req.url));
-    response.headers.set('x-request-id', requestId);
-    return response;
-  }
+  // Note: Onboarding routes are handled above as protected routes (needsAuth=true)
+  // Note: Auth route redirect for logged-in users is handled earlier (line 107-135)
 
   // Case 1: Main domain (ed.databayt.org) - handle i18n for marketing pages
   if (host === "ed.databayt.org" || host === "localhost:3000" || host === "localhost") {

@@ -6,12 +6,14 @@ export const metadata: Metadata = {
   description: "School automation",
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // Root layout should not render html/body tags when using [lang] dynamic routes
-  // The [lang]/layout.tsx handles the html/body tags with proper locale support
-  return <>{children}</>;
+  return (
+    <html suppressHydrationWarning>
+      <body>{children}</body>
+    </html>
+  );
 }

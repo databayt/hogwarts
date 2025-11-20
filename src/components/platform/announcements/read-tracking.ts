@@ -93,8 +93,8 @@ export async function markAnnouncementAsRead(
     });
 
     // Invalidate cache for read status
-    revalidateTag(`announcement-reads-${announcementId}`);
-    revalidateTag(`user-reads-${userId}`);
+    revalidateTag(`announcement-reads-${announcementId}`, "max");
+    revalidateTag(`user-reads-${userId}`, "max");
 
     return { success: true, data: undefined };
   } catch (error) {
@@ -178,9 +178,9 @@ export async function markMultipleAnnouncementsAsRead(
 
     // Invalidate cache for all affected announcements
     validIds.forEach((id) => {
-      revalidateTag(`announcement-reads-${id}`);
+      revalidateTag(`announcement-reads-${id}`, "max");
     });
-    revalidateTag(`user-reads-${userId}`);
+    revalidateTag(`user-reads-${userId}`, "max");
 
     return { success: true, data: { count: result.count } };
   } catch (error) {

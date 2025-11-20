@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (tag) {
-      nextRevalidateTag(tag);
+      nextRevalidateTag(tag, "max");
       logger.info('Cache tag revalidated', {
         action: 'cache_revalidate_tag',
         tag,

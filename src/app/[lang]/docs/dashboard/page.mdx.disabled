@@ -46,6 +46,16 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Users, TrendingUp, GraduationCap, Calendar, DollarSign, Clock, CheckCircle, AlertCircle, Sun, Plus, Upload, Share, Download, Heart, MessageCircle, FileText, Award, Inbox } from 'lucide-react'
 
+export const trendUp12 = { value: 12, direction: "up" }
+export const trendUp5 = { value: 5, direction: "up" }
+export const trendDown2 = { value: 2, direction: "down" }
+export const trendUp23 = { value: 23, direction: "up" }
+export const changeUp5 = { value: 5, direction: "up" }
+export const gridCols1_2 = { base: 1, md: 2 }
+export const gridCols1_2_3 = { base: 1, md: 2, lg: 3 }
+export const gridCols1_2_4 = { base: 1, md: 2, lg: 4 }
+
+
 # Dashboard Card Showcase
 
 This page showcases all **32 dashboard cards** available in the Hogwarts platform, organized by category.
@@ -62,12 +72,12 @@ This page showcases all **32 dashboard cards** available in the Hogwarts platfor
 ## Enhanced Original Cards (5)
 
 <DashboardSection title="Core Dashboard Cards" description="Enhanced with size variants, loading states, and click handlers">
-  <DashboardGrid columns={{ base: 1, md: 2, lg: 4 }}>
+  <DashboardGrid columns={gridCols1_2_4}>
     <StatCard
       icon={<Users className="h-5 w-5" />}
       value="4,812"
       label="Total Students"
-      trend={{ value: 12, direction: "up" }}
+      trend={trendUp12}
       variant="primary"
       size="md"
     />
@@ -76,7 +86,7 @@ This page showcases all **32 dashboard cards** available in the Hogwarts platfor
       icon={<GraduationCap className="h-5 w-5" />}
       value="248"
       label="Teachers"
-      trend={{ value: 5, direction: "up" }}
+      trend={trendUp5}
       variant="success"
       size="md"
     />
@@ -85,7 +95,7 @@ This page showcases all **32 dashboard cards** available in the Hogwarts platfor
       icon={<Calendar className="h-5 w-5" />}
       value="23"
       label="Active Classes"
-      trend={{ value: 2, direction: "down" }}
+      trend={trendDown2}
       variant="warning"
       size="md"
     />
@@ -94,13 +104,13 @@ This page showcases all **32 dashboard cards** available in the Hogwarts platfor
       icon={<DollarSign className="h-5 w-5" />}
       value="$45,678"
       label="Revenue"
-      trend={{ value: 23, direction: "up" }}
+      trend={trendUp23}
       variant="success"
       size="md"
     />
   </DashboardGrid>
 
-  <DashboardGrid columns={{ base: 1, md: 2 }} className="mt-4">
+  <DashboardGrid columns={gridCols1_2} className="mt-4">
     <ProgressCard
       icon={<CheckCircle className="h-5 w-5" />}
       label="Attendance Rate"
@@ -128,13 +138,13 @@ This page showcases all **32 dashboard cards** available in the Hogwarts platfor
 ## Phase 1: Specialized Cards (7)
 
 <DashboardSection title="Specialized Card Variants" description="Purpose-built cards for specific use cases">
-  <DashboardGrid columns={{ base: 1, md: 2, lg: 3 }}>
+  <DashboardGrid columns={gridCols1_2_3}>
     <HeroStatCard
       icon={<Users className="h-12 w-12" />}
       value="4,812"
       label="Total Students"
       subtitle="Across all grade levels"
-      trend={{ value: 12, direction: "up" }}
+      trend={trendUp12}
       variant="primary"
     />
 
@@ -152,11 +162,11 @@ This page showcases all **32 dashboard cards** available in the Hogwarts platfor
         { label: "This Week", value: 94, variant: "success" },
         { label: "Last Week", value: 89, variant: "default" }
       ]}
-      change={{ value: 5, direction: "up" }}
+      change={changeUp5}
     />
   </DashboardGrid>
 
-  <DashboardGrid columns={{ base: 1, md: 2 }} className="mt-4">
+  <DashboardGrid columns={gridCols1_2} className="mt-4">
     <MediaCard
       media={
         <Avatar className="h-16 w-16">
@@ -182,7 +192,7 @@ This page showcases all **32 dashboard cards** available in the Hogwarts platfor
 ## Phase 2: Modern 2025 Patterns (12)
 
 <DashboardSection title="Interactive & Modern Cards" description="2025 design trends: flip cards, sparklines, minimal design">
-  <DashboardGrid columns={{ base: 1, md: 2, lg: 4 }}>
+  <DashboardGrid columns={gridCols1_2_4}>
     <FlipCard
       front={
         <div className="space-y-2 text-center p-4">
@@ -204,7 +214,7 @@ This page showcases all **32 dashboard cards** available in the Hogwarts platfor
       value="$45,678"
       label="Total Revenue"
       data={[120, 150, 170, 130, 190, 210]}
-      trend={{ value: 23, direction: "up" }}
+      trend={trendUp23}
       variant="success"
       size="md"
     />
@@ -224,7 +234,7 @@ This page showcases all **32 dashboard cards** available in the Hogwarts platfor
     />
   </DashboardGrid>
 
-  <DashboardGrid columns={{ base: 1, md: 2, lg: 3 }} className="mt-4">
+  <DashboardGrid columns={gridCols1_2_3} className="mt-4">
     <ProfileCard
       avatar={
         <Avatar className="h-16 w-16">
@@ -255,7 +265,7 @@ This page showcases all **32 dashboard cards** available in the Hogwarts platfor
     />
   </DashboardGrid>
 
-  <DashboardGrid columns={{ base: 1, md: 2 }} className="mt-4">
+  <DashboardGrid columns={gridCols1_2} className="mt-4">
     <CalendarCard
       title="Parent-Teacher Conference"
       date="March 15, 2025"
@@ -293,7 +303,7 @@ This page showcases all **32 dashboard cards** available in the Hogwarts platfor
     />
   </DashboardGrid>
 
-  <DashboardGrid columns={{ base: 1, md: 2, lg: 3 }} className="mt-4">
+  <DashboardGrid columns={gridCols1_2_3} className="mt-4">
     <SocialCard
       title="Post Engagement"
       metrics={[
@@ -327,7 +337,7 @@ This page showcases all **32 dashboard cards** available in the Hogwarts platfor
 ## Phase 3: shadcn Dashboard Patterns (8)
 
 <DashboardSection title="Official shadcn/ui Patterns" description="Based on shadcn/ui and bundui dashboard examples">
-  <DashboardGrid columns={{ base: 1, md: 2 }}>
+  <DashboardGrid columns={gridCols1_2}>
     <RecentSalesCard
       title="Recent Sales"
       description="You made 265 sales this month"
@@ -380,7 +390,7 @@ This page showcases all **32 dashboard cards** available in the Hogwarts platfor
     />
   </DashboardGrid>
 
-  <DashboardGrid columns={{ base: 1, md: 2, lg: 3 }} className="mt-4">
+  <DashboardGrid columns={gridCols1_2_3} className="mt-4">
     <TeamMembersCard
       title="Team Members"
       description="8 members online"
@@ -469,7 +479,7 @@ This page showcases all **32 dashboard cards** available in the Hogwarts platfor
     />
   </DashboardGrid>
 
-  <DashboardGrid columns={{ base: 1, md: 2 }} className="mt-4">
+  <DashboardGrid columns={gridCols1_2} className="mt-4">
     <TaskListCard
       title="Today's Tasks"
       description="5 of 8 completed"
@@ -528,7 +538,7 @@ This page showcases all **32 dashboard cards** available in the Hogwarts platfor
     <div className="p-4 rounded-lg border border-border bg-muted/50">
       <h5 className="mb-2">DashboardGrid</h5>
       <p className="muted mb-4">Responsive grid with breakpoint control (base, md, lg, xl, 2xl)</p>
-      <DashboardGrid columns={{ base: 1, md: 2, lg: 4 }} gap={4}>
+      <DashboardGrid columns={gridCols1_2_4} gap={4}>
         <div className="p-4 rounded bg-primary/10 text-center">Col 1</div>
         <div className="p-4 rounded bg-primary/10 text-center">Col 2</div>
         <div className="p-4 rounded bg-primary/10 text-center">Col 3</div>

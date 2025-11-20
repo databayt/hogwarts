@@ -213,6 +213,8 @@ export function withCache<T>(
 
 /**
  * Revalidate cache by tag
+ * Note: This is a wrapper that calls the API endpoint. For direct Next.js cache revalidation,
+ * import revalidateTag from 'next/cache' instead.
  */
 export async function revalidateTag(tag: string): Promise<void> {
   try {

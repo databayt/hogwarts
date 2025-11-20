@@ -6,7 +6,7 @@ import { AdminAuthGuard } from '@/components/auth/admin-auth-guard'
 
 interface Props {
   children: React.ReactNode
-  params: Promise<{ lang: Locale; subdomain: string }>
+  params: Promise<{ lang: string; subdomain: string }>
 }
 
 export default async function AdminLayout({ children, params }: Props) {
@@ -15,7 +15,7 @@ export default async function AdminLayout({ children, params }: Props) {
   // Authentication is handled by AdminAuthGuard client component
   // This prevents auth() from being called during build time
 
-  const dictionary = await getDictionary(lang)
+  const dictionary = await getDictionary(lang as Locale)
   const d = dictionary?.admin
 
   // Define admin page navigation
@@ -33,7 +33,7 @@ export default async function AdminLayout({ children, params }: Props) {
   ]
 
   return (
-    <AdminAuthGuard lang={lang}>
+    <AdminAuthGuard lang={lang as Locale}>
       <div className="space-y-6">
         <PageHeader
           title={d?.title || 'Admin'}

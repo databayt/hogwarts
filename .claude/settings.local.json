@@ -17,7 +17,9 @@
       "Bash(nul)",
       "Bash(unzip:*)",
       "Bash(wc:*)",
-      "WebFetch(domain:help.figma.com)"
+      "WebFetch(domain:help.figma.com)",
+      "WebFetch(domain:www.prisma.io)",
+      "mcp__ref__ref_search_documentation"
     ],
     "deny": [],
     "ask": []

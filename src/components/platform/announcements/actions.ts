@@ -127,7 +127,7 @@ export async function createAnnouncement(
 
     // Revalidate cache - both path and tags
     revalidatePath(ANNOUNCEMENTS_PATH);
-    revalidateTag(`announcements-${schoolId}`);
+    revalidateTag(`announcements-${schoolId}`, "max");
 
     return { success: true, data: { id: row.id } };
   } catch (error) {
@@ -236,7 +236,7 @@ export async function updateAnnouncement(
 
     // Revalidate cache - both path and tags
     revalidatePath(ANNOUNCEMENTS_PATH);
-    revalidateTag(`announcements-${schoolId}`);
+    revalidateTag(`announcements-${schoolId}`, "max");
 
     return { success: true, data: undefined };
   } catch (error) {
@@ -314,7 +314,7 @@ export async function deleteAnnouncement(
 
     // Revalidate cache - both path and tags
     revalidatePath(ANNOUNCEMENTS_PATH);
-    revalidateTag(`announcements-${schoolId}`);
+    revalidateTag(`announcements-${schoolId}`, "max");
 
     return { success: true, data: undefined };
   } catch (error) {
@@ -401,7 +401,7 @@ export async function toggleAnnouncementPublish(
 
     // Revalidate cache - both path and tags
     revalidatePath(ANNOUNCEMENTS_PATH);
-    revalidateTag(`announcements-${schoolId}`);
+    revalidateTag(`announcements-${schoolId}`, "max");
 
     return { success: true, data: undefined };
   } catch (error) {

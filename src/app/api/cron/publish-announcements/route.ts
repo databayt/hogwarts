@@ -83,7 +83,7 @@ export async function GET(request: NextRequest) {
     // Invalidate cache for all affected schools
     const affectedSchools = new Set(scheduledAnnouncements.map((a) => a.schoolId));
     affectedSchools.forEach((schoolId) => {
-      revalidateTag(`announcements-${schoolId}`);
+      revalidateTag(`announcements-${schoolId}`, "max");
     });
 
     // Log successful publishes

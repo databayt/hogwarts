@@ -6,6 +6,11 @@ const nextConfig: NextConfig = {
   /* config options here */
   pageExtensions: ['js', 'jsx', 'mdx', 'ts', 'tsx'],
 
+  // Enable MDX support with Turbopack
+  experimental: {
+    mdxRs: true,
+  },
+
   // Security headers
   async headers() {
     return [
@@ -21,10 +26,6 @@ const nextConfig: NextConfig = {
         ],
       },
     ];
-  },
-  eslint: {
-    // Skip ESLint during production builds; run `pnpm lint` separately
-    ignoreDuringBuilds: true,
   },
   images: {
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
@@ -63,6 +64,7 @@ const nextConfig: NextConfig = {
 
 const withMDX = createMDX({
   // Add markdown plugins here, as desired
+  // Note: When using Turbopack with mdxRs, only JSON-serializable options are supported
 })
 
 // Wrap MDX and Next.js config with each other

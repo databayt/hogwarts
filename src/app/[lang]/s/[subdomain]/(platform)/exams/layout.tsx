@@ -5,12 +5,12 @@ import { PageNav, type PageNavItem } from '@/components/atom/page-nav'
 
 interface Props {
   children: React.ReactNode
-  params: Promise<{ lang: Locale; subdomain: string }>
+  params: Promise<{ lang: string; subdomain: string }>
 }
 
 export default async function ExamsLayout({ children, params }: Props) {
   const { lang } = await params
-  const dictionary = await getDictionary(lang)
+  const dictionary = await getDictionary(lang as Locale)
   const d = dictionary?.school?.exams?.dashboard
 
   // Define exams page navigation

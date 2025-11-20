@@ -93,7 +93,7 @@ export async function bulkPublishAnnouncements(
 
     // Revalidate cache
     revalidatePath(ANNOUNCEMENTS_PATH);
-    revalidateTag(`announcements-${schoolId}`);
+    revalidateTag(`announcements-${schoolId}`, "max");
 
     return { success: true, data: { count: result.count } };
   } catch (error) {
@@ -173,7 +173,7 @@ export async function bulkUnpublishAnnouncements(
 
     // Revalidate cache
     revalidatePath(ANNOUNCEMENTS_PATH);
-    revalidateTag(`announcements-${schoolId}`);
+    revalidateTag(`announcements-${schoolId}`, "max");
 
     return { success: true, data: { count: result.count } };
   } catch (error) {
@@ -248,7 +248,7 @@ export async function bulkDeleteAnnouncements(
 
     // Revalidate cache
     revalidatePath(ANNOUNCEMENTS_PATH);
-    revalidateTag(`announcements-${schoolId}`);
+    revalidateTag(`announcements-${schoolId}`, "max");
 
     return { success: true, data: { count: result.count } };
   } catch (error) {
@@ -331,7 +331,7 @@ export async function bulkUpdatePriority(
 
     // Revalidate cache
     revalidatePath(ANNOUNCEMENTS_PATH);
-    revalidateTag(`announcements-${schoolId}`);
+    revalidateTag(`announcements-${schoolId}`, "max");
 
     return { success: true, data: { count: result.count } };
   } catch (error) {
@@ -414,7 +414,7 @@ export async function bulkTogglePin(
 
     // Revalidate cache
     revalidatePath(ANNOUNCEMENTS_PATH);
-    revalidateTag(`announcements-${schoolId}`);
+    revalidateTag(`announcements-${schoolId}`, "max");
 
     return { success: true, data: { count: result.count } };
   } catch (error) {

@@ -5,6 +5,7 @@ import React from 'react'
 import { buttonVariants } from '../ui/button'
 import type { Dictionary } from '@/components/internationalization/dictionaries'
 import type { Locale } from '@/components/internationalization/config'
+import { env } from '@/env.mjs'
 
 interface HeroProps {
   dictionary?: Dictionary
@@ -18,6 +19,20 @@ const Hero = ({ dictionary, lang }: HeroProps) => {
     badge: "700+ School automated",
     appointment: "Get Started",
     services: "GitHub"
+  }
+
+  // Construct demo URL based on environment
+  const getDemoUrl = () => {
+    // If demo URL is explicitly configured, use it
+    if (env.NEXT_PUBLIC_DEMO_URL) {
+      return `${env.NEXT_PUBLIC_DEMO_URL}/${lang || 'en'}`
+    }
+
+    // Fallback to constructing from root domain for local development
+    const rootDomain = env.NEXT_PUBLIC_ROOT_DOMAIN || 'localhost:3000'
+    const isLocal = rootDomain.includes('localhost')
+    const protocol = isLocal ? 'http' : 'https'
+    return `${protocol}://demo.${rootDomain}/${lang || 'en'}`
   }
   return (
     <section id="hero" className="h-[calc(100vh-3.5rem)] flex flex-col">
@@ -41,7 +56,7 @@ const Hero = ({ dictionary, lang }: HeroProps) => {
               {heroDict.appointment}
             </Link>
             <Link
-              href="https://demo.databayt.org"
+              href={getDemoUrl()}
               target="_blank"
               rel="noreferrer"
               className={cn(buttonVariants({ variant: "outline", size: "lg" }), "w-full sm:w-auto")}

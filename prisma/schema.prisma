@@ -1,3 +1,16 @@
+/**
+ * Main Prisma Schema File
+ * This file defines the datasource and generator configuration for the Prisma Client.
+ * Multi-file Schema Structure:
+ * - This file: Datasource and generator configuration
+ * - prisma.config.ts: Schema path, migrations, and seed configuration
+ * - prisma/models/*.prisma: 33 model files with business logic
+ * All *.prisma files in the prisma directory (including subdirectories)
+ * are automatically included when prisma.config.ts points to the prisma folder.
+ * Note: The datasource URL in prisma.config.ts can override the URL defined here,
+ * but the datasource block itself must remain in the schema.
+ */
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
@@ -7,7 +20,3 @@ generator client {
   provider   = "prisma-client-js"
   engineType = "binary"
 }
-
-// Multi-file schema configuration
-// All .prisma files in the prisma/models directory are automatically included
-// when using "schema": "./prisma" in package.json
