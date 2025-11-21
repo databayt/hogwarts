@@ -1,12 +1,12 @@
 "use client";
 
 import * as React from "react";
-import { DataTable } from "@/components/table/data-table/data-table";
-import { DataTableAdvancedToolbar } from "@/components/table/data-table/data-table-advanced-toolbar";
-import { DataTableFilterList } from "@/components/table/data-table/data-table-filter-list";
-import { DataTableFilterMenu } from "@/components/table/data-table/data-table-filter-menu";
-import { DataTableSortList } from "@/components/table/data-table/data-table-sort-list";
-import { DataTableToolbar } from "@/components/table/data-table/data-table-toolbar";
+import { DataTable } from "@/components/table/data-table";
+import { DataTableAdvancedToolbar } from "@/components/table/data-table-advanced-toolbar";
+import { DataTableFilterList } from "@/components/table/data-table-filter-list";
+import { DataTableFilterMenu } from "@/components/table/data-table-filter-menu";
+import { DataTableSortList } from "@/components/table/data-table-sort-list";
+import { DataTableToolbar } from "@/components/table/data-table-toolbar";
 import type { Task } from "@prisma/client";
 import { useDataTable } from "@/components/table/use-data-table";
 import type { DataTableRowAction } from "@/components/table/types";

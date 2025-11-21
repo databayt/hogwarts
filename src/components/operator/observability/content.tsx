@@ -3,7 +3,7 @@
 import { Shell as PageContainer } from "@/components/table/shell";
 import { AuditLogTable } from "./logs-table/table";
 import { auditColumns, type AuditRow } from "./logs-table/columns";
-import { DataTableSkeleton } from "@/components/table/data-table/data-table-skeleton";
+import { DataTableSkeleton } from "@/components/table/data-table-skeleton";
 import { EmptyState } from "@/components/operator/common/empty-state";
 import { useState, useEffect } from "react";
 import type { getDictionary } from "@/components/internationalization/dictionaries";

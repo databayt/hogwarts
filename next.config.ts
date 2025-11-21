@@ -1,5 +1,5 @@
 import type { NextConfig } from "next";
-import createMDX from '@next/mdx';
+import { createMDX } from 'fumadocs-mdx/next';
 import { securityHeaders } from './src/lib/security-headers';
 
 const nextConfig: NextConfig = {
@@ -62,10 +62,7 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
 };
 
-const withMDX = createMDX({
-  // Add markdown plugins here, as desired
-  // Note: When using Turbopack with mdxRs, only JSON-serializable options are supported
-})
+const withMDX = createMDX()
 
 // Wrap MDX and Next.js config with each other
 export default withMDX(nextConfig)

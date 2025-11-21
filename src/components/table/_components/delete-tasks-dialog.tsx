@@ -26,7 +26,7 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer";
 import type { Task } from "@prisma/client";
-import { useMediaQuery } from "@/components/table/hooks/use-media-query";
+import { useMediaQuery } from "@/components/table/use-media-query";
 
 import { deleteTasks } from "../_lib/actions";
 

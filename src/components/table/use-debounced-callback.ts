@@ -4,7 +4,7 @@
 
 import * as React from "react";
 
-import { useCallbackRef } from "@/components/table/hooks/use-callback-ref";
+import { useCallbackRef } from "@/components/table/use-callback-ref";
 
 export function useDebouncedCallback<T extends (...args: never[]) => unknown>(
   callback: T,

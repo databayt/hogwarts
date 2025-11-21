@@ -10,7 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { DataTableColumnHeader } from "@/components/table/data-table/data-table-column-header";
+import { DataTableColumnHeader } from "@/components/table/data-table-column-header";
 import { TenantDetail } from "./detail";
 import { SuccessToast, ErrorToast } from "@/components/atom/toast";
 

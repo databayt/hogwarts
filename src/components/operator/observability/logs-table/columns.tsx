@@ -1,6 +1,6 @@
 "use client";
 import { ColumnDef } from "@tanstack/react-table";
-import { DataTableColumnHeader } from "@/components/table/data-table/data-table-column-header";
+import { DataTableColumnHeader } from "@/components/table/data-table-column-header";
 
 export type AuditRow = {
   id: string;

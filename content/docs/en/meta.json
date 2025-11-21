@@ -1,0 +1,15 @@
+{
+  "root": true,
+  "title": "Documentation",
+  "pages": [
+    "index",
+    "getting-started",
+    "components",
+    "platform",
+    "api",
+    "architecture",
+    "deployment",
+    "contributing",
+    "changelog"
+  ]
+}

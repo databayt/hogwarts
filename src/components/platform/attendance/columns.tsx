@@ -1,7 +1,7 @@
 "use client";
 
 import { ColumnDef } from '@tanstack/react-table'
-import { DataTableColumnHeader } from '@/components/table/data-table/data-table-column-header'
+import { DataTableColumnHeader } from '@/components/table/data-table-column-header'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import type { Dictionary } from '@/components/internationalization/dictionaries'
 

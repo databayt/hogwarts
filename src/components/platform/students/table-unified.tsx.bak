@@ -3,8 +3,10 @@
 import { useMemo, useState, useCallback, useTransition } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { DataTableColumnHeader } from '@/components/table/data-table/data-table-column-header';
-import { UnifiedDataTable } from '@/components/table/UnifiedDataTable';
-import { CrudModal, CrudForm, useCrudModal } from '@/components/crud-modal';
+import { DataTableEnhanced } from '@/components/table/data-table-enhanced';
+import { CrudModal } from '@/components/atom/modal/crud-modal';
+import { CrudForm } from '@/components/atom/modal/crud-form';
+import { useCrudModal } from '@/components/atom/modal/use-crud-modal';
 import { useDataTable } from '@/components/table/hooks/use-data-table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -384,7 +386,7 @@ export function StudentsUnifiedTable({
 
   return (
     <>
-      <UnifiedDataTable
+      <DataTableEnhanced
         table={table}
         toolbar={{
           searchKey: 'search',

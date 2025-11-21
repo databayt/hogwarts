@@ -10,9 +10,9 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { DataTablePagination } from '@/components/table/data-table/data-table-pagination';
-import { DataTableLoadMore } from '@/components/table/data-table/data-table-load-more';
-import { DataTableToolbar } from '@/components/table/data-table/data-table-toolbar';
+import { DataTablePagination } from '@/components/table/data-table-pagination';
+import { DataTableLoadMore } from '@/components/table/data-table-load-more';
+import { DataTableToolbar } from '@/components/table/data-table-toolbar';
 import { ViewToggle, type ViewMode } from '@/components/view-toggle';
 import { ExportButton, type ExportButtonProps } from '@/components/export';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -20,7 +20,7 @@ import { getCommonPinningStyles } from '@/components/table/utils';
 import { cn } from '@/lib/utils';
 import { useDictionary } from '@/components/internationalization/use-dictionary';
 
-export interface UnifiedDataTableProps<TData> {
+export interface DataTableEnhancedProps<TData> {
   /** TanStack table instance */
   table: TanstackTable<TData>;
   /** Toolbar configuration */
@@ -60,7 +60,7 @@ export interface UnifiedDataTableProps<TData> {
   emptyMessage?: string;
 }
 
-export function UnifiedDataTable<TData>({
+export function DataTableEnhanced<TData>({
   table,
   toolbar,
   exportConfig,
@@ -73,7 +73,7 @@ export function UnifiedDataTable<TData>({
   actionBar,
   className,
   emptyMessage,
-}: UnifiedDataTableProps<TData>) {
+}: DataTableEnhancedProps<TData>) {
   const { dictionary } = useDictionary();
   const [currentViewMode, setCurrentViewMode] = useState<ViewMode>(
     viewMode?.defaultMode || 'list'

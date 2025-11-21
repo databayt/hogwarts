@@ -2,9 +2,9 @@
 
 import { useState, useCallback } from "react";
 import { ColumnDef } from "@tanstack/react-table";
-import { DataTable } from "@/components/table/data-table/data-table";
-import { DataTableToolbar } from "@/components/table/data-table/data-table-toolbar";
-import { useDataTable } from "@/components/table/hooks/use-data-table";
+import { DataTable } from "@/components/table/data-table";
+import { DataTableToolbar } from "@/components/table/data-table-toolbar";
+import { useDataTable } from "@/components/table/use-data-table";
 import type { ReceiptRow } from "./columns";
 import { EmptyState } from "@/components/operator/common/empty-state";
 import { getReceipts } from "./actions";

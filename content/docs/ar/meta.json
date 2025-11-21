@@ -1,0 +1,15 @@
+{
+  "root": true,
+  "title": "التوثيق",
+  "pages": [
+    "index",
+    "getting-started",
+    "components",
+    "platform",
+    "api",
+    "architecture",
+    "deployment",
+    "contributing",
+    "changelog"
+  ]
+}

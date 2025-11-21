@@ -9,7 +9,7 @@ import {
   DataTableActionBar,
   DataTableActionBarAction,
   DataTableActionBarSelection,
-} from "@/components/table/data-table/data-table-action-bar";
+} from "@/components/table/data-table-action-bar";
 import {
   Select,
   SelectContent,

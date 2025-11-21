@@ -13,49 +13,33 @@ export function useActiveSection(): string {
   return useContext(ActiveSectionContext);
 }
 
+// Type definition for TOC items from Fumadocs
+export interface TOCItem {
+  title: string
+  url: string
+  depth: number
+}
+
+interface DocsTableOfContentsProps {
+  toc?: TOCItem[]
+}
+
 /**
  * Documentation Table of Contents component
+ * Works with Fumadocs-provided TOC data
  */
-export function DocsTableOfContents() {
+export function DocsTableOfContents({ toc = [] }: DocsTableOfContentsProps) {
   const [activeSection, setActiveSection] = useState<string>("");
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
-  const [headings, setHeadings] = useState<Array<{id: string, text: string, level: number}>>([]);
   const { open: sidebarOpen } = useSidebar();
   const navRef = useRef<HTMLDivElement>(null);
-  
-  // Extract headings from the page
-  useEffect(() => {
-    const extractHeadings = () => {
-      const headingElements = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
-      const headingsArray: Array<{id: string, text: string, level: number}> = [];
-      
-      headingElements.forEach((heading) => {
-        const level = parseInt(heading.tagName.charAt(1));
-        const text = heading.textContent || '';
-        let id = heading.id;
-        
-        // Generate ID if not present
-        if (!id) {
-          id = text.toLowerCase()
-            .replace(/[^\w\s-]/g, '')
-            .replace(/\s+/g, '-')
-            .trim();
-          heading.id = id;
-        }
-        
-        // Only include h2 and h3 for cleaner ToC
-        if (level === 2 || level === 3) {
-          headingsArray.push({ id, text, level });
-        }
-      });
-      
-      setHeadings(headingsArray);
-    };
 
-    // Run after a short delay to ensure MDX content is rendered
-    const timer = setTimeout(extractHeadings, 100);
-    return () => clearTimeout(timer);
-  }, []);
+  // Transform TOC items to include proper IDs
+  const headings = toc.map(item => ({
+    id: item.url.replace('#', ''),
+    text: item.title,
+    level: item.depth
+  }));
 
   // Track active section based on scroll position
   useEffect(() => {

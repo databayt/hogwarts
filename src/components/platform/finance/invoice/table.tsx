@@ -2,9 +2,9 @@
 
 import { useState, useCallback } from "react";
 import { ColumnDef } from "@tanstack/react-table";
-import { DataTable } from "@/components/table/data-table/data-table";
-import { DataTableToolbar } from "@/components/table/data-table/data-table-toolbar";
-import { useDataTable } from "@/components/table/hooks/use-data-table";
+import { DataTable } from "@/components/table/data-table";
+import { DataTableToolbar } from "@/components/table/data-table-toolbar";
+import { useDataTable } from "@/components/table/use-data-table";
 import type { InvoiceRow } from "./columns";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";

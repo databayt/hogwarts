@@ -1,9 +1,11 @@
 'use client';
 
 import { useCallback, useMemo, useState, useTransition } from 'react';
-import { useDataTable } from '@/components/table/hooks/use-data-table';
-import { UnifiedDataTable } from '@/components/table/UnifiedDataTable';
-import { CrudModal, CrudForm, useCrudModal } from '@/components/crud-modal';
+import { useDataTable } from '@/components/table/use-data-table';
+import { DataTableEnhanced } from '@/components/table/data-table-enhanced';
+import { CrudModal } from '@/components/atom/modal/crud-modal';
+import { CrudForm } from '@/components/atom/modal/crud-form';
+import { useCrudModal } from '@/components/atom/modal/use-crud-modal';
 import { Button } from '@/components/ui/button';
 import { Plus, Trash2 } from 'lucide-react';
 import { showCrudToast, confirmDelete } from '@/lib/toast-utils';
@@ -284,7 +286,7 @@ export function ListingTemplate<TData extends { id: string }, TFormValues extend
       </div>
 
       {/* Data Table */}
-      <UnifiedDataTable
+      <DataTableEnhanced
         table={table}
         toolbar={{
           searchKey: 'search',

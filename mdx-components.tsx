@@ -1,5 +1,82 @@
 import type { ComponentProps } from 'react'
+import Link from 'next/link'
+import Image from 'next/image'
 import { cn } from '@/lib/utils'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { ExternalLink, Info, AlertTriangle, CheckCircle, XCircle } from 'lucide-react'
+
+// Custom Cards component for documentation
+function Cards({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 my-6">
+      {children}
+    </div>
+  )
+}
+
+// Custom Card component for documentation
+function DocCard({ title, description, href }: { title: string; description: string; href: string }) {
+  return (
+    <Link href={href} className="no-underline">
+      <Card className="hover:shadow-lg transition-shadow">
+        <CardHeader>
+          <CardTitle className="text-lg">{title}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <CardDescription>{description}</CardDescription>
+        </CardContent>
+      </Card>
+    </Link>
+  )
+}
+
+// Custom Callout component
+function Callout({
+  type = 'info',
+  title,
+  children
+}: {
+  type?: 'info' | 'warning' | 'error' | 'success'
+  title?: string
+  children: React.ReactNode
+}) {
+  const icons = {
+    info: <Info className="h-4 w-4" />,
+    warning: <AlertTriangle className="h-4 w-4" />,
+    error: <XCircle className="h-4 w-4" />,
+    success: <CheckCircle className="h-4 w-4" />,
+  }
+
+  const variants = {
+    info: 'default' as const,
+    warning: 'default' as const,
+    error: 'destructive' as const,
+    success: 'default' as const,
+  }
+
+  return (
+    <Alert variant={variants[type]} className="my-4">
+      <div className="flex gap-2">
+        {icons[type]}
+        <div className="flex-1">
+          {title && <AlertTitle>{title}</AlertTitle>}
+          <AlertDescription>{children}</AlertDescription>
+        </div>
+      </div>
+    </Alert>
+  )
+}
+
+// Steps component for numbered instructions
+function Steps({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="[&>h3]:step steps mb-12 ml-4 border-l pl-6 [counter-reset:step]">
+      {children}
+    </div>
+  )
+}
 
 // This file is required to use MDX in `app` directory.
 export function useMDXComponents(components: Record<string, React.ComponentType<any>>): Record<string, React.ComponentType<any>> {
@@ -153,6 +230,19 @@ export function useMDXComponents(components: Record<string, React.ComponentType<
         {...props}
       />
     ),
+    // Custom components
+    Card: DocCard,
+    Cards,
+    Callout,
+    Steps,
+    Tabs,
+    TabsContent,
+    TabsList,
+    TabsTrigger,
+    Alert,
+    AlertDescription,
+    AlertTitle,
+    Image,
     ...components,
   }
 } 
