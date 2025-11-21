@@ -14,33 +14,44 @@ export const dynamic = "force-static"
 export const dynamicParams = false
 
 export function generateStaticParams() {
-  return source.generateParams()
+  // Generate params for both languages
+  const params = []
+
+  // Root docs pages for each language
+  params.push({ lang: 'en', slug: undefined })
+  params.push({ lang: 'ar', slug: undefined })
+
+  // Getting started pages
+  params.push({ lang: 'en', slug: ['getting-started'] })
+  params.push({ lang: 'ar', slug: ['getting-started'] })
+
+  return params
 }
 
 export async function generateMetadata(props: {
-  params: Promise<{ slug?: string[] }>
+  params: Promise<{ slug?: string[]; lang: string }>
 }): Promise<Metadata> {
   const params = await props.params
-  const page = source.getPage(params.slug)
+  const { lang, slug } = params
+
+  // Construct path: lang/slug or just lang for root
+  const fullPath = slug ? [lang, ...slug] : [lang]
+  const page = source.getPage(fullPath)
 
   if (!page) {
-    notFound()
+    return { title: 'Not Found' }
   }
 
   const doc = page.data
 
-  if (!doc.title || !doc.description) {
-    notFound()
-  }
-
   return {
-    title: doc.title,
-    description: doc.description,
+    title: doc.title || 'Documentation',
+    description: doc.description || '',
     openGraph: {
-      title: doc.title,
-      description: doc.description,
+      title: doc.title || 'Documentation',
+      description: doc.description || '',
       type: "article",
-      url: `https://ed.databayt.org${page.url}`,
+      url: `https://ed.databayt.org/${lang}/docs${slug ? '/' + slug.join('/') : ''}`,
     },
   }
 }
@@ -49,7 +60,11 @@ export default async function DocsPage(props: {
   params: Promise<{ slug?: string[]; lang: string }>
 }) {
   const params = await props.params
-  const page = source.getPage(params.slug)
+  const { lang, slug } = params
+
+  // Construct path: lang/slug or just lang for root
+  const fullPath = slug ? [lang, ...slug] : [lang]
+  const page = source.getPage(fullPath)
 
   if (!page) {
     notFound()

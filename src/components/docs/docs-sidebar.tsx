@@ -18,32 +18,24 @@ import {
 // Flat list of links without sections - exactly like codebase-underway
 const DOCS_LINKS = [
   { name: "Introduction", href: "/docs" },
-  { name: "Installation", href: "/docs/installation" },
-  { name: "Architecture", href: "/docs/architecture" },
-  { name: "Pattern", href: "/docs/pattern" },
-  { name: "Stack", href: "/docs/stack" },
-  { name: "Structure", href: "/docs/structure" },
-  { name: "Roadmap", href: "/docs/roadmap" },
-  { name: "Changelog", href: "/docs/changelog" },
-  { name: "Issues", href: "/docs/issues" },
-  { name: "Claude Code", href: "/docs/claude-code" },
-  { name: "Vibe Coding", href: "/docs/vibe-coding" },
-  { name: "Authentication", href: "/docs/authentication" },
-  { name: "Internationalization", href: "/docs/internationalization" },
-  { name: "Domain", href: "/docs/domain" },
-  { name: "Table", href: "/docs/table" },
-  { name: "Onboarding", href: "/docs/onboarding" },
-  { name: "ESLint", href: "/docs/eslint" },
-  { name: "Prettier", href: "/docs/prettier" },
-  { name: "Community", href: "/docs/community" },
-  { name: "Code of Conduct", href: "/docs/code-of-conduct" },
+  { name: "Getting Started", href: "/docs/getting-started" },
 ]
 
 export function DocsSidebar({
   tree,
+  lang = 'en',
   ...props
-}: React.ComponentProps<typeof Sidebar> & { tree: typeof source.pageTree }) {
+}: React.ComponentProps<typeof Sidebar> & {
+  tree: typeof source.pageTree
+  lang?: string
+}) {
   const pathname = usePathname()
+
+  // Add language prefix to hrefs
+  const localizedLinks = DOCS_LINKS.map(link => ({
+    ...link,
+    href: `/${lang}${link.href}`
+  }))
 
   return (
     <Sidebar
@@ -57,7 +49,7 @@ export function DocsSidebar({
           <SidebarGroup className="p-0">
             <SidebarGroupContent>
               <SidebarMenu>
-                {DOCS_LINKS.map(({ name, href }) => {
+                {localizedLinks.map(({ name, href }) => {
                   const isActive = pathname === href
 
                   return (
