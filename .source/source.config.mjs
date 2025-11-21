@@ -43,7 +43,6 @@ var source_config_default = defineConfig({
           transformers,
           defaultLang: "typescript",
           grid: true,
-          lineNumbers: true,
           // Add support for diff highlighting
           onVisitLine(node) {
             if (node.children.length === 0) {

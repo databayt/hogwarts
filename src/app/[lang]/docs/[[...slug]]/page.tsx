@@ -69,7 +69,9 @@ export default async function DocsPage({ params }: DocsPageProps) {
     notFound()
   }
 
-  const { title, description, body: Content, toc } = page.data
+  const { title, description } = page.data
+  const Content = (page.data as any).default || (page.data as any).Page
+  const toc = (page.data as any).toc
 
   // Find neighbor pages for navigation
   const neighbours = findNeighbour(url, lang as 'ar' | 'en')
