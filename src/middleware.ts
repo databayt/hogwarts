@@ -1,160 +1,76 @@
 import { NextResponse, NextRequest } from "next/server";
-import { authRoutes, publicRoutes, apiAuthPrefix } from "@/routes";
 import { i18n, type Locale } from "@/components/internationalization/config";
 
-// Lightweight locale detection (replaces negotiator + formatjs)
+/**
+ * Minimal middleware for Edge Function size optimization (<1MB requirement)
+ *
+ * Responsibilities:
+ * - Locale detection and routing
+ * - Subdomain detection and rewriting
+ *
+ * Auth protection moved to layout level to avoid heavy NextAuth bundle in Edge Function
+ */
+
+// Minimal locale detection
 function getLocale(request: NextRequest): Locale {
-  // 1. Check cookie first
   const cookieLocale = request.cookies.get('NEXT_LOCALE')?.value;
   if (cookieLocale && i18n.locales.includes(cookieLocale as Locale)) {
     return cookieLocale as Locale;
   }
 
-  // 2. Parse Accept-Language header (simple implementation)
   const acceptLanguage = request.headers.get('accept-language');
   if (acceptLanguage) {
-    const languages = acceptLanguage
-      .split(',')
-      .map(lang => lang.split(';')[0].trim().toLowerCase());
-
-    for (const lang of languages) {
-      const locale = lang.split('-')[0]; // Get base language (en-US -> en)
-      if (i18n.locales.includes(locale as Locale)) {
-        return locale as Locale;
-      }
+    const lang = acceptLanguage.split(',')[0].split(';')[0].split('-')[0].trim().toLowerCase();
+    if (i18n.locales.includes(lang as Locale)) {
+      return lang as Locale;
     }
   }
 
   return i18n.defaultLocale;
 }
 
-// Helper function to strip locale from pathname
-function stripLocaleFromPathname(pathname: string): string {
-  for (const locale of i18n.locales) {
-    if (pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`) {
-      return pathname.replace(`/${locale}`, '') || '/';
-    }
-  }
-  return pathname;
-}
-
-// Simple request ID generation
-function generateRequestId(): string {
-  return Math.random().toString(36).substring(2, 15);
-}
-
 export async function middleware(req: NextRequest) {
-  const requestId = generateRequestId();
   const url = req.nextUrl.clone();
   const host = req.headers.get("host") || "";
 
-  // Ignore static files and Next internals
+  // Skip static files
   if (
     url.pathname.startsWith("/_next") ||
-    url.pathname.startsWith(apiAuthPrefix) ||
+    url.pathname.startsWith("/api/auth") ||
     url.pathname.match(/\.(png|jpg|jpeg|gif|ico|svg|css|js|woff2?)$/)
   ) {
     return NextResponse.next();
   }
 
-  // Check if pathname already has a locale
-  const pathnameHasLocale = i18n.locales.some(
+  // Check if pathname has locale
+  const hasLocale = i18n.locales.some(
     (locale) => url.pathname.startsWith(`/${locale}/`) || url.pathname === `/${locale}`
   );
 
-  // Get the current locale
-  let currentLocale: Locale = i18n.defaultLocale;
-  if (pathnameHasLocale) {
-    currentLocale = url.pathname.split('/')[1] as Locale;
+  // Get current locale
+  let locale: Locale;
+  if (hasLocale) {
+    locale = url.pathname.split('/')[1] as Locale;
   } else {
-    currentLocale = getLocale(req);
+    locale = getLocale(req);
   }
 
-  // Get pathname without locale
-  const pathnameWithoutLocale = stripLocaleFromPathname(url.pathname);
-
-  // Determine if route is public
-  const isPublicRoute = publicRoutes.includes(pathnameWithoutLocale);
-  const isDocsRoute = pathnameWithoutLocale.startsWith('/docs');
-  const isAuthRoute = authRoutes.includes(pathnameWithoutLocale);
-  const isStreamPublicRoute = pathnameWithoutLocale.startsWith('/stream') || pathnameWithoutLocale.includes('/stream');
-
-  const needsAuth = !isPublicRoute && !isDocsRoute && !isStreamPublicRoute && !isAuthRoute;
-
-  // Handle auth routes - skip auth check for better performance
-  if (isAuthRoute) {
-    // Lazy load auth only when needed
-    const { auth } = await import("@/auth");
-    const session = await auth();
-    const isLoggedIn = !!session?.user;
-
-    if (isLoggedIn) {
-      const response = NextResponse.redirect(new URL(`/${currentLocale}/dashboard`, req.url));
-      response.headers.set('x-request-id', requestId);
-      return response;
-    }
-
-    if (!pathnameHasLocale) {
-      url.pathname = `/${currentLocale}${pathnameWithoutLocale}`;
-      const response = NextResponse.redirect(url);
-      response.headers.set('x-request-id', requestId);
-      return response;
-    }
-
-    const response = NextResponse.next();
-    response.headers.set('x-request-id', requestId);
-    return response;
-  }
-
-  // Handle public routes
-  if (!needsAuth) {
-    if (!pathnameHasLocale) {
-      url.pathname = `/${currentLocale}${pathnameWithoutLocale}`;
-      const response = NextResponse.redirect(url);
-      response.headers.set('x-request-id', requestId);
-      return response;
-    }
-
-    const response = NextResponse.next();
-    response.headers.set('x-request-id', requestId);
-    return response;
-  }
-
-  // Check authentication for protected routes - lazy load auth
-  const { auth } = await import("@/auth");
-  const session = await auth();
-  const isLoggedIn = !!session?.user;
-
-  // Redirect to login if not authenticated
-  if (!isLoggedIn) {
-    const callbackUrl = url.pathname + url.search;
-    const loginUrl = new URL(`/${currentLocale}/login`, req.url);
-    loginUrl.searchParams.set('callbackUrl', callbackUrl);
-    const response = NextResponse.redirect(loginUrl);
-    response.headers.set('x-request-id', requestId);
-    return response;
-  }
-
-  // Main domain handling
+  // Main domain
   if (host === "ed.databayt.org" || host === "localhost:3000" || host === "localhost") {
-    if (!pathnameHasLocale) {
-      url.pathname = `/${currentLocale}${url.pathname}`;
+    if (!hasLocale) {
+      url.pathname = `/${locale}${url.pathname}`;
       const response = NextResponse.redirect(url);
-      response.cookies.set('NEXT_LOCALE', currentLocale, {
-        maxAge: 365 * 24 * 60 * 60,
+      response.cookies.set('NEXT_LOCALE', locale, {
+        maxAge: 31536000,
         sameSite: 'lax',
         secure: process.env.NODE_ENV === 'production',
       });
-      response.headers.set('x-request-id', requestId);
       return response;
     }
-
-    const response = NextResponse.next();
-    response.headers.set('x-request-id', requestId);
-    return response;
+    return NextResponse.next();
   }
 
-  // Subdomain handling
+  // Subdomain detection
   let subdomain: string | null = null;
 
   if (host.endsWith(".databayt.org") && !host.startsWith("ed.")) {
@@ -169,43 +85,39 @@ export async function middleware(req: NextRequest) {
   }
 
   if (subdomain) {
-    if (!pathnameHasLocale) {
-      url.pathname = `/${currentLocale}${url.pathname}`;
+    if (!hasLocale) {
+      url.pathname = `/${locale}${url.pathname}`;
       const response = NextResponse.redirect(url);
-      response.cookies.set('NEXT_LOCALE', currentLocale, {
-        maxAge: 365 * 24 * 60 * 60,
+      response.cookies.set('NEXT_LOCALE', locale, {
+        maxAge: 31536000,
         sameSite: 'lax',
         secure: process.env.NODE_ENV === 'production',
       });
-      response.headers.set('x-request-id', requestId);
       return response;
     }
 
-    const pathWithoutLocale = stripLocaleFromPathname(url.pathname);
-    url.pathname = `/${currentLocale}/s/${subdomain}${pathWithoutLocale}`;
+    // Rewrite to tenant path
+    const pathWithoutLocale = url.pathname.replace(`/${locale}`, '') || '/';
+    url.pathname = `/${locale}/s/${subdomain}${pathWithoutLocale}`;
 
     const response = NextResponse.rewrite(url);
-    response.headers.set('x-request-id', requestId);
     response.headers.set('x-subdomain', subdomain);
     return response;
   }
 
-  // Default handling
-  if (!pathnameHasLocale) {
-    url.pathname = `/${currentLocale}${url.pathname}`;
+  // Default: add locale if missing
+  if (!hasLocale) {
+    url.pathname = `/${locale}${url.pathname}`;
     const response = NextResponse.redirect(url);
-    response.cookies.set('NEXT_LOCALE', currentLocale, {
-      maxAge: 365 * 24 * 60 * 60,
+    response.cookies.set('NEXT_LOCALE', locale, {
+      maxAge: 31536000,
       sameSite: 'lax',
       secure: process.env.NODE_ENV === 'production',
     });
-    response.headers.set('x-request-id', requestId);
     return response;
   }
 
-  const response = NextResponse.next();
-  response.headers.set('x-request-id', requestId);
-  return response;
+  return NextResponse.next();
 }
 
 export const config = {
