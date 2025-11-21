@@ -60,7 +60,6 @@ export default defineConfig({
           transformers,
           defaultLang: 'typescript',
           grid: true,
-          lineNumbers: true,
           // Add support for diff highlighting
           onVisitLine(node: any) {
             // Prevent lines from collapsing in `display: grid` mode, and
