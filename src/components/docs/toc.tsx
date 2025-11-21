@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import { useEffect, useState, createContext, useContext, useRef } from "react";
 import { useSidebar } from "@/components/ui/sidebar";
 
@@ -15,7 +16,7 @@ export function useActiveSection(): string {
 
 // Type definition for TOC items from Fumadocs
 export interface TOCItem {
-  title: string
+  title: React.ReactNode
   url: string
   depth: number
 }
@@ -37,7 +38,7 @@ export function DocsTableOfContents({ toc = [] }: DocsTableOfContentsProps) {
   // Transform TOC items to include proper IDs
   const headings = toc.map(item => ({
     id: item.url.replace('#', ''),
-    text: item.title,
+    text: typeof item.title === 'string' ? item.title : String(item.title || ''),
     level: item.depth
   }));
 
