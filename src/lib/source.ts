@@ -4,12 +4,7 @@ import { docs } from '../../.source'
 // Export loader with i18n support for Arabic and English
 export const { getPage, getPages, getLanguages } = loader({
   baseUrl: '/docs',
-  source: docs,
-  languages: [
-    { code: 'ar', name: 'العربية' },
-    { code: 'en', name: 'English' },
-  ],
-  defaultLanguage: 'ar',
+  source: docs.toFumadocsSource(),
 })
 
 // Export page tree for navigation - will be generated from actual content
