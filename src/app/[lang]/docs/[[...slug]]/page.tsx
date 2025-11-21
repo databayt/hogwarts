@@ -1,14 +1,12 @@
 import { notFound } from "next/navigation"
 import { DocsTableOfContents } from "@/components/docs/toc"
-import { DocsBreadcrumb } from "@/components/docs/docs-breadcrumb"
-import { DocsMobileNav } from "@/components/docs/docs-mobile-nav"
 import { source } from "@/lib/source"
-import { MDXContent } from "@/components/mdx/mdx-content"
 import { mdxComponents } from "../../../../../mdx-components"
 import type { Metadata } from "next"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import Link from "next/link"
-import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import { findNeighbour } from "fumadocs-core/page-tree"
 
 interface DocsPageProps {
   params: Promise<{
@@ -16,6 +14,10 @@ interface DocsPageProps {
     slug?: string[]
   }>
 }
+
+export const revalidate = false
+export const dynamic = "force-static"
+export const dynamicParams = false
 
 // Generate static params for all doc pages
 export function generateStaticParams() {
@@ -93,13 +95,6 @@ export default async function DocsPage({ params }: DocsPageProps) {
   const page = source.getPage(fullSlug)
 
   if (!page) {
-    // Debug: List available pages
-    const allPages = source.getPages()
-    console.log('Available pages:', allPages.map(p => ({
-      url: p.url,
-      slugs: p.slugs
-    })))
-    console.log('Attempted slug:', fullSlug)
     notFound()
   }
 
@@ -108,21 +103,10 @@ export default async function DocsPage({ params }: DocsPageProps) {
   const Content = (page.data as any).body || (page.data as any).default || (page.data as any).content
 
   // Find neighbor pages for navigation
-  // Filter pages by language first to avoid mixing Arabic and English pages
-  const allPages = source.getPages()
-  const langPages = allPages.filter(p => {
-    // Check if page belongs to current language
-    return p.slugs && p.slugs.length > 0 && p.slugs[0] === lang
-  })
-
-  const currentIndex = langPages.findIndex(p =>
-    p.slugs.join('/') === fullSlug.join('/')
-  )
+  const neighbours = findNeighbour(source.pageTree, page.url)
 
   // Transform URLs from /docs/en/... to /en/docs/...
   const transformUrl = (url: string) => {
-    // URL format from fumadocs: /docs/en or /docs/en/getting-started
-    // Transform to: /en/docs or /en/docs/getting-started
     if (url.startsWith('/docs/')) {
       const afterDocs = url.substring(6) // Remove '/docs/'
       const parts = afterDocs.split('/')
@@ -135,113 +119,128 @@ export default async function DocsPage({ params }: DocsPageProps) {
     return url
   }
 
-  const neighbours = {
-    previous: currentIndex > 0 ? {
-      name: langPages[currentIndex - 1].data.title || 'Previous',
-      url: transformUrl(langPages[currentIndex - 1].url)
+  const transformedNeighbours = {
+    previous: neighbours.previous ? {
+      ...neighbours.previous,
+      url: transformUrl(neighbours.previous.url)
     } : undefined,
-    next: currentIndex < langPages.length - 1 ? {
-      name: langPages[currentIndex + 1].data.title || 'Next',
-      url: transformUrl(langPages[currentIndex + 1].url)
+    next: neighbours.next ? {
+      ...neighbours.next,
+      url: transformUrl(neighbours.next.url)
     } : undefined,
   }
 
   const isRTL = lang === 'ar'
 
   return (
-    <div className="container mx-auto">
-      <div className="flex-1 md:grid md:grid-cols-[1fr_200px] md:gap-6 lg:grid-cols-[1fr_240px] lg:gap-10">
-        <div className="flex flex-col">
-          {/* Breadcrumb */}
-          <DocsBreadcrumb
-            segments={[
-              { title: isRTL ? 'التوثيق' : 'Docs', href: `/${lang}/docs` },
-              ...segments.map((s, i) => ({
-                title: s.replace(/-/g, ' '),
-                href: `/${lang}/docs/${segments.slice(0, i + 1).join('/')}`,
-              })),
-            ]}
-          />
-
-          {/* Page Title and Description */}
-          <div className="space-y-2 py-6">
-            <h1 className="scroll-m-20 text-3xl font-bold tracking-tight lg:text-4xl">
-              {title}
-            </h1>
-            {description && (
-              <p className="text-lg text-muted-foreground">{description}</p>
-            )}
+    <div className="flex items-stretch text-[1.05rem] sm:text-[15px] xl:w-full">
+      <div className="flex min-w-0 flex-1 flex-col">
+        <div className="h-(--top-spacing) shrink-0" />
+        <div className="mx-auto flex w-full max-w-2xl min-w-0 flex-1 flex-col gap-8 px-4 py-6 text-neutral-800 md:px-0 lg:py-8 dark:text-neutral-300">
+          <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2">
+              <div className="flex items-start justify-between">
+                <h1 className="scroll-m-20 text-4xl font-semibold tracking-tight sm:text-3xl xl:text-4xl">
+                  {title}
+                </h1>
+                <div className="docs-nav bg-background/80 border-border/50 fixed inset-x-0 bottom-0 isolate z-50 flex items-center gap-2 border-t px-6 py-4 backdrop-blur-sm sm:static sm:z-0 sm:border-t-0 sm:bg-transparent sm:px-0 sm:pt-1.5 sm:backdrop-blur-none">
+                  {transformedNeighbours.previous && (
+                    <Button
+                      variant="secondary"
+                      size="icon"
+                      className="extend-touch-target ml-auto size-8 shadow-none md:size-7"
+                      asChild
+                    >
+                      <Link href={transformedNeighbours.previous.url}>
+                        {isRTL ? <ChevronRight /> : <ChevronLeft />}
+                        <span className="sr-only">Previous</span>
+                      </Link>
+                    </Button>
+                  )}
+                  {transformedNeighbours.next && (
+                    <Button
+                      variant="secondary"
+                      size="icon"
+                      className="extend-touch-target size-8 shadow-none md:size-7"
+                      asChild
+                    >
+                      <Link href={transformedNeighbours.next.url}>
+                        <span className="sr-only">Next</span>
+                        {isRTL ? <ChevronLeft /> : <ChevronRight />}
+                      </Link>
+                    </Button>
+                  )}
+                </div>
+              </div>
+              {description && (
+                <p className="text-muted-foreground text-[1.05rem] text-balance sm:text-base">
+                  {description}
+                </p>
+              )}
+            </div>
           </div>
-
-          {/* MDX Content */}
-          <div className="prose prose-slate dark:prose-invert max-w-none">
+          <div className="w-full flex-1 *:data-[slot=alert]:first:mt-0">
             {Content ? (
-              <MDXContent>
-                {typeof Content === 'function' ? <Content components={mdxComponents} /> : Content}
-              </MDXContent>
+              typeof Content === 'function' ? <Content components={mdxComponents} /> : Content
             ) : (
               <div className="text-muted-foreground">
                 {isRTL ? 'محتوى الصفحة غير متوفر' : 'Page content not available'}
               </div>
             )}
           </div>
-
-          {/* Navigation */}
-          <div className="flex flex-row items-center justify-between py-8">
-            {neighbours.previous && (
-              <Link
-                href={neighbours.previous.url}
-                className={cn(
-                  "inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground",
-                  isRTL && "flex-row-reverse"
-                )}
-              >
-                {isRTL ? (
-                  <>
-                    <span>{neighbours.previous.name}</span>
-                    <ChevronRight className="h-4 w-4" />
-                  </>
-                ) : (
-                  <>
-                    <ChevronLeft className="h-4 w-4" />
-                    <span>{neighbours.previous.name}</span>
-                  </>
-                )}
-              </Link>
-            )}
-            {neighbours.next && (
-              <Link
-                href={neighbours.next.url}
-                className={cn(
-                  "inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground",
-                  isRTL && "flex-row-reverse",
-                  !neighbours.previous && "ml-auto"
-                )}
-              >
-                {isRTL ? (
-                  <>
-                    <ChevronLeft className="h-4 w-4" />
-                    <span>{neighbours.next.name}</span>
-                  </>
-                ) : (
-                  <>
-                    <span>{neighbours.next.name}</span>
-                    <ChevronRight className="h-4 w-4" />
-                  </>
-                )}
-              </Link>
-            )}
-          </div>
         </div>
-
-        {/* Table of Contents - Desktop */}
-        <div className="hidden md:block">
-          <DocsTableOfContents toc={toc} />
+        <div className="mx-auto hidden h-16 w-full max-w-2xl items-center gap-2 px-4 sm:flex md:px-0">
+          {transformedNeighbours.previous && (
+            <Button
+              variant="secondary"
+              size="sm"
+              asChild
+              className="shadow-none"
+            >
+              <Link href={transformedNeighbours.previous.url}>
+                {isRTL ? (
+                  <>
+                    {transformedNeighbours.previous.name} <ChevronRight />
+                  </>
+                ) : (
+                  <>
+                    <ChevronLeft /> {transformedNeighbours.previous.name}
+                  </>
+                )}
+              </Link>
+            </Button>
+          )}
+          {transformedNeighbours.next && (
+            <Button
+              variant="secondary"
+              size="sm"
+              className="ml-auto shadow-none"
+              asChild
+            >
+              <Link href={transformedNeighbours.next.url}>
+                {isRTL ? (
+                  <>
+                    <ChevronLeft /> {transformedNeighbours.next.name}
+                  </>
+                ) : (
+                  <>
+                    {transformedNeighbours.next.name} <ChevronRight />
+                  </>
+                )}
+              </Link>
+            </Button>
+          )}
         </div>
       </div>
-
-      {/* Mobile Bottom Navigation */}
-      <DocsMobileNav neighbours={neighbours} lang={lang} />
+      <div className="sticky top-[calc(var(--header-height)+1px)] z-30 ml-auto hidden h-[calc(100svh-var(--footer-height)+2rem)] w-72 flex-col gap-4 overflow-hidden overscroll-none pb-8 xl:flex">
+        <div className="h-(--top-spacing) shrink-0" />
+        {toc?.length ? (
+          <div className="no-scrollbar overflow-y-auto px-8">
+            <DocsTableOfContents toc={toc} />
+            <div className="h-12" />
+          </div>
+        ) : null}
+      </div>
     </div>
   )
 }
