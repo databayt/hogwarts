@@ -19,8 +19,12 @@ interface DocsPageProps {
 // Generate static params for all doc pages
 export async function generateStaticParams() {
   return [
+    // Root docs pages
     { lang: 'ar', slug: undefined },
     { lang: 'en', slug: undefined },
+    // Getting started pages
+    { lang: 'ar', slug: ['getting-started'] },
+    { lang: 'en', slug: ['getting-started'] },
     // Add more pages as they are created
   ]
 }
@@ -58,19 +62,36 @@ export default async function DocsPage({ params }: DocsPageProps) {
   const pagePath = segments.length > 0 ? segments.join('/') : 'index'
   const url = `/docs/${segments.join('/')}`
 
-  // Get the page content - try with language prefix
-  let page = getPage([lang, pagePath])
+  // Try different path combinations to find the page
+  let page = null
 
-  // If not found, try without language prefix (for backward compatibility)
-  if (!page) {
-    page = getPage(segments)
+  // Try with full path including language and segments
+  if (segments.length > 0) {
+    page = getPage([lang, ...segments])
+  } else {
+    // For root docs page, try with language and 'index'
+    page = getPage([lang, 'index'])
+  }
+
+  // If not found, try alternative paths
+  if (!page && segments.length === 0) {
+    page = getPage(['index']) // Try just index
   }
 
   if (!page) {
+    page = getPage(segments) // Try without language
+  }
+
+  if (!page) {
+    // As a fallback, list all available pages for debugging
+    const allPages = getPages()
+    console.log('Available pages:', allPages.map(p => p.url))
+    console.log('Attempted path:', [lang, ...segments])
     notFound()
   }
 
-  const { title, description, toc } = page.data
+  const { title, description } = page.data
+  const toc = (page.data as any).toc || []
   // MDX content can be in different properties based on how it's exported
   const Content = (page.data as any).body || (page.data as any).default || (page.data as any).content
 
