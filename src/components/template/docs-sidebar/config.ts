@@ -36,6 +36,17 @@ export const docsConfig: DocsConfig = {
     },
   ],
   sidebarNav: [
+    // ============ GETTING STARTED ============
+    {
+      title: "Getting Started",
+      items: [
+        { title: "Overview", href: "/docs/getting-started", items: [] },
+        { title: "Understanding Hogwarts", href: "/docs/getting-started/understanding", items: [] },
+        { title: "Local Setup", href: "/docs/getting-started/local-setup", items: [] },
+        { title: "Contributing", href: "/docs/getting-started/contributing", items: [] },
+      ],
+    },
+
     // ============ ESSENTIAL DOCUMENTATION ============
     {
       title: "Documentation",
