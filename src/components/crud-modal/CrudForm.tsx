@@ -68,7 +68,8 @@ export function CrudForm<TFormValues extends FieldValues = FieldValues>({
   const { dictionary } = useDictionary();
 
   const form = useForm<TFormValues>({
-    resolver: zodResolver(schema) as any,
+    // @ts-expect-error - zodResolver type inference issue with generic schemas
+    resolver: zodResolver(schema),
     defaultValues: (defaultValues || {}) as any,
   });
 
