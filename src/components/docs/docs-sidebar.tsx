@@ -1,174 +1,83 @@
 "use client"
 
-import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { cn } from "@/lib/utils"
+
+import type { source } from "@/lib/source"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import {
   Sidebar,
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarMenu,
+  SidebarMenuButton,
   SidebarMenuItem,
-  SidebarMenuButton
 } from "@/components/ui/sidebar"
-import { Badge } from "@/components/ui/badge"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { ChevronRight } from "lucide-react"
 
-interface PageTreeNode {
-  type: 'page' | 'folder' | 'separator'
-  name: string
-  url?: string
-  children?: PageTreeNode[]
-  isNew?: boolean
-}
-
-interface DocsSidebarProps {
-  tree: {
-    name: string
-    children: PageTreeNode[]
-  }
-  lang: 'ar' | 'en'
-}
-
-// Top-level sections for quick navigation
-const TOP_LEVEL_SECTIONS = {
-  ar: [
-    { name: "البداية", href: "/docs" },
-    { name: "المكونات", href: "/docs/components" },
-    { name: "المنصة", href: "/docs/platform" },
-    { name: "واجهة البرمجة", href: "/docs/api" },
-    { name: "البنية", href: "/docs/architecture" },
-    { name: "النشر", href: "/docs/deployment" },
-  ],
-  en: [
-    { name: "Get Started", href: "/docs" },
-    { name: "Components", href: "/docs/components" },
-    { name: "Platform", href: "/docs/platform" },
-    { name: "API", href: "/docs/api" },
-    { name: "Architecture", href: "/docs/architecture" },
-    { name: "Deployment", href: "/docs/deployment" },
-  ],
-}
-
-// Pages that should show a "New" badge
-const PAGES_NEW = [
-  "/docs/components/drawer",
-  "/docs/components/pagination",
-  "/docs/components/breadcrumb",
+// Flat list of links without sections - exactly like codebase-underway
+const DOCS_LINKS = [
+  { name: "Introduction", href: "/docs" },
+  { name: "Installation", href: "/docs/installation" },
+  { name: "Architecture", href: "/docs/architecture" },
+  { name: "Pattern", href: "/docs/pattern" },
+  { name: "Stack", href: "/docs/stack" },
+  { name: "Structure", href: "/docs/structure" },
+  { name: "Roadmap", href: "/docs/roadmap" },
+  { name: "Changelog", href: "/docs/changelog" },
+  { name: "Issues", href: "/docs/issues" },
+  { name: "Claude Code", href: "/docs/claude-code" },
+  { name: "Vibe Coding", href: "/docs/vibe-coding" },
+  { name: "Authentication", href: "/docs/authentication" },
+  { name: "Internationalization", href: "/docs/internationalization" },
+  { name: "Domain", href: "/docs/domain" },
+  { name: "Table", href: "/docs/table" },
+  { name: "Onboarding", href: "/docs/onboarding" },
+  { name: "ESLint", href: "/docs/eslint" },
+  { name: "Prettier", href: "/docs/prettier" },
+  { name: "Community", href: "/docs/community" },
+  { name: "Code of Conduct", href: "/docs/code-of-conduct" },
 ]
 
-export function DocsSidebar({ tree, lang }: DocsSidebarProps) {
+export function DocsSidebar({
+  tree,
+  ...props
+}: React.ComponentProps<typeof Sidebar> & { tree: typeof source.pageTree }) {
   const pathname = usePathname()
-  const isRTL = lang === 'ar'
-  const sections = TOP_LEVEL_SECTIONS[lang]
-
-  const isActive = (href: string) => {
-    const fullHref = `/${lang}${href}`
-    if (fullHref === `/${lang}/docs`) {
-      return pathname === fullHref
-    }
-    return pathname.startsWith(fullHref)
-  }
-
-  const renderNode = (node: PageTreeNode, depth = 0) => {
-    if (node.type === 'separator') {
-      return <hr key={node.name} className="my-2" />
-    }
-
-    const href = node.url ? `/${lang}${node.url}` : undefined
-    const active = href ? isActive(node.url!) : false
-
-    if (node.type === 'folder') {
-      return (
-        <SidebarGroup key={node.name}>
-          {depth === 0 && (
-            <SidebarGroupLabel className="text-xs font-medium text-muted-foreground">
-              {node.name}
-            </SidebarGroupLabel>
-          )}
-          {node.children && (
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {node.children.map(child => renderNode(child, depth + 1))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          )}
-        </SidebarGroup>
-      )
-    }
-
-    if (node.type === 'page' && href) {
-      const isNew = PAGES_NEW.includes(node.url || '')
-
-      return (
-        <SidebarMenuItem key={node.url}>
-          <SidebarMenuButton
-            asChild
-            className={cn(
-              "relative w-full justify-start",
-              active && "bg-secondary font-medium text-foreground",
-              isRTL && "flex-row-reverse text-right"
-            )}
-          >
-            <Link href={href}>
-              {isRTL && <ChevronRight className="ml-auto h-4 w-4 opacity-50" />}
-              <span className={cn("truncate", isRTL && "mr-2")}>{node.name}</span>
-              {isNew && (
-                <Badge variant="secondary" className={cn("ml-2 h-5 px-1.5 text-[10px] font-medium", isRTL && "mr-2 ml-0")}>
-                  {lang === 'ar' ? 'جديد' : 'New'}
-                </Badge>
-              )}
-              {!isRTL && active && <ChevronRight className="ml-auto h-4 w-4 opacity-50" />}
-            </Link>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-      )
-    }
-
-    return null
-  }
 
   return (
-    <Sidebar className="sticky top-0 z-30 hidden h-screen w-full shrink-0 md:sticky md:block">
-      <ScrollArea className="h-full pb-12">
-        <SidebarContent>
-          {/* Quick Navigation */}
-          <SidebarGroup>
-            <SidebarGroupLabel className="text-xs font-medium text-muted-foreground">
-              {lang === 'ar' ? 'التنقل السريع' : 'Quick Navigation'}
-            </SidebarGroupLabel>
+    <Sidebar
+      className="sticky top-[calc(var(--header-height)+1px)] z-30 hidden h-[calc(100svh-var(--footer-height)-4rem)] overscroll-none bg-transparent lg:flex"
+      collapsible="none"
+      {...props}
+    >
+      <SidebarContent className="flex flex-col overflow-hidden">
+        <div className="from-background via-background/80 to-background/50 sticky top-0 z-10 h-8 shrink-0 bg-gradient-to-b blur-xs" />
+        <ScrollArea className="flex-1">
+          <SidebarGroup className="p-0">
             <SidebarGroupContent>
               <SidebarMenu>
-                {sections.map(section => (
-                  <SidebarMenuItem key={section.href}>
-                    <SidebarMenuButton
-                      asChild
-                      className={cn(
-                        "relative w-full justify-start",
-                        isActive(section.href) && "bg-secondary font-medium text-foreground",
-                        isRTL && "flex-row-reverse text-right"
-                      )}
-                    >
-                      <Link href={`/${lang}${section.href}`}>
-                        {isRTL && <ChevronRight className="ml-auto h-4 w-4 opacity-50" />}
-                        <span className={cn("truncate", isRTL && "mr-2")}>{section.name}</span>
-                        {!isRTL && isActive(section.href) && <ChevronRight className="ml-auto h-4 w-4 opacity-50" />}
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
+                {DOCS_LINKS.map(({ name, href }) => {
+                  const isActive = pathname === href
+
+                  return (
+                    <SidebarMenuItem key={href}>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={isActive}
+                        className="data-[active=true]:bg-accent data-[active=true]:border-accent relative h-[30px] w-full border border-transparent text-[0.8rem] font-medium px-2"
+                      >
+                        <Link href={href}>{name}</Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  )
+                })}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
-
-          {/* Page Tree */}
-          {tree.children?.map(node => renderNode(node))}
-        </SidebarContent>
-      </ScrollArea>
+        </ScrollArea>
+        <div className="from-background via-background/80 to-background/50 sticky bottom-0 z-10 h-16 shrink-0 bg-gradient-to-t blur-xs" />
+      </SidebarContent>
     </Sidebar>
   )
 }

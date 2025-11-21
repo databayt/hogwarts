@@ -101,6 +101,7 @@
     "culori": "^4.0.2",
     "date-fns": "^4.1.0",
     "framer-motion": "^12.23.12",
+    "front-matter": "^4.0.2",
     "fumadocs-core": "16.0.5",
     "fumadocs-mdx": "13.0.2",
     "fumadocs-ui": "16.0.5",

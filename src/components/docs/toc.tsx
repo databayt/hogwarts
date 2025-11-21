@@ -1,148 +1,123 @@
-"use client";
+"use client"
 
-import * as React from "react";
-import { useEffect, useState, createContext, useContext, useRef } from "react";
-import { useSidebar } from "@/components/ui/sidebar";
+import * as React from "react"
+import { Menu } from "lucide-react"
+import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
-// Context for active sections
-const ActiveSectionContext = createContext<string>("");
+function useActiveItem(itemIds: string[]) {
+  const [activeId, setActiveId] = React.useState<string | null>(null)
 
-/**
- * Hook to get active section
- */
-export function useActiveSection(): string {
-  return useContext(ActiveSectionContext);
-}
-
-// Type definition for TOC items from Fumadocs
-export interface TOCItem {
-  title: React.ReactNode
-  url: string
-  depth: number
-}
-
-interface DocsTableOfContentsProps {
-  toc?: TOCItem[]
-}
-
-/**
- * Documentation Table of Contents component
- * Works with Fumadocs-provided TOC data
- */
-export function DocsTableOfContents({ toc = [] }: DocsTableOfContentsProps) {
-  const [activeSection, setActiveSection] = useState<string>("");
-  const [hoveredItem, setHoveredItem] = useState<string | null>(null);
-  const { open: sidebarOpen } = useSidebar();
-  const navRef = useRef<HTMLDivElement>(null);
-
-  // Transform TOC items to include proper IDs
-  const headings = toc.map(item => ({
-    id: item.url.replace('#', ''),
-    text: typeof item.title === 'string' ? item.title : String(item.title || ''),
-    level: item.depth
-  }));
-
-  // Track active section based on scroll position
-  useEffect(() => {
-    const handleScroll = () => {
-      const scrollPosition = window.scrollY + 100; // Offset for better UX
-      let currentActiveSection = "";
-      
-      // Find active section
-      headings.forEach((heading) => {
-        const element = document.getElementById(heading.id);
-        if (element) {
-          const offsetTop = element.offsetTop;
-          if (scrollPosition >= offsetTop) {
-            currentActiveSection = heading.id;
+  React.useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            setActiveId(entry.target.id)
           }
         }
-      });
-      
-      setActiveSection(currentActiveSection);
-    };
+      },
+      { rootMargin: "0% 0% -80% 0%" }
+    )
 
-    window.addEventListener('scroll', handleScroll);
-    handleScroll(); // Check position on initial load
-    
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-    };
-  }, [headings]);
-
-  // Auto-scroll ToC to keep active section visible
-  useEffect(() => {
-    if (activeSection && navRef.current) {
-      const activeButton = navRef.current.querySelector(`button[data-heading-id="${activeSection}"]`);
-      if (activeButton) {
-        activeButton.scrollIntoView({
-          behavior: 'smooth',
-          block: 'center'
-        });
+    for (const id of itemIds ?? []) {
+      const element = document.getElementById(id)
+      if (element) {
+        observer.observe(element)
       }
     }
-  }, [activeSection]);
 
-  const scrollToSection = (headingId: string) => {
-    const element = document.getElementById(headingId);
-    if (element) {
-      const yOffset = -80; // Account for fixed header
-      const yPosition = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
-      window.scrollTo({ top: yPosition, behavior: 'smooth' });
+    return () => {
+      for (const id of itemIds ?? []) {
+        const element = document.getElementById(id)
+        if (element) {
+          observer.unobserve(element)
+        }
+      }
     }
-  };
+  }, [itemIds])
 
-  // Hide on mobile and when sidebar is open on medium screens
-  if (headings.length === 0) return null;
+  return activeId
+}
+
+export function DocsTableOfContents({
+  toc,
+  variant = "list",
+  className,
+}: {
+  toc?: {
+    title?: React.ReactNode
+    url: string
+    depth: number
+  }[]
+  variant?: "dropdown" | "list"
+  className?: string
+}) {
+  const [open, setOpen] = React.useState(false)
+  const itemIds = React.useMemo(
+    () => toc?.map((item) => item.url.replace("#", "")) ?? [],
+    [toc]
+  )
+  const activeHeading = useActiveItem(itemIds)
+
+  if (!toc?.length) {
+    return null
+  }
+
+  if (variant === "dropdown") {
+    return (
+      <DropdownMenu open={open} onOpenChange={setOpen}>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="outline"
+            size="sm"
+            className={cn("h-8 md:h-7", className)}
+          >
+            <Menu /> On This Page
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent
+          align="start"
+          className="no-scrollbar max-h-[70svh]"
+        >
+          {toc.map((item) => (
+            <DropdownMenuItem
+              key={item.url}
+              asChild
+              onClick={() => setOpen(false)}
+              data-depth={item.depth}
+              className="data-[depth=3]:pl-6 data-[depth=4]:pl-8"
+            >
+              <a href={item.url}>{item.title}</a>
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    )
+  }
 
   return (
-    <div 
-      className={`hidden xl:block fixed top-20 right-1 w-44 z-20 ${
-        sidebarOpen ? 'hidden' : 'lg:block'
-      }`}
-    >
-      <ActiveSectionContext.Provider value={activeSection}>
-        <div className="relative pl-1">
-          {/* Thinner vertical line aligned with left border */}
-          <div className="absolute left-[4px] top-8 bottom-0 w-[0.5px] bg-border/70"></div>
-          
-          <div className="flex gap-2 items-center pb-2">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-text size-4">
-              <path d="M17 6.1H3"></path>
-              <path d="M21 12.1H3"></path>
-              <path d="M15.1 18H3"></path>
-            </svg>
-            <p className="text-sm pl-0 m-0">On This Page</p>
-          </div>
-          
-          <nav ref={navRef} className="mt-2 max-h-[calc(100vh-180px)] overflow-hidden pr-2">
-            {headings.map((heading) => (
-              <div 
-                key={heading.id}
-                className="relative" 
-                onMouseEnter={() => setHoveredItem(heading.id)}
-                onMouseLeave={() => setHoveredItem(null)}
-              >
-                <button 
-                  data-heading-id={heading.id}
-                  onClick={() => scrollToSection(heading.id)}
-                  className={`w-full text-sm text-left border-l-2 transition-all duration-300 ${
-                    heading.level === 3 ? 'pl-6 py-1' : 'px-4 py-1.5'
-                  } ${
-                    activeSection === heading.id
-                      ? "text-primary border-primary" 
-                      : hoveredItem === heading.id
-                        ? "border-primary/40 text-foreground/90"
-                        : "border-transparent text-foreground/70 hover:text-foreground/90 hover:border-border"
-                  }`}
-                >
-                  {heading.text}
-                </button>
-              </div>
-            ))}
-          </nav>
-        </div>
-      </ActiveSectionContext.Provider>
+    <div className={cn("flex flex-col gap-2 p-4 pt-0 text-sm", className)}>
+      <p className="text-muted-foreground bg-background sticky top-0 h-6 text-xs">
+        On This Page
+      </p>
+      {toc.map((item) => (
+        <a
+          key={item.url}
+          href={item.url}
+          className="text-muted-foreground hover:text-foreground data-[active=true]:text-foreground text-[0.8rem] no-underline transition-colors data-[depth=3]:pl-4 data-[depth=4]:pl-6"
+          data-active={item.url === `#${activeHeading}`}
+          data-depth={item.depth}
+        >
+          {item.title}
+        </a>
+      ))}
     </div>
-  );
+  )
 }
