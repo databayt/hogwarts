@@ -10,9 +10,10 @@ import { showCrudToast, confirmDelete } from '@/lib/toast-utils';
 import { useDictionary } from '@/components/internationalization/use-dictionary';
 import type { ColumnDef } from '@tanstack/react-table';
 import type { z } from 'zod';
+import type { FieldValues } from 'react-hook-form';
 import { cn } from '@/lib/utils';
 
-export interface ListingConfig<TData, TSchema extends z.ZodType = z.ZodType> {
+export interface ListingConfig<TData, TFormValues extends FieldValues = FieldValues> {
   /** Entity name for display */
   entityName: string;
   /** Entity path in dictionary */
@@ -20,15 +21,15 @@ export interface ListingConfig<TData, TSchema extends z.ZodType = z.ZodType> {
   /** Column definitions */
   columns: ColumnDef<TData>[];
   /** Validation schema for forms */
-  schema?: TSchema;
+  schema?: z.ZodType<TFormValues>;
   /** Server actions */
   actions: {
     /** Fetch initial data */
     fetchData?: (params?: any) => Promise<TData[]>;
     /** Create new item */
-    create?: (data: z.infer<TSchema>) => Promise<any>;
+    create?: (data: TFormValues) => Promise<any>;
     /** Update existing item */
-    update?: (id: string, data: z.infer<TSchema>) => Promise<any>;
+    update?: (id: string, data: TFormValues) => Promise<any>;
     /** Delete item */
     delete?: (id: string) => Promise<any>;
     /** Export data */
@@ -39,9 +40,9 @@ export interface ListingConfig<TData, TSchema extends z.ZodType = z.ZodType> {
     /** Render form fields */
     renderFields?: (form: any) => React.ReactNode;
     /** Default values for create */
-    defaultValues?: Partial<z.infer<TSchema>>;
+    defaultValues?: Partial<TFormValues>;
     /** Transform data before submit */
-    transformData?: (data: z.infer<TSchema>, mode: 'create' | 'edit') => z.infer<TSchema>;
+    transformData?: (data: TFormValues, mode: 'create' | 'edit') => TFormValues;
   };
   /** Table configuration */
   table?: {
@@ -103,23 +104,23 @@ export interface ListingConfig<TData, TSchema extends z.ZodType = z.ZodType> {
   };
 }
 
-export interface ListingTemplateProps<TData, TSchema extends z.ZodType = z.ZodType> {
+export interface ListingTemplateProps<TData, TFormValues extends FieldValues = FieldValues> {
   /** Initial data */
   initialData: TData[];
   /** Listing configuration */
-  config: ListingConfig<TData, TSchema>;
+  config: ListingConfig<TData, TFormValues>;
   /** Search params for filters */
   searchParams?: Record<string, any>;
   /** Additional class names */
   className?: string;
 }
 
-export function ListingTemplate<TData extends { id: string }, TSchema extends z.ZodType = z.ZodType>({
+export function ListingTemplate<TData extends { id: string }, TFormValues extends FieldValues = FieldValues>({
   initialData,
   config,
   searchParams,
   className,
-}: ListingTemplateProps<TData, TSchema>) {
+}: ListingTemplateProps<TData, TFormValues>) {
   const { dictionary } = useDictionary();
   const [isPending, startTransition] = useTransition();
   const [data, setData] = useState<TData[]>(initialData);
@@ -237,7 +238,7 @@ export function ListingTemplate<TData extends { id: string }, TSchema extends z.
   }, [config.actions, dictionary, refreshData]);
 
   // Handle form submit
-  const handleFormSubmit = useCallback(async (formData: z.infer<TSchema>) => {
+  const handleFormSubmit = useCallback(async (formData: TFormValues) => {
     const mode = crudModal.isCreate ? 'create' : 'edit';
     let processedData = formData;
 

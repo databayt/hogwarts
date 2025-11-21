@@ -40,10 +40,9 @@ export const docsConfig: DocsConfig = {
     {
       title: "Getting Started",
       items: [
-        { title: "Overview", href: "/docs/getting-started", items: [] },
-        { title: "Understanding Hogwarts", href: "/docs/getting-started/understanding", items: [] },
-        { title: "Local Setup", href: "/docs/getting-started/local-setup", items: [] },
-        { title: "Contributing", href: "/docs/getting-started/contributing", items: [] },
+        { title: "Overview", href: "/docs/get-started", items: [] },
+        { title: "Local Setup", href: "/docs/local-setup", items: [] },
+        { title: "Contributing", href: "/docs/contributing", items: [] },
       ],
     },
 

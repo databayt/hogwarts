@@ -292,9 +292,9 @@ export function StudentsUnifiedTable({
 
   // Export handler
   const handleExport = useCallback(async () => {
-    const csvData = await getStudentsCSV();
-    return csvData;
-  }, []);
+    // Return all student data for export
+    return data;
+  }, [data]);
 
   // Grid card renderer
   const renderStudentCard = useCallback((student: StudentRow) => {
@@ -354,7 +354,7 @@ export function StudentsUnifiedTable({
                 const confirmed = await confirmDelete(`Delete ${student.name}?`);
                 if (confirmed) {
                   await deleteStudent({ id: student.id });
-                  showDelete();
+                  showDelete('Student deleted');
                   refreshData();
                 }
               }}
@@ -368,7 +368,7 @@ export function StudentsUnifiedTable({
   }, [crudModal, refreshData]);
 
   // Initialize data table
-  const table = useDataTable<StudentRow>({
+  const { table } = useDataTable<StudentRow>({
     data,
     columns,
     pageCount: 1,
@@ -388,7 +388,7 @@ export function StudentsUnifiedTable({
         table={table}
         toolbar={{
           searchKey: 'search',
-          searchPlaceholder: dictionary?.search || 'Search students...',
+          searchPlaceholder: 'Search students...',
           showViewToggle: true,
           showExport: true,
           customActions: (
@@ -406,7 +406,7 @@ export function StudentsUnifiedTable({
               />
               <Button onClick={crudModal.openCreate}>
                 <Plus className="h-4 w-4 me-2" />
-                {dictionary?.createStudent || 'Create Student'}
+                Create Student
               </Button>
             </div>
           ),
@@ -425,7 +425,7 @@ export function StudentsUnifiedTable({
           interval: 30000,
           onRefresh: refreshData,
         }}
-        emptyMessage={dictionary?.noStudents || 'No students found'}
+        emptyMessage="No students found"
       />
 
       {/* CRUD Modal */}
@@ -434,8 +434,8 @@ export function StudentsUnifiedTable({
         onOpenChange={open => !open && crudModal.close()}
         title={
           crudModal.isCreate
-            ? dictionary?.createStudent || 'Create Student'
-            : dictionary?.editStudent || 'Edit Student'
+            ? 'Create Student'
+            : 'Edit Student'
         }
         loading={crudModal.state.loading || isPending}
         autoCloseDelay={500}
@@ -444,7 +444,6 @@ export function StudentsUnifiedTable({
       >
         <StudentCreateForm
           dictionary={dictionary}
-          student={crudModal.state.data}
           onSuccess={() => {
             crudModal.handleSuccess();
           }}

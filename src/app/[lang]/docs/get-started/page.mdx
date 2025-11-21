@@ -1,0 +1,77 @@
+import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import Link from "next/link"
+import { BookOpen, Code, GitPullRequest, Rocket } from "lucide-react"
+
+# Getting Started with Hogwarts
+
+Welcome to Hogwarts - a production-ready school automation platform. This guide will help you understand our vision, set up your development environment, and make your first contribution.
+
+## What You'll Learn
+
+<div className="grid gap-6 mt-8 md:grid-cols-2">
+  <Link href="/docs/competitors" className="no-underline">
+    <Card className="h-full transition-all hover:shadow-lg cursor-pointer">
+      <CardHeader>
+        <div className="flex items-center gap-3 mb-2">
+          <BookOpen className="h-6 w-6 text-primary" />
+          <CardTitle>Understanding Hogwarts</CardTitle>
+        </div>
+        <CardDescription>
+          Learn what makes Hogwarts unique compared to PowerSchool, Skyward, and other school management platforms.
+        </CardDescription>
+      </CardHeader>
+    </Card>
+  </Link>
+
+  <Link href="/docs/local-setup" className="no-underline">
+    <Card className="h-full transition-all hover:shadow-lg cursor-pointer">
+      <CardHeader>
+        <div className="flex items-center gap-3 mb-2">
+          <Code className="h-6 w-6 text-primary" />
+          <CardTitle>Local Development Setup</CardTitle>
+        </div>
+        <CardDescription>
+          Get Hogwarts running on your machine in under 10 minutes with step-by-step instructions.
+        </CardDescription>
+      </CardHeader>
+    </Card>
+  </Link>
+
+  <Link href="/docs/contributing" className="no-underline">
+    <Card className="h-full transition-all hover:shadow-lg cursor-pointer">
+      <CardHeader>
+        <div className="flex items-center gap-3 mb-2">
+          <GitPullRequest className="h-6 w-6 text-primary" />
+          <CardTitle>Contributing Guide</CardTitle>
+        </div>
+        <CardDescription>
+          Learn how to submit your first pull request following our code standards and review process.
+        </CardDescription>
+      </CardHeader>
+    </Card>
+  </Link>
+
+  <Link href="/docs/architecture" className="no-underline">
+    <Card className="h-full transition-all hover:shadow-lg cursor-pointer">
+      <CardHeader>
+        <div className="flex items-center gap-3 mb-2">
+          <Rocket className="h-6 w-6 text-primary" />
+          <CardTitle>Architecture Deep Dive</CardTitle>
+        </div>
+        <CardDescription>
+          Explore our Next.js 15 + React 19 architecture and the 38 feature modules that power schools worldwide.
+        </CardDescription>
+      </CardHeader>
+    </Card>
+  </Link>
+</div>
+
+## Ready to Start?
+
+<div className="mt-8 flex gap-4">
+  <Link href="/docs/local-setup">
+    <button className="px-6 py-3 bg-primary text-primary-foreground rounded-md hover:opacity-90 transition-opacity">
+      Start Setup →
+    </button>
+  </Link>
+</div>

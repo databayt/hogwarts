@@ -11,13 +11,13 @@ import { SuccessToast, ErrorToast } from '@/components/atom/toast';
 import { useDictionary } from '@/components/internationalization/use-dictionary';
 import { cn } from '@/lib/utils';
 
-export interface CrudFormProps<TSchema extends z.ZodType = z.ZodType> {
+export interface CrudFormProps<TFormValues extends FieldValues = FieldValues> {
   /** Zod validation schema */
-  schema: TSchema;
+  schema: z.ZodType<TFormValues>;
   /** Default values for the form */
-  defaultValues?: z.infer<TSchema>;
+  defaultValues?: Partial<TFormValues>;
   /** Submit handler - should be a server action */
-  onSubmit: (data: z.infer<TSchema>) => Promise<any>;
+  onSubmit: (data: TFormValues) => Promise<any>;
   /** Success callback (injected by CrudModal) */
   onSuccess?: () => void;
   /** Error callback (injected by CrudModal) */
@@ -25,7 +25,7 @@ export interface CrudFormProps<TSchema extends z.ZodType = z.ZodType> {
   /** Whether form is closing (injected by CrudModal) */
   isClosing?: boolean;
   /** Form fields render function */
-  children: (form: UseFormReturn<z.infer<TSchema>>) => React.ReactNode;
+  children: (form: UseFormReturn<TFormValues>) => React.ReactNode;
   /** Submit button label */
   submitLabel?: string;
   /** Cancel button label */
@@ -46,7 +46,7 @@ export interface CrudFormProps<TSchema extends z.ZodType = z.ZodType> {
   resetOnSuccess?: boolean;
 }
 
-export function CrudForm<TSchema extends z.ZodType>({
+export function CrudForm<TFormValues extends FieldValues = FieldValues>({
   schema,
   defaultValues,
   onSubmit,
@@ -63,16 +63,16 @@ export function CrudForm<TSchema extends z.ZodType>({
   successMessage,
   errorMessage,
   resetOnSuccess = true
-}: CrudFormProps<TSchema>) {
+}: CrudFormProps<TFormValues>) {
   const [isPending, startTransition] = useTransition();
   const { dictionary } = useDictionary();
 
-  const form = useForm<z.infer<TSchema>>({
-    resolver: zodResolver(schema),
-    defaultValues: defaultValues || {},
+  const form = useForm<TFormValues>({
+    resolver: zodResolver(schema) as any,
+    defaultValues: (defaultValues || {}) as any,
   });
 
-  const handleSubmit = useCallback(async (data: z.infer<TSchema>) => {
+  const handleSubmit = useCallback(async (data: TFormValues) => {
     startTransition(async () => {
       try {
         const result = await onSubmit(data);
@@ -85,7 +85,7 @@ export function CrudForm<TSchema extends z.ZodType>({
         SuccessToast(
           successMessage ||
           result?.message ||
-          dictionary?.common?.save_success ||
+          dictionary?.common?.success ||
           'Saved successfully'
         );
 
@@ -103,7 +103,7 @@ export function CrudForm<TSchema extends z.ZodType>({
         ErrorToast(
           errorMessage ||
           (error as Error)?.message ||
-          dictionary?.common?.save_error ||
+          dictionary?.common?.error ||
           'Failed to save'
         );
 
@@ -149,7 +149,7 @@ export function CrudForm<TSchema extends z.ZodType>({
             {isLoading ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin me-2" />
-                {dictionary?.common?.saving || 'Saving...'}
+                {dictionary?.common?.loading || 'Saving...'}
               </>
             ) : (
               submitLabel || dictionary?.common?.save || 'Save'

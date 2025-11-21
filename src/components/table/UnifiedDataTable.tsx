@@ -102,7 +102,7 @@ export function UnifiedDataTable<TData>({
       return (
         <div className="flex items-center justify-center h-32">
           <p className="text-muted-foreground">
-            {emptyMessage || dictionary?.common?.no_results || 'No results found.'}
+            {emptyMessage || 'No results found.'}
           </p>
         </div>
       );
@@ -200,7 +200,7 @@ export function UnifiedDataTable<TData>({
                 colSpan={table.getAllColumns().length}
                 className="h-24 text-center"
               >
-                {emptyMessage || dictionary?.common?.no_results || 'No results found.'}
+                {emptyMessage || 'No results found.'}
               </TableCell>
             </TableRow>
           )}
@@ -214,14 +214,7 @@ export function UnifiedDataTable<TData>({
       {/* Toolbar */}
       {toolbar && (
         <div className="flex items-center justify-between gap-2 flex-wrap">
-          <DataTableToolbar
-            table={table}
-            searchKey={toolbar.searchKey}
-            searchPlaceholder={toolbar.searchPlaceholder}
-            filters={toolbar.filters}
-          />
-
-          <div className="flex items-center gap-2">
+          <DataTableToolbar table={table}>
             {/* Custom actions */}
             {toolbar.customActions}
 
@@ -239,7 +232,7 @@ export function UnifiedDataTable<TData>({
                 defaultValue={viewMode.defaultMode}
               />
             )}
-          </div>
+          </DataTableToolbar>
         </div>
       )}
 

@@ -1,0 +1,285 @@
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { CheckCircle, GitBranch, GitPullRequest, AlertCircle, Copy } from "lucide-react"
+import Link from "next/link"
+
+# Contributing Guide
+
+Learn how to submit your first pull request to Hogwarts.
+
+## Finding Issues
+
+<div className="mt-6 p-4 bg-muted rounded-lg">
+  <div className="space-y-3">
+    <a href="https://github.com/databayt/hogwarts/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22" target="_blank" rel="noopener noreferrer" className="flex items-center justify-between group">
+      <span className="text-primary group-hover:underline">Good First Issues →</span>
+      <GitPullRequest className="h-4 w-4 text-muted-foreground" />
+    </a>
+    <a href="https://github.com/databayt/hogwarts/issues" target="_blank" rel="noopener noreferrer" className="flex items-center justify-between group">
+      <span className="text-primary group-hover:underline">All Open Issues →</span>
+      <GitPullRequest className="h-4 w-4 text-muted-foreground" />
+    </a>
+  </div>
+</div>
+
+## Quick Start
+
+### 1. Fork & Clone
+
+<div className="mt-6 space-y-3">
+  <div className="flex items-center justify-between bg-muted p-3 rounded">
+    <code className="text-sm">git clone https://github.com/YOUR_USERNAME/hogwarts.git</code>
+    <button className="p-1 hover:bg-background rounded">
+      <Copy className="h-4 w-4" />
+    </button>
+  </div>
+
+  <div className="flex items-center justify-between bg-muted p-3 rounded">
+    <code className="text-sm">cd hogwarts</code>
+    <button className="p-1 hover:bg-background rounded">
+      <Copy className="h-4 w-4" />
+    </button>
+  </div>
+
+  <div className="flex items-center justify-between bg-muted p-3 rounded">
+    <code className="text-sm">git remote add upstream https://github.com/databayt/hogwarts.git</code>
+    <button className="p-1 hover:bg-background rounded">
+      <Copy className="h-4 w-4" />
+    </button>
+  </div>
+</div>
+
+### 2. Create Feature Branch
+
+<div className="mt-6 space-y-3">
+  <div className="flex items-center justify-between bg-muted p-3 rounded">
+    <code className="text-sm">git checkout -b feature/your-feature-name</code>
+    <button className="p-1 hover:bg-background rounded">
+      <Copy className="h-4 w-4" />
+    </button>
+  </div>
+</div>
+
+<Alert className="mt-4">
+  <GitBranch className="h-4 w-4" />
+  <AlertDescription>
+    Branch naming: `feature/`, `fix/`, `docs/`, `refactor/`, `test/`, `chore/`
+  </AlertDescription>
+</Alert>
+
+### 3. Make Changes
+
+Follow these critical standards:
+
+<div className="grid gap-4 mt-6">
+  <div className="p-4 border rounded-lg">
+    <h4 className="font-medium mb-2">🔒 Multi-Tenant Safety</h4>
+    <p className="text-sm text-muted-foreground mb-3">Every database query MUST include schoolId:</p>
+    <pre className="bg-muted p-3 rounded text-sm">
+      <code>{`// ✅ CORRECT
+await db.student.findMany({
+  where: { schoolId, grade: "10" }
+})`}</code>
+    </pre>
+  </div>
+
+  <div className="p-4 border rounded-lg">
+    <h4 className="font-medium mb-2">📝 Typography System</h4>
+    <p className="text-sm text-muted-foreground mb-3">Use semantic HTML only:</p>
+    <pre className="bg-muted p-3 rounded text-sm">
+      <code>{`// ✅ CORRECT
+<h2>Page Title</h2>
+<p>Body text</p>
+
+// ❌ WRONG
+<div className="text-2xl">Title</div>`}</code>
+    </pre>
+  </div>
+</div>
+
+### 4. Validate Changes
+
+<div className="mt-6 space-y-3">
+  <div className="flex items-center justify-between bg-muted p-3 rounded">
+    <div>
+      <code className="text-sm">pnpm tsc --noEmit</code>
+      <span className="text-xs text-muted-foreground ml-3">Must pass with 0 errors</span>
+    </div>
+    <button className="p-1 hover:bg-background rounded">
+      <Copy className="h-4 w-4" />
+    </button>
+  </div>
+
+  <div className="flex items-center justify-between bg-muted p-3 rounded">
+    <div>
+      <code className="text-sm">pnpm lint</code>
+      <span className="text-xs text-muted-foreground ml-3">Fix linting issues</span>
+    </div>
+    <button className="p-1 hover:bg-background rounded">
+      <Copy className="h-4 w-4" />
+    </button>
+  </div>
+
+  <div className="flex items-center justify-between bg-muted p-3 rounded">
+    <div>
+      <code className="text-sm">pnpm test</code>
+      <span className="text-xs text-muted-foreground ml-3">Run all tests</span>
+    </div>
+    <button className="p-1 hover:bg-background rounded">
+      <Copy className="h-4 w-4" />
+    </button>
+  </div>
+
+  <div className="flex items-center justify-between bg-muted p-3 rounded">
+    <div>
+      <code className="text-sm">pnpm build</code>
+      <span className="text-xs text-muted-foreground ml-3">Verify build succeeds</span>
+    </div>
+    <button className="p-1 hover:bg-background rounded">
+      <Copy className="h-4 w-4" />
+    </button>
+  </div>
+</div>
+
+### 5. Commit Changes
+
+<div className="mt-6 space-y-3">
+  <div className="flex items-center justify-between bg-muted p-3 rounded">
+    <code className="text-sm">git add .</code>
+    <button className="p-1 hover:bg-background rounded">
+      <Copy className="h-4 w-4" />
+    </button>
+  </div>
+
+  <div className="flex items-center justify-between bg-muted p-3 rounded">
+    <code className="text-sm">git commit -m "feat: add student attendance report"</code>
+    <button className="p-1 hover:bg-background rounded">
+      <Copy className="h-4 w-4" />
+    </button>
+  </div>
+</div>
+
+<Alert className="mt-4">
+  <CheckCircle className="h-4 w-4" />
+  <AlertDescription>
+    Commit format: `feat:`, `fix:`, `docs:`, `style:`, `refactor:`, `test:`, `chore:`
+  </AlertDescription>
+</Alert>
+
+### 6. Push & Create PR
+
+<div className="mt-6 space-y-3">
+  <div className="flex items-center justify-between bg-muted p-3 rounded">
+    <code className="text-sm">git push origin feature/your-feature-name</code>
+    <button className="p-1 hover:bg-background rounded">
+      <Copy className="h-4 w-4" />
+    </button>
+  </div>
+</div>
+
+Then go to GitHub and click "Compare & pull request".
+
+## PR Checklist
+
+<div className="mt-6 p-4 bg-muted rounded-lg">
+  <div className="space-y-2">
+    <label className="flex items-center gap-2">
+      <input type="checkbox" className="rounded" />
+      <span className="text-sm">TypeScript passes (`pnpm tsc --noEmit`)</span>
+    </label>
+    <label className="flex items-center gap-2">
+      <input type="checkbox" className="rounded" />
+      <span className="text-sm">All tests pass (`pnpm test`)</span>
+    </label>
+    <label className="flex items-center gap-2">
+      <input type="checkbox" className="rounded" />
+      <span className="text-sm">Build succeeds (`pnpm build`)</span>
+    </label>
+    <label className="flex items-center gap-2">
+      <input type="checkbox" className="rounded" />
+      <span className="text-sm">Database queries include `schoolId`</span>
+    </label>
+    <label className="flex items-center gap-2">
+      <input type="checkbox" className="rounded" />
+      <span className="text-sm">Used semantic HTML (no hardcoded styles)</span>
+    </label>
+  </div>
+</div>
+
+## Server Actions Pattern
+
+<div className="mt-6 p-4 bg-muted rounded">
+  <pre className="text-sm">
+    <code>{`"use server"
+
+import { auth } from "@/auth"
+import { db } from "@/lib/db"
+import { revalidatePath } from "next/cache"
+
+export async function createItem(data: FormData) {
+  // 1. Authenticate
+  const session = await auth()
+  const schoolId = session?.user?.schoolId
+  if (!schoolId) throw new Error("Unauthorized")
+
+  // 2. Validate
+  const validated = schema.parse(Object.fromEntries(data))
+
+  // 3. Execute with schoolId
+  const item = await db.item.create({
+    data: { ...validated, schoolId }
+  })
+
+  // 4. Revalidate
+  revalidatePath("/items")
+  return { success: true, item }
+}`}</code>
+  </pre>
+</div>
+
+## Common Pitfalls
+
+<div className="space-y-3 mt-6">
+  <Alert>
+    <AlertCircle className="h-4 w-4" />
+    <AlertDescription>
+      **Missing schoolId** - Always include in database queries
+    </AlertDescription>
+  </Alert>
+
+  <Alert>
+    <AlertCircle className="h-4 w-4" />
+    <AlertDescription>
+      **Hardcoded text styles** - Use semantic HTML elements
+    </AlertDescription>
+  </Alert>
+
+  <Alert>
+    <AlertCircle className="h-4 w-4" />
+    <AlertDescription>
+      **Skipping TypeScript checks** - Always run `pnpm tsc --noEmit`
+    </AlertDescription>
+  </Alert>
+
+  <Alert>
+    <AlertCircle className="h-4 w-4" />
+    <AlertDescription>
+      **Large PRs** - Keep PRs focused and small (< 400 lines)
+    </AlertDescription>
+  </Alert>
+</div>
+
+## Ready to Contribute?
+
+<div className="mt-8 flex gap-4">
+  <a href="https://github.com/databayt/hogwarts/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22" target="_blank" rel="noopener noreferrer">
+    <button className="px-6 py-3 bg-primary text-primary-foreground rounded-md hover:opacity-90 transition-opacity">
+      Find Your First Issue →
+    </button>
+  </a>
+
+  <Link href="/docs/architecture">
+    <button className="px-6 py-3 border border-primary text-primary rounded-md hover:bg-primary hover:text-primary-foreground transition-colors">
+      Learn Architecture
+    </button>
+  </Link>
+</div>

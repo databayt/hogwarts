@@ -69,26 +69,26 @@ export function showCrudToast(
     switch (operation) {
       case 'create':
         showSuccess(
-          messages?.create || dictionary?.common?.create_success,
+          messages?.create || dictionary?.common?.success,
           'Created successfully'
         );
         break;
       case 'update':
         showSuccess(
-          messages?.update || dictionary?.common?.update_success,
+          messages?.update || dictionary?.common?.success,
           'Updated successfully'
         );
         break;
       case 'delete':
         showDelete(
-          messages?.delete || dictionary?.common?.delete_success,
+          messages?.delete || dictionary?.common?.success,
           'Deleted successfully'
         );
         break;
     }
   } else {
     showError(
-      messages?.error || dictionary?.common?.operation_failed,
+      messages?.error || dictionary?.common?.error,
       'Operation failed'
     );
   }
@@ -126,7 +126,7 @@ export async function withToast<T>(
     if (options.success) {
       showSuccess(
         options.success,
-        options.dictionary?.common?.operation_success || 'Success'
+        options.dictionary?.common?.success || 'Success'
       );
     }
 
@@ -134,7 +134,7 @@ export async function withToast<T>(
   } catch (error) {
     showError(
       options.error || (error as Error)?.message,
-      options.dictionary?.common?.operation_failed || 'Failed'
+      options.dictionary?.common?.error || 'Failed'
     );
     return null;
   }
