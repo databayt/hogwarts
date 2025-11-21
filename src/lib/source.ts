@@ -1,11 +1,14 @@
 import { loader } from 'fumadocs-core/source'
 import { docs } from '../../.source'
 
-// Export loader with i18n support for Arabic and English
-export const { getPage, getPages, getLanguages } = loader({
+// Create the source loader following shadcn v4 pattern
+export const source = loader({
   baseUrl: '/docs',
   source: docs.toFumadocsSource(),
 })
+
+// Re-export the functions for compatibility
+export const { getPage, getPages, getLanguages } = source
 
 // Export page tree for navigation - default to Arabic
 export const pageTree = { name: 'Docs', children: [] }

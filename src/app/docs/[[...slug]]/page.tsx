@@ -1,8 +1,9 @@
 import { notFound } from "next/navigation"
+import { cookies } from 'next/headers'
 import { DocsTableOfContents } from "@/components/docs/toc"
 import { DocsBreadcrumb } from "@/components/docs/docs-breadcrumb"
 import { DocsMobileNav } from "@/components/docs/docs-mobile-nav"
-import { source } from "@/lib/source"
+import { getPage, getPages, findNeighbour } from "@/lib/source"
 import { MDXContent } from "@/components/mdx/mdx-content"
 import type { Metadata } from "next"
 import { ChevronLeft, ChevronRight } from "lucide-react"
@@ -11,40 +12,30 @@ import { cn } from "@/lib/utils"
 
 interface DocsPageProps {
   params: Promise<{
-    lang: string
     slug?: string[]
   }>
 }
 
-// Generate static params for all doc pages
-export function generateStaticParams() {
-  // Get all pages from source
-  const allPages = source.generateParams()
+// Helper to get language from cookies
+async function getLanguage(): Promise<'ar' | 'en'> {
+  const cookieStore = await cookies()
+  const lang = cookieStore.get('lang')?.value || cookieStore.get('NEXT_LOCALE')?.value
+  return (lang === 'en' ? 'en' : 'ar') as 'ar' | 'en'
+}
 
-  // Transform to include language in params
+// Generate static params for all doc pages (both languages)
+export async function generateStaticParams() {
+  // Generate params for both languages
   const params = []
 
-  for (const page of allPages) {
-    // The page.slug from source includes language prefix (e.g., ['ar', 'getting-started'])
-    // We need to split it into lang and slug
-    if (page.slug && page.slug.length > 0) {
-      const [lang, ...rest] = page.slug
-      if (lang === 'ar' || lang === 'en') {
-        params.push({
-          lang,
-          slug: rest.length > 0 ? rest : undefined
-        })
-      }
-    }
-  }
+  // Root docs pages
+  params.push({ slug: undefined })
 
-  // Add root pages for each language if not already included
-  if (!params.some(p => p.lang === 'ar' && !p.slug)) {
-    params.push({ lang: 'ar', slug: undefined })
-  }
-  if (!params.some(p => p.lang === 'en' && !p.slug)) {
-    params.push({ lang: 'en', slug: undefined })
-  }
+  // Getting started pages
+  params.push({ slug: ['getting-started'] })
+
+  // Add more pages as they are created
+  // Since we generate for both languages at runtime, we don't need to duplicate here
 
   return params
 }
@@ -53,15 +44,13 @@ export function generateStaticParams() {
 export async function generateMetadata({
   params,
 }: DocsPageProps): Promise<Metadata> {
-  const { lang, slug } = await params
+  const { slug } = await params
+  const lang = await getLanguage()
+  const path = slug ? slug.join('/') : ''
+  const url = `/docs/${path}`
 
-  // Construct the full slug for source.getPage
-  const fullSlug = slug ? [lang, ...slug] : [lang, 'index']
-  const page = source.getPage(fullSlug)
-
-  if (!page) {
-    return { title: 'Not Found' }
-  }
+  const page = getPage([lang, ...slug || []])
+  if (!page) return { title: 'Not Found' }
 
   const { title, description } = page.data
 
@@ -72,55 +61,55 @@ export async function generateMetadata({
       title,
       description,
       type: 'article',
-      url: page.url,
+      url: url,
     },
   }
 }
 
 export default async function DocsPage({ params }: DocsPageProps) {
-  const { lang, slug } = await params
+  const { slug } = await params
+  const lang = await getLanguage()
   const segments = slug ? [...slug] : []
 
-  // Construct the full slug for source.getPage
-  const fullSlug = segments.length > 0
-    ? [lang, ...segments]
-    : [lang, 'index'] // For root docs page, use index
+  // Build the URL path for the page
+  const pagePath = segments.length > 0 ? segments.join('/') : 'index'
+  const url = `/docs/${segments.join('/')}`
 
-  // Get the page from source
-  const page = source.getPage(fullSlug)
+  // Try different path combinations to find the page
+  let page = null
+
+  // Try with full path including language and segments
+  if (segments.length > 0) {
+    page = getPage([lang, ...segments])
+  } else {
+    // For root docs page, try with language and 'index'
+    page = getPage([lang, 'index'])
+  }
+
+  // If not found, try alternative paths
+  if (!page && segments.length === 0) {
+    page = getPage(['index']) // Try just index
+  }
 
   if (!page) {
-    // Debug: List available pages
-    const allPages = source.getPages()
-    console.log('Available pages:', allPages.map(p => ({
-      url: p.url,
-      slugs: p.slugs
-    })))
-    console.log('Attempted slug:', fullSlug)
+    page = getPage(segments) // Try without language
+  }
+
+  if (!page) {
+    // As a fallback, list all available pages for debugging
+    const allPages = getPages()
+    console.log('Available pages:', allPages.map(p => p.url))
+    console.log('Attempted path:', [lang, ...segments])
     notFound()
   }
 
   const { title, description } = page.data
   const toc = (page.data as any).toc || []
+  // MDX content can be in different properties based on how it's exported
   const Content = (page.data as any).body || (page.data as any).default || (page.data as any).content
 
-  // Find neighbor pages for navigation
-  const allPages = source.getPages()
-  const currentIndex = allPages.findIndex(p =>
-    p.slugs.join('/') === fullSlug.join('/')
-  )
-
-  const neighbours = {
-    previous: currentIndex > 0 ? {
-      name: allPages[currentIndex - 1].data.title || 'Previous',
-      url: `/${lang}${allPages[currentIndex - 1].url}`
-    } : undefined,
-    next: currentIndex < allPages.length - 1 ? {
-      name: allPages[currentIndex + 1].data.title || 'Next',
-      url: `/${lang}${allPages[currentIndex + 1].url}`
-    } : undefined,
-  }
-
+  // Find neighbor pages for navigation (update to use non-prefixed URLs)
+  const neighbours = findNeighbour(url, lang)
   const isRTL = lang === 'ar'
 
   return (
@@ -130,11 +119,11 @@ export default async function DocsPage({ params }: DocsPageProps) {
           {/* Breadcrumb */}
           <DocsBreadcrumb
             segments={[
-              { title: isRTL ? 'التوثيق' : 'Docs', href: `/${lang}/docs` },
-              ...segments.map((s, i) => ({
+              { title: isRTL ? 'التوثيق' : 'Docs', href: `/docs` },
+              ...slug?.map((s, i) => ({
                 title: s.replace(/-/g, ' '),
-                href: `/${lang}/docs/${segments.slice(0, i + 1).join('/')}`,
-              })),
+                href: `/docs/${slug.slice(0, i + 1).join('/')}`,
+              })) || [],
             ]}
           />
 
