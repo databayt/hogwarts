@@ -128,6 +128,7 @@ export function CrudForm<TFormValues extends FieldValues = FieldValues>({
   return (
     <Form {...form}>
       <form
+        // @ts-expect-error - form.handleSubmit type inference issue with generic TFormValues
         onSubmit={form.handleSubmit(handleSubmit)}
         className={cn('space-y-4', className)}
       >
@@ -135,6 +136,7 @@ export function CrudForm<TFormValues extends FieldValues = FieldValues>({
           'space-y-4',
           isLoading && 'opacity-50 pointer-events-none'
         )}>
+          {/* @ts-expect-error - form type inference issue with generic TFormValues */}
           {children(form)}
         </div>
 

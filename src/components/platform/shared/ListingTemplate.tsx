@@ -208,6 +208,7 @@ export function ListingTemplate<TData extends { id: string }, TFormValues extend
   const { table } = useDataTable<TData>({
     data,
     columns: enhancedColumns,
+    pageCount: 1, // Single page for client-side data
     ...tableConfig,
   });
 
