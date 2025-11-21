@@ -107,19 +107,41 @@ export default async function DocsPage({ params }: DocsPageProps) {
   const Content = (page.data as any).body || (page.data as any).default || (page.data as any).content
 
   // Find neighbor pages for navigation
+  // Filter pages by language first to avoid mixing Arabic and English pages
   const allPages = source.getPages()
-  const currentIndex = allPages.findIndex(p =>
+  const langPages = allPages.filter(p => {
+    // Check if page belongs to current language
+    return p.slugs && p.slugs.length > 0 && p.slugs[0] === lang
+  })
+
+  const currentIndex = langPages.findIndex(p =>
     p.slugs.join('/') === fullSlug.join('/')
   )
 
+  // Transform URLs from /docs/en/... to /en/docs/...
+  const transformUrl = (url: string) => {
+    // URL format from fumadocs: /docs/en or /docs/en/getting-started
+    // Transform to: /en/docs or /en/docs/getting-started
+    if (url.startsWith('/docs/')) {
+      const afterDocs = url.substring(6) // Remove '/docs/'
+      const parts = afterDocs.split('/')
+      if (parts.length > 0 && parts[0]) {
+        const pageLang = parts.shift() // Remove language from path
+        const rest = parts.join('/')
+        return `/${pageLang}/docs${rest ? '/' + rest : ''}`
+      }
+    }
+    return url
+  }
+
   const neighbours = {
     previous: currentIndex > 0 ? {
-      name: allPages[currentIndex - 1].data.title || 'Previous',
-      url: `/${lang}${allPages[currentIndex - 1].url}`
+      name: langPages[currentIndex - 1].data.title || 'Previous',
+      url: transformUrl(langPages[currentIndex - 1].url)
     } : undefined,
-    next: currentIndex < allPages.length - 1 ? {
-      name: allPages[currentIndex + 1].data.title || 'Next',
-      url: `/${lang}${allPages[currentIndex + 1].url}`
+    next: currentIndex < langPages.length - 1 ? {
+      name: langPages[currentIndex + 1].data.title || 'Next',
+      url: transformUrl(langPages[currentIndex + 1].url)
     } : undefined,
   }
 
