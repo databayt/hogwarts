@@ -56,7 +56,8 @@ export async function generateMetadata({
   const { lang, slug } = await params
 
   // Construct the full slug for source.getPage
-  const fullSlug = slug ? [lang, ...slug] : [lang, 'index']
+  // Note: fumadocs strips trailing 'index' from paths, so en/index.mdx becomes slug ['en']
+  const fullSlug = slug ? [lang, ...slug] : [lang]
   const page = source.getPage(fullSlug)
 
   if (!page) {
@@ -82,9 +83,10 @@ export default async function DocsPage({ params }: DocsPageProps) {
   const segments = slug ? [...slug] : []
 
   // Construct the full slug for source.getPage
+  // Note: fumadocs strips trailing 'index' from paths, so en/index.mdx becomes slug ['en']
   const fullSlug = segments.length > 0
     ? [lang, ...segments]
-    : [lang, 'index'] // For root docs page, use index
+    : [lang] // For root docs page, just use the language
 
   // Get the page from source
   const page = source.getPage(fullSlug)
