@@ -134,6 +134,12 @@ export function middleware(req: NextRequest) {
       return response;
     }
 
+    // Don't rewrite auth routes - they exist globally at /[lang]/(auth)/*
+    // NOT within subdomain structure /[lang]/s/[subdomain]/(auth)/*
+    if (isAuth) {
+      return NextResponse.next();
+    }
+
     // Rewrite to tenant path
     url.pathname = `/${locale}/s/${subdomain}${pathWithoutLocale}`;
 
