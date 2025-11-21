@@ -32,9 +32,10 @@ interface MainNavProps {
   items?: MainNavItem[]
   children?: React.ReactNode
   school: School
+  locale: string
 }
 
-export function MainNav({ items, children, school }: MainNavProps) {
+export function MainNav({ items, children, school, locale }: MainNavProps) {
   const segment = useSelectedLayoutSegment()
   const [showMobileMenu, setShowMobileMenu] = React.useState<boolean>(false)
 
@@ -43,7 +44,7 @@ export function MainNav({ items, children, school }: MainNavProps) {
 
   return (
     <div className="flex gap-6 md:gap-10">
-      <Link href="/" className="hidden items-center gap-2 md:flex">
+      <Link href={`/${locale}`} className="hidden items-center gap-2 md:flex">
         <Image src="/logo.png" alt={`${displayName} Logo`} width={20} height={20} className="dark:invert" />
         <span className="hidden sm:inline-block  ">
           {displayName}
@@ -54,7 +55,7 @@ export function MainNav({ items, children, school }: MainNavProps) {
           {items?.map((item, index) => (
             <Link
               key={index}
-              href={item.disabled ? "#" : item.href}
+              href={item.disabled ? "#" : `/${locale}${item.href}`}
               className={cn(
                 "flex items-center text-sm transition-colors hover:text-foreground/80",
                 item.href.startsWith(`/${segment}`)
@@ -76,7 +77,7 @@ export function MainNav({ items, children, school }: MainNavProps) {
         <span>Menu</span>
       </button>
       {showMobileMenu && items && (
-        <MobileNav items={items} school={school}>{children}</MobileNav>
+        <MobileNav items={items} school={school} locale={locale}>{children}</MobileNav>
       )}
     </div>
   )

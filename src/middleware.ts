@@ -67,6 +67,20 @@ export function middleware(req: NextRequest) {
     ? url.pathname.replace(`/${locale}`, '') || '/'
     : url.pathname;
 
+  // Detect subdomain early for auth redirects
+  let subdomain: string | null = null;
+
+  if (host.endsWith(".databayt.org") && !host.startsWith("ed.")) {
+    subdomain = host.split(".")[0];
+  } else if (host.includes("---") && host.endsWith(".vercel.app")) {
+    subdomain = host.split("---")[0];
+  } else if (host.includes("localhost") && host.includes(".")) {
+    const parts = host.split(".");
+    if (parts.length > 1 && parts[0] !== "www" && parts[0] !== "localhost") {
+      subdomain = parts[0];
+    }
+  }
+
   // Check route type
   const isPublic = publicRoutes.includes(pathWithoutLocale) ||
                    pathWithoutLocale.startsWith('/docs') ||
@@ -76,7 +90,11 @@ export function middleware(req: NextRequest) {
 
   // Redirect logged-in users away from auth pages
   if (isAuth && authenticated) {
-    const response = NextResponse.redirect(new URL(`/${locale}/dashboard`, req.url));
+    // If on subdomain, redirect to subdomain dashboard
+    const dashboardPath = subdomain
+      ? `/${locale}/s/${subdomain}/dashboard`
+      : `/${locale}/dashboard`;
+    const response = NextResponse.redirect(new URL(dashboardPath, req.url));
     return response;
   }
 
@@ -103,20 +121,7 @@ export function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // Subdomain detection
-  let subdomain: string | null = null;
-
-  if (host.endsWith(".databayt.org") && !host.startsWith("ed.")) {
-    subdomain = host.split(".")[0];
-  } else if (host.includes("---") && host.endsWith(".vercel.app")) {
-    subdomain = host.split("---")[0];
-  } else if (host.includes("localhost") && host.includes(".")) {
-    const parts = host.split(".");
-    if (parts.length > 1 && parts[0] !== "www" && parts[0] !== "localhost") {
-      subdomain = parts[0];
-    }
-  }
-
+  // Subdomain handling (subdomain already detected earlier)
   if (subdomain) {
     if (!hasLocale) {
       url.pathname = `/${locale}${url.pathname}`;

@@ -29,9 +29,10 @@ interface MobileNavProps {
   items: MainNavItem[]
   children?: React.ReactNode
   school: School
+  locale: string
 }
 
-export function MobileNav({ items, children, school }: MobileNavProps) {
+export function MobileNav({ items, children, school, locale }: MobileNavProps) {
   useLockBody()
 
   // Use subdomain instead of full school name and capitalize first letter
@@ -44,7 +45,7 @@ export function MobileNav({ items, children, school }: MobileNavProps) {
       )}
     >
       <div className="relative z-20 grid gap-6 rounded-md bg-popover p-4 text-popover-foreground shadow-md">
-        <Link href="/" className="flex items-center space-x-2">
+        <Link href={`/${locale}`} className="flex items-center space-x-2">
           <Icons.logo />
           <span>{displayName}</span>
         </Link>
@@ -52,7 +53,7 @@ export function MobileNav({ items, children, school }: MobileNavProps) {
           {items.map((item, index) => (
             <Link
               key={index}
-              href={item.disabled ? "#" : item.href}
+              href={item.disabled ? "#" : `/${locale}${item.href}`}
               className={cn(
                 "flex w-full items-center rounded-md p-2 muted hover:underline",
                 item.disabled && "cursor-not-allowed opacity-60"

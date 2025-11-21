@@ -6,14 +6,14 @@ import { notFound } from "next/navigation";
 
 interface SiteLayoutProps {
   children: React.ReactNode;
-  params: Promise<{ subdomain: string }>;
+  params: Promise<{ subdomain: string; lang: string }>;
 }
 
 export default async function SiteLayout({
   children,
   params,
 }: Readonly<SiteLayoutProps>) {
-  const { subdomain } = await params;
+  const { subdomain, lang } = await params;
   const result = await getSchoolBySubdomain(subdomain);
 
   if (!result.success || !result.data) {
@@ -24,7 +24,7 @@ export default async function SiteLayout({
 
   return (
     <div data-slot="site-layout">
-      <SiteHeader school={school} />
+      <SiteHeader school={school} locale={lang} />
       <main 
         data-slot="main-content"
         role="main"

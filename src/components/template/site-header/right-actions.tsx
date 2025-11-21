@@ -8,9 +8,10 @@ import Link from 'next/link'
 
 interface RightActionsProps {
   isAuthenticated: boolean;
+  locale: string;
 }
 
-export function RightActions({ isAuthenticated }: RightActionsProps) {
+export function RightActions({ isAuthenticated, locale }: RightActionsProps) {
   return (
     <div className="flex items-center gap-2">
       {isAuthenticated ? (
@@ -24,7 +25,7 @@ export function RightActions({ isAuthenticated }: RightActionsProps) {
         </Button>
       ) : (
         <Link
-          href="/login"
+          href={`/${locale}/login`}
           className={cn(
             buttonVariants({ variant: "secondary", size: "sm" }),
             "px-4 muted"
