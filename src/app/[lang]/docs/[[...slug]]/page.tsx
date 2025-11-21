@@ -4,6 +4,7 @@ import { DocsBreadcrumb } from "@/components/docs/docs-breadcrumb"
 import { DocsMobileNav } from "@/components/docs/docs-mobile-nav"
 import { source } from "@/lib/source"
 import { MDXContent } from "@/components/mdx/mdx-content"
+import { mdxComponents } from "../../../../../mdx-components"
 import type { Metadata } from "next"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import Link from "next/link"
@@ -176,7 +177,7 @@ export default async function DocsPage({ params }: DocsPageProps) {
           <div className="prose prose-slate dark:prose-invert max-w-none">
             {Content ? (
               <MDXContent>
-                {typeof Content === 'function' ? <Content /> : Content}
+                {typeof Content === 'function' ? <Content components={mdxComponents} /> : Content}
               </MDXContent>
             ) : (
               <div className="text-muted-foreground">
