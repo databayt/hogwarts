@@ -1,0 +1,81 @@
+---
+title: البدء السريع
+description: ابدأ باستخدام Hogwarts في بضع دقائق
+---
+
+# البدء السريع
+
+مرحبًا بك في دليل البدء السريع لمنصة Hogwarts. سيساعدك هذا الدليل في إعداد بيئة التطوير والبدء في استخدام المنصة.
+
+## المتطلبات الأساسية
+
+قبل البدء، تأكد من تثبيت ما يلي:
+
+- **Node.js 20+**
+- **pnpm 9+**
+- **PostgreSQL 14+**
+- **Git**
+
+## خطوات التثبيت
+
+### 1. استنساخ المشروع
+
+```bash
+git clone https://github.com/hogwarts/hogwarts.git
+cd hogwarts
+```
+
+### 2. تثبيت التبعيات
+
+```bash
+pnpm install
+```
+
+### 3. إعداد قاعدة البيانات
+
+```bash
+# إنشاء قاعدة البيانات
+createdb hogwarts
+
+# تشغيل عمليات الترحيل
+pnpm prisma migrate dev
+
+# ملء البيانات التجريبية
+pnpm db:seed
+```
+
+### 4. إعداد المتغيرات البيئية
+
+انسخ ملف `.env.example` إلى `.env.local` وقم بتحديث القيم:
+
+```bash
+cp .env.example .env.local
+```
+
+### 5. تشغيل خادم التطوير
+
+```bash
+pnpm dev
+```
+
+زُر [http://localhost:3000](http://localhost:3000) لرؤية التطبيق.
+
+## الخطوات التالية
+
+<Cards>
+  <Card
+    title="المكونات"
+    description="استكشف مكتبة المكونات"
+    href="/ar/docs/components"
+  />
+  <Card
+    title="واجهة البرمجة"
+    description="تعلم عن API والإجراءات الخادمية"
+    href="/ar/docs/api"
+  />
+  <Card
+    title="النشر"
+    description="انشر تطبيقك إلى الإنتاج"
+    href="/ar/docs/deployment"
+  />
+</Cards>

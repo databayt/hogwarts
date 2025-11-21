@@ -18,18 +18,11 @@ interface DocsPageProps {
 
 // Generate static params for all doc pages
 export async function generateStaticParams() {
-  const pages = getPages()
-  return pages.map((page) => {
-    const segments = page.url.split('/').filter(Boolean)
-    // Remove the first 'docs' segment and language
-    const slug = segments.slice(2)
-    const lang = segments[0] || 'ar'
-
-    return {
-      lang,
-      slug: slug.length > 0 ? slug : undefined,
-    }
-  })
+  return [
+    { lang: 'ar', slug: undefined },
+    { lang: 'en', slug: undefined },
+    // Add more pages as they are created
+  ]
 }
 
 // Generate metadata for the page
@@ -59,19 +52,27 @@ export async function generateMetadata({
 
 export default async function DocsPage({ params }: DocsPageProps) {
   const { lang, slug } = await params
-  const path = slug ? slug.join('/') : ''
-  const url = `/docs/${path}`
+  const segments = slug ? [...slug] : []
 
-  // Get the page content
-  const page = getPage([lang, ...slug || []])
+  // Build the URL path for the page
+  const pagePath = segments.length > 0 ? segments.join('/') : 'index'
+  const url = `/docs/${segments.join('/')}`
+
+  // Get the page content - try with language prefix
+  let page = getPage([lang, pagePath])
+
+  // If not found, try without language prefix (for backward compatibility)
+  if (!page) {
+    page = getPage(segments)
+  }
 
   if (!page) {
     notFound()
   }
 
-  const { title, description } = page.data
-  const Content = (page.data as any).default || (page.data as any).Page
-  const toc = (page.data as any).toc
+  const { title, description, toc } = page.data
+  // MDX content can be in different properties based on how it's exported
+  const Content = (page.data as any).body || (page.data as any).default || (page.data as any).content
 
   // Find neighbor pages for navigation
   const neighbours = findNeighbour(url, lang as 'ar' | 'en')
@@ -104,9 +105,15 @@ export default async function DocsPage({ params }: DocsPageProps) {
 
           {/* MDX Content */}
           <div className="prose prose-slate dark:prose-invert max-w-none">
-            <MDXContent>
-              <Content />
-            </MDXContent>
+            {Content ? (
+              <MDXContent>
+                {typeof Content === 'function' ? <Content /> : Content}
+              </MDXContent>
+            ) : (
+              <div className="text-muted-foreground">
+                {isRTL ? 'محتوى الصفحة غير متوفر' : 'Page content not available'}
+              </div>
+            )}
           </div>
 
           {/* Navigation */}

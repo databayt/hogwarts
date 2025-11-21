@@ -7,17 +7,25 @@ export const { getPage, getPages, getLanguages } = loader({
   source: docs.toFumadocsSource(),
 })
 
-// Export page tree for navigation - will be generated from actual content
+// Export page tree for navigation - default to Arabic
 export const pageTree = { name: 'Docs', children: [] }
 
 // Helper function to get page tree for a specific language
 export function getPageTree(lang: 'ar' | 'en') {
-  // For now, return a basic tree structure
-  // This will be populated when we have actual MDX content
-  return {
-    name: 'Docs',
-    children: []
+  // Build a simple page tree from available pages
+  const pages = getPages()
+  const langPages = pages.filter(p => p.url.startsWith(`/docs`))
+
+  const tree = {
+    name: lang === 'ar' ? 'التوثيق' : 'Documentation',
+    children: langPages.map(page => ({
+      type: 'page' as const,
+      name: page.data.title || 'Untitled',
+      url: page.url
+    }))
   }
+
+  return tree
 }
 
 // Helper to find neighbor pages for navigation

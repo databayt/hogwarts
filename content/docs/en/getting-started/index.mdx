@@ -1,0 +1,81 @@
+---
+title: Getting Started
+description: Get started with Hogwarts in minutes
+---
+
+# Getting Started
+
+Welcome to the Hogwarts platform quick start guide. This guide will help you set up your development environment and start using the platform.
+
+## Prerequisites
+
+Before you begin, make sure you have the following installed:
+
+- **Node.js 20+**
+- **pnpm 9+**
+- **PostgreSQL 14+**
+- **Git**
+
+## Installation Steps
+
+### 1. Clone the Project
+
+```bash
+git clone https://github.com/hogwarts/hogwarts.git
+cd hogwarts
+```
+
+### 2. Install Dependencies
+
+```bash
+pnpm install
+```
+
+### 3. Set Up Database
+
+```bash
+# Create database
+createdb hogwarts
+
+# Run migrations
+pnpm prisma migrate dev
+
+# Seed test data
+pnpm db:seed
+```
+
+### 4. Configure Environment Variables
+
+Copy `.env.example` to `.env.local` and update the values:
+
+```bash
+cp .env.example .env.local
+```
+
+### 5. Start Development Server
+
+```bash
+pnpm dev
+```
+
+Visit [http://localhost:3000](http://localhost:3000) to see the app.
+
+## Next Steps
+
+<Cards>
+  <Card
+    title="Components"
+    description="Explore the component library"
+    href="/en/docs/components"
+  />
+  <Card
+    title="API"
+    description="Learn about APIs and server actions"
+    href="/en/docs/api"
+  />
+  <Card
+    title="Deployment"
+    description="Deploy your app to production"
+    href="/en/docs/deployment"
+  />
+</Cards>
