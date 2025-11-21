@@ -32,7 +32,17 @@ const Hero = ({ dictionary, lang }: HeroProps) => {
     const rootDomain = env.NEXT_PUBLIC_ROOT_DOMAIN || 'localhost:3000'
     const isLocal = rootDomain.includes('localhost')
     const protocol = isLocal ? 'http' : 'https'
-    return `${protocol}://demo.${rootDomain}/${lang || 'en'}`
+
+    if (isLocal) {
+      // For localhost, keep the current behavior
+      return `${protocol}://demo.${rootDomain}/${lang || 'en'}`
+    }
+
+    // For production domains, extract base domain (e.g., ed.databayt.org -> databayt.org)
+    const parts = rootDomain.split('.')
+    const baseDomain = parts.length >= 2 ? parts.slice(-2).join('.') : rootDomain
+
+    return `${protocol}://demo.${baseDomain}/${lang || 'en'}`
   }
   return (
     <section id="hero" className="h-[calc(100vh-3.5rem)] flex flex-col">
