@@ -1,77 +1,117 @@
-import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Copy } from "lucide-react"
 import Link from "next/link"
-import { BookOpen, Code, GitPullRequest, Rocket } from "lucide-react"
 
-# Getting Started with Hogwarts
+# Get Started
 
-Welcome to Hogwarts - a production-ready school automation platform. This guide will help you understand our vision, set up your development environment, and make your first contribution.
+## 1. The Idea
 
-## What You'll Learn
+Building a school automation platform like these real-world products:
+- [PowerSchool](https://www.powerschool.com) - $2.8B valuation, 45M students
+- [Skyward](https://www.skyward.com) - 5.7M students, 1,900+ districts
+- [Infinite Campus](https://www.infinitecampus.com) - 7.8M students, 50 US states
+- [Classter](https://www.classter.com) - 500K+ students, 40+ countries
 
-<div className="grid gap-6 mt-8 md:grid-cols-2">
-  <Link href="/docs/competitors" className="no-underline">
-    <Card className="h-full transition-all hover:shadow-lg cursor-pointer">
-      <CardHeader>
-        <div className="flex items-center gap-3 mb-2">
-          <BookOpen className="h-6 w-6 text-primary" />
-          <CardTitle>Understanding Hogwarts</CardTitle>
-        </div>
-        <CardDescription>
-          Learn what makes Hogwarts unique compared to PowerSchool, Skyward, and other school management platforms.
-        </CardDescription>
-      </CardHeader>
-    </Card>
-  </Link>
+## 2. Run Localhost
 
-  <Link href="/docs/local-setup" className="no-underline">
-    <Card className="h-full transition-all hover:shadow-lg cursor-pointer">
-      <CardHeader>
-        <div className="flex items-center gap-3 mb-2">
-          <Code className="h-6 w-6 text-primary" />
-          <CardTitle>Local Development Setup</CardTitle>
-        </div>
-        <CardDescription>
-          Get Hogwarts running on your machine in under 10 minutes with step-by-step instructions.
-        </CardDescription>
-      </CardHeader>
-    </Card>
-  </Link>
+Quick setup in 5 minutes:
 
-  <Link href="/docs/contributing" className="no-underline">
-    <Card className="h-full transition-all hover:shadow-lg cursor-pointer">
-      <CardHeader>
-        <div className="flex items-center gap-3 mb-2">
-          <GitPullRequest className="h-6 w-6 text-primary" />
-          <CardTitle>Contributing Guide</CardTitle>
-        </div>
-        <CardDescription>
-          Learn how to submit your first pull request following our code standards and review process.
-        </CardDescription>
-      </CardHeader>
-    </Card>
-  </Link>
-
-  <Link href="/docs/architecture" className="no-underline">
-    <Card className="h-full transition-all hover:shadow-lg cursor-pointer">
-      <CardHeader>
-        <div className="flex items-center gap-3 mb-2">
-          <Rocket className="h-6 w-6 text-primary" />
-          <CardTitle>Architecture Deep Dive</CardTitle>
-        </div>
-        <CardDescription>
-          Explore our Next.js 15 + React 19 architecture and the 38 feature modules that power schools worldwide.
-        </CardDescription>
-      </CardHeader>
-    </Card>
-  </Link>
-</div>
-
-## Ready to Start?
-
-<div className="mt-8 flex gap-4">
-  <Link href="/docs/local-setup">
-    <button className="px-6 py-3 bg-primary text-primary-foreground rounded-md hover:opacity-90 transition-opacity">
-      Start Setup →
+<div className="space-y-3 mt-4">
+  <div className="flex items-center justify-between bg-muted p-3 rounded">
+    <code className="text-sm">git clone https://github.com/databayt/hogwarts.git && cd hogwarts</code>
+    <button className="p-1 hover:bg-background rounded">
+      <Copy className="h-4 w-4" />
     </button>
-  </Link>
+  </div>
+
+  <div className="flex items-center justify-between bg-muted p-3 rounded">
+    <code className="text-sm">pnpm install</code>
+    <button className="p-1 hover:bg-background rounded">
+      <Copy className="h-4 w-4" />
+    </button>
+  </div>
+
+  <div className="flex items-center justify-between bg-muted p-3 rounded">
+    <code className="text-sm">cp .env.example .env</code>
+    <button className="p-1 hover:bg-background rounded">
+      <Copy className="h-4 w-4" />
+    </button>
+  </div>
+
+  <div className="flex items-center justify-between bg-muted p-3 rounded">
+    <code className="text-sm">pnpm prisma generate && pnpm prisma migrate dev</code>
+    <button className="p-1 hover:bg-background rounded">
+      <Copy className="h-4 w-4" />
+    </button>
+  </div>
+
+  <div className="flex items-center justify-between bg-muted p-3 rounded">
+    <code className="text-sm">pnpm dev</code>
+    <button className="p-1 hover:bg-background rounded">
+      <Copy className="h-4 w-4" />
+    </button>
+  </div>
 </div>
+
+**Running at:** http://localhost:3000
+
+<Link href="/docs/local-setup" className="text-sm text-primary hover:underline">
+  → Detailed setup guide with database options
+</Link>
+
+## 3. Submit a PR
+
+<div className="space-y-3 mt-4">
+  <div className="flex items-center justify-between bg-muted p-3 rounded">
+    <code className="text-sm">git checkout -b feature/your-name</code>
+    <button className="p-1 hover:bg-background rounded">
+      <Copy className="h-4 w-4" />
+    </button>
+  </div>
+
+  <div className="flex items-center justify-between bg-muted p-3 rounded">
+    <code className="text-sm">git add . && git commit -m "feat: add your change"</code>
+    <button className="p-1 hover:bg-background rounded">
+      <Copy className="h-4 w-4" />
+    </button>
+  </div>
+
+  <div className="flex items-center justify-between bg-muted p-3 rounded">
+    <code className="text-sm">git push origin feature/your-name</code>
+    <button className="p-1 hover:bg-background rounded">
+      <Copy className="h-4 w-4" />
+    </button>
+  </div>
+</div>
+
+**Checklist:**
+- ✅ TypeScript passes (`pnpm tsc --noEmit`)
+- ✅ Tests pass (`pnpm test`)
+- ✅ Build succeeds (`pnpm build`)
+- ✅ Database queries include `schoolId`
+
+<Link href="/docs/contributing" className="text-sm text-primary hover:underline">
+  → Full contribution guide
+</Link>
+
+## 4. First Contribution
+
+Add your name to our contributors showcase:
+
+1. **Create a new file:** `src/app/[lang]/(marketing)/blog/contributors/YOUR-NAME.mdx`
+
+2. **Add your info:**
+```mdx
+---
+name: Your Name
+github: your-github-username
+date: 2024-11-21
+---
+
+# Your Name
+
+Hi! I'm contributing to Hogwarts because [your reason].
+```
+
+3. **Submit PR** with title: `feat: add [Your Name] to contributors`
+
+That's it! Welcome to Hogwarts 🎉

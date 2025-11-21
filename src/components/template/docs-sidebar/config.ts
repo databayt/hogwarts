@@ -40,7 +40,7 @@ export const docsConfig: DocsConfig = {
     {
       title: "Getting Started",
       items: [
-        { title: "Overview", href: "/docs/get-started", items: [] },
+        { title: "Get Started", href: "/docs/get-started", items: [] },
         { title: "Local Setup", href: "/docs/local-setup", items: [] },
         { title: "Contributing", href: "/docs/contributing", items: [] },
       ],
