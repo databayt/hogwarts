@@ -4,9 +4,8 @@ import PlatformHeader from "@/components/template/platform-header/content";
 import PlatformSidebar from "@/components/template/platform-sidebar/content";
 import { SchoolProvider } from "@/components/platform/context/school-context";
 import { getSchoolBySubdomain } from "@/lib/subdomain-actions";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { isRTL as checkIsRTL, type Locale } from "@/components/internationalization/config";
-import { auth } from "@/auth";
 
 interface PlatformLayoutProps {
   children: React.ReactNode;
@@ -18,15 +17,6 @@ export default async function PlatformLayout({
   params,
 }: Readonly<PlatformLayoutProps>) {
   const { subdomain, lang } = await params;
-
-  // Auth protection (moved from middleware to avoid Edge Function size limits)
-  const session = await auth();
-  if (!session?.user) {
-    // Preserve current URL for callback after login
-    const callbackUrl = encodeURIComponent(`/${lang}/s/${subdomain}/dashboard`);
-    redirect(`/${lang}/login?callbackUrl=${callbackUrl}`);
-  }
-
   const result = await getSchoolBySubdomain(subdomain);
 
   if (!result.success || !result.data) {
