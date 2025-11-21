@@ -56,6 +56,7 @@ export const docsConfig: DocsConfig = {
         { title: "Epics", href: "/docs/epics", items: [] },
         { title: "Architecture", href: "/docs/architecture", items: [] },
         { title: "UI Factory", href: "/docs/ui-factory", items: [] },
+        { title: "Unified Listing", href: "/docs/listing", items: [] },
         { title: "Demo", href: "/docs/demo", items: [] },
         { title: "Competitors", href: "/docs/competitors", items: [] },
         { title: "Awesome shadcn", href: "/docs/awesome-shadcn", items: [] },
