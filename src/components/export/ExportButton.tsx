@@ -59,7 +59,7 @@ export function ExportButton({
 }: ExportButtonProps) {
   const [isExporting, setIsExporting] = useState(false);
   const [exportFormat, setExportFormat] = useState<ExportFormat | null>(null);
-  const { dictionary, locale } = useDictionary();
+  const { dictionary } = useDictionary();
 
   const handleExport = async (format: ExportFormat) => {
     try {
@@ -70,7 +70,7 @@ export function ExportButton({
       const data = await fetchData();
 
       if (!data || data.length === 0) {
-        SuccessToast(dictionary?.common?.no_data_to_export || 'No data to export');
+        SuccessToast('No data to export');
         return;
       }
 
@@ -87,16 +87,16 @@ export function ExportButton({
         const csv = convertToCSV(processedData, headers);
         const fileName = formatFilename(filename, 'csv');
         downloadFile(csv, fileName, 'text/csv;charset=utf-8;');
-        SuccessToast(dictionary?.common?.export_success_csv || 'Data exported to CSV');
+        SuccessToast('Data exported to CSV successfully');
       } else if (format === 'excel') {
         const excel = convertToExcel(processedData, headers, filename);
         const fileName = formatFilename(filename, 'xlsx');
         downloadFile(excel, fileName, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        SuccessToast(dictionary?.common?.export_success_excel || 'Data exported to Excel');
+        SuccessToast('Data exported to Excel successfully');
       }
     } catch (error) {
       console.error('Export failed:', error);
-      SuccessToast(dictionary?.common?.export_failed || 'Export failed');
+      SuccessToast('Export failed');
     } finally {
       setIsExporting(false);
       setExportFormat(null);
@@ -109,7 +109,7 @@ export function ExportButton({
     icon || <Download className="h-4 w-4" />
   );
 
-  const buttonLabel = label || dictionary?.common?.export || 'Export';
+  const buttonLabel = label || 'Export';
 
   return (
     <DropdownMenu>
@@ -124,7 +124,7 @@ export function ExportButton({
           {size !== 'icon' && buttonLabel}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align={locale === 'ar' ? 'start' : 'end'}>
+      <DropdownMenuContent align="end">
         {!disabledFormats.includes('csv') && (
           <DropdownMenuItem
             onClick={() => handleExport('csv')}
@@ -132,7 +132,7 @@ export function ExportButton({
             className="gap-2"
           >
             <FileText className="h-4 w-4" />
-            {dictionary?.common?.export_csv || 'Export as CSV'}
+            Export as CSV
             {isExporting && exportFormat === 'csv' && (
               <Loader2 className="h-3 w-3 animate-spin ms-auto" />
             )}
@@ -145,7 +145,7 @@ export function ExportButton({
             className="gap-2"
           >
             <FileSpreadsheet className="h-4 w-4" />
-            {dictionary?.common?.export_excel || 'Export as Excel'}
+            Export as Excel
             {isExporting && exportFormat === 'excel' && (
               <Loader2 className="h-3 w-3 animate-spin ms-auto" />
             )}

@@ -70,18 +70,18 @@ export function StudentsUnifiedTable({
   const crudModal = useCrudModal<StudentRow>({
     onSuccess: async (mode) => {
       if (mode === 'delete') {
-        showDelete(dictionary?.deleteStudent || 'Student deleted');
+        showDelete('Student deleted successfully');
       } else {
         showSuccess(
           mode === 'create'
-            ? dictionary?.createStudent || 'Student created successfully'
-            : dictionary?.editStudent || 'Student updated successfully'
+            ? 'Student created successfully'
+            : 'Student updated successfully'
         );
       }
       await refreshData();
     },
     onError: (error) => {
-      showError(error.message || fullDict?.common?.operation_failed || 'Operation failed');
+      showError(error.message || 'Operation failed');
     },
   });
 
@@ -444,9 +444,6 @@ export function StudentsUnifiedTable({
       >
         <StudentCreateForm
           dictionary={dictionary}
-          onSuccess={() => {
-            crudModal.handleSuccess();
-          }}
         />
       </CrudModal>
     </>

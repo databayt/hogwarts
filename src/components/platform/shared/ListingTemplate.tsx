@@ -128,7 +128,10 @@ export function ListingTemplate<TData extends { id: string }, TFormValues extend
   // CRUD modal state
   const crudModal = useCrudModal<TData>({
     onSuccess: async (mode) => {
-      showCrudToast(mode, true, undefined, dictionary);
+      // Only show toast for create/update/delete modes
+      if (mode !== 'view') {
+        showCrudToast(mode as 'create' | 'update' | 'delete', true, undefined, dictionary);
+      }
       await refreshData();
     },
     onError: (error) => {
@@ -152,7 +155,7 @@ export function ListingTemplate<TData extends { id: string }, TFormValues extend
     if (permissions.canEdit || permissions.canDelete) {
       baseColumns.push({
         id: 'actions',
-        header: dictionary?.common?.actions || 'Actions',
+        header: 'Actions',
         cell: ({ row }) => {
           const item = row.original;
 
@@ -186,7 +189,7 @@ export function ListingTemplate<TData extends { id: string }, TFormValues extend
             </div>
           );
         },
-      });
+      } as ColumnDef<TData>);
     }
 
     return baseColumns;
@@ -202,7 +205,7 @@ export function ListingTemplate<TData extends { id: string }, TFormValues extend
   }), [config.table]);
 
   // Initialize data table
-  const table = useDataTable({
+  const { table } = useDataTable<TData>({
     data,
     columns: enhancedColumns,
     ...tableConfig,
@@ -259,12 +262,12 @@ export function ListingTemplate<TData extends { id: string }, TFormValues extend
   // Modal title
   const modalTitle = useMemo(() => {
     if (crudModal.isCreate) {
-      return `${dictionary?.common?.create || 'Create'} ${config.entityName}`;
+      return `Create ${config.entityName}`;
     } else if (crudModal.isEdit) {
-      return `${dictionary?.common?.edit || 'Edit'} ${config.entityName}`;
+      return `Edit ${config.entityName}`;
     }
     return config.entityName;
-  }, [crudModal, config.entityName, dictionary]);
+  }, [crudModal, config.entityName]);
 
   return (
     <div className={cn('space-y-4', className)}>
@@ -274,7 +277,7 @@ export function ListingTemplate<TData extends { id: string }, TFormValues extend
         {permissions.canCreate && (
           <Button onClick={crudModal.openCreate}>
             <Plus className="h-4 w-4 me-2" />
-            {dictionary?.common?.create || 'Create'}
+            Create
           </Button>
         )}
       </div>
@@ -339,8 +342,8 @@ export function ListingTemplate<TData extends { id: string }, TFormValues extend
             onSubmit={handleFormSubmit}
             submitLabel={
               crudModal.isCreate
-                ? dictionary?.common?.create || 'Create'
-                : dictionary?.common?.save || 'Save'
+                ? 'Create'
+                : 'Save'
             }
             showCancel
             onCancel={crudModal.close}
