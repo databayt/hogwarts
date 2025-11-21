@@ -1,5 +1,5 @@
 import { loader } from 'fumadocs-core/source'
-import { docs } from '@/.source'
+import { docs } from '../../.source'
 
 // Export loader with i18n support for Arabic and English
 export const { getPage, getPages, getLanguages } = loader({
