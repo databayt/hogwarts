@@ -70,6 +70,7 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
   },
   secret: process.env.AUTH_SECRET,
   debug: process.env.NODE_ENV === "development",
+  trustHost: true, // Required for OAuth in production (Vercel proxies)
   events: {
     async signIn({ user, account, isNewUser }) {
       if (process.env.NODE_ENV === 'development') {

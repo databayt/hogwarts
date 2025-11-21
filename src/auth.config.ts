@@ -39,7 +39,6 @@ export default {
           emailVerified: new Date(),
         };
       },
-      checks: [], // Disable PKCE temporarily
     }),
     // Facebook provider - always include if credentials exist
     Facebook({
@@ -60,7 +59,6 @@ export default {
           emailVerified: new Date(),
         };
       },
-      checks: [], // Disable PKCE temporarily
     }),
     Credentials({
       async authorize(credentials) {
