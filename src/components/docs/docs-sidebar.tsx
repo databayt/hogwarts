@@ -19,6 +19,26 @@ import {
 const DOCS_LINKS = [
   { name: "Introduction", href: "/docs" },
   { name: "Getting Started", href: "/docs/getting-started" },
+  { name: "Installation", href: "/docs/installation" },
+  { name: "Architecture", href: "/docs/architecture" },
+  { name: "Tech Stack", href: "/docs/tech-stack" },
+  { name: "Project Structure", href: "/docs/structure" },
+  { name: "Development Workflow", href: "/docs/workflow" },
+  { name: "Build System", href: "/docs/build-system" },
+  { name: "Testing", href: "/docs/testing" },
+  { name: "Authentication", href: "/docs/authentication" },
+  { name: "Internationalization", href: "/docs/internationalization" },
+  { name: "Multi-Tenancy", href: "/docs/multi-tenancy" },
+  { name: "Database", href: "/docs/database" },
+  { name: "API Design", href: "/docs/api-design" },
+  { name: "UI Components", href: "/docs/ui-components" },
+  { name: "Typography", href: "/docs/typography" },
+  { name: "Icons", href: "/docs/icons" },
+  { name: "Deployment", href: "/docs/deployment" },
+  { name: "Environment Variables", href: "/docs/environment" },
+  { name: "Contributing", href: "/docs/contributing" },
+  { name: "Code of Conduct", href: "/docs/code-of-conduct" },
+  { name: "Changelog", href: "/docs/changelog" },
 ]
 
 export function DocsSidebar({

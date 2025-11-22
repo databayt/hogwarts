@@ -5,9 +5,12 @@ import { DocsCopyPage } from "@/components/docs/docs-copy-page"
 import { getPage, getPages, findNeighbour } from "@/lib/source"
 import { MDXContent } from "@/components/mdx/mdx-content"
 import type { Metadata } from "next"
-import { ArrowLeft, ArrowRight } from "lucide-react"
+import { ArrowLeft, ArrowRight, ArrowUpRight } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import fm from "front-matter"
+import { z } from "zod"
 
 interface DocsPageProps {
   params: Promise<{
@@ -111,6 +114,19 @@ export default async function DocsPage({ params }: DocsPageProps) {
   const raw = (page.data as any).raw || ''
   const pageUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://ed.databayt.org'}${url}`
 
+  // Parse front-matter for external links
+  const { attributes } = fm(raw)
+  const { links } = z
+    .object({
+      links: z
+        .object({
+          doc: z.string().optional(),
+          api: z.string().optional(),
+        })
+        .optional(),
+    })
+    .parse(attributes || {})
+
   // Find neighbor pages for navigation
   const neighbours = findNeighbour(url, lang)
 
@@ -157,6 +173,26 @@ export default async function DocsPage({ params }: DocsPageProps) {
                 {description}
               </p>
             )}
+
+            {/* External Links Badges */}
+            {links ? (
+              <div className="flex items-center gap-2 pt-4">
+                {links.doc && (
+                  <Badge asChild variant="secondary" className="rounded-full">
+                    <a href={links.doc} target="_blank" rel="noreferrer">
+                      Docs <ArrowUpRight className="ml-1 h-3 w-3" />
+                    </a>
+                  </Badge>
+                )}
+                {links.api && (
+                  <Badge asChild variant="secondary" className="rounded-full">
+                    <a href={links.api} target="_blank" rel="noreferrer">
+                      API Reference <ArrowUpRight className="ml-1 h-3 w-3" />
+                    </a>
+                  </Badge>
+                )}
+              </div>
+            ) : null}
           </div>
 
           {/* MDX Content */}
