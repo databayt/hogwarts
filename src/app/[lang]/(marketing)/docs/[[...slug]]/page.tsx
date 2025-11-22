@@ -6,7 +6,7 @@ import type { Metadata } from "next"
 import { source } from "@/lib/source"
 import { DocsTableOfContents } from "@/components/docs/toc"
 import { Button } from "@/components/ui/button"
-import { mdxComponents } from "../../../../../mdx-components"
+import { mdxComponents } from "../../../../../../mdx-components"
 
 export const runtime = "nodejs";
 export const revalidate = false

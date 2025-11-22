@@ -1,5 +1,5 @@
-import MarketingHeader from "@/components/template/marketing-header/content";
-import { MarketingFooter } from "@/components/template/marketing-footer/content";
+import { SiteHeader } from "@/components/template/marketing-header/site-header";
+import { SiteFooter } from "@/components/template/marketing-header/site-footer";
 import { getDictionary } from "@/components/internationalization/dictionaries";
 import { type Locale } from "@/components/internationalization/config";
 
@@ -16,15 +16,10 @@ export default async function MarketingLayout({
   const dictionary = await getDictionary(lang as Locale);
 
   return (
-    <div data-slot="site-layout">
-      <MarketingHeader dictionary={dictionary} />
-      <main
-        data-slot="main-content"
-        role="main"
-      >
-        {children}
-      </main>
-      <MarketingFooter />
-    </div>
+    <>
+      <SiteHeader dictionary={dictionary} />
+      {children}
+      <SiteFooter dictionary={dictionary} />
+    </>
   );
 }
