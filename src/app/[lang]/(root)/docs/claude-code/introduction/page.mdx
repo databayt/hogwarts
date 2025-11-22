@@ -1,0 +1,148 @@
+# Claude Code Introduction
+
+**AI-powered development assistant for the Hogwarts platform**
+
+---
+
+## What is Claude Code?
+
+Claude Code is Anthropic's official coding assistant that combines the intelligence of Claude with specialized development tools. It's specifically configured for the Hogwarts school automation platform with **32 specialized agents**, **22 workflow commands**, and **7 reusable skills**.
+
+## Key Capabilities
+
+### 🤖 32 Specialized Agents
+Expert AI agents for every development domain:
+- **Tech Stack**: Next.js, React, Prisma, TypeScript, Tailwind
+- **Process**: Architecture, Testing, Security, Performance
+- **Developer Tools**: Build optimization, dependency management, documentation
+- **Workflow**: Git operations, API design, multi-tenant safety
+
+### ⚡ 22 Workflow Commands
+Quick shortcuts for common tasks:
+- Component generation
+- Page creation
+- Code review
+- Security scanning
+- Error prevention
+- Performance optimization
+
+### 🎨 7 Reusable Skills
+Shared knowledge patterns:
+- Query optimization
+- React performance
+- Security scanning
+- Test generation
+- API design
+- Multi-tenant validation
+- Dictionary validation
+
+### 🔧 Full Automation
+- Auto-formatting on save
+- Pre-commit quality gates
+- Smart error prevention (204+ error types)
+- 95%+ auto-fix success rate
+
+## Getting Started
+
+### Basic Usage
+
+```bash
+# Use agents for specific expertise
+/agents/nextjs -p "Help with routing"
+/agents/react -p "Optimize component performance"
+/agents/prisma -p "Fix N+1 queries"
+
+# Use commands for quick tasks
+/component StudentCard
+/review
+/security-scan
+```
+
+### Complex Features
+
+For multi-step features, use the orchestrator:
+
+```bash
+/agents/orchestrate -p "Create student attendance tracking with:
+- Calendar view
+- Bulk actions
+- Multi-tenant safety
+- Arabic/English support
+- Comprehensive tests"
+```
+
+## Platform-Specific Configuration
+
+Claude Code is pre-configured for Hogwarts with:
+- **Multi-tenant architecture** - All queries scoped by schoolId
+- **Bilingual support** - Arabic (RTL) and English (LTR)
+- **Mirror pattern** - Routes mirror component structure
+- **Server-first** - Server components and actions
+- **Type safety** - Strict TypeScript with no `any`
+- **95%+ test coverage** - TDD approach
+
+## Premium Model Strategy
+
+Claude Code uses only the highest-tier models:
+- **Claude Opus 4.1** - For orchestration agent (complex multi-agent coordination)
+- **Claude Sonnet 4.5** - For all technical agents (maximum quality responses)
+
+Benefits:
+- **Superior reasoning** capabilities
+- **Deepest technical understanding**
+- **Most comprehensive** context handling
+- **No quality compromises** - premium models only
+
+## Integration Points
+
+### MCP Servers (13 total)
+- PostgreSQL - Direct database access
+- GitHub - Repository operations
+- Filesystem - Enhanced file operations
+- Memory - Context persistence
+- Vercel - Deployment management
+- And more...
+
+### Git Hooks
+- Pre-commit validation
+- Pre-push build verification
+- Post-commit actions
+- Smart blocking on protected branches
+
+## Expected Benefits
+
+- **10x faster** feature development
+- **Zero manual formatting**
+- **95%+ test coverage** maintained
+- **Zero security vulnerabilities**
+- **204+ error types** prevented
+- **Maximum quality** with Opus 4.1 + Sonnet 4.5
+- **No compromises** on response quality
+
+## Next Steps
+
+1. **Explore agents**: See [Agents Documentation](/docs/claude-code/agents)
+2. **Learn commands**: See [Commands Documentation](/docs/claude-code/commands)
+3. **Configure settings**: See [Configuration Guide](/docs/claude-code/configuration)
+4. **Review workflows**: See [Workflows Documentation](/docs/claude-code/workflows)
+
+## Migration from Previous Version
+
+If you were using the older version with 20 agents:
+
+```bash
+# Old → New agent names
+/agents/architect → /agents/architecture
+/agents/bug → /agents/debug
+/agents/review → /agents/react-reviewer
+/agents/git → /agents/git-github
+/agents/github → /agents/git-github
+```
+
+Build functionality is now in `/agents/nextjs`, and prettier runs automatically.
+
+---
+
+**Version**: 3.0 (Expanded)
+**Last Updated**: 2025-10-31
+**Status**: Production Ready

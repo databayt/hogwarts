@@ -1,0 +1,953 @@
+# Exam System & Question Bank Demo
+
+Complete guide to the comprehensive examination system with Question Bank, AI-powered exam generation, automated marking, and results analytics.
+
+## Overview
+
+The Demo School has a **complete exam infrastructure** with:
+- ✅ **Question Bank**: 30+ questions across 9 subjects (Math, Physics, Chemistry, Biology, English, Arabic, History, Geography, Computer Science)
+- ✅ **6 Question Types**: MCQ, True/False, Short Answer, Essay, Fill in the Blank, Matching
+- ✅ **12 Exams**: 6 completed with results (Midterms), 6 planned (Finals)
+- ✅ **~1,800 Exam Results**: 6 completed exams × 150 students × 80% participation
+- ✅ **Automated Marking**: MCQ and T/F auto-graded instantly
+- ✅ **Manual Marking**: Essays and short answers with rubric support
+- ✅ **AI Generation**: Auto-create exams from Question Bank
+- ✅ **Results Analytics**: Grade distribution, performance trends, insights
+
+## Quick Access
+
+**Demo Exams**:
+- **Completed**: Grade 10 Math Midterm (25 students, all graded)
+- **In Progress**: Grade 11 Physics Midterm (marking underway)
+- **Planned**: Grade 12 Final Exams (6 subjects, scheduled for June)
+
+**Question Bank**:
+- Total Questions: 30+
+- Subjects: 9 (all major subjects covered)
+- Types: MCQ (40%), T/F (20%), Short Answer (20%), Essay (10%), Fill Blank (5%), Matching (5%)
+- Difficulty: Balanced across Easy (30%), Medium (50%), Hard (20%)
+
+## Feature Walkthroughs
+
+### 1. Question Bank Management (15 minutes)
+
+**Access**: `/en/s/demo/platform/exams/qbank`
+
+**What is Question Bank?**
+Centralized repository of exam questions that can be reused across multiple exams, tagged by subject, topic, difficulty, and learning objectives.
+
+**View Question Bank**:
+1. Navigate to Exams → Question Bank
+2. See all questions in table:
+   - **Subject**: Math, Physics, Chemistry, etc.
+   - **Type**: MCQ, T/F, Short Answer, Essay, Fill Blank, Matching
+   - **Difficulty**: Easy, Medium, Hard
+   - **Topic**: Algebra, Mechanics, Organic Chemistry, etc.
+   - **Used Count**: How many exams use this question
+3. Filter by subject, type, difficulty
+4. Search by keyword
+
+**Create New Question** (MCQ Example):
+1. Click "Add Question"
+2. Fill form:
+   - **Subject**: Mathematics
+   - **Topic**: Quadratic Equations
+   - **Type**: Multiple Choice (MCQ)
+   - **Difficulty**: Medium
+   - **Question Text**: "What are the roots of x² - 5x + 6 = 0?"
+   - **Options**:
+     - A) x = 2, x = 3 ✅ (mark as correct)
+     - B) x = -2, x = -3
+     - C) x = 1, x = 6
+     - D) x = -1, x = -6
+   - **Explanation** (optional): "Factor to (x-2)(x-3) = 0"
+   - **Points**: 2
+   - **Bloom's Taxonomy**: Application
+   - **Learning Objective**: "LO1.3: Solve quadratic equations"
+3. Save → Question added to bank
+
+**Question Types Walkthrough**:
+
+#### A. Multiple Choice (MCQ)
+```
+Question: What is the capital of Sudan?
+A) Khartoum ✅
+B) Cairo
+C) Riyadh
+D) Addis Ababa
+
+Points: 1
+Auto-Graded: Yes
+```
+
+#### B. True/False
+```
+Question: Sudan is located in North Africa.
+Answer: True ✅
+
+Points: 1
+Auto-Graded: Yes
+```
+
+#### C. Short Answer
+```
+Question: Explain the water cycle in 2-3 sentences.
+
+Expected Answer: The water cycle involves evaporation (water turns to vapor), condensation (vapor forms clouds), and precipitation (water falls as rain/snow). It's powered by the sun and gravity.
+
+Points: 3
+Auto-Graded: No (teacher reviews)
+Marking Scheme:
+- Mentions evaporation: 1 point
+- Mentions condensation: 1 point
+- Mentions precipitation: 1 point
+```
+
+#### D. Essay
+```
+Question: Discuss the causes and effects of climate change. (250-300 words)
+
+Points: 10
+Auto-Graded: No (requires rubric-based marking)
+Rubric:
+- Thesis clarity: 2 points
+- Evidence & examples: 3 points
+- Organization & coherence: 2 points
+- Grammar & mechanics: 1 point
+- Depth of analysis: 2 points
+```
+
+#### E. Fill in the Blank
+```
+Question: The Nile River flows through ___ countries before reaching the Mediterranean Sea.
+
+Answer: eleven (or 11)
+
+Points: 1
+Auto-Graded: Yes (exact match or synonym)
+```
+
+#### F. Matching
+```
+Question: Match scientists with their discoveries.
+
+Column A (Scientists):
+1. Albert Einstein
+2. Isaac Newton
+3. Marie Curie
+
+Column B (Discoveries):
+A. Theory of Relativity
+B. Laws of Motion
+C. Radioactivity
+
+Correct Matches:
+1-A, 2-B, 3-C
+
+Points: 3 (1 per correct match)
+Auto-Graded: Yes
+```
+
+**Question Metadata**:
+- **Bloom's Taxonomy**: Remember, Understand, Apply, Analyze, Evaluate, Create
+- **Cognitive Load**: Low, Medium, High
+- **Time to Answer**: Estimated minutes
+- **National Standards**: Link to curriculum standards (CCSS, NGSS, etc.)
+- **Tags**: Free-form tags for organization (e.g., "midterm", "review", "practical")
+
+**Demo Data**:
+```
+Question Bank Breakdown:
+- Math: 8 questions (2 MCQ, 2 T/F, 2 Short, 1 Essay, 1 Fill Blank)
+- Physics: 5 questions (2 MCQ, 1 T/F, 1 Short, 1 Essay)
+- Chemistry: 4 questions (1 MCQ, 1 T/F, 1 Short, 1 Essay)
+- Biology: 3 questions (1 MCQ, 1 T/F, 1 Short)
+- English: 3 questions (1 MCQ, 1 Short, 1 Essay)
+- Arabic: 2 questions (1 MCQ, 1 Essay)
+- History: 2 questions (1 T/F, 1 Essay)
+- Geography: 2 questions (1 MCQ, 1 Short)
+- Computer Science: 2 questions (1 T/F, 1 Short)
+
+Total: 31 questions
+```
+
+---
+
+### 2. Create Exam Manually (10 minutes)
+
+**Access**: `/en/s/demo/platform/exams/manage/new`
+
+**Workflow**:
+1. Click "Create Exam"
+2. Fill Exam Details:
+   - **Title**: "Grade 10 Math Midterm Exam"
+   - **Subject**: Mathematics
+   - **Class**: Math - Grade 10 - Section A
+   - **Date**: February 15, 2025
+   - **Duration**: 90 minutes
+   - **Total Points**: 50
+   - **Passing Score**: 60% (30 points)
+   - **Instructions**: "Answer all questions. Show your work for full credit."
+3. Add Questions:
+   - **Method 1: Select from Question Bank**
+     - Click "Add from Bank"
+     - Filter by subject (Math), difficulty (mix)
+     - Select 20 questions
+     - Total points calculated automatically: 50 points
+   - **Method 2: Create New Question Inline**
+     - Click "Create New"
+     - Fill question details (same as Question Bank)
+     - Option: "Add to Question Bank" (reusable)
+4. Arrange Questions:
+   - Drag-and-drop to reorder
+   - Group by difficulty (Easy → Medium → Hard)
+   - Or by topic (Algebra → Geometry → Calculus)
+5. Configure Settings:
+   - **Shuffle Questions**: Randomize order per student (prevents copying)
+   - **Shuffle Options**: Randomize MCQ choices
+   - **Show Scores**: Immediately or after deadline
+   - **Allow Review**: Can students review after submission?
+   - **Attempts**: 1 (default), 2, 3, or unlimited
+6. Publish:
+   - **Draft**: Save without publishing (invisible to students)
+   - **Scheduled**: Publish automatically on date/time
+   - **Publish Now**: Immediately visible to students
+
+**Result**: Exam created, students notified, appears in "Upcoming Exams"
+
+---
+
+### 3. AI-Powered Exam Generation (7 minutes)
+
+**Access**: `/en/s/demo/platform/exams/generate`
+
+**What is Auto-Generation?**
+AI analyzes Question Bank and creates balanced exams matching your criteria (difficulty, topics, question types, duration).
+
+**Workflow**:
+1. Click "Generate Exam with AI"
+2. Set Parameters:
+   - **Subject**: Mathematics
+   - **Topics**: Select from list (e.g., Algebra, Geometry, Trigonometry)
+   - **Difficulty Distribution**:
+     - Easy: 30% (6 questions)
+     - Medium: 50% (10 questions)
+     - Hard: 20% (4 questions)
+   - **Question Types**:
+     - MCQ: 50% (10 questions)
+     - Short Answer: 30% (6 questions)
+     - Essay: 10% (2 questions)
+     - Fill Blank: 10% (2 questions)
+   - **Total Questions**: 20
+   - **Target Duration**: 90 minutes
+   - **Total Points**: 50
+   - **Bloom's Taxonomy**:
+     - Remember/Understand: 40%
+     - Apply/Analyze: 40%
+     - Evaluate/Create: 20%
+3. Click "Generate"
+4. AI Output:
+   - System selects 20 questions from bank
+   - Balances difficulty, types, topics
+   - Estimates time: 88 minutes (close to target)
+   - Shows coverage: All topics represented
+5. Review Generated Exam:
+   - Preview all questions
+   - Check balance and coverage
+   - Add/remove/replace questions if needed
+6. Approve:
+   - Click "Accept & Create Exam"
+   - Exam created with generated question set
+   - Fill remaining details (title, date, class)
+7. Publish
+
+**Benefits**:
+- ⚡ **Fast**: Generate exam in 2 minutes vs 30 minutes manual
+- 🎯 **Balanced**: AI ensures proper difficulty distribution
+- 🔄 **Fresh**: Randomizes questions, reduces pattern recognition
+- 📊 **Standards-Aligned**: Matches learning objectives automatically
+
+**Demo Testing**:
+```bash
+# Generate Physics Exam:
+Subject: Physics
+Topics: Mechanics, Electricity, Thermodynamics
+Difficulty: 30% Easy, 50% Medium, 20% Hard
+Types: 50% MCQ, 30% Short, 20% Essay
+Total: 25 questions, 60 points, 120 minutes
+
+Click Generate → AI creates exam in 30 seconds
+Review → Adjust 2 questions (swap easy for medium)
+Publish → Exam ready
+```
+
+---
+
+### 4. Student Exam Taking Experience (20 minutes)
+
+**Access**: `/en/s/demo/platform/exams/{examId}/take` (student view)
+
+**Before Exam**:
+1. Student logs in → Dashboard shows "Upcoming Exams"
+2. **Grade 10 Math Midterm** - February 15, 9:00 AM (in 2 days)
+3. Click to view details:
+   - Duration: 90 minutes
+   - Questions: 20
+   - Points: 50
+   - Passing: 60% (30 points)
+   - Instructions: Read carefully
+
+**Taking Exam**:
+1. On exam day, click "Start Exam"
+2. Confirm: "Once started, timer begins. Continue?"
+3. Exam Interface:
+   - **Top Bar**:
+     - Timer: 90:00 (counts down)
+     - Progress: 3/20 questions answered
+     - Auto-save indicator: "All answers saved"
+   - **Question Navigation**:
+     - Sidebar: Question numbers (1-20)
+     - Green: Answered
+     - Gray: Unanswered
+     - Yellow: Flagged for review
+   - **Question Display**:
+     - Question text
+     - Answer input (based on type)
+     - "Flag for Review" checkbox
+     - "Previous" and "Next" buttons
+4. Answer Questions:
+   - **MCQ**: Click radio button for choice
+   - **T/F**: Click True or False
+   - **Short Answer**: Text area (2-3 sentences)
+   - **Essay**: Rich text editor with formatting (bold, italics, bullet points)
+   - **Fill Blank**: Text input
+   - **Matching**: Drag-drop or dropdowns
+5. Auto-Save:
+   - Answers saved every 10 seconds
+   - No manual save needed
+   - Network interruption → Resumes where left off
+6. Review:
+   - Click "Review" → See summary:
+     - Answered: 18/20 ✅
+     - Unanswered: 2 ❌
+     - Flagged: 3 🚩
+   - Jump to unanswered questions
+7. Submit:
+   - Click "Submit Exam"
+   - Warning: "2 questions unanswered. Submit anyway?"
+   - Confirm → Exam submitted
+   - Cannot edit after submission
+
+**After Submission**:
+- **Objective Questions** (MCQ, T/F, Fill Blank, Matching):
+  - **Instant Results**: "You scored 28/40 on objective questions (70%)"
+  - Correct answers highlighted in green
+  - Wrong answers in red with correct answer shown
+- **Subjective Questions** (Short Answer, Essay):
+  - "Awaiting teacher review" (shown as pending)
+  - Estimated grading time: 3-5 business days
+- **Final Score**: "Partial Score: 28/50. Awaiting manual marking for 10 points."
+
+**Demo Testing**:
+```bash
+# Login as student:
+Email: student@demo.databayt.org
+Password: 1234
+
+# Take exam:
+1. Dashboard → "Grade 10 Math Midterm" → Start
+2. Answer 20 questions (mix of types)
+3. Timer: 45 minutes remaining
+4. Flag 2 questions for review
+5. Submit → Instant score: 32/40 (80%) on objective questions
+6. Await teacher grading for 2 essay questions (10 points)
+```
+
+---
+
+### 5. Automated Marking (Instant) (5 minutes)
+
+**How It Works**:
+System automatically grades objective questions the moment student submits exam.
+
+**Objective Question Types** (Auto-Graded):
+1. **Multiple Choice (MCQ)**:
+   - Compare student answer to correct option
+   - Match → Full points
+   - No match → Zero points
+2. **True/False**:
+   - Simple boolean comparison
+   - Instant result
+3. **Fill in the Blank**:
+   - Exact match OR synonym match
+   - Example: "Eleven" = "11" = "11 countries"
+   - Uses fuzzy matching for flexibility
+4. **Matching**:
+   - Check each pair
+   - Partial credit: 1 point per correct match
+
+**Grading Algorithm**:
+```
+For each objective question:
+  student_answer = extract_answer(submission)
+  correct_answer = get_correct_answer(question)
+
+  if question.type == MCQ:
+    points = student_answer == correct_answer ? question.points : 0
+
+  elif question.type == TRUE_FALSE:
+    points = student_answer == correct_answer ? question.points : 0
+
+  elif question.type == FILL_BLANK:
+    # Fuzzy matching with 90% similarity threshold
+    similarity = calculate_similarity(student_answer, correct_answer)
+    points = similarity >= 0.9 ? question.points : 0
+
+  elif question.type == MATCHING:
+    correct_pairs = count_correct_pairs(student_answer, correct_answer)
+    points = correct_pairs * points_per_pair
+
+  total_score += points
+
+return total_score
+```
+
+**Instant Feedback**:
+- Student sees score immediately
+- Color-coded results:
+  - Green ✅: Correct (+2 points)
+  - Red ❌: Wrong (0 points, shows correct answer)
+- Running total updated in real-time
+
+**Demo Data**:
+- 6 completed exams all have objective questions auto-graded
+- Average auto-grading time: < 1 second per exam
+- Accuracy: 100% (deterministic matching)
+
+---
+
+### 6. Manual Marking with Rubrics (15 minutes)
+
+**Access**: `/en/s/demo/platform/exams/mark/{examId}`
+
+**Subjective Question Types** (Require Manual Review):
+- Short Answer (2-3 sentences)
+- Essay (250+ words)
+- Some Fill in the Blank (if fuzzy match fails)
+
+**Marking Workflow**:
+1. Navigate to Exams → Marking
+2. Select exam: "Grade 10 Math Midterm"
+3. See submissions list:
+   - **Status**: Submitted (20), Marked (15), Pending (5)
+   - **Objective Score**: Auto-calculated (e.g., 32/40)
+   - **Subjective Score**: Pending (0/10 graded)
+4. Click student submission: "Ahmed Mohamed Ali"
+5. View Exam Paper:
+   - **Objective Questions**: Already graded (green/red)
+   - **Subjective Questions**: Awaiting marks
+
+**Mark Short Answer**:
+1. Question: "Explain the Pythagorean theorem."
+2. Student Answer: "In a right triangle, the square of hypotenuse equals sum of squares of other two sides. Formula: a² + b² = c²."
+3. Teacher Reviews:
+   - ✅ Correct formula mentioned
+   - ✅ Explanation clear
+   - ✅ Concise and accurate
+4. Assign Score: 3/3 points
+5. Add Feedback (optional): "Excellent explanation!"
+6. Click "Save"
+
+**Mark Essay with Rubric**:
+1. Question: "Discuss climate change causes."
+2. Student Answer: 300-word essay
+3. Load Rubric (pre-defined):
+   ```
+   Rubric: Essay Scoring (10 points total)
+
+   1. Thesis & Introduction (2 points)
+      - 2: Clear, compelling thesis
+      - 1: Thesis present but unclear
+      - 0: No thesis
+
+   2. Evidence & Examples (3 points)
+      - 3: Multiple specific examples with citations
+      - 2: Some examples, lacking specifics
+      - 1: Minimal examples
+      - 0: No examples
+
+   3. Organization (2 points)
+      - 2: Logical flow, strong transitions
+      - 1: Some organization issues
+      - 0: Disorganized
+
+   4. Analysis & Depth (2 points)
+      - 2: Deep critical thinking
+      - 1: Surface-level analysis
+      - 0: No analysis
+
+   5. Grammar & Mechanics (1 point)
+      - 1: Few or no errors
+      - 0: Many errors
+   ```
+4. Score Each Criterion:
+   - Thesis: 2/2 ✅
+   - Evidence: 2/3 ⚠️ (needs more specifics)
+   - Organization: 2/2 ✅
+   - Analysis: 1/2 ⚠️ (surface-level)
+   - Grammar: 1/1 ✅
+5. **Total**: 8/10 points
+6. Add Overall Feedback:
+   "Good thesis and organization. Strengthen with more specific examples and deeper analysis of causes."
+7. Click "Save & Next" → Moves to next student
+
+**Bulk Marking Features**:
+- **Side-by-side view**: See multiple submissions simultaneously
+- **Common feedback library**: Save frequently used comments
+- **Rubric presets**: Load saved rubrics
+- **Partial scoring**: Assign partial credit (e.g., 1.5/3 points)
+- **Offline marking**: Export submissions as PDF, mark offline, upload scores
+
+**Demo Testing**:
+```bash
+# Login as teacher:
+Email: teacher@demo.databayt.org
+Password: 1234
+
+# Mark submissions:
+1. Exams → Marking → "Grade 10 Math Midterm"
+2. 25 submissions: 20 marked, 5 pending
+3. Open first pending submission
+4. Mark 2 short answers (3 min each) = 6 min
+5. Mark 1 essay with rubric (5 min) = 5 min
+6. Save → Final score calculated: 42/50 (84%)
+7. Repeat for remaining 4 students
+```
+
+---
+
+### 7. Exam Results & Analytics (10 minutes)
+
+**Access**: `/en/s/demo/platform/exams/results/{examId}`
+
+**Results Overview**:
+1. Navigate to Exams → Results
+2. Select exam: "Grade 10 Math Midterm"
+3. See Summary Dashboard:
+
+   **Key Metrics**:
+   - **Total Students**: 25
+   - **Submitted**: 25 (100%)
+   - **Marked**: 25 (100%)
+   - **Average Score**: 38/50 (76%)
+   - **Median Score**: 40/50 (80%)
+   - **Highest**: 48/50 (96%) - سارة علي حسن (Sara)
+   - **Lowest**: 22/50 (44%) - محمد عبدالله يوسف (Mohamed)
+   - **Pass Rate**: 88% (22/25 students passed at 60% threshold)
+   - **Standard Deviation**: 8.2
+
+**Grade Distribution** (histogram):
+```
+Grade A (90-100%): ████ 4 students (16%)
+Grade B (80-89%):  ████████ 8 students (32%)
+Grade C (70-79%):  ██████ 6 students (24%)
+Grade D (60-69%):  ████ 4 students (16%)
+Grade F (<60%):    ██ 3 students (12%)
+```
+
+**Performance by Question**:
+| Question | Type | Topic | Difficulty | Avg Score | Pass Rate |
+|----------|------|-------|------------|-----------|-----------|
+| Q1 | MCQ | Algebra | Easy | 1.9/2 | 95% |
+| Q2 | MCQ | Geometry | Medium | 1.6/2 | 80% |
+| Q3 | Short | Calculus | Hard | 1.2/3 | 40% |
+| Q4 | Essay | Problem-solving | Hard | 5.8/10 | 58% |
+
+**Insights**:
+- ⚠️ **Q3 (Calculus Short Answer)**: Only 40% pass rate → Consider reviewing this topic
+- ✅ **Q1 (Algebra MCQ)**: 95% pass rate → Students strong in algebra
+- 📊 **Grade distribution**: Normal curve, healthy spread
+
+**Question Analysis**:
+1. Click on Q3 (difficult question)
+2. See student answers:
+   - **Correct**: 10 students (40%)
+   - **Partially Correct**: 8 students (32%)
+   - **Incorrect**: 7 students (28%)
+3. **Common Mistakes**:
+   - 60% confused derivative vs integral
+   - 30% calculation errors
+   - 10% left blank
+4. **Recommendation**: "Schedule review session on calculus basics"
+
+**Student Performance Report**:
+```
+Student: Ahmed Mohamed Ali
+Overall Score: 42/50 (84%) - Grade B
+
+By Question Type:
+- MCQ: 18/20 (90%)
+- True/False: 8/10 (80%)
+- Short Answer: 10/12 (83%)
+- Essay: 6/8 (75%)
+
+By Topic:
+- Algebra: 15/18 (83%)
+- Geometry: 12/15 (80%)
+- Calculus: 10/12 (83%)
+- Problem-solving: 5/5 (100%)
+
+Strengths: Algebra, Problem-solving
+Areas for Improvement: Geometry (missed 3 questions)
+
+Class Rank: 8/25 (Top 32%)
+```
+
+**Export Options**:
+- **PDF Report**: Individual student reports with detailed breakdown
+- **CSV**: Raw scores for Excel analysis
+- **Gradebook Export**: Import results into gradebook automatically
+- **Parent Reports**: Simplified report card for parents
+
+**Demo Data**:
+- All 6 completed exams have full results and analytics
+- ~1,800 results total (6 exams × 150 students × 80% participation rate)
+- Grade distributions: Normal curves with realistic spreads
+- Performance data: Some questions harder (40% pass), some easier (95% pass)
+
+---
+
+### 8. Publish Results to Students (5 minutes)
+
+**Access**: Exam Results → Publish
+
+**Publishing Workflow**:
+1. Navigate to Exams → Results → Select exam
+2. Verify all submissions marked (25/25 complete)
+3. Configure Publication:
+   - **Show Scores**: Yes (display final score)
+   - **Show Correct Answers**: Yes (allow review)
+   - **Show Feedback**: Yes (teacher comments visible)
+   - **Show Class Average**: Yes (for context)
+   - **Show Rank**: No (optional, some schools disable for sensitivity)
+4. Click "Publish Results"
+5. Confirmation: "Results published to 25 students"
+6. **Automated Actions**:
+   - Students receive notification: "Math Midterm results available"
+   - Parents receive email: "Your child's exam results posted"
+   - Results appear in student/parent dashboards
+
+**Student View (After Publication)**:
+1. Student logs in → Notification: "New exam results"
+2. Click → View results page:
+   - **Your Score**: 42/50 (84%) - Grade B 🎉
+   - **Class Average**: 38/50 (76%)
+   - **Your Rank**: 8/25 (optional, if enabled)
+3. **Review Exam**:
+   - See all questions
+   - Correct answers highlighted green
+   - Wrong answers red with correct answer shown
+   - Teacher feedback displayed for essay questions
+4. **Performance Breakdown**:
+   - By question type
+   - By topic
+   - Strengths and weaknesses
+
+**Parent View**:
+1. Parent logs in → Dashboard: "New exam result for Ahmed"
+2. Click → View summary:
+   - Score: 42/50 (84%)
+   - Grade: B
+   - Class Average: 76%
+   - Teacher Comments: "Strong performance. Excellent problem-solving."
+3. Option: Download PDF report
+
+**Demo Testing**:
+```bash
+# Publish results:
+1. Teacher marks all 25 submissions
+2. Exams → Results → "Grade 10 Math Midterm"
+3. Verify completion: 25/25 marked
+4. Click "Publish Results"
+5. Confirm
+
+# Verify student access:
+1. Login as student@demo.databayt.org
+2. Dashboard → "Math Midterm Results Available"
+3. Click → See score: 84%, Rank: 8/25
+4. Review questions → See correct/wrong answers
+
+# Verify parent access:
+1. Login as parent@demo.databayt.org
+2. Dashboard → "Ahmed scored 84% on Math Midterm"
+3. Click → View summary with teacher feedback
+```
+
+---
+
+### 9. Question Bank Analytics (5 minutes)
+
+**Access**: `/en/s/demo/platform/exams/qbank/analytics`
+
+**Question Performance Tracking**:
+
+Every time a question is used in an exam, system tracks:
+- **Usage Count**: How many exams use this question
+- **Average Score**: Mean student performance
+- **Difficulty Actual vs Intended**: Is "Medium" question actually hard?
+- **Discrimination Index**: Do high-performers get it right more often?
+
+**Example**:
+```
+Question: "What are the roots of x² - 5x + 6 = 0?"
+Tagged Difficulty: Medium
+Actual Difficulty: Easy (90% pass rate)
+
+Usage: 5 exams (125 students total)
+Average Score: 1.8/2 (90%)
+Discrimination: 0.45 (good - high performers do better)
+
+Recommendation: Reclassify as "Easy" or add complexity
+```
+
+**Question Bank Health**:
+- **Total Questions**: 31
+- **Well-Calibrated**: 22 questions (difficulty matches performance)
+- **Too Easy**: 5 questions (>90% pass rate but tagged Medium/Hard)
+- **Too Hard**: 4 questions (<50% pass rate but tagged Easy/Medium)
+- **Unused**: 8 questions (never used in exams - consider archiving)
+- **Overused**: 2 questions (used in 10+ exams - create alternatives)
+
+**Improve Question Quality**:
+1. Identify too-easy question: Q15 (Algebra MCQ, 95% pass but tagged Hard)
+2. Options:
+   - **Retag**: Change difficulty to Easy
+   - **Revise**: Add complexity (multiple-step solution)
+   - **Retire**: Remove from active pool
+3. Update → Question Bank quality improves over time
+
+---
+
+## Advanced Features
+
+### 10. Exam Security Features
+
+**Prevent Cheating**:
+- ✅ **Question Shuffling**: Each student sees different order
+- ✅ **Option Shuffling**: MCQ choices randomized per student
+- ✅ **Time Limits**: Strict deadlines, no extensions without admin approval
+- ✅ **Browser Lockdown**: Optional full-screen mode, disable copy-paste
+- ✅ **Proctoring**: Webcam monitoring (requires student consent)
+- ✅ **Plagiarism Detection**: Compare essay answers for similarity
+- ✅ **IP Tracking**: Flag if multiple students submit from same IP
+- ✅ **Auto-Submit**: Exam submits automatically when time expires
+
+**Academic Integrity Monitoring**:
+```
+Alert: Potential Cheating Detected
+
+Students: Ahmed Mohamed Ali, Fatima Hassan Ibrahim
+Exam: Grade 10 Math Midterm
+Reason: 18/20 identical answers (including wrong answers)
+Similarity Score: 90%
+Action: Flag for manual review
+```
+
+---
+
+### 11. Accommodations & Accessibility
+
+**Special Accommodations**:
+- **Extended Time**: Add 50% or 100% extra time (e.g., 90 min → 135 min)
+- **Separate Room**: Schedule different time/location
+- **Read-Aloud**: Text-to-speech for questions
+- **Large Print**: Increase font size
+- **Assistive Technology**: Screen reader support
+
+**Setup**:
+1. Student Profile → Accommodations tab
+2. Add accommodation: "Extended time (50%) for all exams"
+3. Reason: "Documented learning disability"
+4. Approval: Admin or counselor must approve
+5. Automatic Application: All future exams include accommodation
+
+**Demo Testing**:
+```
+Student: Mohamed Abdullah Yousif
+Accommodation: Extended time (50%)
+
+Regular exam: 90 minutes
+With accommodation: 135 minutes
+
+System automatically adjusts timer when student starts exam
+```
+
+---
+
+### 12. Exam Scheduling & Conflicts
+
+**Exam Calendar**:
+- View all exams in calendar format
+- Identify scheduling conflicts:
+  - 2 exams same day for same students
+  - Exams during holidays
+  - Teacher unavailable (on leave)
+- Automatic conflict detection:
+  - Warning: "3 Grade 10 students have 2 exams on Feb 15"
+  - Suggestion: "Reschedule Physics exam to Feb 16"
+
+**Reschedule Exam**:
+1. Exams → Manage → Select exam
+2. Click "Reschedule"
+3. Choose new date/time
+4. System checks conflicts → None found
+5. Confirm → Students notified of change
+
+---
+
+## Common Tasks
+
+### Scenario 1: Create & Administer Midterm Exam
+**Time**: 45 minutes (30 min creation + 15 min publish)
+
+1. **Create Exam** (30 min):
+   - Use AI generation for speed
+   - Subject: Mathematics, 20 questions, 90 min
+   - Review generated questions
+   - Adjust difficulty balance
+   - Publish
+2. **Students Take Exam** (90 min):
+   - Students notified automatically
+   - 25 students complete exam
+   - Objective questions auto-graded
+3. **Mark Subjective Questions** (15 min):
+   - 5 pending submissions
+   - Mark short answers and essays
+   - Add feedback
+4. **Publish Results** (5 min):
+   - Verify all marked
+   - Click Publish
+   - Students/parents notified
+
+**Total time**: 50 min teacher effort for comprehensive exam
+
+---
+
+### Scenario 2: Build Question Bank from Scratch
+**Time**: 2 hours for 50 questions
+
+1. **Plan** (15 min):
+   - Identify topics: Algebra, Geometry, Calculus
+   - Target difficulty: 30% Easy, 50% Medium, 20% Hard
+   - Question types: 50% MCQ, 30% Short, 20% Essay
+2. **Create Questions** (90 min):
+   - Batch create similar questions (e.g., 10 algebra MCQs)
+   - Use templates for consistency
+   - Add explanations and learning objectives
+3. **Review & Tag** (15 min):
+   - Verify all questions have correct answers
+   - Add tags, topics, difficulty
+   - Test a few questions (preview)
+
+**Result**: 50-question bank ready for exam generation
+
+---
+
+### Scenario 3: Analyze Exam Performance & Improve
+**Time**: 30 minutes
+
+1. **View Results** (10 min):
+   - Open exam results page
+   - Review key metrics (average, distribution)
+   - Identify difficult questions (Q3: 40% pass)
+2. **Deep Dive** (15 min):
+   - Click on Q3 → See common mistakes
+   - Review student answers for patterns
+   - Insight: "Students confusing derivative vs integral"
+3. **Take Action** (5 min):
+   - Schedule review session on calculus
+   - Update Question Bank: Add note to Q3 "Requires calculus review first"
+   - Create new questions targeting this weak area
+
+**Result**: Data-driven teaching improvements
+
+---
+
+## Tips & Best Practices
+
+### For Administrators
+- **Build Question Bank Early**: Create 100+ questions before exam season
+- **Use AI Generation**: Save 80% time on exam creation
+- **Monitor Security**: Enable shuffling and time limits
+- **Review Analytics**: Identify weak topics and struggling students quarterly
+
+### For Teachers
+- **Balanced Exams**: Mix difficulty (30% Easy, 50% Medium, 20% Hard)
+- **Timely Marking**: Grade within 3 business days of exam
+- **Meaningful Feedback**: Don't just mark wrong, explain why
+- **Rubrics**: Always use rubrics for essays (consistency)
+- **Reuse Questions**: Update Question Bank with new questions for reuse
+
+### For Students
+- **Start Early**: Begin exam immediately when available
+- **Flag for Review**: Mark unsure questions, return later
+- **Time Management**: Don't spend too long on one question
+- **Read Carefully**: Read instructions and questions twice
+
+---
+
+## Troubleshooting
+
+### Issue: Exam not appearing for students
+**Solution**:
+- Check exam status (must be "Published", not "Draft")
+- Verify students enrolled in class
+- Check publish date (must be today or past)
+
+### Issue: Automated marking incorrect
+**Solution**:
+- Verify correct answer set properly in Question Bank
+- Check for multiple correct answers (enable if valid)
+- For Fill in Blank, add synonyms (e.g., "11" and "eleven")
+
+### Issue: Students cannot submit exam
+**Solution**:
+- Check browser compatibility (use Chrome/Edge)
+- Ensure stable internet connection
+- Verify exam deadline not passed
+- Check for browser extensions blocking submission
+
+---
+
+## Related Documentation
+
+- [Question Bank Advanced Guide](/en/docs/demo/advanced/question-bank)
+- [Auto-Marking Guide](/en/docs/demo/advanced/auto-marking)
+- [Grades Module](/en/docs/demo/modules/grades) - Gradebook integration
+- [Teacher Walkthrough](/en/docs/demo/walkthrough/teacher) - Teacher exam workflows
+
+---
+
+## Demo Data Summary
+
+- **Question Bank**: 31 questions across 9 subjects
+- **Question Types**: MCQ (40%), T/F (20%), Short (20%), Essay (10%), Fill Blank (5%), Matching (5%)
+- **Difficulty**: Easy (30%), Medium (50%), Hard (20%)
+- **Exams Created**: 12 total
+  - **Completed**: 6 exams (Midterms for Math, Physics, Chemistry, English, Arabic, History)
+  - **Planned**: 6 exams (Finals scheduled for June)
+- **Exam Results**: ~1,800 (6 exams × 150 students × 80% participation)
+- **Auto-Grading**: 100% of objective questions marked instantly
+- **Manual Marking**: All subjective questions marked within 3 days
+- **Pass Rate**: 85% average across all completed exams
+
+**Test Credentials**:
+```
+Teacher: teacher@demo.databayt.org / 1234
+Student: student@demo.databayt.org / 1234
+Parent: parent@demo.databayt.org / 1234
+```
+
+---
+
+**Last Updated**: January 2025 | **Demo Version**: 1.0 | **Coverage**: 100% of Exam System PRD features

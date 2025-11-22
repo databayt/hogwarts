@@ -1,0 +1,346 @@
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { InfoIcon, CheckCircle, AlertCircle, Terminal } from "lucide-react"
+import Link from "next/link"
+
+# Local Development Setup
+
+Get Hogwarts running on your machine in under 10 minutes. Follow these step-by-step instructions for your operating system.
+
+## Prerequisites
+
+Before starting, ensure you have the following installed:
+
+<div className="grid gap-4 mt-6">
+  <div className="flex items-start gap-3 p-4 border rounded-lg">
+    <CheckCircle className="h-5 w-5 text-green-600 mt-0.5" />
+    <div>
+      <h4>Node.js 18.17 or higher</h4>
+      <p className="text-sm text-muted-foreground">Download from <a href="https://nodejs.org" target="_blank" rel="noopener noreferrer">nodejs.org</a></p>
+    </div>
+  </div>
+
+  <div className="flex items-start gap-3 p-4 border rounded-lg">
+    <CheckCircle className="h-5 w-5 text-green-600 mt-0.5" />
+    <div>
+      <h4>pnpm 9.x</h4>
+      <p className="text-sm text-muted-foreground">Required package manager (npm and yarn won't work)</p>
+    </div>
+  </div>
+
+  <div className="flex items-start gap-3 p-4 border rounded-lg">
+    <CheckCircle className="h-5 w-5 text-green-600 mt-0.5" />
+    <div>
+      <h4>Git</h4>
+      <p className="text-sm text-muted-foreground">For cloning the repository</p>
+    </div>
+  </div>
+
+  <div className="flex items-start gap-3 p-4 border rounded-lg">
+    <CheckCircle className="h-5 w-5 text-green-600 mt-0.5" />
+    <div>
+      <h4>PostgreSQL Database</h4>
+      <p className="text-sm text-muted-foreground">Local installation, Docker, or cloud service (Neon, Supabase)</p>
+    </div>
+  </div>
+</div>
+
+## Step 1: Install Prerequisites
+
+<Tabs defaultValue="windows" className="mt-6">
+  <TabsList>
+    <TabsTrigger value="windows">Windows</TabsTrigger>
+    <TabsTrigger value="macos">macOS</TabsTrigger>
+    <TabsTrigger value="linux">Linux</TabsTrigger>
+  </TabsList>
+
+  <TabsContent value="windows" className="mt-4">
+    <div className="space-y-4">
+      <div>
+        <h4>Install Node.js</h4>
+        <pre className="bg-muted p-4 rounded-lg overflow-x-auto">
+          <code>{'# Download from https://nodejs.org\n# Or use winget:\nwinget install OpenJS.NodeJS.LTS'}</code>
+        </pre>
+      </div>
+
+      <div>
+        <h4>Install pnpm</h4>
+        <pre className="bg-muted p-4 rounded-lg overflow-x-auto">
+          <code>{'npm install -g pnpm@9'}</code>
+        </pre>
+      </div>
+
+      <div>
+        <h4>Install Git</h4>
+        <pre className="bg-muted p-4 rounded-lg overflow-x-auto">
+          <code>{'# Download from https://git-scm.com\n# Or use winget:\nwinget install Git.Git'}</code>
+        </pre>
+      </div>
+
+      <div>
+        <h4>Install PostgreSQL (Option 1: Local)</h4>
+        <pre className="bg-muted p-4 rounded-lg overflow-x-auto">
+          <code>{'# Download from https://www.postgresql.org/download/windows/\n# Or use Docker:\ndocker run -d -p 5432:5432 -e POSTGRES_PASSWORD=postgres postgres:16'}</code>
+        </pre>
+      </div>
+    </div>
+  </TabsContent>
+
+  <TabsContent value="macos" className="mt-4">
+    <div className="space-y-4">
+      <div>
+        <h4>Install Homebrew (if not installed)</h4>
+        <pre className="bg-muted p-4 rounded-lg overflow-x-auto">
+          <code>{'/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"'}</code>
+        </pre>
+      </div>
+
+      <div>
+        <h4>Install Prerequisites</h4>
+        <pre className="bg-muted p-4 rounded-lg overflow-x-auto">
+          <code>{'# Install Node.js\nbrew install node@18\n\n# Install pnpm\nnpm install -g pnpm@9\n\n# Install Git\nbrew install git\n\n# Install PostgreSQL\nbrew install postgresql@16\nbrew services start postgresql@16'}</code>
+        </pre>
+      </div>
+    </div>
+  </TabsContent>
+
+  <TabsContent value="linux" className="mt-4">
+    <div className="space-y-4">
+      <div>
+        <h4>Ubuntu/Debian</h4>
+        <pre className="bg-muted p-4 rounded-lg overflow-x-auto">
+          <code>{'# Update packages\nsudo apt update\n\n# Install Node.js 18+\ncurl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -\nsudo apt install -y nodejs\n\n# Install pnpm\nnpm install -g pnpm@9\n\n# Install Git\nsudo apt install git\n\n# Install PostgreSQL\nsudo apt install postgresql postgresql-contrib\nsudo systemctl start postgresql'}</code>
+        </pre>
+      </div>
+    </div>
+  </TabsContent>
+</Tabs>
+
+## Step 2: Clone the Repository
+
+<Alert className="mt-6 mb-4">
+  <InfoIcon className="h-4 w-4" />
+  <AlertDescription>
+    Fork the repository first if you plan to contribute. This allows you to push changes to your fork and create pull requests.
+  </AlertDescription>
+</Alert>
+
+```bash
+# Fork the repo on GitHub first (if contributing)
+# Then clone your fork:
+git clone https://github.com/YOUR_USERNAME/hogwarts.git
+
+# Or clone the original (for testing only):
+git clone https://github.com/databayt/hogwarts.git
+
+# Navigate to the project
+cd hogwarts
+```
+
+## Step 3: Install Dependencies
+
+```bash
+# Install all packages using pnpm
+pnpm install
+
+# This will install:
+# - Next.js 15.4.4
+# - React 19.1.0
+# - Prisma 6.14.0
+# - And 200+ other dependencies
+```
+
+<Alert className="mt-4">
+  <AlertCircle className="h-4 w-4" />
+  <AlertDescription>
+    **Important:** You must use pnpm. The project uses pnpm workspaces and won't work with npm or yarn. Vercel deployments also require pnpm.
+  </AlertDescription>
+</Alert>
+
+## Step 4: Configure Environment Variables
+
+```bash
+# Copy the example environment file
+cp .env.example .env
+
+# Or on Windows:
+copy .env.example .env
+```
+
+Edit the `.env` file with your database credentials:
+
+```bash
+# Database Configuration
+DATABASE_URL="postgresql://postgres:password@localhost:5432/hogwarts"
+
+# For Neon (recommended for quick start):
+# DATABASE_URL="postgresql://user:pass@ep-xxx.us-east-2.aws.neon.tech/hogwarts"
+
+# NextAuth Configuration (required)
+NEXTAUTH_URL="http://localhost:3000"
+NEXTAUTH_SECRET="your-secret-key-here" # Generate with: openssl rand -base64 32
+
+# OAuth (optional, for social login)
+GOOGLE_CLIENT_ID="your-google-client-id"
+GOOGLE_CLIENT_SECRET="your-google-client-secret"
+```
+
+### Database Options
+
+<div className="grid gap-4 mt-6">
+  <div className="p-4 border rounded-lg">
+    <h4>Option 1: Local PostgreSQL (Recommended for development)</h4>
+    <pre className="bg-muted p-3 rounded mt-2">
+      <code>DATABASE_URL="postgresql://postgres:password@localhost:5432/hogwarts"</code>
+    </pre>
+  </div>
+
+  <div className="p-4 border rounded-lg">
+    <h4>Option 2: Docker PostgreSQL</h4>
+    <pre className="bg-muted p-3 rounded mt-2">
+      <code>{'# Run PostgreSQL in Docker\ndocker run -d \\\n  --name hogwarts-db \\\n  -e POSTGRES_PASSWORD=password \\\n  -e POSTGRES_DB=hogwarts \\\n  -p 5432:5432 \\\n  postgres:16'}</code>
+    </pre>
+  </div>
+
+  <div className="p-4 border rounded-lg">
+    <h4>Option 3: Neon (Free cloud PostgreSQL)</h4>
+    <p className="text-sm text-muted-foreground mt-2">
+      1. Sign up at <a href="https://neon.tech" target="_blank" rel="noopener noreferrer">neon.tech</a><br/>
+      2. Create a new project<br/>
+      3. Copy the connection string to your .env file
+    </p>
+  </div>
+</div>
+
+## Step 5: Initialize Database
+
+```bash
+# Generate Prisma client
+pnpm prisma generate
+
+# Run database migrations
+pnpm prisma migrate dev
+
+# Seed with demo data (optional but recommended)
+pnpm db:seed
+```
+
+The seed command creates:
+- Demo schools (Gryffindor Academy, Ravenclaw Institute)
+- Sample users (admin, teachers, students, parents)
+- Test data for all modules
+
+## Step 6: Start Development Server
+
+```bash
+# Start the development server
+pnpm dev
+
+# The server will start on http://localhost:3000
+# With Turbopack for instant hot reload
+```
+
+<Alert className="mt-4">
+  <CheckCircle className="h-4 w-4" />
+  <AlertDescription>
+    **Success!** Hogwarts should now be running at <a href="http://localhost:3000" className="font-semibold">http://localhost:3000</a>
+  </AlertDescription>
+</Alert>
+
+## Step 7: Access the Application
+
+### Default Credentials (from seed data)
+
+<div className="mt-6 p-4 bg-muted rounded-lg">
+  <h4 className="mb-3">Test Accounts</h4>
+  <div className="space-y-2 text-sm">
+    <div><strong>Admin:</strong> admin@gryffindor.edu / password123</div>
+    <div><strong>Teacher:</strong> minerva@gryffindor.edu / password123</div>
+    <div><strong>Student:</strong> harry@gryffindor.edu / password123</div>
+    <div><strong>Parent:</strong> james@potter.com / password123</div>
+  </div>
+</div>
+
+### Multi-Tenant Access
+
+Access different schools using subdomains:
+- `gryffindor.localhost:3000` - Gryffindor Academy
+- `ravenclaw.localhost:3000` - Ravenclaw Institute
+- `localhost:3000` - Platform landing page
+
+## Common Issues & Solutions
+
+<div className="space-y-4 mt-8">
+  <div className="p-4 border rounded-lg">
+    <h4 className="flex items-center gap-2 mb-2">
+      <AlertCircle className="h-5 w-5 text-orange-600" />
+      Build hangs at "Environments: .env"
+    </h4>
+    <p className="text-sm text-muted-foreground mb-2">This means there are TypeScript errors.</p>
+    <pre className="bg-muted p-3 rounded text-sm">
+      <code>{'# Check TypeScript errors\npnpm tsc --noEmit\n\n# Auto-fix common issues\npnpm lint --fix'}</code>
+    </pre>
+  </div>
+
+  <div className="p-4 border rounded-lg">
+    <h4 className="flex items-center gap-2 mb-2">
+      <AlertCircle className="h-5 w-5 text-orange-600" />
+      Database connection failed
+    </h4>
+    <p className="text-sm text-muted-foreground mb-2">Verify PostgreSQL is running and credentials are correct.</p>
+    <pre className="bg-muted p-3 rounded text-sm">
+      <code>{'# Test connection\npnpm prisma db pull\n\n# Check PostgreSQL status\n# Windows: Check Services\n# Mac/Linux: \nsudo systemctl status postgresql'}</code>
+    </pre>
+  </div>
+
+  <div className="p-4 border rounded-lg">
+    <h4 className="flex items-center gap-2 mb-2">
+      <AlertCircle className="h-5 w-5 text-orange-600" />
+      Prisma client out of sync
+    </h4>
+    <p className="text-sm text-muted-foreground mb-2">Regenerate Prisma client after schema changes.</p>
+    <pre className="bg-muted p-3 rounded text-sm">
+      <code>{'pnpm prisma generate\npnpm prisma migrate dev'}</code>
+    </pre>
+  </div>
+</div>
+
+## Useful Commands
+
+<div className="mt-8 p-4 bg-muted rounded-lg">
+  <h4 className="mb-3">Development Commands</h4>
+  <pre className="text-sm">
+    <code>{`pnpm dev              # Start development server
+pnpm build            # Production build
+pnpm lint             # Run ESLint
+pnpm test             # Run tests
+pnpm tsc --noEmit     # Check TypeScript
+
+# Database
+pnpm prisma studio    # Visual database browser
+pnpm db:seed          # Seed demo data
+pnpm prisma migrate dev # Run migrations
+
+# Code Quality
+pnpm test -- --watch  # Run tests in watch mode
+pnpm test:e2e         # Run E2E tests`}</code>
+  </pre>
+</div>
+
+## Next Steps
+
+Now that you have Hogwarts running locally, you're ready to start contributing!
+
+<div className="mt-8 flex gap-4">
+  <Link href="/docs/getting-started/contributing">
+    <button className="px-6 py-3 bg-primary text-primary-foreground rounded-md hover:opacity-90 transition-opacity">
+      Learn How to Contribute →
+    </button>
+  </Link>
+
+  <Link href="/docs/architecture">
+    <button className="px-6 py-3 border border-primary text-primary rounded-md hover:bg-primary hover:text-primary-foreground transition-colors">
+      Explore Architecture
+    </button>
+  </Link>
+</div>

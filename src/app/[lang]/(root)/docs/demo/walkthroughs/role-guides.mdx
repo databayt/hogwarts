@@ -1,0 +1,1693 @@
+# Role-Based Walkthroughs
+
+This guide provides comprehensive walkthroughs for each user role in the Hogwarts platform, showing typical workflows and daily tasks.
+
+---
+
+## Overview
+
+The platform supports **8 user roles** with distinct permissions and workflows:
+
+1. **Administrator** - Full system management and oversight
+2. **Teacher** - Teaching, grading, class management
+3. **Student** - Learning, assignments, exams, attendance
+4. **Guardian (Parent)** - Monitoring student progress, communication
+5. **Accountant** - Financial management (covered in Finance Demo)
+6. **Staff** - Administrative support
+7. **Developer** - Platform administration (super admin)
+8. **User** - Default role for new users
+
+This guide focuses on the **four primary roles**: Administrator, Teacher, Student, and Guardian.
+
+---
+
+## Demo Access Credentials
+
+All passwords in the demo environment are: **`1234`**
+
+**Administrator**:
+- Email: `admin@demo.school` or `jamila.ahmed@demo.school`
+- Access: Full platform control
+
+**Teacher** (25 available):
+- Email: `aisha.hassan@demo.school` (or any teacher email)
+- Access: Teaching tools, class management
+
+**Student** (150 available):
+- Email: `ahmed.mohammed.001@demo.school`
+- Student ID: `2025DEMO0001`
+- Access: Learning platform, personal dashboard
+
+**Guardian/Parent** (300 available):
+- Email: Father: `abdullah.mohammed@demo.school`
+- Email: Mother: `maryam.mohammed@demo.school`
+- Access: Child monitoring, communication
+
+---
+
+## 1. Administrator Walkthrough
+
+**Role**: School Administrator
+**User**: Jamila Ahmed (admin@demo.school)
+**Permissions**: Full system access, all modules, all data
+
+### Daily Morning Routine (15 minutes)
+
+**Objective**: Start the day with system overview and priority actions.
+
+#### Step 1: Login & Dashboard Overview (3 min)
+
+1. **Login**:
+   ```
+   URL: https://demo.ed.databayt.org
+   Email: admin@demo.school
+   Password: 1234
+   ```
+
+2. **View Dashboard**:
+   - Location: `/[lang]/s/demo/platform/dashboard`
+   - Quick Stats (Top Cards):
+     ```
+     Total Students: 150
+     Total Teachers: 25
+     Active Classes: 24
+     Today's Attendance: 87% (130/150 present)
+     ```
+
+3. **Check Alerts** (Red badge notifications):
+   - Overdue fees: 8 students (SDG 60,000 pending)
+   - Low attendance: 12 students (<75% rate)
+   - Pending approvals: 3 leave requests
+   - System alerts: 0 critical issues
+
+4. **Review Today's Schedule**:
+   - Upcoming events widget shows:
+     - 8:00 AM: Grade 10 Math Exam (Room 101)
+     - 10:00 AM: Staff Meeting (Conference Room)
+     - 2:00 PM: Parent Meeting with Ahmed's family
+
+#### Step 2: Check Attendance (2 min)
+
+1. **Navigate to Attendance**:
+   - Sidebar → Attendance → Today's Attendance
+   - Or: `/[lang]/s/demo/platform/attendance`
+
+2. **Review Summary**:
+   ```
+   Date: Today
+   Total Present: 130 (87%)
+   Total Absent: 15 (10%)
+   Late Arrivals: 5 (3%)
+   ```
+
+3. **Identify Issues**:
+   - Click "Absent Students" tab
+   - See list of 15 absent students
+   - Note: Ahmed Mohammed (2025DEMO0001) marked absent
+   - Action: Click "Send Absence Alert" → Parents notified via SMS/email
+
+4. **Check Late Arrivals**:
+   - 5 students arrived late
+   - System auto-marked as "Late" via QR code check-in
+   - Review reasons (if provided)
+
+#### Step 3: Review Financial Status (3 min)
+
+1. **Navigate to Finance Dashboard**:
+   - Sidebar → Finance → Dashboard
+   - Or: `/[lang]/s/demo/platform/finance/dashboard`
+
+2. **Check KPIs**:
+   ```
+   Total Revenue (YTD): SDG 1,200,000
+   Collected: SDG 960,000 (80%)
+   Pending: SDG 180,000 (15%)
+   Overdue: SDG 60,000 (5%)
+
+   This Month:
+   Revenue: SDG 150,000
+   Expenses: SDG 95,000
+   Net Profit: SDG 55,000 (37% margin)
+   ```
+
+3. **Review Overdue Invoices**:
+   - Click "Overdue Invoices" card (8 students)
+   - See list with amounts and days overdue
+   - Action: Select 3 invoices → "Send Payment Reminder"
+   - Toast: "Reminders sent to 3 parents"
+
+4. **Check Expense Approvals**:
+   - Navigate to Expenses → Pending Approvals
+   - See 2 pending expense requests:
+     - Lab Equipment: SDG 15,000 (Teacher: Dr. Sara)
+     - Field Trip Transport: SDG 8,000 (Teacher: Mr. Hassan)
+   - Review receipts and approve/reject
+
+#### Step 4: Announcements & Communication (3 min)
+
+1. **Check Notifications**:
+   - Bell icon shows: 12 unread notifications
+   - Click to open notification panel
+
+2. **Read Important Messages**:
+   - 3 parent inquiries about exam schedule
+   - 2 teacher requests for supplies
+   - 5 system notifications (attendance alerts, payment received)
+   - 2 urgent announcements to review
+
+3. **Create Daily Announcement**:
+   - Click "Create Announcement"
+   - Quick message:
+     ```
+     Title: "Good Morning Hogwarts!"
+     Body: "Reminder: Parent-teacher meetings today 2-5 PM.
+            Grade 10 exams start at 8 AM. Good luck students!"
+     Scope: School (All users)
+     Priority: Normal
+     ```
+   - Click "Publish" → Sent to 176 users
+
+#### Step 5: Review Staff Leave Requests (2 min)
+
+1. **Navigate to Staff Management**:
+   - Sidebar → Staff → Leave Requests
+   - Or: `/[lang]/s/demo/platform/staff/leave`
+
+2. **Review Pending Requests**:
+   - 3 pending leave applications:
+     ```
+     1. Aisha Hassan (Teacher)
+        Date: March 20-22 (3 days)
+        Reason: Medical appointment
+        Status: Pending
+
+     2. Omar Khaled (Teacher)
+        Date: March 25 (1 day)
+        Reason: Personal
+        Status: Pending
+
+     3. Sara Ibrahim (Teacher)
+        Date: April 1-5 (5 days)
+        Reason: Family event
+        Status: Pending
+     ```
+
+3. **Review & Approve**:
+   - Click on Aisha's request
+   - Check: Does she have classes on those days?
+   - System shows: 9 classes affected
+   - Action: Approve request
+   - System prompts: "Assign substitute teacher?"
+   - Select substitute from dropdown
+   - Affected classes updated
+   - Email sent to Aisha: "Leave approved"
+
+4. **Handle Urgent Request**:
+   - Omar's request is for today (just submitted)
+   - Check: 3 classes today
+   - Quick action: Approve + assign substitute immediately
+   - Classes updated in real-time
+
+#### Step 6: Quick System Health Check (2 min)
+
+1. **Check System Status**:
+   - Navigate to Settings → System → Status
+   - View metrics:
+     ```
+     Server Status: ✓ Healthy
+     Database: ✓ Connected (response time: 12ms)
+     Storage: 45% used (550 GB / 1 TB)
+     Backup: Last backup 2 hours ago ✓
+     API Health: 99.8% uptime (last 7 days)
+     ```
+
+2. **Review Error Logs** (if any):
+   - Navigate to Settings → Logs
+   - Filter: Last 24 hours, Level: Error
+   - See: 2 errors (both minor, auto-recovered)
+   - Note: No action needed
+
+3. **Check Scheduled Tasks**:
+   - Attendance reminder cron: ✓ Running
+   - Late fee calculator: ✓ Running daily at 1 AM
+   - Backup job: ✓ Running every 6 hours
+   - Email queue: 15 pending (processing)
+
+**Morning Routine Complete** ✅
+Total Time: 15 minutes
+Key Actions: 3 alerts resolved, 2 leave requests approved, 1 announcement sent, financial overview checked
+
+---
+
+### Weekly Management Tasks (45 minutes)
+
+**Frequency**: Every Monday morning
+**Objective**: Review weekly analytics and plan for the week
+
+#### Task 1: Review Weekly Attendance Report (10 min)
+
+1. **Navigate to Attendance Analytics**:
+   - Attendance → Reports → Weekly Summary
+
+2. **View Week Summary**:
+   ```
+   Week: March 10-14, 2025
+   Average Attendance: 87%
+   Total Present: 650/750 student-days
+   Total Absent: 75 (10%)
+   Late Arrivals: 25 (3%)
+
+   Daily Breakdown:
+   Monday: 88% (132/150)
+   Tuesday: 85% (128/150)
+   Wednesday: 89% (134/150)
+   Thursday: 86% (129/150)
+   Friday: 87% (131/150)
+   ```
+
+3. **Identify At-Risk Students**:
+   - Filter: Attendance < 75% (last 2 weeks)
+   - Results: 15 students
+   - Review list with reasons:
+     - 8 students: Medical issues (documented)
+     - 4 students: No reason provided
+     - 3 students: Family circumstances
+   - Action: Create intervention list
+
+4. **Generate Report for Board Meeting**:
+   - Click "Generate Report"
+   - Select: PDF format, last 4 weeks
+   - Report downloads with charts and statistics
+   - Save for upcoming board presentation
+
+5. **Follow-Up Actions**:
+   - Send alerts to parents of 4 students (no reason)
+   - Schedule meetings with 3 families (family circumstances)
+   - Monitor medical students (check documentation)
+
+#### Task 2: Review Financial Performance (10 min)
+
+1. **Navigate to Finance Dashboard**:
+   - Finance → Dashboard → Weekly View
+
+2. **Review Week Financials**:
+   ```
+   Week Revenue: SDG 75,000
+   Week Expenses: SDG 48,000
+   Week Profit: SDG 27,000 (36% margin)
+
+   Revenue Breakdown:
+   - Tuition Payments: SDG 60,000 (80%)
+   - LMS Course Sales: SDG 5,000 (7%)
+   - Library Fines: SDG 500 (1%)
+   - Other Income: SDG 9,500 (12%)
+
+   Expense Breakdown:
+   - Salaries: SDG 30,000 (63%)
+   - Utilities: SDG 8,000 (17%)
+   - Supplies: SDG 5,000 (10%)
+   - Maintenance: SDG 3,000 (6%)
+   - Other: SDG 2,000 (4%)
+   ```
+
+3. **Collection Rate Analysis**:
+   - Week Collection Rate: 83% (target: 85%)
+   - Below target by 2%
+   - Action: Intensify collection efforts
+
+4. **Review Payment Trends**:
+   - Chart shows: Peak payments on Monday/Tuesday
+   - Drop-off mid-week
+   - Plan: Send reminders on Wednesday mornings
+
+5. **Approve Budget Items**:
+   - Navigate to Budget → Pending Requests
+   - 5 pending budget requests this week:
+     - Science lab equipment: SDG 25,000 (Approve)
+     - Library books: SDG 8,000 (Approve)
+     - Sports equipment: SDG 12,000 (Approve with condition)
+     - Computer upgrades: SDG 35,000 (Defer to next month)
+     - Field trip: SDG 10,000 (Approve)
+
+#### Task 3: Staff Performance Review (10 min)
+
+1. **Navigate to Staff Analytics**:
+   - Staff → Performance Dashboard
+
+2. **Review Teacher Metrics**:
+   ```
+   Average Class Attendance: 87%
+   Average Assignment Submission: 78%
+   Average Exam Scores: 75%
+
+   Top Performers (by student engagement):
+   1. Aisha Hassan (Math) - 92% avg attendance
+   2. Omar Khaled (Physics) - 90% avg attendance
+   3. Sara Ibrahim (English) - 89% avg attendance
+
+   Need Support:
+   1. Teacher X (History) - 78% avg attendance
+   2. Teacher Y (Arabic) - 80% avg attendance
+   ```
+
+3. **Review Assignment Grading**:
+   - Pending Grading Report:
+     - Total Assignments Due: 60
+     - Graded: 45 (75%)
+     - Pending: 15 (25%)
+   - Identify teachers with pending grading (>2 weeks old)
+   - Send reminders to 3 teachers
+
+4. **Check LMS Course Creation**:
+   - 10 courses active
+   - 5 teachers have created courses
+   - 20 teachers haven't engaged with LMS
+   - Action: Schedule LMS training session
+
+5. **Plan Recognition**:
+   - Top 3 teachers: Send recognition email
+   - Share success stories in staff meeting
+   - Consider bonuses/awards for exceptional performance
+
+#### Task 4: Student Performance Overview (10 min)
+
+1. **Navigate to Student Analytics**:
+   - Students → Performance Dashboard
+
+2. **Review Academic Metrics**:
+   ```
+   Overall Grade Distribution:
+   A (90-100): 18% (27 students)
+   B (80-89): 35% (53 students)
+   C (70-79): 30% (45 students)
+   D (60-69): 12% (18 students)
+   F (<60): 5% (7 students)
+
+   Average GPA: 3.2/4.0 (B average)
+   ```
+
+3. **Identify At-Risk Students**:
+   - Filter: GPA < 2.0 (last term)
+   - Results: 12 students
+   - Review detailed performance:
+     - Failing multiple subjects: 7 students
+     - Single subject struggles: 5 students
+   - Action: Create academic intervention plan
+
+4. **Review Exam Results** (Last Week):
+   - 6 exams administered
+   - Average score: 75%
+   - Pass rate: 85%
+   - Top performers: 15 students (>90%)
+   - Need support: 22 students (<60%)
+
+5. **Behavioral Issues**:
+   - Disciplinary incidents this week: 3
+   - Late submissions: 25 students
+   - Attendance issues: 15 students
+   - Action: Schedule counseling sessions
+
+#### Task 5: Plan Upcoming Week (5 min)
+
+1. **Check Calendar**:
+   - Navigate to Calendar → Next Week View
+   - Upcoming events:
+     ```
+     Monday: Grade 11 Chemistry Exam
+     Tuesday: Staff Development Day
+     Wednesday: Parent-Teacher Conferences
+     Thursday: Grade 7 Field Trip
+     Friday: Sports Day
+     ```
+
+2. **Prepare Resources**:
+   - Chemistry Exam: Verify question bank, assign invigilators
+   - Staff Development: Book venue, prepare materials
+   - Conferences: Send schedule to parents
+   - Field Trip: Confirm transport, chaperones
+   - Sports Day: Prepare certificates, medals
+
+3. **Create Weekly Announcement**:
+   ```
+   Title: "Week Ahead: March 17-21"
+   Body: [List of key events]
+   Scope: School
+   Schedule: Monday 7 AM
+   ```
+
+4. **Set Reminders**:
+   - Add calendar reminders for critical events
+   - Delegate tasks to staff
+   - Update project management board
+
+**Weekly Tasks Complete** ✅
+Total Time: 45 minutes
+Insights Gained: Attendance trends, financial health, staff performance, student outcomes
+Actions Planned: Interventions, recognition, resource allocation
+
+---
+
+### Monthly Administrative Tasks (2 hours)
+
+**Frequency**: First Monday of every month
+**Objective**: Strategic review and planning
+
+#### Key Monthly Tasks:
+
+1. **Financial Close & Reporting** (30 min):
+   - Generate monthly financial statements
+   - Review P&L, balance sheet, cash flow
+   - Prepare board report
+   - Analyze budget vs actual variance
+
+2. **Staff Payroll Processing** (20 min):
+   - Review timesheet submissions (25 staff)
+   - Approve overtime hours
+   - Process salary payments
+   - Generate payslips
+
+3. **Student Progress Reports** (30 min):
+   - Generate report cards for 150 students
+   - Review with department heads
+   - Approve and publish to parents
+   - Schedule parent meetings for struggling students
+
+4. **System Maintenance** (15 min):
+   - Review system performance metrics
+   - Plan infrastructure upgrades
+   - Update software/security patches
+   - Backup verification
+
+5. **Strategic Planning** (25 min):
+   - Review enrollment trends
+   - Analyze retention rates
+   - Plan marketing campaigns
+   - Budget forecast for next quarter
+
+---
+
+## 2. Teacher Walkthrough
+
+**Role**: Mathematics Teacher
+**User**: Aisha Hassan (aisha.hassan@demo.school)
+**Classes**: Grade 7A, 8B, 9C Mathematics (75 students total)
+
+### Daily Teaching Routine (30 minutes)
+
+**Objective**: Prepare for classes, manage attendance, review assignments.
+
+#### Step 1: Login & Check Schedule (3 min)
+
+1. **Login**:
+   ```
+   Email: aisha.hassan@demo.school
+   Password: 1234
+   ```
+
+2. **View Today's Schedule**:
+   - Dashboard shows today's classes:
+     ```
+     8:00-9:00 AM: Grade 7A Mathematics (Room 101) - 25 students
+     10:00-11:00 AM: Grade 8B Mathematics (Room 203) - 25 students
+     1:00-2:00 PM: Grade 9C Mathematics (Room 305) - 25 students
+     ```
+
+3. **Check Notifications**:
+   - 5 unread notifications:
+     - 2 assignment submissions (late)
+     - 1 parent message
+     - 1 student absence excuse
+     - 1 school announcement
+
+#### Step 2: Take Attendance - Manual (5 min per class)
+
+**For Each Class**:
+
+1. **Navigate to Attendance**:
+   - Click "Take Attendance" from class card
+   - Or: Sidebar → Attendance → Take Attendance
+
+2. **Select Class**:
+   - Choose: Grade 7A Mathematics
+   - Date: Auto-filled to today
+   - Period: Select "Period 1 (8:00-9:00 AM)"
+
+3. **Mark Attendance**:
+   - Grid view of 25 students with buttons:
+     - Present (green) | Absent (red) | Late (yellow) | Excused (blue)
+   - Quick actions:
+     - "Mark All Present" button (bulk mark)
+     - Then individually change absent/late students
+   - Example:
+     - 23 students: Present ✓
+     - Ahmed Mohammed: Absent (parent called in sick)
+     - Fatima Ali: Late (arrived 8:15 AM)
+
+4. **Add Notes**:
+   - For absent students: "Ahmed - Parent called, sick"
+   - For late students: "Fatima - Bus delay"
+
+5. **Submit Attendance**:
+   - Click "Submit Attendance"
+   - Toast: "Attendance recorded for Grade 7A Mathematics"
+   - System auto-sends absence alert to Ahmed's parents
+
+6. **Repeat for Other Classes**:
+   - Grade 8B (10 AM)
+   - Grade 9C (1 PM)
+
+**Alternative: QR Code Attendance** (1 min per class):
+- Display QR code on projector
+- Students scan with phones when entering
+- System auto-marks present
+- Teacher reviews and adjusts if needed
+
+#### Step 3: Review Assignment Submissions (10 min)
+
+1. **Navigate to Assignments**:
+   - Sidebar → Assignments → My Assignments
+   - Or: `/[lang]/s/demo/platform/assignments`
+
+2. **View Pending Grading**:
+   - Dashboard shows:
+     ```
+     Total Assignments: 12 (4 per class)
+     Pending Grading: 18 submissions
+     Overdue from Students: 5 submissions
+     ```
+
+3. **Grade Recent Submission**:
+   - Click "Grade 7A - Chapter 5 Homework"
+   - See submissions: 23/25 submitted (92%)
+   - 2 students haven't submitted: Ahmed (absent), Hassan (no excuse)
+   - Click on first submission: "Fatima Ali"
+
+4. **Grading Interface**:
+   ```
+   Student: Fatima Ali (2025DEMO0002)
+   Assignment: Chapter 5 Homework
+   Submitted: Today at 7:45 AM (on time)
+   Status: Pending Grading
+
+   Submission:
+   [View PDF/Document submitted by student]
+
+   Question 1: Solve 2x + 5 = 15
+   Student Answer: x = 5 ✓
+   Points: [5/5]
+
+   Question 2: Factor x² - 9
+   Student Answer: (x+3)(x-3) ✓
+   Points: [5/5]
+
+   [... more questions]
+
+   Total Points: [48/50]
+   Grade: 96% (A)
+
+   Feedback: [Text area]
+   "Excellent work, Fatima! Watch for careless errors on Q7."
+
+   [Save Draft] [Submit Grade]
+   ```
+
+5. **Submit Grade**:
+   - Click "Submit Grade"
+   - Student notified immediately
+   - Grade appears in gradebook
+
+6. **Bulk Grading** (for objective questions):
+   - For auto-gradable assignments (MCQ, True/False)
+   - System auto-grades: 20/23 submissions already graded
+   - Teacher reviews flagged answers
+   - Confirms grades
+
+#### Step 4: Create New Assignment (7 min)
+
+1. **Navigate to Create Assignment**:
+   - Assignments → Create New Assignment
+
+2. **Fill Assignment Form**:
+   ```
+   Assignment Details:
+
+   Title: "Chapter 6: Linear Equations Practice"
+   Description: "Complete exercises 1-15 on page 92."
+
+   Class: Grade 7A Mathematics
+
+   Due Date: March 20, 2025 at 11:59 PM
+   Points: 50
+
+   Type: Homework
+   Submission Type: ( ) File Upload (•) Text Entry
+
+   Instructions: [Rich text editor]
+   "Solve all problems showing your work step by step.
+    Upload your solutions as PDF or image files.
+    Late submissions will lose 10% per day."
+
+   Attachments:
+   [Upload] chapter-6-worksheet.pdf
+
+   Settings:
+   [✓] Allow late submissions (with penalty)
+   [ ] Require rubric grading
+   [✓] Notify students via email
+   [ ] Lock after due date
+
+   [Save as Draft] [Publish Assignment]
+   ```
+
+3. **Publish Assignment**:
+   - Click "Publish Assignment"
+   - Toast: "Assignment published to 25 students in Grade 7A"
+   - Email notifications sent
+   - Assignment appears in student dashboards
+
+4. **Verify**:
+   - Check class assignments list
+   - New assignment shows: "0/25 submitted (0%)"
+   - Due date countdown visible
+
+#### Step 5: Respond to Parent Message (3 min)
+
+1. **Navigate to Messages**:
+   - Bell icon → Click on parent message notification
+   - Or: Sidebar → Messages
+
+2. **Read Message**:
+   ```
+   From: Abdullah Mohammed (Ahmed's father)
+   Date: Today at 7:30 AM
+   Subject: Ahmed's Absence
+
+   Message:
+   "Dear Mrs. Hassan,
+
+   Ahmed is sick today with fever and will not attend school.
+   He will make up any missed work. Please let me know if there
+   are assignments he should complete at home.
+
+   Thank you,
+   Abdullah Mohammed"
+   ```
+
+3. **Reply**:
+   ```
+   To: Abdullah Mohammed
+
+   Message:
+   "Dear Mr. Mohammed,
+
+   Thank you for informing me. I hope Ahmed feels better soon.
+
+   Today we covered Section 6.1 on linear equations. Ahmed should:
+   1. Read pages 88-92 in the textbook
+   2. Watch the video lesson I'll send via email
+   3. Complete exercises 1-10 (optional, but recommended)
+
+   No assignment due until next week, so he has time to recover.
+   Please let me know if he needs additional support.
+
+   Best regards,
+   Mrs. Aisha Hassan"
+   ```
+
+4. **Send Message**:
+   - Click "Send"
+   - Toast: "Message sent to Abdullah Mohammed"
+   - Email notification sent to parent
+
+#### Step 6: Quick Class Announcement (2 min)
+
+1. **Navigate to Announcements**:
+   - From class page: Grade 7A → Announcements tab
+   - Click "Quick Announcement"
+
+2. **Create Announcement**:
+   ```
+   Title: "Reminder: Quiz Tomorrow"
+
+   Body:
+   "Dear Students,
+
+   Reminder: We have a quiz tomorrow covering Chapter 5.
+   Please review:
+   - Solving linear equations
+   - Factoring basics
+   - Word problems
+
+   Duration: 30 minutes
+   Good luck!
+
+   Mrs. Hassan"
+
+   Priority: Important
+   ```
+
+3. **Publish**:
+   - Click "Publish"
+   - Sent to 25 students in Grade 7A
+   - Students receive in-app + email notifications
+
+**Daily Routine Complete** ✅
+Total Time: 30 minutes
+Tasks Done: 3 classes attendance, 18 assignments graded, 1 assignment created, 1 parent responded, 1 announcement sent
+
+---
+
+### Weekly Teaching Tasks (1 hour)
+
+#### Task 1: Create and Grade Quiz (30 min)
+
+1. **Navigate to Exams/Quizzes**:
+   - Sidebar → Exams → Create New Exam
+
+2. **Create Quiz Using Question Bank**:
+   ```
+   Exam Details:
+
+   Title: "Chapter 5 Quiz: Linear Equations"
+   Type: Quiz
+   Class: Grade 7A Mathematics
+
+   Date: March 18, 2025
+   Time: 8:00 AM - 8:30 AM
+   Duration: 30 minutes
+   Total Points: 20
+
+   Questions: Select from Question Bank
+   [Search: linear equations, grade 7]
+
+   Selected Questions (10):
+   1. Q1: Solve for x: 2x + 5 = 15 (MCQ) - 2 pts
+   2. Q2: Solve for x: 3x - 7 = 11 (MCQ) - 2 pts
+   3. Q3: True/False: x = 3 is solution to 2x = 6 - 1 pt
+   [... 7 more questions]
+
+   Settings:
+   [✓] Auto-grade objective questions
+   [✓] Randomize question order
+   [ ] Show results immediately
+   [✓] Publish results after manual review
+
+   [Save Draft] [Publish Quiz]
+   ```
+
+3. **Publish Quiz**:
+   - Students notified
+   - Quiz appears in their schedule
+
+4. **After Quiz: Review Results**:
+   - Navigate to Exams → Chapter 5 Quiz → Results
+   - View summary:
+     ```
+     Completed: 23/25 students (2 absent)
+     Average Score: 16.8/20 (84%)
+     Highest: 20/20 (5 students)
+     Lowest: 11/20 (1 student)
+     ```
+
+5. **Analyze Performance**:
+   - Question Analysis shows:
+     - Q1: 92% correct
+     - Q5: 45% correct (many struggled) ← Review in next class
+     - Q9: 78% correct
+
+6. **Manual Grading** (if essay questions):
+   - Review short answer responses
+   - Assign points based on rubric
+   - Add feedback
+
+7. **Publish Results**:
+   - Click "Publish Results to Students"
+   - Students can view scores and feedback
+
+#### Task 2: Update Gradebook (15 min)
+
+1. **Navigate to Gradebook**:
+   - Sidebar → Grades → Gradebook
+   - Select: Grade 7A Mathematics
+
+2. **View Gradebook**:
+   ```
+   Grade 7A Mathematics - Q3 2025
+
+   Students (25) | Assignments (4) | Quizzes (2) | Exams (1) | Total
+
+   Ahmed Mohammed    85%  N/A  90%  88%
+   Fatima Ali        96%  92%  95%  94%
+   Hassan Ibrahim    78%  85%  80%  81%
+   [... 22 more students]
+
+   Class Average: 84.5%
+   ```
+
+3. **Identify Concerns**:
+   - 3 students below 70% (failing)
+   - 5 students between 70-75% (at risk)
+   - Action: Schedule one-on-one meetings
+
+4. **Export Gradebook**:
+   - Click "Export to Excel"
+   - Share with parents during conferences
+
+5. **Update Grade Weights** (if needed):
+   - Settings → Grade Calculation
+   - Adjust: Homework 30%, Quizzes 30%, Exams 40%
+   - Grades recalculate automatically
+
+#### Task 3: Plan Next Week's Lessons (15 min)
+
+1. **Navigate to Lesson Plans**:
+   - Sidebar → Lessons → Lesson Planning
+   - Or: `/[lang]/s/demo/platform/lessons`
+
+2. **Create Lesson Plan**:
+   ```
+   Lesson Plan: Chapter 6 - Linear Equations
+
+   Week of: March 17-21, 2025
+   Class: Grade 7A Mathematics
+
+   Monday (Day 1):
+   - Topic: Introduction to Linear Equations
+   - Objectives: Students will understand the concept of variables
+   - Materials: Textbook, whiteboard, worksheets
+   - Activities:
+     1. Warm-up: Review prior knowledge (10 min)
+     2. Direct instruction: Variables and constants (20 min)
+     3. Guided practice: Examples 1-5 (15 min)
+     4. Independent work: Exercises 1-10 (10 min)
+     5. Exit ticket: Quick check (5 min)
+   - Homework: Page 95, exercises 1-15
+   - Assessment: Exit ticket
+
+   Tuesday (Day 2):
+   - Topic: Solving One-Step Equations
+   [Similar structure]
+
+   Wednesday (Day 3):
+   - Topic: Solving Two-Step Equations
+   [Similar structure]
+
+   Thursday (Day 4):
+   - Topic: Word Problems with Linear Equations
+   [Similar structure]
+
+   Friday (Day 5):
+   - Quiz: Chapter 6 Assessment
+   ```
+
+3. **Add Resources**:
+   - Upload: lesson-slides.pptx
+   - Upload: worksheet.pdf
+   - Add links: Khan Academy videos
+
+4. **Share with Department**:
+   - Export as PDF
+   - Email to math department head
+   - Collaborate with other teachers
+
+**Weekly Tasks Complete** ✅
+Total Time: 1 hour
+Deliverables: 1 quiz created and graded, gradebook updated, lessons planned for next week
+
+---
+
+## 3. Student Walkthrough
+
+**Role**: High School Student
+**User**: Ahmed Mohammed (ahmed.mohammed.001@demo.school)
+**Student ID**: 2025DEMO0001
+**Grade**: 10
+
+### Daily Student Routine (20 minutes)
+
+#### Step 1: Login & Check Dashboard (3 min)
+
+1. **Login**:
+   ```
+   Email: ahmed.mohammed.001@demo.school
+   Password: 1234
+   ```
+
+2. **View Dashboard**:
+   - Location: `/[lang]/s/demo/platform/student/dashboard`
+   - Quick Overview:
+     ```
+     Welcome back, Ahmed!
+
+     Today's Schedule:
+     8:00-9:00 AM: Mathematics (Mrs. Hassan, Room 101)
+     9:00-10:00 AM: Physics (Dr. Omar, Lab 2)
+     10:00-11:00 AM: English (Ms. Sara, Room 205)
+     11:00-12:00 PM: Arabic (Mr. Khaled, Room 108)
+     1:00-2:00 PM: Chemistry (Dr. Fatima, Lab 1)
+
+     Notifications: 8 unread
+     Pending Assignments: 3 (2 due this week)
+     Upcoming Exams: 1 (Physics, Friday)
+     Today's Attendance: Not yet marked
+     ```
+
+3. **Check Notifications**:
+   - Bell icon shows: 8 notifications
+   - Click to view:
+     - New assignment: Chapter 6 Math Homework (due March 20)
+     - Grade published: English Essay - 88% (B+)
+     - Announcement: Quiz tomorrow in Math
+     - Message from Mrs. Hassan about missed class
+     - Library book due reminder (2 days)
+     - 3 more announcements
+
+#### Step 2: Review and Complete Assignment (10 min)
+
+1. **Navigate to Assignments**:
+   - Sidebar → Assignments → Pending
+   - Or: Dashboard → "3 Pending Assignments" card
+
+2. **View Pending List**:
+   ```
+   Pending Assignments:
+
+   1. Math: Chapter 6 Practice
+      Due: March 20 (in 3 days)
+      Points: 50
+      Status: Not started
+
+   2. Physics: Lab Report - Pendulum Experiment
+      Due: March 18 (tomorrow) ⚠️
+      Points: 30
+      Status: In progress (saved draft)
+
+   3. English: Book Review
+      Due: March 25 (in 8 days)
+      Points: 40
+      Status: Not started
+   ```
+
+3. **Work on Urgent Assignment** (Physics Lab Report):
+   - Click "Physics: Lab Report"
+   - Assignment page opens:
+     ```
+     Lab Report: Pendulum Experiment
+
+     Due: Tomorrow at 11:59 PM
+     Points: 30
+
+     Instructions:
+     Write a lab report including:
+     1. Objective
+     2. Hypothesis
+     3. Materials
+     4. Procedure
+     5. Data/Observations
+     6. Analysis
+     7. Conclusion
+
+     Submit as PDF, max 3 pages.
+
+     Your Draft:
+     [Last saved: 2 hours ago]
+     [Open Draft]
+     ```
+
+4. **Continue Working**:
+   - Click "Open Draft"
+   - Text editor opens with saved work
+   - Continue writing report
+   - Add data table and graph
+   - Review checklist: All sections complete ✓
+
+5. **Upload Final Submission**:
+   - Click "Upload File"
+   - Select: `pendulum-lab-report-ahmed.pdf`
+   - File uploads (2.5 MB)
+   - Preview PDF to verify
+
+6. **Submit Assignment**:
+   - Click "Submit Assignment"
+   - Confirmation modal:
+     ```
+     Submit Assignment?
+
+     Assignment: Pendulum Lab Report
+     File: pendulum-lab-report-ahmed.pdf (2.5 MB)
+
+     Once submitted, you cannot edit.
+
+     [Cancel] [Confirm Submit]
+     ```
+   - Click "Confirm Submit"
+   - Toast: "Assignment submitted successfully!"
+   - Status changes: "Submitted" (green badge)
+   - Email confirmation sent
+
+#### Step 3: Check Grades (3 min)
+
+1. **Navigate to Grades**:
+   - Sidebar → Grades → My Grades
+   - Or: Dashboard → "View All Grades" link
+
+2. **View Current Grades**:
+   ```
+   Quarter 3, 2025 - Grade 10
+
+   Subject                Grade    Status
+   Mathematics           88% (B+)  On track
+   Physics               85% (B)   On track
+   English               90% (A-)  Excellent
+   Arabic                82% (B)   On track
+   Chemistry             78% (C+)  Needs improvement
+   Biology               91% (A-)  Excellent
+   History               86% (B)   On track
+   Islamic Studies       93% (A)   Excellent
+
+   Overall GPA: 3.4/4.0 (B+ average)
+   Class Rank: 15/25 (Top 60%)
+   ```
+
+3. **Check Recent Grade** (English Essay):
+   - Click "English" to expand
+   - See recent grades:
+     ```
+     English - Ms. Sara Ibrahim
+
+     Recent Grades:
+     - Essay: Symbolism in Literature (88%, B+)
+       Submitted: March 10
+       Graded: Today
+       Feedback: "Great analysis of themes. Watch for grammar."
+
+     - Chapter 8 Quiz (92%, A-)
+       Date: March 8
+
+     - Vocabulary Assignment (95%, A)
+       Date: March 5
+     ```
+
+4. **Read Teacher Feedback**:
+   - Click on "Essay: Symbolism in Literature"
+   - View detailed feedback:
+     ```
+     Grade: 88/100 (B+)
+
+     Rubric:
+     Content & Analysis: 25/30 (Good analysis, depth could improve)
+     Organization: 20/20 (Excellent structure)
+     Grammar & Mechanics: 18/20 (Few minor errors)
+     Citations: 15/15 (Proper MLA format)
+     Creativity: 10/15 (Solid but could be more original)
+
+     Comments:
+     "Ahmed, this is a solid essay with good textual analysis.
+     Your thesis is clear and your evidence supports it well.
+     To improve:
+     - Explore symbolism in more depth
+     - Vary sentence structure
+     - Proofread for comma usage
+
+     Overall, great work!"
+     ```
+
+5. **Check Chemistry** (Needs Improvement):
+   - Chemistry is at 78% (C+)
+   - Recent quiz: 65% (D)
+   - Action: Schedule tutoring or ask teacher for help
+
+#### Step 4: Prepare for Upcoming Exam (4 min)
+
+1. **Navigate to Exams**:
+   - Sidebar → Exams → Upcoming
+   - Or: Dashboard → "1 Upcoming Exam" card
+
+2. **View Exam Details**:
+   ```
+   Physics Midterm Exam
+
+   Date: Friday, March 21, 2025
+   Time: 8:00 AM - 10:00 AM
+   Duration: 2 hours
+   Room: Lab 2
+   Instructor: Dr. Omar Khaled
+
+   Coverage:
+   - Chapters 1-5
+   - Topics: Mechanics, Forces, Energy, Motion
+
+   Format:
+   - 20 Multiple Choice (40%)
+   - 5 Short Answer (30%)
+   - 2 Essay Questions (30%)
+
+   Total Points: 100
+
+   Materials Allowed:
+   - Calculator (scientific)
+   - Ruler
+   - Pen/pencil
+
+   Materials NOT Allowed:
+   - Phone
+   - Textbook
+   - Notes
+
+   Study Resources:
+   - Review Sheet (attached)
+   - Practice Problems (attached)
+   - Previous Quizzes (available in Grades)
+   ```
+
+3. **Download Study Materials**:
+   - Click "Download Review Sheet" (PDF, 8 pages)
+   - Click "Download Practice Problems" (PDF, 15 problems)
+   - Save to study folder
+
+4. **Check Calendar**:
+   - Add exam to personal calendar
+   - Set reminders:
+     - 3 days before: Start reviewing
+     - 1 day before: Final review
+     - Morning of: Double-check materials
+
+5. **Create Study Plan**:
+   - Plan to review Chapters 1-2 tonight
+   - Chapters 3-4 tomorrow
+   - Chapter 5 + practice problems Wednesday
+   - Full review Thursday
+
+**Daily Routine Complete** ✅
+Total Time: 20 minutes
+Tasks Done: 1 assignment submitted, grades checked, exam preparation started
+
+---
+
+### Weekly Student Activities
+
+#### Study & Homework (5-7 hours/week):
+- Complete 3-5 assignments per week
+- Study for quizzes and exams
+- Review class notes daily
+
+#### Attendance & Participation:
+- Attend all classes (25 classes/week)
+- Check in via QR code or manual attendance
+- Participate in class discussions
+
+#### Communication:
+- Read announcements daily
+- Respond to teacher messages
+- Check email for important notices
+
+#### Extracurricular:
+- Library book borrowing
+- LMS course enrollment
+- Sports and clubs
+
+---
+
+## 4. Guardian (Parent) Walkthrough
+
+**Role**: Parent of Student
+**User**: Abdullah Mohammed (Ahmed's father)
+**Email**: abdullah.mohammed@demo.school
+**Child**: Ahmed Mohammed (Student ID: 2025DEMO0001, Grade 10)
+
+### Daily Parent Routine (10 minutes)
+
+#### Step 1: Login & Check Child's Status (3 min)
+
+1. **Login**:
+   ```
+   Email: abdullah.mohammed@demo.school
+   Password: 1234
+   ```
+
+2. **View Parent Dashboard**:
+   - Location: `/[lang]/s/demo/platform/parent/dashboard`
+   - Overview:
+     ```
+     Welcome, Abdullah Mohammed
+
+     Your Children:
+     - Ahmed Mohammed (Grade 10, Section A)
+       Student ID: 2025DEMO0001
+       Status: Active
+       [View Details]
+
+     Today's Summary for Ahmed:
+     Attendance: Present ✓ (Checked in at 7:55 AM)
+     Classes Today: 5
+     Pending Assignments: 2
+     Recent Grade: English Essay - 88% (B+)
+     Financial Status: 1 invoice pending (SDG 8,000)
+
+     Notifications: 4 unread
+     ```
+
+3. **Check Notifications**:
+   - 4 notifications:
+     - Attendance: Ahmed checked in at school
+     - Grade Published: English Essay - 88%
+     - Announcement: Parent-Teacher conference next week
+     - Invoice: Payment reminder (due in 5 days)
+
+#### Step 2: Monitor Attendance (2 min)
+
+1. **Navigate to Attendance**:
+   - Dashboard → "Attendance" card → "View Details"
+   - Or: Sidebar → My Children → Ahmed → Attendance
+
+2. **View Attendance Summary**:
+   ```
+   Ahmed Mohammed - Attendance
+
+   Current Quarter (Q3 2025):
+   Total Days: 45
+   Present: 40 (89%)
+   Absent: 4 (9%)
+   Late: 1 (2%)
+
+   This Week (March 10-14):
+   Monday: Present ✓ (7:55 AM)
+   Tuesday: Present ✓ (7:58 AM)
+   Wednesday: Absent ✗ (Parent called in sick)
+   Thursday: Present ✓ (8:02 AM)
+   Friday: Present ✓ (7:50 AM)
+
+   Week Attendance: 80% (4/5 days)
+   ```
+
+3. **Review Absence Details**:
+   - Click on "Wednesday: Absent"
+   - See details:
+     ```
+     Date: March 12, 2025
+     Status: Absent (Excused)
+     Reason: Sick (fever)
+     Reported By: Parent (Abdullah Mohammed)
+     Called In: 7:30 AM
+     Teacher Notes: "Will provide notes and assignments"
+     ```
+
+4. **View Attendance Trend**:
+   - Chart shows attendance over last 3 months
+   - Trend: Consistent attendance (85-90% range)
+   - Status: Good (above 75% threshold)
+
+#### Step 3: Check Academic Progress (3 min)
+
+1. **Navigate to Grades**:
+   - Sidebar → My Children → Ahmed → Academic Progress
+
+2. **View Current Grades**:
+   ```
+   Quarter 3, 2025 - Grade 10
+
+   Subject            Grade      Trend    Teacher
+   Mathematics        88% (B+)   ↑ +3%   Mrs. Aisha Hassan
+   Physics            85% (B)    → 0%    Dr. Omar Khaled
+   English            90% (A-)   ↑ +5%   Ms. Sara Ibrahim
+   Arabic             82% (B)    ↓ -2%   Mr. Khaled Ahmed
+   Chemistry          78% (C+)   ↓ -5%   Dr. Fatima Ali
+   Biology            91% (A-)   ↑ +2%   Dr. Hassan Omar
+   History            86% (B)    → 0%    Mr. Ibrahim Said
+   Islamic Studies    93% (A)    ↑ +1%   Sheikh Ahmad
+
+   Overall GPA: 3.4/4.0
+   Trend: Improving (↑)
+   Class Rank: 15/25 (60th percentile)
+   ```
+
+3. **Review Recent Grades**:
+   - English Essay published today: 88% (B+)
+   - Click to view teacher feedback
+   - See rubric breakdown and comments
+
+4. **Identify Concern** (Chemistry):
+   - Chemistry dropped from 83% to 78% (-5%)
+   - Recent quiz: 65% (D)
+   - Action needed: Contact teacher or arrange tutoring
+
+5. **View Grade History**:
+   - Expand Chemistry to see all assignments:
+     ```
+     Chemistry - Dr. Fatima Ali
+
+     Recent Grades:
+     - Chapter 7 Quiz: 65% (D) ← Concern
+     - Lab Report: 80% (B-)
+     - Homework Set 6: 85% (B)
+     - Chapter 6 Quiz: 90% (A-)
+
+     Trend: Recent decline, may need support
+     ```
+
+#### Step 4: Review Financial Status (2 min)
+
+1. **Navigate to Financial Account**:
+   - Sidebar → Finance → My Account
+   - Or: Dashboard → "Financial Status" card
+
+2. **View Account Summary**:
+   ```
+   Financial Account: Ahmed Mohammed
+
+   Account Balance: SDG -8,000 (Outstanding)
+
+   Invoices:
+   - Tuition Q3 2025: SDG 8,000 (Due: March 25)
+     Status: Pending (5 days remaining)
+
+   Payment History (Last 3 Invoices):
+   - Tuition Q2 2025: SDG 8,000 (Paid: Dec 15, 2024)
+   - Tuition Q1 2025: SDG 8,000 (Paid: Sep 10, 2024)
+   - Annual Fees 2024-25: SDG 2,000 (Paid: Aug 20, 2024)
+
+   Total Paid YTD: SDG 26,000
+   Total Outstanding: SDG 8,000
+   ```
+
+3. **View Invoice Details**:
+   - Click on "Tuition Q3 2025"
+   - See breakdown:
+     ```
+     Invoice #INV-2025-Q3-001
+
+     Items:
+     - Tuition Fee: SDG 6,500
+     - Technology Fee: SDG 500
+     - Library Fee: SDG 300
+     - Lab Fee: SDG 400
+     - Activities Fee: SDG 300
+
+     Subtotal: SDG 8,000
+     Discount: SDG 0
+     Total Due: SDG 8,000
+
+     Due Date: March 25, 2025
+     Status: Pending
+
+     [Pay Now] [Download PDF]
+     ```
+
+4. **Make Payment** (Optional):
+   - Click "Pay Now"
+   - Select payment method:
+     - Credit/Debit Card
+     - Bank Transfer
+     - Parent Wallet (if funded)
+   - For demo: Select "Bank Transfer"
+   - Instructions displayed for manual transfer
+   - Upload payment receipt
+
+**Daily Routine Complete** ✅
+Total Time: 10 minutes
+Insights: Attendance good, grades mostly good (Chemistry concern), invoice due soon
+
+---
+
+### Weekly Parent Activities (30 minutes)
+
+#### Task 1: Review Weekly Report (10 min)
+
+Every Sunday, parents receive an automated weekly summary email:
+
+```
+Subject: Weekly Report - Ahmed Mohammed (March 10-14, 2025)
+
+Dear Abdullah Mohammed,
+
+Here's Ahmed's weekly summary:
+
+ATTENDANCE:
+- Days Present: 4/5 (80%)
+- Days Absent: 1 (excused - sick)
+- Status: Good
+
+ACADEMICS:
+- New Grades: 3 assignments
+  * English Essay: 88% (B+)
+  * Math Homework: 92% (A-)
+  * Physics Lab: 85% (B)
+- Overall GPA: 3.4/4.0 (stable)
+
+UPCOMING:
+- Physics Midterm: Friday, March 21
+- Math Quiz: Tomorrow (March 18)
+- Parent-Teacher Conference: March 20, 2:00 PM
+
+FINANCIAL:
+- Invoice Due: March 25 (SDG 8,000)
+
+CONCERNS:
+- Chemistry grade declined to 78%
+  Recommendation: Contact Dr. Fatima Ali for support
+
+[View Full Report] [Contact Teachers]
+
+Best regards,
+Hogwarts School Administration
+```
+
+**Parent Actions**:
+1. Review report
+2. Discuss with Ahmed about Chemistry
+3. Schedule meeting with Chemistry teacher
+4. Mark calendar for upcoming exam and conference
+
+#### Task 2: Communicate with Teachers (10 min)
+
+1. **Send Message to Chemistry Teacher**:
+   ```
+   Navigate to: Messages → New Message
+
+   To: Dr. Fatima Ali (Chemistry Teacher)
+   Subject: Concern about Ahmed's Recent Performance
+
+   Message:
+   "Dear Dr. Fatima,
+
+   I noticed Ahmed's Chemistry grade has dropped from 83% to 78%,
+   and his recent quiz score was 65%.
+
+   I'd like to discuss:
+   1. What topics is he struggling with?
+   2. How can we support him at home?
+   3. Is tutoring recommended?
+
+   Would you be available for a brief meeting this week?
+
+   Thank you,
+   Abdullah Mohammed
+   (Ahmed's father)"
+
+   [Send Message]
+   ```
+
+2. **Teacher Responds** (within 24 hours):
+   ```
+   From: Dr. Fatima Ali
+   Received: Next day, 10:00 AM
+
+   "Dear Mr. Mohammed,
+
+   Thank you for reaching out. Ahmed is a good student, but he's
+   been struggling with Chapter 7 (Chemical Bonding).
+
+   I recommend:
+   1. Extra practice with ionic and covalent bonds
+   2. After-school tutoring on Tuesdays (3-4 PM, free)
+   3. Online resources: Khan Academy Chemistry
+
+   I'm available Thursday at 3:00 PM if you'd like to meet.
+
+   Best regards,
+   Dr. Fatima Ali"
+   ```
+
+3. **Schedule Meeting**:
+   - Reply to confirm Thursday 3 PM
+   - Add to calendar
+   - Notify Ahmed about tutoring opportunity
+
+#### Task 3: Prepare for Parent-Teacher Conference (10 min)
+
+1. **View Conference Schedule**:
+   ```
+   Navigate to: Events → Parent-Teacher Conference
+
+   Event: Parent-Teacher Conference
+   Date: March 20, 2025
+   Your Time Slot: 2:00 PM - 2:30 PM
+   Location: Conference Room A
+
+   Teachers Meeting With:
+   - Mrs. Aisha Hassan (Mathematics) - 5 min
+   - Dr. Omar Khaled (Physics) - 5 min
+   - Dr. Fatima Ali (Chemistry) - 10 min ← Extended
+   - Ms. Sara Ibrahim (English) - 5 min
+   - (Others: Brief updates)
+
+   Total Duration: 30 minutes
+   ```
+
+2. **Prepare Questions**:
+   ```
+   Questions for Conference:
+
+   Mathematics (Mrs. Hassan):
+   - Ahmed's progress in linear equations?
+   - Any challenges foreseen?
+
+   Physics (Dr. Omar):
+   - Preparation for upcoming midterm?
+   - Lab performance?
+
+   Chemistry (Dr. Fatima) - Priority:
+   - Detailed review of struggles
+   - Tutoring plan and timeline
+   - Resources for home support
+
+   English (Ms. Sara):
+   - Writing skills development
+   - Reading comprehension level
+   ```
+
+3. **Review Ahmed's Progress Report**:
+   - Download full progress report PDF
+   - Print for reference during conference
+   - Highlight areas to discuss
+
+**Weekly Activities Complete** ✅
+Total Time: 30 minutes
+Actions: Chemistry concern addressed, conference prepared, teachers contacted
+
+---
+
+## Advanced Workflows
+
+### Multi-Child Parent Account
+
+If a parent has multiple children (e.g., siblings):
+
+**Dashboard View**:
+```
+Your Children:
+
+1. Ahmed Mohammed (Grade 10, Section A)
+   GPA: 3.4 | Attendance: 89% | Status: ✓ Good
+   [View Details]
+
+2. Fatima Mohammed (Grade 8, Section B)
+   GPA: 3.8 | Attendance: 95% | Status: ✓ Excellent
+   [View Details]
+
+Quick Compare:
+- Ahmed: 2 pending assignments
+- Fatima: 1 pending assignment
+
+- Ahmed: 1 invoice pending (SDG 8,000)
+- Fatima: 1 invoice pending (SDG 7,000)
+
+Total Outstanding: SDG 15,000
+```
+
+**Switch Between Children**:
+- Dropdown at top: "Viewing: Ahmed Mohammed"
+- Select "Fatima Mohammed" to switch context
+- All reports and data update for selected child
+
+---
+
+## Mobile App Experience
+
+All roles have mobile app access with responsive design:
+
+**Mobile Features**:
+- Push notifications for important events
+- Quick attendance check-in (QR code scan)
+- Grade notifications
+- Assignment submission via photo
+- Parent-teacher messaging
+- Financial payment via mobile wallet
+
+**Mobile Optimizations**:
+- Simplified navigation
+- Touch-friendly buttons
+- Offline mode for viewing cached data
+- Fast loading with progressive web app
+
+---
+
+## Troubleshooting by Role
+
+### Administrator Issues
+
+**Issue**: Cannot access a module
+- **Solution**: Check role permissions in Settings → Roles & Permissions
+
+**Issue**: Financial reports not generating
+- **Solution**: Verify all invoices are processed, check report date range
+
+---
+
+### Teacher Issues
+
+**Issue**: Cannot submit attendance
+- **Solution**: Ensure class is selected, check internet connection, verify you teach the class
+
+**Issue**: Students not seeing published assignment
+- **Solution**: Verify assignment is "Published" not "Draft", check class assignment list
+
+---
+
+### Student Issues
+
+**Issue**: Cannot submit assignment - "File too large"
+- **Solution**: Compress PDF/images, file limit is 10MB, contact teacher if document required is larger
+
+**Issue**: Grade not showing
+- **Solution**: Teacher may not have published yet, check assignment status, contact teacher if delayed >1 week
+
+---
+
+### Parent Issues
+
+**Issue**: Cannot see child's grades
+- **Solution**: Verify account is linked to child, contact admin to check guardian relationship in system
+
+**Issue**: Payment not reflected after bank transfer
+- **Solution**: Payment processing takes 24-48 hours, upload receipt to invoice for faster confirmation
+
+---
+
+## Related Documentation
+
+- **[Student Management Demo](/docs/demo/modules/students)** - Enrollment, guardians, health records
+- **[Attendance System Demo](/docs/demo/modules/attendance)** - 4 attendance methods, analytics
+- **[Exam System Demo](/docs/demo/modules/exams)** - Question Bank, auto-marking
+- **[Finance System Demo](/docs/demo/modules/finance)** - Financial management
+- **[Learning & Communication Demo](/docs/demo/modules/learning-communication)** - Library, LMS, announcements
+- **[Demo Home](/docs/demo)** - Main demo documentation hub
+
+---
+
+## Support
+
+**Demo Environment**:
+- URL: `https://demo.ed.databayt.org`
+- All passwords: `1234`
+
+**Need Help?**:
+- Email: support@databayt.org
+- Documentation: https://ed.databayt.org/docs
+
+---
+
+**End of Role-Based Walkthroughs**
+
+*Last Updated: January 2025*
+*Version: 1.0.0*
