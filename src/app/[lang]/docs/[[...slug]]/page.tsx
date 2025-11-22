@@ -5,6 +5,7 @@ import { findNeighbour } from "fumadocs-core/page-tree"
 import type { Metadata } from "next"
 import { source } from "@/lib/source"
 import { DocsTableOfContents } from "@/components/docs/toc"
+import { DocsCopyPage } from "@/components/docs/docs-copy-page"
 import { Button } from "@/components/ui/button"
 import { mdxComponents } from "../../../../../mdx-components"
 
@@ -74,6 +75,11 @@ export default async function DocsPage(props: {
   const MDX = doc.body
   const neighbours = findNeighbour(source.pageTree, page.url)
 
+  // Get raw markdown content for copy functionality
+  // Construct a simple text representation from the page data
+  const raw = `# ${doc.title}\n\n${doc.description || ''}`
+  const absoluteUrl = `https://ed.databayt.org/${lang}/docs${slug ? '/' + slug.join('/') : ''}`
+
   return (
     <div className="flex items-stretch text-[1.05rem] sm:text-[15px] xl:w-full">
       <div className="flex min-w-0 flex-1 flex-col">
@@ -86,6 +92,7 @@ export default async function DocsPage(props: {
                   {doc.title}
                 </h1>
                 <div className="docs-nav bg-background/80 border-border/50 fixed inset-x-0 bottom-0 isolate z-50 flex items-center gap-2 border-t px-6 py-4 backdrop-blur-sm sm:static sm:z-0 sm:border-t-0 sm:bg-transparent sm:px-0 sm:pt-1.5 sm:backdrop-blur-none">
+                  <DocsCopyPage page={raw} url={absoluteUrl} />
                   {neighbours.previous && (
                     <Button
                       variant="secondary"
