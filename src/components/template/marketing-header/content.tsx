@@ -2,7 +2,7 @@ import Link from "next/link"
 import { siteConfig, marketingConfig } from "./config"
 import { Icons } from "./icons"
 import { MainNav } from "./main-nav"
-import { MobileNav } from "./mobile-nav"
+import { MobileNavButton } from "./mobile-nav-button"
 import { ModeSwitcher } from "./mode-switcher"
 import { LangSwitcher } from "./lang-switcher"
 import { Button } from "@/components/ui/button"
@@ -24,7 +24,7 @@ export default async function MarketingHeader({ dictionary }: MarketingHeaderPro
     <header className="border-grid sticky top-0 z-50 w-full border-b bg-background">
       <div className="container flex h-14 items-center gap-2 md:gap-4">
         <MainNav dictionary={dictionary} />
-        <MobileNav items={marketingConfig.mainNav} dictionary={dictionary} />
+        <MobileNavButton items={marketingConfig.mainNav} dictionary={dictionary} />
         <div className="ms-auto flex items-center gap-2 md:flex-1 md:justify-end">
           <div className="hidden w-full flex-1 md:flex md:w-auto md:flex-none">
             {/* Login/Logout instead of CommandMenu */}
