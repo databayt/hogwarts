@@ -1,0 +1,480 @@
+# API Reference
+
+Comprehensive REST API for integrating with Hogwarts School Management System. Build custom applications, automate workflows, and extend functionality with our developer-friendly API.
+
+## Overview
+
+The Hogwarts API provides programmatic access to all school management features through a RESTful interface. Whether you're building mobile apps, integrating third-party services, or automating administrative tasks, our API has you covered.
+
+### Base URL
+
+```
+Production: https://api.hogwarts.app/v1
+Staging: https://staging-api.hogwarts.app/v1
+Local: http://localhost:3000/api/v1
+```
+
+### API Features
+
+- 🔐 **Secure Authentication** - JWT-based auth with OAuth2 support
+- 🚀 **High Performance** - Sub-second response times
+- 📊 **Comprehensive Coverage** - All features accessible via API
+- 🔄 **Real-time Updates** - Webhook support for events
+- 📝 **Rich Documentation** - Interactive API explorer
+- 🌍 **Multi-tenant** - School isolation built-in
+
+## Authentication
+
+### Getting Started
+
+All API requests require authentication using Bearer tokens:
+
+```http
+Authorization: Bearer YOUR_API_TOKEN
+```
+
+### Obtaining Tokens
+
+#### 1. API Key Authentication
+
+Generate API keys from your admin dashboard:
+
+```javascript
+// Request
+POST /api/v1/auth/token
+Content-Type: application/json
+
+{
+  "api_key": "sk_live_abc123...",
+  "api_secret": "secret_xyz789..."
+}
+
+// Response
+{
+  "token": "eyJhbGciOiJIUzI1NiIs...",
+  "expires_in": 3600,
+  "token_type": "Bearer"
+}
+```
+
+#### 2. OAuth 2.0 Flow
+
+For third-party applications:
+
+```javascript
+// 1. Redirect user to authorize
+GET https://auth.hogwarts.app/oauth/authorize?
+  client_id=YOUR_CLIENT_ID&
+  redirect_uri=YOUR_REDIRECT_URI&
+  response_type=code&
+  scope=read:students write:attendance
+
+// 2. Exchange code for token
+POST /api/v1/oauth/token
+{
+  "grant_type": "authorization_code",
+  "code": "AUTH_CODE",
+  "client_id": "YOUR_CLIENT_ID",
+  "client_secret": "YOUR_CLIENT_SECRET"
+}
+```
+
+### Token Management
+
+- Tokens expire after 1 hour
+- Refresh tokens valid for 30 days
+- Revoke tokens when no longer needed
+- Rate limits apply per token
+
+## Core Endpoints
+
+### Students
+
+Manage student information and records:
+
+```http
+GET    /api/v1/students              # List all students
+GET    /api/v1/students/:id          # Get student details
+POST   /api/v1/students              # Create new student
+PUT    /api/v1/students/:id          # Update student
+DELETE /api/v1/students/:id          # Delete student
+GET    /api/v1/students/:id/grades   # Get student grades
+GET    /api/v1/students/:id/attendance # Get attendance records
+```
+
+#### Example: Create Student
+
+```javascript
+// Request
+POST /api/v1/students
+Authorization: Bearer YOUR_TOKEN
+Content-Type: application/json
+
+{
+  "firstName": "John",
+  "lastName": "Doe",
+  "email": "john.doe@school.edu",
+  "dateOfBirth": "2008-05-15",
+  "gender": "male",
+  "classId": "class_10a",
+  "enrollmentDate": "2024-01-15",
+  "guardianName": "Jane Doe",
+  "guardianPhone": "+1234567890",
+  "address": {
+    "street": "123 Main St",
+    "city": "Springfield",
+    "state": "IL",
+    "zipCode": "62701"
+  }
+}
+
+// Response
+{
+  "id": "student_abc123",
+  "studentId": "S2024001",
+  "firstName": "John",
+  "lastName": "Doe",
+  "fullName": "John Doe",
+  "email": "john.doe@school.edu",
+  "status": "active",
+  "createdAt": "2024-01-15T10:30:00Z",
+  "updatedAt": "2024-01-15T10:30:00Z"
+}
+```
+
+### Teachers
+
+Staff management endpoints:
+
+```http
+GET    /api/v1/teachers              # List teachers
+GET    /api/v1/teachers/:id          # Get teacher details
+POST   /api/v1/teachers              # Add new teacher
+PUT    /api/v1/teachers/:id          # Update teacher
+DELETE /api/v1/teachers/:id          # Remove teacher
+GET    /api/v1/teachers/:id/classes  # Get assigned classes
+GET    /api/v1/teachers/:id/schedule # Get timetable
+```
+
+### Classes
+
+Class and section management:
+
+```http
+GET    /api/v1/classes               # List all classes
+GET    /api/v1/classes/:id           # Get class details
+POST   /api/v1/classes               # Create class
+PUT    /api/v1/classes/:id           # Update class
+DELETE /api/v1/classes/:id           # Delete class
+GET    /api/v1/classes/:id/students  # List class students
+POST   /api/v1/classes/:id/students  # Assign students
+```
+
+### Attendance
+
+Track and manage attendance:
+
+```http
+GET    /api/v1/attendance            # Get attendance records
+POST   /api/v1/attendance            # Mark attendance
+PUT    /api/v1/attendance/:id        # Update attendance
+GET    /api/v1/attendance/report     # Generate report
+POST   /api/v1/attendance/bulk       # Bulk attendance marking
+```
+
+#### Example: Mark Attendance
+
+```javascript
+// Request
+POST /api/v1/attendance
+Authorization: Bearer YOUR_TOKEN
+Content-Type: application/json
+
+{
+  "date": "2024-01-15",
+  "classId": "class_10a",
+  "attendance": [
+    {
+      "studentId": "student_abc123",
+      "status": "present",
+      "arrivalTime": "08:30"
+    },
+    {
+      "studentId": "student_xyz789",
+      "status": "absent",
+      "reason": "sick"
+    }
+  ]
+}
+
+// Response
+{
+  "success": true,
+  "date": "2024-01-15",
+  "classId": "class_10a",
+  "summary": {
+    "total": 30,
+    "present": 28,
+    "absent": 2,
+    "late": 0,
+    "percentage": 93.33
+  }
+}
+```
+
+### Examinations
+
+Exam management and results:
+
+```http
+GET    /api/v1/exams                 # List exams
+POST   /api/v1/exams                 # Create exam
+GET    /api/v1/exams/:id             # Get exam details
+POST   /api/v1/exams/:id/results     # Submit results
+GET    /api/v1/exams/:id/results     # Get results
+POST   /api/v1/exams/:id/schedule    # Set schedule
+```
+
+### Fees
+
+Financial management:
+
+```http
+GET    /api/v1/fees                  # Fee structure
+GET    /api/v1/fees/outstanding      # Outstanding fees
+POST   /api/v1/fees/payment          # Record payment
+GET    /api/v1/fees/receipts         # List receipts
+GET    /api/v1/fees/receipt/:id      # Get receipt
+POST   /api/v1/fees/reminder         # Send reminder
+```
+
+## Advanced Features
+
+### Pagination
+
+All list endpoints support pagination:
+
+```http
+GET /api/v1/students?page=2&limit=50&sort=name:asc
+```
+
+Parameters:
+- `page` - Page number (default: 1)
+- `limit` - Items per page (default: 25, max: 100)
+- `sort` - Sort field and order (field:asc/desc)
+
+### Filtering
+
+Apply filters using query parameters:
+
+```http
+GET /api/v1/students?class=10A&gender=female&status=active
+```
+
+### Field Selection
+
+Request specific fields only:
+
+```http
+GET /api/v1/students?fields=id,name,email,class
+```
+
+### Search
+
+Full-text search across resources:
+
+```http
+GET /api/v1/search?q=john&type=students,teachers
+```
+
+## Webhooks
+
+### Setting Up Webhooks
+
+Register webhook endpoints to receive real-time notifications:
+
+```javascript
+POST /api/v1/webhooks
+{
+  "url": "https://your-app.com/webhook",
+  "events": ["student.created", "attendance.marked"],
+  "secret": "webhook_secret_key"
+}
+```
+
+### Available Events
+
+| Event | Description | Payload |
+|-------|-------------|---------|
+| `student.created` | New student enrolled | Student object |
+| `student.updated` | Student info updated | Updated fields |
+| `attendance.marked` | Attendance recorded | Attendance data |
+| `fee.paid` | Fee payment received | Payment details |
+| `exam.result` | Exam results published | Result data |
+| `announcement.created` | New announcement | Announcement |
+
+### Webhook Security
+
+Verify webhook signatures:
+
+```javascript
+const crypto = require('crypto');
+
+function verifyWebhook(payload, signature, secret) {
+  const hash = crypto
+    .createHmac('sha256', secret)
+    .update(JSON.stringify(payload))
+    .digest('hex');
+
+  return hash === signature;
+}
+```
+
+## Error Handling
+
+### Error Response Format
+
+```json
+{
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Invalid input data",
+    "details": [
+      {
+        "field": "email",
+        "message": "Invalid email format"
+      }
+    ]
+  },
+  "request_id": "req_abc123"
+}
+```
+
+### Common Error Codes
+
+| Code | HTTP Status | Description |
+|------|-------------|-------------|
+| `UNAUTHORIZED` | 401 | Invalid or missing token |
+| `FORBIDDEN` | 403 | Insufficient permissions |
+| `NOT_FOUND` | 404 | Resource not found |
+| `VALIDATION_ERROR` | 400 | Invalid input data |
+| `RATE_LIMITED` | 429 | Too many requests |
+| `SERVER_ERROR` | 500 | Internal server error |
+
+## Rate Limiting
+
+API rate limits per token:
+
+| Plan | Requests/Hour | Burst |
+|------|---------------|-------|
+| Basic | 1,000 | 50/min |
+| Pro | 10,000 | 500/min |
+| Enterprise | Unlimited | Custom |
+
+Rate limit headers:
+
+```http
+X-RateLimit-Limit: 1000
+X-RateLimit-Remaining: 999
+X-RateLimit-Reset: 1640995200
+```
+
+## SDKs & Libraries
+
+### Official SDKs
+
+- **Node.js**: `npm install @hogwarts/node-sdk`
+- **Python**: `pip install hogwarts-sdk`
+- **PHP**: `composer require hogwarts/php-sdk`
+- **Ruby**: `gem install hogwarts-sdk`
+
+### Example: Node.js SDK
+
+```javascript
+const Hogwarts = require('@hogwarts/node-sdk');
+
+const client = new Hogwarts({
+  apiKey: 'YOUR_API_KEY',
+  schoolId: 'school_123'
+});
+
+// Get all students
+const students = await client.students.list({
+  class: '10A',
+  limit: 50
+});
+
+// Mark attendance
+await client.attendance.mark({
+  date: '2024-01-15',
+  classId: 'class_10a',
+  attendance: [...]
+});
+```
+
+## API Playground
+
+Try our interactive API explorer:
+
+<iframe
+  src="https://api.hogwarts.app/playground"
+  width="100%"
+  height="600"
+  frameborder="0"
+></iframe>
+
+## Best Practices
+
+### 1. Use Appropriate HTTP Methods
+- `GET` - Retrieve data
+- `POST` - Create resources
+- `PUT` - Update entire resource
+- `PATCH` - Partial updates
+- `DELETE` - Remove resources
+
+### 2. Handle Errors Gracefully
+- Implement retry logic for network errors
+- Respect rate limits
+- Log errors for debugging
+
+### 3. Optimize Requests
+- Use field selection
+- Implement caching
+- Batch operations when possible
+
+### 4. Secure Your Integration
+- Store API keys securely
+- Use HTTPS always
+- Validate webhook signatures
+- Rotate keys regularly
+
+## Changelog
+
+### Version 1.2.0 (Latest)
+- Added webhook support
+- Improved error messages
+- New bulk operations endpoints
+- Performance improvements
+
+### Version 1.1.0
+- Added OAuth 2.0 support
+- New search endpoint
+- Field selection feature
+- Bug fixes
+
+## Support
+
+### Getting Help
+
+- 📚 [API Documentation](/docs/api)
+- 💬 [Developer Forum](https://forum.hogwarts.app)
+- 📧 [Email Support](mailto:api@hogwarts.app)
+- 🐛 [Report Issues](https://github.com/hogwarts/api/issues)
+
+### Status Page
+
+Check API status: [status.hogwarts.app](https://status.hogwarts.app)
+
+---
+
+**Ready to integrate?** Get your API keys from the [Admin Dashboard](/admin/api-keys) and start building!

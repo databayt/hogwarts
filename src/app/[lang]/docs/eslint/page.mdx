@@ -1,0 +1,45 @@
+## ESLint
+
+This project uses ESLint flat config with Next.js presets to ensure a consistent, safe codebase.
+
+### Config
+
+```js
+// eslint.config.mjs
+import { dirname } from "path";
+import { fileURLToPath } from "url";
+import { FlatCompat } from "@eslint/eslintrc";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+const compat = new FlatCompat({ baseDirectory: __dirname });
+
+const eslintConfig = [
+  ...compat.extends("next/core-web-vitals", "next/typescript"),
+];
+
+export default eslintConfig;
+```
+
+### Rules & Conventions
+
+- TypeScript-first: prefer typed modules, avoid `any`
+- React 19/Next 15 safe patterns: server components by default, client only when needed
+- Imports: absolute aliases from `components.json` (e.g., `@/components/ui/button`)
+- Lint before commit: run `pnpm lint`
+
+### Commands
+
+```bash
+pnpm lint
+pnpm lint --fix
+```
+
+### Tips
+
+- Keep PRs small; lint errors early
+- Use editor ESLint integration for real-time feedback
+
+
+

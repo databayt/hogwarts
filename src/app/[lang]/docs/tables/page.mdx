@@ -1,0 +1,235 @@
+## Generic Data Table (Reusable List Block)
+
+This is a generic, modular, reusable table block built on TanStack Table + shadcn/ui. It powers any list: students, teachers, classes, subjects, invoices, etc. It supports client UX with URL-synced state and server-driven pagination/filtering/sorting for scale.
+
+### README (What this is)
+
+- **Core**: `DataTable` renderer + `useDataTable` hook + filter/sort/pagination UI.
+- **UI kit**: shadcn/ui table primitives, dropdowns, badges, inputs.
+- **State**: URL-sync via `nuqs` for sharable deep links.
+- **Server**: Manual pagination/sorting/filtering; your query maps table state to Prisma (or any DB).
+- **Config**: Central operators and variants in `@/components/table/config/data-table`.
+
+Key files:
+
+- `@/components/table/data-table/data-table.tsx` — renders headers, rows, pinned columns, pagination, action bar.
+- `@/components/table/hooks/use-data-table.ts` — owns table state, URL sync, debounced filters, manual modes.
+- `@/components/table/data-table/*` — toolbar, filter list/menu, sort list, date/range/select filters, view options.
+- `@/components/table/lib/prisma-filter-columns.ts` — maps filters to Prisma where conditions (example for `Task`).
+- `@/components/table/lib/data-table.ts` — pinning CSS, operator helpers, valid filters guard.
+- `@/components/table/types/data-table.ts` — shared types, column meta (label, variant, options, etc.).
+
+### Current Progress (Working Now)
+
+- Manual pagination, sorting, filtering (server-driven) using TanStack Table.
+- URL-synced state (page, perPage, sort, filter values) with debounce/throttle options.
+- Prebuilt UI: toolbar (basic/advanced), sort list, filter list/menu, date and numeric range, view options, pagination.
+- Column meta drives filters: `meta.variant`, `meta.options`, `meta.range`, `meta.icon`, etc.
+- Example domain: Tasks table with multi-select/status, priority, estimated hours range, createdAt date range, row actions.
+- Prisma filter mapper for Task model demonstrating all operators.
+
+### Open Issues / Next
+
+- Generalize Prisma filter mapper for any model (typed function factory).
+- Add examples for Students/Teachers with typical school fields (name, class, grade, phone, email, status, gender).
+- Server actions for CSV export of current view (filters/sorts respected).
+- Row-level actions per domain (bulk actions, archive) via `actionBar` API.
+- Accessibility pass for all filter controls and keyboard nav.
+- Performance: large result sets, virtualization option for dense tables.
+
+### How to Use Everywhere (Pattern)
+
+1) Define your columns
+
+```tsx
+import type { ColumnDef } from "@tanstack/react-table"
+import { DataTableColumnHeader } from "@/components/table/data-table/data-table-column-header"
+import type { Student } from "@prisma/client"
+
+export function getStudentColumns(): ColumnDef<Student>[] {
+  return [
+    { id: "select", /* checkbox column like tasks */ },
+    {
+      id: "name",
+      accessorKey: "name",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Name" />
+      ),
+      meta: { label: "Name", placeholder: "Search names…", variant: "text" },
+      enableColumnFilter: true,
+    },
+    {
+      id: "grade",
+      accessorKey: "grade",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Grade" />
+      ),
+      meta: {
+        label: "Grade",
+        variant: "multiSelect",
+        options: [
+          { label: "Grade 1", value: "1" },
+          { label: "Grade 2", value: "2" },
+        ],
+      },
+      enableColumnFilter: true,
+    },
+    {
+      id: "createdAt",
+      accessorKey: "createdAt",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Enrolled" />
+      ),
+      meta: { label: "Enrolled", variant: "dateRange" },
+      enableColumnFilter: true,
+    },
+    { id: "actions", /* domain actions */ },
+  ]
+}
+```
+
+2) Build a server query
+
+Use the URL-parsed filters/sorts to build a DB query. For Prisma, use `filterColumns` or a generalized version per model.
+
+```ts
+import { filterColumns } from "@/components/table/lib/prisma-filter-columns"
+
+export async function getStudents({ page, perPage, sorting, filters }: Params) {
+  const where = filterColumns({ filters, joinOperator: "and" }) // customize for Student model
+  const orderBy = sorting.map(s => ({ [s.id]: s.desc ? "desc" : "asc" }))
+
+  const [data, total] = await Promise.all([
+    prisma.student.findMany({
+      where,
+      orderBy,
+      skip: (page - 1) * perPage,
+      take: perPage,
+    }),
+    prisma.student.count({ where }),
+  ])
+
+  return { data, pageCount: Math.ceil(total / perPage) }
+}
+```
+
+3) Compose the page
+
+```tsx
+import { useDataTable } from "@/components/table/hooks/use-data-table"
+import { DataTable } from "@/components/table/data-table/data-table"
+
+export default function StudentsTable({ data, pageCount }: { data: Student[], pageCount: number }) {
+  const columns = React.useMemo(() => getStudentColumns(), [])
+  const { table, shallow, debounceMs, throttleMs } = useDataTable({
+    data,
+    columns,
+    pageCount,
+    initialState: { sorting: [{ id: "createdAt", desc: true }] },
+    getRowId: (row) => row.id,
+    clearOnDefault: true,
+  })
+
+  return (
+    <DataTable table={table}>
+      {/* choose Advanced or Basic toolbar */}
+      {/* <DataTableAdvancedToolbar table={table}>...filters...</DataTableAdvancedToolbar> */}
+      {/* <DataTableToolbar table={table}>...filters...</DataTableToolbar> */}
+    </DataTable>
+  )
+}
+```
+
+### Filtering & Sorting (Deep Dive)
+
+- Variants: `text`, `number`, `range`, `date`, `dateRange`, `boolean`, `select`, `multiSelect`.
+- Operators per variant are configured in `config/data-table.ts` (e.g., text: `iLike`, `notILike`, etc.).
+- Column filters are enabled by setting `enableColumnFilter` and `meta.variant` (and `meta.options` for select types).
+- URL state parsers handle single or multi-value filters and keep links shareable.
+- `getValidFilters` drops empty values to avoid noisy queries.
+- Sorting is manual: state → server `orderBy`.
+- Pinning: columns can be pinned left/right; `getCommonPinningStyles` applies sticky + shadows.
+
+Advanced filter UX:
+
+- Use `DataTableAdvancedToolbar` for power users: combined sort list + filter list/menu.
+- Or use `DataTableToolbar` for simpler setups.
+- Debounce/throttle can be tuned via `useDataTable` props.
+
+### Production Readiness Checklist
+
+- Tenant safety: every query includes `schoolId`; unique constraints scoped by `schoolId`.
+- Access control: guard endpoints by role; hide columns/actions the role shouldn’t see.
+- Performance: index frequent filter fields; cap `perPage`; paginate on server; consider virtualization for wide tables.
+- UX: remember column visibility; provide presets; skeletons for loading states; empty states.
+- i18n/RTL: labels/icons mirror; Arabic and English strings.
+- A11y: keyboard nav, ARIA roles on toolbar and menus, focus management in sheets/dialogs.
+- Observability: log request ID, `schoolId`, filter payloads for troubleshooting.
+- Exports: CSV/XLSX export of current view (respect filters/sorts).
+
+### Multi-tenant SaaS Integration (Central DB + Logic)
+
+This table block is designed for a shared, central database and logic layer while safely serving many schools (tenants).
+
+- Central DB (Neon Postgres + Prisma): one schema shared by all schools; every business table includes `schoolId`. See `/docs/database`.
+- Central Logic: reuse shared filter operators, parsers, and the generic filter→Prisma mapper in `@/components/table/lib/*`.
+- Tenant Context: derive `schoolId` from subdomain/session and include it in every query.
+- URLs remain shareable (filters/sort/page) and work across tenants.
+
+End-to-end flow:
+
+1) User opens a list URL with optional filters/sort (e.g., `/students?page=2&sort=name:asc`).
+2) Middleware or route loader resolves `schoolId` from subdomain (e.g., `hogwarts.hogwarts.app`).
+3) Server function builds Prisma `where/orderBy` from URL and enforces `{ schoolId }`.
+4) Data and `pageCount` returned to the table; UI renders with consistent toolbar/filters.
+
+Example (Prisma, tenant-scoped):
+
+```ts
+export async function getStudents({ schoolId, page, perPage, sorting, filters }: Params) {
+  const whereBase = filterColumns({ filters, joinOperator: "and" })
+  const where = { ...whereBase, schoolId }
+  const orderBy = sorting.map((s) => ({ [s.id]: s.desc ? "desc" : "asc" }))
+
+  const [data, total] = await Promise.all([
+    prisma.student.findMany({ where, orderBy, skip: (page - 1) * perPage, take: perPage }),
+    prisma.student.count({ where }),
+  ])
+  return { data, pageCount: Math.ceil(total / perPage) }
+}
+```
+
+How it serves all schools:
+
+- Subdomain → `schoolId` mapping; queries always include `{ schoolId }`.
+- Same components/filters for all tenants; only data changes by tenant.
+- Optional per-school presets (columns visible, defaults) read from a settings table.
+
+Tie-ins with other docs:
+
+- Architecture and patterns: `/docs/architecture`, `/docs/pattern`.
+- Database and models: `/docs/database` (multi-tenant, indexes, constraints).
+- Provisioning and domains: `/docs/add-school`, `/docs/arrangements`.
+- i18n/RTL guidelines: `/docs/internationalization`.
+
+### Handle All Tables For All Schools
+
+- Create a column factory per domain (Students, Teachers, Classes, Subjects, Invoices) with consistent `id`/`meta`.
+- Create a generic Prisma filter mapper that accepts a model-specific mapping of columnId → Prisma path/type.
+- Enforce tenant scoping in all where clauses with `schoolId` from context.
+- Provide a shared `TablePage` shell that wires: fetch → table → toolbar → action bar.
+- Add presets per role (e.g., Teacher sees only their classes; Parent sees linked students).
+
+### Example Issues To File
+
+- feat(table): generic Prisma filter mapper for any model
+- feat(students): columns + filters + server query
+- feat(teachers): columns + filters + server query
+- feat(table): CSV export for current view
+- chore(a11y): keyboard nav and focus states for filter menus
+
+---
+
+This block is designed to be copied and configured per list with minimal code. Follow the pattern above, keep tenant scoping first, and reuse the shared operators/filters for a consistent UX across all tables.
+
+

@@ -1,0 +1,435 @@
+# Troubleshooting Guide
+
+Comprehensive solutions for common issues, error messages, and performance problems in the exam system.
+
+---
+
+## Quick Diagnosis
+
+### System Health Check
+
+Run diagnostics to identify issues:
+
+```bash
+# Check system status
+npm run exam:health-check
+
+# Validate database connections
+npm run exam:db-check
+
+# Test API endpoints
+npm run exam:api-test
+
+# Verify file permissions
+npm run exam:permissions-check
+```
+
+### Common Symptoms & Solutions
+
+| Symptom | Likely Cause | Quick Fix |
+|---------|--------------|-----------|
+| **Cannot create exam** | Permission issue | Check user role and permissions |
+| **Questions not loading** | Database connection | Restart server, check DB status |
+| **PDF generation fails** | Memory issue | Increase Node memory limit |
+| **Marks not saving** | Session timeout | Re-authenticate, retry |
+| **Import fails** | File format | Check encoding (UTF-8) and format |
+
+---
+
+## Exam Management Issues
+
+### Cannot Create Exam
+
+#### Error: "Permission Denied"
+```typescript
+{
+  error: "You do not have permission to create exams",
+  code: "PERMISSION_DENIED"
+}
+```
+
+**Solutions:**
+1. Verify user role:
+```sql
+SELECT role, permissions FROM User WHERE id = 'userId';
+```
+
+2. Check school context:
+```typescript
+const session = await auth();
+console.log(session?.user?.schoolId); // Must not be null
+```
+
+3. Grant permissions:
+```sql
+UPDATE User SET permissions = array_append(permissions, 'exam:create')
+WHERE id = 'userId';
+```
+
+#### Error: "Class not found"
+```typescript
+{
+  error: "Class not found or does not belong to your school",
+  code: "INVALID_CLASS"
+}
+```
+
+**Solutions:**
+1. Verify class exists:
+```sql
+SELECT * FROM Class WHERE id = 'classId' AND schoolId = 'schoolId';
+```
+
+2. Sync class data:
+```bash
+npm run sync:classes --schoolId=xxx
+```
+
+3. Check enrollment:
+```sql
+SELECT COUNT(*) FROM StudentClass WHERE classId = 'classId';
+```
+
+### Schedule Conflicts
+
+#### Error: "Room already booked"
+```typescript
+{
+  error: "Room conflict detected",
+  code: "ROOM_CONFLICT",
+  conflicts: [...]
+}
+```
+
+**Solutions:**
+1. Find available slots:
+```typescript
+const available = await findAvailableSlots({
+  roomId,
+  date,
+  duration
+});
+```
+
+2. Check timetable:
+```sql
+SELECT * FROM Timetable
+WHERE roomId = 'roomId'
+AND date = '2025-12-15'
+AND (startTime, endTime) OVERLAPS (time1, time2);
+```
+
+3. Force override (admin only):
+```typescript
+await createExam({
+  ...data,
+  forceOverride: true,
+  overrideReason: "Special exam"
+});
+```
+
+### Publishing Issues
+
+#### Error: "Cannot publish incomplete exam"
+```typescript
+{
+  error: "Exam missing required elements",
+  code: "INCOMPLETE_EXAM",
+  missing: ["questions", "invigilators"]
+}
+```
+
+**Solutions:**
+1. Check exam completeness:
+```typescript
+const checklist = await getPublishingChecklist(examId);
+console.log(checklist);
+```
+
+2. Add missing elements:
+```typescript
+// Add questions
+await addQuestionsToExam(examId, questionIds);
+
+// Assign invigilators
+await assignInvigilators(examId, teacherIds);
+```
+
+3. Force publish (not recommended):
+```typescript
+await publishExam(examId, { skipValidation: true });
+```
+
+---
+
+## Question Bank Issues
+
+### Import Problems
+
+#### Error: "Invalid file format"
+```
+Error parsing CSV: Invalid format at row 5
+```
+
+**Solutions:**
+1. Validate CSV format:
+```bash
+# Check encoding
+file -bi questions.csv
+# Should be: text/plain; charset=utf-8
+
+# Convert if needed
+iconv -f ISO-8859-1 -t UTF-8 questions.csv > questions_utf8.csv
+```
+
+2. Use template:
+```csv
+Type,Text,Option1,Option2,Option3,Option4,Correct,Marks,Difficulty
+MCQ,"Question?","A","B","C","D","B",1,EASY
+```
+
+3. Validate before import:
+```typescript
+const validation = await validateImport(file, {
+  dryRun: true
+});
+console.log(validation.errors);
+```
+
+### Duplicate Detection
+
+#### Issue: Duplicates not detected
+**Solutions:**
+1. Adjust similarity threshold:
+```typescript
+const duplicates = await detectDuplicates(question, {
+  threshold: 0.75  // Lower from default 0.85
+});
+```
+
+2. Rebuild search index:
+```bash
+npm run qbank:reindex
+```
+
+3. Manual check:
+```sql
+SELECT * FROM Question
+WHERE SIMILARITY(text, 'your question text') > 0.7;
+```
+
+### Search Not Working
+
+#### Issue: Questions not appearing in search
+**Solutions:**
+1. Rebuild full-text search index:
+```sql
+REINDEX TABLE Question;
+UPDATE Question SET search_vector =
+  to_tsvector('english', text || ' ' || topic || ' ' || tags);
+```
+
+2. Clear cache:
+```typescript
+await cache.delete('questions:*');
+```
+
+3. Check filters:
+```typescript
+// Too restrictive filters
+const results = await searchQuestions({
+  difficulty: ['EASY'],      // Try removing filters
+  type: ['MCQ'],
+  tags: ['specific-tag']
+});
+```
+
+---
+
+## Marking Issues
+
+### Auto-Marking Failures
+
+#### Error: "Marking engine timeout"
+```typescript
+{
+  error: "Marking operation timed out after 30s",
+  code: "MARKING_TIMEOUT"
+}
+```
+
+**Solutions:**
+1. Increase timeout:
+```typescript
+const results = await autoMark(submissions, {
+  timeout: 60000  // 60 seconds
+});
+```
+
+2. Reduce batch size:
+```typescript
+const batches = chunk(submissions, 50);  // Instead of 100
+for (const batch of batches) {
+  await autoMark(batch);
+}
+```
+
+3. Use background job:
+```typescript
+await queueMarkingJob({
+  examId,
+  priority: 'high',
+  retries: 3
+});
+```
+
+### AI Grading Issues
+
+#### Error: "AI service unavailable"
+```typescript
+{
+  error: "Failed to connect to AI service",
+  code: "AI_SERVICE_ERROR"
+}
+```
+
+**Solutions:**
+1. Check API key:
+```bash
+echo $OPENAI_API_KEY
+# Should not be empty
+```
+
+2. Fallback to manual:
+```typescript
+const result = await gradeEssay(answer, {
+  useAI: true,
+  fallbackToManual: true
+});
+```
+
+3. Use alternative model:
+```typescript
+await gradeEssay(answer, {
+  model: 'gpt-3.5-turbo'  // Instead of gpt-4
+});
+```
+
+### Marks Not Saving
+
+#### Issue: Marks disappear after saving
+**Solutions:**
+1. Check transaction:
+```typescript
+await db.$transaction(async (tx) => {
+  await tx.markingResult.create({ data });
+  await tx.examResult.update({
+    where: { id },
+    data: { totalScore }
+  });
+});
+```
+
+2. Verify session:
+```typescript
+const session = await auth();
+if (!session) {
+  throw new Error('Session expired');
+}
+```
+
+3. Check constraints:
+```sql
+-- Check for unique constraint violations
+SELECT * FROM MarkingResult
+WHERE examId = 'xxx' AND studentId = 'yyy';
+```
+
+---
+
+## Results & PDF Issues
+
+### PDF Generation Failures
+
+#### Error: "PDF generation failed"
+```
+Error: Cannot allocate memory
+```
+
+**Solutions:**
+1. Increase memory:
+```bash
+NODE_OPTIONS="--max-old-space-size=4096" npm run generate-pdf
+```
+
+2. Optimize template:
+```typescript
+const pdf = await generatePDF({
+  template: 'minimal',     // Use simpler template
+  quality: 'medium',       // Reduce quality
+  compression: true
+});
+```
+
+3. Use queue:
+```typescript
+await queuePDFGeneration({
+  studentIds,
+  batchSize: 25  // Process in smaller batches
+});
+```
+
+### Batch PDF Issues
+
+#### Error: "Batch generation timeout"
+**Solutions:**
+1. Reduce batch size:
+```typescript
+const options = {
+  batchSize: 10,    // From 50
+  parallel: 2,      // From 4
+  timeout: 60000    // Increase timeout
+};
+```
+
+2. Use background processing:
+```typescript
+const job = await startBatchPDFJob({
+  examId,
+  async: true
+});
+// Check status later
+const status = await getJobStatus(job.id);
+```
+
+3. Split by class:
+```typescript
+for (const classId of classes) {
+  await generateClassPDFs(examId, classId);
+}
+```
+
+### Result Publication Issues
+
+#### Error: "Cannot publish results"
+```typescript
+{
+  error: "Results not ready for publication",
+  code: "RESULTS_NOT_READY",
+  pending: 15
+}
+```
+
+**Solutions:**
+1. Check marking status:
+```sql
+SELECT
+  COUNT(*) FILTER (WHERE status = 'COMPLETED') as completed,
+  COUNT(*) FILTER (WHERE status = 'PENDING') as pending
+FROM MarkingResult
+WHERE examId = 'xxx';
+```
+
+2. Force complete pending:
+```typescript
+await completeP

@@ -1,0 +1,365 @@
+export const metadata = {
+  title: 'Newcomers Guide - Hogwarts',
+  description: 'Simple guide for new contributors to make their first PR and help complete the MVP',
+}
+
+# Welcome, New Contributor! 🎉
+
+**Hogwarts** is transforming education in Sudan and the MENA region by building the world's most accessible school management platform. We're a community of developers building in our spare time—**no deadlines, only progress.**
+
+## Why This Matters
+
+- **2 million+ schools globally** still rely on paper-based systems
+- **Sudan alone** has 40,000+ schools needing modern tools
+- **You can help** 1M+ students have better educational experiences
+- **Revenue share model**: Contributors get a share of subscription revenue when schools pay
+- **Open source**: Full transparency, community-driven development
+
+---
+
+## MVP Progress
+
+We're building toward our **Minimum Viable Product (MVP)** with **98 user stories** across 6 epics:
+
+<div className="my-6 p-6 border rounded-lg bg-muted/30">
+  <div className="mb-4">
+    <div className="flex justify-between mb-2">
+      <span className="font-medium">MVP Completion</span>
+      <span className="font-bold text-primary">~75%</span>
+    </div>
+    <div className="w-full bg-muted rounded-full h-2.5">
+      <div className="bg-primary h-2.5 rounded-full w-3/4"></div>
+    </div>
+  </div>
+
+  **Current Focus:**
+  - ✅ Epic 1: Foundation & Infrastructure (15 stories) - COMPLETE
+  - ✅ Epic 2: Authentication & Authorization (18 stories) - COMPLETE
+  - ✅ Epic 3: School Configuration (12 stories) - COMPLETE
+  - 🔄 Epic 4: Student Management (20 stories) - IN PROGRESS
+  - 🔄 Epic 5: Teacher & Staff Management (15 stories) - IN PROGRESS
+  - 📋 Epic 6: Class & Subject Management (18 stories) - PENDING
+
+  **Your contributions directly accelerate MVP completion!**
+</div>
+
+---
+
+## Quick Start (3 Steps)
+
+### Step 1: Fork & Setup
+
+```bash
+# Fork the repo on GitHub: https://github.com/databayt/hogwarts
+git clone https://github.com/databayt/hogwarts.git
+
+pnpm install
+```
+
+### Step 2: Environment & Database
+
+```bash
+# Copy environment template
+cp .env.example .env
+
+# Edit .env - minimum required:
+# DATABASE_URL="postgresql://user:password@localhost:5432/hogwarts"
+# AUTH_SECRET="generate-with: openssl rand -base64 32"
+# NEXTAUTH_URL="http://localhost:3000"
+
+# Generate Prisma client & run migrations
+pnpm prisma generate
+pnpm prisma migrate dev
+
+# Seed database with demo data
+pnpm db:seed:demo
+
+# Start development server
+pnpm dev
+```
+
+Open `http://localhost:3000` - you should see Hogwarts running! 🎉
+
+### Step 3: Pick Your First Issue
+
+Browse open issues filtered by area:
+- [**Good First Issues**](https://github.com/databayt/hogwarts/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) - Perfect for newcomers
+- [**MVP - Student Management**](https://github.com/databayt/hogwarts/issues?q=is%3Aissue+is%3Aopen+label%3A%22epic%3A+student-management%22)
+- [**MVP - Teacher Management**](https://github.com/databayt/hogwarts/issues?q=is%3Aissue+is%3Aopen+label%3A%22epic%3A+teacher-management%22)
+- [**MVP - Class Management**](https://github.com/databayt/hogwarts/issues?q=is%3Aissue+is%3Aopen+label%3A%22epic%3A+class-management%22)
+- [**Documentation**](https://github.com/databayt/hogwarts/issues?q=is%3Aissue+is%3Aopen+label%3Adocumentation) - Improve docs
+- [**UI Components**](https://github.com/databayt/hogwarts/issues?q=is%3Aissue+is%3Aopen+label%3Aui) - Build components
+
+**Pro Tip:** Comment on the issue saying you're working on it to avoid duplicate work!
+
+---
+
+## Contribution Flowchart
+
+Here's the complete contribution process:
+
+```mermaid
+graph TD
+    A[Find Open Issue] --> B[Comment: 'I'll work on this']
+    B --> C[Create Branch]
+    C --> D[Write Code]
+    D --> E[Test Locally]
+    E --> F{Tests Pass?}
+    F -->|No| D
+    F -->|Yes| G[Commit Changes]
+    G --> H[Push to Fork]
+    H --> I[Create Pull Request]
+    I --> J[CodeRabbit AI Review]
+    J --> K{Changes Requested?}
+    K -->|Yes| D
+    K -->|No| L[Human Review]
+    L --> M{Approved?}
+    M -->|Yes| N[Merge to Main]
+    M -->|No| D
+    N --> O[🎉 Contribution Complete!]
+    O --> P[Pick Next Issue]
+
+    style A fill:#e1f5ff
+    style O fill:#d4edda
+    style N fill:#d4edda
+```
+
+---
+
+## Git Workflow (Simple & Fast)
+
+Follow this exact workflow for your contributions:
+
+```bash
+# 1. Create a new branch
+git checkout -b feature-name
+
+# 2. Make your changes, then stage them
+git add .
+
+# 3. Commit with a clear message
+git commit -m "feat(students): add bulk enrollment feature"
+
+# 4. Push to your fork
+git push -u origin feature-name
+
+# 5. Open Pull Request on GitHub
+# Click "Compare & pull request" button
+
+# 6. Wait for CodeRabbit AI review + human review
+
+# 7. After merge: sync your fork
+git checkout main
+git pull origin main
+```
+
+**Commit Message Format:**
+- `feat(scope): description` - New feature
+- `fix(scope): description` - Bug fix
+- `docs(scope): description` - Documentation
+- `refactor(scope): description` - Code refactor
+- `test(scope): description` - Add/update tests
+
+---
+
+## First PR Checklist
+
+Before opening your PR, verify:
+
+- [ ] Code runs locally without errors (`pnpm dev`)
+- [ ] TypeScript compiles successfully (`pnpm tsc --noEmit`)
+- [ ] All tests pass (`pnpm test`)
+- [ ] Multi-tenant safety: All database queries include `schoolId`
+- [ ] UI changes tested in both **Arabic (RTL)** and **English (LTR)**
+- [ ] No hardcoded text - use translation keys from dictionaries
+- [ ] Semantic HTML used (no `<div>` with `text-*` classes)
+- [ ] Build succeeds (`pnpm build`)
+- [ ] PR description explains **why** (not just what)
+- [ ] Screenshots included for UI changes
+
+---
+
+## Learning Resources
+
+### Essential Docs (Read These First!)
+
+1. **[Tech Stack](/docs/stack)** - Next.js 15, React 19, Prisma, NextAuth v5
+2. **[Architecture](/docs/architecture)** - Mirror pattern, multi-tenant design
+3. **[Code Patterns](/docs/pattern)** - Component structure, server actions
+4. **[Full Contributing Guide](/CONTRIBUTING.md)** - Comprehensive reference
+
+### MVP Details
+
+- **[PRD (Product Requirements)](/docs/prd)** - Complete product vision
+- **[MVP Roadmap](/docs/mvp)** - All 98 stories with acceptance criteria
+- **[Epics Overview](/docs/epics)** - Epic breakdown by feature area
+
+### Design Inspiration
+
+- **[Inspiration Gallery](/docs/inspiration)** - UI patterns, dashboards, forms
+- **[Awesome shadcn](/docs/awesome-shadcn)** - Component library examples
+- **[Typography System](/docs/typography)** - Semantic HTML guidelines
+
+### Deep Dives
+
+- **[Multi-Tenant Guide](/docs/architecture-multi-tenant)** - Tenant isolation patterns
+- **[Build System](/docs/build)** - Error prevention, optimization
+- **[UI Factory](/docs/ui-factory)** - Component generation with AI
+
+---
+
+## Common Tasks
+
+### Generate a New Component
+
+```bash
+/component StudentCard    # Creates component + tests
+/page students/profile    # Creates page with mirror pattern
+/api create students      # Creates server action with validation
+```
+
+### Run Tests
+
+```bash
+pnpm test                 # All unit tests
+pnpm test:e2e            # End-to-end tests
+pnpm test -- --watch     # Watch mode
+```
+
+### Validate Before Commit
+
+```bash
+pnpm tsc --noEmit        # TypeScript check (CRITICAL!)
+/scan-errors             # Detect 204+ error patterns
+/fix-build               # Auto-fix common errors
+```
+
+### Build for Production
+
+```bash
+/build                   # Smart build with 4-phase validation
+```
+
+---
+
+## Multi-Tenant Safety (CRITICAL!)
+
+Every database query **MUST** include `schoolId` for tenant isolation:
+
+```typescript
+// ✅ CORRECT
+await db.student.findMany({
+  where: { schoolId, grade: "10" }
+})
+
+// ❌ WRONG - Missing schoolId
+await db.student.findMany({
+  where: { grade: "10" }
+})
+```
+
+**Get tenant context:**
+
+```typescript
+// In server components
+import { getTenantContext } from "@/lib/tenant-context"
+const { schoolId } = await getTenantContext()
+
+// In server actions
+import { auth } from "@/auth"
+const session = await auth()
+const schoolId = session?.user?.schoolId
+```
+
+---
+
+## Need Help?
+
+- **Discord Community**: [Join us](https://discord.gg/uPa4gGG62c) - Ask questions, get help, discuss features
+- **GitHub Discussions**: [Start a discussion](https://github.com/databayt/hogwarts/discussions)
+- **Issue Comments**: Comment directly on the issue you're working on
+
+---
+
+## Community Values
+
+- **Be kind** - Assume good intent, help each other learn
+- **No deadlines** - We build at our own pace, no pressure
+- **Quality over speed** - Take time to do it right
+- **Share knowledge** - Document what you learn
+- **Celebrate wins** - Every PR merged is a victory for education
+
+---
+
+## Revenue Share Model (Transparent)
+
+We're building a **shared economy**:
+
+- **Source**: School subscriptions ($1-$1.50/student/month)
+- **Distribution**: Community treasury allocates revenue to contributors
+- **Tracking**: Contributions logged publicly (issues, PRs, changelog)
+- **Payout**: Periodic distributions when meaningful revenue accumulates
+
+**Formula** (to be refined with community):
+- Sustained impact and maintenance > one-off tasks
+- Quality code review contributions count
+- Documentation and testing valued equally with features
+
+We'll finalize the exact formula transparently with the community as we grow.
+
+---
+
+## Your First PR Awaits!
+
+1. Pick a [good first issue](https://github.com/databayt/hogwarts/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)
+2. Follow the [Git Workflow](#git-workflow-simple--fast)
+3. Open your PR and wait for review
+4. Celebrate your contribution! 🎉
+
+**Welcome to the Hogwarts community. Let's transform education together.**
+
+---
+
+## Quick Links
+
+<div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-6">
+  <a href="https://github.com/databayt/hogwarts/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22" className="p-4 border rounded-lg hover:border-primary transition-colors">
+    <div className="font-semibold">🎯 Good First Issues</div>
+    <div className="text-sm text-muted-foreground">Start here - beginner-friendly tasks</div>
+  </a>
+
+  <a href="/docs/mvp" className="p-4 border rounded-lg hover:border-primary transition-colors">
+    <div className="font-semibold">📋 MVP Roadmap</div>
+    <div className="text-sm text-muted-foreground">See all 98 user stories</div>
+  </a>
+
+  <a href="/docs/stack" className="p-4 border rounded-lg hover:border-primary transition-colors">
+    <div className="font-semibold">🛠️ Tech Stack</div>
+    <div className="text-sm text-muted-foreground">Next.js 15 + React 19 + Prisma</div>
+  </a>
+
+  <a href="/docs/architecture" className="p-4 border rounded-lg hover:border-primary transition-colors">
+    <div className="font-semibold">📐 Architecture</div>
+    <div className="text-sm text-muted-foreground">Mirror pattern + multi-tenant design</div>
+  </a>
+
+  <a href="/docs/pattern" className="p-4 border rounded-lg hover:border-primary transition-colors">
+    <div className="font-semibold">🎨 Code Patterns</div>
+    <div className="text-sm text-muted-foreground">Component structure + best practices</div>
+  </a>
+
+  <a href="/docs/inspiration" className="p-4 border rounded-lg hover:border-primary transition-colors">
+    <div className="font-semibold">✨ Inspiration</div>
+    <div className="text-sm text-muted-foreground">UI patterns + design examples</div>
+  </a>
+
+  <a href="/CONTRIBUTING.md" className="p-4 border rounded-lg hover:border-primary transition-colors">
+    <div className="font-semibold">📚 Full Guide</div>
+    <div className="text-sm text-muted-foreground">Comprehensive contributing docs</div>
+  </a>
+
+  <a href="https://discord.gg/uPa4gGG62c" className="p-4 border rounded-lg hover:border-primary transition-colors">
+    <div className="font-semibold">💬 Discord</div>
+    <div className="text-sm text-muted-foreground">Join the community</div>
+  </a>
+</div>

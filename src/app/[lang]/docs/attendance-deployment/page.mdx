@@ -1,0 +1,1222 @@
+# Attendance System Production Deployment Guide
+
+This guide provides step-by-step instructions for deploying the comprehensive attendance system to production.
+
+## Table of Contents
+
+1. [Prerequisites](#prerequisites)
+2. [Database Setup](#database-setup)
+3. [Environment Configuration](#environment-configuration)
+4. [WebSocket Server Deployment](#websocket-server-deployment)
+5. [Next.js Application Deployment](#nextjs-application-deployment)
+6. [Post-Deployment Verification](#post-deployment-verification)
+7. [Monitoring and Maintenance](#monitoring-and-maintenance)
+8. [Scaling Considerations](#scaling-considerations)
+9. [Troubleshooting](#troubleshooting)
+
+---
+
+## Prerequisites
+
+### Required Services
+
+- **PostgreSQL Database** (v14 or higher)
+  - Recommended: Neon, Supabase, or managed PostgreSQL
+  - Storage: Minimum 10GB, scale based on attendance volume
+  - Connection pooling: PgBouncer or built-in pooling
+
+- **Redis Cache** (v6 or higher) - Optional but recommended
+  - For session storage and real-time data caching
+  - Recommended: Upstash Redis or managed Redis
+
+- **Node.js Environment** (v18 or higher)
+  - For Next.js application and WebSocket server
+  - Recommended: Vercel, Railway, or DigitalOcean App Platform
+
+- **WebSocket Server Host** (separate from main app)
+  - Socket.io server for real-time updates
+  - Recommended: Railway, Render, or dedicated VPS
+
+### Required Accounts
+
+- Email service (Resend, SendGrid, or similar)
+- SMS provider (Twilio) - if enabling SMS notifications
+- Push notification provider (Firebase) - if enabling push notifications
+- Map provider (Mapbox) - if using geofencing with maps
+- Monitoring service (Sentry) - for error tracking
+
+### Development Tools
+
+```bash
+# Install pnpm globally
+npm install -g pnpm@9
+
+# Verify installations
+node --version  # Should be v18+
+pnpm --version  # Should be 9.x
+psql --version  # Should be 14+
+```
+
+---
+
+## Database Setup
+
+### Step 1: Provision PostgreSQL Database
+
+**Option A: Neon (Recommended)**
+
+1. Create account at [neon.tech](https://neon.tech)
+2. Create new project: "hogwarts-production"
+3. Copy connection string from dashboard
+4. Enable connection pooling (optional but recommended)
+
+**Option B: Supabase**
+
+1. Create account at [supabase.com](https://supabase.com)
+2. Create new project
+3. Copy pooler connection string (recommended for serverless)
+
+**Option C: Self-hosted PostgreSQL**
+
+```bash
+# Install PostgreSQL
+sudo apt update
+sudo apt install postgresql postgresql-contrib
+
+# Create database
+sudo -u postgres psql
+CREATE DATABASE hogwarts_production;
+CREATE USER hogwarts_user WITH ENCRYPTED PASSWORD 'your_secure_password';
+GRANT ALL PRIVILEGES ON DATABASE hogwarts_production TO hogwarts_user;
+```
+
+### Step 2: Run Prisma Migrations
+
+```bash
+# Set DATABASE_URL in .env
+echo "DATABASE_URL=postgresql://user:password@host:5432/dbname" > .env.local
+
+# Generate Prisma client
+pnpm prisma generate
+
+# Run migrations
+pnpm prisma migrate deploy
+
+# Verify migration status
+pnpm prisma migrate status
+```
+
+### Step 3: Apply Database Optimizations
+
+```bash
+# Connect to database
+psql $DATABASE_URL
+
+# Run optimization script
+\i prisma/schema-optimizations.sql
+
+# Verify indexes created
+\di+ attendances*
+\d+ mv_daily_attendance_stats
+\d+ mv_student_attendance_summary
+
+# Analyze tables
+ANALYZE attendances;
+ANALYZE attendance_events;
+ANALYZE student_identifiers;
+```
+
+### Step 4: Seed Initial Data (Optional)
+
+```bash
+# Seed database with test data for development
+pnpm db:seed
+
+# For production, create admin user manually
+pnpm prisma studio
+```
+
+### Step 5: Set Up Maintenance Jobs
+
+Create cron jobs for database maintenance:
+
+```bash
+# Edit crontab
+crontab -e
+
+# Add maintenance jobs (adjust times based on your timezone)
+
+# Cleanup expired QR codes every 15 minutes
+*/15 * * * * psql $DATABASE_URL -c "SELECT cleanup_expired_qr_codes();"
+
+# Archive old location traces daily at 2 AM
+0 2 * * * psql $DATABASE_URL -c "SELECT archive_old_location_traces();"
+
+# Deactivate expired cards daily at 3 AM
+0 3 * * * psql $DATABASE_URL -c "SELECT deactivate_expired_cards();"
+
+# Refresh materialized views every hour
+0 * * * * psql $DATABASE_URL -c "REFRESH MATERIALIZED VIEW CONCURRENTLY mv_daily_attendance_stats;"
+5 * * * * psql $DATABASE_URL -c "REFRESH MATERIALIZED VIEW CONCURRENTLY mv_student_attendance_summary;"
+
+# Vacuum analyze weekly on Sunday at 3 AM
+0 3 * * 0 psql $DATABASE_URL -c "VACUUM ANALYZE;"
+```
+
+---
+
+## Environment Configuration
+
+### Step 1: Copy Environment Template
+
+```bash
+# Copy the attendance environment template
+cp .env.attendance.example .env.local
+
+# Merge with your existing .env if you have one
+cat .env.local .env.attendance.example > .env.production
+```
+
+### Step 2: Configure Core Variables
+
+Edit `.env.local` with your production values:
+
+```bash
+# Database
+DATABASE_URL="postgresql://user:password@host:5432/dbname?sslmode=require"
+DATABASE_POOL_SIZE=20
+DATABASE_CONNECTION_TIMEOUT=10000
+
+# NextAuth
+NEXTAUTH_URL="https://yourdomain.com"
+NEXTAUTH_SECRET="generate_with_openssl_rand_base64_32"
+AUTH_TRUST_HOST=true
+
+# WebSocket (update after deploying socket server)
+NEXT_PUBLIC_SOCKET_URL="https://socket.yourdomain.com"
+NEXT_PUBLIC_ENABLE_REALTIME=true
+NEXT_PUBLIC_SOCKET_RECONNECT_ATTEMPTS=5
+
+# Security
+SECURITY_PREVENT_PROXY=true
+SECURITY_TRACK_IP=true
+SECURITY_DEVICE_FINGERPRINT=true
+SECURITY_RATE_LIMIT=60
+SECURITY_MAX_SESSIONS=3
+
+# Attendance Configuration
+ATTENDANCE_DEFAULT_METHOD=MANUAL
+ATTENDANCE_LATE_THRESHOLD=15
+ATTENDANCE_ABSENT_THRESHOLD=30
+ATTENDANCE_ALLOW_EDIT_DAYS=7
+ATTENDANCE_LOCATION_ACCURACY=50
+
+# QR Code Settings
+QR_CODE_REFRESH_INTERVAL=60
+QR_CODE_VALIDITY_PERIOD=120
+QR_CODE_MAX_SCANS=100
+QR_CODE_REQUIRE_LOCATION=false
+QR_CODE_PREVENT_SCREENSHOT=true
+
+# Geofence Settings
+GEOFENCE_UPDATE_INTERVAL=30
+GEOFENCE_DWELL_TIME=30
+GEOFENCE_REQUIRED_ACCURACY=20
+GEOFENCE_BATTERY_OPTIMIZATION=true
+GEOFENCE_AUTO_CHECKOUT=false
+
+# Feature Flags
+FEATURE_QR_ATTENDANCE=true
+FEATURE_BARCODE_ATTENDANCE=true
+FEATURE_GEOFENCE_ATTENDANCE=true
+FEATURE_REALTIME_DASHBOARD=true
+FEATURE_ADVANCED_ANALYTICS=true
+FEATURE_BULK_UPLOAD=true
+
+# Experimental Features (disable in production)
+ENABLE_EXPERIMENTAL=false
+FEATURE_RFID_ATTENDANCE=false
+FEATURE_NFC_ATTENDANCE=false
+FEATURE_BLUETOOTH_ATTENDANCE=false
+FEATURE_BIOMETRIC_ATTENDANCE=false
+
+# Performance
+ENABLE_COMPRESSION=true
+API_CACHE_TTL=60
+MAX_RECORDS_PER_PAGE=100
+ENABLE_LAZY_LOADING=true
+ENABLE_DATA_PRELOAD=true
+
+# Monitoring
+ENABLE_PERFORMANCE_MONITORING=true
+PERFORMANCE_SAMPLE_RATE=0.1
+ENABLE_REALTIME_METRICS=true
+METRICS_EXPORT_INTERVAL=60
+
+# Debug (disable in production)
+DEBUG_MODE=false
+VERBOSE_LOGGING=false
+LOG_WEBSOCKET_EVENTS=false
+LOG_DATABASE_QUERIES=false
+SIMULATE_DEVICE_SCANS=false
+```
+
+### Step 3: Configure Optional Services
+
+**Redis (Recommended for production)**
+
+```bash
+# Redis URL
+REDIS_URL="redis://default:password@host:6379"
+REDIS_SESSION_TTL=3600
+REDIS_ATTENDANCE_CACHE_TTL=300
+REDIS_ENABLE_REALTIME=true
+
+# Enable query caching
+DB_ENABLE_QUERY_CACHE=true
+DB_QUERY_CACHE_TTL=300
+```
+
+**Email Notifications**
+
+```bash
+# Using Resend
+RESEND_API_KEY="re_xxxxxxxxxxxx"
+NOTIFICATION_METHOD=email
+NOTIFY_PARENTS=true
+NOTIFY_ON_ABSENCE=true
+NOTIFY_ON_LATE=true
+NOTIFY_LOW_ATTENDANCE_THRESHOLD=80
+```
+
+**SMS Notifications (Optional)**
+
+```bash
+SMS_PROVIDER=twilio
+SMS_API_KEY="your_twilio_account_sid"
+SMS_API_SECRET="your_twilio_auth_token"
+```
+
+**Push Notifications (Optional)**
+
+```bash
+PUSH_NOTIFICATION_PROVIDER=firebase
+FIREBASE_SERVER_KEY="your_firebase_server_key"
+```
+
+**Map Provider for Geofencing**
+
+```bash
+MAP_PROVIDER=mapbox
+MAPBOX_ACCESS_TOKEN="pk.xxxxxxxxxxxxxxx"
+```
+
+### Step 4: Generate Secrets
+
+```bash
+# Generate NextAuth secret
+openssl rand -base64 32
+
+# Generate encryption keys for biometric data
+openssl rand -hex 32
+```
+
+---
+
+## WebSocket Server Deployment
+
+The attendance system requires a separate WebSocket server for real-time updates.
+
+### Step 1: Prepare Socket Server Code
+
+Create a new directory for the socket server:
+
+```bash
+mkdir attendance-socket-server
+cd attendance-socket-server
+pnpm init
+```
+
+Install dependencies:
+
+```bash
+pnpm add socket.io express cors dotenv
+pnpm add -D @types/node @types/express @types/cors tsx
+```
+
+Copy the example server file:
+
+```bash
+# Copy from your project
+cp ../hogwarts/src/lib/websocket/server.example.ts ./src/server.ts
+```
+
+Create `package.json` scripts:
+
+```json
+{
+  "scripts": {
+    "start": "node dist/server.js",
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc"
+  }
+}
+```
+
+Create `tsconfig.json`:
+
+```json
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "commonjs",
+    "lib": ["ES2022"],
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
+  },
+  "include": ["src/**/*"]
+}
+```
+
+### Step 2: Deploy to Railway (Recommended)
+
+**Via Railway CLI:**
+
+```bash
+# Install Railway CLI
+npm i -g @railway/cli
+
+# Login to Railway
+railway login
+
+# Initialize project
+railway init
+
+# Set environment variables
+railway variables set PORT=3001
+railway variables set CLIENT_URL=https://yourdomain.com
+railway variables set NODE_ENV=production
+
+# Deploy
+railway up
+```
+
+**Via Railway Dashboard:**
+
+1. Go to [railway.app](https://railway.app)
+2. Click "New Project" → "Deploy from GitHub repo"
+3. Connect your socket server repository
+4. Railway auto-detects Node.js and deploys
+5. Add environment variables in dashboard
+6. Copy the public URL (e.g., `https://attendance-socket.up.railway.app`)
+
+### Step 3: Deploy to Render (Alternative)
+
+1. Go to [render.com](https://render.com)
+2. Click "New" → "Web Service"
+3. Connect GitHub repository
+4. Configure:
+   - **Name**: attendance-socket-server
+   - **Environment**: Node
+   - **Build Command**: `pnpm build`
+   - **Start Command**: `pnpm start`
+   - **Instance Type**: Starter ($7/month minimum for WebSocket support)
+5. Add environment variables
+6. Deploy and copy the service URL
+
+### Step 4: Update Main Application
+
+Update your main application's `.env.local`:
+
+```bash
+NEXT_PUBLIC_SOCKET_URL="https://your-socket-server.railway.app"
+```
+
+### Step 5: Configure CORS
+
+Ensure your socket server allows connections from your main domain:
+
+```typescript
+// In server.ts
+const io = new Server(httpServer, {
+  cors: {
+    origin: [
+      "https://yourdomain.com",
+      "https://www.yourdomain.com",
+      "https://*.yourdomain.com" // For subdomains
+    ],
+    methods: ["GET", "POST"],
+    credentials: true
+  }
+});
+```
+
+### Step 6: Verify WebSocket Connection
+
+Test the connection:
+
+```bash
+# Check server status
+curl https://your-socket-server.railway.app/api/status
+
+# Should return:
+# {
+#   "connected": 0,
+#   "schools": 0,
+#   "rooms": 0,
+#   "uptime": 123.45
+# }
+```
+
+---
+
+## Next.js Application Deployment
+
+### Option A: Deploy to Vercel (Recommended)
+
+**Via Vercel CLI:**
+
+```bash
+# Install Vercel CLI
+npm i -g vercel
+
+# Login
+vercel login
+
+# Deploy to production
+vercel --prod
+
+# Set environment variables
+vercel env add NEXT_PUBLIC_SOCKET_URL production
+vercel env add DATABASE_URL production
+# ... add all required variables
+```
+
+**Via Vercel Dashboard:**
+
+1. Go to [vercel.com](https://vercel.com)
+2. Click "Import Project"
+3. Connect GitHub repository
+4. Configure:
+   - **Framework Preset**: Next.js
+   - **Root Directory**: ./
+   - **Build Command**: `pnpm build`
+   - **Install Command**: `pnpm install`
+5. Add all environment variables from `.env.local`
+6. Deploy
+
+**Important Vercel Settings:**
+
+- **Node.js Version**: 18.x or higher
+- **Serverless Function Region**: Choose closest to database
+- **Edge Functions**: Not recommended for attendance (needs database access)
+- **Cron Jobs**: Set up for materialized view refresh
+
+```javascript
+// vercel.json
+{
+  "crons": [
+    {
+      "path": "/api/cron/refresh-stats",
+      "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/cron/cleanup-qr",
+      "schedule": "*/15 * * * *"
+    }
+  ]
+}
+```
+
+### Option B: Deploy to Railway
+
+```bash
+# Link project
+railway link
+
+# Add environment variables
+railway variables set DATABASE_URL=$DATABASE_URL
+railway variables set NEXTAUTH_URL=https://yourdomain.com
+railway variables set NEXTAUTH_SECRET=$NEXTAUTH_SECRET
+# ... add all variables
+
+# Deploy
+railway up
+
+# Add custom domain
+railway domain
+```
+
+### Option C: Self-Hosted with PM2
+
+```bash
+# Build application
+pnpm build
+
+# Install PM2 globally
+npm install -g pm2
+
+# Start application
+pm2 start pnpm --name "hogwarts-attendance" -- start
+
+# Set up auto-restart
+pm2 startup
+pm2 save
+
+# Monitor
+pm2 monit
+```
+
+---
+
+## Post-Deployment Verification
+
+### Step 1: Verify Database Connection
+
+```bash
+# Check if migrations ran
+pnpm prisma migrate status
+
+# Verify indexes exist
+psql $DATABASE_URL -c "\di+ attendances*"
+
+# Check materialized views
+psql $DATABASE_URL -c "SELECT COUNT(*) FROM mv_daily_attendance_stats;"
+```
+
+### Step 2: Test Authentication
+
+1. Navigate to `https://yourdomain.com/login`
+2. Create test account or login with existing credentials
+3. Verify session persists across page reloads
+4. Check subdomain authentication works: `https://school.yourdomain.com`
+
+### Step 3: Test Attendance Methods
+
+**Manual Attendance:**
+1. Go to `/s/school/attendance/manual`
+2. Select a class and date
+3. Mark attendance for a student
+4. Verify record saved in database
+
+**QR Code Attendance:**
+1. Go to `/s/school/attendance/qr-code`
+2. Generate QR code as teacher
+3. Scan QR code as student (use second device or browser)
+4. Verify attendance marked in real-time
+
+**Barcode Attendance:**
+1. Go to `/s/school/attendance/barcode`
+2. Assign barcode to test student
+3. Scan barcode using camera
+4. Verify attendance marked
+
+**Geofence Attendance:**
+1. Enable location permissions
+2. Create geofence for school location
+3. Enter geofence boundary
+4. Verify attendance auto-marked
+
+### Step 4: Test Real-Time Updates
+
+1. Open attendance dashboard in two browsers
+2. Mark attendance in one browser
+3. Verify update appears in second browser within 1 second
+4. Check WebSocket connection indicator shows "Connected"
+
+### Step 5: Test Analytics
+
+1. Navigate to `/s/school/attendance/analytics`
+2. Verify charts load with data
+3. Test date range filters
+4. Export report to CSV/Excel
+5. Verify exported data matches dashboard
+
+### Step 6: Test Performance
+
+```bash
+# Load test with autocannon
+npx autocannon -c 10 -d 30 https://yourdomain.com/api/attendance/stats
+
+# Should show:
+# - Requests/sec: > 100
+# - Latency p99: < 500ms
+# - Error rate: 0%
+```
+
+### Step 7: Monitor Error Tracking
+
+Check Sentry dashboard:
+1. Go to [sentry.io](https://sentry.io)
+2. Verify events are being captured
+3. Check for any deployment errors
+4. Set up alerts for critical errors
+
+---
+
+## Monitoring and Maintenance
+
+### Application Monitoring
+
+**Vercel Analytics (if using Vercel):**
+- Automatically enabled
+- View at vercel.com/dashboard/analytics
+- Monitor: Page views, API response times, edge function performance
+
+**Sentry Error Tracking:**
+
+```bash
+# Already configured in project
+# View errors at sentry.io lab
+
+# Set up alerts:
+# 1. Go to Alerts → Create Alert
+# 2. Set conditions: "Error rate exceeds 1%"
+# 3. Add notifications: Email, Slack, PagerDuty
+```
+
+### Database Monitoring
+
+**Check Connection Pool:**
+
+```sql
+-- View active connections
+SELECT count(*) FROM pg_stat_activity WHERE state = 'active';
+
+-- View slow queries
+SELECT query, mean_exec_time, calls
+FROM pg_stat_statements
+ORDER BY mean_exec_time DESC
+LIMIT 10;
+
+-- View table sizes
+SELECT
+  tablename,
+  pg_size_pretty(pg_total_relation_size(schemaname||'.'||tablename)) AS size
+FROM pg_tables
+WHERE schemaname = 'public'
+ORDER BY pg_total_relation_size(schemaname||'.'||tablename) DESC;
+```
+
+**Set Up Database Alerts:**
+
+```bash
+# Monitor database size
+# Alert if database > 80% capacity
+
+# Monitor connection count
+# Alert if connections > 80% of max
+
+# Monitor query performance
+# Alert if mean query time > 500ms
+
+# Monitor index usage
+# Alert if index not being used
+```
+
+### WebSocket Server Monitoring
+
+**Health Checks:**
+
+```bash
+# Add to socket server
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'ok',
+    uptime: process.uptime(),
+    connections: io.engine.clientsCount,
+    memory: process.memoryUsage()
+  });
+});
+
+# Monitor with uptime service (UptimeRobot, Pingdom)
+# Check /health endpoint every 5 minutes
+```
+
+### Performance Monitoring
+
+**Key Metrics to Track:**
+
+| Metric | Target | Alert Threshold |
+|--------|--------|-----------------|
+| API Response Time (p95) | < 200ms | > 500ms |
+| WebSocket Connection Success Rate | > 99% | < 95% |
+| Database Query Time (p95) | < 100ms | > 300ms |
+| Error Rate | < 0.1% | > 1% |
+| Attendance Mark Success Rate | > 99.5% | < 98% |
+| Real-time Update Latency | < 1 second | > 3 seconds |
+
+### Backup Strategy
+
+**Database Backups:**
+
+```bash
+# Daily automated backups (if using managed service)
+# Retention: 7 daily, 4 weekly, 12 monthly
+
+# Manual backup script
+pg_dump $DATABASE_URL > backup-$(date +%Y%m%d).sql
+
+# Restore from backup
+psql $DATABASE_URL < backup-20241024.sql
+
+# Test restore monthly
+# Verify data integrity after restore
+```
+
+**Application Backups:**
+
+```bash
+# Git repository backups
+# Automatic with GitHub/GitLab
+
+# Environment variables backup
+# Store in encrypted vault (1Password, Vault)
+
+# User-uploaded files backup
+# If storing barcode images, student photos, etc.
+```
+
+### Maintenance Schedule
+
+| Task | Frequency | Time (UTC) |
+|------|-----------|------------|
+| Refresh materialized views | Hourly | :00, :05 |
+| Cleanup expired QR codes | Every 15 min | */15 * * * * |
+| Archive old location traces | Daily | 02:00 |
+| Deactivate expired cards | Daily | 03:00 |
+| Database VACUUM ANALYZE | Weekly | Sun 03:00 |
+| Review slow query log | Weekly | Mon 10:00 |
+| Check disk space | Daily | 04:00 |
+| Review error logs | Daily | 09:00 |
+| Update dependencies | Monthly | 1st, 10:00 |
+| Security audit | Quarterly | 1st, 10:00 |
+
+---
+
+## Scaling Considerations
+
+### Horizontal Scaling
+
+**When to scale:**
+- Database connections > 80% of pool
+- API response time p95 > 500ms
+- WebSocket server CPU > 70%
+- Database CPU > 70%
+
+**Application Scaling (Vercel):**
+- Automatic scaling with serverless functions
+- No configuration needed
+- Monitor function concurrency in dashboard
+
+**Application Scaling (Self-hosted):**
+
+```bash
+# PM2 cluster mode
+pm2 start pnpm --name "hogwarts" -i max -- start
+
+# Kubernetes horizontal pod autoscaling
+kubectl autoscale deployment hogwarts \
+  --cpu-percent=70 \
+  --min=2 \
+  --max=10
+```
+
+### Database Scaling
+
+**Read Replicas:**
+
+```bash
+# Add read replica for reporting queries
+# Neon: Enable read replicas in lab
+# Configure Prisma with read replica URL
+
+DATABASE_URL="postgresql://..." # Primary (writes)
+DATABASE_READ_URL="postgresql://..." # Replica (reads)
+```
+
+**Connection Pooling:**
+
+```bash
+# Use PgBouncer for connection pooling
+# Recommended for > 100 concurrent connections
+
+# Install PgBouncer
+sudo apt install pgbouncer
+
+# Configure /etc/pgbouncer/pgbouncer.ini
+[databases]
+hogwarts = host=db.host.com port=5432 dbname=hogwarts
+
+[pgbouncer]
+pool_mode = transaction
+max_client_conn = 1000
+default_pool_size = 20
+```
+
+**Table Partitioning:**
+
+For schools with > 100,000 attendance records, enable partitioning:
+
+```sql
+-- See prisma/schema-optimizations.sql
+-- Lines 279-300 for partitioning strategy
+
+-- Partition by month
+CREATE TABLE attendances_partitioned (
+  LIKE attendances INCLUDING ALL
+) PARTITION BY RANGE (date);
+
+-- Create monthly partitions
+CREATE TABLE attendances_2024_10 PARTITION OF attendances_partitioned
+  FOR VALUES FROM ('2024-10-01') TO ('2024-11-01');
+```
+
+### WebSocket Scaling
+
+**Horizontal Scaling with Redis:**
+
+```typescript
+// Install Redis adapter
+pnpm add @socket.io/redis-adapter redis
+
+// Configure in server.ts
+import { createAdapter } from '@socket.io/redis-adapter';
+import { createClient } from 'redis';
+
+const pubClient = createClient({ url: process.env.REDIS_URL });
+const subClient = pubClient.duplicate();
+
+await Promise.all([pubClient.connect(), subClient.connect()]);
+
+io.adapter(createAdapter(pubClient, subClient));
+
+// Now you can run multiple socket server instances
+// All will share session data via Redis
+```
+
+**Load Balancing:**
+
+```nginx
+# Nginx configuration for WebSocket load balancing
+upstream socket_backend {
+  ip_hash; # Sticky sessions
+  server socket1.yourdomain.com:3001;
+  server socket2.yourdomain.com:3001;
+  server socket3.yourdomain.com:3001;
+}
+
+server {
+  location / {
+    proxy_pass http://socket_backend;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+  }
+}
+```
+
+### Redis Caching
+
+```bash
+# Install Redis (if not using managed service)
+sudo apt install redis-server
+
+# Start Redis
+sudo systemctl start redis
+sudo systemctl enable redis
+
+# Configure in application
+REDIS_URL="redis://localhost:6379"
+```
+
+Implement caching for:
+- Attendance statistics (5-minute TTL)
+- Student lists (10-minute TTL)
+- Class schedules (1-hour TTL)
+- User sessions (24-hour TTL)
+
+---
+
+## Troubleshooting
+
+### Database Connection Issues
+
+**Symptom:** "Error: Connection pool exhausted"
+
+**Solution:**
+```bash
+# Increase pool size
+DATABASE_POOL_SIZE=50
+
+# Add connection timeout
+DATABASE_CONNECTION_TIMEOUT=20000
+
+# Check active connections
+psql $DATABASE_URL -c "SELECT count(*) FROM pg_stat_activity;"
+```
+
+### WebSocket Connection Failures
+
+**Symptom:** "WebSocket connection failed" or "Disconnected"
+
+**Checklist:**
+1. Verify socket server is running: `curl https://socket-url/api/status`
+2. Check CORS configuration allows your domain
+3. Verify firewall allows WebSocket connections (port 3001)
+4. Check browser console for specific error messages
+5. Test with WebSocket testing tool: [websocket.org/echo](https://websocket.org/echo.html)
+
+**Common fixes:**
+```bash
+# Update CORS origins in socket server
+cors: {
+  origin: ["https://yourdomain.com", "https://*.yourdomain.com"],
+  credentials: true
+}
+
+# Enable WebSocket transport explicitly
+transports: ['websocket', 'polling']
+```
+
+### Performance Degradation
+
+**Symptom:** Slow API responses or database queries
+
+**Diagnosis:**
+```sql
+-- Find slow queries
+SELECT query, mean_exec_time, calls
+FROM pg_stat_statements
+WHERE mean_exec_time > 100
+ORDER BY mean_exec_time DESC;
+
+-- Check missing indexes
+SELECT schemaname, tablename, attname, n_distinct, correlation
+FROM pg_stats
+WHERE schemaname = 'public'
+  AND tablename IN ('attendances', 'attendance_events')
+ORDER BY tablename, attname;
+
+-- Check table bloat
+SELECT
+  schemaname || '.' || tablename AS table,
+  pg_size_pretty(pg_total_relation_size(schemaname||'.'||tablename)) AS size
+FROM pg_tables
+WHERE schemaname = 'public'
+ORDER BY pg_total_relation_size(schemaname||'.'||tablename) DESC;
+```
+
+**Solutions:**
+```bash
+# Run VACUUM ANALYZE
+psql $DATABASE_URL -c "VACUUM ANALYZE;"
+
+# Refresh materialized views
+psql $DATABASE_URL -c "REFRESH MATERIALIZED VIEW CONCURRENTLY mv_daily_attendance_stats;"
+
+# Rebuild indexes if needed
+psql $DATABASE_URL -c "REINDEX TABLE attendances;"
+
+# Enable query result caching
+DB_ENABLE_QUERY_CACHE=true
+REDIS_URL="redis://..."
+```
+
+### QR Code Scanner Not Working
+
+**Symptom:** Camera not starting or QR codes not scanning
+
+**Checklist:**
+1. Check HTTPS is enabled (camera requires secure context)
+2. Verify browser permissions granted for camera
+3. Test on different device/browser
+4. Check browser console for errors
+5. Verify QR code library installed: `pnpm list @yudiel/react-qr-scanner`
+
+**Common issues:**
+```bash
+# Camera permission denied
+# Solution: User must grant permission manually in browser settings
+
+# Library not found
+pnpm add @yudiel/react-qr-scanner
+
+# QR code expired
+# Solution: Increase QR_CODE_VALIDITY_PERIOD or regenerate code
+```
+
+### Barcode Scanner Issues
+
+**Symptom:** Barcode scanner not detecting codes
+
+**Checklist:**
+1. Verify adequate lighting for camera
+2. Check Quagga2 library installed: `pnpm list @ericblade/quagga2`
+3. Test with different barcode formats (CODE128, EAN-13)
+4. Ensure barcode is properly focused in scanner view
+5. Try manual entry as fallback
+
+**Configuration:**
+```typescript
+// Adjust sensitivity in barcode-scanner.tsx
+frequency: 10, // Increase for better detection
+area: { top: '20%', right: '20%', left: '20%', bottom: '20%' } // Adjust detection area
+```
+
+### Geofence Not Triggering
+
+**Symptom:** Attendance not marked when entering geofence
+
+**Diagnosis:**
+1. Check location permissions granted
+2. Verify geofence coordinates are correct
+3. Check GPS accuracy (should be < 50m)
+4. Test with larger geofence radius initially
+5. Verify GEOFENCE_DWELL_TIME not too high
+
+**Testing:**
+```javascript
+// Test geofence calculation manually
+const distance = haversineDistance(
+  { lat: userLat, lon: userLon },
+  { lat: geofenceLat, lon: geofenceLon }
+);
+
+console.log('Distance from geofence center:', distance, 'meters');
+console.log('Geofence radius:', geofenceRadius, 'meters');
+console.log('Inside geofence:', distance <= geofenceRadius);
+```
+
+### Memory Leaks
+
+**Symptom:** Server memory usage growing over time
+
+**Diagnosis:**
+```bash
+# Monitor memory usage
+pm2 monit
+
+# Heap snapshot analysis (Node.js)
+node --inspect server.js
+# Open chrome://inspect
+# Take heap snapshot, compare over time
+```
+
+**Common causes:**
+- WebSocket connections not properly cleaned up
+- Event listeners not removed
+- Large data sets not paginated
+- Materialized views not refreshed
+
+**Solutions:**
+```typescript
+// Proper cleanup in React components
+useEffect(() => {
+  const unsubscribe = socket.on('event', handler);
+  return () => unsubscribe(); // Clean up on unmount
+}, []);
+
+// Limit data fetched
+const students = await db.student.findMany({
+  take: 100, // Limit results
+  skip: page * 100 // Paginate
+});
+
+// Clear old data periodically
+await db.locationTrace.deleteMany({
+  where: {
+    timestamp: { lt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) }
+  }
+});
+```
+
+### Deployment Failures
+
+**Vercel Build Errors:**
+
+```bash
+# Error: Prisma client not generated
+# Solution: Add to package.json
+"scripts": {
+  "postinstall": "prisma generate"
+}
+
+# Error: pnpm lockfile out of date
+# Solution: Run locally and commit
+pnpm install
+git add pnpm-lock.yaml
+git commit -m "Update lockfile"
+
+# Error: Environment variables missing
+# Solution: Add all required variables in Vercel lab
+# Settings → Environment Variables → Add all from .env.local
+```
+
+---
+
+## Security Checklist
+
+Before going live, verify:
+
+- [ ] Database uses SSL/TLS connections (`?sslmode=require`)
+- [ ] NextAuth secret is strong and random (32+ characters)
+- [ ] All environment variables use production values
+- [ ] Debug mode disabled (`DEBUG_MODE=false`)
+- [ ] CORS configured to allow only your domains
+- [ ] Rate limiting enabled (`SECURITY_RATE_LIMIT=60`)
+- [ ] Proxy detection enabled (`SECURITY_PREVENT_PROXY=true`)
+- [ ] SQL injection protection via Prisma parameterization
+- [ ] XSS protection via React escaping
+- [ ] CSRF protection via NextAuth
+- [ ] Biometric data encrypted at rest (if using biometrics)
+- [ ] Location data retention policy enforced (30 days default)
+- [ ] User consent collected for location tracking
+- [ ] GDPR compliance for EU users
+- [ ] Security headers configured (CSP, HSTS, X-Frame-Options)
+- [ ] Regular dependency updates (`pnpm update`)
+- [ ] Sentry error tracking enabled
+- [ ] Backup strategy implemented and tested
+- [ ] Incident response plan documented
+
+---
+
+## Performance Checklist
+
+Before going live, verify:
+
+- [ ] Database indexes created (`schema-optimizations.sql` applied)
+- [ ] Materialized views created and scheduled for refresh
+- [ ] Connection pooling configured (PgBouncer or database pooling)
+- [ ] Redis caching enabled (optional but recommended)
+- [ ] Image optimization enabled (Next.js Image component)
+- [ ] API response caching configured (`API_CACHE_TTL=60`)
+- [ ] Compression enabled (`ENABLE_COMPRESSION=true`)
+- [ ] Lazy loading enabled for large lists (`ENABLE_LAZY_LOADING=true`)
+- [ ] Database maintenance jobs scheduled (cron)
+- [ ] Monitoring and alerting configured
+- [ ] Load testing performed (target: > 100 req/s, < 500ms p99)
+- [ ] WebSocket server scaled if > 1000 concurrent connections
+- [ ] Database partitioning enabled if > 100k records
+- [ ] CDN configured for static assets (automatic with Vercel)
+- [ ] Service worker configured for offline support
+
+---
+
+## Support and Resources
+
+- **Documentation**: [yourdomain.com/docs/attendance](https://yourdomain.com/docs/attendance)
+- **API Reference**: [yourdomain.com/docs/attendance#api-reference](https://yourdomain.com/docs/attendance#api-reference)
+- **GitHub Issues**: Report bugs and request features
+- **Discord/Slack Community**: Get help from other users
+- **Email Support**: support@yourdomain.com
+
+---
+
+**Deployment completed?** Proceed to [Post-Deployment Verification](#post-deployment-verification) to ensure everything is working correctly.
+
+**Need help?** Check the [Troubleshooting](#troubleshooting) section or contact support.

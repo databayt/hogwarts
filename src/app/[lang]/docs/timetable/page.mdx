@@ -1,0 +1,265 @@
+## Timetable — Comprehensive Guide
+
+A production-ready timetable management system with drag-and-drop scheduling, conflict detection, analytics, and multi-view support.
+
+### 🎯 Key Features
+
+- **Drag & Drop Interface**: Easily move and reorganize classes with visual feedback
+- **Multi-View Support**: Switch between Class, Teacher, Room, and Student views
+- **Conflict Detection**: Automatic detection and resolution suggestions for scheduling conflicts
+- **Subject Color Coding**: Visual distinction between subjects for better readability
+- **Import/Export**: Support for Excel, CSV, JSON, PDF, and iCal formats
+- **Analytics Dashboard**: Workload distribution, room utilization, and optimization insights
+- **Substitute Management**: Handle teacher substitutions with notifications
+- **Mobile Responsive**: Fully optimized for tablets and mobile devices
+- **Internationalization**: Full support for multiple languages including RTL
+
+### 📋 Permissions & Access Control
+
+| Role | View | Edit | Delete | Import/Export | Analytics | Substitutes |
+|------|------|------|--------|--------------|-----------|------------|
+| Admin/Principal | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Teacher | ✅ | ❌ | ❌ | Export only | ❌ | ❌ |
+| Student/Parent | ✅ | ❌ | ❌ | Export only | ❌ | ❌ |
+
+### 🚀 Getting Started
+
+#### Initial Setup
+
+1) Navigate to **Timetable** from the main menu
+2) Click **Settings** (gear icon) to configure:
+   - Working days (e.g., Mon-Fri, Sun-Thu)
+   - Periods per day and duration
+   - Lunch and break periods
+   - Color scheme preference
+3) Import existing data or start creating slots manually
+
+### 📝 Managing Timetable Slots
+
+#### Adding New Slots
+
+1) **Click the "+ Add Slot" button** or click any empty cell in the grid
+2) Fill in the required information:
+   - Day and Period
+   - Class/Section
+   - Subject (with automatic color coding)
+   - Teacher (filtered by subject expertise)
+   - Classroom (shows availability)
+3) **Optional**: Enable recurring to create the same slot for multiple weeks
+4) Click **Save** to add the slot
+
+#### Editing Existing Slots
+
+**Method 1: Drag & Drop**
+- Simply drag any slot to a new time/day position
+- The system validates conflicts automatically
+- Visual feedback shows valid drop zones
+
+**Method 2: Edit Dialog**
+- Click the menu icon (⋮) on any slot
+- Select **Edit** to modify details
+- Change teacher, room, or add substitute
+
+#### Bulk Operations
+
+- **Duplicate**: Copy slots to other days/periods
+- **Move Multiple**: Select multiple slots with Ctrl/Cmd+Click
+- **Delete Multiple**: Select and press Delete key
+
+### ⚠️ Conflict Detection & Resolution
+
+The system automatically detects three types of conflicts:
+
+| Conflict Type | Description | Resolution |
+|--------------|-------------|------------|
+| **Teacher Conflict** | Same teacher in multiple classes | Reassign teacher or adjust timing |
+| **Room Conflict** | Room double-booked | Find alternative room or time |
+| **Class Conflict** | Class scheduled twice in same period | Remove duplicate slot |
+
+#### Resolution Workflow
+
+1) **Automatic Detection**: Conflicts appear as a red badge in the header
+2) **View Details**: Click the conflict counter to see all conflicts
+3) **Smart Suggestions**: System suggests alternative:
+   - Available time slots
+   - Free teachers with same subject expertise
+   - Unoccupied classrooms
+4) **One-Click Fix**: Apply suggestions instantly
+
+### 📊 Analytics & Reports
+
+Access comprehensive analytics from the **Analytics** tab:
+
+#### Teacher Workload Analysis
+- Hours per day/week breakdown
+- Subject distribution per teacher
+- Overload warnings (exceeds limits)
+- Workload balancing suggestions
+
+#### Room Utilization
+- Occupancy percentage
+- Peak usage times
+- Underutilized spaces
+- Optimization recommendations
+
+#### Subject Coverage
+- Hours allocated per subject
+- Class coverage metrics
+- Core vs elective distribution
+- Curriculum compliance check
+
+### 📥 Import/Export Options
+
+#### Importing Data
+
+**Supported Formats**: Excel (.xlsx), CSV, JSON
+
+1) Click **Import/Export** button
+2) Select **Import** tab
+3) Choose file format and upload
+4) **Download template** for correct format
+5) Preview data before importing
+6) Options:
+   - Overwrite existing timetable
+   - Validate for conflicts
+   - Notify affected users
+
+#### Exporting Data
+
+**Available Formats**:
+- **PDF**: Print-ready layout with school branding
+- **Excel**: Full data with multiple sheets
+- **CSV**: Simple format for data processing
+- **Image**: PNG snapshot for sharing
+- **iCal**: Import to calendar applications
+
+**Export Options**:
+- Include substitute teachers
+- Add notes and comments
+- Filter by date range
+- Select specific views
+
+### 🔄 Substitute Teacher Management
+
+Handle teacher absences seamlessly:
+
+1) **Mark Teacher Absent**: Edit slot and toggle "Substitute Teacher"
+2) **Select Substitute**: Choose from qualified teachers
+3) **Automatic Notification**: System notifies:
+   - Original teacher
+   - Substitute teacher
+   - Affected students
+   - Class coordinators
+4) **Visual Indicator**: Substitutions shown with dashed border
+
+### 📱 Mobile & Responsive Design
+
+The timetable is fully optimized for all devices:
+
+- **Desktop**: Full grid view with all features
+- **Tablet**: Condensed view with touch gestures
+- **Mobile**:
+  - Day-by-day view
+  - Swipe between days
+  - Tap to view details
+  - Pinch to zoom
+
+### 🌍 Internationalization
+
+Full support for multiple languages:
+
+- **Languages**: English, Arabic (RTL supported)
+- **Date/Time**: Localized formats
+- **Currency**: Regional currency for fees
+- **Calendar**: Support for different calendar systems
+
+### 🎨 Customization Options
+
+#### Color Schemes
+- **By Subject**: Each subject has unique color
+- **By Teacher**: Color-coded by instructor
+- **By Room Type**: Labs, classrooms, gyms
+- **Custom**: Define your own color palette
+
+#### View Preferences
+- Grid density (compact/normal/spacious)
+- Show/hide teacher photos
+- Display format (12/24 hour)
+- Week start day configuration
+
+### 🚨 Notifications System
+
+Real-time notifications for:
+
+- Schedule changes
+- New assignments
+- Conflict alerts
+- Substitute arrangements
+- Room changes
+- Cancellations
+
+**Delivery Methods**:
+- In-app notifications
+- Email alerts
+- SMS (if configured)
+- Push notifications (mobile app)
+
+### ⚡ Keyboard Shortcuts
+
+| Shortcut | Action |
+|----------|--------|
+| `Ctrl+N` | New slot |
+| `Ctrl+S` | Save changes |
+| `Ctrl+E` | Export |
+| `Ctrl+P` | Print |
+| `Ctrl+K` | Check conflicts |
+| `Delete` | Delete selected |
+| `Ctrl+D` | Duplicate slot |
+| `Ctrl+Z` | Undo |
+| `Ctrl+Y` | Redo |
+
+### 🛠️ Troubleshooting
+
+| Issue | Solution |
+|-------|----------|
+| **No data showing** | Check term selection and permissions |
+| **Can't edit slots** | Verify you have edit permissions |
+| **Conflicts not resolving** | Ensure no circular dependencies |
+| **Export failing** | Check browser popup blockers |
+| **Drag & drop not working** | Enable JavaScript and check browser compatibility |
+| **Missing teachers/rooms** | Ensure they're added in system settings |
+
+### 📚 Best Practices
+
+1. **Regular Backups**: Export weekly for backup
+2. **Conflict Resolution**: Address conflicts immediately
+3. **Workload Balance**: Monitor teacher hours regularly
+4. **Room Optimization**: Review utilization monthly
+5. **Communication**: Notify stakeholders of changes promptly
+6. **Testing**: Validate schedules before term starts
+7. **Documentation**: Keep notes on special arrangements
+
+### 🔒 Security & Privacy
+
+- **Role-based access**: Granular permissions per user type
+- **Audit trail**: All changes logged with timestamp
+- **Data encryption**: Sensitive data encrypted at rest
+- **Session management**: Automatic timeout for security
+- **Multi-tenant isolation**: Complete data separation
+
+### 🚀 Performance Tips
+
+- Use filters to reduce data load
+- Export large datasets in batches
+- Clear browser cache periodically
+- Use Chrome/Firefox for best performance
+- Close unnecessary browser tabs
+
+### 📞 Support
+
+For additional help:
+- Check the FAQ section
+- Contact your system administrator
+- Submit a support ticket
+- Review video tutorials
+- Join the user community forum

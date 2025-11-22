@@ -1,0 +1,49 @@
+## Prettier
+
+We follow the shadcn/ui formatting style: opinionated, minimal config, integrates with Tailwind and the component patterns in `@/components/ui`.
+
+### Config
+
+Create `.prettierrc` in the repo root:
+
+```json
+{
+  "semi": false,
+  "singleQuote": true,
+  "printWidth": 100,
+  "trailingComma": "all",
+  "plugins": [
+    "prettier-plugin-tailwindcss"
+  ]
+}
+```
+
+Install dependencies:
+
+```bash
+pnpm add -D prettier prettier-plugin-tailwindcss
+```
+
+Ignore files in `.prettierignore`:
+
+```text
+node_modules
+.next
+pnpm-lock.yaml
+dist
+```
+
+### Usage
+
+```bash
+pnpm prettier --write .
+```
+
+### Conventions
+
+- Match shadcn/ui: no semicolons, single quotes, Tailwind classes sorted
+- Keep files small and composable; one component per file
+- Co-locate component implementations under `@/components/ui` and feature content under `@/components/...`
+
+
+

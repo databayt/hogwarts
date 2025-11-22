@@ -1,0 +1,81 @@
+## Issues
+
+### Marketing site (public)
+Ship a fast, Arabic‑first marketing site with hero, features, pricing, FAQs, and docs links. Localize content (ar/en), add clear CTAs to start a trial, implement basic SEO (titles, meta, sitemap, robots), and measure conversions. Keep payloads small for low bandwidth. Provide a basic blog/updates section tied to the changelog.
+
+### Visitor signup
+Implement a signup/signin experience with credentials and Google/Facebook OAuth. Validate email ownership, create a user profile with preferred locale, and show a clean post‑signup path to trial. Add rate limits, clear error surfaces, and a developer debug mode. Persist sessions securely and expose RoleGate for conditional UI from day one.
+
+### Trial and plans
+Start a no‑card trial by default for Sudan, display a countdown in the dashboard, store plan and usage limits, and lock plan‑gated features after a grace period. Support manual receipt upload/approval for paid plans, with audit events and notifications. Prepare for online payments later without blocking manual flow.
+
+### Tenant provisioning (subdomain)
+Implement an end‑to‑end flow that creates a School with a unique subdomain, validates availability server‑side, persists locale/timezone and brand settings, assigns the creator as Owner, seeds minimal defaults, writes an audit event, and redirects to the new subdomain. Handle conflicts, reserved names, and isolation from the first write.
+
+### Tenant context middleware
+Resolve subdomain and custom domain to schoolId on each request, cache the resolution briefly, attach schoolId to server actions and RSC loaders, and reject missing/invalid tenants with a friendly page. Support localhost/preview hosts, strip www, and add tests for positive/negative cases.
+
+### Custom domains and branding
+Add a self‑serve custom domain request flow, verify CNAME ownership asynchronously, automate certificates, and surface status/health in Settings. Keep the school live on its subdomain until the custom domain is verified. Fetch per‑school theme assets at runtime and apply brand consistently.
+
+### Seed defaults
+Seed core roles and a minimal academic scaffold (example class and subject) at provisioning. Allow admins to purge demo data. Provide deterministic factories for staging and E2E tests.
+
+### Core data models (Students, Teachers, Classes, Subjects)
+Define Prisma models with composite uniques scoped by schoolId, add createdAt/updatedAt, soft‑archive flags where needed, and indexes for frequent queries. Implement CRUD server actions with Zod validation and optimistic UI hooks, ensure referential integrity (enrollment, teaching assignments), and ship factories + seeds.
+
+### Generic table adoption
+Adopt the generic data table for Students/Teachers with column meta for filters, URL‑synced sort/paging, and server‑driven queries. Respect role‑based scoping, enable column pinning, and add CSV export that reflects the current filtered/sorted view.
+
+### CSV import pipeline
+Parse CSV on the server with encoding detection, map headers to canonical field names, present a validation preview with row‑level errors, implement idempotent upserts with dedupe keys, guard with rate limits, and provide a downloadable error report.
+
+### Admin setup
+Provide flows to configure years/terms/periods, classes, subjects, rooms, and assignments. Validate inputs with Zod, enforce schoolId scoping, and surface errors inline. Offer sensible defaults and quick‑start templates.
+
+### Invites and access
+Allow admins to invite Owners/Admins, Teachers, and Parents with localized emails/SMS. On acceptance, create/link user accounts to the school, set roles, and write audit events. Enforce least‑privilege and add resend/expire flows.
+
+### Teacher onboarding
+After acceptance, show assigned classes and timetable, highlight first tasks (mark attendance, post announcement), and provide role‑appropriate help. Persist dismissible tips.
+
+### Parent and student onboarding
+Allow parents to verify contact and link to one or more students securely. Render a mobile‑first portal with attendance and announcements. Ensure guardian role is read‑only at the server action layer. Respect guardian locale and privacy.
+
+### Attendance (daily/period)
+Build class/period marking with keyboard‑friendly UI, idempotent server actions, and backdate rules. Include bulk mark with per‑student overrides, reports by student/class/date range with server‑side pagination, and CSV export. Add indexes on (schoolId, classId, date).
+
+### Timetable (basic)
+Render a weekly grid per class and teacher using normalized period definitions, persist slots atomically, and detect conflicts (teacher/room). Respect timezone and DST. Provide a duplicate‑week utility.
+
+### Announcements
+Create, edit, publish/unpublish announcements scoped to school/role/class with createdAt sorting, lightweight list views, and simple moderation. Persist author and visibility metadata, and provide a minimal reader for parents/students with pagination.
+
+### Internationalization (ar/en)
+Set locale and dir (RTL/LTR) in root layout, mirror directional icons, translate primary flows (auth, provisioning, attendance, announcements), format date/number/currency per locale, and default Arabic for Sudan while allowing per‑user overrides. Add i18n snapshots.
+
+### Observability baseline
+Introduce a logging adapter that injects requestId and schoolId into every log line, enable error tracking with release tags and user/tenant context, and record KPIs (signups, active schools, attendance events/day). Add lightweight dashboards and alert thresholds.
+
+### Backups and disaster recovery
+Schedule automated daily database backups with 7/30‑day retention, document a restore‑to‑staging drill with step‑by‑step verification, and publish RPO/RTO targets. Include an operator checklist and roll‑forward guidance.
+
+### CI and release management
+Add lint and typecheck jobs, run a minimal Playwright E2E smoke (create school, mark attendance, publish announcement), post artifacts on failure, block merges on red, and publish a human changelog. Trigger preview deployments for PRs.
+
+### Windows Prisma reliability
+Mitigate EPERM rename failures on Windows by pinning Prisma engines or adding a cleanup step, and document a reliable local workflow (close watchers, remove .prisma, reinstall) in Contribute.
+
+### Performance pass
+Audit and add missing indexes, set conservative pagination limits, introduce RSC caching where safe, measure bundle size and TTFB, and remove obvious render bloat. Track regressions in CI with a simple perf budget.
+
+### Accessibility
+Guarantee full keyboard navigation and logical focus order, meet contrast ratios, add labels/ARIA on primary forms and controls, and include skip links and focus traps for dialogs/sheets. Verify with automated checks and a short manual checklist.
+
+### Security hardening
+Harden secret storage, use strong password hashing and rotation policy, add audit events for billing/domain/role changes, review role checks and server action guards, and set sensible rate limits on auth and write endpoints.
+
+### Exit and deprovisioning
+Allow owners to export core data (CSV) and request deletion. Move the school to a time‑boxed retention queue before permanent removal. Provide confirmations and a checklist of post‑deletion expectations for transparency.
+
+
