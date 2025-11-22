@@ -1,63 +1,74 @@
 "use client"
 
-import * as React from "react"
 import Link from "next/link"
-import { useSelectedLayoutSegment } from "next/navigation"
-import { MainNavItem } from "./types"
+import { usePathname } from "next/navigation"
 import { siteConfig } from "./config"
 import { cn } from "@/lib/utils"
 import { Icons } from "./icons"
-import { MobileNav } from "./mobile-nav"
 import Image from "next/image"
 import type { Dictionary } from '@/components/internationalization/dictionaries'
 
 interface MainNavProps {
-  items?: MainNavItem[]
-  children?: React.ReactNode
   dictionary?: Dictionary
 }
 
-export function MainNav({ items, children, dictionary }: MainNavProps) {
-  const segment = useSelectedLayoutSegment()
-  const [showMobileMenu, setShowMobileMenu] = React.useState<boolean>(false)
+export function MainNav({ dictionary }: MainNavProps) {
+  const pathname = usePathname()
 
   return (
-    <div className="flex gap-6 md:gap-10">
-      <Link href="/" className="hidden items-center gap-2 md:flex font-bold text-sm text-foreground opacity-100 hover:opacity-100">
-        <Image src="/logo.png" alt="Hogwarts Logo" width={20} height={20} className="dark:invert" />
-        <span className="hidden sm:inline-block">
+    <div className="me-4 hidden md:flex">
+      <Link href="/" className="me-4 flex items-center gap-2 text-foreground lg:me-6">
+        <Image src="/logo.png" alt="Hogwarts Logo" width={24} height={24} className="dark:invert" />
+        <h5 className="hidden lg:inline-block font-semibold">
           {dictionary?.navigation?.brandName || siteConfig.name}
-        </span>
+        </h5>
       </Link>
-      {items?.length ? (
-        <nav className="hidden gap-6 md:flex">
-          {items?.map((item, index) => (
-            <Link
-              key={index}
-              href={item.disabled ? "#" : item.href}
-              className={cn(
-                "flex items-center text-sm transition-colors hover:text-foreground/80",
-                item.href.startsWith(`/${segment}`)
-                  ? "text-foreground"
-                  : "text-foreground/60",
-                item.disabled && "cursor-not-allowed opacity-80"
-              )}
-            >
-              {dictionary?.navigation?.[item.title.toLowerCase() as keyof typeof dictionary.navigation] || item.title}
-            </Link>
-          ))}
-        </nav>
-      ) : null}
-      <button
-        className="flex items-center space-x-2 md:hidden"
-        onClick={() => setShowMobileMenu(!showMobileMenu)}
-      >
-        {showMobileMenu ? <Icons.close /> : <Icons.logo />}
-        <span>{dictionary?.navigation?.menu || 'Menu'}</span>
-      </button>
-      {showMobileMenu && items && (
-        <MobileNav items={items} dictionary={dictionary}>{children}</MobileNav>
-      )}
+      <nav className="flex items-center gap-6 xl:gap-8">
+        <Link
+          href="/docs"
+          className={cn(
+            "text-sm font-medium transition-colors hover:text-foreground/80",
+            pathname?.startsWith("/docs")
+              ? "text-foreground"
+              : "text-foreground/60"
+          )}
+        >
+          <h6>{dictionary?.navigation?.documentation || "Docs"}</h6>
+        </Link>
+        <Link
+          href="/features"
+          className={cn(
+            "text-sm font-medium transition-colors hover:text-foreground/80",
+            pathname?.startsWith("/features")
+              ? "text-foreground"
+              : "text-foreground/60"
+          )}
+        >
+          <h6>{dictionary?.navigation?.features || "Features"}</h6>
+        </Link>
+        <Link
+          href="/pricing"
+          className={cn(
+            "text-sm font-medium transition-colors hover:text-foreground/80",
+            pathname?.startsWith("/pricing")
+              ? "text-foreground"
+              : "text-foreground/60"
+          )}
+        >
+          <h6>{dictionary?.navigation?.pricing || "Pricing"}</h6>
+        </Link>
+        <Link
+          href="/blog"
+          className={cn(
+            "text-sm font-medium transition-colors hover:text-foreground/80",
+            pathname?.startsWith("/blog")
+              ? "text-foreground"
+              : "text-foreground/60"
+          )}
+        >
+          <h6>{dictionary?.navigation?.blog || "Blog"}</h6>
+        </Link>
+      </nav>
     </div>
   )
 }
