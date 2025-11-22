@@ -135,14 +135,14 @@ export default async function DocsPage({ params }: DocsPageProps) {
               <div className="docs-nav bg-background/80 border-border/50 fixed inset-x-0 bottom-0 isolate z-50 flex items-center gap-2 border-t px-6 py-4 backdrop-blur-sm sm:static sm:z-0 sm:border-t-0 sm:bg-transparent sm:px-0 sm:pt-1.5 sm:backdrop-blur-none">
                 <DocsCopyPage page={raw} url={pageUrl} />
                 {neighbours.previous && (
-                  <Button variant="secondary" size="icon" asChild className="h-8 w-8 shadow-none md:h-7 md:w-7">
+                  <Button variant="secondary" size="icon" asChild className="extend-touch-target ml-auto size-8 shadow-none md:size-7">
                     <Link href={neighbours.previous.url}>
                       <ArrowLeft className="size-4" />
                     </Link>
                   </Button>
                 )}
                 {neighbours.next && (
-                  <Button variant="secondary" size="icon" asChild className="h-8 w-8 shadow-none md:h-7 md:w-7">
+                  <Button variant="secondary" size="icon" asChild className="extend-touch-target size-8 shadow-none md:size-7">
                     <Link href={neighbours.next.url}>
                       <ArrowRight className="size-4" />
                     </Link>

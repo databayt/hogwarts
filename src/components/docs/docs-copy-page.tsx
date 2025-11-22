@@ -1,8 +1,8 @@
 "use client"
 
 import * as React from "react"
-import { Check, Copy, ChevronDown } from "lucide-react"
-
+import { Check, Copy, ChevronDown, ArrowUpRight } from "lucide-react"
+import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -27,6 +27,24 @@ Help me understand how to use it. Be ready to explain concepts, give examples, o
 }
 
 const menuItems = {
+  markdown: (url: string) => (
+    <a href={`${url}.md`} target="_blank" rel="noopener noreferrer">
+      <ArrowUpRight className="size-4" />
+      View as Markdown
+    </a>
+  ),
+  v0: (url: string) => (
+    <a
+      href={getPromptUrl("https://v0.dev", url)}
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 147 70" className="size-4">
+        <path d="M56 50.203V14h14v46.156C70 65.593 65.593 70 60.156 70c-2.596 0-5.158-1-7-2.843L0 14h19.797L56 50.203ZM147 56h-14V23.953L100.953 56H133v14H96.687C85.814 70 77 61.186 77 50.312V14h14v32.156L123.156 14H91V0h36.312C138.186 0 147 8.814 147 19.688V56Z" />
+      </svg>
+      Open in v0
+    </a>
+  ),
   chatgpt: (url: string) => (
     <a
       href={getPromptUrl("https://chatgpt.com", url)}
@@ -60,13 +78,7 @@ const menuItems = {
 }
 
 export function DocsCopyPage({ page, url }: { page: string; url: string }) {
-  const [isCopied, setIsCopied] = React.useState(false)
-
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text)
-    setIsCopied(true)
-    setTimeout(() => setIsCopied(false), 2000)
-  }
+  const { isCopied, copyToClipboard } = useCopyToClipboard()
 
   const trigger = (
     <Button

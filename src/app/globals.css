@@ -149,3 +149,14 @@ body {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* Extend touch target for better mobile UX */
+.extend-touch-target {
+  position: relative;
+}
+
+.extend-touch-target::after {
+  content: "";
+  position: absolute;
+  inset: -0.5rem;
+}
