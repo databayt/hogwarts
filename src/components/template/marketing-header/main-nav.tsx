@@ -26,15 +26,6 @@ export function MainNav({ dictionary }: MainNavProps) {
       </Link>
       <nav className="flex items-center gap-6 xl:gap-8">
         <Link
-          href="/docs"
-          className={cn(
-            "text-sm text-muted-foreground transition-colors hover:text-foreground",
-            pathname?.startsWith("/docs") && "text-foreground"
-          )}
-        >
-          <span>{dictionary?.navigation?.documentation || "Docs"}</span>
-        </Link>
-        <Link
           href="/features"
           className={cn(
             "text-sm text-muted-foreground transition-colors hover:text-foreground",
@@ -42,6 +33,15 @@ export function MainNav({ dictionary }: MainNavProps) {
           )}
         >
           <span>{dictionary?.navigation?.features || "Features"}</span>
+        </Link>
+        <Link
+          href="/blog"
+          className={cn(
+            "text-sm text-muted-foreground transition-colors hover:text-foreground",
+            pathname?.startsWith("/blog") && "text-foreground"
+          )}
+        >
+          <span>{dictionary?.navigation?.blog || "Blog"}</span>
         </Link>
         <Link
           href="/pricing"
@@ -53,13 +53,13 @@ export function MainNav({ dictionary }: MainNavProps) {
           <span>{dictionary?.navigation?.pricing || "Pricing"}</span>
         </Link>
         <Link
-          href="/blog"
+          href="/docs"
           className={cn(
             "text-sm text-muted-foreground transition-colors hover:text-foreground",
-            pathname?.startsWith("/blog") && "text-foreground"
+            pathname?.startsWith("/docs") && "text-foreground"
           )}
         >
-          <span>{dictionary?.navigation?.blog || "Blog"}</span>
+          <span>{dictionary?.navigation?.documentation || "Documentation"}</span>
         </Link>
       </nav>
     </div>
