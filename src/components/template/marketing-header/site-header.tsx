@@ -15,8 +15,8 @@ interface SiteHeaderProps {
 
 export function SiteHeader({ dictionary }: SiteHeaderProps) {
     return (
-        <header className="border-grid sticky top-0 z-50 w-full border-b-[0.5px] bg-background full-bleed">
-            <div className="inner flex h-14 items-center gap-2 md:gap-4">
+        <header className="border-grid sticky top-0 z-50 w-full border-b-[0.5px] bg-background">
+            <div className="px-container flex h-14 items-center gap-2 md:gap-4">
                     <MainNav dictionary={dictionary} />
                     <MobileNavButton items={marketingConfig.mainNav} dictionary={dictionary} />
                     <nav className="flex flex-1 items-center justify-end">
