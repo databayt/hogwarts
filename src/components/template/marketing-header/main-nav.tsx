@@ -20,50 +20,54 @@ export function MainNav({ dictionary }: MainNavProps) {
         <div className="-mt-[2px]">
           <Image src="/logo.png" alt="Hogwarts Logo" width={24} height={24} className="dark:invert" />
         </div>
-        <h5 className="hidden lg:inline-block">
+        <h6 className="hidden lg:inline-block">
           {dictionary?.navigation?.brandName || siteConfig.name}
-        </h5>
+        </h6>
       </Link>
       <nav className="flex items-center gap-6 xl:gap-8">
         <Link
           href="/docs"
           className={cn(
+            "text-sm",
             pathname?.startsWith("/docs")
               ? "text-foreground"
               : ""
           )}
         >
-          <h6>{dictionary?.navigation?.documentation || "Docs"}</h6>
+          <span>{dictionary?.navigation?.documentation || "Docs"}</span>
         </Link>
         <Link
           href="/features"
           className={cn(
+            "text-sm",
             pathname?.startsWith("/features")
               ? "text-foreground"
               : ""
           )}
         >
-          <h6>{dictionary?.navigation?.features || "Features"}</h6>
+          <span>{dictionary?.navigation?.features || "Features"}</span>
         </Link>
         <Link
           href="/pricing"
           className={cn(
+            "text-sm",
             pathname?.startsWith("/pricing")
               ? "text-foreground"
               : ""
           )}
         >
-          <h6>{dictionary?.navigation?.pricing || "Pricing"}</h6>
+          <span>{dictionary?.navigation?.pricing || "Pricing"}</span>
         </Link>
         <Link
           href="/blog"
           className={cn(
+            "text-sm",
             pathname?.startsWith("/blog")
               ? "text-foreground"
               : ""
           )}
         >
-          <h6>{dictionary?.navigation?.blog || "Blog"}</h6>
+          <span>{dictionary?.navigation?.blog || "Blog"}</span>
         </Link>
       </nav>
     </div>
