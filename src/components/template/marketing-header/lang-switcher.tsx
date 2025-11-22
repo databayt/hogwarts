@@ -3,7 +3,7 @@
 import * as React from "react"
 import { useRouter, usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Globe } from "lucide-react"
+import { Languages } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,8 +26,8 @@ export function LangSwitcher() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-8 w-8 px-0">
-          <Globe className="h-4 w-4" />
+        <Button variant="ghost" size="icon" className="size-8">
+          <Languages className="size-4" aria-hidden="true" />
           <span className="sr-only">Change language</span>
         </Button>
       </DropdownMenuTrigger>
