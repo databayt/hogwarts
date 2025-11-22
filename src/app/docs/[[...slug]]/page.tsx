@@ -1,14 +1,13 @@
 import { notFound } from "next/navigation"
 import { cookies } from 'next/headers'
 import { DocsTableOfContents } from "@/components/docs/toc"
-import { DocsBreadcrumb } from "@/components/docs/docs-breadcrumb"
-import { DocsMobileNav } from "@/components/docs/docs-mobile-nav"
+import { DocsCopyPage } from "@/components/docs/docs-copy-page"
 import { getPage, getPages, findNeighbour } from "@/lib/source"
 import { MDXContent } from "@/components/mdx/mdx-content"
 import type { Metadata } from "next"
-import { ChevronLeft, ChevronRight } from "lucide-react"
+import { ArrowLeft, ArrowRight } from "lucide-react"
 import Link from "next/link"
-import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
 
 interface DocsPageProps {
   params: Promise<{
@@ -108,104 +107,96 @@ export default async function DocsPage({ params }: DocsPageProps) {
   // MDX content can be in different properties based on how it's exported
   const Content = (page.data as any).body || (page.data as any).default || (page.data as any).content
 
-  // Find neighbor pages for navigation (update to use non-prefixed URLs)
+  // Get raw content for copy button
+  const raw = (page.data as any).raw || ''
+  const pageUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://ed.databayt.org'}${url}`
+
+  // Find neighbor pages for navigation
   const neighbours = findNeighbour(url, lang)
-  const isRTL = lang === 'ar'
 
   return (
-    <div className="container mx-auto">
-      <div className="flex-1 md:grid md:grid-cols-[1fr_200px] md:gap-6 lg:grid-cols-[1fr_240px] lg:gap-10">
-        <div className="flex flex-col">
-          {/* Breadcrumb */}
-          <DocsBreadcrumb
-            segments={[
-              { title: isRTL ? 'التوثيق' : 'Docs', href: `/docs` },
-              ...slug?.map((s, i) => ({
-                title: s.replace(/-/g, ' '),
-                href: `/docs/${slug.slice(0, i + 1).join('/')}`,
-              })) || [],
-            ]}
-          />
+    <div className="flex items-stretch text-[1.05rem] sm:text-[15px] xl:w-full">
+      {/* Main Content Area */}
+      <div className="flex min-w-0 flex-1 flex-col">
+        <div className="h-(--top-spacing) shrink-0" />
 
-          {/* Page Title and Description */}
-          <div className="space-y-2 py-6">
-            <h1 className="scroll-m-20 text-3xl font-bold tracking-tight lg:text-4xl">
-              {title}
-            </h1>
+        {/* Content Container */}
+        <div className="mx-auto flex w-full max-w-2xl min-w-0 flex-1 flex-col gap-8 px-4 py-6 text-neutral-800 md:px-0 lg:py-8 dark:text-neutral-300">
+
+          {/* Header Section */}
+          <div className="flex flex-col gap-2">
+            <div className="flex items-start justify-between">
+              {/* Title */}
+              <h1 className="scroll-m-20 text-4xl font-semibold tracking-tight sm:text-3xl xl:text-4xl">
+                {title}
+              </h1>
+
+              {/* Copy Page Button + Navigation (Mobile: Fixed Bottom, Desktop: Static Top) */}
+              <div className="docs-nav bg-background/80 border-border/50 fixed inset-x-0 bottom-0 isolate z-50 flex items-center gap-2 border-t px-6 py-4 backdrop-blur-sm sm:static sm:z-0 sm:border-t-0 sm:bg-transparent sm:px-0 sm:pt-1.5 sm:backdrop-blur-none">
+                <DocsCopyPage page={raw} url={pageUrl} />
+                {neighbours.previous && (
+                  <Button variant="secondary" size="icon" asChild className="h-8 w-8 shadow-none md:h-7 md:w-7">
+                    <Link href={neighbours.previous.url}>
+                      <ArrowLeft className="size-4" />
+                    </Link>
+                  </Button>
+                )}
+                {neighbours.next && (
+                  <Button variant="secondary" size="icon" asChild className="h-8 w-8 shadow-none md:h-7 md:w-7">
+                    <Link href={neighbours.next.url}>
+                      <ArrowRight className="size-4" />
+                    </Link>
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            {/* Description */}
             {description && (
-              <p className="text-lg text-muted-foreground">{description}</p>
+              <p className="text-muted-foreground text-[1.05rem] text-balance sm:text-base">
+                {description}
+              </p>
             )}
           </div>
 
           {/* MDX Content */}
-          <div className="prose prose-slate dark:prose-invert max-w-none">
+          <div className="w-full flex-1">
             {Content ? (
               <MDXContent>
                 {typeof Content === 'function' ? <Content /> : Content}
               </MDXContent>
-            ) : (
-              <div className="text-muted-foreground">
-                {isRTL ? 'محتوى الصفحة غير متوفر' : 'Page content not available'}
-              </div>
-            )}
-          </div>
-
-          {/* Navigation */}
-          <div className="flex flex-row items-center justify-between py-8">
-            {neighbours.previous && (
-              <Link
-                href={neighbours.previous.url}
-                className={cn(
-                  "inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground",
-                  isRTL && "flex-row-reverse"
-                )}
-              >
-                {isRTL ? (
-                  <>
-                    <span>{neighbours.previous.name}</span>
-                    <ChevronRight className="h-4 w-4" />
-                  </>
-                ) : (
-                  <>
-                    <ChevronLeft className="h-4 w-4" />
-                    <span>{neighbours.previous.name}</span>
-                  </>
-                )}
-              </Link>
-            )}
-            {neighbours.next && (
-              <Link
-                href={neighbours.next.url}
-                className={cn(
-                  "inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground",
-                  isRTL && "flex-row-reverse",
-                  !neighbours.previous && "ml-auto"
-                )}
-              >
-                {isRTL ? (
-                  <>
-                    <ChevronLeft className="h-4 w-4" />
-                    <span>{neighbours.next.name}</span>
-                  </>
-                ) : (
-                  <>
-                    <span>{neighbours.next.name}</span>
-                    <ChevronRight className="h-4 w-4" />
-                  </>
-                )}
-              </Link>
-            )}
+            ) : null}
           </div>
         </div>
 
-        {/* Table of Contents - Desktop */}
-        <div className="hidden md:block">
-          <DocsTableOfContents toc={toc} />
+        {/* Desktop Footer Navigation */}
+        <div className="mx-auto hidden h-16 w-full max-w-2xl items-center gap-2 px-4 sm:flex md:px-0">
+          {neighbours.previous && (
+            <Button variant="secondary" size="sm" asChild className="shadow-none">
+              <Link href={neighbours.previous.url}>
+                <ArrowLeft className="size-4" /> {neighbours.previous.name}
+              </Link>
+            </Button>
+          )}
+          {neighbours.next && (
+            <Button variant="secondary" size="sm" asChild className="shadow-none">
+              <Link href={neighbours.next.url}>
+                {neighbours.next.name} <ArrowRight className="size-4" />
+              </Link>
+            </Button>
+          )}
         </div>
       </div>
 
-      {/* Mobile Bottom Navigation */}
-      <DocsMobileNav neighbours={neighbours} lang={lang} />
+      {/* Table of Contents (Right Side) */}
+      <div className="sticky top-[calc(var(--header-height)+2rem)] z-30 ml-auto hidden h-[calc(100vh-var(--header-height)-4rem)] w-72 flex-col gap-4 overflow-hidden pb-8 xl:flex">
+        <div className="h-(--top-spacing) shrink-0" />
+        {toc?.length ? (
+          <div className="no-scrollbar overflow-y-auto px-8">
+            <DocsTableOfContents toc={toc} />
+          </div>
+        ) : null}
+      </div>
     </div>
   )
 }

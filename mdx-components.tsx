@@ -162,7 +162,7 @@ export const mdxComponents = {
     },
     p: ({ className, ...props }: React.HTMLAttributes<HTMLParagraphElement>) => (
       <p
-        className={cn("leading-7 text-foreground/80 [&:not(:first-child)]:mt-6 mb-4", className)}
+        className={cn("leading-relaxed [&:not(:first-child)]:mt-6", className)}
         {...props}
       />
     ),

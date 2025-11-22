@@ -39,36 +39,36 @@ export function DocsSidebar({
 
   return (
     <Sidebar
-      className="sticky top-[calc(var(--header-height)+1px)] z-30 hidden h-[calc(100svh-var(--footer-height)-4rem)] overscroll-none bg-transparent lg:flex"
+      className="sticky top-[calc(var(--header-height)+2rem)] z-30 hidden h-[calc(100vh-var(--header-height)-4rem)] overflow-y-auto bg-transparent lg:flex"
       collapsible="none"
       {...props}
     >
-      <SidebarContent className="flex flex-col overflow-hidden">
-        <div className="from-background via-background/80 to-background/50 sticky top-0 z-10 h-8 shrink-0 bg-gradient-to-b blur-xs" />
-        <ScrollArea className="flex-1">
-          <SidebarGroup className="p-0">
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {localizedLinks.map(({ name, href }) => {
-                  const isActive = pathname === href
+      <SidebarContent className="overflow-y-auto gap-0">
+        <ScrollArea className="h-full w-full">
+          <div className="pb-4 pt-2 pl-0">
+            <SidebarGroup className="p-0">
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {localizedLinks.map(({ name, href }) => {
+                    const isActive = pathname === href
 
-                  return (
-                    <SidebarMenuItem key={href}>
-                      <SidebarMenuButton
-                        asChild
-                        isActive={isActive}
-                        className="data-[active=true]:bg-accent data-[active=true]:border-accent relative h-[30px] w-full border border-transparent text-[0.8rem] font-medium px-2"
-                      >
-                        <Link href={href}>{name}</Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  )
-                })}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
+                    return (
+                      <SidebarMenuItem key={href}>
+                        <SidebarMenuButton
+                          asChild
+                          isActive={isActive}
+                          className="data-[active=true]:bg-accent data-[active=true]:border-accent relative h-[30px] w-full border border-transparent text-[0.8rem] font-medium p-0"
+                        >
+                          <Link href={href} className="block w-full">{name}</Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    )
+                  })}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          </div>
         </ScrollArea>
-        <div className="from-background via-background/80 to-background/50 sticky bottom-0 z-10 h-16 shrink-0 bg-gradient-to-t blur-xs" />
       </SidebarContent>
     </Sidebar>
   )
