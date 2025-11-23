@@ -23,11 +23,11 @@ export default async function DocsLayout({ children }: DocsLayoutProps) {
     <div dir={isRTL ? 'rtl' : 'ltr'} lang={lang} className={isRTL ? 'font-tajawal' : 'font-inter'}>
       <div className="container-wrapper flex flex-1 flex-col">
         <SidebarProvider
-          className="min-h-min flex-1 items-start pb-24 [--sidebar-width:220px] lg:grid lg:grid-cols-[var(--sidebar-width)_minmax(0,1fr)] lg:[--sidebar-width:240px]"
+          className="min-h-min flex-1 items-start pb-24 [--sidebar-width:220px] [--top-spacing:0] lg:grid lg:grid-cols-[var(--sidebar-width)_minmax(0,1fr)] lg:[--sidebar-width:240px] lg:[--top-spacing:calc(var(--spacing)*4)]"
           style={
             {
               "--header-height": "3.5rem",
-              "--top-spacing": "1rem",
+              "--footer-height": "0px",
             } as React.CSSProperties
           }
         >

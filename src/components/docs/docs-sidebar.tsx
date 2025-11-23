@@ -15,7 +15,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 
-// Flat list of links without sections - exactly like codebase-underway
+// Flat list of links - matching codebase-underway docs pattern
 const DOCS_LINKS = [
   { name: "Introduction", href: "/docs" },
   { name: "Getting Started", href: "/docs/getting-started" },

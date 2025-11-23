@@ -14,6 +14,7 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+  --spacing-4_5: 1.125rem;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);
@@ -159,4 +160,20 @@ body {
   content: "";
   position: absolute;
   inset: -0.5rem;
+}
+
+/* Custom size utility for 4.5 (1.125rem / 18px) */
+.size-4\.5, .size-4\\.5 {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+/* Blur utility for gradient overlays */
+.blur-xs {
+  filter: blur(4px);
+}
+
+/* Custom width utilities */
+.w-\\(--sidebar-width\\) {
+  width: var(--sidebar-width);
 }
