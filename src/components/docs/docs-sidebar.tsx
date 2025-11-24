@@ -4,23 +4,29 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 
 import type { source } from "@/lib/source"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import {
   Sidebar,
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 
-// Flat list of links - matching codebase-underway docs pattern
-const DOCS_LINKS = [
-  { name: "Introduction", href: "/docs" },
+const TOP_LEVEL_SECTIONS = [
+  { name: "Get Started", href: "/docs" },
+  { name: "Architecture", href: "/docs/architecture" },
+  { name: "Components", href: "/docs/ui-components" },
+  { name: "Database", href: "/docs/database" },
+  { name: "Deployment", href: "/docs/deployment" },
+  { name: "Changelog", href: "/docs/changelog" },
+]
+
+const DOCUMENTATION_PAGES = [
   { name: "Getting Started", href: "/docs/getting-started" },
   { name: "Installation", href: "/docs/installation" },
-  { name: "Architecture", href: "/docs/architecture" },
   { name: "Tech Stack", href: "/docs/tech-stack" },
   { name: "Project Structure", href: "/docs/structure" },
   { name: "Development Workflow", href: "/docs/workflow" },
@@ -29,16 +35,12 @@ const DOCS_LINKS = [
   { name: "Authentication", href: "/docs/authentication" },
   { name: "Internationalization", href: "/docs/internationalization" },
   { name: "Multi-Tenancy", href: "/docs/multi-tenancy" },
-  { name: "Database", href: "/docs/database" },
   { name: "API Design", href: "/docs/api-design" },
-  { name: "UI Components", href: "/docs/ui-components" },
   { name: "Typography", href: "/docs/typography" },
   { name: "Icons", href: "/docs/icons" },
-  { name: "Deployment", href: "/docs/deployment" },
   { name: "Environment Variables", href: "/docs/environment" },
   { name: "Contributing", href: "/docs/contributing" },
   { name: "Code of Conduct", href: "/docs/code-of-conduct" },
-  { name: "Changelog", href: "/docs/changelog" },
 ]
 
 export function DocsSidebar({
@@ -51,44 +53,80 @@ export function DocsSidebar({
 }) {
   const pathname = usePathname()
 
-  // Add language prefix to hrefs
-  const localizedLinks = DOCS_LINKS.map(link => ({
-    ...link,
-    href: `/${lang}${link.href}`
-  }))
-
   return (
     <Sidebar
-      className="sticky top-[calc(var(--header-height)+2rem)] z-30 hidden h-[calc(100vh-var(--header-height)-4rem)] overflow-y-auto bg-transparent lg:flex"
+      className="sticky top-[calc(var(--header-height)+1px)] z-30 hidden h-[calc(100svh-var(--footer-height)-4rem)] overscroll-none bg-transparent lg:flex"
       collapsible="none"
       {...props}
     >
-      <SidebarContent className="overflow-y-auto gap-0">
-        <ScrollArea className="h-full w-full">
-          <div className="pb-4 pt-2 pl-0">
-            <SidebarGroup className="p-0">
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {localizedLinks.map(({ name, href }) => {
-                    const isActive = pathname === href
+      <SidebarContent className="no-scrollbar overflow-x-hidden px-2">
+        {/* Top gradient overlay for scroll indication */}
+        <div className="from-background via-background/80 to-background/50 sticky -top-1 z-10 h-8 shrink-0 bg-gradient-to-b blur-xs" />
 
-                    return (
-                      <SidebarMenuItem key={href}>
-                        <SidebarMenuButton
-                          asChild
-                          isActive={isActive}
-                          className="data-[active=true]:bg-accent data-[active=true]:border-accent relative h-[30px] w-full border border-transparent text-[0.8rem] font-medium p-0"
-                        >
-                          <Link href={href} className="block w-full">{name}</Link>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    )
-                  })}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-          </div>
-        </ScrollArea>
+        {/* Sections */}
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-muted-foreground font-medium">
+            Sections
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {TOP_LEVEL_SECTIONS.map(({ name, href }) => {
+                const localizedHref = `/${lang}${href}`
+                const isActive = href === "/docs"
+                  ? pathname === localizedHref
+                  : pathname.startsWith(localizedHref)
+
+                return (
+                  <SidebarMenuItem key={name}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={isActive}
+                      className="data-[active=true]:bg-accent data-[active=true]:border-accent 3xl:fixed:w-full 3xl:fixed:max-w-48 relative h-[30px] w-fit overflow-visible border border-transparent text-[0.8rem] font-medium after:absolute after:inset-x-0 after:-inset-y-1 after:z-0 after:rounded-md"
+                    >
+                      <Link href={localizedHref}>
+                        <span className="absolute inset-0 flex w-(--sidebar-width) bg-transparent" />
+                        {name}
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                )
+              })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        {/* Documentation */}
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-muted-foreground font-medium">
+            Documentation
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu className="gap-0.5">
+              {DOCUMENTATION_PAGES.map(({ name, href }) => {
+                const localizedHref = `/${lang}${href}`
+                const isActive = pathname === localizedHref
+
+                return (
+                  <SidebarMenuItem key={href}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={isActive}
+                      className="data-[active=true]:bg-accent data-[active=true]:border-accent 3xl:fixed:w-full 3xl:fixed:max-w-48 relative h-[30px] w-fit overflow-visible border border-transparent text-[0.8rem] font-medium after:absolute after:inset-x-0 after:-inset-y-1 after:z-0 after:rounded-md"
+                    >
+                      <Link href={localizedHref}>
+                        <span className="absolute inset-0 flex w-(--sidebar-width) bg-transparent" />
+                        {name}
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                )
+              })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        {/* Bottom gradient overlay for scroll indication */}
+        <div className="from-background via-background/80 to-background/50 sticky -bottom-1 z-10 h-16 shrink-0 bg-gradient-to-t blur-xs" />
       </SidebarContent>
     </Sidebar>
   )
