@@ -170,7 +170,7 @@ function Sidebar({
       <div
         data-slot="sidebar"
         className={cn(
-          " text-sidebar-foreground flex h-full w-(--sidebar-width) flex-col",
+          " text-sidebar-foreground flex h-full w-[var(--sidebar-width)] flex-col",
           className
         )}
         {...props}
@@ -187,7 +187,7 @@ function Sidebar({
           data-sidebar="sidebar"
           data-slot="sidebar"
           data-mobile="true"
-          className=" text-sidebar-foreground w-(--sidebar-width) p-0 [&>button]:hidden"
+          className=" text-sidebar-foreground w-[var(--sidebar-width)] p-0 [&>button]:hidden"
           style={
             {
               "--sidebar-width": SIDEBAR_WIDTH_MOBILE,
@@ -219,14 +219,14 @@ function Sidebar({
         data-slot="sidebar-gap"
         className={cn(
           "relative bg-transparent transition-[width] duration-150 ease-out",
-          "w-(--sidebar-width)",
+          "w-[var(--sidebar-width)]",
           "group-data-[collapsible=offcanvas]:w-0"
         )}
       />
       <div
         data-slot="sidebar-container"
         className={cn(
-          "fixed inset-y-0 z-10 hidden h-svh w-(--sidebar-width) transition-[left,right] duration-150 ease-out md:flex",
+          "fixed inset-y-0 z-10 hidden h-svh w-[var(--sidebar-width)] transition-[left,right] duration-150 ease-out md:flex",
           side === "left"
             ? "left-0 group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)]"
             : "right-0 group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)]",

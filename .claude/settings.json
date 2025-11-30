@@ -48,7 +48,7 @@
     ],
     "ask": []
   },
-  "model": "claude-sonnet-4-5-20250929",
+  "model": "opus",
   "enableAllProjectMcpServers": true,
   "includeCoAuthoredBy": true,
   "alwaysThinkingEnabled": true,
@@ -61,7 +61,7 @@
     "AUTOMATION_LEVEL": "maximum",
     "TDD_ENFORCE": "true",
     "ORCHESTRATOR_MODEL": "claude-opus-4-1-20250805",
-    "DEFAULT_MODEL": "claude-sonnet-4-5-20250929",
+    "DEFAULT_MODEL": "opus",
     "COVERAGE_TARGET": "95",
     "ERROR_PATTERNS": "204",
     "AGENT_COUNT": "33"

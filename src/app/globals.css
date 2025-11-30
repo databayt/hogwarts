@@ -163,7 +163,7 @@ body {
 }
 
 /* Custom size utility for 4.5 (1.125rem / 18px) */
-.size-4\.5, .size-4\\.5 {
+.size-4\.5 {
   width: 1.125rem;
   height: 1.125rem;
 }
@@ -171,9 +171,4 @@ body {
 /* Blur utility for gradient overlays */
 .blur-xs {
   filter: blur(4px);
-}
-
-/* Custom width utilities */
-.w-\\(--sidebar-width\\) {
-  width: var(--sidebar-width);
 }
