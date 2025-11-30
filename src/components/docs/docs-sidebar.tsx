@@ -3,8 +3,8 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 
-import type { source } from "@/lib/source"
-import { ScrollArea } from "@/components/ui/scroll-area"
+import type { docsSource } from "@/lib/source"
+import type { getDictionary } from "@/components/internationalization/dictionaries"
 import {
   Sidebar,
   SidebarContent,
@@ -15,75 +15,73 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 
-// Flat list of links without sections - exactly like codebase-underway docs sidebar
+// Configuration with translation keys and fallback names
 const DOCS_LINKS = [
-  { name: "Introduction", href: "/docs" },
-  { name: "Getting Started", href: "/docs/getting-started" },
-  { name: "Installation", href: "/docs/installation" },
-  { name: "Architecture", href: "/docs/architecture" },
-  { name: "Tech Stack", href: "/docs/tech-stack" },
-  { name: "Project Structure", href: "/docs/structure" },
-  { name: "Development Workflow", href: "/docs/workflow" },
-  { name: "Build System", href: "/docs/build-system" },
-  { name: "Testing", href: "/docs/testing" },
-  { name: "Authentication", href: "/docs/authentication" },
-  { name: "Internationalization", href: "/docs/internationalization" },
-  { name: "Multi-Tenancy", href: "/docs/multi-tenancy" },
-  { name: "Database", href: "/docs/database" },
-  { name: "API Design", href: "/docs/api-design" },
-  { name: "UI Components", href: "/docs/ui-components" },
-  { name: "Typography", href: "/docs/typography" },
-  { name: "Icons", href: "/docs/icons" },
-  { name: "Deployment", href: "/docs/deployment" },
-  { name: "Environment Variables", href: "/docs/environment" },
-  { name: "Contributing", href: "/docs/contributing" },
-  { name: "Code of Conduct", href: "/docs/code-of-conduct" },
-  { name: "Changelog", href: "/docs/changelog" },
-]
+  { key: "introduction", href: "/docs", fallback: "Introduction" },
+  { key: "pitch", href: "/docs/pitch", fallback: "Pitch" },
+  { key: "mvp", href: "/docs/mvp", fallback: "MVP" },
+  { key: "prd", href: "/docs/prd", fallback: "PRD" },
+  { key: "getStarted", href: "/docs/get-started", fallback: "Get Started" },
+  { key: "architecture", href: "/docs/architecture", fallback: "Architecture" },
+  { key: "structure", href: "/docs/structure", fallback: "Structure" },
+  { key: "pattern", href: "/docs/pattern", fallback: "Pattern" },
+  { key: "stack", href: "/docs/stack", fallback: "Stack" },
+  { key: "database", href: "/docs/database", fallback: "Database" },
+  { key: "localhost", href: "/docs/localhost", fallback: "Localhost" },
+  { key: "contributing", href: "/docs/contributing", fallback: "Contributing" },
+  { key: "sharedEconomy", href: "/docs/shared-economy", fallback: "Shared Economy" },
+  { key: "competitors", href: "/docs/competitors", fallback: "Competitors" },
+  { key: "inspiration", href: "/docs/inspiration", fallback: "Inspiration" },
+  { key: "demo", href: "/docs/demo", fallback: "Demo" },
+] as const
+
+type Dictionary = Awaited<ReturnType<typeof getDictionary>> & { docs?: { sidebar?: Record<string, string> } }
 
 export function DocsSidebar({
   tree,
-  lang = 'en',
+  dictionary,
+  lang,
   ...props
 }: React.ComponentProps<typeof Sidebar> & {
-  tree: typeof source.pageTree
+  tree: typeof docsSource.pageTree
+  dictionary?: Dictionary
   lang?: string
 }) {
   const pathname = usePathname()
+  const prefix = lang ? `/${lang}` : ""
 
   return (
     <Sidebar
-      className="sticky top-[calc(var(--header-height)+2rem)] z-30 hidden h-[calc(100vh-var(--header-height)-4rem)] overflow-y-auto bg-transparent lg:flex"
+      className="sticky top-[calc(var(--header-height)+2rem)] z-30 hidden h-[calc(100svh-var(--footer-height)-4rem)] overscroll-none bg-transparent lg:flex"
       collapsible="none"
       {...props}
     >
-      <SidebarContent className="overflow-y-auto gap-0">
-        <ScrollArea className="h-full w-full">
-          <div className="pb-4 pt-2 pl-0">
-            <SidebarGroup className="p-0">
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {DOCS_LINKS.map(({ name, href }) => {
-                    const localizedHref = `/${lang}${href}`
-                    const isActive = pathname === localizedHref
+      <SidebarContent className="no-scrollbar overflow-x-hidden">
+        <div className="pb-4 pt-2 pl-0">
+          <SidebarGroup className="p-0">
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {DOCS_LINKS.map(({ key, href, fallback }) => {
+                  const fullHref = `${prefix}${href}`
+                  const isActive = pathname === fullHref || pathname === href
+                  const name = (dictionary?.docs?.sidebar as Record<string, string> | undefined)?.[key] || fallback
 
-                    return (
-                      <SidebarMenuItem key={href}>
-                        <SidebarMenuButton
-                          asChild
-                          isActive={isActive}
-                          className="data-[active=true]:bg-accent data-[active=true]:border-accent relative h-[30px] w-full border border-transparent text-[0.8rem] font-medium p-0"
-                        >
-                          <Link href={localizedHref} className="block w-full">{name}</Link>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    )
-                  })}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-          </div>
-        </ScrollArea>
+                  return (
+                    <SidebarMenuItem key={href}>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={isActive}
+                        className="relative h-[30px] w-full border border-transparent text-[0.8rem] font-medium p-0"
+                      >
+                        <Link href={fullHref} className="block w-full">{name}</Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  )
+                })}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        </div>
       </SidebarContent>
     </Sidebar>
   )

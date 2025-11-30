@@ -1,0 +1,192 @@
+---
+title: "Get Started"
+description: "Thanks for your interest in contributing to Hogwarts. We're happy to have you here."
+---
+
+## The Idea
+
+Building a school automation platform like these real-world products:
+
+1. [OpenEduCat](https://openeducat.org/) - Open source education management
+2. [Pioneers E-School](https://pioneerseschool.com/) - Comprehensive school system
+3. [PowerSchool](https://www.powerschool.com/) - $2.8B valuation, 45M students
+4. [Infinite Campus](https://www.infinitecampus.com/) - 7.8M students, 50 US states
+
+_See more companies at [Competitors](/docs/competitors)._
+
+## Localhost Setup
+
+**01. Install VS Code**
+
+Download from [code.visualstudio.com](https://code.visualstudio.com/)
+
+---
+
+**02. Install Node.js**
+
+Download from [nodejs.org](https://nodejs.org/) (LTS version)
+
+---
+
+**03. Install Git**
+
+Download from [git-scm.com](https://git-scm.com/downloads)
+
+---
+
+**04. Open VS Code**
+
+Launch VS Code, then open terminal: View → Terminal
+
+---
+
+**05. Install pnpm**
+```text
+npm install -g pnpm
+```
+
+---
+
+**06. Clone the repository**
+```bash
+git clone https://github.com/databayt/hogwarts.git
+```
+
+---
+
+**07. Open project in VS Code**
+
+File → Open Folder → select the `hogwarts` folder
+
+---
+
+**08. Open terminal in VS Code**
+
+View → Terminal or `` Ctrl + ` ``
+
+---
+
+**09. Install dependencies**
+```bash
+pnpm install
+```
+
+---
+
+**10. Create environment file**
+
+Create `.env` in root folder and paste the content from WhatsApp group
+
+---
+
+**11. Generate Prisma client**
+```bash
+pnpm prisma generate
+```
+
+---
+
+**12. Setup database**
+```bash
+pnpm prisma migrate dev
+```
+
+---
+
+**13. Start dev server**
+```bash
+pnpm dev
+```
+
+---
+
+**14. Open browser**
+
+Go to http://localhost:3000
+
+_For detailed setup, see [Localhost Setup](/docs/localhost)._
+
+## First Good Issue
+
+Add your name to the blog page as your first contribution.
+
+**01. Create a new branch**
+```bash
+git checkout -b feat/your-name
+```
+
+---
+
+**02. Open the file**
+
+Open `src/components/marketing/blog/content.tsx` in VS Code
+
+---
+
+**03. Find the Blog text**
+
+Look for this code:
+```tsx
+<div>
+    Blog
+</div>
+```
+
+---
+
+**04. Add your name below Blog**
+
+Change it to:
+```tsx
+<div>
+    Blog
+    <p>Your Name</p>
+</div>
+```
+
+---
+
+**05. Save the file**
+
+Press `Ctrl + S`
+
+---
+
+**06. Stage changes**
+```bash
+git add .
+```
+
+---
+
+**07. Commit changes**
+```bash
+git commit -m "feat: add Your Name to blog"
+```
+
+---
+
+**08. Push to GitHub**
+```bash
+git push origin feat/your-name
+```
+
+**That's it! Welcome to Hogwarts.**
+
+## Next Steps
+
+Browse the [Demo](https://demo.databayt.org/en/dashboard) to assess current progress. Open issues for bugs you find, or create sub-issues if a related issue already exists.
+
+**Login:** `admin@databayt.org` / `1234`
+
+### Explore the Docs
+
+- [MVP](/docs/mvp) - Minimum viable product
+- [Contributing Guide](/docs/contributing) - How to contribute
+- [Architecture](/docs/architecture) - System design
+- [Pattern](/docs/pattern) - Code patterns
+
+### Join the Community
+
+- Browse open issues on [GitHub](https://github.com/databayt/hogwarts/issues)
+- Join our [Discord](https://discord.gg/uPa4gGG62c) server

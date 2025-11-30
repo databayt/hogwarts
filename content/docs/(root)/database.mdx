@@ -1,0 +1,489 @@
+---
+title: "Database"
+description: "Multi-tenant PostgreSQL database architecture with Prisma ORM, row-level security, and domain-based tenant isolation"
+---
+
+The database is engineered as a **multi-tenant school management system** that supports multiple schools in a single database with complete data isolation. Built on PostgreSQL with Prisma ORM, it provides a robust foundation for educational institutions while maintaining strict security boundaries between tenants.
+
+## Core Principles
+
+Our database design is guided by fundamental principles that ensure scalability, security, and maintainability:
+
+- **Row-Level Security** – Every model includes a `schoolId` field ensuring complete data isolation between schools
+- **Shared Schema Architecture** – All schools use the same database schema, optimizing resource utilization
+- **Domain-Based Tenant Identification** – Schools are uniquely identified by subdomain (e.g., `hogwarts.hogwarts.app`), with optional custom domains via CNAME
+- **Type-Safe Database Operations** – Prisma ORM provides end-to-end type safety from database to frontend
+- **Multi-File Schema Organization** – Schema is organized into logical domains for better maintainability
+
+## Database Design
+
+The database follows a comprehensive relational design that captures all aspects of school management from core infrastructure to daily operations.
+
+<img src="/database.png" alt="Database Schema Diagram" />
+
+The entity relationship diagram above illustrates the interconnected nature of our school management system, showing how entities relate through foreign key relationships while maintaining multi-tenant isolation through the `schoolId` field present in every table.
+
+## Multi-Tenant Isolation Strategy
+
+The tenant isolation strategy ensures that each school's data remains completely separate while sharing the same database infrastructure.
+
+### Tenant Entity (School Model)
+
+```typescript
+model School {
+  id          String  @id @default(cuid())
+  name        String
+  domain      String  @unique // e.g., "hogwarts"
+  logoUrl     String?
+  address     String?
+  phoneNumber String?
+  email       String?
+  timezone    String  @default("UTC")
+
+  // Subscription/billing
+  planType    String  @default("basic")
+  maxStudents Int     @default(100)
+  maxTeachers Int     @default(10)
+  isActive    Boolean @default(true)
+}
+```
+
+### Data Isolation Example
+
+```typescript
+// Correct - Always include schoolId
+const students = await prisma.student.findMany({
+  where: { schoolId: "school_123" }
+})
+
+// Wrong - Missing schoolId (security risk)
+const students = await prisma.student.findMany()
+```
+
+## Directory Structure
+
+The Prisma directory follows a well-organized structure that supports both development and production scenarios with clear separation of concerns.
+
+<PrismaStructure />
+
+## Schema Tables
+
+Each model contains realistic sample data that demonstrates the relationships and data structure of our multi-tenant school management system.
+
+### School (Tenant Entity)
+
+Main tenant entities representing different schools in the multi-tenant system.
+
+| ID | School Name | Domain | Plan | Max Students | Active |
+|----|-------------|--------|------|--------------|--------|
+| `sch_001` | Hogwarts | hogwarts | premium | 1000 | Yes |
+| `sch_002` | Beauxbatons | beauxbatons | premium | 500 | Yes |
+| `sch_003` | Durmstrang | durmstrang | basic | 300 | Yes |
+
+### Teacher
+
+Teaching staff with school-specific isolation and department assignments.
+
+| ID | School ID | First Name | Last Name | Email | Gender |
+|----|-----------|------------|-----------|-------|--------|
+| `tch_001` | `sch_001` | Minerva | McGonagall | m.mcg@hogwarts.edu | F |
+| `tch_002` | `sch_001` | Severus | Snape | s.snape@hogwarts.edu | M |
+| `tch_003` | `sch_001` | Rubeus | Hagrid | r.hagrid@hogwarts.edu | M |
+
+### Student
+
+Student enrollment records with guardian relationships and year-level tracking.
+
+| ID | School ID | First Name | Middle | Last Name | Date of Birth | Gender |
+|----|-----------|------------|--------|-----------|---------------|--------|
+| `std_001` | `sch_001` | Harry | J | Potter | 1980-07-31 | M |
+| `std_002` | `sch_001` | Hermione | J | Granger | 1979-09-19 | F |
+| `std_003` | `sch_001` | Ron | B | Weasley | 1980-03-01 | M |
+
+### Department
+
+Academic departments organizing subjects and teacher assignments.
+
+| ID | School ID | Department Name |
+|----|-----------|-----------------|
+| `dep_001` | `sch_001` | Transfiguration |
+| `dep_002` | `sch_001` | Potions |
+| `dep_003` | `sch_001` | Creatures |
+
+### Subject
+
+Academic subjects within departments that form the basis of classes.
+
+| ID | School ID | Department ID | Subject Name |
+|----|-----------|---------------|--------------|
+| `sub_001` | `sch_001` | `dep_001` | Transfiguration |
+| `sub_002` | `sch_001` | `dep_002` | Potions |
+| `sub_003` | `sch_001` | `dep_003` | Creatures |
+
+### Classroom
+
+Physical classroom locations with capacity and type information.
+
+| ID | School ID | Room Name | Capacity | Type |
+|----|-----------|-----------|----------|------|
+| `cls_001` | `sch_001` | Great Hall | 400 | Hall |
+| `cls_002` | `sch_001` | Dungeon | 30 | Lab |
+| `cls_003` | `sch_001` | Room 101 | 35 | Class |
+
+### Assignment
+
+Assessment tasks including homework, quizzes, tests, and projects.
+
+| ID | School ID | Title | Type | Status | Points | Due Date |
+|----|-----------|-------|------|--------|--------|----------|
+| `asg_001` | `sch_001` | Essay | ESSAY | PUBLISHED | 100 | 2024-02-15 |
+| `asg_002` | `sch_001` | Quiz | QUIZ | COMPLETED | 50 | 2024-02-10 |
+| `asg_003` | `sch_001` | Project | PROJECT | IN_PROGRESS | 150 | 2024-02-20 |
+
+### Attendance
+
+Daily attendance tracking per student per class with detailed status information.
+
+| ID | School ID | Student ID | Date | Status | Notes |
+|----|-----------|------------|------|--------|-------|
+| `att_001` | `sch_001` | `std_001` | 2024-02-08 | PRESENT | — |
+| `att_002` | `sch_001` | `std_002` | 2024-02-08 | PRESENT | — |
+| `att_003` | `sch_001` | `std_003` | 2024-02-08 | LATE | Late |
+
+### User (Authentication)
+
+Multi-tenant user accounts with role-based access control and school isolation.
+
+| ID | Email | Role | School ID | Verified |
+|----|-------|------|-----------|----------|
+| `usr_001` | harry@hog.edu | STUDENT | `sch_001` | Yes |
+| `usr_002` | mcg@hog.edu | TEACHER | `sch_001` | Yes |
+| `usr_003` | admin@dev.com | DEVELOPER | null (all schools) | Yes |
+
+## Subscription & Pricing
+
+The subscription system supports tiered pricing plans with flexible discounting capabilities.
+
+### Subscription & Pricing Models
+
+```typescript
+model SubscriptionTier {
+  id                String   @id @default(cuid())
+  name              String   // basic, premium, enterprise
+  description       String
+  monthlyPrice      Int     // Price in cents
+  annualPrice       Int     // Price in cents
+  maxStudents       Int
+  maxTeachers       Int
+  maxClasses        Int
+  features          String[] // Array of feature identifiers
+  isActive          Boolean  @default(true)
+
+  // Relationships
+  subscriptions     Subscription[]
+  discounts         Discount[]
+}
+
+model Discount {
+  id                String   @id @default(cuid())
+  schoolId          String
+  tierId            String
+  code              String   @unique
+  type              String   // percentage, fixed
+  value             Int      // Percentage or fixed amount
+  description       String
+  validFrom         DateTime
+  validUntil        DateTime
+  maxUses           Int?
+  currentUses       Int      @default(0)
+  isActive          Boolean  @default(true)
+
+  // Relationships
+  school            School           @relation(fields: [schoolId], references: [id])
+  subscriptionTier  SubscriptionTier @relation(fields: [tierId], references: [id])
+  appliedDiscounts  AppliedDiscount[]
+}
+
+model AppliedDiscount {
+  id          String   @id @default(cuid())
+  schoolId    String
+  discountId  String
+  invoiceId   String
+  amount      Int      // Amount saved in cents
+  appliedAt   DateTime @default(now())
+
+  // Relationships
+  school      School   @relation(fields: [schoolId], references: [id])
+  discount    Discount @relation(fields: [discountId], references: [id])
+  invoice     Invoice  @relation(fields: [invoiceId], references: [id])
+}
+```
+
+**Key Features:**
+- Tiered subscription plans with different limits and features
+- Flexible discount system supporting both percentage and fixed amounts
+- Usage tracking for limited-use discount codes
+- Complete audit trail of applied discounts
+- Multi-tenant safety with schoolId scoping
+
+### Example Usage
+
+```typescript
+// Create a new subscription tier
+const tier = await prisma.subscriptionTier.create({
+  data: {
+    name: "premium",
+    description: "Premium school plan",
+    monthlyPrice: 19900, // $199.00
+    annualPrice: 199900, // $1,999.00
+    maxStudents: 500,
+    maxTeachers: 50,
+    maxClasses: 100,
+    features: ["analytics", "api_access", "priority_support"]
+  }
+})
+
+// Create a discount code
+const discount = await prisma.discount.create({
+  data: {
+    schoolId: "school_123",
+    tierId: tier.id,
+    code: "WELCOME2024",
+    type: "percentage",
+    value: 20, // 20% off
+    description: "New year promotion",
+    validFrom: new Date(),
+    validUntil: new Date("2024-12-31"),
+    maxUses: 100
+  }
+})
+```
+
+## Legal & Compliance
+
+The legal system provides comprehensive consent tracking and compliance logging.
+
+### Legal & Compliance Models
+
+```typescript
+model LegalConsent {
+  id                String   @id @default(cuid())
+  schoolId          String
+  userId            String
+  documentType      String   // terms, privacy, data-processing
+  documentVersion   String   // Version consented to
+  consentType       String   // explicit, implicit, parental
+  ipAddress         String?
+  userAgent         String?
+  consentedAt       DateTime @default(now())
+  revokedAt         DateTime?
+  metadata          Json?
+
+  // Relationships
+  school            School   @relation(fields: [schoolId], references: [id])
+  user              User     @relation(fields: [userId], references: [id])
+
+  @@unique([schoolId, userId, documentType, documentVersion])
+}
+
+model LegalDocument {
+  id                String   @id @default(cuid())
+  schoolId          String
+  type              String   // terms, privacy, data-processing
+  version           String   // Semantic version
+  content           String   @db.Text
+  effectiveFrom     DateTime
+  effectiveUntil    DateTime?
+  isActive          Boolean  @default(true)
+  requiresExplicit  Boolean  @default(true)
+  metadata          Json?
+
+  // Relationships
+  school            School   @relation(fields: [schoolId], references: [id])
+}
+
+model ComplianceLog {
+  id                String   @id @default(cuid())
+  schoolId          String
+  eventType         String   // consent events, document updates
+  eventData         Json
+  userId            String?
+  timestamp         DateTime @default(now())
+  metadata          Json?
+
+  // Relationships
+  school            School   @relation(fields: [schoolId], references: [id])
+  user              User?    @relation(fields: [userId], references: [id])
+}
+```
+
+**Key Features:**
+- Comprehensive consent tracking with version control
+- Support for multiple document types and consent types
+- Audit trail with detailed event logging
+- GDPR-compliant consent evidence collection
+- Multi-tenant safety with schoolId scoping
+
+### Example Usage
+
+```typescript
+// Record user consent
+const consent = await prisma.legalConsent.create({
+  data: {
+    schoolId: "school_123",
+    userId: "user_456",
+    documentType: "terms",
+    documentVersion: "1.0.0",
+    consentType: "explicit",
+    ipAddress: "192.168.1.1",
+    userAgent: "Mozilla/5.0...",
+    metadata: {
+      source: "onboarding",
+      platform: "web"
+    }
+  }
+})
+
+// Log compliance event
+await prisma.complianceLog.create({
+  data: {
+    schoolId: "school_123",
+    eventType: "consent-given",
+    eventData: {
+      documentType: "terms",
+      version: "1.0.0",
+      consentId: consent.id
+    },
+    userId: "user_456"
+  }
+})
+```
+
+## Authentication & User Roles
+
+The system supports **8 distinct user roles** with varying levels of access and school-specific constraints.
+
+| Role | Description | School Access | Typical Use Case |
+|------|-------------|---------------|------------------|
+| DEVELOPER | Platform administrator | All schools | System maintenance, cross-tenant operations |
+| ADMIN | School administrator | Single school | School management, user oversight |
+| TEACHER | Teaching staff | Single school | Class management, grading, attendance |
+| STUDENT | Enrolled students | Single school | Learning management, assignment submission |
+| GUARDIAN | Student parents/guardians | Single school | Monitor child's progress, communication |
+| ACCOUNTANT | Finance staff | Single school | Billing, financial reporting |
+| STAFF | General school staff | Single school | Administrative support |
+| USER | Default role | Single school | Base level access |
+
+## Security & Data Protection
+
+### Automatic Tenant Filtering
+
+Every database query must include the `schoolId` to ensure proper data isolation:
+
+```typescript
+// Server action with tenant context
+export async function getStudents() {
+  const schoolId = getSchoolId() // From middleware context
+
+  return await prisma.student.findMany({
+    where: { schoolId }
+  })
+}
+```
+
+### Unique Constraints with School Scope
+
+All unique constraints include `schoolId` to allow data duplication across schools:
+
+```typescript
+// Teachers can have same email across different schools
+@@unique([schoolId, emailAddress])
+
+// Departments can have same names across schools
+@@unique([schoolId, departmentName])
+```
+
+## Performance Optimization
+
+### Recommended Database Indexes
+
+```sql
+-- Critical indexes for multi-tenant queries
+CREATE INDEX idx_students_school_id ON students(school_id);
+CREATE INDEX idx_teachers_school_id ON teachers(school_id);
+CREATE INDEX idx_classes_school_id ON classes(school_id);
+CREATE INDEX idx_attendance_school_id ON attendance(school_id);
+```
+
+### Query Performance Guidelines
+
+- Always filter by `schoolId` first in WHERE clauses
+- Use composite indexes for frequently queried field combinations
+- Implement connection pooling for high-traffic scenarios
+- Consider read replicas for reporting and analytics
+
+## Deployment Configuration
+
+### Environment Variables
+
+```bash
+# Database Connection
+DATABASE_URL="postgresql://username:password@host:port/database"
+
+# Multi-tenancy Configuration
+DEFAULT_SCHOOL_DOMAIN="demo"
+ALLOW_SCHOOL_SIGNUP="true"
+
+# Subscription Limits
+BASIC_MAX_STUDENTS=100
+PREMIUM_MAX_STUDENTS=500
+ENTERPRISE_MAX_STUDENTS=2000
+```
+
+### Migration Commands
+
+```bash
+# Generate Prisma Client
+pnpm prisma generate
+
+# Create and apply migrations
+pnpm prisma migrate dev --name init
+
+# Deploy to production
+pnpm prisma migrate deploy
+
+# Seed sample data
+pnpm prisma db seed
+```
+
+## Sample Schools & Test Data
+
+The seeding system creates **three sample schools** with complete datasets:
+
+| School | Domain | Description |
+|--------|--------|-------------|
+| Hogwarts | hogwarts.com | School of Witchcraft and Wizardry |
+| Beauxbatons | beauxbatons.com | Academy of Magic |
+| Durmstrang | durmstrang.com | Institute for Magical Learning |
+
+### Sample Data Statistics
+
+**Hogwarts:**
+- Complete academic structure
+- 4 houses with qualified professors
+- 1000+ active students
+- Full magical curriculum
+
+**Beauxbatons:**
+- French academic system
+- 6 departments
+- 700+ students
+- Specialized courses
+
+**Durmstrang:**
+- Nordic education model
+- 5 faculties
+- 500+ students
+- Advanced programs
+
+This comprehensive database architecture provides the foundation for building scalable, secure, and feature-rich educational management systems.

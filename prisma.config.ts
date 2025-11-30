@@ -49,6 +49,7 @@ export default defineConfig({
 
     // Seed command (replaces package.json prisma.seed config)
     // Uses tsx to execute TypeScript seed files
-    seed: "tsx prisma/generator/seed.ts",
+    // Modular seed structure in prisma/seeds/ (follows prisma/models pattern)
+    seed: "tsx prisma/seeds/index.ts",
   },
 })

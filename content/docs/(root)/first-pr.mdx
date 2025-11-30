@@ -1,0 +1,59 @@
+---
+title: "First Pr"
+description: "Documentation for First Pr"
+---
+
+## Your First PR (Super Simple)
+
+Follow these steps to make your first contribution in under 15 minutes.
+
+### 1) Fork and clone
+
+```bash
+git checkout -b docs/first-pr
+```
+
+### 2) Pick a tiny task
+
+- Fix a typo in docs
+- Improve a sentence
+- Add one missing command
+
+### 3) Run the project
+
+```bash
+pnpm install
+pnpm dev
+```
+
+If Prisma models changed:
+
+```bash
+pnpm prisma generate
+pnpm prisma migrate dev --name init
+```
+
+### 4) Make the edit
+
+- Keep edits small and clear
+- If UI changed, take a screenshot (LTR/RTL if relevant)
+
+### 5) Build and commit
+
+```bash
+pnpm build
+git add -A
+git commit -m "docs: clarify getting started step"
+git push origin HEAD
+```
+
+### 6) Open PR
+
+- Title: short and specific
+- Description: why this helps; add screenshot if UI
+- Link any related issue
+
+We’ll help you land it. Welcome aboard.
+
+
+

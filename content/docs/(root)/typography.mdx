@@ -1,0 +1,216 @@
+---
+title: "Typography"
+description: "Documentation for Typography"
+---
+
+# Typography
+
+Typography styles and components for your app.
+
+## Introduction
+
+The `typography.tsx` component provides a set of pre-styled text elements that you can use throughout your app. All typography components use semantic HTML elements and are styled with Tailwind CSS.
+
+## Usage
+
+```tsx
+import { Typography } from "@/components/ui/typography"
+
+export default function Example() {
+  return (
+    <div>
+      <Typography.H1>The Joke Tax Chronicles</Typography.H1>
+      <Typography.P>
+        Once upon a time, in a far-off land, there was a very lazy king who
+        spent all day lounging on his throne. One day, his advisors came to him
+        with a problem: the kingdom was running out of money.
+      </Typography.P>
+      <Typography.H2>The King's Plan</Typography.H2>
+      <Typography.P>
+        The king thought long and hard, and finally came up with{" "}
+        <Typography.Link href="#">a brilliant plan</Typography.Link>: he would tax the jokes in the
+        kingdom.
+      </Typography.P>
+      <Typography.Blockquote>
+        "After all," he said, "everyone enjoys a good joke, so it's only fair
+        that they should pay for the privilege."
+      </Typography.Blockquote>
+      <Typography.H3>The Joke Tax</Typography.H3>
+      <Typography.P>
+        The king's subjects were not amused. They grumbled and complained, but
+        the king was firm:
+      </Typography.P>
+      <Typography.List>
+        <li>1st level of puns: 5 gold coins</li>
+        <li>2nd level of jokes: 10 gold coins</li>
+        <li>3rd level of one-liners : 20 gold coins</li>
+      </Typography.List>
+      <Typography.P>
+        As a result, people stopped telling jokes, and the kingdom became a very
+        boring place. But at least the king was able to balance his budget.
+      </Typography.P>
+    </div>
+  )
+}
+```
+
+## Examples
+
+### Heading 1
+
+<h1>The Joke Tax Chronicles</h1>
+
+```tsx
+<Typography.H1>The Joke Tax Chronicles</Typography.H1>
+```
+
+### Heading 2
+
+<h2>The People of the Kingdom</h2>
+
+```tsx
+<Typography.H2>The People of the Kingdom</Typography.H2>
+```
+
+### Heading 3
+
+<h3>The Joke Tax</h3>
+
+```tsx
+<Typography.H3>The Joke Tax</Typography.H3>
+```
+
+### Heading 4
+
+<h4>People stopped telling jokes</h4>
+
+```tsx
+<Typography.H4>People stopped telling jokes</Typography.H4>
+```
+
+### Paragraph
+
+<p>
+  The king, seeing how much happier his subjects were, realized the importance
+  of a good joke. He promptly abolished the joke tax.
+</p>
+
+```tsx
+<Typography.P>
+  The king, seeing how much happier his subjects were, realized the importance
+  of a good joke. He promptly abolished the joke tax.
+</Typography.P>
+```
+
+### Blockquote
+
+<blockquote>
+  "After all," he said, "everyone enjoys a good joke, so it's only fair that
+  they should pay for the privilege."
+</blockquote>
+
+```tsx
+<Typography.Blockquote>
+  "After all," he said, "everyone enjoys a good joke, so it's only fair that
+  they should pay for the privilege."
+</Typography.Blockquote>
+```
+
+### Table
+
+| King's Treasury | People's happiness |
+| --------------- | ------------------ |
+| Empty           | Overflowing        |
+| Modest          | Happy              |
+| Full            | Ecstatic           |
+
+```tsx
+<Typography.Table>
+  <Typography.TableHeader>
+    <Typography.TableRow>
+      <Typography.TableHead className="w-[100px]">King's Treasury</Typography.TableHead>
+      <Typography.TableHead>People's happiness</Typography.TableHead>
+    </Typography.TableRow>
+  </Typography.TableHeader>
+  <Typography.TableBody>
+    <Typography.TableRow>
+      <Typography.TableCell className="font-medium">Empty</Typography.TableCell>
+      <Typography.TableCell>Overflowing</Typography.TableCell>
+    </Typography.TableRow>
+    <Typography.TableRow>
+      <Typography.TableCell className="font-medium">Modest</Typography.TableCell>
+      <Typography.TableCell>Happy</Typography.TableCell>
+    </Typography.TableRow>
+    <Typography.TableRow>
+      <Typography.TableCell className="font-medium">Full</Typography.TableCell>
+      <Typography.TableCell>Ecstatic</Typography.TableCell>
+    </Typography.TableRow>
+  </Typography.TableBody>
+</Typography.Table>
+```
+
+### List
+
+<ul>
+  <li>1st level of puns: 5 gold coins</li>
+  <li>2nd level of jokes: 10 gold coins</li>
+  <li>3rd level of one-liners : 20 gold coins</li>
+</ul>
+
+```tsx
+<Typography.List>
+  <li>1st level of puns: 5 gold coins</li>
+  <li>2nd level of jokes: 10 gold coins</li>
+  <li>3rd level of one-liners : 20 gold coins</li>
+</Typography.List>
+```
+
+### Inline code
+
+You can use the `Typography.InlineCode` component for inline code.
+
+```tsx
+<Typography.P>
+  You can use the <Typography.InlineCode>Typography.InlineCode</Typography.InlineCode> component for inline code.
+</Typography.P>
+```
+
+### Lead
+
+<p className="text-xl text-muted-foreground">
+  A modal dialog that interrupts the user with important content and expects a
+  response.
+</p>
+
+```tsx
+<Typography.Lead>
+  A modal dialog that interrupts the user with important content and expects a
+  response.
+</Typography.Lead>
+```
+
+### Large
+
+<div className="text-lg font-semibold">Are you absolutely sure?</div>
+
+```tsx
+<Typography.Large>Are you absolutely sure?</Typography.Large>
+```
+
+### Small
+
+<small className="text-sm font-medium leading-none">
+  Enter your email address.
+</small>
+
+```tsx
+<Typography.Small>Enter your email address.</Typography.Small>
+```
+
+### Muted
+
+<p className="text-sm text-muted-foreground">Enter your email address.</p>
+
+```tsx
+<Typography.Muted>Enter your email address.</Typography.Muted>
+``` 

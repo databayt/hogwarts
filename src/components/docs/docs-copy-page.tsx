@@ -17,6 +17,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 import { Separator } from "@/components/ui/separator"
+import type { getDictionary } from "@/components/internationalization/dictionaries"
 
 function getPromptUrl(baseURL: string, url: string) {
   return `${baseURL}?q=${encodeURIComponent(
@@ -26,7 +27,9 @@ Help me understand how to use it. Be ready to explain concepts, give examples, o
   )}`
 }
 
-const menuItems = {
+type Dictionary = Awaited<ReturnType<typeof getDictionary>> & { docs?: Record<string, string> }
+
+const getMenuItems = (dictionary?: Dictionary) => ({
   markdown: (url: string) => (
     <a href={`${url}.md`} target="_blank" rel="noopener noreferrer">
       <svg strokeLinejoin="round" viewBox="0 0 22 16">
@@ -37,7 +40,7 @@ const menuItems = {
           fill="currentColor"
         />
       </svg>
-      View as Markdown
+      {dictionary?.docs?.viewAsMarkdown || "View as Markdown"}
     </a>
   ),
   v0: (url: string) => (
@@ -54,7 +57,7 @@ const menuItems = {
       >
         <path d="M56 50.203V14h14v46.156C70 65.593 65.593 70 60.156 70c-2.596 0-5.158-1-7-2.843L0 14h19.797L56 50.203ZM147 56h-14V23.953L100.953 56H133v14H96.687C85.814 70 77 61.186 77 50.312V14h14v32.156L123.156 14H91V0h36.312C138.186 0 147 8.814 147 19.688V56Z" />
       </svg>
-      <span className="-translate-x-[2px]">Open in v0</span>
+      <span className="-translate-x-[2px]">{dictionary?.docs?.openInV0 || "Open in v0"}</span>
     </a>
   ),
   chatgpt: (url: string) => (
@@ -69,7 +72,7 @@ const menuItems = {
           fill="currentColor"
         />
       </svg>
-      Open in ChatGPT
+      {dictionary?.docs?.openInChatGPT || "Open in ChatGPT"}
     </a>
   ),
   claude: (url: string) => (
@@ -84,19 +87,21 @@ const menuItems = {
           fill="currentColor"
         />
       </svg>
-      Open in Claude
+      {dictionary?.docs?.openInClaude || "Open in Claude"}
     </a>
   ),
-}
+})
 
-export function DocsCopyPage({ page, url }: { page: string; url: string }) {
+export function DocsCopyPage({ page, url, dictionary }: { page: string; url: string; dictionary?: Dictionary }) {
   const { copyToClipboard, isCopied } = useCopyToClipboard()
+  const menuItems = getMenuItems(dictionary)
+  const copyPageText = dictionary?.docs?.copyPage || "Copy Page"
 
   const trigger = (
     <Button
       variant="secondary"
       size="sm"
-      className="peer -ml-0.5 size-8 shadow-none md:size-7 md:text-[0.8rem]"
+      className="peer -ms-0.5 size-8 shadow-none md:size-7 md:text-[0.8rem]"
     >
       <IconChevronDown className="rotate-180 sm:rotate-0" />
     </Button>
@@ -113,7 +118,7 @@ export function DocsCopyPage({ page, url }: { page: string; url: string }) {
           onClick={() => copyToClipboard(page)}
         >
           {isCopied ? <IconCheck /> : <IconCopy />}
-          Copy Page
+          {copyPageText}
         </Button>
         <DropdownMenu>
           <DropdownMenuTrigger asChild className="hidden sm:flex">
@@ -129,7 +134,7 @@ export function DocsCopyPage({ page, url }: { page: string; url: string }) {
         </DropdownMenu>
         <Separator
           orientation="vertical"
-          className="!bg-foreground/10 absolute top-0 right-8 z-0 !h-8 peer-focus-visible:opacity-0 sm:right-7 sm:!h-7"
+          className="!bg-foreground/10 absolute top-0 end-8 z-0 !h-8 peer-focus-visible:opacity-0 sm:end-7 sm:!h-7"
         />
         <PopoverTrigger asChild className="flex sm:hidden">
           {trigger}

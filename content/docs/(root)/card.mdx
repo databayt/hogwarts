@@ -1,0 +1,245 @@
+---
+title: "Card"
+description: "Documentation for Card"
+---
+
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+
+# Card
+
+Displays a card with header, content, and footer.
+
+## Preview
+
+<Card className="w-[350px]">
+  <CardHeader>
+    <CardTitle>Create project</CardTitle>
+    <CardDescription>Deploy your new project in one-click.</CardDescription>
+  </CardHeader>
+  <CardContent>
+    <form>
+      <div className="grid w-full items-center gap-4">
+        <div className="flex flex-col space-y-1.5">
+          <label htmlFor="name">Name</label>
+          <input id="name" placeholder="Name of your project" />
+        </div>
+        <div className="flex flex-col space-y-1.5">
+          <label htmlFor="framework">Framework</label>
+          <select id="framework">
+            <option value="">Select</option>
+            <option value="next">Next.js</option>
+            <option value="sveltekit">SvelteKit</option>
+            <option value="astro">Astro</option>
+            <option value="nuxt">Nuxt.js</option>
+          </select>
+        </div>
+      </div>
+    </form>
+  </CardContent>
+  <CardFooter className="flex justify-between">
+    <Button variant="outline">Cancel</Button>
+    <Button>Deploy</Button>
+  </CardFooter>
+</Card>
+
+## Installation
+
+### Copy and paste the following code into your project.
+
+```tsx
+import * as React from "react"
+
+import { cn } from "@/lib/utils"
+
+const Card = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn(
+      "rounded-lg border bg-card text-card-foreground shadow-sm",
+      className
+    )}
+    {...props}
+  />
+))
+Card.displayName = "Card"
+
+const CardHeader = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn("flex flex-col space-y-1.5 p-6", className)}
+    {...props}
+  />
+))
+CardHeader.displayName = "CardHeader"
+
+const CardTitle = React.forwardRef<
+  HTMLParagraphElement,
+  React.HTMLAttributes<HTMLHeadingElement>
+>(({ className, ...props }, ref) => (
+  <h3
+    ref={ref}
+    className={cn(
+      "text-2xl font-semibold leading-none tracking-tight",
+      className
+    )}
+    {...props}
+  />
+))
+CardTitle.displayName = "CardTitle"
+
+const CardDescription = React.forwardRef<
+  HTMLParagraphElement,
+  React.HTMLAttributes<HTMLParagraphElement>
+>(({ className, ...props }, ref) => (
+  <p
+    ref={ref}
+    className={cn("text-sm text-muted-foreground", className)}
+    {...props}
+  />
+))
+CardDescription.displayName = "CardDescription"
+
+const CardContent = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div ref={ref} className={cn("p-6 pt-0", className)} {...props} />
+))
+CardContent.displayName = "CardContent"
+
+const CardFooter = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn("flex items-center p-6 pt-0", className)}
+    {...props}
+  />
+))
+CardFooter.displayName = "CardFooter"
+
+export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent }
+```
+
+## Usage
+
+```tsx
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+```
+
+```tsx
+<Card>
+  <CardHeader>
+    <CardTitle>Card Title</CardTitle>
+    <CardDescription>Card Description</CardDescription>
+  </CardHeader>
+  <CardContent>
+    <p>Card Content</p>
+  </CardContent>
+  <CardFooter>
+    <p>Card Footer</p>
+  </CardFooter>
+</Card>
+```
+
+## Examples
+
+### Cookie Settings
+
+<Card className="w-[350px]">
+  <CardHeader>
+    <CardTitle>Cookie Settings</CardTitle>
+    <CardDescription>
+      Manage your cookie settings here.
+    </CardDescription>
+  </CardHeader>
+  <CardContent className="grid gap-6">
+    <div className="flex items-center justify-between space-x-2">
+      <label
+        htmlFor="necessary"
+        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+      >
+        Strictly Necessary
+      </label>
+      <input id="necessary" type="checkbox" defaultChecked />
+    </div>
+    <div className="flex items-center justify-between space-x-2">
+      <label
+        htmlFor="functional"
+        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+      >
+        Functional Cookies
+      </label>
+      <input id="functional" type="checkbox" />
+    </div>
+    <div className="flex items-center justify-between space-x-2">
+      <label
+        htmlFor="performance"
+        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+      >
+        Performance Cookies
+      </label>
+      <input id="performance" type="checkbox" />
+    </div>
+  </CardContent>
+  <CardFooter>
+    <Button className="w-full">Save preferences</Button>
+  </CardFooter>
+</Card>
+
+### Payment Method
+
+<Card className="w-[350px]">
+  <CardHeader>
+    <CardTitle>Payment Method</CardTitle>
+    <CardDescription>
+      Add a new payment method to your account.
+    </CardDescription>
+  </CardHeader>
+  <CardContent className="grid gap-6">
+    <div className="grid gap-2">
+      <label htmlFor="name">Name</label>
+      <input id="name" placeholder="First Last" />
+    </div>
+    <div className="grid gap-2">
+      <label htmlFor="number">Card number</label>
+      <input id="number" placeholder="" />
+    </div>
+    <div className="grid grid-cols-3 gap-4">
+      <div className="grid gap-2">
+        <label htmlFor="month">Expires</label>
+        <select id="month">
+          <option>Month</option>
+        </select>
+      </div>
+      <div className="grid gap-2">
+        <label htmlFor="year">Year</label>
+        <select id="year">
+          <option>Year</option>
+        </select>
+      </div>
+      <div className="grid gap-2">
+        <label htmlFor="cvc">CVC</label>
+        <input id="cvc" placeholder="CVC" />
+      </div>
+    </div>
+  </CardContent>
+  <CardFooter>
+    <Button className="w-full">Continue</Button>
+  </CardFooter>
+</Card> 

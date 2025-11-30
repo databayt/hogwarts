@@ -1,0 +1,442 @@
+---
+title: "Claude Code Configuration & Setup Guide"
+description: "Documentation for Claude Code Configuration & Setup Guide"
+---
+
+# Claude Code Configuration & Setup Guide
+
+This guide documents the complete Claude Code setup for this Next.js 15 project, including current configuration, specialized agents, MCP integrations, and optimization recommendations.
+
+## 🔍 Current Setup Analysis
+
+### Core Configuration Files
+
+Our project has a sophisticated Claude Code setup with the following components:
+
+#### 1. **Project Memory (`CLAUDE.md`)**
+- **Location**: Root directory
+- **Purpose**: Comprehensive project guidelines and architectural patterns
+- **Content**: Next.js 15 specifics, authentication flows, i18n setup, styling conventions
+- **Status**: ✅ Well-documented and current
+
+#### 2. **Settings Configuration (`.claude/settings.json`)**
+```json
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm add:*)",
+      "Bash(pnpm list:*)",
+      "Bash(mkdir:*)",
+      "Bash(pnpm prisma generate:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
+```
+- **Status**: ⚠️ Basic setup - needs enhancement for security
+
+#### 3. **Specialized Agents (`.claude/agents/`)**
+We have 9 specialized agents configured:
+
+| Agent | Model | Purpose | Status |
+|-------|-------|---------|--------|
+| `nextjs-expert` | opus | Next.js optimization & architecture | ✅ Active |
+| `shadcn-ui-specialist` | opus | UI/UX design with shadcn/ui | ✅ Active |
+| `react-code-reviewer` | default | Code quality & best practices | ✅ Active |
+| `typescript-pro` | default | TypeScript expertise | ✅ Active |
+| `architect` | opus | System architecture guidance with mirror-pattern | ✅ Active |
+| `bug-detective` | default | Debugging & troubleshooting | ✅ Active |
+| `unit-test-writer` | default | Test creation & coverage | ✅ Active |
+| `typography-refactor` | default | Typography system compliance | ✅ Active |
+| `nextjs-devops-architect` | default | DevOps & deployment | ✅ Active |
+
+#### 4. **MCP Server Integrations (`.mcp.json`)**
+We have 9 MCP servers configured:
+
+**Development & Monitoring:**
+- `vercel` - Deployment management & monitoring
+- `sentry` - Error tracking & debugging
+- `postgres-dev` - Database queries & management
+
+**Design & Content:**
+- `figma` - Design system integration
+- `notion` - Documentation & knowledge base
+- `airtable` - Content management
+
+**Project Management:**
+- `linear` - Issue tracking & project management
+- `clickup` - Task management & tracking
+- `stripe` - Payment processing (business context)
+
+## 🎯 Areas for Improvement
+
+### 1. **Security & Permissions Enhancement**
+
+**Current State**: Basic permissions with only a few allowed commands
+**Recommended**: Implement comprehensive security model
+
+```json
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm add:*)",
+      "Bash(pnpm list:*)",
+      "Bash(mkdir:*)",
+      "Bash(pnpm prisma generate:*)",
+      "Bash(pnpm run lint)",
+      "Bash(pnpm run build)",
+      "Bash(pnpm run test:*)",
+      "Bash(git status)",
+      "Bash(git diff)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./secrets/**)",
+      "Write(./.env*)",
+      "Bash(rm:*)",
+      "Bash(sudo:*)",
+      "WebFetch(*malicious*)",
+      "Bash(curl:*external-api*)"
+    ],
+    "ask": [
+      "Bash(git push:*)",
+      "Bash(pnpm publish:*)",
+      "Write(./package.json)",
+      "Write(./prisma/schema.prisma)"
+    ]
+  }
+}
+```
+
+### 2. **Hooks Implementation**
+
+**Current State**: No hooks configured
+**Recommended**: Add automated code quality hooks
+
+Create `.claude/hooks/`:
+
+```json
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|MultiEdit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if echo '$file_path' | grep -q '\\.tsx\\?$'; then pnpm run lint:fix $file_path; fi"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo 'Ensuring TypeScript compliance before file creation'"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+### 3. **Model Configuration Optimization**
+
+**Current State**: Default model usage
+**Recommended**: Strategic model allocation
+
+```json
+{
+  "model": "sonnet",
+  "env": {
+    "ANTHROPIC_DEFAULT_SONNET_MODEL": "claude-sonnet-4-20250514",
+    "ANTHROPIC_DEFAULT_OPUS_MODEL": "claude-opus-4-1-20250805",
+    "CLAUDE_CODE_SUBAGENT_MODEL": "opus"
+  }
+}
+```
+
+### 4. **Enhanced Environment Security**
+
+**Current State**: Basic environment setup
+**Recommended**: Secure environment management
+
+```json
+{
+  "env": {
+    "NODE_ENV": "development",
+    "CLAUDE_CODE_ENABLE_TELEMETRY": "1",
+    "DISABLE_TELEMETRY": "0",
+    "MAX_MCP_OUTPUT_TOKENS": "50000"
+  },
+  "permissions": {
+    "additionalDirectories": ["../docs/", "./public/"],
+    "defaultMode": "default"
+  }
+}
+```
+
+## 🚀 Performance Optimizations
+
+### 1. **MCP Server Health Monitoring**
+
+Create monitoring script for MCP servers:
+
+```bash
+#!/bin/bash
+# .claude/scripts/mcp-health.sh
+echo "Checking MCP server status..."
+
+# Check HTTP servers
+curl -s "https://mcp.vercel.com/health" || echo "❌ Vercel MCP down"
+curl -s "https://mcp.sentry.dev/health" || echo "❌ Sentry MCP down"
+curl -s "https://mcp.notion.com/health" || echo "❌ Notion MCP down"
+
+# Check local Figma server
+curl -s "http://127.0.0.1:3845/health" || echo "⚠️ Figma MCP not running"
+
+echo "✅ MCP health check complete"
+```
+
+### 2. **Agent Optimization**
+
+**Current**: All agents use default/opus models
+**Recommended**: Optimize for speed vs. quality balance
+
+```markdown
+# Update agent configurations
+nextjs-expert: opus (complex architecture decisions)
+shadcn-ui-specialist: sonnet (UI implementation)
+react-code-reviewer: sonnet (code review)
+typescript-pro: sonnet (type fixes)
+bug-detective: opus (complex debugging)
+unit-test-writer: sonnet (test generation)
+```
+
+## 💡 Expert Tips & Best Practices
+
+### 1. **Workflow Optimization**
+
+**Use Specialized Agents Proactively:**
+```bash
+# For UI work
+> Use the shadcn-ui-specialist to create a new dashboard component
+
+# For architecture decisions
+> Have the nextjs-expert optimize our API route structure
+
+# For debugging
+> Ask the bug-detective to investigate this React hydration error
+```
+
+**Chain Agents for Complex Tasks:**
+```bash
+# Multi-step development
+> First use architect to plan the feature, then nextjs-expert to implement, then react-code-reviewer to validate
+```
+
+### 2. **MCP Integration Patterns**
+
+**Vercel Integration:**
+```bash
+# Deployment monitoring
+> Check our latest deployment status on Vercel and analyze any errors
+
+# Performance optimization
+> Use Vercel analytics to identify slow pages and suggest optimizations
+```
+
+**Development Workflow:**
+```bash
+# Issue → Design → Code → Deploy
+> Check Linear for priority issues, get designs from Figma, implement with Next.js patterns, deploy via Vercel
+```
+
+### 3. **Memory Management**
+
+**Project-Specific Instructions:**
+- Keep CLAUDE.md updated with new patterns
+- Use imports for team-specific preferences
+- Document API endpoints and key business logic
+
+**Agent-Specific Memory:**
+```markdown
+# Add to CLAUDE.md
+## Component Patterns
+- Use Server Components by default
+- Add "use client" only for interactivity
+- Follow atomic design: atom → molecule → organism
+```
+
+### 4. **Security Best Practices**
+
+**Environment Protection:**
+```json
+{
+  "permissions": {
+    "deny": [
+      "Read(./.env*)",
+      "Read(./secrets/**)",
+      "Read(./.aws/**)",
+      "Write(./.env*)",
+      "Bash(curl:*api-key*)",
+      "WebFetch(*admin*)"
+    ]
+  }
+}
+```
+
+**Safe Development Commands:**
+```json
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm run *)",
+      "Bash(git diff)",
+      "Bash(git status)",
+      "Bash(git log:*)"
+    ],
+    "ask": [
+      "Bash(git push:*)",
+      "Bash(git reset:*)"
+    ]
+  }
+}
+```
+
+## 🔧 Advanced Configuration
+
+### 1. **Custom Status Line**
+
+Create `.claude/statusline.sh`:
+```bash
+#!/bin/bash
+input=$(cat)
+MODEL=$(echo "$input" | jq -r '.model.display_name')
+BRANCH=$(git branch --show-current 2>/dev/null || echo "no-git")
+COST=$(echo "$input" | jq -r '.cost.total_cost_usd // 0')
+
+echo "[$MODEL] 🌿 $BRANCH | 💰 \$$(printf '%.4f' $COST)"
+```
+
+### 2. **Output Style Customization**
+
+For learning mode:
+```bash
+/output-style learning
+```
+
+For explanatory mode:
+```bash
+/output-style explanatory
+```
+
+### 3. **GitHub Actions Integration**
+
+Create `.github/workflows/claude-code.yml`:
+```yaml
+name: Claude Code Review
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  claude-review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: "/review"
+```
+
+## 📊 Monitoring & Metrics
+
+### 1. **Usage Tracking**
+
+Monitor Claude Code effectiveness:
+- Agent usage frequency
+- MCP server response times
+- Code quality improvements
+- Development velocity
+
+### 2. **Cost Optimization**
+
+Based on the YouTube video insights:
+- Use Sonnet for routine tasks
+- Reserve Opus for complex architecture decisions
+- Monitor token usage with status line
+- Optimize MCP output limits
+
+## 🎬 Video Integration Notes
+
+From the referenced [YouTube video](https://www.youtube.com/watch?v=mSMflOx5pq8&t=25s), key optimizations:
+
+1. **Model Selection Strategy**: Use model aliases effectively
+2. **MCP Server Performance**: Monitor connection health
+3. **Agent Specialization**: Leverage domain expertise
+4. **Cost Management**: Balance capability vs. expense
+
+## 🔮 Future Enhancements
+
+### 1. **Planned Additions**
+- [ ] Add Socket.dev MCP for security scanning
+- [ ] Integrate HubSpot MCP for customer data
+- [ ] Set up GitHub MCP for repository management
+- [ ] Configure Plaid MCP for financial integrations
+
+### 2. **Advanced Features**
+- [ ] Custom subagent for Arabic RTL development
+- [ ] Performance monitoring agent
+- [ ] Database migration specialist
+- [ ] SEO optimization agent
+
+### 3. **Team Collaboration**
+- [ ] Shared agent library
+- [ ] Code review automation
+- [ ] Deployment health monitoring
+- [ ] Knowledge base integration
+
+---
+
+## 🆘 Troubleshooting
+
+### Common Issues
+
+**MCP Connection Failures:**
+```bash
+# Reset MCP configuration
+claude mcp reset-project-choices
+
+# Test individual servers
+curl -s https://mcp.vercel.com/
+```
+
+**Agent Not Responding:**
+```bash
+# Check agent configuration
+/agents
+
+# Verify model availability
+/status
+```
+
+**Permission Denied:**
+```bash
+# Review current permissions
+/config
+
+# Temporary bypass (use carefully)
+/permission-mode bypass
+```
+
+This comprehensive setup positions your project for optimal Claude Code usage with security, performance, and team collaboration in mind.

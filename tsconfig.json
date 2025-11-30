@@ -26,6 +26,9 @@
       "@/*": [
         "./src/*"
       ],
+      "@/.source": [
+        "./.source"
+      ],
       "types": [
         "./src/components/marketing/pricing/types/index.d.ts"
       ]

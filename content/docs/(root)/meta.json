@@ -1,0 +1,26 @@
+{
+  "title": "Documentation",
+  "pages": [
+    "index",
+    "pitch",
+    "mvp",
+    "prd",
+    "---Get Started---",
+    "get-started",
+    "repository",
+    "discord",
+    "whatsapp",
+    "---",
+    "architecture",
+    "structure",
+    "pattern",
+    "stack",
+    "database",
+    "localhost",
+    "contributing",
+    "shared-economy",
+    "competitors",
+    "inspiration",
+    "demo"
+  ]
+}

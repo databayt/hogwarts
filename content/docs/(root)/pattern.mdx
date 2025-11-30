@@ -1,0 +1,709 @@
+---
+title: "Pattern"
+description: "Patterns permeate every layer of software development—from how you name a variable to how you structure an entire application."
+---
+
+## Patterns are magic, when you see it you know it
+
+**Consistency** is the foundation of maintainable code. At Databayt, we follow established patterns that ensure our codebase remains scalable, readable, and collaborative. Every pattern serves a purpose — from atomic components to server actions, from naming conventions to file organization.
+
+We believe in **atomic design principles** where small, reusable components compose into larger, more complex systems. This isn't just about React components; it's a philosophy that extends to functions, hooks, utilities, and entire application architecture.
+
+The patterns documented here emerge from real-world usage across our [open source repositories](https://github.com/abdout/databayt), tested in production environments, and refined through community feedback. Every decision prioritizes developer experience, type safety, and long-term maintainability.
+
+## Naming Conventions
+
+### Files and Folders
+- **Components**: kebab-case for files (`button.tsx`, `user-profile.tsx`)
+- **Pages**: kebab-case for route segments (`user-profile`, `sign-in`)
+- **Hooks**: use-prefix convention (`use-leads.ts`, `use-upwork.ts`)
+- **Types**: PascalCase for interfaces and types (`UserData`, `ApiResponse`)
+- **Constants**: UPPER_SNAKE_CASE or camelCase for objects (`API_ENDPOINTS`, `defaultConfig`)
+
+### Variables and Functions
+- **Components**: PascalCase (`export function UserCard()`)
+- **Functions**: camelCase (`export function formatCurrency()`)
+- **Variables**: camelCase (`const userData = await fetchUser()`)
+- **Constants**: SCREAMING_SNAKE_CASE (`const API_BASE_URL = 'https://api.example.com'`)
+- **Types/Interfaces**: PascalCase (`interface UserData`, `type ApiResponse`)
+
+### Database and API
+- **Database tables**: snake_case (`user_profiles`, `order_items`)
+- **API routes**: kebab-case (`/api/user-profile`, `/api/order-history`)
+- **Environment variables**: SCREAMING_SNAKE_CASE (`DATABASE_URL`, `NEXT_PUBLIC_API_KEY`)
+
+## Function Patterns
+
+<div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-8">
+  <div className="p-6 border rounded-lg">
+    <h4 className="font-semibold mb-2">Arrow Functions</h4>
+    <div className="text-sm text-muted-foreground mb-4">
+      Preferred for utilities, event handlers, and inline functions. Excellent for maintaining lexical scope and modern JavaScript patterns.
+    </div>
+    <pre className="text-xs bg-muted p-2 rounded">
+{`const formatPrice = (amount: number) => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD'
+  }).format(amount)
+}`}
+    </pre>
+  </div>
+  <div className="p-6 border rounded-lg">
+    <h4 className="font-semibold mb-2">Function Declarations</h4>
+    <div className="text-sm text-muted-foreground mb-4">
+      Used for React components, API route handlers, and exported functions. Better for hoisting and debugging stack traces.
+    </div>
+    <pre className="text-xs bg-muted p-2 rounded">
+{`export function UserProfile({ userId }: Props) {
+  const { user, loading } = useUser(userId)
+  
+  if (loading) return <Skeleton />
+  return <div>{user.name}</div>
+}`}
+    </pre>
+  </div>
+</div>
+
+## Server Actions & Data Fetching
+
+### Server Actions Pattern
+We use Next.js server actions for form submissions and data mutations, following the "use server" directive pattern:
+
+```typescript
+'use server'
+
+import { revalidatePath } from 'next/cache'
+import { redirect } from 'next/navigation'
+
+export async function createUser(formData: FormData) {
+  const userData = {
+    name: formData.get('name') as string,
+    email: formData.get('email') as string,
+  }
+  
+  try {
+    await db.user.create({ data: userData })
+    revalidatePath('/users')
+    redirect('/users')
+  } catch (error) {
+    throw new Error('Failed to create user')
+  }
+}
+```
+
+### Data Fetching Hierarchy
+- **Server Components**: Direct database queries for initial data
+- **Client Components**: React Query/SWR for interactive data
+- **Server Actions**: Form submissions and mutations
+- **API Routes**: External integrations and webhooks
+
+## Component Architecture
+
+### Atomic Design Structure
+```
+components/
+├── atom/           # Basic elements (Button, Input, Icon)
+├── molecule/       # Simple combinations (SearchBox, FormField)
+├── organism/       # Complex components (Header, UserTable)
+├── template/       # Page layouts and structures
+└── page/          # Complete page compositions
+```
+
+### Component Composition Pattern
+```typescript
+// Compound component pattern
+export function Card({ children, className, ...props }: CardProps) {
+  return (
+    <div className={cn("rounded-lg border bg-card", className)} {...props}>
+      {children}
+    </div>
+  )
+}
+
+Card.Header = CardHeader
+Card.Content = CardContent
+Card.Footer = CardFooter
+```
+
+## Mirror Pattern Architecture
+
+The mirror pattern ensures every feature follows a consistent, predictable structure. Each feature directory contains the same file types, making navigation intuitive and reducing cognitive load.
+
+### Feature Structure
+```
+components/<feature>/
+├── content.tsx      # Main UI composition (client component)
+├── actions.ts       # Server actions (mutations, CRUD)
+├── validation.ts    # Zod schemas for data validation
+├── types.ts         # TypeScript types & interfaces
+├── form.tsx         # Form components (client)
+├── table.tsx        # Data table (client)
+├── column.tsx       # Column definitions (client)
+├── use-<feature>.ts # Custom React hooks
+├── config.ts        # Enums, options, defaults
+└── README.md        # Feature documentation
+```
+
+### Why Mirror Pattern Works
+- **Predictability**: Every feature follows the same structure
+- **Discoverability**: Know exactly where to find validation, actions, or types
+- **Scalability**: New features follow the established template
+- **Collaboration**: Any developer can jump into any feature immediately
+
+---
+
+## Standard File Patterns
+
+### page.tsx Pattern
+
+Pages delegate to content components, handling metadata and i18n:
+
+```typescript
+import BrandingContent from "@/components/onboarding/branding/content";
+import { getDictionary } from "@/components/internationalization/dictionaries";
+import { type Locale } from "@/components/internationalization/config";
+
+export const metadata = {
+  title: "Branding",
+};
+
+interface PageProps {
+  params: Promise<{ lang: Locale }>
+}
+
+export default async function Branding({ params }: PageProps) {
+  const { lang } = await params;
+  const dictionary = await getDictionary(lang);
+  return <BrandingContent dictionary={dictionary.school} />;
+}
+```
+
+### content.tsx Pattern
+
+Client components with hooks, state, and UI composition:
+
+```typescript
+"use client";
+
+import { useState, useEffect } from 'react';
+import { useRouter, useParams } from 'next/navigation';
+import { useListing } from '@/components/onboarding/use-listing';
+import { Button } from "@/components/ui/button";
+import { COLOR_OPTIONS, RADIUS_OPTIONS } from "./config";
+
+interface Props {
+  dictionary?: any;
+}
+
+export default function BrandingContent({ dictionary }: Props) {
+  const dict = dictionary?.onboarding || {};
+  const router = useRouter();
+  const { listing, updateListingData } = useListing();
+  const [primaryColor, setPrimaryColor] = useState<string>('#0f172a');
+
+  useEffect(() => {
+    if (listing?.primaryColor) setPrimaryColor(listing.primaryColor);
+  }, [listing]);
+
+  const handleNext = async () => {
+    updateListingData({ primaryColor });
+    router.push(`/onboarding/${id}/import`);
+  };
+
+  return (
+    <div className="max-w-6xl mx-auto">
+      {/* UI content */}
+    </div>
+  );
+}
+```
+
+### actions.ts Pattern
+
+Server actions with tenant context, validation, and revalidation:
+
+```typescript
+"use server";
+
+import { z } from "zod";
+import { revalidatePath } from "next/cache";
+import { db } from "@/lib/db";
+import { getTenantContext } from "@/lib/tenant-context";
+import { studentCreateSchema } from "./validation";
+
+export async function createStudent(input: z.infer<typeof studentCreateSchema>) {
+  const { schoolId } = await getTenantContext();
+  if (!schoolId) throw new Error("Missing school context");
+
+  const parsed = studentCreateSchema.parse(input);
+
+  const row = await db.student.create({
+    data: {
+      schoolId,
+      givenName: parsed.givenName,
+      surname: parsed.surname,
+      gender: parsed.gender,
+    },
+  });
+
+  revalidatePath("/students");
+  return { success: true as const, id: row.id };
+}
+```
+
+### config.ts Pattern
+
+Constants with `as const` for type safety:
+
+```typescript
+import { ColorOption, StyleOption } from './types';
+
+export const COLOR_OPTIONS: ColorOption[] = [
+  { id: 'slate', name: 'Slate', color: '#0f172a', description: 'Professional' },
+  { id: 'blue', name: 'Blue', color: '#1d4ed8', description: 'Trustworthy' },
+  { id: 'green', name: 'Green', color: '#15803d', description: 'Growth' },
+] as const;
+
+export const RADIUS_OPTIONS: StyleOption[] = [
+  { id: 'none', label: 'no', description: 'Sharp corners' },
+  { id: 'sm', label: 'sm', description: 'Subtle rounding' },
+  { id: 'md', label: 'md', description: 'Medium rounding' },
+] as const;
+
+export const LOGO_LIMITS = {
+  MAX_SIZE: 2 * 1024 * 1024,
+  ALLOWED_TYPES: ['image/jpeg', 'image/png', 'image/svg+xml'],
+} as const;
+```
+
+### validation.ts Pattern
+
+Zod schemas with i18n support:
+
+```typescript
+import { z } from 'zod';
+import { getValidationMessages } from '@/components/internationalization/helpers';
+import type { Dictionary } from '@/components/internationalization/dictionaries';
+
+// i18n-enabled schema factory
+export function createBrandingSchema(dictionary: Dictionary) {
+  const v = getValidationMessages(dictionary);
+
+  return z.object({
+    logoUrl: z.string().url({ message: v.get('validUrlRequired') }).optional(),
+    primaryColor: z.string().regex(/^#[0-9A-F]{6}$/i).optional(),
+    brandName: z.string().min(1, { message: v.get('brandNameRequired') }),
+  });
+}
+
+// Static schema for server-side
+export const brandingSchema = z.object({
+  logoUrl: z.string().url().optional(),
+  primaryColor: z.string().regex(/^#[0-9A-F]{6}$/i).optional(),
+  brandName: z.string().min(1, "Brand name is required"),
+});
+
+export type BrandingFormData = z.infer<typeof brandingSchema>;
+```
+
+### types.ts Pattern
+
+Simple, focused interfaces:
+
+```typescript
+export interface ColorOption {
+  id: string;
+  name: string;
+  color: string;
+  description: string;
+}
+
+export interface StyleOption {
+  id: string;
+  label: string;
+  description: string;
+}
+```
+
+### form.tsx Pattern
+
+React Hook Form with Zod resolver:
+
+```typescript
+"use client";
+
+import { useState, useTransition } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Button } from "@/components/ui/button";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { brandingSchema, type BrandingFormData } from "./validation";
+import { updateSchoolBranding } from "./actions";
+
+interface BrandingFormProps {
+  schoolId: string;
+  initialData?: Partial<BrandingFormData>;
+  onSuccess?: () => void;
+}
+
+export function BrandingForm({ schoolId, initialData, onSuccess }: BrandingFormProps) {
+  const [isPending, startTransition] = useTransition();
+  const [error, setError] = useState<string>("");
+
+  const form = useForm<BrandingFormData>({
+    resolver: zodResolver(brandingSchema),
+    defaultValues: {
+      brandName: initialData?.brandName || "",
+      primaryColor: initialData?.primaryColor || "#000000",
+    },
+  });
+
+  const handleSubmit = (data: BrandingFormData) => {
+    startTransition(async () => {
+      const result = await updateSchoolBranding(schoolId, data);
+      if (result.success) onSuccess?.();
+      else setError(result.error || "Failed to update");
+    });
+  };
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+        <FormField
+          control={form.control}
+          name="brandName"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Brand Name</FormLabel>
+              <FormControl>
+                <Input {...field} disabled={isPending} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <Button type="submit" disabled={isPending}>
+          {isPending ? "Updating..." : "Update"}
+        </Button>
+      </form>
+    </Form>
+  );
+}
+```
+
+### table.tsx Pattern
+
+TanStack Table with load-more pagination:
+
+```typescript
+"use client";
+
+import { useMemo, useState, useCallback } from "react";
+import { DataTable } from "@/components/table/data-table";
+import { DataTableToolbar } from "@/components/table/data-table-toolbar";
+import { useDataTable } from "@/components/table/use-data-table";
+import { getStudentColumns, type StudentRow } from "./columns";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
+import { getStudents } from "./actions";
+
+interface StudentsTableProps {
+  initialData: StudentRow[];
+  total: number;
+  dictionary?: any;
+}
+
+export function StudentsTable({ initialData, total, dictionary }: StudentsTableProps) {
+  const columns = useMemo(() => getStudentColumns(dictionary), [dictionary]);
+  const [data, setData] = useState<StudentRow[]>(initialData);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleLoadMore = useCallback(async () => {
+    if (isLoading) return;
+    setIsLoading(true);
+    const result = await getStudents({ page: currentPage + 1 });
+    setData(prev => [...prev, ...result.rows]);
+    setCurrentPage(p => p + 1);
+    setIsLoading(false);
+  }, [currentPage, isLoading]);
+
+  const { table } = useDataTable<StudentRow>({ data, columns });
+
+  return (
+    <DataTable table={table} onLoadMore={handleLoadMore} isLoading={isLoading}>
+      <DataTableToolbar table={table}>
+        <Button variant="outline" size="sm">
+          <Plus className="h-4 w-4" />
+        </Button>
+      </DataTableToolbar>
+    </DataTable>
+  );
+}
+```
+
+### column.tsx Pattern
+
+Column definitions with custom renderers:
+
+```typescript
+"use client";
+
+import { Badge } from '@/components/ui/badge';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
+import { MoreHorizontal, Eye, Edit, Trash2 } from 'lucide-react';
+import type { SchoolData } from './types';
+
+export interface SchoolColumn {
+  key: keyof SchoolData;
+  title: string;
+  sortable?: boolean;
+  render?: (value: any, row: SchoolData) => React.ReactNode;
+}
+
+export const schoolColumns: SchoolColumn[] = [
+  {
+    key: 'name',
+    title: 'School Name',
+    sortable: true,
+    render: (value, row) => (
+      <div className="flex flex-col">
+        <span className="font-medium">{value || 'Unnamed'}</span>
+        {row.domain && <span className="text-xs text-muted-foreground">{row.domain}</span>}
+      </div>
+    ),
+  },
+  {
+    key: 'schoolType',
+    title: 'Type',
+    sortable: true,
+    render: (value) => value ? <Badge variant="outline">{value}</Badge> : '-',
+  },
+];
+
+interface SchoolActionsProps {
+  school: SchoolData;
+  onEdit?: (school: SchoolData) => void;
+  onDelete?: (school: SchoolData) => void;
+}
+
+export function SchoolActions({ school, onEdit, onDelete }: SchoolActionsProps) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" className="h-8 w-8 p-0">
+          <MoreHorizontal className="h-4 w-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        {onEdit && (
+          <DropdownMenuItem onClick={() => onEdit(school)}>
+            <Edit className="mr-2 h-4 w-4" /> Edit
+          </DropdownMenuItem>
+        )}
+        {onDelete && (
+          <DropdownMenuItem onClick={() => onDelete(school)} className="text-destructive">
+            <Trash2 className="mr-2 h-4 w-4" /> Delete
+          </DropdownMenuItem>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+```
+
+## Multi-Tenant Architecture
+
+For applications serving multiple organizations, tenant isolation is not optional—it is sacred law.
+
+### The Golden Rule
+```typescript
+// Every database query MUST include tenant scope
+await db.student.findMany({
+  where: { schoolId, yearLevel: "10" }  // schoolId = tenant isolation
+})
+
+// NEVER query without tenant scope
+await db.student.findMany({
+  where: { yearLevel: "10" }  // DANGEROUS: breaks isolation
+})
+```
+
+### Server Action Pattern
+```typescript
+"use server"
+
+export async function createStudent(formData: FormData) {
+  // 1. Authenticate and extract schoolId from session
+  const session = await auth()
+  const schoolId = session?.user?.schoolId
+
+  // 2. Validate input
+  const data = studentSchema.parse(Object.fromEntries(formData))
+
+  // 3. Execute with tenant scope (CRITICAL)
+  await db.student.create({
+    data: { ...data, schoolId }
+  })
+
+  // 4. Always revalidate or redirect
+  revalidatePath('/students')
+}
+```
+
+## TypeScript Patterns
+
+### Type Definition Strategy
+- **Props**: Inline for simple components, separate interfaces for complex ones
+- **API Types**: Generated from schema or OpenAPI specs
+- **Utility Types**: Leverage TypeScript's built-in utility types
+- **Strict Mode**: Always enabled with `strict: true` in tsconfig
+
+### Generic Patterns
+```typescript
+// Generic hook pattern
+function useApi<T>(endpoint: string): {
+  data: T | null
+  loading: boolean
+  error: Error | null
+} {
+  // Implementation
+}
+
+// Generic component pattern
+interface TableProps<T> {
+  data: T[]
+  columns: Column<T>[]
+  onRowClick?: (row: T) => void
+}
+```
+
+## File Organization
+
+### Project Structure
+```
+src/
+├── app/                    # Next.js app router
+│   ├── (auth)/            # Route groups
+│   ├── api/               # API routes
+│   └── globals.css        # Global styles
+├── components/            # Reusable components
+├── lib/                   # Utilities and configurations
+├── hooks/                 # Custom React hooks
+├── types/                 # TypeScript type definitions
+└── constants/             # Application constants
+```
+
+### Import Organization
+```typescript
+// 1. React and Next.js imports
+import { useState } from 'react'
+import { redirect } from 'next/navigation'
+
+// 2. Third-party libraries
+import { clsx } from 'clsx'
+import { z } from 'zod'
+
+// 3. Internal utilities and types
+import { cn } from '@/lib/utils'
+import type { User } from '@/types'
+
+// 4. Internal components
+import { Button } from '@/components/atom/button'
+import { UserCard } from '@/components/molecule/user-card'
+```
+
+## Styling Patterns
+
+### Tailwind CSS Organization
+- **Component styles**: Compose utilities with `cn()` helper
+- **Consistent spacing**: Use Tailwind's spacing scale
+- **Responsive design**: Mobile-first responsive patterns
+- **Dark mode**: CSS variables with Tailwind's dark mode
+
+### shadcn/ui Integration
+```typescript
+// Extend base components
+const buttonVariants = cva(
+  "inline-flex items-center justify-center rounded-md text-sm font-medium",
+  {
+    variants: {
+      variant: {
+        default: "bg-primary text-primary-foreground hover:bg-primary/90",
+        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+      },
+      size: {
+        default: "h-10 px-4 py-2",
+        sm: "h-9 rounded-md px-3",
+        lg: "h-11 rounded-md px-8",
+      },
+    },
+  }
+)
+```
+
+## Error Handling
+
+### Graceful Error Boundaries
+```typescript
+// Error boundary pattern
+export function ErrorBoundary({ children }: { children: React.ReactNode }) {
+  return (
+    <ErrorBoundaryProvider fallback={<ErrorFallback />}>
+      {children}
+    </ErrorBoundaryProvider>
+  )
+}
+
+// Form error handling
+export function ContactForm() {
+  const [errors, setErrors] = useState<Record<string, string>>({})
+  
+  const handleSubmit = async (formData: FormData) => {
+    try {
+      await submitContact(formData)
+    } catch (error) {
+      if (error instanceof ValidationError) {
+        setErrors(error.fieldErrors)
+      }
+    }
+  }
+}
+```
+
+## Performance Patterns
+
+### Optimization Strategies
+- **Code splitting**: Dynamic imports for large components
+- **Image optimization**: Next.js Image component with proper sizing
+- **Bundle analysis**: Regular bundle size monitoring
+- **Caching**: Strategic use of React Server Components caching
+
+### Loading States
+```typescript
+// Consistent loading pattern
+export function UserProfile({ userId }: { userId: string }) {
+  const { data: user, isLoading } = useUser(userId)
+  
+  if (isLoading) return <UserProfileSkeleton />
+  if (!user) return <UserNotFound />
+  
+  return <UserProfileContent user={user} />
+}
+```
+
+---
+
+## Pattern Adoption
+
+These patterns are **living guidelines** that evolve with our codebase. They're documented in our [contributing guide](/docs/contributing) and enforced through ESLint rules, Prettier configuration, and code review processes.
+
+When in doubt, prioritize **consistency** over personal preference. Our patterns serve the community, ensuring that any developer can jump into any part of the codebase and immediately understand the structure and conventions.
+
+Every pattern has been battle-tested across multiple projects and reflects real-world usage patterns from our [open source repositories](https://github.com/abdout/databayt). They balance developer experience with maintainability, type safety with flexibility.
+
+
+

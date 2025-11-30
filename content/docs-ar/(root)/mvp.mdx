@@ -1,0 +1,243 @@
+---
+title: "المنتج الأدنى القابل للتطبيق"
+description: "خارطة تنفيذ المنتج الأدنى القابل للتطبيق لمنصة هوجوورتس لأتمتة المدارس - 9 ملاحم أساسية"
+---
+
+**انقر على شارة readme و issue في الملاحم أدناه لمعرفة المزيد.**
+
+يمكن للمدرسة تسجيل الطلاب، وإدارة الفصول، وتتبع الحضور، وتقييم الواجبات، وتحصيل الرسوم، والتواصل مع أولياء الأمور - كل ذلك في منصة واحدة.
+
+<div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6 not-prose">
+  <div className="border rounded-lg p-6">
+    <h3 className="text-base font-medium mb-2">البنية التحتية</h3>
+    <p className="text-sm text-muted-foreground">بنية متعددة المستأجرين، توجيه النطاقات الفرعية، والإعداد التقني الأساسي.</p>
+  </div>
+  <div className="border rounded-lg p-6">
+    <h3 className="text-base font-medium mb-2">المصادقة</h3>
+    <p className="text-sm text-muted-foreground">إدارة المستخدمين، التحكم في الوصول المستند إلى الأدوار، وتدفقات المصادقة الآمنة.</p>
+  </div>
+  <div className="border rounded-lg p-6">
+    <h3 className="text-base font-medium mb-2">التكوين</h3>
+    <p className="text-sm text-muted-foreground">ملف تعريف المدرسة، الهيكل الأكاديمي، العلامة التجارية، والإعدادات.</p>
+  </div>
+  <div className="border rounded-lg p-6">
+    <h3 className="text-base font-medium mb-2">الطالب</h3>
+    <p className="text-sm text-muted-foreground">دورة حياة الطالب من التسجيل إلى التخرج مع الملفات الشخصية.</p>
+  </div>
+  <div className="border rounded-lg p-6">
+    <h3 className="text-base font-medium mb-2">القوائم</h3>
+    <p className="text-sm text-muted-foreground">المواد، الفصول، المعلمون، أولياء الأمور، وسجلات الموظفين.</p>
+  </div>
+  <div className="border rounded-lg p-6">
+    <h3 className="text-base font-medium mb-2">الحضور</h3>
+    <p className="text-sm text-muted-foreground">تتبع الحضور اليومي، التقارير، وإدارة الغياب.</p>
+  </div>
+  <div className="border rounded-lg p-6">
+    <h3 className="text-base font-medium mb-2">الامتحانات</h3>
+    <p className="text-sm text-muted-foreground">جدولة الامتحانات، الدرجات، النتائج، وبطاقات التقارير.</p>
+  </div>
+  <div className="border rounded-lg p-6">
+    <h3 className="text-base font-medium mb-2">الجدول الزمني</h3>
+    <p className="text-sm text-muted-foreground">جدولة الفصول، إدارة الحصص، وكشف التعارضات.</p>
+  </div>
+  <div className="border rounded-lg p-6">
+    <h3 className="text-base font-medium mb-2">القبول</h3>
+    <p className="text-sm text-muted-foreground">معالجة الطلبات، سير عمل التسجيل، وإدارة التسجيل.</p>
+  </div>
+</div>
+
+---
+
+## الملحمة 01: البنية التحتية
+
+إعداد الأساس حيث تحصل كل مدرسة على نطاقها الفرعي الخاص مع بيانات معزولة.
+رائع لتعلم التطبيقات متعددة المستأجرين، والوسيطات، وكيفية الحفاظ على البيانات منفصلة وآمنة.
+
+<div className="flex gap-2 mt-4 mb-4 not-prose">
+  <span className="px-2 py-1 text-xs bg-muted rounded">15 قصة</span>
+  <span className="px-2 py-1 text-xs bg-red-500/20 text-red-700 dark:text-red-400 rounded font-medium">عالي</span>
+</div>
+
+- مخطط قاعدة بيانات متعدد المستأجرين مع نطاق schoolId
+- توجيه النطاقات الفرعية (school.databayt.org)
+- Next.js 16 + React 19 + Prisma 6 مُكوَّن
+- خط أنابيب CI/CD مع اختبارات آلية
+- مراقبة الأخطاء (Sentry) تعمل
+- التدويل (العربية/الإنجليزية) يعمل
+- بيئات التطوير/الاختبار/الإنتاج
+- نمط singleton لقاعدة البيانات مُنفَّذ
+- بنية الاختبار (Vitest، Playwright)
+- Tailwind CSS 4 مع دعم RTL/LTR
+
+---
+
+## الملحمة 02: المصادقة
+
+بناء تسجيل دخول آمن مع البريد الإلكتروني وكلمة المرور والموفرين الاجتماعيين بالإضافة إلى أدوار المستخدمين للمعلمين والطلاب وأولياء الأمور.
+مثالي لتعلم الرموز والمسارات المحمية وأنماط المصادقة الحديثة.
+
+<div className="flex gap-2 mt-4 mb-4 not-prose">
+  <span className="px-2 py-1 text-xs bg-muted rounded">18 قصة</span>
+  <span className="px-2 py-1 text-xs bg-red-500/20 text-red-700 dark:text-red-400 rounded font-medium">عالي</span>
+</div>
+
+- NextAuth v5 مُكوَّن مع استراتيجية JWT
+- مصادقة البريد الإلكتروني/كلمة المرور مع تجزئة bcrypt
+- موفرو OAuth (جوجل، فيسبوك) يعمل
+- المصادقة الثنائية (2FA) وظيفية
+- أدوار DEVELOPER، ADMIN، TEACHER، STUDENT، GUARDIAN، ACCOUNTANT، STAFF، USER
+- التحكم في الوصول المستند إلى الأدوار مُطبَّق على المسارات
+- تدفق إعادة تعيين كلمة المرور كامل
+- إدارة الجلسات مع التجديد التلقائي
+
+---
+
+## الملحمة 03: التكوين
+
+السماح لكل مدرسة بتخصيص مظهرها بالشعارات والألوان والعلامة التجارية.
+طريقة رائعة لتعلم معالجة النماذج وتحميل الملفات وأنظمة السمات.
+
+<div className="flex gap-2 mt-4 mb-4 not-prose">
+  <span className="px-2 py-1 text-xs bg-muted rounded">12 قصة</span>
+  <span className="px-2 py-1 text-xs bg-yellow-500/20 text-yellow-700 dark:text-yellow-400 rounded font-medium">متوسط</span>
+</div>
+
+- إنشاء وإدارة ملف تعريف المدرسة
+- إعداد السنة الأكاديمية مع تواريخ البداية/النهاية
+- تكوين الفصول/الفترات
+- تكوين المستوى الدراسي/الصف
+- إدارة الأقسام
+- العلامة التجارية للمدرسة (تحميل الشعار)
+- منتقي الألوان لألوان المدرسة
+- تكوين المنطقة الزمنية
+
+---
+
+## الملحمة 04: الطالب
+
+إدارة رحلة الطالب الكاملة من التسجيل إلى التخرج مع ملفات شخصية غنية وروابط أولياء الأمور.
+مثالي لتعلم النماذج المعقدة وعلاقات البيانات والتعامل مع الكثير من السجلات بكفاءة.
+
+<div className="flex gap-2 mt-4 mb-4 not-prose">
+  <span className="px-2 py-1 text-xs bg-muted rounded">20 قصة</span>
+  <span className="px-2 py-1 text-xs bg-red-500/20 text-red-700 dark:text-red-400 rounded font-medium">عالي</span>
+</div>
+
+- نموذج تسجيل الطالب يعمل
+- هيكل صفحة ملف الطالب (7 علامات تبويب)
+- علامة المعلومات الشخصية كاملة
+- علامة المعلومات الأكاديمية كاملة
+- علامة السجلات الصحية كاملة
+- علامة المستندات مع قدرة التحميل
+- علامة الإنجازات مع التتبع
+- وظيفة بحث الطلاب
+- نظام التصفية المتقدم
+- علاقات وربط أولياء الأمور
+
+---
+
+## الملحمة 05: القوائم
+
+تتبع المواد والفصول والمعلمين وأولياء الأمور والموظفين مع صفحات الملفات وجداول البيانات.
+مثالي لإتقان عمليات CRUD وفهم كيفية ارتباط الكيانات ببعضها.
+
+<div className="flex gap-2 mt-4 mb-4 not-prose">
+  <span className="px-2 py-1 text-xs bg-muted rounded">18 قصة</span>
+  <span className="px-2 py-1 text-xs bg-red-500/20 text-red-700 dark:text-red-400 rounded font-medium">عالي</span>
+</div>
+
+- إنشاء كتالوج المواد
+- إدارة المواد (عمليات CRUD)
+- إنشاء الفصول مع التفاصيل
+- إدارة سعة الفصل
+- تسجيل الطلاب في الفصول
+- تعيين المعلمين للفصول
+- تخصيص المعلم-المادة
+- نموذج إنشاء ملف المعلم
+- إدارة ملف ولي الأمر/الوصي
+
+---
+
+## الملحمة 06: الحضور
+
+تتبع من يحضر كل يوم مع التأشير البسيط أو خيارات مثل رموز QR وتسجيل الموقع.
+رائع لتعلم التحديثات الفورية وتصور البيانات وأنظمة الإشعارات.
+
+<div className="flex gap-2 mt-4 mb-4 not-prose">
+  <span className="px-2 py-1 text-xs bg-muted rounded">12 قصة</span>
+  <span className="px-2 py-1 text-xs bg-red-500/20 text-red-700 dark:text-red-400 rounded font-medium">عالي</span>
+</div>
+
+- واجهة تأشير الحضور اليومي
+- خيارات حالة الحضور (حاضر/غائب/متأخر/معذور)
+- تأشير الحضور بالجملة
+- تقارير الحضور حسب الفصل
+- تقارير الحضور حسب الطالب
+- ملخص الحضور الشهري
+- إشعار الغياب لأولياء الأمور
+- تتبع التأخير
+
+---
+
+## الملحمة 07: الامتحانات
+
+التعامل مع الامتحانات من الجدولة إلى التقييم، وحساب المعدلات، وإنشاء بطاقات التقارير بصيغة PDF.
+طريقة ممتعة لتعلم إنشاء PDF وحسابات الدرجات والعمل مع البيانات التعليمية.
+
+<div className="flex gap-2 mt-4 mb-4 not-prose">
+  <span className="px-2 py-1 text-xs bg-muted rounded">15 قصة</span>
+  <span className="px-2 py-1 text-xs bg-yellow-500/20 text-yellow-700 dark:text-yellow-400 rounded font-medium">متوسط</span>
+</div>
+
+- إنشاء وجدولة الامتحانات
+- تكوين نوع الامتحان (نصف الفصل/نهائي/اختبار قصير)
+- واجهة إدخال الدرجات
+- تكوين مقياس الدرجات
+- حساب النتائج (المعدلات الموزونة)
+- إنشاء بطاقة التقرير
+- قوالب بطاقات التقارير
+- إشعار النتائج لأولياء الأمور
+
+---
+
+## الملحمة 08: الجدول الزمني
+
+بناء منشئ جدول مرئي مع السحب والإفلات، ومنع الحجز المزدوج للمعلمين أو القاعات.
+ممتاز لتعلم واجهات السحب والإفلات وحل مشاكل الجدولة الحقيقية.
+
+<div className="flex gap-2 mt-4 mb-4 not-prose">
+  <span className="px-2 py-1 text-xs bg-muted rounded">12 قصة</span>
+  <span className="px-2 py-1 text-xs bg-yellow-500/20 text-yellow-700 dark:text-yellow-400 rounded font-medium">متوسط</span>
+</div>
+
+- منشئ الجدول المرئي
+- جدولة السحب والإفلات
+- الجدولة حسب الحصة
+- إدارة الاستراحات في الجدول
+- تخصيص القاعات
+- كشف تعارض المعلمين
+- كشف تعارض القاعات
+- عرض جدول المعلم
+- عرض جدول الفصل
+- تصدير الجدول (PDF/طباعة)
+
+---
+
+## الملحمة 09: القبول
+
+إرشاد الطلاب الجدد خلال التقديمات من ملء النماذج إلى القبول والتسجيل.
+مقدمة رائعة لأنظمة سير العمل وآلات الحالة في التطبيقات الحقيقية.
+
+<div className="flex gap-2 mt-4 mb-4 not-prose">
+  <span className="px-2 py-1 text-xs bg-muted rounded">10 قصص</span>
+  <span className="px-2 py-1 text-xs bg-green-500/20 text-green-700 dark:text-green-400 rounded font-medium">منخفض</span>
+</div>
+
+- نموذج التقديم عبر الإنترنت
+- تتبع حالة التقديم
+- تحميل المستندات للتقديمات
+- سير عمل مراجعة التقديم
+- قرار القبول (قبول/رفض/قائمة انتظار)
+- تأكيد التسجيل
+- تكامل دفع الرسوم
+- تقارير القبول

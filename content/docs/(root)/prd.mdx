@@ -1,0 +1,432 @@
+---
+title: PRD
+description: Product Requirements Document for Hogwarts covering functional and non-functional requirements.
+---
+
+## Executive Summary
+
+The global education sector manages over 2 million schools serving 1.5 billion students, yet 78% still rely on paper-based or fragmented digital systems. This inefficiency costs the industry $12B annually in wasted administrative processes, with each administrator losing 40 hours monthly to manual tasks. Meanwhile, 65% of parents express dissatisfaction with school communication, and manual attendance/grade tracking suffers from a 23% error rate.
+
+Hogwarts is envisioned as the world's most comprehensive, accessible, and user-friendly school management platform—a true operating system for educational institutions. We will revolutionize school administration by providing an all-in-one, cloud-based solution that serves schools, teachers, students, and parents globally.
+
+---
+
+## Project Classification
+
+- **Type:** SaaS B2B Multi-Tenant Web Application
+- **Domain:** Education Technology (EdTech) - K-12 School Management
+- **Complexity:** Level 4 (Enterprise-scale system, 200+ functional requirements, highly regulated domain)
+- **Target Users:** School administrators, teachers, students, parents, accountants, staff
+
+### Market Size (Middle East & Africa)
+
+The MEA region represents a high-growth opportunity for school management systems:
+
+**EdTech Market:**
+
+- MEA education technology market: **$14.4B** (2024) → **$33.0B** by 2030 (CAGR ~14.6%)
+- Middle East EdTech market: **$11.3B** (2024) → **$27.0B** by 2033 (CAGR ~9.1%)
+- K-12 segment holds **44%** of the 2025 cohort, the largest revenue-generating sector
+- GCC EdTech market: **$3.02B** (2024) → **$4.47B** by 2030 (CAGR ~6.74%)
+
+**Country Wise:**
+
+| Country | Size | Growth | Notes |
+|---------|------|--------|-------|
+| Sudan | Emerging | - | Arabic-first target market |
+| Saudi Arabia | $2.32B | 12.77% CAGR | Largest MENA market |
+| Egypt | $302M | 14.0% CAGR | 234 active EdTech companies |
+| South Africa | $929M | 11.78% CAGR | 40% of Africa EdTech 50 |
+
+### Domain Context
+
+The K-12 education sector operates under unique constraints:
+
+- **Regulatory Compliance** - FERPA, COPPA, GDPR, and varying state/regional mandates
+- **Accessibility Requirements** - WCAG 2.1 AA compliance, multilingual support, RTL languages, offline capabilities
+- **Educational Standards** - National curriculum frameworks, standardized assessment reporting, academic calendar variations
+- **Security & Safety** - Child safety protocols, data encryption, multi-tenant isolation, audit trails
+- **Financial Complexity** - Multi-currency, complex fee structures, scholarship management, payment gateway integration
+
+---
+
+## Too Long; Didn't Read
+
+SaaS B2B multi-tenant school management system. Next.js 16 + React 19 + TypeScript + Prisma + PostgreSQL. A school can enroll students, manage classes, track attendance, grade assignments, collect fees, and communicate with parents—all within a single platform.
+
+---
+
+## Success Criteria
+
+Success is measured by genuine transformation of educational operations and stakeholder satisfaction.
+
+### Primary Metrics
+
+| Metric | Baseline | Target |
+|--------|----------|--------|
+| Administrator Time Savings | 40 hours/month lost | 8 hours/month (80% reduction) |
+| Parental Engagement | 65% dissatisfaction | 85% satisfaction (NPS) |
+| Data Accuracy | 23% error rate | \<1% error rate |
+| School Operational Cost | $15K-$50K/year | 60% reduction |
+| Teacher Admin Time | 11 hours/week | 4 hours/week (64% reduction) |
+
+### Business Metrics
+
+**Year 1:** 100 schools, $240K ARR, 98% CSAT, \<3% monthly churn
+
+**Year 3:** 2,500 schools, $6M ARR, 85+ NPS, \<1.5% monthly churn
+
+**Year 5:** 15,000 schools across 50+ countries, $36M ARR, IPO-ready metrics
+
+### Impact Milestones
+
+- Zero student data breaches
+- 1M+ students having better educational experiences
+- 100+ community-contributed features
+- Government partnerships in 10+ countries
+- Industry recognition as #1 open-source school management system
+
+---
+
+## MVP Scope
+
+A school can enroll students, manage classes, track attendance, grade assignments, collect fees, and communicate with parents—all within a single platform.
+
+See [MVP](/docs/mvp) for detailed epic breakdown with story-level tracking.
+
+<div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6 not-prose">
+  <div className="border rounded-lg p-6">
+    <h3 className="text-base font-medium mb-2">Infrastructure</h3>
+    <p className="text-sm text-muted-foreground">Multi-tenant architecture, subdomain routing, and core technical setup.</p>
+  </div>
+  <div className="border rounded-lg p-6">
+    <h3 className="text-base font-medium mb-2">Authentication</h3>
+    <p className="text-sm text-muted-foreground">User management, role-based access control, and secure auth flows.</p>
+  </div>
+  <div className="border rounded-lg p-6">
+    <h3 className="text-base font-medium mb-2">Configuration</h3>
+    <p className="text-sm text-muted-foreground">School profile, academic structure, branding, and settings.</p>
+  </div>
+  <div className="border rounded-lg p-6">
+    <h3 className="text-base font-medium mb-2">Student</h3>
+    <p className="text-sm text-muted-foreground">Student lifecycle from enrollment to graduation with profiles.</p>
+  </div>
+  <div className="border rounded-lg p-6">
+    <h3 className="text-base font-medium mb-2">Listings</h3>
+    <p className="text-sm text-muted-foreground">Subjects, classes, teachers, parents, and staff records.</p>
+  </div>
+  <div className="border rounded-lg p-6">
+    <h3 className="text-base font-medium mb-2">Attendance</h3>
+    <p className="text-sm text-muted-foreground">Daily attendance tracking, reports, and absence management.</p>
+  </div>
+  <div className="border rounded-lg p-6">
+    <h3 className="text-base font-medium mb-2">Exam</h3>
+    <p className="text-sm text-muted-foreground">Exam scheduling, grading, results, and report cards.</p>
+  </div>
+  <div className="border rounded-lg p-6">
+    <h3 className="text-base font-medium mb-2">Timetable</h3>
+    <p className="text-sm text-muted-foreground">Class scheduling, period management, and conflict detection.</p>
+  </div>
+  <div className="border rounded-lg p-6">
+    <h3 className="text-base font-medium mb-2">Admission</h3>
+    <p className="text-sm text-muted-foreground">Application processing, enrollment workflow, and registration management.</p>
+  </div>
+</div>
+
+---
+
+## Growth Phase
+
+Post-MVP features that expand capabilities and market reach:
+
+- AI-powered predictive analytics
+- Digital classroom & LMS
+- Comprehensive finance module (double-entry bookkeeping, payroll)
+- Library management
+- Native mobile applications (React Native)
+- Internationalization expansion (French, Spanish, Hindi, Mandarin)
+- Regional compliance certifications
+
+---
+
+## Vision
+
+Long-term features that position Hogwarts as the definitive education platform:
+
+- AI Teaching Assistant
+- Personalized learning paths
+- Marketplace & ecosystem
+- Blockchain credentials
+- VR/AR learning experiences
+- District-level management
+- Global teacher collaboration network
+
+---
+
+## Tech Stack
+
+Multi-tenant subdomain-based architecture where each school gets isolated data via `schoolId` scoping. Stateless serverless functions on Vercel with 8-role RBAC system (Developer, Admin, Teacher, Student, Guardian, Accountant, Staff, User).
+
+<div className="flex flex-wrap gap-2 mt-4 mb-6 not-prose">
+  <span className="px-2 py-1 text-xs bg-muted rounded">Next.js</span>
+  <span className="px-2 py-1 text-xs bg-muted rounded">React</span>
+  <span className="px-2 py-1 text-xs bg-muted rounded">TypeScript</span>
+  <span className="px-2 py-1 text-xs bg-muted rounded">Prisma</span>
+  <span className="px-2 py-1 text-xs bg-muted rounded">PostgreSQL</span>
+  <span className="px-2 py-1 text-xs bg-muted rounded">NextAuth</span>
+  <span className="px-2 py-1 text-xs bg-muted rounded">Tailwind CSS</span>
+  <span className="px-2 py-1 text-xs bg-muted rounded">shadcn/ui</span>
+  <span className="px-2 py-1 text-xs bg-muted rounded">Vercel</span>
+</div>
+
+---
+
+## Multi-Tenancy Pattern
+
+**Critical Security Rule:**
+
+```typescript
+// NEVER do this
+await prisma.student.findMany()
+
+// ALWAYS scope by schoolId
+await prisma.student.findMany({
+  where: { schoolId }
+})
+```
+
+**Data Isolation:**
+
+- `@@unique([schoolId, email])` on all models
+- Automated tests verify no cross-tenant leaks
+- Audit trails: `schoolId` + `requestId` + `userId` + `timestamp`
+
+**Environment Routing:**
+
+```text
+Production:   school.databayt.org → /[lang]/s/school/...
+Preview:      tenant---branch.vercel.app → /[lang]/s/tenant/...
+Development:  subdomain.localhost:3000 → /[lang]/s/subdomain/...
+Custom:       www.theirschool.com (CNAME) → Hogwarts platform
+```
+
+---
+
+## Role-Based Access Control
+
+| Role | Key Permissions |
+|------|-----------------|
+| DEVELOPER | Access all schools, platform configuration, monitoring |
+| ADMIN | Full access within school, manage users, financial oversight |
+| TEACHER | Manage assigned classes, grade assignments, mark attendance |
+| STUDENT | View own grades, attendance, assignments, submit work |
+| GUARDIAN | View linked students' data, pay fees, receive notifications |
+| ACCOUNTANT | Manage finances, generate reports (no academic data) |
+| STAFF | Limited operational module access |
+| USER | Minimal access, pending role assignment |
+
+**Permission Matrix:**
+
+- Granular permissions: view/create/edit/delete/approve per feature
+- Department-based access: Teachers only see students in their classes
+- Data visibility rules: Students see only their own data
+- Delegation: Admins can delegate permissions temporarily
+
+---
+
+## Subscription Tiers
+
+| Tier | Price | Limits |
+|------|-------|--------|
+| FREE | $0 | 100 students, 1GB storage, community support |
+| PRO | $1.50/student/month | 10GB, priority support, custom branding, API 1K req/hr |
+| ENTERPRISE | $1.00/student/month | Unlimited storage/API, white-label, SLA 99.9%, SSO |
+
+**Billing:** Stripe Subscriptions, monthly/annual (15% discount), 14-day free trial, metered per-student pricing.
+
+---
+
+## API & Integrations
+
+**RESTful API v1:**
+
+- OpenAPI 3.0 spec with Swagger UI
+- API key auth + rate limiting (100-unlimited req/hr by tier)
+- Webhooks: `student.enrolled`, `payment.received`, `grade.updated`
+- HMAC-SHA256 signing, retry logic with exponential backoff
+
+**SSO (Enterprise):**
+
+- SAML 2.0 (Okta, Azure AD, OneLogin)
+- OAuth 2.0 (Google Workspace, Microsoft 365)
+- SCIM (user provisioning)
+
+**Third-Party Integrations:**
+
+- Google Workspace, Microsoft 365, Zoom
+- Stripe (payments), Twilio (SMS), Resend (email)
+- QuickBooks/Xero (accounting)
+- Canvas, Blackboard, Moodle (LTI)
+
+---
+
+## Non-Functional Requirements
+
+### Performance
+
+- Page load: Initial \<2s (3G), subsequent \<500ms (cached)
+- API response: 95th percentile \<500ms, 99th \<1s
+- Database queries: No N+1, query time \<100ms for 95%
+- Concurrent users: 10,000 per school without degradation
+- TTFB: \<200ms via edge caching
+
+### Security
+
+- Data Encryption: AES-256 at rest, TLS 1.3 in transit
+- Authentication: Bcrypt (cost 12), JWT (24h), 2FA, rate limiting
+- Authorization: RBAC on every route, multi-tenant isolation
+- Input Validation: Zod (server-side), SQL injection protection, XSS prevention
+- Audit Logging: All modifications logged, 7-year retention
+
+### Scalability
+
+- Database: Prisma connection pooling, Neon Serverless PostgreSQL
+- Application: Vercel serverless, stateless architecture, edge caching
+- File Storage: S3-compatible (Cloudflare R2), CDN delivery
+- Load Testing: Quarterly tests simulating 50K concurrent users
+
+### Accessibility
+
+- WCAG 2.1 AA compliance
+- Keyboard navigation, screen reader support
+- Color contrast minimum 4.5:1
+- Layout adapts to 200% zoom
+- Automated checks in CI/CD (axe-core)
+
+### Compliance
+
+- FERPA (US student privacy)
+- GDPR (EU data protection)
+- COPPA (parental consent \<13 years)
+- WCAG 2.1 AA (accessibility)
+
+---
+
+## Design System
+
+**Typography:**
+
+- Arabic: Tajawal
+- English: Inter
+- Use semantic HTML (`<h1>-<h6>`, `<p>`)
+- NO hardcoded `text-*` or `font-*` classes
+
+**Colors (OKLCH):**
+
+- Primary: Blue (#3B82F6)
+- Secondary: Amber (#F59E0B)
+- Success: Green (#10B981)
+- Warning: Orange (#F97316)
+- Error: Red (#EF4444)
+
+**Components:**
+
+- shadcn/ui (Radix UI primitives)
+- Responsive containers (`layout-container`)
+- Dark/light theme (next-themes)
+
+---
+
+## Internationalization & RTL
+
+**Locales:** en, ar
+
+**RTL Support:**
+
+- Bidirectional layouts (mirrors for Arabic)
+- Mixed content support
+- Date/number localization
+- Language toggle (persistent)
+
+**URL Structure:**
+
+```text
+/[lang]/path → /en/docs, /ar/docs
+/[lang]/s/[school]/path → /en/s/demo/dashboard
+```
+
+---
+
+## Development Approach
+
+**Agile Methodology:**
+
+- 1-week sprints
+- Weekly standups via Google Meet
+- Sprint planning, review, retrospective
+- CI/CD pipeline
+
+**Quality Gates:**
+
+- Code review (minimum 1 approver)
+- 80%+ code coverage for critical paths
+- No critical/high security vulnerabilities
+- All accessibility checks passing
+- Performance budgets met (Lighthouse ≥90)
+
+**Tech Debt Management:**
+
+- 20% sprint capacity reserved
+- Monthly architecture review
+- 6-month deprecation notice for breaking changes
+
+---
+
+## Testing Strategy
+
+**Required:**
+
+- Multi-tenant isolation (automated suite)
+- Performance benchmarks (10K concurrent users)
+- Security penetration (annual)
+- Accessibility audits (quarterly)
+
+**Coverage Targets:**
+
+- Unit tests: 80%+ for business logic
+- Integration tests: All API endpoints
+- E2E tests: Critical user flows
+- Visual regression: Percy or Chromatic
+
+**Testing Pyramid:**
+
+- 70% Unit tests (Jest, React Testing Library)
+- 20% Integration tests (Supertest)
+- 10% E2E tests (Playwright)
+
+---
+
+## Risk Management
+
+| Risk | Severity | Mitigation |
+|------|----------|------------|
+| Data breach | Critical | Penetration testing, bug bounty |
+| Multi-tenant leak | Critical | Isolation tests, schoolId scoping |
+| Performance issues | High | Load testing, caching |
+| Non-compliance | Critical | Legal review, audits |
+| Low adoption | High | User research, pilots |
+| Integration failures | Medium | Retry logic, monitoring |
+| Competition | Medium | Rapid iteration |
+| Funding constraints | Medium | Lean MVP, early revenue |
+
+---
+
+## References
+
+- [MVP](/docs/mvp) - Detailed epic breakdown with story tracking
+- [Architecture](/docs/architecture) - System design and specs
+- [Pattern](/docs/pattern) - Best practices and standards
+
+---
+
+_Developer-focused PRD for Hogwarts school management platform._

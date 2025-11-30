@@ -1,0 +1,153 @@
+---
+title: "بيئة التطوير المحلية"
+description: "دليل مفصل لإعداد البيئة وتشغيل الخادم المحلي"
+---
+
+import Image from "next/image"
+
+## المتطلبات المسبقة
+
+قبل البدء، تأكد من تثبيت ما يلي:
+
+- **[Node.js](https://nodejs.org/)** (الإصدار 22 أو أعلى، يُنصح بإصدار LTS)
+- **[Git](https://git-scm.com/)** (التحكم في الإصدارات)
+- **[IDE](https://code.visualstudio.com/)** (يُنصح بـ VS Code)
+
+### الخطوة 1: عمل Fork للمشروع
+
+ابدأ بإنشاء نسختك الخاصة من المستودع على GitHub.
+
+1. **انتقل إلى [مستودع Hogwarts](https://github.com/databayt/hogwarts)**
+2. **انقر على زر "Fork"** في الزاوية العلوية اليمنى
+
+<div className="my-8 border rounded-lg overflow-hidden">
+  <Image
+    src="/localhost/fork.png"
+    alt="انقر على زر Fork في صفحة مستودع GitHub"
+    width={800}
+    height={400}
+    className="w-full h-auto"
+  />
+</div>
+
+### الخطوة 2: إنشاء Fork الخاص بك
+
+تأكد من أن اسم المستودع متاح وأنشئ Fork الخاص بك.
+
+1. **تحقق من أن اسم المستودع** متاح
+2. **احتفظ بالإعدادات الافتراضية** (إلا إذا كنت بحاجة لتغييرها)
+3. **انقر على "Create fork"** لإتمام العملية
+
+<div className="my-8 border rounded-lg overflow-hidden">
+  <Image
+    src="/localhost/create-fork.png"
+    alt="مربع حوار إنشاء fork مع اسم المستودع والإعدادات"
+    width={800}
+    height={400}
+    className="w-full h-auto"
+  />
+</div>
+
+### الخطوة 3: فتح VS Code
+
+شغّل محرر الكود وتحضّر لاستنساخ المستودع.
+
+1. **افتح نافذة جديدة** في VS Code
+2. **انقر على أيقونة Git** في الشريط الجانبي الأيسر
+3. **انقر على Clone**
+4. **الصق عنوان URL للمستودع الخاص بك** أو اتصل بـ GitHub من شريط البحث العلوي
+
+<div className="my-8 border rounded-lg overflow-hidden">
+  <Image
+    src="/localhost/clone.png"
+    alt="محرر VS Code مع خيار استنساخ المستودع محدد"
+    width={800}
+    height={400}
+    className="w-full h-auto"
+  />
+</div>
+
+### الخطوة 4: الاستنساخ من GitHub
+
+احصل على عنوان URL لمستودعك المُفَرَّع واستنسخه محلياً.
+
+1. **ارجع إلى مستودعك المُفَرَّع** على GitHub
+2. **انقر على زر "Code" الأخضر**
+3. **انسخ عنوان HTTPS URL** إلى الحافظة
+4. **الصقه في مربع حوار الاستنساخ في محررك**
+
+<div className="my-8 border rounded-lg overflow-hidden">
+  <Image
+    src="/localhost/clone-from-github.png"
+    alt="مربع حوار GitHub clone يظهر زر نسخ HTTPS URL"
+    width={800}
+    height={400}
+    className="w-full h-auto"
+  />
+</div>
+
+### الخطوة 5: اختيار الدليل المحلي
+
+اختر أين تريد تخزين المشروع على جهازك.
+
+1. **اختر دليلاً** لمشاريعك (مثل `~/Documents/projects/`)
+2. **أنشئ مجلداً جديداً** إذا لزم الأمر
+3. **حدد الموقع** وأكد
+
+<div className="my-8 border rounded-lg overflow-hidden">
+  <Image
+    src="/localhost/repo-destination.png"
+    alt="مستكشف الملفات يظهر اختيار الدليل للاستنساخ"
+    width={800}
+    height={400}
+    className="w-full h-auto"
+  />
+</div>
+
+### الخطوة 6: الفتح في المحرر
+
+افتح المشروع المستنسخ في محرر الكود الخاص بك.
+
+1. **انتظر اكتمال عملية الاستنساخ**
+2. **انقر على "Open"** عند المطالبة
+3. **مشروعك جاهز الآن** للتطوير
+
+<div className="my-8 border rounded-lg overflow-hidden">
+  <Image
+    src="/localhost/open-repo.png"
+    alt="المشروع مفتوح بنجاح في VS Code أو Cursor"
+    width={800}
+    height={400}
+    className="w-full h-auto"
+  />
+</div>
+
+### الخطوة 7: تثبيت التبعيات
+
+استخدم pnpm لتثبيت جميع التبعيات المطلوبة.
+
+1. **افتح الطرفية المدمجة** (`Ctrl/Cmd + ~`)
+2. **شغّل أمر التثبيت**:
+
+```bash
+pnpm install
+```
+
+3. **انتظر اكتمال التثبيت**
+
+### الخطوة 8: إعداد البيئة
+
+1. **أنشئ ملف `.env`** في المجلد الجذر
+2. **الصق المحتوى** من مجموعة WhatsApp
+
+### الخطوة 9: بدء خادم التطوير
+
+شغّل خادم التطوير وشاهد تطبيقك يعمل.
+
+1. **شغّل أمر التطوير**:
+```bash
+pnpm dev
+```
+
+2. **انتظر بدء الخادم**
+3. **افتح متصفحك** على `http://localhost:3000`

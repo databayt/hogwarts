@@ -1,0 +1,761 @@
+---
+title: "Internationalization"
+description: "Complete guide to internationalization with Arabic (RTL) and English (LTR) support"
+---
+
+## Overview
+
+This application provides full internationalization support with Arabic (RTL) as a first-class citizen alongside English (LTR). The platform respects user preferences with intelligent locale detection and persistence.
+
+### Supported Languages
+
+| Locale | Name | Direction | Flag | Currency |
+|--------|------|-----------|------|----------|
+| `en` | English | LTR | US | USD |
+| `ar` | Arabic | RTL | SA | SAR |
+
+### Architecture
+
+- **URL-based routing**: `/[lang]/path` (e.g., `/en/dashboard`, `/ar/dashboard`)
+- **Locale detection**: Accept-Language header with cookie persistence
+- **Direction switching**: `dir` attribute on `<html>` element
+- **Translation system**: JSON dictionaries with async loading
+
+---
+
+## Quick Start
+
+### Server Components
+
+```tsx
+import { getDictionary } from "@/components/local/dictionaries";
+import type { Locale } from "@/components/local/config";
+
+export default async function Page({ params }: { params: { lang: string } }) {
+  const dictionary = await getDictionary(params.lang as Locale);
+
+  return (
+    <div>
+      <h1>{dictionary.common.home}</h1>
+      <p>{dictionary.common.loading}</p>
+    </div>
+  );
+}
+```
+
+### Client Components
+
+```tsx
+"use client";
+import { useLocale } from "@/components/local/use-locale";
+
+export function LocaleIndicator() {
+  const { locale, isRTL, localeConfig } = useLocale();
+
+  return (
+    <span className={isRTL ? "text-right" : "text-left"}>
+      {localeConfig.flag} {localeConfig.nativeName}
+    </span>
+  );
+}
+```
+
+---
+
+## Configuration
+
+### Locale Config
+
+Location: `src/components/local/config.ts`
+
+```ts
+export const i18n = {
+  defaultLocale: 'en',
+  locales: ['en', 'ar'],
+} as const;
+
+export type Locale = (typeof i18n)['locales'][number];
+
+export const localeConfig = {
+  'en': {
+    name: 'English',
+    nativeName: 'English',
+    dir: 'ltr',
+    flag: 'US',
+    dateFormat: 'MM/dd/yyyy',
+    currency: 'USD',
+  },
+  'ar': {
+    name: 'Arabic',
+    nativeName: 'Arabic',
+    dir: 'rtl',
+    flag: 'SA',
+    dateFormat: 'dd/MM/yyyy',
+    currency: 'SAR',
+  },
+} as const;
+
+export function isRTL(locale: Locale): boolean {
+  return localeConfig[locale]?.dir === 'rtl';
+}
+```
+
+---
+
+## Dictionary System
+
+### Loading Dictionaries
+
+Location: `src/components/local/dictionaries.ts`
+
+```ts
+import "server-only";
+import type { Locale } from "./config";
+
+const dictionaries = {
+  "en": () => import("./en.json").then((module) => module.default),
+  "ar": () => import("./ar.json").then((module) => module.default),
+} as const;
+
+export const getDictionary = async (locale: Locale) => {
+  try {
+    return await (dictionaries[locale]?.() ?? dictionaries["en"]());
+  } catch (error) {
+    console.warn(`Failed to load dictionary for locale: ${locale}`);
+    return await dictionaries["en"]();
+  }
+};
+
+export type Dictionary = Awaited<ReturnType<typeof getDictionary>>;
+```
+
+### Translation Files
+
+Location: `src/components/local/en.json` and `src/components/local/ar.json`
+
+```json
+{
+  "metadata": {
+    "title": "App Title",
+    "description": "App Description"
+  },
+  "common": {
+    "loading": "Loading...",
+    "home": "Home",
+    "language": "Language"
+  },
+  "navigation": {
+    "docs": "Docs",
+    "atoms": "Atoms"
+  }
+}
+```
+
+### Type-Safe Usage
+
+```tsx
+import type { Dictionary } from "@/components/local/dictionaries";
+
+interface Props {
+  dictionary: Dictionary;
+}
+
+export function Header({ dictionary }: Props) {
+  return <nav>{dictionary.navigation.docs}</nav>;
+}
+```
+
+---
+
+## Middleware & Routing
+
+### Locale Detection Flow
+
+Location: `src/components/local/middleware.ts`
+
+1. Check `NEXT_LOCALE` cookie for user preference
+2. Parse `Accept-Language` header using `negotiator`
+3. Match against supported locales using `@formatjs/intl-localematcher`
+4. Redirect to localized URL if needed
+5. Set cookie for future visits (1 year expiry)
+
+```ts
+import { match } from '@formatjs/intl-localematcher';
+import Negotiator from 'negotiator';
+import { type NextRequest, NextResponse } from 'next/server';
+import { i18n } from './config';
+
+function getLocale(request: NextRequest) {
+  // 1. Check cookie first
+  const cookieLocale = request.cookies.get('NEXT_LOCALE')?.value;
+  if (cookieLocale && i18n.locales.includes(cookieLocale as any)) {
+    return cookieLocale;
+  }
+
+  // 2. Parse Accept-Language header
+  const headers = {
+    'accept-language': request.headers.get('accept-language') ?? '',
+  };
+  const languages = new Negotiator({ headers }).languages();
+
+  // 3. Match against supported locales
+  return match(languages, i18n.locales, i18n.defaultLocale);
+}
+
+export function localizationMiddleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  // Check if pathname already has a locale
+  const pathnameHasLocale = i18n.locales.some(
+    (locale) => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`
+  );
+
+  if (pathnameHasLocale) return NextResponse.next();
+
+  // Redirect to localized URL
+  const locale = getLocale(request);
+  request.nextUrl.pathname = `/${locale}${pathname}`;
+
+  const response = NextResponse.redirect(request.nextUrl);
+  response.cookies.set('NEXT_LOCALE', locale, {
+    maxAge: 365 * 24 * 60 * 60, // 1 year
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+  });
+
+  return response;
+}
+```
+
+### Dependencies
+
+```bash
+pnpm add @formatjs/intl-localematcher negotiator
+pnpm add -D @types/negotiator
+```
+
+---
+
+## Client-Side Hooks
+
+Location: `src/components/local/use-locale.ts`
+
+### useLocale Hook
+
+Returns current locale information and RTL status.
+
+```tsx
+"use client";
+import { useLocale } from "@/components/local/use-locale";
+
+export function MyComponent() {
+  const { locale, isRTL, localeConfig } = useLocale();
+
+  return (
+    <div dir={isRTL ? 'rtl' : 'ltr'}>
+      <p>Current: {localeConfig.nativeName}</p>
+      <p>Direction: {localeConfig.dir}</p>
+      <p>Currency: {localeConfig.currency}</p>
+    </div>
+  );
+}
+```
+
+### useSwitchLocaleHref Hook
+
+Generates URLs for switching between locales.
+
+```tsx
+"use client";
+import { useSwitchLocaleHref } from "@/components/local/use-locale";
+import { i18n, localeConfig } from "@/components/local/config";
+import Link from "next/link";
+
+export function LanguageSwitcher() {
+  const switchLocaleHref = useSwitchLocaleHref();
+
+  return (
+    <nav className="flex gap-2">
+      {i18n.locales.map((locale) => (
+        <Link key={locale} href={switchLocaleHref(locale)}>
+          {localeConfig[locale].flag} {localeConfig[locale].nativeName}
+        </Link>
+      ))}
+    </nav>
+  );
+}
+```
+
+---
+
+## RTL Support
+
+### Layout Integration
+
+The root layout sets direction based on locale:
+
+```tsx
+// src/app/[lang]/layout.tsx
+import { localeConfig, type Locale } from "@/components/local/config";
+
+export default async function RootLayout({
+  children,
+  params,
+}: {
+  children: React.ReactNode;
+  params: { lang: string };
+}) {
+  const { lang } = await params as { lang: Locale };
+  const config = localeConfig[lang];
+
+  return (
+    <html lang={lang} dir={config.dir}>
+      <body>{children}</body>
+    </html>
+  );
+}
+```
+
+### RTL Utility Classes
+
+Location: `src/styles/rtl.css`
+
+#### Layout Utilities
+
+| Class | Description |
+|-------|-------------|
+| `rtl:flex-row-reverse` | Reverse flex direction |
+| `rtl:space-x-reverse` | Reverse horizontal spacing |
+| `rtl:space-y-reverse` | Reverse vertical spacing |
+
+#### Margin & Padding
+
+| Class | Description |
+|-------|-------------|
+| `rtl:ml-auto` | Auto left margin |
+| `rtl:mr-auto` | Auto right margin |
+| `rtl:ml-0` | Zero left margin |
+| `rtl:mr-0` | Zero right margin |
+| `rtl:pl-0` | Zero left padding |
+| `rtl:pr-0` | Zero right padding |
+
+#### Text Alignment
+
+| Class | Description |
+|-------|-------------|
+| `rtl:text-right` | Align text right |
+| `rtl:text-left` | Align text left |
+
+#### Positioning
+
+| Class | Description |
+|-------|-------------|
+| `rtl:left-auto` | Auto left position |
+| `rtl:right-auto` | Auto right position |
+| `rtl:left-0` | Left position 0 |
+| `rtl:right-0` | Right position 0 |
+
+#### Transform
+
+| Class | Description |
+|-------|-------------|
+| `rtl:scale-x-[-1]` | Mirror horizontally |
+
+#### Border Radius
+
+| Class | Description |
+|-------|-------------|
+| `rtl:rounded-l-none` | No left border radius |
+| `rtl:rounded-r-none` | No right border radius |
+| `rtl:rounded-tl-none` | No top-left radius |
+| `rtl:rounded-tr-none` | No top-right radius |
+| `rtl:rounded-bl-none` | No bottom-left radius |
+| `rtl:rounded-br-none` | No bottom-right radius |
+
+#### Borders
+
+| Class | Description |
+|-------|-------------|
+| `rtl:border-l-0` | No left border |
+| `rtl:border-r-0` | No right border |
+| `rtl:border-l` | Add left border |
+| `rtl:border-r` | Add right border |
+
+### Component RTL Classes
+
+Pre-built RTL support for common components:
+
+#### Cards & Navigation
+
+| Class | Description |
+|-------|-------------|
+| `.card-rtl` | RTL card alignment |
+| `.card-header-rtl` | RTL card header |
+| `.card-content-rtl` | RTL card content |
+| `.nav-rtl` | RTL navigation |
+| `.nav-item-rtl` | RTL nav item |
+
+#### Forms
+
+| Class | Description |
+|-------|-------------|
+| `.form-rtl` | RTL form alignment |
+| `.form-label-rtl` | RTL form labels |
+| `.form-input-rtl` | RTL form inputs |
+| `.form-checkbox-rtl` | RTL checkboxes |
+| `.btn-group-rtl` | RTL button groups |
+
+#### Layout Components
+
+| Class | Description |
+|-------|-------------|
+| `.modal-rtl` | RTL modal |
+| `.modal-header-rtl` | RTL modal header |
+| `.modal-close-rtl` | RTL modal close button |
+| `.sidebar-rtl` | RTL sidebar |
+| `.sidebar-item-rtl` | RTL sidebar items |
+| `.dropdown-rtl` | RTL dropdown |
+
+#### Data Display
+
+| Class | Description |
+|-------|-------------|
+| `.table-rtl` | RTL table alignment |
+| `.table-header-rtl` | RTL table headers |
+| `.table-cell-rtl` | RTL table cells |
+| `.avatar-group-rtl` | RTL avatar groups |
+
+#### Navigation Components
+
+| Class | Description |
+|-------|-------------|
+| `.breadcrumb-rtl` | RTL breadcrumbs |
+| `.breadcrumb-separator-rtl` | RTL breadcrumb separators |
+| `.pagination-rtl` | RTL pagination |
+| `.pagination-prev-rtl` | RTL previous button |
+| `.pagination-next-rtl` | RTL next button |
+| `.tabs-rtl` | RTL tabs |
+| `.tab-content-rtl` | RTL tab content |
+
+#### Interactive Components
+
+| Class | Description |
+|-------|-------------|
+| `.accordion-rtl` | RTL accordion |
+| `.accordion-trigger-rtl` | RTL accordion triggers |
+| `.accordion-icon-rtl` | RTL accordion icons |
+| `.select-rtl` | RTL select |
+| `.select-trigger-rtl` | RTL select trigger |
+| `.select-icon-rtl` | RTL select icon |
+| `.command-rtl` | RTL command palette |
+| `.command-input-rtl` | RTL command input |
+| `.command-shortcut-rtl` | RTL command shortcuts |
+
+#### Date & Calendar
+
+| Class | Description |
+|-------|-------------|
+| `.datepicker-rtl` | RTL date picker |
+| `.datepicker-header-rtl` | RTL datepicker header |
+| `.datepicker-nav-rtl` | RTL datepicker navigation |
+| `.calendar-rtl` | RTL calendar |
+| `.calendar-header-rtl` | RTL calendar header |
+| `.calendar-nav-rtl` | RTL calendar navigation |
+| `.calendar-grid-rtl` | RTL calendar grid |
+
+#### Other Components
+
+| Class | Description |
+|-------|-------------|
+| `.toast-rtl` | RTL toast notifications |
+| `.toast-close-rtl` | RTL toast close button |
+| `.progress-rtl` | RTL progress bar |
+| `.sheet-rtl[data-side="right"]` | RTL right sheet |
+| `.sheet-rtl[data-side="left"]` | RTL left sheet |
+| `.scrollbar-rtl` | RTL scrollbar |
+| `.menu-rtl` | RTL menu |
+| `.menu-item-rtl` | RTL menu items |
+| `.menu-shortcut-rtl` | RTL menu shortcuts |
+| `.menu-submenu-rtl` | RTL submenus |
+
+### RTL Animations
+
+| Class | Description |
+|-------|-------------|
+| `rtl:animate-slide-in-right` | Slide in from right |
+| `rtl:animate-slide-out-right` | Slide out to right |
+| `rtl:hover:translate-x-2` | Hover translate right |
+| `rtl:hover:translate-x-[-2]` | Hover translate left |
+| `rtl:focus:translate-x-1` | Focus translate |
+| `rtl:group-hover:translate-x-2` | Group hover translate |
+
+### CSS Logical Properties
+
+Prefer logical properties for automatic RTL support without extra classes:
+
+```css
+/* Instead of: */
+.element {
+  margin-left: 1rem;
+  padding-right: 2rem;
+}
+
+/* Use: */
+.element {
+  margin-inline-start: 1rem;
+  padding-inline-end: 2rem;
+}
+```
+
+Available logical properties in `src/styles/container.css`:
+
+```css
+.layout-container {
+  padding-inline: var(--container-padding);
+}
+
+.ps-responsive {
+  padding-inline-start: var(--container-padding);
+}
+
+.pe-responsive {
+  padding-inline-end: var(--container-padding);
+}
+
+.ms-responsive {
+  margin-inline-start: 2rem;
+}
+
+.me-responsive {
+  margin-inline-end: 2rem;
+}
+```
+
+---
+
+## Arabic Utilities
+
+Location: `src/lib/arabic-utils.ts`
+
+### Number Conversion
+
+```ts
+import { toArabicNumerals, toEnglishNumerals } from "@/lib/arabic-utils";
+
+// Convert to Arabic-Indic numerals
+toArabicNumerals("123")     // "١٢٣"
+toArabicNumerals("2024")    // "٢٠٢٤"
+
+// Convert back to Western numerals
+toEnglishNumerals("١٢٣")    // "123"
+```
+
+### Number Formatting
+
+```ts
+import { formatArabicNumber, formatArabicPercentage } from "@/lib/arabic-utils";
+
+// Format with Arabic thousands separators
+formatArabicNumber(1234567)          // "١٬٢٣٤٬٥٦٧"
+
+// Format percentage
+formatArabicPercentage(75)           // "٧٥٫٠٪"
+formatArabicPercentage(99.5, 2)      // "٩٩٫٥٠٪"
+```
+
+### Currency Formatting
+
+```ts
+import { formatArabicCurrency } from "@/lib/arabic-utils";
+
+formatArabicCurrency(1500)           // "١٬٥٠٠٫٠٠ ر.س"
+formatArabicCurrency(99.99)          // "٩٩٫٩٩ ر.س"
+```
+
+### Date & Time Formatting
+
+```ts
+import { formatArabicDate, formatArabicRelativeTime } from "@/lib/arabic-utils";
+
+// Full date format
+formatArabicDate(new Date())         // "٢٧ نوفمبر ٢٠٢٥"
+
+// Relative time
+formatArabicRelativeTime(pastDate)   // "منذ يومين"
+formatArabicRelativeTime(futureDate) // "خلال ٣ أيام"
+```
+
+### File Size Formatting
+
+```ts
+import { formatArabicFileSize } from "@/lib/arabic-utils";
+
+formatArabicFileSize(1024)           // "١ كيلوبايت"
+formatArabicFileSize(5242880)        // "٥٫٠ ميجابايت"
+formatArabicFileSize(1073741824)     // "١٫٠ جيجابايت"
+```
+
+### Arabic Pluralization
+
+Arabic has three plural forms: singular, dual (exactly 2), and plural (3+).
+
+```ts
+import { arabicPlural } from "@/lib/arabic-utils";
+
+arabicPlural(1, "طالب", "طالبان", "طلاب")  // "طالب" (singular)
+arabicPlural(2, "طالب", "طالبان", "طلاب")  // "طالبان" (dual)
+arabicPlural(5, "طالب", "طالبان", "طلاب")  // "طلاب" (plural)
+
+// Common examples
+arabicPlural(count, "يوم", "يومان", "أيام")     // day/days
+arabicPlural(count, "ملف", "ملفان", "ملفات")   // file/files
+arabicPlural(count, "رسالة", "رسالتان", "رسائل") // message/messages
+```
+
+### Text Direction Detection
+
+```ts
+import { getTextDirection } from "@/lib/arabic-utils";
+
+getTextDirection("Hello World")      // "ltr"
+getTextDirection("مرحبا")            // "rtl"
+getTextDirection("Hello مرحبا")      // "rtl" (Arabic detected)
+```
+
+### RTL CSS Classes
+
+```ts
+import { getRTLClasses } from "@/lib/arabic-utils";
+
+getRTLClasses(true)   // "rtl:text-right rtl:space-x-reverse rtl:ml-auto rtl:mr-0"
+getRTLClasses(false)  // ""
+```
+
+### Arabic Typography
+
+```ts
+import { ARABIC_TYPOGRAPHY_VARS, applyArabicTypography } from "@/lib/arabic-utils";
+
+// CSS custom properties
+ARABIC_TYPOGRAPHY_VARS = {
+  '--font-arabic': '"Noto Sans Arabic", "Amiri", "Scheherazade New", sans-serif',
+  '--font-arabic-display': '"Amiri", "Scheherazade New", serif',
+  '--line-height-arabic': '1.8',
+  '--letter-spacing-arabic': '0.02em'
+}
+
+// Apply to DOM element
+applyArabicTypography(element);
+```
+
+### Locale Check
+
+```ts
+import { isArabicLocale } from "@/lib/arabic-utils";
+
+isArabicLocale("ar")     // true
+isArabicLocale("ar-SA")  // true
+isArabicLocale("en")     // false
+```
+
+### Locale-Aware Formatters
+
+Get all formatters for a locale at once:
+
+```ts
+import { getLocaleFormatters } from "@/lib/arabic-utils";
+
+const formatters = getLocaleFormatters("ar");
+
+formatters.formatNumber(1234)          // "١٬٢٣٤"
+formatters.formatCurrency(99.99)       // "٩٩٫٩٩ ر.س"
+formatters.formatPercentage(75)        // "٧٥٫٠٪"
+formatters.formatDate(new Date())      // "٢٧ نوفمبر ٢٠٢٥"
+formatters.formatRelativeTime(date)    // "منذ يومين"
+formatters.isRTL                       // true
+formatters.textDirection               // "rtl"
+
+// English formatters
+const enFormatters = getLocaleFormatters("en");
+enFormatters.formatNumber(1234)        // "1,234"
+enFormatters.isRTL                     // false
+```
+
+### HTML Escaping
+
+```ts
+import { escapeArabicHTML } from "@/lib/arabic-utils";
+
+// Safe for HTML rendering
+escapeArabicHTML("<script>مرحبا</script>")
+// "&lt;script&gt;مرحبا&lt;/script&gt;"
+```
+
+---
+
+## Best Practices
+
+### UI Guidelines
+
+- Use logical CSS properties (`margin-inline`, `padding-inline`) where possible
+- Icons and arrows must mirror for RTL when directional
+- Numbers remain Western Arabic numerals unless explicitly localized
+- Test all flows in both ar/en
+
+### Typography & Fonts
+
+- Use Arabic-friendly fonts (Rubik for this project)
+- Verify line-height (1.8 recommended for Arabic)
+- Test letter-spacing for Arabic script
+
+### Translation Keys
+
+- Keep translations collocated by feature
+- Avoid concatenating strings; prefer full-sentence translations
+- Validate translation keys at build time
+
+### Testing Checklist
+
+- [ ] All primary flows tested in ar/en
+- [ ] Layouts verified under RTL mirroring
+- [ ] Icons and arrows flip correctly
+- [ ] Screen readers handle language and direction
+- [ ] Dates/numbers/currency localized
+- [ ] Keyboard navigation works in mirrored layouts
+- [ ] No text overflow or truncation issues
+
+---
+
+## Folder Structure
+
+```
+src/
+  components/local/
+    config.ts          # Locale config, types, isRTL helper
+    dictionaries.ts    # Dictionary loader, Dictionary type
+    middleware.ts      # Locale detection & redirection
+    use-locale.ts      # Client hooks: useLocale, useSwitchLocaleHref
+    en.json            # English translations
+    ar.json            # Arabic translations
+  lib/
+    arabic-utils.ts    # Arabic formatting utilities (16 functions)
+  styles/
+    rtl.css            # RTL utility classes (80+ classes)
+    container.css      # Logical property utilities
+```
+
+---
+
+## References
+
+### Internal
+
+- `src/components/local/README.md` - Detailed i18n standard documentation
+
+### External
+
+- [Next.js Internationalization](https://nextjs.org/docs/app/building-your-application/routing/internationalization)
+- [MDN DateTimeFormat](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/DateTimeFormat)
+- [MDN NumberFormat](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat)
+- [W3C Authoring HTML & CSS for RTL](https://www.w3.org/International/techniques/authoring-html)
+- [Radix UI Direction (RTL)](https://www.radix-ui.com/primitives/docs/guides/rtl)

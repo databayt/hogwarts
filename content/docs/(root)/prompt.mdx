@@ -1,0 +1,69 @@
+---
+title: Prompt
+description: Guidelines for creating effective prompts to interact with AI models and agents.
+---
+
+## Prompt Engineering
+
+Effective communication with AI is an art. A well-crafted prompt can be the difference between a generic, unhelpful response and a precise, insightful solution. This guide provides best practices for designing prompts that deliver optimal results.
+
+### Principles of Effective Prompting
+
+- **Clarity and Specificity**: Be as clear and detailed as possible. Vague prompts lead to vague answers. Specify the desired format, tone, and level of detail.
+- **Provide Context**: Give the AI enough background information to understand the request. This includes relevant data, constraints, and the overall goal.
+- **Use Examples**: Show, don't just tell. Providing a few examples of the desired output (few-shot prompting) can significantly improve accuracy.
+- **Iterate and Refine**: Don't expect the perfect response on the first try. Experiment with different phrasing, add more context, or break down complex tasks into smaller steps.
+
+### Prompting Techniques
+
+#### Zero-Shot Prompting
+Ask a direct question without providing any examples. This works best for simple tasks where the AI already has sufficient training data.
+
+**Example:**
+```
+"Summarize the key benefits of using a component-based architecture in web development."
+```
+
+#### Few-Shot Prompting
+Provide a few examples of the input and desired output to guide the AI's response. This is highly effective for tasks requiring a specific format or style.
+
+**Example:**
+```
+"Translate the following English sentences to French:
+
+English: Hello, how are you?
+French: Bonjour, comment ça va?
+
+English: I need to buy some groceries.
+French: Je dois faire des courses.
+
+English: What time is it?
+French: "
+```
+
+#### Chain-of-Thought (CoT) Prompting
+Encourage the AI to break down a problem and "think" step-by-step before giving the final answer. This is useful for complex reasoning and multi-step problems.
+
+**Example:**
+```
+"Q: A farmer has 15 cows. He sells all but 9 of them. How many cows does he have left?
+
+A: The question is a bit of a riddle. The phrase "all but 9" means that 9 cows are the ones that were not sold. So, the farmer has 9 cows left.
+
+Q: There are 3 birds on a wire. 2 of them decide to fly away. How many are left?
+
+A: Let's think step by step. The birds 'deciding' to fly away doesn't mean they have flown away yet. So all 3 are still on the wire. The answer is 3."
+```
+
+### Best Practices
+
+- **Assign a Role**: Tell the AI to act as a specific persona (e.g., "Act as a senior software engineer...").
+- **Use Delimiters**: Use characters like triple backticks (```), XML tags (`<tag>`), or dashes to clearly separate different parts of your prompt.
+- **Specify Output Format**: Explicitly ask for the output in a specific format like JSON, Markdown, or a numbered list.
+- **Negative Prompts**: Clearly state what you *don't* want to see in the response.
+
+write tests first, then the code, then run the tests and update the code until tests pass
+
+i have got some build errors, run 'pnpm build' to see the errors, and then fix them, and then run build until build passes
+
+ claude --dangerously-skip-permissions

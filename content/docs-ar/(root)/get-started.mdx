@@ -1,0 +1,192 @@
+---
+title: "البدء"
+description: "شكراً لاهتمامك بالمساهمة في هوجوورتس. نحن سعداء بوجودك هنا."
+---
+
+## الفكرة
+
+بناء منصة أتمتة مدرسية مثل هذه المنتجات الواقعية:
+
+1. [OpenEduCat](https://openeducat.org/) - إدارة تعليم مفتوحة المصدر
+2. [Pioneers E-School](https://pioneerseschool.com/) - نظام مدرسي شامل
+3. [PowerSchool](https://www.powerschool.com/) - تقييم 2.8 مليار دولار، 45 مليون طالب
+4. [Infinite Campus](https://www.infinitecampus.com/) - 7.8 مليون طالب، 50 ولاية أمريكية
+
+_شاهد المزيد من الشركات في [المنافسون](/ar/docs/competitors)._
+
+## إعداد بيئة التطوير المحلية
+
+**01. تثبيت VS Code**
+
+قم بالتحميل من [code.visualstudio.com](https://code.visualstudio.com/)
+
+---
+
+**02. تثبيت Node.js**
+
+قم بالتحميل من [nodejs.org](https://nodejs.org/) (إصدار LTS)
+
+---
+
+**03. تثبيت Git**
+
+قم بالتحميل من [git-scm.com](https://git-scm.com/downloads)
+
+---
+
+**04. فتح VS Code**
+
+قم بتشغيل VS Code، ثم افتح الطرفية: View → Terminal
+
+---
+
+**05. تثبيت pnpm**
+```text
+npm install -g pnpm
+```
+
+---
+
+**06. استنساخ المستودع**
+```bash
+git clone https://github.com/databayt/hogwarts.git
+```
+
+---
+
+**07. فتح المشروع في VS Code**
+
+File → Open Folder → اختر مجلد `hogwarts`
+
+---
+
+**08. فتح الطرفية في VS Code**
+
+View → Terminal أو `` Ctrl + ` ``
+
+---
+
+**09. تثبيت التبعيات**
+```bash
+pnpm install
+```
+
+---
+
+**10. إنشاء ملف البيئة**
+
+أنشئ `.env` في المجلد الجذر والصق المحتوى من مجموعة واتساب
+
+---
+
+**11. إنشاء عميل Prisma**
+```bash
+pnpm prisma generate
+```
+
+---
+
+**12. إعداد قاعدة البيانات**
+```bash
+pnpm prisma migrate dev
+```
+
+---
+
+**13. بدء خادم التطوير**
+```bash
+pnpm dev
+```
+
+---
+
+**14. فتح المتصفح**
+
+اذهب إلى http://localhost:3000
+
+_للإعداد التفصيلي، انظر [إعداد بيئة التطوير المحلية](/ar/docs/localhost)._
+
+## أول مشكلة جيدة
+
+أضف اسمك إلى صفحة المدونة كأول مساهمة لك.
+
+**01. إنشاء فرع جديد**
+```bash
+git checkout -b feat/your-name
+```
+
+---
+
+**02. فتح الملف**
+
+افتح `src/components/marketing/blog/content.tsx` في VS Code
+
+---
+
+**03. إيجاد نص Blog**
+
+ابحث عن هذا الكود:
+```tsx
+<div>
+    Blog
+</div>
+```
+
+---
+
+**04. أضف اسمك أسفل Blog**
+
+غيّره إلى:
+```tsx
+<div>
+    Blog
+    <p>اسمك</p>
+</div>
+```
+
+---
+
+**05. حفظ الملف**
+
+اضغط `Ctrl + S`
+
+---
+
+**06. إضافة التغييرات للمرحلة**
+```bash
+git add .
+```
+
+---
+
+**07. تثبيت التغييرات**
+```bash
+git commit -m "feat: add اسمك to blog"
+```
+
+---
+
+**08. الدفع إلى GitHub**
+```bash
+git push origin feat/your-name
+```
+
+**هذا كل شيء! مرحباً بك في هوجوورتس.**
+
+## الخطوات التالية
+
+تصفح [العرض التجريبي](https://demo.databayt.org/en/dashboard) لتقييم التقدم الحالي. افتح مشكلات للأخطاء التي تجدها، أو أنشئ مشكلات فرعية إذا كانت مشكلة مرتبطة موجودة بالفعل.
+
+**تسجيل الدخول:** `admin@databayt.org` / `1234`
+
+### استكشف التوثيق
+
+- [المنتج الأدنى القابل للتطبيق](/ar/docs/mvp) - الحد الأدنى من المنتج القابل للتطبيق
+- [دليل المساهمة](/ar/docs/contributing) - كيفية المساهمة
+- [الهندسة المعمارية](/ar/docs/architecture) - تصميم النظام
+- [الأنماط](/ar/docs/pattern) - أنماط الكود
+
+### انضم إلى المجتمع
+
+- تصفح المشكلات المفتوحة على [GitHub](https://github.com/databayt/hogwarts/issues)
+- انضم إلى خادم [Discord](https://discord.gg/uPa4gGG62c)

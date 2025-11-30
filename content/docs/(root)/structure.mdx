@@ -1,0 +1,337 @@
+---
+title: "Structure"
+description: "Documentation for Structure"
+---
+
+## Directory Structure
+
+### Overview
+
+Databayt follows a **feature-based, modular architecture** designed for scalability, reusability, and maintainability. Our structure supports micro-services and micro-frontend patterns while leveraging Next.js App Router conventions.
+
+### Core Principles
+
+- **URL-driven organization**: Every route URL directly maps to predictable directory structures  
+- **Feature-based modularity**: Each feature is self-contained with consistent file patterns  
+- **Component layering**: UI components are organized in atomic, template, and feature layers  
+- **Reusable patterns**: Standardized file conventions across all features  
+- **Open source friendly**: Clear, documented structure for community contributions
+
+---
+
+## Project Root Structure
+
+```text
+Databayt/
+├── public/                     # Static assets
+├── src/                       # Source code (Next.js src directory pattern)
+│   ├── app/                   # Next.js App Router pages and routing
+│   ├── components/            # Reusable components
+│   ├── lib/                   # Shared utilities and configurations
+│   └── types/                 # Global TypeScript definitions
+├── docs/                      # Documentation
+├── .env.local                 # Environment variables
+├── next.config.js             # Next.js configuration  
+├── package.json               # Dependencies
+├── tailwind.config.js         # Tailwind CSS configuration
+└── tsconfig.json              # TypeScript configuration
+```
+
+## Source Directory (`src/`) Structure
+
+### App Directory (`src/app/`)
+
+Following Next.js App Router conventions for routing and page management:
+
+```text
+src/app/
+├── globals.css               # Global styles
+├── layout.tsx                # Root layout
+├── page.tsx                  # Home page
+├── loading.tsx               # Global loading UI
+├── error.tsx                 # Global error UI
+├── not-found.tsx             # 404 page
+├── gallery/                  # Feature route: /gallery
+│   ├── page.tsx              # Gallery main page
+│   ├── layout.tsx            # Gallery layout
+│   ├── loading.tsx           # Gallery loading state
+│   ├── error.tsx             # Gallery error handling
+│   └── [slug]/               # Dynamic gallery routes
+│       ├── page.tsx          # Individual gallery page
+│       └── edit/             # Nested route: /gallery/[slug]/edit
+│           └── page.tsx      # Edit gallery page
+└── dashboard/                # Feature route: /dashboard
+    ├── page.tsx              # Dashboard main page
+    ├── layout.tsx            # Dashboard layout
+    └── analytics/            # Nested route: /dashboard/analytics
+        └── page.tsx          # Analytics page
+```
+
+### Components Directory (`src/components/`)
+
+Three-layer component architecture for maximum reusability:
+
+```text
+src/components/
+├── ui/                       # shadcn/ui components (installed via CLI)
+│   ├── button.tsx
+│   ├── input.tsx
+│   ├── card.tsx
+│   └── ...
+├── atoms/                    # Atomic reusable components (shadcn pattern)
+│   ├── logo.tsx
+│   ├── badge.tsx
+│   ├── avatar.tsx
+│   └── spinner.tsx
+├── templates/                # Layout and template components (shadcn pattern)
+│   ├── header.tsx
+│   ├── footer.tsx
+│   ├── sidebar.tsx
+│   └── navigation.tsx
+└── gallery/                 # Feature-specific components (matches /gallery route)
+    ├── constants.ts          # Gallery constants and configurations
+    ├── types.ts              # Gallery TypeScript type definitions
+    ├── validation.ts         # Gallery form validation schemas
+    ├── actions.ts            # Gallery server actions and API calls
+    ├── use-gallery.tsx       # Gallery custom React hooks
+    ├── form.tsx              # Gallery form components
+    ├── card.tsx              # Gallery card component
+    ├── table.tsx             # Gallery table/list component
+    ├── content.tsx           # Gallery content display component
+    ├── featured.tsx          # Gallery featured items component
+    ├── all.tsx               # Gallery "show all" component
+    └── detail.tsx            # Gallery detail/single item component
+```
+
+---
+
+## Feature Directory Pattern
+
+**Every URL route has a corresponding feature directory in both `src/app/` and `src/components/`.**
+
+For route `/gallery`:
+
+- `src/app/gallery/` – Contains Next.js page components and routing logic  
+- `src/components/gallery/` – Contains feature-specific UI components and logic
+
+### Standard Feature Files
+
+| File | Purpose | Example Content |
+|------|---------|----------------|
+| `constants.ts` | Feature constants, configs, static data | API endpoints, default values, enums |
+| `types.ts` | TypeScript type definitions | Interfaces, types, API response schemas |
+| `validation.ts` | Form validation schemas | Zod schemas, validation rules |
+| `actions.ts` | Server actions and API calls | Data fetching, mutations, server logic |
+| `use-[feature].tsx` | Custom React hooks | State management, data fetching hooks |
+| `form.tsx` | Form components | Create/edit forms, form handling |
+| `card.tsx` | Card/item components | List items, preview cards |
+| `table.tsx` | Table/list components | Data tables, lists with pagination |
+| `content.tsx` | Content display components | Rich content, formatted text |
+| `featured.tsx` | Featured/highlight components | Hero sections, featured items |
+| `all.tsx` | "Show all" list components | Complete lists, archive pages |
+| `detail.tsx` | Detail/single item components | Single item views, detail pages |
+
+### Feature Implementation Example
+
+For a new feature route `/products`:
+
+1. **Create route structure:**
+
+   ```text
+   src/app/products/
+   ├── page.tsx               # Products listing page
+   ├── layout.tsx             # Products layout
+   └── [id]/
+       └── page.tsx           # Individual product page
+   ```
+
+2. **Create component structure:**
+
+   ```text
+   src/components/products/
+   ├── constants.ts           # Product constants
+   ├── types.ts               # Product type definitions
+   ├── validation.ts          # Product validation schemas
+   ├── actions.ts             # Product API actions  
+   ├── use-products.tsx       # Product hooks
+   ├── form.tsx               # Product form
+   ├── card.tsx               # Product card
+   ├── table.tsx              # Products table
+   ├── content.tsx            # Product content display
+   ├── featured.tsx           # Featured products
+   ├── all.tsx                # All products list
+   └── detail.tsx             # Product detail view
+   ```
+
+---
+
+## Component Layer Definitions
+
+### UI Layer (`src/components/ui/`)
+- **Purpose**: Base design system components from shadcn/ui  
+- **Usage**: Installed via `npx shadcn-ui@latest add [component]`  
+- **Examples**: Button, Input, Card, Dialog, Sheet  
+- **Styling**: Fully styled with Tailwind CSS variants
+
+### Atoms Layer (`src/components/atoms/`)
+- **Purpose**: Small, reusable components following shadcn patterns  
+- **Usage**: Custom atomic components built on top of UI layer  
+- **Examples**: Logo, Badge, Avatar, Spinner, Status indicators  
+- **Styling**: Consistent with shadcn/ui styling patterns
+
+### Templates Layer (`src/components/templates/`)
+- **Purpose**: Layout and structural components following shadcn patterns  
+- **Usage**: Page layouts, navigation, common page sections  
+- **Examples**: Header, Footer, Sidebar, Navigation, Page wrappers  
+- **Styling**: Structural styling with flexible content areas
+
+### Feature Layer (`src/components/[feature]/`)
+- **Purpose**: Feature-specific business logic components  
+- **Usage**: Components that implement specific business features  
+- **Examples**: Gallery components, Dashboard widgets, User management  
+- **Styling**: Feature-specific styling while maintaining design consistency
+
+---
+
+## Shared Utilities
+
+### Lib Directory (`src/lib/`)
+```text
+src/lib/
+├── utils.ts              # General utility functions (shadcn utils)
+├── cn.ts                 # className utility (shadcn)
+├── validations/          # Shared validation schemas
+├── hooks/                # Shared custom hooks
+├── constants/            # Global constants
+├── api/                  # API client configurations
+└── auth/                 # Authentication utilities
+```
+
+### Types Directory (`src/types/`)
+```text
+src/types/
+├── global.ts            # Global type definitions
+├── api.ts               # API response types
+├── auth.ts              # Authentication types
+└── database.ts          # Database schema types
+```
+
+---
+
+## File Naming Conventions
+
+### Components
+- **React components**: `kebab-case.tsx` (e.g., `user-profile.tsx`)  
+- **Hooks**: `use-feature-name.tsx` (e.g., `use-gallery.tsx`)  
+- **Types**: `kebab-case.ts` (e.g., `gallery-types.ts`)
+
+### Pages (App Router)
+- **Pages**: `page.tsx`  
+- **Layouts**: `layout.tsx`  
+- **Loading**: `loading.tsx`  
+- **Errors**: `error.tsx`  
+- **Not Found**: `not-found.tsx`
+
+### Utilities
+- **Constants**: `constants.ts` or `config.ts`  
+- **Actions**: `actions.ts`  
+- **Validation**: `validation.ts`  
+- **Utilities**: `utils.ts`
+
+---
+
+## Import Patterns
+
+### Absolute Imports
+Configure TypeScript paths in `tsconfig.json`:
+
+```json
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@/components/*": ["./src/components/*"],
+      "@/lib/*": ["./src/lib/*"],
+      "@/types/*": ["./src/types/*"]
+    }
+  }
+}
+```
+
+### Import Examples
+```typescript
+// Feature components
+import { GalleryCard } from '@/components/gallery/card'
+import { useGallery } from '@/components/gallery/use-gallery'
+
+// Shared components  
+import { Button } from '@/components/ui/button'
+import { Logo } from '@/components/atoms/logo'
+import { Header } from '@/components/templates/header'
+
+// Utilities
+import { cn } from '@/lib/utils'
+import type { GalleryItem } from '@/types/gallery'
+```
+
+---
+
+## Best Practices
+
+### Component Organization
+1. **Single Responsibility**: Each component should have one clear purpose
+2. **Consistent Naming**: Follow established naming patterns across features
+3. **Type Safety**: Use TypeScript for all components and utilities
+4. **Export Patterns**: Use named exports for components, default for pages
+
+### File Structure
+1. **Predictable Paths**: URL structure directly maps to directory structure
+2. **Feature Isolation**: Keep feature logic contained within feature directories  
+3. **Shared Resources**: Place truly shared code in `lib/` and `components/atoms|templates/`
+4. **Documentation**: Include README.md files for complex features
+
+### Development Workflow
+1. **Route First**: Create route structure in `src/app/` first
+2. **Components Second**: Build corresponding components in `src/components/`
+3. **Types & Validation**: Define types and validation schemas early
+4. **Actions Last**: Implement server actions and API integrations
+
+---
+
+## Micro-Frontend Considerations
+
+### Feature Independence
+- Each feature directory can be developed independently
+- Minimal cross-feature dependencies
+- Standardized interfaces between features
+- Shared design system ensures consistency
+
+### Reusability
+- Components built with reusability in mind
+- Clear separation of concerns
+- Consistent API patterns across features
+- Documentation for component usage
+
+### Scalability  
+- New features follow established patterns
+- Clear onboarding path for contributors
+- Standardized development workflow
+- Automated tooling support
+
+---
+
+## Contributing Guidelines
+
+When adding a new feature:
+
+1. **Create route structure** in `src/app/[feature]/`  
+2. **Create component directory** in `src/components/[feature]/`  
+3. **Follow file conventions** using standard file names  
+4. **Add TypeScript types** for all data structures  
+5. **Implement validation schemas** for forms and APIs  
+6. **Write custom hooks** for state management  
+7. **Build UI components** following design system patterns  
+8. **Add documentation** explaining feature usage
+
+This structure ensures our codebase remains organized, scalable, and contributor-friendly while supporting our mission of building reusable automation components for businesses worldwide.

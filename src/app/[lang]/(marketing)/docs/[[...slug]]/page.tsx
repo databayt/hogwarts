@@ -1,12 +1,18 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { ArrowLeft, ArrowRight } from "lucide-react"
+import { ArrowLeft, ArrowRight, ArrowUpRight } from "lucide-react"
 import { findNeighbour } from "fumadocs-core/page-tree"
 import type { Metadata } from "next"
-import { source } from "@/lib/source"
+import fm from "front-matter"
+import z from "zod"
+import { docsSource, docsArabicSource } from "@/lib/source"
+import { DocsCopyPage } from "@/components/docs/docs-copy-page"
 import { DocsTableOfContents } from "@/components/docs/toc"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import { mdxComponents } from "../../../../../../mdx-components"
+import { getDictionary } from "@/components/internationalization/dictionaries"
+import type { Locale } from "@/components/internationalization/config"
 
 export const runtime = "nodejs";
 export const revalidate = false
@@ -14,44 +20,36 @@ export const dynamic = "force-static"
 export const dynamicParams = false
 
 export function generateStaticParams() {
-  // Generate params for both languages
-  const params = []
-
-  // Root docs pages for each language
-  params.push({ lang: 'en', slug: undefined })
-  params.push({ lang: 'ar', slug: undefined })
-
-  // Getting started pages
-  params.push({ lang: 'en', slug: ['getting-started'] })
-  params.push({ lang: 'ar', slug: ['getting-started'] })
-
-  return params
+  const enParams = docsSource.generateParams().map((p) => ({ ...p, lang: "en" }))
+  const arParams = docsArabicSource.generateParams().map((p) => ({ ...p, lang: "ar" }))
+  return [...enParams, ...arParams]
 }
 
 export async function generateMetadata(props: {
   params: Promise<{ slug?: string[]; lang: string }>
 }): Promise<Metadata> {
   const params = await props.params
-  const { lang, slug } = params
-
-  // Construct path: lang/slug or just lang for root
-  const fullPath = slug ? [lang, ...slug] : [lang]
-  const page = source.getPage(fullPath)
+  const source = params.lang === "ar" ? docsArabicSource : docsSource
+  const page = source.getPage(params.slug)
 
   if (!page) {
-    return { title: 'Not Found' }
+    notFound()
   }
 
   const doc = page.data
 
+  if (!doc.title || !doc.description) {
+    notFound()
+  }
+
   return {
-    title: doc.title || 'Documentation',
-    description: doc.description || '',
+    title: doc.title,
+    description: doc.description,
     openGraph: {
-      title: doc.title || 'Documentation',
-      description: doc.description || '',
+      title: doc.title,
+      description: doc.description,
       type: "article",
-      url: `https://ed.databayt.org/${lang}/docs${slug ? '/' + slug.join('/') : ''}`,
+      url: `https://ed.databayt.org${page.url}`,
     },
   }
 }
@@ -60,25 +58,38 @@ export default async function DocsPage(props: {
   params: Promise<{ slug?: string[]; lang: string }>
 }) {
   const params = await props.params
-  const { lang, slug } = params
-
-  // Construct path: lang/slug or just lang for root
-  const fullPath = slug ? [lang, ...slug] : [lang]
-  const page = source.getPage(fullPath)
+  const source = params.lang === "ar" ? docsArabicSource : docsSource
+  const page = source.getPage(params.slug)
+  const dictionary = await getDictionary(params.lang as Locale)
 
   if (!page) {
     notFound()
   }
 
-  const doc = page.data
+  const doc = page.data as any
   const MDX = doc.body
   const neighbours = findNeighbour(source.pageTree, page.url)
+
+  const raw = await doc.exports?.getText?.("raw") || ""
+  const pageUrl = `https://ed.databayt.org${page.url}`
+
+  const { attributes } = fm(raw)
+  const { links } = z
+    .object({
+      links: z
+        .object({
+          doc: z.string().optional(),
+          api: z.string().optional(),
+        })
+        .optional(),
+    })
+    .parse(attributes || {})
 
   return (
     <div className="flex items-stretch text-[1.05rem] sm:text-[15px] xl:w-full">
       <div className="flex min-w-0 flex-1 flex-col">
         <div className="h-(--top-spacing) shrink-0" />
-        <div className="mx-auto flex w-full max-w-2xl min-w-0 flex-1 flex-col gap-8 px-4 py-6 text-neutral-800 md:px-0 lg:py-8 dark:text-neutral-300">
+        <div className="mx-auto flex w-full max-w-2xl min-w-0 flex-1 flex-col gap-8 py-6 text-neutral-800 lg:py-8 dark:text-neutral-300">
           <div className="flex flex-col gap-2">
             <div className="flex flex-col gap-2">
               <div className="flex items-start justify-between">
@@ -86,16 +97,17 @@ export default async function DocsPage(props: {
                   {doc.title}
                 </h1>
                 <div className="docs-nav bg-background/80 border-border/50 fixed inset-x-0 bottom-0 isolate z-50 flex items-center gap-2 border-t px-6 py-4 backdrop-blur-sm sm:static sm:z-0 sm:border-t-0 sm:bg-transparent sm:px-0 sm:pt-1.5 sm:backdrop-blur-none">
+                  <DocsCopyPage page={raw} url={pageUrl} dictionary={dictionary} />
                   {neighbours.previous && (
                     <Button
                       variant="secondary"
                       size="icon"
-                      className="extend-touch-target ml-auto size-8 shadow-none md:size-7"
+                      className="extend-touch-target ms-auto size-8 shadow-none md:size-7"
                       asChild
                     >
                       <Link href={neighbours.previous.url}>
                         <ArrowLeft />
-                        <span className="sr-only">Previous</span>
+                        <span className="sr-only">{dictionary?.common?.previous || "Previous"}</span>
                       </Link>
                     </Button>
                   )}
@@ -107,7 +119,7 @@ export default async function DocsPage(props: {
                       asChild
                     >
                       <Link href={neighbours.next.url}>
-                        <span className="sr-only">Next</span>
+                        <span className="sr-only">{dictionary?.common?.next || "Next"}</span>
                         <ArrowRight />
                       </Link>
                     </Button>
@@ -120,12 +132,30 @@ export default async function DocsPage(props: {
                 </p>
               )}
             </div>
+            {links ? (
+              <div className="flex items-center gap-2 pt-4">
+                {links?.doc && (
+                  <Badge asChild variant="secondary" className="rounded-full">
+                    <a href={links.doc} target="_blank" rel="noreferrer">
+                      Docs <ArrowUpRight className="ms-1 h-3 w-3" />
+                    </a>
+                  </Badge>
+                )}
+                {links?.api && (
+                  <Badge asChild variant="secondary" className="rounded-full">
+                    <a href={links.api} target="_blank" rel="noreferrer">
+                      API Reference <ArrowUpRight className="ms-1 h-3 w-3" />
+                    </a>
+                  </Badge>
+                )}
+              </div>
+            ) : null}
           </div>
           <div className="w-full flex-1 *:data-[slot=alert]:first:mt-0">
             <MDX components={mdxComponents} />
           </div>
         </div>
-        <div className="mx-auto hidden h-16 w-full max-w-2xl items-center gap-2 px-4 sm:flex md:px-0">
+        <div className="mx-auto hidden h-16 w-full max-w-2xl items-center gap-2 sm:flex">
           {neighbours.previous && (
             <Button
               variant="secondary"
@@ -142,7 +172,7 @@ export default async function DocsPage(props: {
             <Button
               variant="secondary"
               size="sm"
-              className="ml-auto shadow-none"
+              className="ms-auto shadow-none"
               asChild
             >
               <Link href={neighbours.next.url}>
@@ -152,7 +182,7 @@ export default async function DocsPage(props: {
           )}
         </div>
       </div>
-      <div className="sticky top-[calc(var(--header-height)+1px)] z-30 ml-auto hidden h-[calc(100svh-var(--footer-height)+2rem)] w-72 flex-col gap-4 overflow-hidden overscroll-none pb-8 xl:flex">
+      <div className="sticky top-[calc(var(--header-height)+2rem)] z-30 ml-auto hidden h-[calc(100vh-var(--header-height)-4rem)] w-72 flex-col gap-4 overflow-hidden pb-8 xl:flex">
         <div className="h-(--top-spacing) shrink-0" />
         {doc.toc?.length ? (
           <div className="no-scrollbar overflow-y-auto px-8">

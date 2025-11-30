@@ -1,0 +1,717 @@
+---
+title: "Templates Factory"
+description: "Complete guide to the templates system for full-page UI patterns and layouts"
+---
+
+# Templates Factory
+
+## Overview
+
+The templates system provides full-page UI patterns and complete application layouts. The goal is to mirror shadcn/ui's blocks system implementation patterns. Templates are pre-built, production-ready page layouts that can be copied and customized for rapid application development.
+
+> **Migration Goal**: This system is being aligned to closely follow the shadcn/ui v4 blocks implementation patterns while preserving the current PageHeader and TabsNav UI components.
+
+## Current Architecture
+
+### File Structure
+```
+src/app/[lang]/(root)/templates/    # Template showcase routes
+├── [...categories]/                # Dynamic category routes (catch-all)
+│   └── page.tsx                   # Template detail page
+├── page.tsx                        # Templates listing page
+└── ../view/templates/
+    └── [name]/page.tsx            # Template preview (iframe)
+
+src/components/root/template/       # Template system core
+├── index.ts                        # Main registry export
+├── config.ts                       # Template configurations
+├── content.tsx                     # Server component container
+├── hero.tsx                        # Hero section with PageHeader
+├── templates-nav.tsx               # Navigation matching BlocksNav
+├── all.tsx                         # Template grid display
+├── template-display.tsx            # Template display with caching
+├── template-viewer.tsx             # Complex viewer with context
+├── registry.ts                     # Zod schemas
+├── registry-templates.ts           # Template definitions
+└── __registry__/                   # Generated registry index
+    ├── index.tsx                   # Registry export
+    └── __templates__.json          # Template metadata
+
+src/lib/                            # Helper functions
+├── categories.ts                   # Category definitions (moved from registry)
+└── templates.ts                    # Template helper functions (getAllTemplateIds, etc.)
+
+src/components/template/            # Individual template components
+├── hero-01/                        # Hero section template
+│   └── page.tsx
+├── header-01/                      # Header template
+├── sidebar-01/                     # Sidebar template
+├── login-01/                       # Login template
+└── footer-01/                      # Footer template
+
+src/registry/                       # Template registry (legacy structure)
+├── new-york/templates/             # New York style templates
+└── default/templates/              # Default style templates
+```
+
+### Current Implementation Details
+
+#### Routing Pattern
+- **Main listing**: `/[lang]/templates` - Shows all templates in a grid
+- **Dynamic detail**: `/[lang]/templates/[...categories]` - Catch-all route for template details
+- **Preview iframe**: `/[lang]/view/templates/[name]` - Isolated preview page
+- Uses `generateStaticParams()` for static generation
+
+#### Registry System
+- **registry-templates.ts**: Array of template objects with metadata
+- **registry-categories.ts**: Separate category definitions
+- **Zod validation**: Schema-based validation for registry items
+- Each template includes: `name`, `type`, `description`, `files`, `categories`, `meta`
+
+#### Display Components
+- **TemplateContent**: Server component that orchestrates the layout
+- **Hero**: Uses `PageHeader` atom component (to be preserved)
+- **TabsNav**: Custom navigation tabs (to be preserved)
+- **TemplateViewer**: Complex client component with:
+  - Context provider for state management
+  - File tree navigation
+  - Code syntax highlighting
+  - Resizable preview panels
+  - Device preview toggles
+  - Copy-to-clipboard functionality
+
+#### Data Flow
+```
+templates/page.tsx
+    ↓
+TemplateContent (server)
+    ↓
+├─→ Hero (PageHeader)
+├─→ TemplateTabs (TabsNav)
+└─→ TemplateDisplay (async)
+        ↓
+        getTemplate()
+        ↓
+        TemplateViewer (client)
+            ├─→ Toolbar
+            ├─→ Preview (iframe)
+            └─→ Code Display
+```
+
+## Side-by-Side Comparison: Templates vs shadcn/ui Blocks
+
+### 1. **Routing Structure**
+
+| Aspect | Your Templates | shadcn/ui Blocks | Status |
+|--------|---------------|------------------|--------|
+| **Main Page** | `/templates/page.tsx` | `/blocks/page.tsx` | ✅ Same pattern |
+| **Dynamic Route** | `/templates/[...categories]/page.tsx` | `/blocks/[...categories]/page.tsx` | ✅ **Identical!** |
+| **Preview Route** | `/view/templates/[name]/page.tsx` | N/A - uses inline preview | ⚠️ Different |
+| **Static Generation** | `generateStaticParams()` | `generateStaticParams()` | ✅ Same |
+| **Route Params** | `params: { categories: string[] }` | `params: { categories?: string[] }` | ✅ Similar |
+
+> **Key Finding**: shadcn/ui blocks ALSO uses `[...categories]` catch-all routing! Your implementation is already aligned.
+
+### 2. **Layout Structure**
+
+| Component | Your Templates | shadcn/ui Blocks | Alignment Needed |
+|-----------|---------------|------------------|-----------------|
+| **Layout File** | No dedicated layout.tsx | `layout.tsx` with PageHeader | ❌ Add layout |
+| **Page Header** | In `content.tsx` via Hero component | In `layout.tsx` | ⚠️ Move to layout |
+| **Navigation** | `TemplateTabs` component | `BlocksNav` in PageNav | ✅ Similar pattern |
+| **Container** | Custom wrapper | `container-wrapper` + `container` | ⚠️ Align classes |
+
+### 3. **Display Components**
+
+| Component | Your Implementation | shadcn/ui Implementation | Notes |
+|-----------|-------------------|------------------------|-------|
+| **Main Display** | `TemplateDisplay` → `TemplateViewer` | `BlockDisplay` → `BlockViewer` | ✅ Same pattern |
+| **Server/Client Split** | ✅ Server component fetches, client renders | ✅ Same approach | ✅ Aligned |
+| **Preview** | `TemplateViewerView` (iframe) | `ComponentPreview` (direct) | ⚠️ Different approach |
+| **Code Display** | `TemplateViewerCode` with file tree | Highlighted code in `BlockViewer` | ✅ Similar |
+| **Toolbar** | `TemplateViewerToolbar` | Part of `BlockViewer` | ✅ Similar |
+
+### 4. **Registry System**
+
+| Aspect | Your Templates | shadcn/ui Blocks |
+|--------|---------------|------------------|
+| **Registry Location** | `registry-templates.ts` | `registry/__index__.tsx` |
+| **Registry Format** | Array of objects | Index object with style keys |
+| **Metadata** | In registry objects | `__blocks__.json` for metadata |
+| **Categories** | `registry-categories.ts` | `lib/categories.ts` |
+| **Schema Validation** | Zod schemas | Zod schemas (registryItemSchema) |
+
+### 5. **Code Organization**
+
+```
+# Your Templates Structure:
+src/
+├── app/[lang]/(root)/templates/
+│   ├── page.tsx
+│   └── [...categories]/page.tsx
+├── components/
+│   ├── root/template/
+│   │   ├── registry-templates.ts
+│   │   ├── template-viewer.tsx
+│   │   └── ...
+│   └── template/
+│       ├── hero-01/
+│       └── ...
+
+# shadcn/ui Blocks Structure:
+apps/v4/
+├── app/(app)/blocks/
+│   ├── page.tsx
+│   ├── [...categories]/page.tsx
+│   └── layout.tsx
+├── components/
+│   ├── block-display.tsx
+│   ├── block-viewer.tsx
+│   └── blocks-nav.tsx
+├── lib/
+│   ├── blocks.ts
+│   └── categories.ts
+└── registry/
+    ├── __index__.tsx
+    └── __blocks__.json
+```
+
+### 6. **Key Functions & Data Flow**
+
+| Function | Your Templates | shadcn/ui Blocks |
+|----------|---------------|------------------|
+| **Get Items** | `getTemplate()` / `getRegistryItem()` | `getRegistryItem()` |
+| **Get All Items** | Custom logic | `getAllBlockIds()` / `getAllBlocks()` |
+| **Highlight Code** | `highlightCode()` | `highlightCode()` |
+| **File Tree** | Custom implementation | `createFileTreeForRegistryItemFiles()` |
+| **Caching** | Not visible | `React.cache()` wrapper functions |
+
+### 7. **Featured Items Display**
+
+| Aspect | Your Templates | shadcn/ui Blocks |
+|--------|---------------|------------------|
+| **Featured List** | `FEATURED_TEMPLATES` in config | `FEATURED_BLOCKS` in page.tsx |
+| **Display Method** | Grid with categories | Sequential `BlockDisplay` components |
+| **Browse Link** | Via tabs | Button to `/blocks/sidebar` |
+
+## Alignment Recommendations
+
+### ✅ **What's Already Aligned**
+1. **Routing**: Your `[...categories]` pattern matches shadcn/ui exactly!
+2. **Server Components**: Both use server components for data fetching
+3. **Schema Validation**: Both use Zod for validation
+4. **Code Highlighting**: Same approach with syntax highlighting
+5. **Category System**: Similar category-based organization
+
+### 🔄 **Changes Needed for Full Alignment**
+
+#### 1. **Add Layout File**
+Create `src/app/[lang]/(root)/templates/layout.tsx`:
+```tsx
+// Move PageHeader and navigation to layout
+export default function TemplatesLayout({ children }) {
+  return (
+    <>
+      <PageHeader>
+        <Announcement />
+        <PageHeaderHeading>Templates title</PageHeaderHeading>
+        <PageHeaderDescription>Description</PageHeaderDescription>
+        <PageActions>...</PageActions>
+      </PageHeader>
+      <PageNav>
+        <TemplatesNav />
+      </PageNav>
+      <div className="container-wrapper">
+        <div className="container">{children}</div>
+      </div>
+    </>
+  )
+}
+```
+
+#### 2. **Simplify Display Components**
+- Rename `TemplateDisplay` → follow `BlockDisplay` pattern
+- Consider simplifying `TemplateViewer` complexity
+- Keep iframe preview if needed (it's a valid choice)
+
+#### 3. **Align Registry Structure**
+- Create `__templates__.json` for metadata
+- Consider restructuring registry to match blocks pattern
+- Use `React.cache()` for performance
+
+#### 4. **Add Helper Functions**
+Create `lib/templates.ts` similar to `lib/blocks.ts`:
+```typescript
+export async function getAllTemplateIds()
+export async function getAllTemplates()
+```
+
+#### 5. **Update Navigation Component**
+Align `TemplateTabs` with `BlocksNav` pattern while keeping your UI style
+
+### 🎯 **Components to Keep As-Is**
+- Your `PageHeader` atom component (it's similar to shadcn's)
+- Your `TabsNav` for navigation (just align the data flow)
+- Theme system and styling approach
+- Iframe preview (if you prefer it over direct rendering)
+
+## How It Works
+
+### 1. Template Definition
+Templates are full React components with complete layouts:
+- Complete page structures
+- Responsive design patterns
+- Theme-aware styling
+- Production-ready code
+
+### 2. Registry System
+- Templates registered in `registry-*.ts` files
+- Auto-generated JSON files for CLI consumption
+- Metadata includes dependencies and file paths
+- Style variants (new-york, default)
+
+### 3. Showcase Pages
+- Dynamic routing for template categories
+- Live preview with code display
+- Copy-to-clipboard functionality
+- Style switching support
+
+### 4. CLI Integration
+- Templates consumable via shadcn CLI
+- JSON registry enables `npx shadcn add template-name`
+- Auto-installs dependencies
+- Places files in correct locations
+
+## How to Add New Templates (Current Process)
+
+> **Note**: This process is being updated to align with shadcn/ui blocks patterns. The following describes the current implementation.
+
+### Step 1: Create Template Component
+Create your template in `src/components/template/your-template/`:
+
+```tsx
+// src/components/template/your-template/page.tsx
+import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
+
+export default function YourTemplate() {
+  return (
+    <div className="container mx-auto p-6">
+      <header className="mb-8">
+        <h1 className="text-4xl font-bold">Your Template</h1>
+        <p className="text-muted-foreground">
+          Template description here
+        </p>
+      </header>
+
+      <main className="grid gap-6">
+        <Card className="p-6">
+          <h2 className="text-2xl font-semibold mb-4">
+            Section Title
+          </h2>
+          <p>Your content here</p>
+          <Button className="mt-4">Action</Button>
+        </Card>
+      </main>
+    </div>
+  )
+}
+```
+
+### Step 2: Register Template
+Add to `src/components/root/template/registry-templates.ts`:
+
+```typescript
+// src/components/root/template/registry-templates.ts
+export const templates: Registry = [
+  {
+    name: "your-template",
+    type: "registry:template",
+    description: "Your template description",
+    files: [
+      {
+        path: "templates/your-template/page.tsx",
+        type: "registry:page",
+      },
+    ],
+    dependencies: ["@/components/ui/button", "@/components/ui/card"],
+    registryDependencies: ["button", "card"],
+    categories: ["landing"],
+    meta: {
+      iframeHeight: "900px",
+      containerClassName: "w-full",
+    },
+  },
+  // ... other templates
+]
+```
+
+### Step 3: Add to Config
+Update `src/components/root/template/config.ts`:
+
+```typescript
+// src/components/root/template/config.ts
+export const TEMPLATES: Template[] = [
+  {
+    name: "your-template",
+    type: "registry:template",
+    description: "Your template description",
+    categories: ["landing"],
+  },
+  // ... other templates
+]
+```
+
+### Step 4: Update Display Components
+If needed, update the display configuration in `src/components/root/template/all.tsx` or relevant display files.
+
+### Step 5: Generate Registry (if applicable)
+```bash
+# If using registry build process
+pnpm build:registry
+```
+
+## Template Categories
+
+### Landing Pages
+Complete landing page layouts:
+- **Hero Sections**: Eye-catching headers with CTAs
+- **Feature Grids**: Product feature showcases
+- **Pricing Tables**: Subscription plan displays
+- **Testimonials**: Customer feedback sections
+- **Footer Layouts**: Company information footers
+
+### Authentication
+User authentication interfaces:
+- **Login Pages**: Sign-in forms with social options
+- **Registration**: Sign-up flows with validation
+- **Password Reset**: Recovery email forms
+- **Two-Factor**: 2FA verification screens
+- **OAuth Flows**: Social login integrations
+
+### Dashboards
+Admin and user dashboards:
+- **Analytics Dashboard**: Data visualization layouts
+- **User Dashboard**: Profile and settings pages
+- **Admin Panel**: Management interfaces
+- **Metrics Display**: KPI and statistics views
+- **Activity Feeds**: Timeline and log displays
+
+### Application Layouts
+Core app structures:
+- **Sidebar Layouts**: Navigation with collapsible sidebar
+- **Header Layouts**: Top navigation patterns
+- **Tab Layouts**: Multi-section interfaces
+- **Split Views**: Dual-pane layouts
+- **Mobile Responsive**: Adaptive designs
+
+### Marketing
+Marketing and content pages:
+- **Blog Layouts**: Article listing and reading
+- **Portfolio**: Project showcases
+- **Team Pages**: Staff directories
+- **Contact Forms**: Inquiry submissions
+- **Newsletter**: Email subscription forms
+
+## Template Features
+
+### Responsive Design
+All templates include:
+- Mobile-first approach
+- Breakpoint optimization
+- Touch-friendly interactions
+- Adaptive layouts
+- Performance optimization
+
+### Theme Support
+Templates work with:
+- Light/dark mode switching
+- Custom color schemes
+- CSS variable theming
+- Tailwind configuration
+- Brand customization
+
+### Accessibility
+Built-in a11y features:
+- Semantic HTML structure
+- ARIA labels and roles
+- Keyboard navigation
+- Focus management
+- Screen reader support
+
+### Production Ready
+Templates include:
+- SEO optimization
+- Performance best practices
+- Error boundaries
+- Loading states
+- Form validation
+
+## Registry System
+
+### JSON Structure
+Each template generates a JSON file:
+
+```json
+{
+  "$schema": "https://ui.shadcn.com/schema.json",
+  "name": "dashboard-01",
+  "type": "registry:template",
+  "description": "A dashboard layout with sidebar navigation",
+  "files": [
+    {
+      "path": "templates/dashboard-01/page.tsx",
+      "content": "// Full component code here",
+      "type": "registry:page",
+      "target": "app/dashboard/page.tsx"
+    }
+  ],
+  "dependencies": [
+    "@radix-ui/react-icons",
+    "@tanstack/react-table"
+  ],
+  "registryDependencies": [
+    "button",
+    "card",
+    "table"
+  ],
+  "categories": ["application"],
+  "subcategory": "dashboard"
+}
+```
+
+### CLI Consumption
+Templates installable via:
+
+```bash
+# Install a specific template
+npx shadcn add dashboard-01
+
+# Install with custom path
+npx shadcn add dashboard-01 --path app/admin
+
+# Install with dependencies
+npx shadcn add dashboard-01 --deps
+```
+
+### Style Variants
+Templates support multiple styles:
+- **new-york**: Modern, clean design
+- **default**: Classic shadcn style
+
+Style-specific imports are automatically adjusted.
+
+## Best Practices
+
+### 1. Template Structure
+- Keep templates self-contained
+- Use composition over inheritance
+- Minimize external dependencies
+- Include all necessary styles
+
+### 2. Component Usage
+- Use shadcn/ui components
+- Avoid hardcoded values
+- Make sections configurable
+- Support theme variables
+
+### 3. Documentation
+- Clear component comments
+- Usage examples in code
+- Configuration options
+- Customization notes
+
+### 4. Performance
+- Lazy load heavy components
+- Optimize images
+- Minimize bundle size
+- Use production builds
+
+### 5. Testing
+- Test responsive breakpoints
+- Verify theme switching
+- Check accessibility
+- Validate forms
+
+## Customization
+
+### Modifying Templates
+After installation, templates can be:
+- Edited directly in your project
+- Extended with new sections
+- Themed with your brand
+- Integrated with your data
+
+### Adding Sections
+Extend templates with new sections:
+
+```tsx
+import OriginalTemplate from "./dashboard-01/page"
+import { CustomSection } from "./custom-section"
+
+export default function ExtendedDashboard() {
+  return (
+    <>
+      <OriginalTemplate />
+      <CustomSection />
+    </>
+  )
+}
+```
+
+### Theming Templates
+Apply custom themes:
+
+```css
+/* Override template variables */
+.template-dashboard {
+  --template-bg: var(--custom-bg);
+  --template-border: var(--custom-border);
+  --template-text: var(--custom-text);
+}
+```
+
+## Troubleshooting
+
+### Build Issues
+```bash
+# Clear build cache
+rm -rf .next __registry__
+
+# Rebuild registry
+pnpm build:registry
+
+# Restart dev server
+pnpm dev
+```
+
+### Import Errors
+- Check style variant imports
+- Verify component paths
+- Ensure dependencies installed
+- Update tsconfig paths
+
+### Styling Problems
+- Check Tailwind configuration
+- Verify CSS imports
+- Test theme variables
+- Clear browser cache
+
+### Registry Updates
+- Run build:registry after changes
+- Verify JSON generation
+- Check public/r/ directory
+- Test CLI installation
+
+## Advanced Features
+
+### Dynamic Data Integration
+Connect templates to your data:
+
+```tsx
+// Transform static template to dynamic
+export default async function DashboardPage() {
+  const data = await fetchDashboardData()
+
+  return <DashboardTemplate data={data} />
+}
+```
+
+### Multi-Language Support
+Add i18n to templates:
+
+```tsx
+import { useTranslation } from "@/lib/i18n"
+
+export default function LocalizedTemplate() {
+  const { t } = useTranslation()
+
+  return (
+    <h1>{t("template.title")}</h1>
+  )
+}
+```
+
+### State Management
+Integrate with state libraries:
+
+```tsx
+import { useStore } from "@/lib/store"
+
+export default function StatefulTemplate() {
+  const { state, actions } = useStore()
+
+  return <TemplateWithState {...state} {...actions} />
+}
+```
+
+## Performance
+
+### Optimization Strategies
+- Code splitting by route
+- Dynamic imports for heavy components
+- Image optimization with Next.js
+- CSS purging in production
+
+### Metrics
+- Initial load: < 100KB
+- Time to interactive: < 2s
+- Lighthouse score: > 90
+- Core Web Vitals: Pass
+
+## Future Enhancements
+
+### Planned Features
+- [ ] Visual template builder
+- [ ] AI-powered customization
+- [ ] Figma to template conversion
+- [ ] Template marketplace
+- [ ] Version control for templates
+- [ ] A/B testing support
+- [ ] Analytics integration
+- [ ] Template composition tool
+
+### Community Templates
+Submit templates via:
+1. Create template following guidelines
+2. Add comprehensive documentation
+3. Include live demo
+4. Submit PR with tests
+
+## Migration Status
+
+### ✅ Migration Complete: Templates Now Mirror shadcn/ui Blocks
+The templates system has been successfully migrated to mirror the shadcn/ui v4 blocks implementation pattern.
+
+#### Completed Migration Tasks
+✅ **Navigation**: Renamed to `templates-nav.tsx` matching BlocksNav pattern
+✅ **Categories**: Moved to `lib/categories.ts` matching blocks structure
+✅ **Helper Functions**: Created `lib/templates.ts` with `getAllTemplateIds()` and `getAllTemplates()`
+✅ **Cache Optimization**: Added React.cache() wrappers for performance
+✅ **Static Exports**: Added `dynamic = "force-static"` and `revalidate = false`
+✅ **Category Routing**: Updated `[...categories]` page to use `getAllTemplateIds()`
+✅ **Container Classes**: Added `container-wrapper`, `section-soft`, and `border-grid`
+✅ **Metadata File**: Created `__templates__.json` matching `__blocks__.json` pattern
+✅ **Imports Updated**: All imports now use new locations
+
+#### What's Preserved (As Requested)
+✅ Current page structure (no layout.tsx changes)
+✅ Hero component in content.tsx
+✅ PageHeader atom component
+✅ Current routing structure `[...categories]`
+✅ TemplateViewer with iframe approach
+✅ Theme system and styling
+
+## Resources
+
+### shadcn/ui References
+- [shadcn/ui Blocks](https://ui.shadcn.com/blocks) - Live blocks showcase
+- [shadcn/ui v4 Source](https://github.com/shadcn-ui/ui) - Official repository
+- [Registry Schema](https://ui.shadcn.com/schema.json) - Registry format specification
+- [CLI Documentation](https://ui.shadcn.com/docs/cli) - CLI usage guide
+
+### Local References
+- **Current Implementation**: `src/components/root/template/`
+- **Template Components**: `src/components/template/`
+- **Routes**: `src/app/[lang]/(root)/templates/`
+- **shadcn/ui Blocks Source**: `C:\Users\pc\Downloads\ui-main\ui-main\apps\v4\app\(app)\blocks\` (local copy for reference)

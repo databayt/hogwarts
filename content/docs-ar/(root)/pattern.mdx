@@ -1,0 +1,233 @@
+---
+title: "الأنماط"
+description: "الأنماط تتخلل كل طبقة من تطوير البرمجيات - من كيفية تسمية متغير إلى كيفية هيكلة تطبيق كامل."
+---
+
+## الأنماط سحرية، عندما تراها تعرفها
+
+**الاتساق** هو أساس الكود القابل للصيانة. في Databayt، نتبع أنماطاً راسخة تضمن بقاء قاعدة كودنا قابلة للتوسع وقابلة للقراءة وتعاونية. كل نمط يخدم غرضاً - من المكونات الذرية إلى إجراءات الخادم، من اصطلاحات التسمية إلى تنظيم الملفات.
+
+## اصطلاحات التسمية
+
+### الملفات والمجلدات
+- **المكونات**: kebab-case للملفات (`button.tsx`، `user-profile.tsx`)
+- **الصفحات**: kebab-case لشرائح المسار (`user-profile`، `sign-in`)
+- **الخطافات**: اصطلاح البادئة use (`use-leads.ts`، `use-upwork.ts`)
+- **الأنواع**: PascalCase للواجهات والأنواع (`UserData`، `ApiResponse`)
+- **الثوابت**: UPPER_SNAKE_CASE أو camelCase للكائنات
+
+### المتغيرات والدوال
+- **المكونات**: PascalCase (`export function UserCard()`)
+- **الدوال**: camelCase (`export function formatCurrency()`)
+- **المتغيرات**: camelCase (`const userData = await fetchUser()`)
+- **الثوابت**: SCREAMING_SNAKE_CASE (`const API_BASE_URL = 'https://api.example.com'`)
+
+### قاعدة البيانات وAPI
+- **جداول قاعدة البيانات**: snake_case (`user_profiles`، `order_items`)
+- **مسارات API**: kebab-case (`/api/user-profile`، `/api/order-history`)
+- **متغيرات البيئة**: SCREAMING_SNAKE_CASE (`DATABASE_URL`، `NEXT_PUBLIC_API_KEY`)
+
+## أنماط الدوال
+
+<div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-8">
+  <div className="p-6 border rounded-lg">
+    <h4 className="font-semibold mb-2">دوال السهم</h4>
+    <div className="text-sm text-muted-foreground mb-4">
+      مفضلة للأدوات ومعالجات الأحداث والدوال المضمنة.
+    </div>
+    <pre className="text-xs bg-muted p-2 rounded overflow-x-auto">
+{`const formatPrice = (amount: number) => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD'
+  }).format(amount)
+}`}
+    </pre>
+  </div>
+  <div className="p-6 border rounded-lg">
+    <h4 className="font-semibold mb-2">تعريفات الدوال</h4>
+    <div className="text-sm text-muted-foreground mb-4">
+      تُستخدم لمكونات React ومعالجات مسارات API والدوال المُصدَّرة.
+    </div>
+    <pre className="text-xs bg-muted p-2 rounded overflow-x-auto">
+{`export function UserProfile({ userId }: Props) {
+  const { user, loading } = useUser(userId)
+
+  if (loading) return <Skeleton />
+  return <div>{user.name}</div>
+}`}
+    </pre>
+  </div>
+</div>
+
+## إجراءات الخادم وجلب البيانات
+
+### نمط إجراءات الخادم
+نستخدم إجراءات خادم Next.js لإرسال النماذج وتغييرات البيانات:
+
+```typescript
+'use server'
+
+import { revalidatePath } from 'next/cache'
+import { redirect } from 'next/navigation'
+
+export async function createUser(formData: FormData) {
+  const userData = {
+    name: formData.get('name') as string,
+    email: formData.get('email') as string,
+  }
+
+  try {
+    await db.user.create({ data: userData })
+    revalidatePath('/users')
+    redirect('/users')
+  } catch (error) {
+    throw new Error('Failed to create user')
+  }
+}
+```
+
+### تسلسل جلب البيانات
+- **مكونات الخادم**: استعلامات قاعدة بيانات مباشرة للبيانات الأولية
+- **مكونات العميل**: React Query/SWR للبيانات التفاعلية
+- **إجراءات الخادم**: إرسال النماذج والتغييرات
+- **مسارات API**: التكاملات الخارجية والwebhooks
+
+## بنية المكونات
+
+### هيكل التصميم الذري
+```
+components/
+├── atom/           # عناصر أساسية (Button، Input، Icon)
+├── molecule/       # تركيبات بسيطة (SearchBox، FormField)
+├── organism/       # مكونات معقدة (Header، UserTable)
+├── template/       # تخطيطات وهياكل الصفحة
+└── page/          # تركيبات الصفحة الكاملة
+```
+
+## بنية نمط المرآة
+
+نمط المرآة يضمن أن كل ميزة تتبع هيكلاً متسقاً ومتوقعاً. كل دليل ميزة يحتوي نفس أنواع الملفات.
+
+### هيكل الميزة
+```
+components/<feature>/
+├── content.tsx      # تركيب UI الرئيسي (مكون عميل)
+├── actions.ts       # إجراءات الخادم (التغييرات، CRUD)
+├── validation.ts    # مخططات Zod للتحقق من البيانات
+├── types.ts         # أنواع TypeScript والواجهات
+├── form.tsx         # مكونات النماذج (عميل)
+├── table.tsx        # جدول البيانات (عميل)
+├── column.tsx       # تعريفات الأعمدة (عميل)
+├── use-<feature>.ts # خطافات React المخصصة
+├── config.ts        # التعدادات، الخيارات، الافتراضيات
+└── README.md        # توثيق الميزة
+```
+
+### لماذا يعمل نمط المرآة
+- **قابلية التنبؤ**: كل ميزة تتبع نفس الهيكل
+- **قابلية الاكتشاف**: تعرف بالضبط أين تجد التحقق والإجراءات والأنواع
+- **قابلية التوسع**: الميزات الجديدة تتبع القالب المحدد
+- **التعاون**: أي مطور يمكنه القفز إلى أي ميزة فوراً
+
+---
+
+## أنماط الملفات القياسية
+
+### نمط page.tsx
+
+الصفحات تفوض إلى مكونات المحتوى، تعالج البيانات الوصفية وi18n:
+
+```typescript
+import BrandingContent from "@/components/onboarding/branding/content";
+import { getDictionary } from "@/components/internationalization/dictionaries";
+import { type Locale } from "@/components/internationalization/config";
+
+export const metadata = {
+  title: "Branding",
+};
+
+interface PageProps {
+  params: Promise<{ lang: Locale }>
+}
+
+export default async function Branding({ params }: PageProps) {
+  const { lang } = await params;
+  const dictionary = await getDictionary(lang);
+  return <BrandingContent dictionary={dictionary.school} />;
+}
+```
+
+### نمط actions.ts
+
+إجراءات الخادم مع سياق المستأجر والتحقق وإعادة التحقق:
+
+```typescript
+"use server";
+
+import { z } from "zod";
+import { revalidatePath } from "next/cache";
+import { db } from "@/lib/db";
+import { getTenantContext } from "@/lib/tenant-context";
+import { studentCreateSchema } from "./validation";
+
+export async function createStudent(input: z.infer<typeof studentCreateSchema>) {
+  const { schoolId } = await getTenantContext();
+  if (!schoolId) throw new Error("Missing school context");
+
+  const parsed = studentCreateSchema.parse(input);
+
+  const row = await db.student.create({
+    data: {
+      schoolId,
+      givenName: parsed.givenName,
+      surname: parsed.surname,
+      gender: parsed.gender,
+    },
+  });
+
+  revalidatePath("/students");
+  return { success: true as const, id: row.id };
+}
+```
+
+## بنية تعدد المستأجرين
+
+للتطبيقات التي تخدم مؤسسات متعددة، عزل المستأجر ليس اختيارياً - إنه قانون مقدس.
+
+### القاعدة الذهبية
+```typescript
+// كل استعلام قاعدة بيانات يجب أن يتضمن نطاق المستأجر
+await db.student.findMany({
+  where: { schoolId, yearLevel: "10" }  // schoolId = عزل المستأجر
+})
+
+// لا تستعلم أبداً بدون نطاق المستأجر
+await db.student.findMany({
+  where: { yearLevel: "10" }  // خطير: يكسر العزل
+})
+```
+
+## أنماط TypeScript
+
+### استراتيجية تعريف الأنواع
+- **Props**: مضمنة للمكونات البسيطة، واجهات منفصلة للمعقدة
+- **أنواع API**: مُولَّدة من المخطط أو مواصفات OpenAPI
+- **أنواع الأداة**: استفد من أنواع الأداة المدمجة في TypeScript
+- **الوضع الصارم**: مُفعَّل دائماً مع `strict: true` في tsconfig
+
+## أنماط التنسيق
+
+### تنظيم Tailwind CSS
+- **أنماط المكونات**: ركّب الأدوات مع مساعد `cn()`
+- **مسافات متسقة**: استخدم مقياس مسافات Tailwind
+- **تصميم متجاوب**: أنماط متجاوبة للهاتف أولاً
+- **الوضع الداكن**: متغيرات CSS مع وضع Tailwind الداكن
+
+---
+
+## تبني الأنماط
+
+هذه الأنماط هي **إرشادات حية** تتطور مع قاعدة كودنا. إنها موثقة في [دليل المساهمة](/ar/docs/contributing) ومُنفَّذة من خلال قواعد ESLint وتكوين Prettier وعمليات مراجعة الكود.
+
+عندما تشك، أعطِ الأولوية **للاتساق** على التفضيل الشخصي. أنماطنا تخدم المجتمع، تضمن أن أي مطور يمكنه القفز إلى أي جزء من قاعدة الكود وفهم الهيكل والاصطلاحات فوراً.

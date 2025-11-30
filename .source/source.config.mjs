@@ -67,7 +67,11 @@ var source_config_default = defineConfig({
 var docs = defineDocs({
   dir: "content/docs"
 });
+var docsArabic = defineDocs({
+  dir: "content/docs-ar"
+});
 export {
   source_config_default as default,
-  docs
+  docs,
+  docsArabic
 };
