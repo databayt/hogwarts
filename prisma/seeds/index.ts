@@ -82,15 +82,16 @@ async function main() {
     console.log("\nPHASE 5: CLASSES & ENROLLMENTS");
     console.log("-".repeat(40));
 
-    const { classes, enrollments, assignments, submissions, attendances } =
+    const { classes } =
       await seedClasses(
         prisma,
         schoolId,
-        yearLevels,
+        term1.id,
+        periods,
+        classrooms,
         subjects,
         teachers,
-        students,
-        classrooms
+        students
       );
 
     // Phase 6: Resources
@@ -104,7 +105,7 @@ async function main() {
     console.log("\nPHASE 7: FINANCE & FEES");
     console.log("-".repeat(40));
 
-    await seedFees(prisma, schoolId, students);
+    await seedFees(prisma, schoolId, classes, students);
     await seedFinance(prisma, schoolId, teachers, students, schoolYear);
 
     // Phase 8: Assessments
