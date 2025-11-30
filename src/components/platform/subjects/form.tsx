@@ -13,7 +13,12 @@ import { useRouter } from "next/navigation";
 import { InformationStep } from "./information";
 import { SubjectFormFooter } from "./footer";
 
-export function SubjectCreateForm() {
+interface SubjectCreateFormProps {
+  /** Callback fired on successful create/update - use for optimistic refresh */
+  onSuccess?: () => void;
+}
+
+export function SubjectCreateForm({ onSuccess }: SubjectCreateFormProps) {
   const { modal, closeModal } = useModal();
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
@@ -50,7 +55,12 @@ export function SubjectCreateForm() {
     if (res?.success) {
       toast.success(currentId ? "Subject updated" : "Subject created");
       closeModal();
-      router.refresh();
+      // Use callback for optimistic update, fallback to router.refresh()
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        router.refresh();
+      }
     } else {
       toast.error(currentId ? "Failed to update subject" : "Failed to create subject");
     }

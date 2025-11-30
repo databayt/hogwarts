@@ -1,18 +1,26 @@
 "use client";
 
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, useTransition } from "react";
 import { DataTable } from "@/components/table/data-table";
-import { DataTableToolbar } from "@/components/table/data-table-toolbar";
 import { useDataTable } from "@/components/table/use-data-table";
 import { getStudentColumns, type StudentRow } from "./columns";
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
 import { useModal } from "@/components/atom/modal/context";
 import Modal from "@/components/atom/modal/modal";
 import { StudentCreateForm } from "@/components/platform/students/form";
-import { ExportButton } from "./export-button";
 import type { Dictionary } from "@/components/internationalization/dictionaries";
-import { getStudents } from "./actions";
+import { getStudents, getStudentsCSV, deleteStudent } from "./actions";
+import { usePlatformView } from "@/hooks/use-platform-view";
+import { usePlatformData } from "@/hooks/use-platform-data";
+import {
+  PlatformToolbar,
+  GridCard,
+  GridContainer,
+  GridEmptyState,
+} from "@/components/platform/shared";
+import { Badge } from "@/components/ui/badge";
+import { GraduationCap, User } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { DeleteToast, ErrorToast, confirmDeleteDialog } from "@/components/atom/toast";
 
 interface StudentsTableProps {
   initialData: StudentRow[];
@@ -22,36 +30,62 @@ interface StudentsTableProps {
 }
 
 export function StudentsTable({ initialData, total, dictionary, perPage = 20 }: StudentsTableProps) {
+  const router = useRouter();
+  const { openModal } = useModal();
+  const [isPending, startTransition] = useTransition();
+
+  // Default translations - safely access dictionary or use fallbacks
+  const t = {
+    fullName: dictionary?.fullName || "Name",
+    class: dictionary?.class || "Class",
+    status: "Status",
+    created: "Created",
+    actions: "Actions",
+    editStudent: dictionary?.editStudent || "Edit Student",
+    deleteStudent: dictionary?.deleteStudent || "Delete Student",
+    viewStudent: "View Student",
+    createStudent: "Create Student",
+    allStudents: dictionary?.allStudents || "All Students",
+    noStudents: "No students found",
+    addNewStudent: "Add a new student to your school",
+    active: "Active",
+    inactive: "Inactive",
+    search: "Search students...",
+    create: "Create",
+    export: "Export",
+    reset: "Reset",
+  };
+
+  // View mode (table/grid)
+  const { view, toggleView } = usePlatformView({ defaultView: "table" });
+
+  // Search state
+  const [searchValue, setSearchValue] = useState("");
+
+  // Data management with optimistic updates
+  const {
+    data,
+    total: dataTotal,
+    isLoading,
+    hasMore,
+    loadMore,
+    refresh,
+    optimisticRemove,
+  } = usePlatformData<StudentRow, { name?: string }>({
+    initialData,
+    total,
+    perPage,
+    fetcher: async (params) => {
+      const result = await getStudents(params);
+      return { rows: result.rows as StudentRow[], total: result.total };
+    },
+    filters: searchValue ? { name: searchValue } : undefined,
+  });
+
   // Generate columns on the client side with hooks
   const columns = useMemo(() => getStudentColumns(dictionary), [dictionary]);
 
-  // State for incremental loading
-  const [data, setData] = useState<StudentRow[]>(initialData);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [isLoading, setIsLoading] = useState(false);
-
-  const hasMore = data.length < total;
-
-  const handleLoadMore = useCallback(async () => {
-    if (isLoading || !hasMore) return;
-
-    setIsLoading(true);
-    try {
-      const nextPage = currentPage + 1;
-      const result = await getStudents({ page: nextPage, perPage });
-
-      if (result.rows.length > 0) {
-        setData(prev => [...prev, ...result.rows as any]);
-        setCurrentPage(nextPage);
-      }
-    } catch (error) {
-      console.error('Failed to load more students:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [currentPage, perPage, isLoading, hasMore]);
-
-  // Use pageCount of 1 since we're handling all data client-side
+  // Table instance
   const { table } = useDataTable<StudentRow>({
     data,
     columns,
@@ -59,41 +93,175 @@ export function StudentsTable({ initialData, total, dictionary, perPage = 20 }: 
     initialState: {
       pagination: {
         pageIndex: 0,
-        pageSize: data.length, // Show all loaded data
+        pageSize: data.length || perPage,
       }
     }
   });
 
-  const { openModal } = useModal();
+  // Handle search
+  const handleSearchChange = useCallback((value: string) => {
+    setSearchValue(value);
+    startTransition(() => {
+      router.refresh();
+    });
+  }, [router]);
+
+  // Handle delete with optimistic update
+  const handleDelete = useCallback(async (student: StudentRow) => {
+    try {
+      const ok = await confirmDeleteDialog(`Delete ${student.name}?`);
+      if (!ok) return;
+
+      // Optimistic remove
+      optimisticRemove(student.id);
+
+      const result = await deleteStudent({ id: student.id });
+      if (result.success) {
+        DeleteToast();
+      } else {
+        // Revert on error
+        refresh();
+        ErrorToast("Failed to delete student");
+      }
+    } catch (e) {
+      refresh();
+      ErrorToast(e instanceof Error ? e.message : "Failed to delete");
+    }
+  }, [optimisticRemove, refresh]);
+
+  // Handle edit
+  const handleEdit = useCallback((id: string) => {
+    openModal(id);
+  }, [openModal]);
+
+  // Handle view
+  const handleView = useCallback((student: StudentRow) => {
+    if (!student.userId) {
+      ErrorToast("This student does not have a user account");
+      return;
+    }
+    router.push(`/profile/${student.userId}`);
+  }, [router]);
+
+  // Get status badge
+  const getStatusBadge = (status: string) => {
+    return status === "active"
+      ? { label: t.active || "Active", variant: "default" as const }
+      : { label: t.inactive || "Inactive", variant: "outline" as const };
+  };
+
+  // Export CSV wrapper
+  const handleExportCSV = useCallback(async (filters?: Record<string, unknown>) => {
+    return getStudentsCSV(filters);
+  }, []);
+
+  // Toolbar translations
+  const toolbarTranslations = {
+    search: t.search || "Search students...",
+    create: t.create || "Create",
+    reset: t.reset || "Reset",
+    export: t.export || "Export",
+    exportCSV: "Export CSV",
+    exporting: "Exporting...",
+  };
 
   return (
-    <DataTable
-      table={table}
-      paginationMode="load-more"
-      hasMore={hasMore}
-      isLoading={isLoading}
-      onLoadMore={handleLoadMore}
-    >
-      <DataTableToolbar table={table}>
-        <div className="flex items-center gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="h-8 w-8 p-0 rounded-full"
-            onClick={() => openModal()}
-            aria-label="Create"
-            title="Create"
-          >
-            <Plus className="h-4 w-4" />
-          </Button>
-          <ExportButton />
-        </div>
-      </DataTableToolbar>
-      <Modal content={<StudentCreateForm dictionary={dictionary} />} />
-    </DataTable>
+    <>
+      <PlatformToolbar
+        table={view === "table" ? table : undefined}
+        view={view}
+        onToggleView={toggleView}
+        searchValue={searchValue}
+        onSearchChange={handleSearchChange}
+        searchPlaceholder={t.search || "Search students..."}
+        onCreate={() => openModal()}
+        getCSV={handleExportCSV}
+        entityName="students"
+        translations={toolbarTranslations}
+      />
+
+      {view === "table" ? (
+        <DataTable
+          table={table}
+          paginationMode="load-more"
+          hasMore={hasMore}
+          isLoading={isLoading || isPending}
+          onLoadMore={loadMore}
+        />
+      ) : (
+        <>
+          {data.length === 0 ? (
+            <GridEmptyState
+              title={t.allStudents || "All Students"}
+              description={t.addNewStudent || "Add a new student to your school"}
+              icon={<GraduationCap className="h-12 w-12" />}
+            />
+          ) : (
+            <GridContainer columns={3}>
+              {data.map((student) => {
+                const statusBadge = getStatusBadge(student.status);
+                const initials = student.name
+                  .split(" ")
+                  .map((n) => n[0])
+                  .join("")
+                  .substring(0, 2)
+                  .toUpperCase();
+
+                return (
+                  <GridCard
+                    key={student.id}
+                    title={student.name}
+                    subtitle={student.className !== "-" ? student.className : undefined}
+                    avatarFallback={initials}
+                    status={statusBadge}
+                    metadata={[
+                      { label: t.class || "Class", value: student.className },
+                      { label: t.created || "Created", value: new Date(student.createdAt).toLocaleDateString() },
+                    ]}
+                    actions={[
+                      ...(student.userId
+                        ? [{ label: t.viewStudent || "View", onClick: () => handleView(student) }]
+                        : []),
+                      { label: t.editStudent || "Edit", onClick: () => handleEdit(student.id) },
+                      {
+                        label: t.deleteStudent || "Delete",
+                        onClick: () => handleDelete(student),
+                        variant: "destructive" as const,
+                      },
+                    ]}
+                    actionsLabel={t.actions || "Actions"}
+                    onClick={() => student.userId && handleView(student)}
+                  >
+                    {!student.userId && (
+                      <div className="flex items-center gap-2 mt-2">
+                        <Badge variant="outline" className="gap-1 text-xs">
+                          <User className="h-3 w-3" />
+                          No Account
+                        </Badge>
+                      </div>
+                    )}
+                  </GridCard>
+                );
+              })}
+            </GridContainer>
+          )}
+
+          {/* Load more for grid view */}
+          {hasMore && (
+            <div className="flex justify-center mt-4">
+              <button
+                onClick={loadMore}
+                disabled={isLoading}
+                className="px-4 py-2 text-sm border rounded-md hover:bg-accent disabled:opacity-50"
+              >
+                {isLoading ? "Loading..." : "Load More"}
+              </button>
+            </div>
+          )}
+        </>
+      )}
+
+      <Modal content={<StudentCreateForm dictionary={dictionary} onSuccess={refresh} />} />
+    </>
   );
 }
-
-
-

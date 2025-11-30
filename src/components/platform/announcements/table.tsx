@@ -1,19 +1,29 @@
 "use client";
 
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, useTransition } from "react";
 import { DataTable } from "@/components/table/data-table";
-import { DataTableToolbar } from "@/components/table/data-table-toolbar";
 import { useDataTable } from "@/components/table/use-data-table";
 import type { AnnouncementRow } from "./columns";
 import { getAnnouncementColumns } from "./columns";
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
 import { useModal } from "@/components/atom/modal/context";
 import Modal from "@/components/atom/modal/modal";
 import { AnnouncementCreateForm } from "@/components/platform/announcements/form";
 import type { Dictionary } from "@/components/internationalization/dictionaries";
 import type { Locale } from "@/components/internationalization/config";
 import { getAnnouncements } from "./actions";
+import { usePlatformView } from "@/hooks/use-platform-view";
+import { usePlatformData } from "@/hooks/use-platform-data";
+import {
+  PlatformToolbar,
+  GridCard,
+  GridContainer,
+  GridEmptyState,
+} from "@/components/platform/shared";
+import { Badge } from "@/components/ui/badge";
+import { Megaphone, Pin, Star } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { deleteAnnouncement, toggleAnnouncementPublish } from "./actions";
+import { DeleteToast, ErrorToast, confirmDeleteDialog } from "@/components/atom/toast";
 
 interface AnnouncementsTableProps {
   initialData: AnnouncementRow[];
@@ -23,6 +33,28 @@ interface AnnouncementsTableProps {
   perPage?: number;
 }
 
+// Export CSV function
+async function getAnnouncementsCSV(filters?: Record<string, unknown>): Promise<string> {
+  // Get all announcements without pagination for export
+  const result = await getAnnouncements({ page: 1, perPage: 1000, ...filters });
+  if (!result.success || !result.data.rows) return "";
+
+  const rows = result.data.rows;
+  const headers = ["ID", "Title", "Scope", "Published", "Created At", "Created By"];
+  const csvRows = rows.map((row) =>
+    [
+      row.id,
+      `"${row.title.replace(/"/g, '""')}"`,
+      row.scope,
+      row.published ? "Yes" : "No",
+      row.createdAt,
+      row.createdBy || "",
+    ].join(",")
+  );
+
+  return [headers.join(","), ...csvRows].join("\n");
+}
+
 export function AnnouncementsTable({
   initialData,
   total,
@@ -30,35 +62,46 @@ export function AnnouncementsTable({
   lang,
   perPage = 20
 }: AnnouncementsTableProps) {
-  const columns = useMemo(() => getAnnouncementColumns(dictionary), [dictionary]);
+  const t = dictionary;
+  const router = useRouter();
+  const { openModal } = useModal();
+  const [isPending, startTransition] = useTransition();
 
-  // State for incremental loading
-  const [data, setData] = useState<AnnouncementRow[]>(initialData);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [isLoading, setIsLoading] = useState(false);
+  // View mode (table/grid)
+  const { view, toggleView } = usePlatformView({ defaultView: "table" });
 
-  const hasMore = data.length < total;
+  // Search state
+  const [searchValue, setSearchValue] = useState("");
 
-  const handleLoadMore = useCallback(async () => {
-    if (isLoading || !hasMore) return;
-
-    setIsLoading(true);
-    try {
-      const nextPage = currentPage + 1;
-      const result = await getAnnouncements({ page: nextPage, perPage });
-
-      if (result.success && result.data.rows.length > 0) {
-        setData(prev => [...prev, ...result.data.rows as any]);
-        setCurrentPage(nextPage);
+  // Data management with optimistic updates
+  const {
+    data,
+    total: dataTotal,
+    isLoading,
+    hasMore,
+    loadMore,
+    refresh,
+    optimisticUpdate,
+    optimisticRemove,
+    setData,
+  } = usePlatformData<AnnouncementRow, { title?: string }>({
+    initialData,
+    total,
+    perPage,
+    fetcher: async (params) => {
+      const result = await getAnnouncements(params);
+      if (result.success) {
+        return { rows: result.data.rows as AnnouncementRow[], total: result.data.total };
       }
-    } catch (error) {
-      console.error('Failed to load more announcements:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [currentPage, perPage, isLoading, hasMore]);
+      return { rows: [], total: 0 };
+    },
+    filters: searchValue ? { title: searchValue } : undefined,
+  });
 
-  // Use pageCount of 1 since we're handling all data client-side
+  // Generate columns with dictionary
+  const columns = useMemo(() => getAnnouncementColumns(t), [t]);
+
+  // Table instance (for table view)
   const { table } = useDataTable<AnnouncementRow>({
     data,
     columns,
@@ -66,38 +109,212 @@ export function AnnouncementsTable({
     initialState: {
       pagination: {
         pageIndex: 0,
-        pageSize: data.length, // Show all loaded data
+        pageSize: data.length || perPage,
       }
     }
   });
 
-  const { openModal } = useModal();
-  const t = dictionary;
+  // Handle search with debounce
+  const handleSearchChange = useCallback((value: string) => {
+    setSearchValue(value);
+    // Trigger refresh with new search value
+    startTransition(() => {
+      router.refresh();
+    });
+  }, [router]);
+
+  // Handle delete with optimistic update
+  const handleDelete = useCallback(async (announcement: AnnouncementRow) => {
+    try {
+      const ok = await confirmDeleteDialog(t.confirmDelete.replace('{title}', announcement.title));
+      if (!ok) return;
+
+      // Optimistic remove
+      optimisticRemove(announcement.id);
+
+      const result = await deleteAnnouncement({ id: announcement.id });
+      if (result.success) {
+        DeleteToast();
+      } else {
+        // Revert on error
+        refresh();
+        ErrorToast(result.error || t.failedToDelete);
+      }
+    } catch (e) {
+      refresh();
+      ErrorToast(e instanceof Error ? e.message : t.failedToDelete);
+    }
+  }, [t, optimisticRemove, refresh]);
+
+  // Handle toggle publish with optimistic update
+  const handleTogglePublish = useCallback(async (announcement: AnnouncementRow) => {
+    try {
+      // Optimistic update
+      optimisticUpdate(announcement.id, (item) => ({
+        ...item,
+        published: !item.published,
+      }));
+
+      const result = await toggleAnnouncementPublish({
+        id: announcement.id,
+        publish: !announcement.published,
+      });
+
+      if (!result.success) {
+        // Revert on error
+        refresh();
+        ErrorToast(result.error || t.failedToTogglePublish);
+      }
+    } catch (e) {
+      refresh();
+      ErrorToast(e instanceof Error ? e.message : t.failedToTogglePublish);
+    }
+  }, [t, optimisticUpdate, refresh]);
+
+  // Handle edit
+  const handleEdit = useCallback((id: string) => {
+    openModal(id);
+  }, [openModal]);
+
+  // Handle view
+  const handleView = useCallback((id: string) => {
+    router.push(`/announcements/${id}`);
+  }, [router]);
+
+  // Get scope badge variant
+  const getScopeBadge = (scope: string) => {
+    switch (scope) {
+      case "school":
+        return { label: t.schoolWide, variant: "default" as const };
+      case "class":
+        return { label: t.classSpecific, variant: "secondary" as const };
+      case "role":
+        return { label: t.roleSpecific, variant: "outline" as const };
+      default:
+        return { label: scope, variant: "outline" as const };
+    }
+  };
+
+  // Translations for toolbar
+  const toolbarTranslations = {
+    search: t.announcementTitle,
+    create: t.create,
+    reset: t.cancel,
+    tableView: t.title,
+    gridView: t.title,
+    export: "Export",
+    exportCSV: "Export CSV",
+    exporting: "Exporting...",
+  };
 
   return (
-    <DataTable
-      table={table}
-      paginationMode="load-more"
-      hasMore={hasMore}
-      isLoading={isLoading}
-      onLoadMore={handleLoadMore}
-    >
-      <DataTableToolbar table={table}>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="h-8 w-8 p-0 rounded-full"
-          onClick={() => openModal()}
-          aria-label={t.create}
-          title={t.create}
-        >
-          <Plus className="h-4 w-4" />
-        </Button>
-      </DataTableToolbar>
-      <Modal content={<AnnouncementCreateForm dictionary={dictionary} lang={lang} />} />
-    </DataTable>
+    <>
+      <PlatformToolbar
+        table={view === "table" ? table : undefined}
+        view={view}
+        onToggleView={toggleView}
+        searchValue={searchValue}
+        onSearchChange={handleSearchChange}
+        searchPlaceholder={t.announcementTitle}
+        onCreate={() => openModal()}
+        getCSV={getAnnouncementsCSV}
+        entityName="announcements"
+        translations={toolbarTranslations}
+      />
+
+      {view === "table" ? (
+        <DataTable
+          table={table}
+          paginationMode="load-more"
+          hasMore={hasMore}
+          isLoading={isLoading || isPending}
+          onLoadMore={loadMore}
+        />
+      ) : (
+        <>
+          {data.length === 0 ? (
+            <GridEmptyState
+              title={t.allAnnouncements}
+              description={t.createNewAnnouncement}
+              icon={<Megaphone className="h-12 w-12" />}
+            />
+          ) : (
+            <GridContainer columns={3}>
+              {data.map((announcement) => {
+                const scopeBadge = getScopeBadge(announcement.scope);
+                return (
+                  <GridCard
+                    key={announcement.id}
+                    title={announcement.title}
+                    subtitle={new Date(announcement.createdAt).toLocaleDateString()}
+                    avatarFallback={announcement.title.substring(0, 2).toUpperCase()}
+                    status={{
+                      label: announcement.published ? t.published : t.draft,
+                      variant: announcement.published ? "default" : "outline",
+                    }}
+                    badges={[
+                      scopeBadge,
+                      ...(announcement.pinned ? [{ label: "Pinned", variant: "secondary" as const }] : []),
+                      ...(announcement.featured ? [{ label: "Featured", variant: "default" as const }] : []),
+                    ]}
+                    metadata={[
+                      { label: t.scope, value: scopeBadge.label },
+                      { label: t.created, value: new Date(announcement.createdAt).toLocaleDateString() },
+                    ]}
+                    actions={[
+                      { label: t.view, onClick: () => handleView(announcement.id) },
+                      { label: t.editAnnouncement, onClick: () => handleEdit(announcement.id) },
+                      {
+                        label: announcement.published ? t.unpublish : t.publish,
+                        onClick: () => handleTogglePublish(announcement),
+                      },
+                      {
+                        label: t.deleteAnnouncement,
+                        onClick: () => handleDelete(announcement),
+                        variant: "destructive",
+                      },
+                    ]}
+                    actionsLabel={t.actions}
+                    onClick={() => handleView(announcement.id)}
+                  >
+                    {(announcement.pinned || announcement.featured) && (
+                      <div className="flex gap-2 mt-2">
+                        {announcement.pinned && (
+                          <Badge variant="secondary" className="gap-1">
+                            <Pin className="h-3 w-3" />
+                            Pinned
+                          </Badge>
+                        )}
+                        {announcement.featured && (
+                          <Badge variant="default" className="gap-1">
+                            <Star className="h-3 w-3" />
+                            Featured
+                          </Badge>
+                        )}
+                      </div>
+                    )}
+                  </GridCard>
+                );
+              })}
+            </GridContainer>
+          )}
+
+          {/* Load more for grid view */}
+          {hasMore && (
+            <div className="flex justify-center mt-4">
+              <button
+                onClick={loadMore}
+                disabled={isLoading}
+                className="px-4 py-2 text-sm border rounded-md hover:bg-accent disabled:opacity-50"
+              >
+                {isLoading ? "Loading..." : "Load More"}
+              </button>
+            </div>
+          )}
+        </>
+      )}
+
+      <Modal content={<AnnouncementCreateForm dictionary={t} lang={lang} onSuccess={refresh} />} />
+    </>
   );
 }
-
-

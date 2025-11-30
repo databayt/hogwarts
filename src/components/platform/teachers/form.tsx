@@ -19,7 +19,12 @@ import { SubjectExpertiseStep } from "./expertise";
 import { ReviewStep } from "./review";
 import { TeacherFormFooter } from "./footer";
 
-export function TeacherCreateForm() {
+interface TeacherCreateFormProps {
+  /** Callback fired on successful create/update - use for optimistic refresh */
+  onSuccess?: () => void;
+}
+
+export function TeacherCreateForm({ onSuccess }: TeacherCreateFormProps) {
   const { modal, closeModal } = useModal();
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
@@ -79,7 +84,12 @@ export function TeacherCreateForm() {
     if (res?.success) {
       toast.success(currentId ? "Teacher updated" : "Teacher created");
       closeModal();
-      router.refresh();
+      // Use callback for optimistic update, fallback to router.refresh()
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        router.refresh();
+      }
     } else {
       toast.error(currentId ? "Failed to update teacher" : "Failed to create teacher");
     }

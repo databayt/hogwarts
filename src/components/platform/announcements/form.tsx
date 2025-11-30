@@ -19,9 +19,11 @@ import type { Locale } from "@/components/internationalization/config";
 interface AnnouncementCreateFormProps {
   dictionary: Dictionary['school']['announcements'];
   lang: Locale;
+  /** Callback fired on successful create/update - use for optimistic refresh */
+  onSuccess?: () => void;
 }
 
-export function AnnouncementCreateForm({ dictionary, lang }: AnnouncementCreateFormProps) {
+export function AnnouncementCreateForm({ dictionary, lang, onSuccess }: AnnouncementCreateFormProps) {
   const { modal, closeModal } = useModal();
   const router = useRouter();
   const t = dictionary;
@@ -67,7 +69,12 @@ export function AnnouncementCreateForm({ dictionary, lang }: AnnouncementCreateF
     if (res?.success) {
       toast.success(currentId ? t.announcementUpdated : t.announcementCreated);
       closeModal();
-      router.refresh();
+      // Use callback for optimistic update, fallback to router.refresh()
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        router.refresh();
+      }
     } else {
       toast.error(currentId ? t.failedToUpdate : t.failedToCreate);
     }
