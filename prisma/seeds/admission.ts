@@ -150,6 +150,7 @@ export async function seedAdmission(
 
       // Communication
       const commTemplates: Record<AdmissionApplicationStatus, { subject: string; message: string } | null> = {
+        [AdmissionApplicationStatus.DRAFT]: null,
         [AdmissionApplicationStatus.SUBMITTED]: { subject: "Application Received", message: `Dear ${name.givenName}, Thank you for your application.` },
         [AdmissionApplicationStatus.UNDER_REVIEW]: { subject: "Application Under Review", message: `Dear ${name.givenName}, Your application is under review.` },
         [AdmissionApplicationStatus.SHORTLISTED]: { subject: "Application Shortlisted", message: `Congratulations ${name.givenName}! You have been shortlisted.` },

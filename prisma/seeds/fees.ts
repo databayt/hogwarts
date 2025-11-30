@@ -1,6 +1,7 @@
 /**
  * Fees Seed Module
  * Creates fee structures, assignments, and payments
+ * Currency: SDG (Sudanese Pound) - Comboni School
  */
 
 import { FeeStatus, PaymentMethod, PaymentStatus } from "@prisma/client";
@@ -12,15 +13,17 @@ export async function seedFees(
   classes: ClassRef[],
   students: StudentRef[]
 ): Promise<void> {
-  console.log("💰 Creating fee structures and payments...");
+  console.log("💰 Creating fee structures and payments (SDG - Sudanese Pound)...");
 
   const academicYear = "2025-2026";
 
+  // Fee structures in SDG (Sudanese Pound)
+  // Comboni School - Quality private education fees
   const feeStructures = [
-    { name: "Grade 10-12 Annual Fee", tuition: 20000, admission: 3000, registration: 800, exam: 1500, library: 500, lab: 1200, sports: 600, total: 27600 },
-    { name: "Grade 7-9 Annual Fee", tuition: 15000, admission: 2500, registration: 600, exam: 1200, library: 400, lab: 800, sports: 500, total: 21000 },
-    { name: "Grade 1-6 Annual Fee", tuition: 12000, admission: 2000, registration: 500, exam: 1000, library: 300, lab: 500, sports: 400, total: 16700 },
-    { name: "KG Annual Fee", tuition: 10000, admission: 1500, registration: 400, exam: 500, library: 200, lab: 0, sports: 300, total: 12900 },
+    { name: "Secondary (Grade 10-12) Annual Fee | الرسوم السنوية للمرحلة الثانوية", tuition: 1200000, admission: 180000, registration: 48000, exam: 90000, library: 30000, lab: 72000, sports: 36000, total: 1656000 },
+    { name: "Intermediate (Grade 7-9) Annual Fee | الرسوم السنوية للمرحلة المتوسطة", tuition: 900000, admission: 150000, registration: 36000, exam: 72000, library: 24000, lab: 48000, sports: 30000, total: 1260000 },
+    { name: "Primary (Grade 1-6) Annual Fee | الرسوم السنوية للمرحلة الابتدائية", tuition: 720000, admission: 120000, registration: 30000, exam: 60000, library: 18000, lab: 30000, sports: 24000, total: 1002000 },
+    { name: "Kindergarten (KG1-KG2) Annual Fee | الرسوم السنوية للروضة", tuition: 600000, admission: 90000, registration: 24000, exam: 30000, library: 12000, lab: 0, sports: 18000, total: 774000 },
   ];
 
   const createdStructures: { id: string; total: number }[] = [];

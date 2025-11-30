@@ -1,6 +1,7 @@
 /**
  * Finance Seed Module
  * Creates comprehensive financial data: accounts, payroll, banking, budgets, expenses
+ * Currency: SDG (Sudanese Pound) - Comboni School Port Sudan
  */
 
 import {
@@ -24,6 +25,9 @@ import {
 import { faker } from "@faker-js/faker";
 import type { SeedPrisma, UserRef, TeacherRef, StudentRef } from "./types";
 
+// SDG Exchange rate context (for realistic amounts)
+// 1 USD ≈ 600 SDG (approximate, for demo purposes)
+
 export async function seedFinance(
   prisma: SeedPrisma,
   schoolId: string,
@@ -32,7 +36,7 @@ export async function seedFinance(
   teachers: TeacherRef[],
   students: StudentRef[]
 ): Promise<void> {
-  console.log("💰 Creating finance module...");
+  console.log("💰 Creating finance module (SDG - Sudanese Pound)...");
 
   const adminUser = users.find(u => u.email.includes("admin"));
   const accountantUser = users.find(u => u.email.includes("accountant"));
@@ -88,10 +92,12 @@ export async function seedFinance(
   }
 
   // ===== SALARY STRUCTURES (for 30 teachers) =====
+  // Salaries in SDG (Sudanese Pound) - Realistic for Comboni School teachers
   const salaryStructures: { id: string; baseSalary: number; teacher: TeacherRef }[] = [];
 
   for (const teacher of teachers.slice(0, 30)) {
-    const baseSalary = faker.number.int({ min: 3000, max: 8000 });
+    // Teacher salaries in SDG (approximately 1,800,000 - 4,800,000 SDG/month)
+    const baseSalary = faker.number.int({ min: 1800000, max: 4800000 });
 
     const structure = await prisma.salaryStructure.create({
       data: {
@@ -99,7 +105,7 @@ export async function seedFinance(
         teacherId: teacher.id,
         effectiveFrom: new Date("2025-07-01T00:00:00Z"),
         baseSalary,
-        currency: "USD",
+        currency: "SDG",  // Sudanese Pound
         payFrequency: PayFrequency.MONTHLY,
         isActive: true,
       },
@@ -208,7 +214,7 @@ export async function seedFinance(
           payrollRunId: run.id,
           structureId,
           teacherId: teacher.id,
-          slipNumber: `SLP-${run.runNumber}-${teacher.id.substring(0, 6)}`,
+          slipNumber: `SLP-${run.runNumber}-${structureId.substring(0, 8)}`,
           payPeriodStart,
           payPeriodEnd,
           payDate,
@@ -244,42 +250,43 @@ export async function seedFinance(
   }
 
   // ===== BANK ACCOUNTS =====
+  // Bank of Khartoum - Main Operating Account (SDG)
   const mainBank = await prisma.bankAccount.create({
     data: {
       schoolId,
       userId: adminUser.id,
-      bankId: "bank_main",
+      bankId: "bank_khartoum",
       accountId: `ACC-${faker.finance.accountNumber(10)}`,
       accessToken: "encrypted_token",
-      institutionId: "inst_001",
-      name: "Main Operating Account",
+      institutionId: "inst_sudan_001",
+      name: "Main Operating Account - Bank of Khartoum",
       officialName: `${schoolName} Operating`,
       mask: "1234",
-      currentBalance: 500000,
-      availableBalance: 480000,
+      currentBalance: 300000000,  // 300M SDG
+      availableBalance: 288000000,  // 288M SDG
       type: "depository",
       subtype: "checking",
     },
   });
 
-  // Bank transactions (50)
+  // Bank transactions (50) in SDG
   for (let i = 0; i < 50; i++) {
     const isCredit = i % 3 === 0;
-    const amount = faker.number.float({ min: 100, max: 5000, multipleOf: 0.01 });
+    const amount = faker.number.float({ min: 60000, max: 3000000, multipleOf: 0.01 });  // SDG amounts
 
     await prisma.transaction.create({
       data: {
         schoolId,
         accountId: mainBank.accountId,
         bankAccountId: mainBank.id,
-        name: isCredit ? "Fee Payment" : "Expense Payment",
+        name: isCredit ? "دفع رسوم | Fee Payment" : "دفع مصاريف | Expense Payment",
         amount: isCredit ? amount : -amount,
         date: faker.date.between({ from: "2025-07-01", to: new Date() }),
         paymentChannel: "online",
         category: isCredit ? "Income" : "Expense",
         type: isCredit ? "credit" : "debit",
         pending: false,
-        isoCurrencyCode: "USD",
+        isoCurrencyCode: "SDG",
       },
     });
   }
@@ -290,15 +297,15 @@ export async function seedFinance(
       schoolId,
       walletType: WalletType.SCHOOL,
       ownerId: schoolId,
-      balance: 50000,
-      currency: "USD",
+      balance: 30000000,  // 30M SDG
+      currency: "SDG",
       isActive: true,
     },
   });
 
   for (let i = 0; i < 10; i++) {
     const type = i % 2 === 0 ? TransactionType.CREDIT : TransactionType.DEBIT;
-    const amount = faker.number.float({ min: 100, max: 2000, multipleOf: 0.01 });
+    const amount = faker.number.float({ min: 60000, max: 1200000, multipleOf: 0.01 });  // SDG amounts
 
     await prisma.walletTransaction.create({
       data: {
@@ -306,8 +313,8 @@ export async function seedFinance(
         walletId: wallet.id,
         type,
         amount,
-        balanceAfter: 50000 + (type === TransactionType.CREDIT ? amount : -amount),
-        description: type === TransactionType.CREDIT ? "Payment received" : "Refund processed",
+        balanceAfter: 30000000 + (type === TransactionType.CREDIT ? amount : -amount),
+        description: type === TransactionType.CREDIT ? "استلام دفعة | Payment received" : "معالجة استرداد | Refund processed",
         sourceModule: "fees",
         createdBy: accountantUser.id,
       },
@@ -315,14 +322,15 @@ export async function seedFinance(
   }
 
   // ===== BUDGETS =====
+  // Budgets in SDG
   for (let i = 0; i < 3; i++) {
     const budget = await prisma.budget.create({
       data: {
         schoolId,
         fiscalYearId: fiscalYear.id,
-        name: `Budget ${i + 1} - FY 2025-2026`,
-        description: `Department budget ${i + 1}`,
-        totalAmount: faker.number.int({ min: 50000, max: 200000 }),
+        name: `ميزانية ${i + 1} | Budget ${i + 1} - FY 2025-2026`,
+        description: `Department budget ${i + 1} - Comboni School`,
+        totalAmount: faker.number.int({ min: 30000000, max: 120000000 }),  // 30M - 120M SDG
         status: BudgetStatus.ACTIVE,
         approvedBy: adminUser.id,
         approvedAt: new Date("2025-07-01"),
@@ -331,7 +339,7 @@ export async function seedFinance(
     });
 
     const categoryId = Array.from(createdCategories.values())[i % createdCategories.size];
-    const allocated = faker.number.float({ min: 5000, max: 30000, multipleOf: 0.01 });
+    const allocated = faker.number.float({ min: 3000000, max: 18000000, multipleOf: 0.01 });  // SDG
     const spent = faker.number.float({ min: 0, max: allocated * 0.7, multipleOf: 0.01 });
 
     await prisma.budgetAllocation.create({
@@ -347,6 +355,17 @@ export async function seedFinance(
   }
 
   // ===== EXPENSES (30) =====
+  // Expenses in SDG with Sudanese vendors
+  const sudaneseVendors = [
+    "مكتبة الخرطوم | Khartoum Bookstore",
+    "شركة أفرو للتوريدات | Afro Supplies Co.",
+    "مطابع السودان | Sudan Press",
+    "شركة النيل للأثاث | Nile Furniture Co.",
+    "مؤسسة الرياض للمستلزمات | Riyadh Supplies",
+    "شركة البحر الأحمر | Red Sea Company",
+    "مكتبة العلم | Al-Ilm Bookstore",
+    "شركة الشرق للتقنية | East Tech Co.",
+  ];
   const categoryIds = Array.from(createdCategories.values());
   for (let i = 0; i < 30; i++) {
     await prisma.expense.create({
@@ -354,11 +373,11 @@ export async function seedFinance(
         schoolId,
         expenseNumber: `EXP-2025-${String(i + 1).padStart(4, "0")}`,
         categoryId: categoryIds[i % categoryIds.length],
-        amount: faker.number.float({ min: 50, max: 2000, multipleOf: 0.01 }),
+        amount: faker.number.float({ min: 30000, max: 1200000, multipleOf: 0.01 }),  // SDG amounts
         expenseDate: faker.date.between({ from: "2025-07-01", to: new Date() }),
-        vendor: faker.company.name(),
-        description: "Operating expense",
-        paymentMethod: ["Cash", "Bank Transfer", "Credit Card"][i % 3],
+        vendor: sudaneseVendors[i % sudaneseVendors.length],
+        description: "مصاريف تشغيلية | Operating expense",
+        paymentMethod: ["Cash", "Bank Transfer", "Cheque"][i % 3],
         status: i < 20 ? ExpenseStatus.PAID : ExpenseStatus.APPROVED,
         submittedBy: accountantUser.id,
         submittedAt: faker.date.between({ from: "2025-07-01", to: new Date() }),
@@ -370,6 +389,7 @@ export async function seedFinance(
   }
 
   // ===== USER INVOICES (20) =====
+  // Invoices in SDG - Comboni School
   for (let i = 0; i < 20; i++) {
     const user = users[i % users.length];
     const invoiceDate = faker.date.between({ from: "2025-07-01", to: new Date() });
@@ -379,9 +399,9 @@ export async function seedFinance(
     const fromAddress = await prisma.userInvoiceAddress.create({
       data: {
         schoolId,
-        name: schoolName,
-        email: `billing@${schoolName.toLowerCase().replace(/\s+/g, "")}.org`,
-        address1: "123 School Street",
+        name: "مدرسة كمبوني | Comboni School",
+        email: `billing@demo.databayt.org`,
+        address1: "الخرطوم، السودان | Khartoum, Sudan",
       },
     });
 
@@ -390,11 +410,11 @@ export async function seedFinance(
         schoolId,
         name: faker.person.fullName(),
         email: user.email,
-        address1: faker.location.streetAddress(),
+        address1: "الخرطوم | Khartoum",
       },
     });
 
-    const subTotal = faker.number.float({ min: 500, max: 3000, multipleOf: 0.01 });
+    const subTotal = faker.number.float({ min: 300000, max: 1800000, multipleOf: 0.01 });  // SDG
     const tax = subTotal * 0.1;
     const total = subTotal + tax;
 
@@ -405,7 +425,7 @@ export async function seedFinance(
         invoice_no: `INV-2025-${String(i + 1).padStart(4, "0")}`,
         invoice_date: invoiceDate,
         due_date: dueDate,
-        currency: "USD",
+        currency: "SDG",  // Sudanese Pound
         fromAddressId: fromAddress.id,
         toAddressId: toAddress.id,
         sub_total: subTotal,
@@ -419,7 +439,7 @@ export async function seedFinance(
       data: {
         schoolId,
         invoiceId: invoice.id,
-        item_name: "Tuition Fee",
+        item_name: "الرسوم الدراسية | Tuition Fee",
         quantity: 1,
         price: subTotal,
         total: subTotal,

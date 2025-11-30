@@ -69,7 +69,7 @@ export const platformSearchConfig: SearchConfig = {
       id: "charts",
       title: "Charts",
       type: "navigation",
-      href: "/lab/charts",
+      href: "/dashboard/charts",
       icon: BarChart3,
       roles: ["ADMIN"],
       keywords: ["analytics", "statistics", "data"],

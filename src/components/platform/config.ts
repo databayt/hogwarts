@@ -19,7 +19,7 @@ export const sidebarLinks: SidebarNavItem[] = [
         title: "Billing",
         authorizeOnly: UserRole.ADMIN,
       },
-      { href: "/lab/charts", icon: "lineChart", title: "Charts" },
+      { href: "/dashboard/charts", icon: "lineChart", title: "Charts" },
       {
         href: "/admin/orders",
         icon: "package",

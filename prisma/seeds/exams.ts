@@ -58,10 +58,10 @@ export async function seedExams(
         totalMarks: 100,
         passingMarks: 50,
         examType: ExamType.FINAL,
-        status: ExamStatus.SCHEDULED,
+        status: ExamStatus.PLANNED,
       },
     });
-    exams.push({ id: final.id, subjectName: subject.subjectName, status: ExamStatus.SCHEDULED });
+    exams.push({ id: final.id, subjectName: subject.subjectName, status: ExamStatus.PLANNED });
   }
 
   // Create results for completed exams

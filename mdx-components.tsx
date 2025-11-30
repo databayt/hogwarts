@@ -5,7 +5,15 @@ import { cn } from '@/lib/utils'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
 import { ExternalLink, Info, AlertTriangle, CheckCircle, XCircle } from 'lucide-react'
+import { StoryVideo } from '@/components/docs/story-video'
+import { ComponentPreview } from '@/components/docs/component-preview'
 
 // Custom Cards component for documentation
 function Cards({ children }: { children: React.ReactNode }) {
@@ -250,6 +258,12 @@ export const mdxComponents = {
     AlertDescription,
     AlertTitle,
     Image,
+    StoryVideo,
+    Accordion,
+    AccordionContent,
+    AccordionItem,
+    AccordionTrigger,
+    ComponentPreview,
 }
 
 // This file is required to use MDX in `app` directory.

@@ -38,12 +38,14 @@
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
-    ".next/types/**/*.ts",
     "node_modules/next/types/**/*.ts",
     "src/app/docs/dashboard/page.mdx",
+    ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "prisma/generator",
+    ".next"
   ]
 }

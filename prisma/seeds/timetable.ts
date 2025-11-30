@@ -32,22 +32,23 @@ export async function seedTimetable(
     take: 20,
   });
 
-  // Timetable entries
+  // Timetable entries - only include classes that have both teacherId and classroomId
   const timetableRows: {
     schoolId: string;
     termId: string;
     dayOfWeek: number;
     periodId: string;
     classId: string;
-    teacherId: string | null;
-    classroomId: string | null;
+    teacherId: string;
+    classroomId: string;
     weekOffset: number;
   }[] = [];
 
   for (let d = 0; d < WORKING_DAYS.length; d++) {
     for (let p = 0; p < Math.min(6, periods.length); p++) {
       const cls = classesWithDetails[(d + p) % classesWithDetails.length];
-      if (cls) {
+      // Only add entries where both teacherId and classroomId are defined
+      if (cls && cls.teacherId && cls.classroomId) {
         timetableRows.push({
           schoolId,
           termId,

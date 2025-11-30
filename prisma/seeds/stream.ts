@@ -1,54 +1,106 @@
 /**
  * Stream (LMS) Seed Module
  * Creates LMS courses, chapters, and lessons
+ * Comboni School - Arabic, Islamic, and Academic courses
  */
 
 import { faker } from "@faker-js/faker";
 import type { SeedPrisma, TeacherRef } from "./types";
 
 const COURSES_DATA = [
+  // Islamic Studies
   {
-    title: "Introduction to Python Programming",
-    slug: "intro-python-programming",
-    description: "Learn Python from scratch with hands-on projects.",
-    price: 49.99,
-    categoryName: "Programming",
+    title: "القرآن الكريم - التجويد | Quran Recitation with Tajweed",
+    slug: "quran-tajweed",
+    description: "تعلم أحكام التجويد وتلاوة القرآن الكريم بالطريقة الصحيحة. Learn proper Quran recitation with tajweed rules.",
+    price: 0,
+    categoryName: "Islamic Studies",
     chapters: [
-      { title: "Getting Started with Python", lessons: ["What is Python?", "Installing Python", "Your First Program"] },
-      { title: "Python Basics", lessons: ["Variables", "Operators", "Control Flow"] },
+      { title: "مقدمة في التجويد | Introduction to Tajweed", lessons: ["أهمية التجويد | Importance of Tajweed", "مخارج الحروف | Letter Articulation Points", "صفات الحروف | Letter Characteristics"] },
+      { title: "أحكام النون الساكنة | Rules of Noon Sakinah", lessons: ["الإظهار | Izhar", "الإدغام | Idgham", "الإقلاب | Iqlab", "الإخفاء | Ikhfa"] },
     ],
   },
   {
-    title: "Advanced Mathematics",
-    slug: "advanced-mathematics",
-    description: "Master calculus, linear algebra, and differential equations.",
-    price: 79.99,
-    categoryName: "Mathematics",
+    title: "السيرة النبوية | Life of Prophet Muhammad ﷺ",
+    slug: "seerah-nabawiyyah",
+    description: "دراسة سيرة النبي محمد صلى الله عليه وسلم من الميلاد إلى الوفاة. Comprehensive study of the Prophet's life.",
+    price: 0,
+    categoryName: "Islamic Studies",
     chapters: [
-      { title: "Calculus Fundamentals", lessons: ["Limits", "Derivatives", "Integration"] },
-      { title: "Linear Algebra", lessons: ["Matrices", "Vectors", "Transformations"] },
+      { title: "الفترة المكية | Meccan Period", lessons: ["الميلاد والنشأة | Birth and Childhood", "البعثة | The Revelation", "الدعوة السرية والجهرية | Secret and Public Call"] },
+      { title: "الفترة المدنية | Medinan Period", lessons: ["الهجرة | The Migration", "غزوات النبي | Battles", "فتح مكة | Conquest of Mecca"] },
     ],
   },
+  // Arabic Language
   {
-    title: "Physics: Mechanics",
-    slug: "physics-mechanics",
-    description: "Explore classical mechanics, forces, and motion.",
-    price: 59.99,
-    categoryName: "Science",
-    chapters: [
-      { title: "Newton's Laws", lessons: ["First Law", "Second Law", "Third Law"] },
-      { title: "Energy and Work", lessons: ["Work", "Energy Conservation"] },
-    ],
-  },
-  {
-    title: "English Language Mastery",
-    slug: "english-language-mastery",
-    description: "Improve your English skills.",
+    title: "النحو العربي | Arabic Grammar",
+    slug: "arabic-grammar",
+    description: "أساسيات النحو العربي للمبتدئين والمتوسطين. Arabic grammar fundamentals for beginners and intermediate learners.",
     price: 0,
     categoryName: "Languages",
     chapters: [
-      { title: "Grammar Essentials", lessons: ["Tenses", "Present Tense", "Past Tense"] },
-      { title: "Vocabulary Building", lessons: ["Common Phrases", "Academic Vocabulary"] },
+      { title: "الجملة الاسمية | Nominal Sentence", lessons: ["المبتدأ والخبر | Subject and Predicate", "أنواع الخبر | Types of Predicate", "كان وأخواتها | Kana and Sisters"] },
+      { title: "الجملة الفعلية | Verbal Sentence", lessons: ["الفعل والفاعل | Verb and Subject", "المفعول به | Object", "الفعل المبني للمجهول | Passive Voice"] },
+    ],
+  },
+  // Mathematics
+  {
+    title: "الرياضيات المتقدمة | Advanced Mathematics",
+    slug: "advanced-mathematics",
+    description: "التفاضل والتكامل والجبر الخطي. Calculus, linear algebra, and differential equations.",
+    price: 0,
+    categoryName: "Mathematics",
+    chapters: [
+      { title: "التفاضل | Calculus", lessons: ["النهايات | Limits", "المشتقات | Derivatives", "التكامل | Integration"] },
+      { title: "الجبر الخطي | Linear Algebra", lessons: ["المصفوفات | Matrices", "المتجهات | Vectors", "التحويلات | Transformations"] },
+    ],
+  },
+  // Science
+  {
+    title: "الفيزياء: الميكانيكا | Physics: Mechanics",
+    slug: "physics-mechanics",
+    description: "دراسة الميكانيكا الكلاسيكية والقوى والحركة. Classical mechanics, forces, and motion.",
+    price: 0,
+    categoryName: "Science",
+    chapters: [
+      { title: "قوانين نيوتن | Newton's Laws", lessons: ["القانون الأول | First Law", "القانون الثاني | Second Law", "القانون الثالث | Third Law"] },
+      { title: "الطاقة والشغل | Energy and Work", lessons: ["الشغل | Work", "الطاقة الحركية | Kinetic Energy", "حفظ الطاقة | Energy Conservation"] },
+    ],
+  },
+  // English Language
+  {
+    title: "English Language Mastery",
+    slug: "english-language-mastery",
+    description: "Comprehensive English skills for academic success.",
+    price: 0,
+    categoryName: "Languages",
+    chapters: [
+      { title: "Grammar Essentials", lessons: ["Tenses Overview", "Present & Past Tense", "Future & Conditional"] },
+      { title: "Academic Writing", lessons: ["Essay Structure", "Research Writing", "Citations & References"] },
+    ],
+  },
+  // Computer Science
+  {
+    title: "مقدمة في البرمجة | Introduction to Programming",
+    slug: "intro-programming",
+    description: "تعلم أساسيات البرمجة باستخدام بايثون. Learn programming fundamentals with Python.",
+    price: 0,
+    categoryName: "Programming",
+    chapters: [
+      { title: "البداية مع بايثون | Getting Started", lessons: ["ما هي البرمجة؟ | What is Programming?", "تثبيت بايثون | Installing Python", "برنامجك الأول | Your First Program"] },
+      { title: "أساسيات بايثون | Python Basics", lessons: ["المتغيرات | Variables", "العمليات الحسابية | Operators", "التحكم بالتدفق | Control Flow"] },
+    ],
+  },
+  // Sudanese Studies
+  {
+    title: "تاريخ السودان | Sudanese History",
+    slug: "sudanese-history",
+    description: "دراسة تاريخ السودان من الممالك القديمة إلى العصر الحديث. Sudan's history from ancient kingdoms to modern era.",
+    price: 0,
+    categoryName: "Humanities",
+    chapters: [
+      { title: "الممالك القديمة | Ancient Kingdoms", lessons: ["مملكة كوش | Kingdom of Kush", "نبتة ومروي | Napata and Meroe", "الممالك المسيحية | Christian Kingdoms"] },
+      { title: "السودان الحديث | Modern Sudan", lessons: ["الدولة المهدية | Mahdist State", "الحكم الثنائي | Condominium Rule", "الاستقلال | Independence"] },
     ],
   },
 ];
@@ -58,10 +110,10 @@ export async function seedStream(
   schoolId: string,
   teachers: TeacherRef[]
 ): Promise<void> {
-  console.log("🎓 Creating LMS courses...");
+  console.log("🎓 Creating LMS courses (Comboni School - Arabic, Islamic & Academic)...");
 
-  // Categories
-  const categoryNames = ["Programming", "Mathematics", "Science", "Languages", "Business"];
+  // Categories - Arabic/English
+  const categoryNames = ["Islamic Studies", "Languages", "Mathematics", "Science", "Programming", "Humanities"];
   const categories = new Map<string, string>();
 
   for (const name of categoryNames) {

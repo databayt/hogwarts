@@ -1,20 +1,25 @@
 /**
  * Lessons Seed Module
- * Creates lesson plans
+ * Creates lesson plans - Comboni School curriculum
  */
 
 import { faker } from "@faker-js/faker";
 import type { SeedPrisma, ClassRef } from "./types";
 
+// Bilingual lesson topics (Arabic/English) - Comboni School curriculum
 const LESSON_TOPICS = [
-  { title: "Introduction to Algebra", objectives: "Understand basic algebraic concepts" },
-  { title: "Arabic Grammar: Verb Conjugation", objectives: "Master verb conjugation" },
-  { title: "English Literature: Poetry Analysis", objectives: "Analyze poetic devices" },
-  { title: "Physics: Newton's Laws", objectives: "Apply Newton's laws" },
-  { title: "Chemistry: Periodic Table", objectives: "Understand periodic trends" },
-  { title: "Biology: Cell Structure", objectives: "Identify cell organelles" },
-  { title: "Geography: Climate Zones", objectives: "Understand global climate patterns" },
-  { title: "Islamic Studies: Quran Recitation", objectives: "Improve tajweed" },
+  { title: "مقدمة في الجبر | Introduction to Algebra", objectives: "فهم المفاهيم الجبرية الأساسية | Understand basic algebraic concepts" },
+  { title: "النحو العربي: تصريف الأفعال | Arabic Grammar: Verb Conjugation", objectives: "إتقان تصريف الأفعال | Master verb conjugation in Arabic" },
+  { title: "English Literature: Poetry Analysis", objectives: "Analyze poetic devices and literary techniques" },
+  { title: "الفيزياء: قوانين نيوتن | Physics: Newton's Laws", objectives: "تطبيق قوانين نيوتن | Apply Newton's laws to solve problems" },
+  { title: "الكيمياء: الجدول الدوري | Chemistry: Periodic Table", objectives: "فهم الاتجاهات الدورية | Understand periodic trends" },
+  { title: "الأحياء: تركيب الخلية | Biology: Cell Structure", objectives: "تحديد عضيات الخلية | Identify cell organelles and their functions" },
+  { title: "الجغرافيا: مناخ السودان | Geography: Sudan's Climate", objectives: "فهم المناطق المناخية | Understand climate zones in Sudan and Africa" },
+  { title: "التجويد: أحكام النون الساكنة | Tajweed: Rules of Noon Sakinah", objectives: "إتقان أحكام التجويد | Master tajweed rules in Quran recitation" },
+  { title: "السيرة النبوية: الهجرة | Seerah: The Migration", objectives: "دراسة هجرة النبي | Study the Prophet's migration to Medina" },
+  { title: "التاريخ السوداني: مملكة كوش | Sudanese History: Kingdom of Kush", objectives: "فهم الحضارة الكوشية | Understand the ancient Kushite civilization" },
+  { title: "الفقه: أركان الإسلام | Fiqh: Pillars of Islam", objectives: "تعلم أركان الإسلام | Learn the five pillars of Islam" },
+  { title: "علوم الحاسوب: مقدمة في البرمجة | CS: Introduction to Programming", objectives: "تعلم أساسيات البرمجة | Learn programming fundamentals" },
 ];
 
 export async function seedLessons(
@@ -22,7 +27,7 @@ export async function seedLessons(
   schoolId: string,
   classes: ClassRef[]
 ): Promise<void> {
-  console.log("📖 Creating lesson plans...");
+  console.log("📖 Creating lesson plans (Comboni School - Bilingual)...");
 
   let count = 0;
   for (let i = 0; i < Math.min(16, classes.length * 2); i++) {

@@ -1,6 +1,6 @@
 /**
  * Departments Seed Module
- * Creates departments and subjects
+ * Creates departments and subjects (Sudanese National Curriculum)
  */
 
 import type { SeedPrisma, DepartmentRef, SubjectRef } from "./types";
@@ -13,22 +13,22 @@ export async function seedDepartments(
   departments: DepartmentRef[];
   subjects: SubjectRef[];
 }> {
-  console.log("📖 Creating departments and subjects...");
+  console.log("📖 Creating departments and subjects (Sudanese Curriculum)...");
 
   const departments: DepartmentRef[] = [];
   const subjects: SubjectRef[] = [];
 
   for (const dept of DEPARTMENTS) {
     const department = await prisma.department.create({
-      data: { schoolId, departmentName: dept.name },
+      data: { schoolId, departmentName: dept.nameEn },  // Use English name for DB compatibility
     });
     departments.push({ id: department.id, departmentName: department.departmentName });
 
-    for (const subjectName of dept.subjects) {
-      const subject = await prisma.subject.create({
-        data: { schoolId, departmentId: department.id, subjectName },
+    for (const subject of dept.subjects) {
+      const subjectRecord = await prisma.subject.create({
+        data: { schoolId, departmentId: department.id, subjectName: subject.en },
       });
-      subjects.push({ id: subject.id, subjectName: subject.subjectName });
+      subjects.push({ id: subjectRecord.id, subjectName: subjectRecord.subjectName });
     }
   }
 

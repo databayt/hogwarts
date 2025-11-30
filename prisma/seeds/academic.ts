@@ -1,6 +1,7 @@
 /**
  * Academic Seed Module
  * Creates academic structure: years, terms, levels, periods
+ * Aligned with Sudanese academic calendar (September - June)
  */
 
 import type { SeedPrisma, SchoolYearRef, TermRef, YearLevelRef, PeriodRef } from "./types";
@@ -16,9 +17,9 @@ export async function seedAcademic(
   yearLevels: YearLevelRef[];
   periods: PeriodRef[];
 }> {
-  console.log("📚 Creating academic structure...");
+  console.log("📚 Creating academic structure (Sudanese Calendar)...");
 
-  // School Year
+  // School Year - Sudanese academic year (September - June)
   const schoolYear = await prisma.schoolYear.create({
     data: {
       schoolId,
@@ -28,7 +29,7 @@ export async function seedAcademic(
     },
   });
 
-  // Periods
+  // Periods - Sudanese school day (7:45 AM - 3:20 PM, Sun-Thu)
   for (const p of PERIODS) {
     await prisma.period.create({
       data: {
@@ -45,7 +46,7 @@ export async function seedAcademic(
     orderBy: { name: "asc" },
   });
 
-  // Terms
+  // Terms - Sudanese school terms
   const term1 = await prisma.term.create({
     data: {
       schoolId,
@@ -66,10 +67,10 @@ export async function seedAcademic(
     },
   });
 
-  // Year Levels
-  for (const [index, levelName] of YEAR_LEVELS.entries()) {
+  // Year Levels - Sudanese education system
+  for (const level of YEAR_LEVELS) {
     await prisma.yearLevel.create({
-      data: { schoolId, levelName, levelOrder: index + 1 },
+      data: { schoolId, levelName: level.en, levelOrder: level.order },
     });
   }
   const yearLevels = await prisma.yearLevel.findMany({

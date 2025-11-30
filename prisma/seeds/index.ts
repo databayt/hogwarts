@@ -99,26 +99,26 @@ async function main() {
     console.log("-".repeat(40));
 
     await seedLibrary(prisma, schoolId);
-    await seedAnnouncements(prisma, schoolId, adminUser);
+    await seedAnnouncements(prisma, schoolId, classes);
 
     // Phase 7: Finance & Fees
     console.log("\nPHASE 7: FINANCE & FEES");
     console.log("-".repeat(40));
 
     await seedFees(prisma, schoolId, classes, students);
-    await seedFinance(prisma, schoolId, teachers, students, schoolYear);
+    await seedFinance(prisma, schoolId, schoolName, [devUser, adminUser, accountantUser, staffUser], teachers, students);
 
     // Phase 8: Assessments
     console.log("\nPHASE 8: ASSESSMENTS");
     console.log("-".repeat(40));
 
-    await seedExams(prisma, schoolId, students, subjects, classes, terms[0]);
+    await seedExams(prisma, schoolId, classes, subjects, students);
 
     // Phase 9: Scheduling
     console.log("\nPHASE 9: SCHEDULING");
     console.log("-".repeat(40));
 
-    await seedTimetable(prisma, schoolId, classes, teachers, classrooms);
+    await seedTimetable(prisma, schoolId, term1.id, periods, classes);
 
     // Phase 10: Learning Management
     console.log("\nPHASE 10: LEARNING MANAGEMENT");
