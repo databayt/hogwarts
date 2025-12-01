@@ -6,7 +6,7 @@ import { z } from "zod";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { createAnnouncement, getAnnouncement, updateAnnouncement } from "@/components/platform/announcements/actions";
-import { announcementCreateSchema } from "@/components/platform/announcements/validation";
+import { announcementCreateSchema, type AnnouncementFormValues } from "@/components/platform/announcements/validation";
 import { Form } from "@/components/ui/form";
 import { useModal } from "@/components/atom/modal/context";
 import { useRouter } from "next/navigation";
@@ -28,7 +28,7 @@ export function AnnouncementCreateForm({ dictionary, lang, onSuccess }: Announce
   const router = useRouter();
   const t = dictionary;
   const [currentStep, setCurrentStep] = useState(1);
-  const form = useForm<z.infer<typeof announcementCreateSchema>>({
+  const form = useForm<AnnouncementFormValues>({
     resolver: zodResolver(announcementCreateSchema),
     defaultValues: {
       title: "",
@@ -64,7 +64,7 @@ export function AnnouncementCreateForm({ dictionary, lang, onSuccess }: Announce
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentId]);
 
-  async function onSubmit(values: z.infer<typeof announcementCreateSchema>) {
+  async function onSubmit(values: AnnouncementFormValues) {
     const res = currentId
       ? await updateAnnouncement({ id: currentId, ...values })
       : await createAnnouncement(values);

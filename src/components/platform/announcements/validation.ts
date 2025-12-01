@@ -1,13 +1,13 @@
 import { z } from "zod"
-import { i18n, type Locale } from "@/components/internationalization/config"
 
 // Language enum for announcements (matches supported locales)
-export const languageSchema = z.enum(i18n.locales as [Locale, ...Locale[]])
+// Using literal array to avoid readonly type issues with z.enum
+export const languageSchema = z.enum(["ar", "en"] as const)
 
 export const announcementBaseSchema = z.object({
   title: z.string().min(1, "Title is required"),
   body: z.string().min(1, "Body is required"),
-  language: languageSchema.default("ar"), // Default to Arabic
+  language: languageSchema, // Required: "ar" or "en" - set default in form
   scope: z.enum(["school", "class", "role"]),
   classId: z.string().optional(),
   role: z.string().optional(),
@@ -44,6 +44,9 @@ export const announcementBaseSchema = z.object({
 })
 
 export const announcementCreateSchema = announcementBaseSchema
+
+// Type for form values (use with react-hook-form)
+export type AnnouncementFormValues = z.infer<typeof announcementCreateSchema>
 
 export const announcementUpdateSchema = announcementBaseSchema.partial().extend({
   id: z.string().min(1, "Required"),

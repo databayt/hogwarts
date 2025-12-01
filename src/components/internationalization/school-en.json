@@ -517,7 +517,11 @@
       "roleStudent": "Student",
       "roleGuardian": "Guardian",
       "roleStaff": "Staff",
-      "roleAccountant": "Accountant"
+      "roleAccountant": "Accountant",
+      "language": "Language",
+      "selectLanguage": "Select language",
+      "arabic": "العربية",
+      "english": "English"
     },
     "parents": {
       "title": "Parents",

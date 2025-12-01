@@ -517,7 +517,11 @@
       "roleStudent": "طالب",
       "roleGuardian": "ولي أمر",
       "roleStaff": "موظف",
-      "roleAccountant": "محاسب"
+      "roleAccountant": "محاسب",
+      "language": "اللغة",
+      "selectLanguage": "اختر اللغة",
+      "arabic": "العربية",
+      "english": "English"
     },
     "parents": {
       "title": "أولياء الأمور",
