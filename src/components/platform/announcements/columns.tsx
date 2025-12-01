@@ -48,16 +48,17 @@ export const getAnnouncementColumns = (dictionary: Dictionary['school']['announc
   {
     accessorKey: "scope",
     header: ({ column }) => <DataTableColumnHeader column={column} title={columns.scope} />,
-    meta: {
-      label: columns.scope,
-      variant: "select",
-      options: [
-        { label: t.schoolWide, value: "school" },
-        { label: t.classSpecific, value: "class" },
-        { label: t.roleSpecific, value: "role" },
-      ],
+    cell: ({ getValue }) => {
+      const scope = getValue<string>();
+      const labels: Record<string, string> = {
+        school: t.schoolWide,
+        class: t.classSpecific,
+        role: t.roleSpecific,
+      };
+      return <span className="text-sm">{labels[scope] || scope}</span>;
     },
-    enableColumnFilter: true,
+    meta: { label: columns.scope, variant: "text" },
+    enableColumnFilter: false, // Toolbar has custom filter
   },
   {
     accessorKey: "published",
@@ -66,16 +67,9 @@ export const getAnnouncementColumns = (dictionary: Dictionary['school']['announc
       const is = getValue<boolean>();
       return <Badge variant={is ? "default" : "outline"}>{is ? t.published : t.draft}</Badge>;
     },
-    meta: {
-      label: columns.status,
-      variant: "select",
-      options: [
-        { label: t.published, value: "true" },
-        { label: t.draft, value: "false" },
-      ],
-    },
+    meta: { label: columns.status, variant: "text" },
     id: 'published',
-    enableColumnFilter: true,
+    enableColumnFilter: false, // Toolbar has custom filter
   },
   {
     accessorKey: "createdAt",

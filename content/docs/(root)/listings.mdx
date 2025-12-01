@@ -134,25 +134,27 @@ const { data } = usePlatformData({
 });
 ```
 
-### Custom Filter Dropdowns
+### Custom Filter Dropdowns (Internationalized)
 
-Add entity-specific filters via `additionalActions`:
+Add entity-specific filters via `additionalActions` with **translated labels**:
 
 ```typescript
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-// Filter options
-const SCOPE_OPTIONS = [
-  { value: "all", label: "All Scopes" },
-  { value: "school", label: "School-wide" },
-  { value: "class", label: "Class-specific" },
-];
+// Filter options built inside component with dictionary translations
+// Use simplified labels: "Scope" not "All Scopes", "Status" not "All Status"
+const SCOPE_OPTIONS = useMemo(() => [
+  { value: "all", label: t.scope },        // "Scope" / "النطاق"
+  { value: "school", label: t.schoolWide }, // "School-wide" / "المدرسة"
+  { value: "class", label: t.classSpecific },
+  { value: "role", label: t.roleSpecific },
+], [t]);
 
-const STATUS_OPTIONS = [
-  { value: "all", label: "All Status" },
-  { value: "published", label: "Published" },
-  { value: "draft", label: "Draft" },
-];
+const STATUS_OPTIONS = useMemo(() => [
+  { value: "all", label: t.status },       // "Status" / "الحالة"
+  { value: "published", label: t.published },
+  { value: "draft", label: t.draft },
+], [t]);
 
 // Filter state
 const [scopeFilter, setScopeFilter] = useState("all");
@@ -163,7 +165,7 @@ const filterDropdowns = (
   <>
     <Select value={scopeFilter} onValueChange={setScopeFilter}>
       <SelectTrigger className="h-9 w-32 py-1">
-        <SelectValue placeholder="Scope" />
+        <SelectValue placeholder={t.scope} />
       </SelectTrigger>
       <SelectContent>
         {SCOPE_OPTIONS.map((opt) => (
@@ -175,7 +177,7 @@ const filterDropdowns = (
     </Select>
     <Select value={statusFilter} onValueChange={setStatusFilter}>
       <SelectTrigger className="h-9 w-32 py-1">
-        <SelectValue placeholder="Status" />
+        <SelectValue placeholder={t.status} />
       </SelectTrigger>
       <SelectContent>
         {STATUS_OPTIONS.map((opt) => (
@@ -194,6 +196,12 @@ const filterDropdowns = (
   additionalActions={filterDropdowns}
 />
 ```
+
+**Key Points:**
+- Build filter options **inside the component** where dictionary is available
+- Use `useMemo` to avoid recreating options on every render
+- Use **simplified labels** ("Scope" not "All Scopes") for cleaner UI
+- Pass translated `placeholder` to SelectValue
 
 ### Wiring Filters to Data Fetcher
 
@@ -223,6 +231,81 @@ const { data } = usePlatformData({
   filters,
 });
 ```
+
+### Language-Based Filtering (i18n)
+
+For bilingual platforms, filter data by the user's current locale:
+
+```typescript
+interface TableProps {
+  initialData: RowType[];
+  total: number;
+  dictionary: Dictionary['school']['announcements'];
+  lang: Locale;  // Current locale from route params
+}
+
+export function Table({ initialData, total, dictionary, lang }: TableProps) {
+  const t = dictionary;
+
+  // Always include language filter for locale-based content
+  const filters = useMemo(() => {
+    const f: Record<string, unknown> = {
+      language: lang,  // Always filter by current locale
+    };
+    if (deferredSearch) f.title = deferredSearch;
+    if (scopeFilter !== "all") f.scope = scopeFilter;
+    return f;
+  }, [lang, deferredSearch, scopeFilter]);
+
+  // In fetcher, always pass language
+  const { data } = usePlatformData({
+    fetcher: async (params) => {
+      const result = await getItems({
+        ...params,
+        language: lang,  // Filter by locale
+      });
+      return { rows: result.rows, total: result.total };
+    },
+    filters,
+  });
+}
+```
+
+**Key Points:**
+- Pass `lang` from route params to table component
+- Add `language` field to Prisma model with default (e.g., `"ar"`)
+- Always include `language` filter in queries
+- Create separate content for each locale (not bilingual content in single records)
+
+### Avoiding Duplicate Filters
+
+When using custom toolbar filters, **disable column filters** to avoid duplicate UI:
+
+```typescript
+// columns.tsx - WRONG: creates duplicate filters
+{
+  accessorKey: "scope",
+  meta: {
+    variant: "select",
+    options: [...],
+  },
+  enableColumnFilter: true,  // ❌ Creates dropdown in column header
+}
+
+// columns.tsx - CORRECT: toolbar handles filtering
+{
+  accessorKey: "scope",
+  cell: ({ getValue }) => {
+    const scope = getValue<string>();
+    const labels = { school: t.schoolWide, class: t.classSpecific };
+    return <span>{labels[scope] || scope}</span>;
+  },
+  meta: { label: t.scope, variant: "text" },
+  enableColumnFilter: false,  // ✅ Toolbar has custom filter
+}
+```
+
+**Rule:** If you have a custom filter dropdown in the toolbar, set `enableColumnFilter: false` on that column.
 
 ## Implementation Guide
 
@@ -702,7 +785,46 @@ if (onSuccess) {
 const columns = useMemo(() => getColumns(dictionary), [dictionary]);
 ```
 
-### 3. Handle Loading States
+### 3. Internationalized Page Navigation
+
+Use dictionary translations for page-nav items:
+
+```typescript
+// layout.tsx
+export default async function Layout({ children, params }: Props) {
+  const { lang } = await params;
+  const dictionary = await getDictionary(lang as Locale);
+  const d = dictionary?.school?.announcements;
+
+  // Navigation with i18n
+  const pages: PageNavItem[] = [
+    { name: d?.navAll || 'All', href: `/${lang}/announcements` },
+    { name: d?.navPublished || 'Published', href: `/${lang}/announcements/published` },
+    { name: d?.navDrafts || 'Drafts', href: `/${lang}/announcements/drafts` },
+    { name: d?.navScheduled || 'Scheduled', href: `/${lang}/announcements/scheduled` },
+  ];
+
+  return (
+    <div className="space-y-6">
+      <PageHeadingSetter title={d?.title || 'Announcements'} />
+      <PageNav pages={pages} />
+      {children}
+    </div>
+  );
+}
+```
+
+**Dictionary keys:**
+```json
+{
+  "navAll": "All",
+  "navPublished": "Published",
+  "navDrafts": "Drafts",
+  "navScheduled": "Scheduled"
+}
+```
+
+### 4. Handle Loading States
 
 ```typescript
 <DataTable
@@ -711,7 +833,7 @@ const columns = useMemo(() => getColumns(dictionary), [dictionary]);
 />
 ```
 
-### 4. Include schoolId in All Queries
+### 5. Include schoolId in All Queries
 
 ```typescript
 const { schoolId } = await getTenantContext();
@@ -722,7 +844,7 @@ await db.item.findMany({
 });
 ```
 
-### 5. Provide Grid View Fallback
+### 6. Provide Grid View Fallback
 
 ```typescript
 {data.length === 0 ? (

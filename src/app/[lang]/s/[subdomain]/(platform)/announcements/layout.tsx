@@ -13,12 +13,12 @@ export default async function AnnouncementsLayout({ children, params }: Props) {
   const dictionary = await getDictionary(lang as Locale)
   const d = dictionary?.school?.announcements
 
-  // Define announcements page navigation
+  // Define announcements page navigation with i18n
   const announcementsPages: PageNavItem[] = [
-    { name: 'All', href: `/${lang}/announcements` },
-    // Future navigation items can be added here:
-    // { name: d?.navigation?.drafts || 'Drafts', href: `/${lang}/announcements/drafts`, hidden: true },
-    // { name: d?.navigation?.scheduled || 'Scheduled', href: `/${lang}/announcements/scheduled`, hidden: true },
+    { name: d?.navAll || 'All', href: `/${lang}/announcements` },
+    { name: d?.navPublished || 'Published', href: `/${lang}/announcements/published` },
+    { name: d?.navDrafts || 'Drafts', href: `/${lang}/announcements/drafts` },
+    { name: d?.navScheduled || 'Scheduled', href: `/${lang}/announcements/scheduled` },
   ]
 
   return (

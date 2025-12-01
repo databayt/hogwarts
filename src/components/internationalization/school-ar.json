@@ -521,7 +521,12 @@
       "language": "اللغة",
       "selectLanguage": "اختر اللغة",
       "arabic": "العربية",
-      "english": "English"
+      "english": "English",
+      "navAll": "الكل",
+      "navPublished": "المنشورة",
+      "navDrafts": "المسودات",
+      "navScheduled": "المجدولة",
+      "navArchived": "المؤرشفة"
     },
     "parents": {
       "title": "أولياء الأمور",

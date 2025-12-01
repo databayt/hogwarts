@@ -521,7 +521,12 @@
       "language": "Language",
       "selectLanguage": "Select language",
       "arabic": "العربية",
-      "english": "English"
+      "english": "English",
+      "navAll": "All",
+      "navPublished": "Published",
+      "navDrafts": "Drafts",
+      "navScheduled": "Scheduled",
+      "navArchived": "Archived"
     },
     "parents": {
       "title": "Parents",
