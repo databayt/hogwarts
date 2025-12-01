@@ -106,12 +106,12 @@ export function PlatformToolbar<TData>({
       role="toolbar"
       aria-orientation="horizontal"
       className={cn(
-        "flex w-full flex-wrap items-center justify-between gap-2 p-1",
+        "flex w-full flex-wrap items-center gap-2 p-1",
         className
       )}
     >
       {/* Left side: Search and filters */}
-      <div className="flex flex-1 flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         {/* Search input */}
         {onSearchChange && (
           <div className="relative">

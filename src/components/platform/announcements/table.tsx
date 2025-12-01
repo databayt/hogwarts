@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useCallback, useTransition } from "react";
+import { useMemo, useState, useCallback, useTransition, useDeferredValue, useEffect } from "react";
 import { DataTable } from "@/components/table/data-table";
 import { useDataTable } from "@/components/table/use-data-table";
 import type { AnnouncementRow } from "./columns";
@@ -24,6 +24,13 @@ import { Megaphone, Pin, Star } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { deleteAnnouncement, toggleAnnouncementPublish } from "./actions";
 import { DeleteToast, ErrorToast, confirmDeleteDialog } from "@/components/atom/toast";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface AnnouncementsTableProps {
   initialData: AnnouncementRow[];
@@ -55,6 +62,20 @@ async function getAnnouncementsCSV(filters?: Record<string, unknown>): Promise<s
   return [headers.join(","), ...csvRows].join("\n");
 }
 
+// Filter options
+const SCOPE_OPTIONS = [
+  { value: "all", label: "All Scopes" },
+  { value: "school", label: "School-wide" },
+  { value: "class", label: "Class-specific" },
+  { value: "role", label: "Role-specific" },
+];
+
+const PUBLISHED_OPTIONS = [
+  { value: "all", label: "All Status" },
+  { value: "published", label: "Published" },
+  { value: "draft", label: "Draft" },
+];
+
 export function AnnouncementsTable({
   initialData,
   total,
@@ -70,8 +91,22 @@ export function AnnouncementsTable({
   // View mode (table/grid)
   const { view, toggleView } = usePlatformView({ defaultView: "table" });
 
-  // Search state
-  const [searchValue, setSearchValue] = useState("");
+  // Search state with debouncing
+  const [searchInput, setSearchInput] = useState("");
+  const deferredSearch = useDeferredValue(searchInput);
+
+  // Filter state
+  const [scopeFilter, setScopeFilter] = useState("all");
+  const [publishedFilter, setPublishedFilter] = useState("all");
+
+  // Build filters object
+  const filters = useMemo(() => {
+    const f: Record<string, unknown> = {};
+    if (deferredSearch) f.title = deferredSearch;
+    if (scopeFilter !== "all") f.scope = scopeFilter;
+    if (publishedFilter !== "all") f.published = publishedFilter;
+    return Object.keys(f).length > 0 ? f : undefined;
+  }, [deferredSearch, scopeFilter, publishedFilter]);
 
   // Data management with optimistic updates
   const {
@@ -84,18 +119,23 @@ export function AnnouncementsTable({
     optimisticUpdate,
     optimisticRemove,
     setData,
-  } = usePlatformData<AnnouncementRow, { title?: string }>({
+  } = usePlatformData<AnnouncementRow, Record<string, unknown>>({
     initialData,
     total,
     perPage,
     fetcher: async (params) => {
-      const result = await getAnnouncements(params);
+      const result = await getAnnouncements({
+        ...params,
+        title: deferredSearch || undefined,
+        scope: scopeFilter !== "all" ? scopeFilter : undefined,
+        published: publishedFilter !== "all" ? publishedFilter : undefined,
+      });
       if (result.success) {
         return { rows: result.data.rows as AnnouncementRow[], total: result.data.total };
       }
       return { rows: [], total: 0 };
     },
-    filters: searchValue ? { title: searchValue } : undefined,
+    filters,
   });
 
   // Generate columns with dictionary
@@ -114,14 +154,17 @@ export function AnnouncementsTable({
     }
   });
 
-  // Handle search with debounce
+  // Handle search (debounced via useDeferredValue)
   const handleSearchChange = useCallback((value: string) => {
-    setSearchValue(value);
-    // Trigger refresh with new search value
-    startTransition(() => {
-      router.refresh();
-    });
-  }, [router]);
+    setSearchInput(value);
+  }, []);
+
+  // Handle filter reset
+  const handleResetFilters = useCallback(() => {
+    setSearchInput("");
+    setScopeFilter("all");
+    setPublishedFilter("all");
+  }, []);
 
   // Handle delete with optimistic update
   const handleDelete = useCallback(async (announcement: AnnouncementRow) => {
@@ -207,19 +250,50 @@ export function AnnouncementsTable({
     exporting: "Exporting...",
   };
 
+  // Filter dropdowns for toolbar
+  const filterDropdowns = (
+    <>
+      <Select value={scopeFilter} onValueChange={setScopeFilter}>
+        <SelectTrigger className="h-9 w-32">
+          <SelectValue placeholder="Scope" />
+        </SelectTrigger>
+        <SelectContent>
+          {SCOPE_OPTIONS.map((opt) => (
+            <SelectItem key={opt.value} value={opt.value}>
+              {opt.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <Select value={publishedFilter} onValueChange={setPublishedFilter}>
+        <SelectTrigger className="h-9 w-32">
+          <SelectValue placeholder="Status" />
+        </SelectTrigger>
+        <SelectContent>
+          {PUBLISHED_OPTIONS.map((opt) => (
+            <SelectItem key={opt.value} value={opt.value}>
+              {opt.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </>
+  );
+
   return (
     <>
       <PlatformToolbar
         table={view === "table" ? table : undefined}
         view={view}
         onToggleView={toggleView}
-        searchValue={searchValue}
+        searchValue={searchInput}
         onSearchChange={handleSearchChange}
         searchPlaceholder={t.announcementTitle}
         onCreate={() => openModal()}
         getCSV={getAnnouncementsCSV}
         entityName="announcements"
         translations={toolbarTranslations}
+        additionalActions={filterDropdowns}
       />
 
       {view === "table" ? (
