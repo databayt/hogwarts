@@ -95,13 +95,16 @@ export default function StatsContent(_props: StatsContentProps) {
           <StatsDashboard />
         </section>
 
-        {/* Stats 12 & 13: Usage & Segmented */}
+        {/* Stats 12: Usage */}
         <section>
-          <h3 className="mb-4 text-lg font-medium">Stats Usage & Segmented (stats-12, stats-13)</h3>
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-            <StatsUsage />
-            <StatsSegmented />
-          </div>
+          <h3 className="mb-4 text-lg font-medium">Stats Usage (stats-12)</h3>
+          <StatsUsage />
+        </section>
+
+        {/* Stats 13: Segmented */}
+        <section>
+          <h3 className="mb-4 text-lg font-medium">Stats Segmented (stats-13)</h3>
+          <StatsSegmented />
         </section>
       </div>
     </>
