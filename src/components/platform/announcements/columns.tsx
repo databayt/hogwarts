@@ -57,8 +57,17 @@ export const getAnnouncementColumns = (dictionary: Dictionary['school']['announc
       };
       return <span className="text-sm">{labels[scope] || scope}</span>;
     },
-    meta: { label: columns.scope, variant: "text" },
-    enableColumnFilter: false, // Toolbar has custom filter
+    meta: {
+      label: columns.scope,
+      variant: "select",
+      options: [
+        { label: t.schoolWide, value: "school" },
+        { label: t.classSpecific, value: "class" },
+        { label: t.roleSpecific, value: "role" },
+      ],
+    },
+    enableColumnFilter: true,
+    filterFn: (row, id, value) => value.includes(row.getValue(id)),
   },
   {
     accessorKey: "published",
@@ -67,9 +76,17 @@ export const getAnnouncementColumns = (dictionary: Dictionary['school']['announc
       const is = getValue<boolean>();
       return <Badge variant={is ? "default" : "outline"}>{is ? t.published : t.draft}</Badge>;
     },
-    meta: { label: columns.status, variant: "text" },
+    meta: {
+      label: columns.status,
+      variant: "select",
+      options: [
+        { label: t.published, value: "true" },
+        { label: t.draft, value: "false" },
+      ],
+    },
     id: 'published',
-    enableColumnFilter: false, // Toolbar has custom filter
+    enableColumnFilter: true,
+    filterFn: (row, id, value) => value.includes(String(row.getValue(id))),
   },
   {
     accessorKey: "createdAt",

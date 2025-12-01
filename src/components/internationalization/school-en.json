@@ -526,6 +526,7 @@
       "navPublished": "Published",
       "navDrafts": "Drafts",
       "navScheduled": "Scheduled",
+      "navConfig": "Config",
       "navArchived": "Archived"
     },
     "parents": {

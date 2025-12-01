@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useCallback, useTransition, useDeferredValue, useEffect } from "react";
+import { useMemo, useState, useCallback, useTransition, useDeferredValue } from "react";
 import { DataTable } from "@/components/table/data-table";
 import { useDataTable } from "@/components/table/use-data-table";
 import type { AnnouncementRow } from "./columns";
@@ -24,13 +24,6 @@ import { Megaphone, Pin, Star } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { deleteAnnouncement, toggleAnnouncementPublish } from "./actions";
 import { DeleteToast, ErrorToast, confirmDeleteDialog } from "@/components/atom/toast";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 interface AnnouncementsTableProps {
   initialData: AnnouncementRow[];
@@ -79,20 +72,6 @@ export function AnnouncementsTable({
   const { openModal } = useModal();
   const [isPending, startTransition] = useTransition();
 
-  // Filter options with translations
-  const SCOPE_OPTIONS = useMemo(() => [
-    { value: "all", label: t.scope },
-    { value: "school", label: t.schoolWide },
-    { value: "class", label: t.classSpecific },
-    { value: "role", label: t.roleSpecific },
-  ], [t]);
-
-  const PUBLISHED_OPTIONS = useMemo(() => [
-    { value: "all", label: t.status },
-    { value: "published", label: t.published },
-    { value: "draft", label: t.draft },
-  ], [t]);
-
   // View mode (table/grid)
   const { view, toggleView } = usePlatformView({ defaultView: "table" });
 
@@ -100,20 +79,14 @@ export function AnnouncementsTable({
   const [searchInput, setSearchInput] = useState("");
   const deferredSearch = useDeferredValue(searchInput);
 
-  // Filter state
-  const [scopeFilter, setScopeFilter] = useState("all");
-  const [publishedFilter, setPublishedFilter] = useState("all");
-
   // Build filters object (always include language for locale-based filtering)
   const filters = useMemo(() => {
     const f: Record<string, unknown> = {
       language: lang, // Always filter by current locale
     };
     if (deferredSearch) f.title = deferredSearch;
-    if (scopeFilter !== "all") f.scope = scopeFilter;
-    if (publishedFilter !== "all") f.published = publishedFilter;
     return f;
-  }, [lang, deferredSearch, scopeFilter, publishedFilter]);
+  }, [lang, deferredSearch]);
 
   // Data management with optimistic updates
   const {
@@ -135,8 +108,6 @@ export function AnnouncementsTable({
         ...params,
         language: lang, // Always filter by current locale
         title: deferredSearch || undefined,
-        scope: scopeFilter !== "all" ? scopeFilter : undefined,
-        published: publishedFilter !== "all" ? publishedFilter : undefined,
       });
       if (result.success) {
         return { rows: result.data.rows as AnnouncementRow[], total: result.data.total };
@@ -165,13 +136,6 @@ export function AnnouncementsTable({
   // Handle search (debounced via useDeferredValue)
   const handleSearchChange = useCallback((value: string) => {
     setSearchInput(value);
-  }, []);
-
-  // Handle filter reset
-  const handleResetFilters = useCallback(() => {
-    setSearchInput("");
-    setScopeFilter("all");
-    setPublishedFilter("all");
   }, []);
 
   // Handle delete with optimistic update
@@ -261,36 +225,6 @@ export function AnnouncementsTable({
     exporting: "Exporting...",
   };
 
-  // Filter dropdowns for toolbar (py-1 to match Input padding)
-  const filterDropdowns = (
-    <>
-      <Select value={scopeFilter} onValueChange={setScopeFilter}>
-        <SelectTrigger className="h-9 w-32 py-1">
-          <SelectValue placeholder={t.scope} />
-        </SelectTrigger>
-        <SelectContent>
-          {SCOPE_OPTIONS.map((opt) => (
-            <SelectItem key={opt.value} value={opt.value}>
-              {opt.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      <Select value={publishedFilter} onValueChange={setPublishedFilter}>
-        <SelectTrigger className="h-9 w-32 py-1">
-          <SelectValue placeholder={t.status} />
-        </SelectTrigger>
-        <SelectContent>
-          {PUBLISHED_OPTIONS.map((opt) => (
-            <SelectItem key={opt.value} value={opt.value}>
-              {opt.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </>
-  );
-
   return (
     <>
       <PlatformToolbar
@@ -304,7 +238,6 @@ export function AnnouncementsTable({
         getCSV={getAnnouncementsCSV}
         entityName="announcements"
         translations={toolbarTranslations}
-        additionalActions={filterDropdowns}
       />
 
       {view === "table" ? (

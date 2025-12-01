@@ -462,9 +462,9 @@
       "content": "المحتوى",
       "body": "المحتوى",
       "scope": "النطاق",
-      "schoolWide": "على مستوى المدرسة",
-      "classSpecific": "فصل محدد",
-      "roleSpecific": "دور محدد",
+      "schoolWide": "مدرسة",
+      "classSpecific": "فصل",
+      "roleSpecific": "دور",
       "selectClasses": "اختر الفصول",
       "selectRoles": "اختر الأدوار",
       "publishDate": "تاريخ النشر",
@@ -526,6 +526,7 @@
       "navPublished": "المنشورة",
       "navDrafts": "المسودات",
       "navScheduled": "المجدولة",
+      "navConfig": "الإعدادات",
       "navArchived": "المؤرشفة"
     },
     "parents": {
