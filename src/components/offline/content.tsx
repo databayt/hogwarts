@@ -32,7 +32,7 @@ export function OfflineContent({ dictionary, lang }: OfflineContentProps) {
           <p className="text-muted-foreground">
             While offline, you can:
           </p>
-          <ul className="text-left space-y-1">
+          <ul className="text-start space-y-1">
             <li>• View previously cached pages</li>
             <li>• Access downloaded documents</li>
             <li>• Review saved student data</li>

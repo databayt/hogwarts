@@ -81,7 +81,7 @@ export function UserAuthForm({ className, type, ...props }: UserAuthFormProps) {
           </div>
           <button className={cn(buttonVariants())} disabled={isLoading}>
             {isLoading && (
-              <Icons.spinner className="mr-2 size-4 animate-spin" />
+              <Icons.spinner className="me-2 size-4 animate-spin" />
             )}
             {type === "register" ? "Sign Up with Email" : "Sign In with Email"}
           </button>
@@ -107,9 +107,9 @@ export function UserAuthForm({ className, type, ...props }: UserAuthFormProps) {
         disabled={isLoading || isGoogleLoading}
       >
         {isGoogleLoading ? (
-          <Icons.spinner className="mr-2 size-4 animate-spin" />
+          <Icons.spinner className="me-2 size-4 animate-spin" />
         ) : (
-          <Icons.google className="mr-2 size-4" />
+          <Icons.google className="me-2 size-4" />
         )}{" "}
         Google
       </button>

@@ -63,7 +63,7 @@ export default function SchoolDetail({
           {school.website && (
             <Button variant="outline" size="sm" asChild>
               <a href={school.website} target="_blank" rel="noopener noreferrer">
-                <ExternalLink className="h-4 w-4 mr-2" />
+                <ExternalLink className="h-4 w-4 me-2" />
                 Visit Website
               </a>
             </Button>
@@ -73,7 +73,7 @@ export default function SchoolDetail({
           <div className="flex gap-2">
             {onEdit && (
               <Button variant="outline" onClick={onEdit}>
-                <Edit className="h-4 w-4 mr-2" />
+                <Edit className="h-4 w-4 me-2" />
                 Edit
               </Button>
             )}

@@ -242,12 +242,12 @@ export function FileBrowser({
       <div className="flex flex-col sm:flex-row gap-4">
         {/* Search */}
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
             placeholder="Search files..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9"
+            className="ps-9"
           />
         </div>
 
@@ -446,7 +446,7 @@ function FileGridItem({ file, selectable, onView, onDownload, onDelete, onSelect
       </div>
 
       {/* Actions Menu */}
-      <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+      <div className="absolute top-2 end-2 opacity-0 group-hover:opacity-100 transition-opacity">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="secondary" size="icon" className="h-8 w-8">
@@ -455,15 +455,15 @@ function FileGridItem({ file, selectable, onView, onDownload, onDelete, onSelect
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={onView}>
-              <Eye className="w-4 h-4 mr-2" />
+              <Eye className="w-4 h-4 me-2" />
               View
             </DropdownMenuItem>
             <DropdownMenuItem onClick={onDownload}>
-              <Download className="w-4 h-4 mr-2" />
+              <Download className="w-4 h-4 me-2" />
               Download
             </DropdownMenuItem>
             <DropdownMenuItem onClick={onDelete} className="text-destructive">
-              <Trash2 className="w-4 h-4 mr-2" />
+              <Trash2 className="w-4 h-4 me-2" />
               Delete
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -592,11 +592,11 @@ function FilePreviewDialog({ file, open, onClose, onDownload, onDelete }: FilePr
 
         <DialogFooter>
           <Button variant="outline" onClick={onDelete}>
-            <Trash2 className="w-4 h-4 mr-2" />
+            <Trash2 className="w-4 h-4 me-2" />
             Delete
           </Button>
           <Button onClick={onDownload}>
-            <Download className="w-4 h-4 mr-2" />
+            <Download className="w-4 h-4 me-2" />
             Download
           </Button>
         </DialogFooter>

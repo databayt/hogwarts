@@ -177,7 +177,7 @@ export function PaymentCard({ title, description, price, feature, featuredescrip
                   id="cardNumber"
                   value={cardNumber}
                   onChange={(e) => setCardNumber(e.target.value)}
-                  className="pl-14 font-mono tracking-wider"
+                  className="ps-14 font-mono tracking-wider"
                   placeholder="1234 5678 9012 3456"
                   maxLength={19}
                 />
@@ -233,7 +233,7 @@ export function PaymentCard({ title, description, price, feature, featuredescrip
             {/* Pay Button */}
             <Button className="w-full mt-2" onClick={handlePay}>
               Pay ${price || "320"}.00
-              <ArrowRight className="ml-2 h-4 w-4" />
+              <ArrowRight className="ms-2 h-4 w-4" />
             </Button>
           </CardContent>
         </Card>

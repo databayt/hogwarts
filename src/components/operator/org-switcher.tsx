@@ -62,7 +62,7 @@ export function OrgSwitcher({
                 <span className='font-semibold'>Next Starter</span>
                 <span className=''>{selectedTenant.name}</span>
               </div>
-              <ChevronsUpDown className='ml-auto' />
+              <ChevronsUpDown className='ms-auto' />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent
@@ -76,7 +76,7 @@ export function OrgSwitcher({
               >
                 {tenant.name}{' '}
                 {tenant.id === selectedTenant.id && (
-                  <Check className='ml-auto' />
+                  <Check className='ms-auto' />
                 )}
               </DropdownMenuItem>
             ))}

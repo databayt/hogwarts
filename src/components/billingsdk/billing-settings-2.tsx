@@ -304,7 +304,7 @@ export function BillingSettings2({
 							<div key={field.id} className="space-y-2">
 								<Label htmlFor={field.id}>
 									{field.label}
-									{field.required && <span className="text-red-500 ml-1">*</span>}
+									{field.required && <span className="text-red-500 ms-1">*</span>}
 								</Label>
 								<Input
 									id={field.id}
@@ -334,7 +334,7 @@ export function BillingSettings2({
 					<div className="space-y-2 min-w-0">
 						<Label id="currency-label">
 							Currency
-							{currencyRequired && <span className="text-red-500 ml-1">*</span>}
+							{currencyRequired && <span className="text-red-500 ms-1">*</span>}
 						</Label>
 						<Select value={normalizedDefaultCurrency} onValueChange={(value) => handleCurrencyChange(value, onCurrencyChange)}>
 							<SelectTrigger

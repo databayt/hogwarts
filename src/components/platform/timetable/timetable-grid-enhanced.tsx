@@ -127,20 +127,20 @@ const DraggableSlot: React.FC<{
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={onEdit}>
-                <Edit2 className="mr-2 h-4 w-4" />
+                <Edit2 className="me-2 h-4 w-4" />
                 Edit
               </DropdownMenuItem>
               <DropdownMenuItem>
-                <Copy className="mr-2 h-4 w-4" />
+                <Copy className="me-2 h-4 w-4" />
                 Duplicate
               </DropdownMenuItem>
               <DropdownMenuItem>
-                <Move className="mr-2 h-4 w-4" />
+                <Move className="me-2 h-4 w-4" />
                 Move
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={onDelete} className="text-red-600">
-                <Trash2 className="mr-2 h-4 w-4" />
+                <Trash2 className="me-2 h-4 w-4" />
                 Delete
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -150,12 +150,12 @@ const DraggableSlot: React.FC<{
 
       <div className="space-y-1">
         <p className="flex items-center muted">
-          <User className="mr-1 h-3 w-3" />
+          <User className="me-1 h-3 w-3" />
           <small className="truncate">{displayInfo.teacher}</small>
         </p>
         {slot.classroomId && (
           <p className="flex items-center muted">
-            <MapPin className="mr-1 h-3 w-3" />
+            <MapPin className="me-1 h-3 w-3" />
             <small className="truncate">{slot.classroomId}</small>
           </p>
         )}
@@ -326,10 +326,10 @@ export function TimetableGridEnhanced({
         <table className="w-full border-collapse bg-background rounded-lg overflow-hidden shadow-sm">
           <thead>
             <tr className="bg-muted">
-              <th className="border-r border-b p-3 text-left"
+              <th className="border-r border-b p-3 text-start"
                   style={{ width: `${GRID_SETTINGS.TIME_COLUMN_WIDTH}px` }}>
                 <h6 className="inline-flex items-center">
-                  <Clock className="mr-2 h-4 w-4" />
+                  <Clock className="me-2 h-4 w-4" />
                   {dictionary.time || 'Time'}
                 </h6>
               </th>

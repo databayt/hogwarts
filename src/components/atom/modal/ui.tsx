@@ -26,7 +26,7 @@ function Modal({ content, big = false, full = false }: Props) {
 
       `}>
         {full && 
-        <Button size='icon' variant='outline' onClick={closeModal} className="absolute top-0 right-0 m-4">
+        <Button size='icon' variant='outline' onClick={closeModal} className="absolute top-0 end-0 m-4">
         <X size={25} />
         </Button>}
         {content}

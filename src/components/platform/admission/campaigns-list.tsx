@@ -82,7 +82,7 @@ export function CampaignsList({ campaigns }: Props) {
             setDialogOpen(true);
           }}
         >
-          <IconPlus className="mr-2 h-4 w-4" />
+          <IconPlus className="me-2 h-4 w-4" />
           {"Add Campaign"}
         </Button>
       </div>
@@ -97,7 +97,7 @@ export function CampaignsList({ campaigns }: Props) {
               <TableHead>{"Status"}</TableHead>
               <TableHead>{"Total Seats"}</TableHead>
               <TableHead>{"Application Fee"}</TableHead>
-              <TableHead className="text-right">
+              <TableHead className="text-end">
                 {"Actions"}
               </TableHead>
             </TableRow>
@@ -129,7 +129,7 @@ export function CampaignsList({ campaigns }: Props) {
                       ? `₹${campaign.applicationFee}`
                       : "Free"}
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-end">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" className="h-8 w-8 p-0">
@@ -148,14 +148,14 @@ export function CampaignsList({ campaigns }: Props) {
                             setDialogOpen(true);
                           }}
                         >
-                          <IconEdit className="mr-2 h-4 w-4" />
+                          <IconEdit className="me-2 h-4 w-4" />
                           {"Edit"}
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => handleDelete(campaign.id)}
                           className="text-red-600"
                         >
-                          <IconTrash className="mr-2 h-4 w-4" />
+                          <IconTrash className="me-2 h-4 w-4" />
                           {"Delete"}
                         </DropdownMenuItem>
                       </DropdownMenuContent>

@@ -47,7 +47,7 @@ export function PromptTable({ prompts }: PromptTableProps) {
             <TableHead>Description</TableHead>
             <TableHead className="w-[120px]">Category</TableHead>
             <TableHead className="w-[100px]">Type</TableHead>
-            <TableHead className="w-[80px] text-right">Actions</TableHead>
+            <TableHead className="w-[80px] text-end">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -56,7 +56,7 @@ export function PromptTable({ prompts }: PromptTableProps) {
               <TableCell className="font-medium">
                 <button
                   onClick={() => scrollToPrompt(prompt.id)}
-                  className="text-left text-primary hover:underline"
+                  className="text-start text-primary hover:underline"
                 >
                   {prompt.name}
                 </button>
@@ -79,7 +79,7 @@ export function PromptTable({ prompts }: PromptTableProps) {
                   {prompt.source}
                 </Badge>
               </TableCell>
-              <TableCell className="text-right">
+              <TableCell className="text-end">
                 <Button
                   size="sm"
                   variant="ghost"

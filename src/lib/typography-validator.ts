@@ -13,16 +13,21 @@ export interface TypographyViolation {
 }
 
 // Typography mapping based on the project's typography system
+// Aligned with reference codebase at /Users/abdout/codebase
 const TYPOGRAPHY_MAPPINGS: Record<string, string> = {
   'text-4xl font-extrabold': 'h1',
   'text-5xl font-extrabold': 'h1',
+  'text-4xl font-bold': 'h2',
   'text-3xl font-bold': 'h2',
   'text-2xl font-semibold': 'h3',
   'text-xl font-semibold': 'h4',
-  'text-lg font-semibold': 'h5',
-  'text-base font-semibold': 'h6',
+  'text-sm font-semibold': 'h5',
+  'text-lg font-semibold': 'h5', // Legacy mapping
+  'text-sm font-normal': 'h6',
+  'text-base font-semibold': 'h6', // Legacy mapping
   'text-sm text-muted-foreground': 'p className="muted"',
   'text-xs text-muted-foreground': 'small className="muted"',
+  'text-xl text-muted-foreground': 'p className="lead"',
   'text-xs': 'small',
   'text-xl': 'p className="lead"',
   'text-sm': 'p className="muted"'

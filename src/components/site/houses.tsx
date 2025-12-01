@@ -85,7 +85,7 @@ export function Houses() {
           <div className="text-center pt-12">
           <Button variant="ghost" asChild className='flex items-end justify-center hover:bg-transparent hover:underline p-0'>
               <Link href="/#" className="flex ">
-                <Image src="/site/hat.png" alt="Witch" width={40} height={40} className="dark:invert mr-1"/>
+                <Image src="/site/hat.png" alt="Witch" width={40} height={40} className="dark:invert me-1"/>
                 Take Sorting Quiz
               </Link>
             </Button>

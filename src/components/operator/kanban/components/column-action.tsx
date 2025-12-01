@@ -51,14 +51,14 @@ export function ColumnActions({
         <Input
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className='mt-0! mr-auto text-base disabled:cursor-pointer disabled:border-none disabled:opacity-100'
+          className='mt-0! me-auto text-base disabled:cursor-pointer disabled:border-none disabled:opacity-100'
           disabled={editDisable}
           ref={inputRef}
         />
       </form>
       <DropdownMenu modal={false}>
         <DropdownMenuTrigger asChild>
-          <Button variant='secondary' className='ml-1'>
+          <Button variant='secondary' className='ms-1'>
             <span className='sr-only'>Actions</span>
             <DotsHorizontalIcon className='h-4 w-4' />
           </Button>

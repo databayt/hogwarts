@@ -227,7 +227,7 @@ export default function AcademicContent({ school, dictionary, lang }: Props) {
                   <ul className="space-y-2">
                     {level.features.map((feature, featureIndex) => (
                       <li key={featureIndex} className="flex items-center muted">
-                        <div className="w-2 h-2 bg-blue-500 rounded-full mr-3 flex-shrink-0"></div>
+                        <div className="w-2 h-2 bg-blue-500 rounded-full me-3 flex-shrink-0"></div>
                         {feature}
                       </li>
                     ))}

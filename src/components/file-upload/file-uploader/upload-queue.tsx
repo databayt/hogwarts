@@ -224,11 +224,11 @@ export function UploadQueue({
                     <>
                       <Separator orientation="vertical" className="h-3" />
                       <Badge variant="secondary" className="text-xs px-1.5 py-0">
-                        <Zap className="h-3 w-3 mr-1" />
+                        <Zap className="h-3 w-3 me-1" />
                         {formatSpeed(speed.bytesPerSecond)}
                       </Badge>
                       <Badge variant="secondary" className="text-xs px-1.5 py-0">
-                        <Clock className="h-3 w-3 mr-1" />
+                        <Clock className="h-3 w-3 me-1" />
                         {formatETA(speed.remainingTime)}
                       </Badge>
                     </>

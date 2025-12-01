@@ -65,7 +65,7 @@ export function UpcomingCharges({
                 <p className="font-semibold">{nextBillingDate}</p>
               </div>
             </div>
-            <div className="text-right">
+            <div className="text-end">
               <p className="text-sm text-muted-foreground">Total</p>
               <p className="text-2xl font-bold tabular-nums">{totalAmount}</p>
             </div>

@@ -49,11 +49,11 @@ export function BillingDashboard({ stats, invoices, paymentMethods, dictionary }
         </div>
         <div className="flex gap-2">
           <Button variant="outline">
-            <IconSettings className="mr-2 h-4 w-4" />
+            <IconSettings className="me-2 h-4 w-4" />
             Settings
           </Button>
           <Button>
-            <IconArrowUpRight className="mr-2 h-4 w-4" />
+            <IconArrowUpRight className="me-2 h-4 w-4" />
             Upgrade Plan
           </Button>
         </div>
@@ -193,7 +193,7 @@ export function BillingDashboard({ stats, invoices, paymentMethods, dictionary }
                     </div>
                     <span className="text-sm text-muted-foreground">
                       {resource.current.toLocaleString()} / {resource.limit.toLocaleString()} {resource.unit || ""}
-                      <span className="ml-2 font-medium">({resource.percentage}%)</span>
+                      <span className="ms-2 font-medium">({resource.percentage}%)</span>
                     </span>
                   </div>
                   <Progress value={resource.percentage} className="h-2">
@@ -289,7 +289,7 @@ export function BillingDashboard({ stats, invoices, paymentMethods, dictionary }
                   <CardDescription>Your billing and invoice history</CardDescription>
                 </div>
                 <Button variant="outline" size="sm">
-                  <IconDownload className="mr-2 h-4 w-4" />
+                  <IconDownload className="me-2 h-4 w-4" />
                   Export All
                 </Button>
               </div>
@@ -338,7 +338,7 @@ export function BillingDashboard({ stats, invoices, paymentMethods, dictionary }
                   <CardDescription>Manage your payment methods</CardDescription>
                 </div>
                 <Button size="sm">
-                  <IconPlus className="mr-2 h-4 w-4" />
+                  <IconPlus className="me-2 h-4 w-4" />
                   Add Payment Method
                 </Button>
               </div>

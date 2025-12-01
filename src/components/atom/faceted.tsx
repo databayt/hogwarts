@@ -120,7 +120,7 @@ function FacetedTrigger(props: React.ComponentProps<typeof PopoverTrigger>) {
   return (
     <PopoverTrigger
       {...triggerProps}
-      className={cn("justify-between text-left", className)}
+      className={cn("justify-between text-start", className)}
     >
       {children}
     </PopoverTrigger>
@@ -164,7 +164,7 @@ function FacetedBadgeList(props: FacetedBadgeListProps) {
         className="flex w-full items-center gap-1 text-muted-foreground"
       >
         {placeholder}
-        <ChevronsUpDown className="ml-auto size-4 shrink-0 opacity-50" />
+        <ChevronsUpDown className="ms-auto size-4 shrink-0 opacity-50" />
       </div>
     );
   }

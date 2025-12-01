@@ -67,7 +67,7 @@ export function StoryVideo() {
 
       <div className="absolute inset-0 bg-black/10" />
 
-      <div className="absolute bottom-4 right-4 flex items-center gap-2">
+      <div className="absolute bottom-4 end-4 flex items-center gap-2">
         <Button
           variant="ghost"
           size="sm"

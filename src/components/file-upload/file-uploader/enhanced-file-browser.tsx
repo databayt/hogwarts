@@ -263,7 +263,7 @@ export function EnhancedFileBrowser({
             className="h-7 px-2"
             onClick={() => onFolderChange?.('/')}
           >
-            <Folder className="h-4 w-4 mr-1" />
+            <Folder className="h-4 w-4 me-1" />
             {dictionary?.root || 'Root'}
           </Button>
           {currentFolder !== '/' && (
@@ -274,7 +274,7 @@ export function EnhancedFileBrowser({
                 size="sm"
                 className="h-7 px-2"
               >
-                <FolderOpen className="h-4 w-4 mr-1" />
+                <FolderOpen className="h-4 w-4 me-1" />
                 {currentFolder}
               </Button>
             </>
@@ -298,7 +298,7 @@ export function EnhancedFileBrowser({
                     processedFiles.find(f => f.id === id)!
                   ))}
                 >
-                  <Download className="h-4 w-4 mr-1" />
+                  <Download className="h-4 w-4 me-1" />
                   {dictionary?.download || 'Download'}
                 </Button>
                 <Button
@@ -308,7 +308,7 @@ export function EnhancedFileBrowser({
                     processedFiles.find(f => f.id === id)!
                   ))}
                 >
-                  <Trash2 className="h-4 w-4 mr-1" />
+                  <Trash2 className="h-4 w-4 me-1" />
                   {dictionary?.delete || 'Delete'}
                 </Button>
               </>
@@ -321,13 +321,13 @@ export function EnhancedFileBrowser({
         {/* Search */}
         {showSearch && (
           <div className="relative">
-            <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Search className="absolute start-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               type="search"
               placeholder={dictionary?.searchFiles || 'Search files...'}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="h-8 w-64 pl-8"
+              className="h-8 w-64 ps-8"
             />
           </div>
         )}
@@ -337,7 +337,7 @@ export function EnhancedFileBrowser({
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm" className="h-8">
-                <Filter className="h-4 w-4 mr-1" />
+                <Filter className="h-4 w-4 me-1" />
                 {dictionary?.filter || 'Filter'}
               </Button>
             </DropdownMenuTrigger>
@@ -353,7 +353,7 @@ export function EnhancedFileBrowser({
                   }))
                 }
               >
-                <ImageIcon className="h-4 w-4 mr-2" />
+                <ImageIcon className="h-4 w-4 me-2" />
                 {dictionary?.images || 'Images'}
               </DropdownMenuCheckboxItem>
               <DropdownMenuCheckboxItem
@@ -365,7 +365,7 @@ export function EnhancedFileBrowser({
                   }))
                 }
               >
-                <Video className="h-4 w-4 mr-2" />
+                <Video className="h-4 w-4 me-2" />
                 {dictionary?.videos || 'Videos'}
               </DropdownMenuCheckboxItem>
               <DropdownMenuCheckboxItem
@@ -377,7 +377,7 @@ export function EnhancedFileBrowser({
                   }))
                 }
               >
-                <FileText className="h-4 w-4 mr-2" />
+                <FileText className="h-4 w-4 me-2" />
                 {dictionary?.documents || 'Documents'}
               </DropdownMenuCheckboxItem>
             </DropdownMenuContent>
@@ -390,9 +390,9 @@ export function EnhancedFileBrowser({
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm" className="h-8">
                 {sort.direction === 'asc' ? (
-                  <SortAsc className="h-4 w-4 mr-1" />
+                  <SortAsc className="h-4 w-4 me-1" />
                 ) : (
-                  <SortDesc className="h-4 w-4 mr-1" />
+                  <SortDesc className="h-4 w-4 me-1" />
                 )}
                 {dictionary?.sort || 'Sort'}
               </Button>
@@ -518,7 +518,7 @@ export function EnhancedFileBrowser({
                   {/* Selection checkbox */}
                   {allowSelection && (
                     <div className={cn(
-                      'absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity',
+                      'absolute top-2 start-2 opacity-0 group-hover:opacity-100 transition-opacity',
                       selectedFiles.has(file.id) && 'opacity-100'
                     )}>
                       <Checkbox
@@ -539,7 +539,7 @@ export function EnhancedFileBrowser({
 
                   {/* Actions */}
                   {allowActions && (
-                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="absolute top-2 end-2 opacity-0 group-hover:opacity-100 transition-opacity">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button
@@ -555,32 +555,32 @@ export function EnhancedFileBrowser({
                           <DropdownMenuItem
                             onClick={() => onFileAction?.('view', file)}
                           >
-                            <Eye className="h-4 w-4 mr-2" />
+                            <Eye className="h-4 w-4 me-2" />
                             {dictionary?.view || 'View'}
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() => onFileAction?.('download', file)}
                           >
-                            <Download className="h-4 w-4 mr-2" />
+                            <Download className="h-4 w-4 me-2" />
                             {dictionary?.download || 'Download'}
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() => onFileAction?.('share', file)}
                           >
-                            <Share2 className="h-4 w-4 mr-2" />
+                            <Share2 className="h-4 w-4 me-2" />
                             {dictionary?.share || 'Share'}
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
                             onClick={() => onFileAction?.('rename', file)}
                           >
-                            <Edit className="h-4 w-4 mr-2" />
+                            <Edit className="h-4 w-4 me-2" />
                             {dictionary?.rename || 'Rename'}
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() => onFileAction?.('copy', file)}
                           >
-                            <Copy className="h-4 w-4 mr-2" />
+                            <Copy className="h-4 w-4 me-2" />
                             {dictionary?.copy || 'Copy'}
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
@@ -588,7 +588,7 @@ export function EnhancedFileBrowser({
                             onClick={() => onFileAction?.('delete', file)}
                             className="text-destructive"
                           >
-                            <Trash2 className="h-4 w-4 mr-2" />
+                            <Trash2 className="h-4 w-4 me-2" />
                             {dictionary?.delete || 'Delete'}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
@@ -639,7 +639,7 @@ export function EnhancedFileBrowser({
             <TableHead>{dictionary?.type || 'Type'}</TableHead>
             <TableHead>{dictionary?.uploadedBy || 'Uploaded by'}</TableHead>
             <TableHead>{dictionary?.uploadedAt || 'Uploaded at'}</TableHead>
-            {allowActions && <TableHead className="text-right">{dictionary?.actions || 'Actions'}</TableHead>}
+            {allowActions && <TableHead className="text-end">{dictionary?.actions || 'Actions'}</TableHead>}
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -693,7 +693,7 @@ export function EnhancedFileBrowser({
                   {format(new Date(file.uploadedAt), 'MMM d, yyyy h:mm a')}
                 </TableCell>
                 {allowActions && (
-                  <TableCell className="text-right">
+                  <TableCell className="text-end">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button
@@ -709,13 +709,13 @@ export function EnhancedFileBrowser({
                         <DropdownMenuItem
                           onClick={() => onFileAction?.('view', file)}
                         >
-                          <Eye className="h-4 w-4 mr-2" />
+                          <Eye className="h-4 w-4 me-2" />
                           {dictionary?.view || 'View'}
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => onFileAction?.('download', file)}
                         >
-                          <Download className="h-4 w-4 mr-2" />
+                          <Download className="h-4 w-4 me-2" />
                           {dictionary?.download || 'Download'}
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
@@ -723,7 +723,7 @@ export function EnhancedFileBrowser({
                           onClick={() => onFileAction?.('delete', file)}
                           className="text-destructive"
                         >
-                          <Trash2 className="h-4 w-4 mr-2" />
+                          <Trash2 className="h-4 w-4 me-2" />
                           {dictionary?.delete || 'Delete'}
                         </DropdownMenuItem>
                       </DropdownMenuContent>

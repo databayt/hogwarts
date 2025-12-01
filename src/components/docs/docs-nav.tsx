@@ -43,7 +43,7 @@ export function DocsNav() {
           <Link
             href={breadcrumb.href}
             className={cn(
-              "ml-1 overflow-hidden text-ellipsis whitespace-nowrap",
+              "ms-1 overflow-hidden text-ellipsis whitespace-nowrap",
               breadcrumb.isLast
                 ? "text-foreground"
                 : "hover:text-foreground"

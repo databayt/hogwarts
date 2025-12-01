@@ -245,7 +245,7 @@ export function ConfigDialog({ open, onOpenChange, classConfig, onConfigChange, 
               }}
             >
               {searchValue || "Search school..."}
-              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              <ChevronsUpDown className="ms-2 h-4 w-4 shrink-0 opacity-50" />
             </Button>
           </PopoverTrigger>
           <PopoverContent
@@ -285,12 +285,12 @@ export function ConfigDialog({ open, onOpenChange, classConfig, onConfigChange, 
                         >
                           <Check
                             className={cn(
-                              "mr-2 h-4 w-4",
+                              "me-2 h-4 w-4",
                               tempConfig.school === school.SCHUL_NM ? "opacity-100" : "opacity-0"
                             )}
                           />
                           {school.SCHUL_NM}
-                          <small className="ml-2 text-muted-foreground">
+                          <small className="ms-2 text-muted-foreground">
                             ({school.ATPT_OFCDC_SC_NM})
                           </small>
                         </CommandItem>

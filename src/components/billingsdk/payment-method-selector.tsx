@@ -285,7 +285,7 @@ export function PaymentMethodSelector({ onProceed }: PaymentMethodSelectorProps)
   }
 
   return (
-    <Card className="max-w-lg mx-auto text-left overflow-hidden shadow-lg w-full">
+    <Card className="max-w-lg mx-auto text-start overflow-hidden shadow-lg w-full">
       <CardHeader className="px-4 sm:px-6 pb-2">
         <CardTitle className="text-base font-semibold">
           Payment Methods
@@ -335,7 +335,7 @@ export function PaymentMethodSelector({ onProceed }: PaymentMethodSelectorProps)
                   }`}>
                     {option.icon}
                   </div>
-                  <div className="flex-1 text-left">
+                  <div className="flex-1 text-start">
                     <h3 className={`font-medium transition-colors ${
                       isSelected ? "text-primary" : "text-foreground hover:text-primary"
                     }`}>

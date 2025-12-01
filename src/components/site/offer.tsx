@@ -54,7 +54,7 @@ export function SpecialOffers() {
         <SectionHeading title="Benefits" description="Financial support options designed to make your wizarding journey more affordable." />
         
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 py-14 pl-14">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 py-14 ps-14">
           {specialOffers.map((offer, index) => (
             <div key={index} className="text-center">
               <div className="flex justify-center pb-6">
@@ -66,7 +66,7 @@ export function SpecialOffers() {
                   {offer.icon}
                 </div>
               </div>
-              <CardTitle className="text-xl font-bold pb-2 mr-14">
+              <CardTitle className="text-xl font-bold pb-2 me-14">
                 {offer.title}
               </CardTitle>
               <div className="flex justify-center pb-2">

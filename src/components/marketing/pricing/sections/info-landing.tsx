@@ -28,9 +28,9 @@ export default function InfoLanding({
             {data.list.map((item, index) => {
               const Icon = Icons[item.icon || "arrowRight"];
               return (
-                <div className="relative pl-8" key={index}>
+                <div className="relative ps-8" key={index}>
                   <dt>
-                    <Icon className="absolute left-0 top-1 size-5 stroke-purple-700" />
+                    <Icon className="absolute start-0 top-1 size-5 stroke-purple-700" />
                     <span>{item.title}</span>
                   </dt>
                   <dd className="muted">

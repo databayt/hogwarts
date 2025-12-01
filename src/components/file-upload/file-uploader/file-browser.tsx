@@ -70,13 +70,13 @@ export function FileBrowser({
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         {/* Search */}
         <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             type="search"
             placeholder="Search files..."
             value={state.filter.search || ''}
             onChange={handleSearchChange}
-            className="pl-9"
+            className="ps-9"
           />
         </div>
 
@@ -118,7 +118,7 @@ export function FileBrowser({
               size="sm"
               onClick={actions.deleteSelected}
             >
-              <Trash2 className="mr-2 h-4 w-4" />
+              <Trash2 className="me-2 h-4 w-4" />
               Delete ({state.selected.length})
             </Button>
           )}
@@ -184,7 +184,7 @@ export function FileBrowser({
                     )}
                   >
                     {allowSelect && (
-                      <div className="absolute top-3 left-3 z-10">
+                      <div className="absolute top-3 start-3 z-10">
                         <Checkbox
                           checked={isSelected}
                           onCheckedChange={() => actions.toggleSelect(file.id)}
@@ -236,11 +236,11 @@ export function FileBrowser({
                         />
                       </th>
                     )}
-                    <th className="p-4 text-left font-medium">Name</th>
-                    <th className="p-4 text-left font-medium">Size</th>
-                    <th className="p-4 text-left font-medium">Type</th>
-                    <th className="p-4 text-left font-medium">Uploaded</th>
-                    <th className="p-4 text-right font-medium">Actions</th>
+                    <th className="p-4 text-start font-medium">Name</th>
+                    <th className="p-4 text-start font-medium">Size</th>
+                    <th className="p-4 text-start font-medium">Type</th>
+                    <th className="p-4 text-start font-medium">Uploaded</th>
+                    <th className="p-4 text-end font-medium">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -275,7 +275,7 @@ export function FileBrowser({
                         <td className="p-4 text-muted-foreground">
                           {new Date(file.uploadedAt).toLocaleDateString()}
                         </td>
-                        <td className="p-4 text-right">
+                        <td className="p-4 text-end">
                           <Button
                             variant="ghost"
                             size="sm"

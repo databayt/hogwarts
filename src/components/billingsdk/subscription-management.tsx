@@ -18,7 +18,7 @@ export interface SubscriptionManagementProps {
 
 export function SubscriptionManagement({ className, currentPlan, cancelSubscription, updatePlan }: SubscriptionManagementProps) {
 
-    return (<div className={cn("text-left w-full", className)}>
+    return (<div className={cn("text-start w-full", className)}>
         <Card className="shadow-lg">
             <CardHeader className="pb-4 sm:pb-6 px-4 sm:px-6">
                 <CardTitle className="flex items-center gap-2 sm:gap-3 text-lg sm:text-xl">

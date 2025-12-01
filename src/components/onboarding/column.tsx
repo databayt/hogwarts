@@ -142,25 +142,25 @@ export function SchoolActions({
         <DropdownMenuItem 
           onClick={() => navigator.clipboard.writeText(school.id || '')}
         >
-          <Copy className="mr-2 h-4 w-4" />
+          <Copy className="me-2 h-4 w-4" />
           Copy School ID
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         {onView && (
           <DropdownMenuItem onClick={() => onView(school)}>
-            <Eye className="mr-2 h-4 w-4" />
+            <Eye className="me-2 h-4 w-4" />
             View Details
           </DropdownMenuItem>
         )}
         {onEdit && (
           <DropdownMenuItem onClick={() => onEdit(school)}>
-            <Edit className="mr-2 h-4 w-4" />
+            <Edit className="me-2 h-4 w-4" />
             Edit School
           </DropdownMenuItem>
         )}
         {onDuplicate && (
           <DropdownMenuItem onClick={() => onDuplicate(school)}>
-            <Copy className="mr-2 h-4 w-4" />
+            <Copy className="me-2 h-4 w-4" />
             Duplicate
           </DropdownMenuItem>
         )}
@@ -170,7 +170,7 @@ export function SchoolActions({
             onClick={() => onDelete(school)}
             className="text-destructive"
           >
-            <Trash2 className="mr-2 h-4 w-4" />
+            <Trash2 className="me-2 h-4 w-4" />
             Delete
           </DropdownMenuItem>
         )}

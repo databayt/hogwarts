@@ -325,7 +325,7 @@ export function LibraryManagement({
             <TabsTrigger value="transactions">
               Transactions
               {userTransactions.filter(t => t.status === 'ACTIVE').length > 0 && (
-                <Badge variant="destructive" className="ml-2">
+                <Badge variant="destructive" className="ms-2">
                   {userTransactions.filter(t => t.status === 'ACTIVE').length}
                 </Badge>
               )}
@@ -333,7 +333,7 @@ export function LibraryManagement({
             <TabsTrigger value="reservations">
               Reservations
               {userReservations.filter(r => r.status === 'ACTIVE').length > 0 && (
-                <Badge variant="secondary" className="ml-2">
+                <Badge variant="secondary" className="ms-2">
                   {userReservations.filter(r => r.status === 'ACTIVE').length}
                 </Badge>
               )}
@@ -343,12 +343,12 @@ export function LibraryManagement({
           {userRole === 'LIBRARIAN' && (
             <div className="flex gap-2">
               <Button variant="outline" onClick={() => setScannerActive(!scannerActive)}>
-                <Barcode className="h-4 w-4 mr-2" />
+                <Barcode className="h-4 w-4 me-2" />
                 {scannerActive ? 'Stop Scanner' : 'Scan ISBN'}
               </Button>
               {onAddBook && (
                 <Button onClick={() => setAddBookDialogOpen(true)}>
-                  <Plus className="h-4 w-4 mr-2" />
+                  <Plus className="h-4 w-4 me-2" />
                   Add Book
                 </Button>
               )}
@@ -431,7 +431,7 @@ export function LibraryManagement({
                                 )}
                               />
                             ))}
-                            <span className="text-xs text-muted-foreground ml-1">
+                            <span className="text-xs text-muted-foreground ms-1">
                               ({book.rating.toFixed(1)})
                             </span>
                           </div>
@@ -458,7 +458,7 @@ export function LibraryManagement({
                             setCheckoutDialogOpen(true);
                           }}
                         >
-                          <BookOpen className="h-4 w-4 mr-2" />
+                          <BookOpen className="h-4 w-4 me-2" />
                           Check Out
                         </Button>
                       ) : (
@@ -468,7 +468,7 @@ export function LibraryManagement({
                           variant="outline"
                           onClick={() => handleReserve(book.id)}
                         >
-                          <Clock className="h-4 w-4 mr-2" />
+                          <Clock className="h-4 w-4 me-2" />
                           Reserve
                         </Button>
                       )}
@@ -550,7 +550,7 @@ export function LibraryManagement({
                             {isOverdue ? 'OVERDUE' : transaction.status}
                           </Badge>
                           {transaction.fineAmount && transaction.fineAmount > 0 && (
-                            <Badge variant="outline" className="ml-2 text-red-600">
+                            <Badge variant="outline" className="ms-2 text-red-600">
                               ${transaction.fineAmount.toFixed(2)} fine
                             </Badge>
                           )}

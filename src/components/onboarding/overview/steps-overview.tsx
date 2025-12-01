@@ -96,7 +96,7 @@ const StepsOverview: React.FC<StepsOverviewProps> = ({ onGetStarted, isLoading =
               <Button onClick={onGetStarted} disabled={isLoading}>
                 {isLoading ? (
                   <>
-                    <Skeleton className="w-4 h-4 mr-2" />
+                    <Skeleton className="w-4 h-4 me-2" />
                     Creating school...
                   </>
                 ) : (

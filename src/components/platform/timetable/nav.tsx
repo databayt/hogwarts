@@ -93,7 +93,7 @@ export function Nav() {
           })}
         </div>
 
-        <div className="ml-auto flex flex-row gap-2 sm:gap-4">
+        <div className="ms-auto flex flex-row gap-2 sm:gap-4">
           <AboutHoverCard />
           <button
             onClick={() => setShowConfig(true)}

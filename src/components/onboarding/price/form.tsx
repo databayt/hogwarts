@@ -27,7 +27,7 @@ export function PriceForm() {
             error={form.formState.errors.tuitionFee?.message}
           >
             <div className="relative">
-              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">
+              <span className="absolute start-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">
                 $
               </span>
               <input
@@ -35,7 +35,7 @@ export function PriceForm() {
                 min="0"
                 step="1"
                 {...form.register('tuitionFee', { valueAsNumber: true })}
-                className="w-full pl-8 pr-4 py-3 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                className="w-full ps-8 pe-4 py-3 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                 placeholder="5000"
               />
             </div>
@@ -47,7 +47,7 @@ export function PriceForm() {
             error={form.formState.errors.registrationFee?.message}
           >
             <div className="relative">
-              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">
+              <span className="absolute start-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">
                 $
               </span>
               <input
@@ -55,7 +55,7 @@ export function PriceForm() {
                 min="0"
                 step="1"
                 {...form.register('registrationFee', { valueAsNumber: true })}
-                className="w-full pl-8 pr-4 py-3 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                className="w-full ps-8 pe-4 py-3 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                 placeholder="0"
               />
             </div>
@@ -67,7 +67,7 @@ export function PriceForm() {
             error={form.formState.errors.applicationFee?.message}
           >
             <div className="relative">
-              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">
+              <span className="absolute start-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">
                 $
               </span>
               <input
@@ -75,7 +75,7 @@ export function PriceForm() {
                 min="0"
                 step="1"
                 {...form.register('applicationFee', { valueAsNumber: true })}
-                className="w-full pl-8 pr-4 py-3 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                className="w-full ps-8 pe-4 py-3 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                 placeholder="0"
               />
             </div>

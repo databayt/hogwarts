@@ -17,7 +17,7 @@ export default function ParentDashboard({ data }: ParentDashboardProps) {
   return (
     <div className=" rounded-lg p-6">
       <h3 className="mb-4 flex items-center">
-        <span className="mr-2">👨‍👩‍👧‍👦</span>
+        <span className="me-2">👨‍👩‍👧‍👦</span>
         Parent Dashboard
       </h3>
 
@@ -114,7 +114,7 @@ export default function ParentDashboard({ data }: ParentDashboardProps) {
               <div className="font-medium">Parent-Teacher Conference</div>
               <div className="muted">Emma's Math Teacher • Scheduled</div>
             </div>
-            <div className="text-right">
+            <div className="text-end">
               <div className="muted">Dec 18</div>
               <div className="text-xs muted">2:00 PM</div>
             </div>
@@ -127,7 +127,7 @@ export default function ParentDashboard({ data }: ParentDashboardProps) {
               <div className="font-medium">Science Fair Invitation</div>
               <div className="muted">Liam's Science Class • Event</div>
             </div>
-            <div className="text-right">
+            <div className="text-end">
               <div className="muted">Dec 22</div>
               <div className="text-xs muted">6:00 PM</div>
             </div>

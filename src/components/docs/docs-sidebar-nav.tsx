@@ -58,7 +58,7 @@ export function DocsSidebarNavItems({
             {item.title}
             {item.external && (
               <svg
-                className="ml-1 h-3 w-3"
+                className="ms-1 h-3 w-3"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"

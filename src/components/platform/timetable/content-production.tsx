@@ -241,7 +241,7 @@ function TimetableContentInner({ dictionary }: Props) {
           <AlertDescription>{error}</AlertDescription>
         </Alert>
         <Button onClick={loadInitialData} className="mt-4">
-          <RefreshCw className="h-4 w-4 mr-2" />
+          <RefreshCw className="h-4 w-4 me-2" />
           Retry
         </Button>
       </div>
@@ -270,7 +270,7 @@ function TimetableContentInner({ dictionary }: Props) {
           </span>
           {readOnlyMode && (
             <>
-              <Eye className="h-4 w-4 ml-2" />
+              <Eye className="h-4 w-4 ms-2" />
               <span className="text-sm text-muted-foreground">
                 Read-only mode
               </span>
@@ -314,7 +314,7 @@ function TimetableContentInner({ dictionary }: Props) {
           <div className="mt-6 print:hidden">
             <div className="flex justify-between items-center mb-4">
               {timetableData?.update_date && !error && (
-                <p className="ml-1 text-sm text-muted-foreground">
+                <p className="ms-1 text-sm text-muted-foreground">
                   Updated: {new Date(timetableData.update_date).toLocaleString()}
                 </p>
               )}

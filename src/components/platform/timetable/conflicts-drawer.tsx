@@ -77,7 +77,7 @@ export function ConflictsDrawer({ termId, open, onOpenChange, onApplySuggestion 
                     {sug.length > 0 && (
                       <div>
                         <p className="mb-1"><small>Suggestions:</small></p>
-                        <ul className="list-disc pl-5 space-y-1 max-h-28 overflow-auto">
+                        <ul className="list-disc ps-5 space-y-1 max-h-28 overflow-auto">
                           {sug.map((s) => (
                             <li key={`${s.dayOfWeek}:${s.periodId}`} className="flex items-center justify-between">
                               <span>Day {s.dayOfWeek} — {s.periodName}</span>

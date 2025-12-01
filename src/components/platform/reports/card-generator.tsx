@@ -461,7 +461,7 @@ export function ReportCardGenerator({
               <div key={index} className="text-sm">
                 <span className="font-medium">{activity.activity}:</span> {activity.performance}
                 {activity.achievements && activity.achievements.length > 0 && (
-                  <div className="ml-4 mt-1 text-xs text-gray-600">
+                  <div className="ms-4 mt-1 text-xs text-gray-600">
                     Achievements: {activity.achievements.join(', ')}
                   </div>
                 )}
@@ -548,7 +548,7 @@ export function ReportCardGenerator({
             <div className="flex items-center gap-2">
               {bulkActionMode && selectedCards.length > 0 && (
                 <Button onClick={handleBulkPDF}>
-                  <Download className="h-4 w-4 mr-2" />
+                  <Download className="h-4 w-4 me-2" />
                   Download {selectedCards.length} PDFs
                 </Button>
               )}
@@ -791,12 +791,12 @@ export function ReportCardGenerator({
               Close
             </Button>
             <Button onClick={() => window.print()}>
-              <Printer className="h-4 w-4 mr-2" />
+              <Printer className="h-4 w-4 me-2" />
               Print
             </Button>
             {selectedReportCard && (
               <Button onClick={() => handleGeneratePDF(selectedReportCard)}>
-                <Download className="h-4 w-4 mr-2" />
+                <Download className="h-4 w-4 me-2" />
                 Download PDF
               </Button>
             )}

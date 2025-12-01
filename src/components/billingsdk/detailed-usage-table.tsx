@@ -56,7 +56,7 @@ export function DetailedUsageTable({
             style={{ width: `${Math.max(0, Math.min(percentage, 100))}%` }}
           />
         </div>
-        <span className="text-xs font-medium tabular-nums w-10 text-right">{Math.round(percentage)}%</span>
+        <span className="text-xs font-medium tabular-nums w-10 text-end">{Math.round(percentage)}%</span>
       </div>
     )
   }
@@ -76,9 +76,9 @@ export function DetailedUsageTable({
             <TableHeader>
               <TableRow>
                 <TableHead className="w-[180px]">Resource</TableHead>
-                <TableHead className="text-right">Used</TableHead>
-                <TableHead className="text-right">Limit</TableHead>
-                <TableHead className="text-right min-w-[160px]">Usage</TableHead>
+                <TableHead className="text-end">Used</TableHead>
+                <TableHead className="text-end">Limit</TableHead>
+                <TableHead className="text-end min-w-[160px]">Usage</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -106,15 +106,15 @@ export function DetailedUsageTable({
                       <TableCell className="font-medium">
                         {resource.name}
                       </TableCell>
-                      <TableCell className="text-right tabular-nums">
+                      <TableCell className="text-end tabular-nums">
                         {formatNumber(resource.used)}
                         {unit}
                       </TableCell>
-                      <TableCell className="text-right tabular-nums text-muted-foreground">
+                      <TableCell className="text-end tabular-nums text-muted-foreground">
                         {formatNumber(resource.limit)}
                         {unit}
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="text-end">
                         {getPercentageBar(percentage)}
                       </TableCell>
                     </TableRow>

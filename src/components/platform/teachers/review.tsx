@@ -123,7 +123,7 @@ export function ReviewStep({ form, isView }: TeacherFormStepProps & { onEditStep
         </CardContent>
       </Card>
 
-      <ScrollArea className="h-[400px] pr-4">
+      <ScrollArea className="h-[400px] pe-4">
         <div className="space-y-4">
           {/* Basic Information */}
           <Card>
@@ -190,7 +190,7 @@ export function ReviewStep({ form, isView }: TeacherFormStepProps & { onEditStep
               {values.qualifications && values.qualifications.length > 0 ? (
                 <div className="space-y-3">
                   {values.qualifications.map((qual, index) => (
-                    <div key={index} className="border-l-2 border-primary pl-3">
+                    <div key={index} className="border-s-2 border-primary ps-3">
                       <div className="flex items-start justify-between">
                         <div>
                           <p className="font-medium">{qual.name}</p>
@@ -224,7 +224,7 @@ export function ReviewStep({ form, isView }: TeacherFormStepProps & { onEditStep
               {values.experiences && values.experiences.length > 0 ? (
                 <div className="space-y-3">
                   {values.experiences.map((exp, index) => (
-                    <div key={index} className="border-l-2 border-primary pl-3">
+                    <div key={index} className="border-s-2 border-primary ps-3">
                       <div className="flex items-start justify-between">
                         <div>
                           <p className="font-medium">{exp.position}</p>

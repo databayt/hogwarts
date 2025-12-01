@@ -59,7 +59,7 @@ export function ComponentPreview({
       className={cn("relative my-4 flex flex-col space-y-2", className)}
       {...props}
     >
-      <Tabs defaultValue="preview" className="relative mr-auto w-full">
+      <Tabs defaultValue="preview" className="relative me-auto w-full">
         <div className="flex items-center justify-between pb-3">
           <TabsList className="w-full justify-start rounded-none border-b bg-transparent p-0">
             <TabsTrigger

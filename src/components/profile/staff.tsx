@@ -17,7 +17,7 @@ export default function StaffDashboard({ data }: StaffDashboardProps) {
   return (
     <div className=" rounded-lg p-6">
       <h3 className="mb-4 flex items-center">
-        <span className="mr-2">👨‍💼</span>
+        <span className="me-2">👨‍💼</span>
         Staff Dashboard
       </h3>
 
@@ -114,7 +114,7 @@ export default function StaffDashboard({ data }: StaffDashboardProps) {
               <div className="font-medium">New Computer Lab Setup</div>
               <p className="muted">Technology Department • Completed</p>
             </div>
-            <div className="text-right">
+            <div className="text-end">
               <p className="muted">Dec 15</p>
               <p className="muted">On Time</p>
             </div>
@@ -127,7 +127,7 @@ export default function StaffDashboard({ data }: StaffDashboardProps) {
               <div className="font-medium">Science Fair Planning</div>
               <p className="muted">Science Department • In Progress</p>
             </div>
-            <div className="text-right">
+            <div className="text-end">
               <p className="muted">Dec 20</p>
               <p className="muted">Due Soon</p>
             </div>

@@ -81,23 +81,23 @@ export default function ProfileHeader({ role, data }: ProfileHeaderProps) {
 
         <ul className="space-y-2 muted">
           <li className="flex items-center">
-            <span className="text-[#39d353] mr-2">📖</span>
+            <span className="text-[#39d353] me-2">📖</span>
             Currently studying Advanced Mathematics and Computer Science.
           </li>
           <li className="flex items-center">
-            <span className="text-[#39d353] mr-2">🎯</span>
+            <span className="text-[#39d353] me-2">🎯</span>
             Preparing for Engineering entrance exams
           </li>
           <li className="flex items-center">
-            <span className="text-[#ffffff] mr-2">💡</span>
+            <span className="text-[#ffffff] me-2">💡</span>
             Ask me about Science projects or coding assignments.
           </li>
           <li className="flex items-center">
-            <span className="text-[#ffa000] mr-2">🤝</span>
+            <span className="text-[#ffa000] me-2">🤝</span>
             Looking to collaborate on school tech projects & study groups
           </li>
           <li className="flex items-center">
-            <span className="text-[#ffa000] mr-2">⚡</span>
+            <span className="text-[#ffa000] me-2">⚡</span>
             Fun fact: I love building apps and participating in science fairs.
           </li>
         </ul>
@@ -125,31 +125,31 @@ export default function ProfileHeader({ role, data }: ProfileHeaderProps) {
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center">
-                <div className="w-3 h-3 rounded-full bg-[#26a641] mr-2"></div>
+                <div className="w-3 h-3 rounded-full bg-[#26a641] me-2"></div>
                 <span className="muted">Mathematics 95%</span>
               </div>
             </div>
             <div className="flex items-center justify-between">
               <div className="flex items-center">
-                <div className="w-3 h-3 rounded-full bg-[#1f6feb] mr-2"></div>
+                <div className="w-3 h-3 rounded-full bg-[#1f6feb] me-2"></div>
                 <span className="muted">Computer Science 92%</span>
               </div>
             </div>
             <div className="flex items-center justify-between">
               <div className="flex items-center">
-                <div className="w-3 h-3 rounded-full bg-[#a259ff] mr-2"></div>
+                <div className="w-3 h-3 rounded-full bg-[#a259ff] me-2"></div>
                 <span className="muted">Physics 88%</span>
               </div>
             </div>
             <div className="flex items-center justify-between">
               <div className="flex items-center">
-                <div className="w-3 h-3 rounded-full bg-[#ffa000] mr-2"></div>
+                <div className="w-3 h-3 rounded-full bg-[#ffa000] me-2"></div>
                 <span className="muted">Chemistry 85%</span>
               </div>
             </div>
             <div className="flex items-center justify-between">
               <div className="flex items-center">
-                <div className="w-3 h-3 rounded-full bg-[#f24e1e] mr-2"></div>
+                <div className="w-3 h-3 rounded-full bg-[#f24e1e] me-2"></div>
                 <span className="muted">English 82%</span>
               </div>
             </div>

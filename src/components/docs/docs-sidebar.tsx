@@ -56,7 +56,7 @@ export function DocsSidebar({
       {...props}
     >
       <SidebarContent className="no-scrollbar overflow-x-hidden">
-        <div className="pb-4 pt-2 pl-0">
+        <div className="pb-4 pt-2 ps-0">
           <SidebarGroup className="p-0">
             <SidebarGroupContent>
               <SidebarMenu>

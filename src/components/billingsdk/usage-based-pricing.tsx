@@ -244,7 +244,7 @@ export function UsageBasedPricing({
 
   return (
     <Card className={cn("w-full max-w-3xl min-w-lg mx-auto", className)}>
-      <CardHeader className="text-left">
+      <CardHeader className="text-start">
         <CardTitle>{title}</CardTitle>
         <CardDescription>{subtitle}</CardDescription>
       </CardHeader>

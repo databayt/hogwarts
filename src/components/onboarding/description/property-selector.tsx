@@ -21,7 +21,7 @@ export function PropertySelector({
       type="button"
       onClick={onClick}
       className={`
-        w-full p-6 rounded-xl border-2 transition-colors text-left
+        w-full p-6 rounded-xl border-2 transition-colors text-start
         ${
           isSelected
             ? "border-primary bg-primary/5"

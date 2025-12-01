@@ -107,12 +107,12 @@ export default function AllSchools({
         {showActions && (
           <div className="flex gap-2">
             <Button onClick={handleExport} variant="outline" size="sm">
-              <Download className="h-4 w-4 mr-2" />
+              <Download className="h-4 w-4 me-2" />
               Export
             </Button>
             {onCreateNew && (
               <Button onClick={onCreateNew} size="sm">
-                <Plus className="h-4 w-4 mr-2" />
+                <Plus className="h-4 w-4 me-2" />
                 New School
               </Button>
             )}
@@ -126,12 +126,12 @@ export default function AllSchools({
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
               <div className="relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute start-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Search schools by name, description, or location..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9"
+                  className="ps-9"
                 />
               </div>
             </div>
@@ -139,7 +139,7 @@ export default function AllSchools({
             <div className="flex gap-2">
               <Select value={typeFilter} onValueChange={setTypeFilter}>
                 <SelectTrigger className="w-40">
-                  <Filter className="h-4 w-4 mr-2" />
+                  <Filter className="h-4 w-4 me-2" />
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -173,7 +173,7 @@ export default function AllSchools({
                   Search: {searchQuery}
                   <button
                     onClick={() => setSearchQuery('')}
-                    className="ml-1 hover:bg-muted rounded"
+                    className="ms-1 hover:bg-muted rounded"
                   >
                     ×
                   </button>
@@ -184,7 +184,7 @@ export default function AllSchools({
                   Type: {SCHOOL_CATEGORIES.find(c => c.value === typeFilter)?.label}
                   <button
                     onClick={() => setTypeFilter('all')}
-                    className="ml-1 hover:bg-muted rounded"
+                    className="ms-1 hover:bg-muted rounded"
                   >
                     ×
                   </button>
@@ -214,7 +214,7 @@ export default function AllSchools({
             </div>
             {onCreateNew && schools.length === 0 && (
               <Button onClick={onCreateNew}>
-                <Plus className="h-4 w-4 mr-2" />
+                <Plus className="h-4 w-4 me-2" />
                 Create First School
               </Button>
             )}

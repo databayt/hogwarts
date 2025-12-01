@@ -45,7 +45,7 @@ export function BillingFormButton({
     >
       {isPending ? (
         <>
-          <Icons.spinner className="mr-2 size-4 animate-spin" /> Loading...
+          <Icons.spinner className="me-2 size-4 animate-spin" /> Loading...
         </>
       ) : (
         <>

@@ -92,7 +92,7 @@ export function QualificationsStep({ form, isView }: TeacherFormStepProps) {
         )}
       </div>
 
-      <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2">
+      <div className="space-y-4 max-h-[500px] overflow-y-auto pe-2">
         {fields.map((field, index) => (
           <Card key={field.id} className="relative">
             <CardHeader className="pb-3">
@@ -235,10 +235,10 @@ export function QualificationsStep({ form, isView }: TeacherFormStepProps) {
                         <FormLabel>
                           Expiry Date
                           {isExpired && (
-                            <span className="ml-2 text-xs text-destructive">(Expired)</span>
+                            <span className="ms-2 text-xs text-destructive">(Expired)</span>
                           )}
                           {isExpiringSoon && (
-                            <span className="ml-2 text-xs text-yellow-600">(Expiring Soon)</span>
+                            <span className="ms-2 text-xs text-yellow-600">(Expiring Soon)</span>
                           )}
                         </FormLabel>
                         <FormControl>

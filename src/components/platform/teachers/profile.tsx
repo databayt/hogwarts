@@ -228,7 +228,7 @@ export function TeacherProfile({ teacher, onEdit }: TeacherProfileProps) {
                     <p className="text-sm text-muted-foreground">Primary Phone</p>
                     <p className="font-medium">
                       {getPrimaryPhone().phoneNumber}
-                      <Badge variant="outline" className="ml-2 text-xs">
+                      <Badge variant="outline" className="ms-2 text-xs">
                         {getPrimaryPhone().phoneType}
                       </Badge>
                     </p>
@@ -243,7 +243,7 @@ export function TeacherProfile({ teacher, onEdit }: TeacherProfileProps) {
                         .map((phone: any, index: number) => (
                           <p key={index} className="text-sm">
                             {phone.phoneNumber}
-                            <Badge variant="outline" className="ml-2 text-xs">
+                            <Badge variant="outline" className="ms-2 text-xs">
                               {phone.phoneType}
                             </Badge>
                           </p>

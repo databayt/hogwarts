@@ -39,9 +39,9 @@ export default async function HeroLanding({ lang }: HeroLandingProps) {
             )}
           target="_blank"
         >
-          <span className="mr-3">🎉</span>
+          <span className="me-3">🎉</span>
           <span className="hidden md:flex">Introducing&nbsp;</span> Next Auth
-          Roles Template on <Icons.twitter className="ml-2 size-3.5" />
+          Roles Template on <Icons.twitter className="ms-2 size-3.5" />
         </Link>
 
         <h1 className="text-balance tracking-tight">
@@ -86,7 +86,7 @@ export default async function HeroLanding({ lang }: HeroLandingProps) {
               "px-5 rounded-full",
             )}
           >
-            <Icons.gitHub className="mr-2 size-4" />
+            <Icons.gitHub className="me-2 size-4" />
             <p>
               <span className="hidden sm:inline-block">Star on</span> GitHub{" "}
               <span>{nFormatter(stars)}</span>

@@ -287,7 +287,7 @@ export default function AdmissionContent({ school, dictionary, lang }: Props) {
                   <ul className="space-y-2">
                     {requirement.requirements.map((req, reqIndex) => (
                       <li key={reqIndex} className="flex items-center muted">
-                        <CheckCircle className="w-4 h-4 text-green-500 mr-3 flex-shrink-0" />
+                        <CheckCircle className="w-4 h-4 text-green-500 me-3 flex-shrink-0" />
                         {req}
                       </li>
                     ))}

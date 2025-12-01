@@ -89,7 +89,7 @@ export default function PriceContent(props: Props) {
           />
           {!isFocused && (
             <div
-              className="-ml-3 mb-4 w-8 h-8 bg-muted rounded-full flex items-center justify-center cursor-pointer hover:bg-accent transition-colors self-end"
+              className="-ms-3 mb-4 w-8 h-8 bg-muted rounded-full flex items-center justify-center cursor-pointer hover:bg-accent transition-colors self-end"
               onClick={() => {
                 if (inputRef.current) {
                   inputRef.current.focus();

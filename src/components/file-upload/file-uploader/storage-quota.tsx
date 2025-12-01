@@ -203,7 +203,7 @@ export function StorageQuota({
               </CardDescription>
             </div>
             <Badge variant="secondary" className={tierConfig[tier].bgColor}>
-              <TierIcon className="h-3 w-3 mr-1" />
+              <TierIcon className="h-3 w-3 me-1" />
               {tierConfig[tier].label}
             </Badge>
           </div>
@@ -219,7 +219,7 @@ export function StorageQuota({
                   {dictionary?.used || 'used'}
                 </span>
               </div>
-              <div className="text-right">
+              <div className="text-end">
                 <p className="text-sm font-medium">
                   {formatBytes(used)} / {formatBytes(total)}
                 </p>
@@ -338,7 +338,7 @@ export function StorageQuota({
                                 {item.count} {dictionary?.files || 'files'}
                               </Badge>
                             </div>
-                            <div className="text-right">
+                            <div className="text-end">
                               <p className="text-sm font-medium">
                                 {formatBytes(item.size)}
                               </p>
@@ -380,7 +380,7 @@ export function StorageQuota({
                 className="flex-1"
                 onClick={onUpgrade}
               >
-                <Zap className="h-4 w-4 mr-2" />
+                <Zap className="h-4 w-4 me-2" />
                 {dictionary?.upgrade || 'Upgrade'}
               </Button>
             )}
@@ -402,7 +402,7 @@ export function StorageQuota({
             <Tooltip>
               <TooltipTrigger asChild>
                 <Badge variant="outline" className="text-xs">
-                  <TierIcon className="h-3 w-3 mr-1" />
+                  <TierIcon className="h-3 w-3 me-1" />
                   {tierConfig[tier].label}
                 </Badge>
               </TooltipTrigger>

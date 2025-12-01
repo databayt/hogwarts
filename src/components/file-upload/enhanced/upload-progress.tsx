@@ -134,7 +134,7 @@ export function UploadProgress({ progress }: UploadProgressProps) {
                 <span className="truncate flex-1 text-muted-foreground">
                   {filename}
                 </span>
-                <span className="font-medium ml-2">
+                <span className="font-medium ms-2">
                   {Math.round(fileProgress.progress)}%
                 </span>
               </div>

@@ -1,7 +1,7 @@
 import { constructMetadata } from "@/components/marketing/pricing/lib/utils";
 import { getDictionary } from "@/components/internationalization/dictionaries";
 import { type Locale } from "@/components/internationalization/config";
-import BillingContentWrapper from "@/components/platform/billing/content";
+import BillingContent from "@/components/platform/billing/content";
 
 export const metadata = constructMetadata({
   title: "Billing – School Administration",
@@ -16,5 +16,5 @@ export default async function Billing({ params }: Props) {
   const { lang } = await params;
   const dictionary = await getDictionary(lang);
 
-  return <BillingContentWrapper dictionary={dictionary} />;
+  return <BillingContent dictionary={dictionary} lang={lang} />;
 }

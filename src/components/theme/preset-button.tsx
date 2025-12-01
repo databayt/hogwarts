@@ -78,7 +78,7 @@ export function PresetButton({ preset, onApply, isActive = false }: PresetButton
 
       {/* Active indicator */}
       {isActive && (
-        <div className="absolute right-2 top-2">
+        <div className="absolute end-2 top-2">
           <div className="h-2 w-2 rounded-full" style={{ backgroundColor: primaryColor }} />
         </div>
       )}

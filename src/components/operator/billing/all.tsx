@@ -122,7 +122,7 @@ export function AllInvoices({
               placeholder="Search invoices..."
               value={filters.search}
               onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-              className="pl-9"
+              className="ps-9"
             />
           </div>
 

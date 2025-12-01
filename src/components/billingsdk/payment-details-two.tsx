@@ -36,7 +36,7 @@ const CardLogo = ({ type }: { type: string }) => {
     case "visa":
       return <div className="flex items-center justify-center w-10 h-5 bg-blue-600 rounded text-white text-xs font-bold">VISA</div>
     case "mastercard":
-      return <div className="flex items-center"><div className="w-5 h-5 bg-red-500 rounded-full"></div><div className="w-5 h-5 bg-orange-400 rounded-full -ml-2"></div></div>
+      return <div className="flex items-center"><div className="w-5 h-5 bg-red-500 rounded-full"></div><div className="w-5 h-5 bg-orange-400 rounded-full -ms-2"></div></div>
     case "amex":
       return <div className="flex items-center justify-center w-10 h-6 bg-blue-500 rounded text-white text-xs font-bold">AMEX</div>
     case "rupay":
@@ -220,7 +220,7 @@ export function PaymentDetailsTwo({
                     <div className="absolute left-3 top-1/2 -translate-y-1/2 z-10"><CardLogo type={cardType} /></div>
                     <Input
                       id="cardNumber"
-                      className="pl-14 font-mono tracking-wide"
+                      className="ps-14 font-mono tracking-wide"
                       placeholder="1234 5678 9012 3456"
                       maxLength={20}
                       inputMode="numeric"
@@ -267,7 +267,7 @@ export function PaymentDetailsTwo({
                       <Input
                         id="cvv"
                         type="password"
-                        className="pl-10 font-mono"
+                        className="ps-10 font-mono"
                         placeholder="123"
                         maxLength={4}
                         inputMode="numeric"
@@ -409,13 +409,13 @@ export function PaymentDetailsTwo({
               </Button>
               <Button type="button" onClick={handleNext} className="min-w-[100px]">
                 Next
-                <ChevronRight className="ml-2 h-4 w-4" />
+                <ChevronRight className="ms-2 h-4 w-4" />
               </Button>
             </>
           ) : (
             <>
               <Button type="button" variant="ghost" onClick={handleBack}>
-                <ChevronLeft className="mr-2 h-4 w-4" />
+                <ChevronLeft className="me-2 h-4 w-4" />
                 Back
               </Button>
               <Button type="submit" disabled={isSubmitting || isSaved} className="min-w-[120px]">

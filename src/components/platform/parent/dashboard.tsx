@@ -245,7 +245,7 @@ export function ParentDashboard({
               </span>
               {selectedChild.grades.trend === 'up' && (
                 <Badge variant="outline" className="text-green-600">
-                  <TrendingUp className="h-3 w-3 mr-1" />
+                  <TrendingUp className="h-3 w-3 me-1" />
                   Improving
                 </Badge>
               )}
@@ -409,7 +409,7 @@ export function ParentDashboard({
                 onClick={() => onViewDetails?.('assignments', selectedChild.id)}
               >
                 View All Assignments
-                <ChevronRight className="h-4 w-4 ml-2" />
+                <ChevronRight className="h-4 w-4 ms-2" />
               </Button>
             </CardFooter>
           </Card>

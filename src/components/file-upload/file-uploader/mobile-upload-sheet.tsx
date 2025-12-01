@@ -412,18 +412,18 @@ export function MobileUploadSheet({
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="upload" className="text-xs">
-              <Upload className="h-4 w-4 mr-1" />
+              <Upload className="h-4 w-4 me-1" />
               {dictionary?.upload || 'Upload'}
             </TabsTrigger>
             <TabsTrigger value="recent" className="text-xs">
-              <History className="h-4 w-4 mr-1" />
+              <History className="h-4 w-4 me-1" />
               {dictionary?.recent || 'Recent'}
             </TabsTrigger>
             <TabsTrigger value="queue" className="text-xs relative">
-              <Cloud className="h-4 w-4 mr-1" />
+              <Cloud className="h-4 w-4 me-1" />
               {dictionary?.queue || 'Queue'}
               {uploads.filter(u => u.status === 'uploading').length > 0 && (
-                <span className="absolute -top-1 -right-1 h-2 w-2 bg-primary rounded-full animate-pulse" />
+                <span className="absolute -top-1 -end-1 h-2 w-2 bg-primary rounded-full animate-pulse" />
               )}
             </TabsTrigger>
           </TabsList>
@@ -502,7 +502,7 @@ export function MobileUploadSheet({
     return (
       <Drawer open={open} onOpenChange={onOpenChange}>
         <DrawerContent className="max-h-[90vh]">
-          <DrawerHeader className="text-left">
+          <DrawerHeader className="text-start">
             <DrawerTitle>{dictionary?.uploadFiles || 'Upload Files'}</DrawerTitle>
             <DrawerDescription>
               {dictionary?.uploadDescription || 'Choose files to upload'}

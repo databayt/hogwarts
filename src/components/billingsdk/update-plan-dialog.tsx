@@ -90,7 +90,7 @@ export function UpdatePlanDialog({ currentPlan, plans, onPlanChange, className, 
                         </div>
                     ) : (
                         <RadioGroup value={selectedPlan} onValueChange={handlePlanChange}>
-                            <div className="space-y-2.5 sm:space-y-3 pb-2 pr-0.5">
+                            <div className="space-y-2.5 sm:space-y-3 pb-2 pe-0.5">
                                 {plans.map((plan, index) => (
                                 <motion.div
                                     key={plan.id}
@@ -167,7 +167,7 @@ export function UpdatePlanDialog({ currentPlan, plans, onPlanChange, className, 
                                                     )}
                                                 </div>
                                             </div>
-                                            <div className="text-right flex-shrink-0 min-w-[60px] sm:min-w-[80px]">
+                                            <div className="text-end flex-shrink-0 min-w-[60px] sm:min-w-[80px]">
                                                 <div className="text-base sm:text-xl font-bold sm:font-semibold leading-tight">
                                                     {
                                                         parseFloat(getCurrentPrice(plan)) >= 0 ?

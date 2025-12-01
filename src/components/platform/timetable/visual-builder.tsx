@@ -195,7 +195,7 @@ function TimetableCell({
               <div className="text-xs opacity-90">{entry.teacherName}</div>
               {entry.roomNumber && (
                 <div className="text-xs opacity-90 mt-1">
-                  <MapPin className="h-3 w-3 inline mr-1" />
+                  <MapPin className="h-3 w-3 inline me-1" />
                   {entry.roomNumber}
                 </div>
               )}
@@ -391,11 +391,11 @@ export function TimetableBuilder({
               </div>
               <div className="flex gap-2">
                 <Button variant="outline" size="sm" onClick={handleClearAll}>
-                  <Trash2 className="h-4 w-4 mr-2" />
+                  <Trash2 className="h-4 w-4 me-2" />
                   Clear All
                 </Button>
                 <Button variant="outline" size="sm" onClick={handleExport}>
-                  <Download className="h-4 w-4 mr-2" />
+                  <Download className="h-4 w-4 me-2" />
                   Export
                 </Button>
                 <div>
@@ -408,13 +408,13 @@ export function TimetableBuilder({
                   />
                   <Button variant="outline" size="sm" asChild>
                     <label htmlFor="import-timetable" className="cursor-pointer">
-                      <Upload className="h-4 w-4 mr-2" />
+                      <Upload className="h-4 w-4 me-2" />
                       Import
                     </label>
                   </Button>
                 </div>
                 <Button onClick={handleSave} disabled={saving}>
-                  <Save className="h-4 w-4 mr-2" />
+                  <Save className="h-4 w-4 me-2" />
                   {saving ? 'Saving...' : 'Save'}
                 </Button>
               </div>
@@ -433,7 +433,7 @@ export function TimetableBuilder({
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <ScrollArea className="h-[500px] pr-4">
+                <ScrollArea className="h-[500px] pe-4">
                   <SortableContext items={subjects.map(s => s.id)} strategy={rectSortingStrategy}>
                     <div className="space-y-2">
                       {subjects.map(subject => (

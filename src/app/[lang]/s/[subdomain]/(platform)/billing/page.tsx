@@ -19,5 +19,5 @@ export default async function BillingPage({ params }: Props) {
   const { lang } = await params;
   const dictionary = await getDictionary(lang);
 
-  return <BillingContent dictionary={dictionary} />;
+  return <BillingContent dictionary={dictionary} lang={lang} />;
 }

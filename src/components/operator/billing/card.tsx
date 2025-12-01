@@ -112,7 +112,7 @@ export function InvoiceCompactCard({ invoice }: { invoice: InvoiceWithSchool }) 
           <small className="muted">{invoice.school.name}</small>
         </div>
       </div>
-      <div className="text-right">
+      <div className="text-end">
         <div className="font-medium tabular-nums">{formatCurrency(outstanding, invoice.currency)}</div>
         <Badge variant={INVOICE_STATUS_VARIANTS[invoice.status as InvoiceStatus]} className="mt-1">
           {invoice.status}

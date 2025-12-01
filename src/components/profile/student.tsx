@@ -17,7 +17,7 @@ export default function StudentDashboard({ data }: StudentDashboardProps) {
   return (
     <div className=" rounded-lg p-6">
       <h3 className="mb-4 flex items-center">
-        <span className="mr-2">🎓</span>
+        <span className="me-2">🎓</span>
         Student Dashboard
       </h3>
 

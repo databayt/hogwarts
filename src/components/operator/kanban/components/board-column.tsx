@@ -69,12 +69,12 @@ export function BoardColumn({ column, tasks, isOverlay }: BoardColumnProps) {
         dragging: isOverlay ? 'overlay' : isDragging ? 'over' : undefined
       })}
     >
-      <CardHeader className='space-between flex flex-row items-center border-b-2 p-4 text-left font-semibold'>
+      <CardHeader className='space-between flex flex-row items-center border-b-2 p-4 text-start font-semibold'>
         <Button
           variant={'ghost'}
           {...attributes}
           {...listeners}
-          className='text-primary/50 relative -ml-2 h-auto cursor-grab p-1'
+          className='text-primary/50 relative -ms-2 h-auto cursor-grab p-1'
         >
           <span className='sr-only'>{`Move column: ${column.title}`}</span>
           <IconGripVertical />

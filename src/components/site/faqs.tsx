@@ -16,7 +16,7 @@ export default function FAQs() {
                             <h3 className="font-medium">How do I get my Hogwarts letter?</h3>
                             <p className="text-muted-foreground mt-4">Your Hogwarts letter will be delivered by owl post on your 11th birthday. If you haven&apos;t received it by then, please check with your local Ministry of Magic office.</p>
 
-                            <ol className="list-outside list-decimal space-y-2 pl-4">
+                            <ol className="list-outside list-decimal space-y-2 ps-4">
                                 <li className="text-muted-foreground mt-4">Letters are automatically sent to all magical children on their birthday.</li>
                                 <li className="text-muted-foreground mt-4">Muggle-born students may experience delays due to protective enchantments.</li>
                                 <li className="text-muted-foreground mt-4">If your letter is lost, a Hogwarts representative will visit you personally.</li>
@@ -29,7 +29,7 @@ export default function FAQs() {
                         <div className="py-6">
                             <h3 className="font-medium">What supplies do I need for school?</h3>
                             <p className="text-muted-foreground my-4">Your Hogwarts letter includes a complete list of required books and equipment. You can purchase everything at Diagon Alley.</p>
-                            <ul className="list-outside list-disc space-y-2 pl-4">
+                            <ul className="list-outside list-disc space-y-2 ps-4">
                                 <li className="text-muted-foreground">Standard spell books, cauldron, and magical ingredients</li>
                                 <li className="text-muted-foreground">A wand from Ollivanders (the wand chooses the wizard!)</li>
                                 <li className="text-muted-foreground">Robes, pointed hat, and protective gloves</li>

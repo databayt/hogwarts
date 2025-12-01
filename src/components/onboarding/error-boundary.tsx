@@ -69,7 +69,7 @@ function DefaultErrorFallback({ error, reset }: { error?: Error; reset: () => vo
         </CardHeader>
         <CardContent className="text-center space-y-4">
           {process.env.NODE_ENV === 'development' && error && (
-            <details className="text-left">
+            <details className="text-start">
               <summary className="text-sm font-medium cursor-pointer">
                 Error Details (Development Only)
               </summary>
@@ -81,7 +81,7 @@ function DefaultErrorFallback({ error, reset }: { error?: Error; reset: () => vo
           )}
           <div className="space-y-2">
             <Button onClick={reset} className="w-full">
-              <RefreshCcw className="mr-2 h-4 w-4" />
+              <RefreshCcw className="me-2 h-4 w-4" />
               Try Again
             </Button>
             <Button

@@ -158,7 +158,7 @@ export function ImportForm({
                     <Info className="h-4 w-4" />
                     <span>Need a template?</span>
                     <Button variant="link" size="sm" className="p-0 h-auto">
-                      <Download className="h-3 w-3 mr-1" />
+                      <Download className="h-3 w-3 me-1" />
                       Download template
                     </Button>
                   </div>
@@ -220,7 +220,7 @@ export function ImportForm({
             >
               {isSubmitting ? (
                 <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white me-2" />
                   Processing...
                 </>
               ) : (

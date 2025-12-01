@@ -312,7 +312,7 @@ export default function BentoGrid() {
                   </p>
                 </div>
               </div>
-              <div className="relative mt-6 before:absolute before:inset-0 before:mx-auto before:w-px before:bg-purple-500/50 sm:-my-8 sm:-mr-8">
+              <div className="relative mt-6 before:absolute before:inset-0 before:mx-auto before:w-px before:bg-purple-500/50 sm:-my-8 sm:-me-8">
                 <div className="relative flex h-full flex-col justify-center space-y-6 py-6">
                   <div className="relative flex w-[calc(50%+0.875rem)] items-center justify-end gap-2">
                     <span className="block h-fit rounded-md border bg-muted/50 px-2 py-1 muted">

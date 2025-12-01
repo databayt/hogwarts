@@ -145,7 +145,7 @@ export function ExperienceStep({ form, isView }: TeacherFormStepProps) {
       </div>
 
       {/* Timeline View */}
-      <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2">
+      <div className="space-y-4 max-h-[500px] overflow-y-auto pe-2">
         {fields.map((field, index) => {
           const duration = calculateDuration(
             form.watch(`experiences.${index}.startDate`),
@@ -170,7 +170,7 @@ export function ExperienceStep({ form, isView }: TeacherFormStepProps) {
                       <CardTitle className="text-sm font-medium">
                         Experience #{index + 1}
                         {form.watch(`experiences.${index}.isCurrent`) && (
-                          <Badge variant="outline" className="ml-2 text-xs">
+                          <Badge variant="outline" className="ms-2 text-xs">
                             Current
                           </Badge>
                         )}
@@ -195,7 +195,7 @@ export function ExperienceStep({ form, isView }: TeacherFormStepProps) {
                   )}
                 </div>
               </CardHeader>
-              <CardContent className="space-y-4 pl-14">
+              <CardContent className="space-y-4 ps-14">
                 <div className="grid grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
@@ -203,7 +203,7 @@ export function ExperienceStep({ form, isView }: TeacherFormStepProps) {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          <Building className="h-3 w-3 inline mr-1" />
+                          <Building className="h-3 w-3 inline me-1" />
                           Institution/School
                         </FormLabel>
                         <FormControl>
@@ -244,7 +244,7 @@ export function ExperienceStep({ form, isView }: TeacherFormStepProps) {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          <Calendar className="h-3 w-3 inline mr-1" />
+                          <Calendar className="h-3 w-3 inline me-1" />
                           Start Date
                         </FormLabel>
                         <FormControl>

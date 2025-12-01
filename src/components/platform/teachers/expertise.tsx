@@ -170,7 +170,7 @@ export function SubjectExpertiseStep({ form, isView }: TeacherFormStepProps) {
         </div>
       )}
 
-      <div className="space-y-3 max-h-[450px] overflow-y-auto pr-2">
+      <div className="space-y-3 max-h-[450px] overflow-y-auto pe-2">
         {fields.map((field, index) => {
           const subjectId = form.watch(`subjectExpertise.${index}.subjectId`);
           const selectedSubject = AVAILABLE_SUBJECTS.find(s => s.id === subjectId);
@@ -212,7 +212,7 @@ export function SubjectExpertiseStep({ form, isView }: TeacherFormStepProps) {
                                       >
                                         {subject.name}
                                         {!isSubjectAvailable(subject.id) && subject.id !== field.value && (
-                                          <span className="ml-2 text-xs text-muted-foreground">(Already added)</span>
+                                          <span className="ms-2 text-xs text-muted-foreground">(Already added)</span>
                                         )}
                                       </SelectItem>
                                     ))}
@@ -269,7 +269,7 @@ export function SubjectExpertiseStep({ form, isView }: TeacherFormStepProps) {
                 </div>
 
                 {selectedSubject && (
-                  <div className="mt-3 pl-7">
+                  <div className="mt-3 ps-7">
                     <Badge variant="secondary" className="text-xs">
                       {selectedSubject.category}
                     </Badge>

@@ -246,7 +246,7 @@ export function SlotEditorDialog({
                   <h5>Validation Error</h5>
                 </AlertTitle>
                 <AlertDescription>
-                  <ul className="list-disc pl-5">
+                  <ul className="list-disc ps-5">
                     {validationErrors.map((error, i) => (
                       <li key={i}><p className="muted">{error}</p></li>
                     ))}
@@ -270,7 +270,7 @@ export function SlotEditorDialog({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          <Calendar className="inline mr-2 h-4 w-4" />
+                          <Calendar className="inline me-2 h-4 w-4" />
                           Day of Week
                         </FormLabel>
                         <Select
@@ -301,7 +301,7 @@ export function SlotEditorDialog({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          <Clock className="inline mr-2 h-4 w-4" />
+                          <Clock className="inline me-2 h-4 w-4" />
                           Period
                         </FormLabel>
                         <Select onValueChange={field.onChange} value={field.value}>
@@ -315,7 +315,7 @@ export function SlotEditorDialog({
                               <SelectItem key={period.id} value={period.id}>
                                 <div className="flex justify-between w-full">
                                   <span>{period.name}</span>
-                                  <small className="text-muted-foreground ml-2">
+                                  <small className="text-muted-foreground ms-2">
                                     {period.startTime} - {period.endTime}
                                   </small>
                                 </div>
@@ -335,7 +335,7 @@ export function SlotEditorDialog({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>
-                        <Users className="inline mr-2 h-4 w-4" />
+                        <Users className="inline me-2 h-4 w-4" />
                         Class
                       </FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
@@ -349,7 +349,7 @@ export function SlotEditorDialog({
                             <SelectItem key={cls.id} value={cls.id}>
                               <div className="flex items-center justify-between w-full">
                                 <span>{cls.name}</span>
-                                <Badge variant="secondary" className="ml-2">
+                                <Badge variant="secondary" className="ms-2">
                                   {cls.currentEnrollment}/{cls.capacity} students
                                 </Badge>
                               </div>
@@ -370,7 +370,7 @@ export function SlotEditorDialog({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>
-                        <BookOpen className="inline mr-2 h-4 w-4" />
+                        <BookOpen className="inline me-2 h-4 w-4" />
                         Subject
                       </FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
@@ -388,7 +388,7 @@ export function SlotEditorDialog({
                                   style={{ backgroundColor: subject.color }}
                                 />
                                 <span>{subject.name}</span>
-                                <Badge variant="outline" className="ml-2">
+                                <Badge variant="outline" className="ms-2">
                                   {subject.code}
                                 </Badge>
                               </div>
@@ -410,7 +410,7 @@ export function SlotEditorDialog({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>
-                        <User className="inline mr-2 h-4 w-4" />
+                        <User className="inline me-2 h-4 w-4" />
                         Teacher
                       </FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
@@ -456,7 +456,7 @@ export function SlotEditorDialog({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>
-                        <MapPin className="inline mr-2 h-4 w-4" />
+                        <MapPin className="inline me-2 h-4 w-4" />
                         Classroom
                       </FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>

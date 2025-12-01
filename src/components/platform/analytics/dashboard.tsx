@@ -236,7 +236,7 @@ export function AnalyticsDashboard({
                 </SelectContent>
               </Select>
               <Button variant="outline" onClick={onExportReport}>
-                <Download className="h-4 w-4 mr-2" />
+                <Download className="h-4 w-4 me-2" />
                 Export Report
               </Button>
             </div>

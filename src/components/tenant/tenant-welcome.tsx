@@ -166,7 +166,7 @@ export default function TenantWelcome({ school, subdomain }: TenantWelcomeProps)
               <Button className="w-full" asChild>
                 <Link href="/login">
                   Login to Portal
-                  <ArrowRight className="w-4 h-4 ml-2" />
+                  <ArrowRight className="w-4 h-4 ms-2" />
                 </Link>
               </Button>
             </CardContent>
@@ -187,7 +187,7 @@ export default function TenantWelcome({ school, subdomain }: TenantWelcomeProps)
               <Button variant="outline" className="w-full" asChild>
                 <Link href="/onboarding">
                   Complete Setup
-                  <ArrowRight className="w-4 h-4 ml-2" />
+                  <ArrowRight className="w-4 h-4 ms-2" />
                 </Link>
               </Button>
             </CardContent>

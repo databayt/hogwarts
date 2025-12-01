@@ -140,7 +140,7 @@ export function DocumentManager({
                       )}
                       {status === 'verified' && (
                         <Badge variant="default" className="text-xs">
-                          <Check className="mr-1 h-3 w-3" />
+                          <Check className="me-1 h-3 w-3" />
                           Verified
                         </Badge>
                       )}
@@ -180,7 +180,7 @@ export function DocumentManager({
                       asChild
                     >
                       <label>
-                        <Upload className="mr-2 h-4 w-4" />
+                        <Upload className="me-2 h-4 w-4" />
                         {status === 'missing' ? 'Upload' : 'Replace'}
                         <input
                           type="file"

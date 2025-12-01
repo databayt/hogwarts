@@ -22,7 +22,7 @@ export function StepperFlow({
       <ol className="relative">
         {steps.map((s, i) => (
           <li key={i} className="flex items-start">
-            <div className="flex flex-col items-center mr-3">
+            <div className="flex flex-col items-center me-3">
               <div className={`flex items-center justify-center rounded-full border ${circleSize} font-medium`}>{i + 1}</div>
               {i < steps.length - 1 && (
                 <div className="w-px grow bg-border my-1" />

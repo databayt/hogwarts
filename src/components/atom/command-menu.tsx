@@ -55,7 +55,7 @@ export function CommandMenu({ ...props }: DialogProps) {
             <Button
                 variant="outline"
                 className={cn(
-                    "relative h-8 w-full justify-start rounded-[0.5rem] bg-muted/50 text-sm font-normal text-muted-foreground shadow-none sm:pr-12 md:w-40 lg:w-56 xl:w-64"
+                    "relative h-8 w-full justify-start rounded-[0.5rem] bg-muted/50 text-sm font-normal text-muted-foreground shadow-none sm:pe-12 md:w-40 lg:w-56 xl:w-64"
                 )}
                 onClick={() => setOpen(true)}
                 {...props}
@@ -96,7 +96,7 @@ export function CommandMenu({ ...props }: DialogProps) {
                                         runCommand(() => router.push(navItem.href as string))
                                     }}
                                 >
-                                    <div className="mr-2 flex h-4 w-4 items-center justify-center">
+                                    <div className="me-2 flex h-4 w-4 items-center justify-center">
                                         <Circle className="h-3 w-3" />
                                     </div>
                                     {navItem.title}

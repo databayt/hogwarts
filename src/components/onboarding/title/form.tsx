@@ -115,7 +115,7 @@ export const TitleForm = forwardRef<TitleFormRef, TitleFormProps>(({ schoolId, i
     <Form {...form}>
       <div className={`space-y-6 ${isRTL ? 'rtl' : 'ltr'}`}>
         {error && (
-          <div className={`text-sm text-destructive bg-destructive/10 p-3 rounded-md ${isRTL ? 'text-right' : 'text-left'}`}>
+          <div className={`text-sm text-destructive bg-destructive/10 p-3 rounded-md ${isRTL ? 'text-end' : 'text-start'}`}>
             {error}
           </div>
         )}
@@ -129,7 +129,7 @@ export const TitleForm = forwardRef<TitleFormRef, TitleFormProps>(({ schoolId, i
                 <Textarea
                   {...field}
                   placeholder={dict.schoolNamePlaceholder || "e.g., Al-Azhar International School"}
-                  className={`w-full h-[80px] sm:h-[100px] p-4 sm:p-6 border border-input rounded-lg resize-none focus:outline-none focus:border-ring transition-colors text-sm sm:text-base ${isRTL ? 'text-right' : 'text-left'}`}
+                  className={`w-full h-[80px] sm:h-[100px] p-4 sm:p-6 border border-input rounded-lg resize-none focus:outline-none focus:border-ring transition-colors text-sm sm:text-base ${isRTL ? 'text-end' : 'text-start'}`}
                   maxLength={maxLength}
                   disabled={isPending}
                   dir={isRTL ? 'rtl' : 'ltr'}
@@ -151,7 +151,7 @@ export const TitleForm = forwardRef<TitleFormRef, TitleFormProps>(({ schoolId, i
           name="subdomain"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className={`text-sm text-muted-foreground ${isRTL ? 'text-right' : 'text-left'}`}>
+              <FormLabel className={`text-sm text-muted-foreground ${isRTL ? 'text-end' : 'text-start'}`}>
                 {dict.schoolAvailableAt || "Your school will be available at:"}
               </FormLabel>
               <FormControl>

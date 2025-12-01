@@ -435,7 +435,7 @@ export function QuestionBankForm({
               {"Cancel"}
             </Button>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isSubmitting && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
               {initialData?.id ? "Update" : "Create"}
             </Button>
           </div>
@@ -486,7 +486,7 @@ function MultipleChoiceFields({
             size="sm"
             onClick={addOption}
           >
-            <Plus className="mr-2 h-4 w-4" />
+            <Plus className="me-2 h-4 w-4" />
             Add Option
           </Button>
         )}
@@ -569,7 +569,7 @@ function FillBlankFields({ form, isView }: { form: UseFormReturn<any>; isView: b
         <FormLabel>Accepted Answers</FormLabel>
         {!isView && (
           <Button type="button" variant="outline" size="sm" onClick={addAnswer}>
-            <Plus className="mr-2 h-4 w-4" />
+            <Plus className="me-2 h-4 w-4" />
             Add Answer
           </Button>
         )}
@@ -727,7 +727,7 @@ function TagsInput({
                 <button
                   type="button"
                   onClick={() => removeTag(tag)}
-                  className="ml-1 hover:text-destructive"
+                  className="ms-1 hover:text-destructive"
                 >
                   <X className="h-3 w-3" />
                 </button>

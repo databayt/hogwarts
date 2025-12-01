@@ -74,7 +74,7 @@ export default function ProfileSidebar({ role, data }: ProfileSidebarProps) {
             className="w-full h-full object-cover"
           />
         </div>
-        <div className="absolute bottom-6 right-6 w-8 h-8 bg-muted rounded-full flex items-center justify-center border-2 border-border">
+        <div className="absolute bottom-6 end-6 w-8 h-8 bg-muted rounded-full flex items-center justify-center border-2 border-border">
           <span>😀
           </span>
         </div>

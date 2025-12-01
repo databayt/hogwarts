@@ -104,7 +104,7 @@ export function Faculty() {
                 <div className="overflow-hidden">
                   <div className="flex">
                     {/* Image Section - At Top of Container */}
-                    <div className="w-2/5 relative pl-6 pr-2">
+                    <div className="w-2/5 relative ps-6 pe-2">
                       <div className="relative w-40 h-40">
                         <Image
                           src={professor.image}
@@ -116,7 +116,7 @@ export function Faculty() {
                     </div>
 
                     {/* Content Section */}
-                    <div className="w-3/5 pl-2 pr-6 space-y-2">
+                    <div className="w-3/5 ps-2 pe-6 space-y-2">
                       {/* Header */}
                       <div className="">
                         <h3>

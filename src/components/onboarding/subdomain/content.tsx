@@ -186,9 +186,9 @@ export default function SubdomainContent(props: Props) {
                   value={subdomain}
                   onChange={handleSubdomainChange}
                   placeholder="yourschool"
-                  className="pr-10"
+                  className="pe-10"
                 />
-                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                <div className="absolute end-3 top-1/2 transform -translate-y-1/2">
                   {getValidationIcon()}
                 </div>
               </div>
@@ -214,7 +214,7 @@ export default function SubdomainContent(props: Props) {
               onClick={handleRegenerate}
               className="w-full"
             >
-              <RefreshCw className="w-4 h-4 mr-2" />
+              <RefreshCw className="w-4 h-4 me-2" />
               Regenerate from school name
             </Button>
 
@@ -246,7 +246,7 @@ export default function SubdomainContent(props: Props) {
             >
               {isChecking ? (
                 <>
-                  <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                  <RefreshCw className="w-4 h-4 me-2 animate-spin" />
                   Checking availability...
                 </>
               ) : (

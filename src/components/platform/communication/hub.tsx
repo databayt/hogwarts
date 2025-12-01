@@ -317,7 +317,7 @@ export function CommunicationHub({
               <TabsTrigger value="unread">
                 Unread
                 {stats.totalUnread > 0 && (
-                  <Badge variant="destructive" className="ml-1 h-4 px-1">
+                  <Badge variant="destructive" className="ms-1 h-4 px-1">
                     {stats.totalUnread}
                   </Badge>
                 )}
@@ -336,7 +336,7 @@ export function CommunicationHub({
                       key={conversation.id}
                       onClick={() => setSelectedConversation(conversation.id)}
                       className={cn(
-                        "w-full flex items-start gap-3 p-3 rounded-lg transition-colors text-left",
+                        "w-full flex items-start gap-3 p-3 rounded-lg transition-colors text-start",
                         isSelected ? "bg-primary/10" : "hover:bg-muted"
                       )}
                     >
@@ -417,20 +417,20 @@ export function CommunicationHub({
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem>
-                      <Users className="h-4 w-4 mr-2" />
+                      <Users className="h-4 w-4 me-2" />
                       View Participants
                     </DropdownMenuItem>
                     <DropdownMenuItem>
-                      <Bell className="h-4 w-4 mr-2" />
+                      <Bell className="h-4 w-4 me-2" />
                       Mute Notifications
                     </DropdownMenuItem>
                     <DropdownMenuItem>
-                      <Archive className="h-4 w-4 mr-2" />
+                      <Archive className="h-4 w-4 me-2" />
                       Archive Chat
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem className="text-red-600">
-                      <Trash2 className="h-4 w-4 mr-2" />
+                      <Trash2 className="h-4 w-4 me-2" />
                       Delete Conversation
                     </DropdownMenuItem>
                   </DropdownMenuContent>
@@ -664,7 +664,7 @@ export function CommunicationHub({
                         onClick={() => setSelectedParticipants(prev =>
                           prev.filter(p => p !== id)
                         )}
-                        className="ml-1"
+                        className="ms-1"
                       >
                         <X className="h-3 w-3" />
                       </button>

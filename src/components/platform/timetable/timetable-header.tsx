@@ -169,7 +169,7 @@ export function TimetableHeader({
           )} />
         </Button>
 
-        <Button variant="ghost" className="ml-2" onClick={() => setOpenSettings(true)}>
+        <Button variant="ghost" className="ms-2" onClick={() => setOpenSettings(true)}>
           Schedule settings
         </Button>
         <Button variant="ghost" onClick={() => setOpenSlot(true)}>
@@ -185,7 +185,7 @@ export function TimetableHeader({
         )}
 
         {/* Timetable Options Indicators */}
-        <div className="flex items-center gap-2 ml-4">
+        <div className="flex items-center gap-2 ms-4">
           {useTimetableStore.getState().classConfig?.showAllSubjects && (
             <div className="px-2 py-1 bg-chart-1 text-chart-1 rounded-full">
               <small>All Subjects</small>

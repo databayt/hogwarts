@@ -34,7 +34,7 @@ export function UpdatePlanCard({ currentPlan, plans, onPlanChange, className, ti
     }, [])
 
     return (
-        <Card className={cn("max-w-xl mx-auto text-left overflow-hidden shadow-lg w-full", className)}>
+        <Card className={cn("max-w-xl mx-auto text-start overflow-hidden shadow-lg w-full", className)}>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-base font-semibold">
                     {title || "Upgrade Plan"}
@@ -136,7 +136,7 @@ export function UpdatePlanCard({ currentPlan, plans, onPlanChange, className, ti
                                                 )}
                                             </div>
                                         </div>
-                                        <div className="text-right flex-shrink-0 min-w-[60px] sm:min-w-[80px]">
+                                        <div className="text-end flex-shrink-0 min-w-[60px] sm:min-w-[80px]">
                                             <div className="text-base sm:text-xl font-bold sm:font-semibold leading-tight">
                                                 {
                                                     parseFloat(getCurrentPrice(plan)) >= 0 ?

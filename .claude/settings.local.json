@@ -34,7 +34,9 @@
       "Bash(basename:*)",
       "Bash(for route in \"announcements\" \"assignments\" \"attendance\" \"events\" \"exams\" \"finance\" \"grades\" \"lessons\" \"parents\" \"students\" \"subjects\" \"teachers\")",
       "Bash(if [ -f \"/Users/abdout/hogwarts/src/app/[lang]/s/[subdomain]/(platform)/$route/page.tsx\" ])",
-      "Bash([ ! -f \"/Users/abdout/hogwarts/src/app/[lang]/s/[subdomain]/(platform)/$route/error.tsx\" ])"
+      "Bash([ ! -f \"/Users/abdout/hogwarts/src/app/[lang]/s/[subdomain]/(platform)/$route/error.tsx\" ])",
+      "mcp__shadcn__search_items_in_registries",
+      "WebFetch(domain:www.eldoraui.site)"
     ],
     "deny": [],
     "ask": []

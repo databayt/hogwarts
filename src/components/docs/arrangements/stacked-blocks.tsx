@@ -19,7 +19,7 @@ export function StackedBlocks({
         {blocks.map((b) => (
           <div key={b.title} className="rounded-md border p-4">
             <div className="text-sm font-medium mb-2">{b.title}</div>
-            <ul className="list-disc pl-4 text-sm text-muted-foreground space-y-1">
+            <ul className="list-disc ps-4 text-sm text-muted-foreground space-y-1">
               {b.items.map((it) => (
                 <li key={it}>{it}</li>
               ))}

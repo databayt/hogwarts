@@ -381,7 +381,7 @@ export function FileActionsToolbar({
                       onClick={() => handleAction(action.id)}
                       className={action.destructive ? 'text-destructive' : ''}
                     >
-                      <Icon className="h-4 w-4 mr-2" />
+                      <Icon className="h-4 w-4 me-2" />
                       {dictionary?.[action.id] || action.label}
                     </DropdownMenuItem>
                   );
@@ -394,7 +394,7 @@ export function FileActionsToolbar({
         <div className="flex items-center gap-1">
           {onUpload && (
             <Button variant="ghost" size="sm" onClick={onUpload}>
-              <Upload className="h-4 w-4 mr-1" />
+              <Upload className="h-4 w-4 me-1" />
               {dictionary?.upload || 'Upload'}
             </Button>
           )}
@@ -519,7 +519,7 @@ export function FileActionsToolbar({
                   onClick={onClearSelection}
                   disabled={isProcessing !== null}
                 >
-                  <X className="h-4 w-4 mr-1" />
+                  <X className="h-4 w-4 me-1" />
                   {dictionary?.clear || 'Clear'}
                 </Button>
               </>
@@ -528,13 +528,13 @@ export function FileActionsToolbar({
                 {/* Non-selection actions */}
                 {onCreateFolder && (
                   <Button variant="outline" size="sm" onClick={onCreateFolder}>
-                    <FolderPlus className="h-4 w-4 mr-1" />
+                    <FolderPlus className="h-4 w-4 me-1" />
                     {dictionary?.newFolder || 'New folder'}
                   </Button>
                 )}
                 {onUpload && (
                   <Button variant="default" size="sm" onClick={onUpload}>
-                    <Upload className="h-4 w-4 mr-1" />
+                    <Upload className="h-4 w-4 me-1" />
                     {dictionary?.upload || 'Upload'}
                   </Button>
                 )}
@@ -571,7 +571,7 @@ export function FileActionsToolbar({
               className="border-t px-3 py-2 bg-muted/50"
             >
               <p className="text-xs text-muted-foreground">
-                <Info className="h-3 w-3 inline mr-1" />
+                <Info className="h-3 w-3 inline me-1" />
                 {dictionary?.batchInfo || 'Batch operations will apply to all selected files'}
               </p>
             </motion.div>

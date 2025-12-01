@@ -20,7 +20,7 @@ export default function Newsletter() {
 
   return (
     <section className="py-14">
-      <div className="flex justify-center pr-66">
+      <div className="flex justify-center pe-66">
         <Image
           src="/site/glass.png"
           alt="Hogwarts Glasses"

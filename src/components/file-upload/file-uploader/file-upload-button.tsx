@@ -76,7 +76,7 @@ export function FileUploadButton({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button disabled={disabled} className={className}>
-          <Upload className="mr-2 h-4 w-4" />
+          <Upload className="me-2 h-4 w-4" />
           {label}
         </Button>
       </DialogTrigger>
@@ -114,7 +114,7 @@ export function FileUploadButton({
               onClick={handleUpload}
               disabled={isUploading || files.length === 0}
             >
-              {isUploading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isUploading && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
               {isUploading ? 'Uploading...' : 'Upload'}
             </Button>
           </div>

@@ -79,7 +79,7 @@ export function RecentInvoices({ invoices, maxItems = 5 }: { invoices: InvoiceWi
                 <small className="muted">{invoice.school.name}</small>
               </div>
             </div>
-            <div className="text-right">
+            <div className="text-end">
               <div className="font-medium tabular-nums">
                 {formatCurrency(invoice.amountDue, invoice.currency)}
               </div>
@@ -209,7 +209,7 @@ export function InvoicesDueSoon({ invoices, maxItems = 5 }: { invoices: InvoiceW
                   <small className="muted">{invoice.school.name}</small>
                 </div>
               </div>
-              <div className="text-right">
+              <div className="text-end">
                 <div className="font-medium tabular-nums">
                   {formatCurrency(invoice.amountDue - invoice.amountPaid, invoice.currency)}
                 </div>

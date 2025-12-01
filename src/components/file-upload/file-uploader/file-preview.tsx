@@ -422,14 +422,14 @@ export function FilePreview({
               variant="default"
               onClick={() => window.open(fileUrl, '_blank')}
             >
-              <ExternalLink className="h-4 w-4 mr-2" />
+              <ExternalLink className="h-4 w-4 me-2" />
               {dictionary?.openInNewTab || 'Open in new tab'}
             </Button>
             <Button
               variant="outline"
               onClick={() => onAction?.('download', file)}
             >
-              <Download className="h-4 w-4 mr-2" />
+              <Download className="h-4 w-4 me-2" />
               {dictionary?.download || 'Download'}
             </Button>
           </div>
@@ -451,7 +451,7 @@ export function FilePreview({
               variant="default"
               onClick={() => window.open(metadata.url, '_blank')}
             >
-              <ExternalLink className="h-4 w-4 mr-2" />
+              <ExternalLink className="h-4 w-4 me-2" />
               {dictionary?.openInNewTab || 'Open in new tab'}
             </Button>
           )}
@@ -459,7 +459,7 @@ export function FilePreview({
             variant="outline"
             onClick={() => onAction?.('download', file)}
           >
-            <Download className="h-4 w-4 mr-2" />
+            <Download className="h-4 w-4 me-2" />
             {dictionary?.download || 'Download'}
           </Button>
         </div>
@@ -663,15 +663,15 @@ export function FilePreview({
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={() => onAction?.('rename', file)}>
-                  <Edit3 className="h-4 w-4 mr-2" />
+                  <Edit3 className="h-4 w-4 me-2" />
                   {dictionary?.rename || 'Rename'}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => onAction?.('copy', file)}>
-                  <Copy className="h-4 w-4 mr-2" />
+                  <Copy className="h-4 w-4 me-2" />
                   {dictionary?.copy || 'Copy'}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => onAction?.('info', file)}>
-                  <Info className="h-4 w-4 mr-2" />
+                  <Info className="h-4 w-4 me-2" />
                   {dictionary?.fileInfo || 'File info'}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
@@ -679,7 +679,7 @@ export function FilePreview({
                   onClick={() => onAction?.('delete', file)}
                   className="text-destructive"
                 >
-                  <Trash2 className="h-4 w-4 mr-2" />
+                  <Trash2 className="h-4 w-4 me-2" />
                   {dictionary?.delete || 'Delete'}
                 </DropdownMenuItem>
               </DropdownMenuContent>

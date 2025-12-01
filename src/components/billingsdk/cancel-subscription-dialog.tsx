@@ -154,7 +154,7 @@ export function CancelSubscriptionDialog({
                     </div>
                 )}
                 <div className={cn("py-6 px-4 flex flex-col gap-4", leftPanelImageUrl ? "w-full md:w-1/2" : "w-full")}>
-                    <div className="flex flex-col gap-2 text-center md:text-left">
+                    <div className="flex flex-col gap-2 text-center md:text-start">
                         <h2 className="md:text-2xl text-xl font-semibold">{title}</h2>
                         <p className="md:text-sm text-xs text-muted-foreground">{description}</p>
                         {error && (

@@ -71,16 +71,16 @@ export function TaskCard({ task, isOverlay }: TaskCardProps) {
           variant={'ghost'}
           {...attributes}
           {...listeners}
-          className='text-secondary-foreground/50 -ml-2 h-auto cursor-grab p-1'
+          className='text-secondary-foreground/50 -ms-2 h-auto cursor-grab p-1'
         >
           <span className='sr-only'>Move task</span>
           <IconGripVertical />
         </Button>
-        <Badge variant={'outline'} className='ml-auto font-semibold'>
+        <Badge variant={'outline'} className='ms-auto font-semibold'>
           Task
         </Badge>
       </CardHeader>
-      <CardContent className='px-3 pt-3 pb-6 text-left whitespace-pre-wrap'>
+      <CardContent className='px-3 pt-3 pb-6 text-start whitespace-pre-wrap'>
         {task.title}
       </CardContent>
     </Card>

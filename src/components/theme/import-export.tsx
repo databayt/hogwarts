@@ -62,12 +62,12 @@ export function ThemeImportExport() {
           <Button onClick={handleExport} disabled={isExporting || !themeState} className="w-full">
             {isExporting ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="me-2 h-4 w-4 animate-spin" />
                 Exporting...
               </>
             ) : (
               <>
-                <Download className="mr-2 h-4 w-4" />
+                <Download className="me-2 h-4 w-4" />
                 Export Theme
               </>
             )}
@@ -99,12 +99,12 @@ export function ThemeImportExport() {
           >
             {isImporting ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="me-2 h-4 w-4 animate-spin" />
                 Importing...
               </>
             ) : (
               <>
-                <Upload className="mr-2 h-4 w-4" />
+                <Upload className="me-2 h-4 w-4" />
                 Choose File
               </>
             )}

@@ -49,9 +49,9 @@ function SignInModal({
             }}
           >
             {signInClicked ? (
-              <Icons.spinner className="mr-2 size-4 animate-spin" />
+              <Icons.spinner className="me-2 size-4 animate-spin" />
             ) : (
-              <Icons.google className="mr-2 size-4" />
+              <Icons.google className="me-2 size-4" />
             )}{" "}
             Sign In with Google
           </Button>

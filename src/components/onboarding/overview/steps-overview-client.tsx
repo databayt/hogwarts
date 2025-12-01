@@ -213,7 +213,7 @@ const StepsOverviewClient: React.FC<StepsOverviewClientProps> = ({ dictionary, l
               <Button onClick={handleGetStarted} disabled={isCreating}>
                 {isCreating ? (
                   <>
-                    <Skeleton className="w-4 h-4 mr-2" />
+                    <Skeleton className="w-4 h-4 me-2" />
                     {dictionary.creatingSchool}
                   </>
                 ) : (

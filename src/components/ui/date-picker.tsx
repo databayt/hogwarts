@@ -35,13 +35,13 @@ export function DatePicker({
         <Button
           variant="outline"
           className={cn(
-            "justify-start text-left font-normal",
+            "justify-start text-start font-normal",
             !date && "text-muted-foreground",
             className
           )}
           disabled={disabled}
         >
-          <CalendarIcon className="mr-2 h-4 w-4" />
+          <CalendarIcon className="me-2 h-4 w-4" />
           {date ? format(date, "PPP") : <span>{placeholder}</span>}
         </Button>
       </PopoverTrigger>
@@ -96,13 +96,13 @@ export function DateRangePicker({
         <Button
           variant="outline"
           className={cn(
-            "justify-start text-left font-normal",
+            "justify-start text-start font-normal",
             !range.from && "text-muted-foreground",
             className
           )}
           disabled={disabled}
         >
-          <CalendarIcon className="mr-2 h-4 w-4" />
+          <CalendarIcon className="me-2 h-4 w-4" />
           {range.from ? (
             range.to ? (
               <>

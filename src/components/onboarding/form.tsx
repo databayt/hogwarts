@@ -112,7 +112,7 @@ export function OnboardingForm({
                   disabled={isSubmitting}
                   className={!onBack ? "w-full" : ""}
                 >
-                  {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {isSubmitting && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
                   Continue
                 </Button>
               </div>

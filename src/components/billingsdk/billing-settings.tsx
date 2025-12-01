@@ -172,7 +172,7 @@ export function BillingSettings({
         </div>
       ))}
       <Button variant="outline" className="w-full" onClick={onAddCard}>
-        <Plus className="mr-2 h-4 w-4" />
+        <Plus className="me-2 h-4 w-4" />
         Add new card
       </Button>
     </div>
@@ -189,7 +189,7 @@ export function BillingSettings({
           <DropdownMenuTrigger asChild>
             <Button variant="outline" size="sm" className="w-full sm:w-auto">
               {invoiceFormat}
-              <ChevronDown className="ml-2 h-4 w-4" />
+              <ChevronDown className="ms-2 h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">

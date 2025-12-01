@@ -57,7 +57,7 @@ export default function SectionHeading({
               className="underline underline-offset-4 flex items-center justify-center text-foreground/70 hover:text-foreground"
             >
               {linkText}
-              {linkIcon && <span className="ml-1">{linkIcon}</span>}
+              {linkIcon && <span className="ms-1">{linkIcon}</span>}
             </Link>
           )}
         </p>

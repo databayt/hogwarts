@@ -69,7 +69,7 @@ export function PricingCard({ offer, isYearly, userId, subscriptionPlan, userRol
         </Link>
       )}
       {(!userId || !subscriptionPlan) && isPro && (
-        <a href="#more-info" className="ml-3">
+        <a href="#more-info" className="ms-3">
           <small className="muted">More info ↗</small>
         </a>
       )}
@@ -89,7 +89,7 @@ export function PricingCard({ offer, isYearly, userId, subscriptionPlan, userRol
         <p className="lead text-foreground">{offer.title}</p>
         <CardTitle className="tracking-tight">
           {priceDisplay}
-          <span className="muted ml-1">
+          <span className="muted ms-1">
             {offer.prices.monthly > 0 ? "/mo" : ""}
           </span>
         </CardTitle>

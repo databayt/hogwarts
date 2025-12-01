@@ -84,9 +84,9 @@ export function InvoiceHistory({
                         <TableRow>
                             <TableHead className="w-[120px]">Date</TableHead>
                             <TableHead>Description</TableHead>
-                            <TableHead className="text-right">Amount</TableHead>
-                            <TableHead className="text-right">Status</TableHead>
-                            <TableHead className="text-right">Action</TableHead>
+                            <TableHead className="text-end">Amount</TableHead>
+                            <TableHead className="text-end">Status</TableHead>
+                            <TableHead className="text-end">Action</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -110,13 +110,13 @@ export function InvoiceHistory({
                                         {inv.description || "Invoice"}
                                     </div>
                                 </TableCell>
-                                <TableCell className="text-right font-medium">
+                                <TableCell className="text-end font-medium">
                                     {inv.amount}
                                 </TableCell>
-                                <TableCell className="text-right">
+                                <TableCell className="text-end">
                                     {statusBadge(inv.status)}
                                 </TableCell>
-                                <TableCell className="text-right">
+                                <TableCell className="text-end">
                                     <Button
                                         variant="outline"
                                         size="sm"

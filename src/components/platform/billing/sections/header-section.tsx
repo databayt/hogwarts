@@ -52,11 +52,11 @@ export function HeaderSection({
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={onSettings}>
-            <IconSettings className="mr-2 h-4 w-4" />
+            <IconSettings className="me-2 h-4 w-4" />
             Settings
           </Button>
           <Button onClick={onUpgrade}>
-            <IconArrowUpRight className="mr-2 h-4 w-4" />
+            <IconArrowUpRight className="me-2 h-4 w-4" />
             Upgrade Plan
           </Button>
         </div>
