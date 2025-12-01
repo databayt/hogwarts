@@ -15,6 +15,7 @@ import StatsDashboard from "./stats-dashboard"
 import StatsUsage from "./stats-usage"
 import StatsSegmented from "./stats-segmented"
 import StatsWeather from "./stats-weather"
+import StatsAppleActivity from "./stats-apple-activity"
 
 interface StatsContentProps {
   dictionary: Awaited<ReturnType<typeof getDictionary>>
@@ -112,6 +113,12 @@ export default function StatsContent(_props: StatsContentProps) {
         <section>
           <h3 className="mb-4 text-lg font-medium">Stats Weather (stats-14)</h3>
           <StatsWeather />
+        </section>
+
+        {/* Stats 15: Apple Activity */}
+        <section>
+          <h3 className="mb-4 text-lg font-medium">Apple Activity Rings (stats-15)</h3>
+          <StatsAppleActivity />
         </section>
       </div>
     </>

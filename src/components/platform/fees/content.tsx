@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import PageHeader from "@/components/atom/page-header";
+import { PageHeadingSetter } from "@/components/platform/context/page-heading-setter";
 import { FeeDashboard } from "./dashboard";
 import { FeeStructuresList } from "./fee-structures-list";
 import { PaymentsList } from "./payments-list";
@@ -24,10 +24,9 @@ export default async function FeesContent({ dictionary }: Props) {
 
   return (
     <div className="space-y-6">
-      <PageHeader
+      <PageHeadingSetter
         title="Fee Management"
         description="Manage fee structures, payments, scholarships, and refunds"
-        className="text-start max-w-none"
       />
 
       <Suspense fallback={<div>Loading...</div>}>

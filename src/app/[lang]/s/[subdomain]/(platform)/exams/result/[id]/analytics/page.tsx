@@ -3,7 +3,7 @@ import type { Locale } from "@/components/internationalization/config";
 import { db } from "@/lib/db";
 import { getTenantContext } from "@/lib/tenant-context";
 import { Shell as PageContainer } from "@/components/table/shell";
-import PageHeader from "@/components/atom/page-header";
+import { PageHeadingSetter } from "@/components/platform/context/page-heading-setter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { notFound } from "next/navigation";
 import { TrendingUp, Users, Award, AlertCircle } from "lucide-react";
@@ -57,10 +57,9 @@ export default async function ExamAnalyticsPage({ params }: Props) {
   return (
     <PageContainer>
       <div className="flex flex-col gap-4">
-        <PageHeader
+        <PageHeadingSetter
           title="Analytics"
           description={`${exam.class?.name} - ${exam.subject?.subjectName}`}
-          className="text-start max-w-none"
         />
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

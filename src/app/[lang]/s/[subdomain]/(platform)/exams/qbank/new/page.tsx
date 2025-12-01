@@ -2,7 +2,7 @@ import { getDictionary } from "@/components/internationalization/dictionaries";
 import type { Locale } from "@/components/internationalization/config";
 import { QuestionBankForm } from "@/components/platform/exams/qbank/form";
 import { Shell as PageContainer } from "@/components/table/shell";
-import PageHeader from "@/components/atom/page-header";
+import { PageHeadingSetter } from "@/components/platform/context/page-heading-setter";
 
 export const metadata = { title: "Add Question" };
 
@@ -17,9 +17,8 @@ export default async function NewQuestionPage({ params }: Props) {
   return (
     <PageContainer>
       <div className="flex flex-col gap-4">
-        <PageHeader
+        <PageHeadingSetter
           title="New Question"
-          className="text-start max-w-none"
         />
         <QuestionBankForm />
       </div>

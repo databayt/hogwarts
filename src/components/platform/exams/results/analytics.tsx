@@ -1,5 +1,5 @@
 import { Shell as PageContainer } from "@/components/table/shell";
-import PageHeader from "@/components/atom/page-header";
+import { PageHeadingSetter } from "@/components/platform/context/page-heading-setter";
 import type { Locale } from "@/components/internationalization/config";
 import type { Dictionary } from "@/components/internationalization/dictionaries";
 import { Button } from "@/components/ui/button";
@@ -63,18 +63,16 @@ export default async function ResultsAnalyticsContent({ dictionary, lang }: Prop
   return (
     <PageContainer>
       <div className="flex flex-1 flex-col gap-6">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="sm" asChild>
-            <Link href={`/${lang}/results`}>
-              <ArrowLeft className="h-4 w-4" />
-            </Link>
-          </Button>
-          <PageHeader
-            title="Results Analytics"
-            description="Comprehensive analysis of exam performance and trends"
-            className="text-start max-w-none"
-          />
-        </div>
+        <PageHeadingSetter
+          title="Results Analytics"
+          description="Comprehensive analysis of exam performance and trends"
+        />
+        <Button variant="ghost" size="sm" asChild>
+          <Link href={`/${lang}/results`}>
+            <ArrowLeft className="h-4 w-4" />
+            Back
+          </Link>
+        </Button>
 
         {/* Overview Stats */}
         <div className="grid gap-4 md:grid-cols-4">

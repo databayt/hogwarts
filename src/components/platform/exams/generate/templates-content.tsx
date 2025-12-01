@@ -5,7 +5,7 @@ import { templateSearchParams } from "./list-params";
 import { db } from "@/lib/db";
 import { getTenantContext } from "@/lib/tenant-context";
 import { Shell as PageContainer } from "@/components/table/shell";
-import PageHeader from "@/components/atom/page-header";
+import { PageHeadingSetter } from "@/components/platform/context/page-heading-setter";
 import type { Locale } from "@/components/internationalization/config";
 import type { Dictionary } from "@/components/internationalization/dictionaries";
 import { calculateTotalQuestions } from "./utils";
@@ -90,10 +90,9 @@ export default async function TemplatesContent({
   return (
     <PageContainer>
       <div className="flex flex-1 flex-col gap-4">
-        <PageHeader
+        <PageHeadingSetter
           title={dictionary?.generate?.templates?.title || "Exam Templates"}
           description={dictionary?.generate?.templates?.description || "Create reusable exam blueprints with question distribution rules"}
-          className="text-start max-w-none"
         />
         <TemplatesTable initialData={data} total={total} dictionary={dictionary} />
       </div>

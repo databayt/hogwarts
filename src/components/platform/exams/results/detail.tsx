@@ -1,5 +1,5 @@
 import { Shell as PageContainer } from "@/components/table/shell";
-import PageHeader from "@/components/atom/page-header";
+import { PageHeadingSetter } from "@/components/platform/context/page-heading-setter";
 import type { Locale } from "@/components/internationalization/config";
 import type { Dictionary } from "@/components/internationalization/dictionaries";
 import { Button } from "@/components/ui/button";
@@ -44,19 +44,17 @@ export default async function ResultDetailContent({ dictionary, lang, examId }: 
   return (
     <PageContainer>
       <div className="flex flex-1 flex-col gap-6">
+        <PageHeadingSetter
+          title={summary?.examTitle || (r?.labels?.examResults || "Exam Results")}
+          description={`${summary?.className || ""} • ${summary?.subjectName || ""} • ${summary?.examDate ? new Date(summary.examDate).toLocaleDateString() : ""}`}
+        />
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="sm" asChild>
-              <Link href={`/${lang}/results`}>
-                <ArrowLeft className="h-4 w-4" />
-              </Link>
-            </Button>
-            <PageHeader
-              title={summary?.examTitle || (r?.labels?.examResults || "Exam Results")}
-              description={`${summary?.className || ""} • ${summary?.subjectName || ""} • ${summary?.examDate ? new Date(summary.examDate).toLocaleDateString() : ""}`}
-              className="text-start max-w-none"
-            />
-          </div>
+          <Button variant="ghost" size="sm" asChild>
+            <Link href={`/${lang}/results`}>
+              <ArrowLeft className="h-4 w-4" />
+              Back
+            </Link>
+          </Button>
           <Button variant="outline">
             <Download className="mr-2 h-4 w-4" />
             {r?.actions?.exportAllPDFs || "Export All PDFs"}

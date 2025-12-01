@@ -3,7 +3,7 @@ import type { Locale } from "@/components/internationalization/config";
 import { db } from "@/lib/db";
 import { getTenantContext } from "@/lib/tenant-context";
 import { Shell as PageContainer } from "@/components/table/shell";
-import PageHeader from "@/components/atom/page-header";
+import { PageHeadingSetter } from "@/components/platform/context/page-heading-setter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -52,10 +52,9 @@ export default async function Page({ params }: Props) {
   return (
     <PageContainer>
       <div className="flex flex-1 flex-col gap-6">
-        <PageHeader
+        <PageHeadingSetter
           title={d?.upcomingExams || "Upcoming Exams"}
           description={d?.upcomingDescription || "Scheduled examinations"}
-          className="text-start max-w-none"
         />
 
         {upcomingExams.length === 0 ? (

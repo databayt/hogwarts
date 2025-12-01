@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { Eye, Plus } from "lucide-react"
-import PageHeader from "@/components/atom/page-header"
+import { PageHeadingSetter } from "@/components/platform/context/page-heading-setter"
 import { Button } from "@/components/ui/button"
 import { DashboardCardsShowcase } from "@/components/platform/lab/dashboard-cards-showcase"
 import { ShadcnShowcase } from "@/components/atom/lab/shadcn-showcase"
@@ -15,10 +15,9 @@ export default function LabPage() {
   return (
     <div className="container mx-auto space-y-6 p-6">
       {/* Page Header */}
-      <PageHeader
+      <PageHeadingSetter
         title="Atom"
         description="A collection of reusable UI components built with shadcn/ui and Radix primitives"
-        variant="dashboard"
       />
 
       {/* View Mode Toggle Buttons */}

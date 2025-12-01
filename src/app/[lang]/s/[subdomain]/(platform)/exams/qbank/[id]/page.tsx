@@ -3,7 +3,7 @@ import type { Locale } from "@/components/internationalization/config";
 import { db } from "@/lib/db";
 import { getTenantContext } from "@/lib/tenant-context";
 import { Shell as PageContainer } from "@/components/table/shell";
-import PageHeader from "@/components/atom/page-header";
+import { PageHeadingSetter } from "@/components/platform/context/page-heading-setter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -42,12 +42,11 @@ export default async function QuestionDetailPage({ params }: Props) {
   return (
     <PageContainer>
       <div className="flex flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <PageHeader
-            title="Question Details"
-            description={question.subject?.subjectName || ""}
-            className="text-start max-w-none"
-          />
+        <PageHeadingSetter
+          title="Question Details"
+          description={question.subject?.subjectName || ""}
+        />
+        <div className="flex justify-end">
           <Button asChild>
             <Link href={`/${lang}/exams/qbank/${id}/edit`}>
               <Pencil className="mr-2 h-4 w-4" />

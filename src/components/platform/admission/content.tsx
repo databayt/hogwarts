@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import PageHeader from "@/components/atom/page-header";
+import { PageHeadingSetter } from "@/components/platform/context/page-heading-setter";
 import { CampaignsList } from "./campaigns-list";
 import { ApplicationsList } from "./applications-list";
 import { AdmissionDashboard } from "./dashboard";
@@ -18,10 +18,9 @@ export default async function AdmissionContent() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
+      <PageHeadingSetter
         title="Admission Management"
         description="Manage admission campaigns, applications, and enrollment"
-        className="text-start max-w-none"
       />
 
       <Suspense fallback={<div>Loading...</div>}>

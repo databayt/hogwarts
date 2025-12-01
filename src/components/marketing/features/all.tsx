@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { features } from "./constants"
-import PageHeader from "@/components/atom/page-header"
+import PageHeading from "@/components/atom/page-heading"
 import { Search } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import type { getDictionary } from "@/components/internationalization/dictionaries";
@@ -15,7 +15,7 @@ export default function AllFeatures(props: Props) {
   return (
     <div>
         <div className="flex flex-col items-center space-y-8 mt-8">
-        <PageHeader title="Features" />
+        <PageHeading title="Features" />
         
         <div className="relative w-full max-w-xs">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />

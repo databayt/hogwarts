@@ -4,7 +4,7 @@ import * as React from "react";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import PageHeader from "@/components/atom/page-header";
+import { PageHeadingSetter } from "@/components/platform/context/page-heading-setter";
 import { Database } from "lucide-react";
 import { useSchool } from "@/components/platform/context/school-context";
 import { type Locale } from "@/components/internationalization/config";
@@ -80,9 +80,8 @@ export function EnhancedSettingsContent({ dictionary, lang }: Props) {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <PageHeader
+      <PageHeadingSetter
         title={dictionary?.school?.settings?.title || 'Settings'}
-        className="text-start max-w-none"
       />
 
       {/* Settings Tabs */}
