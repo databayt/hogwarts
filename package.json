@@ -166,7 +166,7 @@
     "zod": "^4.0.14"
   },
   "devDependencies": {
-    "@eslint/eslintrc": "2.15.4",
+    "@eslint/eslintrc": "^3.3.3",
     "@playwright/test": "^1.55.0",
     "@tailwindcss/postcss": "^4",
     "@testing-library/dom": "^10.4.0",
