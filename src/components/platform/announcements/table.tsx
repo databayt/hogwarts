@@ -65,19 +65,7 @@ function createGetAnnouncementsCSV(lang: Locale) {
   };
 }
 
-// Filter options
-const SCOPE_OPTIONS = [
-  { value: "all", label: "All Scopes" },
-  { value: "school", label: "School-wide" },
-  { value: "class", label: "Class-specific" },
-  { value: "role", label: "Role-specific" },
-];
-
-const PUBLISHED_OPTIONS = [
-  { value: "all", label: "All Status" },
-  { value: "published", label: "Published" },
-  { value: "draft", label: "Draft" },
-];
+// Filter options - built dynamically with translations inside component
 
 export function AnnouncementsTable({
   initialData,
@@ -90,6 +78,20 @@ export function AnnouncementsTable({
   const router = useRouter();
   const { openModal } = useModal();
   const [isPending, startTransition] = useTransition();
+
+  // Filter options with translations
+  const SCOPE_OPTIONS = useMemo(() => [
+    { value: "all", label: t.scope },
+    { value: "school", label: t.schoolWide },
+    { value: "class", label: t.classSpecific },
+    { value: "role", label: t.roleSpecific },
+  ], [t]);
+
+  const PUBLISHED_OPTIONS = useMemo(() => [
+    { value: "all", label: t.status },
+    { value: "published", label: t.published },
+    { value: "draft", label: t.draft },
+  ], [t]);
 
   // View mode (table/grid)
   const { view, toggleView } = usePlatformView({ defaultView: "table" });
@@ -264,7 +266,7 @@ export function AnnouncementsTable({
     <>
       <Select value={scopeFilter} onValueChange={setScopeFilter}>
         <SelectTrigger className="h-9 w-32 py-1">
-          <SelectValue placeholder="Scope" />
+          <SelectValue placeholder={t.scope} />
         </SelectTrigger>
         <SelectContent>
           {SCOPE_OPTIONS.map((opt) => (
@@ -276,7 +278,7 @@ export function AnnouncementsTable({
       </Select>
       <Select value={publishedFilter} onValueChange={setPublishedFilter}>
         <SelectTrigger className="h-9 w-32 py-1">
-          <SelectValue placeholder="Status" />
+          <SelectValue placeholder={t.status} />
         </SelectTrigger>
         <SelectContent>
           {PUBLISHED_OPTIONS.map((opt) => (

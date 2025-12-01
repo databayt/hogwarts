@@ -39,12 +39,7 @@
       "mcp__Ref__ref_read_url"
     ],
     "deny": [
-      "Bash(rm:*)",
-      "Bash(del:*)",
-      "Bash(rmdir:*)",
-      "Bash(format:*)",
-      "Bash(shutdown:*)",
-      "Bash(reboot:*)"
+
     ],
     "ask": []
   },

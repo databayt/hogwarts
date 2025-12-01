@@ -20,7 +20,7 @@ const PageHeading = React.forwardRef<HTMLDivElement, PageHeadingProps>(
           {title}
         </h1>
         {description && (
-          <p className="text-muted-foreground text-[1.05rem] text-balance sm:text-base">
+          <p className="text-muted-foreground text-lg text-balance sm:text-base">
             {description}
           </p>
         )}
