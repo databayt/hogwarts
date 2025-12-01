@@ -18,43 +18,76 @@ interface BillingContentProps {
   lang: Locale;
 }
 
-export default function BillingContent({ dictionary, lang }: BillingContentProps) {
+export default function BillingContent(_props: BillingContentProps) {
   return (
     <>
-      <DashboardHeader heading="Billing" text="Manage your subscription, payments, and billing settings." />
-      <div className="flex flex-col gap-6 py-4 pb-14">
-        {/* Subscription & Plan Management */}
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <DashboardHeader heading="Billing" text="BillingSDK components from billingsdk.com" />
+      <div className="flex flex-col gap-8 py-4 pb-14">
+        {/* Billing 01: Subscription Management */}
+        <section>
+          <h3 className="mb-4 text-lg font-medium">Subscription Management</h3>
           <SubscriptionManagementDemo />
+        </section>
+
+        {/* Billing 02: Update Plan Card */}
+        <section>
+          <h3 className="mb-4 text-lg font-medium">Update Plan Card</h3>
           <UpdatePlanCardDemo />
-        </div>
+        </section>
 
-        {/* Trial & Pricing */}
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        {/* Billing 03: Trial Expiry Card */}
+        <section>
+          <h3 className="mb-4 text-lg font-medium">Trial Expiry Card</h3>
           <TrialExpiryCardDemo />
+        </section>
+
+        {/* Billing 04: Usage Based Pricing */}
+        <section>
+          <h3 className="mb-4 text-lg font-medium">Usage Based Pricing</h3>
           <UsageBasedPricingDemo />
-        </div>
+        </section>
 
-        {/* Usage & Charges */}
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        {/* Billing 05: Detailed Usage Table */}
+        <section>
+          <h3 className="mb-4 text-lg font-medium">Detailed Usage Table</h3>
           <DetailedUsageTableDemo />
+        </section>
+
+        {/* Billing 06: Upcoming Charges */}
+        <section>
+          <h3 className="mb-4 text-lg font-medium">Upcoming Charges</h3>
           <UpcomingChargesDemo />
-        </div>
+        </section>
 
-        {/* Invoice History - Full Width */}
-        <InvoiceHistoryDemo />
+        {/* Billing 07: Invoice History */}
+        <section>
+          <h3 className="mb-4 text-lg font-medium">Invoice History</h3>
+          <InvoiceHistoryDemo />
+        </section>
 
-        {/* Payment Methods */}
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        {/* Billing 08: Payment Method Selector */}
+        <section>
+          <h3 className="mb-4 text-lg font-medium">Payment Method Selector</h3>
           <PaymentMethodSelectorDemo />
-          <PaymentCardDemo />
-        </div>
+        </section>
 
-        {/* Billing Settings */}
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        {/* Billing 09: Payment Card */}
+        <section>
+          <h3 className="mb-4 text-lg font-medium">Payment Card</h3>
+          <PaymentCardDemo />
+        </section>
+
+        {/* Billing 10: Billing Settings */}
+        <section>
+          <h3 className="mb-4 text-lg font-medium">Billing Settings</h3>
           <BillingSettingsDemo />
+        </section>
+
+        {/* Billing 11: Billing Settings 2 */}
+        <section>
+          <h3 className="mb-4 text-lg font-medium">Billing Settings (Alternate)</h3>
           <BillingSettings2Demo />
-        </div>
+        </section>
       </div>
     </>
   );

@@ -3,6 +3,8 @@ import { ModalProvider } from "@/components/atom/modal/context";
 import PlatformHeader from "@/components/template/platform-header/content";
 import PlatformSidebar from "@/components/template/platform-sidebar/content";
 import { SchoolProvider } from "@/components/platform/context/school-context";
+import { PageHeadingProvider } from "@/components/platform/context/page-heading-context";
+import { PageHeadingDisplay } from "@/components/platform/context/page-heading-display";
 import { getSchoolBySubdomain } from "@/lib/subdomain-actions";
 import { notFound } from "next/navigation";
 import { isRTL as checkIsRTL, type Locale } from "@/components/internationalization/config";
@@ -34,14 +36,21 @@ export default async function PlatformLayout({
     <SchoolProvider school={school}>
       <SidebarProvider>
         <ModalProvider>
-          {/* Ensure the provider's flex wrapper has a single column child to preserve layout */}
-          <div className="flex min-h-svh w-full flex-col" dir={isRTL ? 'rtl' : 'ltr'}>
-            <PlatformHeader school={school} lang={lang} />
-            <div className="flex pt-6">
-              <PlatformSidebar school={school} lang={lang} side={isRTL ? 'right' : 'left'} />
-              <div className="w-full pb-10 transition-[margin] duration-200 ease-in-out">{children}</div>
+          <PageHeadingProvider>
+            {/* Ensure the provider's flex wrapper has a single column child to preserve layout */}
+            <div className="flex min-h-svh w-full flex-col" dir={isRTL ? 'rtl' : 'ltr'}>
+              <PlatformHeader school={school} lang={lang} />
+              <div className="flex pt-6">
+                <PlatformSidebar school={school} lang={lang} side={isRTL ? 'right' : 'left'} />
+                <div className="w-full pb-10 transition-[margin] duration-200 ease-in-out">
+                  <div className="mb-6 px-4 sm:px-6 lg:px-8">
+                    <PageHeadingDisplay />
+                  </div>
+                  {children}
+                </div>
+              </div>
             </div>
-          </div>
+          </PageHeadingProvider>
         </ModalProvider>
       </SidebarProvider>
     </SchoolProvider>
