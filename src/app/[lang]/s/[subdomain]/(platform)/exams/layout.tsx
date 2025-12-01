@@ -11,36 +11,40 @@ interface Props {
 export default async function ExamsLayout({ children, params }: Props) {
   const { lang } = await params
   const dictionary = await getDictionary(lang as Locale)
-  const d = dictionary?.school?.exams?.dashboard
+  const d = dictionary?.school?.exams
 
-  // Define exams page navigation
+  // Define exams page navigation with proper i18n
   const examsPages: PageNavItem[] = [
     {
-      name: 'Exams',
+      name: d?.navigation?.manage || 'Manage',
       href: `/${lang}/exams`
     },
     {
-      name: 'QBank',
+      name: d?.navigation?.qbank || 'Question Bank',
       href: `/${lang}/exams/qbank`
     },
     {
-      name: 'Generate',
+      name: d?.navigation?.generate || 'Generate',
       href: `/${lang}/exams/generate`
     },
     {
-      name: 'Mark',
+      name: d?.navigation?.mark || 'Mark',
       href: `/${lang}/exams/mark`
     },
     {
-      name: 'Result',
+      name: d?.navigation?.result || 'Results',
       href: `/${lang}/exams/result`
+    },
+    {
+      name: d?.navigation?.upcoming || 'Upcoming',
+      href: `/${lang}/exams/upcoming`
     },
   ]
 
   return (
     <div className="space-y-6">
       <PageHeadingSetter
-        title="Exams"
+        title={d?.title || 'Exams'}
       />
       <PageNav pages={examsPages} />
 

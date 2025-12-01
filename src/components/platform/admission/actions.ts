@@ -102,6 +102,38 @@ export async function getCampaigns() {
   }));
 }
 
+export async function getCampaignById(id: string) {
+  const { schoolId } = await getSessionAndSchool();
+
+  const campaign = await db.admissionCampaign.findUnique({
+    where: { id, schoolId },
+    include: {
+      applications: {
+        select: {
+          id: true,
+          status: true,
+        },
+      },
+    },
+  });
+
+  if (!campaign) return null;
+
+  // Convert Decimal to number and add application counts
+  const statusCounts = campaign.applications.reduce((acc, app) => {
+    acc[app.status] = (acc[app.status] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
+  return {
+    ...campaign,
+    applicationFee: campaign.applicationFee ? Number(campaign.applicationFee) : null,
+    applicationCount: campaign.applications.length,
+    statusCounts,
+    applications: undefined, // Remove raw applications from response
+  };
+}
+
 // Application Actions
 export async function submitApplication(data: ApplicationFormData) {
   const { schoolId } = await getSessionAndSchool();

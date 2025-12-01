@@ -125,6 +125,7 @@ export function AnnouncementsTable({
     data,
     columns,
     pageCount: 1,
+    enableClientFiltering: true, // Enable client-side column filters
     initialState: {
       pagination: {
         pageIndex: 0,

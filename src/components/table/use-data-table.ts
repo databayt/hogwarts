@@ -59,6 +59,8 @@ interface UseDataTableProps<TData>
   throttleMs?: number;
   clearOnDefault?: boolean;
   enableAdvancedFilter?: boolean;
+  /** Enable client-side column filtering (default: false, uses server-side) */
+  enableClientFiltering?: boolean;
   scroll?: boolean;
   shallow?: boolean;
   startTransition?: React.TransitionStartFunction;
@@ -74,6 +76,7 @@ export function useDataTable<TData>(props: UseDataTableProps<TData>) {
     throttleMs = THROTTLE_MS,
     clearOnDefault = false,
     enableAdvancedFilter = false,
+    enableClientFiltering = false,
     scroll = false,
     shallow = true,
     startTransition,
@@ -289,7 +292,7 @@ export function useDataTable<TData>(props: UseDataTableProps<TData>) {
     getFacetedMinMaxValues: getFacetedMinMaxValues(),
     manualPagination: true,
     manualSorting: true,
-    manualFiltering: true,
+    manualFiltering: !enableClientFiltering,
   });
 
   return { table, shallow, debounceMs, throttleMs };
