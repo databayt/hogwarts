@@ -4,18 +4,20 @@ import tsconfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig({
   plugins: [tsconfigPaths(), react()],
+  css: {
+    postcss: {},
+  },
   test: {
     globals: true,
     environment: "jsdom",
     include: [
-      "src/components/platform/operator/**/*.test.{ts,tsx}",
-      "src/app/(platform)/operator/**/*.test.{ts,tsx}",
-      "src/components/table/**/*.test.{ts,tsx}",
+      "src/**/*.test.{ts,tsx}",
     ],
     coverage: {
       provider: "v8",
       reporter: ["text", "lcov"],
     },
+    css: false,
   },
 });
 

@@ -36,7 +36,8 @@
       "Bash(if [ -f \"/Users/abdout/hogwarts/src/app/[lang]/s/[subdomain]/(platform)/$route/page.tsx\" ])",
       "Bash([ ! -f \"/Users/abdout/hogwarts/src/app/[lang]/s/[subdomain]/(platform)/$route/error.tsx\" ])",
       "mcp__shadcn__search_items_in_registries",
-      "WebFetch(domain:www.eldoraui.site)"
+      "WebFetch(domain:www.eldoraui.site)",
+      "mcp__ref__ref_read_url"
     ],
     "deny": [],
     "ask": []
