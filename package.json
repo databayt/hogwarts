@@ -35,6 +35,8 @@
     "@iconify/react": "^6.0.0",
     "@langchain/openai": "^1.0.0",
     "@langchain/textsplitters": "^1.0.0",
+    "@mdi/js": "^7.4.47",
+    "@mdi/react": "^1.6.1",
     "@mdx-js/loader": "^3.1.0",
     "@mdx-js/react": "^3.1.0",
     "@neondatabase/api-client": "^2.2.0",

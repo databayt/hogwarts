@@ -5,21 +5,22 @@ description: "Complete guide to internationalization with Arabic (RTL) and Engli
 
 ## Overview
 
-This application provides full internationalization support with Arabic (RTL) as a first-class citizen alongside English (LTR). The platform respects user preferences with intelligent locale detection and persistence.
+This application provides full internationalization support with Arabic (RTL) as the default language alongside English (LTR). The system handles both **static UI translations** and **bilingual user-generated content**.
 
 ### Supported Languages
 
-| Locale | Name | Direction | Flag | Currency |
-|--------|------|-----------|------|----------|
-| `en` | English | LTR | US | USD |
-| `ar` | Arabic | RTL | SA | SAR |
+| Locale | Name | Direction | Flag | Currency | Default |
+|--------|------|-----------|------|----------|---------|
+| `ar` | Arabic | RTL | SA | SAR | Yes |
+| `en` | English | LTR | US | USD | No |
 
-### Architecture
+### Key Features
 
-- **URL-based routing**: `/[lang]/path` (e.g., `/en/dashboard`, `/ar/dashboard`)
-- **Locale detection**: Accept-Language header with cookie persistence
+- **URL-based routing**: `/[lang]/path` (e.g., `/ar/dashboard`, `/en/dashboard`)
+- **Bilingual content**: Separate fields for Arabic/English user content
+- **Logical CSS properties**: `ms-`, `me-`, `ps-`, `pe-` for auto-mirroring
 - **Direction switching**: `dir` attribute on `<html>` element
-- **Translation system**: JSON dictionaries with async loading
+- **Smart fallbacks**: Falls back to available language if preferred is empty
 
 ---
 
@@ -28,11 +29,12 @@ This application provides full internationalization support with Arabic (RTL) as
 ### Server Components
 
 ```tsx
-import { getDictionary } from "@/components/local/dictionaries";
-import type { Locale } from "@/components/local/config";
+import { getDictionary } from "@/components/internationalization/dictionaries";
+import type { Locale } from "@/components/internationalization/config";
 
 export default async function Page({ params }: { params: { lang: string } }) {
-  const dictionary = await getDictionary(params.lang as Locale);
+  const { lang } = await params;
+  const dictionary = await getDictionary(lang as Locale);
 
   return (
     <div>
@@ -47,13 +49,13 @@ export default async function Page({ params }: { params: { lang: string } }) {
 
 ```tsx
 "use client";
-import { useLocale } from "@/components/local/use-locale";
+import { useLocale } from "@/components/internationalization/use-locale";
 
 export function LocaleIndicator() {
   const { locale, isRTL, localeConfig } = useLocale();
 
   return (
-    <span className={isRTL ? "text-right" : "text-left"}>
+    <span className={isRTL ? "text-end" : "text-start"}>
       {localeConfig.flag} {localeConfig.nativeName}
     </span>
   );
@@ -62,15 +64,149 @@ export function LocaleIndicator() {
 
 ---
 
+## Bilingual User Content
+
+For user-generated content (announcements, notifications, etc.), use separate fields for each language.
+
+### Pattern 1: Dual Database Fields
+
+**Prisma Schema:**
+```prisma
+model Announcement {
+  id       String @id @default(cuid())
+  schoolId String
+
+  // Bilingual content fields
+  titleEn  String?
+  titleAr  String?
+  bodyEn   String? @db.Text
+  bodyAr   String? @db.Text
+
+  // ... other fields
+}
+```
+
+**Usage in Components:**
+```tsx
+import { getLocalizedText } from "@/lib/i18n-content";
+import type { Locale } from "@/components/internationalization/config";
+
+interface Props {
+  announcement: {
+    titleEn: string | null;
+    titleAr: string | null;
+    bodyEn: string | null;
+    bodyAr: string | null;
+  };
+  lang: Locale;
+}
+
+export function AnnouncementCard({ announcement, lang }: Props) {
+  const title = getLocalizedText(lang, announcement.titleEn, announcement.titleAr);
+  const body = getLocalizedText(lang, announcement.bodyEn, announcement.bodyAr);
+
+  return (
+    <article>
+      <h2>{title}</h2>
+      <p>{body}</p>
+    </article>
+  );
+}
+```
+
+### Pattern 2: JSON Storage
+
+**Prisma Schema:**
+```prisma
+model Notification {
+  id      String @id @default(cuid())
+  // Store as JSON: { "en": "...", "ar": "..." }
+  title   Json
+  message Json
+}
+```
+
+**Usage:**
+```tsx
+import { getLocalizedFromJSON } from "@/lib/i18n-content";
+
+const title = getLocalizedFromJSON(lang, notification.title);
+```
+
+### Bilingual Form Pattern
+
+```tsx
+"use client";
+import { useForm } from "react-hook-form";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+interface BilingualFormData {
+  titleEn: string;
+  titleAr: string;
+  bodyEn: string;
+  bodyAr: string;
+}
+
+export function BilingualContentForm() {
+  const form = useForm<BilingualFormData>();
+
+  return (
+    <Tabs defaultValue="ar">
+      <TabsList>
+        <TabsTrigger value="ar">العربية</TabsTrigger>
+        <TabsTrigger value="en">English</TabsTrigger>
+      </TabsList>
+
+      <TabsContent value="ar" dir="rtl">
+        <Input {...form.register("titleAr")} placeholder="العنوان" />
+        <Textarea {...form.register("bodyAr")} placeholder="المحتوى" />
+      </TabsContent>
+
+      <TabsContent value="en" dir="ltr">
+        <Input {...form.register("titleEn")} placeholder="Title" />
+        <Textarea {...form.register("bodyEn")} placeholder="Content" />
+      </TabsContent>
+    </Tabs>
+  );
+}
+```
+
+### i18n Content Utilities
+
+Location: `src/lib/i18n-content.ts`
+
+```ts
+import { getLocalizedText, getLocalizedFromObject, getLocalizedFromJSON } from "@/lib/i18n-content";
+
+// From dual fields
+const title = getLocalizedText(locale, item.titleEn, item.titleAr);
+
+// From BilingualText object
+const text = getLocalizedFromObject(locale, { en: "Hello", ar: "مرحبا" });
+
+// From JSON database field
+const message = getLocalizedFromJSON(locale, dbField);
+
+// Check completion status
+import { getBilingualStatus } from "@/lib/i18n-content";
+const { complete, missingEn, missingAr } = getBilingualStatus(item.title);
+
+// Convert legacy content during migration
+import { convertToBilingual, detectLanguage } from "@/lib/i18n-content";
+const bilingual = convertToBilingual("مرحبا بالعالم"); // { en: "", ar: "مرحبا بالعالم" }
+```
+
+---
+
 ## Configuration
 
 ### Locale Config
 
-Location: `src/components/local/config.ts`
+Location: `src/components/internationalization/config.ts`
 
 ```ts
 export const i18n = {
-  defaultLocale: 'en',
+  defaultLocale: 'ar',
   locales: ['en', 'ar'],
 } as const;
 
@@ -81,15 +217,15 @@ export const localeConfig = {
     name: 'English',
     nativeName: 'English',
     dir: 'ltr',
-    flag: 'US',
+    flag: '🇺🇸',
     dateFormat: 'MM/dd/yyyy',
     currency: 'USD',
   },
   'ar': {
     name: 'Arabic',
-    nativeName: 'Arabic',
+    nativeName: 'العربية',
     dir: 'rtl',
-    flag: 'SA',
+    flag: '🇸🇦',
     dateFormat: 'dd/MM/yyyy',
     currency: 'SAR',
   },
@@ -106,189 +242,95 @@ export function isRTL(locale: Locale): boolean {
 
 ### Loading Dictionaries
 
-Location: `src/components/local/dictionaries.ts`
+Location: `src/components/internationalization/dictionaries.ts`
+
+The system uses **route-specific dictionary loaders** for optimized bundle sizes:
 
 ```ts
-import "server-only";
-import type { Locale } from "./config";
+// Marketing pages - lightweight
+import { getMarketingDictionary } from "@/components/internationalization/dictionaries";
 
-const dictionaries = {
-  "en": () => import("./en.json").then((module) => module.default),
-  "ar": () => import("./ar.json").then((module) => module.default),
-} as const;
+// Platform core - general + school + operator
+import { getPlatformCoreDictionary } from "@/components/internationalization/dictionaries";
 
-export const getDictionary = async (locale: Locale) => {
-  try {
-    return await (dictionaries[locale]?.() ?? dictionaries["en"]());
-  } catch (error) {
-    console.warn(`Failed to load dictionary for locale: ${locale}`);
-    return await dictionaries["en"]();
-  }
-};
+// Finance pages - includes finance module
+import { getFinanceDictionary } from "@/components/internationalization/dictionaries";
 
-export type Dictionary = Awaited<ReturnType<typeof getDictionary>>;
+// Full dictionary - all translations (use sparingly)
+import { getDictionary } from "@/components/internationalization/dictionaries";
 ```
 
-### Translation Files
+### Translation Files Structure
 
-Location: `src/components/local/en.json` and `src/components/local/ar.json`
-
-```json
-{
-  "metadata": {
-    "title": "App Title",
-    "description": "App Description"
-  },
-  "common": {
-    "loading": "Loading...",
-    "home": "Home",
-    "language": "Language"
-  },
-  "navigation": {
-    "docs": "Docs",
-    "atoms": "Atoms"
-  }
-}
+```
+src/components/internationalization/
+├── config.ts              # Locale config, types
+├── dictionaries.ts        # Dictionary loaders
+├── use-locale.ts          # Client hooks
+├── use-dictionary.ts      # Dictionary hook
+├── language-switcher.tsx  # UI component
+├── en.json                # General English
+├── ar.json                # General Arabic
+├── school-en.json         # School module (English)
+├── school-ar.json         # School module (Arabic)
+├── operator-en.json       # Operator module
+├── operator-ar.json
+└── dictionaries/
+    ├── en/
+    │   ├── finance.json
+    │   ├── library.json
+    │   └── ...
+    └── ar/
+        ├── finance.json
+        ├── library.json
+        └── ...
 ```
 
 ### Type-Safe Usage
 
 ```tsx
-import type { Dictionary } from "@/components/local/dictionaries";
+import type { Dictionary } from "@/components/internationalization/dictionaries";
 
 interface Props {
-  dictionary: Dictionary;
+  dictionary: Dictionary['school'];
 }
 
-export function Header({ dictionary }: Props) {
-  return <nav>{dictionary.navigation.docs}</nav>;
+export function StudentList({ dictionary }: Props) {
+  return <h1>{dictionary.students.title}</h1>;
 }
 ```
 
 ---
 
-## Middleware & Routing
+## RTL Support with Logical Properties
 
-### Locale Detection Flow
+### CSS Logical Properties (Preferred)
 
-Location: `src/components/local/middleware.ts`
+Always use **logical CSS properties** instead of physical directions. These automatically adapt to RTL/LTR:
 
-1. Check `NEXT_LOCALE` cookie for user preference
-2. Parse `Accept-Language` header using `negotiator`
-3. Match against supported locales using `@formatjs/intl-localematcher`
-4. Redirect to localized URL if needed
-5. Set cookie for future visits (1 year expiry)
+| Physical (Avoid) | Logical (Use) | Description |
+|------------------|---------------|-------------|
+| `ml-*` | `ms-*` | Margin inline-start |
+| `mr-*` | `me-*` | Margin inline-end |
+| `pl-*` | `ps-*` | Padding inline-start |
+| `pr-*` | `pe-*` | Padding inline-end |
+| `left-*` | `start-*` | Position start |
+| `right-*` | `end-*` | Position end |
+| `text-left` | `text-start` | Text alignment start |
+| `text-right` | `text-end` | Text alignment end |
+| `border-l-*` | `border-s-*` | Border start |
+| `border-r-*` | `border-e-*` | Border end |
+| `rounded-l-*` | `rounded-s-*` | Border radius start |
+| `rounded-r-*` | `rounded-e-*` | Border radius end |
 
-```ts
-import { match } from '@formatjs/intl-localematcher';
-import Negotiator from 'negotiator';
-import { type NextRequest, NextResponse } from 'next/server';
-import { i18n } from './config';
-
-function getLocale(request: NextRequest) {
-  // 1. Check cookie first
-  const cookieLocale = request.cookies.get('NEXT_LOCALE')?.value;
-  if (cookieLocale && i18n.locales.includes(cookieLocale as any)) {
-    return cookieLocale;
-  }
-
-  // 2. Parse Accept-Language header
-  const headers = {
-    'accept-language': request.headers.get('accept-language') ?? '',
-  };
-  const languages = new Negotiator({ headers }).languages();
-
-  // 3. Match against supported locales
-  return match(languages, i18n.locales, i18n.defaultLocale);
-}
-
-export function localizationMiddleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
-
-  // Check if pathname already has a locale
-  const pathnameHasLocale = i18n.locales.some(
-    (locale) => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`
-  );
-
-  if (pathnameHasLocale) return NextResponse.next();
-
-  // Redirect to localized URL
-  const locale = getLocale(request);
-  request.nextUrl.pathname = `/${locale}${pathname}`;
-
-  const response = NextResponse.redirect(request.nextUrl);
-  response.cookies.set('NEXT_LOCALE', locale, {
-    maxAge: 365 * 24 * 60 * 60, // 1 year
-    sameSite: 'lax',
-    secure: process.env.NODE_ENV === 'production',
-  });
-
-  return response;
-}
-```
-
-### Dependencies
-
-```bash
-pnpm add @formatjs/intl-localematcher negotiator
-pnpm add -D @types/negotiator
-```
-
----
-
-## Client-Side Hooks
-
-Location: `src/components/local/use-locale.ts`
-
-### useLocale Hook
-
-Returns current locale information and RTL status.
-
+**Example:**
 ```tsx
-"use client";
-import { useLocale } from "@/components/local/use-locale";
+// ❌ Wrong - physical properties don't adapt
+<div className="ml-4 pr-2 text-left border-l-2">
 
-export function MyComponent() {
-  const { locale, isRTL, localeConfig } = useLocale();
-
-  return (
-    <div dir={isRTL ? 'rtl' : 'ltr'}>
-      <p>Current: {localeConfig.nativeName}</p>
-      <p>Direction: {localeConfig.dir}</p>
-      <p>Currency: {localeConfig.currency}</p>
-    </div>
-  );
-}
+// ✅ Correct - logical properties adapt to RTL/LTR
+<div className="ms-4 pe-2 text-start border-s-2">
 ```
-
-### useSwitchLocaleHref Hook
-
-Generates URLs for switching between locales.
-
-```tsx
-"use client";
-import { useSwitchLocaleHref } from "@/components/local/use-locale";
-import { i18n, localeConfig } from "@/components/local/config";
-import Link from "next/link";
-
-export function LanguageSwitcher() {
-  const switchLocaleHref = useSwitchLocaleHref();
-
-  return (
-    <nav className="flex gap-2">
-      {i18n.locales.map((locale) => (
-        <Link key={locale} href={switchLocaleHref(locale)}>
-          {localeConfig[locale].flag} {localeConfig[locale].nativeName}
-        </Link>
-      ))}
-    </nav>
-  );
-}
-```
-
----
-
-## RTL Support
 
 ### Layout Integration
 
@@ -296,7 +338,7 @@ The root layout sets direction based on locale:
 
 ```tsx
 // src/app/[lang]/layout.tsx
-import { localeConfig, type Locale } from "@/components/local/config";
+import { localeConfig, type Locale } from "@/components/internationalization/config";
 
 export default async function RootLayout({
   children,
@@ -316,379 +358,135 @@ export default async function RootLayout({
 }
 ```
 
-### RTL Utility Classes
+### When to Use `rtl:` Variants
 
-Location: `src/styles/rtl.css`
+Only use `rtl:` variants for cases that **cannot** be solved with logical properties:
 
-#### Layout Utilities
+```tsx
+// Flex direction reversal (no logical equivalent)
+<div className="flex flex-row rtl:flex-row-reverse">
 
-| Class | Description |
-|-------|-------------|
-| `rtl:flex-row-reverse` | Reverse flex direction |
-| `rtl:space-x-reverse` | Reverse horizontal spacing |
-| `rtl:space-y-reverse` | Reverse vertical spacing |
+// Icon mirroring for directional icons
+<ChevronRight className="rtl:scale-x-[-1]" />
 
-#### Margin & Padding
+// Space reversal in flex
+<div className="flex space-x-2 rtl:space-x-reverse">
+```
 
-| Class | Description |
-|-------|-------------|
-| `rtl:ml-auto` | Auto left margin |
-| `rtl:mr-auto` | Auto right margin |
-| `rtl:ml-0` | Zero left margin |
-| `rtl:mr-0` | Zero right margin |
-| `rtl:pl-0` | Zero left padding |
-| `rtl:pr-0` | Zero right padding |
+---
 
-#### Text Alignment
+## Client-Side Hooks
 
-| Class | Description |
-|-------|-------------|
-| `rtl:text-right` | Align text right |
-| `rtl:text-left` | Align text left |
+### useLocale Hook
 
-#### Positioning
+```tsx
+"use client";
+import { useLocale } from "@/components/internationalization/use-locale";
 
-| Class | Description |
-|-------|-------------|
-| `rtl:left-auto` | Auto left position |
-| `rtl:right-auto` | Auto right position |
-| `rtl:left-0` | Left position 0 |
-| `rtl:right-0` | Right position 0 |
+export function MyComponent() {
+  const { locale, isRTL, localeConfig } = useLocale();
 
-#### Transform
-
-| Class | Description |
-|-------|-------------|
-| `rtl:scale-x-[-1]` | Mirror horizontally |
-
-#### Border Radius
-
-| Class | Description |
-|-------|-------------|
-| `rtl:rounded-l-none` | No left border radius |
-| `rtl:rounded-r-none` | No right border radius |
-| `rtl:rounded-tl-none` | No top-left radius |
-| `rtl:rounded-tr-none` | No top-right radius |
-| `rtl:rounded-bl-none` | No bottom-left radius |
-| `rtl:rounded-br-none` | No bottom-right radius |
-
-#### Borders
-
-| Class | Description |
-|-------|-------------|
-| `rtl:border-l-0` | No left border |
-| `rtl:border-r-0` | No right border |
-| `rtl:border-l` | Add left border |
-| `rtl:border-r` | Add right border |
-
-### Component RTL Classes
-
-Pre-built RTL support for common components:
-
-#### Cards & Navigation
-
-| Class | Description |
-|-------|-------------|
-| `.card-rtl` | RTL card alignment |
-| `.card-header-rtl` | RTL card header |
-| `.card-content-rtl` | RTL card content |
-| `.nav-rtl` | RTL navigation |
-| `.nav-item-rtl` | RTL nav item |
-
-#### Forms
-
-| Class | Description |
-|-------|-------------|
-| `.form-rtl` | RTL form alignment |
-| `.form-label-rtl` | RTL form labels |
-| `.form-input-rtl` | RTL form inputs |
-| `.form-checkbox-rtl` | RTL checkboxes |
-| `.btn-group-rtl` | RTL button groups |
-
-#### Layout Components
-
-| Class | Description |
-|-------|-------------|
-| `.modal-rtl` | RTL modal |
-| `.modal-header-rtl` | RTL modal header |
-| `.modal-close-rtl` | RTL modal close button |
-| `.sidebar-rtl` | RTL sidebar |
-| `.sidebar-item-rtl` | RTL sidebar items |
-| `.dropdown-rtl` | RTL dropdown |
-
-#### Data Display
-
-| Class | Description |
-|-------|-------------|
-| `.table-rtl` | RTL table alignment |
-| `.table-header-rtl` | RTL table headers |
-| `.table-cell-rtl` | RTL table cells |
-| `.avatar-group-rtl` | RTL avatar groups |
-
-#### Navigation Components
-
-| Class | Description |
-|-------|-------------|
-| `.breadcrumb-rtl` | RTL breadcrumbs |
-| `.breadcrumb-separator-rtl` | RTL breadcrumb separators |
-| `.pagination-rtl` | RTL pagination |
-| `.pagination-prev-rtl` | RTL previous button |
-| `.pagination-next-rtl` | RTL next button |
-| `.tabs-rtl` | RTL tabs |
-| `.tab-content-rtl` | RTL tab content |
-
-#### Interactive Components
-
-| Class | Description |
-|-------|-------------|
-| `.accordion-rtl` | RTL accordion |
-| `.accordion-trigger-rtl` | RTL accordion triggers |
-| `.accordion-icon-rtl` | RTL accordion icons |
-| `.select-rtl` | RTL select |
-| `.select-trigger-rtl` | RTL select trigger |
-| `.select-icon-rtl` | RTL select icon |
-| `.command-rtl` | RTL command palette |
-| `.command-input-rtl` | RTL command input |
-| `.command-shortcut-rtl` | RTL command shortcuts |
-
-#### Date & Calendar
-
-| Class | Description |
-|-------|-------------|
-| `.datepicker-rtl` | RTL date picker |
-| `.datepicker-header-rtl` | RTL datepicker header |
-| `.datepicker-nav-rtl` | RTL datepicker navigation |
-| `.calendar-rtl` | RTL calendar |
-| `.calendar-header-rtl` | RTL calendar header |
-| `.calendar-nav-rtl` | RTL calendar navigation |
-| `.calendar-grid-rtl` | RTL calendar grid |
-
-#### Other Components
-
-| Class | Description |
-|-------|-------------|
-| `.toast-rtl` | RTL toast notifications |
-| `.toast-close-rtl` | RTL toast close button |
-| `.progress-rtl` | RTL progress bar |
-| `.sheet-rtl[data-side="right"]` | RTL right sheet |
-| `.sheet-rtl[data-side="left"]` | RTL left sheet |
-| `.scrollbar-rtl` | RTL scrollbar |
-| `.menu-rtl` | RTL menu |
-| `.menu-item-rtl` | RTL menu items |
-| `.menu-shortcut-rtl` | RTL menu shortcuts |
-| `.menu-submenu-rtl` | RTL submenus |
-
-### RTL Animations
-
-| Class | Description |
-|-------|-------------|
-| `rtl:animate-slide-in-right` | Slide in from right |
-| `rtl:animate-slide-out-right` | Slide out to right |
-| `rtl:hover:translate-x-2` | Hover translate right |
-| `rtl:hover:translate-x-[-2]` | Hover translate left |
-| `rtl:focus:translate-x-1` | Focus translate |
-| `rtl:group-hover:translate-x-2` | Group hover translate |
-
-### CSS Logical Properties
-
-Prefer logical properties for automatic RTL support without extra classes:
-
-```css
-/* Instead of: */
-.element {
-  margin-left: 1rem;
-  padding-right: 2rem;
-}
-
-/* Use: */
-.element {
-  margin-inline-start: 1rem;
-  padding-inline-end: 2rem;
+  return (
+    <div dir={isRTL ? 'rtl' : 'ltr'}>
+      <p>Current: {localeConfig.nativeName}</p>
+      <p>Direction: {localeConfig.dir}</p>
+    </div>
+  );
 }
 ```
 
-Available logical properties in `src/styles/container.css`:
+### useDictionary Hook
 
-```css
-.layout-container {
-  padding-inline: var(--container-padding);
+```tsx
+"use client";
+import { useDictionary } from "@/components/internationalization/use-dictionary";
+
+export function ClientComponent() {
+  const { dictionary, isLoading } = useDictionary();
+
+  if (isLoading) return <Spinner />;
+
+  return <h1>{dictionary?.common.welcome}</h1>;
 }
+```
 
-.ps-responsive {
-  padding-inline-start: var(--container-padding);
-}
+### useSwitchLocaleHref Hook
 
-.pe-responsive {
-  padding-inline-end: var(--container-padding);
-}
+```tsx
+"use client";
+import { useSwitchLocaleHref } from "@/components/internationalization/use-locale";
+import Link from "next/link";
 
-.ms-responsive {
-  margin-inline-start: 2rem;
-}
+export function LanguageSwitcher() {
+  const switchLocaleHref = useSwitchLocaleHref();
 
-.me-responsive {
-  margin-inline-end: 2rem;
+  return (
+    <nav className="flex gap-2">
+      <Link href={switchLocaleHref("ar")}>العربية</Link>
+      <Link href={switchLocaleHref("en")}>English</Link>
+    </nav>
+  );
 }
 ```
 
 ---
 
-## Arabic Utilities
-
-Location: `src/lib/arabic-utils.ts`
-
-### Number Conversion
-
-```ts
-import { toArabicNumerals, toEnglishNumerals } from "@/lib/arabic-utils";
-
-// Convert to Arabic-Indic numerals
-toArabicNumerals("123")     // "١٢٣"
-toArabicNumerals("2024")    // "٢٠٢٤"
-
-// Convert back to Western numerals
-toEnglishNumerals("١٢٣")    // "123"
-```
+## Arabic Number & Date Formatting
 
 ### Number Formatting
 
-```ts
-import { formatArabicNumber, formatArabicPercentage } from "@/lib/arabic-utils";
+```tsx
+// Format with locale-aware separators
+const formatter = new Intl.NumberFormat(locale, {
+  style: 'decimal',
+  maximumFractionDigits: 2,
+});
+formatter.format(1234567); // ar: "١٬٢٣٤٬٥٦٧" | en: "1,234,567"
 
-// Format with Arabic thousands separators
-formatArabicNumber(1234567)          // "١٬٢٣٤٬٥٦٧"
-
-// Format percentage
-formatArabicPercentage(75)           // "٧٥٫٠٪"
-formatArabicPercentage(99.5, 2)      // "٩٩٫٥٠٪"
+// Currency formatting
+const currencyFormatter = new Intl.NumberFormat(locale, {
+  style: 'currency',
+  currency: locale === 'ar' ? 'SAR' : 'USD',
+});
+currencyFormatter.format(99.99); // ar: "٩٩٫٩٩ ر.س" | en: "$99.99"
 ```
 
-### Currency Formatting
+### Date Formatting
 
-```ts
-import { formatArabicCurrency } from "@/lib/arabic-utils";
-
-formatArabicCurrency(1500)           // "١٬٥٠٠٫٠٠ ر.س"
-formatArabicCurrency(99.99)          // "٩٩٫٩٩ ر.س"
-```
-
-### Date & Time Formatting
-
-```ts
-import { formatArabicDate, formatArabicRelativeTime } from "@/lib/arabic-utils";
-
-// Full date format
-formatArabicDate(new Date())         // "٢٧ نوفمبر ٢٠٢٥"
+```tsx
+const dateFormatter = new Intl.DateTimeFormat(locale, {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+});
+dateFormatter.format(new Date()); // ar: "١ ديسمبر ٢٠٢٥" | en: "December 1, 2025"
 
 // Relative time
-formatArabicRelativeTime(pastDate)   // "منذ يومين"
-formatArabicRelativeTime(futureDate) // "خلال ٣ أيام"
-```
-
-### File Size Formatting
-
-```ts
-import { formatArabicFileSize } from "@/lib/arabic-utils";
-
-formatArabicFileSize(1024)           // "١ كيلوبايت"
-formatArabicFileSize(5242880)        // "٥٫٠ ميجابايت"
-formatArabicFileSize(1073741824)     // "١٫٠ جيجابايت"
+const relativeFormatter = new Intl.RelativeTimeFormat(locale, {
+  numeric: 'auto',
+});
+relativeFormatter.format(-2, 'day'); // ar: "منذ يومين" | en: "2 days ago"
 ```
 
 ### Arabic Pluralization
 
-Arabic has three plural forms: singular, dual (exactly 2), and plural (3+).
+Arabic has three plural forms: singular (1), dual (2), and plural (3+).
 
-```ts
-import { arabicPlural } from "@/lib/arabic-utils";
-
-arabicPlural(1, "طالب", "طالبان", "طلاب")  // "طالب" (singular)
-arabicPlural(2, "طالب", "طالبان", "طلاب")  // "طالبان" (dual)
-arabicPlural(5, "طالب", "طالبان", "طلاب")  // "طلاب" (plural)
-
-// Common examples
-arabicPlural(count, "يوم", "يومان", "أيام")     // day/days
-arabicPlural(count, "ملف", "ملفان", "ملفات")   // file/files
-arabicPlural(count, "رسالة", "رسالتان", "رسائل") // message/messages
-```
-
-### Text Direction Detection
-
-```ts
-import { getTextDirection } from "@/lib/arabic-utils";
-
-getTextDirection("Hello World")      // "ltr"
-getTextDirection("مرحبا")            // "rtl"
-getTextDirection("Hello مرحبا")      // "rtl" (Arabic detected)
-```
-
-### RTL CSS Classes
-
-```ts
-import { getRTLClasses } from "@/lib/arabic-utils";
-
-getRTLClasses(true)   // "rtl:text-right rtl:space-x-reverse rtl:ml-auto rtl:mr-0"
-getRTLClasses(false)  // ""
-```
-
-### Arabic Typography
-
-```ts
-import { ARABIC_TYPOGRAPHY_VARS, applyArabicTypography } from "@/lib/arabic-utils";
-
-// CSS custom properties
-ARABIC_TYPOGRAPHY_VARS = {
-  '--font-arabic': '"Noto Sans Arabic", "Amiri", "Scheherazade New", sans-serif',
-  '--font-arabic-display': '"Amiri", "Scheherazade New", serif',
-  '--line-height-arabic': '1.8',
-  '--letter-spacing-arabic': '0.02em'
+```tsx
+function arabicPlural(
+  count: number,
+  singular: string,
+  dual: string,
+  plural: string
+): string {
+  if (count === 1) return singular;
+  if (count === 2) return dual;
+  return plural;
 }
 
-// Apply to DOM element
-applyArabicTypography(element);
-```
-
-### Locale Check
-
-```ts
-import { isArabicLocale } from "@/lib/arabic-utils";
-
-isArabicLocale("ar")     // true
-isArabicLocale("ar-SA")  // true
-isArabicLocale("en")     // false
-```
-
-### Locale-Aware Formatters
-
-Get all formatters for a locale at once:
-
-```ts
-import { getLocaleFormatters } from "@/lib/arabic-utils";
-
-const formatters = getLocaleFormatters("ar");
-
-formatters.formatNumber(1234)          // "١٬٢٣٤"
-formatters.formatCurrency(99.99)       // "٩٩٫٩٩ ر.س"
-formatters.formatPercentage(75)        // "٧٥٫٠٪"
-formatters.formatDate(new Date())      // "٢٧ نوفمبر ٢٠٢٥"
-formatters.formatRelativeTime(date)    // "منذ يومين"
-formatters.isRTL                       // true
-formatters.textDirection               // "rtl"
-
-// English formatters
-const enFormatters = getLocaleFormatters("en");
-enFormatters.formatNumber(1234)        // "1,234"
-enFormatters.isRTL                     // false
-```
-
-### HTML Escaping
-
-```ts
-import { escapeArabicHTML } from "@/lib/arabic-utils";
-
-// Safe for HTML rendering
-escapeArabicHTML("<script>مرحبا</script>")
-// "&lt;script&gt;مرحبا&lt;/script&gt;"
+// Usage
+arabicPlural(count, "طالب", "طالبان", "طلاب");  // student/students
+arabicPlural(count, "يوم", "يومان", "أيام");     // day/days
 ```
 
 ---
@@ -697,32 +495,84 @@ escapeArabicHTML("<script>مرحبا</script>")
 
 ### UI Guidelines
 
-- Use logical CSS properties (`margin-inline`, `padding-inline`) where possible
-- Icons and arrows must mirror for RTL when directional
-- Numbers remain Western Arabic numerals unless explicitly localized
-- Test all flows in both ar/en
+1. **Use logical properties** - `ms-`, `me-`, `ps-`, `pe-` instead of `ml-`, `mr-`, etc.
+2. **Mirror directional icons** - Arrows and chevrons should flip in RTL
+3. **Test both languages** - Always verify layouts in ar and en
+4. **Numbers stay Western** - Unless explicitly localized for display
 
-### Typography & Fonts
+### Content Guidelines
 
-- Use Arabic-friendly fonts (Rubik for this project)
-- Verify line-height (1.8 recommended for Arabic)
-- Test letter-spacing for Arabic script
+1. **Avoid string concatenation** - Use full-sentence translations
+2. **Provide both languages** - Mark incomplete translations clearly
+3. **Use bilingual forms** - Tab-based input for ar/en content
+4. **Validate completeness** - Show warnings for missing translations
 
-### Translation Keys
+### Typography
 
-- Keep translations collocated by feature
-- Avoid concatenating strings; prefer full-sentence translations
-- Validate translation keys at build time
+- **Arabic font**: Tajawal (system default)
+- **English font**: Inter
+- **Line height**: 1.8 recommended for Arabic
+- **No font-size hardcoding** - Use semantic HTML (h1-h6, p, small)
 
 ### Testing Checklist
 
-- [ ] All primary flows tested in ar/en
-- [ ] Layouts verified under RTL mirroring
-- [ ] Icons and arrows flip correctly
-- [ ] Screen readers handle language and direction
-- [ ] Dates/numbers/currency localized
-- [ ] Keyboard navigation works in mirrored layouts
-- [ ] No text overflow or truncation issues
+- [ ] All flows tested in ar/en
+- [ ] Logical properties used (no `ml-*`, `mr-*`, etc.)
+- [ ] Icons mirror correctly
+- [ ] Dates/numbers localized
+- [ ] Screen readers handle language
+- [ ] Keyboard navigation works
+- [ ] No text overflow
+
+---
+
+## Migration Guide
+
+### Converting Legacy Content
+
+```ts
+import { convertToBilingual, detectLanguage } from "@/lib/i18n-content";
+
+// Migrate existing single-field content
+async function migrateAnnouncements() {
+  const announcements = await db.announcement.findMany();
+
+  for (const ann of announcements) {
+    const lang = detectLanguage(ann.title);
+    const titleBilingual = convertToBilingual(ann.title, lang);
+    const bodyBilingual = convertToBilingual(ann.body, lang);
+
+    await db.announcement.update({
+      where: { id: ann.id },
+      data: {
+        titleEn: titleBilingual.en,
+        titleAr: titleBilingual.ar,
+        bodyEn: bodyBilingual.en,
+        bodyAr: bodyBilingual.ar,
+      },
+    });
+  }
+}
+```
+
+### Prisma Migration Example
+
+```sql
+-- Add bilingual fields
+ALTER TABLE "announcements" ADD COLUMN "titleEn" TEXT;
+ALTER TABLE "announcements" ADD COLUMN "titleAr" TEXT;
+ALTER TABLE "announcements" ADD COLUMN "bodyEn" TEXT;
+ALTER TABLE "announcements" ADD COLUMN "bodyAr" TEXT;
+
+-- Copy existing data (detect language and assign)
+UPDATE "announcements"
+SET "titleAr" = "title", "bodyAr" = "body"
+WHERE "title" ~ '[\u0600-\u06FF]';
+
+UPDATE "announcements"
+SET "titleEn" = "title", "bodyEn" = "body"
+WHERE "title" !~ '[\u0600-\u06FF]';
+```
 
 ---
 
@@ -730,18 +580,23 @@ escapeArabicHTML("<script>مرحبا</script>")
 
 ```
 src/
-  components/local/
-    config.ts          # Locale config, types, isRTL helper
-    dictionaries.ts    # Dictionary loader, Dictionary type
-    middleware.ts      # Locale detection & redirection
-    use-locale.ts      # Client hooks: useLocale, useSwitchLocaleHref
-    en.json            # English translations
-    ar.json            # Arabic translations
+  components/internationalization/
+    config.ts              # Locale config, types, isRTL helper
+    dictionaries.ts        # Dictionary loaders (route-specific)
+    use-locale.ts          # Client hooks: useLocale, useSwitchLocaleHref
+    use-dictionary.ts      # useDictionary hook
+    language-switcher.tsx  # Language switcher component
+    en.json                # General English translations
+    ar.json                # General Arabic translations
+    school-*.json          # School module translations
+    operator-*.json        # Operator module translations
+    dictionaries/          # Feature-specific translations
+      en/
+      ar/
   lib/
-    arabic-utils.ts    # Arabic formatting utilities (16 functions)
+    i18n-content.ts        # Bilingual content utilities
   styles/
-    rtl.css            # RTL utility classes (80+ classes)
-    container.css      # Logical property utilities
+    globals.css            # Base styles with logical properties
 ```
 
 ---
@@ -750,12 +605,12 @@ src/
 
 ### Internal
 
-- `src/components/local/README.md` - Detailed i18n standard documentation
+- `src/lib/i18n-content.ts` - Bilingual content utilities
+- `src/components/internationalization/` - Full i18n implementation
 
 ### External
 
 - [Next.js Internationalization](https://nextjs.org/docs/app/building-your-application/routing/internationalization)
-- [MDN DateTimeFormat](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/DateTimeFormat)
-- [MDN NumberFormat](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat)
+- [Tailwind CSS Logical Properties](https://tailwindcss.com/docs/margin#using-logical-properties)
+- [MDN CSS Logical Properties](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_logical_properties_and_values)
 - [W3C Authoring HTML & CSS for RTL](https://www.w3.org/International/techniques/authoring-html)
-- [Radix UI Direction (RTL)](https://www.radix-ui.com/primitives/docs/guides/rtl)

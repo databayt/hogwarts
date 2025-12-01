@@ -6,6 +6,7 @@ import { buttonVariants } from '../ui/button'
 import type { Dictionary } from '@/components/internationalization/dictionaries'
 import type { Locale } from '@/components/internationalization/config'
 import { env } from '@/env.mjs'
+import { HeroIllustration } from './hero-illustration'
 
 interface HeroProps {
   dictionary?: Dictionary
@@ -44,35 +45,50 @@ const Hero = ({ dictionary, lang }: HeroProps) => {
 
     return `${protocol}://demo.${baseDomain}/${lang || 'en'}`
   }
+
   return (
-    <section id="hero" className="h-[calc(100vh-3.5rem)] flex flex-col">
-      <div className="flex-1 flex flex-col items-center justify-center space-y-6">
-        <div className="flex flex-col items-center gap-4 text-center">
-          <Link
-            href={siteConfig.links.twitter}
-            className="rounded-2xl bg-muted px-4 py-1.5"
-            target="_blank"
-          >
-            <small>{heroDict.badge || "700+ School automated"}</small>
-          </Link>
-            <h1 className="font-heading font-extrabold text-3xl sm:text-5xl md:text-6xl lg:text-[90px]">
-            {heroDict.title}
-          </h1>
-          <p className="lead max-w-[48rem]">
-            {heroDict.subtitle}
-          </p>
-          <div className="flex flex-col sm:flex-row gap-3 sm:space-x-4 w-full sm:w-auto px-4 sm:px-0 max-w-[300px] sm:max-w-none mx-auto pt-2">
-            <Link href={`/${lang}/onboarding`} className={cn(buttonVariants({ size: "lg" }), "w-full sm:w-auto")}>
-              {heroDict.appointment}
-            </Link>
+    <section id="hero" className="min-h-[calc(100vh-3.5rem)] bg-background">
+      <div className="container mx-auto px-4 lg:px-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center min-h-[calc(100vh-3.5rem)]">
+          {/* Left: Content */}
+          <div className="space-y-6 py-12 lg:py-0">
             <Link
-              href={getDemoUrl()}
+              href={siteConfig.links.twitter}
+              className="rounded-2xl bg-muted px-4 py-1.5 inline-block hover:bg-muted/80 transition-colors"
               target="_blank"
-              rel="noreferrer"
-              className={cn(buttonVariants({ variant: "outline", size: "lg" }), "w-full sm:w-auto")}
             >
-              Live Demo
+              <small>{heroDict.badge || "700+ School automated"}</small>
             </Link>
+
+            <h1 className="font-heading font-extrabold text-4xl sm:text-5xl lg:text-6xl xl:text-7xl tracking-tight">
+              {heroDict.title}
+            </h1>
+
+            <p className="text-lg lg:text-xl text-muted-foreground max-w-xl">
+              {heroDict.subtitle}
+            </p>
+
+            <div className="flex flex-col sm:flex-row gap-3 pt-4">
+              <Link
+                href={`/${lang || 'en'}/onboarding`}
+                className={cn(buttonVariants({ size: "lg" }), "w-full sm:w-auto")}
+              >
+                {heroDict.appointment}
+              </Link>
+              <Link
+                href={getDemoUrl()}
+                target="_blank"
+                rel="noreferrer"
+                className={cn(buttonVariants({ variant: "outline", size: "lg" }), "w-full sm:w-auto")}
+              >
+                Live Demo
+              </Link>
+            </div>
+          </div>
+
+          {/* Right: Illustration - hidden on mobile/tablet for performance */}
+          <div className="hidden lg:flex justify-center lg:justify-end items-center">
+            <HeroIllustration />
           </div>
         </div>
       </div>

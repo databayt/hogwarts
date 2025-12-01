@@ -14,6 +14,7 @@ import StatsAreaChart from "./stats-area-chart"
 import StatsDashboard from "./stats-dashboard"
 import StatsUsage from "./stats-usage"
 import StatsSegmented from "./stats-segmented"
+import StatsWeather from "./stats-weather"
 
 interface StatsContentProps {
   dictionary: Awaited<ReturnType<typeof getDictionary>>
@@ -105,6 +106,12 @@ export default function StatsContent(_props: StatsContentProps) {
         <section>
           <h3 className="mb-4 text-lg font-medium">Stats Segmented (stats-13)</h3>
           <StatsSegmented />
+        </section>
+
+        {/* Stats 14: Weather */}
+        <section>
+          <h3 className="mb-4 text-lg font-medium">Stats Weather (stats-14)</h3>
+          <StatsWeather />
         </section>
       </div>
     </>
