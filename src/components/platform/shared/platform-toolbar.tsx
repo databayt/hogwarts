@@ -207,7 +207,7 @@ export function PlatformToolbar<TData>({
             type="button"
             variant="outline"
             size="icon"
-            className="h-8 w-8 rounded-full"
+            className="h-9 w-9 rounded-full"
             onClick={onCreate}
             aria-label={t.create}
             title={t.create}

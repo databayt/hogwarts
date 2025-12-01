@@ -53,7 +53,7 @@ export function ViewToggle({
             size={size}
             onClick={onToggle}
             className={cn(
-              size === "icon" && "h-8 w-8 p-0",
+              size === "icon" && "h-9 w-9 p-0",
               className
             )}
             aria-label={tooltipText}

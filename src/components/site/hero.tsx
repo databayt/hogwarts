@@ -2,7 +2,14 @@
 
 import { Button } from "@/components/ui/button";
 import { AnimatedButton } from "@/components/atom/animated-button";
+import { BlurInText } from "@/components/ui/blur-in-text";
+import { motion } from "motion/react";
 import Image from "next/image";
+
+const blurVariants = {
+  hidden: { filter: "blur(10px)", opacity: 0 },
+  visible: { filter: "blur(0px)", opacity: 1 },
+};
 
 export function Hero() {
   return (
@@ -26,13 +33,19 @@ export function Hero() {
                       <div className="flex items-center justify-center gap-2 mb-6">
             <Image src="/site/ball.png" alt="Hogwarts Logo" width={100} height={100} className="w-14 h-14 dark:invert"/>
           </div>
-            <h1 className="py-4">
-            Beautiful Mind, <br />
-            Curious. Wonder.
-          </h1>
-          <p className="pb-6">
-          The most magical part of the Harry Potter books, is that they eventually used the skills they learned at school
-          </p>
+            <BlurInText
+              text="Beautiful Mind, Curious. Wonder."
+              className="py-4 text-center"
+            />
+            <motion.p
+              initial="hidden"
+              animate="visible"
+              transition={{ duration: 1 }}
+              variants={blurVariants}
+              className="pb-6"
+            >
+              The most magical part of the Harry Potter books, is that they eventually used the skills they learned at school
+            </motion.p>
             <div className="flex flex-col sm:flex-row justify-center gap-4">
               <AnimatedButton 
                 size="lg" 
@@ -58,13 +71,19 @@ export function Hero() {
           <div className="flex items-center gap-2">
             <Image src="/site/ball.png" alt="Hogwarts Logo" width={100} height={100} className="w-14 h-14 dark:invert"/>
           </div>
-          <h1 className="py-4">
-            Beautiful Mind, <br />
-            Curious. Wonder.
-          </h1>
-          <p className="pb-6">
-          The most magical part of the Harry Potter books, is that <br /> they eventually used the skills they learned at school
-          </p>
+          <BlurInText
+            text="Beautiful Mind, Curious. Wonder."
+            className="py-4"
+          />
+          <motion.p
+            initial="hidden"
+            animate="visible"
+            transition={{ duration: 1 }}
+            variants={blurVariants}
+            className="pb-6"
+          >
+            The most magical part of the Harry Potter books, is that they eventually used the skills they learned at school
+          </motion.p>
           <div className="flex flex-row gap-4">
             <AnimatedButton 
               size="lg"

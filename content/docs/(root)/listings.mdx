@@ -49,24 +49,27 @@ components/platform/<feature>/
 
 ### PlatformToolbar
 
-The `PlatformToolbar` component provides a unified interface for all listings:
+The `PlatformToolbar` component provides a unified interface for all listings with a **compact inline layout**:
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│  [Search Input]  [Filters]  [Reset]  │  [View]  [Export]  [+]  │
-└─────────────────────────────────────────────────────────────────┘
-         Left Side                              Right Side
+┌────────────────────────────────────────────────────────────────────────────┐
+│  [Search]  [Scope ▾]  [Status ▾]  [Reset]  [⊞]  [↓]  [Filters ▾]  [+]     │
+└────────────────────────────────────────────────────────────────────────────┘
+     Search    Custom Filters    Reset   View Export ColFilters  Create
 ```
 
-**Left Side:**
-- Search input with icon
-- Table column filters (table view only)
-- Reset button (when filters active)
+**Layout:** All elements flow inline with consistent `gap-2` (8px) spacing.
 
-**Right Side:**
-- View toggle (Table/Grid)
-- Export CSV button
-- Create button (Plus icon)
+**Components (left to right):**
+- Search input with icon (`h-9`)
+- Custom filter dropdowns via `additionalActions` (`h-9`)
+- Reset button (when filters active) (`h-9`)
+- View toggle (Table/Grid) (`h-9`)
+- Export CSV button (`h-9`)
+- Column visibility toggle (table view only)
+- Create button (Plus icon) (`h-9`)
+
+**Height Consistency:** All toolbar elements use `h-9` (36px) for visual consistency.
 
 ### usePlatformData Hook
 
@@ -97,6 +100,127 @@ The `usePlatformView` hook manages view mode (table/grid):
 ```typescript
 const { view, toggleView } = usePlatformView({
   defaultView: "table"
+});
+```
+
+## Advanced Patterns
+
+### Debounced Search
+
+Use `useDeferredValue` for natural debouncing (~300ms) without manual timers:
+
+```typescript
+import { useDeferredValue, useState } from "react";
+
+// Search state with debouncing
+const [searchInput, setSearchInput] = useState("");
+const deferredSearch = useDeferredValue(searchInput);
+
+// Handle search (no manual debounce needed)
+const handleSearchChange = useCallback((value: string) => {
+  setSearchInput(value);
+}, []);
+
+// Use deferredSearch in data fetcher
+const { data } = usePlatformData({
+  fetcher: async (params) => {
+    const result = await getItems({
+      ...params,
+      title: deferredSearch || undefined,
+    });
+    return { rows: result.rows, total: result.total };
+  },
+  filters: deferredSearch ? { title: deferredSearch } : undefined,
+});
+```
+
+### Custom Filter Dropdowns
+
+Add entity-specific filters via `additionalActions`:
+
+```typescript
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+// Filter options
+const SCOPE_OPTIONS = [
+  { value: "all", label: "All Scopes" },
+  { value: "school", label: "School-wide" },
+  { value: "class", label: "Class-specific" },
+];
+
+const STATUS_OPTIONS = [
+  { value: "all", label: "All Status" },
+  { value: "published", label: "Published" },
+  { value: "draft", label: "Draft" },
+];
+
+// Filter state
+const [scopeFilter, setScopeFilter] = useState("all");
+const [statusFilter, setStatusFilter] = useState("all");
+
+// Filter dropdowns (h-9 for consistency with search)
+const filterDropdowns = (
+  <>
+    <Select value={scopeFilter} onValueChange={setScopeFilter}>
+      <SelectTrigger className="h-9 w-32">
+        <SelectValue placeholder="Scope" />
+      </SelectTrigger>
+      <SelectContent>
+        {SCOPE_OPTIONS.map((opt) => (
+          <SelectItem key={opt.value} value={opt.value}>
+            {opt.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+    <Select value={statusFilter} onValueChange={setStatusFilter}>
+      <SelectTrigger className="h-9 w-32">
+        <SelectValue placeholder="Status" />
+      </SelectTrigger>
+      <SelectContent>
+        {STATUS_OPTIONS.map((opt) => (
+          <SelectItem key={opt.value} value={opt.value}>
+            {opt.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  </>
+);
+
+// Use in PlatformToolbar
+<PlatformToolbar
+  // ... other props
+  additionalActions={filterDropdowns}
+/>
+```
+
+### Wiring Filters to Data Fetcher
+
+Combine search and filter state in the fetcher:
+
+```typescript
+// Build filters object
+const filters = useMemo(() => {
+  const f: Record<string, unknown> = {};
+  if (deferredSearch) f.title = deferredSearch;
+  if (scopeFilter !== "all") f.scope = scopeFilter;
+  if (statusFilter !== "all") f.status = statusFilter;
+  return Object.keys(f).length > 0 ? f : undefined;
+}, [deferredSearch, scopeFilter, statusFilter]);
+
+// Pass to usePlatformData
+const { data } = usePlatformData({
+  fetcher: async (params) => {
+    const result = await getItems({
+      ...params,
+      title: deferredSearch || undefined,
+      scope: scopeFilter !== "all" ? scopeFilter : undefined,
+      status: statusFilter !== "all" ? statusFilter : undefined,
+    });
+    return { rows: result.rows, total: result.total };
+  },
+  filters,
 });
 ```
 
@@ -541,7 +665,23 @@ The `PlatformToolbar` handles export automatically:
 
 ## Best Practices
 
-### 1. Always Use `onSuccess` Callback
+### 1. Toolbar Height Consistency
+
+All toolbar elements must use `h-9` (36px) for visual consistency:
+
+```typescript
+// ✅ CORRECT - consistent h-9 height
+<Input className="h-9 w-40 pl-8" />
+<SelectTrigger className="h-9 w-32" />
+<Button className="h-9" />
+<ViewToggle className="h-9 w-9" />
+
+// ❌ WRONG - inconsistent heights
+<Input className="h-8" />  // 32px
+<Button className="h-10" /> // 40px
+```
+
+### 2. Always Use `onSuccess` Callback
 
 ```typescript
 // In form component

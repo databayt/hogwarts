@@ -1,55 +1,17 @@
-/* Typography System - Aligned with reference/ui registry */
+/* Typography System - shadcn/ui Inline Utilities Approach
+ *
+ * This project uses INLINE utility classes for typography, not global element styles.
+ * Each component explicitly applies its own typography classes.
+ *
+ * Example usage:
+ *   <h1 className="scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl">
+ *   <p className="leading-7 [&:not(:first-child)]:mt-6">
+ *
+ * See: src/lib/typography.ts for reusable class constants
+ */
+
 @layer base {
-  /* Headings */
-  h1 {
-    @apply scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl;
-  }
-
-  h2 {
-    @apply scroll-m-20 text-4xl font-bold tracking-tight first:mt-0;
-  }
-
-  h3 {
-    @apply scroll-m-20 text-2xl font-semibold tracking-tight;
-  }
-
-  h4 {
-    @apply scroll-m-20 text-xl font-semibold tracking-tight;
-  }
-
-  h5 {
-    @apply scroll-m-20 text-sm font-semibold tracking-tight;
-  }
-
-  h6 {
-    @apply scroll-m-20 text-sm font-normal text-foreground/70 hover:text-foreground focus:text-foreground data-[active=true]:text-foreground transition-colors tracking-tight;
-  }
-
-  /* Paragraph - Commented for explicit control */
-  /* p {
-    @apply leading-6 text-muted-foreground;
-  } */
-
-  /* Blockquote */
-  /* blockquote {
-    @apply mt-6 border-l-2 pl-6 italic;
-  } */
-
-  /* Lists */
-  /* ul {
-    @apply my-6 ml-6 list-disc [&>li]:mt-2;
-  } */
-
-  ol {
-    @apply my-6 ml-6 list-decimal [&>li]:mt-2;
-  }
-
-  /* Inline code */
-  /* code {
-    @apply relative rounded bg-muted px-[0.3rem] py-[0.2rem] font-mono text-sm font-semibold;
-  } */
-
-  /* Tables */
+  /* Tables - Global styling for consistency */
   table {
     @apply w-full;
   }
@@ -73,24 +35,21 @@
   td {
     @apply p-4 align-middle [&:has([role=checkbox])]:pr-0;
   }
+}
 
-  /* Links */
-  a {
-    @apply font-medium text-primary hover:text-primary/80;
-  }
-
-  /* Small text */
-  small {
-    @apply text-sm font-medium leading-none;
-  }
-
-  /* Large text */
+@layer utilities {
+  /* Lead text - Large intro paragraphs */
   .lead {
     @apply text-xl text-muted-foreground;
   }
 
-  /* Muted text */
+  /* Muted text - Secondary/hint text */
   .muted {
     @apply text-sm text-muted-foreground;
+  }
+
+  /* Text balance for headings */
+  .text-balance {
+    text-wrap: balance;
   }
 }

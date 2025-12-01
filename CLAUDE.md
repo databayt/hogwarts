@@ -238,19 +238,38 @@ export const getColumns = (dictionary?: Dictionary): ColumnDef<Row>[] => [
 const columns = useMemo(() => getColumns(dictionary), [dictionary])
 ```
 
-### Typography System
+### Typography System (shadcn/ui Inline Utilities)
 
-**NEVER hardcode typography classes**. Always use semantic HTML:
+Use **semantic HTML with inline Tailwind classes** following shadcn/ui patterns:
 
-| Instead of | Use |
-|------------|-----|
-| `<div className="text-3xl font-bold">` | `<h2>` |
-| `<div className="text-2xl font-semibold">` | `<h3>` |
-| `<div className="text-sm text-muted-foreground">` | `<p className="muted">` |
-| `<div className="text-xl">` | `<p className="lead">` |
-| `<div className="text-xs">` | `<small>` |
+```tsx
+import { typography } from "@/lib/typography"
 
-Typography styles are defined in `src/styles/typography.css`.
+// Use constants for consistency
+<h1 className={typography.h1}>Page Title</h1>
+<p className={typography.p}>Body text</p>
+<p className={typography.lead}>Intro paragraph</p>
+
+// Or inline classes directly
+<h1 className="scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl">
+<h2 className="scroll-m-20 text-3xl font-semibold tracking-tight border-b pb-2">
+<p className="leading-7 [&:not(:first-child)]:mt-6">
+```
+
+**Typography constants** in `src/lib/typography.ts`:
+
+| Key | Classes |
+|-----|---------|
+| `h1` | `scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl` |
+| `h2` | `scroll-m-20 text-3xl font-semibold tracking-tight border-b pb-2` |
+| `h3` | `scroll-m-20 text-2xl font-semibold tracking-tight` |
+| `h4` | `scroll-m-20 text-xl font-semibold tracking-tight` |
+| `p` | `leading-7 [&:not(:first-child)]:mt-6` |
+| `lead` | `text-xl text-muted-foreground` |
+| `muted` | `text-sm text-muted-foreground` |
+| `small` | `text-sm font-medium leading-none` |
+
+**Utility classes** (`.lead`, `.muted`) remain in `src/styles/typography.css`.
 
 ### Import Aliases
 
@@ -671,10 +690,10 @@ pnpm test:e2e:report         # Show test report
    - ALWAYS include `schoolId` in database queries
    - Missing `schoolId` breaks tenant isolation
 
-4. **Typography Violations**
-   - Never use `<div>` for text content
-   - Use semantic HTML (h1-h6, p, small)
-   - Never hardcode `text-*` or `font-*` classes
+4. **Typography Pattern**
+   - Use semantic HTML with inline Tailwind classes (shadcn/ui approach)
+   - Import `typography` from `@/lib/typography` for consistent classes
+   - Utility classes `.lead` and `.muted` available in CSS
 
 5. **Prisma Client**
    - Regenerate after schema changes: `pnpm prisma generate`
