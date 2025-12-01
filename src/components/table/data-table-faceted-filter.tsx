@@ -80,7 +80,7 @@ export function DataTableFacetedFilter<TData, TValue>({
           type="button"
           variant="outline"
           size="sm"
-          className="border-dashed"
+          className="h-9 border-dashed"
         >
           {selectedValues?.size > 0 ? (
             <div

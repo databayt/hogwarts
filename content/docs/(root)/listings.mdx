@@ -158,11 +158,11 @@ const STATUS_OPTIONS = [
 const [scopeFilter, setScopeFilter] = useState("all");
 const [statusFilter, setStatusFilter] = useState("all");
 
-// Filter dropdowns (h-9 for consistency with search)
+// Filter dropdowns (h-9 py-1 to match Input styling exactly)
 const filterDropdowns = (
   <>
     <Select value={scopeFilter} onValueChange={setScopeFilter}>
-      <SelectTrigger className="h-9 w-32">
+      <SelectTrigger className="h-9 w-32 py-1">
         <SelectValue placeholder="Scope" />
       </SelectTrigger>
       <SelectContent>
@@ -174,7 +174,7 @@ const filterDropdowns = (
       </SelectContent>
     </Select>
     <Select value={statusFilter} onValueChange={setStatusFilter}>
-      <SelectTrigger className="h-9 w-32">
+      <SelectTrigger className="h-9 w-32 py-1">
         <SelectValue placeholder="Status" />
       </SelectTrigger>
       <SelectContent>
@@ -667,18 +667,19 @@ The `PlatformToolbar` handles export automatically:
 
 ### 1. Toolbar Height Consistency
 
-All toolbar elements must use `h-9` (36px) for visual consistency:
+All toolbar elements must use `h-9` (36px) for visual consistency. **Important:** SelectTrigger uses `py-2` by default while Input uses `py-1`—add `py-1` to SelectTrigger for identical appearance:
 
 ```typescript
-// ✅ CORRECT - consistent h-9 height
-<Input className="h-9 w-40 pl-8" />
-<SelectTrigger className="h-9 w-32" />
-<Button className="h-9" />
-<ViewToggle className="h-9 w-9" />
+// ✅ CORRECT - consistent height AND padding
+<Input className="h-9 w-40 pl-8" />          // h-9 + py-1 (default)
+<SelectTrigger className="h-9 w-32 py-1" />  // h-9 + py-1 (override)
+<Button size="icon" className="h-9 w-9" />   // h-9 w-9
+<ViewToggle className="h-9 w-9 p-0" />       // h-9 w-9 p-0
 
-// ❌ WRONG - inconsistent heights
-<Input className="h-8" />  // 32px
-<Button className="h-10" /> // 40px
+// ❌ WRONG - inconsistent heights or padding
+<Input className="h-8" />              // 32px
+<SelectTrigger className="h-9 w-32" /> // h-9 but py-2 makes content smaller
+<Button className="h-10" />            // 40px
 ```
 
 ### 2. Always Use `onSuccess` Callback

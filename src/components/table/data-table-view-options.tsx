@@ -45,7 +45,7 @@ export function DataTableViewOptions<TData>({
           role="combobox"
           variant="outline"
           size="sm"
-          className="hidden h-8 lg:flex"
+          className="hidden h-9 lg:flex"
         >
           <Settings2 />
           View

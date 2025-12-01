@@ -250,11 +250,11 @@ export function AnnouncementsTable({
     exporting: "Exporting...",
   };
 
-  // Filter dropdowns for toolbar
+  // Filter dropdowns for toolbar (py-1 to match Input padding)
   const filterDropdowns = (
     <>
       <Select value={scopeFilter} onValueChange={setScopeFilter}>
-        <SelectTrigger className="h-9 w-32">
+        <SelectTrigger className="h-9 w-32 py-1">
           <SelectValue placeholder="Scope" />
         </SelectTrigger>
         <SelectContent>
@@ -266,7 +266,7 @@ export function AnnouncementsTable({
         </SelectContent>
       </Select>
       <Select value={publishedFilter} onValueChange={setPublishedFilter}>
-        <SelectTrigger className="h-9 w-32">
+        <SelectTrigger className="h-9 w-32 py-1">
           <SelectValue placeholder="Status" />
         </SelectTrigger>
         <SelectContent>
