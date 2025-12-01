@@ -1,5 +1,5 @@
 import { Shell as PageContainer } from '@/components/table/shell'
-import PageHeader from '@/components/atom/page-header'
+import { PageHeadingSetter } from '@/components/platform/context/page-heading-setter'
 import type { Locale } from '@/components/internationalization/config'
 import type { Dictionary } from '@/components/internationalization/dictionaries'
 import { Button } from '@/components/ui/button'
@@ -51,10 +51,9 @@ export default async function ExpensesContent({ dictionary, lang }: Props) {
   return (
     <PageContainer>
       <div className="flex flex-1 flex-col gap-6">
-        <PageHeader
+        <PageHeadingSetter
           title={d?.title || 'Expense Management'}
           description={d?.description || 'Submit expenses, manage approval workflow, and track reimbursements'}
-          className="text-start max-w-none"
         />
 
         <div className="grid gap-4 md:grid-cols-4">

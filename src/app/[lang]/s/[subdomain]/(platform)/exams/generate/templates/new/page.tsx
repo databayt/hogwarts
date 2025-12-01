@@ -1,7 +1,7 @@
 import { getDictionary } from "@/components/internationalization/dictionaries";
 import type { Locale } from "@/components/internationalization/config";
 import { Shell as PageContainer } from "@/components/table/shell";
-import PageHeader from "@/components/atom/page-header";
+import { PageHeadingSetter } from "@/components/platform/context/page-heading-setter";
 
 export const metadata = { title: "Create Template" };
 
@@ -16,9 +16,8 @@ export default async function NewTemplatePage({ params }: Props) {
   return (
     <PageContainer>
       <div className="flex flex-col gap-4">
-        <PageHeader
+        <PageHeadingSetter
           title="New Template"
-          className="text-start max-w-none"
         />
         {/* Template form component will go here */}
       </div>

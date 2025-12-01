@@ -13,7 +13,7 @@ import { formatPoints, formatConfidence, getAIConfidenceIndicator } from "@/comp
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import type { Locale } from "@/components/internationalization/config"
 import { Shell as PageContainer } from "@/components/table/shell"
-import PageHeader from "@/components/atom/page-header"
+import { PageHeadingSetter } from "@/components/platform/context/page-heading-setter"
 
 export default async function GradingPage({
   params,
@@ -67,20 +67,17 @@ export default async function GradingPage({
   return (
     <PageContainer>
       <div className="flex flex-col gap-6">
+        <PageHeadingSetter
+          title="Grade"
+          description={`${studentAnswer.student.user?.username || studentAnswer.student.user?.email || "Unknown Student"} • ${studentAnswer.exam.title}`}
+        />
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" asChild>
-              <Link href={`/${lang}/exams/mark`}>
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                {dict.buttons.back}
-              </Link>
-            </Button>
-            <PageHeader
-              title="Grade"
-              description={`${studentAnswer.student.user?.username || studentAnswer.student.user?.email || "Unknown Student"} • ${studentAnswer.exam.title}`}
-              className="text-start max-w-none"
-            />
-          </div>
+          <Button variant="ghost" asChild>
+            <Link href={`/${lang}/exams/mark`}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              {dict.buttons.back}
+            </Link>
+          </Button>
           <div className="flex gap-2">
             <Button variant="outline">
               <Zap className="mr-2 h-4 w-4" />

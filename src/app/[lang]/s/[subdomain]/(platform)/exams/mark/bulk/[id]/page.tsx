@@ -3,7 +3,7 @@ import type { Locale } from "@/components/internationalization/config";
 import { db } from "@/lib/db";
 import { getTenantContext } from "@/lib/tenant-context";
 import { Shell as PageContainer } from "@/components/table/shell";
-import PageHeader from "@/components/atom/page-header";
+import { PageHeadingSetter } from "@/components/platform/context/page-heading-setter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { notFound } from "next/navigation";
@@ -46,10 +46,9 @@ export default async function BulkMarkingPage({ params }: Props) {
   return (
     <PageContainer>
       <div className="flex flex-col gap-4">
-        <PageHeader
+        <PageHeadingSetter
           title="Bulk Grade"
           description={`${exam.class?.name} - ${exam.subject?.subjectName}`}
-          className="text-start max-w-none"
         />
 
         <Card>
