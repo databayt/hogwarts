@@ -46,6 +46,9 @@ type AnnouncementListResult = {
   language: string;
   scope: string;
   published: boolean;
+  priority: string;
+  pinned: boolean;
+  featured: boolean;
   createdAt: string;
   createdBy: string | null;
 };
@@ -575,6 +578,9 @@ export async function getAnnouncements(
           language: true,
           scope: true,
           published: true,
+          priority: true,
+          pinned: true,
+          featured: true,
           createdAt: true,
           createdBy: true,
         },
@@ -589,6 +595,9 @@ export async function getAnnouncements(
       language: a.language,
       scope: a.scope,
       published: a.published,
+      priority: a.priority,
+      pinned: a.pinned,
+      featured: a.featured,
       createdAt: a.createdAt.toISOString(),
       createdBy: a.createdBy,
     }));

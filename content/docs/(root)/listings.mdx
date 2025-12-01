@@ -134,102 +134,80 @@ const { data } = usePlatformData({
 });
 ```
 
-### Custom Filter Dropdowns (Internationalized)
+### Column Filters (Preferred Approach)
 
-Add entity-specific filters via `additionalActions` with **translated labels**:
+Use **column filters** (dropdown in table headers) instead of custom toolbar dropdowns for simpler, less duplicated UI:
 
 ```typescript
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-
-// Filter options built inside component with dictionary translations
-// Use simplified labels: "Scope" not "All Scopes", "Status" not "All Status"
-const SCOPE_OPTIONS = useMemo(() => [
-  { value: "all", label: t.scope },        // "Scope" / "النطاق"
-  { value: "school", label: t.schoolWide }, // "School-wide" / "المدرسة"
-  { value: "class", label: t.classSpecific },
-  { value: "role", label: t.roleSpecific },
-], [t]);
-
-const STATUS_OPTIONS = useMemo(() => [
-  { value: "all", label: t.status },       // "Status" / "الحالة"
-  { value: "published", label: t.published },
-  { value: "draft", label: t.draft },
-], [t]);
-
-// Filter state
-const [scopeFilter, setScopeFilter] = useState("all");
-const [statusFilter, setStatusFilter] = useState("all");
-
-// Filter dropdowns (h-9 py-1 to match Input styling exactly)
-const filterDropdowns = (
-  <>
-    <Select value={scopeFilter} onValueChange={setScopeFilter}>
-      <SelectTrigger className="h-9 w-32 py-1">
-        <SelectValue placeholder={t.scope} />
-      </SelectTrigger>
-      <SelectContent>
-        {SCOPE_OPTIONS.map((opt) => (
-          <SelectItem key={opt.value} value={opt.value}>
-            {opt.label}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
-    <Select value={statusFilter} onValueChange={setStatusFilter}>
-      <SelectTrigger className="h-9 w-32 py-1">
-        <SelectValue placeholder={t.status} />
-      </SelectTrigger>
-      <SelectContent>
-        {STATUS_OPTIONS.map((opt) => (
-          <SelectItem key={opt.value} value={opt.value}>
-            {opt.label}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
-  </>
-);
-
-// Use in PlatformToolbar
-<PlatformToolbar
-  // ... other props
-  additionalActions={filterDropdowns}
-/>
+// columns.tsx - Enable column filters with select options
+{
+  accessorKey: "scope",
+  header: ({ column }) => <DataTableColumnHeader column={column} title={t.scope} />,
+  cell: ({ getValue }) => {
+    const scope = getValue<string>();
+    const labels: Record<string, string> = {
+      school: t.schoolWide,  // "School" / "مدرسة"
+      class: t.classSpecific, // "Class" / "فصل"
+      role: t.roleSpecific,   // "Role" / "دور"
+    };
+    return <span className="text-sm">{labels[scope] || scope}</span>;
+  },
+  meta: {
+    label: t.scope,
+    variant: "select",
+    options: [
+      { label: t.schoolWide, value: "school" },
+      { label: t.classSpecific, value: "class" },
+      { label: t.roleSpecific, value: "role" },
+    ],
+  },
+  enableColumnFilter: true,
+  filterFn: (row, id, value) => value.includes(row.getValue(id)),
+},
+{
+  accessorKey: "published",
+  header: ({ column }) => <DataTableColumnHeader column={column} title={t.status} />,
+  cell: ({ getValue }) => {
+    const is = getValue<boolean>();
+    return <Badge variant={is ? "default" : "outline"}>{is ? t.published : t.draft}</Badge>;
+  },
+  meta: {
+    label: t.status,
+    variant: "select",
+    options: [
+      { label: t.published, value: "true" },
+      { label: t.draft, value: "false" },
+    ],
+  },
+  enableColumnFilter: true,
+  filterFn: (row, id, value) => value.includes(String(row.getValue(id))),
+},
 ```
 
 **Key Points:**
-- Build filter options **inside the component** where dictionary is available
-- Use `useMemo` to avoid recreating options on every render
-- Use **simplified labels** ("Scope" not "All Scopes") for cleaner UI
-- Pass translated `placeholder` to SelectValue
+- Use **simplified labels** in dictionary: "School" not "School-wide", "مدرسة" not "على مستوى المدرسة"
+- Column filters work on already-loaded data (client-side filtering)
+- No need for custom toolbar dropdowns - cleaner, less code
+- Pass translated options via `meta.options`
 
-### Wiring Filters to Data Fetcher
+### Simplified Dictionary Labels
 
-Combine search and filter state in the fetcher:
+For filter dropdowns and column displays, use concise labels:
 
-```typescript
-// Build filters object
-const filters = useMemo(() => {
-  const f: Record<string, unknown> = {};
-  if (deferredSearch) f.title = deferredSearch;
-  if (scopeFilter !== "all") f.scope = scopeFilter;
-  if (statusFilter !== "all") f.status = statusFilter;
-  return Object.keys(f).length > 0 ? f : undefined;
-}, [deferredSearch, scopeFilter, statusFilter]);
+```json
+// English
+{
+  "schoolWide": "School",      // Not "School-wide"
+  "classSpecific": "Class",    // Not "Class Specific"
+  "roleSpecific": "Role"       // Not "Role Specific"
+}
 
-// Pass to usePlatformData
-const { data } = usePlatformData({
-  fetcher: async (params) => {
-    const result = await getItems({
-      ...params,
-      title: deferredSearch || undefined,
-      scope: scopeFilter !== "all" ? scopeFilter : undefined,
-      status: statusFilter !== "all" ? statusFilter : undefined,
-    });
-    return { rows: result.rows, total: result.total };
-  },
-  filters,
-});
+// Arabic
+{
+  "schoolWide": "مدرسة",        // Not "على مستوى المدرسة"
+  "classSpecific": "فصل",       // Not "فصل محدد"
+  "roleSpecific": "دور"         // Not "دور محدد"
+}
 ```
 
 ### Language-Based Filtering (i18n)
@@ -277,35 +255,40 @@ export function Table({ initialData, total, dictionary, lang }: TableProps) {
 - Always include `language` filter in queries
 - Create separate content for each locale (not bilingual content in single records)
 
-### Avoiding Duplicate Filters
+### Column Filters vs Toolbar Filters
 
-When using custom toolbar filters, **disable column filters** to avoid duplicate UI:
+**Prefer column filters** over custom toolbar dropdowns:
 
 ```typescript
-// columns.tsx - WRONG: creates duplicate filters
+// ✅ PREFERRED: Column filters (built into DataTable)
 {
   accessorKey: "scope",
   meta: {
     variant: "select",
     options: [...],
   },
-  enableColumnFilter: true,  // ❌ Creates dropdown in column header
+  enableColumnFilter: true,  // Dropdown in column header
 }
 
-// columns.tsx - CORRECT: toolbar handles filtering
-{
-  accessorKey: "scope",
-  cell: ({ getValue }) => {
-    const scope = getValue<string>();
-    const labels = { school: t.schoolWide, class: t.classSpecific };
-    return <span>{labels[scope] || scope}</span>;
-  },
-  meta: { label: t.scope, variant: "text" },
-  enableColumnFilter: false,  // ✅ Toolbar has custom filter
-}
+// ❌ AVOID: Custom toolbar dropdowns (duplicates column filters)
+// Only use additionalActions for filters NOT available as columns
+const filterDropdowns = (
+  <Select value={scopeFilter} onValueChange={setScopeFilter}>
+    {/* ... */}
+  </Select>
+);
+<PlatformToolbar additionalActions={filterDropdowns} />
 ```
 
-**Rule:** If you have a custom filter dropdown in the toolbar, set `enableColumnFilter: false` on that column.
+**When to Use Toolbar Filters:**
+- Complex multi-field filters that span multiple columns
+- Date range pickers or other specialized inputs
+- Filters for data not shown in columns
+
+**When to Use Column Filters:**
+- Simple select/checkbox filters for column values
+- Status, scope, type, category filters
+- Any filterable column already displayed
 
 ## Implementation Guide
 
@@ -787,7 +770,7 @@ const columns = useMemo(() => getColumns(dictionary), [dictionary]);
 
 ### 3. Internationalized Page Navigation
 
-Use dictionary translations for page-nav items:
+Use dictionary translations for page-nav items. **Prefer useful pages over filter duplicates:**
 
 ```typescript
 // layout.tsx
@@ -796,13 +779,18 @@ export default async function Layout({ children, params }: Props) {
   const dictionary = await getDictionary(lang as Locale);
   const d = dictionary?.school?.announcements;
 
-  // Navigation with i18n
+  // ✅ CORRECT: Useful production pages (not filter duplicates)
+  // Column filters already handle Published/Drafts filtering
   const pages: PageNavItem[] = [
     { name: d?.navAll || 'All', href: `/${lang}/announcements` },
-    { name: d?.navPublished || 'Published', href: `/${lang}/announcements/published` },
-    { name: d?.navDrafts || 'Drafts', href: `/${lang}/announcements/drafts` },
-    { name: d?.navScheduled || 'Scheduled', href: `/${lang}/announcements/scheduled` },
+    { name: d?.navConfig || 'Config', href: `/${lang}/announcements/config` },
+    { name: d?.navArchived || 'Archived', href: `/${lang}/announcements/archived` },
   ];
+
+  // ❌ AVOID: Filter duplicates (use column filters instead)
+  // { name: 'Published', href: `/${lang}/announcements/published` },
+  // { name: 'Drafts', href: `/${lang}/announcements/drafts` },
+  // { name: 'Scheduled', href: `/${lang}/announcements/scheduled` },
 
   return (
     <div className="space-y-6">
@@ -818,11 +806,16 @@ export default async function Layout({ children, params }: Props) {
 ```json
 {
   "navAll": "All",
-  "navPublished": "Published",
-  "navDrafts": "Drafts",
-  "navScheduled": "Scheduled"
+  "navConfig": "Config",
+  "navArchived": "Archived"
 }
 ```
+
+**Page-Nav Best Practices:**
+- Use for **distinct functionality** (Config, Archived, Analytics)
+- **Don't duplicate filters** (Published, Drafts) - column filters handle this
+- Create **actual pages** for each nav item
+- Keep navigation **concise** (3-4 items max)
 
 ### 4. Handle Loading States
 
