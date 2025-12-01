@@ -30,7 +30,7 @@ const getStatusBadge = (status: string) => {
   );
 };
 
-export const invoiceColumns: ColumnDef<InvoiceRow>[] = [
+export const getInvoiceColumns = (): ColumnDef<InvoiceRow>[] => [
   { 
     accessorKey: "invoice_no", 
     id: 'invoice_no', 
@@ -157,3 +157,6 @@ export const invoiceColumns: ColumnDef<InvoiceRow>[] = [
     enableColumnFilter: false,
   },
 ];
+
+// NOTE: Do NOT export pre-generated columns. Always use getInvoiceColumns()
+// inside useMemo in client components to avoid SSR hook issues.

@@ -3,6 +3,11 @@
     "title": "هجورتس - نظام إدارة المدارس",
     "description": "منصة شاملة لإدارة المؤسسات التعليمية"
   },
+  "chatbot": {
+    "title": "المساعد الذكي",
+    "startMessage": "ابدأ محادثة...",
+    "thinking": "أفكر..."
+  },
   "common": {
     "loading": "جاري التحميل...",
     "error": "حدث خطأ ما",
@@ -428,5 +433,39 @@
     "light": "فاتح",
     "dark": "داكن",
     "system": "النظام"
+  },
+  "docs": {
+    "sidebar": {
+      "introduction": "المقدمة",
+      "pitch": "العرض",
+      "mvp": "المنتج الأولي",
+      "prd": "متطلبات المنتج",
+      "getStarted": "ابدأ الآن",
+      "architecture": "الهيكل",
+      "structure": "البنية",
+      "pattern": "النمط",
+      "stack": "التقنيات",
+      "database": "قاعدة البيانات",
+      "localhost": "الخادم المحلي",
+      "contributing": "المساهمة",
+      "sharedEconomy": "الاقتصاد التشاركي",
+      "competitors": "المنافسون",
+      "inspiration": "الإلهام",
+      "demo": "العرض التوضيحي"
+    },
+    "copyPage": "نسخ الصفحة",
+    "copy": "نسخ",
+    "copied": "تم النسخ",
+    "copyToClipboard": "نسخ إلى الحافظة",
+    "onThisPage": "في هذه الصفحة",
+    "preview": "معاينة",
+    "code": "الكود",
+    "viewCode": "عرض الكود",
+    "expand": "توسيع",
+    "collapse": "طي",
+    "viewAsMarkdown": "عرض كـ Markdown",
+    "openInV0": "فتح في v0",
+    "openInChatGPT": "فتح في ChatGPT",
+    "openInClaude": "فتح في Claude"
   }
 }

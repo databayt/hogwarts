@@ -16,7 +16,7 @@ export type SubjectRow = {
   createdAt: string;
 };
 
-export const subjectColumns: ColumnDef<SubjectRow>[] = [
+export const getSubjectColumns = (): ColumnDef<SubjectRow>[] => [
   {
     accessorKey: "subjectName",
     header: ({ column }) => <DataTableColumnHeader column={column} title="Subject Name" />,
@@ -82,3 +82,6 @@ export const subjectColumns: ColumnDef<SubjectRow>[] = [
     enableColumnFilter: false,
   },
 ];
+
+// NOTE: Do NOT export pre-generated columns. Always use getSubjectColumns()
+// inside useMemo in client components to avoid SSR hook issues.

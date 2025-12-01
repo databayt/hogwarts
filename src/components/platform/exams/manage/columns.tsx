@@ -44,7 +44,7 @@ const getExamTypeBadge = (type: string) => {
   );
 };
 
-export const examColumns: ColumnDef<ExamRow>[] = [
+export const getExamColumns = (): ColumnDef<ExamRow>[] => [
   { 
     accessorKey: "title", 
     id: 'title', 
@@ -176,3 +176,6 @@ export const examColumns: ColumnDef<ExamRow>[] = [
     enableColumnFilter: false,
   },
 ];
+
+// NOTE: Do NOT export pre-generated columns. Always use getExamColumns()
+// inside useMemo in client components to avoid SSR hook issues.

@@ -1,28 +1,22 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import {
-  Users,
-  CreditCard,
-  FileText,
-  Calendar,
-  Bell,
-} from "lucide-react";
-import type { Dictionary } from "@/components/internationalization/dictionaries";
-import { getParentDashboardData } from "../actions";
-import { QuickActions } from "../quick-actions";
-import { getQuickActionsByRole } from "../quick-actions-config";
-import { getTenantContext } from "@/lib/tenant-context";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Progress } from "@/components/ui/progress"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { getParentDashboardData } from "../actions"
+import { QuickActions } from "../quick-actions"
+import { getQuickActionsByRole } from "../quick-actions-config"
+import { getTenantContext } from "@/lib/tenant-context"
+import { ParentDashboardStats } from "@/components/platform/shared/stats"
 
 interface ParentDashboardProps {
   user: {
-    id: string;
-    email?: string | null;
-    role?: string;
-    schoolId?: string | null;
-  };
-  dictionary?: Dictionary["school"];
-  locale?: string;
+    id: string
+    email?: string | null
+    role?: string
+    schoolId?: string | null
+  }
+  dictionary?: Dictionary["school"]
+  locale?: string
 }
 
 export async function ParentDashboard({
@@ -31,50 +25,49 @@ export async function ParentDashboard({
   locale = "en",
 }: ParentDashboardProps) {
   // Fetch real data from server action with error handling
-  let data;
+  let data
   try {
-    data = await getParentDashboardData();
+    data = await getParentDashboardData()
   } catch (error) {
-    console.error('[ParentDashboard] Error fetching lab data:', error);
+    console.error("[ParentDashboard] Error fetching data:", error)
     return (
       <div className="space-y-6">
-        <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
-          <h3 className="mb-4">Unable to Load Dashboard</h3>
-          <p className="text-muted-foreground">
-            There was an error loading the dashboard data. Please try refreshing the page.
-          </p>
-        </div>
+        <Card>
+          <CardContent className="p-6">
+            <h3 className="mb-4">Unable to Load Dashboard</h3>
+            <p className="text-muted-foreground">
+              There was an error loading the dashboard data. Please try refreshing the page.
+            </p>
+          </CardContent>
+        </Card>
       </div>
-    );
+    )
   }
 
   // Get tenant context for subdomain
-  const { schoolId } = await getTenantContext();
+  const { schoolId } = await getTenantContext()
 
   // Get school subdomain for URL construction with error handling
-  let school = null;
+  let school = null
   try {
     if (schoolId) {
-      const { db } = await import("@/lib/db");
-      school = await db.school.findUnique({ where: { id: schoolId }, select: { domain: true } });
+      const { db } = await import("@/lib/db")
+      school = await db.school.findUnique({
+        where: { id: schoolId },
+        select: { domain: true },
+      })
     }
   } catch (error) {
-    console.error('[ParentDashboard] Error fetching school domain:', error);
+    console.error("[ParentDashboard] Error fetching school domain:", error)
   }
 
-  // Get lab dictionary
+  // Get dictionary with fallback
   const dashDict = dictionary?.parentDashboard || {
     stats: {
       children: "Children",
       attendance: "Attendance",
       assignments: "Assignments",
       announcements: "Announcements",
-    },
-    quickActions: {
-      title: "Quick Actions",
-      messageTeacher: "Message Teacher",
-      viewReportCard: "View Report Card",
-      checkAttendance: "Check Attendance",
     },
     sections: {
       childrenOverview: "Children Overview",
@@ -98,62 +91,32 @@ export async function ParentDashboard({
       recentGrades: "Recent Grades",
       presentDays: "Present Days",
     },
-  };
+  }
 
   return (
     <div className="space-y-6">
-      {/* Hero Section - Children Overview */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{dashDict.stats.children}</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{data.children.length}</div>
-            <p className="text-xs text-muted-foreground">{dashDict.labels.enrolledStudents}</p>
-          </CardContent>
-        </Card>
+      {/* Stats Section - Using new reusable component */}
+      <ParentDashboardStats
+        childrenCount={data.children.length}
+        attendance={data.attendanceSummary.percentage}
+        upcomingAssignments={data.upcomingAssignments.length}
+        announcements={data.announcements.length}
+        dictionary={dashDict.stats}
+      />
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{dashDict.stats.attendance}</CardTitle>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {data.attendanceSummary.percentage.toFixed(1)}%
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {data.attendanceSummary.presentDays}/{data.attendanceSummary.totalDays} {dashDict.labels.daysPresent}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{dashDict.stats.assignments}</CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {data.upcomingAssignments.length}
-            </div>
-            <p className="text-xs text-muted-foreground">{dashDict.labels.upcoming}</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{dashDict.stats.announcements}</CardTitle>
-            <Bell className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{data.announcements.length}</div>
-            <p className="text-xs text-muted-foreground">{dashDict.labels.newMessages}</p>
-          </CardContent>
-        </Card>
-      </div>
+      {/* Attendance Progress Card */}
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-medium">{dashDict.stats.attendance}</span>
+            <span className="text-sm text-muted-foreground">
+              {data.attendanceSummary.presentDays}/{data.attendanceSummary.totalDays}{" "}
+              {dashDict.labels.daysPresent}
+            </span>
+          </div>
+          <Progress value={data.attendanceSummary.percentage} className="h-2" />
+        </CardContent>
+      </Card>
 
       {/* Quick Actions */}
       <QuickActions
@@ -173,7 +136,7 @@ export async function ParentDashboard({
               data.children.map((child) => (
                 <div key={child.id} className="p-4 border rounded-lg">
                   <div className="flex items-center justify-between mb-3">
-                    <h4 className="font-semibold">{child.name}</h4>
+                    <p className="font-semibold">{child.name}</p>
                     <Badge variant="outline">{child.studentId}</Badge>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
@@ -193,9 +156,7 @@ export async function ParentDashboard({
                       <p className="text-sm text-muted-foreground">
                         {dashDict.labels.recentGrades}
                       </p>
-                      <p className="text-lg font-bold">
-                        {data.recentGrades.length}
-                      </p>
+                      <p className="text-lg font-bold">{data.recentGrades.length}</p>
                     </div>
                   </div>
                 </div>
@@ -222,9 +183,7 @@ export async function ParentDashboard({
                 >
                   <div>
                     <p className="font-medium">{grade.examTitle}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {grade.subject}
-                    </p>
+                    <p className="text-sm text-muted-foreground">{grade.subject}</p>
                   </div>
                   <div className="text-right">
                     <p className="font-bold">
@@ -319,37 +278,6 @@ export async function ParentDashboard({
           </CardContent>
         </Card>
       </div>
-
-      {/* Attendance Summary */}
-      <Card>
-        <CardHeader>
-          <CardTitle>{dashDict.sections.attendanceSummary}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-between">
-            <div className="flex-1">
-              <div className="flex justify-between mb-2">
-                <span className="text-sm text-muted-foreground">
-                  {dashDict.labels.presentDays}
-                </span>
-                <span className="font-medium">
-                  {data.attendanceSummary.presentDays} /{" "}
-                  {data.attendanceSummary.totalDays}
-                </span>
-              </div>
-              <Progress value={data.attendanceSummary.percentage} />
-            </div>
-            <div className="ml-6">
-              <div className="text-3xl font-bold">
-                {data.attendanceSummary.percentage.toFixed(1)}%
-              </div>
-              <p className="text-xs text-muted-foreground text-center">
-                {dashDict.labels.attendance}
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
     </div>
-  );
+  )
 }

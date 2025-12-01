@@ -4,7 +4,7 @@ import { useMemo, useState, useCallback } from "react";
 import { DataTable } from "@/components/table/data-table";
 import { DataTableToolbar } from "@/components/table/data-table-toolbar";
 import { useDataTable } from "@/components/table/use-data-table";
-import { assignmentColumns, type AssignmentRow } from "./columns";
+import { getAssignmentColumns, type AssignmentRow } from "./columns";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { useModal } from "@/components/atom/modal/context";
@@ -20,7 +20,7 @@ interface AssignmentsTableProps {
 }
 
 export function AssignmentsTable({ initialData, total, perPage = 20 }: AssignmentsTableProps) {
-  const columns = useMemo(() => assignmentColumns, []);
+  const columns = useMemo(() => getAssignmentColumns(), []);
 
   // State for incremental loading
   const [data, setData] = useState<AssignmentRow[]>(initialData);

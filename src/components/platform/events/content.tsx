@@ -6,6 +6,7 @@ import { db } from '@/lib/db'
 import { getTenantContext } from '@/lib/tenant-context'
 import { type Locale } from '@/components/internationalization/config'
 import { type Dictionary } from '@/components/internationalization/dictionaries'
+import { type Prisma } from '@prisma/client'
 
 interface Props {
   searchParams: Promise<SearchParams>
@@ -19,7 +20,7 @@ export default async function EventsContent({ searchParams, dictionary, lang }: 
   let data: EventRow[] = []
   let total = 0
   
-  if (schoolId && (db as any).event) {
+  if (schoolId) {
     const where: any = {
       schoolId,
       ...(sp.title ? { title: { contains: sp.title, mode: 'insensitive' } } : {}),
@@ -31,18 +32,18 @@ export default async function EventsContent({ searchParams, dictionary, lang }: 
     
     const skip = (sp.page - 1) * sp.perPage
     const take = sp.perPage
-    const orderBy = (sp.sort && Array.isArray(sp.sort) && sp.sort.length)
-      ? sp.sort.map((s: any) => ({ [s.id]: s.desc ? 'desc' : 'asc' }))
+    const orderBy: Prisma.EventOrderByWithRelationInput[] = (sp.sort && Array.isArray(sp.sort) && sp.sort.length)
+      ? sp.sort.map((s: { id: string; desc?: boolean }) => ({ [s.id]: s.desc ? 'desc' : 'asc' } as Prisma.EventOrderByWithRelationInput))
       : [{ eventDate: 'desc' }, { startTime: 'asc' }]
       
     const [rows, count] = await Promise.all([
-      (db as any).event.findMany({ 
-        where, 
-        orderBy, 
-        skip, 
+      db.event.findMany({
+        where,
+        orderBy,
+        skip,
         take,
       }),
-      (db as any).event.count({ where }),
+      db.event.count({ where }),
     ])
     
     data = rows.map((e: any) => ({ 

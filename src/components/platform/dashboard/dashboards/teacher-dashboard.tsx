@@ -1,21 +1,21 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Calendar, Users, FileText } from "lucide-react";
-import type { Dictionary } from "@/components/internationalization/dictionaries";
-import { getTeacherDashboardData } from "../actions";
-import { QuickActions } from "../quick-actions";
-import { getQuickActionsByRole } from "../quick-actions-config";
-import { getTenantContext } from "@/lib/tenant-context";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { getTeacherDashboardData } from "../actions"
+import { QuickActions } from "../quick-actions"
+import { getQuickActionsByRole } from "../quick-actions-config"
+import { getTenantContext } from "@/lib/tenant-context"
+import { TeacherDashboardStats } from "@/components/platform/shared/stats"
 
 interface TeacherDashboardProps {
   user: {
-    id: string;
-    email?: string | null;
-    role?: string;
-    schoolId?: string | null;
-  };
-  dictionary?: Dictionary["school"];
-  locale?: string;
+    id: string
+    email?: string | null
+    role?: string
+    schoolId?: string | null
+  }
+  dictionary?: Dictionary["school"]
+  locale?: string
 }
 
 export async function TeacherDashboard({
@@ -24,38 +24,43 @@ export async function TeacherDashboard({
   locale = "en",
 }: TeacherDashboardProps) {
   // Fetch real data from server action with error handling
-  let data;
+  let data
   try {
-    data = await getTeacherDashboardData();
+    data = await getTeacherDashboardData()
   } catch (error) {
-    console.error('[TeacherDashboard] Error fetching lab data:', error);
+    console.error("[TeacherDashboard] Error fetching data:", error)
     return (
       <div className="space-y-6">
-        <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
-          <h3 className="mb-4">Unable to Load Dashboard</h3>
-          <p className="text-muted-foreground">
-            There was an error loading the dashboard data. Please try refreshing the page.
-          </p>
-        </div>
+        <Card>
+          <CardContent className="p-6">
+            <h3 className="mb-4">Unable to Load Dashboard</h3>
+            <p className="text-muted-foreground">
+              There was an error loading the dashboard data. Please try refreshing the page.
+            </p>
+          </CardContent>
+        </Card>
       </div>
-    );
+    )
   }
 
   // Get tenant context for subdomain
-  const { schoolId } = await getTenantContext();
+  const { schoolId } = await getTenantContext()
 
   // Get school subdomain for URL construction with error handling
-  let school = null;
+  let school = null
   try {
     if (schoolId) {
-      const { db } = await import("@/lib/db");
-      school = await db.school.findUnique({ where: { id: schoolId }, select: { domain: true } });
+      const { db } = await import("@/lib/db")
+      school = await db.school.findUnique({
+        where: { id: schoolId },
+        select: { domain: true },
+      })
     }
   } catch (error) {
-    console.error('[TeacherDashboard] Error fetching school domain:', error);
+    console.error("[TeacherDashboard] Error fetching school domain:", error)
   }
 
-  // Get lab dictionary
+  // Get dictionary with fallback
   const dashDict = dictionary?.teacherDashboard || {
     stats: {
       todaysClasses: "Today's Classes",
@@ -91,72 +96,18 @@ export async function TeacherDashboard({
       average: "Average",
       noPerformanceData: "No performance data available",
     },
-  };
+  }
 
   return (
     <div className="space-y-6">
-      {/* Hero Section */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              {dashDict.stats.todaysClasses}
-            </CardTitle>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{data.todaysClasses.length}</div>
-            <p className="text-xs text-muted-foreground">
-              {dashDict.labels.classesScheduled}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              {dashDict.stats.pendingGrading}
-            </CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{data.pendingGrading}</div>
-            <p className="text-xs text-muted-foreground">
-              {dashDict.labels.assignmentsToGrade}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              {dashDict.stats.attendanceDue}
-            </CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{data.attendanceDue}</div>
-            <p className="text-xs text-muted-foreground">
-              {dashDict.labels.needAttendance}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              {dashDict.stats.totalStudents}
-            </CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{data.totalStudents}</div>
-            <p className="text-xs text-muted-foreground">
-              {dashDict.labels.acrossAllClasses}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+      {/* Stats Section - Using new reusable component */}
+      <TeacherDashboardStats
+        todaysClasses={data.todaysClasses.length}
+        pendingGrading={data.pendingGrading}
+        attendanceDue={data.attendanceDue}
+        totalStudents={data.totalStudents}
+        dictionary={dashDict.stats}
+      />
 
       {/* Quick Actions */}
       <QuickActions
@@ -297,5 +248,5 @@ export async function TeacherDashboard({
         </Card>
       </div>
     </div>
-  );
+  )
 }

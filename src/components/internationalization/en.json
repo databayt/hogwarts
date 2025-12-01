@@ -838,5 +838,39 @@
     "light": "Light",
     "dark": "Dark",
     "system": "System"
+  },
+  "docs": {
+    "sidebar": {
+      "introduction": "Introduction",
+      "pitch": "Pitch",
+      "mvp": "MVP",
+      "prd": "PRD",
+      "getStarted": "Get Started",
+      "architecture": "Architecture",
+      "structure": "Structure",
+      "pattern": "Pattern",
+      "stack": "Stack",
+      "database": "Database",
+      "localhost": "Localhost",
+      "contributing": "Contributing",
+      "sharedEconomy": "Shared Economy",
+      "competitors": "Competitors",
+      "inspiration": "Inspiration",
+      "demo": "Demo"
+    },
+    "copyPage": "Copy Page",
+    "copy": "Copy",
+    "copied": "Copied",
+    "copyToClipboard": "Copy to Clipboard",
+    "onThisPage": "On This Page",
+    "preview": "Preview",
+    "code": "Code",
+    "viewCode": "View Code",
+    "expand": "Expand",
+    "collapse": "Collapse",
+    "viewAsMarkdown": "View as Markdown",
+    "openInV0": "Open in v0",
+    "openInChatGPT": "Open in ChatGPT",
+    "openInClaude": "Open in Claude"
   }
 }

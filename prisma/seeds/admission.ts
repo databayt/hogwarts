@@ -130,12 +130,12 @@ export async function seedAdmission(
           motherPhone: `+249${faker.string.numeric(9)}`,
           applyingForClass: grades[Math.floor(Math.random() * grades.length)],
           status,
-          submittedAt: faker.date.between({ from: campaign.startDate, to: new Date() }),
+          submittedAt: faker.date.between({ from: campaign.startDate, to: campaign.endDate }),
           admissionOffered: isSelected,
           admissionConfirmed: isAdmitted,
           enrollmentNumber: isAdmitted ? `ENR-${baseYear}-${String(appCounter).padStart(4, "0")}` : null,
           applicationFeePaid: true,
-          paymentDate: faker.date.between({ from: campaign.startDate, to: new Date() }),
+          paymentDate: faker.date.between({ from: campaign.startDate, to: campaign.endDate }),
         },
       });
 

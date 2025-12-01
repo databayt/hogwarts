@@ -1,6 +1,6 @@
 import { auth } from "@/auth"
 import { InvoiceTable } from "@/components/platform/finance/invoice/table"
-import { invoiceColumns, type InvoiceRow } from "@/components/platform/finance/invoice/columns"
+import type { InvoiceRow } from "@/components/platform/finance/invoice/columns"
 import { SearchParams } from 'nuqs/server'
 import { invoiceSearchParams } from '@/components/platform/finance/invoice/list-params'
 import { getInvoicesWithFilters } from '@/components/platform/finance/invoice/actions'
@@ -66,7 +66,7 @@ export async function InvoiceContent({ searchParams }: Props) {
   
   return (
     <div className="flex flex-1 flex-col gap-4">
-      <InvoiceTable initialData={data} columns={invoiceColumns} total={total} perPage={sp.perPage} />
+      <InvoiceTable initialData={data} total={total} perPage={sp.perPage} />
     </div>
   )
 }

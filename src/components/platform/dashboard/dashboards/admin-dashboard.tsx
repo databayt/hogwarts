@@ -1,55 +1,57 @@
-import type { Dictionary } from "@/components/internationalization/dictionaries";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { Users, FileText, AlertTriangle, TrendingUp } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
-import { getDashboardSummary } from "./actions";
-import { QuickActions } from "../quick-actions";
-import { getQuickActionsByRole } from "../quick-actions-config";
-import { getTenantContext } from "@/lib/tenant-context";
-// TODO: Fix lab-showcase prop mismatches (36+ TypeScript errors)
-// import { DashboardShowcase } from "../lab-showcase";
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Progress } from "@/components/ui/progress"
+import { AlertTriangle } from "lucide-react"
+import { formatDistanceToNow } from "date-fns"
+import { getDashboardSummary } from "./actions"
+import { QuickActions } from "../quick-actions"
+import { getQuickActionsByRole } from "../quick-actions-config"
+import { getTenantContext } from "@/lib/tenant-context"
+import { AdminDashboardStats } from "@/components/platform/shared/stats"
 
 interface Props {
-  user: any;
-  dictionary?: Dictionary["school"];
-  locale?: string;
+  user: any
+  dictionary?: Dictionary["school"]
+  locale?: string
 }
 
 export async function AdminDashboard({ user, dictionary, locale = "en" }: Props) {
   // Fetch real data from server actions with error handling
-  let dashboardData;
+  let dashboardData
   try {
-    dashboardData = await getDashboardSummary();
+    dashboardData = await getDashboardSummary()
   } catch (error) {
-    console.error('[AdminDashboard] Error fetching lab data:', error);
-    // Return early with error message instead of crashing
+    console.error("[AdminDashboard] Error fetching data:", error)
     return (
       <div className="space-y-6">
-        <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
-          <h3 className="mb-4">Unable to Load Dashboard</h3>
-          <p className="text-muted-foreground">
-            There was an error loading the dashboard data. Please try refreshing the page.
-          </p>
-        </div>
+        <Card>
+          <CardContent className="p-6">
+            <h3 className="mb-4">Unable to Load Dashboard</h3>
+            <p className="text-muted-foreground">
+              There was an error loading the dashboard data. Please try refreshing the page.
+            </p>
+          </CardContent>
+        </Card>
       </div>
-    );
+    )
   }
 
   // Get tenant context for subdomain
-  const { schoolId } = await getTenantContext();
+  const { schoolId } = await getTenantContext()
 
   // Get school subdomain for URL construction with error handling
-  let school = null;
+  let school = null
   try {
     if (schoolId) {
-      const { db } = await import("@/lib/db");
-      school = await db.school.findUnique({ where: { id: schoolId }, select: { domain: true } });
+      const { db } = await import("@/lib/db")
+      school = await db.school.findUnique({
+        where: { id: schoolId },
+        select: { domain: true },
+      })
     }
   } catch (error) {
-    console.error('[AdminDashboard] Error fetching school domain:', error);
-    // Continue without school domain - QuickActions will work without it
+    console.error("[AdminDashboard] Error fetching school domain:", error)
   }
 
   // Destructure real data
@@ -61,7 +63,7 @@ export async function AdminDashboard({ user, dictionary, locale = "en" }: Props)
     announcements,
     classes,
     activities,
-  } = dashboardData;
+  } = dashboardData
 
   // Mock data for features not yet implemented (Financial, Compliance, etc.)
   const mockFinancialSummary = {
@@ -70,91 +72,60 @@ export async function AdminDashboard({ user, dictionary, locale = "en" }: Props)
     profit: 270000,
     outstandingFees: 45000,
     budgetUtilization: 78.4,
-  };
+  }
 
   const mockStaffPerformance = {
     excellent: 28,
     good: 42,
     satisfactory: 15,
     needsImprovement: 5,
-  };
+  }
 
   const mockComplianceStatus = {
     academic: "Compliant",
     financial: "Compliant",
     safety: "Pending Review",
     accreditation: "Compliant",
-  };
+  }
 
   const mockPendingRequests = [
-    { type: "Teacher Leave", requester: "Sarah Johnson", urgency: "medium", daysOpen: 2 },
-    { type: "Budget Approval", requester: "Math Department", urgency: "high", daysOpen: 1 },
+    { type: "Teacher Leave", requester: "Sarah Johnson", urgency: "high", daysOpen: 2 },
+    { type: "Budget Approval", requester: "Math Department", urgency: "medium", daysOpen: 1 },
     { type: "Student Transfer", requester: "Parent", urgency: "low", daysOpen: 5 },
-  ];
+  ]
 
   const mockSystemAlerts = [
-    { type: "Database Backup", message: "Scheduled backup completed successfully", severity: "info" },
-    { type: "System Update", message: "New features available in next update", severity: "info" },
-    { type: "Security Alert", message: "Multiple login attempts detected", severity: "warning" },
-  ];
+    {
+      type: "Database Backup",
+      message: "Scheduled backup completed successfully",
+      severity: "info",
+    },
+    {
+      type: "System Update",
+      message: "New features available in next update",
+      severity: "info",
+    },
+    {
+      type: "Security Alert",
+      message: "Multiple login attempts detected",
+      severity: "warning",
+    },
+  ]
 
   return (
     <div className="space-y-6">
-      {/* Hero Section - School Overview Metrics */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Enrollment</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{enrollment.total}</div>
-            <p className="text-xs text-muted-foreground">
-              +{enrollment.newThisMonth} this month
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Attendance Rate</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{attendance.attendanceRate}%</div>
-            <p className="text-xs text-muted-foreground">
-              {attendance.present} present, {attendance.absent} absent
-            </p>
-            <Progress value={attendance.attendanceRate} className="mt-2" />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Classes</CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{classes.total}</div>
-            <p className="text-xs text-muted-foreground">
-              {announcements.published} announcements
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Staff</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{staff.total}</div>
-            <p className="text-xs text-muted-foreground">
-              {staff.departments} departments
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+      {/* Hero Section - School Overview Metrics using new reusable component */}
+      <AdminDashboardStats
+        totalEnrollment={enrollment.total}
+        newThisMonth={enrollment.newThisMonth}
+        attendanceRate={attendance.attendanceRate}
+        present={attendance.present}
+        absent={attendance.absent}
+        activeClasses={classes.total}
+        announcementsCount={announcements.published}
+        totalStaff={staff.total}
+        departments={staff.departments}
+      />
 
       {/* Quick Actions */}
       <QuickActions
@@ -172,15 +143,21 @@ export async function AdminDashboard({ user, dictionary, locale = "en" }: Props)
           <CardContent className="space-y-4">
             <div className="flex justify-between items-center">
               <span className="text-sm text-muted-foreground">Total Revenue</span>
-              <span className="font-medium">${(mockFinancialSummary.totalRevenue / 1000).toFixed(0)}K</span>
+              <span className="font-medium">
+                ${(mockFinancialSummary.totalRevenue / 1000).toFixed(0)}K
+              </span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-muted-foreground">Expenses</span>
-              <span className="font-medium text-red-600">${(mockFinancialSummary.expenses / 1000).toFixed(0)}K</span>
+              <span className="font-medium text-destructive">
+                ${(mockFinancialSummary.expenses / 1000).toFixed(0)}K
+              </span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-muted-foreground">Net Profit</span>
-              <span className="font-medium text-green-600">${(mockFinancialSummary.profit / 1000).toFixed(0)}K</span>
+              <span className="font-medium text-emerald-600 dark:text-emerald-400">
+                ${(mockFinancialSummary.profit / 1000).toFixed(0)}K
+              </span>
             </div>
             <div className="pt-2 border-t">
               <div className="flex justify-between items-center mb-2">
@@ -204,11 +181,15 @@ export async function AdminDashboard({ user, dictionary, locale = "en" }: Props)
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-muted-foreground">Pass Rate</span>
-              <span className="font-medium text-green-600">{academicPerformance.passRate}%</span>
+              <span className="font-medium text-emerald-600 dark:text-emerald-400">
+                {academicPerformance.passRate}%
+              </span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-muted-foreground">Improvement</span>
-              <span className="font-medium text-green-600">{academicPerformance.improvement}</span>
+              <span className="font-medium text-emerald-600 dark:text-emerald-400">
+                {academicPerformance.improvement}
+              </span>
             </div>
             <div className="pt-2 border-t">
               <div className="flex justify-between items-center">
@@ -228,29 +209,43 @@ export async function AdminDashboard({ user, dictionary, locale = "en" }: Props)
             <div className="flex items-center justify-between p-2 border rounded">
               <span className="text-sm">Excellent</span>
               <div className="flex items-center space-x-2">
-                <Progress value={(mockStaffPerformance.excellent / staff.total) * 100} className="w-20" />
+                <Progress
+                  value={(mockStaffPerformance.excellent / staff.total) * 100}
+                  className="w-20"
+                />
                 <span className="text-sm font-medium">{mockStaffPerformance.excellent}</span>
               </div>
             </div>
             <div className="flex items-center justify-between p-2 border rounded">
               <span className="text-sm">Good</span>
               <div className="flex items-center space-x-2">
-                <Progress value={(mockStaffPerformance.good / staff.total) * 100} className="w-20" />
+                <Progress
+                  value={(mockStaffPerformance.good / staff.total) * 100}
+                  className="w-20"
+                />
                 <span className="text-sm font-medium">{mockStaffPerformance.good}</span>
               </div>
             </div>
             <div className="flex items-center justify-between p-2 border rounded">
               <span className="text-sm">Satisfactory</span>
               <div className="flex items-center space-x-2">
-                <Progress value={(mockStaffPerformance.satisfactory / staff.total) * 100} className="w-20" />
+                <Progress
+                  value={(mockStaffPerformance.satisfactory / staff.total) * 100}
+                  className="w-20"
+                />
                 <span className="text-sm font-medium">{mockStaffPerformance.satisfactory}</span>
               </div>
             </div>
             <div className="flex items-center justify-between p-2 border rounded">
               <span className="text-sm">Needs Improvement</span>
               <div className="flex items-center space-x-2">
-                <Progress value={(mockStaffPerformance.needsImprovement / staff.total) * 100} className="w-20" />
-                <span className="text-sm font-medium">{mockStaffPerformance.needsImprovement}</span>
+                <Progress
+                  value={(mockStaffPerformance.needsImprovement / staff.total) * 100}
+                  className="w-20"
+                />
+                <span className="text-sm font-medium">
+                  {mockStaffPerformance.needsImprovement}
+                </span>
               </div>
             </div>
           </CardContent>
@@ -286,7 +281,9 @@ export async function AdminDashboard({ user, dictionary, locale = "en" }: Props)
                   <div className="flex items-center justify-between mt-2">
                     <p className="text-sm text-muted-foreground">by {activity.user}</p>
                     <div className="flex items-center space-x-2">
-                      <Badge variant="outline" className="text-xs capitalize">{activity.type}</Badge>
+                      <Badge variant="outline" className="text-xs capitalize">
+                        {activity.type}
+                      </Badge>
                       <p className="text-xs text-muted-foreground">
                         {formatDistanceToNow(activity.timestamp, { addSuffix: true })}
                       </p>
@@ -307,7 +304,10 @@ export async function AdminDashboard({ user, dictionary, locale = "en" }: Props)
           </CardHeader>
           <CardContent className="space-y-3">
             {mockPendingRequests.map((request, index) => (
-              <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+              <div
+                key={index}
+                className="flex items-center justify-between p-3 border rounded-lg"
+              >
                 <div>
                   <p className="font-medium">{request.type}</p>
                   <p className="text-sm text-muted-foreground">{request.requester}</p>
@@ -317,7 +317,7 @@ export async function AdminDashboard({ user, dictionary, locale = "en" }: Props)
                     {request.urgency}
                   </Badge>
                   <p className="text-xs text-muted-foreground mt-1">
-                    {request.daysOpen} day{request.daysOpen !== 1 ? 's' : ''} open
+                    {request.daysOpen} day{request.daysOpen !== 1 ? "s" : ""} open
                   </p>
                 </div>
               </div>
@@ -335,30 +335,28 @@ export async function AdminDashboard({ user, dictionary, locale = "en" }: Props)
           <div className="grid gap-6 md:grid-cols-3">
             <div className="text-center">
               <h4 className="mb-2">Student-Teacher Ratio</h4>
-              <div className="text-2xl font-bold text-blue-600">
-                {classes.studentTeacherRatio}:1
-              </div>
+              <p className="text-2xl font-bold text-primary">{classes.studentTeacherRatio}:1</p>
               <p className="text-xs text-muted-foreground">
                 {enrollment.active} students / {staff.total} teachers
               </p>
             </div>
             <div className="text-center">
               <h4 className="mb-2">Exams & Assignments</h4>
-              <div className="text-2xl font-bold text-green-600">
-                {(academicPerformance.totalExams || 0) + (academicPerformance.totalAssignments || 0)}
-              </div>
+              <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+                {(academicPerformance.totalExams || 0) +
+                  (academicPerformance.totalAssignments || 0)}
+              </p>
               <p className="text-xs text-muted-foreground">
-                {academicPerformance.totalExams} exams, {academicPerformance.totalAssignments} assignments
+                {academicPerformance.totalExams} exams, {academicPerformance.totalAssignments}{" "}
+                assignments
               </p>
             </div>
             <div className="text-center">
               <h4 className="mb-2">Recent Announcements</h4>
-              <div className="text-2xl font-bold text-purple-600">
+              <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
                 {announcements.recentCount}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                In the last 7 days
               </p>
+              <p className="text-xs text-muted-foreground">In the last 7 days</p>
             </div>
           </div>
         </CardContent>
@@ -373,9 +371,11 @@ export async function AdminDashboard({ user, dictionary, locale = "en" }: Props)
           <div className="space-y-3">
             {mockSystemAlerts.map((alert, index) => (
               <div key={index} className="flex items-center space-x-3 p-3 border rounded-lg">
-                <AlertTriangle className={`h-5 w-5 ${
-                  alert.severity === "warning" ? "text-yellow-500" : "text-blue-500"
-                }`} />
+                <AlertTriangle
+                  className={`h-5 w-5 ${
+                    alert.severity === "warning" ? "text-amber-500" : "text-primary"
+                  }`}
+                />
                 <div className="flex-1">
                   <p className="font-medium">{alert.type}</p>
                   <p className="text-sm text-muted-foreground">{alert.message}</p>
@@ -388,10 +388,6 @@ export async function AdminDashboard({ user, dictionary, locale = "en" }: Props)
           </div>
         </CardContent>
       </Card>
-
-      {/* Dashboard Card Component Showcase */}
-      {/* TODO: Re-enable after fixing prop mismatches */}
-      {/* <DashboardShowcase /> */}
     </div>
-  );
+  )
 }

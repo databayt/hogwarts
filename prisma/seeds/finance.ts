@@ -96,8 +96,8 @@ export async function seedFinance(
   const salaryStructures: { id: string; baseSalary: number; teacher: TeacherRef }[] = [];
 
   for (const teacher of teachers.slice(0, 30)) {
-    // Teacher salaries in SDG (approximately 1,800,000 - 4,800,000 SDG/month)
-    const baseSalary = faker.number.int({ min: 1800000, max: 4800000 });
+    // Teacher salaries in SDG (approximately 600,000 - 1,800,000 SDG/month = ~$1K-3K USD)
+    const baseSalary = faker.number.int({ min: 600000, max: 1800000 });
 
     const structure = await prisma.salaryStructure.create({
       data: {
@@ -262,8 +262,8 @@ export async function seedFinance(
       name: "Main Operating Account - Bank of Khartoum",
       officialName: `${schoolName} Operating`,
       mask: "1234",
-      currentBalance: 300000000,  // 300M SDG
-      availableBalance: 288000000,  // 288M SDG
+      currentBalance: 45000000,  // 45M SDG (~$75K USD)
+      availableBalance: 42000000,  // 42M SDG (~$70K USD)
       type: "depository",
       subtype: "checking",
     },
@@ -330,7 +330,7 @@ export async function seedFinance(
         fiscalYearId: fiscalYear.id,
         name: `ميزانية ${i + 1} | Budget ${i + 1} - FY 2025-2026`,
         description: `Department budget ${i + 1} - Comboni School`,
-        totalAmount: faker.number.int({ min: 30000000, max: 120000000 }),  // 30M - 120M SDG
+        totalAmount: faker.number.int({ min: 15000000, max: 45000000 }),  // 15M - 45M SDG (~$25K-75K USD)
         status: BudgetStatus.ACTIVE,
         approvedBy: adminUser.id,
         approvedAt: new Date("2025-07-01"),

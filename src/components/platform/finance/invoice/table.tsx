@@ -1,11 +1,10 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import { ColumnDef } from "@tanstack/react-table";
+import { useState, useCallback, useMemo } from "react";
 import { DataTable } from "@/components/table/data-table";
 import { DataTableToolbar } from "@/components/table/data-table-toolbar";
 import { useDataTable } from "@/components/table/use-data-table";
-import type { InvoiceRow } from "./columns";
+import { getInvoiceColumns, type InvoiceRow } from "./columns";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { useModal } from "@/components/atom/modal/context";
@@ -15,12 +14,12 @@ import { getInvoicesWithFilters } from "./actions";
 
 interface InvoiceTableProps {
   initialData: InvoiceRow[];
-  columns: ColumnDef<InvoiceRow, unknown>[];
   total: number;
   perPage?: number;
 }
 
-export function InvoiceTable({ initialData, columns, total, perPage = 20 }: InvoiceTableProps) {
+export function InvoiceTable({ initialData, total, perPage = 20 }: InvoiceTableProps) {
+  const columns = useMemo(() => getInvoiceColumns(), []);
   // State for incremental loading
   const [data, setData] = useState<InvoiceRow[]>(initialData);
   const [currentPage, setCurrentPage] = useState(1);

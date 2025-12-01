@@ -95,8 +95,8 @@ export const getStudentColumns = (dictionary?: Dictionary['school']['students'])
   ];
 }
 
-// Export a default version for backward compatibility
-export const studentColumns = getStudentColumns();
+// NOTE: Do NOT export pre-generated columns. Always use getStudentColumns()
+// inside useMemo in client components to avoid SSR hook issues.
 
 
 

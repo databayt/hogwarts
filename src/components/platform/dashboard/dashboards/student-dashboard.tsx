@@ -1,28 +1,23 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import {
-  Calendar,
-  Clock,
-  Award,
-  FileText,
-  MessageSquare,
-} from "lucide-react";
-import type { Dictionary } from "@/components/internationalization/dictionaries";
-import { getStudentDashboardData } from "../actions";
-import { QuickActions } from "../quick-actions";
-import { getQuickActionsByRole } from "../quick-actions-config";
-import { getTenantContext } from "@/lib/tenant-context";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Progress } from "@/components/ui/progress"
+import { Clock } from "lucide-react"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { getStudentDashboardData } from "../actions"
+import { QuickActions } from "../quick-actions"
+import { getQuickActionsByRole } from "../quick-actions-config"
+import { getTenantContext } from "@/lib/tenant-context"
+import { StudentDashboardStats } from "@/components/platform/shared/stats"
 
 interface StudentDashboardProps {
   user: {
-    id: string;
-    email?: string | null;
-    role?: string;
-    schoolId?: string | null;
-  };
-  dictionary?: Dictionary["school"];
-  locale?: string;
+    id: string
+    email?: string | null
+    role?: string
+    schoolId?: string | null
+  }
+  dictionary?: Dictionary["school"]
+  locale?: string
 }
 
 export async function StudentDashboard({
@@ -31,51 +26,49 @@ export async function StudentDashboard({
   locale = "en",
 }: StudentDashboardProps) {
   // Fetch real data from server action with error handling
-  let data;
+  let data
   try {
-    data = await getStudentDashboardData();
+    data = await getStudentDashboardData()
   } catch (error) {
-    console.error('[StudentDashboard] Error fetching lab data:', error);
+    console.error("[StudentDashboard] Error fetching data:", error)
     return (
       <div className="space-y-6">
-        <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
-          <h3 className="mb-4">Unable to Load Dashboard</h3>
-          <p className="text-muted-foreground">
-            There was an error loading the dashboard data. Please try refreshing the page.
-          </p>
-        </div>
+        <Card>
+          <CardContent className="p-6">
+            <h3 className="mb-4">Unable to Load Dashboard</h3>
+            <p className="text-muted-foreground">
+              There was an error loading the dashboard data. Please try refreshing the page.
+            </p>
+          </CardContent>
+        </Card>
       </div>
-    );
+    )
   }
 
   // Get tenant context for subdomain
-  const { schoolId } = await getTenantContext();
+  const { schoolId } = await getTenantContext()
 
   // Get school subdomain for URL construction with error handling
-  let school = null;
+  let school = null
   try {
     if (schoolId) {
-      const { db } = await import("@/lib/db");
-      school = await db.school.findUnique({ where: { id: schoolId }, select: { domain: true } });
+      const { db } = await import("@/lib/db")
+      school = await db.school.findUnique({
+        where: { id: schoolId },
+        select: { domain: true },
+      })
     }
   } catch (error) {
-    console.error('[StudentDashboard] Error fetching school domain:', error);
+    console.error("[StudentDashboard] Error fetching school domain:", error)
   }
 
-  // Get lab dictionary
+  // Get dictionary with fallback
   const dashDict = dictionary?.studentDashboard || {
     stats: {
       attendance: "Attendance",
-      assignments: "Upcoming Assignments",
+      upcomingAssignments: "Upcoming Assignments",
       averageGrade: "Average Grade",
       announcements: "Announcements",
-    },
-    quickActions: {
-      title: "Quick Actions",
-      submitAssignment: "Submit Assignment",
-      checkGrades: "Check Grades",
-      viewTimetable: "View Timetable",
-      messages: "Messages",
     },
     sections: {
       upcomingAssignments: "Upcoming Assignments",
@@ -92,87 +85,39 @@ export async function StudentDashboard({
       noAnnouncements: "No announcements",
       due: "Due",
       room: "Room",
-      grade: "Grade",
-      basedOnRecentExams: "Based on recent exams",
-      unreadMessages: "Unread messages",
       pending: "Pending",
     },
-  };
+  }
 
   const averageGrade =
     data.recentGrades.length > 0
       ? data.recentGrades.reduce((sum, g) => sum + g.percentage, 0) /
         data.recentGrades.length
-      : 0;
+      : 0
 
   return (
     <div className="space-y-6">
-      {/* Hero Section */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              {dashDict.stats.attendance}
-            </CardTitle>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {data.attendanceSummary.percentage.toFixed(1)}%
-            </div>
-            <p className="text-xs text-muted-foreground">
+      {/* Stats Section - Using new reusable component */}
+      <StudentDashboardStats
+        attendance={data.attendanceSummary.percentage}
+        upcomingAssignments={data.upcomingAssignments.length}
+        averageGrade={averageGrade}
+        dictionary={dashDict.stats}
+      />
+
+      {/* Attendance Progress Card */}
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-medium">{dashDict.stats.attendance}</span>
+            <span className="text-sm text-muted-foreground">
               {data.attendanceSummary.presentDays}/{data.attendanceSummary.totalDays}{" "}
               {dashDict.labels.daysPresent}
-            </p>
-            <Progress value={data.attendanceSummary.percentage} className="mt-2" />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              {dashDict.stats.assignments}
-            </CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {data.upcomingAssignments.length}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {dashDict.labels.dueThisWeek}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              {dashDict.stats.averageGrade}
-            </CardTitle>
-            <Award className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{averageGrade.toFixed(1)}%</div>
-            <p className="text-xs text-muted-foreground">
-              {dashDict.labels.basedOnRecentExams}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              {dashDict.stats.announcements}
-            </CardTitle>
-            <MessageSquare className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{data.announcements.length}</div>
-            <p className="text-xs text-muted-foreground">{dashDict.labels.unreadMessages}</p>
-          </CardContent>
-        </Card>
-      </div>
+            </span>
+          </div>
+          <Progress value={data.attendanceSummary.percentage} className="h-2" />
+        </CardContent>
+      </Card>
 
       {/* Quick Actions */}
       <QuickActions
@@ -245,7 +190,9 @@ export async function StudentDashboard({
                           : "default"
                       }
                     >
-                      {assignment.status === "NOT_SUBMITTED" ? dashDict.labels.pending : assignment.status}
+                      {assignment.status === "NOT_SUBMITTED"
+                        ? dashDict.labels.pending
+                        : assignment.status}
                     </Badge>
                     <p className="text-xs text-muted-foreground mt-1">
                       {dashDict.labels.due}:{" "}
@@ -283,7 +230,8 @@ export async function StudentDashboard({
                       {grade.marksObtained}/{grade.totalMarks}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {grade.percentage.toFixed(1)}% {grade.grade ? `• ${grade.grade}` : ""}
+                      {grade.percentage.toFixed(1)}%{" "}
+                      {grade.grade ? `• ${grade.grade}` : ""}
                     </p>
                   </div>
                 </div>
@@ -325,5 +273,5 @@ export async function StudentDashboard({
         </Card>
       </div>
     </div>
-  );
+  )
 }

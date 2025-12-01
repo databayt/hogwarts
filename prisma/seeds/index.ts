@@ -146,9 +146,9 @@ async function main() {
 
   Login Credentials (password: 1234):
   - Developer: dev@databayt.org
-  - Admin: admin@demo.databayt.org
-  - Accountant: accountant@demo.databayt.org
-  - Staff: staff@demo.databayt.org
+  - Admin: admin@databayt.org
+  - Accountant: accountant@databayt.org
+  - Staff: staff@databayt.org
 
   Data Summary:
   - ${teachers.length} teachers

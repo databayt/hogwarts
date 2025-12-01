@@ -5,13 +5,14 @@ import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { getTenantContext } from "@/lib/tenant-context";
 import { eventCreateSchema, eventUpdateSchema, getEventsSchema } from "@/components/platform/events/validation";
+import { type Prisma } from "@prisma/client";
 
 export async function createEvent(input: z.infer<typeof eventCreateSchema>) {
   const { schoolId } = await getTenantContext();
   if (!schoolId) throw new Error("Missing school context");
   const parsed = eventCreateSchema.parse(input);
   
-  const row = await (db as any).event.create({
+  const row = await db.event.create({
     data: {
       schoolId,
       title: parsed.title,
@@ -56,7 +57,7 @@ export async function updateEvent(input: z.infer<typeof eventUpdateSchema>) {
   if (typeof rest.registrationRequired !== "undefined") data.registrationRequired = rest.registrationRequired;
   if (typeof rest.notes !== "undefined") data.notes = rest.notes || null;
   
-  await (db as any).event.updateMany({ where: { id, schoolId }, data });
+  await db.event.updateMany({ where: { id, schoolId }, data });
   revalidatePath("/lab/events");
   return { success: true as const };
 }
@@ -65,7 +66,7 @@ export async function deleteEvent(input: { id: string }) {
   const { schoolId } = await getTenantContext();
   if (!schoolId) throw new Error("Missing school context");
   const { id } = z.object({ id: z.string().min(1) }).parse(input);
-  await (db as any).event.deleteMany({ where: { id, schoolId } });
+  await db.event.deleteMany({ where: { id, schoolId } });
   revalidatePath("/lab/events");
   return { success: true as const };
 }
@@ -75,8 +76,7 @@ export async function getEvent(input: { id: string }) {
   const { schoolId } = await getTenantContext();
   if (!schoolId) throw new Error("Missing school context");
   const { id } = z.object({ id: z.string().min(1) }).parse(input);
-  if (!(db as any).event) return { event: null as null };
-  const e = await (db as any).event.findFirst({
+  const e = await db.event.findFirst({
     where: { id, schoolId },
     select: {
       id: true,
@@ -107,7 +107,6 @@ export async function getEvents(input: Partial<z.infer<typeof getEventsSchema>>)
   const { schoolId } = await getTenantContext();
   if (!schoolId) throw new Error("Missing school context");
   const sp = getEventsSchema.parse(input ?? {});
-  if (!(db as any).event) return { rows: [] as Array<{ id: string; title: string; eventType: string; eventDate: string; startTime: string; endTime: string; location: string; organizer: string; targetAudience: string; maxAttendees: number | null; currentAttendees: number; status: string; isPublic: boolean; createdAt: string }>, total: 0 };
   const where: any = {
     schoolId,
     ...(sp.title
@@ -128,17 +127,17 @@ export async function getEvents(input: Partial<z.infer<typeof getEventsSchema>>)
   };
   const skip = (sp.page - 1) * sp.perPage;
   const take = sp.perPage;
-  const orderBy = sp.sort && Array.isArray(sp.sort) && sp.sort.length
-    ? sp.sort.map((s) => ({ [s.id]: s.desc ? "desc" : "asc" }))
+  const orderBy: Prisma.EventOrderByWithRelationInput[] = sp.sort && Array.isArray(sp.sort) && sp.sort.length
+    ? sp.sort.map((s) => ({ [s.id]: s.desc ? "desc" : "asc" } as Prisma.EventOrderByWithRelationInput))
     : [{ eventDate: "desc" }, { startTime: "asc" }];
   const [rows, count] = await Promise.all([
-    (db as any).event.findMany({ 
-      where, 
-      orderBy, 
-      skip, 
+    db.event.findMany({
+      where,
+      orderBy,
+      skip,
       take,
     }),
-    (db as any).event.count({ where }),
+    db.event.count({ where }),
   ]);
   const mapped = (rows as Array<any>).map((e) => ({
     id: e.id as string,
@@ -167,7 +166,6 @@ export async function getEventsCSV(input?: Partial<z.infer<typeof getEventsSchem
   if (!schoolId) throw new Error("Missing school context");
 
   const sp = getEventsSchema.parse(input ?? {});
-  if (!(db as any).event) return "";
 
   const where: any = {
     schoolId,
@@ -176,7 +174,7 @@ export async function getEventsCSV(input?: Partial<z.infer<typeof getEventsSchem
     ...(sp.status ? { status: sp.status } : {}),
   };
 
-  const events = await (db as any).event.findMany({
+  const events = await db.event.findMany({
     where,
     orderBy: [{ eventDate: "desc" }],
   });

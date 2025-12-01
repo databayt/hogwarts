@@ -95,7 +95,9 @@
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
     "cookies-next": "^6.1.0",
+    "country-state-city": "^3.2.1",
     "culori": "^4.0.2",
+    "currency-codes": "^2.2.0",
     "date-fns": "^4.1.0",
     "framer-motion": "^12.23.12",
     "front-matter": "^4.0.2",
@@ -111,6 +113,7 @@
     "leaflet": "^1.9.4",
     "lucide-react": "^0.533.0",
     "moment": "^2.30.1",
+    "motion": "^12.23.24",
     "ms": "^2.1.3",
     "nanoid": "^5.1.5",
     "negotiator": "^1.0.0",
@@ -163,7 +166,7 @@
     "zod": "^4.0.14"
   },
   "devDependencies": {
-    "@eslint/eslintrc": "^3.3.1",
+    "@eslint/eslintrc": "2.15.4",
     "@playwright/test": "^1.55.0",
     "@tailwindcss/postcss": "^4",
     "@testing-library/dom": "^10.4.0",

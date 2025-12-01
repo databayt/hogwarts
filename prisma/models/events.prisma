@@ -1,0 +1,52 @@
+// School Events
+
+enum EventType {
+  ACADEMIC
+  SPORTS
+  CULTURAL
+  PARENT_MEETING
+  CELEBRATION
+  WORKSHOP
+  OTHER
+}
+
+enum EventStatus {
+  PLANNED
+  ONGOING
+  COMPLETED
+  CANCELLED
+  POSTPONED
+}
+
+model Event {
+  id               String      @id @default(cuid())
+  schoolId         String
+  title            String
+  description      String?     @db.Text
+  eventType        EventType   @default(OTHER)
+  eventDate        DateTime
+  startTime        String
+  endTime          String
+  location         String?
+  organizer        String?
+  targetAudience   String?
+  maxAttendees     Int?
+  currentAttendees Int         @default(0)
+  isPublic         Boolean     @default(false)
+  registrationRequired Boolean @default(false)
+  notes            String?     @db.Text
+  status           EventStatus @default(PLANNED)
+
+  // Relationships
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Indexes for performance
+  @@index([schoolId])
+  @@index([schoolId, eventDate])
+  @@index([schoolId, eventType])
+  @@index([schoolId, status])
+  @@map("events")
+}

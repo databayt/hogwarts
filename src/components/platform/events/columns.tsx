@@ -46,7 +46,7 @@ const getEventTypeBadge = (type: string) => {
   );
 };
 
-export const eventColumns: ColumnDef<EventRow>[] = [
+export const getEventColumns = (): ColumnDef<EventRow>[] => [
   { 
     accessorKey: "title", 
     id: 'title', 
@@ -189,3 +189,6 @@ export const eventColumns: ColumnDef<EventRow>[] = [
     enableColumnFilter: false,
   },
 ];
+
+// NOTE: Do NOT export pre-generated columns. Always use getEventColumns()
+// inside useMemo in client components to avoid SSR hook issues.

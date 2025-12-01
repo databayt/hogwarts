@@ -35,7 +35,7 @@ export async function seedAuth(
   // School Admin
   const adminUser = await prisma.user.create({
     data: {
-      email: "admin@demo.databayt.org",
+      email: "admin@databayt.org",
       username: "School Administrator",
       role: UserRole.ADMIN,
       password: passwordHash,
@@ -47,7 +47,7 @@ export async function seedAuth(
   // Accountant
   const accountantUser = await prisma.user.create({
     data: {
-      email: "accountant@demo.databayt.org",
+      email: "accountant@databayt.org",
       username: "School Accountant",
       role: UserRole.ACCOUNTANT,
       password: passwordHash,
@@ -59,7 +59,7 @@ export async function seedAuth(
   // Staff
   const staffUser = await prisma.user.create({
     data: {
-      email: "staff@demo.databayt.org",
+      email: "staff@databayt.org",
       username: "Support Staff",
       role: UserRole.STAFF,
       password: passwordHash,

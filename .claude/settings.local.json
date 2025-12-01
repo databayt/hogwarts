@@ -19,7 +19,22 @@
       "Bash(wc:*)",
       "WebFetch(domain:help.figma.com)",
       "WebFetch(domain:www.prisma.io)",
-      "mcp__ref__ref_search_documentation"
+      "mcp__ref__ref_search_documentation",
+      "WebFetch(domain:billingsdk.com)",
+      "WebFetch(domain:blocks.so)",
+      "Bash(while read dir)",
+      "Bash(do if [ -d $dir ])",
+      "Bash(! [ -f $dir/error.tsx ])",
+      "Bash(then echo $dir)",
+      "Bash(for dir in /Users/abdout/hogwarts/src/app/[lang]/s/[subdomain]/(platform)/{admin,announcements,assignments,attendance,events,exams,finance,grades,lessons,parents,students,subjects,teachers,timetable})",
+      "Bash(do)",
+      "Bash(if [ -f \"$dir/page.tsx\" ])",
+      "Bash([ ! -f \"$dir/error.tsx\" ])",
+      "Bash(then)",
+      "Bash(basename:*)",
+      "Bash(for route in \"announcements\" \"assignments\" \"attendance\" \"events\" \"exams\" \"finance\" \"grades\" \"lessons\" \"parents\" \"students\" \"subjects\" \"teachers\")",
+      "Bash(if [ -f \"/Users/abdout/hogwarts/src/app/[lang]/s/[subdomain]/(platform)/$route/page.tsx\" ])",
+      "Bash([ ! -f \"/Users/abdout/hogwarts/src/app/[lang]/s/[subdomain]/(platform)/$route/error.tsx\" ])"
     ],
     "deny": [],
     "ask": []

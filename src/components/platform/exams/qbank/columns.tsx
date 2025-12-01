@@ -82,7 +82,7 @@ const getSourceBadge = (source: string) => {
   );
 };
 
-export const questionBankColumns: ColumnDef<QuestionBankRow>[] = [
+export const getQuestionBankColumns = (): ColumnDef<QuestionBankRow>[] => [
   {
     accessorKey: "questionText",
     id: "questionText",
@@ -302,3 +302,6 @@ export const questionBankColumns: ColumnDef<QuestionBankRow>[] = [
     enableColumnFilter: false,
   },
 ];
+
+// NOTE: Do NOT export pre-generated columns. Always use getQuestionBankColumns()
+// inside useMemo in client components to avoid SSR hook issues.

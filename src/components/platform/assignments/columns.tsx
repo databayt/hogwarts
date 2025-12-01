@@ -18,7 +18,7 @@ export type AssignmentRow = {
   createdAt: string;
 };
 
-export const assignmentColumns: ColumnDef<AssignmentRow>[] = [
+export const getAssignmentColumns = (): ColumnDef<AssignmentRow>[] => [
   {
     accessorKey: "title",
     header: ({ column }) => <DataTableColumnHeader column={column} title="Title" />,
@@ -100,3 +100,6 @@ export const assignmentColumns: ColumnDef<AssignmentRow>[] = [
     enableColumnFilter: false,
   },
 ];
+
+// NOTE: Do NOT export pre-generated columns. Always use getAssignmentColumns()
+// inside useMemo in client components to avoid SSR hook issues.

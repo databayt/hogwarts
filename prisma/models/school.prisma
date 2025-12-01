@@ -74,6 +74,9 @@ model School {
   appliedDiscounts        AppliedDiscount[]
   // Branding and visibility
   branding                SchoolBranding?
+  // Events relations
+  events                  Event[]
+
   // Examination relations
   exams                   Exam[]
   examResults             ExamResult[]

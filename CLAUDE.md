@@ -63,6 +63,9 @@ pnpm test:e2e:debug         # Debug mode
 pnpm tsc --noEmit           # Check TypeScript (CRITICAL before builds)
 /scan-errors                # Detect 204+ error patterns
 /fix-build                  # Auto-fix with 95%+ success rate
+
+# Error Diagnosis
+/diagnose-sse <route>       # Diagnose server-side exceptions
 ```
 
 ---
@@ -698,6 +701,21 @@ pnpm test:e2e:report         # Show test report
 10. **onboarding Flow**
     - Exact sequence defined in `host-footer.tsx`
     - Navigation handled by `HostFooter` with context-aware validation
+
+11. **Server-Side Exceptions (SSE)**
+    - "Application error: a server-side exception has occurred" with digest code
+    - **Root Causes**:
+      - Hooks called from server components (useModal, useState in async functions)
+      - Column definitions with hooks called outside client component context
+      - Unhandled async errors (Stripe API, database queries without try-catch)
+      - Missing null checks before property access
+      - Missing error.tsx boundaries in route groups
+    - **Diagnosis**: Run `/diagnose-sse /route/path` to analyze
+    - **Prevention**:
+      - Always add error.tsx to route groups
+      - Wrap external API calls (Stripe) in try-catch
+      - Use useMemo for column generation in client components
+      - Check for null before arithmetic operations
 
 ---
 

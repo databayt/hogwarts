@@ -38,7 +38,7 @@ const getStatusBadge = (status: string) => {
   );
 };
 
-export const lessonColumns: ColumnDef<LessonRow>[] = [
+export const getLessonColumns = (): ColumnDef<LessonRow>[] => [
   { 
     accessorKey: "title", 
     id: 'title', 
@@ -152,3 +152,6 @@ export const lessonColumns: ColumnDef<LessonRow>[] = [
     enableColumnFilter: false,
   },
 ];
+
+// NOTE: Do NOT export pre-generated columns. Always use getLessonColumns()
+// inside useMemo in client components to avoid SSR hook issues.

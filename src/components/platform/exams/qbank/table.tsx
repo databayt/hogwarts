@@ -4,7 +4,7 @@ import { useMemo, useState, useCallback } from "react";
 import { DataTable } from "@/components/table/data-table";
 import { DataTableToolbar } from "@/components/table/data-table-toolbar";
 import { useDataTable } from "@/components/table/use-data-table";
-import { questionBankColumns, type QuestionBankRow } from "./columns";
+import { getQuestionBankColumns, type QuestionBankRow } from "./columns";
 import { Button } from "@/components/ui/button";
 import { Plus, Sparkles } from "lucide-react";
 import { useModal } from "@/components/atom/modal/context";
@@ -26,7 +26,7 @@ export function QuestionBankTable({
   perPage = 20,
   dictionary,
 }: QuestionBankTableProps) {
-  const columns = useMemo(() => questionBankColumns, []);
+  const columns = useMemo(() => getQuestionBankColumns(), []);
 
   // State for incremental loading
   const [data, setData] = useState<QuestionBankRow[]>(initialData);

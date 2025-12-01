@@ -27,7 +27,7 @@ Help me understand how to use it. Be ready to explain concepts, give examples, o
   )}`
 }
 
-type Dictionary = Awaited<ReturnType<typeof getDictionary>> & { docs?: Record<string, string> }
+type Dictionary = Awaited<ReturnType<typeof getDictionary>>
 
 const getMenuItems = (dictionary?: Dictionary) => ({
   markdown: (url: string) => (

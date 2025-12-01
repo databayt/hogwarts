@@ -56,3 +56,4 @@ build.log
 # Corrupted or temporary files
 "]*"
 build-analysis-report.md
+.env*.local

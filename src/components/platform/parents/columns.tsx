@@ -18,7 +18,7 @@ export type ParentRow = {
   createdAt: string;
 };
 
-export const parentColumns: ColumnDef<ParentRow>[] = [
+export const getParentColumns = (): ColumnDef<ParentRow>[] => [
   { accessorKey: "name", id: 'name', header: ({ column }) => <DataTableColumnHeader column={column} title="Name" />, meta: { label: "Name", variant: "text" }, enableColumnFilter: true },
   { accessorKey: "emailAddress", id: 'emailAddress', header: ({ column }) => <DataTableColumnHeader column={column} title="Email" />, meta: { label: "Email", variant: "text" }, enableColumnFilter: true },
   { accessorKey: "status", id: 'status', header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />, meta: { label: "Status", variant: "select", options: [{ label: 'Active', value: 'active' }, { label: 'Inactive', value: 'inactive' }] }, enableColumnFilter: true },
@@ -70,3 +70,6 @@ export const parentColumns: ColumnDef<ParentRow>[] = [
     enableColumnFilter: false,
   },
 ];
+
+// NOTE: Do NOT export pre-generated columns. Always use getParentColumns()
+// inside useMemo in client components to avoid SSR hook issues.

@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import type { getDictionary } from "@/components/internationalization/dictionaries"
 
-type Dictionary = Awaited<ReturnType<typeof getDictionary>> & { docs?: Record<string, string> }
+type Dictionary = Awaited<ReturnType<typeof getDictionary>>
 
 function useActiveItem(itemIds: string[]) {
   const [activeId, setActiveId] = React.useState<string | null>(null)

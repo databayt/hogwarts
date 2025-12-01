@@ -3,7 +3,7 @@
 import { useMemo, useState, useCallback, useTransition } from "react";
 import { DataTable } from "@/components/table/data-table";
 import { useDataTable } from "@/components/table/use-data-table";
-import { subjectColumns, type SubjectRow } from "./columns";
+import { getSubjectColumns, type SubjectRow } from "./columns";
 import { useModal } from "@/components/atom/modal/context";
 import Modal from "@/components/atom/modal/modal";
 import { SubjectCreateForm } from "@/components/platform/subjects/form";
@@ -75,7 +75,7 @@ export function SubjectsTable({ initialData, total, perPage = 20 }: SubjectsTabl
   });
 
   // Generate columns on the client side
-  const columns = useMemo(() => subjectColumns, []);
+  const columns = useMemo(() => getSubjectColumns(), []);
 
   // Table instance
   const { table } = useDataTable<SubjectRow>({

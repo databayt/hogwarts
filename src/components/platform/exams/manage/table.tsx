@@ -4,7 +4,7 @@ import { useMemo, useState, useCallback } from "react";
 import { DataTable } from "@/components/table/data-table";
 import { DataTableToolbar } from "@/components/table/data-table-toolbar";
 import { useDataTable } from "@/components/table/use-data-table";
-import { examColumns, type ExamRow } from "./columns";
+import { getExamColumns, type ExamRow } from "./columns";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { useModal } from "@/components/atom/modal/context";
@@ -20,7 +20,7 @@ interface ExamsTableProps {
 }
 
 export function ExamsTable({ initialData, total, perPage = 20 }: ExamsTableProps) {
-  const columns = useMemo(() => examColumns, []);
+  const columns = useMemo(() => getExamColumns(), []);
 
   // State for incremental loading
   const [data, setData] = useState<ExamRow[]>(initialData);
