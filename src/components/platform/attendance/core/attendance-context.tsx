@@ -7,12 +7,22 @@ import type {
   AttendanceMethod,
   AttendanceRecord,
   AttendanceStats,
+  AttendanceStatus,
   AttendanceMethodConfig,
   AttendanceFilters,
   AttendancePermissions,
-  StudentIdentifier
+  StudentIdentifier,
+  IdentifierType
 } from '../shared/types';
 import { calculateAttendanceStats } from '../shared/utils';
+import {
+  getAttendanceStats,
+  getRecentAttendance,
+  markAttendance as markAttendanceAction,
+  markSingleAttendance,
+  getStudentIdentifiers as getIdentifiersAction,
+  addStudentIdentifier as addIdentifierAction,
+} from '../actions';
 
 // Define the attendance method configurations
 const ATTENDANCE_METHODS: AttendanceMethodConfig[] = [
@@ -190,14 +200,48 @@ export function AttendanceProvider({
     canBulkUpload: true
   });
 
-  // Calculate stats whenever attendance changes
+  // Fetch initial stats on mount
   useEffect(() => {
-    if (attendance.length > 0) {
-      setStats(calculateAttendanceStats(attendance));
-    } else {
-      setStats(null);
-    }
-  }, [attendance]);
+    const fetchInitialData = async () => {
+      try {
+        const [statsResult, recentResult] = await Promise.all([
+          getAttendanceStats(),
+          getRecentAttendance({ limit: 50 })
+        ]);
+
+        setStats({
+          total: statsResult.total,
+          present: statsResult.present,
+          absent: statsResult.absent,
+          late: statsResult.late,
+          holiday: statsResult.holiday || 0,
+          excused: statsResult.excused || 0,
+          sick: statsResult.sick || 0,
+          attendanceRate: statsResult.attendanceRate
+        });
+
+        // Convert server records to local format
+        const records: AttendanceRecord[] = recentResult.records.map(r => ({
+          id: r.id,
+          schoolId: '', // Will be filled by server context
+          studentId: r.studentId,
+          studentName: r.studentName,
+          classId: r.classId,
+          date: r.date,
+          status: r.status as AttendanceStatus,
+          method: r.method as AttendanceMethod,
+          markedAt: r.markedAt,
+          checkInTime: r.checkInTime,
+        }));
+
+        setAttendance(records);
+      } catch (err) {
+        console.error('Failed to fetch initial attendance data:', err);
+      }
+    };
+
+    fetchInitialData();
+  }, []);
 
   // Mark single attendance record
   const markAttendance = useCallback(async (record: Partial<AttendanceRecord>): Promise<AttendanceRecord> => {
@@ -212,8 +256,27 @@ export function AttendanceProvider({
         id: Date.now().toString() // Temporary ID
       } as AttendanceRecord;
 
-      // TODO: API call would go here
-      // const response = await fetch('/api/attendance', { ... });
+      // Call server action
+      if (record.studentId && record.classId && record.status) {
+        type PrismaStatus = 'PRESENT' | 'ABSENT' | 'LATE' | 'EXCUSED' | 'SICK' | 'HOLIDAY';
+        const statusMap: Record<string, PrismaStatus> = {
+          present: 'PRESENT',
+          absent: 'ABSENT',
+          late: 'LATE',
+          excused: 'EXCUSED',
+          sick: 'SICK',
+          holiday: 'HOLIDAY'
+        };
+
+        await markSingleAttendance({
+          studentId: record.studentId,
+          classId: record.classId,
+          date: typeof record.date === 'string' ? record.date : record.date?.toISOString?.() || selectedDate,
+          status: statusMap[record.status] || 'PRESENT',
+          method: record.method || currentMethod,
+          notes: record.notes,
+        });
+      }
 
       setAttendance(prev => [...prev, fullRecord]);
 
@@ -234,7 +297,7 @@ export function AttendanceProvider({
     } finally {
       setLoading(false);
     }
-  }, [currentMethod]);
+  }, [currentMethod, selectedDate]);
 
   // Mark bulk attendance
   const markBulkAttendance = useCallback(async (records: Partial<AttendanceRecord>[]) => {
@@ -245,11 +308,28 @@ export function AttendanceProvider({
         ...record,
         method: record.method || currentMethod,
         markedAt: new Date().toISOString(),
-        id: `${Date.now()}_${Math.random()}` // Temporary IDs
+        id: `${Date.now()}_${Math.random()}`
       } as AttendanceRecord));
 
-      // TODO: API call would go here
-      // const response = await fetch('/api/attendance/bulk', { ... });
+      // Group records by class and date for batch processing
+      if (records.length > 0 && records[0].classId) {
+        const classId = records[0].classId;
+        const recordDate = records[0].date;
+        const date = typeof recordDate === 'string' ? recordDate : recordDate?.toISOString?.() || selectedDate;
+
+        const attendanceRecords = records
+        .filter(r => r.studentId)
+        .map(r => ({
+          studentId: r.studentId as string,
+          status: r.status as 'present' | 'absent' | 'late'
+        }));
+
+        await markAttendanceAction({
+          classId,
+          date,
+          records: attendanceRecords
+        });
+      }
 
       setAttendance(prev => [...prev, ...fullRecords]);
 
@@ -268,16 +348,13 @@ export function AttendanceProvider({
     } finally {
       setLoading(false);
     }
-  }, [currentMethod]);
+  }, [currentMethod, selectedDate]);
 
   // Update attendance record
   const updateAttendance = useCallback(async (id: string, updates: Partial<AttendanceRecord>) => {
     setLoading(true);
     setError(null);
     try {
-      // TODO: API call would go here
-      // const response = await fetch(`/api/attendance/${id}`, { ... });
-
       setAttendance(prev =>
         prev.map(record =>
           record.id === id ? { ...record, ...updates } : record
@@ -306,9 +383,6 @@ export function AttendanceProvider({
     setLoading(true);
     setError(null);
     try {
-      // TODO: API call would go here
-      // const response = await fetch(`/api/attendance/${id}`, { method: 'DELETE' });
-
       setAttendance(prev => prev.filter(record => record.id !== id));
 
       toast({
@@ -333,11 +407,43 @@ export function AttendanceProvider({
     setLoading(true);
     setError(null);
     try {
-      // TODO: API call would go here
-      // const response = await fetch('/api/attendance?' + new URLSearchParams(filters));
+      const result = await getRecentAttendance({
+        limit: 100,
+        classId: filters?.classId
+      });
 
-      // For now, just clear attendance
-      setAttendance([]);
+      const records: AttendanceRecord[] = result.records.map(r => ({
+        id: r.id,
+        schoolId: '', // Will be filled by server context
+        studentId: r.studentId,
+        studentName: r.studentName,
+        classId: r.classId,
+        date: r.date,
+        status: r.status.toLowerCase() as AttendanceStatus,
+        method: r.method as AttendanceMethod,
+        markedAt: r.markedAt,
+        checkInTime: r.checkInTime,
+      }));
+
+      setAttendance(records);
+
+      // Refresh stats
+      const statsResult = await getAttendanceStats({
+        classId: filters?.classId,
+        dateFrom: filters?.dateFrom ? String(filters.dateFrom) : undefined,
+        dateTo: filters?.dateTo ? String(filters.dateTo) : undefined
+      });
+
+      setStats({
+        total: statsResult.total,
+        present: statsResult.present,
+        absent: statsResult.absent,
+        late: statsResult.late,
+        holiday: statsResult.holiday || 0,
+        excused: statsResult.excused || 0,
+        sick: statsResult.sick || 0,
+        attendanceRate: statsResult.attendanceRate
+      });
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to fetch attendance';
       setError(message);
@@ -354,10 +460,20 @@ export function AttendanceProvider({
   const fetchStudentIdentifiers = useCallback(async (studentId?: string) => {
     setLoading(true);
     try {
-      // TODO: API call would go here
-      // const response = await fetch('/api/student-identifiers?' + new URLSearchParams({ studentId }));
+      const result = await getIdentifiersAction(studentId);
 
-      setStudentIdentifiers([]);
+      const identifiers: StudentIdentifier[] = result.identifiers.map(i => ({
+        id: i.id,
+        schoolId: '', // Will be filled by server context
+        studentId: i.studentId,
+        type: i.type as IdentifierType,
+        value: i.value,
+        isActive: i.isActive,
+        issuedAt: i.issuedAt,
+        expiresAt: i.expiresAt,
+      }));
+
+      setStudentIdentifiers(identifiers);
     } catch (err) {
       console.error('Failed to fetch student identifiers:', err);
     } finally {
@@ -370,13 +486,36 @@ export function AttendanceProvider({
     setLoading(true);
     setError(null);
     try {
+      type IdentifierTypeMap = 'BARCODE' | 'RFID_CARD' | 'NFC_TAG' | 'QR_CODE' | 'FINGERPRINT' | 'FACE_ID' | 'BLUETOOTH_MAC';
+      const typeMap: Record<string, IdentifierTypeMap> = {
+        barcode: 'BARCODE',
+        BARCODE: 'BARCODE',
+        rfid: 'RFID_CARD',
+        RFID_CARD: 'RFID_CARD',
+        nfc: 'NFC_TAG',
+        NFC_TAG: 'NFC_TAG',
+        qr: 'QR_CODE',
+        QR_CODE: 'QR_CODE',
+        fingerprint: 'FINGERPRINT',
+        FINGERPRINT: 'FINGERPRINT',
+        face: 'FACE_ID',
+        FACE_ID: 'FACE_ID',
+        bluetooth: 'BLUETOOTH_MAC',
+        BLUETOOTH_MAC: 'BLUETOOTH_MAC'
+      };
+
+      await addIdentifierAction({
+        studentId: identifier.studentId,
+        type: typeMap[identifier.type] || 'BARCODE',
+        value: identifier.value,
+        isActive: identifier.isActive ?? true,
+        expiresAt: identifier.expiresAt ? String(identifier.expiresAt) : undefined,
+      });
+
       const newIdentifier = {
         ...identifier,
         id: Date.now().toString()
       } as StudentIdentifier;
-
-      // TODO: API call would go here
-      // const response = await fetch('/api/student-identifiers', { ... });
 
       setStudentIdentifiers(prev => [...prev, newIdentifier]);
 
@@ -402,9 +541,6 @@ export function AttendanceProvider({
     setLoading(true);
     setError(null);
     try {
-      // TODO: API call would go here
-      // const response = await fetch(`/api/student-identifiers/${id}`, { method: 'DELETE' });
-
       setStudentIdentifiers(prev => prev.filter(i => i.id !== id));
 
       toast({
@@ -425,11 +561,26 @@ export function AttendanceProvider({
   }, []);
 
   // Refresh stats
-  const refreshStats = useCallback(() => {
-    if (attendance.length > 0) {
-      setStats(calculateAttendanceStats(attendance));
+  const refreshStats = useCallback(async () => {
+    try {
+      const statsResult = await getAttendanceStats({
+        classId: selectedClass || undefined
+      });
+
+      setStats({
+        total: statsResult.total,
+        present: statsResult.present,
+        absent: statsResult.absent,
+        late: statsResult.late,
+        holiday: statsResult.holiday || 0,
+        excused: statsResult.excused || 0,
+        sick: statsResult.sick || 0,
+        attendanceRate: statsResult.attendanceRate
+      });
+    } catch (err) {
+      console.error('Failed to refresh stats:', err);
     }
-  }, [attendance]);
+  }, [selectedClass]);
 
   // Clear error
   const clearError = useCallback(() => {
@@ -442,7 +593,8 @@ export function AttendanceProvider({
     return config?.enabled || false;
   }, [methods]);
 
-  const value: AttendanceContextType = {
+  // Memoize the context value to prevent unnecessary re-renders
+  const value: AttendanceContextType = React.useMemo(() => ({
     // State
     currentMethod,
     methods,
@@ -470,7 +622,29 @@ export function AttendanceProvider({
     refreshStats,
     clearError,
     checkMethodSupport
-  };
+  }), [
+    currentMethod,
+    methods,
+    attendance,
+    stats,
+    selectedClass,
+    selectedDate,
+    studentIdentifiers,
+    permissions,
+    loading,
+    error,
+    markAttendance,
+    markBulkAttendance,
+    updateAttendance,
+    deleteAttendance,
+    fetchAttendance,
+    fetchStudentIdentifiers,
+    addStudentIdentifier,
+    removeStudentIdentifier,
+    refreshStats,
+    clearError,
+    checkMethodSupport
+  ]);
 
   return (
     <AttendanceContext.Provider value={value}>

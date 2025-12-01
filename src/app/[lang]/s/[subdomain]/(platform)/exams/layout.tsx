@@ -13,30 +13,30 @@ export default async function ExamsLayout({ children, params }: Props) {
   const dictionary = await getDictionary(lang as Locale)
   const d = dictionary?.school?.exams
 
-  // Define exams page navigation with proper i18n
+  // Define exams page navigation using dictionary paths
   const examsPages: PageNavItem[] = [
     {
-      name: d?.navigation?.manage || 'Manage',
+      name: d?.allExams || 'Manage',
       href: `/${lang}/exams`
     },
     {
-      name: d?.navigation?.qbank || 'Question Bank',
+      name: d?.dashboard?.blocks?.qbank?.title || 'Question Bank',
       href: `/${lang}/exams/qbank`
     },
     {
-      name: d?.navigation?.generate || 'Generate',
+      name: d?.dashboard?.blocks?.generate?.title || 'Generate',
       href: `/${lang}/exams/generate`
     },
     {
-      name: d?.navigation?.mark || 'Mark',
+      name: d?.dashboard?.blocks?.mark?.title || 'Mark',
       href: `/${lang}/exams/mark`
     },
     {
-      name: d?.navigation?.result || 'Results',
+      name: d?.results || 'Results',
       href: `/${lang}/exams/result`
     },
     {
-      name: d?.navigation?.upcoming || 'Upcoming',
+      name: d?.upcomingExams || 'Upcoming',
       href: `/${lang}/exams/upcoming`
     },
   ]

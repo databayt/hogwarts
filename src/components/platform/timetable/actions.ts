@@ -569,4 +569,436 @@ export async function getWeeklyTimetable(input: unknown): Promise<{
   }
 }
 
+// ============================================================================
+// ADDITIONAL SERVER ACTIONS FOR SUB-ROUTES
+// ============================================================================
 
+/**
+ * Get rooms for selection dropdown
+ */
+export async function getRoomsForSelection() {
+  await requireReadAccess()
+
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) throw new Error('Missing school context')
+
+  const rows = await db.classroom.findMany({
+    where: { schoolId },
+    orderBy: { roomName: 'asc' },
+    select: { id: true, roomName: true, capacity: true }
+  })
+
+  return {
+    rooms: rows.map((r) => ({
+      id: r.id,
+      label: r.roomName,
+      capacity: r.capacity
+    }))
+  }
+}
+
+/**
+ * Get timetable filtered by a specific class
+ */
+export async function getTimetableByClass(input: { termId: string; classId: string; weekOffset?: 0 | 1 }) {
+  await requireReadAccess()
+
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) throw new Error('Missing school context')
+
+  const { config } = await getScheduleConfig({ termId: input.termId })
+
+  const term = await db.term.findFirst({
+    where: { id: input.termId, schoolId },
+    select: { yearId: true }
+  })
+  if (!term) throw new Error('Invalid term')
+
+  const periods = await db.period.findMany({
+    where: { schoolId, yearId: term.yearId },
+    orderBy: { startTime: 'asc' },
+    select: { id: true, name: true, startTime: true, endTime: true }
+  })
+
+  const slots = await db.timetable.findMany({
+    where: {
+      schoolId,
+      termId: input.termId,
+      classId: input.classId,
+      weekOffset: input.weekOffset ?? 0
+    },
+    include: {
+      teacher: { select: { id: true, givenName: true, surname: true } },
+      classroom: { select: { id: true, roomName: true } },
+      class: { select: { id: true, name: true, subject: { select: { subjectName: true } } } },
+      period: { select: { id: true, name: true, startTime: true, endTime: true } }
+    }
+  })
+
+  const classInfo = await db.class.findFirst({
+    where: { id: input.classId, schoolId },
+    select: { id: true, name: true, subject: { select: { subjectName: true } } }
+  })
+
+  return {
+    classInfo: classInfo ? {
+      id: classInfo.id,
+      name: classInfo.name,
+      subject: classInfo.subject?.subjectName
+    } : null,
+    workingDays: config.workingDays,
+    periods: periods.map(p => ({
+      id: p.id,
+      name: p.name,
+      startTime: p.startTime,
+      endTime: p.endTime
+    })),
+    slots: slots.map(s => ({
+      id: s.id,
+      dayOfWeek: s.dayOfWeek,
+      periodId: s.periodId,
+      periodName: s.period.name,
+      teacher: s.teacher ? `${s.teacher.givenName} ${s.teacher.surname}` : '',
+      teacherId: s.teacherId,
+      room: s.classroom?.roomName || '',
+      roomId: s.classroomId,
+      subject: s.class?.subject?.subjectName || s.class?.name || ''
+    })),
+    lunchAfterPeriod: config.defaultLunchAfterPeriod
+  }
+}
+
+/**
+ * Get timetable filtered by a specific teacher
+ */
+export async function getTimetableByTeacher(input: { termId: string; teacherId: string; weekOffset?: 0 | 1 }) {
+  await requireReadAccess()
+
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) throw new Error('Missing school context')
+
+  const { config } = await getScheduleConfig({ termId: input.termId })
+
+  const term = await db.term.findFirst({
+    where: { id: input.termId, schoolId },
+    select: { yearId: true }
+  })
+  if (!term) throw new Error('Invalid term')
+
+  const periods = await db.period.findMany({
+    where: { schoolId, yearId: term.yearId },
+    orderBy: { startTime: 'asc' },
+    select: { id: true, name: true, startTime: true, endTime: true }
+  })
+
+  const slots = await db.timetable.findMany({
+    where: {
+      schoolId,
+      termId: input.termId,
+      teacherId: input.teacherId,
+      weekOffset: input.weekOffset ?? 0
+    },
+    include: {
+      class: { select: { id: true, name: true, subject: { select: { subjectName: true } } } },
+      classroom: { select: { id: true, roomName: true } },
+      period: { select: { id: true, name: true, startTime: true, endTime: true } }
+    }
+  })
+
+  const teacherInfo = await db.teacher.findFirst({
+    where: { id: input.teacherId, schoolId },
+    select: { id: true, givenName: true, surname: true, emailAddress: true }
+  })
+
+  // Calculate workload
+  const uniqueDays = new Set(slots.map(s => s.dayOfWeek))
+  const totalPeriods = slots.length
+
+  return {
+    teacherInfo: teacherInfo ? {
+      id: teacherInfo.id,
+      name: `${teacherInfo.givenName} ${teacherInfo.surname}`,
+      email: teacherInfo.emailAddress
+    } : null,
+    workingDays: config.workingDays,
+    periods: periods.map(p => ({
+      id: p.id,
+      name: p.name,
+      startTime: p.startTime,
+      endTime: p.endTime
+    })),
+    slots: slots.map(s => ({
+      id: s.id,
+      dayOfWeek: s.dayOfWeek,
+      periodId: s.periodId,
+      periodName: s.period.name,
+      className: s.class?.name || '',
+      classId: s.classId,
+      room: s.classroom?.roomName || '',
+      roomId: s.classroomId,
+      subject: s.class?.subject?.subjectName || s.class?.name || ''
+    })),
+    workload: {
+      daysPerWeek: uniqueDays.size,
+      periodsPerWeek: totalPeriods,
+      classesTeaching: [...new Set(slots.map(s => s.classId))].length
+    },
+    lunchAfterPeriod: config.defaultLunchAfterPeriod
+  }
+}
+
+/**
+ * Get timetable filtered by a specific room
+ */
+export async function getTimetableByRoom(input: { termId: string; roomId: string; weekOffset?: 0 | 1 }) {
+  await requireReadAccess()
+
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) throw new Error('Missing school context')
+
+  const { config } = await getScheduleConfig({ termId: input.termId })
+
+  const term = await db.term.findFirst({
+    where: { id: input.termId, schoolId },
+    select: { yearId: true }
+  })
+  if (!term) throw new Error('Invalid term')
+
+  const periods = await db.period.findMany({
+    where: { schoolId, yearId: term.yearId },
+    orderBy: { startTime: 'asc' },
+    select: { id: true, name: true, startTime: true, endTime: true }
+  })
+
+  const slots = await db.timetable.findMany({
+    where: {
+      schoolId,
+      termId: input.termId,
+      classroomId: input.roomId,
+      weekOffset: input.weekOffset ?? 0
+    },
+    include: {
+      class: { select: { id: true, name: true, subject: { select: { subjectName: true } } } },
+      teacher: { select: { id: true, givenName: true, surname: true } },
+      period: { select: { id: true, name: true, startTime: true, endTime: true } }
+    }
+  })
+
+  const roomInfo = await db.classroom.findFirst({
+    where: { id: input.roomId, schoolId },
+    select: { id: true, roomName: true, capacity: true }
+  })
+
+  // Calculate utilization
+  const totalPossibleSlots = config.workingDays.length * periods.filter(p => !p.name.includes('Break') && !p.name.includes('Lunch')).length
+  const utilizationRate = totalPossibleSlots > 0 ? (slots.length / totalPossibleSlots) * 100 : 0
+
+  return {
+    roomInfo: roomInfo ? {
+      id: roomInfo.id,
+      name: roomInfo.roomName,
+      capacity: roomInfo.capacity
+    } : null,
+    workingDays: config.workingDays,
+    periods: periods.map(p => ({
+      id: p.id,
+      name: p.name,
+      startTime: p.startTime,
+      endTime: p.endTime
+    })),
+    slots: slots.map(s => ({
+      id: s.id,
+      dayOfWeek: s.dayOfWeek,
+      periodId: s.periodId,
+      periodName: s.period.name,
+      className: s.class?.name || '',
+      classId: s.classId,
+      teacher: s.teacher ? `${s.teacher.givenName} ${s.teacher.surname}` : '',
+      teacherId: s.teacherId,
+      subject: s.class?.subject?.subjectName || s.class?.name || ''
+    })),
+    utilization: {
+      usedSlots: slots.length,
+      totalSlots: totalPossibleSlots,
+      rate: Math.round(utilizationRate)
+    },
+    lunchAfterPeriod: config.defaultLunchAfterPeriod
+  }
+}
+
+/**
+ * Get timetable analytics data
+ */
+export async function getTimetableAnalytics(input: { termId: string }) {
+  await requirePermission('view_analytics')
+
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) throw new Error('Missing school context')
+
+  const { config } = await getScheduleConfig({ termId: input.termId })
+
+  const term = await db.term.findFirst({
+    where: { id: input.termId, schoolId },
+    select: { yearId: true }
+  })
+  if (!term) throw new Error('Invalid term')
+
+  const periods = await db.period.findMany({
+    where: { schoolId, yearId: term.yearId },
+    orderBy: { startTime: 'asc' }
+  })
+
+  const slots = await db.timetable.findMany({
+    where: { schoolId, termId: input.termId, weekOffset: 0 },
+    include: {
+      teacher: { select: { id: true, givenName: true, surname: true } },
+      classroom: { select: { id: true, roomName: true, capacity: true } },
+      class: { select: { id: true, name: true, subject: { select: { subjectName: true } } } }
+    }
+  })
+
+  // Teacher workload analysis
+  const teacherWorkload = new Map<string, { name: string; periods: number; classes: Set<string>; subjects: Set<string> }>()
+  for (const slot of slots) {
+    if (slot.teacher) {
+      const key = slot.teacherId
+      const existing = teacherWorkload.get(key) || {
+        name: `${slot.teacher.givenName} ${slot.teacher.surname}`,
+        periods: 0,
+        classes: new Set(),
+        subjects: new Set()
+      }
+      existing.periods++
+      existing.classes.add(slot.classId)
+      if (slot.class?.subject?.subjectName) existing.subjects.add(slot.class.subject.subjectName)
+      teacherWorkload.set(key, existing)
+    }
+  }
+
+  // Room utilization analysis
+  const rooms = await db.classroom.findMany({
+    where: { schoolId },
+    select: { id: true, roomName: true, capacity: true }
+  })
+
+  const teachingPeriods = periods.filter(p => !p.name.includes('Break') && !p.name.includes('Lunch'))
+  const maxSlotsPerRoom = config.workingDays.length * teachingPeriods.length
+
+  const roomUtilization = rooms.map(room => {
+    const roomSlots = slots.filter(s => s.classroomId === room.id)
+    return {
+      id: room.id,
+      name: room.roomName,
+      capacity: room.capacity,
+      usedSlots: roomSlots.length,
+      totalSlots: maxSlotsPerRoom,
+      utilizationRate: maxSlotsPerRoom > 0 ? Math.round((roomSlots.length / maxSlotsPerRoom) * 100) : 0
+    }
+  })
+
+  // Subject distribution
+  const subjectDist = new Map<string, { name: string; periods: number; classes: Set<string> }>()
+  for (const slot of slots) {
+    const subject = slot.class?.subject?.subjectName || slot.class?.name || 'Unknown'
+    const existing = subjectDist.get(subject) || { name: subject, periods: 0, classes: new Set() }
+    existing.periods++
+    existing.classes.add(slot.classId)
+    subjectDist.set(subject, existing)
+  }
+
+  // Detect conflicts
+  const { conflicts } = await detectTimetableConflicts({ termId: input.termId })
+
+  return {
+    summary: {
+      totalSlots: slots.length,
+      totalTeachers: teacherWorkload.size,
+      totalRooms: rooms.length,
+      totalClasses: [...new Set(slots.map(s => s.classId))].length,
+      conflictCount: conflicts.length
+    },
+    teacherWorkload: Array.from(teacherWorkload.entries()).map(([id, data]) => ({
+      id,
+      name: data.name,
+      periodsPerWeek: data.periods,
+      classesCount: data.classes.size,
+      subjects: Array.from(data.subjects)
+    })).sort((a, b) => b.periodsPerWeek - a.periodsPerWeek),
+    roomUtilization: roomUtilization.sort((a, b) => b.utilizationRate - a.utilizationRate),
+    subjectDistribution: Array.from(subjectDist.entries()).map(([name, data]) => ({
+      name,
+      periodsPerWeek: data.periods,
+      classesCount: data.classes.size
+    })).sort((a, b) => b.periodsPerWeek - a.periodsPerWeek),
+    conflicts
+  }
+}
+
+/**
+ * Delete a timetable slot
+ */
+export async function deleteTimetableSlot(input: {
+  termId: string
+  dayOfWeek: number
+  periodId: string
+  classId: string
+  weekOffset: 0 | 1
+}) {
+  await requireAdminAccess()
+
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) throw new Error('Missing school context')
+
+  await db.timetable.delete({
+    where: {
+      schoolId_termId_dayOfWeek_periodId_classId_weekOffset: {
+        schoolId,
+        termId: input.termId,
+        dayOfWeek: input.dayOfWeek,
+        periodId: input.periodId,
+        classId: input.classId,
+        weekOffset: input.weekOffset
+      }
+    }
+  })
+
+  await logTimetableAction('delete', {
+    entityType: 'slot',
+    metadata: input
+  })
+
+  return { success: true }
+}
+
+/**
+ * Get all periods for the current term
+ */
+export async function getPeriodsForTerm(input: { termId: string }) {
+  await requireReadAccess()
+
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) throw new Error('Missing school context')
+
+  const term = await db.term.findFirst({
+    where: { id: input.termId, schoolId },
+    select: { yearId: true }
+  })
+  if (!term) throw new Error('Invalid term')
+
+  const periods = await db.period.findMany({
+    where: { schoolId, yearId: term.yearId },
+    orderBy: { startTime: 'asc' },
+    select: { id: true, name: true, startTime: true, endTime: true }
+  })
+
+  return {
+    periods: periods.map((p, idx) => ({
+      id: p.id,
+      name: p.name,
+      order: idx + 1,
+      startTime: p.startTime,
+      endTime: p.endTime,
+      isBreak: p.name.toLowerCase().includes('break') || p.name.toLowerCase().includes('lunch')
+    }))
+  }
+}

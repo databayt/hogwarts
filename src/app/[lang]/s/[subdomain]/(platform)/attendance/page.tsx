@@ -3,17 +3,29 @@ import { AttendanceOverviewContent } from '@/components/platform/attendance/over
 import { getDictionary } from '@/components/internationalization/dictionaries'
 import { type Locale } from '@/components/internationalization/config'
 import { auth } from '@/auth'
+import { type Metadata } from 'next'
 
-export const metadata = { title: 'Dashboard: Attendance Overview' }
+export async function generateMetadata({ params }: { params: Promise<{ lang: Locale }> }): Promise<Metadata> {
+  const { lang } = await params
+  const dictionary = await getDictionary(lang)
+
+  return {
+    title: dictionary?.school?.attendance?.title || 'Attendance',
+    description: dictionary?.school?.attendance?.overview || 'Manage student attendance',
+  }
+}
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>
 }
 
 export default async function Page({ params }: Props) {
-  const { lang } = await params
-  const dictionary = await getDictionary(lang)
-  const session = await auth()
+  // Parallel data fetching
+  const [{ lang }, dictionary, session] = await Promise.all([
+    params,
+    getDictionary((await params).lang),
+    auth(),
+  ])
 
   // Determine user permissions based on role
   const permissions = {

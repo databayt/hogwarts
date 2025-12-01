@@ -11,18 +11,18 @@ interface ErrorProps {
   reset: () => void
 }
 
-export default function CampaignsError({ error, reset }: ErrorProps) {
+export default function ReportsError({ error, reset }: ErrorProps) {
   useEffect(() => {
-    console.error("Campaigns page error:", error)
+    console.error("Reports page error:", error)
   }, [error])
 
   return (
     <div className="grid gap-8">
       <Alert variant="destructive">
         <AlertCircle className="h-4 w-4" />
-        <AlertTitle>Unable to load campaigns</AlertTitle>
+        <AlertTitle>Unable to load reports</AlertTitle>
         <AlertDescription className="mt-2 space-y-2">
-          <p>An unexpected error occurred while loading admission campaigns.</p>
+          <p>An unexpected error occurred while loading attendance reports.</p>
           {error.digest && (
             <p className="text-xs text-muted-foreground">
               Error reference: {error.digest}

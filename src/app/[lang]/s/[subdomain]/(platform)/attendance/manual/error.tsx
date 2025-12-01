@@ -11,18 +11,18 @@ interface ErrorProps {
   reset: () => void
 }
 
-export default function ApplicationsError({ error, reset }: ErrorProps) {
+export default function ManualAttendanceError({ error, reset }: ErrorProps) {
   useEffect(() => {
-    console.error("Applications page error:", error)
+    console.error("Manual attendance page error:", error)
   }, [error])
 
   return (
     <div className="grid gap-8">
       <Alert variant="destructive">
         <AlertCircle className="h-4 w-4" />
-        <AlertTitle>Unable to load applications</AlertTitle>
+        <AlertTitle>Unable to load manual attendance</AlertTitle>
         <AlertDescription className="mt-2 space-y-2">
-          <p>An unexpected error occurred while loading applications.</p>
+          <p>An unexpected error occurred while loading the attendance form.</p>
           {error.digest && (
             <p className="text-xs text-muted-foreground">
               Error reference: {error.digest}

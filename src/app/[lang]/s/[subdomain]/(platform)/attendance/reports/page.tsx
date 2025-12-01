@@ -1,12 +1,18 @@
-import { attendanceReportParams } from '@/components/platform/attendance/reports/page-params'
-import { SearchParams } from 'nuqs/server'
-import { Shell as PageContainer } from '@/components/table/shell'
-import Link from 'next/link'
-import { AttendanceReportExportButton } from '@/components/platform/attendance/reports/export-button'
+import { ReportsContent } from '@/components/platform/attendance/reports/content'
 import { getDictionary } from '@/components/internationalization/dictionaries'
 import { type Locale } from '@/components/internationalization/config'
+import { SearchParams } from 'nuqs/server'
+import { type Metadata } from 'next'
 
-export const metadata = { title: 'Dashboard: Attendance Reports' }
+export async function generateMetadata({ params }: { params: Promise<{ lang: Locale }> }): Promise<Metadata> {
+  const { lang } = await params
+  const dictionary = await getDictionary(lang)
+
+  return {
+    title: dictionary?.school?.attendance?.reports || 'Attendance Reports',
+    description: 'Generate and export attendance reports',
+  }
+}
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>
@@ -14,35 +20,25 @@ interface Props {
 }
 
 export default async function Page({ params, searchParams }: Props) {
-  const { lang } = await params
-  const dictionary = await getDictionary(lang)
-  const sp = await attendanceReportParams.parse(await searchParams)
+  // Parallel data fetching
+  const [{ lang }, dictionary, sp] = await Promise.all([
+    params,
+    getDictionary((await params).lang),
+    searchParams,
+  ])
 
   return (
-    <PageContainer>
-      <div className="flex flex-1 flex-col gap-4">
-        <div>
-          <h1 className="font-semibold">Attendance Reports</h1>
-          <p className="muted text-muted-foreground">Filters and CSV export coming soon</p>
-          <div className="muted flex items-center gap-3">
-            <Link className="underline" href={`/dashboard/attendance/reports?${new URLSearchParams({
-              ...(sp.classId ? { classId: sp.classId } : {}),
-              ...(sp.studentId ? { studentId: sp.studentId } : {}),
-              ...(sp.status ? { status: sp.status } : {}),
-              ...(sp.from ? { from: sp.from } : {}),
-              ...(sp.to ? { to: sp.to } : {}),
-            }).toString()}`}>Apply filters</Link>
-            <AttendanceReportExportButton filters={{
-              ...(sp.classId ? { classId: sp.classId } : {}),
-              ...(sp.studentId ? { studentId: sp.studentId } : {}),
-              ...(sp.status ? { status: sp.status } : {}),
-              ...(sp.from ? { from: sp.from } : {}),
-              ...(sp.to ? { to: sp.to } : {}),
-            }} />
-          </div>
-        </div>
-      </div>
-    </PageContainer>
+    <ReportsContent
+      dictionary={dictionary}
+      locale={lang}
+      initialFilters={{
+        classId: sp.classId as string | undefined,
+        studentId: sp.studentId as string | undefined,
+        status: sp.status as string | undefined,
+        from: sp.from as string | undefined,
+        to: sp.to as string | undefined,
+      }}
+    />
   )
 }
 

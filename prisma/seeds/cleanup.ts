@@ -69,6 +69,24 @@ export async function seedCleanup(prisma: SeedPrisma): Promise<void> {
     "chartOfAccount",
     "fiscalYear",
 
+    // Exams - Auto-Marking & Question Bank (must come before exam)
+    "gradeOverride",
+    "markingResult",
+    "studentAnswer",
+    "rubricCriterion",
+    "rubric",
+    "generatedExamQuestion",
+    "generatedExam",
+    "examTemplate",
+    "questionReview",
+    "questionAnalytics",
+    "sourceChunk",
+    "sourceMaterial",
+    "generationJob",
+    "quizGameQuestion",
+    "quizGame",
+    "questionBank",
+
     // Academics
     "reportCardGrade",
     "reportCard",

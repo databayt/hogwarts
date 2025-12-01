@@ -23,7 +23,7 @@ import { randomBytes } from 'crypto'
 /**
  * Mark attendance for multiple students in a class
  */
-export async function markAttendance(input: z.infer<typeof markAttendanceSchema>) {
+export async function markAttendance(input: z.infer<typeof markAttendanceSchema>): Promise<{ success: true; count: number }> {
   const { schoolId } = await getTenantContext()
   if (!schoolId) throw new Error('Missing school context')
 
@@ -86,7 +86,7 @@ export async function markSingleAttendance(input: {
   notes?: string
   confidence?: number
   deviceId?: string
-}) {
+}): Promise<{ success: boolean; attendance: unknown }> {
   const { schoolId } = await getTenantContext()
   if (!schoolId) throw new Error('Missing school context')
 
@@ -134,7 +134,15 @@ export async function markSingleAttendance(input: {
 /**
  * Get attendance list for a class on a specific date
  */
-export async function getAttendanceList(input: { classId: string; date: string }) {
+export async function getAttendanceList(input: { classId: string; date: string }): Promise<{
+  rows: Array<{
+    studentId: string
+    name: string
+    status: 'present' | 'absent' | 'late'
+    checkInTime?: Date
+    method?: string
+  }>
+}> {
   const { schoolId } = await getTenantContext()
   if (!schoolId) throw new Error('Missing school context')
 
@@ -189,7 +197,13 @@ export async function getAttendanceList(input: { classId: string; date: string }
 /**
  * Get classes for selection dropdown
  */
-export async function getClassesForSelection() {
+export async function getClassesForSelection(): Promise<{
+  classes: Array<{
+    id: string
+    name: string
+    teacher: string | null
+  }>
+}> {
   const { schoolId } = await getTenantContext()
   if (!schoolId) throw new Error('Missing school context')
 
@@ -226,7 +240,17 @@ export async function getAttendanceStats(input?: {
   dateFrom?: string
   dateTo?: string
   studentId?: string
-}) {
+}): Promise<{
+  total: number
+  present: number
+  absent: number
+  late: number
+  excused: number
+  sick: number
+  holiday: number
+  attendanceRate: number
+  lastUpdated: string
+}> {
   const { schoolId } = await getTenantContext()
   if (!schoolId) throw new Error('Missing school context')
 
@@ -479,7 +503,7 @@ export async function getStudentsAtRisk(input?: {
       id: true,
       givenName: true,
       surname: true,
-      attendance: {
+      attendances: {
         where,
         select: { status: true }
       }
@@ -488,8 +512,8 @@ export async function getStudentsAtRisk(input?: {
 
   const atRisk = students
     .map(student => {
-      const total = student.attendance.length
-      const present = student.attendance.filter(a => a.status === 'PRESENT' || a.status === 'LATE').length
+      const total = student.attendances.length
+      const present = student.attendances.filter((a: { status: string }) => a.status === 'PRESENT' || a.status === 'LATE').length
       const rate = total > 0 ? Math.round((present / total) * 100) : 100
 
       return {
@@ -794,14 +818,17 @@ export async function getStudentIdentifiers(studentId?: string) {
 export async function findStudentByIdentifier(input: {
   type: string
   value: string
-}) {
+}): Promise<
+  | { found: false; error: string }
+  | { found: true; student: { id: string; name: string } }
+> {
   const { schoolId } = await getTenantContext()
   if (!schoolId) throw new Error('Missing school context')
 
   const identifier = await db.studentIdentifier.findFirst({
     where: {
       schoolId,
-      type: input.type as any,
+      type: input.type as 'BARCODE' | 'QR_CODE' | 'RFID_CARD' | 'NFC_TAG' | 'FINGERPRINT' | 'FACE_ID' | 'BLUETOOTH_MAC',
       value: input.value,
       isActive: true,
       OR: [
@@ -849,7 +876,11 @@ export async function findStudentByIdentifier(input: {
 /**
  * Bulk upload attendance records
  */
-export async function bulkUploadAttendance(input: z.infer<typeof bulkUploadSchema>) {
+export async function bulkUploadAttendance(input: z.infer<typeof bulkUploadSchema>): Promise<{
+  successful: number
+  failed: number
+  errors: Array<{ studentId: string; error: string }>
+}> {
   const { schoolId } = await getTenantContext()
   if (!schoolId) throw new Error('Missing school context')
 
@@ -985,7 +1016,7 @@ export async function getAttendanceReportCsv(input: {
   from?: string
   to?: string
   limit?: number
-}) {
+}): Promise<string> {
   const { schoolId } = await getTenantContext()
   if (!schoolId) throw new Error('Missing school context')
 
@@ -1049,7 +1080,7 @@ export async function checkOutStudent(input: {
   studentId: string
   classId: string
   date: string
-}) {
+}): Promise<{ success: boolean; error?: string }> {
   const { schoolId } = await getTenantContext()
   if (!schoolId) throw new Error('Missing school context')
 
@@ -1087,7 +1118,7 @@ export async function checkOutStudent(input: {
 export async function bulkCheckOut(input: {
   classId: string
   date: string
-}) {
+}): Promise<{ success: boolean; count: number }> {
   const { schoolId } = await getTenantContext()
   if (!schoolId) throw new Error('Missing school context')
 
@@ -1103,4 +1134,73 @@ export async function bulkCheckOut(input: {
 
   revalidatePath('/attendance')
   return { success: true, count: result.count }
+}
+
+// ============================================================================
+// BULK UPLOAD HISTORY
+// ============================================================================
+
+/**
+ * Get recent bulk uploads (grouped by date and method=BULK_UPLOAD)
+ */
+export async function getRecentBulkUploads(limit = 5): Promise<{
+  uploads: Array<{
+    date: Date
+    classId: string
+    className: string
+    total: number
+    successful: number
+    failed: number
+  }>
+}> {
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) return { uploads: [] }
+
+  // Get unique date+class combinations for BULK_UPLOAD method
+  const recentUploads = await db.attendance.groupBy({
+    by: ['date', 'classId'],
+    where: {
+      schoolId,
+      method: 'BULK_UPLOAD',
+    },
+    _count: {
+      _all: true,
+    },
+    orderBy: { date: 'desc' },
+    take: limit,
+  })
+
+  // Get class names
+  const classIds = [...new Set(recentUploads.map(u => u.classId))]
+  const classes = await db.class.findMany({
+    where: { id: { in: classIds }, schoolId },
+    select: { id: true, name: true },
+  })
+  const classMap = new Map(classes.map(c => [c.id, c.name]))
+
+  // Get success/fail counts for each upload
+  const uploads = await Promise.all(
+    recentUploads.map(async (upload) => {
+      const successCount = await db.attendance.count({
+        where: {
+          schoolId,
+          date: upload.date,
+          classId: upload.classId,
+          method: 'BULK_UPLOAD',
+          status: { not: 'ABSENT' }, // Consider non-absent as successful processing
+        },
+      })
+
+      return {
+        date: upload.date,
+        classId: upload.classId,
+        className: classMap.get(upload.classId) || 'Unknown Class',
+        total: upload._count._all,
+        successful: successCount,
+        failed: upload._count._all - successCount,
+      }
+    })
+  )
+
+  return { uploads }
 }

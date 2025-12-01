@@ -11,18 +11,18 @@ interface ErrorProps {
   reset: () => void
 }
 
-export default function AdmissionError({ error, reset }: ErrorProps) {
+export default function AnalyticsError({ error, reset }: ErrorProps) {
   useEffect(() => {
-    console.error("Admission page error:", error)
+    console.error("Analytics page error:", error)
   }, [error])
 
   return (
     <div className="grid gap-8">
       <Alert variant="destructive">
         <AlertCircle className="h-4 w-4" />
-        <AlertTitle>Unable to load admission data</AlertTitle>
+        <AlertTitle>Unable to load analytics</AlertTitle>
         <AlertDescription className="mt-2 space-y-2">
-          <p>An unexpected error occurred while loading admission information.</p>
+          <p>An unexpected error occurred while loading attendance analytics.</p>
           {error.digest && (
             <p className="text-xs text-muted-foreground">
               Error reference: {error.digest}

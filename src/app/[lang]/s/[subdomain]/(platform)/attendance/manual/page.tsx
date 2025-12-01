@@ -3,23 +3,35 @@ import { AttendanceContent } from '@/components/platform/attendance/content'
 import { getDictionary } from '@/components/internationalization/dictionaries'
 import { type Locale } from '@/components/internationalization/config'
 import { auth } from '@/auth'
+import { type Metadata } from 'next'
 
-export const metadata = { title: 'Dashboard: Manual Attendance' }
+export async function generateMetadata({ params }: { params: Promise<{ lang: Locale }> }): Promise<Metadata> {
+  const { lang } = await params
+  const dictionary = await getDictionary(lang)
+
+  return {
+    title: dictionary?.school?.attendance?.manual || 'Manual Attendance',
+    description: 'Mark attendance manually for your class',
+  }
+}
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string }>
 }
 
 export default async function Page({ params }: Props) {
-  const { lang } = await params
-  const dictionary = await getDictionary(lang)
-  const session = await auth()
+  // Parallel data fetching
+  const [{ lang }, dictionary, session] = await Promise.all([
+    params,
+    getDictionary((await params).lang),
+    auth(),
+  ])
 
   // Check permissions
   if (session?.user?.role !== 'ADMIN' && session?.user?.role !== 'TEACHER') {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh]">
-        <h2 className="text-2xl font-bold mb-4">Access Denied</h2>
+        <h2>Access Denied</h2>
         <p className="text-muted-foreground">
           You do not have permission to access manual attendance marking.
         </p>

@@ -80,7 +80,7 @@ export interface AttendanceDevice {
   location?: string;
   isActive: boolean;
   lastPing?: Date | string;
-  configuration?: Record<string, any>;
+  configuration?: Record<string, unknown>;
 }
 
 export interface AttendanceSession {
@@ -120,7 +120,7 @@ export interface AttendanceMethodConfig {
   color: string;
   requiresHardware: boolean;
   supportedDevices: DeviceType[];
-  settings?: Record<string, any>;
+  settings?: Record<string, unknown>;
 }
 
 export interface QRCodeConfig {

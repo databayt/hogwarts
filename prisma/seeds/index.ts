@@ -22,6 +22,7 @@ import { seedLessons } from "./lessons";
 import { seedReports } from "./reports";
 import { seedAdmission } from "./admission";
 import { seedFinance } from "./finance";
+import { seedAttendance } from "./attendance";
 import type { SeedPrisma } from "./types";
 
 const prisma = new PrismaClient() as SeedPrisma;
@@ -112,7 +113,7 @@ async function main() {
     console.log("\nPHASE 8: ASSESSMENTS");
     console.log("-".repeat(40));
 
-    await seedExams(prisma, schoolId, classes, subjects, students);
+    await seedExams(prisma, schoolId, classes, subjects, students, teachers);
 
     // Phase 9: Scheduling
     console.log("\nPHASE 9: SCHEDULING");
@@ -128,8 +129,14 @@ async function main() {
     await seedLessons(prisma, schoolId, classes);
     await seedReports(prisma, schoolId, terms[0].id, students, subjects);
 
-    // Phase 11: Admissions
-    console.log("\nPHASE 11: ADMISSIONS");
+    // Phase 11: Attendance
+    console.log("\nPHASE 11: ATTENDANCE");
+    console.log("-".repeat(40));
+
+    await seedAttendance(prisma, schoolId, classes, students);
+
+    // Phase 12: Admissions
+    console.log("\nPHASE 12: ADMISSIONS");
     console.log("-".repeat(40));
 
     await seedAdmission(prisma, schoolId, schoolName, adminUser);

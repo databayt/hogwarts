@@ -1,23 +1,26 @@
 "use client"
 
 import * as React from 'react'
+import { useCallback, useMemo } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import {
   Users,
   Clock,
   CheckCircle2,
   XCircle,
   AlertCircle,
-  Calendar,
-  Filter
+  Loader2,
+  RefreshCw
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatDistanceToNow } from 'date-fns'
 import type { Dictionary } from '@/components/internationalization/dictionaries'
 import type { UserRole } from '@prisma/client'
+import { getRecentAttendance, getAttendanceStats, getClassesForSelection } from '../actions'
 
 interface Props {
   dictionary?: Dictionary['school']
@@ -27,109 +30,129 @@ interface Props {
 
 interface AttendanceRecord {
   id: string
+  studentId: string
   studentName: string
+  classId: string
   className: string
-  status: 'present' | 'absent' | 'late' | 'excused'
-  method: string
-  timestamp: Date
-  markedBy: string
+  date: string
+  status: string // AttendanceStatus enum value
+  method: string // AttendanceMethod enum value
+  checkInTime?: string
+  markedAt: string
+  markedBy?: string | null
 }
 
-// Mock data - replace with actual API call
-const getMockRecentActivity = (): AttendanceRecord[] => {
-  const now = new Date()
-  return [
-    {
-      id: '1',
-      studentName: 'Harry Potter',
-      className: 'Gryffindor - Year 7',
-      status: 'present',
-      method: 'Manual',
-      timestamp: new Date(now.getTime() - 5 * 60000), // 5 minutes ago
-      markedBy: 'Prof. McGonagall',
-    },
-    {
-      id: '2',
-      studentName: 'Hermione Granger',
-      className: 'Gryffindor - Year 7',
-      status: 'present',
-      method: 'QR Code',
-      timestamp: new Date(now.getTime() - 10 * 60000), // 10 minutes ago
-      markedBy: 'Self Check-in',
-    },
-    {
-      id: '3',
-      studentName: 'Ron Weasley',
-      className: 'Gryffindor - Year 7',
-      status: 'late',
-      method: 'Manual',
-      timestamp: new Date(now.getTime() - 15 * 60000), // 15 minutes ago
-      markedBy: 'Prof. McGonagall',
-    },
-    {
-      id: '4',
-      studentName: 'Draco Malfoy',
-      className: 'Slytherin - Year 7',
-      status: 'absent',
-      method: 'Manual',
-      timestamp: new Date(now.getTime() - 30 * 60000), // 30 minutes ago
-      markedBy: 'Prof. Snape',
-    },
-    {
-      id: '5',
-      studentName: 'Luna Lovegood',
-      className: 'Ravenclaw - Year 6',
-      status: 'present',
-      method: 'Geofence',
-      timestamp: new Date(now.getTime() - 45 * 60000), // 45 minutes ago
-      markedBy: 'Automatic',
-    },
-  ]
+interface Stats {
+  total: number
+  present: number
+  absent: number
+  late: number
+  attendanceRate: number
 }
 
-const getStatusIcon = (status: AttendanceRecord['status']) => {
+interface ClassOption {
+  id: string
+  name: string
+  teacher: string | null
+}
+
+const getStatusIcon = (status: string) => {
   switch (status) {
-    case 'present':
+    case 'PRESENT':
       return <CheckCircle2 className="h-4 w-4 text-green-500" />
-    case 'absent':
+    case 'ABSENT':
       return <XCircle className="h-4 w-4 text-red-500" />
-    case 'late':
+    case 'LATE':
       return <Clock className="h-4 w-4 text-yellow-500" />
-    case 'excused':
+    case 'EXCUSED':
+    case 'SICK':
       return <AlertCircle className="h-4 w-4 text-blue-500" />
+    default:
+      return <AlertCircle className="h-4 w-4 text-muted-foreground" />
   }
 }
 
-const getStatusBadgeVariant = (status: AttendanceRecord['status']) => {
+const getStatusBadgeVariant = (status: string): "default" | "destructive" | "secondary" | "outline" => {
   switch (status) {
-    case 'present':
+    case 'PRESENT':
       return 'default'
-    case 'absent':
+    case 'ABSENT':
       return 'destructive'
-    case 'late':
+    case 'LATE':
       return 'secondary'
-    case 'excused':
+    default:
       return 'outline'
   }
 }
 
+const getMethodDisplayName = (method: string): string => {
+  const names: Record<string, string> = {
+    'MANUAL': 'Manual',
+    'QR_CODE': 'QR Code',
+    'BARCODE': 'Barcode',
+    'GEOFENCE': 'Geofence',
+    'RFID': 'RFID Card',
+    'NFC': 'NFC',
+    'BLUETOOTH': 'Bluetooth',
+    'BULK_UPLOAD': 'Bulk Upload'
+  }
+  return names[method] || method
+}
+
 export function RecentActivityContent({ dictionary, locale = 'en', userRole }: Props) {
   const [records, setRecords] = React.useState<AttendanceRecord[]>([])
-  const [filter, setFilter] = React.useState<'all' | 'present' | 'absent' | 'late'>('all')
+  const [stats, setStats] = React.useState<Stats | null>(null)
+  const [classes, setClasses] = React.useState<ClassOption[]>([])
+  const [filter, setFilter] = React.useState<string>('all')
+  const [selectedClass, setSelectedClass] = React.useState<string>('all')
+  const [loading, setLoading] = React.useState(true)
+  const [refreshing, setRefreshing] = React.useState(false)
+
+  const fetchData = React.useCallback(async () => {
+    try {
+      const classFilter = selectedClass !== 'all' ? selectedClass : undefined
+
+      const [recordsResult, statsResult, classesResult] = await Promise.all([
+        getRecentAttendance({ limit: 100, classId: classFilter }),
+        getAttendanceStats({ classId: classFilter }),
+        getClassesForSelection()
+      ])
+
+      // Map the results to match our interface types
+      setRecords(recordsResult.records.map(r => ({
+        ...r,
+        status: String(r.status),
+        method: String(r.method),
+      })))
+      setStats(statsResult)
+      setClasses(classesResult.classes)
+    } catch (error) {
+      console.error('Error fetching recent attendance:', error)
+    } finally {
+      setLoading(false)
+    }
+  }, [selectedClass])
 
   React.useEffect(() => {
-    // In production, fetch from API
-    setRecords(getMockRecentActivity())
-  }, [])
+    fetchData()
+  }, [fetchData])
 
-  const filteredRecords = filter === 'all'
-    ? records
-    : records.filter(r => r.status === filter)
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true)
+    await fetchData()
+    setTimeout(() => setRefreshing(false), 500)
+  }, [fetchData])
+
+  // Memoize filtered records to prevent recalculation on every render
+  const filteredRecords = React.useMemo(() => {
+    if (filter === 'all') return records
+    return records.filter(r => r.status === filter.toUpperCase())
+  }, [filter, records])
 
   const dict = dictionary?.attendance || {
     recentActivity: 'Recent Activity',
     recentActivityDescription: 'Latest attendance records across all methods',
-    allRecords: 'All Records',
+    allRecords: 'All',
     present: 'Present',
     absent: 'Absent',
     late: 'Late',
@@ -139,8 +162,36 @@ export function RecentActivityContent({ dictionary, locale = 'en', userRole }: P
     via: 'via',
   }
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-muted-foreground" />
+          <p className="text-muted-foreground">Loading recent activity...</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
+      {/* Header with Refresh */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="scroll-m-20 text-2xl font-semibold tracking-tight">{dict.recentActivity}</h1>
+          <p className="text-sm text-muted-foreground">{dict.recentActivityDescription}</p>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleRefresh}
+          disabled={refreshing}
+        >
+          <RefreshCw className={cn("h-4 w-4 mr-2", refreshing && "animate-spin")} />
+          Refresh
+        </Button>
+      </div>
+
       {/* Summary Cards */}
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
@@ -149,9 +200,9 @@ export function RecentActivityContent({ dictionary, locale = 'en', userRole }: P
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{records.length}</div>
+            <div className="text-2xl font-bold">{stats?.total || 0}</div>
             <p className="text-xs text-muted-foreground">
-              Last 24 hours
+              {stats?.attendanceRate || 0}% attendance rate
             </p>
           </CardContent>
         </Card>
@@ -163,8 +214,11 @@ export function RecentActivityContent({ dictionary, locale = 'en', userRole }: P
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              {records.filter(r => r.status === 'present').length}
+              {stats?.present || 0}
             </div>
+            <p className="text-xs text-muted-foreground">
+              {stats?.total ? Math.round((stats.present / stats.total) * 100) : 0}% of total
+            </p>
           </CardContent>
         </Card>
 
@@ -175,8 +229,11 @@ export function RecentActivityContent({ dictionary, locale = 'en', userRole }: P
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-yellow-600">
-              {records.filter(r => r.status === 'late').length}
+              {stats?.late || 0}
             </div>
+            <p className="text-xs text-muted-foreground">
+              {stats?.total ? Math.round((stats.late / stats.total) * 100) : 0}% of total
+            </p>
           </CardContent>
         </Card>
 
@@ -187,8 +244,11 @@ export function RecentActivityContent({ dictionary, locale = 'en', userRole }: P
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-600">
-              {records.filter(r => r.status === 'absent').length}
+              {stats?.absent || 0}
             </div>
+            <p className="text-xs text-muted-foreground">
+              {stats?.total ? Math.round((stats.absent / stats.total) * 100) : 0}% of total
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -196,40 +256,53 @@ export function RecentActivityContent({ dictionary, locale = 'en', userRole }: P
       {/* Recent Records */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between flex-wrap gap-4">
             <div>
               <CardTitle>{dict.recentActivity}</CardTitle>
               <CardDescription>{dict.recentActivityDescription}</CardDescription>
             </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant={filter === 'all' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setFilter('all')}
-              >
-                {dict.allRecords}
-              </Button>
-              <Button
-                variant={filter === 'present' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setFilter('present')}
-              >
-                {dict.present}
-              </Button>
-              <Button
-                variant={filter === 'late' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setFilter('late')}
-              >
-                {dict.late}
-              </Button>
-              <Button
-                variant={filter === 'absent' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setFilter('absent')}
-              >
-                {dict.absent}
-              </Button>
+            <div className="flex items-center gap-2 flex-wrap">
+              <Select value={selectedClass} onValueChange={setSelectedClass}>
+                <SelectTrigger className="w-[150px]">
+                  <SelectValue placeholder="Select class" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Classes</SelectItem>
+                  {classes.map(cls => (
+                    <SelectItem key={cls.id} value={cls.id}>{cls.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <div className="flex items-center gap-1">
+                <Button
+                  variant={filter === 'all' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setFilter('all')}
+                >
+                  {dict.allRecords}
+                </Button>
+                <Button
+                  variant={filter === 'present' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setFilter('present')}
+                >
+                  {dict.present}
+                </Button>
+                <Button
+                  variant={filter === 'late' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setFilter('late')}
+                >
+                  {dict.late}
+                </Button>
+                <Button
+                  variant={filter === 'absent' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setFilter('absent')}
+                >
+                  {dict.absent}
+                </Button>
+              </div>
             </div>
           </div>
         </CardHeader>
@@ -266,17 +339,24 @@ export function RecentActivityContent({ dictionary, locale = 'en', userRole }: P
                         </p>
                         <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1 rtl:flex-row-reverse">
                           <span>
-                            {dict.markedBy} {record.markedBy}
+                            {dict.via} {getMethodDisplayName(record.method)}
                           </span>
-                          <span>•</span>
-                          <span>
-                            {dict.via} {record.method}
-                          </span>
+                          {record.checkInTime && (
+                            <>
+                              <span>•</span>
+                              <span>
+                                Check-in: {new Date(record.checkInTime).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })}
+                              </span>
+                            </>
+                          )}
                         </div>
                       </div>
                     </div>
-                    <div className="text-sm text-muted-foreground">
-                      {formatDistanceToNow(record.timestamp, { addSuffix: true })}
+                    <div className="text-sm text-muted-foreground text-right">
+                      <p>{new Date(record.date).toLocaleDateString(locale)}</p>
+                      <p className="text-xs">
+                        {formatDistanceToNow(new Date(record.markedAt), { addSuffix: true })}
+                      </p>
                     </div>
                   </div>
                 ))}

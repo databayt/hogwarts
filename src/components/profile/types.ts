@@ -1,4 +1,5 @@
 // Profile Types - GitHub-inspired profile system
+import type React from "react"
 
 export type ProfileRole = "student" | "teacher" | "staff" | "parent"
 
@@ -62,7 +63,7 @@ export type ProfileData = StudentProfileData | TeacherProfileData | ParentProfil
 export interface ProfileStat {
   label: string
   value: number | string
-  icon?: string
+  icon?: React.ReactNode
 }
 
 // Achievement badge
