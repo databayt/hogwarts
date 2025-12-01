@@ -1,5 +1,5 @@
 import { type Locale } from '@/components/internationalization/config'
-import PageHeader from '@/components/atom/page-header'
+import { PageHeadingSetter } from '@/components/platform/context/page-heading-setter'
 import { PageNav, type PageNavItem } from '@/components/atom/page-nav'
 import { getDictionary } from '@/components/internationalization/dictionaries'
 
@@ -38,9 +38,8 @@ export default async function AttendanceLayout({ children, params }: Props) {
 
   return (
     <div className="space-y-6">
-      <PageHeader
+      <PageHeadingSetter
         title={dictionary?.school?.attendance?.title || 'Attendance'}
-        className="text-start max-w-none"
       />
       <PageNav pages={attendancePages} />
 

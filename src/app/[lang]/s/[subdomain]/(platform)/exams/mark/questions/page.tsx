@@ -8,7 +8,7 @@ import Link from "next/link"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import type { Locale } from "@/components/internationalization/config"
 import { Shell as PageContainer } from "@/components/table/shell"
-import PageHeader from "@/components/atom/page-header"
+import { PageHeadingSetter } from "@/components/platform/context/page-heading-setter"
 
 export const metadata = {
   title: "Question Bank",
@@ -70,9 +70,8 @@ export default async function QuestionBankPage({
     <PageContainer>
       <div className="flex flex-col gap-6">
         <div className="flex items-center justify-between">
-          <PageHeader
+          <PageHeadingSetter
             title="Questions"
-            className="text-start max-w-none"
           />
           <Button asChild>
             <Link href={`/${lang}/exams/mark/questions/create`}>

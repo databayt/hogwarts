@@ -12,6 +12,7 @@ import { Prisma } from "@prisma/client";
 
 export type AnnouncementListFilters = {
   title?: string;
+  language?: string; // Filter by language (en/ar)
   scope?: string;
   published?: string;
   priority?: string;
@@ -42,6 +43,7 @@ export type AnnouncementQueryParams = AnnouncementListFilters &
 export const announcementListSelect = {
   id: true,
   title: true,
+  language: true, // Include language for locale-based display
   scope: true,
   priority: true,
   published: true,
@@ -59,6 +61,7 @@ export const announcementDetailSelect = {
   schoolId: true,
   title: true,
   body: true,
+  language: true, // Include language for locale-based display
   scope: true,
   priority: true,
   classId: true,
@@ -112,6 +115,11 @@ export function buildAnnouncementWhere(
       contains: filters.title,
       mode: Prisma.QueryMode.insensitive,
     };
+  }
+
+  // Language filter (for locale-based filtering)
+  if (filters.language) {
+    where.language = filters.language;
   }
 
   // Enum filters

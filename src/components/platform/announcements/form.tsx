@@ -33,6 +33,7 @@ export function AnnouncementCreateForm({ dictionary, lang, onSuccess }: Announce
     defaultValues: {
       title: "",
       body: "",
+      language: lang, // Default to current locale
       scope: "school",
       classId: "",
       role: "",
@@ -52,6 +53,7 @@ export function AnnouncementCreateForm({ dictionary, lang, onSuccess }: Announce
       form.reset({
         title: a.title ?? "",
         body: a.body ?? "",
+        language: (a.language as "en" | "ar") ?? lang,
         scope: (a.scope as 'school' | 'class' | 'role') ?? "school",
         classId: a.classId ?? "",
         role: a.role ?? "",
@@ -82,7 +84,7 @@ export function AnnouncementCreateForm({ dictionary, lang, onSuccess }: Announce
 
   const handleNext = async () => {
     if (currentStep === 1) {
-      const step1Fields = ['title', 'body'] as const;
+      const step1Fields = ['title', 'body', 'language'] as const;
       const step1Valid = await form.trigger(step1Fields);
       if (step1Valid) {
         setCurrentStep(2);
@@ -95,8 +97,8 @@ export function AnnouncementCreateForm({ dictionary, lang, onSuccess }: Announce
   const handleSaveCurrentStep = async () => {
     if (currentId) {
       // For editing, save current step data
-      const currentStepFields = currentStep === 1 
-        ? ['title', 'body'] as const
+      const currentStepFields = currentStep === 1
+        ? ['title', 'body', 'language'] as const
         : ['scope', 'classId', 'role', 'published'] as const;
       
       const stepValid = await form.trigger(currentStepFields);

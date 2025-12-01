@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import { auth } from '@/auth'
-import PageHeader from '@/components/atom/page-header'
+import { PageHeadingSetter } from '@/components/platform/context/page-heading-setter'
 import { PageNav, type PageNavItem } from '@/components/atom/page-nav'
 import { getDictionary } from '@/components/internationalization/dictionaries'
 import type { Locale } from '@/components/internationalization/config'
@@ -33,9 +33,8 @@ export default async function BankingLayout({
 
   return (
     <div className="space-y-6">
-      <PageHeader
+      <PageHeadingSetter
         title="Banking"
-        className="text-start max-w-none"
       />
       <PageNav pages={bankingPages} />
 

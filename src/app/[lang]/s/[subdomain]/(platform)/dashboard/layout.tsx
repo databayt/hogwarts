@@ -1,6 +1,6 @@
 import { type Locale } from '@/components/internationalization/config'
 import { getDictionary } from '@/components/internationalization/dictionaries'
-import PageHeader from '@/components/atom/page-header'
+import { PageHeadingSetter } from '@/components/platform/context/page-heading-setter'
 
 interface Props {
   children: React.ReactNode
@@ -14,9 +14,8 @@ export default async function DashboardLayout({ children, params }: Props) {
 
   return (
     <div className="space-y-6">
-      <PageHeader
+      <PageHeadingSetter
         title={d?.title || 'Overview'}
-        className="text-start max-w-none"
       />
       {children}
     </div>

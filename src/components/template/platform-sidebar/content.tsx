@@ -3,7 +3,6 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Sidebar,
   SidebarContent,
@@ -58,7 +57,6 @@ export default function PlatformSidebar({ school, lang, ...props }: PlatformSide
         </SidebarMenu>
       </SidebarHeader> */}
       <SidebarContent className="border-0 bg-transparent">
-        <ScrollArea className="h-full" dir={isRTL ? "rtl" : "ltr"}>
           <SidebarGroup className="p-2 pb-16">
             <SidebarMenu className="space-y-1 list-none">
               {platformNav
@@ -96,7 +94,6 @@ export default function PlatformSidebar({ school, lang, ...props }: PlatformSide
               })}
             </SidebarMenu>
           </SidebarGroup>
-        </ScrollArea>
       </SidebarContent>
     </Sidebar>
   );

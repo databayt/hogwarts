@@ -30,6 +30,7 @@ type AnnouncementSelectResult = {
   schoolId: string;
   title: string;
   body: string;
+  language: string;
   scope: string;
   classId: string | null;
   role: string | null;
@@ -42,6 +43,7 @@ type AnnouncementSelectResult = {
 type AnnouncementListResult = {
   id: string;
   title: string;
+  language: string;
   scope: string;
   published: boolean;
   createdAt: string;
@@ -109,6 +111,7 @@ export async function createAnnouncement(
         schoolId,
         title: parsed.title,
         body: parsed.body,
+        language: parsed.language || "ar", // Default to Arabic
         scope: parsed.scope,
         classId: parsed.classId || null,
         role: (parsed.role as any) || null,
@@ -205,6 +208,7 @@ export async function updateAnnouncement(
     const data: any = {};
     if (typeof rest.title !== "undefined") data.title = rest.title;
     if (typeof rest.body !== "undefined") data.body = rest.body;
+    if (typeof rest.language !== "undefined") data.language = rest.language;
     if (typeof rest.scope !== "undefined") data.scope = rest.scope;
     if (typeof rest.classId !== "undefined") {
       // Use Prisma relation API instead of foreign key
@@ -461,6 +465,7 @@ export async function getAnnouncement(
         schoolId: true,
         title: true,
         body: true,
+        language: true,
         scope: true,
         classId: true,
         role: true,
@@ -542,6 +547,7 @@ export async function getAnnouncements(
       }),
       ...(sp.scope && { scope: sp.scope }),
       ...(sp.published && { published: sp.published === "true" }),
+      ...(sp.language && { language: sp.language }), // Filter by language (en/ar)
     };
 
     // Build pagination
@@ -566,6 +572,7 @@ export async function getAnnouncements(
         select: {
           id: true,
           title: true,
+          language: true,
           scope: true,
           published: true,
           createdAt: true,
@@ -579,6 +586,7 @@ export async function getAnnouncements(
     const mapped: AnnouncementListResult[] = rows.map((a) => ({
       id: a.id,
       title: a.title,
+      language: a.language,
       scope: a.scope,
       published: a.published,
       createdAt: a.createdAt.toISOString(),

@@ -1,8 +1,13 @@
 import { z } from "zod"
+import { i18n, type Locale } from "@/components/internationalization/config"
+
+// Language enum for announcements (matches supported locales)
+export const languageSchema = z.enum(i18n.locales as [Locale, ...Locale[]])
 
 export const announcementBaseSchema = z.object({
   title: z.string().min(1, "Title is required"),
   body: z.string().min(1, "Body is required"),
+  language: languageSchema.default("ar"), // Default to Arabic
   scope: z.enum(["school", "class", "role"]),
   classId: z.string().optional(),
   role: z.string().optional(),
@@ -52,6 +57,7 @@ export const getAnnouncementsSchema = z.object({
   title: z.string().optional().default(""),
   scope: z.string().optional().default(""),
   published: z.string().optional().default(""),
+  language: z.string().optional().default(""), // Filter by locale (en/ar)
   sort: z.array(sortItemSchema).optional().default([]),
 })
 

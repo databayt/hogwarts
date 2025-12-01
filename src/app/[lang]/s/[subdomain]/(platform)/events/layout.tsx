@@ -1,6 +1,6 @@
 import { type Locale } from '@/components/internationalization/config'
 import { getDictionary } from '@/components/internationalization/dictionaries'
-import PageHeader from '@/components/atom/page-header'
+import { PageHeadingSetter } from '@/components/platform/context/page-heading-setter'
 import { PageNav, type PageNavItem } from '@/components/atom/page-nav'
 
 interface Props {
@@ -26,9 +26,8 @@ export default async function EventsLayout({ children, params }: Props) {
 
   return (
     <div className="space-y-6">
-      <PageHeader
+      <PageHeadingSetter
         title={d?.title || 'Events'}
-        className="text-start max-w-none"
       />
       <PageNav pages={eventsPages} />
       {children}

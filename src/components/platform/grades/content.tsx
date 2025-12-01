@@ -5,7 +5,7 @@ import { resultsSearchParams } from '@/components/platform/grades/list-params'
 import { db } from '@/lib/db'
 import { getTenantContext } from '@/lib/tenant-context'
 import { Shell as PageContainer } from '@/components/table/shell'
-import PageHeader from '@/components/atom/page-header'
+import { PageHeadingSetter } from '@/components/platform/context/page-heading-setter'
 import { type Locale } from '@/components/internationalization/config'
 import { type Dictionary } from '@/components/internationalization/dictionaries'
 
@@ -77,10 +77,9 @@ export default async function ResultsContent({ searchParams, dictionary, lang }:
   return (
     <PageContainer>
       <div className="flex flex-1 flex-col gap-4">
-        <PageHeader
+        <PageHeadingSetter
           title={dictionary.school.grades.results}
           description={dictionary.school.grades.manageResults}
-          className="text-start max-w-none"
         />
         <ResultsTable initialData={data} total={total} dictionary={dictionary} lang={lang} perPage={sp.perPage} />
       </div>

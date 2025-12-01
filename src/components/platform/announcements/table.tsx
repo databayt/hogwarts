@@ -40,26 +40,29 @@ interface AnnouncementsTableProps {
   perPage?: number;
 }
 
-// Export CSV function
-async function getAnnouncementsCSV(filters?: Record<string, unknown>): Promise<string> {
-  // Get all announcements without pagination for export
-  const result = await getAnnouncements({ page: 1, perPage: 1000, ...filters });
-  if (!result.success || !result.data.rows) return "";
+// Export CSV function (will be created inside component to access lang)
+function createGetAnnouncementsCSV(lang: Locale) {
+  return async function getAnnouncementsCSV(filters?: Record<string, unknown>): Promise<string> {
+    // Get all announcements without pagination for export (filtered by language)
+    const result = await getAnnouncements({ page: 1, perPage: 1000, language: lang, ...filters });
+    if (!result.success || !result.data.rows) return "";
 
-  const rows = result.data.rows;
-  const headers = ["ID", "Title", "Scope", "Published", "Created At", "Created By"];
-  const csvRows = rows.map((row) =>
-    [
-      row.id,
-      `"${row.title.replace(/"/g, '""')}"`,
-      row.scope,
-      row.published ? "Yes" : "No",
-      row.createdAt,
-      row.createdBy || "",
-    ].join(",")
-  );
+    const rows = result.data.rows;
+    const headers = ["ID", "Title", "Language", "Scope", "Published", "Created At", "Created By"];
+    const csvRows = rows.map((row) =>
+      [
+        row.id,
+        `"${row.title.replace(/"/g, '""')}"`,
+        row.language,
+        row.scope,
+        row.published ? "Yes" : "No",
+        row.createdAt,
+        row.createdBy || "",
+      ].join(",")
+    );
 
-  return [headers.join(","), ...csvRows].join("\n");
+    return [headers.join(","), ...csvRows].join("\n");
+  };
 }
 
 // Filter options
@@ -99,14 +102,16 @@ export function AnnouncementsTable({
   const [scopeFilter, setScopeFilter] = useState("all");
   const [publishedFilter, setPublishedFilter] = useState("all");
 
-  // Build filters object
+  // Build filters object (always include language for locale-based filtering)
   const filters = useMemo(() => {
-    const f: Record<string, unknown> = {};
+    const f: Record<string, unknown> = {
+      language: lang, // Always filter by current locale
+    };
     if (deferredSearch) f.title = deferredSearch;
     if (scopeFilter !== "all") f.scope = scopeFilter;
     if (publishedFilter !== "all") f.published = publishedFilter;
-    return Object.keys(f).length > 0 ? f : undefined;
-  }, [deferredSearch, scopeFilter, publishedFilter]);
+    return f;
+  }, [lang, deferredSearch, scopeFilter, publishedFilter]);
 
   // Data management with optimistic updates
   const {
@@ -126,6 +131,7 @@ export function AnnouncementsTable({
     fetcher: async (params) => {
       const result = await getAnnouncements({
         ...params,
+        language: lang, // Always filter by current locale
         title: deferredSearch || undefined,
         scope: scopeFilter !== "all" ? scopeFilter : undefined,
         published: publishedFilter !== "all" ? publishedFilter : undefined,
@@ -237,6 +243,9 @@ export function AnnouncementsTable({
         return { label: scope, variant: "outline" as const };
     }
   };
+
+  // Create locale-aware CSV export function
+  const getAnnouncementsCSV = useMemo(() => createGetAnnouncementsCSV(lang), [lang]);
 
   // Translations for toolbar
   const toolbarTranslations = {

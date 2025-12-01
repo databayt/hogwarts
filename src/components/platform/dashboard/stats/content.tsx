@@ -16,6 +16,8 @@ import StatsUsage from "./stats-usage"
 import StatsSegmented from "./stats-segmented"
 import StatsWeather from "./stats-weather"
 import StatsAppleActivity from "./stats-apple-activity"
+import StatsCardFlip from "./stats-card-flip"
+import StatsCurrencyTransfer from "./stats-currency-transfer"
 
 interface StatsContentProps {
   dictionary: Awaited<ReturnType<typeof getDictionary>>
@@ -119,6 +121,18 @@ export default function StatsContent(_props: StatsContentProps) {
         <section>
           <h3 className="mb-4 text-lg font-medium">Apple Activity Rings (stats-15)</h3>
           <StatsAppleActivity />
+        </section>
+
+        {/* Stats 16: Card Flip */}
+        <section>
+          <h3 className="mb-4 text-lg font-medium">Card Flip (stats-16)</h3>
+          <StatsCardFlip />
+        </section>
+
+        {/* Stats 17: Currency Transfer */}
+        <section>
+          <h3 className="mb-4 text-lg font-medium">Currency Transfer (stats-17)</h3>
+          <StatsCurrencyTransfer />
         </section>
       </div>
     </>

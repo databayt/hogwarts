@@ -5,7 +5,7 @@ import { getCurrentDomain } from '@/components/site/utils';
 import { generateSchoolMetadata, generateDefaultMetadata } from '@/components/site/metadata';
 import { getDictionary } from '@/components/internationalization/dictionaries';
 import { type Locale } from '@/components/internationalization/config';
-import PageHeader from '@/components/atom/page-header';
+import { PageHeadingSetter } from '@/components/platform/context/page-heading-setter';
 import { PageNav, type PageNavItem } from '@/components/atom/page-nav';
 
 interface StudentsManageProps {
@@ -49,9 +49,8 @@ export default async function StudentsManage({ params }: StudentsManageProps) {
   return (
     <div className="school-content" data-school-id={school.id} data-subdomain={subdomain}>
       <div className="space-y-6">
-        <PageHeader
+        <PageHeadingSetter
           title={dict.title}
-          className="text-start max-w-none"
         />
         <PageNav pages={studentPages} />
         <div className="rounded-lg border bg-card p-8">

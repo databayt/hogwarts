@@ -15,6 +15,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 export type AnnouncementRow = {
   id: string;
   title: string;
+  language: string;
   scope: string;
   published: boolean;
   createdAt: string;

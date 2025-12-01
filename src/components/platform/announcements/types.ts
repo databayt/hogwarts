@@ -7,6 +7,7 @@ export type AnnouncementDTO = {
   schoolId: string;
   title: string;
   body: string;
+  language: "en" | "ar";
   scope: "school" | "class" | "role";
   classId: string | null;
   class?: { id: string; name: string } | null;
@@ -19,6 +20,7 @@ export type AnnouncementDTO = {
 export type AnnouncementRow = {
   id: string;
   title: string;
+  language: string;
   scope: string;
   published: boolean;
   createdAt: string;

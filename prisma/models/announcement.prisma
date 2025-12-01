@@ -18,6 +18,7 @@ model Announcement {
   schoolId String
   title    String
   body     String               @db.Text
+  language String               @default("ar") // "en" or "ar" - filters by user locale
   scope    AnnouncementScope    @default(school)
   priority AnnouncementPriority @default(normal)
 
@@ -51,6 +52,7 @@ model Announcement {
   // Optimized indexes for performance
   @@index([schoolId, scope])
   @@index([schoolId, published, createdAt])
+  @@index([schoolId, language, published, createdAt]) // Language-based filtering
   @@index([schoolId, classId])
   @@index([schoolId, role])
   @@index([schoolId, pinned, createdAt])

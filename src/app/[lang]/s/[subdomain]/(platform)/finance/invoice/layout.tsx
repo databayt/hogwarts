@@ -1,6 +1,6 @@
 import { getDictionary } from '@/components/internationalization/dictionaries'
 import { type Locale } from '@/components/internationalization/config'
-import PageHeader from '@/components/atom/page-header'
+import { PageHeadingSetter } from '@/components/platform/context/page-heading-setter'
 import { PageNav, type PageNavItem } from '@/components/atom/page-nav'
 
 interface Props {
@@ -24,9 +24,8 @@ export default async function InvoiceLayout({ children, params }: Props) {
 
   return (
     <div className="space-y-6">
-      <PageHeader
+      <PageHeadingSetter
         title={d?.title || 'Invoice'}
-        className="text-start max-w-none"
       />
       <PageNav pages={invoicePages} />
       {children}

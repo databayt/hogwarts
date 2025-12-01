@@ -3,7 +3,7 @@ import type { Locale } from "@/components/internationalization/config";
 import { db } from "@/lib/db";
 import { getTenantContext } from "@/lib/tenant-context";
 import { Shell as PageContainer } from "@/components/table/shell";
-import PageHeader from "@/components/atom/page-header";
+import { PageHeadingSetter } from "@/components/platform/context/page-heading-setter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -49,10 +49,9 @@ export default async function Page({ params }: Props) {
     <PageContainer>
       <div className="flex flex-1 flex-col gap-6">
         <div className="flex items-center justify-between">
-          <PageHeader
+          <PageHeadingSetter
             title={exam.title}
             description={exam.description || d?.description || "Exam Details"}
-            className="text-start max-w-none"
           />
           <Button asChild>
             <Link href={`/${lang}/exams/${id}/edit`}>

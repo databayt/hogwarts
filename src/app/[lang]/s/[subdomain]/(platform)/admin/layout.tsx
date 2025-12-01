@@ -1,6 +1,6 @@
 import { type Locale } from '@/components/internationalization/config'
 import { getDictionary } from '@/components/internationalization/dictionaries'
-import PageHeader from '@/components/atom/page-header'
+import { PageHeadingSetter } from '@/components/platform/context/page-heading-setter'
 import { PageNav, type PageNavItem } from '@/components/atom/page-nav'
 import { AdminAuthGuard } from '@/components/auth/admin-auth-guard'
 
@@ -35,9 +35,8 @@ export default async function AdminLayout({ children, params }: Props) {
   return (
     <AdminAuthGuard lang={lang as Locale}>
       <div className="space-y-6">
-        <PageHeader
+        <PageHeadingSetter
           title={d?.title || 'Admin'}
-          className="text-start max-w-none"
         />
         <PageNav pages={adminPages} />
         {children}

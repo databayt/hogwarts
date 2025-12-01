@@ -24,7 +24,9 @@ export default async function AnnouncementsContent({ searchParams, dictionary, l
   if (schoolId) {
     try {
       // Use shared query builder (caching removed due to multi-tenant complexity)
+      // Filter by current language (lang) to show only announcements in the user's locale
       const { rows, count } = await getAnnouncementsList(schoolId, {
+        language: lang, // Filter by current locale
         title: sp.title,
         scope: sp.scope,
         published: sp.published,
@@ -38,6 +40,7 @@ export default async function AnnouncementsContent({ searchParams, dictionary, l
       data = rows.map((a) => ({
         id: a.id,
         title: a.title,
+        language: a.language, // Include language in row data
         scope: a.scope,
         published: a.published,
         // Safe date serialization - fallback to current time if null/undefined
