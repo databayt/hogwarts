@@ -1,6 +1,5 @@
 import { Skeleton } from "@/components/ui/skeleton"
 import { SkeletonStats } from "@/components/ui/skeleton-stats"
-import { SkeletonCard } from "@/components/ui/skeleton-card"
 
 export default function AnalyticsLoading() {
   return (
@@ -13,10 +12,10 @@ export default function AnalyticsLoading() {
 
       {/* Charts grid */}
       <div className="grid gap-6 md:grid-cols-2">
-        <SkeletonCard className="h-[400px]" />
-        <SkeletonCard className="h-[400px]" />
-        <SkeletonCard className="h-[400px]" />
-        <SkeletonCard className="h-[400px]" />
+        <Skeleton className="h-[400px] w-full rounded-lg" />
+        <Skeleton className="h-[400px] w-full rounded-lg" />
+        <Skeleton className="h-[400px] w-full rounded-lg" />
+        <Skeleton className="h-[400px] w-full rounded-lg" />
       </div>
     </div>
   )

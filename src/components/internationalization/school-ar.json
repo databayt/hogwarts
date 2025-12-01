@@ -51,6 +51,7 @@
     },
     "attendance": {
       "title": "الحضور",
+      "manual": "الحضور اليدوي",
       "overview": "نظرة عامة",
       "settings": "الإعدادات",
       "analytics": "التحليلات",

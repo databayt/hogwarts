@@ -51,6 +51,7 @@
     },
     "attendance": {
       "title": "Attendance",
+      "manual": "Manual Attendance",
       "overview": "Overview",
       "settings": "Settings",
       "analytics": "Analytics",
