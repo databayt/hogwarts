@@ -33,9 +33,8 @@ const DOCS_LINKS = [
   { key: "competitors", href: "/docs/competitors", fallback: "Competitors" },
   { key: "inspiration", href: "/docs/inspiration", fallback: "Inspiration" },
   { key: "demo", href: "/docs/demo", fallback: "Demo" },
+  { key: "listings", href: "/docs/listings", fallback: "Listings" },
 ] as const
-
-type Dictionary = Awaited<ReturnType<typeof getDictionary>> & { docs?: { sidebar?: Record<string, string> } }
 
 export function DocsSidebar({
   tree,
@@ -44,7 +43,7 @@ export function DocsSidebar({
   ...props
 }: React.ComponentProps<typeof Sidebar> & {
   tree: typeof docsSource.pageTree
-  dictionary?: Dictionary
+  dictionary?: Awaited<ReturnType<typeof getDictionary>>
   lang?: string
 }) {
   const pathname = usePathname()
@@ -64,7 +63,7 @@ export function DocsSidebar({
                 {DOCS_LINKS.map(({ key, href, fallback }) => {
                   const fullHref = `${prefix}${href}`
                   const isActive = pathname === fullHref || pathname === href
-                  const name = (dictionary?.docs?.sidebar as Record<string, string> | undefined)?.[key] || fallback
+                  const name = dictionary?.docs?.sidebar?.[key as keyof typeof dictionary.docs.sidebar] || fallback
 
                   return (
                     <SidebarMenuItem key={href}>

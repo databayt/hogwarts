@@ -159,3 +159,52 @@ export async function getLessons(input: Partial<z.infer<typeof getLessonsSchema>
   }));
   return { rows: mapped, total: count as number };
 }
+
+/**
+ * Export lessons to CSV format
+ */
+export async function getLessonsCSV(input?: Partial<z.infer<typeof getLessonsSchema>>) {
+  const { schoolId } = await getTenantContext();
+  if (!schoolId) throw new Error("Missing school context");
+
+  const sp = getLessonsSchema.parse(input ?? {});
+
+  const where: any = {
+    schoolId,
+    ...(sp.title ? { title: { contains: sp.title, mode: "insensitive" } } : {}),
+    ...(sp.classId ? { classId: sp.classId } : {}),
+    ...(sp.status ? { status: sp.status } : {}),
+  };
+
+  const lessons = await db.lesson.findMany({
+    where,
+    include: {
+      class: {
+        select: {
+          name: true,
+          subject: { select: { subjectName: true } },
+          teacher: { select: { givenName: true, surname: true } },
+        },
+      },
+    },
+    orderBy: [{ lessonDate: "desc" }],
+  });
+
+  const headers = ["ID", "Title", "Class", "Teacher", "Subject", "Date", "Start Time", "End Time", "Status", "Created"];
+  const csvRows = (lessons as Array<any>).map((l) =>
+    [
+      l.id,
+      `"${(l.title || "").replace(/"/g, '""')}"`,
+      `"${(l.class?.name || "").replace(/"/g, '""')}"`,
+      `"${l.class?.teacher ? `${l.class.teacher.givenName} ${l.class.teacher.surname}` : ""}"`,
+      `"${(l.class?.subject?.subjectName || "").replace(/"/g, '""')}"`,
+      new Date(l.lessonDate).toISOString().split("T")[0],
+      l.startTime,
+      l.endTime,
+      l.status,
+      new Date(l.createdAt).toISOString().split("T")[0],
+    ].join(",")
+  );
+
+  return [headers.join(","), ...csvRows].join("\n");
+}

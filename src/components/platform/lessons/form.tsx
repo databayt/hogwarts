@@ -15,7 +15,12 @@ import { ScheduleDetailsStep } from "./schedule-details";
 import { ContentAssessmentStep } from "./content-assessment";
 import { LessonFormFooter } from "./footer";
 
-export function LessonCreateForm() {
+interface LessonCreateFormProps {
+  /** Callback fired on successful create/update - use for optimistic refresh */
+  onSuccess?: () => void;
+}
+
+export function LessonCreateForm({ onSuccess }: LessonCreateFormProps) {
   const { modal, closeModal } = useModal();
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
@@ -69,11 +74,16 @@ export function LessonCreateForm() {
     const res = currentId
       ? await updateLesson({ id: currentId, ...values })
       : await createLesson(values);
-      
+
     if (res?.success) {
       toast.success(currentId ? "Lesson updated" : "Lesson created");
       closeModal();
-      router.refresh();
+      // Use callback for optimistic update, fallback to router.refresh()
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        router.refresh();
+      }
     } else {
       toast.error(currentId ? "Failed to update lesson" : "Failed to create lesson");
     }

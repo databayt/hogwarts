@@ -165,3 +165,49 @@ export async function getResults(input: Partial<z.infer<typeof getResultsSchema>
   }));
   return { rows: mapped, total: count as number };
 }
+
+/**
+ * Export results to CSV format
+ */
+export async function getResultsCSV(input?: Partial<z.infer<typeof getResultsSchema>>) {
+  const { schoolId } = await getTenantContext();
+  if (!schoolId) throw new Error("Missing school context");
+
+  const sp = getResultsSchema.parse(input ?? {});
+  if (!(db as any).result) return "";
+
+  const where: any = {
+    schoolId,
+    ...(sp.studentId ? { studentId: sp.studentId } : {}),
+    ...(sp.assignmentId ? { assignmentId: sp.assignmentId } : {}),
+    ...(sp.classId ? { classId: sp.classId } : {}),
+    ...(sp.grade ? { grade: sp.grade } : {}),
+  };
+
+  const results = await (db as any).result.findMany({
+    where,
+    include: {
+      student: { select: { givenName: true, surname: true } },
+      assignment: { select: { title: true } },
+      class: { select: { name: true } },
+    },
+    orderBy: [{ createdAt: "desc" }],
+  });
+
+  const headers = ["ID", "Student", "Assignment", "Class", "Score", "Max Score", "Percentage", "Grade", "Created"];
+  const csvRows = (results as Array<any>).map((r) =>
+    [
+      r.id,
+      `"${r.student ? `${r.student.givenName} ${r.student.surname}` : "Unknown"}"`,
+      `"${(r.assignment?.title || "").replace(/"/g, '""')}"`,
+      `"${(r.class?.name || "").replace(/"/g, '""')}"`,
+      r.score,
+      r.maxScore,
+      r.percentage?.toFixed(1) || "0",
+      r.grade,
+      new Date(r.createdAt).toISOString().split("T")[0],
+    ].join(",")
+  );
+
+  return [headers.join(","), ...csvRows].join("\n");
+}

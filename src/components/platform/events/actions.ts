@@ -158,3 +158,48 @@ export async function getEvents(input: Partial<z.infer<typeof getEventsSchema>>)
   }));
   return { rows: mapped, total: count as number };
 }
+
+/**
+ * Export events to CSV format
+ */
+export async function getEventsCSV(input?: Partial<z.infer<typeof getEventsSchema>>) {
+  const { schoolId } = await getTenantContext();
+  if (!schoolId) throw new Error("Missing school context");
+
+  const sp = getEventsSchema.parse(input ?? {});
+  if (!(db as any).event) return "";
+
+  const where: any = {
+    schoolId,
+    ...(sp.title ? { title: { contains: sp.title, mode: "insensitive" } } : {}),
+    ...(sp.eventType ? { eventType: sp.eventType } : {}),
+    ...(sp.status ? { status: sp.status } : {}),
+  };
+
+  const events = await (db as any).event.findMany({
+    where,
+    orderBy: [{ eventDate: "desc" }],
+  });
+
+  const headers = ["ID", "Title", "Type", "Date", "Start Time", "End Time", "Location", "Organizer", "Audience", "Max Attendees", "Current Attendees", "Status", "Public", "Created"];
+  const csvRows = (events as Array<any>).map((e) =>
+    [
+      e.id,
+      `"${(e.title || "").replace(/"/g, '""')}"`,
+      e.eventType,
+      new Date(e.eventDate).toISOString().split("T")[0],
+      e.startTime,
+      e.endTime,
+      `"${(e.location || "").replace(/"/g, '""')}"`,
+      `"${(e.organizer || "").replace(/"/g, '""')}"`,
+      `"${(e.targetAudience || "").replace(/"/g, '""')}"`,
+      e.maxAttendees || "",
+      e.currentAttendees || 0,
+      e.status,
+      e.isPublic ? "Yes" : "No",
+      new Date(e.createdAt).toISOString().split("T")[0],
+    ].join(",")
+  );
+
+  return [headers.join(","), ...csvRows].join("\n");
+}

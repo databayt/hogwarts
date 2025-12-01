@@ -15,7 +15,12 @@ import { ScheduleLocationStep } from "./schedule-location";
 import { DetailsAttendeesStep } from "./details-attendees";
 import { EventFormFooter } from "./footer";
 
-export function EventCreateForm() {
+interface EventCreateFormProps {
+  /** Callback fired on successful create/update - use for optimistic refresh */
+  onSuccess?: () => void;
+}
+
+export function EventCreateForm({ onSuccess }: EventCreateFormProps) {
   const { modal, closeModal } = useModal();
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
@@ -73,11 +78,16 @@ export function EventCreateForm() {
     const res = currentId
       ? await updateEvent({ id: currentId, ...values })
       : await createEvent(values);
-      
+
     if (res?.success) {
       toast.success(currentId ? "Event updated" : "Event created");
       closeModal();
-      router.refresh();
+      // Use callback for optimistic update, fallback to router.refresh()
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        router.refresh();
+      }
     } else {
       toast.error(currentId ? "Failed to update event" : "Failed to create event");
     }

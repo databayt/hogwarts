@@ -14,7 +14,12 @@ import { InformationStep } from "./information";
 import { ScheduleStep } from "./schedule";
 import { ClassFormFooter } from "./footer";
 
-export function ClassCreateForm() {
+interface ClassCreateFormProps {
+  /** Callback fired on successful create/update - use for optimistic refresh */
+  onSuccess?: () => void;
+}
+
+export function ClassCreateForm({ onSuccess }: ClassCreateFormProps) {
   const { modal, closeModal } = useModal();
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
@@ -68,7 +73,12 @@ export function ClassCreateForm() {
     if (res?.success) {
       toast.success(currentId ? "Class updated" : "Class created");
       closeModal();
-      router.refresh();
+      // Use callback for optimistic update, fallback to router.refresh()
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        router.refresh();
+      }
     } else {
       toast.error(currentId ? "Failed to update class" : "Failed to create class");
     }

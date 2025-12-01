@@ -14,7 +14,12 @@ import { InformationStep } from "./information";
 import { ContactStep } from "./contact";
 import { ParentFormFooter } from "./footer";
 
-export function ParentCreateForm() {
+interface ParentCreateFormProps {
+  /** Callback fired on successful create/update - use for optimistic refresh */
+  onSuccess?: () => void;
+}
+
+export function ParentCreateForm({ onSuccess }: ParentCreateFormProps) {
   const { modal, closeModal } = useModal();
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
@@ -55,7 +60,12 @@ export function ParentCreateForm() {
     if (res?.success) {
       toast.success(currentId ? "Parent updated" : "Parent created");
       closeModal();
-      router.refresh();
+      // Use callback for optimistic update, fallback to router.refresh()
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        router.refresh();
+      }
     } else {
       toast.error(currentId ? "Failed to update parent" : "Failed to create parent");
     }

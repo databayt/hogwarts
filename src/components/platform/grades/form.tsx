@@ -17,9 +17,11 @@ import { type Dictionary } from "@/components/internationalization/dictionaries"
 
 interface ResultCreateFormProps {
   dictionary: Dictionary;
+  /** Callback fired on successful create/update - use for optimistic refresh */
+  onSuccess?: () => void;
 }
 
-export function ResultCreateForm({ dictionary }: ResultCreateFormProps) {
+export function ResultCreateForm({ dictionary, onSuccess }: ResultCreateFormProps) {
   const { modal, closeModal } = useModal();
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
@@ -66,7 +68,12 @@ export function ResultCreateForm({ dictionary }: ResultCreateFormProps) {
     if (res?.success) {
       toast.success(currentId ? dictionary.school.grades.resultUpdated : dictionary.school.grades.resultCreated);
       closeModal();
-      router.refresh();
+      // Use callback for optimistic update, fallback to router.refresh()
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        router.refresh();
+      }
     } else {
       toast.error(currentId ? dictionary.school.grades.failedToUpdate : dictionary.school.grades.failedToCreate);
     }

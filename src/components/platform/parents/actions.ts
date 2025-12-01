@@ -117,3 +117,52 @@ export async function getParents(input: Partial<z.infer<typeof getParentsSchema>
   }));
   return { rows: mapped, total: count as number };
 }
+
+/**
+ * Export parents to CSV format
+ */
+export async function getParentsCSV(input?: Partial<z.infer<typeof getParentsSchema>>) {
+  const { schoolId } = await getTenantContext();
+  if (!schoolId) throw new Error("Missing school context");
+
+  const sp = getParentsSchema.parse(input ?? {});
+  if (!(db as any).guardian) return "";
+
+  const where: any = {
+    schoolId,
+    ...(sp.name
+      ? {
+          OR: [
+            { givenName: { contains: sp.name, mode: "insensitive" } },
+            { surname: { contains: sp.name, mode: "insensitive" } },
+          ],
+        }
+      : {}),
+    ...(sp.status
+      ? sp.status === "active"
+        ? { NOT: { userId: null } }
+        : sp.status === "inactive"
+          ? { userId: null }
+          : {}
+        : {}),
+  };
+
+  const parents = await (db as any).guardian.findMany({
+    where,
+    orderBy: [{ createdAt: "desc" }],
+  });
+
+  const headers = ["ID", "Given Name", "Surname", "Email", "Status", "Created"];
+  const csvRows = (parents as Array<any>).map((p) =>
+    [
+      p.id,
+      `"${(p.givenName || "").replace(/"/g, '""')}"`,
+      `"${(p.surname || "").replace(/"/g, '""')}"`,
+      `"${(p.emailAddress || "").replace(/"/g, '""')}"`,
+      p.userId ? "Active" : "Inactive",
+      new Date(p.createdAt).toISOString().split("T")[0],
+    ].join(",")
+  );
+
+  return [headers.join(","), ...csvRows].join("\n");
+}

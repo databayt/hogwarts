@@ -1,0 +1,613 @@
+---
+title: "Listings"
+description: "A unified pattern for data tables, grids, and CRUD operations across the platform with optimistic updates, auto-refresh, and consistent UX."
+---
+
+## The Listings Block
+
+**Listings** are the backbone of data-driven features in the platform. They provide a unified pattern for displaying, searching, filtering, creating, editing, and deleting records—all with a consistent UX and optimistic updates.
+
+Every listing in the platform follows the same structure, making it predictable for developers and consistent for users. Whether you're working with Students, Teachers, Classes, Events, or any other entity—the pattern remains the same.
+
+## Key Features
+
+<div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 not-prose">
+  <div className="border rounded-lg p-6">
+    <h4 className="font-semibold mb-2">Modal Auto-Close</h4>
+    <p className="text-sm text-muted-foreground">Forms automatically close after successful create/update operations, providing immediate visual feedback.</p>
+  </div>
+  <div className="border rounded-lg p-6">
+    <h4 className="font-semibold mb-2">Auto-Refresh</h4>
+    <p className="text-sm text-muted-foreground">Lists update instantly without page reload using optimistic updates and the `usePlatformData` hook.</p>
+  </div>
+  <div className="border rounded-lg p-6">
+    <h4 className="font-semibold mb-2">View Toggle</h4>
+    <p className="text-sm text-muted-foreground">Switch between Table and Grid views with a single click. State persists across sessions.</p>
+  </div>
+  <div className="border rounded-lg p-6">
+    <h4 className="font-semibold mb-2">Unified Toolbar</h4>
+    <p className="text-sm text-muted-foreground">Consistent layout with search on the left, actions (view toggle, export, create) on the right.</p>
+  </div>
+</div>
+
+## Architecture
+
+Every listing consists of these co-located files following the mirror pattern:
+
+```
+components/platform/<feature>/
+├── table.tsx        # Main listing component (table + grid views)
+├── form.tsx         # Create/Edit form with onSuccess callback
+├── columns.tsx      # Column definitions for the table
+├── actions.ts       # Server actions (CRUD + CSV export)
+├── validation.ts    # Zod schemas
+├── types.ts         # TypeScript interfaces
+└── content.tsx      # Server component wrapper
+```
+
+## Core Components
+
+### PlatformToolbar
+
+The `PlatformToolbar` component provides a unified interface for all listings:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  [Search Input]  [Filters]  [Reset]  │  [View]  [Export]  [+]  │
+└─────────────────────────────────────────────────────────────────┘
+         Left Side                              Right Side
+```
+
+**Left Side:**
+- Search input with icon
+- Table column filters (table view only)
+- Reset button (when filters active)
+
+**Right Side:**
+- View toggle (Table/Grid)
+- Export CSV button
+- Create button (Plus icon)
+
+### usePlatformData Hook
+
+The `usePlatformData` hook manages data state with optimistic updates:
+
+```typescript
+const {
+  data,           // Current data array
+  total,          // Total count for pagination
+  isLoading,      // Loading state
+  hasMore,        // Whether more data is available
+  loadMore,       // Load more function
+  refresh,        // Refresh data function
+  optimisticRemove, // Remove item optimistically
+} = usePlatformData<RowType, FilterType>({
+  initialData,    // Initial data from server
+  total,          // Total count from server
+  perPage,        // Items per page (default: 20)
+  fetcher,        // Async function to fetch data
+  filters,        // Optional filter object
+});
+```
+
+### usePlatformView Hook
+
+The `usePlatformView` hook manages view mode (table/grid):
+
+```typescript
+const { view, toggleView } = usePlatformView({
+  defaultView: "table"
+});
+```
+
+## Implementation Guide
+
+### 1. Table Component (table.tsx)
+
+```typescript
+"use client";
+
+import { useMemo, useState, useCallback, useTransition } from "react";
+import { DataTable } from "@/components/table/data-table";
+import { useDataTable } from "@/components/table/use-data-table";
+import { getColumns, type RowType } from "./columns";
+import { useModal } from "@/components/atom/modal/context";
+import Modal from "@/components/atom/modal/modal";
+import { CreateForm } from "./form";
+import { getItems, getItemsCSV, deleteItem } from "./actions";
+import { usePlatformView } from "@/hooks/use-platform-view";
+import { usePlatformData } from "@/hooks/use-platform-data";
+import {
+  PlatformToolbar,
+  GridCard,
+  GridContainer,
+  GridEmptyState,
+} from "@/components/platform/shared";
+import { useRouter } from "next/navigation";
+import { DeleteToast, ErrorToast, confirmDeleteDialog } from "@/components/atom/toast";
+
+interface TableProps {
+  initialData: RowType[];
+  total: number;
+  perPage?: number;
+}
+
+export function ItemsTable({ initialData, total, perPage = 20 }: TableProps) {
+  const router = useRouter();
+  const { openModal } = useModal();
+  const [isPending, startTransition] = useTransition();
+
+  // View mode (table/grid)
+  const { view, toggleView } = usePlatformView({ defaultView: "table" });
+
+  // Search state
+  const [searchValue, setSearchValue] = useState("");
+
+  // Data management with optimistic updates
+  const {
+    data,
+    isLoading,
+    hasMore,
+    loadMore,
+    refresh,
+    optimisticRemove,
+  } = usePlatformData<RowType, { name?: string }>({
+    initialData,
+    total,
+    perPage,
+    fetcher: async (params) => {
+      const result = await getItems(params);
+      return { rows: result.rows, total: result.total };
+    },
+    filters: searchValue ? { name: searchValue } : undefined,
+  });
+
+  // Columns (memoized)
+  const columns = useMemo(() => getColumns(), []);
+
+  // Table instance
+  const { table } = useDataTable<RowType>({
+    data,
+    columns,
+    pageCount: 1,
+    initialState: {
+      pagination: { pageIndex: 0, pageSize: data.length || perPage }
+    }
+  });
+
+  // Handlers
+  const handleSearchChange = useCallback((value: string) => {
+    setSearchValue(value);
+    startTransition(() => router.refresh());
+  }, [router]);
+
+  const handleDelete = useCallback(async (item: RowType) => {
+    const ok = await confirmDeleteDialog(`Delete ${item.name}?`);
+    if (!ok) return;
+    optimisticRemove(item.id);
+    const result = await deleteItem({ id: item.id });
+    if (!result.success) {
+      refresh();
+      ErrorToast("Failed to delete");
+    } else {
+      DeleteToast();
+    }
+  }, [optimisticRemove, refresh]);
+
+  const handleExportCSV = useCallback(async (filters?: Record<string, unknown>) => {
+    return getItemsCSV(filters);
+  }, []);
+
+  return (
+    <>
+      <PlatformToolbar
+        table={view === "table" ? table : undefined}
+        view={view}
+        onToggleView={toggleView}
+        searchValue={searchValue}
+        onSearchChange={handleSearchChange}
+        searchPlaceholder="Search..."
+        onCreate={() => openModal()}
+        getCSV={handleExportCSV}
+        entityName="items"
+      />
+
+      {view === "table" ? (
+        <DataTable
+          table={table}
+          paginationMode="load-more"
+          hasMore={hasMore}
+          isLoading={isLoading || isPending}
+          onLoadMore={loadMore}
+        />
+      ) : (
+        <GridContainer columns={3}>
+          {data.map((item) => (
+            <GridCard
+              key={item.id}
+              title={item.name}
+              // ... grid card props
+            />
+          ))}
+        </GridContainer>
+      )}
+
+      <Modal content={<CreateForm onSuccess={refresh} />} />
+    </>
+  );
+}
+```
+
+### 2. Form Component (form.tsx)
+
+```typescript
+"use client";
+
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { createItem, getItem, updateItem } from "./actions";
+import { itemSchema, type ItemFormData } from "./validation";
+import { useModal } from "@/components/atom/modal/context";
+import { useRouter } from "next/navigation";
+
+interface FormProps {
+  /** Callback fired on successful create/update - use for optimistic refresh */
+  onSuccess?: () => void;
+}
+
+export function CreateForm({ onSuccess }: FormProps) {
+  const { modal, closeModal } = useModal();
+  const router = useRouter();
+
+  const form = useForm<ItemFormData>({
+    resolver: zodResolver(itemSchema),
+    defaultValues: { name: "" },
+  });
+
+  const currentId = modal.id || undefined;
+  const isView = modal.id?.startsWith("view:");
+
+  // Load existing data for edit mode
+  useEffect(() => {
+    if (!currentId || isView) return;
+    getItem({ id: currentId }).then((res) => {
+      if (res.item) form.reset(res.item);
+    });
+  }, [currentId]);
+
+  async function onSubmit(values: ItemFormData) {
+    const res = currentId
+      ? await updateItem({ id: currentId, ...values })
+      : await createItem(values);
+
+    if (res?.success) {
+      toast.success(currentId ? "Updated" : "Created");
+      closeModal();
+      // Use callback for optimistic update, fallback to router.refresh()
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        router.refresh();
+      }
+    } else {
+      toast.error("Failed");
+    }
+  }
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)}>
+        {/* Form fields */}
+      </form>
+    </Form>
+  );
+}
+```
+
+### 3. Actions (actions.ts)
+
+```typescript
+"use server";
+
+import { z } from "zod";
+import { revalidatePath } from "next/cache";
+import { db } from "@/lib/db";
+import { getTenantContext } from "@/lib/tenant-context";
+import { itemSchema, getItemsSchema } from "./validation";
+
+export async function createItem(input: z.infer<typeof itemSchema>) {
+  const { schoolId } = await getTenantContext();
+  if (!schoolId) throw new Error("Missing school context");
+
+  const parsed = itemSchema.parse(input);
+  const row = await db.item.create({
+    data: { schoolId, ...parsed },
+  });
+
+  revalidatePath("/items");
+  return { success: true, id: row.id };
+}
+
+export async function getItems(input: Partial<z.infer<typeof getItemsSchema>>) {
+  const { schoolId } = await getTenantContext();
+  if (!schoolId) throw new Error("Missing school context");
+
+  const sp = getItemsSchema.parse(input ?? {});
+  const where = {
+    schoolId,
+    ...(sp.name ? { name: { contains: sp.name, mode: "insensitive" } } : {}),
+  };
+
+  const [rows, count] = await Promise.all([
+    db.item.findMany({ where, skip: (sp.page - 1) * sp.perPage, take: sp.perPage }),
+    db.item.count({ where }),
+  ]);
+
+  return { rows, total: count };
+}
+
+export async function getItemsCSV(input?: Partial<z.infer<typeof getItemsSchema>>) {
+  const { schoolId } = await getTenantContext();
+  if (!schoolId) throw new Error("Missing school context");
+
+  const items = await db.item.findMany({ where: { schoolId } });
+
+  const headers = ["ID", "Name", "Created"];
+  const csvRows = items.map((item) =>
+    [item.id, `"${item.name}"`, item.createdAt.toISOString()].join(",")
+  );
+
+  return [headers.join(","), ...csvRows].join("\n");
+}
+```
+
+## Grid View Components
+
+### GridContainer
+
+Responsive grid layout:
+
+```typescript
+<GridContainer columns={3}>
+  {data.map((item) => (
+    <GridCard key={item.id} {...props} />
+  ))}
+</GridContainer>
+```
+
+### GridCard
+
+Card component for grid view:
+
+```typescript
+<GridCard
+  title={item.name}
+  subtitle={item.description}
+  avatarFallback="AB"
+  status={{ label: "Active", variant: "default" }}
+  metadata={[
+    { label: "Type", value: item.type },
+    { label: "Count", value: item.count },
+  ]}
+  actions={[
+    { label: "View", onClick: () => handleView(item.id) },
+    { label: "Edit", onClick: () => handleEdit(item.id) },
+    { label: "Delete", onClick: () => handleDelete(item), variant: "destructive" },
+  ]}
+  onClick={() => handleView(item.id)}
+/>
+```
+
+### GridEmptyState
+
+Empty state for grid view:
+
+```typescript
+<GridEmptyState
+  title="No Items Found"
+  description="Create your first item to get started"
+  icon={<Package className="h-12 w-12" />}
+/>
+```
+
+## Modal Pattern
+
+### Opening Modals
+
+```typescript
+const { openModal } = useModal();
+
+// Create mode (no ID)
+openModal();
+
+// Edit mode (with ID)
+openModal(item.id);
+
+// View mode (with view: prefix)
+openModal(`view:${item.id}`);
+```
+
+### Modal Detection in Forms
+
+```typescript
+const { modal, closeModal } = useModal();
+
+const isView = modal.id?.startsWith("view:");
+const currentId = modal.id
+  ? (modal.id.startsWith("view:") ? modal.id.split(":")[1] : modal.id)
+  : undefined;
+const isEdit = !!currentId && !isView;
+const isCreate = !currentId;
+```
+
+## Optimistic Updates
+
+### Why Optimistic Updates?
+
+Instead of waiting for server response, we update the UI immediately:
+
+1. **Better UX**: Instant visual feedback
+2. **Perceived Performance**: App feels faster
+3. **Error Recovery**: Revert on failure
+
+### Implementation Flow
+
+```
+User Action → Optimistic UI Update → Server Request →
+  ├── Success: Keep UI state
+  └── Failure: Revert UI + Show error
+```
+
+### Delete with Optimistic Update
+
+```typescript
+const handleDelete = useCallback(async (item: RowType) => {
+  const ok = await confirmDeleteDialog(`Delete ${item.name}?`);
+  if (!ok) return;
+
+  // 1. Optimistic remove from UI
+  optimisticRemove(item.id);
+
+  // 2. Server request
+  const result = await deleteItem({ id: item.id });
+
+  if (result.success) {
+    // 3a. Success: Show toast
+    DeleteToast();
+  } else {
+    // 3b. Failure: Revert + error
+    refresh();
+    ErrorToast("Failed to delete");
+  }
+}, [optimisticRemove, refresh]);
+```
+
+## Export Pattern
+
+### CSV Export
+
+All listings support CSV export through `getXXXCSV` server actions:
+
+```typescript
+export async function getItemsCSV(input?: Partial<z.infer<typeof getItemsSchema>>) {
+  const { schoolId } = await getTenantContext();
+  if (!schoolId) throw new Error("Missing school context");
+
+  const items = await db.item.findMany({
+    where: { schoolId },
+    orderBy: [{ createdAt: "desc" }],
+  });
+
+  const headers = ["ID", "Name", "Email", "Status", "Created"];
+  const csvRows = items.map((item) =>
+    [
+      item.id,
+      `"${(item.name || "").replace(/"/g, '""')}"`,
+      `"${(item.email || "").replace(/"/g, '""')}"`,
+      item.status,
+      new Date(item.createdAt).toISOString().split("T")[0],
+    ].join(",")
+  );
+
+  return [headers.join(","), ...csvRows].join("\n");
+}
+```
+
+### Export Button
+
+The `PlatformToolbar` handles export automatically:
+
+```typescript
+<PlatformToolbar
+  getCSV={handleExportCSV}
+  entityName="items"  // Used for filename: items.csv
+/>
+```
+
+## Modules Using This Pattern
+
+| Module | Table | Grid | Search | Export |
+|--------|-------|------|--------|--------|
+| **Students** | Yes | Yes | Yes | Yes |
+| **Teachers** | Yes | Yes | Yes | Yes |
+| **Subjects** | Yes | Yes | Yes | Yes |
+| **Announcements** | Yes | Yes | Yes | Yes |
+| **Classes** | Yes | Yes | Yes | Yes |
+| **Events** | Yes | Yes | Yes | Yes |
+| **Grades** | Yes | Yes | Yes | Yes |
+| **Lessons** | Yes | Yes | Yes | Yes |
+| **Parents** | Yes | Yes | Yes | Yes |
+
+## Best Practices
+
+### 1. Always Use `onSuccess` Callback
+
+```typescript
+// In form component
+if (onSuccess) {
+  onSuccess();
+} else {
+  router.refresh();
+}
+
+// In table component
+<Modal content={<CreateForm onSuccess={refresh} />} />
+```
+
+### 2. Memoize Columns
+
+```typescript
+const columns = useMemo(() => getColumns(dictionary), [dictionary]);
+```
+
+### 3. Handle Loading States
+
+```typescript
+<DataTable
+  isLoading={isLoading || isPending}
+  // ...
+/>
+```
+
+### 4. Include schoolId in All Queries
+
+```typescript
+const { schoolId } = await getTenantContext();
+if (!schoolId) throw new Error("Missing school context");
+
+await db.item.findMany({
+  where: { schoolId, ...filters }
+});
+```
+
+### 5. Provide Grid View Fallback
+
+```typescript
+{data.length === 0 ? (
+  <GridEmptyState title="No Items" description="Add your first item" />
+) : (
+  <GridContainer columns={3}>
+    {/* Grid cards */}
+  </GridContainer>
+)}
+```
+
+## Shared Components
+
+All shared listing components are exported from:
+
+```typescript
+import {
+  PlatformToolbar,
+  GridCard,
+  GridContainer,
+  GridEmptyState,
+  ExportButton,
+  ViewToggle,
+} from "@/components/platform/shared";
+```
+
+---
+
+The Listings pattern ensures consistency across all data-driven features in the platform. By following this pattern, you get auto-refresh, optimistic updates, view toggles, and export functionality—all out of the box.

@@ -1,18 +1,26 @@
 "use client";
 
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, useTransition } from "react";
 import { DataTable } from "@/components/table/data-table";
-import { DataTableToolbar } from "@/components/table/data-table-toolbar";
 import { useDataTable } from "@/components/table/use-data-table";
 import { resultColumns, type ResultRow } from "./columns";
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
 import { useModal } from "@/components/atom/modal/context";
 import Modal from "@/components/atom/modal/modal";
 import { ResultCreateForm } from "@/components/platform/grades/form";
+import { getResults, getResultsCSV, deleteResult } from "./actions";
+import { usePlatformView } from "@/hooks/use-platform-view";
+import { usePlatformData } from "@/hooks/use-platform-data";
+import {
+  PlatformToolbar,
+  GridCard,
+  GridContainer,
+  GridEmptyState,
+} from "@/components/platform/shared";
+import { ClipboardCheck, TrendingUp } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { DeleteToast, ErrorToast, confirmDeleteDialog } from "@/components/atom/toast";
 import type { Dictionary } from "@/components/internationalization/dictionaries";
 import type { Locale } from "@/components/internationalization/config";
-import { getResults } from "./actions";
 
 interface ResultsTableProps {
   initialData: ResultRow[];
@@ -23,36 +31,41 @@ interface ResultsTableProps {
 }
 
 export function ResultsTable({ initialData, total, dictionary, lang, perPage = 20 }: ResultsTableProps) {
+  const router = useRouter();
+  const { openModal } = useModal();
+  const [isPending, startTransition] = useTransition();
+  const t = dictionary.school.grades;
+
+  // View mode (table/grid)
+  const { view, toggleView } = usePlatformView({ defaultView: "table" });
+
+  // Search state
+  const [searchValue, setSearchValue] = useState("");
+
+  // Data management with optimistic updates
+  const {
+    data,
+    total: dataTotal,
+    isLoading,
+    hasMore,
+    loadMore,
+    refresh,
+    optimisticRemove,
+  } = usePlatformData<ResultRow, { studentName?: string }>({
+    initialData,
+    total,
+    perPage,
+    fetcher: async (params) => {
+      const result = await getResults(params);
+      return { rows: result.rows as ResultRow[], total: result.total };
+    },
+    filters: searchValue ? { studentName: searchValue } : undefined,
+  });
+
   // Generate columns on the client side with hooks
   const columns = useMemo(() => resultColumns(dictionary, lang), [dictionary, lang]);
 
-  // State for incremental loading
-  const [data, setData] = useState<ResultRow[]>(initialData);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [isLoading, setIsLoading] = useState(false);
-
-  const hasMore = data.length < total;
-
-  const handleLoadMore = useCallback(async () => {
-    if (isLoading || !hasMore) return;
-
-    setIsLoading(true);
-    try {
-      const nextPage = currentPage + 1;
-      const result = await getResults({ page: nextPage, perPage });
-
-      if (result.rows.length > 0) {
-        setData(prev => [...prev, ...result.rows]);
-        setCurrentPage(nextPage);
-      }
-    } catch (error) {
-      console.error('Failed to load more results:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [currentPage, perPage, isLoading, hasMore]);
-
-  // Use pageCount of 1 since we're handling all data client-side
+  // Table instance
   const { table } = useDataTable<ResultRow>({
     data,
     columns,
@@ -60,35 +73,176 @@ export function ResultsTable({ initialData, total, dictionary, lang, perPage = 2
     initialState: {
       pagination: {
         pageIndex: 0,
-        pageSize: data.length, // Show all loaded data
+        pageSize: data.length || perPage,
       }
     }
   });
 
-  const { openModal } = useModal();
+  // Handle search
+  const handleSearchChange = useCallback((value: string) => {
+    setSearchValue(value);
+    startTransition(() => {
+      router.refresh();
+    });
+  }, [router]);
+
+  // Handle delete with optimistic update
+  const handleDelete = useCallback(async (result: ResultRow) => {
+    try {
+      const ok = await confirmDeleteDialog(t.deleteResultConfirm.replace("{studentName}", result.studentName));
+      if (!ok) return;
+
+      // Optimistic remove
+      optimisticRemove(result.id);
+
+      const res = await deleteResult({ id: result.id });
+      if (res.success) {
+        DeleteToast();
+      } else {
+        // Revert on error
+        refresh();
+        ErrorToast(t.failedToUpdate);
+      }
+    } catch (e) {
+      refresh();
+      ErrorToast(e instanceof Error ? e.message : t.failedToUpdate);
+    }
+  }, [optimisticRemove, refresh, t]);
+
+  // Handle edit
+  const handleEdit = useCallback((id: string) => {
+    openModal(id);
+  }, [openModal]);
+
+  // Handle view
+  const handleView = useCallback((id: string) => {
+    router.push(`/grades/${id}`);
+  }, [router]);
+
+  // Export CSV wrapper
+  const handleExportCSV = useCallback(async (filters?: Record<string, unknown>) => {
+    return getResultsCSV(filters);
+  }, []);
+
+  // Get grade color
+  const getGradeColor = (grade: string) => {
+    const gradeMap: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
+      "A+": "default", "A": "default", "A-": "default",
+      "B+": "secondary", "B": "secondary", "B-": "secondary",
+      "C+": "outline", "C": "outline", "C-": "outline",
+      "D+": "destructive", "D": "destructive", "F": "destructive",
+    };
+    return { label: grade, variant: gradeMap[grade] || "outline" };
+  };
+
+  // Toolbar translations
+  const toolbarTranslations = {
+    search: "Search results...",
+    create: dictionary.school.common.actions.add || "Create",
+    reset: dictionary.school.common.actions.reset || "Reset",
+    export: dictionary.school.common.actions.export || "Export",
+    exportCSV: "Export CSV",
+    exporting: "Exporting...",
+  };
 
   return (
-    <DataTable
-      table={table}
-      paginationMode="load-more"
-      hasMore={hasMore}
-      isLoading={isLoading}
-      onLoadMore={handleLoadMore}
-    >
-      <DataTableToolbar table={table}>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="h-8 w-8 p-0 rounded-full"
-          onClick={() => openModal()}
-          aria-label="Create"
-          title="Create"
-        >
-          <Plus className="h-4 w-4" />
-        </Button>
-      </DataTableToolbar>
-      <Modal content={<ResultCreateForm dictionary={dictionary} />} />
-    </DataTable>
+    <>
+      <PlatformToolbar
+        table={view === "table" ? table : undefined}
+        view={view}
+        onToggleView={toggleView}
+        searchValue={searchValue}
+        onSearchChange={handleSearchChange}
+        searchPlaceholder="Search results..."
+        onCreate={() => openModal()}
+        getCSV={handleExportCSV}
+        entityName="grades"
+        translations={toolbarTranslations}
+      />
+
+      {view === "table" ? (
+        <DataTable
+          table={table}
+          paginationMode="load-more"
+          hasMore={hasMore}
+          isLoading={isLoading || isPending}
+          onLoadMore={loadMore}
+        />
+      ) : (
+        <>
+          {data.length === 0 ? (
+            <GridEmptyState
+              title={t.allResults || "All Results"}
+              description={t.recordNewResult || "Record a new grade result"}
+              icon={<ClipboardCheck className="h-12 w-12" />}
+            />
+          ) : (
+            <GridContainer columns={3}>
+              {data.map((result) => {
+                const initials = result.studentName
+                  .split(" ")
+                  .map((n) => n[0])
+                  .join("")
+                  .substring(0, 2)
+                  .toUpperCase();
+                const gradeBadge = getGradeColor(result.grade);
+
+                return (
+                  <GridCard
+                    key={result.id}
+                    title={result.studentName}
+                    subtitle={result.assignmentTitle}
+                    avatarFallback={initials}
+                    status={gradeBadge}
+                    metadata={[
+                      { label: t.class, value: result.className },
+                      {
+                        label: t.score,
+                        value: `${result.score}/${result.maxScore}`,
+                      },
+                      {
+                        label: t.percentage,
+                        value: (
+                          <span className="flex items-center gap-1">
+                            <TrendingUp className="h-3 w-3" />
+                            {result.percentage.toFixed(1)}%
+                          </span>
+                        ),
+                      },
+                    ]}
+                    actions={[
+                      { label: dictionary.school.common.actions.view, onClick: () => handleView(result.id) },
+                      { label: dictionary.school.common.actions.edit, onClick: () => handleEdit(result.id) },
+                      {
+                        label: dictionary.school.common.actions.delete,
+                        onClick: () => handleDelete(result),
+                        variant: "destructive",
+                      },
+                    ]}
+                    actionsLabel={t.actions}
+                    onClick={() => handleView(result.id)}
+                  />
+                );
+              })}
+            </GridContainer>
+          )}
+
+          {/* Load more for grid view */}
+          {hasMore && (
+            <div className="flex justify-center mt-4">
+              <button
+                onClick={loadMore}
+                disabled={isLoading}
+                className="px-4 py-2 text-sm border rounded-md hover:bg-accent disabled:opacity-50"
+              >
+                {isLoading ? "Loading..." : "Load More"}
+              </button>
+            </div>
+          )}
+        </>
+      )}
+
+      <Modal content={<ResultCreateForm dictionary={dictionary} onSuccess={refresh} />} />
+    </>
   );
 }
