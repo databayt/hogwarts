@@ -2,8 +2,9 @@ import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { getTenantContext } from "@/lib/tenant-context";
-import { BillingDashboard } from "./dashboard";
+import { BillingPage } from "./billing-page";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { IconLoader2 } from "@tabler/icons-react";
 import {
   getBillingStats,
@@ -12,6 +13,7 @@ import {
   getSubscriptionDetails,
 } from "./actions";
 import type { Dictionary } from "@/components/internationalization/dictionaries";
+import Link from "next/link";
 
 interface Props {
   dictionary?: Dictionary;
@@ -36,6 +38,9 @@ async function BillingContent({ dictionary }: Props) {
     redirect("/auth/login");
   }
 
+  // Get locale from session or default to 'ar'
+  const locale = "ar";
+
   // Check if school has a subscription
   const subscriptionResult = await getSubscriptionDetails();
 
@@ -44,46 +49,29 @@ async function BillingContent({ dictionary }: Props) {
       <div className="container mx-auto py-10">
         <Card>
           <CardContent className="flex flex-col items-center justify-center min-h-[400px] gap-4">
-            <h2 className="text-2xl font-bold">No Active Subscription</h2>
-            <p className="text-muted-foreground text-center max-w-md">
-              You don't have an active subscription yet. Please choose a plan to get started with our platform.
+            <h2>No Active Subscription</h2>
+            <p className="muted text-center max-w-md">
+              You don&apos;t have an active subscription yet. Please choose a plan to get started with our platform.
             </p>
-            <a
-              href="/pricing"
-              className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
-            >
-              View Plans
-            </a>
+            <Button asChild>
+              <Link href={`/${locale}/pricing`}>View Plans</Link>
+            </Button>
           </CardContent>
         </Card>
       </div>
     );
   }
 
-  // Fetch all billing data
-  const [
-    statsResult,
-    invoicesResult,
-    paymentMethodsResult,
-  ] = await Promise.all([
+  // Fetch all billing data in parallel
+  const [statsResult, invoicesResult, paymentMethodsResult] = await Promise.all([
     getBillingStats(),
-    getInvoices({ page: 1, limit: 10 }),
+    getInvoices({ page: 1, limit: 20 }),
     getPaymentMethods(),
   ]);
 
   if (!statsResult.success) {
-    return (
-      <div className="container mx-auto py-10">
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center min-h-[400px] gap-4">
-            <h2 className="text-2xl font-bold">Error Loading Billing Data</h2>
-            <p className="text-muted-foreground text-center max-w-md">
-              {statsResult.error || "An error occurred while loading your billing information"}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-    );
+    // Throw error to be caught by error.tsx boundary
+    throw new Error(statsResult.error || "Failed to load billing data");
   }
 
   const stats = statsResult.data;
@@ -91,9 +79,10 @@ async function BillingContent({ dictionary }: Props) {
   const paymentMethods = paymentMethodsResult.success ? paymentMethodsResult.data : [];
 
   return (
-    <div className="container mx-auto py-10">
-      <BillingDashboard
+    <div className="container mx-auto py-6 px-4 sm:px-6 lg:px-8">
+      <BillingPage
         stats={stats}
+        subscription={subscriptionResult.data}
         invoices={invoices}
         paymentMethods={paymentMethods}
         dictionary={dictionary}
