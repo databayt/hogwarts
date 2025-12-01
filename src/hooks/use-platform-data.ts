@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo, useTransition } from "react";
+import { useState, useCallback, useEffect, useRef, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
 interface UsePlatformDataOptions<TData, TFilters> {
@@ -66,25 +66,42 @@ export function usePlatformData<TData extends { id: string }, TFilters = Record<
     }
   }, [currentPage, perPage, isLoading, hasMore, fetcher, filters]);
 
-  // Refresh data from server
+  // Refresh data from server (reset to page 1 with current filters)
   const refresh = useCallback(async () => {
     setIsLoading(true);
     try {
-      const result = await fetcher({ ...filters, page: 1, perPage: data.length || perPage });
+      const result = await fetcher({ ...filters, page: 1, perPage });
       setData(result.rows);
       setTotal(result.total);
-      setCurrentPage(Math.ceil(result.rows.length / perPage));
+      setCurrentPage(1);
     } catch (error) {
       console.error("Failed to refresh:", error);
     } finally {
       setIsLoading(false);
     }
+  }, [fetcher, filters, perPage]);
 
-    // Also trigger Next.js cache revalidation
-    startTransition(() => {
-      router.refresh();
-    });
-  }, [fetcher, filters, data.length, perPage, router]);
+  // Track previous filters to detect changes
+  const prevFiltersRef = useRef<string>(JSON.stringify(filters));
+  const isFirstRender = useRef(true);
+
+  // Auto-refetch when filters change (skip first render)
+  useEffect(() => {
+    const currentFilters = JSON.stringify(filters);
+
+    // Skip first render (initialData is already filtered)
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      prevFiltersRef.current = currentFilters;
+      return;
+    }
+
+    // Only refetch if filters actually changed
+    if (currentFilters !== prevFiltersRef.current) {
+      prevFiltersRef.current = currentFilters;
+      refresh();
+    }
+  }, [filters, refresh]);
 
   // Optimistic add - immediately add item to list
   const optimisticAdd = useCallback((item: TData) => {
