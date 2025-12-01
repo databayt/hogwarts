@@ -33,9 +33,6 @@ export const platformNav: PlatformNavItem[] = [
   // Admin lab – admin only
   { title: "Overview", href: "/dashboard", icon: "pieChart", roles: ALL_ROLES },
   { title: "Admin", href: "/admin", icon: "admin", roles: ["ADMIN", "DEVELOPER"], className: "-ml-[1.5px] h-4.5 w-4.5" },
-  { title: "Charts", href: "/dashboard/charts", icon: "barChart", roles: ["ADMIN"] },
-  { title: "Stats", href: "/dashboard/stats", icon: "trendingUp", roles: ["ADMIN"] },
-  { title: "Billing", href: "/admin/billing", icon: "receipt", roles: ["ADMIN", "DEVELOPER"] },
 
   // School platform – recommended visibility
   { title: "Announcements", href: "/announcements", icon: "speaker", roles: ALL_ROLES, className: "h-4.5 w-4.5" },
@@ -60,6 +57,9 @@ export const platformNav: PlatformNavItem[] = [
   // Profile and Settings
   { title: "Profile", href: "/profile", icon: "user", roles: ALL_ROLES },
   { title: "Settings", href: "/settings", icon: "cog", roles: ALL_ROLES },
+
+  // Showcase components – admin only (at the end)
+  { title: "Charts", href: "/charts", icon: "barChart", roles: ["ADMIN"] },
+  { title: "Stats", href: "/stats", icon: "trendingUp", roles: ["ADMIN"] },
+  { title: "Billing", href: "/billing", icon: "receipt", roles: ["ADMIN", "DEVELOPER"] },
 ];
-
-
