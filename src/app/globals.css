@@ -92,6 +92,14 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+
+  /* GitHub Contribution Graph Colors (Light Mode) */
+  /* Exception: Data visualization requires exact GitHub colors */
+  --contribution-level-0: #ebedf0;
+  --contribution-level-1: #9be9a8;
+  --contribution-level-2: #40c463;
+  --contribution-level-3: #30a14e;
+  --contribution-level-4: #216e39;
 }
 
 .dark {
@@ -126,6 +134,14 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+
+  /* GitHub Contribution Graph Colors (Dark Mode) */
+  /* Exception: Data visualization requires exact GitHub colors */
+  --contribution-level-0: #161b22;
+  --contribution-level-1: #0e4429;
+  --contribution-level-2: #006d32;
+  --contribution-level-3: #26a641;
+  --contribution-level-4: #39d353;
 }
 
 @layer base {

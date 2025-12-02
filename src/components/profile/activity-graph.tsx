@@ -3,7 +3,6 @@
 import { useMemo, useState } from "react"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { cn } from "@/lib/utils"
 import type { ProfileRole, ActivityDataPoint } from "./types"
 
 interface ActivityGraphProps {
@@ -11,13 +10,22 @@ interface ActivityGraphProps {
   data?: Record<string, unknown>
 }
 
-// Color levels for the contribution graph (using semantic-friendly colors)
-const LEVEL_COLORS = {
-  0: "bg-muted/40 dark:bg-muted/20",
-  1: "bg-emerald-200 dark:bg-emerald-900/60",
-  2: "bg-emerald-400 dark:bg-emerald-700/80",
-  3: "bg-emerald-500 dark:bg-emerald-500",
-  4: "bg-emerald-600 dark:bg-emerald-400",
+/**
+ * GitHub-inspired Contribution Graph Colors
+ *
+ * EXCEPTION: This component uses exact GitHub colors for data visualization
+ * authenticity. The colors are defined as CSS custom properties in globals.css
+ * and are documented in .claude/skills/ui-validator.md under "Exceptions".
+ *
+ * Light mode: #ebedf0 → #9be9a8 → #40c463 → #30a14e → #216e39
+ * Dark mode:  #161b22 → #0e4429 → #006d32 → #26a641 → #39d353
+ */
+const LEVEL_STYLES: Record<number, React.CSSProperties> = {
+  0: { backgroundColor: "var(--contribution-level-0)" },
+  1: { backgroundColor: "var(--contribution-level-1)" },
+  2: { backgroundColor: "var(--contribution-level-2)" },
+  3: { backgroundColor: "var(--contribution-level-3)" },
+  4: { backgroundColor: "var(--contribution-level-4)" },
 }
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
@@ -235,10 +243,8 @@ export default function ActivityGraph({ role = "student", data }: ActivityGraphP
                       <Tooltip key={`${weekIdx}-${dayIdx}`}>
                         <TooltipTrigger asChild>
                           <div
-                            className={cn(
-                              "size-[10px] rounded-sm transition-all cursor-pointer hover:ring-1 hover:ring-foreground/20",
-                              LEVEL_COLORS[day.level]
-                            )}
+                            className="size-[10px] rounded-[2px] transition-all cursor-pointer hover:ring-1 hover:ring-foreground/20"
+                            style={LEVEL_STYLES[day.level]}
                           />
                         </TooltipTrigger>
                         <TooltipContent side="top" className="max-w-xs">
@@ -275,10 +281,11 @@ export default function ActivityGraph({ role = "student", data }: ActivityGraphP
           <div className="flex items-center gap-1">
             <span>Less</span>
             <div className="flex gap-[2px]">
-              {Object.values(LEVEL_COLORS).map((color, idx) => (
+              {[0, 1, 2, 3, 4].map((level) => (
                 <div
-                  key={idx}
-                  className={cn("size-[10px] rounded-sm", color)}
+                  key={level}
+                  className="size-[10px] rounded-[2px]"
+                  style={LEVEL_STYLES[level]}
                 />
               ))}
             </div>

@@ -87,7 +87,26 @@ text-primary-foreground
 border-border
 border-input
 ring-ring
+
+// ✅ Contribution graph colors (GitHub-inspired exception)
+// These CSS custom properties are allowed for data visualization
+// Defined in globals.css as --contribution-level-{0-4}
+bg-[--contribution-level-0]
+bg-[--contribution-level-1]
+bg-[--contribution-level-2]
+bg-[--contribution-level-3]
+bg-[--contribution-level-4]
 ```
+
+### Exceptions
+
+The following components have documented exceptions to the semantic token rule:
+
+1. **Contribution Graph** (`src/components/profile/activity-graph.tsx`)
+   - **Reason**: GitHub-inspired visualization requires specific green gradient colors
+   - **Pattern**: Uses CSS custom properties `--contribution-level-{0-4}`
+   - **Dark mode**: Properties auto-switch via CSS variables in `:root` and `.dark`
+   - **Documentation**: See `src/components/profile/COLOR_SYSTEM.md`
 
 ### Validation Code
 
