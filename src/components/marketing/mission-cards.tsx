@@ -31,9 +31,8 @@ const cards = [
 export default function MissionCards({ dictionary }: MissionCardsProps) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const dict = (dictionary?.marketing as any)?.missionCards || {
-        heading: "A restoration of time through the elimination of repetitive tasks.",
-        description1: "While no one can foresee every challenge schools will face, we know that designing powerful systems requires both bold innovation and careful consideration of outcomes.",
-        description2: "That's why we focus on building tools with educators and students at their foundation. Through our daily development, we aim to show what responsible school automation looks like in practice.",
+        heading: "A restoration of time, elimination of repetitive tasks.",
+        description: "78% of schools still rely on paper-based systems, costing the industry $12B annually in wasted processes. We're building reusable automation components—from atomic building blocks to complete solutions—that give educators back their 40 hours lost each month to manual tasks. Every line of code is open source, every contribution shapes the future of how schools operate.",
     }
 
     return (
@@ -47,12 +46,9 @@ export default function MissionCards({ dictionary }: MissionCardsProps) {
                 </div>
 
                 {/* Right column - Description */}
-                <div className="lg:col-span-7 lg:col-start-6 space-y-4">
+                <div className="lg:col-span-7 lg:col-start-6">
                     <p className="text-muted-foreground leading-relaxed">
-                        {dict.description1}
-                    </p>
-                    <p className="text-muted-foreground leading-relaxed">
-                        {dict.description2}
+                        {dict.description}
                     </p>
                 </div>
 
@@ -60,10 +56,10 @@ export default function MissionCards({ dictionary }: MissionCardsProps) {
                 {cards.map((card, index) => (
                     <div key={index} className="lg:col-span-4">
                         <Link href={card.href} className="block">
-                            <div className={`${card.bgColor} rounded-lg p-6 aspect-square flex flex-col`}>
+                            <div className={`${card.bgColor} rounded-lg p-6 aspect-[5/4] flex flex-col`}>
                                 {/* Icon with slow animation effect */}
                                 <div className="flex-1 animation-box">
-                                    <div className="w-32 h-32 md:w-40 md:h-40 relative">
+                                    <div className="w-24 h-24 md:w-28 md:h-28 relative">
                                         <Image
                                             src={card.icon}
                                             alt=""
