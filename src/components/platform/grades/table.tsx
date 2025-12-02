@@ -16,7 +16,7 @@ import {
   GridContainer,
   GridEmptyState,
 } from "@/components/platform/shared";
-import { ClipboardCheck, TrendingUp } from "lucide-react";
+import { ClipboardCheck, TrendingUp } from "@aliimam/icons";
 import { useRouter } from "next/navigation";
 import { DeleteToast, ErrorToast, confirmDeleteDialog } from "@/components/atom/toast";
 import type { Dictionary } from "@/components/internationalization/dictionaries";
@@ -77,7 +77,13 @@ export function ResultsTable({ initialData, total, dictionary, lang, perPage = 2
       pagination: {
         pageIndex: 0,
         pageSize: data.length || perPage,
-      }
+      },
+      columnVisibility: {
+        // Default visible: studentName, assignmentTitle, className, percentage, grade, actions
+        score: false,
+        maxScore: false,
+        createdAt: false,
+      },
     }
   });
 

@@ -3,13 +3,43 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { DataTableColumnHeader } from "@/components/table/data-table-column-header";
 import { Button } from "@/components/ui/button";
-import { Ellipsis } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Ellipsis } from "@aliimam/icons";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useModal } from "@/components/atom/modal/context";
 import { deleteResult } from "@/components/platform/grades/actions";
 import { DeleteToast, ErrorToast, confirmDeleteDialog } from "@/components/atom/toast";
 import { type Dictionary } from "@/components/internationalization/dictionaries";
 import { type Locale } from "@/components/internationalization/config";
+
+// Helper to extract assignment type badge
+function getAssignmentBadge(title: string): { name: string; type: string } {
+  const lower = title.toLowerCase();
+  if (lower.includes("homework")) return { name: title.replace(/homework\s*/i, "").trim() || "HW", type: "Homework" };
+  if (lower.includes("quiz")) return { name: title.replace(/quiz\s*/i, "").trim() || "Quiz", type: "Quiz" };
+  if (lower.includes("exam")) return { name: title.replace(/exam\s*/i, "").trim() || "Exam", type: "Exam" };
+  if (lower.includes("project")) return { name: title.replace(/project\s*/i, "").trim() || "Project", type: "Project" };
+  if (lower.includes("test")) return { name: title.replace(/test\s*/i, "").trim() || "Test", type: "Test" };
+  if (lower.includes("midterm")) return { name: "Midterm", type: "Exam" };
+  if (lower.includes("final")) return { name: "Final", type: "Exam" };
+  return { name: title, type: "Assignment" };
+}
+
+// Helper to extract class badge info
+function getClassBadge(className: string): { name: string; section?: string } {
+  // Extract section like "A", "B", "Week 1" etc.
+  const match = className.match(/(.+?)\s*[-–]\s*(.+)/);
+  if (match) return { name: match[1].trim(), section: match[2].trim() };
+  return { name: className };
+}
+
+// Grade color helper
+function getGradeVariant(grade: string): "default" | "secondary" | "destructive" | "outline" {
+  if (grade.startsWith("A")) return "default";
+  if (grade.startsWith("B")) return "secondary";
+  if (grade.startsWith("C")) return "outline";
+  return "destructive";
+}
 
 export type ResultRow = {
   id: string;
@@ -37,6 +67,16 @@ export const resultColumns = (t: Dictionary["school"]["grades"], locale: Locale 
     meta: { label: t.assignment, variant: "text" },
     id: 'assignmentTitle',
     enableColumnFilter: true,
+    cell: ({ getValue }) => {
+      const title = getValue<string>() || "";
+      const { name, type } = getAssignmentBadge(title);
+      return (
+        <div className="flex items-center gap-2">
+          <span>{name}</span>
+          <Badge variant="outline" className="text-[10px] px-1.5 py-0">{type}</Badge>
+        </div>
+      );
+    },
   },
   {
     accessorKey: "className",
@@ -44,6 +84,16 @@ export const resultColumns = (t: Dictionary["school"]["grades"], locale: Locale 
     meta: { label: t.class, variant: "text" },
     id: 'className',
     enableColumnFilter: true,
+    cell: ({ getValue }) => {
+      const name = getValue<string>() || "";
+      const { name: className, section } = getClassBadge(name);
+      return (
+        <div className="flex items-center gap-2">
+          <span>{className}</span>
+          {section && <Badge variant="secondary" className="text-[10px] px-1.5 py-0">{section}</Badge>}
+        </div>
+      );
+    },
   },
   {
     accessorKey: "score",
@@ -61,27 +111,37 @@ export const resultColumns = (t: Dictionary["school"]["grades"], locale: Locale 
   },
   {
     accessorKey: "percentage",
-    header: ({ column }) => <DataTableColumnHeader column={column} title={t.percentage} />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title={t.percentage} className="justify-center" />,
     meta: { label: t.percentage, variant: "number" },
     id: 'percentage',
     cell: ({ getValue }) => {
       const value = getValue<number>() || 0;
       return (
-        <small className="tabular-nums">
-          {new Intl.NumberFormat(locale, {
-            minimumFractionDigits: 1,
-            maximumFractionDigits: 1
-          }).format(value)}%
-        </small>
+        <div className="text-center">
+          <small className="tabular-nums">
+            {new Intl.NumberFormat(locale, {
+              minimumFractionDigits: 0,
+              maximumFractionDigits: 0
+            }).format(value)}%
+          </small>
+        </div>
       );
     },
   },
   {
     accessorKey: "grade",
-    header: ({ column }) => <DataTableColumnHeader column={column} title={t.grade} />,
+    header: ({ column }) => <DataTableColumnHeader column={column} title={t.grade} className="justify-center" />,
     meta: { label: t.grade, variant: "text" },
     id: 'grade',
     enableColumnFilter: true,
+    cell: ({ getValue }) => {
+      const grade = getValue<string>() || "";
+      return (
+        <div className="text-center">
+          <Badge variant={getGradeVariant(grade)}>{grade}</Badge>
+        </div>
+      );
+    },
   },
   {
     accessorKey: "createdAt",
