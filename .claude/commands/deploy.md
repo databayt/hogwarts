@@ -1,24 +1,53 @@
 ---
 description: Deploy to environment (staging/production)
-requiresArgs: true
+requiresArgs: false
 ---
 
-Deploy to $1:
+# Auto-Deploy
 
-Pre-deployment checks:
-1. Run: pnpm test
-2. Run: pnpm lint
-3. Run: pnpm tsc --noEmit
-4. Run: pnpm build
+Validates, commits, pushes, and monitors deployment automatically.
 
-If all pass:
-1. Verify environment variables configured
-2. Check database migrations ready
-3. Push to branch: git push origin $1
-4. Monitor deployment on Vercel
-5. Run smoke tests
+## Execute
 
-If deploying to production, EXTRA caution:
-- Backup database
-- Notify team
-- Have rollback plan ready
+Run the deploy hook:
+```bash
+.claude/hooks/deploy.sh
+```
+
+This will:
+1. **Validate** - TypeScript, lint, tests
+2. **Auto-fix** - Lint issues
+3. **Build** - Production build check
+4. **Commit** - Auto-generate conventional commit
+5. **Push** - Push to current branch
+6. **Monitor** - Show Vercel deployment URL
+
+## Arguments
+
+- No args: Deploy to current branch (staging preview)
+- `production`: Deploy to production (requires main branch)
+
+## For Production
+
+If deploying to production, run extra checks:
+```bash
+# Ensure on main branch
+git checkout main
+git pull origin main
+
+# Run full test suite
+pnpm test
+
+# Deploy
+.claude/hooks/deploy.sh
+```
+
+## Quick Reference
+
+| Command | Use Case | Time |
+|---------|----------|------|
+| `/deploy` | Auto-deploy current changes | ~30s |
+| `/quick` | Tiny changes (skip tests/build) | ~10s |
+| `/dev` | Small changes with full checks | ~45s |
+| `/validate` | Full agent validation | ~2min |
+| `/ship production` | Production release | ~5min |

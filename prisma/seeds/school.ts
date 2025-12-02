@@ -47,7 +47,7 @@ export async function seedSchool(prisma: SeedPrisma): Promise<SchoolRef> {
   console.log(`   📍 Location: ${DEMO_SCHOOL.address}, ${DEMO_SCHOOL.city}, ${DEMO_SCHOOL.state}`);
   console.log(`   📞 Phone: ${DEMO_SCHOOL.phone}`);
   console.log(`   🎓 Motto: ${DEMO_SCHOOL.motto} (${DEMO_SCHOOL.mottoEn})`);
-  console.log(`   🌍 ${DEMO_SCHOOL.diversity}\n`);
+  console.log(`   🏛️ Type: ${DEMO_SCHOOL.schoolType}\n`);
 
   return {
     id: school.id,

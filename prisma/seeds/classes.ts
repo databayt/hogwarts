@@ -200,7 +200,6 @@ export async function seedClasses(
             schoolId,
             classId: clazz.id,
             title: `${subjectName} Assignment - Week 1`,
-            titleAr: `واجب ${subjectAr} - الأسبوع الأول`,
             description: faker.lorem.sentences({ min: 2, max: 4 }),
             type: AssessmentType.HOMEWORK,
             status: AssessmentStatus.PUBLISHED,
@@ -239,11 +238,11 @@ export async function seedClasses(
   // Create score ranges
   await prisma.scoreRange.createMany({
     data: [
-      { schoolId, minScore: "90.00", maxScore: "100.00", grade: "A", gradeAr: "ممتاز" },
-      { schoolId, minScore: "80.00", maxScore: "89.99", grade: "B", gradeAr: "جيد جداً" },
-      { schoolId, minScore: "70.00", maxScore: "79.99", grade: "C", gradeAr: "جيد" },
-      { schoolId, minScore: "60.00", maxScore: "69.99", grade: "D", gradeAr: "مقبول" },
-      { schoolId, minScore: "0.00", maxScore: "59.99", grade: "F", gradeAr: "راسب" },
+      { schoolId, minScore: "90.00", maxScore: "100.00", grade: "A" },
+      { schoolId, minScore: "80.00", maxScore: "89.99", grade: "B" },
+      { schoolId, minScore: "70.00", maxScore: "79.99", grade: "C" },
+      { schoolId, minScore: "60.00", maxScore: "69.99", grade: "D" },
+      { schoolId, minScore: "0.00", maxScore: "59.99", grade: "F" },
     ],
     skipDuplicates: true,
   });
