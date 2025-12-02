@@ -18,6 +18,7 @@ import {
 import ProfileSidebar from "./profile-sidebar"
 import PinnedItems from "./pinned-items"
 import ContributionGraph from "./contribution-graph"
+import ContributionActivity from "./contribution-activity"
 import ActivityOverview from "./activity-overview"
 import StudentDashboard from "./student"
 import TeacherDashboard from "./teacher"
@@ -87,11 +88,6 @@ export default function ProfileContent({ role, data, dictionary, lang }: Props) 
     }
   }
 
-  const formatCurrentDate = () => {
-    const now = new Date()
-    return now.toLocaleDateString("en-US", { month: "long", year: "numeric" })
-  }
-
   const MainContent = () => (
     <div className="space-y-6">
       {/* Tab Navigation */}
@@ -126,19 +122,11 @@ export default function ProfileContent({ role, data, dictionary, lang }: Props) 
             <ContributionGraph role={role} data={data} />
           </div>
 
-          {/* Activity Overview */}
-          <ActivityOverview role={role} data={data} />
+          {/* Contribution Activity Timeline */}
+          <ContributionActivity role={role} data={data} />
 
-          {/* Activity Timeline */}
-          <div className="space-y-4">
-            <h3 className="text-base font-semibold text-foreground">{formatCurrentDate()}</h3>
-            <div className="text-center py-8 text-muted-foreground">
-              <p>No activity recorded for this period.</p>
-            </div>
-            <button className="w-full bg-muted border border-border rounded-lg py-3 text-sm text-muted-foreground hover:bg-muted/80 hover:text-foreground transition-colors">
-              Show more activity
-            </button>
-          </div>
+          {/* Activity Overview with pie chart */}
+          <ActivityOverview role={role} data={data} />
         </TabsContent>
 
         {/* Other Tabs - Show Role Dashboard */}

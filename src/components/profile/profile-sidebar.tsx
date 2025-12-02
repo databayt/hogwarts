@@ -233,24 +233,20 @@ export default function ProfileSidebar({ role, data }: ProfileSidebarProps) {
           Passionate about learning and growth. Always striving for excellence in academics and extracurricular activities.
         </p>
 
-        {/* Action Buttons */}
-        <div className="flex gap-2">
-          <Button className="flex-1" size="sm">
-            View Full Profile
-          </Button>
-          <Button variant="outline" size="sm" className="px-3">
-            <Mail className="size-4" />
-          </Button>
-        </div>
+        {/* Edit Profile Button - GitHub style */}
+        <Button variant="outline" className="w-full" size="sm">
+          Edit profile
+        </Button>
 
-        {/* Stats */}
-        <div className="flex items-center gap-4 text-sm">
+        {/* Stats - GitHub style: "12 followers · 3 following" */}
+        <div className="flex items-center flex-wrap gap-1 text-sm text-muted-foreground">
+          <Users className="size-4" />
           {config.stats.map((stat, idx) => (
-            <div key={idx} className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
-              {stat.icon}
+            <span key={idx} className="flex items-center">
               <span className="font-semibold text-foreground">{stat.value}</span>
-              <span>{stat.label}</span>
-            </div>
+              <span className="ms-1">{stat.label}</span>
+              {idx < config.stats.length - 1 && <span className="mx-1">·</span>}
+            </span>
           ))}
         </div>
 
