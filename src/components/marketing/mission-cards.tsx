@@ -11,19 +11,19 @@ const cards = [
         title: "Student Success First",
         icon: "/icons/hands-build.svg",
         href: "/about",
-        bgColor: "bg-[#F5F0E8]", // oat
+        bgColor: "bg-[#E3DACC]", // oat - rgb(227, 218, 204)
     },
     {
         title: "Scalable School Operations",
         icon: "/icons/hands-stack.svg",
         href: "/features",
-        bgColor: "bg-[#D4C9B0]", // cactus
+        bgColor: "bg-[#BCD1CA]", // cactus - rgb(188, 209, 202)
     },
     {
         title: "Academy: Learn to Automate",
         icon: "/icons/objects-puzzle.svg",
         href: "/docs",
-        bgColor: "bg-[#C5D1DC]", // heather
+        bgColor: "bg-[#CBCADB]", // heather - rgb(203, 202, 219)
     },
 ]
 
