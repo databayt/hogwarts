@@ -7,6 +7,7 @@ import type { Dictionary } from '@/components/internationalization/dictionaries'
 import type { Locale } from '@/components/internationalization/config'
 import { env } from '@/env.mjs'
 import { HeroIllustration } from './hero-illustration'
+import { AnimatedWord } from './animated-word'
 
 interface HeroProps {
   dictionary?: Dictionary
@@ -15,7 +16,7 @@ interface HeroProps {
 
 const Hero = ({ dictionary, lang }: HeroProps) => {
   const heroDict = dictionary?.marketing?.hero || {
-    title: "Automate Education,\nelevate the curiosity.",
+    title: "Automate Education,",
     subtitle: "Educational management system streamlining operations for students, educators, and school leaders. Transform your institution's efficiency today.",
     badge: "700+ School automated",
     appointment: "Get Started",
@@ -61,7 +62,8 @@ const Hero = ({ dictionary, lang }: HeroProps) => {
             </Link>
 
             <h1 className="font-heading font-extrabold text-4xl sm:text-5xl lg:text-6xl xl:text-7xl tracking-tight">
-              {heroDict.title}
+              <span className="block">{heroDict.title}</span>
+              <span className="block">elevate the <AnimatedWord words={["curiosity", "wonder"]} />.</span>
             </h1>
 
             <p className="text-lg lg:text-xl text-muted-foreground max-w-xl">
