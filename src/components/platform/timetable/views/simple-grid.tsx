@@ -3,7 +3,7 @@
 import { useMemo } from 'react'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
-import { Clock } from 'lucide-react'
+import { Clock } from "lucide-react"
 
 const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 

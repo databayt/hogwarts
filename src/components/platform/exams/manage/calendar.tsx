@@ -2,14 +2,7 @@
 
 import * as React from 'react';
 import { useState, useMemo, useCallback } from 'react';
-import {
-  Calendar as CalendarIcon,
-  Clock,
-  MapPin,
-  Users,
-  BookOpen,
-  CircleAlert
-} from "lucide-react";
+import { Calendar as CalendarIcon, Clock, MapPin, Users, BookOpen, CircleAlert } from "lucide-react";
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';

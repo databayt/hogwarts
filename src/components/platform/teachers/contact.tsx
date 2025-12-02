@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Trash2, Phone, Mail, Smartphone, House, Briefcase, TriangleAlert } from "lucide-react";
+import { Plus, Trash, Phone, Mail, Smartphone, House, Briefcase, TriangleAlert } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 import { TeacherFormStepProps } from "./types";
@@ -159,7 +159,7 @@ export function ContactStep({ form, isView }: TeacherFormStepProps) {
                             onClick={() => remove(index)}
                             className="h-8 w-8 p-0"
                           >
-                            <Trash2 className="h-4 w-4 text-destructive" />
+                            <Trash className="h-4 w-4 text-destructive" />
                           </Button>
                         )}
                       </div>

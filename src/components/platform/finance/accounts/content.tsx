@@ -1,6 +1,7 @@
 import type { Locale } from '@/components/internationalization/config'
 import type { Dictionary } from '@/components/internationalization/dictionaries'
-import { BookOpen, FileText, BarChart, Lock, Calendar, Settings } from 'lucide-react'
+import { BookOpen, FileText, Lock, Calendar, Settings } from "lucide-react"
+import { BarChart } from "lucide-react"
 import { db } from '@/lib/db'
 import { getTenantContext } from '@/lib/tenant-context'
 import { StatsCard, FeatureCard, DashboardGrid } from '../lib/dashboard-components'

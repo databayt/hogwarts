@@ -10,18 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import {
-  Calendar,
-  Clock,
-  MapPin,
-  Users,
-  Video,
-  ChevronLeft,
-  ChevronRight,
-  Download,
-  Printer,
-  Plus
-} from 'lucide-react'
+import { Calendar, Clock, MapPin, Users, Video, ChevronLeft, ChevronRight, Download, Printer, Plus } from "lucide-react"
 import { cn } from '@/lib/utils'
 import { format, startOfWeek, addDays, isSameDay } from 'date-fns'
 import type { TeacherProfile } from '../../types'

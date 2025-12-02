@@ -4,16 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Alert } from "@/components/ui/alert";
-import {
-  CreditCard,
-  DollarSign,
-  Receipt,
-  TriangleAlert,
-  CircleCheck,
-  Clock,
-  Download,
-  Printer
-} from "lucide-react";
+import { CreditCard, DollarSign, Receipt, TriangleAlert, CircleCheck, Clock, Download, Printer } from "lucide-react";
 import type { Student, FeeRecord } from "../../registration/types";
 import { format } from "date-fns";
 

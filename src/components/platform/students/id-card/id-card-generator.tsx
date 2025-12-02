@@ -18,19 +18,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  CreditCard,
-  Users,
-  Search,
-  ListFilter,
-  Printer,
-  Download,
-  Settings,
-  Palette,
-  FileText,
-  CircleCheck,
-  CircleX
-} from "lucide-react";
+import { CreditCard, Users, Search, ListFilter, Printer, Download, Settings, Palette, FileText, CircleCheck, CircleX } from "lucide-react";
 import { IDCardPreview } from "./id-card-preview";
 import { idCardTemplates, defaultTemplate } from "./templates";
 import type { IDCardData, IDCardTemplate, IDCardGenerationOptions } from "./types";

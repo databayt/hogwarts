@@ -3,12 +3,8 @@
 import * as React from 'react';
 import { useState, useMemo } from 'react';
 import { format, startOfMonth, endOfMonth, subMonths, addMonths } from 'date-fns';
-import {
-  TrendingUp, TrendingDown, Users, GraduationCap, DollarSign,
-  Calendar, Award, BookOpen, School, Activity, Target, TriangleAlert,
-  Download, Filter, ChevronUp, ChevronDown, BarChart3, PieChart as PieChartIcon,
-  Star
-} from 'lucide-react';
+import { TrendingUp, TrendingDown, Users, GraduationCap, DollarSign, Calendar, Award, BookOpen, School, Activity, Target, TriangleAlert, Download, ListFilter, ChevronUp, ChevronDown, Star } from "lucide-react"
+import { BarChart3, PieChart as PieChartIcon } from "lucide-react";
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {

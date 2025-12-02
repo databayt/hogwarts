@@ -19,19 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Bell,
-  Mail,
-  MessageSquare,
-  Smartphone,
-  Volume2,
-  VolumeX,
-  Clock,
-  Calendar,
-  TriangleAlert,
-  Info,
-  CircleCheck,
-} from "lucide-react";
+import { Bell, Mail, MessageSquare, Smartphone, Volume2, VolumeX, Clock, Calendar, TriangleAlert, Info, CircleCheck,  } from "lucide-react";
 import { SuccessToast } from "@/components/atom/toast";
 import { type Dictionary } from "@/components/internationalization/dictionaries";
 

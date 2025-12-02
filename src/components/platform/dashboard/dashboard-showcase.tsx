@@ -3,33 +3,7 @@
 'use client'
 
 import * as React from "react"
-import {
-  Users,
-  GraduationCap,
-  BookOpen,
-  Calendar,
-  TrendingUp,
-  TrendingDown,
-  FileText,
-  Bell,
-  Clock,
-  CheckCircle,
-  CircleAlert,
-  DollarSign,
-  Award,
-  Target,
-  Activity,
-  Zap,
-  Heart,
-  Star,
-  Mail,
-  Phone,
-  MapPin,
-  Settings,
-  Sun,
-  Cloud,
-  CloudRain
-} from "lucide-react"
+import { Users, GraduationCap, BookOpen, Calendar, TrendingUp, TrendingDown, FileText, Bell, Clock, CircleCheck, CircleAlert, DollarSign, Award, Target, Activity, Zap, Heart, Star, Mail, Phone, MapPin, Settings, Sun, Cloud, CloudRain } from "lucide-react"
 
 // Import all atom lab cards
 import { StatCard } from "@/components/atom/lab/stat-card"
@@ -167,7 +141,7 @@ export function DashboardShowcase() {
           />
 
           <ProgressCard
-            icon={<CheckCircle className="h-4 w-4" />}
+            icon={<CircleCheck className="h-4 w-4" />}
             value={92}
             label="Assignment Submitted"
             variant="success"
@@ -354,7 +328,7 @@ export function DashboardShowcase() {
                 title: "Assignment Submitted",
                 description: "John submitted Physics homework",
                 timestamp: "2 hours ago",
-                icon: <CheckCircle className="h-4 w-4" />,
+                icon: <CircleCheck className="h-4 w-4" />,
                 type: "success"
               },
               {
@@ -368,7 +342,7 @@ export function DashboardShowcase() {
                 title: "Attendance Marked",
                 description: "Present for all classes today",
                 timestamp: "1 day ago",
-                icon: <CheckCircle className="h-4 w-4" />,
+                icon: <CircleCheck className="h-4 w-4" />,
                 type: "success"
               }
             ]}

@@ -13,28 +13,7 @@ import { Input } from '@/components/ui/input'
 import { Progress } from '@/components/ui/progress'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import {
-  CheckSquare,
-  Clock,
-  AlertCircle,
-  Calendar,
-  Filter,
-  Search,
-  Plus,
-  ChevronRight,
-  Star,
-  Flag,
-  Users,
-  Paperclip,
-  MessageSquare,
-  MoreVertical,
-  TrendingUp,
-  Target,
-  ListTodo,
-  CheckCircle,
-  XCircle,
-  PlayCircle
-} from 'lucide-react'
+import { SquareCheck, Clock, CircleAlert, Calendar, ListFilter, Search, Plus, ChevronRight, Star, Flag, Users, Paperclip, MessageSquare, EllipsisVertical, TrendingUp, Target, ListTodo, CircleCheck, CircleX, CirclePlay } from "lucide-react"
 import { cn } from '@/lib/utils'
 import { format, formatDistanceToNow, isAfter, isBefore, addDays } from 'date-fns'
 import type { StaffProfile } from '../../types'
@@ -254,10 +233,10 @@ export function TasksTab({
   const getStatusIcon = (status: TaskStatus) => {
     switch (status) {
       case 'todo': return <ListTodo className="h-4 w-4" />
-      case 'in-progress': return <PlayCircle className="h-4 w-4" />
+      case 'in-progress': return <CirclePlay className="h-4 w-4" />
       case 'review': return <Clock className="h-4 w-4" />
-      case 'completed': return <CheckCircle className="h-4 w-4" />
-      case 'cancelled': return <XCircle className="h-4 w-4" />
+      case 'completed': return <CircleCheck className="h-4 w-4" />
+      case 'cancelled': return <CircleX className="h-4 w-4" />
       default: return null
     }
   }
@@ -287,7 +266,7 @@ export function TasksTab({
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-blue-500/10">
-                <CheckSquare className="h-4 w-4 text-blue-500" />
+                <SquareCheck className="h-4 w-4 text-blue-500" />
               </div>
               <div>
                 <p className="text-2xl font-bold">{workMetrics.tasksInProgress}</p>
@@ -315,7 +294,7 @@ export function TasksTab({
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-red-500/10">
-                <AlertCircle className="h-4 w-4 text-red-500" />
+                <CircleAlert className="h-4 w-4 text-red-500" />
               </div>
               <div>
                 <p className="text-2xl font-bold">{mockMetrics.overdue}</p>
@@ -329,7 +308,7 @@ export function TasksTab({
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-green-500/10">
-                <CheckCircle className="h-4 w-4 text-green-500" />
+                <CircleCheck className="h-4 w-4 text-green-500" />
               </div>
               <div>
                 <p className="text-2xl font-bold">{mockMetrics.completedToday}</p>
@@ -390,7 +369,7 @@ export function TasksTab({
               <option value="low">Low</option>
             </select>
             <Button variant="outline" size="icon">
-              <Filter className="h-4 w-4" />
+              <ListFilter className="h-4 w-4" />
             </Button>
             {isOwner && (
               <Button>
@@ -545,14 +524,14 @@ export function TasksTab({
                         </span>
                         {task.actualHours && (
                           <span className="flex items-center gap-1">
-                            <CheckCircle className="h-3 w-3" />
+                            <CircleCheck className="h-3 w-3" />
                             {task.actualHours}h actual
                           </span>
                         )}
                       </div>
                     </div>
                     <Button variant="ghost" size="sm">
-                      <MoreVertical className="h-4 w-4" />
+                      <EllipsisVertical className="h-4 w-4" />
                     </Button>
                   </div>
                 </div>

@@ -2,13 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Calendar } from "@/components/ui/calendar";
-import {
-  CircleCheck,
-  CircleX,
-  Clock,
-  TrendingUp,
-  TrendingDown
-} from "lucide-react";
+import { CircleCheck, CircleX, Clock, TrendingUp, TrendingDown } from "lucide-react";
 import type { Student } from "../../registration/types";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay } from "date-fns";
 

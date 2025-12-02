@@ -3,7 +3,7 @@
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import { CircleAlert, CircleCheck, Info, CircleX } from 'lucide-react'
+import { CircleAlert, CircleCheck, Info, CircleX } from "lucide-react"
 import type { FinancialAlert } from "./types"
 
 interface AlertCardProps {

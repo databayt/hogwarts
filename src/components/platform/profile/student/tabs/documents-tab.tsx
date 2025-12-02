@@ -27,27 +27,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
-import {
-  FileText,
-  Upload,
-  Download,
-  Eye,
-  Trash2,
-  Share2,
-  MoreVertical,
-  Search,
-  Filter,
-  FolderOpen,
-  File,
-  FileImage,
-  FileCheck,
-  FileClock,
-  FileX,
-  Shield,
-  Calendar,
-  HardDrive,
-  CheckCircle
-} from 'lucide-react'
+import { FileText, Upload, Download, Eye, Trash, Share2, EllipsisVertical, Search, ListFilter, FolderOpen, File, FileImage, FileCheck, FileClock, FileX, Shield, Calendar, HardDrive, CircleCheck } from "lucide-react"
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
 import type { StudentProfile } from '../../types'
@@ -295,7 +275,7 @@ export function DocumentsTab({
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-2">
-              <CheckCircle className="h-4 w-4 text-muted-foreground" />
+              <CircleCheck className="h-4 w-4 text-muted-foreground" />
               <p className="text-sm text-muted-foreground">Verified</p>
             </div>
             <p className="text-2xl font-bold">{verifiedCount}</p>
@@ -345,7 +325,7 @@ export function DocumentsTab({
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm">
-                    <Filter className="h-4 w-4 mr-2" />
+                    <ListFilter className="h-4 w-4 mr-2" />
                     Category
                   </Button>
                 </DropdownMenuTrigger>
@@ -448,7 +428,7 @@ export function DocumentsTab({
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="sm">
-                          <MoreVertical className="h-4 w-4" />
+                          <EllipsisVertical className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
@@ -472,7 +452,7 @@ export function DocumentsTab({
                         )}
                         <DropdownMenuSeparator />
                         <DropdownMenuItem className="text-destructive">
-                          <Trash2 className="h-4 w-4 mr-2" />
+                          <Trash className="h-4 w-4 mr-2" />
                           Delete
                         </DropdownMenuItem>
                       </DropdownMenuContent>

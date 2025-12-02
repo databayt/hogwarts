@@ -11,22 +11,7 @@ import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import {
-  Users,
-  GraduationCap,
-  Calendar,
-  CreditCard,
-  TrendingUp,
-  AlertCircle,
-  ChevronRight,
-  Clock,
-  Award,
-  BookOpen,
-  Activity,
-  MessageSquare,
-  FileText,
-  Bell
-} from 'lucide-react'
+import { Users, GraduationCap, Calendar, CreditCard, TrendingUp, CircleAlert, ChevronRight, Clock, Award, BookOpen, Activity, MessageSquare, FileText, Bell } from "lucide-react"
 import { cn } from '@/lib/utils'
 import { format, formatDistanceToNow } from 'date-fns'
 import type { ParentProfile } from '../../types'
@@ -119,7 +104,7 @@ export function OverviewTab({
         <Card className="border-destructive/50 bg-destructive/5">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <AlertCircle className="h-5 w-5 text-destructive" />
+              <CircleAlert className="h-5 w-5 text-destructive" />
               <div className="flex-1">
                 <p className="font-medium">Payment Reminder</p>
                 <p className="text-sm text-muted-foreground">
@@ -356,7 +341,7 @@ export function OverviewTab({
       <Card>
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
-            <AlertCircle className="h-4 w-4" />
+            <CircleAlert className="h-4 w-4" />
             Emergency Information
           </CardTitle>
         </CardHeader>

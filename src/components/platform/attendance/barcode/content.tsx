@@ -6,14 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/components/ui/use-toast';
-import {
-  Barcode,
-  Scan,
-  CreditCard,
-  Users,
-  Settings,
-  CircleAlert
-} from "lucide-react";
+import { Barcode, Scan, CreditCard, Users, Settings, CircleAlert } from "lucide-react";
 import { BarcodeScanner } from './barcode-scanner';
 import { StudentCards } from './student-cards';
 import { useAttendanceContext } from '../core/attendance-context';

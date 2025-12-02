@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { LoaderCircle, CircleAlert, CircleCheckBig } from 'lucide-react';
+import { LoaderCircle, CircleAlert, CircleCheckBig } from "lucide-react";
 import { createTransfer } from './actions';
 import type { BankAccount } from '../types';
 import type { getDictionary } from '@/components/internationalization/dictionaries';

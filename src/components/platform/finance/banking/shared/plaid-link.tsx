@@ -10,7 +10,7 @@ import {
   usePlaidLink,
 } from 'react-plaid-link'
 import { createBankAccount } from '@/components/platform/finance/banking/actions/bank.actions'
-import { LoaderCircle, CircleAlert } from 'lucide-react'
+import { LoaderCircle, CircleAlert } from "lucide-react"
 import { Alert, AlertDescription } from '@/components/ui/alert'
 
 interface PlaidLinkProps {

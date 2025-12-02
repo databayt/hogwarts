@@ -3,12 +3,7 @@
 import * as React from 'react';
 import { useState, useMemo, useCallback } from 'react';
 import { format, addDays, isPast, isFuture, differenceInDays } from 'date-fns';
-import {
-  DollarSign, CreditCard, Receipt, AlertCircle, CheckCircle,
-  Clock, Download, Send, Filter, Search, Calendar, Users,
-  TrendingUp, TrendingDown, Wallet, Ban, RefreshCw, FileText,
-  Mail, MessageSquare, Phone, Printer, Share2, Eye, Edit, Plus
-} from 'lucide-react';
+import { DollarSign, CreditCard, Receipt, CircleAlert, CircleCheck, Clock, Download, Send, ListFilter, Search, Calendar, Users, TrendingUp, TrendingDown, Wallet, Ban, RefreshCw, FileText, Mail, MessageSquare, Phone, Printer, Share2, Eye, Pencil, Plus } from "lucide-react";
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
@@ -728,7 +723,7 @@ export function FeeManagement({
                     return (
                       <div key={payment.id} className="flex items-center justify-between p-4 border rounded-lg border-red-200 bg-red-50">
                         <div className="flex items-center gap-3">
-                          <AlertCircle className="h-8 w-8 text-red-600" />
+                          <CircleAlert className="h-8 w-8 text-red-600" />
                           <div>
                             <p className="font-medium">
                               {payment.student?.givenName} {payment.student?.surname}

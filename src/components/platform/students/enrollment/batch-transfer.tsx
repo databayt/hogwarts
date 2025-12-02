@@ -30,16 +30,7 @@ import {
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import {
-  CalendarIcon,
-  CircleCheck,
-  TriangleAlert,
-  ArrowRight,
-  Clock,
-  CircleX,
-  Users,
-  TrendingUp
-} from "lucide-react";
+import { Calendar as CalendarIcon, CircleCheck, TriangleAlert, ArrowRight, Clock, CircleX, Users, TrendingUp } from "lucide-react";
 import { batchTransferSchema, type BatchTransferFormInput } from "./validation";
 import type { Student, Batch } from "../registration/types";
 import type { BatchTransferRequest } from "./types";

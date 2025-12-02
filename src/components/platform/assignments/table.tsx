@@ -6,7 +6,7 @@ import { DataTableToolbar } from "@/components/table/data-table-toolbar";
 import { useDataTable } from "@/components/table/use-data-table";
 import { getAssignmentColumns, type AssignmentRow } from "./columns";
 import { Button } from "@/components/ui/button";
-import { Plus } from "@aliimam/icons";
+import { Plus } from "lucide-react";
 import { useModal } from "@/components/atom/modal/context";
 import Modal from "@/components/atom/modal/modal";
 import { AssignmentCreateForm } from "@/components/platform/assignments/form";

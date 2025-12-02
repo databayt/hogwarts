@@ -2,19 +2,8 @@
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  Users,
-  UserPlus,
-  Calendar,
-  CalendarOff,
-  School,
-  CircleAlert,
-  FileText,
-  Plus,
-  ChevronRight,
-  QrCode,
-  BarChart3
-} from "lucide-react";
+import { Users, UserPlus, Calendar, CalendarOff, School, CircleAlert, FileText, Plus, ChevronRight, QrCode } from "lucide-react"
+import { BarChart3 } from "lucide-react";
 import Link from 'next/link';
 
 interface EmptyStateProps {

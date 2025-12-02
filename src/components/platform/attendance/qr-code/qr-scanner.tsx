@@ -13,17 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { toast } from '@/components/ui/use-toast';
-import {
-  Scan,
-  Camera,
-  CameraOff,
-  CircleCheck,
-  CircleAlert,
-  MapPin,
-  LoaderCircle,
-  Upload,
-  RefreshCw
-} from "lucide-react";
+import { Scan, Camera, CameraOff, CircleCheck, CircleAlert, MapPin, LoaderCircle, Upload, RefreshCw } from "lucide-react";
 import { useCamera, useGeolocation } from '../shared/hooks';
 import { useAttendanceContext } from '../core/attendance-context';
 import { validateQRPayload } from '../shared/utils';

@@ -1,15 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-  EllipsisVertical,
-  RefreshCw,
-  Trash2,
-  CreditCard,
-  DollarSign,
-  Calendar,
-  TrendingUp
-} from 'lucide-react';
+import { EllipsisVertical, RefreshCw, Trash2, CreditCard, DollarSign, Calendar, TrendingUp } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,

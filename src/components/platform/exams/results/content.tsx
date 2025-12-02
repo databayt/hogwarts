@@ -2,7 +2,8 @@ import type { Locale } from "@/components/internationalization/config";
 import type { Dictionary } from "@/components/internationalization/dictionaries";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { FileBarChart, Download, TrendingUp } from "lucide-react";
+import { Download, TrendingUp } from "lucide-react"
+import { FileBarChart } from "lucide-react";
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { getTenantContext } from "@/lib/tenant-context";

@@ -11,24 +11,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Progress } from '@/components/ui/progress'
-import {
-  Users,
-  Calendar,
-  Clock,
-  MapPin,
-  Award,
-  Star,
-  ChevronRight,
-  Activity,
-  Target,
-  Zap,
-  Music,
-  Palette,
-  Code,
-  BookOpen,
-  Trophy,
-  Heart
-} from 'lucide-react'
+import { Users, Calendar, Clock, MapPin, Award, Star, ChevronRight, Activity, Target, Zap, Music, Palette, Code, BookOpen, Trophy, Heart } from "lucide-react"
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
 import type { StudentProfile } from '../../types'

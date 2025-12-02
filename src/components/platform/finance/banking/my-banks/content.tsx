@@ -5,7 +5,7 @@ import { getAccounts } from './actions';
 import BankList from './bank-list';
 import AddBankButton from './add-bank-button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Building2 } from 'lucide-react';
+import { Building2 } from "lucide-react";
 import type { User } from 'next-auth';
 
 interface Props {

@@ -16,7 +16,7 @@ import {
   GridContainer,
   GridEmptyState,
 } from "@/components/platform/shared";
-import { Users, Mail, CircleCheck, CircleX } from "@aliimam/icons";
+import { Users, Mail, CircleCheck, CircleX } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { DeleteToast, ErrorToast, confirmDeleteDialog } from "@/components/atom/toast";
 import { Badge } from "@/components/ui/badge";

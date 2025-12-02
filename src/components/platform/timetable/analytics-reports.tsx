@@ -55,18 +55,8 @@ import {
   getDayName
 } from './utils'
 import { SUBJECT_COLORS, WORKLOAD_LIMITS } from "./config"
-import {
-  Users,
-  BookOpen,
-  MapPin,
-  TriangleAlert,
-  TrendingUp,
-  Clock,
-  BarChart3,
-  PieChartIcon,
-  Activity,
-  Target
-} from 'lucide-react'
+import { Users, BookOpen, MapPin, TriangleAlert, TrendingUp, Clock, Activity, Target } from "lucide-react"
+import { BarChart3, PieChart as PieChartIcon } from "lucide-react"
 
 interface AnalyticsReportsProps {
   slots: TimetableSlot[]

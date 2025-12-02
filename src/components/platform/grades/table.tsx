@@ -16,7 +16,7 @@ import {
   GridContainer,
   GridEmptyState,
 } from "@/components/platform/shared";
-import { ClipboardCheck, TrendingUp } from "@aliimam/icons";
+import { ClipboardCheck, TrendingUp } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { DeleteToast, ErrorToast, confirmDeleteDialog } from "@/components/atom/toast";
 import type { Dictionary } from "@/components/internationalization/dictionaries";

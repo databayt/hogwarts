@@ -19,20 +19,7 @@ import {
   TableHeader,
   TableRow
 } from '@/components/ui/table'
-import {
-  BookOpen,
-  GraduationCap,
-  FileText,
-  Award,
-  Calendar,
-  Clock,
-  ChevronUp,
-  ChevronDown,
-  Minus,
-  Download,
-  Eye,
-  TrendingUp
-} from 'lucide-react'
+import { BookOpen, GraduationCap, FileText, Award, Calendar, Clock, ChevronUp, ChevronDown, Minus, Download, Eye, TrendingUp } from "lucide-react"
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
 import type { StudentProfile } from '../../types'

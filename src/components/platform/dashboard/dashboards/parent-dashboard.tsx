@@ -1,17 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
-import {
-  Users,
-  Calendar,
-  FileText,
-  Bell,
-  Trophy,
-  ChevronRight,
-  GraduationCap,
-  Clock,
-  DollarSign,
-} from "lucide-react"
+import { Users, Calendar, FileText, Bell, Trophy, ChevronRight, GraduationCap, Clock, DollarSign,  } from "lucide-react"
 import { format, isToday, isTomorrow, differenceInDays } from "date-fns"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { getParentDashboardData } from "../actions"

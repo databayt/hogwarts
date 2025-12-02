@@ -9,7 +9,7 @@ import { TransactionList } from "./transaction-list"
 import { CashFlowChart } from "./cash-flow-chart"
 import { BankAccountsSummary } from "./bank-accounts-summary"
 import type { FinancialKPI } from "./types"
-import { TrendingUp, TrendingDown, DollarSign, Receipt, Users, Wallet, Building, CircleAlert } from 'lucide-react'
+import { TrendingUp, TrendingDown, DollarSign, Receipt, Users, Wallet, Building, CircleAlert } from "lucide-react"
 
 export async function FinanceDashboardContent() {
   const session = await auth()

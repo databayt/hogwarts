@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { useState, useCallback, useRef } from 'react';
 import { format } from 'date-fns';
-import { Upload, X, FileText, File, Image, FileVideo, FileAudio, Save, Send, CircleAlert, LoaderCircle } from 'lucide-react';
+import { Upload, X, FileText, File, Image, FileAudio, Save, Send, CircleAlert, LoaderCircle, Video } from "lucide-react";
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
@@ -221,7 +221,7 @@ export function SubmissionForm({
 
   const getFileIcon = (type: string) => {
     if (type.startsWith('image/')) return <Image className="h-4 w-4" />;
-    if (type.startsWith('video/')) return <FileVideo className="h-4 w-4" />;
+    if (type.startsWith('video/')) return <Video className="h-4 w-4" />;
     if (type.startsWith('audio/')) return <FileAudio className="h-4 w-4" />;
     if (type.includes('pdf')) return <FileText className="h-4 w-4 text-red-600" />;
     return <File className="h-4 w-4" />;

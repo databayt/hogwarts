@@ -2,7 +2,7 @@ import type { Locale } from '@/components/internationalization/config'
 import type { Dictionary } from '@/components/internationalization/dictionaries'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Users, DollarSign, Calendar, FileText, CircleCheck, CircleAlert, Clock, Settings } from 'lucide-react'
+import { Users, DollarSign, Calendar, FileText, CircleCheck, CircleAlert, Clock, Settings } from "lucide-react"
 import Link from 'next/link'
 import { db } from '@/lib/db'
 import { getTenantContext } from '@/lib/tenant-context'

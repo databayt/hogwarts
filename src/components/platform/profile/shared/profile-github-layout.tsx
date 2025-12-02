@@ -12,30 +12,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
-import {
-  MapPin,
-  Mail,
-  Phone,
-  Link,
-  Calendar,
-  Users,
-  Award,
-  Edit2,
-  Share2,
-  MoreVertical,
-  UserPlus,
-  MessageSquare,
-  CheckCircle,
-  Star,
-  Eye,
-  Github,
-  Linkedin,
-  Twitter,
-  Facebook,
-  Instagram,
-  Youtube,
-  Globe
-} from 'lucide-react'
+import { MapPin, Mail, Phone, Link, Calendar, Users, Award, PencilLine, Share2, EllipsisVertical, UserPlus, MessageSquare, CircleCheck, Star, Eye, Github, Linkedin, Twitter, Facebook, Instagram, Youtube, Globe } from "lucide-react"
 import { format } from 'date-fns'
 import { cn } from '@/lib/utils'
 import {
@@ -143,7 +120,7 @@ export function ProfileGitHubLayout({
           onClick={onEdit}
           className="w-full"
         >
-          <Edit2 className="h-4 w-4 mr-2" />
+          <PencilLine className="h-4 w-4 mr-2" />
           Edit Profile
         </Button>
       )
@@ -275,7 +252,7 @@ export function ProfileGitHubLayout({
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="secondary" size="icon">
-                      <MoreVertical className="h-4 w-4" />
+                      <EllipsisVertical className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
@@ -402,7 +379,7 @@ export function ProfileGitHubLayout({
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <div className="relative">
-                      <CheckCircle className="h-10 w-10 text-blue-500" />
+                      <CircleCheck className="h-10 w-10 text-blue-500" />
                     </div>
                   </TooltipTrigger>
                   <TooltipContent>

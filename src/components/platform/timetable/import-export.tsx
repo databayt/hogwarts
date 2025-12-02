@@ -24,19 +24,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Progress } from '@/components/ui/progress'
 import { Checkbox } from '@/components/ui/checkbox'
-import {
-  Download,
-  Upload,
-  FileSpreadsheet,
-  FileText,
-  FileJson,
-  Image,
-  Calendar,
-  CircleAlert,
-  CircleCheck,
-  FileDown,
-  FileUp
-} from 'lucide-react'
+import { Download, Upload, FileSpreadsheet, FileText, FileJson, Image, Calendar, CircleAlert, CircleCheck, FileDown, FileUp } from "lucide-react"
 import {
   TimetableSlot,
   Period,

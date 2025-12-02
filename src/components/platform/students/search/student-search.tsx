@@ -12,17 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import {
-  Search,
-  ListFilter,
-  X,
-  Download,
-  Upload,
-  Users,
-  UserPlus,
-  Calendar as CalendarIcon,
-  ChevronDown
-} from "lucide-react";
+import { Search, ListFilter, X, Download, Upload, Users, UserPlus, Calendar as CalendarIcon, ChevronDown } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useDebounce } from "@/hooks/use-debounce";

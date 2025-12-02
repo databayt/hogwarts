@@ -1,18 +1,12 @@
-import {
-  MessageSquare,
-  Users,
-  Building2,
-  Megaphone,
-  Hash,
-  type LucideIcon,
-} from "lucide-react"
+import { MessageSquare, Users, Building2, Megaphone, Hash } from "lucide-react"
 import type { ConversationType, ParticipantRole, MessageStatus } from "@prisma/client"
+import type { ElementType } from "react"
 
 // Conversation type configuration
 export const CONVERSATION_TYPE_CONFIG: Record<
   ConversationType,
   {
-    icon: LucideIcon
+    icon: ElementType
     label: string
     description: string
     color: string // Semantic token

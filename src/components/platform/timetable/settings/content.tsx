@@ -9,15 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
-import {
-  Settings,
-  RefreshCw,
-  TriangleAlert,
-  Calendar,
-  Clock,
-  Save,
-  Check
-} from 'lucide-react'
+import { Settings, RefreshCw, TriangleAlert, Calendar, Clock, Save, Check } from "lucide-react"
 import { cn } from '@/lib/utils'
 import { type Dictionary } from '@/components/internationalization/dictionaries'
 import { type Locale } from '@/components/internationalization/config'

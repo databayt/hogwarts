@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
-import { Bell, School, Users, BookOpen, Filter, ChevronDown } from "lucide-react";
+import { Bell, School, Users, BookOpen, ListFilter, ChevronDown } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -148,7 +148,7 @@ export function ParentAnnouncementsContent() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Filter className="w-5 h-5" />
+              <ListFilter className="w-5 h-5" />
               Filters
             </CardTitle>
           </CardHeader>

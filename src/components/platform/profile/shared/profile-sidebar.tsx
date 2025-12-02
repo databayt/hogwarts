@@ -11,34 +11,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { Separator } from '@/components/ui/separator'
-import {
-  Info,
-  Briefcase,
-  GraduationCap,
-  Award,
-  Languages,
-  Code,
-  Users,
-  Calendar,
-  MapPin,
-  Mail,
-  Phone,
-  Globe,
-  Shield,
-  ChevronRight,
-  Star,
-  BookOpen,
-  Target,
-  Zap,
-  Trophy,
-  Heart,
-  Music,
-  Palette,
-  Gamepad2,
-  Camera,
-  Plane,
-  Coffee
-} from 'lucide-react'
+import { Info, Briefcase, GraduationCap, Award, Languages, Code, Users, Calendar, MapPin, Mail, Phone, Globe, Shield, ChevronRight, Star, BookOpen, Target, Zap, Trophy, Heart, Music, Palette, Gamepad2, Camera, Plane, Coffee } from "lucide-react"
 import { cn } from '@/lib/utils'
 import type {
   StudentProfile,

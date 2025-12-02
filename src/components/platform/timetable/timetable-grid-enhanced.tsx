@@ -31,18 +31,7 @@ import {
 } from '@/components/ui/tooltip'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import {
-  CircleAlert,
-  Clock,
-  MapPin,
-  User,
-  Edit2,
-  Trash2,
-  Copy,
-  Move,
-  Repeat,
-  EllipsisVertical
-} from 'lucide-react'
+import { CircleAlert, Clock, MapPin, User, PencilLine, Trash, Copy, Move, Repeat, EllipsisVertical } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -127,7 +116,7 @@ const DraggableSlot: React.FC<{
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={onEdit}>
-                <Edit2 className="me-2 h-4 w-4" />
+                <PencilLine className="me-2 h-4 w-4" />
                 Pencil
               </DropdownMenuItem>
               <DropdownMenuItem>
@@ -140,7 +129,7 @@ const DraggableSlot: React.FC<{
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={onDelete} className="text-red-600">
-                <Trash2 className="me-2 h-4 w-4" />
+                <Trash className="me-2 h-4 w-4" />
                 Delete
               </DropdownMenuItem>
             </DropdownMenuContent>

@@ -7,15 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import {
-  Upload,
-  FileText,
-  Image,
-  Trash2,
-  Eye,
-  CircleCheck,
-  CircleAlert
-} from "lucide-react";
+import { Upload, FileText, Image, Trash2, Eye, CircleCheck, CircleAlert } from "lucide-react";
 import { useFieldArray } from "react-hook-form";
 import { useState } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";

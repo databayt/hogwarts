@@ -15,24 +15,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
 import type { Dictionary } from '@/components/internationalization/dictionaries'
-import {
-  Search,
-  Filter,
-  User,
-  Mail,
-  Phone,
-  MapPin,
-  BookOpen,
-  GraduationCap,
-  Calendar,
-  Grid,
-  List,
-  ChevronRight,
-  Award,
-  Users,
-  Clock,
-  Star
-} from 'lucide-react'
+import { Search, ListFilter, User, Mail, Phone, MapPin, BookOpen, GraduationCap, Calendar, LayoutGrid, List, ChevronRight, Award, Users, Clock, Star } from "lucide-react"
 import { format } from 'date-fns'
 
 // ============================================================================
@@ -275,7 +258,7 @@ export function TeacherDirectoryContent({
             size="icon"
             onClick={() => setViewMode('grid')}
           >
-            <Grid className="h-4 w-4" />
+            <LayoutGrid className="h-4 w-4" />
           </Button>
           <Button
             variant={viewMode === 'list' ? 'default' : 'outline'}

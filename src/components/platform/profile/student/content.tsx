@@ -25,16 +25,7 @@ import { useSidebar } from '@/components/ui/sidebar'
 import { cn } from '@/lib/utils'
 import type { StudentProfile, ConnectionStatus } from '../types'
 import type { Dictionary } from '@/components/internationalization/dictionaries'
-import {
-  LayoutGrid,
-  BookOpen,
-  Activity,
-  Trophy,
-  FileText,
-  Users,
-  Calendar,
-  Star
-} from 'lucide-react'
+import { LayoutGrid, BookOpen, Activity, Trophy, FileText, Users, Calendar, Star } from "lucide-react"
 
 // ============================================================================
 // Types

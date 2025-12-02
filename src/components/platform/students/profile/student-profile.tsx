@@ -7,25 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
-import {
-  User,
-  Calendar,
-  Phone,
-  Mail,
-  MapPin,
-  Heart,
-  School,
-  FileText,
-  Award,
-  TriangleAlert,
-  BookOpen,
-  CreditCard,
-  Pencil,
-  Download,
-  Printer,
-  Share2,
-  EllipsisVertical
-} from "lucide-react";
+import { User, Calendar, Phone, Mail, MapPin, Heart, School, FileText, Award, TriangleAlert, BookOpen, CreditCard, Pencil, Download, Printer, Share2, EllipsisVertical } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,

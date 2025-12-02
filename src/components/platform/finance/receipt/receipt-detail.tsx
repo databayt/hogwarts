@@ -16,20 +16,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { toast } from 'sonner'
-import {
-  FileText,
-  Calendar,
-  DollarSign,
-  MapPin,
-  Phone,
-  LoaderCircle,
-  CircleAlert,
-  CircleCheck,
-  Clock,
-  Trash2,
-  RefreshCw,
-  Download,
-} from 'lucide-react'
+import { FileText, Calendar, DollarSign, MapPin, Phone, LoaderCircle, CircleAlert, CircleCheck, Clock, Trash2, RefreshCw, Download,  } from "lucide-react"
 
 interface ReceiptDetailProps {
   receipt: ExpenseReceipt

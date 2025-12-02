@@ -2,13 +2,8 @@ import type { Locale } from "@/components/internationalization/config";
 import type { Dictionary } from "@/components/internationalization/dictionaries";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  BookOpen,
-  FileText,
-  Sparkles,
-  BarChart3,
-  Plus
-} from "lucide-react";
+import { BookOpen, FileText, Sparkles, Plus } from "lucide-react"
+import { BarChart3 } from "lucide-react";
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { getTenantContext } from "@/lib/tenant-context";

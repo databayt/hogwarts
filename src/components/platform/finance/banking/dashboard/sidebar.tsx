@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { BankCard } from '@/components/platform/finance/banking/shared/bank-card'
 import { Button } from '@/components/ui/button'
-import { Plus } from 'lucide-react'
+import { Plus } from "lucide-react"
 
 interface DashboardSidebarProps {
   user: {

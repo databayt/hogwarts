@@ -3,10 +3,10 @@
 import * as React from "react"
 import { cn } from "@/lib/utils"
 
-// Re-export all icons from @aliimam/icons for direct usage
-export * from "@aliimam/icons"
+// Re-export all icons from lucide-react for direct usage
+export * from "lucide-react"
 
-// Re-export missing icons from lucide-react that don't exist in @aliimam/icons
+// Named re-exports for commonly used icons
 export {
   // Chart icons
   BarChart,
@@ -49,13 +49,12 @@ export {
 } from "lucide-react"
 
 // Import all icons as a namespace for the Icon component
-import * as AliIcons from "@aliimam/icons"
 import * as LucideIcons from "lucide-react"
 
 // Get the IconProps type from the package
-type AliIconProps = React.ComponentProps<typeof AliIcons.Clock>
+type IconComponentProps = React.ComponentProps<typeof LucideIcons.Clock>
 
-// Icon name mapping from lucide-react to @aliimam/icons
+// Icon name mapping for backwards compatibility with legacy icon names
 export const iconMapping: Record<string, string> = {
   // Status icons (naming differs)
   AlertCircle: "CircleAlert",
@@ -100,9 +99,9 @@ export const iconMapping: Record<string, string> = {
 }
 
 // Extended IconProps
-export interface IconProps extends Omit<AliIconProps, 'ref'> {
+export interface IconProps extends Omit<IconComponentProps, 'ref'> {
   /**
-   * Icon name - supports both @aliimam/icons names and lucide-react aliases
+   * Icon name - supports lucide-react names with backwards compatibility for legacy aliases
    */
   name: string
   /**
@@ -117,13 +116,13 @@ export interface IconProps extends Omit<AliIconProps, 'ref'> {
 
 /**
  * Unified Icon component for the platform
- * Supports both @aliimam/icons names and lucide-react aliases for backwards compatibility
+ * Supports lucide-react icons with backwards compatibility for legacy icon names
  *
  * @example
- * // Using @aliimam/icons name
+ * // Using lucide-react name
  * <Icon name="Clock" size={24} />
  *
- * // Using lucide-react alias (automatically mapped)
+ * // Using legacy alias (automatically mapped)
  * <Icon name="AlertCircle" size={24} /> // Maps to CircleAlert
  */
 export function Icon({
@@ -132,20 +131,20 @@ export function Icon({
   className,
   ...props
 }: IconProps) {
-  // Check if there's a mapping for this icon name
+  // Check if there's a mapping for this icon name (for backwards compatibility)
   const mappedName = iconMapping[name] || name
 
-  // Try @aliimam/icons first
-  let IconComponent = (AliIcons as unknown as Record<string, React.ComponentType<AliIconProps>>)[mappedName]
+  // Try to get the icon from lucide-react
+  let IconComponent = (LucideIcons as unknown as Record<string, React.ComponentType<IconComponentProps>>)[mappedName]
 
-  // Fall back to lucide-react if not found in @aliimam/icons
+  // Fall back to original name if mapped name not found
   if (!IconComponent) {
-    IconComponent = (LucideIcons as unknown as Record<string, React.ComponentType<AliIconProps>>)[name]
+    IconComponent = (LucideIcons as unknown as Record<string, React.ComponentType<IconComponentProps>>)[name]
   }
 
   if (!IconComponent) {
     if (process.env.NODE_ENV === 'development') {
-      console.warn(`Icon "${name}" not found in @aliimam/icons or lucide-react`)
+      console.warn(`Icon "${name}" not found in lucide-react`)
     }
     return null
   }

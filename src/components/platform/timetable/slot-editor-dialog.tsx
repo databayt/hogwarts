@@ -45,7 +45,7 @@ import {
 } from './types'
 import { DAYS_OF_WEEK, SUBJECT_COLORS } from "./config"
 import { validateSlotPlacement, findAvailableSlots } from './utils'
-import { CircleAlert, User, MapPin, Clock, BookOpen, Users, Calendar } from 'lucide-react'
+import { CircleAlert, User, MapPin, Clock, BookOpen, Users, Calendar } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 
 const slotSchema = z.object({

@@ -5,7 +5,7 @@ import { getAccounts } from './actions';
 import PaymentTransferForm from './form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { CreditCard, CircleAlert } from 'lucide-react';
+import { CreditCard, CircleAlert } from "lucide-react";
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import type { User } from 'next-auth';

@@ -3,13 +3,7 @@
 import * as React from 'react';
 import { useState, useMemo, useCallback } from 'react';
 import { format, addDays, isPast, isFuture, isToday, differenceInDays, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay } from 'date-fns';
-import {
-  Calendar, MapPin, Users, Clock, DollarSign, Ticket, Share2,
-  Edit, Trash2, Copy, Eye, EyeOff, Send, Download, Upload,
-  Plus, Filter, Search, ChevronLeft, ChevronRight, EllipsisVertical,
-  Star, Bell, CircleCheck, CircleX, CircleAlert, Image as ImageIcon,
-  Video, Music, Trophy, Briefcase, GraduationCap, Heart, Flag
-} from 'lucide-react';
+import { Calendar, MapPin, Users, Clock, DollarSign, Ticket, Share2, Pencil, Trash2, Copy, Eye, EyeOff, Send, Download, Upload, Plus, ListFilter, Search, ChevronLeft, ChevronRight, EllipsisVertical, Star, Bell, CircleCheck, CircleX, CircleAlert, Image as ImageIcon, Video, Music, Trophy, Briefcase, GraduationCap, Heart, Flag } from "lucide-react";
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
@@ -153,7 +147,7 @@ const eventTypeIcons = {
   workshop: Briefcase,
   meeting: Users,
   holiday: Flag,
-  examination: Edit,
+  examination: Pencil,
   other: Calendar,
 };
 

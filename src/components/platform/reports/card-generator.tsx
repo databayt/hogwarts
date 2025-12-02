@@ -3,12 +3,8 @@
 import * as React from 'react';
 import { useState, useMemo, useCallback, useRef } from 'react';
 import { format } from 'date-fns';
-import {
-  Download, Printer, Send, Eye, FileText, Award, TrendingUp,
-  TrendingDown, Star, CircleAlert, CircleCheck, CircleX, Share2,
-  Filter, Search, Calendar, Users, BookOpen, Target, BarChart3,
-  Mail, MessageSquare
-} from 'lucide-react';
+import { Download, Printer, Send, Eye, FileText, Award, TrendingUp, TrendingDown, Star, CircleAlert, CircleCheck, CircleX, Share2, ListFilter, Search, Calendar, Users, BookOpen, Target, Mail, MessageSquare } from "lucide-react"
+import { BarChart3 } from "lucide-react";
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {

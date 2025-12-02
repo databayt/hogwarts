@@ -9,24 +9,7 @@ import {
 } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
-import {
-  Server,
-  Database,
-  HardDrive,
-  Activity,
-  FileText,
-  Download,
-  RefreshCw,
-  Trash2,
-  CircleAlert,
-  CircleCheck,
-  Zap,
-  Clock,
-  Cpu,
-  MemoryStick,
-  Wifi,
-  Archive,
-} from 'lucide-react'
+import { Server, Database, HardDrive, Activity, FileText, Download, RefreshCw, Trash, CircleAlert, CircleCheck, Zap, Clock, Cpu, MemoryStick, Wifi, Archive } from "lucide-react"
 import Link from 'next/link'
 import { db } from '@/lib/db'
 import { getTenantContext } from '@/lib/tenant-context'
@@ -445,7 +428,7 @@ export default async function SystemContent({ dictionary, lang }: Props) {
               Export Logs
             </Button>
             <Button variant="outline" className="justify-start">
-              <Trash2 className="mr-2 h-4 w-4" />
+              <Trash className="mr-2 h-4 w-4" />
               Clean Temporary Files
             </Button>
             <Button variant="outline" className="justify-start">

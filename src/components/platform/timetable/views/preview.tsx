@@ -8,14 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
-import {
-  Users,
-  GraduationCap,
-  Calendar,
-  TriangleAlert,
-  RefreshCw,
-  Eye
-} from 'lucide-react'
+import { Users, GraduationCap, Calendar, TriangleAlert, RefreshCw, Eye } from "lucide-react"
 import { type Dictionary } from '@/components/internationalization/dictionaries'
 import { type Locale } from '@/components/internationalization/config'
 import {

@@ -18,16 +18,8 @@ import {
   MonthlyComparisonChart,
   AbsenceReasonsChart
 } from './charts';
-import {
-  BarChart3,
-  TrendingUp,
-  Users,
-  Calendar,
-  Activity,
-  RefreshCw,
-  TriangleAlert,
-  LoaderCircle
-} from "lucide-react";
+import { TrendingUp, Users, Calendar, Activity, RefreshCw, TriangleAlert, LoaderCircle } from "lucide-react"
+import { BarChart3 } from "lucide-react";
 import { cn } from '@/lib/utils';
 import type { Dictionary } from '@/components/internationalization/dictionaries';
 

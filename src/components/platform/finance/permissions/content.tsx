@@ -33,17 +33,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { toast } from "sonner"
-import {
-  Shield,
-  UserPlus,
-  UserMinus,
-  Copy,
-  Search,
-  ListFilter,
-  CircleCheckBig,
-  CircleX,
-  CircleAlert,
-} from "lucide-react"
+import { Shield, UserPlus, UserMinus, Copy, Search, ListFilter, CircleCheckBig, CircleX, CircleAlert,  } from "lucide-react"
 import {
   getAllUsersWithPermissions,
   getPermissionsByModule,

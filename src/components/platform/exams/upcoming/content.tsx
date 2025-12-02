@@ -4,7 +4,7 @@ import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Calendar, Clock, BookOpen, ChevronRight, CircleAlert } from "@aliimam/icons";
+import { Calendar, Clock, BookOpen, ChevronRight, CircleAlert } from "lucide-react";
 import Link from "next/link"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"

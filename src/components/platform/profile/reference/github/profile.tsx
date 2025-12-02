@@ -1,6 +1,7 @@
 import Link from "next/link"
 import Image from "next/image"
-import { Bell, ChevronDown, GitFork, Plus, Star } from "lucide-react"
+import { Bell, ChevronDown, Plus, Star } from "lucide-react"
+import { GitFork } from "lucide-react"
 
 export default function GitHubProfile() {
   return (

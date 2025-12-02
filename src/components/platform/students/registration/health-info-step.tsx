@@ -9,13 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import {
-  CalendarIcon,
-  Heart,
-  Plus,
-  Trash2,
-  TriangleAlert
-} from "lucide-react";
+import { Calendar as CalendarIcon, Heart, Plus, Trash, TriangleAlert } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useFieldArray } from "react-hook-form";
@@ -245,7 +239,7 @@ export function HealthInfoStep({ form, dictionary }: HealthInfoStepProps) {
                   size="sm"
                   onClick={() => removeVaccination(index)}
                 >
-                  <Trash2 className="h-4 w-4" />
+                  <Trash className="h-4 w-4" />
                 </Button>
               </CardTitle>
             </CardHeader>

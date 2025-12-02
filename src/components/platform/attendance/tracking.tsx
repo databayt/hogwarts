@@ -3,24 +3,7 @@
 import * as React from 'react';
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { format, isToday, startOfWeek, endOfWeek, eachDayOfInterval } from 'date-fns';
-import {
-  QrCode,
-  Scan,
-  Users,
-  Clock,
-  Calendar,
-  CircleCheck,
-  CircleX,
-  CircleAlert,
-  Timer,
-  TrendingUp,
-  TrendingDown,
-  Wifi,
-  WifiOff,
-  Download,
-  Upload,
-  RefreshCw
-} from "lucide-react";
+import { QrCode, Scan, Users, Clock, Calendar, CircleCheck, CircleX, CircleAlert, Timer, TrendingUp, TrendingDown, Wifi, WifiOff, Download, Upload, RefreshCw } from "lucide-react";
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {

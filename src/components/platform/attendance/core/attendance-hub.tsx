@@ -12,24 +12,7 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import {
-  Pencil,
-  MapPin,
-  QrCode,
-  Barcode,
-  CreditCard,
-  Fingerprint,
-  User,
-  Users,
-  Smartphone,
-  Bluetooth,
-  Upload,
-  ChevronRight,
-  CircleAlert,
-  CircleCheck,
-  Clock,
-  TrendingUp
-} from "lucide-react";
+import { Pencil, MapPin, QrCode, Barcode, CreditCard, Fingerprint, User, Users, Smartphone, Bluetooth, Upload, ChevronRight, CircleAlert, CircleCheck, Clock, TrendingUp } from "lucide-react";
 import { useAttendanceContext } from './attendance-context';
 import { cn } from '@/lib/utils';
 import { getMethodIcon, getMethodDisplayName, formatAttendanceDate } from '../shared/utils';

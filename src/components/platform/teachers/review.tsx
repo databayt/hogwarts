@@ -6,11 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  User, Mail, Calendar, Briefcase, GraduationCap, BookOpen,
-  Building, Phone, MapPin, FileText, Award, CircleCheck,
-  CircleAlert, Clock, Star
-} from "lucide-react";
+import { User, Mail, Calendar, Briefcase, GraduationCap, BookOpen, Building, Phone, MapPin, FileText, Award, CircleCheck, CircleAlert, Clock, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 

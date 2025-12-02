@@ -1,17 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  FileText,
-  Download,
-  Eye,
-  Upload,
-  CircleCheck,
-  CircleX,
-  Clock,
-  TriangleAlert,
-  File
-} from "lucide-react";
+import { FileText, Download, Eye, Upload, CircleCheck, CircleX, Clock, TriangleAlert, File } from "lucide-react";
 import type { Student, StudentDocument } from "../../registration/types";
 import { format } from "date-fns";
 

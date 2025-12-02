@@ -1,16 +1,7 @@
 "use client"
 
 import * as React from "react"
-import {
-  Users,
-  UserCheck,
-  Clock,
-  CircleCheck,
-  ListOrdered,
-  CircleX,
-  GraduationCap,
-  TrendingUp
-} from "lucide-react"
+import { Users, UserCheck, Clock, CircleCheck, ListOrdered, CircleX, GraduationCap, TrendingUp } from "lucide-react"
 import { TrendingStats } from "../trending-stats"
 import { ProgressStats, ProgressStatStacked } from "../progress-stats"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"

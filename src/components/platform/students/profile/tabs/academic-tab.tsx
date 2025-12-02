@@ -3,12 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import {
-  BookOpen,
-  Trophy,
-  TrendingUp,
-  Calendar
-} from "lucide-react";
+import { BookOpen, Trophy, TrendingUp, Calendar } from "lucide-react";
 import type { Student } from "../../registration/types";
 import { format } from "date-fns";
 

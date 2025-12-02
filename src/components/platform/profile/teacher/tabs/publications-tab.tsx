@@ -11,29 +11,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import {
-  BookOpen,
-  FileText,
-  Users,
-  Calendar,
-  ExternalLink,
-  Download,
-  Search,
-  Filter,
-  Plus,
-  Edit,
-  ChevronRight,
-  Quote,
-  TrendingUp,
-  Globe,
-  Lock,
-  Unlock,
-  BookMarked,
-  Newspaper,
-  Video,
-  Presentation,
-  GraduationCap
-} from 'lucide-react'
+import { BookOpen, FileText, Users, Calendar, ExternalLink, Download, Search, ListFilter, Plus, Pencil, ChevronRight, Quote, TrendingUp, Globe, Lock, LockOpen, BookMarked, Newspaper, Video, Presentation, GraduationCap } from "lucide-react"
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
 import type { TeacherProfile } from '../../types'
@@ -354,7 +332,7 @@ export function PublicationsTab({
               />
             </div>
             <Button variant="outline" size="icon">
-              <Filter className="h-4 w-4" />
+              <ListFilter className="h-4 w-4" />
             </Button>
           </div>
 
@@ -430,7 +408,7 @@ export function PublicationsTab({
                           )}
                           {pub.isOpenAccess && (
                             <Badge variant="default" className="text-xs">
-                              <Unlock className="h-3 w-3 mr-1" />
+                              <LockOpen className="h-3 w-3 mr-1" />
                               Open Access
                             </Badge>
                           )}
@@ -451,7 +429,7 @@ export function PublicationsTab({
                         )}
                         {isOwner && (
                           <Button variant="ghost" size="sm">
-                            <Edit className="h-3 w-3" />
+                            <Pencil className="h-3 w-3" />
                           </Button>
                         )}
                       </div>

@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
-import { Clock, Users, MapPin, TriangleAlert, RefreshCw, BookOpen } from 'lucide-react'
+import { Clock, Users, MapPin, TriangleAlert, RefreshCw, BookOpen } from "lucide-react"
 import { cn } from '@/lib/utils'
 import { type Dictionary } from '@/components/internationalization/dictionaries'
 import {

@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Trash2, BookOpen, Award, Star, GraduationCap } from "lucide-react";
+import { Plus, Trash, BookOpen, Award, Star, GraduationCap } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 import { TeacherFormStepProps } from "./types";
@@ -263,7 +263,7 @@ export function SubjectExpertiseStep({ form, isView }: TeacherFormStepProps) {
                       onClick={() => remove(index)}
                       className="h-8 w-8 p-0"
                     >
-                      <Trash2 className="h-4 w-4 text-destructive" />
+                      <Trash className="h-4 w-4 text-destructive" />
                     </Button>
                   )}
                 </div>

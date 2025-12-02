@@ -18,16 +18,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import {
-  CalendarIcon,
-  CircleCheck,
-  Info,
-  TriangleAlert,
-  Users,
-  BookOpen,
-  CreditCard,
-  FileText
-} from "lucide-react";
+import { Calendar as CalendarIcon, CircleCheck, Info, TriangleAlert, Users, BookOpen, CreditCard, FileText } from "lucide-react";
 import { enrollmentSchema, type EnrollmentFormInput } from "./validation";
 import type { Student, Batch } from "../registration/types";
 import type { Course, Subject, Section } from "./types";

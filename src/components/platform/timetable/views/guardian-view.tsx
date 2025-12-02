@@ -8,14 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import {
-  Clock,
-  Calendar,
-  Users,
-  TriangleAlert,
-  ChevronRight,
-  User
-} from 'lucide-react'
+import { Clock, Calendar, Users, TriangleAlert, ChevronRight, User } from "lucide-react"
 import { cn } from '@/lib/utils'
 import { type Dictionary } from '@/components/internationalization/dictionaries'
 import { type Locale } from '@/components/internationalization/config'

@@ -20,20 +20,8 @@ import {
   TableHeader,
   TableRow
 } from '@/components/ui/table'
-import {
-  Users,
-  BookOpen,
-  Calendar,
-  Clock,
-  TrendingUp,
-  Award,
-  ChevronRight,
-  Eye,
-  Download,
-  BarChart,
-  PieChart,
-  Activity
-} from 'lucide-react'
+import { Users, BookOpen, Calendar, Clock, TrendingUp, Award, ChevronRight, Eye, Download, Activity } from "lucide-react"
+import { BarChart, PieChart } from "lucide-react"
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
 import type { TeacherProfile } from '../../types'

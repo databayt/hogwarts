@@ -2,12 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  Download,
-  Printer,
-  RotateCw,
-  Maximize2
-} from "lucide-react";
+import { Download, Printer, RotateCw, Maximize2 } from "lucide-react";
 import { IDCardTemplateComponent } from "./id-card-template";
 import type { IDCardData, IDCardTemplate } from "./types";
 import { useState } from "react";

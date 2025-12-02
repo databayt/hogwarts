@@ -6,14 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
-import {
-  Pencil,
-  Trash,
-  Copy,
-  TrendingUp,
-  Users,
-  Clock
-} from "lucide-react";
+import { Pencil, Trash, Copy, TrendingUp, Users, Clock } from "lucide-react";
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import type { Dictionary } from "@/components/internationalization/dictionaries"

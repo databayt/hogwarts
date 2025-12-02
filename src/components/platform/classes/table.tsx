@@ -16,7 +16,7 @@ import {
   GridContainer,
   GridEmptyState,
 } from "@/components/platform/shared";
-import { BookOpen, Users } from "@aliimam/icons";
+import { BookOpen, Users } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { DeleteToast, ErrorToast, confirmDeleteDialog } from "@/components/atom/toast";
 

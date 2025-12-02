@@ -38,18 +38,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import {
-  Search,
-  ListFilter,
-  Download,
-  Ellipsis,
-  ChevronDown,
-  ChevronUp,
-  Receipt,
-  Calendar,
-  ArrowUpDown,
-  Eye
-} from 'lucide-react'
+import { Search, ListFilter, Download, Ellipsis, ChevronDown, ChevronUp, Receipt, Calendar, ArrowUpDown, Eye } from "lucide-react"
 import { formatAmount, formatDateTime } from '@/components/platform/finance/banking/lib/utils'
 import { cn } from '@/lib/utils'
 import type { Transaction, BankAccount, BankingDictionary } from '../types'

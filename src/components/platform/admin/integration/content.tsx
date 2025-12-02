@@ -8,17 +8,7 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import {
-  Link2,
-  Mail,
-  CreditCard,
-  Webhook,
-  Globe,
-  Shield,
-  CircleCheck,
-  CircleAlert,
-  Settings,
-} from 'lucide-react'
+import { Link2, Mail, CreditCard, Webhook, Globe, Shield, CircleCheck, CircleAlert, Settings,  } from "lucide-react"
 import Link from 'next/link'
 import { getTenantContext } from '@/lib/tenant-context'
 

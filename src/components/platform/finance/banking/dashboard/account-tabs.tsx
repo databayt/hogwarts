@@ -4,7 +4,7 @@ import { memo, useCallback, useMemo, useTransition } from 'react'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { formatAmount } from '@/components/platform/finance/banking/lib/utils'
-import { LoaderCircle } from 'lucide-react'
+import { LoaderCircle } from "lucide-react"
 
 interface AccountTabsProps {
   accounts: any[]

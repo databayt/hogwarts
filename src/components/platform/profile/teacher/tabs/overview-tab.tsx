@@ -11,20 +11,8 @@ import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import {
-  Award,
-  BookOpen,
-  Users,
-  TrendingUp,
-  Calendar,
-  Star,
-  Clock,
-  GraduationCap,
-  ChevronRight,
-  MessageSquare,
-  BarChart,
-  Target
-} from 'lucide-react'
+import { Award, BookOpen, Users, TrendingUp, Calendar, Star, Clock, GraduationCap, ChevronRight, MessageSquare, Target } from "lucide-react"
+import { BarChart } from "lucide-react"
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
 import type { TeacherProfile } from '../../types'

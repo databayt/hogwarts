@@ -15,7 +15,7 @@ import { getColumns } from './columns'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { LoaderCircle, Grid3x3, List, Plus } from 'lucide-react'
+import { LoaderCircle, Grid3X3, List, Plus } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -149,7 +149,7 @@ export function ReceiptsContent({ initialReceipts = [], locale = 'en' }: Receipt
         <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as 'grid' | 'table')}>
           <TabsList>
             <TabsTrigger value="grid" className="gap-2">
-              <Grid3x3 className="h-4 w-4" />
+              <Grid3X3 className="h-4 w-4" />
               Grid
             </TabsTrigger>
             <TabsTrigger value="table" className="gap-2">

@@ -1,6 +1,6 @@
 import type { Locale } from '@/components/internationalization/config'
 import type { Dictionary } from '@/components/internationalization/dictionaries'
-import { Clock, Calendar, Users, CircleCheck, CircleAlert, FileText } from 'lucide-react'
+import { Clock, Calendar, Users, CircleCheck, CircleAlert, FileText } from "lucide-react"
 import { db } from '@/lib/db'
 import { getTenantContext } from '@/lib/tenant-context'
 import { StatsCard, FeatureCard, DashboardGrid } from '../lib/dashboard-components'

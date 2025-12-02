@@ -3,26 +3,15 @@ import type {
   NotificationPriority,
   NotificationChannel,
 } from "@prisma/client"
-import {
-  Bell,
-  MessageSquare,
-  BookOpen,
-  Calendar,
-  DollarSign,
-  Megaphone,
-  UserCheck,
-  TriangleAlert,
-  FileText,
-  Shield,
-  type LucideIcon,
-} from "lucide-react"
+import type { ElementType } from "react"
+import { Bell, MessageSquare, BookOpen, Calendar, DollarSign, Megaphone, UserCheck, TriangleAlert, FileText, Shield } from "lucide-react"
 
 // Notification type configurations
 // Note: Icons use semantic color tokens for consistency and theme compatibility
 export const NOTIFICATION_TYPE_CONFIG: Record<
   NotificationType,
   {
-    icon: LucideIcon
+    icon: ElementType
     requiresAction: boolean
   }
 > = {

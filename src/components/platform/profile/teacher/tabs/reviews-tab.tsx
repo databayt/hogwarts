@@ -12,25 +12,8 @@ import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import {
-  Star,
-  ThumbsUp,
-  MessageSquare,
-  TrendingUp,
-  Calendar,
-  Filter,
-  ChevronDown,
-  ChevronRight,
-  Award,
-  BarChart3,
-  Users,
-  Clock,
-  BookOpen,
-  Heart,
-  Flag,
-  MoreVertical,
-  CheckCircle
-} from 'lucide-react'
+import { Star, ThumbsUp, MessageSquare, TrendingUp, Calendar, ListFilter, ChevronDown, ChevronRight, Award, Users, Clock, BookOpen, Heart, Flag, EllipsisVertical, CircleCheck } from "lucide-react"
+import { BarChart3 } from "lucide-react"
 import { cn } from '@/lib/utils'
 import { format, formatDistanceToNow } from 'date-fns'
 import type { TeacherProfile } from '../../types'
@@ -402,7 +385,7 @@ export function ReviewsTab({
           </select>
 
           <Button variant="outline" size="icon">
-            <Filter className="h-4 w-4" />
+            <ListFilter className="h-4 w-4" />
           </Button>
         </div>
 
@@ -438,7 +421,7 @@ export function ReviewsTab({
                           <p className="font-medium">{review.studentName}</p>
                           {review.verified && (
                             <Badge variant="secondary" className="text-xs">
-                              <CheckCircle className="h-3 w-3 mr-1" />
+                              <CircleCheck className="h-3 w-3 mr-1" />
                               Verified
                             </Badge>
                           )}
@@ -457,7 +440,7 @@ export function ReviewsTab({
                       </span>
                       {isOwner && (
                         <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <MoreVertical className="h-4 w-4" />
+                          <EllipsisVertical className="h-4 w-4" />
                         </Button>
                       )}
                     </div>

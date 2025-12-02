@@ -8,7 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
-import { Clock, DoorOpen, Users, TriangleAlert, RefreshCw, User } from 'lucide-react'
+import { Clock, DoorOpen, Users, TriangleAlert, RefreshCw, User } from "lucide-react"
 import { cn } from '@/lib/utils'
 import { type Dictionary } from '@/components/internationalization/dictionaries'
 import {

@@ -7,16 +7,8 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
-import {
-  BarChart3,
-  RefreshCw,
-  TriangleAlert,
-  Users,
-  DoorOpen,
-  BookOpen,
-  Clock,
-  TrendingUp
-} from 'lucide-react'
+import { RefreshCw, TriangleAlert, Users, DoorOpen, BookOpen, Clock, TrendingUp } from "lucide-react"
+import { BarChart3 } from "lucide-react"
 import { cn } from '@/lib/utils'
 import { type Dictionary } from '@/components/internationalization/dictionaries'
 import {

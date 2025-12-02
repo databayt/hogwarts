@@ -19,13 +19,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
-import {
-  Plus,
-  Trash,
-  Save,
-  ArrowLeft,
-  ArrowRight
-} from "lucide-react";
+import { Plus, Trash, Save, ArrowLeft, ArrowRight } from "lucide-react";
 import { createQuestionSchema, type CreateQuestionFormData } from "./validation"
 import { createQuestion, updateQuestion } from "./actions"
 import type { Dictionary } from "@/components/internationalization/dictionaries"

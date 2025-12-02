@@ -12,14 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import {
-  Pencil,
-  Trash,
-  Copy,
-  Eye,
-  EllipsisVertical,
-  FileText
-} from "lucide-react";
+import { Pencil, Trash, Copy, Eye, EllipsisVertical, FileText } from "lucide-react";
 import Link from "next/link"
 import type { QuestionType, DifficultyLevel, BloomLevel } from "@prisma/client"
 import type { Dictionary } from "@/components/internationalization/dictionaries"

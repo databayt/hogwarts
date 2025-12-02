@@ -17,29 +17,8 @@ import { Separator } from '@/components/ui/separator'
 import { cn } from '@/lib/utils'
 import type { StaffProfile } from '../../types'
 import type { Dictionary } from '@/components/internationalization/dictionaries'
-import {
-  FileText,
-  Download,
-  Eye,
-  Share2,
-  Calendar,
-  Clock,
-  TrendingUp,
-  Filter,
-  Search,
-  ChevronRight,
-  FileSpreadsheet,
-  PieChart,
-  BarChart3,
-  FileCheck,
-  AlertCircle,
-  CheckCircle2,
-  XCircle,
-  RefreshCw,
-  Archive,
-  Trash2,
-  Send
-} from 'lucide-react'
+import { FileText, Download, Eye, Share2, Calendar, Clock, TrendingUp, ListFilter, Search, ChevronRight, FileSpreadsheet, FileCheck, CircleAlert, CircleCheckBig, CircleX, RefreshCw, Archive, Trash2, Send } from "lucide-react"
+import { PieChart, BarChart3 } from "lucide-react"
 import { format } from 'date-fns'
 
 // ============================================================================
@@ -298,11 +277,11 @@ export function ReportsTab({
   const getStatusIcon = (status: Report['status']) => {
     switch (status) {
       case 'completed':
-        return <CheckCircle2 className="h-4 w-4" />
+        return <CircleCheckBig className="h-4 w-4" />
       case 'processing':
         return <RefreshCw className="h-4 w-4 animate-spin" />
       case 'failed':
-        return <XCircle className="h-4 w-4" />
+        return <CircleX className="h-4 w-4" />
       case 'archived':
         return <Archive className="h-4 w-4" />
       default:
@@ -482,7 +461,7 @@ export function ReportsTab({
                         {/* Error Message */}
                         {report.error && (
                           <div className="flex items-center gap-2 mt-2 p-2 bg-red-50 text-red-600 rounded text-sm">
-                            <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                            <CircleAlert className="h-4 w-4 flex-shrink-0" />
                             <span>{report.error}</span>
                           </div>
                         )}

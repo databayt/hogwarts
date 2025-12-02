@@ -1,20 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
-import {
-  Calendar,
-  DollarSign,
-  Receipt,
-  CreditCard,
-  CircleAlert,
-  Clock,
-  ChevronRight,
-  FileText,
-  Wallet,
-  PiggyBank,
-  ArrowDownRight,
-  ArrowUpRight,
-} from "lucide-react"
+import { Calendar, DollarSign, Receipt, CreditCard, CircleAlert, Clock, ChevronRight, FileText, Wallet, PiggyBank, ArrowDownRight, ArrowUpRight,  } from "lucide-react"
 import { format, isToday, isTomorrow } from "date-fns"
 import { QuickActions } from "../quick-actions"
 import { getQuickActionsByRole } from "../quick-actions-config"

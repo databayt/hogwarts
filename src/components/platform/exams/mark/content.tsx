@@ -6,13 +6,7 @@ import { MarkingTable } from "./table"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import {
-  Plus,
-  FileText,
-  Clock,
-  CircleCheck,
-  CircleAlert
-} from "lucide-react";
+import { Plus, FileText, Clock, CircleCheck, CircleAlert } from "lucide-react";
 import Link from "next/link"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import type { Locale } from "@/components/internationalization/config"

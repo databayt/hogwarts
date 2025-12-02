@@ -18,22 +18,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
 import { toast } from '@/components/ui/use-toast';
-import {
-  QrCode,
-  RefreshCw,
-  Download,
-  Share2,
-  Copy,
-  Shield,
-  MapPin,
-  Clock,
-  Settings,
-  Maximize2,
-  Eye,
-  EyeOff,
-  CircleAlert,
-  CircleCheck
-} from "lucide-react";
+import { QrCode, RefreshCw, Download, Share2, Copy, Shield, MapPin, Clock, Settings, Maximize2, Eye, EyeOff, CircleAlert, CircleCheck } from "lucide-react";
 import { useCountdown } from '../shared/hooks';
 import { generateQRPayload } from '../shared/utils';
 import type { Dictionary } from '@/components/internationalization/dictionaries';

@@ -8,11 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  User, Mail, Phone, Calendar, Briefcase, GraduationCap, BookOpen,
-  Building, Award, Clock, Pencil, Download, FileText, MapPin,
-  Star, TrendingUp, Users, CircleAlert, CircleCheck
-} from "lucide-react";
+import { User, Mail, Phone, Calendar, Briefcase, GraduationCap, BookOpen, Building, Award, Clock, Pencil, Download, FileText, MapPin, Star, TrendingUp, Users, CircleAlert, CircleCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 

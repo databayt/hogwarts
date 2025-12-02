@@ -1,6 +1,7 @@
 "use client"
 
-import { GitBranch, GitCommit, CircleAlert, GitFork, FileCode, Folder, TriangleAlert, GitPullRequest, School } from "lucide-react";
+import { CircleAlert, FileCode, Folder, TriangleAlert, School } from "lucide-react"
+import { GitBranch, GitCommit, GitFork, GitPullRequest } from "lucide-react";
 // import { Commit, Repo, Issue, PullRequest, Madrsa } from "@/components/atom/icon"; // Commented out - icon component doesn't exist
 import Link from "next/link";
 

@@ -10,19 +10,8 @@ import {
   CardTitle
 } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import {
-  Users,
-  UserCheck,
-  UserX,
-  Clock,
-  UserMinus,
-  Calendar,
-  TrendingUp,
-  TrendingDown,
-  Activity,
-  PieChart,
-  BarChart3
-} from "lucide-react";
+import { Users, UserCheck, UserX, Clock, UserMinus, Calendar, TrendingUp, TrendingDown, Activity } from "lucide-react"
+import { PieChart, BarChart3 } from "lucide-react";
 import { cn } from '@/lib/utils';
 import type { AttendanceStats, AttendanceRecord, AttendanceMethod } from '../shared/types';
 import { getMethodDisplayName, getStatusColor, calculateAttendancePercentage } from '../shared/utils';

@@ -11,24 +11,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Progress } from '@/components/ui/progress'
-import {
-  Award,
-  Trophy,
-  Medal,
-  Star,
-  Target,
-  Zap,
-  Shield,
-  Crown,
-  Download,
-  Eye,
-  Share2,
-  Calendar,
-  ExternalLink,
-  CheckCircle,
-  TrendingUp,
-  Users
-} from 'lucide-react'
+import { Award, Trophy, Medal, Star, Target, Zap, Shield, Crown, Download, Eye, Share2, Calendar, ExternalLink, CircleCheck, TrendingUp, Users } from "lucide-react"
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
 import type { StudentProfile } from '../../types'
@@ -117,7 +100,7 @@ const mockAchievements: Achievement[] = [
     date: new Date('2023-12-20'),
     issuer: 'School Administration',
     description: '100% attendance for the entire semester',
-    icon: <CheckCircle className="h-4 w-4" />,
+    icon: <CircleCheck className="h-4 w-4" />,
     color: 'bg-green-500',
     verified: true,
     points: 50,
@@ -268,7 +251,7 @@ export function AchievementsTab({
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-2">
-              <CheckCircle className="h-4 w-4 text-muted-foreground" />
+              <CircleCheck className="h-4 w-4 text-muted-foreground" />
               <p className="text-sm text-muted-foreground">Verified</p>
             </div>
             <p className="text-2xl font-bold">{verifiedCount}</p>
@@ -350,7 +333,7 @@ export function AchievementsTab({
                             </p>
                           </div>
                           {achievement.verified && (
-                            <CheckCircle className="h-4 w-4 text-green-500" />
+                            <CircleCheck className="h-4 w-4 text-green-500" />
                           )}
                         </div>
 

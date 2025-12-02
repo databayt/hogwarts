@@ -25,16 +25,7 @@ import { cn } from '@/lib/utils'
 import type { ParentProfile, ConnectionStatus } from '../types'
 import { UserProfileType } from '../types'
 import type { Dictionary } from '@/components/internationalization/dictionaries'
-import {
-  LayoutGrid,
-  Users,
-  GraduationCap,
-  CreditCard,
-  MessageSquare,
-  FileText,
-  Bell,
-  Calendar
-} from 'lucide-react'
+import { LayoutGrid, Users, GraduationCap, CreditCard, MessageSquare, FileText, Bell, Calendar } from "lucide-react"
 
 // ============================================================================
 // Types

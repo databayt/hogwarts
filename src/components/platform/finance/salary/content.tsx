@@ -8,16 +8,8 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import {
-  DollarSign,
-  Users,
-  TrendingUp,
-  Calculator,
-  FileText,
-  Settings,
-  BarChart,
-  Award,
-} from 'lucide-react'
+import { DollarSign, Users, TrendingUp, Calculator, FileText, Settings, Award,  } from "lucide-react"
+import { BarChart } from "lucide-react"
 import Link from 'next/link'
 import { db } from '@/lib/db'
 import { getTenantContext } from '@/lib/tenant-context'

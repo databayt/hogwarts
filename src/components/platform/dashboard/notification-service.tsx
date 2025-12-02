@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
-import { Bell, X, TriangleAlert, CheckCircle, Info, CircleX } from "lucide-react";
+import { Bell, X, TriangleAlert, CircleCheck, Info, CircleX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -182,7 +182,7 @@ export function NotificationPanel({ onClose }: { onClose?: () => void }) {
   const getIcon = (type: NotificationType) => {
     switch (type) {
       case "success":
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
+        return <CircleCheck className="h-4 w-4 text-green-500" />;
       case "warning":
         return <TriangleAlert className="h-4 w-4 text-yellow-500" />;
       case "error":
@@ -337,7 +337,7 @@ export function NotificationToast({
   const getIcon = (type: NotificationType) => {
     switch (type) {
       case "success":
-        return <CheckCircle className="h-5 w-5 text-green-500" />;
+        return <CircleCheck className="h-5 w-5 text-green-500" />;
       case "warning":
         return <TriangleAlert className="h-5 w-5 text-yellow-500" />;
       case "error":

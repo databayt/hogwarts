@@ -8,16 +8,7 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import {
-  CreditCard,
-  Package,
-  Receipt,
-  Tag,
-  TrendingUp,
-  DollarSign,
-  Users,
-  Calendar,
-} from 'lucide-react'
+import { CreditCard, Package, Receipt, Tag, TrendingUp, DollarSign, Users, Calendar,  } from "lucide-react"
 import Link from 'next/link'
 import { db } from '@/lib/db'
 import { getTenantContext } from '@/lib/tenant-context'

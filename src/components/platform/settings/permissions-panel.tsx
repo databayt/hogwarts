@@ -14,23 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import {
-  Shield,
-  Lock,
-  LockOpen,
-  Eye,
-  Edit,
-  Trash,
-  Plus,
-  Users,
-  FileText,
-  DollarSign,
-  Calendar,
-  Settings,
-  TriangleAlert,
-  CircleCheck,
-  CircleX,
-} from "lucide-react";
+import { Shield, Lock, LockOpen, Eye, Pencil, Trash, Plus, Users, FileText, DollarSign, Calendar, Settings, TriangleAlert, CircleCheck, CircleX,  } from "lucide-react";
 import { SuccessToast, ErrorToast } from "@/components/atom/toast";
 import type { UserRole } from "./role-management";
 import { type Dictionary } from "@/components/internationalization/dictionaries";

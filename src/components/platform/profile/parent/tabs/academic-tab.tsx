@@ -12,25 +12,8 @@ import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import {
-  GraduationCap,
-  Calendar,
-  Clock,
-  FileText,
-  CheckCircle,
-  XCircle,
-  AlertCircle,
-  TrendingUp,
-  TrendingDown,
-  Download,
-  ChevronRight,
-  BookOpen,
-  Award,
-  Target,
-  BarChart3,
-  PieChart,
-  Users
-} from 'lucide-react'
+import { GraduationCap, Calendar, Clock, FileText, CircleCheck, CircleX, CircleAlert, TrendingUp, TrendingDown, Download, ChevronRight, BookOpen, Award, Target, Users } from "lucide-react"
+import { BarChart3, PieChart } from "lucide-react"
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
 import type { ParentProfile } from '../../types'
@@ -317,11 +300,11 @@ export function AcademicTab({
 
   const getStatusIcon = (status: Assignment['status']) => {
     switch (status) {
-      case 'graded': return <CheckCircle className="h-4 w-4" />
+      case 'graded': return <CircleCheck className="h-4 w-4" />
       case 'submitted': return <Clock className="h-4 w-4" />
-      case 'pending': return <AlertCircle className="h-4 w-4" />
-      case 'late': return <AlertCircle className="h-4 w-4" />
-      case 'missing': return <XCircle className="h-4 w-4" />
+      case 'pending': return <CircleAlert className="h-4 w-4" />
+      case 'late': return <CircleAlert className="h-4 w-4" />
+      case 'missing': return <CircleX className="h-4 w-4" />
       default: return null
     }
   }
@@ -689,10 +672,10 @@ export function AcademicTab({
                           record.status === 'late' && "bg-yellow-500/10",
                           record.status === 'excused' && "bg-blue-500/10"
                         )}>
-                          {record.status === 'present' && <CheckCircle className="h-4 w-4 text-green-500" />}
-                          {record.status === 'absent' && <XCircle className="h-4 w-4 text-red-500" />}
+                          {record.status === 'present' && <CircleCheck className="h-4 w-4 text-green-500" />}
+                          {record.status === 'absent' && <CircleX className="h-4 w-4 text-red-500" />}
                           {record.status === 'late' && <Clock className="h-4 w-4 text-yellow-500" />}
-                          {record.status === 'excused' && <AlertCircle className="h-4 w-4 text-blue-500" />}
+                          {record.status === 'excused' && <CircleAlert className="h-4 w-4 text-blue-500" />}
                         </div>
                         <div>
                           <p className="text-sm font-medium">{record.childName}</p>

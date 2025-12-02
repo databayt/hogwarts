@@ -3,7 +3,7 @@
 import { useState, useEffect, useTransition } from 'react'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { TriangleAlert } from 'lucide-react'
+import { TriangleAlert } from "lucide-react"
 import { type Dictionary } from '@/components/internationalization/dictionaries'
 import { type Locale } from '@/components/internationalization/config'
 import { getActiveTerm, getPersonalizedTimetable } from '../actions'

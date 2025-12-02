@@ -30,19 +30,7 @@ import {
   TableRow
 } from '@/components/ui/table';
 import { toast } from '@/components/ui/use-toast';
-import {
-  CreditCard,
-  Plus,
-  Pencil,
-  Trash2,
-  Download,
-  Upload,
-  Search,
-  CircleCheck,
-  CircleX,
-  CircleAlert,
-  Printer
-} from "lucide-react";
+import { CreditCard, Plus, Pencil, Trash2, Download, Upload, Search, CircleCheck, CircleX, CircleAlert, Printer } from "lucide-react";
 import { useAttendanceContext } from '../core/attendance-context';
 import type { Dictionary } from '@/components/internationalization/dictionaries';
 import type { StudentIdentifier } from '../shared/types';

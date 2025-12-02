@@ -4,13 +4,13 @@ import Link from "next/link"
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 import { ChevronRight } from "lucide-react";
-import type { LucideIcon } from "lucide-react"
+import type { ElementType } from "react"
 
 interface ActionCardProps {
   title: string
   description: string
   href: string
-  icon: LucideIcon
+  icon: ElementType
   iconColor?: string
   className?: string
 }

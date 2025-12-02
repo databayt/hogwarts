@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Box, Edit } from "lucide-react"
+import { Box, Pencil } from "lucide-react"
 
 interface MetricCardProps {
   title: string
@@ -240,7 +240,7 @@ export default function StatsDashboard() {
           progressColor="bg-emerald-500"
           status="It's all right."
           actionLabel="Change Budget"
-          actionIcon={<Edit className="h-4 w-4" />}
+          actionIcon={<Pencil className="h-4 w-4" />}
           onActionClick={() => setBudgetDialogOpen(true)}
         />
       </div>

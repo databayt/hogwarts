@@ -18,7 +18,7 @@ import {
   GridEmptyState,
 } from "@/components/platform/shared";
 import { Badge } from "@/components/ui/badge";
-import { GraduationCap, User } from "@aliimam/icons";
+import { GraduationCap, User } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { DeleteToast, ErrorToast, confirmDeleteDialog } from "@/components/atom/toast";
 

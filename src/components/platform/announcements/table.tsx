@@ -20,7 +20,7 @@ import {
   GridEmptyState,
 } from "@/components/platform/shared";
 import { Badge } from "@/components/ui/badge";
-import { Megaphone, Pin, Star } from "@aliimam/icons";
+import { Megaphone, Pin, Star } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { deleteAnnouncement, toggleAnnouncementPublish } from "./actions";
 import { DeleteToast, ErrorToast, confirmDeleteDialog } from "@/components/atom/toast";

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Clock, ThumbsUp, Building2 } from 'lucide-react';
+import { Clock, ThumbsUp, Building2 } from "lucide-react";
 // import { Ngo } from '@/components/atom/icon'; // Commented out - icon component doesn't exist
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';

@@ -7,15 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import {
-  Users,
-  Clock,
-  CircleCheck,
-  CircleX,
-  CircleAlert,
-  LoaderCircle,
-  RefreshCw
-} from "lucide-react";
+import { Users, Clock, CircleCheck, CircleX, CircleAlert, LoaderCircle, RefreshCw } from "lucide-react";
 import { cn } from '@/lib/utils'
 import { formatDistanceToNow } from 'date-fns'
 import type { Dictionary } from '@/components/internationalization/dictionaries'

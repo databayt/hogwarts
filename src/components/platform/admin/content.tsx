@@ -8,36 +8,8 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import {
-  Settings,
-  Users,
-  Server,
-  Link2,
-  Shield,
-  BarChart3,
-  MessageSquare,
-  CreditCard,
-  Activity,
-  UserCheck,
-  Database,
-  Lock,
-  CircleAlert,
-  CircleCheck,
-  Clock,
-  TrendingUp,
-  Building,
-  Key,
-  Globe,
-  Mail,
-  Bell,
-  FileText,
-  Zap,
-  HardDrive,
-  Cloud,
-  Webhook,
-  UserCog,
-  School,
-} from 'lucide-react'
+import { Settings, Users, Server, Link2, Shield, MessageSquare, CreditCard, Activity, UserCheck, Database, Lock, CircleAlert, CircleCheck, Clock, TrendingUp, Building, Key, Globe, Mail, Bell, FileText, Zap, HardDrive, Cloud, Webhook, UserCog, School,  } from "lucide-react"
+import { BarChart3 } from "lucide-react"
 import Link from 'next/link'
 import { db } from '@/lib/db'
 import { getTenantContext } from '@/lib/tenant-context'
@@ -160,33 +132,40 @@ export default async function AdminContent({ dictionary, lang }: Props) {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        {/* Combined: Active Sessions + Departments */}
+        <Card className="md:col-span-2">
+          <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">
-              {d?.stats?.activeSessions || 'Active Sessions'}
+              Organization Overview
             </CardTitle>
-            <UserCheck className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{activeSessions.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">
-              {d?.stats?.currentlyLoggedIn || 'Currently logged in'}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              {d?.stats?.pendingActions || 'Pending Actions'}
-            </CardTitle>
-            <CircleAlert className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{pendingApprovals + failedLogins}</div>
-            <p className="text-xs text-muted-foreground">
-              {d?.stats?.requiresAttention || 'Requires attention'}
-            </p>
+            <div className="grid grid-cols-2 divide-x">
+              <div className="pr-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <UserCheck className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground">
+                    {d?.stats?.activeSessions || 'Active Sessions'}
+                  </span>
+                </div>
+                <div className="text-2xl font-bold">{activeSessions.toLocaleString()}</div>
+                <p className="text-xs text-muted-foreground">
+                  {d?.stats?.currentlyLoggedIn || 'Currently logged in'}
+                </p>
+              </div>
+              <div className="pl-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <Building className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground">
+                    {d?.stats?.departments || 'Departments'}
+                  </span>
+                </div>
+                <div className="text-2xl font-bold">{totalDepartments}</div>
+                <p className="text-xs text-muted-foreground">
+                  {d?.stats?.activeDepartments || 'Active departments'}
+                </p>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -223,33 +202,40 @@ export default async function AdminContent({ dictionary, lang }: Props) {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        {/* Combined: Pending Actions + Classrooms */}
+        <Card className="md:col-span-2">
+          <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">
-              {d?.stats?.departments || 'Departments'}
+              Operations Overview
             </CardTitle>
-            <Building className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalDepartments}</div>
-            <p className="text-xs text-muted-foreground">
-              {d?.stats?.activeDepartments || 'Active departments'}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              {d?.stats?.classrooms || 'Classrooms'}
-            </CardTitle>
-            <Building className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalClassrooms}</div>
-            <p className="text-xs text-muted-foreground">
-              {d?.stats?.totalClassrooms || 'Total classrooms'}
-            </p>
+            <div className="grid grid-cols-2 divide-x">
+              <div className="pr-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <CircleAlert className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground">
+                    {d?.stats?.pendingActions || 'Pending Actions'}
+                  </span>
+                </div>
+                <div className="text-2xl font-bold">{pendingApprovals + failedLogins}</div>
+                <p className="text-xs text-muted-foreground">
+                  {d?.stats?.requiresAttention || 'Requires attention'}
+                </p>
+              </div>
+              <div className="pl-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <Building className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground">
+                    {d?.stats?.classrooms || 'Classrooms'}
+                  </span>
+                </div>
+                <div className="text-2xl font-bold">{totalClassrooms}</div>
+                <p className="text-xs text-muted-foreground">
+                  {d?.stats?.totalClassrooms || 'Total classrooms'}
+                </p>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>

@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { formatAmount, formatDateTime } from '@/components/platform/finance/banking/lib/utils'
-import { LoaderCircle } from 'lucide-react'
+import { LoaderCircle } from "lucide-react"
 
 interface RecentTransactionsListProps {
   transactions: any[]

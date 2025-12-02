@@ -10,20 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { Button } from '@/components/ui/button'
-import {
-  Award,
-  BookOpen,
-  Target,
-  TrendingUp,
-  Users,
-  Calendar,
-  Star,
-  FileText,
-  ChevronRight,
-  Brain,
-  Code,
-  Globe
-} from 'lucide-react'
+import { Award, BookOpen, Target, TrendingUp, Users, Calendar, Star, FileText, ChevronRight, Brain, Code, Globe } from "lucide-react"
 import { cn } from '@/lib/utils'
 import type { StudentProfile } from '../../types'
 import type { Dictionary } from '@/components/internationalization/dictionaries'

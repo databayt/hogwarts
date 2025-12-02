@@ -8,8 +8,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
-import type { LucideIcon } from 'lucide-react'
-import type { ReactNode } from 'react'
+import type { ElementType, ReactNode } from 'react'
 
 /**
  * StatsCard Component
@@ -20,7 +19,7 @@ interface StatsCardProps {
   title: string
   value: string | number
   description?: string
-  icon?: LucideIcon
+  icon?: ElementType
   trend?: 'up' | 'down' | 'neutral'
 }
 
@@ -53,7 +52,7 @@ export function StatsCard({ title, value, description, icon: Icon, trend }: Stat
 interface FeatureCardProps {
   title: string
   description: string
-  icon?: LucideIcon
+  icon?: ElementType
   primaryAction: {
     label: string
     href: string

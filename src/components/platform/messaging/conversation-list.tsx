@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Search, MessageSquarePlus, Filter, LoaderCircle } from "lucide-react"
+import { Search, MessageSquarePlus, ListFilter, LoaderCircle } from "lucide-react"
 import type { ConversationDTO, ConversationType } from "./types"
 import { ConversationCard, ConversationCardSkeleton } from "./conversation-card"
 import { cn } from "@/lib/utils"
@@ -165,7 +165,7 @@ export function ConversationList({
 
           <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v as typeof typeFilter)}>
             <SelectTrigger className="w-[100px]">
-              <Filter className="h-4 w-4" />
+              <ListFilter className="h-4 w-4" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">{locale === "ar" ? "كل الأنواع" : "All types"}</SelectItem>

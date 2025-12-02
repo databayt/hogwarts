@@ -29,7 +29,7 @@ import {
 } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
-import { Save, Download, Upload } from 'lucide-react';
+import { Save, Download, Upload } from "lucide-react";
 import { cn } from '@/lib/utils';
 import { type Dictionary } from '@/components/internationalization/dictionaries';
 import { type Locale } from '@/components/internationalization/config';

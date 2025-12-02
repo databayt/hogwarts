@@ -6,14 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import {
-  Clock,
-  Calendar,
-  BookOpen,
-  GraduationCap,
-  TriangleAlert,
-  ChevronRight
-} from 'lucide-react'
+import { Clock, Calendar, BookOpen, GraduationCap, TriangleAlert, ChevronRight } from "lucide-react"
 import { cn } from '@/lib/utils'
 import { type Dictionary } from '@/components/internationalization/dictionaries'
 import { type Locale } from '@/components/internationalization/config'

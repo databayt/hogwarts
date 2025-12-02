@@ -10,23 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import {
-  Calendar,
-  Clock,
-  Users,
-  MapPin,
-  Video,
-  ChevronLeft,
-  ChevronRight,
-  Plus,
-  AlertCircle,
-  Coffee,
-  Briefcase,
-  Home,
-  CalendarCheck,
-  CalendarX,
-  CheckCircle
-} from 'lucide-react'
+import { Calendar, Clock, Users, MapPin, Video, ChevronLeft, ChevronRight, Plus, CircleAlert, Coffee, Briefcase, House, CalendarCheck, CalendarX, CircleCheck, GraduationCap } from "lucide-react"
 import { cn } from '@/lib/utils'
 import { format, addDays, startOfWeek, addWeeks, isSameDay, isToday } from 'date-fns'
 import type { StaffProfile } from '../../types'
@@ -217,8 +201,8 @@ export function ScheduleTab({
 
   const getLeaveTypeIcon = (type: Leave['type']) => {
     switch (type) {
-      case 'vacation': return <Home className="h-4 w-4" />
-      case 'sick': return <AlertCircle className="h-4 w-4" />
+      case 'vacation': return <House className="h-4 w-4" />
+      case 'sick': return <CircleAlert className="h-4 w-4" />
       case 'personal': return <Users className="h-4 w-4" />
       case 'conference': return <Briefcase className="h-4 w-4" />
       case 'training': return <GraduationCap className="h-4 w-4" />
@@ -558,6 +542,3 @@ export function ScheduleTab({
     </div>
   )
 }
-
-// Missing import
-import { GraduationCap } from 'lucide-react'

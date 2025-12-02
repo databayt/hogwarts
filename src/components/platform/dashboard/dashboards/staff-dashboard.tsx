@@ -1,22 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
-import {
-  Calendar,
-  Clock,
-  CheckCircle2,
-  TriangleAlert,
-  Users,
-  Bell,
-  ClipboardList,
-  Building,
-  Wrench,
-  Package,
-  ChevronRight,
-  ListTodo,
-  UserCheck,
-  FileCheck,
-} from "lucide-react"
+import { Calendar, Clock, CircleCheckBig, TriangleAlert, Users, Bell, ClipboardList, Building, Wrench, Package, ChevronRight, ListTodo, UserCheck, FileCheck,  } from "lucide-react"
 import { format } from "date-fns"
 import { QuickActions } from "../quick-actions"
 import { getQuickActionsByRole } from "../quick-actions-config"
@@ -236,7 +221,7 @@ export async function StaffDashboard({
                       "bg-muted"
                     }`}>
                       {task.status === "completed" ? (
-                        <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                        <CircleCheckBig className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                       ) : task.status === "in-progress" ? (
                         <Clock className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                       ) : (
@@ -588,7 +573,7 @@ export async function StaffDashboard({
           current={mockWorkflowStatus.completedToday}
           total={mockWorkflowStatus.totalTasks}
           unit="tasks"
-          icon={CheckCircle2}
+          icon={CircleCheckBig}
           showPercentage
         />
         <ProgressCard

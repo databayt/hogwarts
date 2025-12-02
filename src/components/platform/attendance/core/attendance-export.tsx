@@ -24,16 +24,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { DateRangePicker } from '@/components/ui/date-picker';
 import { toast } from '@/components/ui/use-toast';
-import {
-  Download,
-  FileText,
-  Table2,
-  FileJson,
-  LoaderCircle,
-  Calendar,
-  Users,
-  ListFilter
-} from "lucide-react";
+import { Download, FileText, Table2, FileJson, LoaderCircle, Calendar, Users, ListFilter } from "lucide-react";
 import type { AttendanceRecord, ExportOptions, AttendanceFilters } from '../shared/types';
 import { generateAttendanceCSV, downloadCSV, formatAttendanceDate } from '../shared/utils';
 

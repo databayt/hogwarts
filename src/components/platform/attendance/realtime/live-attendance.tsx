@@ -8,20 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import {
-  Wifi,
-  WifiOff,
-  Users,
-  UserCheck,
-  UserX,
-  Clock,
-  Activity,
-  Bell,
-  RefreshCw,
-  Zap,
-  TrendingUp,
-  CircleAlert
-} from "lucide-react";
+import { Wifi, WifiOff, Users, UserCheck, UserX, Clock, Activity, Bell, RefreshCw, Zap, TrendingUp, CircleAlert } from "lucide-react";
 import { useClassAttendance } from '@/lib/websocket/use-socket';
 import { cn } from '@/lib/utils';
 import { formatTime, getStatusVariant } from '../shared/utils';

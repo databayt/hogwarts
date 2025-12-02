@@ -4,17 +4,7 @@ import * as React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import {
-  TrendingUp,
-  TrendingDown,
-  Calendar,
-  Users,
-  CircleCheck,
-  CircleX,
-  Clock,
-  Award,
-  TriangleAlert
-} from "lucide-react";
+import { TrendingUp, TrendingDown, Calendar, Users, CircleCheck, CircleX, Clock, Award, TriangleAlert } from "lucide-react";
 import { calculateAttendancePercentage, getClassAttendanceStats, getAtRiskStudents } from './attendance-stats';
 import type { AttendanceStats } from './attendance-stats';
 import { cn } from '@/lib/utils';

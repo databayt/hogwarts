@@ -8,17 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Upload,
-  FileSpreadsheet,
-  Download,
-  CircleAlert,
-  CircleCheck,
-  FileText,
-  Calendar,
-  Users,
-  LoaderCircle
-} from "lucide-react";
+import { Upload, FileSpreadsheet, Download, CircleAlert, CircleCheck, FileText, Calendar, Users, LoaderCircle } from "lucide-react";
 import { useAttendanceContext } from '../core/attendance-context';
 import { FileUploader, ACCEPT_DOCUMENTS, type UploadedFileResult } from '@/components/file-upload/enhanced/file-uploader';
 import { toast } from 'sonner';

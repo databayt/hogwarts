@@ -3,12 +3,7 @@
 import * as React from 'react';
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { format, isToday, isYesterday, formatDistanceToNow } from 'date-fns';
-import {
-  MessageSquare, Send, Paperclip, Search, Phone, Video, EllipsisVertical,
-  Users, User, Bell, BellOff, Archive, Star, Trash2, Reply, Forward,
-  Check, CheckCheck, Clock, CircleAlert, Image as ImageIcon, FileText,
-  Smile, AtSign, Hash, Filter, Plus, X, ChevronDown, Upload as UploadIcon
-} from 'lucide-react';
+import { MessageSquare, Send, Paperclip, Search, Phone, Video, EllipsisVertical, Users, User, Bell, BellOff, Archive, Star, Trash, Reply, Forward, Check, CheckCheck, Clock, CircleAlert, Image as ImageIcon, FileText, Smile, AtSign, Hash, ListFilter, Plus, X, ChevronDown, Upload as UploadIcon } from "lucide-react";
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
@@ -430,7 +425,7 @@ export function CommunicationHub({
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem className="text-red-600">
-                      <Trash2 className="h-4 w-4 me-2" />
+                      <Trash className="h-4 w-4 me-2" />
                       Delete Conversation
                     </DropdownMenuItem>
                   </DropdownMenuContent>

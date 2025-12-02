@@ -11,13 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
-import {
-  MapPin,
-  RefreshCw,
-  Users,
-  LoaderCircle,
-  CircleAlert
-} from "lucide-react";
+import { MapPin, RefreshCw, Users, LoaderCircle, CircleAlert } from "lucide-react";
 import dynamic from 'next/dynamic'
 
 // Dynamically import Leaflet components (SSR compatibility)

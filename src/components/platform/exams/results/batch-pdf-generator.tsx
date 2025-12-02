@@ -21,16 +21,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
-import {
-  Download,
-  FileDown,
-  LoaderCircle,
-  Users,
-  FileText,
-  CircleCheck,
-  CircleX,
-  CircleAlert
-} from "lucide-react";
+import { Download, FileDown, LoaderCircle, Users, FileText, CircleCheck, CircleX, CircleAlert } from "lucide-react";
 import {
   generateBatchExamPDFs,
   getBatchProgress,

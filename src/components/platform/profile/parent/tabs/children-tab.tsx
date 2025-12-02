@@ -12,26 +12,8 @@ import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Progress } from '@/components/ui/progress'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import {
-  Users,
-  GraduationCap,
-  Calendar,
-  Award,
-  BookOpen,
-  Activity,
-  Clock,
-  TrendingUp,
-  TrendingDown,
-  AlertCircle,
-  CheckCircle,
-  ChevronRight,
-  FileText,
-  Heart,
-  Target,
-  BarChart3,
-  Star,
-  Briefcase
-} from 'lucide-react'
+import { Users, GraduationCap, Calendar, Award, BookOpen, Activity, Clock, TrendingUp, TrendingDown, CircleAlert, CircleCheck, ChevronRight, FileText, Heart, Target, Star, Briefcase } from "lucide-react"
+import { BarChart3 } from "lucide-react"
 import { cn } from '@/lib/utils'
 import { format, formatDistanceToNow } from 'date-fns'
 import type { ParentProfile } from '../../types'

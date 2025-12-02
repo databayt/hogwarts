@@ -1,33 +1,7 @@
 "use client"
 
 import * as React from "react"
-import {
-  Users,
-  TrendingUp,
-  DollarSign,
-  Activity,
-  Target,
-  Award,
-  Calendar,
-  Clock,
-  Bell,
-  MessageSquare,
-  ThumbsUp,
-  Star,
-  MapPin,
-  Cloud,
-  Sun,
-  Moon,
-  Zap,
-  Heart,
-  BookOpen,
-  CheckCircle2,
-  CircleAlert,
-  Info,
-  Mail,
-  Phone,
-  Settings,
-} from "lucide-react"
+import { Users, TrendingUp, DollarSign, Activity, Target, Award, Calendar, Clock, Bell, MessageSquare, ThumbsUp, Star, MapPin, Cloud, Sun, Moon, Zap, Heart, BookOpen, CircleCheckBig, CircleAlert, Info, Mail, Phone, Settings,  } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 import {
@@ -98,7 +72,7 @@ export function DashboardCardsShowcase() {
             title="Recent Activities"
             items={[
               { icon: <Activity className="size-4" />, title: "Student enrolled", subtitle: "2 minutes ago" },
-              { icon: <CheckCircle2 className="size-4" />, title: "Assignment submitted", subtitle: "15 minutes ago" },
+              { icon: <CircleCheckBig className="size-4" />, title: "Assignment submitted", subtitle: "15 minutes ago" },
               { icon: <Bell className="size-4" />, title: "New announcement", subtitle: "1 hour ago" },
             ]}
           />
@@ -176,11 +150,11 @@ export function DashboardCardsShowcase() {
           >
             <ul className="space-y-2">
               <li className="flex items-center gap-2">
-                <CheckCircle2 className="size-4 text-green-600" />
+                <CircleCheckBig className="size-4 text-green-600" />
                 <span>Introduction to React</span>
               </li>
               <li className="flex items-center gap-2">
-                <CheckCircle2 className="size-4 text-green-600" />
+                <CircleCheckBig className="size-4 text-green-600" />
                 <span>State Management</span>
               </li>
               <li className="flex items-center gap-2">
@@ -260,7 +234,7 @@ export function DashboardCardsShowcase() {
             <TimelineCard
               title="Assignment Posted"
               timestamp="2024-01-17"
-              icon={<CheckCircle2 className="size-4" />}
+              icon={<CircleCheckBig className="size-4" />}
               showConnector={false}
             />
           </div>
@@ -428,7 +402,7 @@ export function DashboardCardsShowcase() {
 
           <BannerCard
             variant="success"
-            icon={<CheckCircle2 className="size-6" />}
+            icon={<CircleCheckBig className="size-6" />}
             title="Success!"
             description="All students have completed the course requirements"
           />

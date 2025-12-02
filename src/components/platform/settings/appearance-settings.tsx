@@ -17,7 +17,7 @@
 import * as React from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Palette, Settings, Download, Eye } from 'lucide-react'
+import { Palette, Settings, Download, Eye } from "lucide-react"
 import type { Locale } from '@/components/internationalization/config'
 import type { Dictionary } from '@/components/internationalization/dictionaries'
 

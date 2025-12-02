@@ -20,37 +20,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { cn } from '@/lib/utils'
 import type { StaffProfile } from '../../types'
 import type { Dictionary } from '@/components/internationalization/dictionaries'
-import {
-  User,
-  Bell,
-  Shield,
-  Globe,
-  Palette,
-  Eye,
-  Mail,
-  Phone,
-  MapPin,
-  Camera,
-  Lock,
-  Key,
-  Smartphone,
-  Monitor,
-  Moon,
-  Sun,
-  Languages,
-  Volume2,
-  Wifi,
-  Download,
-  Trash2,
-  AlertCircle,
-  CheckCircle2,
-  Info,
-  Settings2,
-  UserCog,
-  BellRing,
-  ShieldCheck,
-  Calendar
-} from 'lucide-react'
+import { User, Bell, Shield, Globe, Palette, Eye, Mail, Phone, MapPin, Camera, Lock, Key, Smartphone, Monitor, Moon, Sun, Languages, Volume2, Wifi, Download, Trash2, CircleAlert, CircleCheckBig, Info, Settings2, UserCog, BellRing, ShieldCheck, Calendar } from "lucide-react"
 
 // ============================================================================
 // Types
@@ -722,7 +692,7 @@ export function SettingsTab({
 
                 {twoFactorEnabled && (
                   <Alert>
-                    <CheckCircle2 className="h-4 w-4" />
+                    <CircleCheckBig className="h-4 w-4" />
                     <AlertDescription>
                       Two-factor authentication is enabled. You'll need to enter a code
                       from your authenticator app when signing in.
@@ -798,21 +768,21 @@ export function SettingsTab({
             <CardContent>
               <div className="space-y-3">
                 <div className="flex items-start gap-3">
-                  <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5" />
+                  <CircleCheckBig className="h-5 w-5 text-green-600 mt-0.5" />
                   <div className="flex-1">
                     <p className="text-sm font-medium">Password changed successfully</p>
                     <p className="text-xs text-muted-foreground">2 days ago from New York, US</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
-                  <AlertCircle className="h-5 w-5 text-yellow-600 mt-0.5" />
+                  <CircleAlert className="h-5 w-5 text-yellow-600 mt-0.5" />
                   <div className="flex-1">
                     <p className="text-sm font-medium">New device sign-in</p>
                     <p className="text-xs text-muted-foreground">5 days ago from iPhone, Brooklyn</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
-                  <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5" />
+                  <CircleCheckBig className="h-5 w-5 text-green-600 mt-0.5" />
                   <div className="flex-1">
                     <p className="text-sm font-medium">Two-factor authentication enabled</p>
                     <p className="text-xs text-muted-foreground">1 week ago</p>

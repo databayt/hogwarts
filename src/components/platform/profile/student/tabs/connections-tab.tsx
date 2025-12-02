@@ -12,25 +12,7 @@ import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import {
-  Users,
-  UserPlus,
-  UserMinus,
-  UserCheck,
-  Search,
-  MessageSquare,
-  Mail,
-  MoreVertical,
-  Star,
-  School,
-  Briefcase,
-  Calendar,
-  MapPin,
-  Filter,
-  ChevronRight,
-  Globe,
-  Link
-} from 'lucide-react'
+import { Users, UserPlus, UserMinus, UserCheck, Search, MessageSquare, Mail, EllipsisVertical, Star, School, Briefcase, Calendar, MapPin, ListFilter, ChevronRight, Globe, Link } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -355,7 +337,7 @@ export function ConnectionsTab({
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button variant="ghost" size="sm">
-                                <MoreVertical className="h-4 w-4" />
+                                <EllipsisVertical className="h-4 w-4" />
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
@@ -406,7 +388,7 @@ export function ConnectionsTab({
               <CardTitle className="text-base flex items-center justify-between">
                 <span>All Connections</span>
                 <Button variant="outline" size="sm">
-                  <Filter className="h-4 w-4 mr-2" />
+                  <ListFilter className="h-4 w-4 mr-2" />
                   Filter
                 </Button>
               </CardTitle>

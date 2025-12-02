@@ -22,20 +22,7 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import {
-  UserCog,
-  ArrowRight,
-  Eye,
-  Shield,
-  TriangleAlert,
-  Sparkles,
-  Users,
-  GraduationCap,
-  BookOpen,
-  DollarSign,
-  UserCheck,
-  Code,
-} from "lucide-react";
+import { UserCog, ArrowRight, Eye, Shield, TriangleAlert, Sparkles, Users, GraduationCap, BookOpen, DollarSign, UserCheck, Code,  } from "lucide-react";
 import { SuccessToast, ErrorToast, InfoToast } from "@/components/atom/toast";
 import type { UserRole } from "./role-management";
 import { type Dictionary } from "@/components/internationalization/dictionaries";

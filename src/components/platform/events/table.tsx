@@ -16,7 +16,7 @@ import {
   GridContainer,
   GridEmptyState,
 } from "@/components/platform/shared";
-import { Calendar, MapPin, Users } from "@aliimam/icons";
+import { Calendar, MapPin, Users } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { DeleteToast, ErrorToast, confirmDeleteDialog } from "@/components/atom/toast";
 import { Badge } from "@/components/ui/badge";

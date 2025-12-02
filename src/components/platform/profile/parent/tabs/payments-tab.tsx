@@ -11,25 +11,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import {
-  CreditCard,
-  Calendar,
-  Download,
-  ChevronRight,
-  AlertCircle,
-  CheckCircle,
-  Clock,
-  DollarSign,
-  Receipt,
-  TrendingUp,
-  TrendingDown,
-  FileText,
-  Printer,
-  Filter,
-  Plus,
-  ArrowUpRight,
-  ArrowDownRight
-} from 'lucide-react'
+import { CreditCard, Calendar, Download, ChevronRight, CircleAlert, CircleCheck, Clock, DollarSign, Receipt, TrendingUp, TrendingDown, FileText, Printer, ListFilter, Plus, ArrowUpRight, ArrowDownRight } from "lucide-react"
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
 import type { ParentProfile } from '../../types'
@@ -310,7 +292,7 @@ export function PaymentsTab({
         <Card className="border-destructive/50 bg-destructive/5">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <AlertCircle className="h-5 w-5 text-destructive" />
+              <CircleAlert className="h-5 w-5 text-destructive" />
               <div className="flex-1">
                 <p className="font-medium">Overdue Payment Alert</p>
                 <p className="text-sm text-muted-foreground">
@@ -345,7 +327,7 @@ export function PaymentsTab({
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-green-500/10">
-                <CheckCircle className="h-4 w-4 text-green-500" />
+                <CircleCheck className="h-4 w-4 text-green-500" />
               </div>
               <div>
                 <p className="text-2xl font-bold">${totalPaid}</p>
@@ -359,7 +341,7 @@ export function PaymentsTab({
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-orange-500/10">
-                <AlertCircle className="h-4 w-4 text-orange-500" />
+                <CircleAlert className="h-4 w-4 text-orange-500" />
               </div>
               <div>
                 <p className="text-2xl font-bold">${overdueAmount}</p>
@@ -464,7 +446,7 @@ export function PaymentsTab({
         </select>
 
         <Button variant="outline" size="sm">
-          <Filter className="h-4 w-4 mr-1" />
+          <ListFilter className="h-4 w-4 mr-1" />
           More Filters
         </Button>
       </div>

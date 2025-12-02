@@ -3,18 +3,8 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import Link from "next/link"
-import {
-  FileText,
-  DollarSign,
-  Receipt,
-  Users,
-  BarChart,
-  Building,
-  Plus,
-  Calculator,
-  Wallet,
-  TrendingUp
-} from 'lucide-react'
+import { FileText, DollarSign, Receipt, Users, Building, Plus, Calculator, Wallet, TrendingUp } from "lucide-react"
+import { BarChart } from "lucide-react"
 import type { QuickAction } from "./types"
 import { cn } from "@/lib/utils"
 

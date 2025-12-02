@@ -6,12 +6,7 @@ import { QuestionCard } from "./card"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import {
-  TrendingUp,
-  Star,
-  Award,
-  ThumbsUp
-} from "lucide-react";
+import { TrendingUp, Star, Award, ThumbsUp } from "lucide-react";
 import Link from "next/link"
 import type { QuestionType, DifficultyLevel, BloomLevel, Rubric } from "@prisma/client"
 import type { Dictionary } from "@/components/internationalization/dictionaries"

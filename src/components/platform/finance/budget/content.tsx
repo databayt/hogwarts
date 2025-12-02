@@ -1,6 +1,7 @@
 import type { Locale } from '@/components/internationalization/config'
 import type { Dictionary } from '@/components/internationalization/dictionaries'
-import { PieChart, TrendingUp, TriangleAlert, CircleCheck, DollarSign, BarChart } from 'lucide-react'
+import { TrendingUp, TriangleAlert, CircleCheck, DollarSign } from "lucide-react"
+import { PieChart, BarChart } from "lucide-react"
 import { db } from '@/lib/db'
 import { getTenantContext } from '@/lib/tenant-context'
 import { StatsCard, FeatureCard, DashboardGrid, formatCurrency, formatPercentage } from '../lib/dashboard-components'

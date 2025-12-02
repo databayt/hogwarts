@@ -11,32 +11,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
-import {
-  MapPin,
-  Mail,
-  Phone,
-  Link,
-  Calendar,
-  Briefcase,
-  Users,
-  Award,
-  Edit2,
-  Share2,
-  MoreVertical,
-  UserPlus,
-  MessageSquare,
-  Shield,
-  CheckCircle,
-  Star,
-  Eye,
-  Github,
-  Linkedin,
-  Twitter,
-  Facebook,
-  Instagram,
-  Youtube,
-  Globe
-} from 'lucide-react'
+import { MapPin, Mail, Phone, Link, Calendar, Briefcase, Users, Award, PencilLine, Share2, EllipsisVertical, UserPlus, MessageSquare, Shield, CircleCheck, Star, Eye, Github, Linkedin, Twitter, Facebook, Instagram, Youtube, Globe } from "lucide-react"
 import { format } from 'date-fns'
 import { cn } from '@/lib/utils'
 import {
@@ -188,7 +163,7 @@ export function ProfileHeader({
           size="sm"
           onClick={onEdit}
         >
-          <Edit2 className="h-4 w-4 mr-2" />
+          <PencilLine className="h-4 w-4 mr-2" />
           Edit Profile
         </Button>
       )
@@ -290,7 +265,7 @@ export function ProfileHeader({
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger>
-                        <CheckCircle className="h-5 w-5 text-blue-500" />
+                        <CircleCheck className="h-5 w-5 text-blue-500" />
                       </TooltipTrigger>
                       <TooltipContent>
                         <p>Verified Profile</p>
@@ -413,7 +388,7 @@ export function ProfileHeader({
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm" className="px-2">
-                    <MoreVertical className="h-4 w-4" />
+                    <EllipsisVertical className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">

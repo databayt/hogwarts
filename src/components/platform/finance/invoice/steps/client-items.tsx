@@ -3,7 +3,7 @@
 import { useFormContext, useFieldArray } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { CalendarIcon } from "lucide-react";
+import { Calendar as CalendarIcon, Plus } from "lucide-react";
 import { format } from "date-fns";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
@@ -13,7 +13,6 @@ import { CURRENCY_OPTIONS } from "../config";
 import { z } from "zod";
 import { InvoiceSchemaZod } from "../validation";
 import { Icons } from "@/components/atom/icons";
-import { Plus } from "lucide-react";
 
 interface ClientItemsStepProps {
   isView: boolean;
@@ -94,7 +93,7 @@ export function ClientItemsStep({ isView, currentId }: ClientItemsStepProps) {
                     !watch("invoice_date") && "text-muted-foreground"
                   )}
                 >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  <Calendar className="mr-2 h-4 w-4" />
                   {watch("invoice_date") ? (
                     format(watch("invoice_date"), "MMM do, yyyy")
                   ) : (
@@ -124,7 +123,7 @@ export function ClientItemsStep({ isView, currentId }: ClientItemsStepProps) {
                     !watch("due_date") && "text-muted-foreground"
                   )}
                 >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  <Calendar className="mr-2 h-4 w-4" />
                   {watch("due_date") ? (
                     format(watch("due_date"), "MMM do, yyyy")
                   ) : (

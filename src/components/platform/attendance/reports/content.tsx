@@ -17,18 +17,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import {
-  FileSpreadsheet,
-  Download,
-  Search,
-  ListFilter,
-  RefreshCw,
-  LoaderCircle,
-  CircleCheck,
-  CircleX,
-  Clock,
-  CircleAlert
-} from "lucide-react";
+import { FileSpreadsheet, Download, Search, ListFilter, RefreshCw, LoaderCircle, CircleCheck, CircleX, Clock, CircleAlert } from "lucide-react";
 import { cn } from '@/lib/utils'
 import type { Dictionary } from '@/components/internationalization/dictionaries'
 import {

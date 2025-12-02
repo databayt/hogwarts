@@ -9,7 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { TriangleAlert, RefreshCw, Shield, Eye, LayoutGrid, Users } from 'lucide-react'
+import { TriangleAlert, RefreshCw, Shield, Eye, LayoutGrid, Users } from "lucide-react"
 import type { Dictionary } from '@/components/internationalization/dictionaries'
 import type { Locale } from '@/components/internationalization/config'
 import type { LegacyTimetableData } from './types'

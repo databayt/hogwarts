@@ -1,6 +1,6 @@
 import type { Locale } from '@/components/internationalization/config'
 import type { Dictionary } from '@/components/internationalization/dictionaries'
-import { TrendingUp, Receipt, CircleCheck, CircleAlert, DollarSign, FolderOpen } from 'lucide-react'
+import { TrendingUp, Receipt, CircleCheck, CircleAlert, DollarSign, FolderOpen } from "lucide-react"
 import { db } from '@/lib/db'
 import { getTenantContext } from '@/lib/tenant-context'
 import { StatsCard, FeatureCard, DashboardGrid, formatCurrency } from '../lib/dashboard-components'

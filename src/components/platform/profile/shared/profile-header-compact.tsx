@@ -9,17 +9,7 @@ import React from 'react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import {
-  Edit2,
-  UserPlus,
-  MessageSquare,
-  Share2,
-  MoreVertical,
-  CheckCircle,
-  Star,
-  Briefcase,
-  Calendar
-} from 'lucide-react'
+import { PencilLine, UserPlus, MessageSquare, Share2, EllipsisVertical, CircleCheck, Star, Briefcase, Calendar } from "lucide-react"
 import { cn } from '@/lib/utils'
 import {
   DropdownMenu,
@@ -111,7 +101,7 @@ export function ProfileHeaderCompact({
           size="sm"
           onClick={onEdit}
         >
-          <Edit2 className="h-4 w-4 mr-2" />
+          <PencilLine className="h-4 w-4 mr-2" />
           Edit
         </Button>
       )
@@ -218,7 +208,7 @@ export function ProfileHeaderCompact({
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger>
-                    <CheckCircle className="h-4 w-4 text-blue-500" />
+                    <CircleCheck className="h-4 w-4 text-blue-500" />
                   </TooltipTrigger>
                   <TooltipContent>
                     <p>Verified Profile</p>
@@ -314,7 +304,7 @@ export function ProfileHeaderCompact({
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm" className="px-2">
-                <MoreVertical className="h-4 w-4" />
+                <EllipsisVertical className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">

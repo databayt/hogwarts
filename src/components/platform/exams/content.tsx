@@ -5,23 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import {
-  Calendar,
-  BookOpen,
-  Sparkles,
-  ClipboardCheck,
-  FileBarChart,
-  TrendingUp,
-  TrendingDown,
-  Users,
-  Clock,
-  CircleCheck,
-  CircleAlert,
-  ArrowRight,
-  GraduationCap,
-  Target,
-  Zap
-} from "lucide-react";
+import { Calendar, BookOpen, Sparkles, ClipboardCheck, TrendingUp, TrendingDown, Users, Clock, CircleCheck, CircleAlert, ArrowRight, GraduationCap, Target, Zap } from "lucide-react"
+import { FileBarChart } from "lucide-react";
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { getTenantContext } from "@/lib/tenant-context";

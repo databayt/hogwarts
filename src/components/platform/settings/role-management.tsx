@@ -48,18 +48,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  Users,
-  UserPlus,
-  Shield,
-  Eye,
-  Edit,
-  Trash2,
-  Key,
-  UserCog,
-  TriangleAlert,
-  CircleCheck,
-} from "lucide-react";
+import { Users, UserPlus, Shield, Eye, Pencil, Trash2, Key, UserCog, TriangleAlert, CircleCheck,  } from "lucide-react";
 import { SuccessToast, ErrorToast } from "@/components/atom/toast";
 import type { Dictionary } from "@/components/internationalization/dictionaries";
 import {

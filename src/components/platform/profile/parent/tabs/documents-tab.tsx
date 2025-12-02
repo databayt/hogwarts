@@ -11,31 +11,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Progress } from '@/components/ui/progress'
-import {
-  FileText,
-  Download,
-  Upload,
-  Search,
-  Filter,
-  Eye,
-  Share,
-  Trash,
-  Plus,
-  FolderOpen,
-  File,
-  FileCheck,
-  AlertCircle,
-  CheckCircle,
-  Clock,
-  Calendar,
-  ChevronRight,
-  Paperclip,
-  Shield,
-  Heart,
-  GraduationCap,
-  CreditCard,
-  Users
-} from 'lucide-react'
+import { FileText, Download, Upload, Search, ListFilter, Eye, Share, Trash, Plus, FolderOpen, File, FileCheck, CircleAlert, CircleCheck, Clock, Calendar, ChevronRight, Paperclip, Shield, Heart, GraduationCap, CreditCard, Users } from "lucide-react"
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
 import type { ParentProfile } from '../../types'
@@ -342,7 +318,7 @@ export function DocumentsTab({
         <Card className="border-yellow-500/50 bg-yellow-50/50 dark:bg-yellow-900/10">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <AlertCircle className="h-5 w-5 text-yellow-500" />
+              <CircleAlert className="h-5 w-5 text-yellow-500" />
               <div className="flex-1">
                 <p className="font-medium">Action Required</p>
                 <p className="text-sm text-muted-foreground">
@@ -377,7 +353,7 @@ export function DocumentsTab({
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-yellow-500/10">
-                <AlertCircle className="h-4 w-4 text-yellow-500" />
+                <CircleAlert className="h-4 w-4 text-yellow-500" />
               </div>
               <div>
                 <p className="text-2xl font-bold">{requiredPending}</p>
@@ -405,7 +381,7 @@ export function DocumentsTab({
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-green-500/10">
-                <CheckCircle className="h-4 w-4 text-green-500" />
+                <CircleCheck className="h-4 w-4 text-green-500" />
               </div>
               <div>
                 <p className="text-2xl font-bold">{uploadProgress.toFixed(0)}%</p>
@@ -476,7 +452,7 @@ export function DocumentsTab({
               ))}
             </select>
             <Button variant="outline" size="icon" onClick={() => setSelectedCategory('all')}>
-              <Filter className="h-4 w-4" />
+              <ListFilter className="h-4 w-4" />
             </Button>
             <Button>
               <Upload className="h-4 w-4 mr-2" />
@@ -491,7 +467,7 @@ export function DocumentsTab({
         <Card>
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
-              <AlertCircle className="h-4 w-4" />
+              <CircleAlert className="h-4 w-4" />
               Required Documents
             </CardTitle>
           </CardHeader>

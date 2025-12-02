@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { Drawer, DrawerContent, DrawerTrigger, DrawerHeader, DrawerTitle } from "@/components/ui/drawer"
-import { Info } from 'lucide-react'
+import { Info } from "lucide-react"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
 import { useMediaQuery } from "./use-media-query"

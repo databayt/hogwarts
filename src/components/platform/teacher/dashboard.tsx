@@ -3,11 +3,8 @@
 import * as React from 'react';
 import { useState, useMemo } from 'react';
 import { format, isToday, isTomorrow, startOfWeek, endOfWeek, addDays, isPast, isFuture, differenceInMinutes } from 'date-fns';
-import {
-  Calendar, Clock, Users, BookOpen, FileText, TrendingUp, CircleAlert,
-  ChevronRight, BarChart3, CircleCheck, CircleX, Timer, School,
-  GraduationCap, Target, Award, Activity
-} from 'lucide-react';
+import { Calendar, Clock, Users, BookOpen, FileText, TrendingUp, CircleAlert, ChevronRight, CircleCheck, CircleX, Timer, School, GraduationCap, Target, Award, Activity } from "lucide-react"
+import { BarChart3 } from "lucide-react";
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {

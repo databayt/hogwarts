@@ -7,15 +7,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import {
-  Users,
-  UserCheck,
-  UserX,
-  TrendingUp,
-  TrendingDown,
-  Award,
-  BarChart3
-} from "lucide-react";
+import { Users, UserCheck, UserX, TrendingUp, TrendingDown, Award } from "lucide-react"
+import { BarChart3 } from "lucide-react";
 
 interface Props {
   examId: string;

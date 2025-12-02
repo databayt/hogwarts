@@ -7,12 +7,7 @@ import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import {
-  ChevronLeft,
-  ChevronRight,
-  Save,
-  Check
-} from "lucide-react";
+import { ChevronLeft, ChevronRight, Save, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // Import step components

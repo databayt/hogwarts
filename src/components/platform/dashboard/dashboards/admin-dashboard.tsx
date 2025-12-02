@@ -2,20 +2,7 @@ import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
-import {
-  TriangleAlert,
-  Users,
-  Calendar,
-  BookOpen,
-  DollarSign,
-  TrendingUp,
-  Bell,
-  ClipboardList,
-  UserPlus,
-  FileText,
-  Settings,
-  ChevronRight,
-} from "lucide-react"
+import { TriangleAlert, Users, Calendar, BookOpen, DollarSign, TrendingUp, Bell, ClipboardList, UserPlus, FileText, Settings, ChevronRight,  } from "lucide-react"
 import { formatDistanceToNow } from "date-fns"
 import { getDashboardSummary } from "./actions"
 import { QuickActions } from "../quick-actions"

@@ -10,21 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
-import {
-  GraduationCap,
-  Award,
-  BookOpen,
-  Calendar,
-  MapPin,
-  Download,
-  ChevronRight,
-  Plus,
-  Edit,
-  ExternalLink,
-  Shield,
-  Star,
-  Trophy
-} from 'lucide-react'
+import { GraduationCap, Award, BookOpen, Calendar, MapPin, Download, ChevronRight, Plus, Pencil, ExternalLink, Shield, Star, Trophy } from "lucide-react"
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
 import type { TeacherProfile } from '../../types'
@@ -374,7 +360,7 @@ export function QualificationsTab({
                   </div>
                   {isOwner && (
                     <Button variant="ghost" size="sm">
-                      <Edit className="h-3 w-3" />
+                      <Pencil className="h-3 w-3" />
                     </Button>
                   )}
                 </div>
@@ -481,7 +467,7 @@ export function QualificationsTab({
                     )}
                     {isOwner && (
                       <Button variant="ghost" size="sm">
-                        <Edit className="h-3 w-3" />
+                        <Pencil className="h-3 w-3" />
                       </Button>
                     )}
                   </div>

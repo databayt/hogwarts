@@ -13,7 +13,7 @@ import { ParentProfileContent } from './parent/content'
 import { StaffProfileContent } from './staff/content'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
-import { AlertCircle } from 'lucide-react'
+import { CircleAlert } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { useDictionary } from '@/components/internationalization/use-dictionary'
 import { useLocale } from '@/components/internationalization/use-locale'
@@ -53,7 +53,7 @@ export function ProfileContent() {
     return (
       <div className="container mx-auto p-6">
         <Alert>
-          <AlertCircle className="h-4 w-4" />
+          <CircleAlert className="h-4 w-4" />
           <AlertTitle>Authentication Required</AlertTitle>
           <AlertDescription>
             Please sign in to view your profile.

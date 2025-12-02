@@ -21,15 +21,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Ellipsis,
-  Eye,
-  Pencil,
-  Trash2,
-  FileText,
-  CreditCard,
-  Calendar
-} from "lucide-react";
+import { Ellipsis, Eye, Pencil, Trash2, FileText, CreditCard, Calendar } from "lucide-react";
 import { format } from "date-fns";
 import type { Student } from "../registration/types";
 

@@ -16,20 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { cn } from '@/lib/utils'
 import type { Dictionary } from '@/components/internationalization/dictionaries'
-import {
-  Search,
-  Filter,
-  User,
-  Mail,
-  Phone,
-  MapPin,
-  Briefcase,
-  Calendar,
-  Grid,
-  List,
-  ChevronRight,
-  Building
-} from 'lucide-react'
+import { Search, ListFilter, User, Mail, Phone, MapPin, Briefcase, Calendar, LayoutGrid, List, ChevronRight, Building } from "lucide-react"
 import { format } from 'date-fns'
 
 // ============================================================================
@@ -225,7 +212,7 @@ export function StaffDirectoryContent({
             size="icon"
             onClick={() => setViewMode('grid')}
           >
-            <Grid className="h-4 w-4" />
+            <LayoutGrid className="h-4 w-4" />
           </Button>
           <Button
             variant={viewMode === 'list' ? 'default' : 'outline'}

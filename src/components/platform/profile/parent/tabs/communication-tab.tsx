@@ -13,29 +13,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import {
-  MessageSquare,
-  Bell,
-  Send,
-  Search,
-  Filter,
-  ChevronRight,
-  Paperclip,
-  Calendar,
-  Users,
-  AlertCircle,
-  Info,
-  Star,
-  Archive,
-  Inbox,
-  Clock,
-  CheckCircle,
-  Reply,
-  MoreVertical,
-  Phone,
-  Mail,
-  Megaphone
-} from 'lucide-react'
+import { MessageSquare, Bell, Send, Search, ListFilter, ChevronRight, Paperclip, Calendar, Users, CircleAlert, Info, Star, Archive, Inbox, Clock, CircleCheck, Reply, EllipsisVertical, Phone, Mail, Megaphone, GraduationCap, CreditCard } from "lucide-react"
 import { cn } from '@/lib/utils'
 import { format, formatDistanceToNow } from 'date-fns'
 import type { ParentProfile } from '../../types'
@@ -301,14 +279,14 @@ export function CommunicationTab({
       case 'payment': return <CreditCard className="h-4 w-4" />
       case 'message': return <MessageSquare className="h-4 w-4" />
       case 'event': return <Calendar className="h-4 w-4" />
-      case 'behavior': return <AlertCircle className="h-4 w-4" />
+      case 'behavior': return <CircleAlert className="h-4 w-4" />
       default: return <Info className="h-4 w-4" />
     }
   }
 
   const getAnnouncementIcon = (type: Announcement['type']) => {
     switch (type) {
-      case 'urgent': return <AlertCircle className="h-4 w-4 text-red-500" />
+      case 'urgent': return <CircleAlert className="h-4 w-4 text-red-500" />
       case 'event': return <Calendar className="h-4 w-4 text-blue-500" />
       case 'holiday': return <Calendar className="h-4 w-4 text-green-500" />
       case 'academic': return <GraduationCap className="h-4 w-4 text-purple-500" />
@@ -424,7 +402,7 @@ export function CommunicationTab({
                   <option value="starred">Starred</option>
                 </select>
                 <Button variant="outline" size="icon">
-                  <Filter className="h-4 w-4" />
+                  <ListFilter className="h-4 w-4" />
                 </Button>
                 <Button>
                   <MessageSquare className="h-4 w-4 mr-2" />
@@ -517,7 +495,7 @@ export function CommunicationTab({
                           <Archive className="h-4 w-4" />
                         </Button>
                         <Button variant="ghost" size="icon">
-                          <MoreVertical className="h-4 w-4" />
+                          <EllipsisVertical className="h-4 w-4" />
                         </Button>
                       </div>
                     </div>
@@ -785,6 +763,3 @@ export function CommunicationTab({
     </div>
   )
 }
-
-// Missing imports
-import { GraduationCap, CreditCard } from 'lucide-react'

@@ -19,7 +19,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { EllipsisVertical, RefreshCw, Trash2, LoaderCircle } from 'lucide-react';
+import { EllipsisVertical, RefreshCw, Trash2, LoaderCircle } from "lucide-react";
 import { removeBank, syncBankData } from './actions';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';

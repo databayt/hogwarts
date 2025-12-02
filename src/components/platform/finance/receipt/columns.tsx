@@ -19,7 +19,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Ellipsis, Eye, Trash2, RefreshCw } from 'lucide-react'
+import { Ellipsis, Eye, Trash2, RefreshCw } from "lucide-react"
 
 export function getColumns(): ColumnDef<ExpenseReceipt>[] {
   return [

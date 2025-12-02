@@ -10,24 +10,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { Button } from '@/components/ui/button'
-import {
-  Briefcase,
-  Clock,
-  CheckCircle,
-  AlertCircle,
-  TrendingUp,
-  Users,
-  Calendar,
-  FileText,
-  Award,
-  Target,
-  BarChart3,
-  ChevronRight,
-  Shield,
-  Building,
-  Mail,
-  Phone
-} from 'lucide-react'
+import { Briefcase, Clock, CircleCheck, CircleAlert, TrendingUp, Users, Calendar, FileText, Award, Target, ChevronRight, Shield, Building, Mail, Phone } from "lucide-react"
+import { BarChart3 } from "lucide-react"
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
 import type { StaffProfile } from '../../types'
@@ -71,7 +55,7 @@ export function OverviewTab({
       title: 'Tasks Completed',
       value: workMetrics.tasksCompleted,
       description: 'This month',
-      icon: <CheckCircle className="h-4 w-4" />,
+      icon: <CircleCheck className="h-4 w-4" />,
       color: 'text-green-500',
       trend: 'up'
     },

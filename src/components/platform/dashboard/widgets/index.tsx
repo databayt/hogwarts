@@ -7,19 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
-import {
-  Calendar,
-  Clock,
-  TrendingUp,
-  TrendingDown,
-  ChevronRight,
-  Bell,
-  Users,
-  BookOpen,
-  GraduationCap,
-  DollarSign,
-  type LucideIcon
-} from "lucide-react"
+import { Calendar, Clock, TrendingUp, TrendingDown, ChevronRight, Bell, Users, BookOpen, GraduationCap, DollarSign } from "lucide-react"
+import type { ElementType } from "react"
 import Link from "next/link"
 
 // ============================================================================
@@ -224,7 +213,7 @@ interface MetricCardProps {
   value: string | number
   change?: number
   changeType?: "positive" | "negative" | "neutral"
-  icon?: LucideIcon
+  icon?: ElementType
   iconColor?: string
   description?: string
   href?: string
@@ -407,7 +396,7 @@ interface ProgressCardProps {
   current: number
   total: number
   unit?: string
-  icon?: LucideIcon
+  icon?: ElementType
   color?: string
   showPercentage?: boolean
   className?: string
@@ -451,7 +440,7 @@ export function ProgressCard({
 
 interface QuickActionItem {
   label: string
-  icon: LucideIcon
+  icon: ElementType
   href: string
   color?: string
 }
@@ -539,7 +528,7 @@ export function ChartCard({ title, description, children, footer, className }: C
 // ============================================================================
 
 interface EmptyStateProps {
-  icon?: LucideIcon
+  icon?: ElementType
   title: string
   description?: string
   action?: {

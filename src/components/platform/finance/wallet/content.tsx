@@ -1,6 +1,6 @@
 import type { Locale } from '@/components/internationalization/config'
 import type { Dictionary } from '@/components/internationalization/dictionaries'
-import { Wallet, Users, DollarSign, TrendingUp, ArrowUpCircle, ArrowDownCircle } from 'lucide-react'
+import { Wallet, Users, DollarSign, TrendingUp, CircleArrowUp, CircleArrowDown } from "lucide-react"
 import { db } from '@/lib/db'
 import { getTenantContext } from '@/lib/tenant-context'
 import { StatsCard, FeatureCard, DashboardGrid, formatCurrency } from '../lib/dashboard-components'
@@ -95,7 +95,7 @@ export default async function WalletContent({ dictionary, lang }: Props) {
             title={d?.stats?.topups || 'Total Top-ups'}
             value={formatCurrency(totalTopups)}
             description={d?.stats?.lifetime || 'Lifetime top-ups'}
-            icon={ArrowUpCircle}
+            icon={CircleArrowUp}
           />
         </DashboardGrid>
 
@@ -119,7 +119,7 @@ export default async function WalletContent({ dictionary, lang }: Props) {
             <FeatureCard
               title={d?.sections?.topup || 'Top-up Wallet'}
               description={d?.sections?.topupDesc || 'Add funds to parent or school wallets'}
-              icon={ArrowUpCircle}
+              icon={CircleArrowUp}
               primaryAction={{
                 label: d?.actions?.topup || 'Top-up',
                 href: `/${lang}/finance/wallet/topup`
@@ -147,7 +147,7 @@ export default async function WalletContent({ dictionary, lang }: Props) {
             <FeatureCard
               title={d?.sections?.refunds || 'Refunds'}
               description={d?.sections?.refundsDesc || 'Process wallet refunds and adjustments'}
-              icon={ArrowDownCircle}
+              icon={CircleArrowDown}
               primaryAction={{
                 label: d?.actions?.processRefund || 'Process Refund',
                 href: `/${lang}/finance/wallet/refund`

@@ -4,17 +4,7 @@ import { StatCard } from "../atom/stat-card"
 import { ActionCard } from "../atom/action-card"
 import { RecentTable } from "../atom/recent-table"
 import { getAttendanceStats, getRecentAttendance } from "../actions"
-import {
-  Users,
-  CircleCheck,
-  CircleAlert,
-  Clock,
-  TrendingUp,
-  Pencil,
-  QrCode,
-  Upload,
-  FileText
-} from "lucide-react";
+import { Users, CircleCheck, CircleAlert, Clock, TrendingUp, Pencil, QrCode, Upload, FileText } from "lucide-react";
 import type { Locale } from "@/components/internationalization/config"
 import type { getDictionary } from "@/components/internationalization/dictionaries"
 

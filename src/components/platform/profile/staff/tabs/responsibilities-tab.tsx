@@ -11,23 +11,8 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import {
-  Briefcase,
-  Shield,
-  Users,
-  Target,
-  CheckCircle,
-  Clock,
-  AlertCircle,
-  ChevronRight,
-  FileText,
-  Building,
-  Award,
-  TrendingUp,
-  Calendar,
-  BarChart3,
-  ListChecks
-} from 'lucide-react'
+import { Briefcase, Shield, Users, Target, CircleCheck, Clock, CircleAlert, ChevronRight, FileText, Building, Award, TrendingUp, Calendar, ListChecks } from "lucide-react"
+import { BarChart3 } from "lucide-react"
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
 import type { StaffProfile } from '../../types'
@@ -265,7 +250,7 @@ export function ResponsibilitiesTab({
       case 'financial': return <TrendingUp className="h-4 w-4" />
       case 'administrative': return <FileText className="h-4 w-4" />
       case 'operational': return <Shield className="h-4 w-4" />
-      case 'compliance': return <CheckCircle className="h-4 w-4" />
+      case 'compliance': return <CircleCheck className="h-4 w-4" />
       default: return <Briefcase className="h-4 w-4" />
     }
   }
@@ -323,7 +308,7 @@ export function ResponsibilitiesTab({
             <CardContent className="space-y-3">
               {responsibilities.primary.map((resp: string, index: number) => (
                 <div key={index} className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
-                  <CheckCircle className="h-4 w-4 text-green-500 mt-0.5" />
+                  <CircleCheck className="h-4 w-4 text-green-500 mt-0.5" />
                   <p className="text-sm flex-1">{resp}</p>
                 </div>
               ))}

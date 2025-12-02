@@ -28,7 +28,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Clock, Users, MapPin, Book, Save, Download, Upload, Trash2, Copy } from 'lucide-react';
+import { Clock, Users, MapPin, Book, Save, Download, Upload, Trash, Copy } from "lucide-react";
 import { toast } from 'sonner';
 
 interface TimeSlot {
@@ -206,7 +206,7 @@ function TimetableCell({
               className="h-6 w-6 p-0 hover:bg-white/20"
               onClick={() => onRemove(entry.id)}
             >
-              <Trash2 className="h-3 w-3" />
+              <Trash className="h-3 w-3" />
             </Button>
           </div>
         </div>
@@ -391,7 +391,7 @@ export function TimetableBuilder({
               </div>
               <div className="flex gap-2">
                 <Button variant="outline" size="sm" onClick={handleClearAll}>
-                  <Trash2 className="h-4 w-4 me-2" />
+                  <Trash className="h-4 w-4 me-2" />
                   Clear All
                 </Button>
                 <Button variant="outline" size="sm" onClick={handleExport}>

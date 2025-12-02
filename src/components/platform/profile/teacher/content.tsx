@@ -25,16 +25,7 @@ import { cn } from '@/lib/utils'
 import type { TeacherProfile, ConnectionStatus } from '../types'
 import { UserProfileType } from '../types'
 import type { Dictionary } from '@/components/internationalization/dictionaries'
-import {
-  LayoutGrid,
-  Users,
-  Calendar,
-  GraduationCap,
-  BookOpen,
-  Star,
-  MessageSquare,
-  Award
-} from 'lucide-react'
+import { LayoutGrid, Users, Calendar, GraduationCap, BookOpen, Star, MessageSquare, Award } from "lucide-react"
 
 // ============================================================================
 // Types

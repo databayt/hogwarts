@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Trash2, GraduationCap, Award, FileCheck } from "lucide-react";
+import { Plus, Trash, GraduationCap, Award, FileCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 import { TeacherFormStepProps } from "./types";
@@ -109,7 +109,7 @@ export function QualificationsStep({ form, isView }: TeacherFormStepProps) {
                     onClick={() => remove(index)}
                     className="h-8 w-8 p-0"
                   >
-                    <Trash2 className="h-4 w-4 text-destructive" />
+                    <Trash className="h-4 w-4 text-destructive" />
                   </Button>
                 )}
               </div>

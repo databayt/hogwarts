@@ -10,7 +10,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
-import { BookAIcon, LayoutDashboardIcon } from 'lucide-react';
+import { BookOpen, LayoutDashboard } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -29,7 +29,7 @@ export default function DashboardSidebar({children} : { children : React.ReactNo
                 href={"/dashboard"}
                 className={cn(pathname === "/dashboard" && "bg-white")}
               >
-                <LayoutDashboardIcon />
+                <LayoutDashboard />
                 <span>Dashboard</span>
               </Link>
             </SidebarMenuButton>
@@ -41,7 +41,7 @@ export default function DashboardSidebar({children} : { children : React.ReactNo
                 href={"/invoice"}
                 className={cn(pathname === "/invoice" && "bg-white")}
               >
-                <BookAIcon />
+                <BookOpen />
                 <span>Invoice</span>
               </Link>
             </SidebarMenuButton>
@@ -57,7 +57,7 @@ export default function DashboardSidebar({children} : { children : React.ReactNo
                 href={"/settings"}
                 className={cn(pathname === "/settings" && "bg-white")}
               >
-                <BookAIcon />
+                <BookOpen />
                 <span>Settings</span>
               </Link>
             </SidebarMenuButton>

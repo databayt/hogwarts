@@ -7,15 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
-import {
-  Calendar,
-  Users,
-  DoorOpen,
-  Settings,
-  TriangleAlert,
-  FileText,
-  RefreshCw
-} from 'lucide-react'
+import { Calendar, Users, DoorOpen, Settings, TriangleAlert, FileText, RefreshCw } from "lucide-react"
 import { cn } from '@/lib/utils'
 import { type Dictionary } from '@/components/internationalization/dictionaries'
 import { type Locale } from '@/components/internationalization/config'

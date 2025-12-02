@@ -17,32 +17,7 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/components/ui/select'
-import {
-  FileText,
-  Award,
-  BookOpen,
-  Users,
-  Calendar,
-  CheckCircle,
-  XCircle,
-  Clock,
-  Star,
-  MessageSquare,
-  Heart,
-  Share2,
-  Upload,
-  Download,
-  CreditCard,
-  GraduationCap,
-  Trophy,
-  Target,
-  Zap,
-  AlertCircle,
-  Info,
-  TrendingUp,
-  TrendingDown,
-  Activity
-} from 'lucide-react'
+import { FileText, Award, BookOpen, Users, Calendar, CircleCheck, CircleX, Clock, Star, MessageSquare, Heart, Share2, Upload, Download, CreditCard, GraduationCap, Trophy, Target, Zap, CircleAlert, Info, TrendingUp, TrendingDown, Activity } from "lucide-react"
 import { cn } from '@/lib/utils'
 import { formatDistanceToNow, format } from 'date-fns'
 import { ar, enUS } from 'date-fns/locale'
@@ -75,7 +50,7 @@ interface ActivityGroup {
 
 const ACTIVITY_ICONS: Record<ActivityType, React.ReactNode> = {
   [ActivityType.ASSIGNMENT_SUBMITTED]: <Upload className="h-4 w-4" />,
-  [ActivityType.GRADE_RECEIVED]: <CheckCircle className="h-4 w-4" />,
+  [ActivityType.GRADE_RECEIVED]: <CircleCheck className="h-4 w-4" />,
   [ActivityType.COURSE_ENROLLED]: <BookOpen className="h-4 w-4" />,
   [ActivityType.COURSE_COMPLETED]: <GraduationCap className="h-4 w-4" />,
   [ActivityType.ACHIEVEMENT_EARNED]: <Award className="h-4 w-4" />,

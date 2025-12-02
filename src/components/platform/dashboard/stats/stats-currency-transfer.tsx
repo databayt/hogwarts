@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence } from "motion/react"
 import { Card, CardContent } from "@/components/ui/card"
-import { ArrowUpIcon, ArrowDownIcon, InfoIcon, ArrowUpDown, Check } from "lucide-react"
+import { ArrowUp, ArrowDown, Info, ArrowUpDown, Check } from "lucide-react"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { useState, useEffect } from "react"
 import { cn } from "@/lib/utils"
@@ -161,7 +161,7 @@ export default function StatsCurrencyTransfer() {
                     >
                       <div className="w-full space-y-1">
                         <span className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-                          <ArrowUpIcon className="h-3 w-3" />
+                          <ArrowUp className="h-3 w-3" />
                           From
                         </span>
                         <div className="flex flex-col gap-1.5">
@@ -193,7 +193,7 @@ export default function StatsCurrencyTransfer() {
                     >
                       <div className="w-full space-y-1">
                         <span className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-                          <ArrowDownIcon className="h-3 w-3" />
+                          <ArrowDown className="h-3 w-3" />
                           To
                         </span>
                         <div className="flex flex-col gap-1.5">
@@ -250,7 +250,7 @@ export default function StatsCurrencyTransfer() {
                 </AnimatePresence>
                 <Tooltip>
                   <TooltipTrigger>
-                    <InfoIcon className="h-3 w-3 text-muted-foreground transition-colors hover:text-foreground" />
+                    <Info className="h-3 w-3 text-muted-foreground transition-colors hover:text-foreground" />
                   </TooltipTrigger>
                   <TooltipContent>
                     <p className="text-xs">{isCompleted ? `Rate updated at 10:45 AM` : "Please wait..."}</p>

@@ -13,16 +13,7 @@ import { ExpenseReceipt } from './types'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import {
-  FileText,
-  Calendar,
-  DollarSign,
-  MapPin,
-  Clock,
-  LoaderCircle,
-  CircleAlert,
-  CircleCheck
-} from 'lucide-react'
+import { FileText, Calendar, DollarSign, MapPin, Clock, LoaderCircle, CircleAlert, CircleCheck } from "lucide-react"
 
 interface ReceiptCardProps {
   receipt: ExpenseReceipt

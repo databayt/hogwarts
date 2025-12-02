@@ -22,20 +22,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  FileText,
-  Award,
-  TrendingUp,
-  Download,
-  Printer,
-  Trophy,
-  Medal,
-  Target,
-  BarChart,
-  Calendar,
-  Clock,
-  CircleCheck
-} from "lucide-react";
+import { FileText, Award, TrendingUp, Download, Printer, Trophy, Medal, Target, Calendar, Clock, CircleCheck } from "lucide-react"
+import { BarChart } from "lucide-react";
 import type { Student, Achievement } from "../registration/types";
 import { format } from "date-fns";
 import { toast } from "sonner";

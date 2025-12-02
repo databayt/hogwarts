@@ -6,14 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/components/ui/use-toast';
-import {
-  QrCode,
-  Scan,
-  Users,
-  RefreshCw,
-  Settings,
-  CircleAlert
-} from "lucide-react";
+import { QrCode, Scan, Users, RefreshCw, Settings, CircleAlert } from "lucide-react";
 import { QRGenerator } from './qr-generator';
 import { QRScanner } from './qr-scanner';
 import { useAttendanceContext } from '../core/attendance-context';

@@ -1,7 +1,7 @@
 'use client'
 
 import { memo } from "react"
-import { Clock } from 'lucide-react'
+import { Clock } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { TimetableCell } from "./timetable-cell"
 import type { LegacyTimetableData } from "./types"

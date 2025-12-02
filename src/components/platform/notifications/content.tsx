@@ -9,7 +9,7 @@ import type { NotificationDTO } from "./types"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { NotificationCenterClient } from "./notification-center-client"
-import { Bell, Filter, Settings } from "lucide-react"
+import { Bell, ListFilter, Settings } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { getNotificationDictionary } from "@/components/internationalization/dictionaries"
@@ -192,7 +192,7 @@ export async function NotificationCenterContent({
             </div>
             <Button variant="outline" size="sm" asChild>
               <Link href={`/${locale}/notifications?${new URLSearchParams(searchParams as Record<string, string>).toString()}`}>
-                <Filter className="h-4 w-4 mr-2" />
+                <ListFilter className="h-4 w-4 mr-2" />
                 {dict.notifications.filters.filterBy}
               </Link>
             </Button>

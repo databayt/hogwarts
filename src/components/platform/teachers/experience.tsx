@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Trash2, Briefcase, Calendar, Building } from "lucide-react";
+import { Plus, Trash, Briefcase, Calendar, Building } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 
@@ -190,7 +190,7 @@ export function ExperienceStep({ form, isView }: TeacherFormStepProps) {
                       onClick={() => remove(index)}
                       className="h-8 w-8 p-0"
                     >
-                      <Trash2 className="h-4 w-4 text-destructive" />
+                      <Trash className="h-4 w-4 text-destructive" />
                     </Button>
                   )}
                 </div>
