@@ -26,6 +26,7 @@ import Link from "next/link";
 import { db } from "@/lib/db";
 import { getTenantContext } from "@/lib/tenant-context";
 import { cn } from "@/lib/utils";
+import { ExamCardFlip } from "./exam-card-flip";
 
 interface Props {
   dictionary: Dictionary;
@@ -161,44 +162,106 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
 
   return (
     <div className="space-y-8">
-      {/* Stats Row - Trending Style */}
-      <div className="grid grid-cols-1 gap-px rounded-xl bg-border sm:grid-cols-2 lg:grid-cols-4">
-        {trendingStats.map((stat, index) => (
-          <Card
-            key={stat.name}
-            className={cn(
-              "rounded-none border-0 shadow-none py-0",
-              index === 0 && "rounded-tl-xl sm:rounded-l-xl sm:rounded-tr-none",
-              index === trendingStats.length - 1 && "rounded-br-xl sm:rounded-r-xl sm:rounded-bl-none",
-              index === 1 && "rounded-tr-xl sm:rounded-none",
-              index === 2 && "rounded-bl-xl sm:rounded-none"
-            )}
-          >
-            <CardContent className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2 p-4 sm:p-6">
-              <div className="flex items-center gap-2">
-                <stat.icon className="h-4 w-4 text-muted-foreground" />
-                <p className="text-sm font-medium text-muted-foreground">{stat.name}</p>
+      {/* Hero Section: Card Flip + 2x2 Stats Grid */}
+      <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
+        {/* Card Flip - Overview */}
+        <ExamCardFlip
+          title={d?.pageTitle || "Examinations"}
+          subtitle={d?.description || "Complete exam management system"}
+          description={d?.dashboard?.description || "Comprehensive exam management with question banks, auto-generation, AI marking, and detailed results."}
+          features={[
+            d?.dashboard?.blocks?.qbank?.title || "Question Bank",
+            d?.dashboard?.blocks?.generate?.title || "AI Generation",
+            d?.dashboard?.blocks?.mark?.title || "Auto Marking",
+            d?.dashboard?.blocks?.results?.title || "Results & Reports",
+          ]}
+          href={`/${lang}/exams`}
+          ctaText={d?.nav?.overview || "View Overview"}
+          stats={{ label: d?.dashboard?.stats?.totalExams || "exams", value: examsCount }}
+        />
+
+        {/* 2x2 Stats Grid */}
+        <div className="grid grid-cols-2 gap-4">
+          {/* Total Exams */}
+          <Card className="relative overflow-hidden">
+            <div className="absolute top-0 right-0 h-20 w-20 translate-x-6 -translate-y-6 rounded-full bg-primary/10" />
+            <CardContent className="p-5">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Calendar className="h-4 w-4" />
+                <span className="text-sm font-medium">{d?.dashboard?.stats?.totalExams || "Total Exams"}</span>
               </div>
-              <p
-                className={cn(
+              <div className="mt-2 flex items-baseline gap-2">
+                <span className="text-3xl font-bold">{examsCount}</span>
+                <span className={cn(
                   "text-xs font-medium",
-                  stat.changeType === "positive"
-                    ? "text-emerald-600 dark:text-emerald-400"
-                    : stat.changeType === "negative"
-                    ? "text-red-600 dark:text-red-400"
-                    : "text-muted-foreground"
-                )}
-              >
-                {stat.changeType === "positive" && <TrendingUp className="inline h-3 w-3 mr-1" />}
-                {stat.changeType === "negative" && <TrendingDown className="inline h-3 w-3 mr-1" />}
-                {stat.change}
-              </p>
-              <p className="w-full flex-none text-3xl font-semibold tracking-tight text-foreground">
-                {stat.value}
-              </p>
+                  Number(examChange) >= 0 ? "text-emerald-600" : "text-red-600"
+                )}>
+                  {Number(examChange) >= 0 && <TrendingUp className="inline h-3 w-3 mr-0.5" />}
+                  {Number(examChange) < 0 && <TrendingDown className="inline h-3 w-3 mr-0.5" />}
+                  {examChange}%
+                </span>
+              </div>
+              <p className="mt-1 text-xs text-muted-foreground">{d?.dashboard?.stats?.allScheduledExams || "All scheduled exams"}</p>
             </CardContent>
           </Card>
-        ))}
+
+          {/* Upcoming */}
+          <Card className="relative overflow-hidden">
+            <div className="absolute top-0 right-0 h-20 w-20 translate-x-6 -translate-y-6 rounded-full bg-blue-500/10" />
+            <CardContent className="p-5">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Clock className="h-4 w-4" />
+                <span className="text-sm font-medium">{d?.dashboard?.stats?.upcoming || "Upcoming"}</span>
+              </div>
+              <div className="mt-2 flex items-baseline gap-2">
+                <span className="text-3xl font-bold">{upcomingExamsCount}</span>
+                {upcomingExamsCount > 3 && (
+                  <Badge variant="secondary" className="text-xs">Active</Badge>
+                )}
+              </div>
+              <p className="mt-1 text-xs text-muted-foreground">{d?.dashboard?.stats?.scheduledForFuture || "Scheduled for future"}</p>
+            </CardContent>
+          </Card>
+
+          {/* Question Bank */}
+          <Card className="relative overflow-hidden">
+            <div className="absolute top-0 right-0 h-20 w-20 translate-x-6 -translate-y-6 rounded-full bg-purple-500/10" />
+            <CardContent className="p-5">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <BookOpen className="h-4 w-4" />
+                <span className="text-sm font-medium">{d?.dashboard?.stats?.questionBank || "Question Bank"}</span>
+              </div>
+              <div className="mt-2 flex items-baseline gap-2">
+                <span className="text-3xl font-bold">{questionBankCount}</span>
+                <span className={cn(
+                  "text-xs font-medium",
+                  Number(questionChange) >= 0 ? "text-emerald-600" : "text-red-600"
+                )}>
+                  {Number(questionChange) >= 0 && <TrendingUp className="inline h-3 w-3 mr-0.5" />}
+                  {Number(questionChange) < 0 && <TrendingDown className="inline h-3 w-3 mr-0.5" />}
+                  {questionChange}%
+                </span>
+              </div>
+              <p className="mt-1 text-xs text-muted-foreground">{d?.dashboard?.stats?.availableQuestions || "Available questions"}</p>
+            </CardContent>
+          </Card>
+
+          {/* Students */}
+          <Card className="relative overflow-hidden">
+            <div className="absolute top-0 right-0 h-20 w-20 translate-x-6 -translate-y-6 rounded-full bg-emerald-500/10" />
+            <CardContent className="p-5">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Users className="h-4 w-4" />
+                <span className="text-sm font-medium">{d?.dashboard?.stats?.students || "Students"}</span>
+              </div>
+              <div className="mt-2 flex items-baseline gap-2">
+                <span className="text-3xl font-bold">{studentsEnrolledCount}</span>
+                <Badge variant="outline" className="text-xs">Enrolled</Badge>
+              </div>
+              <p className="mt-1 text-xs text-muted-foreground">{d?.dashboard?.stats?.enrolledStudents || "Enrolled students"}</p>
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
       {/* Progress Cards Row */}
