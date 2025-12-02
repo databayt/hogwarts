@@ -252,7 +252,21 @@ export async function getAttendanceStats(input?: {
   lastUpdated: string
 }> {
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error('Missing school context')
+
+  // Return default data if no school context (e.g., during SSR or unauthenticated)
+  if (!schoolId) {
+    return {
+      total: 0,
+      present: 0,
+      absent: 0,
+      late: 0,
+      excused: 0,
+      sick: 0,
+      holiday: 0,
+      attendanceRate: 0,
+      lastUpdated: new Date().toISOString(),
+    }
+  }
 
   const where: Prisma.AttendanceWhereInput = { schoolId }
 
@@ -543,7 +557,11 @@ export async function getRecentAttendance(input?: {
   classId?: string
 }) {
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error('Missing school context')
+
+  // Return empty data if no school context
+  if (!schoolId) {
+    return { records: [] }
+  }
 
   const limit = input?.limit ?? 50
 
