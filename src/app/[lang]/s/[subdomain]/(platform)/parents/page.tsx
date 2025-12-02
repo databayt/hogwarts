@@ -7,7 +7,6 @@ import { generateSchoolMetadata, generateDefaultMetadata } from '@/components/si
 import { getDictionary } from '@/components/internationalization/dictionaries';
 import { type Locale } from '@/components/internationalization/config';
 import { PageHeadingSetter } from '@/components/platform/context/page-heading-setter';
-import { PageNav, type PageNavItem } from '@/components/atom/page-nav';
 
 interface ParentsProps {
   params: Promise<{ subdomain: string; lang: Locale }>;
@@ -42,19 +41,12 @@ export default async function Parents({ params, searchParams }: ParentsProps) {
   const school = result.data;
   const dict = dictionary.school.parents;
 
-  const parentPages: PageNavItem[] = [
-    { name: dict.overview || 'Overview', href: `/${lang}/s/${subdomain}/parents` },
-    { name: dict.manage || 'Manage', href: `/${lang}/s/${subdomain}/parents/manage` },
-    { name: dict.analysis || 'Analysis', href: `/${lang}/s/${subdomain}/parents/analysis` },
-  ];
-
   return (
     <div className="school-content" data-school-id={school.id} data-subdomain={subdomain}>
       <div className="space-y-6">
         <PageHeadingSetter
           title={dict.title}
         />
-        <PageNav pages={parentPages} />
         <ParentsContent searchParams={searchParams} dictionary={dictionary} lang={lang} />
       </div>
     </div>
