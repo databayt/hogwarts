@@ -102,7 +102,7 @@ bg-[--contribution-level-4]
 
 The following components have documented exceptions to the semantic token rule:
 
-1. **Contribution Graph** (`src/components/profile/activity-graph.tsx`)
+1. **Contribution Graph** (`src/components/profile/contribution-graph.tsx`)
    - **Reason**: GitHub-inspired visualization requires specific green gradient colors
    - **Pattern**: Uses CSS custom properties `--contribution-level-{0-4}`
    - **Dark mode**: Properties auto-switch via CSS variables in `:root` and `.dark`

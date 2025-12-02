@@ -1746,6 +1746,8 @@
       "viewResultDetails": "عرض تفاصيل النتيجة",
       "next": "التالي",
       "back": "رجوع",
+      "cancel": "إلغاء",
+      "save": "حفظ",
       "studentAssignmentInfo": "معلومات الطالب والواجب",
       "gradingInfo": "معلومات التقييم",
       "actions": "الإجراءات",

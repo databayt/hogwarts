@@ -19,7 +19,7 @@ This directory contains a reusable GitHub-like profile UI system that can be use
 
 ### Shared Components
 
-- **`activity-graph.tsx`** - GitHub-style activity heatmap
+- **`contribution-graph.tsx`** - GitHub-style contribution heatmap
 - **`activity-overview.tsx`** - Activity summary and contribution overview
 
 ## Usage

@@ -17,7 +17,7 @@ import {
 } from "lucide-react"
 import ProfileSidebar from "./profile-sidebar"
 import PinnedItems from "./pinned-items"
-import ActivityGraph from "./activity-graph"
+import ContributionGraph from "./contribution-graph"
 import ActivityOverview from "./activity-overview"
 import StudentDashboard from "./student"
 import TeacherDashboard from "./teacher"
@@ -123,7 +123,7 @@ export default function ProfileContent({ role, data, dictionary, lang }: Props) 
 
           {/* Activity Graph */}
           <div className="rounded-lg border border-border p-6">
-            <ActivityGraph role={role} data={data} />
+            <ContributionGraph role={role} data={data} />
           </div>
 
           {/* Activity Overview */}

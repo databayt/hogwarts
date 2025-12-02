@@ -16,6 +16,7 @@ import { seedLibrary } from "./library";
 import { seedAnnouncements } from "./announcements";
 import { seedFees } from "./fees";
 import { seedExams } from "./exams";
+import { seedGrades } from "./grades";
 import { seedTimetable } from "./timetable";
 import { seedStream } from "./stream";
 import { seedLessons } from "./lessons";
@@ -114,6 +115,7 @@ async function main() {
     console.log("-".repeat(40));
 
     await seedExams(prisma, schoolId, classes, subjects, students, teachers);
+    await seedGrades(prisma, schoolId, classes, subjects, students, teachers);
 
     // Phase 9: Scheduling
     console.log("\nPHASE 9: SCHEDULING");
