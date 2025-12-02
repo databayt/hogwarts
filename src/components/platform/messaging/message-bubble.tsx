@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { format } from "date-fns"
 import { ar, enUS } from "date-fns/locale"
-import { Check, CheckCheck, MoreVertical, Reply, Smile, Pencil, Trash2, Copy, Clock } from "lucide-react"
+import { Check, CheckCheck, EllipsisVertical, Reply, Smile, Pencil, Trash2, Copy, Clock } from "lucide-react"
 import type { MessageDTO } from "./types"
 import { cn } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -248,7 +248,7 @@ export function MessageBubble({
                     size="icon"
                     className="h-8 w-8 bg-background border border-border"
                   >
-                    <MoreVertical className="h-4 w-4" />
+                    <EllipsisVertical className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align={isOwnMessage ? "end" : "start"}>

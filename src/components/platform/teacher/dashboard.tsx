@@ -4,8 +4,8 @@ import * as React from 'react';
 import { useState, useMemo } from 'react';
 import { format, isToday, isTomorrow, startOfWeek, endOfWeek, addDays, isPast, isFuture, differenceInMinutes } from 'date-fns';
 import {
-  Calendar, Clock, Users, BookOpen, FileText, TrendingUp, AlertCircle,
-  ChevronRight, BarChart3, CheckCircle, XCircle, Timer, School,
+  Calendar, Clock, Users, BookOpen, FileText, TrendingUp, CircleAlert,
+  ChevronRight, BarChart3, CircleCheck, CircleX, Timer, School,
   GraduationCap, Target, Award, Activity
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -204,7 +204,7 @@ export function TeacherDashboard({
                 </Badge>
               ) : (
                 <Badge variant="secondary" className="py-2 px-4">
-                  <CheckCircle className="h-4 w-4 mr-2" />
+                  <CircleCheck className="h-4 w-4 mr-2" />
                   No more classes today
                 </Badge>
               )}
@@ -324,7 +324,7 @@ export function TeacherDashboard({
                           </Badge>
                         )}
                         {session.status === 'completed' && (
-                          <CheckCircle className="h-5 w-5 text-green-600" />
+                          <CircleCheck className="h-5 w-5 text-green-600" />
                         )}
                       </div>
                       {index < todaySchedule.length - 1 && (
@@ -472,7 +472,7 @@ export function TeacherDashboard({
           <div className="space-y-3">
             {announcements.map(announcement => (
               <div key={announcement.id} className="flex items-start gap-3">
-                <AlertCircle className={cn(
+                <CircleAlert className={cn(
                   "h-5 w-5 mt-0.5",
                   announcement.priority === 'high' && "text-red-600",
                   announcement.priority === 'medium' && "text-yellow-600",

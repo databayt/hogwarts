@@ -17,7 +17,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   Shield,
   Lock,
-  Unlock,
+  LockOpen,
   Eye,
   Edit,
   Trash,
@@ -27,9 +27,9 @@ import {
   DollarSign,
   Calendar,
   Settings,
-  AlertTriangle,
-  CheckCircle,
-  XCircle,
+  TriangleAlert,
+  CircleCheck,
+  CircleX,
 } from "lucide-react";
 import { SuccessToast, ErrorToast } from "@/components/atom/toast";
 import type { UserRole } from "./role-management";
@@ -303,7 +303,7 @@ export function PermissionsPanel({
                 {/* Special case for DEVELOPER */}
                 {role === "DEVELOPER" && (
                   <Alert className="border-red-200">
-                    <AlertTriangle className="h-4 w-4" />
+                    <TriangleAlert className="h-4 w-4" />
                     <AlertTitle>{dictionary?.settings?.permissionsPanel?.developerRole || "Developer Role"}</AlertTitle>
                     <AlertDescription>
                       {dictionary?.settings?.permissionsPanel?.developerFullAccess || "Developers have full system access by default. This cannot be modified."}
@@ -359,9 +359,9 @@ export function PermissionsPanel({
                               >
                                 <div className="flex items-center gap-2 rtl:flex-row-reverse">
                                   {hasPermission(role as UserRole, perm) ? (
-                                    <CheckCircle className="h-4 w-4 text-green-600" />
+                                    <CircleCheck className="h-4 w-4 text-green-600" />
                                   ) : (
-                                    <XCircle className="h-4 w-4 text-muted-foreground" />
+                                    <CircleX className="h-4 w-4 text-muted-foreground" />
                                   )}
                                   <Label htmlFor={perm} className="text-sm cursor-pointer">
                                     {label}

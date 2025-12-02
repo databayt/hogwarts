@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { DollarSign, TrendingUp, AlertCircle, Wallet, Receipt, CreditCard } from "lucide-react"
+import { DollarSign, TrendingUp, CircleAlert, Wallet, Receipt, CreditCard } from "lucide-react"
 import { TrendingStats } from "../trending-stats"
 import { ProgressStats, ProgressStatStacked } from "../progress-stats"
 import type { TrendingStatItem, FinanceStatsData, StatsDictionary } from "../types"
@@ -75,7 +75,7 @@ export function FinanceStats({
           change: data.outstandingChange,
           // For outstanding, negative change is good
           changeType: (data.outstandingChange ?? 0) <= 0 ? "positive" as const : "negative" as const,
-          icon: <AlertCircle className="h-4 w-4" />,
+          icon: <CircleAlert className="h-4 w-4" />,
         }]
       : []),
     ...(data.collectionRate !== undefined
@@ -175,7 +175,7 @@ export function AccountantDashboardStats({
     {
       label: dictionary?.overduePayments || "Overdue Payments",
       value: overduePayments,
-      icon: <AlertCircle className="h-4 w-4" />,
+      icon: <CircleAlert className="h-4 w-4" />,
       variant: overduePayments > 0 ? "danger" : "default",
     },
   ]

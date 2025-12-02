@@ -28,9 +28,9 @@ import {
   VolumeX,
   Clock,
   Calendar,
-  AlertTriangle,
+  TriangleAlert,
   Info,
-  CheckCircle,
+  CircleCheck,
 } from "lucide-react";
 import { SuccessToast } from "@/components/atom/toast";
 import { type Dictionary } from "@/components/internationalization/dictionaries";
@@ -369,7 +369,7 @@ export function NotificationSettings({ dictionary }: Props) {
                   <div key={type} className="flex items-center justify-between py-1 rtl:flex-row-reverse">
                     <div className="flex items-center gap-2 rtl:flex-row-reverse">
                       {type === "emergencies" && (
-                        <AlertTriangle className="h-4 w-4 text-red-500" />
+                        <TriangleAlert className="h-4 w-4 text-red-500" />
                       )}
                       <Label
                         htmlFor={`sms-${type}`}
@@ -457,7 +457,7 @@ export function NotificationSettings({ dictionary }: Props) {
               <div className="flex items-center justify-between rtl:flex-row-reverse">
                 <div className="space-y-1">
                   <Label htmlFor="allow-emergencies" className="flex items-center gap-2 rtl:flex-row-reverse">
-                    <AlertTriangle className="h-4 w-4 text-red-500" />
+                    <TriangleAlert className="h-4 w-4 text-red-500" />
                     {dictionary?.settings?.notificationSettings?.allowEmergencies || "Allow Emergency Notifications"}
                   </Label>
                   <p className="text-xs text-muted-foreground">

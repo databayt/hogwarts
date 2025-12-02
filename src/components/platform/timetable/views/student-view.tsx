@@ -11,7 +11,7 @@ import {
   Calendar,
   BookOpen,
   GraduationCap,
-  AlertTriangle,
+  TriangleAlert,
   ChevronRight
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -147,7 +147,7 @@ export default function StudentView({
   if (error) {
     return (
       <Alert variant="destructive">
-        <AlertTriangle className="h-4 w-4" />
+        <TriangleAlert className="h-4 w-4" />
         <AlertDescription>{error}</AlertDescription>
       </Alert>
     )

@@ -4,7 +4,7 @@ import type { Locale } from '@/components/internationalization/config'
 import type { Dictionary } from '@/components/internationalization/dictionaries'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { TrendingUp, Receipt, CheckCircle, AlertCircle, DollarSign, FolderOpen } from 'lucide-react'
+import { TrendingUp, Receipt, CircleCheck, CircleAlert, DollarSign, FolderOpen } from 'lucide-react'
 import Link from 'next/link'
 import { db } from '@/lib/db'
 import { getTenantContext } from '@/lib/tenant-context'
@@ -82,7 +82,7 @@ export default async function ExpensesContent({ dictionary, lang }: Props) {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">{d?.stats?.pending || 'Pending Approval'}</CardTitle>
-              <AlertCircle className="h-4 w-4 text-muted-foreground" />
+              <CircleAlert className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{pendingExpensesCount}</div>
@@ -124,7 +124,7 @@ export default async function ExpensesContent({ dictionary, lang }: Props) {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <CheckCircle className="h-5 w-5" />
+                <CircleCheck className="h-5 w-5" />
                 {d?.sections?.approval || 'Approval Workflow'}
               </CardTitle>
               <CardDescription>{d?.sections?.approvalDesc || 'Review and approve pending expenses'}</CardDescription>
@@ -196,7 +196,7 @@ export default async function ExpensesContent({ dictionary, lang }: Props) {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <AlertCircle className="h-5 w-5" />
+                <CircleAlert className="h-5 w-5" />
                 {d?.sections?.policy || 'Expense Policy'}
               </CardTitle>
               <CardDescription>{d?.sections?.policyDesc || 'Configure expense rules and limits'}</CardDescription>

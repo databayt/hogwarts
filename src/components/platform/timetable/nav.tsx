@@ -3,7 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Menu, Calendar, Utensils, Clock, Settings } from "lucide-react"
+import { Menu, Calendar, Utensils, Clock, Settings } from '@aliimam/icons'
 import { Button } from "@/components/ui/button"
 import { Drawer, DrawerContent, DrawerTrigger, DrawerHeader, DrawerTitle } from "@/components/ui/drawer"
 import { cn } from "@/lib/utils"

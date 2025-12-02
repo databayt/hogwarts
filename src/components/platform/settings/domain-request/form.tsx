@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Globe, AlertCircle, CheckCircle, Clock, XCircle } from "lucide-react";
+import { Globe, CircleAlert, CircleCheck, Clock, CircleX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -75,11 +75,11 @@ export function DomainRequestForm({ currentDomain, existingRequests = [], dictio
       case 'pending':
         return <Badge variant="secondary"><Clock className="w-3 h-3 mr-1" />Pending</Badge>;
       case 'approved':
-        return <Badge variant="default"><CheckCircle className="w-3 h-3 mr-1" />Approved</Badge>;
+        return <Badge variant="default"><CircleCheck className="w-3 h-3 mr-1" />Approved</Badge>;
       case 'rejected':
-        return <Badge variant="destructive"><XCircle className="w-3 h-3 mr-1" />Rejected</Badge>;
+        return <Badge variant="destructive"><CircleX className="w-3 h-3 mr-1" />Rejected</Badge>;
       case 'verified':
-        return <Badge className="bg-green-500"><CheckCircle className="w-3 h-3 mr-1" />Verified</Badge>;
+        return <Badge className="bg-green-500"><CircleCheck className="w-3 h-3 mr-1" />Verified</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -148,7 +148,7 @@ export function DomainRequestForm({ currentDomain, existingRequests = [], dictio
               </div>
 
               <Alert>
-                <AlertCircle className="h-4 w-4" />
+                <CircleAlert className="h-4 w-4" />
                 <AlertTitle>Important</AlertTitle>
                 <AlertDescription>
                   Domain requests are reviewed within 24-48 hours. Once approved, your new domain will be active immediately.
@@ -157,14 +157,14 @@ export function DomainRequestForm({ currentDomain, existingRequests = [], dictio
 
               {error && (
                 <Alert variant="destructive">
-                  <AlertCircle className="h-4 w-4" />
+                  <CircleAlert className="h-4 w-4" />
                   <AlertDescription>{error}</AlertDescription>
                 </Alert>
               )}
 
               {success && (
                 <Alert className="border-green-500 bg-green-50">
-                  <CheckCircle className="h-4 w-4 text-green-600" />
+                  <CircleCheck className="h-4 w-4 text-green-600" />
                   <AlertDescription className="text-green-600">{success}</AlertDescription>
                 </Alert>
               )}

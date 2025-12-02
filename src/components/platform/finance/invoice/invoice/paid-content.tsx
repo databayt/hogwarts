@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import type { Invoice } from "@/components/platform/finance/invoice/types";
-import { ArrowLeft, CheckIcon } from "lucide-react";
+import { ArrowLeft, Check } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -88,7 +88,7 @@ export default function PaidInvoiceContent({ invoiceId, dictionary, lang }: Prop
                   "bg-green-50 text-green-600 font-semibold p-4 flex items-center gap-3"
                 )}
               >
-                <CheckIcon />
+                <Check />
                 <p>Your invoice payment done</p>
               </div>
             )}

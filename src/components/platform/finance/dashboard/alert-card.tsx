@@ -3,7 +3,7 @@
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import { AlertCircle, CheckCircle, Info, XCircle } from "lucide-react"
+import { CircleAlert, CircleCheck, Info, CircleX } from 'lucide-react'
 import type { FinancialAlert } from "./types"
 
 interface AlertCardProps {
@@ -15,11 +15,11 @@ export function AlertCard({ alert, onDismiss }: AlertCardProps) {
   const getIcon = () => {
     switch (alert.type) {
       case 'error':
-        return <XCircle className="h-4 w-4" />
+        return <CircleX className="h-4 w-4" />
       case 'warning':
-        return <AlertCircle className="h-4 w-4" />
+        return <CircleAlert className="h-4 w-4" />
       case 'success':
-        return <CheckCircle className="h-4 w-4" />
+        return <CircleCheck className="h-4 w-4" />
       case 'info':
       default:
         return <Info className="h-4 w-4" />

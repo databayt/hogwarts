@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { useState, useMemo, useCallback } from 'react';
 import { format, formatDistanceToNow, isPast, isWithinInterval, addDays } from 'date-fns';
-import { Clock, Calendar, FileText, Upload, Check, X, AlertCircle, ChevronRight } from 'lucide-react';
+import { Clock, Calendar, FileText, Upload, Check, X, CircleAlert, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {

@@ -45,7 +45,7 @@ import {
 } from './types'
 import { DAYS_OF_WEEK, SUBJECT_COLORS } from "./config"
 import { validateSlotPlacement, findAvailableSlots } from './utils'
-import { AlertCircle, User, MapPin, Clock, BookOpen, Users, Calendar } from 'lucide-react'
+import { CircleAlert, User, MapPin, Clock, BookOpen, Users, Calendar } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 
 const slotSchema = z.object({
@@ -145,7 +145,7 @@ export function SlotEditorDialog({
       const subject = subjects.find(s => s.id === subjectId)
       setSelectedSubject(subject || null)
 
-      // Filter teachers who can teach this subject
+      // ListFilter teachers who can teach this subject
       const qualifiedTeachers = teachers.filter(t =>
         t.subjects.includes(subjectId)
       )
@@ -166,7 +166,7 @@ export function SlotEditorDialog({
     const periodId = form.watch('periodId')
 
     if (dayOfWeek !== undefined && periodId) {
-      // Filter available rooms for this time slot
+      // ListFilter available rooms for this time slot
       const occupiedRooms = existingSlots
         .filter(s => s.dayOfWeek === dayOfWeek && s.periodId === periodId)
         .map(s => s.classroomId)
@@ -230,7 +230,7 @@ export function SlotEditorDialog({
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            <h4>{slot ? dictionary.editSlot || 'Edit Timetable Slot' : dictionary.addSlot || 'Add Timetable Slot'}</h4>
+            <h4>{slot ? dictionary.editSlot || 'Pencil Timetable Slot' : dictionary.addSlot || 'Add Timetable Slot'}</h4>
           </DialogTitle>
           <DialogDescription>
             <p className="muted">{dictionary.slotDescription || 'Configure the timetable slot details'}</p>
@@ -241,7 +241,7 @@ export function SlotEditorDialog({
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
             {validationErrors.length > 0 && (
               <Alert variant="destructive">
-                <AlertCircle className="h-4 w-4" />
+                <CircleAlert className="h-4 w-4" />
                 <AlertTitle>
                   <h5>Validation Error</h5>
                 </AlertTitle>

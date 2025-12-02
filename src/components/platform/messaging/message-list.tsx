@@ -2,7 +2,7 @@
 
 import { format, isToday, isYesterday } from "date-fns"
 import { ar, enUS } from "date-fns/locale"
-import { Loader2, ArrowDown } from "lucide-react"
+import { LoaderCircle, ArrowDown } from "lucide-react"
 import type { MessageDTO } from "./types"
 import { MessageGroup, groupMessages } from "./message-group"
 import { AutoScroller, useIsAtBottom } from "./auto-scroller"
@@ -214,7 +214,7 @@ export function MessageList({
                 >
                   {item.type === "loader" && (
                     <div className="flex justify-center py-2">
-                      <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                      <LoaderCircle className="h-5 w-5 animate-spin text-muted-foreground" />
                     </div>
                   )}
 
@@ -276,7 +276,7 @@ export function MessageList({
           {/* Loading indicator at top */}
           {isLoading && hasMore && (
             <div className="flex justify-center py-2">
-              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+              <LoaderCircle className="h-5 w-5 animate-spin text-muted-foreground" />
             </div>
           )}
 
@@ -317,7 +317,7 @@ export function MessageList({
           {/* Loading indicator at bottom */}
           {isLoading && !hasMore && (
             <div className="flex justify-center py-2">
-              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+              <LoaderCircle className="h-5 w-5 animate-spin text-muted-foreground" />
             </div>
           )}
         </div>

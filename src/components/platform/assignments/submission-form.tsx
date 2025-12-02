@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { useState, useCallback, useRef } from 'react';
 import { format } from 'date-fns';
-import { Upload, X, FileText, File, Image, FileVideo, FileAudio, Save, Send, AlertCircle, Loader2 } from 'lucide-react';
+import { Upload, X, FileText, File, Image, FileVideo, FileAudio, Save, Send, CircleAlert, LoaderCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
@@ -300,7 +300,7 @@ export function SubmissionForm({
         <CardContent className="space-y-4">
           {isPastDue && (
             <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
+              <CircleAlert className="h-4 w-4" />
               <AlertTitle>Late Submission</AlertTitle>
               <AlertDescription>
                 This assignment is past due. Your submission will be marked as late.
@@ -432,7 +432,7 @@ export function SubmissionForm({
             disabled={isSubmitting || isUploading}
           >
             {isSubmitting ? (
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              <LoaderCircle className="h-4 w-4 mr-2 animate-spin" />
             ) : (
               <Save className="h-4 w-4 mr-2" />
             )}
@@ -443,7 +443,7 @@ export function SubmissionForm({
             disabled={isSubmitting || isUploading}
           >
             {isSubmitting ? (
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              <LoaderCircle className="h-4 w-4 mr-2 animate-spin" />
             ) : (
               <Send className="h-4 w-4 mr-2" />
             )}

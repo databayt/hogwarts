@@ -21,8 +21,8 @@ import {
   UserCheck,
   Database,
   Lock,
-  AlertCircle,
-  CheckCircle,
+  CircleAlert,
+  CircleCheck,
   Clock,
   TrendingUp,
   Building,
@@ -180,7 +180,7 @@ export default async function AdminContent({ dictionary, lang }: Props) {
             <CardTitle className="text-sm font-medium">
               {d?.stats?.pendingActions || 'Pending Actions'}
             </CardTitle>
-            <AlertCircle className="h-4 w-4 text-muted-foreground" />
+            <CircleAlert className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{pendingApprovals + failedLogins}</div>

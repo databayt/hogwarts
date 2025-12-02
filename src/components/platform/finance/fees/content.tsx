@@ -12,10 +12,10 @@ import {
   CreditCard,
   Users,
   DollarSign,
-  AlertCircle,
-  CheckCircle,
+  CircleAlert,
+  CircleCheck,
   Award,
-  AlertTriangle,
+  TriangleAlert,
   TrendingUp,
 } from 'lucide-react'
 import Link from 'next/link'
@@ -42,7 +42,7 @@ export default async function FeesContent({ dictionary, lang }: Props) {
   // Check permissions for current user
   const canView = await checkCurrentUserPermission(schoolId, 'fees', 'view')
   const canCreate = await checkCurrentUserPermission(schoolId, 'fees', 'create')
-  const canEdit = await checkCurrentUserPermission(schoolId, 'fees', 'edit')
+  const canPencil = await checkCurrentUserPermission(schoolId, 'fees', 'edit')
   const canApprove = await checkCurrentUserPermission(schoolId, 'fees', 'approve')
   const canExport = await checkCurrentUserPermission(schoolId, 'fees', 'export')
 
@@ -145,7 +145,7 @@ export default async function FeesContent({ dictionary, lang }: Props) {
               <CardTitle className="text-sm font-medium">
                 Pending Payments
               </CardTitle>
-              <AlertCircle className="h-4 w-4 text-muted-foreground" />
+              <CircleAlert className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
@@ -162,7 +162,7 @@ export default async function FeesContent({ dictionary, lang }: Props) {
               <CardTitle className="text-sm font-medium">
                 Overdue Payments
               </CardTitle>
-              <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+              <TriangleAlert className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
@@ -193,7 +193,7 @@ export default async function FeesContent({ dictionary, lang }: Props) {
         {/* Quick Actions */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {/* Fee Structures */}
-          {canEdit && (
+          {canPencil && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -250,7 +250,7 @@ export default async function FeesContent({ dictionary, lang }: Props) {
           </Card>
 
           {/* Student Assignments */}
-          {canEdit && (
+          {canPencil && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -311,7 +311,7 @@ export default async function FeesContent({ dictionary, lang }: Props) {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <AlertTriangle className="h-5 w-5" />
+                  <TriangleAlert className="h-5 w-5" />
                   Fines & Penalties
                 </CardTitle>
                 <CardDescription>

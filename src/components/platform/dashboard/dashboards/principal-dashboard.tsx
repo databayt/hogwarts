@@ -2,7 +2,7 @@ import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
-import { AlertTriangle, DollarSign } from "lucide-react"
+import { TriangleAlert, DollarSign } from "lucide-react"
 import { getPrincipalDashboardData } from "../actions/principal"
 import { DashboardSectionError } from "../error-boundary"
 import { QuickActions } from "../quick-actions"
@@ -87,7 +87,7 @@ export async function PrincipalDashboard({
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
-              <AlertTriangle className="h-5 w-5 text-destructive" />
+              <TriangleAlert className="h-5 w-5 text-destructive" />
               <span>{t.criticalAlerts.title}</span>
             </CardTitle>
           </CardHeader>
@@ -99,7 +99,7 @@ export async function PrincipalDashboard({
                   className="flex items-center justify-between p-3 border rounded-lg"
                 >
                   <div className="flex items-center space-x-3">
-                    <AlertTriangle
+                    <TriangleAlert
                       className={`h-5 w-5 ${
                         alert.severity === "critical" || alert.severity === "high"
                           ? "text-destructive"

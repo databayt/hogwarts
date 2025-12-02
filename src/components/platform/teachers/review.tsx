@@ -8,8 +8,8 @@ import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   User, Mail, Calendar, Briefcase, GraduationCap, BookOpen,
-  Building, Phone, MapPin, FileText, Award, CheckCircle,
-  AlertCircle, Clock, Star
+  Building, Phone, MapPin, FileText, Award, CircleCheck,
+  CircleAlert, Clock, Star
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
@@ -71,9 +71,9 @@ export function ReviewStep({ form, isView }: TeacherFormStepProps & { onEditStep
         <h3 className="font-semibold">{title}</h3>
       </div>
       {complete ? (
-        <CheckCircle className="h-4 w-4 text-green-500" />
+        <CircleCheck className="h-4 w-4 text-green-500" />
       ) : (
-        <AlertCircle className="h-4 w-4 text-yellow-500" />
+        <CircleAlert className="h-4 w-4 text-yellow-500" />
       )}
     </div>
   );
@@ -111,7 +111,7 @@ export function ReviewStep({ form, isView }: TeacherFormStepProps & { onEditStep
               {Object.entries(status.sections).map(([key, complete]) => (
                 <div key={key} className="flex items-center gap-2">
                   {complete ? (
-                    <CheckCircle className="h-3 w-3 text-green-500" />
+                    <CircleCheck className="h-3 w-3 text-green-500" />
                   ) : (
                     <Clock className="h-3 w-3 text-muted-foreground" />
                   )}
@@ -287,12 +287,12 @@ export function ReviewStep({ form, isView }: TeacherFormStepProps & { onEditStep
             <div className="flex items-center gap-2">
               {status.percentage === 100 ? (
                 <>
-                  <CheckCircle className="h-5 w-5 text-green-500" />
+                  <CircleCheck className="h-5 w-5 text-green-500" />
                   <span className="font-medium text-green-700">Profile Complete</span>
                 </>
               ) : (
                 <>
-                  <AlertCircle className="h-5 w-5 text-yellow-600" />
+                  <CircleAlert className="h-5 w-5 text-yellow-600" />
                   <span className="font-medium text-yellow-700">
                     Profile {Math.round(status.percentage)}% Complete
                   </span>

@@ -5,7 +5,7 @@ import { NotificationCard, NotificationCardCompact } from "./card"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Bell, CheckCheck, Loader2 } from "lucide-react"
+import { Bell, CheckCheck, LoaderCircle } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { NotificationDTO } from "./types"
 import { NotificationType, NotificationPriority } from "@prisma/client"
@@ -51,7 +51,7 @@ export function NotificationList({
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        <LoaderCircle className="h-6 w-6 animate-spin text-muted-foreground" />
       </div>
     )
   }

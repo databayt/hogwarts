@@ -22,7 +22,7 @@ import {
   Heart,
   BookOpen,
   CheckCircle2,
-  AlertCircle,
+  CircleAlert,
   Info,
   Mail,
   Phone,
@@ -466,7 +466,7 @@ export function DashboardCardsShowcase() {
           <ActionCard
             title="Action Required"
             description="Click the button to perform an action"
-            icon={<AlertCircle className="size-5" />}
+            icon={<CircleAlert className="size-5" />}
             action={
               <Button onClick={() => alert("Action button clicked!")}>
                 Take Action

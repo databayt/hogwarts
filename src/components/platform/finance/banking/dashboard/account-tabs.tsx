@@ -4,7 +4,7 @@ import { memo, useCallback, useMemo, useTransition } from 'react'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { formatAmount } from '@/components/platform/finance/banking/lib/utils'
-import { Loader2 } from 'lucide-react'
+import { LoaderCircle } from 'lucide-react'
 
 interface AccountTabsProps {
   accounts: any[]
@@ -94,7 +94,7 @@ export const AccountTabs = memo(function AccountTabs({
       {/* Loading indicator during transition */}
       {isPending && (
         <div className="absolute inset-0 flex items-center justify-center bg-background/50">
-          <Loader2 className="h-4 w-4 animate-spin" />
+          <LoaderCircle className="h-4 w-4 animate-spin" />
         </div>
       )}
     </div>

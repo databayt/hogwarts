@@ -4,7 +4,7 @@ import * as React from 'react';
 import { useState, useMemo } from 'react';
 import { format, startOfWeek, endOfWeek, isToday, isTomorrow, isPast } from 'date-fns';
 import {
-  Users, Calendar, TrendingUp, Award, Clock, AlertCircle, ChevronRight,
+  Users, Calendar, TrendingUp, Award, Clock, CircleAlert, ChevronRight,
   BookOpen, FileText, DollarSign, Bell, BarChart3, User, School
 } from 'lucide-react';
 import { cn } from '@/lib/utils';

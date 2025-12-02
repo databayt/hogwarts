@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Upload, Download, AlertCircle, CheckCircle, XCircle, FileSpreadsheet } from "lucide-react";
+import { Upload, Download, CircleAlert, CircleCheck, CircleX, FileSpreadsheet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -107,7 +107,7 @@ export function CsvImportComponent({ dictionary, lang }: CsvImportComponentProps
     <div className="space-y-6">
       {/* Instructions */}
       <Alert>
-        <AlertCircle className="h-4 w-4" />
+        <CircleAlert className="h-4 w-4" />
         <AlertTitle>Instructions</AlertTitle>
         <AlertDescription className="space-y-2">
           <p>1. Download the CSV template and fill in the required information</p>
@@ -187,9 +187,9 @@ export function CsvImportComponent({ dictionary, lang }: CsvImportComponentProps
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               {result.success ? (
-                <><CheckCircle className="w-5 h-5 text-green-500" /> Import Results</>
+                <><CircleCheck className="w-5 h-5 text-green-500" /> Import Results</>
               ) : (
-                <><XCircle className="w-5 h-5 text-red-500" /> Import Failed</>
+                <><CircleX className="w-5 h-5 text-red-500" /> Import Failed</>
               )}
             </CardTitle>
           </CardHeader>
@@ -213,7 +213,7 @@ export function CsvImportComponent({ dictionary, lang }: CsvImportComponentProps
                 <div className="max-h-96 overflow-y-auto space-y-3">
                   {result.errors.map((error, index) => (
                     <Alert key={index} variant="destructive">
-                      <AlertCircle className="h-4 w-4" />
+                      <CircleAlert className="h-4 w-4" />
                       <AlertDescription>
                         <div className="space-y-1">
                           <p>
@@ -239,7 +239,7 @@ export function CsvImportComponent({ dictionary, lang }: CsvImportComponentProps
                 <div className="max-h-60 overflow-y-auto space-y-2">
                   {result.warnings.map((warning, index) => (
                     <Alert key={index} variant="default" className="border-yellow-500 bg-yellow-50">
-                      <AlertCircle className="h-4 w-4 text-yellow-600" />
+                      <CircleAlert className="h-4 w-4 text-yellow-600" />
                       <AlertDescription className="text-yellow-800">
                         <span className="font-medium">Row {warning.row}:</span> {warning.warning}
                       </AlertDescription>
@@ -251,7 +251,7 @@ export function CsvImportComponent({ dictionary, lang }: CsvImportComponentProps
 
             {result.success && result.imported > 0 && (
               <Alert className="border-green-500 bg-green-50">
-                <CheckCircle className="h-4 w-4 text-green-600" />
+                <CircleCheck className="h-4 w-4 text-green-600" />
                 <AlertDescription className="text-green-600">
                   Successfully imported {result.imported} {type}. Default passwords have been set and should be changed on first login.
                 </AlertDescription>

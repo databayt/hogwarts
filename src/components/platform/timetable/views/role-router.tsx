@@ -3,7 +3,7 @@
 import { useState, useEffect, useTransition } from 'react'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { AlertTriangle } from 'lucide-react'
+import { TriangleAlert } from 'lucide-react'
 import { type Dictionary } from '@/components/internationalization/dictionaries'
 import { type Locale } from '@/components/internationalization/config'
 import { getActiveTerm, getPersonalizedTimetable } from '../actions'
@@ -111,7 +111,7 @@ export default function RoleRouter({ dictionary, lang }: Props) {
   if (error) {
     return (
       <Alert variant="destructive">
-        <AlertTriangle className="h-4 w-4" />
+        <TriangleAlert className="h-4 w-4" />
         <AlertDescription>{error}</AlertDescription>
       </Alert>
     )

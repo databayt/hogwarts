@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useEffect, useState } from "react"
 import { useTimetableStore } from "@/components/platform/timetable/timetable"
-import { ChevronLeft, ChevronRight } from "lucide-react"
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { cn } from "@/lib/utils"
 import { ScheduleSettingsDialog } from "@/components/platform/timetable/schedule-settings-dialog"
 import { SlotEditor } from "@/components/platform/timetable/slot-editor"
@@ -173,7 +173,7 @@ export function TimetableHeader({
           Schedule settings
         </Button>
         <Button variant="ghost" onClick={() => setOpenSlot(true)}>
-          Edit slots
+          Pencil slots
         </Button>
         {conflicts != null && (
           <button

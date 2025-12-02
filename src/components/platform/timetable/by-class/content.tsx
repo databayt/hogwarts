@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
-import { Clock, Users, MapPin, AlertTriangle, RefreshCw, BookOpen } from 'lucide-react'
+import { Clock, Users, MapPin, TriangleAlert, RefreshCw, BookOpen } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { type Dictionary } from '@/components/internationalization/dictionaries'
 import {
@@ -123,7 +123,7 @@ export default function TimetableByClassContent({ dictionary }: Props) {
     return `${d.getUTCHours().toString().padStart(2, '0')}:${d.getUTCMinutes().toString().padStart(2, '0')}`
   }
 
-  // Filter to teaching periods only
+  // ListFilter to teaching periods only
   const teachingPeriods = timetableData?.periods.filter(
     p => !p.name.toLowerCase().includes('break') && !p.name.toLowerCase().includes('lunch')
   ) || []
@@ -188,7 +188,7 @@ export default function TimetableByClassContent({ dictionary }: Props) {
           {/* Error */}
           {error && (
             <Alert variant="destructive">
-              <AlertTriangle className="h-4 w-4" />
+              <TriangleAlert className="h-4 w-4" />
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}

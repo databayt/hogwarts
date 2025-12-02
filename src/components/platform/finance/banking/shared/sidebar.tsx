@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import {
-  Home,
+  House,
   CreditCard,
   SendHorizontal,
   History,
@@ -26,7 +26,7 @@ export function BankingSidebar({ user, dictionary, lang }: BankingSidebarProps) 
     {
       title: dictionary?.dashboard || 'Dashboard',
       href: `/${lang}/banking`,
-      icon: Home,
+      icon: House,
     },
     {
       title: dictionary?.myBanks || 'My Banks',

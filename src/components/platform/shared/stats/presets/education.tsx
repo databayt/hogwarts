@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Users, BookOpen, GraduationCap, Calendar, FileText, Clock, Bell, Award, TrendingUp, CheckCircle, AlertTriangle, Settings } from "lucide-react"
+import { Users, BookOpen, GraduationCap, Calendar, FileText, Clock, Bell, Award, TrendingUp, CircleCheck, TriangleAlert, Settings } from "lucide-react"
 import { TrendingStats } from "../trending-stats"
 import type { TrendingStatItem, EducationDashboardStatsData, StatsDictionary } from "../types"
 
@@ -393,7 +393,7 @@ export function PrincipalDashboardStats({
     {
       label: dictionary?.discipline || "Discipline",
       value: disciplineScore,
-      icon: <CheckCircle className="h-4 w-4" />,
+      icon: <CircleCheck className="h-4 w-4" />,
     },
     {
       label: dictionary?.parentSatisfaction || "Parent Satisfaction",
@@ -548,7 +548,7 @@ export function StaffDashboardStats({
     {
       label: dictionary?.systemAlerts || "System Alerts",
       value: systemAlerts,
-      icon: <AlertTriangle className="h-4 w-4" />,
+      icon: <TriangleAlert className="h-4 w-4" />,
     },
     {
       label: dictionary?.totalTasks || "Total Tasks",

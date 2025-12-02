@@ -14,7 +14,7 @@ import {
   Calculator,
   Wallet,
   TrendingUp
-} from "lucide-react"
+} from 'lucide-react'
 import type { QuickAction } from "./types"
 import { cn } from "@/lib/utils"
 

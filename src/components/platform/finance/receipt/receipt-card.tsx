@@ -19,9 +19,9 @@ import {
   DollarSign,
   MapPin,
   Clock,
-  Loader2,
-  AlertCircle,
-  CheckCircle
+  LoaderCircle,
+  CircleAlert,
+  CircleCheck
 } from 'lucide-react'
 
 interface ReceiptCardProps {
@@ -39,17 +39,17 @@ export function ReceiptCard({ receipt, locale = 'en' }: ReceiptCardProps) {
     processing: {
       label: 'Processing',
       variant: 'default' as const,
-      icon: Loader2,
+      icon: LoaderCircle,
     },
     processed: {
       label: 'Processed',
       variant: 'default' as const,
-      icon: CheckCircle,
+      icon: CircleCheck,
     },
     error: {
       label: 'Error',
       variant: 'destructive' as const,
-      icon: AlertCircle,
+      icon: CircleAlert,
     },
   }
 

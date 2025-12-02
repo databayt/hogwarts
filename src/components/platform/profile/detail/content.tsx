@@ -9,7 +9,7 @@ import { StaffProfileContent } from "../staff/content"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Skeleton } from "@/components/ui/skeleton"
-import { AlertCircle, Lock, UserX } from "lucide-react"
+import { CircleAlert, Lock, UserX } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
 import type { Locale } from "@/components/internationalization/config"
@@ -39,7 +39,7 @@ export function ProfileDetailContent({
     return (
       <div className="container mx-auto p-6">
         <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
+          <CircleAlert className="h-4 w-4" />
           <AlertTitle>Error</AlertTitle>
           <AlertDescription>
             {error || "Failed to load profile"}
@@ -189,7 +189,7 @@ export function ProfileDetailContent({
                 {isOwner && (
                   <div className="pt-4">
                     <Alert>
-                      <AlertCircle className="h-4 w-4" />
+                      <CircleAlert className="h-4 w-4" />
                       <AlertTitle>Complete Your Profile</AlertTitle>
                       <AlertDescription>
                         Your profile type has not been configured yet. Please

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Search, MessageSquarePlus, Filter, Loader2 } from "lucide-react"
+import { Search, MessageSquarePlus, Filter, LoaderCircle } from "lucide-react"
 import type { ConversationDTO, ConversationType } from "./types"
 import { ConversationCard, ConversationCardSkeleton } from "./conversation-card"
 import { cn } from "@/lib/utils"

@@ -39,10 +39,10 @@ import {
   UserMinus,
   Copy,
   Search,
-  Filter,
-  CheckCircle2,
-  XCircle,
-  AlertCircle,
+  ListFilter,
+  CircleCheckBig,
+  CircleX,
+  CircleAlert,
 } from "lucide-react"
 import {
   getAllUsersWithPermissions,
@@ -273,7 +273,7 @@ export function PermissionManagementContent() {
           ) : filteredUsers.length === 0 ? (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">
-                <AlertCircle className="h-12 w-12 text-muted-foreground mb-4" />
+                <CircleAlert className="h-12 w-12 text-muted-foreground mb-4" />
                 <p className="text-muted-foreground">No users found</p>
               </CardContent>
             </Card>

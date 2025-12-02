@@ -19,8 +19,8 @@ import {
   UserX,
   Key,
   Mail,
-  AlertCircle,
-  CheckCircle,
+  CircleAlert,
+  CircleCheck,
   Clock,
   Ban,
 } from 'lucide-react'
@@ -413,9 +413,9 @@ export default async function MembershipContent({ dictionary, lang }: Props) {
                       {user.role}
                     </span>
                     {user.emailVerified ? (
-                      <CheckCircle className="h-4 w-4 text-green-500" />
+                      <CircleCheck className="h-4 w-4 text-green-500" />
                     ) : (
-                      <AlertCircle className="h-4 w-4 text-yellow-500" />
+                      <CircleAlert className="h-4 w-4 text-yellow-500" />
                     )}
                   </div>
                 </div>

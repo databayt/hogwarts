@@ -3,7 +3,7 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { DataTableColumnHeader } from "@/components/table/data-table-column-header";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal } from "lucide-react";
+import { Ellipsis } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useModal } from "@/components/atom/modal/context";
 import { deleteTeacher } from "@/components/platform/teachers/actions";
@@ -22,7 +22,7 @@ export type TeacherRow = {
 export const getTeacherColumns = (dictionary?: Dictionary['school']['teachers']): ColumnDef<TeacherRow>[] => {
   const dict = dictionary || {
     fullName: "Name",
-    editTeacher: "Edit Teacher",
+    editTeacher: "Pencil Teacher",
     deleteTeacher: "Delete Teacher"
   };
 
@@ -74,7 +74,7 @@ export const getTeacherColumns = (dictionary?: Dictionary['school']['teachers'])
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="h-8 w-8 p-0">
-              <MoreHorizontal className="h-4 w-4" />
+              <Ellipsis className="h-4 w-4" />
               <span className="sr-only">Open menu</span>
             </Button>
           </DropdownMenuTrigger>
@@ -82,7 +82,7 @@ export const getTeacherColumns = (dictionary?: Dictionary['school']['teachers'])
             <DropdownMenuLabel>{columns.actions}</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={onView}>View</DropdownMenuItem>
-            <DropdownMenuItem onClick={onEdit}>{dict.editTeacher || "Edit"}</DropdownMenuItem>
+            <DropdownMenuItem onClick={onEdit}>{dict.editTeacher || "Pencil"}</DropdownMenuItem>
             <DropdownMenuItem onClick={onDelete}>{dict.deleteTeacher || "Delete"}</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

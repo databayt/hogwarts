@@ -5,9 +5,9 @@ import { useState, useMemo, useCallback, useEffect } from 'react';
 import { format, formatDistanceToNow, isToday, isYesterday, startOfDay, differenceInDays, isPast } from 'date-fns';
 import {
   Bell, BellOff, Check, CheckCheck, X, Archive, Star, Trash2,
-  MessageSquare, Calendar, DollarSign, Award, AlertTriangle,
+  MessageSquare, Calendar, DollarSign, Award, TriangleAlert,
   Users, BookOpen, Clock, Filter, Settings, Volume2, VolumeX,
-  Info, CheckCircle, XCircle, AlertCircle, Zap, TrendingUp
+  Info, CircleCheck, CircleX, CircleAlert, Zap, TrendingUp
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -108,7 +108,7 @@ const typeIcons = {
   attendance: Users,
   fee: DollarSign,
   event: Calendar,
-  announcement: AlertCircle,
+  announcement: CircleAlert,
   system: Settings,
 };
 

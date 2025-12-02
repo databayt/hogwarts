@@ -41,7 +41,7 @@ export function TeachersTable({ initialData, total, dictionary, perPage = 20 }: 
     status: "Status",
     created: "Created",
     actions: "Actions",
-    editTeacher: dictionary?.editTeacher || "Edit Teacher",
+    editTeacher: dictionary?.editTeacher || "Pencil Teacher",
     deleteTeacher: dictionary?.deleteTeacher || "Delete Teacher",
     viewTeacher: "View Teacher",
     createTeacher: "Create Teacher",
@@ -222,7 +222,7 @@ export function TeachersTable({ initialData, total, dictionary, perPage = 20 }: 
                       ...(teacher.userId
                         ? [{ label: t.viewTeacher || "View", onClick: () => handleView(teacher) }]
                         : []),
-                      { label: t.editTeacher || "Edit", onClick: () => handleEdit(teacher.id) },
+                      { label: t.editTeacher || "Pencil", onClick: () => handleEdit(teacher.id) },
                       {
                         label: t.deleteTeacher || "Delete",
                         onClick: () => handleDelete(teacher),

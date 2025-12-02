@@ -7,7 +7,7 @@ import {
   FileText,
   Users,
   BookOpen,
-  CheckCircle,
+  CircleCheck,
   Bell,
   ChevronRight,
   GraduationCap,
@@ -193,7 +193,7 @@ export async function TeacherDashboard({
         <MetricCard
           title="Attendance Due"
           value={data.attendanceDue}
-          icon={CheckCircle}
+          icon={CircleCheck}
           iconColor={data.attendanceDue > 0 ? "text-amber-500" : "text-green-500"}
           href={`/${locale}/s/${school?.domain}/attendance`}
         />
@@ -459,7 +459,7 @@ export async function TeacherDashboard({
           current={Math.max(0, data.pendingAssignments.length - data.pendingGrading)}
           total={Math.max(data.pendingAssignments.length, 1)}
           unit="graded"
-          icon={CheckCircle}
+          icon={CircleCheck}
           showPercentage
         />
         <ProgressCard

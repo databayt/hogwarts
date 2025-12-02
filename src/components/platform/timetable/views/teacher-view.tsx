@@ -11,7 +11,7 @@ import {
   Calendar,
   BookOpen,
   Users,
-  AlertTriangle,
+  TriangleAlert,
   TrendingUp
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -149,7 +149,7 @@ export default function TeacherView({
   if (error) {
     return (
       <Alert variant="destructive">
-        <AlertTriangle className="h-4 w-4" />
+        <TriangleAlert className="h-4 w-4" />
         <AlertDescription>{error}</AlertDescription>
       </Alert>
     )

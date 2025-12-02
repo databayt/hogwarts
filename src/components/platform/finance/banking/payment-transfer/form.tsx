@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { LoaderCircle, CircleAlert, CircleCheckBig } from 'lucide-react';
 import { createTransfer } from './actions';
 import type { BankAccount } from '../types';
 import type { getDictionary } from '@/components/internationalization/dictionaries';
@@ -108,14 +108,14 @@ function PaymentTransferForm(props: Props) {
       {/* Status Messages */}
       {!state.success && (
         <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
+          <CircleAlert className="h-4 w-4" />
           <AlertDescription>{state.error.message || 'An error occurred'}</AlertDescription>
         </Alert>
       )}
 
       {state.success && (
         <Alert>
-          <CheckCircle2 className="h-4 w-4" />
+          <CircleCheckBig className="h-4 w-4" />
           <AlertDescription>{props.dictionary.transferSuccess}</AlertDescription>
         </Alert>
       )}
@@ -277,7 +277,7 @@ function PaymentTransferForm(props: Props) {
       >
         {isPending ? (
           <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
             {props.dictionary.processing}
           </>
         ) : (

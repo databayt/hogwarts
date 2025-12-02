@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { Plus, Loader2 } from 'lucide-react';
+import { Plus, LoaderCircle } from 'lucide-react';
 import type { getDictionary } from '@/components/internationalization/dictionaries';
 import { PlaidLink } from '../shared/plaid-link';
 
@@ -32,7 +32,7 @@ export default function AddBankButton(props: Props) {
       >
         {isLinking ? (
           <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
             {props.dictionary.processing}
           </>
         ) : (

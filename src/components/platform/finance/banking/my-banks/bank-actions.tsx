@@ -19,7 +19,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { MoreVertical, RefreshCw, Trash2, Loader2 } from 'lucide-react';
+import { EllipsisVertical, RefreshCw, Trash2, LoaderCircle } from 'lucide-react';
 import { removeBank, syncBankData } from './actions';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
@@ -66,9 +66,9 @@ export default function BankActions(props: Props) {
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" size="icon" disabled={isPending}>
             {isPending ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
+              <LoaderCircle className="h-4 w-4 animate-spin" />
             ) : (
-              <MoreVertical className="h-4 w-4" />
+              <EllipsisVertical className="h-4 w-4" />
             )}
           </Button>
         </DropdownMenuTrigger>
@@ -102,7 +102,7 @@ export default function BankActions(props: Props) {
             <AlertDialogCancel>{props.dictionary.cancel || 'Cancel'}</AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete} disabled={isPending}>
               {isPending ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
               ) : null}
               {props.dictionary.remove || 'Remove'}
             </AlertDialogAction>

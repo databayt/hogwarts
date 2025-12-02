@@ -57,8 +57,8 @@ import {
   Trash2,
   Key,
   UserCog,
-  AlertTriangle,
-  CheckCircle,
+  TriangleAlert,
+  CircleCheck,
 } from "lucide-react";
 import { SuccessToast, ErrorToast } from "@/components/atom/toast";
 import type { Dictionary } from "@/components/internationalization/dictionaries";
@@ -326,7 +326,7 @@ export function RoleManagement({
         <Card className="border-yellow-500 bg-yellow-50 dark:bg-yellow-950/20">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-yellow-700 dark:text-yellow-400">
-              <AlertTriangle className="h-5 w-5" />
+              <TriangleAlert className="h-5 w-5" />
               {dictionary?.settings?.userManagementLabels?.developerModeActive || "Developer Mode Active"}
             </CardTitle>
             <CardDescription>

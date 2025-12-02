@@ -93,7 +93,7 @@ export function TeacherInfoPopup({ subject, onSave, initialInfo = "", children }
   const content = (
     <>
       <div className="space-y-2">
-        <h4>Edit teacher info</h4>
+        <h4>Pencil teacher info</h4>
         <p className="muted">
           Enter info for {subject}. It will be stored in your browser.
         </p>
@@ -108,7 +108,7 @@ export function TeacherInfoPopup({ subject, onSave, initialInfo = "", children }
         <DrawerTrigger asChild>{children}</DrawerTrigger>
         <DrawerContent className="h-[40%]">
           <DrawerHeader>
-            <DrawerTitle>Edit teacher info</DrawerTitle>
+            <DrawerTitle>Pencil teacher info</DrawerTitle>
             <DrawerDescription>
               Enter info for {subject}. It will be stored in your browser.
             </DrawerDescription>

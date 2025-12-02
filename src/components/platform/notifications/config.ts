@@ -11,7 +11,7 @@ import {
   DollarSign,
   Megaphone,
   UserCheck,
-  AlertTriangle,
+  TriangleAlert,
   FileText,
   Shield,
   type LucideIcon,
@@ -55,7 +55,7 @@ export const NOTIFICATION_TYPE_CONFIG: Record<
     requiresAction: false,
   },
   attendance_alert: {
-    icon: AlertTriangle,
+    icon: TriangleAlert,
     requiresAction: true,
   },
   fee_due: {
@@ -63,7 +63,7 @@ export const NOTIFICATION_TYPE_CONFIG: Record<
     requiresAction: true,
   },
   fee_overdue: {
-    icon: AlertTriangle,
+    icon: TriangleAlert,
     requiresAction: true,
   },
   fee_paid: {
@@ -79,7 +79,7 @@ export const NOTIFICATION_TYPE_CONFIG: Record<
     requiresAction: false,
   },
   class_cancelled: {
-    icon: AlertTriangle,
+    icon: TriangleAlert,
     requiresAction: false,
   },
   class_rescheduled: {

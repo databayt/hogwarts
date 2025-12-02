@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { formatAmount, formatDateTime } from '@/components/platform/finance/banking/lib/utils'
-import { Loader2 } from 'lucide-react'
+import { LoaderCircle } from 'lucide-react'
 
 interface RecentTransactionsListProps {
   transactions: any[]
@@ -168,7 +168,7 @@ export const RecentTransactionsList = memo(function RecentTransactionsList({
               {category}
             </Button>
           ))}
-          {isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+          {isPending && <LoaderCircle className="h-4 w-4 animate-spin" />}
         </div>
       )}
 

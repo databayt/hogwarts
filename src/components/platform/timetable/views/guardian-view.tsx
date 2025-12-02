@@ -12,7 +12,7 @@ import {
   Clock,
   Calendar,
   Users,
-  AlertTriangle,
+  TriangleAlert,
   ChevronRight,
   User
 } from 'lucide-react'
@@ -232,7 +232,7 @@ export default function GuardianView({
   if (error && children.length === 0) {
     return (
       <Alert variant="destructive">
-        <AlertTriangle className="h-4 w-4" />
+        <TriangleAlert className="h-4 w-4" />
         <AlertDescription>{error}</AlertDescription>
       </Alert>
     )
@@ -312,7 +312,7 @@ export default function GuardianView({
       {/* Error Alert */}
       {error && (
         <Alert variant="destructive">
-          <AlertTriangle className="h-4 w-4" />
+          <TriangleAlert className="h-4 w-4" />
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}

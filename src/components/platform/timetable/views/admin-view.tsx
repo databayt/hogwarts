@@ -12,7 +12,7 @@ import {
   Users,
   DoorOpen,
   Settings,
-  AlertTriangle,
+  TriangleAlert,
   FileText,
   RefreshCw
 } from 'lucide-react'
@@ -220,7 +220,7 @@ export default function AdminView({
 
               {/* Conflict Check */}
               <Button variant="outline" size="sm" onClick={checkConflicts}>
-                <AlertTriangle className="h-4 w-4 me-2" />
+                <TriangleAlert className="h-4 w-4 me-2" />
                 Check Conflicts
               </Button>
 

@@ -11,7 +11,7 @@ import { useRouter } from 'next/navigation'
 import { uploadReceipt } from './actions'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
-import { Upload, Loader2 } from 'lucide-react'
+import { Upload, LoaderCircle } from 'lucide-react'
 import { FileUploader, ACCEPT_IMAGES, ACCEPT_DOCUMENTS, type UploadedFileResult } from '@/components/file-upload/enhanced/file-uploader'
 
 interface UploadFormProps {
@@ -118,7 +118,7 @@ export function UploadForm({ locale = 'en' }: UploadFormProps) {
       >
         {isProcessing ? (
           <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
             Processing Receipt...
           </>
         ) : (

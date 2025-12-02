@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
-import { Bell, X, AlertTriangle, CheckCircle, Info, XCircle } from "lucide-react";
+import { Bell, X, TriangleAlert, CheckCircle, Info, CircleX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -184,11 +184,11 @@ export function NotificationPanel({ onClose }: { onClose?: () => void }) {
       case "success":
         return <CheckCircle className="h-4 w-4 text-green-500" />;
       case "warning":
-        return <AlertTriangle className="h-4 w-4 text-yellow-500" />;
+        return <TriangleAlert className="h-4 w-4 text-yellow-500" />;
       case "error":
-        return <XCircle className="h-4 w-4 text-red-500" />;
+        return <CircleX className="h-4 w-4 text-red-500" />;
       case "critical":
-        return <AlertTriangle className="h-4 w-4 text-red-600" />;
+        return <TriangleAlert className="h-4 w-4 text-red-600" />;
       default:
         return <Info className="h-4 w-4 text-blue-500" />;
     }
@@ -339,11 +339,11 @@ export function NotificationToast({
       case "success":
         return <CheckCircle className="h-5 w-5 text-green-500" />;
       case "warning":
-        return <AlertTriangle className="h-5 w-5 text-yellow-500" />;
+        return <TriangleAlert className="h-5 w-5 text-yellow-500" />;
       case "error":
-        return <XCircle className="h-5 w-5 text-red-500" />;
+        return <CircleX className="h-5 w-5 text-red-500" />;
       case "critical":
-        return <AlertTriangle className="h-5 w-5 text-red-600 animate-pulse" />;
+        return <TriangleAlert className="h-5 w-5 text-red-600 animate-pulse" />;
       default:
         return <Info className="h-5 w-5 text-blue-500" />;
     }

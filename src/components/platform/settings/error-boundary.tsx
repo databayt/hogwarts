@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { AlertTriangle, RefreshCw } from "lucide-react";
+import { TriangleAlert, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -50,7 +50,7 @@ export class SettingsErrorBoundary extends React.Component<Props, State> {
           <Card className="border-destructive">
             <CardHeader>
               <div className="flex items-center gap-2 rtl:flex-row-reverse">
-                <AlertTriangle className="h-6 w-6 text-destructive" />
+                <TriangleAlert className="h-6 w-6 text-destructive" />
                 <CardTitle>{dictionary?.settings?.errors?.somethingWrong || "Something went wrong"}</CardTitle>
               </div>
               <CardDescription>

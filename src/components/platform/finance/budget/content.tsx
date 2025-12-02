@@ -1,6 +1,6 @@
 import type { Locale } from '@/components/internationalization/config'
 import type { Dictionary } from '@/components/internationalization/dictionaries'
-import { PieChart, TrendingUp, AlertTriangle, CheckCircle, DollarSign, BarChart } from 'lucide-react'
+import { PieChart, TrendingUp, TriangleAlert, CircleCheck, DollarSign, BarChart } from 'lucide-react'
 import { db } from '@/lib/db'
 import { getTenantContext } from '@/lib/tenant-context'
 import { StatsCard, FeatureCard, DashboardGrid, formatCurrency, formatPercentage } from '../lib/dashboard-components'
@@ -25,7 +25,7 @@ export default async function BudgetContent({ dictionary, lang }: Props) {
   // Check permissions for current user
   const canView = await checkCurrentUserPermission(schoolId, 'budget', 'view')
   const canCreate = await checkCurrentUserPermission(schoolId, 'budget', 'create')
-  const canEdit = await checkCurrentUserPermission(schoolId, 'budget', 'edit')
+  const canPencil = await checkCurrentUserPermission(schoolId, 'budget', 'edit')
   const canApprove = await checkCurrentUserPermission(schoolId, 'budget', 'approve')
   const canExport = await checkCurrentUserPermission(schoolId, 'budget', 'export')
 
@@ -96,7 +96,7 @@ export default async function BudgetContent({ dictionary, lang }: Props) {
             title="Remaining"
             value={formatCurrency(variance)}
             description="Available budget"
-            icon={CheckCircle}
+            icon={CircleCheck}
           />
           <StatsCard
             title="Allocations"
@@ -123,7 +123,7 @@ export default async function BudgetContent({ dictionary, lang }: Props) {
               href: `/${lang}/finance/budget/new`
             } : undefined}
           />
-          {canEdit && (
+          {canPencil && (
             <FeatureCard
               title="Budget Allocations"
               description="Allocate budget by department or category"
@@ -155,7 +155,7 @@ export default async function BudgetContent({ dictionary, lang }: Props) {
             <FeatureCard
               title="Variance Analysis"
               description="Analyze budget vs actual spending"
-              icon={AlertTriangle}
+              icon={TriangleAlert}
               primaryAction={{
                 label: 'Variance Report',
                 href: `/${lang}/finance/budget/variance`
@@ -185,7 +185,7 @@ export default async function BudgetContent({ dictionary, lang }: Props) {
             <FeatureCard
               title="Budget Approval"
               description="Review and approve budget requests"
-              icon={CheckCircle}
+              icon={CircleCheck}
               primaryAction={{
                 label: 'Pending Approval',
                 href: `/${lang}/finance/budget/approval`

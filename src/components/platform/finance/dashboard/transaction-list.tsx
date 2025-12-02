@@ -3,7 +3,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { ArrowDownLeft, ArrowUpRight, ArrowRight } from "lucide-react"
+import { ArrowDownLeft, ArrowUpRight, ArrowRight } from 'lucide-react'
 import { format } from "date-fns"
 import type { RecentTransaction } from "./types"
 import Link from "next/link"

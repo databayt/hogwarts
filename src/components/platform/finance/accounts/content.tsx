@@ -25,7 +25,7 @@ export default async function AccountsContent({ dictionary, lang }: Props) {
   // Check permissions for current user
   const canView = await checkCurrentUserPermission(schoolId, 'accounts', 'view')
   const canCreate = await checkCurrentUserPermission(schoolId, 'accounts', 'create')
-  const canEdit = await checkCurrentUserPermission(schoolId, 'accounts', 'edit')
+  const canPencil = await checkCurrentUserPermission(schoolId, 'accounts', 'edit')
   const canApprove = await checkCurrentUserPermission(schoolId, 'accounts', 'approve')
 
   // If user can't view accounts, show empty state
@@ -135,7 +135,7 @@ export default async function AccountsContent({ dictionary, lang }: Props) {
               href: `/${lang}/finance/accounts/ledger/balances`
             }}
           />
-          {canEdit && (
+          {canPencil && (
             <FeatureCard
               title={d?.fiscalYear || 'Fiscal Years'}
               description="Manage accounting periods"
@@ -166,7 +166,7 @@ export default async function AccountsContent({ dictionary, lang }: Props) {
               }}
             />
           )}
-          {canEdit && (
+          {canPencil && (
             <FeatureCard
               title="Accounting Settings"
               description="Configure accounting rules"

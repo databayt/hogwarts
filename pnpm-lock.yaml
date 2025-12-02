@@ -11,6 +11,9 @@ importers:
       '@ai-sdk/anthropic':
         specifier: ^2.0.37
         version: 2.0.37(zod@4.0.14)
+      '@aliimam/icons':
+        specifier: ^0.1.9
+        version: 0.1.9(react@19.2.0)
       '@anthropic-ai/sdk':
         specifier: ^0.68.0
         version: 0.68.0(zod@4.0.14)
@@ -573,6 +576,11 @@ packages:
   '@ai-sdk/provider@2.0.0':
     resolution: {integrity: sha512-6o7Y2SeO9vFKB8lArHXehNuusnpddKPk7xqL7T2/b+OvXMRIXUO1rR4wcv1hAFUAT9avGZshty3Wlua/XA7TvA==}
     engines: {node: '>=18'}
+
+  '@aliimam/icons@0.1.9':
+    resolution: {integrity: sha512-swL7tQ/YtCPBDQqB5wJz2s1aEHIJ681ZgTwjToeB8fbbHGGXPapAQU1K1Ny9LIXDasOwrZR41z22CskfHcDB7g==}
+    peerDependencies:
+      react: ^16.x || ^17.x || ^18.x || ^19.x
 
   '@alloc/quick-lru@5.2.0':
     resolution: {integrity: sha512-UrcABB+4bUrFABwbluTIBErXwvbsU/V7TZWfmbgJfbkwiBuziS9gxdODUyuiecfdGQ85jglMW6juS3+z5TsKLw==}
@@ -8732,6 +8740,10 @@ snapshots:
   '@ai-sdk/provider@2.0.0':
     dependencies:
       json-schema: 0.4.0
+
+  '@aliimam/icons@0.1.9(react@19.2.0)':
+    dependencies:
+      react: 19.2.0
 
   '@alloc/quick-lru@5.2.0': {}
 

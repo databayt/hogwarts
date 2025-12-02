@@ -4,9 +4,9 @@ import * as React from 'react';
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { format, isToday, isYesterday, formatDistanceToNow } from 'date-fns';
 import {
-  MessageSquare, Send, Paperclip, Search, Phone, Video, MoreVertical,
+  MessageSquare, Send, Paperclip, Search, Phone, Video, EllipsisVertical,
   Users, User, Bell, BellOff, Archive, Star, Trash2, Reply, Forward,
-  Check, CheckCheck, Clock, AlertCircle, Image as ImageIcon, FileText,
+  Check, CheckCheck, Clock, CircleAlert, Image as ImageIcon, FileText,
   Smile, AtSign, Hash, Filter, Plus, X, ChevronDown, Upload as UploadIcon
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -412,7 +412,7 @@ export function CommunicationHub({
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon">
-                      <MoreVertical className="h-4 w-4" />
+                      <EllipsisVertical className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">

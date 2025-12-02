@@ -10,7 +10,7 @@ import { Progress } from '@/components/ui/progress'
 import {
   BarChart3,
   RefreshCw,
-  AlertTriangle,
+  TriangleAlert,
   Users,
   DoorOpen,
   BookOpen,
@@ -156,7 +156,7 @@ export default function TimetableAnalyticsContent({ dictionary }: Props) {
       {/* Error */}
       {error && (
         <Alert variant="destructive">
-          <AlertTriangle className="h-4 w-4" />
+          <TriangleAlert className="h-4 w-4" />
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
@@ -226,7 +226,7 @@ export default function TimetableAnalyticsContent({ dictionary }: Props) {
             <Card className={cn(analytics.summary.conflictCount > 0 && "border-red-500")}>
               <CardContent className="pt-6">
                 <div className="flex items-center gap-4">
-                  <AlertTriangle className={cn(
+                  <TriangleAlert className={cn(
                     "h-8 w-8",
                     analytics.summary.conflictCount > 0 ? "text-red-500" : "text-green-500"
                   )} />

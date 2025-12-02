@@ -14,7 +14,7 @@ import {
   Bell,
   Clock,
   CheckCircle,
-  AlertCircle,
+  CircleAlert,
   DollarSign,
   Award,
   Target,
@@ -129,7 +129,7 @@ export function DashboardShowcase() {
           />
 
           <StatCard
-            icon={<AlertCircle className="h-4 w-4" />}
+            icon={<CircleAlert className="h-4 w-4" />}
             value="23"
             label="Pending Issues"
             trend={{ value: 12, direction: "down" }}

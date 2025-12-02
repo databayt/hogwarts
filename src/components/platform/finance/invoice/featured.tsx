@@ -7,7 +7,7 @@
  */
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { FileText, DollarSign, Clock, AlertCircle } from "lucide-react";
+import { FileText, DollarSign, Clock, CircleAlert } from "lucide-react";
 import { formatCurrency, isInvoiceOverdue, getDaysOverdue } from "./util";
 import { Badge } from "@/components/ui/badge";
 
@@ -70,7 +70,7 @@ export function FeaturedInvoices({ invoices }: FeaturedInvoicesProps) {
             <CardTitle>
               <small>Overdue</small>
             </CardTitle>
-            <AlertCircle className="size-4 text-muted-foreground" />
+            <CircleAlert className="size-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <h2 className="font-bold">{overdueInvoices.length}</h2>
@@ -96,7 +96,7 @@ export function FeaturedInvoices({ invoices }: FeaturedInvoicesProps) {
       {overdueInvoices.length > 0 && (
         <div className="space-y-4">
           <div className="flex items-center gap-2">
-            <AlertCircle className="size-5 text-red-600" />
+            <CircleAlert className="size-5 text-red-600" />
             <h4>Overdue Invoices</h4>
             <span className="rounded-full bg-red-500/10 px-2 py-1">
               <small className="text-red-600">{overdueInvoices.length}</small>

@@ -25,7 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, X, Loader2 } from "lucide-react";
+import { Plus, X, LoaderCircle } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { createQuestion, updateQuestion } from "./actions";
 import { questionBankSchema } from "./validation";
@@ -159,7 +159,7 @@ export function QuestionBankForm({
         <div className="space-y-4">
           <h2 className="text-lg font-semibold">
             {initialData?.id
-              ? "Edit Question"
+              ? "Pencil Question"
               : "Create Question"}
           </h2>
 
@@ -435,7 +435,7 @@ export function QuestionBankForm({
               {"Cancel"}
             </Button>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
+              {isSubmitting && <LoaderCircle className="me-2 h-4 w-4 animate-spin" />}
               {initialData?.id ? "Update" : "Create"}
             </Button>
           </div>

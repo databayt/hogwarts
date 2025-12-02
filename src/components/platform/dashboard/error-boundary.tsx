@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { AlertCircle, RefreshCw, Home } from "lucide-react";
+import { CircleAlert, RefreshCw, House } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -81,7 +81,7 @@ export function DefaultErrorFallback({
   return (
     <div className="container mx-auto p-6">
       <Alert variant="destructive" className="mb-6">
-        <AlertCircle className="h-4 w-4" />
+        <CircleAlert className="h-4 w-4" />
         <AlertTitle>Dashboard Error</AlertTitle>
         <AlertDescription>
           We encountered an error while loading your dashboard. Please try refreshing the page.
@@ -122,7 +122,7 @@ export function DefaultErrorFallback({
               onClick={() => (window.location.href = "/")}
               variant="outline"
             >
-              <Home className="mr-2 h-4 w-4" />
+              <House className="mr-2 h-4 w-4" />
               Go Home
             </Button>
           </div>
@@ -148,7 +148,7 @@ export function DashboardSectionError({
     <Card className="border-destructive/50">
       <CardContent className="pt-6">
         <div className="flex flex-col items-center justify-center space-y-4 py-8">
-          <AlertCircle className="h-8 w-8 text-destructive/70" />
+          <CircleAlert className="h-8 w-8 text-destructive/70" />
           <div className="text-center space-y-2">
             <h3 className="font-semibold">{title}</h3>
             <p className="text-sm text-muted-foreground max-w-sm">{message}</p>

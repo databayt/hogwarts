@@ -12,11 +12,11 @@ import {
   Shield,
   Lock,
   Key,
-  AlertTriangle,
+  TriangleAlert,
   UserX,
   Activity,
   FileWarning,
-  CheckCircle,
+  CircleCheck,
 } from 'lucide-react'
 import Link from 'next/link'
 import { db } from '@/lib/db'
@@ -169,7 +169,7 @@ export default async function SecurityContent({ dictionary, lang }: Props) {
         <Card className="border-red-500/20 hover:border-red-500/40 transition-colors">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-red-500" />
+              <TriangleAlert className="h-5 w-5 text-red-500" />
               Threat Detection
             </CardTitle>
             <CardDescription>Security threat monitoring</CardDescription>

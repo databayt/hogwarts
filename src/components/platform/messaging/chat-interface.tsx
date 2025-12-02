@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback, useOptimistic } from "react"
-import { Users, Phone, Video, MoreVertical, Info } from "lucide-react"
+import { Users, Phone, Video, EllipsisVertical, Info } from "lucide-react"
 import type { ConversationDTO, MessageDTO, TypingIndicatorDTO } from "./types"
 import { MessageList, MessageListSkeleton } from "./message-list"
 import { MessageInput } from "./message-input"
@@ -382,7 +382,7 @@ export function ChatInterface({
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon">
-                <MoreVertical className="h-5 w-5" />
+                <EllipsisVertical className="h-5 w-5" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">

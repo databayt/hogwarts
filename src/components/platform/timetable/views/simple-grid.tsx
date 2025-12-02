@@ -112,7 +112,7 @@ export default function SimpleGrid({
   // Sort working days for RTL
   const sortedDays = isRTL ? [...workingDays].reverse() : workingDays
 
-  // Filter periods (teaching only, no breaks for lunch row)
+  // ListFilter periods (teaching only, no breaks for lunch row)
   const teachingPeriods = periods.filter(p => !p.isBreak)
 
   return (

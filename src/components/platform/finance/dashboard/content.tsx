@@ -9,7 +9,7 @@ import { TransactionList } from "./transaction-list"
 import { CashFlowChart } from "./cash-flow-chart"
 import { BankAccountsSummary } from "./bank-accounts-summary"
 import type { FinancialKPI } from "./types"
-import { TrendingUp, TrendingDown, DollarSign, Receipt, Users, Wallet, Building, AlertCircle } from "lucide-react"
+import { TrendingUp, TrendingDown, DollarSign, Receipt, Users, Wallet, Building, CircleAlert } from 'lucide-react'
 
 export async function FinanceDashboardContent() {
   const session = await auth()
@@ -114,7 +114,7 @@ export async function FinanceDashboardContent() {
       }
     ]
 
-    // Filter KPIs based on role
+    // ListFilter KPIs based on role
     switch (userRole) {
       case 'ADMIN':
       case 'ACCOUNTANT':

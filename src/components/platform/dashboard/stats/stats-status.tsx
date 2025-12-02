@@ -2,7 +2,7 @@
 
 import { Card, CardContent } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
-import { AlertTriangle, Check, ChevronRight, Eye } from "lucide-react"
+import { TriangleAlert, Check, ChevronRight, Eye } from "lucide-react"
 import Link from "next/link"
 
 const data = [
@@ -55,7 +55,7 @@ export default function StatsStatus() {
                     ) : item.status === "observe" ? (
                       <Eye className="size-4 shrink-0" aria-hidden={true} />
                     ) : (
-                      <AlertTriangle className="size-4 shrink-0" aria-hidden={true} />
+                      <TriangleAlert className="size-4 shrink-0" aria-hidden={true} />
                     )}
                   </span>
                   <div>

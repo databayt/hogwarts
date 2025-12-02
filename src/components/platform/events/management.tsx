@@ -6,8 +6,8 @@ import { format, addDays, isPast, isFuture, isToday, differenceInDays, startOfMo
 import {
   Calendar, MapPin, Users, Clock, DollarSign, Ticket, Share2,
   Edit, Trash2, Copy, Eye, EyeOff, Send, Download, Upload,
-  Plus, Filter, Search, ChevronLeft, ChevronRight, MoreVertical,
-  Star, Bell, CheckCircle, XCircle, AlertCircle, Image as ImageIcon,
+  Plus, Filter, Search, ChevronLeft, ChevronRight, EllipsisVertical,
+  Star, Bell, CircleCheck, CircleX, CircleAlert, Image as ImageIcon,
   Video, Music, Trophy, Briefcase, GraduationCap, Heart, Flag
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -448,7 +448,7 @@ export function EventManagement({
                     size="sm"
                     onClick={() => handleCancelRegistration(event)}
                   >
-                    <CheckCircle className="h-4 w-4 mr-1" />
+                    <CircleCheck className="h-4 w-4 mr-1" />
                     Registered
                   </Button>
                 ) : (

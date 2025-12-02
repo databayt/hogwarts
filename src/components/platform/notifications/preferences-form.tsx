@@ -26,7 +26,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Separator } from "@/components/ui/separator"
 import { toast } from "@/components/ui/use-toast"
-import { Loader2, Bell, Mail, Smartphone, MessageSquare, Clock } from "lucide-react"
+import { LoaderCircle, Bell, Mail, Smartphone, MessageSquare, Clock } from "lucide-react"
 import { NOTIFICATION_TYPE_CONFIG } from "./config"
 import { updateNotificationPreferences } from "./actions"
 import type { NotificationChannel, NotificationType } from "@prisma/client"
@@ -409,7 +409,7 @@ export function NotificationPreferencesForm({
             {dictionary.common.reset}
           </Button>
           <Button type="submit" disabled={isLoading}>
-            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {isLoading && <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />}
             {dictionary.common.save}
           </Button>
         </div>

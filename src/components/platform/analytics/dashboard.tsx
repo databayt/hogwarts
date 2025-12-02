@@ -5,7 +5,7 @@ import { useState, useMemo } from 'react';
 import { format, startOfMonth, endOfMonth, subMonths, addMonths } from 'date-fns';
 import {
   TrendingUp, TrendingDown, Users, GraduationCap, DollarSign,
-  Calendar, Award, BookOpen, School, Activity, Target, AlertTriangle,
+  Calendar, Award, BookOpen, School, Activity, Target, TriangleAlert,
   Download, Filter, ChevronUp, ChevronDown, BarChart3, PieChart as PieChartIcon,
   Star
 } from 'lucide-react';
@@ -458,7 +458,7 @@ export function AnalyticsDashboard({
               <div className="space-y-3">
                 {insights.map((insight, index) => (
                   <div key={index} className="flex items-start gap-3 p-3 rounded-lg border">
-                    <AlertTriangle className={cn(
+                    <TriangleAlert className={cn(
                       "h-5 w-5 mt-0.5",
                       insight.type === 'alert' && "text-red-600",
                       insight.type === 'warning' && "text-yellow-600",

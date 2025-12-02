@@ -1,6 +1,6 @@
 import type { Locale } from '@/components/internationalization/config'
 import type { Dictionary } from '@/components/internationalization/dictionaries'
-import { TrendingUp, Receipt, CheckCircle, AlertCircle, DollarSign, FolderOpen } from 'lucide-react'
+import { TrendingUp, Receipt, CircleCheck, CircleAlert, DollarSign, FolderOpen } from 'lucide-react'
 import { db } from '@/lib/db'
 import { getTenantContext } from '@/lib/tenant-context'
 import { StatsCard, FeatureCard, DashboardGrid, formatCurrency } from '../lib/dashboard-components'
@@ -25,7 +25,7 @@ export default async function ExpensesContent({ dictionary, lang }: Props) {
   // Check permissions for current user
   const canView = await checkCurrentUserPermission(schoolId, 'expenses', 'view')
   const canCreate = await checkCurrentUserPermission(schoolId, 'expenses', 'create')
-  const canEdit = await checkCurrentUserPermission(schoolId, 'expenses', 'edit')
+  const canPencil = await checkCurrentUserPermission(schoolId, 'expenses', 'edit')
   const canApprove = await checkCurrentUserPermission(schoolId, 'expenses', 'approve')
   const canExport = await checkCurrentUserPermission(schoolId, 'expenses', 'export')
 
@@ -79,7 +79,7 @@ export default async function ExpensesContent({ dictionary, lang }: Props) {
             title="Pending"
             value={pendingExpensesCount}
             description="Awaiting approval"
-            icon={AlertCircle}
+            icon={CircleAlert}
           />
           <StatsCard
             title="All Expenses"
@@ -115,7 +115,7 @@ export default async function ExpensesContent({ dictionary, lang }: Props) {
             <FeatureCard
               title="Approval Workflow"
               description="Review and approve expense requests"
-              icon={CheckCircle}
+              icon={CircleCheck}
               primaryAction={{
                 label: 'Pending Approval',
                 href: `/${lang}/finance/expenses/approval`,
@@ -127,7 +127,7 @@ export default async function ExpensesContent({ dictionary, lang }: Props) {
               }}
             />
           )}
-          {canEdit && (
+          {canPencil && (
             <FeatureCard
               title="Expense Categories"
               description="Manage expense categories and types"

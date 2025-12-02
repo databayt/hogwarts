@@ -2,7 +2,7 @@ import type { Locale } from '@/components/internationalization/config'
 import type { Dictionary } from '@/components/internationalization/dictionaries'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Users, DollarSign, Calendar, FileText, CheckCircle, AlertCircle, Clock, Settings } from 'lucide-react'
+import { Users, DollarSign, Calendar, FileText, CircleCheck, CircleAlert, Clock, Settings } from 'lucide-react'
 import Link from 'next/link'
 import { db } from '@/lib/db'
 import { getTenantContext } from '@/lib/tenant-context'
@@ -118,13 +118,13 @@ export default async function PayrollContent({ dictionary, lang }: Props) {
             title="Pending Approval"
             value={pendingRunsCount}
             description={`${pendingSlipsCount} slips`}
-            icon={AlertCircle}
+            icon={CircleAlert}
           />
           <StatsCard
             title="Paid Out"
             value={paidSlipsCount}
             description={`Salary slips / ${totalSlipsCount}`}
-            icon={CheckCircle}
+            icon={CircleCheck}
           />
         </DashboardGrid>
 
@@ -178,7 +178,7 @@ export default async function PayrollContent({ dictionary, lang }: Props) {
             <FeatureCard
               title="Approval Queue"
               description="Review and approve pending payroll runs"
-              icon={CheckCircle}
+              icon={CircleCheck}
               primaryAction={{
                 label: `Approval Queue (${pendingRunsCount})`,
                 href: `/${lang}/finance/payroll/approval`

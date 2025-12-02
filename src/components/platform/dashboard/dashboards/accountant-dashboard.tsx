@@ -6,7 +6,7 @@ import {
   DollarSign,
   Receipt,
   CreditCard,
-  AlertCircle,
+  CircleAlert,
   Clock,
   ChevronRight,
   FileText,
@@ -191,7 +191,7 @@ export async function AccountantDashboard({
         <MetricCard
           title="Overdue"
           value={`$${(mockFeeCollectionStatus.overdue / 1000).toFixed(0)}K`}
-          icon={AlertCircle}
+          icon={CircleAlert}
           iconColor="text-destructive"
           href={`/${locale}/s/${school?.domain}/finance`}
         />

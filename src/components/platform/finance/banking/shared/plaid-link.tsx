@@ -10,7 +10,7 @@ import {
   usePlaidLink,
 } from 'react-plaid-link'
 import { createBankAccount } from '@/components/platform/finance/banking/actions/bank.actions'
-import { Loader2, AlertCircle } from 'lucide-react'
+import { LoaderCircle, CircleAlert } from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 
 interface PlaidLinkProps {
@@ -184,7 +184,7 @@ export function PlaidLink({ user, variant = 'default', dictionary }: PlaidLinkPr
       {/* Error Message */}
       {error && (
         <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
+          <CircleAlert className="h-4 w-4" />
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
@@ -198,7 +198,7 @@ export function PlaidLink({ user, variant = 'default', dictionary }: PlaidLinkPr
       >
         {isLoading || isPending ? (
           <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
             {isPending
               ? (dictionary?.connecting || 'Connecting...')
               : (dictionary?.loading || 'Loading...')}

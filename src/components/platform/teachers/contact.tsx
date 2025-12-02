@@ -10,16 +10,16 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Trash2, Phone, Mail, Smartphone, Home, Briefcase, AlertTriangle } from "lucide-react";
+import { Plus, Trash2, Phone, Mail, Smartphone, House, Briefcase, TriangleAlert } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 import { TeacherFormStepProps } from "./types";
 
 const PHONE_TYPE_OPTIONS = [
   { label: "Mobile", value: "mobile", icon: Smartphone },
-  { label: "Home", value: "home", icon: Home },
+  { label: "House", value: "home", icon: House },
   { label: "Work", value: "work", icon: Briefcase },
-  { label: "Emergency", value: "emergency", icon: AlertTriangle },
+  { label: "Emergency", value: "emergency", icon: TriangleAlert },
 ] as const;
 
 export function ContactStep({ form, isView }: TeacherFormStepProps) {

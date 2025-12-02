@@ -10,7 +10,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
-import { BookAIcon, LayoutDashboardIcon } from "lucide-react";
+import { BookAIcon, LayoutDashboardIcon } from 'lucide-react';
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 

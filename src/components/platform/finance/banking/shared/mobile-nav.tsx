@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import {
-  Home,
+  House,
   CreditCard,
   SendHorizontal,
   History,
@@ -36,7 +36,7 @@ export function BankingMobileNav({ user, dictionary, lang }: BankingMobileNavPro
     {
       title: dictionary?.dashboard || 'Dashboard',
       href: `/${lang}/banking`,
-      icon: Home,
+      icon: House,
     },
     {
       title: dictionary?.myBanks || 'My Banks',

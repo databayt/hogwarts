@@ -27,7 +27,7 @@ import {
   ArrowRight,
   Eye,
   Shield,
-  AlertTriangle,
+  TriangleAlert,
   Sparkles,
   Users,
   GraduationCap,
@@ -249,7 +249,7 @@ export function RoleSwitcher({
 
           {isDeveloperMode && (
             <Alert className="mt-4 bg-purple-100 dark:bg-purple-900/30">
-              <AlertTriangle className="h-4 w-4 text-purple-600" />
+              <TriangleAlert className="h-4 w-4 text-purple-600" />
               <AlertTitle>{dictionary?.settings?.roleSwitcher?.developerModeActive || "Developer Mode Active"}</AlertTitle>
               <AlertDescription>
                 {dictionary?.settings?.roleSwitcher?.switchNote || "You can now switch between all roles to test different lab views and features. Changes are temporary and for testing purposes only."}

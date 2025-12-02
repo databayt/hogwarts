@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
-import { AlertTriangle, RefreshCw, CheckCircle, User, DoorOpen, ArrowRight } from 'lucide-react'
+import { TriangleAlert, RefreshCw, CircleCheck, User, DoorOpen, ArrowRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { type Dictionary } from '@/components/internationalization/dictionaries'
 import {
@@ -82,7 +82,7 @@ export default function TimetableConflictsContent({ dictionary }: Props) {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <AlertTriangle className="h-5 w-5" />
+            <TriangleAlert className="h-5 w-5" />
             {d?.conflicts?.title || 'Timetable Conflicts'}
           </CardTitle>
           <CardDescription>
@@ -119,7 +119,7 @@ export default function TimetableConflictsContent({ dictionary }: Props) {
           {/* Error */}
           {error && (
             <Alert variant="destructive">
-              <AlertTriangle className="h-4 w-4" />
+              <TriangleAlert className="h-4 w-4" />
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
@@ -146,7 +146,7 @@ export default function TimetableConflictsContent({ dictionary }: Props) {
                 <div className="flex items-center gap-3">
                   {conflicts.length === 0 ? (
                     <>
-                      <CheckCircle className="h-6 w-6 text-green-600" />
+                      <CircleCheck className="h-6 w-6 text-green-600" />
                       <div>
                         <h3 className="font-semibold text-green-800 dark:text-green-200">No Conflicts Found</h3>
                         <p className="text-sm text-green-600 dark:text-green-400">
@@ -156,7 +156,7 @@ export default function TimetableConflictsContent({ dictionary }: Props) {
                     </>
                   ) : (
                     <>
-                      <AlertTriangle className="h-6 w-6 text-red-600" />
+                      <TriangleAlert className="h-6 w-6 text-red-600" />
                       <div>
                         <h3 className="font-semibold text-red-800 dark:text-red-200">
                           {conflicts.length} Conflict{conflicts.length > 1 ? 's' : ''} Detected
@@ -231,7 +231,7 @@ export default function TimetableConflictsContent({ dictionary }: Props) {
           {/* No Term Selected */}
           {!selectedTerm && !isPending && (
             <div className="text-center py-12 text-muted-foreground">
-              <AlertTriangle className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <TriangleAlert className="h-12 w-12 mx-auto mb-4 opacity-50" />
               <p>Select a term to scan for conflicts</p>
             </div>
           )}

@@ -10,8 +10,8 @@ import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   User, Mail, Phone, Calendar, Briefcase, GraduationCap, BookOpen,
-  Building, Award, Clock, Edit, Download, FileText, MapPin,
-  Star, TrendingUp, Users, AlertCircle, CheckCircle
+  Building, Award, Clock, Pencil, Download, FileText, MapPin,
+  Star, TrendingUp, Users, CircleAlert, CircleCheck
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
@@ -132,8 +132,8 @@ export function TeacherProfile({ teacher, onEdit }: TeacherProfileProps) {
             <div className="text-right space-y-2">
               {onEdit && (
                 <Button onClick={onEdit} variant="outline" size="sm" className="gap-2">
-                  <Edit className="h-4 w-4" />
-                  Edit Profile
+                  <Pencil className="h-4 w-4" />
+                  Pencil Profile
                 </Button>
               )}
               <div className="text-sm text-muted-foreground">
@@ -363,7 +363,7 @@ export function TeacherProfile({ teacher, onEdit }: TeacherProfileProps) {
                             <Badge variant="outline">{qual.qualificationType}</Badge>
                             {isExpired && (
                               <Badge variant="destructive" className="gap-1">
-                                <AlertCircle className="h-3 w-3" />
+                                <CircleAlert className="h-3 w-3" />
                                 Expired
                               </Badge>
                             )}

@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label'
 import {
   Settings,
   RefreshCw,
-  AlertTriangle,
+  TriangleAlert,
   Calendar,
   Clock,
   Save,
@@ -189,7 +189,7 @@ export default function TimetableSettingsContent({ dictionary }: Props) {
       {/* Notifications */}
       {error && (
         <Alert variant="destructive">
-          <AlertTriangle className="h-4 w-4" />
+          <TriangleAlert className="h-4 w-4" />
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}

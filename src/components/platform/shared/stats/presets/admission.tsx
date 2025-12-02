@@ -5,9 +5,9 @@ import {
   Users,
   UserCheck,
   Clock,
-  CheckCircle,
+  CircleCheck,
   ListOrdered,
-  XCircle,
+  CircleX,
   GraduationCap,
   TrendingUp
 } from "lucide-react"
@@ -93,7 +93,7 @@ export function AdmissionStats({
     {
       label: labels.selected || "Selected",
       value: data.selected,
-      icon: <CheckCircle className="h-4 w-4" />,
+      icon: <CircleCheck className="h-4 w-4" />,
       variant: "success",
     },
     {
@@ -105,7 +105,7 @@ export function AdmissionStats({
     {
       label: labels.rejected || "Rejected",
       value: data.rejected,
-      icon: <XCircle className="h-4 w-4" />,
+      icon: <CircleX className="h-4 w-4" />,
       variant: "danger",
     },
     {

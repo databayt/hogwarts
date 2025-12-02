@@ -22,9 +22,9 @@ import {
   DollarSign,
   MapPin,
   Phone,
-  Loader2,
-  AlertCircle,
-  CheckCircle,
+  LoaderCircle,
+  CircleAlert,
+  CircleCheck,
   Clock,
   Trash2,
   RefreshCw,
@@ -43,9 +43,9 @@ export function ReceiptDetail({ receipt, locale = 'en' }: ReceiptDetailProps) {
 
   const statusConfig = {
     pending: { label: 'Pending', variant: 'secondary' as const, icon: Clock },
-    processing: { label: 'Processing', variant: 'default' as const, icon: Loader2 },
-    processed: { label: 'Processed', variant: 'default' as const, icon: CheckCircle },
-    error: { label: 'Error', variant: 'destructive' as const, icon: AlertCircle },
+    processing: { label: 'Processing', variant: 'default' as const, icon: LoaderCircle },
+    processed: { label: 'Processed', variant: 'default' as const, icon: CircleCheck },
+    error: { label: 'Error', variant: 'destructive' as const, icon: CircleAlert },
   }
 
   const status = statusConfig[receipt.status]
@@ -121,7 +121,7 @@ export function ReceiptDetail({ receipt, locale = 'en' }: ReceiptDetailProps) {
               disabled={isRetrying}
             >
               {isRetrying ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <LoaderCircle className="h-4 w-4 animate-spin" />
               ) : (
                 <>
                   <RefreshCw className="h-4 w-4 mr-2" />
@@ -227,14 +227,14 @@ export function ReceiptDetail({ receipt, locale = 'en' }: ReceiptDetailProps) {
               </>
             ) : receipt.status === 'processing' ? (
               <div className="flex flex-col items-center justify-center p-12 text-center">
-                <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
+                <LoaderCircle className="h-8 w-8 animate-spin text-primary mb-4" />
                 <p className="text-sm text-muted-foreground">
                   AI extraction in progress...
                 </p>
               </div>
             ) : receipt.status === 'error' ? (
               <div className="flex flex-col items-center justify-center p-12 text-center">
-                <AlertCircle className="h-8 w-8 text-destructive mb-4" />
+                <CircleAlert className="h-8 w-8 text-destructive mb-4" />
                 <p className="text-sm text-muted-foreground mb-4">
                   Extraction failed. Please retry.
                 </p>
@@ -294,7 +294,7 @@ export function ReceiptDetail({ receipt, locale = 'en' }: ReceiptDetailProps) {
           disabled={isDeleting}
         >
           {isDeleting ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
+            <LoaderCircle className="h-4 w-4 animate-spin" />
           ) : (
             <>
               <Trash2 className="h-4 w-4 mr-2" />

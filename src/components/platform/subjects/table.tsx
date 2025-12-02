@@ -202,7 +202,7 @@ export function SubjectsTable({ initialData, total, perPage = 20 }: SubjectsTabl
                     ]}
                     actions={[
                       { label: "View", onClick: () => handleView(subject.id) },
-                      { label: "Edit", onClick: () => handleEdit(subject.id) },
+                      { label: "Pencil", onClick: () => handleEdit(subject.id) },
                       {
                         label: "Delete",
                         onClick: () => handleDelete(subject),

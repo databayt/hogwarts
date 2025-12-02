@@ -1,13 +1,13 @@
 "use client"
 
-import { GitBranch, GitCommit, AlertCircle, GitFork, FileCode, Folder, AlertTriangle, GitPullRequest, School } from "lucide-react";
+import { GitBranch, GitCommit, CircleAlert, GitFork, FileCode, Folder, TriangleAlert, GitPullRequest, School } from "lucide-react";
 // import { Commit, Repo, Issue, PullRequest, Madrsa } from "@/components/atom/icon"; // Commented out - icon component doesn't exist
 import Link from "next/link";
 
 // Temporary replacements for icon components
 const Commit = FileCode;
 const Repo = Folder;
-const Issue = AlertTriangle;
+const Issue = TriangleAlert;
 const PullRequest = GitPullRequest;
 const Madrsa = School;
 

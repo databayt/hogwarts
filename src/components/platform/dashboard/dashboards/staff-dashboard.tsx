@@ -5,7 +5,7 @@ import {
   Calendar,
   Clock,
   CheckCircle2,
-  AlertTriangle,
+  TriangleAlert,
   Users,
   Bell,
   ClipboardList,
@@ -200,7 +200,7 @@ export async function StaffDashboard({
         <MetricCard
           title="Alerts"
           value={mockInventoryAlerts.length + mockMaintenanceRequests.filter(m => m.priority === "high").length}
-          icon={AlertTriangle}
+          icon={TriangleAlert}
           iconColor="text-amber-500"
         />
       </div>

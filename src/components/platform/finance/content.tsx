@@ -21,8 +21,8 @@ import {
   TrendingUp,
   BookOpen,
   FileBarChart,
-  AlertCircle,
-  CheckCircle,
+  CircleAlert,
+  CircleCheck,
   Calendar,
   Banknote,
 } from 'lucide-react'
@@ -180,7 +180,7 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
               <CardTitle className="text-sm font-medium">
                 {d?.stats?.pendingPayments || 'Pending Payments'}
               </CardTitle>
-              <AlertCircle className="h-4 w-4 text-muted-foreground" />
+              <CircleAlert className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">

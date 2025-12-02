@@ -2,7 +2,7 @@
 
 import { format, formatDistanceToNow } from "date-fns"
 import { ar, enUS } from "date-fns/locale"
-import { Hash, MessageSquare, Users, Building2, Megaphone, MoreVertical, Archive, Trash2, Pin, Volume2, VolumeX } from "lucide-react"
+import { Hash, MessageSquare, Users, Building2, Megaphone, EllipsisVertical, Archive, Trash2, Pin, Volume2, VolumeX } from "lucide-react"
 import type { ConversationDTO } from "./types"
 import { CONVERSATION_TYPE_CONFIG } from "./config"
 import { cn } from "@/lib/utils"
@@ -192,7 +192,7 @@ export function ConversationCard({
               size="icon"
               className="h-8 w-8 bg-background border border-border"
             >
-              <MoreVertical className="h-4 w-4" />
+              <EllipsisVertical className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">

@@ -16,7 +16,7 @@ import {
   GridContainer,
   GridEmptyState,
 } from "@/components/platform/shared";
-import { Users, Mail, CheckCircle, XCircle } from "lucide-react";
+import { Users, Mail, CircleCheck, CircleX } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { DeleteToast, ErrorToast, confirmDeleteDialog } from "@/components/atom/toast";
 import { Badge } from "@/components/ui/badge";
@@ -227,9 +227,9 @@ export function ParentsTable({ initialData, total, perPage = 20 }: ParentsTableP
                         value: (
                           <span className="flex items-center gap-1">
                             {parent.status === "active" ? (
-                              <CheckCircle className="h-3 w-3 text-green-500" />
+                              <CircleCheck className="h-3 w-3 text-green-500" />
                             ) : (
-                              <XCircle className="h-3 w-3 text-muted-foreground" />
+                              <CircleX className="h-3 w-3 text-muted-foreground" />
                             )}
                             {parent.status === "active" ? t.active : t.inactive}
                           </span>

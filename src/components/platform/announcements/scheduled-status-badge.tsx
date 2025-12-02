@@ -1,7 +1,7 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
-import { Clock, CheckCircle, Calendar, XCircle } from "lucide-react";
+import { Clock, CircleCheck, Calendar, CircleX } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   Tooltip,
@@ -37,14 +37,14 @@ export function ScheduledStatusBadge({
   if (expiresDate && expiresDate < now && published) {
     // Expired
     status = "expired";
-    icon = <XCircle className="h-3 w-3" />;
+    icon = <CircleX className="h-3 w-3" />;
     label = "Expired";
     variant = "destructive";
     tooltipText = `Expired on ${expiresDate.toLocaleString()}`;
   } else if (published) {
     // Published
     status = "published";
-    icon = <CheckCircle className="h-3 w-3" />;
+    icon = <CircleCheck className="h-3 w-3" />;
     label = "Published";
     variant = "default";
     tooltipText = "Currently published";

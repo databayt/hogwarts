@@ -5,7 +5,7 @@ import { useState, useMemo, useCallback, useRef } from 'react';
 import { format } from 'date-fns';
 import {
   Download, Printer, Send, Eye, FileText, Award, TrendingUp,
-  TrendingDown, Star, AlertCircle, CheckCircle, XCircle, Share2,
+  TrendingDown, Star, CircleAlert, CircleCheck, CircleX, Share2,
   Filter, Search, Calendar, Users, BookOpen, Target, BarChart3,
   Mail, MessageSquare
 } from 'lucide-react';

@@ -25,7 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, X, Loader2 } from "lucide-react";
+import { Plus, X, LoaderCircle } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { createQuestion, updateQuestion } from "./actions";
 import { questionBankSchema } from "./validation";
@@ -159,7 +159,7 @@ export function QuestionBankForm({
         <div className="space-y-4">
           <h2 className="text-lg font-semibold">
             {initialData?.id
-              ? "Edit Question"
+              ? "Pencil Question"
               : "Create Question"}
           </h2>
 
@@ -390,7 +390,7 @@ export function QuestionBankForm({
                 <FormLabel>Tags</FormLabel>
                 <FormControl>
                   <TagsInput
-                    value={field.value}
+                    value={field.value || []}
                     onChange={field.onChange}
                     disabled={isView}
                   />
@@ -435,7 +435,7 @@ export function QuestionBankForm({
               {"Cancel"}
             </Button>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isSubmitting && <LoaderCircle className="me-2 h-4 w-4 animate-spin" />}
               {initialData?.id ? "Update" : "Create"}
             </Button>
           </div>
@@ -451,7 +451,7 @@ function MultipleChoiceFields({
   isView,
   type,
 }: {
-  form: UseFormReturn<z.infer<typeof questionBankSchema>>;
+  form: UseFormReturn<any>;
   isView: boolean;
   type: QuestionType;
 }) {
@@ -470,7 +470,8 @@ function MultipleChoiceFields({
     const current = form.getValues("options") || [];
     form.setValue(
       "options",
-      current.filter((_, i) => i !== index)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      current.filter((_: any, i: number) => i !== index)
     );
   };
 
@@ -485,14 +486,15 @@ function MultipleChoiceFields({
             size="sm"
             onClick={addOption}
           >
-            <Plus className="mr-2 h-4 w-4" />
+            <Plus className="me-2 h-4 w-4" />
             Add Option
           </Button>
         )}
       </div>
 
       <div className="space-y-3">
-        {options.map((option, index) => (
+        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+        {options.map((option: any, index: number) => (
           <div key={index} className="flex gap-2 items-start border p-3 rounded-md">
             <Checkbox
               checked={option.isCorrect}
@@ -544,7 +546,7 @@ function MultipleChoiceFields({
 }
 
 // Fill in the Blank Fields
-function FillBlankFields({ form, isView }: { form: UseFormReturn<z.infer<typeof questionBankSchema>>; isView: boolean }) {
+function FillBlankFields({ form, isView }: { form: UseFormReturn<any>; isView: boolean }) {
   const answers = form.watch("acceptedAnswers") || [""];
 
   const addAnswer = () => {
@@ -556,7 +558,8 @@ function FillBlankFields({ form, isView }: { form: UseFormReturn<z.infer<typeof 
     const current = form.getValues("acceptedAnswers") || [];
     form.setValue(
       "acceptedAnswers",
-      current.filter((_, i) => i !== index)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      current.filter((_: any, i: number) => i !== index)
     );
   };
 
@@ -566,7 +569,7 @@ function FillBlankFields({ form, isView }: { form: UseFormReturn<z.infer<typeof 
         <FormLabel>Accepted Answers</FormLabel>
         {!isView && (
           <Button type="button" variant="outline" size="sm" onClick={addAnswer}>
-            <Plus className="mr-2 h-4 w-4" />
+            <Plus className="me-2 h-4 w-4" />
             Add Answer
           </Button>
         )}
@@ -620,7 +623,7 @@ function FillBlankFields({ form, isView }: { form: UseFormReturn<z.infer<typeof 
 }
 
 // Subjective Question Fields
-function SubjectiveFields({ form, isView }: { form: UseFormReturn<z.infer<typeof questionBankSchema>>; isView: boolean }) {
+function SubjectiveFields({ form, isView }: { form: UseFormReturn<any>; isView: boolean }) {
   return (
     <div className="space-y-4">
       <FormField
@@ -717,14 +720,14 @@ function TagsInput({
       </div>
       {value.length > 0 && (
         <div className="flex flex-wrap gap-2">
-          {value.map((tag) => (
+          {value.map((tag: string) => (
             <Badge key={tag} variant="secondary" className="gap-1">
               {tag}
               {!disabled && (
                 <button
                   type="button"
                   onClick={() => removeTag(tag)}
-                  className="ml-1 hover:text-destructive"
+                  className="ms-1 hover:text-destructive"
                 >
                   <X className="h-3 w-3" />
                 </button>

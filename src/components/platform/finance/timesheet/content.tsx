@@ -1,6 +1,6 @@
 import type { Locale } from '@/components/internationalization/config'
 import type { Dictionary } from '@/components/internationalization/dictionaries'
-import { Clock, Calendar, Users, CheckCircle, AlertCircle, FileText } from 'lucide-react'
+import { Clock, Calendar, Users, CircleCheck, CircleAlert, FileText } from 'lucide-react'
 import { db } from '@/lib/db'
 import { getTenantContext } from '@/lib/tenant-context'
 import { StatsCard, FeatureCard, DashboardGrid } from '../lib/dashboard-components'
@@ -87,7 +87,7 @@ export default async function TimesheetContent({ dictionary, lang }: Props) {
             title="Pending Approval"
             value={pendingEntriesCount}
             description="Requires review"
-            icon={AlertCircle}
+            icon={CircleAlert}
           />
           <StatsCard
             title="Active Periods"
@@ -134,7 +134,7 @@ export default async function TimesheetContent({ dictionary, lang }: Props) {
             <FeatureCard
               title="Approval Queue"
               description="Review and approve timesheet entries"
-              icon={CheckCircle}
+              icon={CircleCheck}
               primaryAction={{
                 label: 'Approve Entries',
                 href: `/${lang}/finance/timesheet/approve`,

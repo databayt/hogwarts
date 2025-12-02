@@ -59,7 +59,7 @@ import {
   Users,
   BookOpen,
   MapPin,
-  AlertTriangle,
+  TriangleAlert,
   TrendingUp,
   Clock,
   BarChart3,
@@ -248,7 +248,7 @@ export function AnalyticsReports({
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle><h6>Active Conflicts</h6></CardTitle>
-            <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+            <TriangleAlert className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <h3 className="text-foreground">{conflicts.length}</h3>

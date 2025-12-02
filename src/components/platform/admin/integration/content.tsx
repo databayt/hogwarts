@@ -15,8 +15,8 @@ import {
   Webhook,
   Globe,
   Shield,
-  CheckCircle,
-  AlertCircle,
+  CircleCheck,
+  CircleAlert,
   Settings,
 } from 'lucide-react'
 import Link from 'next/link'
@@ -60,17 +60,17 @@ export default async function IntegrationContent({ dictionary, lang }: Props) {
               <div className="flex items-center justify-between">
                 <span className="text-sm">Google</span>
                 {integrations.oauth.google.enabled ? (
-                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  <CircleCheck className="h-4 w-4 text-green-500" />
                 ) : (
-                  <AlertCircle className="h-4 w-4 text-gray-400" />
+                  <CircleAlert className="h-4 w-4 text-gray-400" />
                 )}
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm">Facebook</span>
                 {integrations.oauth.facebook.enabled ? (
-                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  <CircleCheck className="h-4 w-4 text-green-500" />
                 ) : (
-                  <AlertCircle className="h-4 w-4 text-gray-400" />
+                  <CircleAlert className="h-4 w-4 text-gray-400" />
                 )}
               </div>
             </div>

@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { format, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay, subDays } from "date-fns";
-import { Calendar, CheckCircle, XCircle, Clock, AlertCircle, TrendingUp, TrendingDown } from "lucide-react";
+import { Calendar, CircleCheck, CircleX, Clock, CircleAlert, TrendingUp, TrendingDown } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -105,13 +105,13 @@ export function AttendanceView({ students }: AttendanceViewProps) {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'present':
-        return <CheckCircle className="w-4 h-4 text-green-500" />;
+        return <CircleCheck className="w-4 h-4 text-green-500" />;
       case 'absent':
-        return <XCircle className="w-4 h-4 text-red-500" />;
+        return <CircleX className="w-4 h-4 text-red-500" />;
       case 'late':
         return <Clock className="w-4 h-4 text-yellow-500" />;
       case 'excused':
-        return <AlertCircle className="w-4 h-4 text-blue-500" />;
+        return <CircleAlert className="w-4 h-4 text-blue-500" />;
       default:
         return null;
     }
@@ -217,7 +217,7 @@ export function AttendanceView({ students }: AttendanceViewProps) {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Present</CardTitle>
-            <CheckCircle className="h-4 w-4 text-green-500" />
+            <CircleCheck className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
             <h3>{stats.present}</h3>
@@ -228,7 +228,7 @@ export function AttendanceView({ students }: AttendanceViewProps) {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Absent</CardTitle>
-            <XCircle className="h-4 w-4 text-red-500" />
+            <CircleX className="h-4 w-4 text-red-500" />
           </CardHeader>
           <CardContent>
             <h3>{stats.absent}</h3>

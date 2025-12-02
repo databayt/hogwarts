@@ -180,7 +180,7 @@ export function TeacherCreateForm({ onSuccess }: TeacherCreateFormProps) {
           <div className="flex-grow flex flex-col md:flex-row gap-6">
             {/* Title Section */}
             <div className="md:w-1/3">
-              <h2 className="text-2xl font-semibold">{isView ? "View Teacher" : currentId ? "Edit Teacher" : "Create Teacher"}</h2>
+              <h2 className="text-2xl font-semibold">{isView ? "View Teacher" : currentId ? "Pencil Teacher" : "Create Teacher"}</h2>
               <p className="text-sm text-muted-foreground mt-2">{isView ? "View teacher details" : currentId ? "Update teacher details" : "Add a new teacher to your school"}</p>
             </div>
 

@@ -15,7 +15,7 @@ import { getColumns } from './columns'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Loader2, Grid3x3, List, Plus } from 'lucide-react'
+import { LoaderCircle, Grid3x3, List, Plus } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -163,7 +163,7 @@ export function ReceiptsContent({ initialReceipts = [], locale = 'en' }: Receipt
       {/* Content */}
       {isLoading && receipts.length === 0 ? (
         <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <LoaderCircle className="h-8 w-8 animate-spin text-primary" />
         </div>
       ) : receipts.length === 0 ? (
         <Card>

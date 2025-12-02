@@ -43,7 +43,8 @@
       "WebFetch(domain:aliimam.in)",
       "WebFetch(domain:www.npmjs.com)",
       "mcp__browser__playwright_click",
-      "mcp__browser__playwright_get_visible_html"
+      "mcp__browser__playwright_get_visible_html",
+      "mcp__browser__playwright_close"
     ],
     "deny": [],
     "ask": []

@@ -40,9 +40,9 @@ import {
 } from '@/components/ui/select'
 import {
   Search,
-  Filter,
+  ListFilter,
   Download,
-  MoreHorizontal,
+  Ellipsis,
   ChevronDown,
   ChevronUp,
   Receipt,
@@ -115,7 +115,7 @@ export function TransactionsTableImproved({
     amount: true
   })
 
-  // Filter transactions
+  // ListFilter transactions
   const filteredTransactions = useMemo(() => {
     return transactions.filter(transaction => {
       // Search filter
@@ -480,7 +480,7 @@ export function TransactionsTableImproved({
                         className="h-8 w-8 p-0"
                         onClick={() => setDetailsSheet(transaction)}
                       >
-                        <MoreHorizontal className="h-4 w-4" />
+                        <Ellipsis className="h-4 w-4" />
                         <span className="sr-only">View transaction details</span>
                       </Button>
                     </TableCell>

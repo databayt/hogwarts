@@ -32,8 +32,8 @@ import {
   FileJson,
   Image,
   Calendar,
-  AlertCircle,
-  CheckCircle2,
+  CircleAlert,
+  CircleCheck,
   FileDown,
   FileUp
 } from 'lucide-react'
@@ -645,7 +645,7 @@ X-WR-TIMEZONE:UTC
 
                 {importFile && (
                   <Alert>
-                    <CheckCircle2 className="h-4 w-4" />
+                    <CircleCheck className="h-4 w-4" />
                     <AlertDescription>
                       File selected: {importFile.name} ({(importFile.size / 1024).toFixed(2)} KB)
                     </AlertDescription>

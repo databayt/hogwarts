@@ -4,8 +4,8 @@ import * as React from 'react';
 import { useState, useMemo, useCallback } from 'react';
 import { format, addDays, isPast, differenceInDays } from 'date-fns';
 import {
-  Book, BookOpen, Search, Barcode, Users, Calendar, AlertCircle,
-  Clock, TrendingUp, Filter, Plus, Minus, CheckCircle, XCircle,
+  Book, BookOpen, Search, Barcode, Users, Calendar, CircleAlert,
+  Clock, TrendingUp, Filter, Plus, Minus, CircleCheck, CircleX,
   Download, Upload, QrCode, History, Star, Archive
 } from 'lucide-react';
 import { cn } from '@/lib/utils';

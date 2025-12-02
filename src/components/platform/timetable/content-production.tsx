@@ -8,12 +8,15 @@ import { ConfigDialog } from './config-dialog'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
-import { AlertTriangle, RefreshCw, Shield, Eye } from 'lucide-react'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { TriangleAlert, RefreshCw, Shield, Eye, LayoutGrid, Users } from 'lucide-react'
 import type { Dictionary } from '@/components/internationalization/dictionaries'
+import type { Locale } from '@/components/internationalization/config'
 import type { LegacyTimetableData } from './types'
 import { getWeeklyTimetable, getTermsForSelection } from './actions'
 import { useTimetablePermissions } from './use-timetable-permissions'
 import { SessionProvider } from 'next-auth/react'
+import { TimetablePreview } from './views'
 
 interface Props {
   dictionary?: Dictionary['school']
@@ -76,6 +79,7 @@ function generatePeriods(timetableData: LegacyTimetableData | null, classConfig:
 function TimetableContentInner({ dictionary }: Props) {
   const params = useParams()
   const subdomain = params?.subdomain as string
+  const lang = (params?.lang as Locale) || 'en'
 
   // Get permissions and role info
   const {
@@ -88,6 +92,9 @@ function TimetableContentInner({ dictionary }: Props) {
     canConfigure,
     readOnlyMode
   } = useTimetablePermissions()
+
+  // View mode: 'grid' for legacy, 'preview' for role-based preview
+  const [viewMode, setViewMode] = useState<'grid' | 'preview'>('preview')
 
   const [isLoading, setIsLoading] = useState(true)
   const [isPending, startTransition] = useTransition()
@@ -237,7 +244,7 @@ function TimetableContentInner({ dictionary }: Props) {
     return (
       <div className="space-y-6">
         <Alert variant="destructive">
-          <AlertTriangle className="h-4 w-4" />
+          <TriangleAlert className="h-4 w-4" />
           <AlertDescription>{error}</AlertDescription>
         </Alert>
         <Button onClick={loadInitialData} className="mt-4">
@@ -261,91 +268,115 @@ function TimetableContentInner({ dictionary }: Props) {
 
   return (
     <div className="space-y-6">
-      {/* Role indicator badge */}
-      {role && (
-        <div className="flex items-center gap-2 p-2 bg-muted/50 rounded-lg print:hidden">
-          <Shield className="h-4 w-4" />
-          <span className="text-sm font-medium">
-            Viewing as: {role}
-          </span>
-          {readOnlyMode && (
-            <>
-              <Eye className="h-4 w-4 ms-2" />
-              <span className="text-sm text-muted-foreground">
-                Read-only mode
+      {/* View Mode Tabs */}
+      <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as 'grid' | 'preview')} className="print:hidden">
+        <TabsList className="grid w-full max-w-md grid-cols-2">
+          <TabsTrigger value="preview" className="gap-2">
+            <Users className="h-4 w-4" />
+            Preview by Role
+          </TabsTrigger>
+          <TabsTrigger value="grid" className="gap-2">
+            <LayoutGrid className="h-4 w-4" />
+            Full Grid
+          </TabsTrigger>
+        </TabsList>
+
+        {/* Preview Mode - Teacher/Student switcher */}
+        <TabsContent value="preview" className="mt-4">
+          {dictionary && (
+            <TimetablePreview dictionary={dictionary} lang={lang} />
+          )}
+        </TabsContent>
+
+        {/* Legacy Grid Mode */}
+        <TabsContent value="grid" className="mt-4">
+          {/* Role indicator badge */}
+          {role && (
+            <div className="flex items-center gap-2 p-2 bg-muted/50 rounded-lg mb-4">
+              <Shield className="h-4 w-4" />
+              <span className="text-sm font-medium">
+                Viewing as: {role}
               </span>
-            </>
-          )}
-        </div>
-      )}
-
-      <main className="min-h-screen print:bg-white print:py-4">
-        <div className="max-w-4xl mx-auto print:max-w-none">
-          <TimetableHeader
-            schoolYear={getCurrentSchoolYear()}
-            school={classConfig.school}
-            grade={classConfig.grade}
-            class={classConfig.class}
-            isNextWeek={isNextWeek}
-            isWeekChangeLoading={isWeekChangeLoading}
-            onWeekChange={changeWeek}
-          />
-
-          {isWeekChangeLoading ? (
-            <div className="overflow-x-auto shadow-lg rounded-xl border border-border">
-              <div className="min-w-full bg-background">
-                <Skeleton className="h-[600px]" />
-              </div>
-            </div>
-          ) : (
-            <div className="overflow-x-auto rounded-xl shadow-sm border border-border print:shadow-none print:border print:rounded-none">
-              <TimetableGrid
-                periods={periods}
-                timetableData={timetableData}
-                onTeacherInfoSave={canEdit ? saveTeacherInfo : () => {}}
-                getTeacherInfo={getTeacherInfo}
-                onSubjectChange={canEdit ? handleSubjectChange : undefined}
-                showAllSubjects={classConfig.showAllSubjects}
-                availableSubjects={availableSubjects}
-              />
-            </div>
-          )}
-
-          <div className="mt-6 print:hidden">
-            <div className="flex justify-between items-center mb-4">
-              {timetableData?.update_date && !error && (
-                <p className="ms-1 text-sm text-muted-foreground">
-                  Updated: {new Date(timetableData.update_date).toLocaleString()}
-                </p>
+              {readOnlyMode && (
+                <>
+                  <Eye className="h-4 w-4 ms-2" />
+                  <span className="text-sm text-muted-foreground">
+                    Read-only mode
+                  </span>
+                </>
               )}
+            </div>
+          )}
 
-              {/* Admin controls - only shown to admins */}
-              {isAdmin && (
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowConfig(true)}
-                  >
-                    Configure Settings
-                  </Button>
+          <main className="print:bg-white print:py-4">
+            <div className="max-w-4xl mx-auto print:max-w-none">
+              <TimetableHeader
+                schoolYear={getCurrentSchoolYear()}
+                school={classConfig.school}
+                grade={classConfig.grade}
+                class={classConfig.class}
+                isNextWeek={isNextWeek}
+                isWeekChangeLoading={isWeekChangeLoading}
+                onWeekChange={changeWeek}
+              />
+
+              {isWeekChangeLoading ? (
+                <div className="overflow-x-auto shadow-lg rounded-xl border border-border">
+                  <div className="min-w-full bg-background">
+                    <Skeleton className="h-[600px]" />
+                  </div>
+                </div>
+              ) : (
+                <div className="overflow-x-auto rounded-xl shadow-sm border border-border print:shadow-none print:border print:rounded-none">
+                  <TimetableGrid
+                    periods={periods}
+                    timetableData={timetableData}
+                    onTeacherInfoSave={canEdit ? saveTeacherInfo : () => {}}
+                    getTeacherInfo={getTeacherInfo}
+                    onSubjectChange={canEdit ? handleSubjectChange : undefined}
+                    showAllSubjects={classConfig.showAllSubjects}
+                    availableSubjects={availableSubjects}
+                  />
                 </div>
               )}
-            </div>
-          </div>
 
-          {/* Config dialog - only accessible by admins */}
-          {canConfigure && (
-            <ConfigDialog
-              open={showConfig}
-              onOpenChange={setShowConfig}
-              classConfig={classConfig}
-              onConfigChange={setTempConfig}
-              onSave={handleConfigSave}
-            />
-          )}
-        </div>
-      </main>
+              <div className="mt-6 print:hidden">
+                <div className="flex justify-between items-center mb-4">
+                  {timetableData?.update_date && !error && (
+                    <p className="ms-1 text-sm text-muted-foreground">
+                      Updated: {new Date(timetableData.update_date).toLocaleString()}
+                    </p>
+                  )}
+
+                  {/* Admin controls - only shown to admins */}
+                  {isAdmin && (
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowConfig(true)}
+                      >
+                        Configure Settings
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Config dialog - only accessible by admins */}
+              {canConfigure && (
+                <ConfigDialog
+                  open={showConfig}
+                  onOpenChange={setShowConfig}
+                  classConfig={classConfig}
+                  onConfigChange={setTempConfig}
+                  onSave={handleConfigSave}
+                />
+              )}
+            </div>
+          </main>
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }

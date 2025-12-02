@@ -32,7 +32,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
-  AlertCircle,
+  CircleAlert,
   Clock,
   MapPin,
   User,
@@ -41,7 +41,7 @@ import {
   Copy,
   Move,
   Repeat,
-  MoreVertical
+  EllipsisVertical
 } from 'lucide-react'
 import {
   DropdownMenu,
@@ -122,13 +122,13 @@ const DraggableSlot: React.FC<{
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-                <MoreVertical className="h-3 w-3" />
+                <EllipsisVertical className="h-3 w-3" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={onEdit}>
                 <Edit2 className="me-2 h-4 w-4" />
-                Edit
+                Pencil
               </DropdownMenuItem>
               <DropdownMenuItem>
                 <Copy className="me-2 h-4 w-4" />
@@ -315,7 +315,7 @@ export function TimetableGridEnhanced({
         {conflicts.length > 0 && showConflicts && (
           <div className="mb-4 p-3 bg-chart-4 border border-chart-4 rounded-lg">
             <div className="flex items-center gap-2">
-              <AlertCircle className="h-5 w-5 text-chart-4" />
+              <CircleAlert className="h-5 w-5 text-chart-4" />
               <h6 className="text-foreground">
                 {conflicts.length} conflict{conflicts.length > 1 ? 's' : ''} detected
               </h6>

@@ -18,8 +18,8 @@ import {
   Download,
   RefreshCw,
   Trash2,
-  AlertCircle,
-  CheckCircle,
+  CircleAlert,
+  CircleCheck,
   Zap,
   Clock,
   Cpu,
@@ -111,10 +111,10 @@ export default async function SystemContent({ dictionary, lang }: Props) {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'healthy': return <CheckCircle className="h-4 w-4 text-green-500" />
-      case 'degraded': return <AlertCircle className="h-4 w-4 text-yellow-500" />
-      case 'down': return <AlertCircle className="h-4 w-4 text-red-500" />
-      default: return <AlertCircle className="h-4 w-4 text-gray-500" />
+      case 'healthy': return <CircleCheck className="h-4 w-4 text-green-500" />
+      case 'degraded': return <CircleAlert className="h-4 w-4 text-yellow-500" />
+      case 'down': return <CircleAlert className="h-4 w-4 text-red-500" />
+      default: return <CircleAlert className="h-4 w-4 text-gray-500" />
     }
   }
 
