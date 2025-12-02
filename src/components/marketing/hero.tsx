@@ -60,8 +60,8 @@ const Hero = ({ dictionary, lang }: HeroProps) => {
           </Link>
 
           <h1 className="font-heading font-extrabold text-4xl sm:text-5xl lg:text-6xl xl:text-7xl tracking-tight">
-            <span className="block">Automate the boring,</span>
-            <span className="block">elevate the wonder.</span>
+            <span className="block whitespace-nowrap">Automate the boring,</span>
+            <span className="block whitespace-nowrap">elevate the wonder.</span>
           </h1>
 
           <div className="flex flex-col sm:flex-row gap-3">
