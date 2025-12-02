@@ -24,9 +24,10 @@ export default async function AnnouncementsContent({ searchParams, dictionary, l
   if (schoolId) {
     try {
       // Use shared query builder (caching removed due to multi-tenant complexity)
-      // Filter by current language (lang) to show only announcements in the user's locale
+      // Admin table shows ALL announcements regardless of language
+      // Language filtering is only for public-facing views (not admin management)
       const { rows, count } = await getAnnouncementsList(schoolId, {
-        language: lang, // Filter by current locale
+        // Note: language filter removed - admin sees all announcements
         title: sp.title,
         scope: sp.scope,
         published: sp.published,
