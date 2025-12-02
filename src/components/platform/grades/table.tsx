@@ -57,7 +57,10 @@ export function ResultsTable({ initialData, total, dictionary, lang, perPage = 2
     perPage,
     fetcher: async (params) => {
       const result = await getResults(params);
-      return { rows: result.rows as ResultRow[], total: result.total };
+      if (result.success) {
+        return { rows: result.data.rows as ResultRow[], total: result.data.total };
+      }
+      return { rows: [], total: 0 };
     },
     filters: searchValue ? { studentName: searchValue } : undefined,
   });
@@ -121,7 +124,11 @@ export function ResultsTable({ initialData, total, dictionary, lang, perPage = 2
 
   // Export CSV wrapper
   const handleExportCSV = useCallback(async (filters?: Record<string, unknown>) => {
-    return getResultsCSV(filters);
+    const result = await getResultsCSV(filters);
+    if (result.success) {
+      return result.data;
+    }
+    return "";
   }, []);
 
   // Get grade color

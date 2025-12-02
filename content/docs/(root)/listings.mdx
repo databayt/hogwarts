@@ -36,14 +36,24 @@ Every listing consists of these co-located files following the mirror pattern:
 
 ```
 components/platform/<feature>/
-├── table.tsx        # Main listing component (table + grid views)
-├── form.tsx         # Create/Edit form with onSuccess callback
-├── columns.tsx      # Column definitions for the table
-├── actions.ts       # Server actions (CRUD + CSV export)
-├── validation.ts    # Zod schemas
-├── types.ts         # TypeScript interfaces
-└── content.tsx      # Server component wrapper
+├── table.tsx          # Main listing component (table + grid views)
+├── form.tsx           # Create/Edit form with onSuccess callback
+├── columns.tsx        # Column definitions for the table
+├── actions.ts         # Server actions (CRUD + CSV export)
+├── queries.ts         # Centralized query builders (NEW)
+├── authorization.ts   # Role-based access control (NEW)
+├── validation.ts      # Zod schemas
+├── types.ts           # TypeScript interfaces
+└── content.tsx        # Server component wrapper
 ```
+
+### Reference Implementation: Announcements & Grades
+
+The **Announcements** and **Grades** modules serve as reference implementations with the complete pattern including:
+
+- **queries.ts**: Centralized query builders with type-safe Prisma queries
+- **authorization.ts**: Role-based access control (RBAC)
+- **ActionResponse<T>**: Typed success/error responses
 
 ## Core Components
 

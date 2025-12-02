@@ -45,8 +45,8 @@ export function ResultCreateForm({ dictionary, onSuccess }: ResultCreateFormProp
     const load = async () => {
       if (!currentId) return;
       const res = await getResult({ id: currentId });
-      const r = res.result as any;
-      if (!r) return;
+      if (!res.success || !res.data) return;
+      const r = res.data;
       form.reset({
         studentId: r.studentId ?? "",
         assignmentId: r.assignmentId ?? "",
