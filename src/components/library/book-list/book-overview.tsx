@@ -13,23 +13,14 @@ interface Props {
 export default function BookOverview({ book, userId }: Props) {
   return (
     <section className="flex flex-col md:flex-row gap-8 md:gap-12 items-center">
-      {/* Animated 3D Book - Red/White */}
-      <div className="shrink-0 animate-[float_3s_ease-in-out_infinite]">
-        <Book
-          color="#dc2626"
-          textColor="#ffffff"
-          width={280}
-          depth={5}
-        >
-          {/* Top half - White with title */}
-          <div className="bg-white p-6 flex flex-col justify-center min-h-[140px]">
-            <h2 className="font-bold text-slate-900 text-xl leading-tight line-clamp-3">
+      {/* 3D Book - aliimam style */}
+      <div className="shrink-0">
+        <Book depth={10}>
+          <div className="p-3 mb-2 grid gap-4">
+            <h1 className="font-semibold">
               {book.title}
-            </h2>
-          </div>
-          {/* Bottom half - Red with author */}
-          <div className="bg-red-600 p-6 flex flex-col justify-center min-h-[100px]">
-            <p className="text-white/90 text-base font-medium">
+            </h1>
+            <p className="text-xs opacity-70">
               {book.author}
             </p>
           </div>

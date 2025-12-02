@@ -1,7 +1,5 @@
-"use client";
-
-import { cn } from "@/lib/utils";
-import React from "react";
+import { cn } from '@/lib/utils';
+import React from 'react';
 
 interface BookProps {
   children: React.ReactNode;
@@ -9,7 +7,7 @@ interface BookProps {
   textColor?: string;
   texture?: boolean;
   depth?: number;
-  variant?: "default" | "simple";
+  variant?: 'default' | 'simple';
   illustration?: React.ReactNode;
   width?: number;
 }
@@ -17,48 +15,48 @@ interface BookProps {
 export function Book(props: BookProps) {
   const {
     children,
-    color = "#f50537",
+    color = '#f50537',
     depth,
     texture,
-    variant = "default",
+    variant = 'default',
     textColor,
     illustration,
     width,
   } = props;
   return (
     <div
-      className={cn("w-fit [perspective:900px] inline-block group")}
+      className={cn('w-fit [perspective:900px] inline-block group')}
       style={
         {
-          "--book-color": color,
-          "--text-color": textColor,
-          "--book-depth": (depth || 4) + "cqw",
-          "--book-width": (width || 196) + "px",
+          '--book-color': color,
+          '--text-color': textColor,
+          '--book-depth': (depth || 4) + 'cqw',
+          '--book-width': (width || 196) + 'px',
         } as React.CSSProperties
       }
     >
       <div className="contain-inline-size aspect-[49/60] w-fit rotate-0 relative [transform-style:preserve-3d] min-w-[calc(var(--book-width))] transition-transform duration-500 ease-out group-hover:[transform:rotateY(-20deg)_scale(1.066)translateX(-8px)]">
         <Stack
           align="stretch"
-          className="rounded-l border border-border rounded-r shadow-book bg-stone-100 dark:bg-stone-800 bg-[var(--book-color)] size-full absolute overflow-hidden"
+          className="rounded-l border border-border rounded-r shadow-book  bg-stone-100 dark:bg-stone-800 bg-[var(--book-color)] size-full absolute overflow-hidden"
         >
-          {variant !== "simple" && (
+          {variant !== 'simple' && (
             <Stack
               shrink
               grow
               direction="row"
               className={cn(
-                "min-w-[calc(var(--book-width))] bg-[var(--book-color)] relative overflow-hidden"
+                'min-w-[calc(var(--book-width))] bg-[var(--book-color)] relative overflow-hidden',
               )}
             >
-              <div className="absolute inset-y-0 mix-blend-overlay opacity-100 min-w-[8.2%] bg-book-bind" />
+              <div className="absolute inset-y-0 mix-blend-overlay opacity-100 min-w-[8.2%] bg-book-bind-bg" />
               {illustration && (
                 <div className="object-cover">{illustration}</div>
               )}
             </Stack>
           )}
-          <Stack grow={variant === "simple"} direction="row" className="h-fit">
-            <div className="mix-blend-overlay opacity-100 min-w-[8.2%] bg-book-bind h-full" />
+          <Stack grow={variant === 'simple'} direction="row" className="h-fit">
+            <div className="mix-blend-overlay opacity-100 min-w-[8.2%] bg-book-bind-bg h-full" />
             <div className="contain-inline-size w-full">{children}</div>
           </Stack>
           {texture && (
@@ -73,14 +71,14 @@ export function Book(props: BookProps) {
           className="absolute bg-book-pages w-[calc(var(--book-depth)-2px)] h-[calc(100%-2*6px)] top-[3px]"
           style={{
             transform:
-              "translateX(calc(var(--book-width) - var(--book-depth) / 2 - 3px)) rotateY(90deg) translateX(calc(var(--book-depth) / 2))",
+              'translateX(calc(var(--book-width) - var(--book-depth) / 2 - 3px)) rotateY(90deg) translateX(calc(var(--book-depth) / 2))',
           }}
         />
         <div
           aria-hidden={true}
           className="rounded-l-md rounded-r bg-[var(--book-color)] book-bg absolute left-0 w-full h-full"
           style={{
-            transform: "translateZ(calc(-1 * var(--book-depth)))",
+            transform: 'translateZ(calc(-1 * var(--book-depth)))',
           }}
         />
       </div>
@@ -88,21 +86,22 @@ export function Book(props: BookProps) {
   );
 }
 
-import { ComponentProps } from "react";
+ 
+import { ComponentProps } from 'react';
 
-type FlexAlignItems = "stretch" | "start" | "end" | "center";
+type FlexAlignItems = 'stretch' | 'start' | 'end' | 'center';
 type FlexJustifyContent =
-  | "stretch"
-  | "start"
-  | "end"
-  | "space-between"
-  | "space-around"
-  | "space-evenly"
-  | "center";
+  | 'stretch'
+  | 'start'
+  | 'end'
+  | 'space-between'
+  | 'space-around'
+  | 'space-evenly'
+  | 'center';
 
-interface StackProps extends ComponentProps<"div"> {
+interface StackProps extends ComponentProps<'div'> {
   children: React.ReactNode;
-  direction?: "column" | "row";
+  direction?: 'column' | 'row';
   align?: FlexAlignItems;
   justify?: FlexJustifyContent;
   gap?: number;
@@ -118,12 +117,12 @@ function Stack(props: StackProps) {
     children,
     shrink = false,
     grow = false,
-    justify = "start",
-    align = "start",
+    justify = 'start',
+    align = 'start',
     wrap = false,
     padding = 0,
     gap = 0,
-    direction = "column",
+    direction = 'column',
     className,
     ...etc
   } = props;
@@ -132,26 +131,26 @@ function Stack(props: StackProps) {
     <div
       className={className}
       style={{
-        display: "flex",
-        flex: "initial",
+        display: 'flex',
+        flex: 'initial',
         flexDirection: direction,
         alignItems:
-          align === "start"
-            ? "flex-start"
-            : align === "end"
-              ? "flex-end"
+          align === 'start'
+            ? 'flex-start'
+            : align === 'end'
+              ? 'flex-end'
               : align,
         justifyContent:
-          justify === "start"
-            ? "flex-start"
-            : justify === "end"
-              ? "flex-end"
+          justify === 'start'
+            ? 'flex-start'
+            : justify === 'end'
+              ? 'flex-end'
               : justify,
-        flexWrap: wrap ? "wrap" : "nowrap",
+        flexWrap: wrap ? 'wrap' : 'nowrap',
         flexGrow: grow ? 1 : 0,
         flexShrink: shrink ? 1 : 0,
-        padding: padding * 4 + "px",
-        gap: gap * 4 + "px",
+        padding: padding * 4 + 'px',
+        gap: gap * 4 + 'px',
       }}
       {...etc}
     >
@@ -160,4 +159,4 @@ function Stack(props: StackProps) {
   );
 }
 
-export { Stack };
+export { Stack }
