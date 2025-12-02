@@ -70,7 +70,7 @@ export default async function LocaleLayout({
     : (isRTL ? tajawal.className : GeistSans.className);
 
   return (
-    <div className={`${fontClass} ${GeistSans.variable} ${tajawal.variable} antialiased layout-container`}>
+    <div className={`${fontClass} ${GeistSans.variable} ${tajawal.variable} antialiased layout-container [--header-height:calc(var(--spacing)*14)] [--footer-height:calc(var(--spacing)*14)] xl:[--footer-height:calc(var(--spacing)*24)]`}>
       <SessionProvider session={session}>
         <NuqsAdapter>
           <ThemeProvider>
