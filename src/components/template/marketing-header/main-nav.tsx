@@ -20,7 +20,7 @@ export function MainNav({ dictionary }: MainNavProps) {
         <div className="-mt-[2px]">
           <Image src="/logo.png" alt="Hogwarts Logo" width={18} height={18} className="dark:invert" />
         </div>
-        <h6 className="hidden lg:inline-block">
+        <h6 className="hidden font-bold lg:inline-block">
           {dictionary?.navigation?.brandName || siteConfig.name}
         </h6>
       </Link>

@@ -1,12 +1,12 @@
 import Link from "next/link"
-import { siteConfig, marketingConfig } from "./config"
-import { Icons } from "./icons"
+import { marketingConfig } from "./config"
 import { MainNav } from "./main-nav"
 import { MobileNavButton } from "./mobile-nav-button"
 import { ModeSwitcher } from "./mode-switcher"
 import { LangSwitcher } from "./lang-switcher"
-import { Button } from "@/components/ui/button"
+import { GitHubLink } from "./github-link"
 import { buttonVariants } from "@/components/ui/button"
+import { Separator } from "@/components/ui/separator"
 import { cn } from "@/lib/utils"
 import type { Dictionary } from '@/components/internationalization/dictionaries'
 import { auth } from "@/auth"
@@ -51,22 +51,10 @@ export default async function MarketingHeader({ dictionary }: MarketingHeaderPro
               )}
             </div>
           </div>
-          <nav className="flex items-center gap-0.5">
-            <Button
-              asChild
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 px-0"
-            >
-              <Link
-                href={siteConfig.links.github}
-                target="_blank"
-                rel="noreferrer"
-              >
-                <Icons.gitHub className="h-4 w-4" />
-                <span className="sr-only">GitHub</span>
-              </Link>
-            </Button>
+          <nav className="flex items-center gap-0.5 **:data-[slot=separator]:!h-4">
+            <Separator orientation="vertical" className="mx-1 hidden md:block" />
+            <GitHubLink />
+            <Separator orientation="vertical" className="mx-1" />
             <LangSwitcher />
             <ModeSwitcher />
           </nav>
