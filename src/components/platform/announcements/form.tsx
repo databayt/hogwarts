@@ -12,6 +12,7 @@ import { useRouter } from "next/navigation";
 import { InformationStep } from "./information";
 import { ScopeStep } from "./scope";
 import { AnnouncementFormFooter } from "./footer";
+import PageHeading from "@/components/atom/page-heading";
 import type { Dictionary } from "@/components/internationalization/dictionaries";
 import type { Locale } from "@/components/internationalization/config";
 
@@ -138,8 +139,10 @@ export function AnnouncementCreateForm({ dictionary, lang, onSuccess }: Announce
           <div className="flex-grow flex flex-col md:flex-row gap-6">
             {/* Title Section */}
             <div className="md:w-1/3">
-              <h2>{isView ? t.viewAnnouncement : currentId ? t.editAnnouncement : t.createAnnouncement}</h2>
-              <p className="muted">{isView ? t.viewAnnouncementDetails : currentId ? t.updateAnnouncementDetails : t.createNewAnnouncement}</p>
+              <PageHeading
+                title={isView ? t.viewAnnouncement : currentId ? t.editAnnouncement : t.createAnnouncement}
+                description={isView ? t.viewAnnouncementDetails : currentId ? t.updateAnnouncementDetails : t.createNewAnnouncement}
+              />
             </div>
 
             {/* Form Content */}
