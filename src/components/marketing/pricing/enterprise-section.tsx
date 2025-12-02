@@ -14,10 +14,10 @@ export default function EnterpriseSection({ lang }: EnterpriseSectionProps) {
       <div className="flex justify-center">
         <Badge className="bg-muted text-foreground">Enterprise</Badge>
       </div>
-      <h3 className="font-heading">
+      <h1 className="text-4xl md:text-5xl font-heading font-extrabold">
         Need Something Bigger?
-      </h3>
-      <p className="leading-normal text-muted-foreground sm:leading-7">
+      </h1>
+      <p className="muted">
         For enterprises and large organizations, we offer custom solutions with dedicated teams, SLAs, and specialized support tailored to your unique requirements.
       </p>
       <div className="flex justify-center">

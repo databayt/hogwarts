@@ -1,6 +1,7 @@
 import Image from "next/image"
 import Link from "next/link"
 import type { Dictionary } from '@/components/internationalization/dictionaries'
+import '@/styles/animation-box.css'
 
 interface MissionCardsProps {
     dictionary?: Dictionary
@@ -30,7 +31,7 @@ const cards = [
 export default function MissionCards({ dictionary }: MissionCardsProps) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const dict = (dictionary?.marketing as any)?.missionCards || {
-        heading: "We build automation to serve education's long-term success.",
+        heading: "A restoration of time through the elimination of repetitive tasks.",
         description1: "While no one can foresee every challenge schools will face, we know that designing powerful systems requires both bold innovation and careful consideration of outcomes.",
         description2: "That's why we focus on building tools with educators and students at their foundation. Through our daily development, we aim to show what responsible school automation looks like in practice.",
     }
@@ -58,10 +59,10 @@ export default function MissionCards({ dictionary }: MissionCardsProps) {
                 {/* Three Cards */}
                 {cards.map((card, index) => (
                     <div key={index} className="lg:col-span-4">
-                        <Link href={card.href} className="block group">
-                            <div className={`${card.bgColor} rounded-lg p-6 aspect-square flex flex-col transition-transform duration-300 group-hover:scale-[1.02]`}>
-                                {/* Icon */}
-                                <div className="flex-1 flex items-center justify-center">
+                        <Link href={card.href} className="block">
+                            <div className={`${card.bgColor} rounded-lg p-6 aspect-square flex flex-col`}>
+                                {/* Icon with slow animation effect */}
+                                <div className="flex-1 animation-box">
                                     <div className="w-32 h-32 md:w-40 md:h-40 relative">
                                         <Image
                                             src={card.icon}

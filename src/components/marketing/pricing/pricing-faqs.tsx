@@ -23,11 +23,11 @@ export default function PricingFAQs() {
       <div className="flex w-full max-w-6xl">
         <div className="grid gap-y-12 gap-x-32 px-2 lg:[grid-template-columns:1fr_auto]">
           <div className="text-center lg:text-left">
-            <h2 className="mb-4">
+            <h1 className="mb-4 text-4xl md:text-5xl font-heading font-extrabold">
               Frequently <br className="hidden lg:block" /> Asked <br className="hidden lg:block" />
               Questions
-            </h2>
-            <p>Your guide to pricing and plans with Databayt.</p>
+            </h1>
+            <p className="muted">Your guide to pricing and plans with Databayt.</p>
           </div>
 
           <div className="divide-y divide-dashed sm:mx-auto sm:max-w-2xl lg:mx-0">
