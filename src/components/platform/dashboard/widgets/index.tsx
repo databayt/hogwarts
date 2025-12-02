@@ -364,7 +364,15 @@ export function AnnouncementCard({
   href,
   className
 }: AnnouncementCardProps) {
-  const formattedDate = typeof date === 'string' ? date : date.toLocaleDateString()
+  const formattedDate = (() => {
+    if (!date) return "-"
+    if (typeof date === 'string') return date
+    try {
+      return date.toLocaleDateString()
+    } catch {
+      return "-"
+    }
+  })()
 
   return (
     <div className={cn(
