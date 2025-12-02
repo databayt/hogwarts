@@ -16,7 +16,7 @@ export default async function MarketingLayout({
   const dictionary = await getDictionary(lang as Locale);
 
   return (
-    <div className="px-12">
+    <div className="px-14">
       <SiteHeader dictionary={dictionary} />
       {children}
       <SiteFooter dictionary={dictionary} />
