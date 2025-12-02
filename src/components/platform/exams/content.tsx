@@ -47,6 +47,14 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
   let studentsEnrolledCount = 0;
   let lastMonthExamsCount = 0;
   let lastMonthQuestionsCount = 0;
+  let nextExam: {
+    id: string;
+    title: string;
+    examDate: Date;
+    duration: number;
+    subject: { subjectName: string };
+    class: { name: string };
+  } | null = null;
 
   if (schoolId) {
     const today = new Date();
@@ -105,7 +113,41 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
         }
       }),
     ]);
+
+    // Fetch next upcoming exam separately for proper type inference
+    nextExam = await db.exam.findFirst({
+      where: {
+        schoolId,
+        status: { in: ["PLANNED", "IN_PROGRESS"] },
+        examDate: { gte: today }
+      },
+      orderBy: { examDate: "asc" },
+      select: {
+        id: true,
+        title: true,
+        examDate: true,
+        duration: true,
+        subject: { select: { subjectName: true } },
+        class: { select: { name: true } },
+      }
+    });
   }
+
+  // Format next exam details for the card
+  const formatDate = (date: Date) => {
+    return new Intl.DateTimeFormat(lang === "ar" ? "ar-SA" : "en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    }).format(date);
+  };
+
+  const formatTime = (date: Date) => {
+    return new Intl.DateTimeFormat(lang === "ar" ? "ar-SA" : "en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+    }).format(date);
+  };
 
   const d = dictionary?.school?.exams;
 
@@ -164,20 +206,27 @@ export default async function ExamsContent({ dictionary, lang }: Props) {
     <div className="space-y-8">
       {/* Hero Section: Card Flip + 2x2 Stats Grid */}
       <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
-        {/* Card Flip - Overview */}
+        {/* Card Flip - Next Exam */}
         <ExamCardFlip
-          title={d?.pageTitle || "Examinations"}
-          subtitle={d?.description || "Complete exam management system"}
-          description={d?.dashboard?.description || "Comprehensive exam management with question banks, auto-generation, AI marking, and detailed results."}
-          features={[
-            d?.dashboard?.blocks?.qbank?.title || "Question Bank",
-            d?.dashboard?.blocks?.generate?.title || "AI Generation",
-            d?.dashboard?.blocks?.mark?.title || "Auto Marking",
-            d?.dashboard?.blocks?.results?.title || "Results & Reports",
+          title={nextExam ? (d?.upcomingExams || "Next Exam") : (d?.noUpcomingExams || "No Upcoming")}
+          subtitle={nextExam?.title || (d?.createExam || "Schedule an exam")}
+          description={nextExam
+            ? `${nextExam.subject?.subjectName || ""} - ${nextExam.class?.name || ""}`
+            : (d?.createDescription || "Create a new examination")
+          }
+          examDetails={nextExam ? [
+            { label: d?.examDate || "Date", value: formatDate(nextExam.examDate) },
+            { label: d?.time || "Time", value: formatTime(nextExam.examDate) },
+            { label: d?.duration || "Duration", value: `${nextExam.duration} ${d?.minutes || "min"}` },
+            { label: d?.dashboard?.stats?.questionBank || "Qbank", value: `${questionBankCount}`, href: `/${lang}/exams/qbank` },
+          ] : [
+            { label: d?.dashboard?.stats?.totalExams || "Total", value: `${examsCount}` },
+            { label: d?.dashboard?.stats?.upcoming || "Upcoming", value: `${upcomingExamsCount}` },
+            { label: d?.dashboard?.stats?.questionBank || "Qbank", value: `${questionBankCount}`, href: `/${lang}/exams/qbank` },
+            { label: d?.dashboard?.stats?.templates || "Templates", value: `${templatesCount}` },
           ]}
-          href={`/${lang}/exams`}
-          ctaText={d?.nav?.overview || "View Overview"}
-          stats={{ label: d?.dashboard?.stats?.totalExams || "exams", value: examsCount }}
+          ctaHref={nextExam ? `/${lang}/exams/${nextExam.id}` : `/${lang}/exams/new`}
+          ctaText={nextExam ? (d?.viewDetails || "View Details") : (d?.createExam || "Create Exam")}
         />
 
         {/* 2x2 Stats Grid */}
