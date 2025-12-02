@@ -49,7 +49,8 @@ export async function GET(request: NextRequest) {
       select: {
         id: true,
         schoolId: true,
-        title: true,
+        titleEn: true,
+        titleAr: true,
         scheduledFor: true,
       },
     });
@@ -91,7 +92,7 @@ export async function GET(request: NextRequest) {
       `[publish-announcements] Published ${result.count} announcements:`,
       scheduledAnnouncements.map((a) => ({
         id: a.id,
-        title: a.title,
+        title: a.titleEn || a.titleAr,
         scheduledFor: a.scheduledFor,
       }))
     );
@@ -102,7 +103,7 @@ export async function GET(request: NextRequest) {
       published: result.count,
       announcements: scheduledAnnouncements.map((a) => ({
         id: a.id,
-        title: a.title,
+        title: a.titleEn || a.titleAr,
         scheduledFor: a.scheduledFor,
       })),
       duration: Date.now() - startTime,

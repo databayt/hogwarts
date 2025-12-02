@@ -11,11 +11,13 @@ import { deleteAnnouncement, toggleAnnouncementPublish } from "@/components/plat
 import { DeleteToast, ErrorToast, confirmDeleteDialog } from "@/components/atom/toast";
 import type { Dictionary } from "@/components/internationalization/dictionaries";
 import { useRouter, useSearchParams } from "next/navigation";
+import type { Locale } from "@/components/internationalization/config";
 
+// Bilingual row type - both language versions
 export type AnnouncementRow = {
   id: string;
-  title: string;
-  language: string;
+  titleEn: string | null;
+  titleAr: string | null;
   scope: string;
   published: boolean;
   createdAt: string;
@@ -25,7 +27,21 @@ export type AnnouncementRow = {
   featured: boolean;
 };
 
-export const getAnnouncementColumns = (dictionary: Dictionary['school']['announcements']): ColumnDef<AnnouncementRow>[] => {
+/**
+ * Get localized title with fallback
+ * If preferred locale is missing, falls back to the other language
+ */
+function getLocalizedTitle(row: AnnouncementRow, locale: Locale): string {
+  if (locale === 'ar') {
+    return row.titleAr || row.titleEn || '';
+  }
+  return row.titleEn || row.titleAr || '';
+}
+
+export const getAnnouncementColumns = (
+  dictionary: Dictionary['school']['announcements'],
+  locale: Locale
+): ColumnDef<AnnouncementRow>[] => {
   const t = dictionary;
 
   // Map dictionary keys to column structure for easier access
@@ -39,11 +55,19 @@ export const getAnnouncementColumns = (dictionary: Dictionary['school']['announc
 
   return [
   {
-    accessorKey: "title",
+    // Use a custom accessor that returns localized title
+    accessorFn: (row) => getLocalizedTitle(row, locale),
     header: ({ column }) => <DataTableColumnHeader column={column} title={columns.title} />,
     meta: { label: columns.title, variant: "text" },
     id: 'title',
     enableColumnFilter: true,
+    // Custom filter that searches both languages
+    filterFn: (row, id, filterValue: string) => {
+      const titleEn = row.original.titleEn?.toLowerCase() || '';
+      const titleAr = row.original.titleAr || '';
+      const search = filterValue.toLowerCase();
+      return titleEn.includes(search) || titleAr.includes(search);
+    },
   },
   {
     accessorKey: "scope",
@@ -105,6 +129,9 @@ export const getAnnouncementColumns = (dictionary: Dictionary['school']['announc
       const router = useRouter();
       const searchParams = useSearchParams();
 
+      // Get display title for confirmation dialog
+      const displayTitle = getLocalizedTitle(announcement, locale);
+
       const onView = () => {
         const qs = searchParams.toString();
         router.push(`/announcements/${announcement.id}${qs ? `?${qs}` : ''}`);
@@ -120,7 +147,7 @@ export const getAnnouncementColumns = (dictionary: Dictionary['school']['announc
       };
       const onDelete = async () => {
         try {
-          const ok = await confirmDeleteDialog(t.confirmDelete.replace('{title}', announcement.title));
+          const ok = await confirmDeleteDialog(t.confirmDelete.replace('{title}', displayTitle));
           if (!ok) return;
           await deleteAnnouncement({ id: announcement.id });
           DeleteToast();
@@ -154,6 +181,3 @@ export const getAnnouncementColumns = (dictionary: Dictionary['school']['announc
   },
   ];
 }
-
-
-

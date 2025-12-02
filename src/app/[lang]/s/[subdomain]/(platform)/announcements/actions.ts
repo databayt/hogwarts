@@ -12,7 +12,17 @@ export async function createAnnouncement(input: z.infer<typeof announcementCreat
   if (!schoolId) throw new Error('Missing school context')
   const parsed = announcementCreateSchema.parse(input)
   await db.announcement.create(
-    { data: { schoolId, title: parsed.title, body: parsed.body, scope: parsed.scope as unknown as Prisma.AnnouncementCreateInput["scope"], classId: parsed.classId ?? null, role: parsed.role ?? null } } as unknown as Prisma.AnnouncementCreateArgs
+    { data: {
+      schoolId,
+      titleEn: parsed.titleEn ?? null,
+      titleAr: parsed.titleAr ?? null,
+      bodyEn: parsed.bodyEn ?? null,
+      bodyAr: parsed.bodyAr ?? null,
+      scope: parsed.scope as unknown as Prisma.AnnouncementCreateInput["scope"],
+      classId: parsed.classId ?? null,
+      role: parsed.role ?? null,
+      published: parsed.published ?? false,
+    } } as unknown as Prisma.AnnouncementCreateArgs
   )
   revalidatePath('/lab/announcements')
   return { success: true as const }

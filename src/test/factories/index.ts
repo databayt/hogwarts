@@ -295,9 +295,10 @@ export function createMockAnnouncement(overrides?: Partial<Announcement>): Annou
   return {
     id,
     schoolId,
-    title: overrides?.title ?? `Announcement ${id}`,
-    body: overrides?.body ?? 'Test announcement content',
-    language: overrides?.language ?? 'ar',
+    titleEn: overrides?.titleEn ?? `Announcement ${id}`,
+    titleAr: overrides?.titleAr ?? null,
+    bodyEn: overrides?.bodyEn ?? 'Test announcement content',
+    bodyAr: overrides?.bodyAr ?? null,
     scope: overrides?.scope ?? 'school',
     priority: overrides?.priority ?? 'normal',
     createdBy: overrides?.createdBy ?? 'u1',

@@ -2,7 +2,6 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { createAnnouncement, getAnnouncement, updateAnnouncement } from "@/components/platform/announcements/actions";
@@ -31,9 +30,10 @@ export function AnnouncementCreateForm({ dictionary, lang, onSuccess }: Announce
   const form = useForm<AnnouncementFormValues>({
     resolver: zodResolver(announcementCreateSchema),
     defaultValues: {
-      title: "",
-      body: "",
-      language: lang, // Default to current locale
+      titleEn: "",
+      titleAr: "",
+      bodyEn: "",
+      bodyAr: "",
       scope: "school",
       classId: "",
       role: "",
@@ -51,9 +51,10 @@ export function AnnouncementCreateForm({ dictionary, lang, onSuccess }: Announce
       if (!res.success || !res.data) return;
       const a = res.data;
       form.reset({
-        title: a.title ?? "",
-        body: a.body ?? "",
-        language: (a.language as "en" | "ar") ?? lang,
+        titleEn: a.titleEn ?? "",
+        titleAr: a.titleAr ?? "",
+        bodyEn: a.bodyEn ?? "",
+        bodyAr: a.bodyAr ?? "",
         scope: (a.scope as 'school' | 'class' | 'role') ?? "school",
         classId: a.classId ?? "",
         role: a.role ?? "",
@@ -84,7 +85,7 @@ export function AnnouncementCreateForm({ dictionary, lang, onSuccess }: Announce
 
   const handleNext = async () => {
     if (currentStep === 1) {
-      const step1Fields = ['title', 'body', 'language'] as const;
+      const step1Fields = ['titleEn', 'titleAr', 'bodyEn', 'bodyAr'] as const;
       const step1Valid = await form.trigger(step1Fields);
       if (step1Valid) {
         setCurrentStep(2);
@@ -98,9 +99,9 @@ export function AnnouncementCreateForm({ dictionary, lang, onSuccess }: Announce
     if (currentId) {
       // For editing, save current step data
       const currentStepFields = currentStep === 1
-        ? ['title', 'body', 'language'] as const
+        ? ['titleEn', 'titleAr', 'bodyEn', 'bodyAr'] as const
         : ['scope', 'classId', 'role', 'published'] as const;
-      
+
       const stepValid = await form.trigger(currentStepFields);
       if (stepValid) {
         await form.handleSubmit(onSubmit)();

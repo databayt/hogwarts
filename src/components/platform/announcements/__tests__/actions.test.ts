@@ -17,7 +17,7 @@ import { createAnnouncement, toggleAnnouncementPublish, deleteAnnouncement } fro
 
 describe('announcement actions', () => {
   it('creates announcement with schoolId', async () => {
-    await createAnnouncement({ title: 't', body: 'b', language: 'ar', scope: 'school', published: false })
+    await createAnnouncement({ titleEn: 't', bodyEn: 'b', scope: 'school', published: false })
     expect(create).toHaveBeenCalled()
   })
   it('toggles publish with tenant safety', async () => {

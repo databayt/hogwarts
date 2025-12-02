@@ -477,8 +477,8 @@ export async function getStudentDashboardData() {
     })),
     announcements: announcements.map((announcement) => ({
       id: announcement.id,
-      title: announcement.title,
-      body: announcement.body,
+      title: announcement.titleEn || announcement.titleAr || "",
+      body: announcement.bodyEn || announcement.bodyAr || "",
       createdAt: announcement.createdAt.toISOString(),
     })),
     attendanceSummary: {
@@ -686,8 +686,8 @@ export async function getParentDashboardData() {
     },
     announcements: announcements.map((announcement) => ({
       id: announcement.id,
-      title: announcement.title,
-      body: announcement.body,
+      title: announcement.titleEn || announcement.titleAr || "",
+      body: announcement.bodyEn || announcement.bodyAr || "",
       createdAt: announcement.createdAt.toISOString(),
     })),
   };

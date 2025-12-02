@@ -24,10 +24,8 @@ export default async function AnnouncementsContent({ searchParams, dictionary, l
   if (schoolId) {
     try {
       // Use shared query builder (caching removed due to multi-tenant complexity)
-      // Admin table shows ALL announcements regardless of language
-      // Language filtering is only for public-facing views (not admin management)
+      // Admin table shows ALL announcements - bilingual with locale-based display
       const { rows, count } = await getAnnouncementsList(schoolId, {
-        // Note: language filter removed - admin sees all announcements
         title: sp.title,
         scope: sp.scope,
         published: sp.published,
@@ -36,12 +34,12 @@ export default async function AnnouncementsContent({ searchParams, dictionary, l
         sort: sp.sort,
       });
 
-      // Map results to table format with safe date serialization
+      // Map results to table format with bilingual fields
       // CRITICAL FIX: Handle null/undefined dates to prevent server-side exceptions
       data = rows.map((a) => ({
         id: a.id,
-        title: a.title,
-        language: a.language, // Include language in row data
+        titleEn: a.titleEn,
+        titleAr: a.titleAr,
         scope: a.scope,
         published: a.published,
         // Safe date serialization - fallback to current time if null/undefined
@@ -74,6 +72,3 @@ export default async function AnnouncementsContent({ searchParams, dictionary, l
     </div>
   )
 }
-
-
-

@@ -289,7 +289,8 @@ export async function getAnnouncementReadStatistics(
       where: { id: announcementId },
       select: {
         id: true,
-        title: true,
+        titleEn: true,
+        titleAr: true,
         schoolId: true,
         scope: true,
         classId: true,
@@ -326,7 +327,7 @@ export async function getAnnouncementReadStatistics(
       success: true,
       data: {
         id: announcement.id,
-        title: announcement.title,
+        title: announcement.titleEn || announcement.titleAr || "",
         totalReads: reads.length,
         uniqueReaders,
         readPercentage,

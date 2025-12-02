@@ -1,6 +1,11 @@
 /**
  * Shared query builders and utilities for announcements
  * Consolidates query logic to eliminate duplication and improve maintainability
+ *
+ * Bilingual Support:
+ * - All announcements have titleEn/titleAr and bodyEn/bodyAr fields
+ * - Locale-based display is handled in the content/columns components
+ * - Fallback logic: if preferred locale is missing, use the other language
  */
 
 import { db } from "@/lib/db";
@@ -11,8 +16,7 @@ import { Prisma } from "@prisma/client";
 // ============================================================================
 
 export type AnnouncementListFilters = {
-  title?: string;
-  language?: string; // Filter by language (en/ar)
+  title?: string; // Searches both titleEn and titleAr
   scope?: string;
   published?: string;
   priority?: string;
@@ -39,11 +43,11 @@ export type AnnouncementQueryParams = AnnouncementListFilters &
   PaginationParams &
   AnnouncementSortParams;
 
-// Select types for different query contexts
+// Select types for different query contexts - bilingual fields
 export const announcementListSelect = {
   id: true,
-  title: true,
-  language: true, // Include language for locale-based display
+  titleEn: true,
+  titleAr: true,
   scope: true,
   priority: true,
   published: true,
@@ -59,9 +63,10 @@ export const announcementListSelect = {
 export const announcementDetailSelect = {
   id: true,
   schoolId: true,
-  title: true,
-  body: true,
-  language: true, // Include language for locale-based display
+  titleEn: true,
+  titleAr: true,
+  bodyEn: true,
+  bodyAr: true,
   scope: true,
   priority: true,
   classId: true,
@@ -109,17 +114,22 @@ export function buildAnnouncementWhere(
     schoolId,
   };
 
-  // Text search
+  // Text search - search in both English and Arabic titles
   if (filters.title) {
-    where.title = {
-      contains: filters.title,
-      mode: Prisma.QueryMode.insensitive,
-    };
-  }
-
-  // Language filter (for locale-based filtering)
-  if (filters.language) {
-    where.language = filters.language;
+    where.OR = [
+      {
+        titleEn: {
+          contains: filters.title,
+          mode: Prisma.QueryMode.insensitive,
+        },
+      },
+      {
+        titleAr: {
+          contains: filters.title,
+          mode: Prisma.QueryMode.insensitive,
+        },
+      },
+    ];
   }
 
   // Enum filters
@@ -316,7 +326,8 @@ export async function getScheduledAnnouncementsToPublish(schoolId?: string) {
     select: {
       id: true,
       schoolId: true,
-      title: true,
+      titleEn: true,
+      titleAr: true,
       scheduledFor: true,
     },
   });
@@ -341,7 +352,8 @@ export async function getExpiredAnnouncements(schoolId?: string) {
     select: {
       id: true,
       schoolId: true,
-      title: true,
+      titleEn: true,
+      titleAr: true,
       expiresAt: true,
     },
   });
@@ -446,4 +458,40 @@ export async function getAnnouncementsByIds(
     },
     select: announcementDetailSelect,
   });
+}
+
+// ============================================================================
+// Locale Helpers
+// ============================================================================
+
+/**
+ * Get localized title with fallback
+ * @param announcement - Announcement with titleEn and titleAr
+ * @param locale - Current locale ('en' or 'ar')
+ * @returns Title in preferred language or fallback
+ */
+export function getLocalizedTitle(
+  announcement: { titleEn: string | null; titleAr: string | null },
+  locale: string
+): string {
+  if (locale === 'ar') {
+    return announcement.titleAr || announcement.titleEn || '';
+  }
+  return announcement.titleEn || announcement.titleAr || '';
+}
+
+/**
+ * Get localized body with fallback
+ * @param announcement - Announcement with bodyEn and bodyAr
+ * @param locale - Current locale ('en' or 'ar')
+ * @returns Body in preferred language or fallback
+ */
+export function getLocalizedBody(
+  announcement: { bodyEn: string | null; bodyAr: string | null },
+  locale: string
+): string {
+  if (locale === 'ar') {
+    return announcement.bodyAr || announcement.bodyEn || '';
+  }
+  return announcement.bodyEn || announcement.bodyAr || '';
 }

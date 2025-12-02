@@ -49,7 +49,8 @@ export async function GET(request: NextRequest) {
       select: {
         id: true,
         schoolId: true,
-        title: true,
+        titleEn: true,
+        titleAr: true,
         expiresAt: true,
       },
     });
@@ -90,7 +91,7 @@ export async function GET(request: NextRequest) {
       `[expire-announcements] Expired ${result.count} announcements:`,
       expiredAnnouncements.map((a) => ({
         id: a.id,
-        title: a.title,
+        title: a.titleEn || a.titleAr,
         expiresAt: a.expiresAt,
       }))
     );
@@ -101,7 +102,7 @@ export async function GET(request: NextRequest) {
       expired: result.count,
       announcements: expiredAnnouncements.map((a) => ({
         id: a.id,
-        title: a.title,
+        title: a.titleEn || a.titleAr,
         expiresAt: a.expiresAt,
       })),
       duration: Date.now() - startTime,

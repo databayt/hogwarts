@@ -33,20 +33,30 @@ interface AnnouncementsTableProps {
   perPage?: number;
 }
 
-// Export CSV function (will be created inside component to access lang)
+/**
+ * Get localized title with fallback
+ */
+function getLocalizedTitle(row: AnnouncementRow, locale: Locale): string {
+  if (locale === 'ar') {
+    return row.titleAr || row.titleEn || '';
+  }
+  return row.titleEn || row.titleAr || '';
+}
+
+// Export CSV function
 function createGetAnnouncementsCSV(lang: Locale) {
   return async function getAnnouncementsCSV(filters?: Record<string, unknown>): Promise<string> {
-    // Get all announcements without pagination for export (filtered by language)
-    const result = await getAnnouncements({ page: 1, perPage: 1000, language: lang, ...filters });
+    // Get all announcements without pagination for export
+    const result = await getAnnouncements({ page: 1, perPage: 1000, ...filters });
     if (!result.success || !result.data.rows) return "";
 
     const rows = result.data.rows;
-    const headers = ["ID", "Title", "Language", "Scope", "Published", "Created At", "Created By"];
+    const headers = ["ID", "Title (EN)", "Title (AR)", "Scope", "Published", "Created At", "Created By"];
     const csvRows = rows.map((row) =>
       [
         row.id,
-        `"${row.title.replace(/"/g, '""')}"`,
-        row.language,
+        `"${(row.titleEn || '').replace(/"/g, '""')}"`,
+        `"${(row.titleAr || '').replace(/"/g, '""')}"`,
         row.scope,
         row.published ? "Yes" : "No",
         row.createdAt,
@@ -57,8 +67,6 @@ function createGetAnnouncementsCSV(lang: Locale) {
     return [headers.join(","), ...csvRows].join("\n");
   };
 }
-
-// Filter options - built dynamically with translations inside component
 
 export function AnnouncementsTable({
   initialData,
@@ -79,14 +87,12 @@ export function AnnouncementsTable({
   const [searchInput, setSearchInput] = useState("");
   const deferredSearch = useDeferredValue(searchInput);
 
-  // Build filters object (always include language for locale-based filtering)
+  // Build filters object
   const filters = useMemo(() => {
-    const f: Record<string, unknown> = {
-      language: lang, // Always filter by current locale
-    };
+    const f: Record<string, unknown> = {};
     if (deferredSearch) f.title = deferredSearch;
     return f;
-  }, [lang, deferredSearch]);
+  }, [deferredSearch]);
 
   // Data management with optimistic updates
   const {
@@ -106,7 +112,6 @@ export function AnnouncementsTable({
     fetcher: async (params) => {
       const result = await getAnnouncements({
         ...params,
-        language: lang, // Always filter by current locale
         title: deferredSearch || undefined,
       });
       if (result.success) {
@@ -117,8 +122,8 @@ export function AnnouncementsTable({
     filters,
   });
 
-  // Generate columns with dictionary
-  const columns = useMemo(() => getAnnouncementColumns(t), [t]);
+  // Generate columns with dictionary and locale for bilingual display
+  const columns = useMemo(() => getAnnouncementColumns(t, lang), [t, lang]);
 
   // Table instance (for table view)
   const { table } = useDataTable<AnnouncementRow>({
@@ -141,8 +146,9 @@ export function AnnouncementsTable({
 
   // Handle delete with optimistic update
   const handleDelete = useCallback(async (announcement: AnnouncementRow) => {
+    const displayTitle = getLocalizedTitle(announcement, lang);
     try {
-      const ok = await confirmDeleteDialog(t.confirmDelete.replace('{title}', announcement.title));
+      const ok = await confirmDeleteDialog(t.confirmDelete.replace('{title}', displayTitle));
       if (!ok) return;
 
       // Optimistic remove
@@ -160,7 +166,7 @@ export function AnnouncementsTable({
       refresh();
       ErrorToast(e instanceof Error ? e.message : t.failedToDelete);
     }
-  }, [t, optimisticRemove, refresh]);
+  }, [t, lang, optimisticRemove, refresh]);
 
   // Handle toggle publish with optimistic update
   const handleTogglePublish = useCallback(async (announcement: AnnouncementRow) => {
@@ -261,12 +267,13 @@ export function AnnouncementsTable({
             <GridContainer columns={3}>
               {data.map((announcement) => {
                 const scopeBadge = getScopeBadge(announcement.scope);
+                const displayTitle = getLocalizedTitle(announcement, lang);
                 return (
                   <GridCard
                     key={announcement.id}
-                    title={announcement.title}
+                    title={displayTitle}
                     subtitle={new Date(announcement.createdAt).toLocaleDateString()}
-                    avatarFallback={announcement.title.substring(0, 2).toUpperCase()}
+                    avatarFallback={displayTitle.substring(0, 2).toUpperCase()}
                     status={{
                       label: announcement.published ? t.published : t.draft,
                       variant: announcement.published ? "default" : "outline",

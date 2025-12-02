@@ -197,7 +197,8 @@ export async function getRecentActivities() {
       take: 5,
       select: {
         id: true,
-        title: true,
+        titleEn: true,
+        titleAr: true,
         createdAt: true,
       },
     }),
@@ -235,7 +236,7 @@ export async function getRecentActivities() {
     })),
     ...recentAnnouncements.map((a) => ({
       type: "announcement" as const,
-      action: `New announcement: ${a.title}`,
+      action: `New announcement: ${a.titleEn || a.titleAr}`,
       timestamp: a.createdAt,
       user: "Admin",
     })),

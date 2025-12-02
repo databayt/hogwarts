@@ -1,13 +1,12 @@
 import { z } from "zod"
 
-// Language enum for announcements (matches supported locales)
-// Using literal array to avoid readonly type issues with z.enum
-export const languageSchema = z.enum(["ar", "en"] as const)
-
+// Bilingual announcement schema
+// Both languages are optional but at least one title is required
 export const announcementBaseSchema = z.object({
-  title: z.string().min(1, "Title is required"),
-  body: z.string().min(1, "Body is required"),
-  language: languageSchema, // Required: "ar" or "en" - set default in form
+  titleEn: z.string().optional(), // English title
+  titleAr: z.string().optional(), // Arabic title
+  bodyEn: z.string().optional(),  // English body
+  bodyAr: z.string().optional(),  // Arabic body
   scope: z.enum(["school", "class", "role"]),
   classId: z.string().optional(),
   role: z.string().optional(),
@@ -18,6 +17,22 @@ export const announcementBaseSchema = z.object({
   pinned: z.boolean().optional(),
   featured: z.boolean().optional(),
 }).superRefine((val, ctx) => {
+  // At least one title is required
+  if (!val.titleEn && !val.titleAr) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "At least one title (English or Arabic) is required",
+      path: ["titleEn"]
+    })
+  }
+  // At least one body is required
+  if (!val.bodyEn && !val.bodyAr) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "At least one body (English or Arabic) is required",
+      path: ["bodyEn"]
+    })
+  }
   if (val.scope === "class" && !val.classId) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Class is required when scope is class", path: ["classId"] })
   }
@@ -57,12 +72,8 @@ export const sortItemSchema = z.object({ id: z.string(), desc: z.boolean().optio
 export const getAnnouncementsSchema = z.object({
   page: z.number().int().positive().default(1),
   perPage: z.number().int().positive().max(200).default(20),
-  title: z.string().optional().default(""),
+  title: z.string().optional().default(""), // Searches both titleEn and titleAr
   scope: z.string().optional().default(""),
   published: z.string().optional().default(""),
-  language: z.string().optional().default(""), // Filter by locale (en/ar)
   sort: z.array(sortItemSchema).optional().default([]),
 })
-
-
-

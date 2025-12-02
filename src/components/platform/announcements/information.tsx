@@ -1,18 +1,9 @@
 "use client";
 
 import { type UseFormReturn } from "react-hook-form";
-import { z } from "zod";
-import { announcementCreateSchema } from "./validation";
 import { FormControl, FormField, FormItem, FormMessage, FormLabel } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import type { Dictionary } from "@/components/internationalization/dictionaries";
 
 import { AnnouncementFormStepProps } from "./types";
@@ -26,59 +17,83 @@ export function InformationStep({ form, isView, dictionary }: InformationStepPro
 
   return (
     <div className="space-y-4 w-full">
-      {/* Language selector */}
+      {/* English Title */}
       <FormField
         control={form.control}
-        name="language"
+        name="titleEn"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>{t.language || "Language"}</FormLabel>
-            <Select
-              onValueChange={field.onChange}
-              defaultValue={field.value}
-              disabled={isView}
-            >
-              <FormControl>
-                <SelectTrigger>
-                  <SelectValue placeholder={t.selectLanguage || "Select language"} />
-                </SelectTrigger>
-              </FormControl>
-              <SelectContent>
-                <SelectItem value="ar">{t.arabic || "العربية"}</SelectItem>
-                <SelectItem value="en">{t.english || "English"}</SelectItem>
-              </SelectContent>
-            </Select>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-
-      <FormField
-        control={form.control}
-        name="title"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>{t.titleLabel}</FormLabel>
+            <FormLabel>{t.titleLabel} (English)</FormLabel>
             <FormControl>
-              <Input placeholder={t.titlePlaceholder} disabled={isView} {...field} />
+              <Input
+                placeholder="Enter title in English"
+                disabled={isView}
+                {...field}
+                value={field.value ?? ""}
+              />
             </FormControl>
             <FormMessage />
           </FormItem>
         )}
       />
 
+      {/* Arabic Title */}
       <FormField
         control={form.control}
-        name="body"
+        name="titleAr"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>{t.contentLabel}</FormLabel>
+            <FormLabel>{t.titleLabel} (العربية)</FormLabel>
+            <FormControl>
+              <Input
+                placeholder="أدخل العنوان بالعربية"
+                disabled={isView}
+                dir="rtl"
+                {...field}
+                value={field.value ?? ""}
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      {/* English Body */}
+      <FormField
+        control={form.control}
+        name="bodyEn"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>{t.contentLabel} (English)</FormLabel>
             <FormControl>
               <Textarea
-                placeholder={t.contentPlaceholder}
+                placeholder="Enter content in English"
                 className="min-h-[120px]"
                 disabled={isView}
                 {...field}
+                value={field.value ?? ""}
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      {/* Arabic Body */}
+      <FormField
+        control={form.control}
+        name="bodyAr"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>{t.contentLabel} (العربية)</FormLabel>
+            <FormControl>
+              <Textarea
+                placeholder="أدخل المحتوى بالعربية"
+                className="min-h-[120px]"
+                disabled={isView}
+                dir="rtl"
+                {...field}
+                value={field.value ?? ""}
               />
             </FormControl>
             <FormMessage />
