@@ -64,11 +64,7 @@ const Hero = ({ dictionary, lang }: HeroProps) => {
             <span className="block">elevate the wonder.</span>
           </h1>
 
-          <p className="text-lg lg:text-xl text-muted-foreground max-w-xl">
-            {heroDict.subtitle}
-          </p>
-
-          <div className="flex flex-col sm:flex-row gap-3 pt-4">
+          <div className="flex flex-col sm:flex-row gap-3">
             <Link
               href={`/${lang || 'en'}/onboarding`}
               className={cn(buttonVariants({ size: "lg" }), "w-full sm:w-auto")}
