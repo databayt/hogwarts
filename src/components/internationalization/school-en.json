@@ -557,7 +557,15 @@
     },
     "exams": {
       "title": "Examination Management",
+      "pageTitle": "Examinations",
       "description": "Comprehensive exam management system with question banks, auto-generation, marking, and results",
+      "nav": {
+        "overview": "Overview",
+        "qbank": "Qbank",
+        "generate": "Generate",
+        "mark": "Mark",
+        "record": "Record"
+      },
       "allExams": "All Exams",
       "createExam": "Create Exam",
       "editExam": "Edit Exam",

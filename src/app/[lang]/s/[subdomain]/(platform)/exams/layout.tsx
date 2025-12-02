@@ -13,38 +13,34 @@ export default async function ExamsLayout({ children, params }: Props) {
   const dictionary = await getDictionary(lang as Locale)
   const d = dictionary?.school?.exams
 
-  // Define exams page navigation using dictionary paths
+  // Define exams page navigation: Overview, Qbank, Generate, Mark, Record
   const examsPages: PageNavItem[] = [
     {
-      name: d?.allExams || 'Manage',
+      name: d?.nav?.overview || 'Overview',
       href: `/${lang}/exams`
     },
     {
-      name: d?.dashboard?.blocks?.qbank?.title || 'Question Bank',
+      name: d?.nav?.qbank || 'Qbank',
       href: `/${lang}/exams/qbank`
     },
     {
-      name: d?.dashboard?.blocks?.generate?.title || 'Generate',
+      name: d?.nav?.generate || 'Generate',
       href: `/${lang}/exams/generate`
     },
     {
-      name: d?.dashboard?.blocks?.mark?.title || 'Mark',
+      name: d?.nav?.mark || 'Mark',
       href: `/${lang}/exams/mark`
     },
     {
-      name: d?.results || 'Results',
+      name: d?.nav?.record || 'Record',
       href: `/${lang}/exams/result`
-    },
-    {
-      name: d?.upcomingExams || 'Upcoming',
-      href: `/${lang}/exams/upcoming`
     },
   ]
 
   return (
     <div className="space-y-6">
       <PageHeadingSetter
-        title={d?.title || 'Exams'}
+        title={d?.pageTitle || 'Examinations'}
       />
       <PageNav pages={examsPages} />
 
