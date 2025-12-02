@@ -2,7 +2,7 @@ import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
-import { TriangleAlert, Users, Calendar, BookOpen, DollarSign, TrendingUp, Bell, ClipboardList, UserPlus, FileText, Settings, ChevronRight,  } from "lucide-react"
+import { DollarSign, TrendingUp, Bell, ClipboardList, ChevronRight } from "lucide-react"
 import { formatDistanceToNow, isValid } from "date-fns"
 
 // Safe date formatting helper
@@ -170,7 +170,7 @@ export async function AdminDashboard({ user, dictionary, locale = "en" }: Props)
           change={enrollment.newThisMonth > 0 ? enrollment.newThisMonth : undefined}
           changeType="positive"
           description="new this month"
-          icon={Users}
+          iconName="Users"
           iconColor="text-blue-500"
           href={`/${locale}/s/${school?.domain}/students`}
         />
@@ -180,14 +180,14 @@ export async function AdminDashboard({ user, dictionary, locale = "en" }: Props)
           change={2.3}
           changeType="positive"
           description="vs last week"
-          icon={Calendar}
+          iconName="Calendar"
           iconColor="text-green-500"
           href={`/${locale}/s/${school?.domain}/attendance`}
         />
         <MetricCard
           title="Active Classes"
           value={classes.total}
-          icon={BookOpen}
+          iconName="BookOpen"
           iconColor="text-purple-500"
           href={`/${locale}/s/${school?.domain}/subjects`}
         />
@@ -195,7 +195,7 @@ export async function AdminDashboard({ user, dictionary, locale = "en" }: Props)
           title="Total Staff"
           value={staff.total}
           description={`${staff.departments} departments`}
-          icon={Users}
+          iconName="Users"
           iconColor="text-orange-500"
           href={`/${locale}/s/${school?.domain}/teachers`}
         />
@@ -340,7 +340,7 @@ export async function AdminDashboard({ user, dictionary, locale = "en" }: Props)
                 ))
             ) : (
               <EmptyState
-                icon={Bell}
+                iconName="Bell"
                 title="No recent announcements"
                 description="New announcements will appear here"
               />
@@ -376,7 +376,7 @@ export async function AdminDashboard({ user, dictionary, locale = "en" }: Props)
               ))
             ) : (
               <EmptyState
-                icon={ClipboardList}
+                iconName="ClipboardList"
                 title="No recent activities"
                 description="Activities will appear here as they happen"
               />
@@ -428,7 +428,7 @@ export async function AdminDashboard({ user, dictionary, locale = "en" }: Props)
           current={3.2}
           total={10}
           unit="GB"
-          icon={Settings}
+          iconName="Settings"
           showPercentage
         />
         <ProgressCard
@@ -436,7 +436,7 @@ export async function AdminDashboard({ user, dictionary, locale = "en" }: Props)
           current={45000}
           total={100000}
           unit="calls"
-          icon={TrendingUp}
+          iconName="TrendingUp"
           showPercentage
         />
         <ProgressCard
@@ -444,7 +444,7 @@ export async function AdminDashboard({ user, dictionary, locale = "en" }: Props)
           current={127}
           total={500}
           unit="users"
-          icon={Users}
+          iconName="Users"
           showPercentage
         />
       </div>

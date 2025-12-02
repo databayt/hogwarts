@@ -7,9 +7,33 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
-import { Calendar, Clock, TrendingUp, TrendingDown, ChevronRight, Bell, Users, BookOpen, GraduationCap, DollarSign } from "lucide-react"
+import { Calendar, Clock, TrendingUp, TrendingDown, ChevronRight, Bell, Users, BookOpen, GraduationCap, DollarSign, Settings, ClipboardList, FileText, Award, CalendarDays, MessageSquare, UserPlus, BarChart3, FolderOpen, CheckCircle } from "lucide-react"
 import type { ElementType } from "react"
 import Link from "next/link"
+
+// Icon mapping for string-based icon names (to avoid passing functions from Server to Client Components)
+const iconMap: Record<string, ElementType> = {
+  Calendar,
+  Clock,
+  TrendingUp,
+  TrendingDown,
+  ChevronRight,
+  Bell,
+  Users,
+  BookOpen,
+  GraduationCap,
+  DollarSign,
+  Settings,
+  ClipboardList,
+  FileText,
+  Award,
+  CalendarDays,
+  MessageSquare,
+  UserPlus,
+  BarChart3,
+  FolderOpen,
+  CheckCircle,
+}
 
 // ============================================================================
 // Activity Rings - Apple-style circular progress indicators
@@ -214,6 +238,7 @@ interface MetricCardProps {
   change?: number
   changeType?: "positive" | "negative" | "neutral"
   icon?: ElementType
+  iconName?: string // String-based icon name for Server Component compatibility
   iconColor?: string
   description?: string
   href?: string
@@ -225,12 +250,15 @@ export function MetricCard({
   value,
   change,
   changeType = "neutral",
-  icon: Icon,
+  icon,
+  iconName,
   iconColor = "text-primary",
   description,
   href,
   className,
 }: MetricCardProps) {
+  // Support both direct icon prop (client-side) and iconName string (server-side)
+  const Icon = icon || (iconName ? iconMap[iconName] : undefined)
   const content = (
     <Card className={cn(
       "group relative overflow-hidden transition-all duration-300",
@@ -405,6 +433,7 @@ interface ProgressCardProps {
   total: number
   unit?: string
   icon?: ElementType
+  iconName?: string // String-based icon name for Server Component compatibility
   color?: string
   showPercentage?: boolean
   className?: string
@@ -415,11 +444,14 @@ export function ProgressCard({
   current,
   total,
   unit = "",
-  icon: Icon,
+  icon,
+  iconName,
   color = "bg-primary",
   showPercentage = true,
   className,
 }: ProgressCardProps) {
+  // Support both direct icon prop (client-side) and iconName string (server-side)
+  const Icon = icon || (iconName ? iconMap[iconName] : undefined)
   const percentage = total > 0 ? Math.round((current / total) * 100) : 0
 
   return (
@@ -537,6 +569,7 @@ export function ChartCard({ title, description, children, footer, className }: C
 
 interface EmptyStateProps {
   icon?: ElementType
+  iconName?: string // String-based icon name for Server Component compatibility
   title: string
   description?: string
   action?: {
@@ -548,12 +581,15 @@ interface EmptyStateProps {
 }
 
 export function EmptyState({
-  icon: Icon,
+  icon,
+  iconName,
   title,
   description,
   action,
   className
 }: EmptyStateProps) {
+  // Support both direct icon prop (client-side) and iconName string (server-side)
+  const Icon = icon || (iconName ? iconMap[iconName] : undefined)
   return (
     <div className={cn(
       "flex flex-col items-center justify-center py-8 px-4 text-center",
