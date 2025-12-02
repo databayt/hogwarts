@@ -1,11 +1,10 @@
 .clock {
     border-radius: 50%;
-    background-size: 88%;
-    height: 12em;
-    padding-bottom: 31%;
+    height: 9em;
     position: relative;
-    width: 12em;
-    border: 4px solid #fcfcfc;
+    width: 9em;
+    border: 3px solid #fcfcfc;
+    overflow: hidden;
 }
 
 .clock.simple:after {

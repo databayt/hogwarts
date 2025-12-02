@@ -12,7 +12,7 @@ const Time = ({ dictionary }: TimeProps) => {
     return (
         <section className='flex justify-between items-center py-8 md:py-10 lg:py-12 my-40 bg-black dark:invert text-background rounded-md'>
             <div className='flex flex-col items-start justify-start ps-12'>
-                <h1 className="font-heading text-5xl pt-5 md:text-7xl flex items-center justify-center pb-7 dark:invert">
+                <h1 className="font-heading font-extrabold text-5xl pt-5 md:text-7xl flex items-center justify-center pb-7 dark:invert">
                     {timeDict.title}
                 </h1>
                 <p className="max-w-[70%] md:max-w-[100%] font-heading text-lg -mt-4 sm:text-xl md:text-2xl flex items-center justify-center pb-7 dark:invert">

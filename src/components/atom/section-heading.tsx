@@ -34,7 +34,7 @@ export default function SectionHeading({
     <div className={cn("flex flex-col items-center space-y-2 text-center pt-20", className)}>
       <h1
         className={cn(
-          "font-heading text-5xl md:text-7xl leading-[1.1]",
+          "font-heading font-extrabold text-5xl md:text-7xl leading-[1.1]",
           titleClassName
         )}
       >

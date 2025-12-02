@@ -66,7 +66,7 @@ export default function FAQs({ dictionary }: FAQsProps) {
     <section className="py-16 md:py-32">
       <div className="grid gap-y-12 lg:grid-cols-[1fr_2fr] lg:gap-x-12">
         <div className="text-center lg:text-start">
-          <h1 className="mb-4 whitespace-pre-line text-5xl md:text-7xl font-heading">
+          <h1 className="mb-4 whitespace-pre-line text-5xl md:text-7xl font-heading font-extrabold">
             {faqsDict.titleBreak || faqsDict.title}
           </h1>
           <p className="muted">{faqsDict.subtitle}</p>
