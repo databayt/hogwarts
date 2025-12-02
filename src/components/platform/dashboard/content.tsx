@@ -59,6 +59,8 @@ export default async function DashboardContent({ school, dictionary, locale = "e
       case "STAFF":
         return <StaffDashboard user={user} dictionary={dictionary!} locale={locale} />;
       case "ADMIN":
+      case "DEVELOPER":
+        // DEVELOPER (platform admin) sees AdminDashboard when viewing school subdomains
         return <AdminDashboard user={user} dictionary={dictionary!} locale={locale} />;
       case "PRINCIPAL":
         return <PrincipalDashboard user={user} dictionary={dictionary!} locale={locale} />;
