@@ -99,6 +99,16 @@
       "heading": "A restoration of time, elimination of repetitive tasks.",
       "description": "78% of schools still rely on paper-based systems, costing the industry $12B annually in wasted processes. We're building reusable automation components—from atomic building blocks to complete solutions—that give educators back their 40 hours lost each month to manual tasks. Every line of code is open source, every contribution shapes the future of how schools operate."
     },
+    "storySection": {
+      "title": "Building the future of education",
+      "quote": "What if schools could focus on teaching instead of paperwork? What would education look like then?"
+    },
+    "openSource": {
+      "title": "Proudly Open Source",
+      "description": "Hogwarts is open source and powered by open source software. The code is available on",
+      "github": "GitHub",
+      "contributors": "Contributors"
+    },
     "time": {
       "title": "Time",
       "subtitle": "We sell the origin of value."
