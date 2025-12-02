@@ -22,7 +22,7 @@ export default function LetsWorkTogether({ dictionary }: LetsWorkTogetherProps) 
    
   
       <section className="">
-        <h2 className="mb-8">{dict.title}</h2>
+        <h1 className="mb-8 text-5xl md:text-7xl font-heading">{dict.title}</h1>
         <div className="flex flex-col lg:flex-row gap-8 lg:gap-14 ">
           <div className="flex-1">
             <p className="muted mb-4">

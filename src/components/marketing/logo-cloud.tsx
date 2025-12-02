@@ -64,10 +64,10 @@ export default function LogoCloud({ dictionary }: LogoCloudProps) {
 
     return (
         <section className="bg-background overflow-hidden py-16">
-            <div className="group relative m-auto max-w-7xl px-6">
+            <div className="group relative m-auto max-w-7xl">
                 <div className="flex flex-col items-center md:flex-row">
-                    <div className="md:max-w-44 md:border-r md:pr-6">
-                        <small className="text-end whitespace-pre-line">{text}</small>
+                    <div className="md:max-w-52 md:border-r md:pr-6">
+                        <p className="text-end whitespace-pre-line text-xl font-semibold">{text}</p>
                     </div>
                     <div className="relative py-6 md:w-[calc(100%-11rem)]">
                         <InfiniteSlider

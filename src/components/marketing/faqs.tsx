@@ -135,12 +135,11 @@ export default function FAQs({ dictionary }: FAQsProps) {
 
   return (
     <section className="scroll-py-16 py-16 md:scroll-py-32 md:py-32">
-      <div className="container mx-auto px-4">
-        <div className="grid gap-y-12 lg:grid-cols-[1fr_2fr] lg:gap-x-12">
-          <div className="text-center lg:text-start">
-            <h2 className="mb-4 whitespace-pre-line">
-              {faqsDict.titleBreak || faqsDict.title}
-            </h2>
+      <div className="grid gap-y-12 lg:grid-cols-[1fr_2fr] lg:gap-x-12">
+        <div className="text-center lg:text-start">
+          <h1 className="mb-4 whitespace-pre-line text-5xl md:text-7xl font-heading">
+            {faqsDict.titleBreak || faqsDict.title}
+          </h1>
             <p className="muted">{faqsDict.subtitle}</p>
           </div>
           <div className="divide-y divide-dashed sm:mx-auto sm:max-w-xl lg:mx-0 lg:ms-auto">
@@ -191,7 +190,6 @@ export default function FAQs({ dictionary }: FAQsProps) {
                 ))}
               </Accordion>
             </div>
-          </div>
         </div>
       </div>
     </section>

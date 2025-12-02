@@ -32,14 +32,14 @@ export default function SectionHeading({
 }: SectionHeadingProps) {
   return (
     <div className={cn("flex flex-col items-center space-y-2 text-center pt-20", className)}>
-      <h2 
+      <h1
         className={cn(
-          "font-heading leading-[1.1]",
+          "font-heading text-5xl md:text-7xl leading-[1.1]",
           titleClassName
         )}
       >
         {title}
-      </h2>
+      </h1>
       
       {(description || linkText) && (
         <p 

@@ -41,7 +41,7 @@ export default function Testimonial({ dictionary }: TestimonialProps) {
         {
             name: "Layla Osman",
             role: "Education Coordinator",
-            content: "Simplified parent-teacher communication. Highly effective for our district.",
+            content: "Simplified parent-teacher communication. Highly effective.",
             avatar: "/contributors/5.jpg"
         },
         {

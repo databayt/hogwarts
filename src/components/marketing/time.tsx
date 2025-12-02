@@ -10,16 +10,18 @@ const Time = ({ dictionary }: TimeProps) => {
     const timeDict = (dictionary as any).time || { title: 'Time', subtitle: 'We sell the origin of value.' };
 
     return (
-        <section className='flex justify-between items-center px-12 md:px-16 lg:px-20 py-8 md:py-10 lg:py-12 my-40 bg-black dark:invert text-background rounded-md'>
-            <div className='flex flex-col items-start justify-start  '>
-                <h2 className="font-heading text-3xl pt-5  sm:text-2xl md:text-6xl flex items-center justify-center pb-7 dark:invert">
+        <section className='flex justify-between items-center py-8 md:py-10 lg:py-12 my-40 bg-black dark:invert text-background rounded-md'>
+            <div className='flex flex-col items-start justify-start ps-12'>
+                <h1 className="font-heading text-5xl pt-5 md:text-7xl flex items-center justify-center pb-7 dark:invert">
                     {timeDict.title}
-                </h2>
-                <h2 className="max-w-[70%] md:max-w-[100%] font-heading text-lg -mt-4 sm:text-xl md:text-3xl flex items-center justify-center pb-7 dark:invert">
+                </h1>
+                <p className="max-w-[70%] md:max-w-[100%] font-heading text-lg -mt-4 sm:text-xl md:text-2xl flex items-center justify-center pb-7 dark:invert">
                     {timeDict.subtitle}
-                </h2>
+                </p>
             </div>
-            <Clock />
+            <div className="pe-12">
+                <Clock />
+            </div>
         </section>
     )
 }
