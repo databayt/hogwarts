@@ -9,7 +9,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Users, Clock, CircleCheck, CircleX, CircleAlert, LoaderCircle, RefreshCw } from "lucide-react";
 import { cn } from '@/lib/utils'
-import { formatDistanceToNow } from 'date-fns'
+import { formatDistanceToNow, isValid } from 'date-fns'
 import type { Dictionary } from '@/components/internationalization/dictionaries'
 import type { UserRole } from '@prisma/client'
 import { getRecentAttendance, getAttendanceStats, getClassesForSelection } from '../actions'
@@ -46,6 +46,40 @@ interface ClassOption {
   id: string
   name: string
   teacher: string | null
+}
+
+// Safe date formatting helpers
+function safeFormatDistanceToNow(date: Date | string | null | undefined): string {
+  if (!date) return "recently"
+  try {
+    const dateObj = typeof date === "string" ? new Date(date) : date
+    if (!isValid(dateObj)) return "recently"
+    return formatDistanceToNow(dateObj, { addSuffix: true })
+  } catch {
+    return "recently"
+  }
+}
+
+function safeFormatDate(date: Date | string | null | undefined, locale: string = 'en'): string {
+  if (!date) return "-"
+  try {
+    const dateObj = typeof date === "string" ? new Date(date) : date
+    if (!isValid(dateObj)) return "-"
+    return dateObj.toLocaleDateString(locale)
+  } catch {
+    return "-"
+  }
+}
+
+function safeFormatTime(date: Date | string | null | undefined, locale: string = 'en'): string {
+  if (!date) return "-"
+  try {
+    const dateObj = typeof date === "string" ? new Date(date) : date
+    if (!isValid(dateObj)) return "-"
+    return dateObj.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })
+  } catch {
+    return "-"
+  }
 }
 
 const getStatusIcon = (status: string) => {
@@ -337,7 +371,7 @@ export function RecentActivityContent({ dictionary, locale = 'en', userRole }: P
                             <>
                               <span>•</span>
                               <span>
-                                Check-in: {new Date(record.checkInTime).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })}
+                                Check-in: {safeFormatTime(record.checkInTime, locale)}
                               </span>
                             </>
                           )}
@@ -345,9 +379,9 @@ export function RecentActivityContent({ dictionary, locale = 'en', userRole }: P
                       </div>
                     </div>
                     <div className="text-sm text-muted-foreground text-right">
-                      <p>{new Date(record.date).toLocaleDateString(locale)}</p>
+                      <p>{safeFormatDate(record.date, locale)}</p>
                       <p className="text-xs">
-                        {formatDistanceToNow(new Date(record.markedAt), { addSuffix: true })}
+                        {safeFormatDistanceToNow(record.markedAt)}
                       </p>
                     </div>
                   </div>
