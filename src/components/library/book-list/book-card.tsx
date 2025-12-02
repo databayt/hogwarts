@@ -3,11 +3,10 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
-import { Book } from "@/components/ui/book";
-import type { Book as BookType } from "../types";
+import type { Book } from "../types";
 
 interface Props {
-  book: BookType;
+  book: Book;
 }
 
 export default function BookCard({ book }: Props) {
@@ -21,48 +20,45 @@ export default function BookCard({ book }: Props) {
     <li className="list-none">
       <Link
         href={`/library/books/${book.id}`}
-        className="block transition-transform hover:scale-[1.02]"
+        className="block bg-card border border-border rounded-lg overflow-hidden hover:shadow-lg transition-shadow"
       >
-        <Book
-          color={book.coverColor || "#1a1a2e"}
-          textColor="#ffffff"
-          width={180}
-          depth={3}
+        {/* Book Cover */}
+        <div
+          className="relative aspect-[3/4] overflow-hidden"
+          style={{ backgroundColor: book.coverColor || "#1a1a2e" }}
         >
-          <div className="p-4 flex flex-col h-full justify-end min-h-[60px]">
-            {hasValidImage ? (
-              <div className="absolute inset-0 overflow-hidden">
-                <Image
-                  src={book.coverUrl}
-                  alt={book.title}
-                  fill
-                  className="object-cover"
-                  onError={() => setImageError(true)}
-                />
-              </div>
-            ) : null}
-            <div className="relative z-10">
-              <h3 className="font-semibold text-white text-sm line-clamp-2 mb-1">
+          {hasValidImage ? (
+            <Image
+              src={book.coverUrl}
+              alt={book.title}
+              fill
+              className="object-cover"
+              onError={() => setImageError(true)}
+            />
+          ) : (
+            <div className="flex flex-col items-center justify-center h-full p-4 text-center">
+              <h3 className="font-bold text-white text-lg line-clamp-3 mb-2">
                 {book.title}
               </h3>
-              <p className="text-white/70 text-xs">{book.author}</p>
+              <p className="text-white/80 text-sm">{book.author}</p>
             </div>
-          </div>
-        </Book>
+          )}
+        </div>
 
-        <div className="mt-3 space-y-1 px-1">
-          <h4 className="font-medium text-foreground text-sm line-clamp-1">
+        {/* Book Info */}
+        <div className="p-4 space-y-2">
+          <h4 className="font-semibold text-foreground line-clamp-1">
             {book.title}
           </h4>
-          <p className="text-muted-foreground text-xs">by {book.author}</p>
+          <p className="text-muted-foreground text-sm">by {book.author}</p>
 
-          <div className="flex items-center justify-between text-xs">
+          <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">{book.genre}</span>
             <span className="text-amber-500">⭐ {book.rating}/5</span>
           </div>
 
           <p
-            className={`text-xs ${
+            className={`text-sm font-medium ${
               book.availableCopies > 0
                 ? "text-green-600 dark:text-green-400"
                 : "text-red-600 dark:text-red-400"
