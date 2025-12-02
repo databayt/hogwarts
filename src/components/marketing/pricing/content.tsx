@@ -21,11 +21,19 @@ interface Props {
 
 export default async function PricingContent(props: Props) {
   const { lang } = props;
-  const user = await currentUser();
 
-  let subscriptionPlan;
-  if (user && user.id) {
-    subscriptionPlan = await getUserSubscriptionPlan(user.id);
+  // Safely get user and subscription - don't crash if auth/db fails
+  let user = null;
+  let subscriptionPlan = undefined;
+
+  try {
+    user = await currentUser();
+    if (user?.id) {
+      subscriptionPlan = await getUserSubscriptionPlan(user.id);
+    }
+  } catch (error) {
+    // Log but continue - pricing page should work for anonymous users
+    console.error("Failed to get user/subscription:", error);
   }
 
   return (
