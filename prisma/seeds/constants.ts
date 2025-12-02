@@ -112,7 +112,7 @@ export const KHARTOUM_NEIGHBORHOODS = [
   "أركويت", "الصافية", "القوز", "الجريف", "سوبا", "الفردوس", "المنصورة",
 ];
 
-// Departments and their subjects (Sudanese National Curriculum aligned)
+// Departments and their subjects (Sudanese National Curriculum aligned - Full K-12)
 export const DEPARTMENTS = [
   {
     name: "اللغات",  // Languages
@@ -121,6 +121,14 @@ export const DEPARTMENTS = [
       { ar: "اللغة العربية", en: "Arabic" },
       { ar: "اللغة الإنجليزية", en: "English" },
       { ar: "اللغة الفرنسية", en: "French" },
+      { ar: "القراءة", en: "Reading" },
+      { ar: "الكتابة", en: "Writing" },
+      { ar: "الإملاء", en: "Spelling" },
+      { ar: "التعبير", en: "Composition" },
+      { ar: "النحو والصرف", en: "Grammar" },
+      { ar: "الأدب العربي", en: "Arabic Literature" },
+      { ar: "الأدب الإنجليزي", en: "English Literature" },
+      { ar: "الخط العربي", en: "Calligraphy" },
     ],
   },
   {
@@ -128,21 +136,31 @@ export const DEPARTMENTS = [
     nameEn: "Sciences",
     subjects: [
       { ar: "الرياضيات", en: "Mathematics" },
+      { ar: "الحساب", en: "Arithmetic" },
+      { ar: "الجبر", en: "Algebra" },
+      { ar: "الهندسة", en: "Geometry" },
+      { ar: "الإحصاء", en: "Statistics" },
+      { ar: "العلوم", en: "Science" },
       { ar: "الفيزياء", en: "Physics" },
       { ar: "الكيمياء", en: "Chemistry" },
       { ar: "الأحياء", en: "Biology" },
-      { ar: "علوم البيئة", en: "Environmental Science" },
+      { ar: "علوم البيئة", en: "Environmental" },
+      { ar: "علوم الأرض", en: "Earth Science" },
     ],
   },
   {
     name: "العلوم الإنسانية",  // Humanities
     nameEn: "Humanities",
     subjects: [
+      { ar: "الدراسات الاجتماعية", en: "Social Studies" },
       { ar: "الجغرافيا", en: "Geography" },
       { ar: "التاريخ", en: "History" },
       { ar: "التاريخ السوداني", en: "Sudanese History" },
       { ar: "التربية الوطنية", en: "Civics" },
       { ar: "الاقتصاد", en: "Economics" },
+      { ar: "علم النفس", en: "Psychology" },
+      { ar: "علم الاجتماع", en: "Sociology" },
+      { ar: "الفلسفة", en: "Philosophy" },
     ],
   },
   {
@@ -151,8 +169,12 @@ export const DEPARTMENTS = [
     subjects: [
       { ar: "التربية الإسلامية", en: "Islamic" },
       { ar: "القرآن الكريم", en: "Quran" },
+      { ar: "التجويد", en: "Tajweed" },
       { ar: "الحديث النبوي", en: "Hadith" },
       { ar: "الفقه", en: "Fiqh" },
+      { ar: "التوحيد", en: "Tawheed" },
+      { ar: "السيرة النبوية", en: "Seerah" },
+      { ar: "الأخلاق الإسلامية", en: "Islamic Ethics" },
     ],
   },
   {
@@ -162,6 +184,9 @@ export const DEPARTMENTS = [
       { ar: "علوم الحاسوب", en: "Computer Science" },
       { ar: "تقنية المعلومات", en: "IT" },
       { ar: "الثقافة الرقمية", en: "Digital Literacy" },
+      { ar: "البرمجة", en: "Programming" },
+      { ar: "تصميم المواقع", en: "Web Design" },
+      { ar: "الروبوتات", en: "Robotics" },
     ],
   },
   {
@@ -172,6 +197,20 @@ export const DEPARTMENTS = [
       { ar: "التربية الموسيقية", en: "Music" },
       { ar: "التربية البدنية", en: "Physical" },
       { ar: "التربية الصحية", en: "Health" },
+      { ar: "الأشغال اليدوية", en: "Crafts" },
+      { ar: "المسرح", en: "Drama" },
+      { ar: "التربية الأسرية", en: "Home Economics" },
+    ],
+  },
+  {
+    name: "مهارات الحياة",  // Life Skills
+    nameEn: "Life Skills",
+    subjects: [
+      { ar: "المهارات الحياتية", en: "Life Skills" },
+      { ar: "التوجيه المهني", en: "Career Guidance" },
+      { ar: "ريادة الأعمال", en: "Entrepreneurship" },
+      { ar: "التفكير النقدي", en: "Critical Thinking" },
+      { ar: "مهارات التواصل", en: "Communication" },
     ],
   },
 ];
