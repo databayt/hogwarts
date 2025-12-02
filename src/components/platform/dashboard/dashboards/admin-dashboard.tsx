@@ -49,25 +49,27 @@ interface Props {
 }
 
 export async function AdminDashboard({ user, dictionary, locale = "en" }: Props) {
-  // Fetch real data from server actions with error handling
-  let dashboardData
+  // Wrap entire component in try-catch for comprehensive error handling
   try {
-    dashboardData = await getDashboardSummary()
-  } catch (error) {
-    console.error("[AdminDashboard] Error fetching data:", error)
-    return (
-      <div className="space-y-6">
-        <Card>
-          <CardContent className="p-6">
-            <h3 className="mb-4">Unable to Load Dashboard</h3>
-            <p className="text-muted-foreground">
-              There was an error loading the dashboard data. Please try refreshing the page.
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-    )
-  }
+    // Fetch real data from server actions with error handling
+    let dashboardData
+    try {
+      dashboardData = await getDashboardSummary()
+    } catch (error) {
+      console.error("[AdminDashboard] Error fetching data:", error)
+      return (
+        <div className="space-y-6">
+          <Card>
+            <CardContent className="p-6">
+              <h3 className="mb-4">Unable to Load Dashboard</h3>
+              <p className="text-muted-foreground">
+                There was an error loading the dashboard data. Please try refreshing the page.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      )
+    }
 
   // Get tenant context for subdomain with error handling
   let schoolId: string | null = null
@@ -448,4 +450,27 @@ export async function AdminDashboard({ user, dictionary, locale = "en" }: Props)
       </div>
     </div>
   )
+  } catch (renderError) {
+    // Catch any rendering errors and log them
+    console.error("[AdminDashboard] Rendering error:", renderError)
+    const errorMessage = renderError instanceof Error ? renderError.message : String(renderError)
+    const errorStack = renderError instanceof Error ? renderError.stack : undefined
+    console.error("[AdminDashboard] Error message:", errorMessage)
+    console.error("[AdminDashboard] Error stack:", errorStack)
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardContent className="p-6">
+            <h3 className="mb-4">Dashboard Rendering Error</h3>
+            <p className="text-muted-foreground mb-2">
+              An error occurred while rendering the dashboard.
+            </p>
+            <pre className="text-xs bg-muted p-2 rounded overflow-auto max-h-40">
+              {errorMessage}
+            </pre>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
 }
