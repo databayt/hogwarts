@@ -48,6 +48,14 @@ interface Props {
 }
 
 export async function AdminDashboard({ user, dictionary, locale = "en" }: Props) {
+  // TEMPORARY: Return immediately to isolate error source
+  // If this fixes the error, the issue is in the function body below
+  return (
+    <div className="p-6">
+      <p>DEBUG: AdminDashboard rendered successfully for {user?.email || "unknown"}</p>
+    </div>
+  )
+
   // Wrap entire component in try-catch for comprehensive error handling
   try {
     // Fetch real data from server actions with error handling
