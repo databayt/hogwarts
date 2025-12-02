@@ -7,7 +7,6 @@ import type { Dictionary } from '@/components/internationalization/dictionaries'
 import type { Locale } from '@/components/internationalization/config'
 import { env } from '@/env.mjs'
 import { HeroIllustration } from './hero-illustration'
-import { AnimatedWord } from './animated-word'
 
 interface HeroProps {
   dictionary?: Dictionary
@@ -62,8 +61,8 @@ const Hero = ({ dictionary, lang }: HeroProps) => {
             </Link>
 
             <h1 className="font-heading font-extrabold text-4xl sm:text-5xl lg:text-6xl xl:text-7xl tracking-tight">
-              <span className="block">{heroDict.title}</span>
-              <span className="block">elevate the <AnimatedWord words={["curiosity", "wonder"]} />.</span>
+              <span className="block">Automate Education,</span>
+              <span className="block">elevate the wonder.</span>
             </h1>
 
             <p className="text-lg lg:text-xl text-muted-foreground max-w-xl">

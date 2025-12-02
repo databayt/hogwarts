@@ -97,7 +97,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "npx prettier --write \"$CLAUDE_TOOL_ARGS\" --log-level silent || exit 0"
+            "command": "npx prettier --write \"$CLAUDE_TOOL_ARGS\" --log-level silent || exit 0; .claude/hooks/deploy.sh 2>/dev/null &"
           }
         ]
       },
@@ -106,7 +106,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "npx prettier --write \"$CLAUDE_TOOL_ARGS\" --log-level silent || exit 0"
+            "command": "npx prettier --write \"$CLAUDE_TOOL_ARGS\" --log-level silent || exit 0; .claude/hooks/deploy.sh 2>/dev/null &"
           }
         ]
       },
@@ -126,7 +126,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo '🚀 HOGWARTS SCHOOL AUTOMATION PLATFORM'; echo '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'; echo 'Stack: Next.js 15 + React 19 + Prisma + TypeScript'; echo 'Auto-Deploy: SessionEnd triggers validation + deploy'; echo ''; BRANCH=$(git branch --show-current 2>/dev/null); CHANGES=$(git status --porcelain 2>/dev/null | wc -l); echo \"📊 Repository: $BRANCH branch | $CHANGES uncommitted\"; echo ''; echo '⚡ Development Loop (fastest → thorough):'; echo '  /quick    - Lint + commit + push (~10s)'; echo '  /dev      - Validate + test + build + deploy (~30s)'; echo '  /deploy   - Full auto-deploy pipeline (~30s)'; echo '  /validate - Agent-powered validation (~2min)'; echo '  /ship     - Production release (~5min)'; echo ''; echo '🔄 Auto-Deploy: Changes auto-deploy on session end'; echo ''; exit 0"
+            "command": "echo '🚀 HOGWARTS - FULLY AUTOMATIC MODE'; echo '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'; echo 'Stack: Next.js 15 + React 19 + Prisma + TypeScript'; echo ''; BRANCH=$(git branch --show-current 2>/dev/null); echo \"📊 Branch: $BRANCH\"; echo ''; echo '🔄 AUTO-DEPLOY ACTIVE:'; echo '  • After edits: Auto-validate + commit + push'; echo '  • Debounce: 60s between deploys'; echo '  • Preview: https://${BRANCH}---hogwarts.vercel.app'; echo ''; echo '📝 Just describe what you need - everything else is automatic'; echo ''; exit 0"
           }
         ]
       }

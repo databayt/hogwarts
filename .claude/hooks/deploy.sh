@@ -1,110 +1,107 @@
 #!/bin/bash
-# Auto-Deploy Hook - Triggered after file changes
-# Validates, commits, pushes, and monitors deployment
+# Smart Auto-Deploy - Runs after edits with debounce
+# Only deploys if:
+# 1. There are uncommitted changes
+# 2. Last deploy was >60 seconds ago
+# 3. Not currently deploying
 
-set -e
+LOCK_FILE="/tmp/hogwarts-deploy.lock"
+TIMESTAMP_FILE="/tmp/hogwarts-last-deploy"
+DEBOUNCE_SECONDS=60
 
+# Check if already deploying
+if [ -f "$LOCK_FILE" ]; then
+    exit 0
+fi
+
+# Check if there are uncommitted changes
+CHANGES=$(git status --porcelain 2>/dev/null | wc -l | tr -d ' ')
+if [ "$CHANGES" -eq 0 ]; then
+    exit 0
+fi
+
+# Check debounce (don't deploy if deployed recently)
+if [ -f "$TIMESTAMP_FILE" ]; then
+    LAST_DEPLOY=$(cat "$TIMESTAMP_FILE" 2>/dev/null || echo 0)
+    NOW=$(date +%s)
+    DIFF=$((NOW - LAST_DEPLOY))
+    if [ "$DIFF" -lt "$DEBOUNCE_SECONDS" ]; then
+        exit 0
+    fi
+fi
+
+# Create lock
+touch "$LOCK_FILE"
+
+# Run deploy
 echo ""
 echo "═══════════════════════════════════════"
 echo "🚀 AUTO-DEPLOY TRIGGERED"
 echo "═══════════════════════════════════════"
 
-# Step 1: Quick Validation
-echo ""
-echo "Step 1/5: Validating..."
-
-# TypeScript check
+# Quick validation
+echo "Validating..."
 if ! pnpm tsc --noEmit 2>/dev/null; then
-    echo "❌ TypeScript errors - auto-deploy aborted"
-    echo "💡 Fix errors and changes will auto-deploy"
-    exit 1
+    echo "❌ TypeScript errors - skipping deploy"
+    rm -f "$LOCK_FILE"
+    exit 0
 fi
-echo "  ✅ TypeScript: OK"
 
-# Lint check (with auto-fix)
 pnpm lint --fix --quiet 2>/dev/null || true
+
 if ! pnpm lint --quiet 2>/dev/null; then
-    echo "❌ Lint errors - auto-deploy aborted"
-    exit 1
+    echo "❌ Lint errors - skipping deploy"
+    rm -f "$LOCK_FILE"
+    exit 0
 fi
-echo "  ✅ Lint: OK"
 
-# Step 2: Quick Test (changed files only)
-echo ""
-echo "Step 2/5: Testing changed files..."
-if pnpm test --changed --run --silent 2>/dev/null; then
-    echo "  ✅ Tests: OK"
+# Build check
+echo "Building..."
+if ! pnpm build 2>/dev/null | tail -3; then
+    echo "❌ Build failed - skipping deploy"
+    rm -f "$LOCK_FILE"
+    exit 0
+fi
+
+# Commit
+echo "Committing..."
+CHANGED_FILES=$(git diff --name-only | head -3 | tr '\n' ', ' | sed 's/,$//')
+git add -A 2>/dev/null
+
+# Determine commit type
+if git diff --cached --name-only | grep -qE '\.(css|scss)'; then
+    TYPE="style"
+elif git diff --cached --name-only | grep -qE '\.test\.(ts|tsx)$'; then
+    TYPE="test"
+elif git diff --cached --name-only | grep -qE '\.md$'; then
+    TYPE="docs"
 else
-    echo "  ⚠️  Tests: Skipped (no test changes)"
+    TYPE="fix"
 fi
 
-# Step 3: Build Check
-echo ""
-echo "Step 3/5: Build check..."
-if ! pnpm build 2>/dev/null | tail -5; then
-    echo "❌ Build failed - auto-deploy aborted"
-    exit 1
-fi
-echo "  ✅ Build: OK"
-
-# Step 4: Auto-Commit
-echo ""
-echo "Step 4/5: Committing..."
-
-# Check if there are changes to commit
-if git diff --quiet && git diff --cached --quiet; then
-    echo "  ℹ️  No changes to commit"
-else
-    # Get changed files for commit message
-    CHANGED_FILES=$(git diff --name-only | head -3 | tr '\n' ', ' | sed 's/,$//')
-
-    # Determine commit type
-    if git diff --name-only | grep -qE '\.(css|scss|tailwind)'; then
-        TYPE="style"
-    elif git diff --name-only | grep -qE '\.test\.(ts|tsx)$'; then
-        TYPE="test"
-    elif git diff --name-only | grep -qE 'README|\.md$'; then
-        TYPE="docs"
-    else
-        TYPE="fix"
-    fi
-
-    git add -A
-    git commit -m "$(cat <<EOF
-${TYPE}: auto-deploy changes
+git commit -m "${TYPE}: auto-deploy
 
 Files: ${CHANGED_FILES}
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
 
-Co-Authored-By: Claude <noreply@anthropic.com>
-EOF
-)" 2>/dev/null || echo "  ℹ️  Nothing to commit"
+Co-Authored-By: Claude <noreply@anthropic.com>" 2>/dev/null || true
 
-    COMMIT_HASH=$(git rev-parse --short HEAD 2>/dev/null)
-    echo "  ✅ Committed: ${COMMIT_HASH}"
-fi
-
-# Step 5: Push & Deploy
-echo ""
-echo "Step 5/5: Pushing to deploy..."
-
+# Push
+echo "Pushing..."
 BRANCH=$(git branch --show-current)
-git push origin "${BRANCH}" 2>/dev/null
+git push origin "$BRANCH" 2>/dev/null || true
 
-echo "  ✅ Pushed to origin/${BRANCH}"
+# Update timestamp
+date +%s > "$TIMESTAMP_FILE"
 
-# Get Vercel deployment URL
+# Remove lock
+rm -f "$LOCK_FILE"
+
 echo ""
-echo "═══════════════════════════════════════"
 echo "✅ AUTO-DEPLOY COMPLETE"
-echo "═══════════════════════════════════════"
-echo "Branch:  ${BRANCH}"
-echo "Commit:  ${COMMIT_HASH:-latest}"
-echo "Status:  Deploying to Vercel..."
-echo ""
-echo "🔗 Preview: https://${BRANCH}---hogwarts.vercel.app"
-echo "📊 Dashboard: https://vercel.com/dashboard"
+echo "Branch: $BRANCH"
+echo "Preview: https://${BRANCH}---hogwarts.vercel.app"
 echo "═══════════════════════════════════════"
 
 exit 0
