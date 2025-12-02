@@ -91,7 +91,12 @@ export function AttendanceOverviewContent({ dictionary, locale = 'en' }: Attenda
     };
 
     const methodPath = methodPathMap[method];
-    router.push(`/${locale}/attendance/${methodPath}`);
+    // Extract subdomain from current path
+    const pathSegments = pathname.split('/');
+    const subdomainIndex = pathSegments.indexOf('s');
+    const subdomain = subdomainIndex !== -1 ? pathSegments[subdomainIndex + 1] : '';
+
+    router.push(`/${locale}/s/${subdomain}/attendance/${methodPath}`);
   };
 
   const isMethodAvailable = (method: AttendanceMethod) => {
@@ -119,21 +124,33 @@ export function AttendanceOverviewContent({ dictionary, locale = 'en' }: Attenda
   // Role-based quick actions
   const getQuickActions = () => {
     switch (userRole) {
-      case 'ADMIN':
+      case 'ADMIN': {
+        const pathSegments = pathname.split('/');
+        const subdomainIndex = pathSegments.indexOf('s');
+        const subdomain = subdomainIndex !== -1 ? pathSegments[subdomainIndex + 1] : '';
         return [
           { label: d?.quickActions?.bulkImport || 'Bulk Import', icon: Upload, action: () => handleMethodSelect('BULK_UPLOAD'), color: 'blue' },
-          { label: d?.quickActions?.settings || 'Settings', icon: Edit, action: () => router.push(`/${locale}/attendance/settings`), color: 'gray' },
+          { label: d?.quickActions?.settings || 'Settings', icon: Edit, action: () => router.push(`/${locale}/s/${subdomain}/attendance/settings`), color: 'gray' },
         ];
-      case 'TEACHER':
+      }
+      case 'TEACHER': {
+        const pathSegments = pathname.split('/');
+        const subdomainIndex = pathSegments.indexOf('s');
+        const subdomain = subdomainIndex !== -1 ? pathSegments[subdomainIndex + 1] : '';
         return [
           { label: d?.quickActions?.markAttendance || 'Mark Attendance', icon: Edit, action: () => handleMethodSelect('MANUAL'), color: 'green' },
-          { label: d?.quickActions?.viewReports || 'View Reports', icon: Users, action: () => router.push(`/${locale}/attendance/reports`), color: 'purple' },
+          { label: d?.quickActions?.viewReports || 'View Reports', icon: Users, action: () => router.push(`/${locale}/s/${subdomain}/attendance/reports`), color: 'purple' },
         ];
-      case 'STUDENT':
+      }
+      case 'STUDENT': {
+        const pathSegments = pathname.split('/');
+        const subdomainIndex = pathSegments.indexOf('s');
+        const subdomain = subdomainIndex !== -1 ? pathSegments[subdomainIndex + 1] : '';
         return [
           { label: d?.quickActions?.selfCheckIn || 'Self Check-in', icon: QrCode, action: () => handleMethodSelect('QR_CODE'), color: 'blue' },
-          { label: d?.quickActions?.myAttendance || 'My Attendance', icon: User, action: () => router.push(`/${locale}/attendance/my-attendance`), color: 'green' },
+          { label: d?.quickActions?.myAttendance || 'My Attendance', icon: User, action: () => router.push(`/${locale}/s/${subdomain}/attendance/my-attendance`), color: 'green' },
         ];
+      }
       default:
         return [];
     }

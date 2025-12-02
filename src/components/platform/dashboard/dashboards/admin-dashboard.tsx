@@ -2,16 +2,49 @@ import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
-import { AlertTriangle } from "lucide-react"
+import {
+  AlertTriangle,
+  Users,
+  Calendar,
+  BookOpen,
+  DollarSign,
+  TrendingUp,
+  Bell,
+  ClipboardList,
+  UserPlus,
+  FileText,
+  Settings,
+  ChevronRight,
+} from "lucide-react"
 import { formatDistanceToNow } from "date-fns"
 import { getDashboardSummary } from "./actions"
 import { QuickActions } from "../quick-actions"
 import { getQuickActionsByRole } from "../quick-actions-config"
 import { getTenantContext } from "@/lib/tenant-context"
-import { AdminDashboardStats } from "@/components/platform/shared/stats"
+import { TrendingStats } from "@/components/platform/shared/stats"
+import {
+  WelcomeBanner,
+  MetricCard,
+  ActivityRings,
+  ProgressCard,
+  AnnouncementCard,
+  EmptyState,
+} from "../widgets"
+import {
+  AttendanceTrendChart,
+  PerformanceGauge,
+  WeeklyActivityChart,
+} from "../widgets/dashboard-charts"
+import Link from "next/link"
 
 interface Props {
-  user: any
+  user: {
+    id: string
+    email?: string | null
+    role?: string
+    schoolId?: string | null
+    name?: string
+  }
   dictionary?: Dictionary["school"]
   locale?: string
 }
@@ -47,7 +80,7 @@ export async function AdminDashboard({ user, dictionary, locale = "en" }: Props)
       const { db } = await import("@/lib/db")
       school = await db.school.findUnique({
         where: { id: schoolId },
-        select: { domain: true },
+        select: { domain: true, name: true },
       })
     }
   } catch (error) {
@@ -65,67 +98,101 @@ export async function AdminDashboard({ user, dictionary, locale = "en" }: Props)
     activities,
   } = dashboardData
 
-  // Mock data for features not yet implemented (Financial, Compliance, etc.)
-  const mockFinancialSummary = {
+  // Dictionary
+  const d = dictionary?.dashboard
+
+  // Activity rings data for key metrics
+  const activityData = [
+    {
+      label: "Attendance",
+      value: attendance.attendanceRate || 0,
+      color: "#22c55e",
+      current: attendance.present || 0,
+      target: attendance.total || 100,
+      unit: "present",
+    },
+    {
+      label: "Classes",
+      value: Math.min(100, (classes.active / Math.max(classes.total, 1)) * 100),
+      color: "#3b82f6",
+      current: classes.active,
+      target: classes.total || 1,
+      unit: "active",
+    },
+    {
+      label: "Staff",
+      value: staff.presenceRate || 85,
+      color: "#f59e0b",
+      current: staff.total,
+      target: staff.total,
+      unit: "staff",
+    },
+  ]
+
+  // Weekly attendance data for chart
+  const weeklyAttendance = [
+    { day: "Mon", value: 92 },
+    { day: "Tue", value: 95 },
+    { day: "Wed", value: 88 },
+    { day: "Thu", value: 94 },
+    { day: "Fri", value: 91 },
+  ]
+
+  // Mock financial data
+  const financialData = {
     totalRevenue: 1250000,
     expenses: 980000,
     profit: 270000,
-    outstandingFees: 45000,
-    budgetUtilization: 78.4,
+    collectionRate: 78.4,
   }
-
-  const mockStaffPerformance = {
-    excellent: 28,
-    good: 42,
-    satisfactory: 15,
-    needsImprovement: 5,
-  }
-
-  const mockComplianceStatus = {
-    academic: "Compliant",
-    financial: "Compliant",
-    safety: "Pending Review",
-    accreditation: "Compliant",
-  }
-
-  const mockPendingRequests = [
-    { type: "Teacher Leave", requester: "Sarah Johnson", urgency: "high", daysOpen: 2 },
-    { type: "Budget Approval", requester: "Math Department", urgency: "medium", daysOpen: 1 },
-    { type: "Student Transfer", requester: "Parent", urgency: "low", daysOpen: 5 },
-  ]
-
-  const mockSystemAlerts = [
-    {
-      type: "Database Backup",
-      message: "Scheduled backup completed successfully",
-      severity: "info",
-    },
-    {
-      type: "System Update",
-      message: "New features available in next update",
-      severity: "info",
-    },
-    {
-      type: "Security Alert",
-      message: "Multiple login attempts detected",
-      severity: "warning",
-    },
-  ]
 
   return (
     <div className="space-y-6">
-      {/* Hero Section - School Overview Metrics using new reusable component */}
-      <AdminDashboardStats
-        totalEnrollment={enrollment.total}
-        newThisMonth={enrollment.newThisMonth}
-        attendanceRate={attendance.attendanceRate}
-        present={attendance.present}
-        absent={attendance.absent}
-        activeClasses={classes.total}
-        announcementsCount={announcements.published}
-        totalStaff={staff.total}
-        departments={staff.departments}
+      {/* Welcome Banner */}
+      <WelcomeBanner
+        userName={user.name || user.email?.split("@")[0]}
+        role="Administrator"
+        subtitle={`Managing ${school?.name || "your school"}`}
       />
+
+      {/* Key Metrics Row */}
+      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+        <MetricCard
+          title="Total Students"
+          value={enrollment.total.toLocaleString()}
+          change={enrollment.newThisMonth > 0 ? enrollment.newThisMonth : undefined}
+          changeType="positive"
+          description="new this month"
+          icon={Users}
+          iconColor="text-blue-500"
+          href={`/${locale}/s/${school?.domain}/students`}
+        />
+        <MetricCard
+          title="Attendance Today"
+          value={`${attendance.attendanceRate}%`}
+          change={2.3}
+          changeType="positive"
+          description="vs last week"
+          icon={Calendar}
+          iconColor="text-green-500"
+          href={`/${locale}/s/${school?.domain}/attendance`}
+        />
+        <MetricCard
+          title="Active Classes"
+          value={classes.total}
+          icon={BookOpen}
+          iconColor="text-purple-500"
+          href={`/${locale}/s/${school?.domain}/subjects`}
+        />
+        <MetricCard
+          title="Total Staff"
+          value={staff.total}
+          description={`${staff.departments} departments`}
+          icon={Users}
+          iconColor="text-orange-500"
+          href={`/${locale}/s/${school?.domain}/teachers`}
+        />
+      </div>
 
       {/* Quick Actions */}
       <QuickActions
@@ -134,194 +201,179 @@ export async function AdminDashboard({ user, dictionary, locale = "en" }: Props)
       />
 
       {/* Main Content Grid */}
+      <div className="grid gap-6 lg:grid-cols-3">
+        {/* Activity Rings + Performance Gauge */}
+        <div className="space-y-6">
+          <ActivityRings activities={activityData} title="School Performance" />
+          <PerformanceGauge
+            value={Math.round((academicPerformance.passRate || 85))}
+            label="Pass Rate"
+            description="Current academic term"
+            color="hsl(var(--chart-1))"
+          />
+        </div>
+
+        {/* Weekly Attendance Chart */}
+        <WeeklyActivityChart
+          data={weeklyAttendance}
+          title="Weekly Attendance"
+          label="Attendance %"
+          color="hsl(var(--chart-1))"
+          className="lg:col-span-2"
+        />
+      </div>
+
+      {/* Secondary Content Grid */}
       <div className="grid gap-6 md:grid-cols-2">
         {/* Financial Summary */}
         <Card>
-          <CardHeader>
-            <CardTitle>Financial Summary</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="text-base flex items-center gap-2">
+              <DollarSign className="h-4 w-4" />
+              Financial Summary
+            </CardTitle>
+            <Link
+              href={`/${locale}/s/${school?.domain}/finance`}
+              className="text-sm text-primary hover:underline flex items-center gap-1"
+            >
+              View details <ChevronRight className="h-4 w-4" />
+            </Link>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex justify-between items-center">
               <span className="text-sm text-muted-foreground">Total Revenue</span>
-              <span className="font-medium">
-                ${(mockFinancialSummary.totalRevenue / 1000).toFixed(0)}K
+              <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                ${(financialData.totalRevenue / 1000).toFixed(0)}K
               </span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-muted-foreground">Expenses</span>
-              <span className="font-medium text-destructive">
-                ${(mockFinancialSummary.expenses / 1000).toFixed(0)}K
+              <span className="font-semibold text-destructive">
+                ${(financialData.expenses / 1000).toFixed(0)}K
               </span>
             </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Net Profit</span>
-              <span className="font-medium text-emerald-600 dark:text-emerald-400">
-                ${(mockFinancialSummary.profit / 1000).toFixed(0)}K
+            <div className="flex justify-between items-center pt-2 border-t">
+              <span className="text-sm font-medium">Net Profit</span>
+              <span className="font-bold text-primary">
+                ${(financialData.profit / 1000).toFixed(0)}K
               </span>
             </div>
-            <div className="pt-2 border-t">
+            <div className="pt-2">
               <div className="flex justify-between items-center mb-2">
-                <span className="text-sm text-muted-foreground">Budget Utilization</span>
-                <span className="font-medium">{mockFinancialSummary.budgetUtilization}%</span>
+                <span className="text-sm text-muted-foreground">Fee Collection Rate</span>
+                <span className="text-sm font-medium">{financialData.collectionRate}%</span>
               </div>
-              <Progress value={mockFinancialSummary.budgetUtilization} className="mt-2" />
+              <Progress value={financialData.collectionRate} className="h-2" />
             </div>
           </CardContent>
         </Card>
 
-        {/* Academic Performance Trends */}
+        {/* Academic Performance */}
         <Card>
-          <CardHeader>
-            <CardTitle>Academic Performance Trends</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="text-base flex items-center gap-2">
+              <TrendingUp className="h-4 w-4" />
+              Academic Performance
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Average GPA</span>
-              <span className="font-medium">{academicPerformance.averageGPA}</span>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="text-center p-3 bg-muted/50 rounded-lg">
+                <p className="text-2xl font-bold text-primary">
+                  {academicPerformance.averageGPA || "3.2"}
+                </p>
+                <p className="text-xs text-muted-foreground">Average GPA</p>
+              </div>
+              <div className="text-center p-3 bg-muted/50 rounded-lg">
+                <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+                  {academicPerformance.passRate || 85}%
+                </p>
+                <p className="text-xs text-muted-foreground">Pass Rate</p>
+              </div>
             </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Pass Rate</span>
-              <span className="font-medium text-emerald-600 dark:text-emerald-400">
-                {academicPerformance.passRate}%
-              </span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Improvement</span>
-              <span className="font-medium text-emerald-600 dark:text-emerald-400">
-                {academicPerformance.improvement}
-              </span>
-            </div>
-            <div className="pt-2 border-t">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">Top Performers</span>
-                <span className="font-medium">{academicPerformance.topPerformers} students</span>
+            <div className="space-y-2 pt-2">
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-muted-foreground">Total Exams</span>
+                <span className="font-medium">{academicPerformance.totalExams || 0}</span>
+              </div>
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-muted-foreground">Total Assignments</span>
+                <span className="font-medium">{academicPerformance.totalAssignments || 0}</span>
+              </div>
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-muted-foreground">Top Performers</span>
+                <span className="font-medium">{academicPerformance.topPerformers || "N/A"}</span>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Staff Performance */}
+        {/* Recent Announcements */}
         <Card>
-          <CardHeader>
-            <CardTitle>Staff Performance</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Bell className="h-4 w-4" />
+              Recent Announcements
+            </CardTitle>
+            <Badge variant="secondary">{announcements.recentCount} new</Badge>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="flex items-center justify-between p-2 border rounded">
-              <span className="text-sm">Excellent</span>
-              <div className="flex items-center space-x-2">
-                <Progress
-                  value={(mockStaffPerformance.excellent / staff.total) * 100}
-                  className="w-20"
-                />
-                <span className="text-sm font-medium">{mockStaffPerformance.excellent}</span>
-              </div>
-            </div>
-            <div className="flex items-center justify-between p-2 border rounded">
-              <span className="text-sm">Good</span>
-              <div className="flex items-center space-x-2">
-                <Progress
-                  value={(mockStaffPerformance.good / staff.total) * 100}
-                  className="w-20"
-                />
-                <span className="text-sm font-medium">{mockStaffPerformance.good}</span>
-              </div>
-            </div>
-            <div className="flex items-center justify-between p-2 border rounded">
-              <span className="text-sm">Satisfactory</span>
-              <div className="flex items-center space-x-2">
-                <Progress
-                  value={(mockStaffPerformance.satisfactory / staff.total) * 100}
-                  className="w-20"
-                />
-                <span className="text-sm font-medium">{mockStaffPerformance.satisfactory}</span>
-              </div>
-            </div>
-            <div className="flex items-center justify-between p-2 border rounded">
-              <span className="text-sm">Needs Improvement</span>
-              <div className="flex items-center space-x-2">
-                <Progress
-                  value={(mockStaffPerformance.needsImprovement / staff.total) * 100}
-                  className="w-20"
-                />
-                <span className="text-sm font-medium">
-                  {mockStaffPerformance.needsImprovement}
-                </span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Compliance Status */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Compliance Status</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {Object.entries(mockComplianceStatus).map(([area, status]) => (
-              <div key={area} className="flex items-center justify-between p-2 border rounded">
-                <span className="text-sm capitalize">{area}</span>
-                <Badge variant={status === "Compliant" ? "default" : "secondary"}>
-                  {status}
-                </Badge>
-              </div>
-            ))}
+            {activities.filter(a => a.type === "announcement").length > 0 ? (
+              activities
+                .filter((a) => a.type === "announcement")
+                .slice(0, 3)
+                .map((activity, index) => (
+                  <AnnouncementCard
+                    key={index}
+                    title={activity.action.replace("New announcement: ", "")}
+                    content="Click to view full announcement details"
+                    date={activity.timestamp}
+                    priority={index === 0 ? "high" : "normal"}
+                  />
+                ))
+            ) : (
+              <EmptyState
+                icon={Bell}
+                title="No recent announcements"
+                description="New announcements will appear here"
+              />
+            )}
           </CardContent>
         </Card>
 
         {/* Recent Activities */}
         <Card>
           <CardHeader>
-            <CardTitle>Recent Activities</CardTitle>
+            <CardTitle className="text-base flex items-center gap-2">
+              <ClipboardList className="h-4 w-4" />
+              Recent Activities
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {activities.length > 0 ? (
               activities.slice(0, 4).map((activity, index) => (
-                <div key={index} className="p-3 border rounded-lg">
-                  <p className="font-medium">{activity.action}</p>
-                  <div className="flex items-center justify-between mt-2">
-                    <p className="text-sm text-muted-foreground">by {activity.user}</p>
-                    <div className="flex items-center space-x-2">
-                      <Badge variant="outline" className="text-xs capitalize">
+                <div key={index} className="flex items-start gap-3 p-3 rounded-lg border">
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">{activity.action}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-xs text-muted-foreground">by {activity.user}</span>
+                      <Badge variant="outline" className="text-xs">
                         {activity.type}
                       </Badge>
-                      <p className="text-xs text-muted-foreground">
-                        {formatDistanceToNow(activity.timestamp, { addSuffix: true })}
-                      </p>
                     </div>
                   </div>
+                  <span className="text-xs text-muted-foreground whitespace-nowrap">
+                    {formatDistanceToNow(activity.timestamp, { addSuffix: true })}
+                  </span>
                 </div>
               ))
             ) : (
-              <p className="text-sm text-muted-foreground">No recent activities</p>
+              <EmptyState
+                icon={ClipboardList}
+                title="No recent activities"
+                description="Activities will appear here as they happen"
+              />
             )}
-          </CardContent>
-        </Card>
-
-        {/* Pending Requests */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Pending Requests</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {mockPendingRequests.map((request, index) => (
-              <div
-                key={index}
-                className="flex items-center justify-between p-3 border rounded-lg"
-              >
-                <div>
-                  <p className="font-medium">{request.type}</p>
-                  <p className="text-sm text-muted-foreground">{request.requester}</p>
-                </div>
-                <div className="text-right">
-                  <Badge variant={request.urgency === "high" ? "destructive" : "secondary"}>
-                    {request.urgency}
-                  </Badge>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {request.daysOpen} day{request.daysOpen !== 1 ? "s" : ""} open
-                  </p>
-                </div>
-              </div>
-            ))}
           </CardContent>
         </Card>
       </div>
@@ -329,65 +381,66 @@ export async function AdminDashboard({ user, dictionary, locale = "en" }: Props)
       {/* Analytics Section */}
       <Card>
         <CardHeader>
-          <CardTitle>Analytics Overview</CardTitle>
+          <CardTitle className="text-base">School Analytics</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid gap-6 md:grid-cols-3">
-            <div className="text-center">
-              <h4 className="mb-2">Student-Teacher Ratio</h4>
-              <p className="text-2xl font-bold text-primary">{classes.studentTeacherRatio}:1</p>
-              <p className="text-xs text-muted-foreground">
+            <div className="text-center p-4 bg-muted/30 rounded-lg">
+              <p className="text-3xl font-bold text-primary">{classes.studentTeacherRatio}:1</p>
+              <p className="text-sm text-muted-foreground mt-1">Student-Teacher Ratio</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
                 {enrollment.active} students / {staff.total} teachers
               </p>
             </div>
-            <div className="text-center">
-              <h4 className="mb-2">Exams & Assignments</h4>
-              <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
-                {(academicPerformance.totalExams || 0) +
-                  (academicPerformance.totalAssignments || 0)}
+            <div className="text-center p-4 bg-muted/30 rounded-lg">
+              <p className="text-3xl font-bold text-emerald-600 dark:text-emerald-400">
+                {(academicPerformance.totalExams || 0) + (academicPerformance.totalAssignments || 0)}
               </p>
-              <p className="text-xs text-muted-foreground">
-                {academicPerformance.totalExams} exams, {academicPerformance.totalAssignments}{" "}
-                assignments
+              <p className="text-sm text-muted-foreground mt-1">Assessments</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {academicPerformance.totalExams} exams, {academicPerformance.totalAssignments} assignments
               </p>
             </div>
-            <div className="text-center">
-              <h4 className="mb-2">Recent Announcements</h4>
-              <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                {announcements.recentCount}
+            <div className="text-center p-4 bg-muted/30 rounded-lg">
+              <p className="text-3xl font-bold text-purple-600 dark:text-purple-400">
+                {announcements.published}
               </p>
-              <p className="text-xs text-muted-foreground">In the last 7 days</p>
+              <p className="text-sm text-muted-foreground mt-1">Published Announcements</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {announcements.unpublished} drafts pending
+              </p>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* System Alerts */}
-      <Card>
-        <CardHeader>
-          <CardTitle>System Alerts</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {mockSystemAlerts.map((alert, index) => (
-              <div key={index} className="flex items-center space-x-3 p-3 border rounded-lg">
-                <AlertTriangle
-                  className={`h-5 w-5 ${
-                    alert.severity === "warning" ? "text-amber-500" : "text-primary"
-                  }`}
-                />
-                <div className="flex-1">
-                  <p className="font-medium">{alert.type}</p>
-                  <p className="text-sm text-muted-foreground">{alert.message}</p>
-                </div>
-                <Badge variant={alert.severity === "warning" ? "secondary" : "default"}>
-                  {alert.severity}
-                </Badge>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+      {/* System Status */}
+      <div className="grid gap-6 md:grid-cols-3">
+        <ProgressCard
+          title="Storage Used"
+          current={3.2}
+          total={10}
+          unit="GB"
+          icon={Settings}
+          showPercentage
+        />
+        <ProgressCard
+          title="Monthly API Calls"
+          current={45000}
+          total={100000}
+          unit="calls"
+          icon={TrendingUp}
+          showPercentage
+        />
+        <ProgressCard
+          title="Active Sessions"
+          current={127}
+          total={500}
+          unit="users"
+          icon={Users}
+          showPercentage
+        />
+      </div>
     </div>
   )
 }

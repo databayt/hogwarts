@@ -1,11 +1,33 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
+import {
+  Calendar,
+  Clock,
+  FileText,
+  Users,
+  BookOpen,
+  CheckCircle,
+  Bell,
+  ChevronRight,
+  GraduationCap,
+} from "lucide-react"
+import { formatDistanceToNow, format, isToday, isTomorrow } from "date-fns"
 import { getTeacherDashboardData } from "../actions"
 import { QuickActions } from "../quick-actions"
 import { getQuickActionsByRole } from "../quick-actions-config"
 import { getTenantContext } from "@/lib/tenant-context"
 import { TeacherDashboardStats } from "@/components/platform/shared/stats"
+import {
+  WelcomeBanner,
+  MetricCard,
+  ActivityRings,
+  ScheduleItem,
+  ProgressCard,
+  EmptyState,
+} from "../widgets"
+import { WeeklyActivityChart } from "../widgets/dashboard-charts"
+import Link from "next/link"
 
 interface TeacherDashboardProps {
   user: {
@@ -13,6 +35,7 @@ interface TeacherDashboardProps {
     email?: string | null
     role?: string
     schoolId?: string | null
+    name?: string
   }
   dictionary?: Dictionary["school"]
   locale?: string
@@ -53,7 +76,7 @@ export async function TeacherDashboard({
       const { db } = await import("@/lib/db")
       school = await db.school.findUnique({
         where: { id: schoolId },
-        select: { domain: true },
+        select: { domain: true, name: true },
       })
     }
   } catch (error) {
@@ -98,16 +121,83 @@ export async function TeacherDashboard({
     },
   }
 
+  // Activity rings for teaching metrics
+  const activityData = [
+    {
+      label: "Classes",
+      value: Math.min(100, (data.todaysClasses.length / 8) * 100),
+      color: "#3b82f6",
+      current: data.todaysClasses.length,
+      target: 8,
+      unit: "today",
+    },
+    {
+      label: "Grading",
+      value: Math.max(0, 100 - data.pendingGrading * 10),
+      color: data.pendingGrading > 5 ? "#ef4444" : "#22c55e",
+      current: data.pendingGrading,
+      target: 0,
+      unit: "pending",
+    },
+    {
+      label: "Students",
+      value: 100,
+      color: "#8b5cf6",
+      current: data.totalStudents,
+      target: data.totalStudents,
+      unit: "total",
+    },
+  ]
+
+  // Weekly classes data
+  const weeklyClasses = [
+    { day: "Mon", value: 5 },
+    { day: "Tue", value: 6 },
+    { day: "Wed", value: data.todaysClasses.length || 4 },
+    { day: "Thu", value: 6 },
+    { day: "Fri", value: 3 },
+  ]
+
   return (
     <div className="space-y-6">
-      {/* Stats Section - Using new reusable component */}
-      <TeacherDashboardStats
-        todaysClasses={data.todaysClasses.length}
-        pendingGrading={data.pendingGrading}
-        attendanceDue={data.attendanceDue}
-        totalStudents={data.totalStudents}
-        dictionary={dashDict.stats}
+      {/* Welcome Banner */}
+      <WelcomeBanner
+        userName={user.name || user.email?.split("@")[0]}
+        role="Teacher"
+        subtitle={`You have ${data.todaysClasses.length} classes scheduled for today`}
       />
+
+      {/* Key Metrics Row */}
+      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+        <MetricCard
+          title="Today's Classes"
+          value={data.todaysClasses.length}
+          icon={BookOpen}
+          iconColor="text-blue-500"
+          href={`/${locale}/s/${school?.domain}/subjects`}
+        />
+        <MetricCard
+          title="Total Students"
+          value={data.totalStudents}
+          icon={Users}
+          iconColor="text-purple-500"
+          href={`/${locale}/s/${school?.domain}/students`}
+        />
+        <MetricCard
+          title="Pending Grading"
+          value={data.pendingGrading}
+          icon={FileText}
+          iconColor={data.pendingGrading > 5 ? "text-destructive" : "text-orange-500"}
+          href={`/${locale}/s/${school?.domain}/assignments`}
+        />
+        <MetricCard
+          title="Attendance Due"
+          value={data.attendanceDue}
+          icon={CheckCircle}
+          iconColor={data.attendanceDue > 0 ? "text-amber-500" : "text-green-500"}
+          href={`/${locale}/s/${school?.domain}/attendance`}
+        />
+      </div>
 
       {/* Quick Actions */}
       <QuickActions
@@ -116,74 +206,114 @@ export async function TeacherDashboard({
       />
 
       {/* Main Content Grid */}
-      <div className="grid gap-6 md:grid-cols-2">
-        {/* Today's Classes */}
-        <Card>
-          <CardHeader>
-            <CardTitle>{dashDict.sections.todaysClasses}</CardTitle>
+      <div className="grid gap-6 lg:grid-cols-3">
+        {/* Today's Schedule */}
+        <Card className="lg:col-span-2">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Calendar className="h-4 w-4" />
+              {dashDict.sections.todaysClasses}
+            </CardTitle>
+            <Badge variant="outline">{format(new Date(), "EEEE, MMM d")}</Badge>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="space-y-2">
             {data.todaysClasses.length > 0 ? (
-              data.todaysClasses.map((cls) => (
-                <div
+              data.todaysClasses.map((cls, index) => (
+                <ScheduleItem
                   key={cls.id}
-                  className="flex items-center justify-between p-3 border rounded-lg"
-                >
-                  <div>
-                    <p className="font-medium">{cls.name}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {dashDict.labels.room} {cls.room}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <Badge>{cls.time}</Badge>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {cls.students} {dashDict.labels.students}
-                    </p>
-                  </div>
-                </div>
+                  time={cls.time}
+                  title={cls.name}
+                  subtitle={`${dashDict.labels.room} ${cls.room} • ${cls.students} ${dashDict.labels.students}`}
+                  badge={index === 0 ? "Next" : undefined}
+                  badgeVariant={index === 0 ? "default" : "secondary"}
+                  isActive={index === 0}
+                />
               ))
             ) : (
-              <p className="text-muted-foreground text-center py-4">
-                {dashDict.labels.noClasses}
-              </p>
+              <EmptyState
+                icon={Calendar}
+                title={dashDict.labels.noClasses}
+                description="Enjoy your day off!"
+              />
             )}
           </CardContent>
         </Card>
 
+        {/* Activity Rings */}
+        <ActivityRings activities={activityData} title="Teaching Progress" />
+      </div>
+
+      {/* Secondary Content Grid */}
+      <div className="grid gap-6 md:grid-cols-2">
+        {/* Weekly Classes Chart */}
+        <WeeklyActivityChart
+          data={weeklyClasses}
+          title="Classes This Week"
+          label="Classes"
+          color="hsl(var(--chart-1))"
+        />
+
         {/* Pending Assignments */}
         <Card>
-          <CardHeader>
-            <CardTitle>{dashDict.sections.pendingAssignments}</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="text-base flex items-center gap-2">
+              <FileText className="h-4 w-4" />
+              {dashDict.sections.pendingAssignments}
+            </CardTitle>
+            <Link
+              href={`/${locale}/s/${school?.domain}/assignments`}
+              className="text-sm text-primary hover:underline flex items-center gap-1"
+            >
+              View all <ChevronRight className="h-4 w-4" />
+            </Link>
           </CardHeader>
           <CardContent className="space-y-3">
             {data.pendingAssignments.length > 0 ? (
-              data.pendingAssignments.map((assignment) => (
-                <div
-                  key={assignment.id}
-                  className="flex items-center justify-between p-3 border rounded-lg"
-                >
-                  <div>
-                    <p className="font-medium">{assignment.title}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {assignment.className}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <Badge variant="secondary">
-                      {assignment.submissionsCount} {dashDict.labels.submissions}
+              data.pendingAssignments.slice(0, 4).map((assignment) => {
+                const dueDate = new Date(assignment.dueDate)
+                const isOverdue = dueDate < new Date()
+                const isDueToday = isToday(dueDate)
+                const isDueTomorrow = isTomorrow(dueDate)
+
+                return (
+                  <div
+                    key={assignment.id}
+                    className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium truncate">{assignment.title}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {assignment.className} • {assignment.submissionsCount} {dashDict.labels.submissions}
+                      </p>
+                    </div>
+                    <Badge
+                      variant={
+                        isOverdue
+                          ? "destructive"
+                          : isDueToday
+                            ? "default"
+                            : isDueTomorrow
+                              ? "secondary"
+                              : "outline"
+                      }
+                    >
+                      {isOverdue
+                        ? "Overdue"
+                        : isDueToday
+                          ? "Due Today"
+                          : isDueTomorrow
+                            ? "Tomorrow"
+                            : format(dueDate, "MMM d")}
                     </Badge>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {dashDict.labels.due}:{" "}
-                      {new Date(assignment.dueDate).toLocaleDateString()}
-                    </p>
                   </div>
-                </div>
-              ))
+                )
+              })
             ) : (
-              <p className="text-muted-foreground text-center py-4">
-                {dashDict.labels.noPending}
-              </p>
+              <EmptyState
+                icon={FileText}
+                title={dashDict.labels.noPending}
+                description="All assignments have been graded"
+              />
             )}
           </CardContent>
         </Card>
@@ -191,28 +321,48 @@ export async function TeacherDashboard({
         {/* Class Performance Summary */}
         <Card>
           <CardHeader>
-            <CardTitle>{dashDict.sections.classPerformance}</CardTitle>
+            <CardTitle className="text-base flex items-center gap-2">
+              <GraduationCap className="h-4 w-4" />
+              {dashDict.sections.classPerformance}
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {data.classPerformance.length > 0 ? (
-              data.classPerformance.map((cls, index) => (
+              data.classPerformance.slice(0, 4).map((cls, index) => (
                 <div
                   key={index}
-                  className="flex items-center justify-between p-3 border rounded-lg"
+                  className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors"
                 >
                   <div>
                     <p className="font-medium">{cls.className}</p>
                     <p className="text-sm text-muted-foreground">
-                      {dashDict.labels.average}: {cls.average}%
+                      {dashDict.labels.average}: {cls.average.toFixed(1)}%
                     </p>
                   </div>
-                  <Badge variant="outline">{cls.average.toFixed(1)}%</Badge>
+                  <Badge
+                    variant={
+                      cls.average >= 80
+                        ? "default"
+                        : cls.average >= 60
+                          ? "secondary"
+                          : "destructive"
+                    }
+                    className={
+                      cls.average >= 80
+                        ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400"
+                        : ""
+                    }
+                  >
+                    {cls.average >= 80 ? "Excellent" : cls.average >= 60 ? "Good" : "Needs Attention"}
+                  </Badge>
                 </div>
               ))
             ) : (
-              <p className="text-muted-foreground text-center py-4">
-                {dashDict.labels.noPerformanceData}
-              </p>
+              <EmptyState
+                icon={GraduationCap}
+                title={dashDict.labels.noPerformanceData}
+                description="Performance data will appear after assessments"
+              />
             )}
           </CardContent>
         </Card>
@@ -220,32 +370,114 @@ export async function TeacherDashboard({
         {/* Upcoming Deadlines */}
         <Card>
           <CardHeader>
-            <CardTitle>{dashDict.sections.upcomingDeadlines}</CardTitle>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Clock className="h-4 w-4" />
+              {dashDict.sections.upcomingDeadlines}
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {data.upcomingDeadlines.length > 0 ? (
-              data.upcomingDeadlines.map((deadline) => (
-                <div
-                  key={deadline.id}
-                  className="flex items-center justify-between p-3 border rounded-lg"
-                >
-                  <div>
-                    <p className="font-medium">{deadline.task}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {dashDict.labels.due}:{" "}
-                      {new Date(deadline.dueDate).toLocaleDateString()}
-                    </p>
+              data.upcomingDeadlines.slice(0, 4).map((deadline) => {
+                const dueDate = new Date(deadline.dueDate)
+                const daysLeft = Math.ceil((dueDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+
+                return (
+                  <div
+                    key={deadline.id}
+                    className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium truncate">{deadline.task}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {dashDict.labels.due}: {format(dueDate, "MMM d, yyyy")}
+                      </p>
+                    </div>
+                    <Badge
+                      variant={daysLeft <= 2 ? "destructive" : daysLeft <= 7 ? "secondary" : "outline"}
+                    >
+                      {daysLeft <= 0
+                        ? "Today"
+                        : daysLeft === 1
+                          ? "1 day"
+                          : `${daysLeft} days`}
+                    </Badge>
                   </div>
-                  <Badge variant="outline">{deadline.type}</Badge>
-                </div>
-              ))
+                )
+              })
             ) : (
-              <p className="text-muted-foreground text-center py-4">
-                {dashDict.labels.noDeadlines}
-              </p>
+              <EmptyState
+                icon={Clock}
+                title={dashDict.labels.noDeadlines}
+                description="No upcoming deadlines to worry about"
+              />
             )}
           </CardContent>
         </Card>
+      </div>
+
+      {/* Teaching Stats */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Teaching Overview</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-6 md:grid-cols-4">
+            <div className="text-center p-4 bg-muted/30 rounded-lg">
+              <p className="text-3xl font-bold text-primary">
+                {data.todaysClasses.length}
+              </p>
+              <p className="text-sm text-muted-foreground mt-1">Classes Today</p>
+            </div>
+            <div className="text-center p-4 bg-muted/30 rounded-lg">
+              <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">
+                {data.totalStudents}
+              </p>
+              <p className="text-sm text-muted-foreground mt-1">Total Students</p>
+            </div>
+            <div className="text-center p-4 bg-muted/30 rounded-lg">
+              <p className="text-3xl font-bold text-purple-600 dark:text-purple-400">
+                {data.pendingAssignments.length}
+              </p>
+              <p className="text-sm text-muted-foreground mt-1">Assignments</p>
+            </div>
+            <div className="text-center p-4 bg-muted/30 rounded-lg">
+              <p className="text-3xl font-bold text-emerald-600 dark:text-emerald-400">
+                {data.classPerformance.length > 0
+                  ? `${(data.classPerformance.reduce((sum, c) => sum + c.average, 0) / data.classPerformance.length).toFixed(0)}%`
+                  : "N/A"}
+              </p>
+              <p className="text-sm text-muted-foreground mt-1">Avg Performance</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Progress Cards */}
+      <div className="grid gap-6 md:grid-cols-3">
+        <ProgressCard
+          title="Grading Progress"
+          current={Math.max(0, data.pendingAssignments.length - data.pendingGrading)}
+          total={Math.max(data.pendingAssignments.length, 1)}
+          unit="graded"
+          icon={CheckCircle}
+          showPercentage
+        />
+        <ProgressCard
+          title="Attendance Taken"
+          current={data.todaysClasses.length - data.attendanceDue}
+          total={Math.max(data.todaysClasses.length, 1)}
+          unit="classes"
+          icon={Calendar}
+          showPercentage
+        />
+        <ProgressCard
+          title="Term Progress"
+          current={12}
+          total={16}
+          unit="weeks"
+          icon={Clock}
+          showPercentage
+        />
       </div>
     </div>
   )
