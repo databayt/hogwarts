@@ -1,12 +1,11 @@
-import Link from "next/link"
-import { siteConfig, marketingConfig } from "./config"
+import { marketingConfig } from "./config"
 import { CommandMenu } from "./command-menu"
-import { Icons } from "./icons"
 import { MainNav } from "./main-nav"
 import { MobileNavButton } from "./mobile-nav-button"
 import { ModeSwitcher } from "./mode-switcher"
 import { LangSwitcher } from "./lang-switcher"
-import { Button } from "@/components/ui/button"
+import { GitHubLink } from "./github-link"
+import { Separator } from "@/components/ui/separator"
 import type { Dictionary } from '@/components/internationalization/dictionaries'
 
 interface SiteHeaderProps {
@@ -16,26 +15,14 @@ interface SiteHeaderProps {
 export function SiteHeader({ dictionary }: SiteHeaderProps) {
     return (
         <header className="sticky top-0 z-50 w-full bg-background">
-            <div className="flex h-14 items-center gap-2 md:gap-4">
+            <div className="flex h-14 items-center gap-2 md:gap-4 **:data-[slot=separator]:!h-4">
                     <MainNav dictionary={dictionary} />
                     <MobileNavButton items={marketingConfig.mainNav} dictionary={dictionary} />
-                    <nav className="flex flex-1 items-center justify-end">
+                    <nav className="flex flex-1 items-center justify-end gap-0.5">
                         <CommandMenu dictionary={dictionary} />
-                        <Button
-                            asChild
-                            variant="ghost"
-                            size="icon"
-                            className="size-8"
-                        >
-                            <Link
-                                aria-label="GitHub repo"
-                                href={siteConfig.links.github}
-                                target="_blank"
-                                rel="noreferrer"
-                            >
-                                <Icons.gitHub className="size-4" aria-hidden="true" />
-                            </Link>
-                        </Button>
+                        <Separator orientation="vertical" className="mx-1 hidden md:block" />
+                        <GitHubLink />
+                        <Separator orientation="vertical" className="mx-1" />
                         <LangSwitcher />
                         <ModeSwitcher />
                     </nav>
