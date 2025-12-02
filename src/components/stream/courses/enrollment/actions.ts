@@ -26,6 +26,10 @@ export async function enrollInCourseAction(courseId: string) {
     throw new Error("School context required");
   }
 
+  if (!stripe) {
+    throw new Error("Stripe is not configured");
+  }
+
   let checkoutUrl: string;
 
   try {
@@ -136,7 +140,8 @@ export async function enrollInCourseAction(courseId: string) {
       }
 
       // Create Stripe price if not exists
-      const stripeProduct = await stripe.products.create({
+      // We already checked stripe is not null above, but TypeScript doesn't track it across closure
+      const stripeProduct = await stripe!.products.create({
         name: course.title,
         metadata: {
           courseId: course.id,
@@ -144,14 +149,14 @@ export async function enrollInCourseAction(courseId: string) {
         },
       });
 
-      const stripePrice = await stripe.prices.create({
+      const stripePrice = await stripe!.prices.create({
         product: stripeProduct.id,
         unit_amount: Math.round(course.price * 100), // Convert to cents
         currency: "usd",
       });
 
       // Create checkout session
-      const checkoutSession = await stripe.checkout.sessions.create({
+      const checkoutSession = await stripe!.checkout.sessions.create({
         customer: stripeCustomerId,
         line_items: [
           {

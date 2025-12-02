@@ -13,7 +13,7 @@ export const env = createEnv({
     DATABASE_URL: z.string().min(1).optional(),
     RESEND_API_KEY: z.string().min(1).optional(),
     EMAIL_FROM: z.string().min(1).optional(),
-    STRIPE_API_KEY: z.string().min(1),
+    STRIPE_API_KEY: z.string().min(1).optional(),
     STRIPE_WEBHOOK_SECRET: z.string().min(1).optional(),
     ENABLE_PRODUCTION_LOGS: z.string().optional(),
     SENTRY_DSN: z.string().optional(),

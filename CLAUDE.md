@@ -366,81 +366,61 @@ session.user.isPlatformAdmin
 
 ## Development Workflows
 
-### Creating a New Feature
+### Fully Automatic Mode (Default)
 
-1. **Plan** (for complex features):
-   ```bash
-   /plan <feature>        # Generate PRD and architecture
-   /story <feature>       # Create implementation stories
-   ```
+**Just describe what you need** - everything else is automatic:
 
-2. **Generate boilerplate**:
-   ```bash
-   /component StudentCard    # React component with tests
-   /page students/profile    # Next.js page with mirror pattern
-   /api create students      # Server action with validation
-   ```
-
-3. **Implement with TDD**:
-   ```bash
-   /test src/components/students/form.tsx   # Generate tests
-   pnpm test -- --watch                     # Run in watch mode
-   ```
-
-4. **Validate**:
-   ```bash
-   /scan-errors              # Check for 204+ error patterns
-   pnpm tsc --noEmit         # TypeScript validation
-   /review                   # Comprehensive code review
-   ```
-
-5. **Commit & Deploy**:
-   ```bash
-   git add .
-   git commit -m "feat: add student profile"  # Auto-validation runs
-   /ship staging             # Deploy with validation
-   ```
-
-### Before Every Build
-
-**CRITICAL**: Always validate TypeScript before building:
-
-```bash
-pnpm tsc --noEmit          # Must show 0 errors
+```
+You: "Fix the login validation bug"
+     ↓
+Claude: Makes changes
+     ↓ (automatic - no typing needed)
+PostToolUse Hook:
+  1. Prettier formats code
+  2. deploy.sh triggers (background):
+     • Validate: tsc + lint
+     • Build: pnpm build
+     • Commit: auto-generated message
+     • Push: to current branch
+     • Vercel: auto-deploys
+     ↓
+Preview URL ready
 ```
 
-**Why?** Next.js build hangs at "Environments: .env" when TypeScript errors exist (silent failure).
+### Auto-Deploy Hook
 
-### Error Prevention Workflow
+Located at `.claude/hooks/deploy.sh` - triggers after every Edit/Write with:
+- **Debounce**: 60s between deploys (won't spam)
+- **Lock**: Prevents concurrent deploys
+- **Validation**: tsc + lint + build before commit
+- **Bypass**: Uses `--no-verify` to skip redundant hooks
 
-```bash
-# 1. Detect errors before commit
-/scan-errors               # Finds 204+ error patterns (7s)
+### Manual Commands (When Needed)
 
-# 2. Auto-fix
-/fix-build                 # 95%+ success rate (7s vs 3 hours manual)
+| Command | Use Case | Time |
+|---------|----------|------|
+| `/quick` | Tiny changes (lint + commit) | ~10s |
+| `/dev` | Small changes with tests | ~30s |
+| `/deploy` | Force deploy now | ~30s |
+| `/validate` | Full agent validation | ~2min |
+| `/ship production` | Production release | ~5min |
 
-# 3. Validate fixes
-/pre-commit-full           # Comprehensive validation (15s)
+### For Complex Features
 
-# 4. Commit safely
-git commit -m "feat: add feature"
-```
+1. **Plan**: `/plan <feature>` - Generate PRD
+2. **Stories**: `/story <feature>` - Create tasks
+3. **Implement**: Just describe each task
+4. **Auto-deploy**: Happens automatically
 
-### Pre-Commit Validation
+### Pre-Commit Hooks (Manual Commits Only)
 
-Enabled via `.claude/settings.json` - automatically runs before commits:
+When you manually run `git commit`, these checks run:
+- TypeScript compilation
+- Prisma client sync
+- ESLint validation
+- Test execution
 
-1. TypeScript compilation (`pnpm tsc --noEmit`)
-2. Prisma client sync (if schema changed)
-3. ESLint validation
-4. Test execution (changed files)
-
-**Branch-aware:**
-- **Protected branches** (main/master/production): STRICT blocking
-- **Feature branches**: Warning but allows override
-
-Override with `git commit --no-verify` (not recommended).
+**Note**: Auto-deploy bypasses these (it validates first).
 
 ---
 

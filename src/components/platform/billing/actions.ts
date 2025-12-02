@@ -118,6 +118,10 @@ export async function updateSubscription(input: unknown): Promise<BillingActionR
       return { success: false, error: "Price not configured for this tier" };
     }
 
+    if (!stripe) {
+      return { success: false, error: "Stripe is not configured" };
+    }
+
     const updatedStripeSubscription = await stripe.subscriptions.update(
       currentSubscription.stripeSubscriptionId,
       {
@@ -179,6 +183,10 @@ export async function cancelSubscription(input: unknown): Promise<BillingActionR
 
     if (!subscription) {
       return { success: false, error: "No active subscription found" };
+    }
+
+    if (!stripe) {
+      return { success: false, error: "Stripe is not configured" };
     }
 
     // Cancel in Stripe
@@ -844,6 +852,10 @@ export async function updateBillingPreferences(input: unknown): Promise<BillingA
 
 export async function openCustomerPortal(userStripeId: string) {
   try {
+    if (!stripe) {
+      throw new Error("Stripe is not configured");
+    }
+
     const session = await auth();
 
     if (!session?.user || !session?.user.email) {

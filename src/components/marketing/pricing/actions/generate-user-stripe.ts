@@ -18,6 +18,10 @@ export async function generateUserStripe(priceId: string): Promise<responseActio
   let redirectUrl: string = "";
 
   try {
+    if (!stripe) {
+      throw new Error("Stripe is not configured");
+    }
+
     const session = await auth()
     const user = session?.user;
 

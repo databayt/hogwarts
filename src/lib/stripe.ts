@@ -1,4 +1,7 @@
 import Stripe from "stripe";
 import { env } from "@/env.mjs";
 
-export const stripe = new Stripe(env.STRIPE_API_KEY);
+// Create Stripe instance only if API key is available
+export const stripe = env.STRIPE_API_KEY
+  ? new Stripe(env.STRIPE_API_KEY)
+  : null;

@@ -65,6 +65,9 @@ export async function createCourseAction(
     // Create Stripe product if price is set
     let stripePriceId: string | null = null;
     if (price && price > 0) {
+      if (!stripe) {
+        throw new Error("Stripe is not configured");
+      }
       const stripeProduct = await stripe.products.create({
         name: title,
         description: description || undefined,

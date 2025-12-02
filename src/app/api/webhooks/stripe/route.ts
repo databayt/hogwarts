@@ -5,6 +5,10 @@ import { stripe } from "@/components/marketing/pricing/lib/stripe";
 import { getTierIdFromStripePrice } from "@/components/marketing/pricing/lib/get-tier-id";
 
 export async function POST(req: Request) {
+  if (!stripe) {
+    return new Response("Stripe is not configured", { status: 500 });
+  }
+
   const body = await req.text();
   const headerList = await headers();
   const signature = headerList.get("Stripe-Signature") as string;

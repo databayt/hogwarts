@@ -19,6 +19,10 @@ export async function openCustomerPortal(
   let redirectUrl: string = "";
 
   try {
+    if (!stripe) {
+      throw new Error("Stripe is not configured");
+    }
+
     const session = await auth();
 
     if (!session?.user || !session?.user.email) {

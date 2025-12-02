@@ -48,49 +48,47 @@ const Hero = ({ dictionary, lang }: HeroProps) => {
 
   return (
     <section id="hero" className="min-h-[calc(100vh-3.5rem)] bg-background">
-      <div className="container mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center min-h-[calc(100vh-3.5rem)]">
-          {/* Left: Content */}
-          <div className="space-y-6 py-12 lg:py-0">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center min-h-[calc(100vh-3.5rem)]">
+        {/* Left: Content */}
+        <div className="space-y-6 py-12 lg:py-0">
+          <Link
+            href={siteConfig.links.twitter}
+            className="rounded-2xl bg-muted px-4 py-1.5 inline-block hover:bg-muted/80 transition-colors"
+            target="_blank"
+          >
+            <small>{heroDict.badge || "700+ School automated"}</small>
+          </Link>
+
+          <h1 className="font-heading font-extrabold text-4xl sm:text-5xl lg:text-6xl xl:text-7xl tracking-tight">
+            <span className="block">Automate Education,</span>
+            <span className="block">elevate the wonder.</span>
+          </h1>
+
+          <p className="text-lg lg:text-xl text-muted-foreground max-w-xl">
+            {heroDict.subtitle}
+          </p>
+
+          <div className="flex flex-col sm:flex-row gap-3 pt-4">
             <Link
-              href={siteConfig.links.twitter}
-              className="rounded-2xl bg-muted px-4 py-1.5 inline-block hover:bg-muted/80 transition-colors"
-              target="_blank"
+              href={`/${lang || 'en'}/onboarding`}
+              className={cn(buttonVariants({ size: "lg" }), "w-full sm:w-auto")}
             >
-              <small>{heroDict.badge || "700+ School automated"}</small>
+              {heroDict.appointment}
             </Link>
-
-            <h1 className="font-heading font-extrabold text-4xl sm:text-5xl lg:text-6xl xl:text-7xl tracking-tight">
-              <span className="block">Automate Education,</span>
-              <span className="block">elevate the wonder.</span>
-            </h1>
-
-            <p className="text-lg lg:text-xl text-muted-foreground max-w-xl">
-              {heroDict.subtitle}
-            </p>
-
-            <div className="flex flex-col sm:flex-row gap-3 pt-4">
-              <Link
-                href={`/${lang || 'en'}/onboarding`}
-                className={cn(buttonVariants({ size: "lg" }), "w-full sm:w-auto")}
-              >
-                {heroDict.appointment}
-              </Link>
-              <Link
-                href={getDemoUrl()}
-                target="_blank"
-                rel="noreferrer"
-                className={cn(buttonVariants({ variant: "outline", size: "lg" }), "w-full sm:w-auto")}
-              >
-                Live Demo
-              </Link>
-            </div>
+            <Link
+              href={getDemoUrl()}
+              target="_blank"
+              rel="noreferrer"
+              className={cn(buttonVariants({ variant: "outline", size: "lg" }), "w-full sm:w-auto")}
+            >
+              Live Demo
+            </Link>
           </div>
+        </div>
 
-          {/* Right: Illustration - hidden on mobile/tablet for performance */}
-          <div className="hidden lg:flex justify-center lg:justify-end items-center">
-            <HeroIllustration />
-          </div>
+        {/* Right: Illustration - hidden on mobile/tablet for performance */}
+        <div className="hidden lg:flex justify-center lg:justify-end items-center">
+          <HeroIllustration />
         </div>
       </div>
     </section>

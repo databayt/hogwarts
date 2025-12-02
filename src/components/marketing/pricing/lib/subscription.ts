@@ -51,7 +51,7 @@ export async function getUserSubscriptionPlan(
 
   // Safely retrieve Stripe subscription with error handling
   let isCanceled = false;
-  if (isPaid && user.stripeSubscriptionId) {
+  if (isPaid && user.stripeSubscriptionId && stripe) {
     try {
       const stripePlan = await stripe.subscriptions.retrieve(
         user.stripeSubscriptionId
