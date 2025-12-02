@@ -3,7 +3,7 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { DataTableColumnHeader } from "@/components/table/data-table-column-header";
 import { Button } from "@/components/ui/button";
-import { Ellipsis } from "lucide-react";
+import { Ellipsis } from "@aliimam/icons";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useModal } from "@/components/atom/modal/context";
 import { deleteExam } from "./actions";
@@ -28,18 +28,33 @@ const getStatusBadge = (status: string) => {
   );
 };
 
+// Short labels for exam types - keep badges compact
+const examTypeLabels: Record<string, string> = {
+  MIDTERM: "Mid",
+  FINAL: "Final",
+  QUIZ: "Quiz",
+  TEST: "Test",
+  ASSIGNMENT: "HW",
+  HOMEWORK: "HW",
+  PROJECT: "Proj",
+  PRACTICAL: "Prac",
+};
+
 const getExamTypeBadge = (type: string) => {
   const variants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
     MIDTERM: "default",
     FINAL: "secondary",
     QUIZ: "outline",
+    TEST: "outline",
     ASSIGNMENT: "destructive",
+    HOMEWORK: "destructive",
     PROJECT: "default",
+    PRACTICAL: "default",
   };
-  
+
   return (
     <Badge variant={variants[type] || "default"}>
-      {type}
+      {examTypeLabels[type] || type}
     </Badge>
   );
 };

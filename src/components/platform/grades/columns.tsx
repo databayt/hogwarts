@@ -12,17 +12,29 @@ import { DeleteToast, ErrorToast, confirmDeleteDialog } from "@/components/atom/
 import { type Dictionary } from "@/components/internationalization/dictionaries";
 import { type Locale } from "@/components/internationalization/config";
 
-// Helper to extract assignment type badge
+// Helper to extract assignment type badge - using short labels
 function getAssignmentBadge(title: string): { name: string; type: string } {
   const lower = title.toLowerCase();
-  if (lower.includes("homework")) return { name: title.replace(/homework\s*/i, "").trim() || "HW", type: "Homework" };
-  if (lower.includes("quiz")) return { name: title.replace(/quiz\s*/i, "").trim() || "Quiz", type: "Quiz" };
-  if (lower.includes("exam")) return { name: title.replace(/exam\s*/i, "").trim() || "Exam", type: "Exam" };
-  if (lower.includes("project")) return { name: title.replace(/project\s*/i, "").trim() || "Project", type: "Project" };
-  if (lower.includes("test")) return { name: title.replace(/test\s*/i, "").trim() || "Test", type: "Test" };
-  if (lower.includes("midterm")) return { name: "Midterm", type: "Exam" };
-  if (lower.includes("final")) return { name: "Final", type: "Exam" };
-  return { name: title, type: "Assignment" };
+  if (lower.includes("homework")) return { name: formatWeekLabel(title.replace(/homework\s*/i, "").trim()) || "HW", type: "HW" };
+  if (lower.includes("quiz")) return { name: formatWeekLabel(title.replace(/quiz\s*/i, "").trim()) || "Quiz", type: "Quiz" };
+  if (lower.includes("exam")) return { name: formatWeekLabel(title.replace(/exam\s*/i, "").trim()) || "Exam", type: "Exam" };
+  if (lower.includes("project")) return { name: formatWeekLabel(title.replace(/project\s*/i, "").trim()) || "Proj", type: "Proj" };
+  if (lower.includes("test")) return { name: formatWeekLabel(title.replace(/test\s*/i, "").trim()) || "Test", type: "Test" };
+  if (lower.includes("midterm")) return { name: "Mid", type: "Mid" };
+  if (lower.includes("final")) return { name: "Final", type: "Final" };
+  return { name: formatWeekLabel(title), type: "Assgn" };
+}
+
+// Simplify week labels: "Week 1" → "W1", "Week1" → "W1", "week 10" → "W10"
+function formatWeekLabel(text: string): string {
+  if (!text) return text;
+  return text
+    .replace(/\bweek\s*(\d+)\b/gi, "W$1")  // "Week 1" or "week1" → "W1"
+    .replace(/\b1st\s*week\b/gi, "W1")
+    .replace(/\b2nd\s*week\b/gi, "W2")
+    .replace(/\b3rd\s*week\b/gi, "W3")
+    .replace(/\b(\d+)(st|nd|rd|th)\s*week\b/gi, "W$1")
+    .trim();
 }
 
 // Helper to extract class badge info

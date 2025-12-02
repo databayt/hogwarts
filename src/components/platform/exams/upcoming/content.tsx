@@ -1,19 +1,26 @@
 import type { Locale } from "@/components/internationalization/config"
+import type { ElementType } from "react"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import {
-  Calendar,
-  Clock,
-  BookOpen,
-  ChevronRight,
-  CircleAlert
-} from "lucide-react";
+import { Calendar, Clock, BookOpen, ChevronRight, CircleAlert } from "@aliimam/icons";
 import Link from "next/link"
 import { db } from "@/lib/db"
 import { getTenantContext } from "@/lib/tenant-context"
 import { format, differenceInDays, addDays } from "date-fns"
+
+// Short labels for exam types - keep badges compact
+const examTypeLabels: Record<string, string> = {
+  MIDTERM: "Mid",
+  FINAL: "Final",
+  QUIZ: "Quiz",
+  TEST: "Test",
+  ASSIGNMENT: "HW",
+  HOMEWORK: "HW",
+  PROJECT: "Proj",
+  PRACTICAL: "Prac",
+}
 
 interface Props {
   dictionary: Dictionary
@@ -156,7 +163,7 @@ export default async function UpcomingExamsContent({ dictionary, lang }: Props) 
 
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4 text-sm">
-            <Badge variant="outline">{exam.examType}</Badge>
+            <Badge variant="outline">{examTypeLabels[exam.examType] || exam.examType}</Badge>
             <span className="text-muted-foreground">
               {exam.totalMarks} {d?.labels?.marks || "marks"}
             </span>
