@@ -57,8 +57,14 @@ export async function AdminDashboard({ user, dictionary, locale = "en" }: Props)
     )
   }
 
-  // Get tenant context for subdomain
-  const { schoolId } = await getTenantContext()
+  // Get tenant context for subdomain with error handling
+  let schoolId: string | null = null
+  try {
+    const tenantContext = await getTenantContext()
+    schoolId = tenantContext.schoolId
+  } catch (error) {
+    console.error("[AdminDashboard] Error getting tenant context:", error)
+  }
 
   // Get school subdomain for URL construction with error handling
   let school = null
