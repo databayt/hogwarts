@@ -29,7 +29,7 @@ export function GradingStep({ form, isView, dictionary }: ResultFormStepProps) {
           name="score"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>{dictionary.school.grades.score}</FormLabel>
+              <FormLabel>{dictionary.score}</FormLabel>
               <FormControl>
                 <Input
                   type="number"
@@ -51,7 +51,7 @@ export function GradingStep({ form, isView, dictionary }: ResultFormStepProps) {
           name="maxScore"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>{dictionary.school.grades.maxScore}</FormLabel>
+              <FormLabel>{dictionary.maxScore}</FormLabel>
               <FormControl>
                 <Input
                   type="number"
@@ -76,11 +76,11 @@ export function GradingStep({ form, isView, dictionary }: ResultFormStepProps) {
         name="grade"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>{dictionary.school.grades.grade}</FormLabel>
+            <FormLabel>{dictionary.grade}</FormLabel>
             <Select onValueChange={field.onChange} value={field.value} disabled={isView}>
               <FormControl>
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder={dictionary.school.grades.selectGrade} />
+                  <SelectValue placeholder={dictionary.selectGrade} />
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
@@ -101,10 +101,10 @@ export function GradingStep({ form, isView, dictionary }: ResultFormStepProps) {
         name="feedback"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>{dictionary.school.grades.feedback}</FormLabel>
+            <FormLabel>{dictionary.feedback}</FormLabel>
             <FormControl>
               <Textarea
-                placeholder={dictionary.school.grades.feedbackPlaceholder}
+                placeholder={dictionary.feedbackPlaceholder}
                 className="min-h-[120px]"
                 disabled={isView}
                 {...field}

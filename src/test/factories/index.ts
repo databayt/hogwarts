@@ -280,6 +280,10 @@ export function createMockTimetable(overrides?: Partial<Timetable>): Timetable {
     teacherId: overrides?.teacherId ?? 't1',
     classroomId: overrides?.classroomId ?? 'classroom1',
     weekOffset: overrides?.weekOffset ?? 0,
+    rotationWeek: overrides?.rotationWeek ?? 0,
+    constraintViolations: overrides?.constraintViolations ?? [],
+    lastValidatedAt: overrides?.lastValidatedAt ?? null,
+    templateSlotId: overrides?.templateSlotId ?? null,
     createdAt: overrides?.createdAt ?? new Date('2024-01-01'),
     updatedAt: overrides?.updatedAt ?? new Date('2024-01-01'),
   }

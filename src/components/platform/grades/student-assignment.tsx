@@ -58,11 +58,11 @@ export function StudentAssignmentStep({ form, isView, dictionary }: ResultFormSt
         name="studentId"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>{dictionary.school.grades.student}</FormLabel>
+            <FormLabel>{dictionary.student}</FormLabel>
             <Select onValueChange={field.onChange} value={field.value} disabled={isView}>
               <FormControl>
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder={dictionary.school.grades.selectStudent} />
+                  <SelectValue placeholder={dictionary.selectStudent} />
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
@@ -83,17 +83,17 @@ export function StudentAssignmentStep({ form, isView, dictionary }: ResultFormSt
         name="assignmentId"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>{dictionary.school.grades.assignment}</FormLabel>
+            <FormLabel>{dictionary.assignment}</FormLabel>
             <Select onValueChange={field.onChange} value={field.value} disabled={isView}>
               <FormControl>
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder={dictionary.school.grades.selectAssignment} />
+                  <SelectValue placeholder={dictionary.selectAssignment} />
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
                 {assignments.map((assignment) => (
                   <SelectItem key={assignment.id} value={assignment.id}>
-                    {assignment.title} ({assignment.totalPoints} {dictionary.school.grades.points})
+                    {assignment.title} ({assignment.totalPoints} {dictionary.points})
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -108,11 +108,11 @@ export function StudentAssignmentStep({ form, isView, dictionary }: ResultFormSt
         name="classId"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>{dictionary.school.grades.class}</FormLabel>
+            <FormLabel>{dictionary.class}</FormLabel>
             <Select onValueChange={field.onChange} value={field.value} disabled={isView}>
               <FormControl>
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder={dictionary.school.grades.selectClass} />
+                  <SelectValue placeholder={dictionary.selectClass} />
                 </SelectTrigger>
               </FormControl>
               <SelectContent>

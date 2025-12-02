@@ -165,9 +165,9 @@ export async function logTimetableAction(
   action: TimetableAction,
   details: {
     entityId?: string
-    entityType?: 'slot' | 'config' | 'conflict' | 'bulk'
-    changes?: Record<string, any>
-    metadata?: Record<string, any>
+    entityType?: 'slot' | 'config' | 'conflict' | 'bulk' | 'term' | 'teacher_constraint' | 'room_constraint' | 'template' | 'template_application'
+    changes?: Record<string, unknown>
+    metadata?: Record<string, unknown>
   }
 ) {
   const { userId, email, schoolId, role } = await getPermissionContext()

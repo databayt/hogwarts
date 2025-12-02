@@ -12,6 +12,9 @@ model Classroom {
   classes       Class[]
   timetables    Timetable[]
 
+  // Timetable constraint relations
+  constraints RoomConstraint[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

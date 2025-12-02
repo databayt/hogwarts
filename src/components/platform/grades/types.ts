@@ -38,7 +38,7 @@ export type ResultRow = {
 export interface ResultFormStepProps {
   form: UseFormReturn<z.infer<typeof resultCreateSchema>>;
   isView: boolean;
-  dictionary: Dictionary;
+  dictionary: Dictionary["school"]["grades"];
 }
 
 export type StepFieldKeys = keyof z.infer<typeof resultCreateSchema>;

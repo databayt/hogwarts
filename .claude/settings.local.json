@@ -39,7 +39,8 @@
       "WebFetch(domain:www.eldoraui.site)",
       "mcp__ref__ref_read_url",
       "mcp__browser__playwright_navigate",
-      "mcp__browser__playwright_screenshot"
+      "mcp__browser__playwright_screenshot",
+      "WebFetch(domain:aliimam.in)"
     ],
     "deny": [],
     "ask": []

@@ -11,6 +11,12 @@ model Timetable {
   classroomId String
   weekOffset  Int    @default(0) // 0 current, 1 next
 
+  // Constraint validation metadata
+  rotationWeek         Int       @default(0) // 0 = Week A, 1 = Week B
+  constraintViolations Json      @default("[]")
+  lastValidatedAt      DateTime?
+  templateSlotId       String?
+
   // Relations
   school    School    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   term      Term      @relation(fields: [termId], references: [id])
@@ -37,4 +43,241 @@ model Timetable {
   @@index([schoolId, termId, teacherId, dayOfWeek])
   @@index([schoolId, termId, classId, dayOfWeek])
   @@map("timetables")
+}
+
+// ============================================================================
+// TEACHER CONSTRAINT MODELS
+// ============================================================================
+
+// Teacher scheduling constraints and preferences
+model TeacherConstraint {
+  id        String  @id @default(cuid())
+  schoolId  String
+  teacherId String
+  termId    String? // null = applies to all terms
+
+  // Time constraints
+  maxPeriodsPerDay      Int     @default(6)
+  maxPeriodsPerWeek     Int     @default(25)
+  minFreePeriods        Int     @default(1) // Per day
+  preferredStartPeriod  Int? // 1-indexed period number
+  preferredEndPeriod    Int?
+  maxConsecutivePeriods Int     @default(3)
+
+  // Day preferences (JSON: {dayOfWeek: "preferred" | "neutral" | "avoid" | "unavailable"})
+  dayPreferences Json @default("{}")
+
+  // Period preferences (JSON: {periodId: "preferred" | "neutral" | "avoid" | "unavailable"})
+  periodPreferences Json @default("{}")
+
+  // Subject expertise requirements
+  enforceSubjectMatch Boolean @default(true)
+
+  // Break requirements
+  lunchBreakRequired Boolean @default(true)
+
+  notes String? @db.Text
+
+  // Relations
+  school            School                    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  teacher           Teacher                   @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  term              Term?                     @relation(fields: [termId], references: [id])
+  unavailableBlocks TeacherUnavailableBlock[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([schoolId, teacherId, termId])
+  @@index([schoolId, teacherId])
+  @@index([schoolId, termId])
+  @@map("teacher_constraints")
+}
+
+// Specific time blocks when teacher is unavailable
+model TeacherUnavailableBlock {
+  id                  String  @id @default(cuid())
+  schoolId            String
+  teacherConstraintId String
+  dayOfWeek           Int // 0-6
+  periodId            String
+  reason              String?
+  isRecurring         Boolean  @default(true)
+  specificDate        DateTime?
+
+  // Relations
+  school            School            @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  teacherConstraint TeacherConstraint @relation(fields: [teacherConstraintId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([schoolId, teacherConstraintId, dayOfWeek, periodId, specificDate])
+  @@index([schoolId, teacherConstraintId])
+  @@map("teacher_unavailable_blocks")
+}
+
+// ============================================================================
+// ROOM CONSTRAINT MODELS
+// ============================================================================
+
+// Room scheduling constraints and requirements
+model RoomConstraint {
+  id          String  @id @default(cuid())
+  schoolId    String
+  classroomId String
+  termId      String?
+
+  // Subject constraints
+  allowedSubjectTypes String[] @default([])
+
+  // Capacity constraints
+  strictCapacityLimit Boolean @default(true)
+  capacityBuffer      Int     @default(0) // Allow N extra students
+
+  // Accessibility
+  wheelchairAccessible Boolean @default(false)
+  hasElevatorAccess    Boolean @default(false)
+  floorLevel           Int?
+
+  // Reserved periods (JSON: {dayOfWeek: [periodId, periodId]})
+  reservedPeriods Json @default("{}")
+
+  // Maintenance blocks (JSON: [{dayOfWeek, periodId, reason, startDate?, endDate?}])
+  maintenanceBlocks Json @default("[]")
+
+  // Relations
+  school    School    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  classroom Classroom @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+  term      Term?     @relation(fields: [termId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([schoolId, classroomId, termId])
+  @@index([schoolId, classroomId])
+  @@index([schoolId, termId])
+  @@map("room_constraints")
+}
+
+// ============================================================================
+// TIMETABLE TEMPLATE MODELS
+// ============================================================================
+
+// Reusable timetable templates
+model TimetableTemplate {
+  id          String  @id @default(cuid())
+  schoolId    String
+  name        String
+  description String? @db.Text
+
+  // Version control
+  version   Int     @default(1)
+  isActive  Boolean @default(true)
+  isDefault Boolean @default(false)
+
+  // Source tracking
+  sourceTermId String?
+  createdById  String?
+
+  // Template data
+  workingDays  Int[]
+  rotationType String @default("SINGLE_WEEK") // SINGLE_WEEK, BIWEEKLY, ROTATING
+  slotPatterns Json   @default("[]") // Array of slot pattern objects
+  metadata     Json   @default("{}") // Additional template metadata
+
+  // Statistics
+  totalSlots   Int @default(0)
+  classCount   Int @default(0)
+  teacherCount Int @default(0)
+
+  // Relations
+  school       School                @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  sourceTerm   Term?                 @relation("TemplateSourceTerm", fields: [sourceTermId], references: [id])
+  createdBy    User?                 @relation(fields: [createdById], references: [id])
+  applications TemplateApplication[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([schoolId, name, version])
+  @@index([schoolId, isActive])
+  @@map("timetable_templates")
+}
+
+// Track template applications to terms
+model TemplateApplication {
+  id         String @id @default(cuid())
+  schoolId   String
+  templateId String
+  termId     String
+
+  appliedById String?
+  appliedAt   DateTime @default(now())
+
+  // Application options used
+  options Json @default("{}")
+
+  // Results
+  slotsCreated   Int @default(0)
+  conflictsFound Int @default(0)
+
+  // Relations
+  school    School            @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  template  TimetableTemplate @relation(fields: [templateId], references: [id])
+  term      Term              @relation(fields: [termId], references: [id])
+  appliedBy User?             @relation(fields: [appliedById], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@index([schoolId, termId])
+  @@index([schoolId, templateId])
+  @@map("template_applications")
+}
+
+// ============================================================================
+// SCHEDULE EXCEPTION MODELS
+// ============================================================================
+
+// Holidays, events, and modified schedules
+model ScheduleException {
+  id       String  @id @default(cuid())
+  schoolId String
+  termId   String?
+
+  // Exception details
+  exceptionType String // HOLIDAY, EVENT, MODIFIED_SCHEDULE, CANCELLED
+  title         String
+  description   String? @db.Text
+
+  // Date range
+  startDate DateTime
+  endDate   DateTime
+  isAllDay  Boolean  @default(true)
+
+  // Scope
+  affectsAllClasses  Boolean  @default(true)
+  affectedClassIds   String[] @default([])
+  affectedTeacherIds String[] @default([])
+
+  // Replacement schedule (JSON: [{dayOfWeek, periodId, ...slotData}])
+  replacementSlots Json @default("[]")
+
+  // Recurrence
+  isRecurring    Boolean @default(false)
+  recurrenceRule String? // iCal RRULE format
+
+  // Status
+  status String @default("ACTIVE") // ACTIVE, CANCELLED, COMPLETED
+
+  // Relations
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  term   Term?  @relation(fields: [termId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([schoolId, startDate, endDate])
+  @@index([schoolId, termId])
+  @@index([schoolId, status])
+  @@map("schedule_exceptions")
 }

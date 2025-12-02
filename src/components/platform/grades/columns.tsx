@@ -23,46 +23,46 @@ export type ResultRow = {
   createdAt: string;
 };
 
-export const resultColumns = (dictionary: Dictionary, locale: Locale = 'en'): ColumnDef<ResultRow>[] => [
+export const resultColumns = (t: Dictionary["school"]["grades"], locale: Locale = 'en'): ColumnDef<ResultRow>[] => [
   {
     accessorKey: "studentName",
-    header: ({ column }) => <DataTableColumnHeader column={column} title={dictionary.school.grades.student} />,
-    meta: { label: dictionary.school.grades.student, variant: "text" },
+    header: ({ column }) => <DataTableColumnHeader column={column} title={t.student} />,
+    meta: { label: t.student, variant: "text" },
     id: 'studentName',
     enableColumnFilter: true,
   },
   {
     accessorKey: "assignmentTitle",
-    header: ({ column }) => <DataTableColumnHeader column={column} title={dictionary.school.grades.assignment} />,
-    meta: { label: dictionary.school.grades.assignment, variant: "text" },
+    header: ({ column }) => <DataTableColumnHeader column={column} title={t.assignment} />,
+    meta: { label: t.assignment, variant: "text" },
     id: 'assignmentTitle',
     enableColumnFilter: true,
   },
   {
     accessorKey: "className",
-    header: ({ column }) => <DataTableColumnHeader column={column} title={dictionary.school.grades.class} />,
-    meta: { label: dictionary.school.grades.class, variant: "text" },
+    header: ({ column }) => <DataTableColumnHeader column={column} title={t.class} />,
+    meta: { label: t.class, variant: "text" },
     id: 'className',
     enableColumnFilter: true,
   },
   {
     accessorKey: "score",
-    header: ({ column }) => <DataTableColumnHeader column={column} title={dictionary.school.grades.score} />,
-    meta: { label: dictionary.school.grades.score, variant: "number" },
+    header: ({ column }) => <DataTableColumnHeader column={column} title={t.score} />,
+    meta: { label: t.score, variant: "number" },
     id: 'score',
     enableColumnFilter: true,
   },
   {
     accessorKey: "maxScore",
-    header: ({ column }) => <DataTableColumnHeader column={column} title={dictionary.school.grades.maxScore} />,
-    meta: { label: dictionary.school.grades.maxScore, variant: "number" },
+    header: ({ column }) => <DataTableColumnHeader column={column} title={t.maxScore} />,
+    meta: { label: t.maxScore, variant: "number" },
     id: 'maxScore',
     enableColumnFilter: true,
   },
   {
     accessorKey: "percentage",
-    header: ({ column }) => <DataTableColumnHeader column={column} title={dictionary.school.grades.percentage} />,
-    meta: { label: dictionary.school.grades.percentage, variant: "number" },
+    header: ({ column }) => <DataTableColumnHeader column={column} title={t.percentage} />,
+    meta: { label: t.percentage, variant: "number" },
     id: 'percentage',
     cell: ({ getValue }) => {
       const value = getValue<number>() || 0;
@@ -78,22 +78,22 @@ export const resultColumns = (dictionary: Dictionary, locale: Locale = 'en'): Co
   },
   {
     accessorKey: "grade",
-    header: ({ column }) => <DataTableColumnHeader column={column} title={dictionary.school.grades.grade} />,
-    meta: { label: dictionary.school.grades.grade, variant: "text" },
+    header: ({ column }) => <DataTableColumnHeader column={column} title={t.grade} />,
+    meta: { label: t.grade, variant: "text" },
     id: 'grade',
     enableColumnFilter: true,
   },
   {
     accessorKey: "createdAt",
-    header: ({ column }) => <DataTableColumnHeader column={column} title={dictionary.school.grades.created} />,
-    meta: { label: dictionary.school.grades.created, variant: "text" },
+    header: ({ column }) => <DataTableColumnHeader column={column} title={t.created} />,
+    meta: { label: t.created, variant: "text" },
     cell: ({ getValue }) => (
       <small className="tabular-nums">{new Date(getValue<string>()).toLocaleDateString(locale)}</small>
     ),
   },
   {
     id: "actions",
-    header: () => <span className="sr-only">{dictionary.school.grades.actions}</span>,
+    header: () => <span className="sr-only">{t.actions}</span>,
     cell: ({ row }) => {
       const result = row.original;
       const { openModal } = useModal();
@@ -104,12 +104,12 @@ export const resultColumns = (dictionary: Dictionary, locale: Locale = 'en'): Co
       const onEdit = () => openModal(result.id);
       const onDelete = async () => {
         try {
-          const ok = await confirmDeleteDialog(dictionary.school.grades.deleteResultConfirm.replace('{studentName}', result.studentName));
+          const ok = await confirmDeleteDialog(t.deleteResultConfirm.replace('{studentName}', result.studentName));
           if (!ok) return;
           await deleteResult({ id: result.id });
           DeleteToast();
         } catch (e) {
-          ErrorToast(e instanceof Error ? e.message : dictionary.school.grades.failedToUpdate);
+          ErrorToast(e instanceof Error ? e.message : t.failedToUpdate);
         }
       };
       return (
@@ -117,15 +117,15 @@ export const resultColumns = (dictionary: Dictionary, locale: Locale = 'en'): Co
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="h-8 w-8 p-0">
               <MoreHorizontal className="h-4 w-4" />
-              <span className="sr-only">{dictionary.school.grades.openMenu}</span>
+              <span className="sr-only">{t.openMenu}</span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuLabel>{dictionary.school.grades.actions}</DropdownMenuLabel>
+            <DropdownMenuLabel>{t.actions}</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={onView}>{dictionary.school.common.actions.view}</DropdownMenuItem>
-            <DropdownMenuItem onClick={onEdit}>{dictionary.school.common.actions.edit}</DropdownMenuItem>
-            <DropdownMenuItem onClick={onDelete}>{dictionary.school.common.actions.delete}</DropdownMenuItem>
+            <DropdownMenuItem onClick={onView}>{t.viewGrade}</DropdownMenuItem>
+            <DropdownMenuItem onClick={onEdit}>{t.editGrade}</DropdownMenuItem>
+            <DropdownMenuItem onClick={onDelete}>{t.deleteGrade}</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       );

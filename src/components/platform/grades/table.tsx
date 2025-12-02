@@ -25,7 +25,7 @@ import type { Locale } from "@/components/internationalization/config";
 interface ResultsTableProps {
   initialData: ResultRow[];
   total: number;
-  dictionary: Dictionary;
+  dictionary: Dictionary["school"]["grades"];
   lang: Locale;
   perPage?: number;
 }
@@ -34,7 +34,7 @@ export function ResultsTable({ initialData, total, dictionary, lang, perPage = 2
   const router = useRouter();
   const { openModal } = useModal();
   const [isPending, startTransition] = useTransition();
-  const t = dictionary.school.grades;
+  const t = dictionary;
 
   // View mode (table/grid)
   const { view, toggleView } = usePlatformView({ defaultView: "table" });
@@ -66,7 +66,7 @@ export function ResultsTable({ initialData, total, dictionary, lang, perPage = 2
   });
 
   // Generate columns on the client side with hooks
-  const columns = useMemo(() => resultColumns(dictionary, lang), [dictionary, lang]);
+  const columns = useMemo(() => resultColumns(t, lang), [t, lang]);
 
   // Table instance
   const { table } = useDataTable<ResultRow>({
@@ -144,11 +144,11 @@ export function ResultsTable({ initialData, total, dictionary, lang, perPage = 2
 
   // Toolbar translations
   const toolbarTranslations = {
-    search: "Search results...",
-    create: dictionary.school.common.actions.add || "Create",
-    reset: dictionary.school.common.actions.reset || "Reset",
-    export: dictionary.school.common.actions.export || "Export",
-    exportCSV: "Export CSV",
+    search: t.studentName || "Search results...",
+    create: t.addGrade || "Add",
+    reset: "Reset",
+    export: "Export",
+    exportCSV: t.exportCSV || "Export CSV",
     exporting: "Exporting...",
   };
 
@@ -218,10 +218,10 @@ export function ResultsTable({ initialData, total, dictionary, lang, perPage = 2
                       },
                     ]}
                     actions={[
-                      { label: dictionary.school.common.actions.view, onClick: () => handleView(result.id) },
-                      { label: dictionary.school.common.actions.edit, onClick: () => handleEdit(result.id) },
+                      { label: t.viewGrade || "View", onClick: () => handleView(result.id) },
+                      { label: t.editGrade || "Edit", onClick: () => handleEdit(result.id) },
                       {
-                        label: dictionary.school.common.actions.delete,
+                        label: t.deleteGrade || "Delete",
                         onClick: () => handleDelete(result),
                         variant: "destructive",
                       },
@@ -249,7 +249,7 @@ export function ResultsTable({ initialData, total, dictionary, lang, perPage = 2
         </>
       )}
 
-      <Modal content={<ResultCreateForm dictionary={dictionary} onSuccess={refresh} />} />
+      <Modal content={<ResultCreateForm dictionary={t} onSuccess={refresh} />} />
     </>
   );
 }

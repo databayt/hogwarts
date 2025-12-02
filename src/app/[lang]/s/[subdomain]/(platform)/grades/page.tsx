@@ -14,5 +14,5 @@ export default async function Page({ params, searchParams }: Props) {
   const { lang } = await params
   const dictionary = await getDictionary(lang)
 
-  return <GradesContent searchParams={searchParams} dictionary={dictionary} lang={lang} />
+  return <GradesContent searchParams={searchParams} dictionary={dictionary.school} lang={lang} />
 }

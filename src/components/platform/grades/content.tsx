@@ -3,24 +3,24 @@ import { type ResultRow } from "@/components/platform/grades/columns";
 import { SearchParams } from "nuqs/server";
 import { resultsSearchParams } from "@/components/platform/grades/list-params";
 import { getTenantContext } from "@/lib/tenant-context";
-import { Shell as PageContainer } from "@/components/table/shell";
 import { type Locale } from "@/components/internationalization/config";
 import { type Dictionary } from "@/components/internationalization/dictionaries";
 import { getResultsList, formatResultRow } from "@/components/platform/grades/queries";
 
 interface Props {
   searchParams: Promise<SearchParams>;
-  dictionary: Dictionary;
+  dictionary: Dictionary["school"];
   lang: Locale;
 }
 
-export default async function ResultsContent({
+export default async function GradesContent({
   searchParams,
   dictionary,
   lang,
 }: Props) {
   const sp = await resultsSearchParams.parse(await searchParams);
   const { schoolId } = await getTenantContext();
+  const t = dictionary.grades;
 
   let data: ResultRow[] = [];
   let total = 0;
@@ -43,7 +43,7 @@ export default async function ResultsContent({
       total = count;
     } catch (error) {
       // Log error for debugging but don't crash the page
-      console.error("[ResultsContent] Error fetching results:", error);
+      console.error("[GradesContent] Error fetching results:", error);
       // Return empty data - page will show "No results" instead of crashing
       data = [];
       total = 0;
@@ -51,16 +51,14 @@ export default async function ResultsContent({
   }
 
   return (
-    <PageContainer>
-      <div className="flex flex-1 flex-col gap-4">
-        <ResultsTable
-          initialData={data}
-          total={total}
-          dictionary={dictionary}
-          lang={lang}
-          perPage={sp.perPage}
-        />
-      </div>
-    </PageContainer>
+    <div className="space-y-6">
+      <ResultsTable
+        initialData={data}
+        total={total}
+        dictionary={t}
+        lang={lang}
+        perPage={sp.perPage}
+      />
+    </div>
   );
 }

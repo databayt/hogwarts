@@ -1745,6 +1745,8 @@
       "viewResultDetails": "View result details",
       "next": "Next",
       "back": "Back",
+      "cancel": "Cancel",
+      "save": "Save",
       "studentAssignmentInfo": "Student & Assignment Information",
       "gradingInfo": "Grading Information",
       "actions": "Actions",

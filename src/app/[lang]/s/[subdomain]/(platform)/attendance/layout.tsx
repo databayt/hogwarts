@@ -11,35 +11,40 @@ interface Props {
 export default async function AttendanceLayout({ children, params }: Props) {
   const { lang, subdomain } = await params
   const dictionary = await getDictionary(lang as Locale)
+  const d = dictionary?.school?.attendance
 
-  // Define attendance page navigation with full context
+  // MVP routes only - practical attendance management
   const attendancePages: PageNavItem[] = [
     {
-      name: dictionary?.school?.attendance?.overview || 'Overview',
+      name: d?.overview || 'Overview',
       href: `/${lang}/s/${subdomain}/attendance`,
     },
     {
-      name: dictionary?.school?.attendance?.settings || 'Settings',
-      href: `/${lang}/s/${subdomain}/attendance/settings`,
+      name: d?.manual || 'Manual',
+      href: `/${lang}/s/${subdomain}/attendance/manual`,
     },
     {
-      name: dictionary?.school?.attendance?.analytics || 'Analytics',
-      href: `/${lang}/s/${subdomain}/attendance/analytics`,
+      name: 'QR Code',
+      href: `/${lang}/s/${subdomain}/attendance/qr-code`,
     },
     {
-      name: dictionary?.school?.attendance?.reports || 'Reports',
+      name: (d?.bulkUpload as { title?: string } | undefined)?.title || 'Bulk Upload',
+      href: `/${lang}/s/${subdomain}/attendance/bulk-upload`,
+    },
+    {
+      name: d?.reports || 'Reports',
       href: `/${lang}/s/${subdomain}/attendance/reports`,
     },
     {
-      name: dictionary?.school?.attendance?.recent || 'Recent',
-      href: `/${lang}/s/${subdomain}/attendance/recent`,
+      name: d?.settings || 'Settings',
+      href: `/${lang}/s/${subdomain}/attendance/settings`,
     },
   ]
 
   return (
     <div className="space-y-6">
       <PageHeadingSetter
-        title={dictionary?.school?.attendance?.title || 'Attendance'}
+        title={d?.title || 'Attendance'}
       />
       <PageNav pages={attendancePages} />
 

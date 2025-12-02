@@ -65,6 +65,13 @@ model School {
   userInvoiceSignatures   UserInvoiceSignature[]
   timetables              Timetable[]
   schoolWeekConfigs       SchoolWeekConfig[]
+  // Timetable optimization relations
+  teacherConstraints       TeacherConstraint[]
+  teacherUnavailableBlocks TeacherUnavailableBlock[]
+  roomConstraints          RoomConstraint[]
+  timetableTemplates       TimetableTemplate[]
+  templateApplications     TemplateApplication[]
+  scheduleExceptions       ScheduleException[]
   // Legal relations
   legalConsents           LegalConsent[]
   legalDocuments          LegalDocument[]
@@ -311,6 +318,7 @@ model Term {
   termNumber Int
   startDate  DateTime
   endDate    DateTime
+  isActive   Boolean  @default(false) // Active term for timetable auto-selection
 
   school            School             @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   schoolYear        SchoolYear         @relation(fields: [yearId], references: [id], onDelete: Cascade)
@@ -319,10 +327,18 @@ model Term {
   schoolWeekConfigs SchoolWeekConfig[]
   reportCards       ReportCard[]
 
+  // Timetable optimization relations
+  teacherConstraints   TeacherConstraint[]
+  roomConstraints      RoomConstraint[]
+  timetableTemplates   TimetableTemplate[] @relation("TemplateSourceTerm")
+  templateApplications TemplateApplication[]
+  scheduleExceptions   ScheduleException[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@unique([schoolId, yearId, termNumber]) // Unique term number per school year
+  @@index([schoolId, isActive]) // Index for active term lookup
   @@map("terms")
 }
 

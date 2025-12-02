@@ -27,6 +27,7 @@ const DOCS_LINKS = [
   { key: "pattern", href: "/docs/pattern", fallback: "Pattern" },
   { key: "stack", href: "/docs/stack", fallback: "Stack" },
   { key: "database", href: "/docs/database", fallback: "Database" },
+  { key: "attendance", href: "/docs/attendance", fallback: "Attendance" },
   { key: "localhost", href: "/docs/localhost", fallback: "Localhost" },
   { key: "contributing", href: "/docs/contributing", fallback: "Contributing" },
   { key: "sharedEconomy", href: "/docs/shared-economy", fallback: "Shared Economy" },

@@ -16,7 +16,7 @@ import { ResultFormFooter } from "./footer";
 import { type Dictionary } from "@/components/internationalization/dictionaries";
 
 interface ResultCreateFormProps {
-  dictionary: Dictionary;
+  dictionary: Dictionary["school"]["grades"];
   /** Callback fired on successful create/update - use for optimistic refresh */
   onSuccess?: () => void;
 }
@@ -25,6 +25,7 @@ export function ResultCreateForm({ dictionary, onSuccess }: ResultCreateFormProp
   const { modal, closeModal } = useModal();
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
+  const t = dictionary;
   const form = useForm<z.infer<typeof resultCreateSchema>>({
     resolver: zodResolver(resultCreateSchema),
     defaultValues: {
@@ -66,7 +67,7 @@ export function ResultCreateForm({ dictionary, onSuccess }: ResultCreateFormProp
       ? await updateResult({ id: currentId, ...values })
       : await createResult(values);
     if (res?.success) {
-      toast.success(currentId ? dictionary.school.grades.resultUpdated : dictionary.school.grades.resultCreated);
+      toast.success(currentId ? t.resultUpdated : t.resultCreated);
       closeModal();
       // Use callback for optimistic update, fallback to router.refresh()
       if (onSuccess) {
@@ -75,7 +76,7 @@ export function ResultCreateForm({ dictionary, onSuccess }: ResultCreateFormProp
         router.refresh();
       }
     } else {
-      toast.error(currentId ? dictionary.school.grades.failedToUpdate : dictionary.school.grades.failedToCreate);
+      toast.error(currentId ? t.failedToUpdate : t.failedToCreate);
     }
   }
 
@@ -119,9 +120,9 @@ export function ResultCreateForm({ dictionary, onSuccess }: ResultCreateFormProp
   const renderCurrentStep = () => {
     switch (currentStep) {
       case 1:
-        return <StudentAssignmentStep form={form} isView={isView} dictionary={dictionary} />;
+        return <StudentAssignmentStep form={form} isView={isView} dictionary={t} />;
       case 2:
-        return <GradingStep form={form} isView={isView} dictionary={dictionary} />;
+        return <GradingStep form={form} isView={isView} dictionary={t} />;
       default:
         return null;
     }
@@ -134,8 +135,8 @@ export function ResultCreateForm({ dictionary, onSuccess }: ResultCreateFormProp
           <div className="flex-grow flex flex-col md:flex-row gap-6">
             {/* Title Section */}
             <div className="md:w-1/3">
-              <h2>{isView ? dictionary.school.grades.viewResult : currentId ? dictionary.school.grades.editResult : dictionary.school.grades.createResult}</h2>
-              <p className="muted">{isView ? dictionary.school.grades.viewResultDetails : currentId ? dictionary.school.grades.updateResultDetails : dictionary.school.grades.recordNewResult}</p>
+              <h2>{isView ? t.viewResult : currentId ? t.editResult : t.createResult}</h2>
+              <p className="muted">{isView ? t.viewResultDetails : currentId ? t.updateResultDetails : t.recordNewResult}</p>
             </div>
 
             {/* Form Content */}
@@ -154,7 +155,7 @@ export function ResultCreateForm({ dictionary, onSuccess }: ResultCreateFormProp
             onNext={handleNext}
             onSaveCurrentStep={handleSaveCurrentStep}
             form={form}
-            dictionary={dictionary}
+            dictionary={t}
           />
         </form>
       </Form>

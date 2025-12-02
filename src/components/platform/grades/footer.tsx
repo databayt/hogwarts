@@ -15,7 +15,7 @@ interface FooterProps {
   onNext: () => void;
   onSaveCurrentStep: () => void;
   form: UseFormReturn<z.infer<typeof resultCreateSchema>>;
-  dictionary: Dictionary;
+  dictionary: Dictionary["school"]["grades"];
 }
 
 import { STEP_FIELDS, TOTAL_FIELDS } from "./config";
@@ -47,7 +47,7 @@ export function ResultFormFooter({ currentStep, isView, currentId, onBack, onNex
       
       <div className="flex items-center justify-between ">
         <div className="text-sm font-medium text-muted-foreground">
-          {currentStep === 1 ? dictionary.school.grades.studentAssignmentInfo : dictionary.school.grades.gradingInfo}
+          {currentStep === 1 ? dictionary.studentAssignmentInfo : dictionary.gradingInfo}
         </div>
         <div className="flex gap-3">
           <Button
@@ -56,7 +56,7 @@ export function ResultFormFooter({ currentStep, isView, currentId, onBack, onNex
             variant="ghost"
             onClick={onBack}
           >
-            {currentStep === 1 ? dictionary.school.common.actions.cancel : dictionary.school.grades.back}
+            {currentStep === 1 ? dictionary.cancel : dictionary.back}
           </Button>
           {!isView && (
             <>
@@ -68,7 +68,7 @@ export function ResultFormFooter({ currentStep, isView, currentId, onBack, onNex
                   onClick={onSaveCurrentStep}
                   disabled={!form.formState.isDirty}
                 >
-                  {dictionary.school.common.actions.save}
+                  {dictionary.save}
                 </Button>
               )}
               <Button
@@ -76,7 +76,7 @@ export function ResultFormFooter({ currentStep, isView, currentId, onBack, onNex
                 size="sm"
                 onClick={onNext}
               >
-                {currentStep === 1 ? dictionary.school.grades.next : currentId ? dictionary.school.common.actions.save : dictionary.school.grades.createResult}
+                {currentStep === 1 ? dictionary.next : currentId ? dictionary.save : dictionary.createResult}
               </Button>
             </>
           )}

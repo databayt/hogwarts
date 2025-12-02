@@ -1,0 +1,345 @@
+---
+title: "Attendance"
+description: "Complete guide to the attendance management module - track and manage student attendance with multiple methods"
+---
+
+## Overview
+
+The Attendance module provides a practical, production-ready system for tracking student attendance. It supports multiple tracking methods and provides comprehensive reporting capabilities.
+
+### Key Features
+
+- **Manual Attendance** - Mark attendance for classes with student lists
+- **QR Code Sessions** - Generate QR codes for students to scan
+- **Bulk Upload** - Import attendance records from CSV files
+- **Reports** - Generate and export attendance data
+- **Real-time Stats** - View attendance rates and trends
+
+## Quick Start
+
+Navigate to **Attendance** in the platform sidebar to access the module.
+
+### Overview Dashboard
+
+The overview page displays:
+- **Quick Stats** - Total records, present, absent, late counts, and overall attendance rate
+- **Quick Actions** - Shortcuts to common tasks
+- **Recent Activity** - Latest attendance records
+
+## Taking Attendance
+
+### Manual Attendance
+
+Mark attendance manually for a class:
+
+**01. Go to Manual page**
+
+Click "Take Attendance" from the overview or navigate to Attendance → Manual
+
+---
+
+**02. Select a class**
+
+Choose the class from the dropdown
+
+---
+
+**03. Select the date**
+
+Pick the date for attendance (defaults to today)
+
+---
+
+**04. Mark status for each student**
+
+Use the toggle buttons to mark each student as:
+- **Present** (green)
+- **Absent** (red)
+- **Late** (yellow)
+
+---
+
+**05. Submit**
+
+Click "Save Attendance" to record all entries
+
+### QR Code Sessions
+
+Generate QR codes for students to scan and mark their attendance:
+
+**01. Go to QR Code page**
+
+Click "QR Code Session" from overview or navigate to Attendance → QR Code
+
+---
+
+**02. Select a class**
+
+Choose the class for the session
+
+---
+
+**03. Configure options**
+
+Set validity period (default: 30 minutes)
+
+---
+
+**04. Generate QR Code**
+
+Click "Generate" to create a unique QR code
+
+---
+
+**05. Display the QR code**
+
+Students scan with their devices to check in
+
+### Bulk Upload
+
+Import attendance records from a CSV file:
+
+**01. Go to Bulk Upload page**
+
+Navigate to Attendance → Bulk Upload
+
+---
+
+**02. Download template**
+
+Get the CSV template with required columns
+
+---
+
+**03. Fill in data**
+
+Add attendance records following the format:
+```csv
+studentId,date,status,checkInTime,checkOutTime,notes
+student_123,2024-01-15,PRESENT,08:00,15:00,
+student_456,2024-01-15,ABSENT,,,Medical leave
+```
+
+---
+
+**04. Upload file**
+
+Select your CSV file and click "Upload"
+
+---
+
+**05. Review results**
+
+Check the import summary for successful and failed records
+
+## Reports
+
+Generate and export attendance reports:
+
+### Available Filters
+
+- **Class** - Filter by specific class
+- **Student** - Filter by individual student
+- **Status** - Filter by attendance status (Present, Absent, Late, etc.)
+- **Date Range** - Select custom date range
+
+### Export Options
+
+- **CSV** - Comma-separated values for spreadsheets
+- **Excel** - Microsoft Excel format
+- **PDF** - Printable document
+
+### Report Types
+
+1. **Summary Report** - Overview statistics by class or student
+2. **Detailed Report** - Individual attendance records
+3. **Trend Report** - Attendance patterns over time
+
+## Settings
+
+Configure attendance module behavior:
+
+### General Settings
+
+- **Default Check-in Time** - Set standard arrival time
+- **Late Threshold** - Minutes after which students are marked late
+- **Attendance Methods** - Enable/disable specific methods
+
+### QR Code Settings
+
+- **Session Duration** - How long QR codes remain valid
+- **Location Verification** - Require GPS location on scan
+- **Single Use** - Allow multiple scans per student
+
+## API Reference
+
+### Server Actions
+
+The attendance module uses server actions for data operations:
+
+```typescript
+// Get attendance statistics
+getAttendanceStats(input?: {
+  classId?: string
+  dateFrom?: string
+  dateTo?: string
+  studentId?: string
+})
+
+// Mark attendance for multiple students
+markAttendance(input: {
+  classId: string
+  date: string
+  records: Array<{
+    studentId: string
+    status: 'present' | 'absent' | 'late'
+  }>
+})
+
+// Get recent attendance records
+getRecentAttendance(input?: {
+  limit?: number
+  classId?: string
+})
+
+// Generate QR code session
+generateQRSession(input: {
+  classId: string
+  validFor: number // seconds
+  includeLocation?: boolean
+})
+```
+
+### Types
+
+```typescript
+type AttendanceStatus =
+  | 'PRESENT'
+  | 'ABSENT'
+  | 'LATE'
+  | 'EXCUSED'
+  | 'SICK'
+  | 'HOLIDAY'
+
+type AttendanceMethod =
+  | 'MANUAL'
+  | 'QR_CODE'
+  | 'BULK_UPLOAD'
+  | 'GEOFENCE'    // Phase 2
+  | 'BARCODE'     // Phase 2
+  | 'RFID'        // Phase 2
+  | 'BIOMETRIC'   // Phase 2
+
+interface AttendanceRecord {
+  id: string
+  schoolId: string
+  studentId: string
+  classId: string
+  date: Date
+  status: AttendanceStatus
+  method: AttendanceMethod
+  checkInTime?: Date
+  checkOutTime?: Date
+  notes?: string
+}
+```
+
+## Database Schema
+
+The attendance module uses these Prisma models:
+
+```prisma
+model Attendance {
+  id          String           @id @default(cuid())
+  schoolId    String
+  studentId   String
+  classId     String
+  date        DateTime
+  status      AttendanceStatus
+  method      AttendanceMethod
+  checkInTime DateTime?
+  checkOutTime DateTime?
+  location    Json?
+  notes       String?
+  markedBy    String?
+  markedAt    DateTime
+
+  @@unique([schoolId, studentId, classId, date])
+  @@index([schoolId])
+  @@index([classId])
+  @@index([date])
+}
+
+model QRCodeSession {
+  id          String   @id @default(cuid())
+  schoolId    String
+  classId     String
+  code        String   @unique
+  expiresAt   DateTime
+  isActive    Boolean  @default(true)
+  scanCount   Int      @default(0)
+  scannedBy   Json     @default("[]")
+}
+```
+
+## Seed Data
+
+The attendance seed creates realistic test data:
+
+- 30 days of attendance records
+- Realistic distribution: 85% present, 5% late, 8% absent, 2% excused/sick
+- Day-of-week variations (more late on Sundays, more absences mid-week)
+- Student identifiers for scanning (barcode, RFID)
+- Sample QR code sessions
+
+Run seed:
+```bash
+pnpm db:seed
+```
+
+## Best Practices
+
+### For Teachers
+
+1. Mark attendance at the start of each class
+2. Use QR codes for quick group check-ins
+3. Add notes for excused absences
+4. Review weekly reports for patterns
+
+### For Administrators
+
+1. Configure sensible late thresholds
+2. Monitor school-wide attendance rates
+3. Follow up on students below 80% attendance
+4. Export monthly reports for records
+
+## Troubleshooting
+
+### QR Code Not Scanning
+
+- Check QR code hasn't expired
+- Ensure good lighting for camera
+- Try refreshing the page to generate new code
+
+### Missing Attendance Records
+
+- Verify the correct date is selected
+- Check if student is enrolled in the class
+- Confirm school context is correct
+
+### Bulk Upload Errors
+
+- Ensure CSV format matches template exactly
+- Check student IDs exist in the system
+- Verify dates are in YYYY-MM-DD format
+
+## Roadmap (Phase 2)
+
+Future enhancements planned:
+
+- **Geofence Check-in** - Automatic attendance when entering campus
+- **Barcode Scanning** - Use student ID barcodes
+- **RFID/NFC** - Tap cards for quick check-in
+- **Biometric** - Fingerprint and face recognition
+- **Advanced Analytics** - Predictive attendance patterns
+- **Parent Notifications** - Automatic alerts for absences

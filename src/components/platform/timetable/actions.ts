@@ -1002,3 +1002,1260 @@ export async function getPeriodsForTerm(input: { termId: string }) {
     }))
   }
 }
+
+// ============================================================================
+// ACTIVE TERM & ROLE-BASED TIMETABLE ACTIONS
+// ============================================================================
+
+/**
+ * Get the active term for the current school
+ * Priority: 1) Term.isActive=true 2) Today within term dates 3) Most recent
+ */
+export async function getActiveTerm() {
+  await requireReadAccess()
+
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) throw new Error('Missing school context')
+
+  const today = new Date()
+
+  // Priority 1: Explicitly marked as active
+  const activeTerm = await db.term.findFirst({
+    where: { schoolId, isActive: true },
+    select: {
+      id: true,
+      termNumber: true,
+      startDate: true,
+      endDate: true,
+      schoolYear: { select: { id: true, yearName: true } }
+    }
+  })
+
+  if (activeTerm) {
+    return {
+      term: {
+        id: activeTerm.id,
+        termNumber: activeTerm.termNumber,
+        label: `${activeTerm.schoolYear.yearName} - Term ${activeTerm.termNumber}`,
+        startDate: activeTerm.startDate,
+        endDate: activeTerm.endDate,
+        yearId: activeTerm.schoolYear.id
+      },
+      source: 'explicit' as const
+    }
+  }
+
+  // Priority 2: Current date falls within term dates
+  const currentTerm = await db.term.findFirst({
+    where: {
+      schoolId,
+      startDate: { lte: today },
+      endDate: { gte: today }
+    },
+    select: {
+      id: true,
+      termNumber: true,
+      startDate: true,
+      endDate: true,
+      schoolYear: { select: { id: true, yearName: true } }
+    }
+  })
+
+  if (currentTerm) {
+    return {
+      term: {
+        id: currentTerm.id,
+        termNumber: currentTerm.termNumber,
+        label: `${currentTerm.schoolYear.yearName} - Term ${currentTerm.termNumber}`,
+        startDate: currentTerm.startDate,
+        endDate: currentTerm.endDate,
+        yearId: currentTerm.schoolYear.id
+      },
+      source: 'date_range' as const
+    }
+  }
+
+  // Priority 3: Most recent term
+  const recentTerm = await db.term.findFirst({
+    where: { schoolId },
+    orderBy: { startDate: 'desc' },
+    select: {
+      id: true,
+      termNumber: true,
+      startDate: true,
+      endDate: true,
+      schoolYear: { select: { id: true, yearName: true } }
+    }
+  })
+
+  if (recentTerm) {
+    return {
+      term: {
+        id: recentTerm.id,
+        termNumber: recentTerm.termNumber,
+        label: `${recentTerm.schoolYear.yearName} - Term ${recentTerm.termNumber}`,
+        startDate: recentTerm.startDate,
+        endDate: recentTerm.endDate,
+        yearId: recentTerm.schoolYear.id
+      },
+      source: 'most_recent' as const
+    }
+  }
+
+  return { term: null, source: 'none' as const }
+}
+
+/**
+ * Set a term as active (admin only)
+ */
+export async function setActiveTerm(input: { termId: string }) {
+  await requireAdminAccess()
+
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) throw new Error('Missing school context')
+
+  // Deactivate all terms for this school
+  await db.term.updateMany({
+    where: { schoolId },
+    data: { isActive: false }
+  })
+
+  // Activate the selected term
+  await db.term.update({
+    where: { id: input.termId },
+    data: { isActive: true }
+  })
+
+  await logTimetableAction('configure_settings', {
+    entityType: 'term',
+    entityId: input.termId,
+    changes: { isActive: true }
+  })
+
+  return { success: true }
+}
+
+type ViewType = 'admin' | 'teacher' | 'student' | 'guardian'
+
+/**
+ * Get personalized timetable based on user role
+ * Returns appropriate view type and data based on session
+ */
+export async function getPersonalizedTimetable(input: { termId: string; weekOffset?: 0 | 1 }) {
+  await requireReadAccess()
+
+  const { schoolId, role } = await getPermissionContext()
+  if (!schoolId) throw new Error('Missing school context')
+
+  const session = await auth()
+  const userId = session?.user?.id
+
+  if (!userId) throw new Error('Not authenticated')
+
+  // Determine view type based on role
+  let viewType: ViewType = 'admin'
+  let filterData: { teacherId?: string; classId?: string; childrenIds?: string[] } = {}
+
+  switch (role) {
+    case 'DEVELOPER':
+    case 'ADMIN':
+      viewType = 'admin'
+      break
+
+    case 'TEACHER': {
+      viewType = 'teacher'
+      // Get teacher record linked to user
+      const teacher = await db.teacher.findFirst({
+        where: { userId, schoolId },
+        select: { id: true }
+      })
+      if (teacher) {
+        filterData.teacherId = teacher.id
+      }
+      break
+    }
+
+    case 'STUDENT': {
+      viewType = 'student'
+      // Get student record and their class
+      const student = await db.student.findFirst({
+        where: { userId, schoolId },
+        select: { id: true }
+      })
+      if (student) {
+        // Get current class enrollment
+        const enrollment = await db.studentClass.findFirst({
+          where: { studentId: student.id, schoolId },
+          orderBy: { createdAt: 'desc' },
+          select: { classId: true }
+        })
+        if (enrollment) {
+          filterData.classId = enrollment.classId
+        }
+      }
+      break
+    }
+
+    case 'GUARDIAN': {
+      viewType = 'guardian'
+      // Get guardian record
+      const guardian = await db.guardian.findFirst({
+        where: { userId, schoolId },
+        select: { id: true }
+      })
+      if (guardian) {
+        // Get linked children (students)
+        const studentGuardians = await db.studentGuardian.findMany({
+          where: { guardianId: guardian.id, schoolId },
+          select: {
+            student: {
+              select: {
+                id: true,
+                givenName: true,
+                surname: true
+              }
+            }
+          }
+        })
+        filterData.childrenIds = studentGuardians.map(sg => sg.student.id)
+      }
+      break
+    }
+
+    default:
+      viewType = 'student' // Default to most restricted view
+  }
+
+  // Get base schedule data
+  const { config } = await getScheduleConfig({ termId: input.termId })
+
+  const term = await db.term.findFirst({
+    where: { id: input.termId, schoolId },
+    select: {
+      yearId: true,
+      termNumber: true,
+      schoolYear: { select: { yearName: true } }
+    }
+  })
+  if (!term) throw new Error('Invalid term')
+
+  const periods = await db.period.findMany({
+    where: { schoolId, yearId: term.yearId },
+    orderBy: { startTime: 'asc' },
+    select: { id: true, name: true, startTime: true, endTime: true }
+  })
+
+  return {
+    viewType,
+    filterData,
+    termInfo: {
+      id: input.termId,
+      termNumber: term.termNumber,
+      yearName: term.schoolYear.yearName,
+      label: `${term.schoolYear.yearName} - Term ${term.termNumber}`
+    },
+    workingDays: config.workingDays,
+    periods: periods.map((p, idx) => ({
+      id: p.id,
+      name: p.name,
+      order: idx + 1,
+      startTime: p.startTime,
+      endTime: p.endTime,
+      isBreak: p.name.toLowerCase().includes('break') || p.name.toLowerCase().includes('lunch')
+    })),
+    lunchAfterPeriod: config.defaultLunchAfterPeriod
+  }
+}
+
+/**
+ * Get children linked to the authenticated guardian
+ */
+export async function getGuardianChildren() {
+  await requireReadAccess()
+
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) throw new Error('Missing school context')
+
+  const session = await auth()
+  const userId = session?.user?.id
+
+  if (!userId) throw new Error('Not authenticated')
+
+  // Get guardian record
+  const guardian = await db.guardian.findFirst({
+    where: { userId, schoolId },
+    select: { id: true }
+  })
+
+  if (!guardian) {
+    return { children: [] }
+  }
+
+  // Get linked students
+  const studentGuardians = await db.studentGuardian.findMany({
+    where: { guardianId: guardian.id, schoolId },
+    select: {
+      student: {
+        select: {
+          id: true,
+          givenName: true,
+          surname: true,
+          profilePhotoUrl: true
+        }
+      }
+    }
+  })
+
+  // Get each student's current class
+  const children = await Promise.all(
+    studentGuardians.map(async (sg) => {
+      const enrollment = await db.studentClass.findFirst({
+        where: { studentId: sg.student.id, schoolId },
+        orderBy: { createdAt: 'desc' },
+        select: {
+          class: { select: { id: true, name: true } }
+        }
+      })
+
+      return {
+        id: sg.student.id,
+        name: `${sg.student.givenName} ${sg.student.surname}`,
+        photoUrl: sg.student.profilePhotoUrl,
+        classId: enrollment?.class.id,
+        className: enrollment?.class.name
+      }
+    })
+  )
+
+  return { children }
+}
+
+/**
+ * Get timetable for a specific child (guardian view)
+ */
+export async function getChildTimetable(input: { termId: string; childId: string; weekOffset?: 0 | 1 }) {
+  await requireReadAccess()
+
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) throw new Error('Missing school context')
+
+  const session = await auth()
+  const userId = session?.user?.id
+  const role = session?.user?.role
+
+  if (!userId) throw new Error('Not authenticated')
+
+  // Verify guardian has access to this child (unless admin)
+  if (role !== 'DEVELOPER' && role !== 'ADMIN') {
+    const guardian = await db.guardian.findFirst({
+      where: { userId, schoolId },
+      select: { id: true }
+    })
+
+    if (guardian) {
+      const hasAccess = await db.studentGuardian.findFirst({
+        where: {
+          guardianId: guardian.id,
+          studentId: input.childId,
+          schoolId
+        }
+      })
+
+      if (!hasAccess) {
+        throw new Error('Access denied to this student')
+      }
+    }
+  }
+
+  // Get student's class
+  const enrollment = await db.studentClass.findFirst({
+    where: { studentId: input.childId, schoolId },
+    orderBy: { createdAt: 'desc' },
+    select: { classId: true }
+  })
+
+  if (!enrollment) {
+    return {
+      studentInfo: null,
+      slots: [],
+      workingDays: [],
+      periods: [],
+      lunchAfterPeriod: null
+    }
+  }
+
+  // Get student info
+  const student = await db.student.findFirst({
+    where: { id: input.childId, schoolId },
+    select: { id: true, givenName: true, surname: true }
+  })
+
+  // Use existing getTimetableByClass
+  const timetableData = await getTimetableByClass({
+    termId: input.termId,
+    classId: enrollment.classId,
+    weekOffset: input.weekOffset
+  })
+
+  return {
+    studentInfo: student ? {
+      id: student.id,
+      name: `${student.givenName} ${student.surname}`
+    } : null,
+    ...timetableData
+  }
+}
+
+/**
+ * Get today's schedule for the authenticated user
+ */
+export async function getTodaySchedule(input?: { date?: Date }) {
+  await requireReadAccess()
+
+  const { schoolId, role } = await getPermissionContext()
+  if (!schoolId) throw new Error('Missing school context')
+
+  const session = await auth()
+  const userId = session?.user?.id
+
+  if (!userId) throw new Error('Not authenticated')
+
+  const targetDate = input?.date || new Date()
+  const dayOfWeek = targetDate.getDay() // 0 = Sunday
+
+  // Get active term
+  const { term } = await getActiveTerm()
+  if (!term) {
+    return { schedule: [], dayOfWeek, message: 'No active term' }
+  }
+
+  // Get periods for this term
+  const periods = await db.period.findMany({
+    where: { schoolId, yearId: term.yearId },
+    orderBy: { startTime: 'asc' },
+    select: { id: true, name: true, startTime: true, endTime: true }
+  })
+
+  // Build filter based on role
+  const where: {
+    schoolId: string
+    termId: string
+    dayOfWeek: number
+    weekOffset: number
+    teacherId?: string
+    classId?: string
+  } = {
+    schoolId,
+    termId: term.id,
+    dayOfWeek,
+    weekOffset: 0
+  }
+
+  if (role === 'TEACHER') {
+    const teacher = await db.teacher.findFirst({
+      where: { userId, schoolId },
+      select: { id: true }
+    })
+    if (teacher) where.teacherId = teacher.id
+  } else if (role === 'STUDENT') {
+    const student = await db.student.findFirst({
+      where: { userId, schoolId },
+      select: { id: true }
+    })
+    if (student) {
+      const enrollment = await db.studentClass.findFirst({
+        where: { studentId: student.id, schoolId },
+        orderBy: { createdAt: 'desc' },
+        select: { classId: true }
+      })
+      if (enrollment) where.classId = enrollment.classId
+    }
+  }
+
+  const slots = await db.timetable.findMany({
+    where,
+    include: {
+      class: { select: { name: true, subject: { select: { subjectName: true } } } },
+      teacher: { select: { givenName: true, surname: true } },
+      classroom: { select: { roomName: true } },
+      period: { select: { id: true, name: true, startTime: true, endTime: true } }
+    },
+    orderBy: { period: { startTime: 'asc' } }
+  })
+
+  const schedule = slots.map(slot => ({
+    periodId: slot.periodId,
+    periodName: slot.period.name,
+    startTime: slot.period.startTime,
+    endTime: slot.period.endTime,
+    subject: slot.class?.subject?.subjectName || slot.class?.name || '',
+    className: slot.class?.name || '',
+    teacher: slot.teacher ? `${slot.teacher.givenName} ${slot.teacher.surname}` : '',
+    room: slot.classroom?.roomName || ''
+  }))
+
+  // Fill in empty periods
+  const fullSchedule = periods.map(period => {
+    const existing = schedule.find(s => s.periodId === period.id)
+    if (existing) return existing
+
+    const isBreak = period.name.toLowerCase().includes('break') || period.name.toLowerCase().includes('lunch')
+    return {
+      periodId: period.id,
+      periodName: period.name,
+      startTime: period.startTime,
+      endTime: period.endTime,
+      subject: isBreak ? period.name : '',
+      className: '',
+      teacher: '',
+      room: '',
+      isBreak
+    }
+  })
+
+  return {
+    schedule: fullSchedule,
+    dayOfWeek,
+    date: targetDate.toISOString(),
+    termLabel: term.label
+  }
+}
+
+// ============================================================================
+// TEACHER CONSTRAINT MANAGEMENT ACTIONS
+// ============================================================================
+
+/**
+ * Get teacher constraints
+ */
+export async function getTeacherConstraints(input: { teacherId: string; termId?: string }) {
+  await requireReadAccess()
+
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) throw new Error('Missing school context')
+
+  const constraint = await db.teacherConstraint.findFirst({
+    where: {
+      schoolId,
+      teacherId: input.teacherId,
+      OR: [
+        { termId: input.termId },
+        { termId: null }
+      ]
+    },
+    include: {
+      unavailableBlocks: true,
+      teacher: { select: { givenName: true, surname: true } }
+    },
+    orderBy: { termId: 'desc' }
+  })
+
+  if (!constraint) {
+    return { constraint: null }
+  }
+
+  return {
+    constraint: {
+      id: constraint.id,
+      teacherId: constraint.teacherId,
+      teacherName: `${constraint.teacher.givenName} ${constraint.teacher.surname}`,
+      termId: constraint.termId,
+      maxPeriodsPerDay: constraint.maxPeriodsPerDay,
+      maxPeriodsPerWeek: constraint.maxPeriodsPerWeek,
+      minFreePeriods: constraint.minFreePeriods,
+      maxConsecutivePeriods: constraint.maxConsecutivePeriods,
+      dayPreferences: constraint.dayPreferences as Record<string, string>,
+      periodPreferences: constraint.periodPreferences as Record<string, string>,
+      enforceSubjectMatch: constraint.enforceSubjectMatch,
+      lunchBreakRequired: constraint.lunchBreakRequired,
+      notes: constraint.notes,
+      unavailableBlocks: constraint.unavailableBlocks.map(block => ({
+        id: block.id,
+        dayOfWeek: block.dayOfWeek,
+        periodId: block.periodId,
+        reason: block.reason,
+        isRecurring: block.isRecurring,
+        specificDate: block.specificDate
+      }))
+    }
+  }
+}
+
+/**
+ * Upsert teacher constraints (admin only)
+ */
+export async function upsertTeacherConstraints(input: {
+  teacherId: string
+  termId?: string | null
+  maxPeriodsPerDay?: number
+  maxPeriodsPerWeek?: number
+  minFreePeriods?: number
+  maxConsecutivePeriods?: number
+  dayPreferences?: Record<string, string>
+  periodPreferences?: Record<string, string>
+  enforceSubjectMatch?: boolean
+  lunchBreakRequired?: boolean
+  notes?: string | null
+}) {
+  await requireAdminAccess()
+
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) throw new Error('Missing school context')
+
+  const data = {
+    schoolId,
+    teacherId: input.teacherId,
+    termId: input.termId ?? null,
+    maxPeriodsPerDay: input.maxPeriodsPerDay ?? 6,
+    maxPeriodsPerWeek: input.maxPeriodsPerWeek ?? 25,
+    minFreePeriods: input.minFreePeriods ?? 1,
+    maxConsecutivePeriods: input.maxConsecutivePeriods ?? 3,
+    dayPreferences: input.dayPreferences ?? {},
+    periodPreferences: input.periodPreferences ?? {},
+    enforceSubjectMatch: input.enforceSubjectMatch ?? true,
+    lunchBreakRequired: input.lunchBreakRequired ?? true,
+    notes: input.notes ?? null
+  }
+
+  // Find existing constraint (handling nullable termId)
+  const existing = await db.teacherConstraint.findFirst({
+    where: {
+      schoolId,
+      teacherId: input.teacherId,
+      termId: input.termId ?? null
+    }
+  })
+
+  const constraint = existing
+    ? await db.teacherConstraint.update({
+        where: { id: existing.id },
+        data
+      })
+    : await db.teacherConstraint.create({ data })
+
+  await logTimetableAction('configure_settings', {
+    entityType: 'teacher_constraint',
+    entityId: constraint.id,
+    changes: input
+  })
+
+  return { id: constraint.id }
+}
+
+/**
+ * Add unavailable block for a teacher
+ */
+export async function addTeacherUnavailableBlock(input: {
+  teacherConstraintId: string
+  dayOfWeek: number
+  periodId: string
+  reason?: string
+  isRecurring?: boolean
+  specificDate?: Date
+}) {
+  await requireAdminAccess()
+
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) throw new Error('Missing school context')
+
+  const block = await db.teacherUnavailableBlock.create({
+    data: {
+      schoolId,
+      teacherConstraintId: input.teacherConstraintId,
+      dayOfWeek: input.dayOfWeek,
+      periodId: input.periodId,
+      reason: input.reason,
+      isRecurring: input.isRecurring ?? true,
+      specificDate: input.specificDate
+    }
+  })
+
+  return { id: block.id }
+}
+
+/**
+ * Remove unavailable block
+ */
+export async function removeTeacherUnavailableBlock(input: { blockId: string }) {
+  await requireAdminAccess()
+
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) throw new Error('Missing school context')
+
+  await db.teacherUnavailableBlock.delete({
+    where: { id: input.blockId, schoolId }
+  })
+
+  return { success: true }
+}
+
+// ============================================================================
+// ROOM CONSTRAINT MANAGEMENT ACTIONS
+// ============================================================================
+
+/**
+ * Get room constraints
+ */
+export async function getRoomConstraints(input: { classroomId: string; termId?: string }) {
+  await requireReadAccess()
+
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) throw new Error('Missing school context')
+
+  const constraint = await db.roomConstraint.findFirst({
+    where: {
+      schoolId,
+      classroomId: input.classroomId,
+      OR: [
+        { termId: input.termId },
+        { termId: null }
+      ]
+    },
+    include: {
+      classroom: { select: { roomName: true, capacity: true } }
+    },
+    orderBy: { termId: 'desc' }
+  })
+
+  if (!constraint) {
+    return { constraint: null }
+  }
+
+  return {
+    constraint: {
+      id: constraint.id,
+      classroomId: constraint.classroomId,
+      roomName: constraint.classroom.roomName,
+      capacity: constraint.classroom.capacity,
+      termId: constraint.termId,
+      allowedSubjectTypes: constraint.allowedSubjectTypes,
+      strictCapacityLimit: constraint.strictCapacityLimit,
+      capacityBuffer: constraint.capacityBuffer,
+      wheelchairAccessible: constraint.wheelchairAccessible,
+      hasElevatorAccess: constraint.hasElevatorAccess,
+      floorLevel: constraint.floorLevel,
+      reservedPeriods: constraint.reservedPeriods as Record<string, string[]>,
+      maintenanceBlocks: constraint.maintenanceBlocks as Array<{
+        dayOfWeek: number
+        periodId: string
+        reason: string
+        startDate?: string
+        endDate?: string
+      }>
+    }
+  }
+}
+
+/**
+ * Upsert room constraints (admin only)
+ */
+export async function upsertRoomConstraints(input: {
+  classroomId: string
+  termId?: string | null
+  allowedSubjectTypes?: string[]
+  strictCapacityLimit?: boolean
+  capacityBuffer?: number
+  wheelchairAccessible?: boolean
+  hasElevatorAccess?: boolean
+  floorLevel?: number | null
+  reservedPeriods?: Record<string, string[]>
+  maintenanceBlocks?: Array<{
+    dayOfWeek: number
+    periodId: string
+    reason: string
+    startDate?: string
+    endDate?: string
+  }>
+}) {
+  await requireAdminAccess()
+
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) throw new Error('Missing school context')
+
+  const data = {
+    schoolId,
+    classroomId: input.classroomId,
+    termId: input.termId ?? null,
+    allowedSubjectTypes: input.allowedSubjectTypes ?? [],
+    strictCapacityLimit: input.strictCapacityLimit ?? true,
+    capacityBuffer: input.capacityBuffer ?? 0,
+    wheelchairAccessible: input.wheelchairAccessible ?? false,
+    hasElevatorAccess: input.hasElevatorAccess ?? false,
+    floorLevel: input.floorLevel ?? null,
+    reservedPeriods: input.reservedPeriods ?? {},
+    maintenanceBlocks: input.maintenanceBlocks ?? []
+  }
+
+  // Find existing constraint (handling nullable termId)
+  const existing = await db.roomConstraint.findFirst({
+    where: {
+      schoolId,
+      classroomId: input.classroomId,
+      termId: input.termId ?? null
+    }
+  })
+
+  const constraint = existing
+    ? await db.roomConstraint.update({
+        where: { id: existing.id },
+        data
+      })
+    : await db.roomConstraint.create({ data })
+
+  await logTimetableAction('configure_settings', {
+    entityType: 'room_constraint',
+    entityId: constraint.id,
+    changes: input
+  })
+
+  return { id: constraint.id }
+}
+
+// ============================================================================
+// TEMPLATE MANAGEMENT ACTIONS
+// ============================================================================
+
+/**
+ * List all timetable templates for the school
+ */
+export async function listTimetableTemplates() {
+  await requireReadAccess()
+
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) throw new Error('Missing school context')
+
+  const templates = await db.timetableTemplate.findMany({
+    where: { schoolId, isActive: true },
+    orderBy: [{ isDefault: 'desc' }, { createdAt: 'desc' }],
+    select: {
+      id: true,
+      name: true,
+      description: true,
+      version: true,
+      isDefault: true,
+      rotationType: true,
+      totalSlots: true,
+      classCount: true,
+      teacherCount: true,
+      createdAt: true,
+      createdBy: { select: { email: true } },
+      sourceTerm: { select: { termNumber: true, schoolYear: { select: { yearName: true } } } }
+    }
+  })
+
+  return {
+    templates: templates.map(t => ({
+      id: t.id,
+      name: t.name,
+      description: t.description,
+      version: t.version,
+      isDefault: t.isDefault,
+      rotationType: t.rotationType,
+      stats: {
+        totalSlots: t.totalSlots,
+        classCount: t.classCount,
+        teacherCount: t.teacherCount
+      },
+      source: t.sourceTerm ? `${t.sourceTerm.schoolYear.yearName} Term ${t.sourceTerm.termNumber}` : null,
+      createdBy: t.createdBy?.email,
+      createdAt: t.createdAt
+    }))
+  }
+}
+
+/**
+ * Create a template from an existing term's timetable
+ */
+export async function createTemplateFromTerm(input: { name: string; description?: string; sourceTermId: string }) {
+  await requireAdminAccess()
+
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) throw new Error('Missing school context')
+
+  const session = await auth()
+  const userId = session?.user?.id
+
+  // Get all slots from the source term
+  const slots = await db.timetable.findMany({
+    where: { schoolId, termId: input.sourceTermId, weekOffset: 0 },
+    select: {
+      dayOfWeek: true,
+      periodId: true,
+      classId: true,
+      teacherId: true,
+      classroomId: true,
+      rotationWeek: true
+    }
+  })
+
+  // Get working days config
+  const { config } = await getScheduleConfig({ termId: input.sourceTermId })
+
+  // Build slot patterns (anonymized for template reuse)
+  const slotPatterns = slots.map(s => ({
+    dayOfWeek: s.dayOfWeek,
+    periodId: s.periodId,
+    classId: s.classId,
+    teacherId: s.teacherId,
+    classroomId: s.classroomId,
+    rotationWeek: s.rotationWeek
+  }))
+
+  // Calculate statistics
+  const uniqueClasses = new Set(slots.map(s => s.classId))
+  const uniqueTeachers = new Set(slots.map(s => s.teacherId))
+
+  // Check for existing template with same name
+  const existing = await db.timetableTemplate.findFirst({
+    where: { schoolId, name: input.name },
+    orderBy: { version: 'desc' },
+    select: { version: true }
+  })
+
+  const version = existing ? existing.version + 1 : 1
+
+  const template = await db.timetableTemplate.create({
+    data: {
+      schoolId,
+      name: input.name,
+      description: input.description,
+      version,
+      sourceTermId: input.sourceTermId,
+      createdById: userId,
+      workingDays: config.workingDays,
+      slotPatterns,
+      totalSlots: slots.length,
+      classCount: uniqueClasses.size,
+      teacherCount: uniqueTeachers.size
+    }
+  })
+
+  await logTimetableAction('configure_settings', {
+    entityType: 'template',
+    entityId: template.id,
+    changes: { name: input.name, sourceTermId: input.sourceTermId }
+  })
+
+  return { id: template.id, version }
+}
+
+/**
+ * Apply a template to a target term
+ */
+export async function applyTemplateToTerm(input: {
+  templateId: string
+  targetTermId: string
+  clearExisting?: boolean
+  teacherMapping?: Record<string, string>
+  roomMapping?: Record<string, string>
+}) {
+  await requireAdminAccess()
+
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) throw new Error('Missing school context')
+
+  const session = await auth()
+  const userId = session?.user?.id
+
+  // Get template
+  const template = await db.timetableTemplate.findUnique({
+    where: { id: input.templateId },
+    select: { slotPatterns: true, workingDays: true }
+  })
+
+  if (!template) throw new Error('Template not found')
+
+  // Clear existing slots if requested
+  if (input.clearExisting) {
+    await db.timetable.deleteMany({
+      where: { schoolId, termId: input.targetTermId }
+    })
+  }
+
+  const slotPatterns = template.slotPatterns as Array<{
+    dayOfWeek: number
+    periodId: string
+    classId: string
+    teacherId: string
+    classroomId: string
+    rotationWeek: number
+  }>
+
+  // Apply slots with optional mapping
+  let slotsCreated = 0
+  let conflictsFound = 0
+
+  for (const pattern of slotPatterns) {
+    const teacherId = input.teacherMapping?.[pattern.teacherId] || pattern.teacherId
+    const classroomId = input.roomMapping?.[pattern.classroomId] || pattern.classroomId
+
+    try {
+      await db.timetable.create({
+        data: {
+          schoolId,
+          termId: input.targetTermId,
+          dayOfWeek: pattern.dayOfWeek,
+          periodId: pattern.periodId,
+          classId: pattern.classId,
+          teacherId,
+          classroomId,
+          weekOffset: 0,
+          rotationWeek: pattern.rotationWeek
+        }
+      })
+      slotsCreated++
+    } catch {
+      // Likely a conflict
+      conflictsFound++
+    }
+  }
+
+  // Record application
+  await db.templateApplication.create({
+    data: {
+      schoolId,
+      templateId: input.templateId,
+      termId: input.targetTermId,
+      appliedById: userId,
+      options: {
+        clearExisting: input.clearExisting,
+        teacherMapping: input.teacherMapping,
+        roomMapping: input.roomMapping
+      },
+      slotsCreated,
+      conflictsFound
+    }
+  })
+
+  await logTimetableAction('configure_settings', {
+    entityType: 'template_application',
+    metadata: { templateId: input.templateId, targetTermId: input.targetTermId }
+  })
+
+  return { slotsCreated, conflictsFound }
+}
+
+/**
+ * Delete a template
+ */
+export async function deleteTemplate(input: { templateId: string }) {
+  await requireAdminAccess()
+
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) throw new Error('Missing school context')
+
+  // Soft delete by marking inactive
+  await db.timetableTemplate.update({
+    where: { id: input.templateId, schoolId },
+    data: { isActive: false }
+  })
+
+  await logTimetableAction('delete', {
+    entityType: 'template',
+    entityId: input.templateId
+  })
+
+  return { success: true }
+}
+
+/**
+ * Set a template as default
+ */
+export async function setDefaultTemplate(input: { templateId: string }) {
+  await requireAdminAccess()
+
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) throw new Error('Missing school context')
+
+  // Remove default from all templates
+  await db.timetableTemplate.updateMany({
+    where: { schoolId },
+    data: { isDefault: false }
+  })
+
+  // Set new default
+  await db.timetableTemplate.update({
+    where: { id: input.templateId, schoolId },
+    data: { isDefault: true }
+  })
+
+  return { success: true }
+}
+
+// ============================================================================
+// CONSTRAINT VALIDATION PIPELINE
+// ============================================================================
+
+type ValidationResult = {
+  isValid: boolean
+  violations: Array<{
+    type: 'teacher_unavailable' | 'teacher_overload' | 'room_reserved' | 'room_capacity' | 'conflict' | 'consecutive_limit'
+    severity: 'error' | 'warning'
+    message: string
+    details?: Record<string, unknown>
+  }>
+}
+
+/**
+ * Validate a slot against all constraints
+ */
+export async function validateSlotConstraints(input: {
+  termId: string
+  dayOfWeek: number
+  periodId: string
+  classId: string
+  teacherId: string
+  classroomId: string
+  weekOffset?: number
+}): Promise<ValidationResult> {
+  await requireReadAccess()
+
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) throw new Error('Missing school context')
+
+  const violations: ValidationResult['violations'] = []
+
+  // 1. Check teacher unavailability
+  const teacherConstraint = await db.teacherConstraint.findFirst({
+    where: {
+      schoolId,
+      teacherId: input.teacherId,
+      OR: [{ termId: input.termId }, { termId: null }]
+    },
+    include: { unavailableBlocks: true }
+  })
+
+  if (teacherConstraint) {
+    // Check unavailable blocks
+    const isUnavailable = teacherConstraint.unavailableBlocks.some(
+      block => block.dayOfWeek === input.dayOfWeek && block.periodId === input.periodId && block.isRecurring
+    )
+
+    if (isUnavailable) {
+      violations.push({
+        type: 'teacher_unavailable',
+        severity: 'error',
+        message: 'Teacher is marked as unavailable for this time slot'
+      })
+    }
+
+    // Check day preference
+    const dayPref = (teacherConstraint.dayPreferences as Record<string, string>)?.[input.dayOfWeek.toString()]
+    if (dayPref === 'unavailable') {
+      violations.push({
+        type: 'teacher_unavailable',
+        severity: 'error',
+        message: 'Teacher has marked this day as unavailable'
+      })
+    } else if (dayPref === 'avoid') {
+      violations.push({
+        type: 'teacher_unavailable',
+        severity: 'warning',
+        message: 'Teacher prefers to avoid this day'
+      })
+    }
+
+    // Check workload limits
+    const teacherSlots = await db.timetable.count({
+      where: {
+        schoolId,
+        termId: input.termId,
+        teacherId: input.teacherId,
+        weekOffset: input.weekOffset ?? 0
+      }
+    })
+
+    if (teacherSlots >= teacherConstraint.maxPeriodsPerWeek) {
+      violations.push({
+        type: 'teacher_overload',
+        severity: 'error',
+        message: `Teacher would exceed max periods per week (${teacherConstraint.maxPeriodsPerWeek})`,
+        details: { current: teacherSlots, max: teacherConstraint.maxPeriodsPerWeek }
+      })
+    }
+
+    // Check consecutive periods
+    const sameDay = await db.timetable.findMany({
+      where: {
+        schoolId,
+        termId: input.termId,
+        teacherId: input.teacherId,
+        dayOfWeek: input.dayOfWeek,
+        weekOffset: input.weekOffset ?? 0
+      },
+      include: { period: { select: { startTime: true } } },
+      orderBy: { period: { startTime: 'asc' } }
+    })
+
+    if (sameDay.length >= teacherConstraint.maxConsecutivePeriods) {
+      violations.push({
+        type: 'consecutive_limit',
+        severity: 'warning',
+        message: `Teacher may have too many consecutive periods (limit: ${teacherConstraint.maxConsecutivePeriods})`
+      })
+    }
+  }
+
+  // 2. Check room constraints
+  const roomConstraint = await db.roomConstraint.findFirst({
+    where: {
+      schoolId,
+      classroomId: input.classroomId,
+      OR: [{ termId: input.termId }, { termId: null }]
+    }
+  })
+
+  if (roomConstraint) {
+    // Check reserved periods
+    const reserved = (roomConstraint.reservedPeriods as Record<string, string[]>)?.[input.dayOfWeek.toString()]
+    if (reserved?.includes(input.periodId)) {
+      violations.push({
+        type: 'room_reserved',
+        severity: 'error',
+        message: 'Room is reserved during this period'
+      })
+    }
+  }
+
+  // 3. Check conflicts (teacher/room double-booking)
+  const existingSlot = await db.timetable.findFirst({
+    where: {
+      schoolId,
+      termId: input.termId,
+      dayOfWeek: input.dayOfWeek,
+      periodId: input.periodId,
+      weekOffset: input.weekOffset ?? 0,
+      OR: [
+        { teacherId: input.teacherId },
+        { classroomId: input.classroomId }
+      ],
+      NOT: { classId: input.classId }
+    },
+    include: {
+      class: { select: { name: true } },
+      teacher: { select: { givenName: true, surname: true } }
+    }
+  })
+
+  if (existingSlot) {
+    if (existingSlot.teacherId === input.teacherId) {
+      violations.push({
+        type: 'conflict',
+        severity: 'error',
+        message: `Teacher is already assigned to ${existingSlot.class.name} at this time`
+      })
+    }
+    if (existingSlot.classroomId === input.classroomId) {
+      violations.push({
+        type: 'conflict',
+        severity: 'error',
+        message: `Room is already used by ${existingSlot.class.name} at this time`
+      })
+    }
+  }
+
+  return {
+    isValid: violations.filter(v => v.severity === 'error').length === 0,
+    violations
+  }
+}

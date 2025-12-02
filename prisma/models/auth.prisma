@@ -114,6 +114,10 @@ model User {
   grantedPermissions FilePermission[] @relation("GrantedPermissions")
   fileAuditLogs      FileAuditLog[]   @relation("FileAuditLogs")
 
+  // Timetable optimization relations
+  timetableTemplates   TimetableTemplate[]
+  templateApplications TemplateApplication[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
