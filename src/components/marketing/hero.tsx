@@ -59,7 +59,7 @@ const Hero = ({ dictionary, lang }: HeroProps) => {
             <small>{heroDict.badge || "700+ School automated"}</small>
           </Link>
 
-          <h1 className="font-heading font-extrabold text-4xl sm:text-5xl lg:text-6xl xl:text-7xl tracking-tight">
+          <h1 className="font-heading font-black text-5xl sm:text-6xl lg:text-7xl xl:text-8xl tracking-tight">
             <span className="block">Automate</span>
             <span className="block">the boring,</span>
             <span className="block">elevate the</span>

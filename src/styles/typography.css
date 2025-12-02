@@ -52,4 +52,9 @@
   .text-balance {
     text-wrap: balance;
   }
+
+  /* Heading font - Section titles */
+  .font-heading {
+    font-family: var(--font-heading);
+  }
 }
