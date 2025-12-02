@@ -28,7 +28,8 @@ const cards = [
 ]
 
 export default function MissionCards({ dictionary }: MissionCardsProps) {
-    const dict = dictionary?.marketing?.missionCards || {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const dict = (dictionary?.marketing as any)?.missionCards || {
         heading: "We build automation to serve education's long-term success.",
         description1: "While no one can foresee every challenge schools will face, we know that designing powerful systems requires both bold innovation and careful consideration of outcomes.",
         description2: "That's why we focus on building tools with educators and students at their foundation. Through our daily development, we aim to show what responsible school automation looks like in practice.",
