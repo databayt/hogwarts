@@ -13,7 +13,18 @@ import { subDays, startOfMonth, endOfMonth } from "date-fns";
 
 export async function getEnrollmentMetrics() {
   const { schoolId } = await getTenantContext();
-  if (!schoolId) throw new Error("Missing school context");
+  if (!schoolId) {
+    // Return default values when school context is missing
+    return {
+      total: 0,
+      newThisMonth: 0,
+      active: 0,
+      inactive: 0,
+      graduated: 0,
+      transferIn: 0,
+      transferOut: 0,
+    };
+  }
 
   const now = new Date();
   const firstOfMonth = startOfMonth(now);
@@ -47,7 +58,15 @@ export async function getEnrollmentMetrics() {
 
 export async function getAttendanceMetrics() {
   const { schoolId } = await getTenantContext();
-  if (!schoolId) throw new Error("Missing school context");
+  if (!schoolId) {
+    return {
+      attendanceRate: 0,
+      present: 0,
+      absent: 0,
+      late: 0,
+      total: 0,
+    };
+  }
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -86,7 +105,13 @@ export async function getAttendanceMetrics() {
 
 export async function getStaffMetrics() {
   const { schoolId } = await getTenantContext();
-  if (!schoolId) throw new Error("Missing school context");
+  if (!schoolId) {
+    return {
+      total: 0,
+      departments: 0,
+      presenceRate: 0,
+    };
+  }
 
   const [totalTeachers, departments] = await Promise.all([
     db.teacher.count({ where: { schoolId } }),
@@ -107,7 +132,16 @@ export async function getStaffMetrics() {
 
 export async function getAcademicPerformanceMetrics() {
   const { schoolId } = await getTenantContext();
-  if (!schoolId) throw new Error("Missing school context");
+  if (!schoolId) {
+    return {
+      averageGPA: null,
+      passRate: null,
+      improvement: null,
+      topPerformers: null,
+      totalExams: 0,
+      totalAssignments: 0,
+    };
+  }
 
   // TODO: Implement when ExamResult and GPA models are added
   // For now, return calculated mock data or nulls
@@ -129,7 +163,14 @@ export async function getAcademicPerformanceMetrics() {
 
 export async function getAnnouncementsMetrics() {
   const { schoolId } = await getTenantContext();
-  if (!schoolId) throw new Error("Missing school context");
+  if (!schoolId) {
+    return {
+      total: 0,
+      published: 0,
+      unpublished: 0,
+      recentCount: 0,
+    };
+  }
 
   const [total, published, unpublished, recentCount] = await Promise.all([
     db.announcement.count({ where: { schoolId } }),
@@ -155,7 +196,13 @@ export async function getAnnouncementsMetrics() {
 
 export async function getClassesMetrics() {
   const { schoolId } = await getTenantContext();
-  if (!schoolId) throw new Error("Missing school context");
+  if (!schoolId) {
+    return {
+      total: 0,
+      active: 0,
+      studentTeacherRatio: 0,
+    };
+  }
 
   const [totalClasses, activeClasses, students, teachers] = await Promise.all([
     db.class.count({ where: { schoolId } }),
@@ -177,7 +224,9 @@ export async function getClassesMetrics() {
 
 export async function getRecentActivities() {
   const { schoolId } = await getTenantContext();
-  if (!schoolId) throw new Error("Missing school context");
+  if (!schoolId) {
+    return [];
+  }
 
   const [recentStudents, recentAnnouncements, recentExams, recentAssignments] = await Promise.all([
     db.student.findMany({
@@ -273,7 +322,8 @@ export async function getRecentActivities() {
  */
 export async function getDashboardSummary() {
   const { schoolId } = await getTenantContext();
-  if (!schoolId) throw new Error("Missing school context");
+  // If no schoolId, we'll still call the individual functions
+  // which will return default/empty data gracefully
 
   const [
     enrollment,
