@@ -20,7 +20,6 @@ import { getDashboardSummary } from "./actions"
 import { QuickActions } from "../quick-actions"
 import { getQuickActionsByRole } from "../quick-actions-config"
 import { getTenantContext } from "@/lib/tenant-context"
-import { TrendingStats } from "@/components/platform/shared/stats"
 import {
   WelcomeBanner,
   MetricCard,
@@ -94,16 +93,16 @@ export async function AdminDashboard({ user, dictionary, locale = "en" }: Props)
     console.error("[AdminDashboard] Error fetching school domain:", error)
   }
 
-  // Destructure real data
+  // Destructure real data with safe defaults
   const {
-    enrollment,
-    attendance,
-    staff,
-    academicPerformance,
-    announcements,
-    classes,
-    activities,
-  } = dashboardData
+    enrollment = { total: 0, newThisMonth: 0, active: 0 },
+    attendance = { attendanceRate: 0, present: 0, absent: 0, late: 0, total: 0 },
+    staff = { total: 0, departments: 0, presenceRate: 0 },
+    academicPerformance = { averageGPA: null, passRate: null, totalExams: 0, totalAssignments: 0, topPerformers: null },
+    announcements = { total: 0, published: 0, unpublished: 0, recentCount: 0 },
+    classes = { total: 0, active: 0, studentTeacherRatio: 0 },
+    activities = [],
+  } = dashboardData || {}
 
   // Dictionary
   const d = dictionary?.dashboard
