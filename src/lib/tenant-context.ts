@@ -34,8 +34,13 @@ export async function getTenantContext(): Promise<TenantContext> {
   let headerSchoolId: string | null = null;
   const subdomain = hdrs.get("x-subdomain");
   if (subdomain) {
-    const school = await db.school.findUnique({ where: { domain: subdomain } });
-    headerSchoolId = school?.id ?? null;
+    try {
+      const school = await db.school.findUnique({ where: { domain: subdomain } });
+      headerSchoolId = school?.id ?? null;
+    } catch (error) {
+      console.error("[getTenantContext] Failed to resolve subdomain:", subdomain, error);
+      headerSchoolId = null;
+    }
   }
   const schoolId = impersonatedSchoolId ?? headerSchoolId ?? session?.user?.schoolId ?? null;
   const role = (session?.user?.role as UserRole | undefined) ?? null;
