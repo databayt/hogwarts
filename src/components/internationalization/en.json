@@ -97,7 +97,8 @@
     },
     "missionCards": {
       "heading": "A restoration of time, elimination of repetitive.",
-      "description": "We sell time—the origin of value. Schools lose 40 hours monthly to paperwork; we give 80% of that back. Our open-source platform transforms fragmented systems into unified infrastructure, cutting operational costs by 60%. From atomic components to complete solutions, every contribution adds lasting value to a global ecosystem. This isn't vendor dependency—it's community ownership: transparent, auditable, and built by developers worldwide solving shared challenges together."
+      "description": "We sell time—the origin of value. Schools lose 40 hours monthly to paperwork; we give 80% of that back. Our open-source platform transforms fragmented systems into unified infrastructure, cutting operational costs by 60%.",
+      "values": "Transparency breeds accountability—when every stakeholder has access to real-time data, trust grows and outcomes improve. Open-source is participatory development: communities inspect, modify, and own their tools. They're not consumers—they're co-creators building capacity, reducing dependency, and ensuring sustainability."
     },
     "storySection": {
       "title": "Building the future of education",

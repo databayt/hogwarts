@@ -32,7 +32,8 @@ export default function MissionCards({ dictionary }: MissionCardsProps) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const dict = (dictionary?.marketing as any)?.missionCards || {
         heading: "A restoration of time, elimination of repetitive.",
-        description: "We sell time—the origin of value. Schools lose 40 hours monthly to paperwork; we give 80% of that back. Our open-source platform transforms fragmented systems into unified infrastructure, cutting operational costs by 60%. From atomic components to complete solutions, every contribution adds lasting value to a global ecosystem. This isn't vendor dependency—it's community ownership: transparent, auditable, and built by developers worldwide solving shared challenges together.",
+        description: "We sell time—the origin of value. Schools lose 40 hours monthly to paperwork; we give 80% of that back. Our open-source platform transforms fragmented systems into unified infrastructure, cutting operational costs by 60%.",
+        values: "Transparency breeds accountability—when every stakeholder has access to real-time data, trust grows and outcomes improve. Open-source is participatory development: communities inspect, modify, and own their tools. They're not consumers—they're co-creators building capacity, reducing dependency, and ensuring sustainability.",
     }
 
     return (
@@ -46,9 +47,12 @@ export default function MissionCards({ dictionary }: MissionCardsProps) {
                 </div>
 
                 {/* Right column - Description */}
-                <div className="lg:col-span-7 lg:col-start-6">
+                <div className="lg:col-span-7 lg:col-start-6 space-y-4">
                     <p className="text-muted-foreground leading-relaxed">
                         {dict.description}
+                    </p>
+                    <p className="text-muted-foreground leading-relaxed">
+                        {dict.values}
                     </p>
                 </div>
 
@@ -56,10 +60,10 @@ export default function MissionCards({ dictionary }: MissionCardsProps) {
                 {cards.map((card, index) => (
                     <div key={index} className="lg:col-span-4">
                         <Link href={card.href} className="block">
-                            <div className={`${card.bgColor} rounded-lg p-8 aspect-square flex flex-col`}>
+                            <div className={`${card.bgColor} rounded-lg p-6 aspect-[5/4] flex flex-col`}>
                                 {/* Icon with slow animation effect */}
                                 <div className="flex-1 animation-box">
-                                    <div className="w-28 h-28 md:w-36 md:h-36 relative">
+                                    <div className="w-24 h-24 md:w-28 md:h-28 relative">
                                         <Image
                                             src={card.icon}
                                             alt=""
