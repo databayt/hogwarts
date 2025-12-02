@@ -11,6 +11,7 @@ import Boost from "./boost";
 // import Codebase from "@/components/landing/codebase";
 import FAQs from "./faqs";
 import LogoCloud from "./logo-cloud";
+import MissionCards from "./mission-cards";
 // import { Gallery } from "@/components/landing/gallery";
 import type { getDictionary } from '@/components/internationalization/dictionaries';
 import type { Locale } from '@/components/internationalization/config';
@@ -25,6 +26,7 @@ export default function HomeContent(props: Props) {
   return (
     <main className="flex min-h-screen flex-col">
       <Hero dictionary={dictionary} lang={lang} />
+      <MissionCards dictionary={dictionary} />
       {/* <Gallery />
       <Stack />
       <Automated />
