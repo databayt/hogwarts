@@ -3,7 +3,19 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { TriangleAlert, Users, Calendar, BookOpen, DollarSign, TrendingUp, Bell, ClipboardList, UserPlus, FileText, Settings, ChevronRight,  } from "lucide-react"
-import { formatDistanceToNow } from "date-fns"
+import { formatDistanceToNow, isValid } from "date-fns"
+
+// Safe date formatting helper
+function safeFormatDistanceToNow(date: Date | string | null | undefined): string {
+  if (!date) return "recently"
+  try {
+    const dateObj = typeof date === "string" ? new Date(date) : date
+    if (!isValid(dateObj)) return "recently"
+    return formatDistanceToNow(dateObj, { addSuffix: true })
+  } catch {
+    return "recently"
+  }
+}
 import { getDashboardSummary } from "./actions"
 import { QuickActions } from "../quick-actions"
 import { getQuickActionsByRole } from "../quick-actions-config"
@@ -356,7 +368,7 @@ export async function AdminDashboard({ user, dictionary, locale = "en" }: Props)
                     </div>
                   </div>
                   <span className="text-xs text-muted-foreground whitespace-nowrap">
-                    {formatDistanceToNow(activity.timestamp, { addSuffix: true })}
+                    {safeFormatDistanceToNow(activity.timestamp)}
                   </span>
                 </div>
               ))
