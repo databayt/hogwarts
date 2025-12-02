@@ -16,10 +16,10 @@ export default async function MarketingLayout({
   const dictionary = await getDictionary(lang as Locale);
 
   return (
-    <>
+    <div className="px-8 lg:px-16 xl:px-24">
       <SiteHeader dictionary={dictionary} />
       {children}
       <SiteFooter dictionary={dictionary} />
-    </>
+    </div>
   );
 }

@@ -48,7 +48,7 @@ const Hero = ({ dictionary, lang }: HeroProps) => {
 
   return (
     <section id="hero" className="min-h-[calc(100vh-3.5rem)] bg-background">
-      <div className="container mx-auto px-4 lg:px-8">
+      <div className="container mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center min-h-[calc(100vh-3.5rem)]">
           {/* Left: Content */}
           <div className="space-y-6 py-12 lg:py-0">
