@@ -3,7 +3,7 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { DataTableColumnHeader } from "@/components/table/data-table-column-header";
 import { Button } from "@/components/ui/button";
-import { Ellipsis } from "lucide-react";
+import { MoreHorizontal } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useModal } from "@/components/atom/modal/context";
 import { deleteSubject } from "@/components/platform/subjects/actions";
@@ -12,17 +12,27 @@ import { DeleteToast, ErrorToast, confirmDeleteDialog } from "@/components/atom/
 export type SubjectRow = {
   id: string;
   subjectName: string;
+  subjectNameAr: string | null;
   departmentName: string;
+  departmentNameAr: string | null;
   createdAt: string;
 };
 
 export const getSubjectColumns = (): ColumnDef<SubjectRow>[] => [
   {
     accessorKey: "subjectName",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Subject Name" />,
-    meta: { label: "Subject Name", variant: "text" },
+    header: ({ column }) => <DataTableColumnHeader column={column} title="Subject" />,
+    meta: { label: "Subject", variant: "text" },
     id: 'subjectName',
     enableColumnFilter: true,
+  },
+  {
+    accessorKey: "subjectNameAr",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="المادة" />,
+    meta: { label: "المادة", variant: "text" },
+    id: 'subjectNameAr',
+    cell: ({ getValue }) => getValue<string | null>() || "-",
+    enableColumnFilter: false,
   },
   {
     accessorKey: "departmentName",
@@ -30,6 +40,14 @@ export const getSubjectColumns = (): ColumnDef<SubjectRow>[] => [
     meta: { label: "Department", variant: "text" },
     id: 'departmentName',
     enableColumnFilter: true,
+  },
+  {
+    accessorKey: "departmentNameAr",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="القسم" />,
+    meta: { label: "القسم", variant: "text" },
+    id: 'departmentNameAr',
+    cell: ({ getValue }) => getValue<string | null>() || "-",
+    enableColumnFilter: false,
   },
   {
     accessorKey: "createdAt",
@@ -64,7 +82,7 @@ export const getSubjectColumns = (): ColumnDef<SubjectRow>[] => [
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="h-8 w-8 p-0">
-              <Ellipsis className="h-4 w-4" />
+              <MoreHorizontal className="h-4 w-4" />
               <span className="sr-only">Open menu</span>
             </Button>
           </DropdownMenuTrigger>

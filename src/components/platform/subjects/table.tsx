@@ -16,7 +16,7 @@ import {
   GridContainer,
   GridEmptyState,
 } from "@/components/platform/shared";
-import { BookOpen, Building2 } from "@aliimam/icons";
+import { BookOpen, Building2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { DeleteToast, ErrorToast, confirmDeleteDialog } from "@/components/atom/toast";
 
@@ -30,12 +30,14 @@ interface SubjectsTableProps {
 async function getSubjectsCSV(filters?: Record<string, unknown>): Promise<string> {
   const result = await getSubjects({ page: 1, perPage: 1000, ...filters });
   const rows = result.rows;
-  const headers = ["ID", "Subject Name", "Department", "Created At"];
+  const headers = ["ID", "Subject Name", "المادة", "Department", "القسم", "Created At"];
   const csvRows = rows.map((row) =>
     [
       row.id,
       `"${row.subjectName.replace(/"/g, '""')}"`,
+      `"${(row.subjectNameAr || "").replace(/"/g, '""')}"`,
       `"${row.departmentName.replace(/"/g, '""')}"`,
+      `"${(row.departmentNameAr || "").replace(/"/g, '""')}"`,
       row.createdAt,
     ].join(",")
   );
@@ -89,6 +91,8 @@ export function SubjectsTable({ initialData, total, perPage = 20 }: SubjectsTabl
       },
       columnVisibility: {
         // Default visible: subjectName, departmentName
+        subjectNameAr: false,
+        departmentNameAr: false,
         createdAt: false,
       },
     },

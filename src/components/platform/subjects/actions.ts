@@ -69,7 +69,7 @@ export async function getSubjects(input: Partial<z.infer<typeof getSubjectsSchem
   const { schoolId } = await getTenantContext();
   if (!schoolId) throw new Error("Missing school context");
   const sp = getSubjectsSchema.parse(input ?? {});
-  if (!(db as any).subject) return { rows: [] as Array<{ id: string; subjectName: string; departmentName: string; createdAt: string }>, total: 0 };
+  if (!(db as any).subject) return { rows: [] as Array<{ id: string; subjectName: string; subjectNameAr: string | null; departmentName: string; departmentNameAr: string | null; createdAt: string }>, total: 0 };
   const where: any = {
     schoolId,
     ...(sp.subjectName
@@ -85,15 +85,16 @@ export async function getSubjects(input: Partial<z.infer<typeof getSubjectsSchem
     ? sp.sort.map((s) => ({ [s.id]: s.desc ? "desc" : "asc" }))
     : [{ createdAt: "desc" }];
   const [rows, count] = await Promise.all([
-    (db as any).subject.findMany({ 
-      where, 
-      orderBy, 
-      skip, 
+    (db as any).subject.findMany({
+      where,
+      orderBy,
+      skip,
       take,
       include: {
         department: {
           select: {
-            departmentName: true
+            departmentName: true,
+            departmentNameAr: true,
           }
         }
       }
@@ -103,7 +104,9 @@ export async function getSubjects(input: Partial<z.infer<typeof getSubjectsSchem
   const mapped = (rows as Array<any>).map((s) => ({
     id: s.id as string,
     subjectName: s.subjectName as string,
+    subjectNameAr: (s.subjectNameAr as string | null) || null,
     departmentName: s.department?.departmentName || "Unknown",
+    departmentNameAr: (s.department?.departmentNameAr as string | null) || null,
     createdAt: (s.createdAt as Date).toISOString(),
   }));
   return { rows: mapped, total: count as number };

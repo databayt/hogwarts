@@ -118,9 +118,9 @@ export const DEPARTMENTS = [
     name: "اللغات",  // Languages
     nameEn: "Languages",
     subjects: [
-      { ar: "اللغة العربية", en: "Arabic Language" },
-      { ar: "اللغة الإنجليزية", en: "English Language" },
-      { ar: "اللغة الفرنسية", en: "French Language" },
+      { ar: "اللغة العربية", en: "Arabic" },
+      { ar: "اللغة الإنجليزية", en: "English" },
+      { ar: "اللغة الفرنسية", en: "French" },
     ],
   },
   {
@@ -146,10 +146,10 @@ export const DEPARTMENTS = [
     ],
   },
   {
-    name: "الدراسات الإسلامية",  // Islamic Studies
-    nameEn: "Religious Studies",
+    name: "الدين",  // Religion
+    nameEn: "Religion",
     subjects: [
-      { ar: "التربية الإسلامية", en: "Islamic Studies" },
+      { ar: "التربية الإسلامية", en: "Islamic" },
       { ar: "القرآن الكريم", en: "Quran" },
       { ar: "الحديث النبوي", en: "Hadith" },
       { ar: "الفقه", en: "Fiqh" },
@@ -160,18 +160,18 @@ export const DEPARTMENTS = [
     nameEn: "ICT",
     subjects: [
       { ar: "علوم الحاسوب", en: "Computer Science" },
-      { ar: "تقنية المعلومات", en: "Information Technology" },
+      { ar: "تقنية المعلومات", en: "IT" },
       { ar: "الثقافة الرقمية", en: "Digital Literacy" },
     ],
   },
   {
-    name: "الفنون والتربية البدنية",  // Arts & PE
-    nameEn: "Arts & Physical Education",
+    name: "الفنون والرياضة",  // Arts & PE
+    nameEn: "Arts & PE",
     subjects: [
       { ar: "التربية الفنية", en: "Art" },
       { ar: "التربية الموسيقية", en: "Music" },
-      { ar: "التربية البدنية", en: "Physical Education" },
-      { ar: "التربية الصحية", en: "Health Education" },
+      { ar: "التربية البدنية", en: "PE" },
+      { ar: "التربية الصحية", en: "Health" },
     ],
   },
 ];
