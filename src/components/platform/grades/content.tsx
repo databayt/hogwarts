@@ -4,7 +4,6 @@ import { SearchParams } from "nuqs/server";
 import { resultsSearchParams } from "@/components/platform/grades/list-params";
 import { getTenantContext } from "@/lib/tenant-context";
 import { Shell as PageContainer } from "@/components/table/shell";
-import { PageHeadingSetter } from "@/components/platform/context/page-heading-setter";
 import { type Locale } from "@/components/internationalization/config";
 import { type Dictionary } from "@/components/internationalization/dictionaries";
 import { getResultsList, formatResultRow } from "@/components/platform/grades/queries";
@@ -54,10 +53,6 @@ export default async function ResultsContent({
   return (
     <PageContainer>
       <div className="flex flex-1 flex-col gap-4">
-        <PageHeadingSetter
-          title={dictionary.school.grades.results}
-          description={dictionary.school.grades.manageResults}
-        />
         <ResultsTable
           initialData={data}
           total={total}
