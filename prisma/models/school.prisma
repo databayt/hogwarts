@@ -343,10 +343,11 @@ model Term {
 }
 
 model YearLevel {
-  id         String @id @default(cuid())
-  schoolId   String
-  levelName  String
-  levelOrder Int
+  id          String  @id @default(cuid())
+  schoolId    String
+  levelName   String
+  levelNameAr String? // Arabic name for bilingual support
+  levelOrder  Int
 
   school            School             @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   studentYearLevels StudentYearLevel[]

@@ -206,6 +206,7 @@ export function createMockClass(overrides?: Partial<Class>): Class {
     endPeriodId: overrides?.endPeriodId ?? 'period2',
     classroomId: overrides?.classroomId ?? 'classroom1',
     name: overrides?.name ?? `Class ${id}`,
+    nameAr: overrides?.nameAr ?? null,
     courseCode: overrides?.courseCode ?? null,
     credits: overrides?.credits ?? null,
     evaluationType: overrides?.evaluationType ?? 'NORMAL',
@@ -230,6 +231,7 @@ export function createMockSubject(overrides?: Partial<Subject>): Subject {
     schoolId,
     departmentId: overrides?.departmentId ?? 'dept1',
     subjectName: overrides?.subjectName ?? `Subject ${id}`,
+    subjectNameAr: overrides?.subjectNameAr ?? null,
     createdAt: overrides?.createdAt ?? new Date('2024-01-01'),
     updatedAt: overrides?.updatedAt ?? new Date('2024-01-01'),
   }

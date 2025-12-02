@@ -20,13 +20,22 @@ export async function seedDepartments(
 
   for (const dept of DEPARTMENTS) {
     const department = await prisma.department.create({
-      data: { schoolId, departmentName: dept.nameEn },  // Use English name for DB compatibility
+      data: {
+        schoolId,
+        departmentName: dept.nameEn,
+        departmentNameAr: dept.name,  // Arabic name for bilingual support
+      },
     });
     departments.push({ id: department.id, departmentName: department.departmentName });
 
     for (const subject of dept.subjects) {
       const subjectRecord = await prisma.subject.create({
-        data: { schoolId, departmentId: department.id, subjectName: subject.en },
+        data: {
+          schoolId,
+          departmentId: department.id,
+          subjectName: subject.en,
+          subjectNameAr: subject.ar,  // Arabic name for bilingual support
+        },
       });
       subjects.push({ id: subjectRecord.id, subjectName: subjectRecord.subjectName });
     }

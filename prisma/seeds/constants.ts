@@ -203,3 +203,32 @@ export function getRandomName(gender: "M" | "F"): { givenName: string; surname: 
 export function timeAt(hour: number, minute = 0): Date {
   return new Date(Date.UTC(1970, 0, 1, hour, minute, 0, 0));
 }
+
+// Arabic labels for class generation
+export const ARABIC_LABELS = {
+  grade: "الصف",
+  section: { A: "أ", B: "ب", C: "ج", D: "د" },
+};
+
+/**
+ * Generate Arabic class name from English components
+ * @param subjectAr - Arabic subject name (from DEPARTMENTS subjects)
+ * @param grade - Grade number (10, 11, 12)
+ * @param section - Section letter (A, B, C)
+ * @returns Arabic class name like "الرياضيات الصف 10 أ"
+ */
+export function getClassNameAr(subjectAr: string, grade: string, section: string): string {
+  const sectionAr = ARABIC_LABELS.section[section as keyof typeof ARABIC_LABELS.section] || section;
+  return `${subjectAr} ${ARABIC_LABELS.grade} ${grade} ${sectionAr}`;
+}
+
+/**
+ * Find Arabic subject name from English name
+ */
+export function findSubjectAr(subjectNameEn: string): string {
+  for (const dept of DEPARTMENTS) {
+    const subject = dept.subjects.find(s => s.en === subjectNameEn);
+    if (subject) return subject.ar;
+  }
+  return subjectNameEn;  // Fallback to English if not found
+}

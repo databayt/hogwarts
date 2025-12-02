@@ -6,6 +6,7 @@
 import { AssessmentStatus, AssessmentType, SubmissionStatus, AttendanceStatus } from "@prisma/client";
 import { faker } from "@faker-js/faker";
 import type { SeedPrisma, ClassRef, TeacherRef, StudentRef, SubjectRef, PeriodRef, ClassroomRef } from "./types";
+import { getClassNameAr, findSubjectAr } from "./constants";
 
 export async function seedClasses(
   prisma: SeedPrisma,
@@ -35,10 +36,15 @@ export async function seedClasses(
         const classroom = classrooms[(si + gradeLabels.indexOf(grade)) % classrooms.length];
 
         const className = `${subject.subjectName} Grade ${grade} ${sectionLabels[si]}`;
+        const section = sectionLabels[si];
+        const subjectAr = findSubjectAr(subject.subjectName);
+        const classNameAr = getClassNameAr(subjectAr, grade, section);
+
         const clazz = await prisma.class.create({
           data: {
             schoolId,
             name: className,
+            nameAr: classNameAr,  // Arabic class name for bilingual support
             subjectId: subject.id,
             teacherId: teacher.id,
             termId,

@@ -67,10 +67,15 @@ export async function seedAcademic(
     },
   });
 
-  // Year Levels - Sudanese education system
+  // Year Levels - Sudanese education system (bilingual AR/EN)
   for (const level of YEAR_LEVELS) {
     await prisma.yearLevel.create({
-      data: { schoolId, levelName: level.en, levelOrder: level.order },
+      data: {
+        schoolId,
+        levelName: level.en,
+        levelNameAr: level.ar,  // Arabic name for bilingual support
+        levelOrder: level.order,
+      },
     });
   }
   const yearLevels = await prisma.yearLevel.findMany({

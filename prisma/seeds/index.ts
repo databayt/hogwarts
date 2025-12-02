@@ -14,6 +14,7 @@ import { seedPeople } from "./people";
 import { seedClasses } from "./classes";
 import { seedLibrary } from "./library";
 import { seedAnnouncements } from "./announcements";
+import { seedEvents } from "./events";
 import { seedFees } from "./fees";
 import { seedExams } from "./exams";
 import { seedGrades } from "./grades";
@@ -102,6 +103,7 @@ async function main() {
 
     await seedLibrary(prisma, schoolId);
     await seedAnnouncements(prisma, schoolId, classes);
+    await seedEvents(prisma, schoolId);
 
     // Phase 7: Finance & Fees
     console.log("\nPHASE 7: FINANCE & FEES");
