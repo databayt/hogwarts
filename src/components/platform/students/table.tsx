@@ -18,7 +18,7 @@ import {
   GridEmptyState,
 } from "@/components/platform/shared";
 import { Badge } from "@/components/ui/badge";
-import { GraduationCap, User } from "lucide-react";
+import { GraduationCap, User } from "@aliimam/icons";
 import { useRouter } from "next/navigation";
 import { DeleteToast, ErrorToast, confirmDeleteDialog } from "@/components/atom/toast";
 
@@ -94,8 +94,12 @@ export function StudentsTable({ initialData, total, dictionary, perPage = 20 }: 
       pagination: {
         pageIndex: 0,
         pageSize: data.length || perPage,
-      }
-    }
+      },
+      columnVisibility: {
+        // Default visible: name, className, status
+        createdAt: false,
+      },
+    },
   });
 
   // Handle search

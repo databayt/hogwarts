@@ -16,7 +16,7 @@ import {
   GridContainer,
   GridEmptyState,
 } from "@/components/platform/shared";
-import { Users, Mail, CircleCheck, CircleX } from "lucide-react";
+import { Users, Mail, CircleCheck, CircleX } from "@aliimam/icons";
 import { useRouter } from "next/navigation";
 import { DeleteToast, ErrorToast, confirmDeleteDialog } from "@/components/atom/toast";
 import { Badge } from "@/components/ui/badge";
@@ -91,8 +91,12 @@ export function ParentsTable({ initialData, total, perPage = 20 }: ParentsTableP
       pagination: {
         pageIndex: 0,
         pageSize: data.length || perPage,
-      }
-    }
+      },
+      columnVisibility: {
+        // Default visible: name, emailAddress, status
+        createdAt: false,
+      },
+    },
   });
 
   // Handle search

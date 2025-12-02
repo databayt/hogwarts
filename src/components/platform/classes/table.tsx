@@ -16,7 +16,7 @@ import {
   GridContainer,
   GridEmptyState,
 } from "@/components/platform/shared";
-import { BookOpen, Users } from "lucide-react";
+import { BookOpen, Users } from "@aliimam/icons";
 import { useRouter } from "next/navigation";
 import { DeleteToast, ErrorToast, confirmDeleteDialog } from "@/components/atom/toast";
 
@@ -90,8 +90,13 @@ export function ClassesTable({ initialData, total, perPage = 20 }: ClassesTableP
       pagination: {
         pageIndex: 0,
         pageSize: data.length || perPage,
-      }
-    }
+      },
+      columnVisibility: {
+        // Default visible: name, subjectName, teacherName, enrolledStudents
+        termName: false,
+        createdAt: false,
+      },
+    },
   });
 
   // Handle search

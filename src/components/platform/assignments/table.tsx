@@ -6,7 +6,7 @@ import { DataTableToolbar } from "@/components/table/data-table-toolbar";
 import { useDataTable } from "@/components/table/use-data-table";
 import { getAssignmentColumns, type AssignmentRow } from "./columns";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus } from "@aliimam/icons";
 import { useModal } from "@/components/atom/modal/context";
 import Modal from "@/components/atom/modal/modal";
 import { AssignmentCreateForm } from "@/components/platform/assignments/form";
@@ -57,8 +57,14 @@ export function AssignmentsTable({ initialData, total, perPage = 20 }: Assignmen
       pagination: {
         pageIndex: 0,
         pageSize: data.length, // Show all loaded data
-      }
-    }
+      },
+      columnVisibility: {
+        // Default visible: title, className, dueDate, status
+        type: false,
+        totalPoints: false,
+        createdAt: false,
+      },
+    },
   });
 
   const { openModal } = useModal();

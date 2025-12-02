@@ -11,6 +11,7 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
+  CommandSeparator,
 } from "@/components/ui/command";
 import {
   Popover,
@@ -37,6 +38,17 @@ export function DataTableViewOptions<TData>({
     [table],
   );
 
+  // Check if all columns are visible
+  const allVisible = React.useMemo(
+    () => columns.every((col) => col.getIsVisible()),
+    [columns],
+  );
+
+  // Toggle all columns visibility
+  const toggleAll = React.useCallback(() => {
+    columns.forEach((col) => col.toggleVisibility(!allVisible));
+  }, [columns, allVisible]);
+
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -58,6 +70,17 @@ export function DataTableViewOptions<TData>({
           <CommandList>
             <CommandEmpty>No columns found.</CommandEmpty>
             <CommandGroup>
+              {/* Select All option */}
+              <CommandItem onSelect={toggleAll}>
+                <span className="truncate font-medium">All</span>
+                <Check
+                  className={cn(
+                    "ml-auto size-4 shrink-0",
+                    allVisible ? "opacity-100" : "opacity-0",
+                  )}
+                />
+              </CommandItem>
+              <CommandSeparator className="my-1" />
               {columns.map((column) => (
                 <CommandItem
                   key={column.id}

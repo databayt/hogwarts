@@ -16,7 +16,7 @@ import {
   GridContainer,
   GridEmptyState,
 } from "@/components/platform/shared";
-import { BookOpen, Building2 } from "lucide-react";
+import { BookOpen, Building2 } from "@aliimam/icons";
 import { useRouter } from "next/navigation";
 import { DeleteToast, ErrorToast, confirmDeleteDialog } from "@/components/atom/toast";
 
@@ -86,8 +86,12 @@ export function SubjectsTable({ initialData, total, perPage = 20 }: SubjectsTabl
       pagination: {
         pageIndex: 0,
         pageSize: data.length || perPage,
-      }
-    }
+      },
+      columnVisibility: {
+        // Default visible: subjectName, departmentName
+        createdAt: false,
+      },
+    },
   });
 
   // Handle search

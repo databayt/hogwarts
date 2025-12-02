@@ -16,7 +16,7 @@ import {
   GridContainer,
   GridEmptyState,
 } from "@/components/platform/shared";
-import { Calendar, MapPin, Users } from "lucide-react";
+import { Calendar, MapPin, Users } from "@aliimam/icons";
 import { useRouter } from "next/navigation";
 import { DeleteToast, ErrorToast, confirmDeleteDialog } from "@/components/atom/toast";
 import { Badge } from "@/components/ui/badge";
@@ -93,8 +93,16 @@ export function EventsTable({ initialData, total, perPage = 20 }: EventsTablePro
       pagination: {
         pageIndex: 0,
         pageSize: data.length || perPage,
-      }
-    }
+      },
+      columnVisibility: {
+        // Default visible: title, eventType, eventDate, status
+        location: false,
+        currentAttendees: false,
+        maxAttendees: false,
+        isPublic: false,
+        createdAt: false,
+      },
+    },
   });
 
   // Handle search

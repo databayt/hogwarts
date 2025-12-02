@@ -147,14 +147,34 @@ export async function getStudents(input: Partial<z.infer<typeof getStudentsSchem
     ? sp.sort.map((s) => ({ [s.id]: s.desc ? "desc" : "asc" }))
     : [{ createdAt: "desc" }];
   const [rows, count] = await Promise.all([
-    (db as any).student.findMany({ where, orderBy, skip, take }),
+    (db as any).student.findMany({
+      where,
+      orderBy,
+      skip,
+      take,
+      include: {
+        studentClasses: {
+          include: {
+            class: {
+              select: {
+                name: true,
+              },
+            },
+          },
+          take: 1, // Get primary class
+        },
+      },
+    }),
     (db as any).student.count({ where }),
   ]);
   const mapped = (rows as Array<any>).map((s) => ({
     id: s.id as string,
     userId: s.userId as string | null,
     name: [s.givenName, s.surname].filter(Boolean).join(" "),
-    className: "-",
+    className:
+      s.studentClasses && s.studentClasses.length > 0
+        ? s.studentClasses[0].class?.name || "-"
+        : "-",
     status: s.userId ? "active" : "inactive",
     createdAt: (s.createdAt as Date).toISOString(),
   }));

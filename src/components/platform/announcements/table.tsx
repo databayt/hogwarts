@@ -20,7 +20,7 @@ import {
   GridEmptyState,
 } from "@/components/platform/shared";
 import { Badge } from "@/components/ui/badge";
-import { Megaphone, Pin, Star } from "lucide-react";
+import { Megaphone, Pin, Star } from "@aliimam/icons";
 import { useRouter } from "next/navigation";
 import { deleteAnnouncement, toggleAnnouncementPublish } from "./actions";
 import { DeleteToast, ErrorToast, confirmDeleteDialog } from "@/components/atom/toast";
@@ -135,8 +135,14 @@ export function AnnouncementsTable({
       pagination: {
         pageIndex: 0,
         pageSize: data.length || perPage,
-      }
-    }
+      },
+      columnVisibility: {
+        // Default visible: title, scope, published, createdAt
+        featured: false,
+        pinned: false,
+        createdBy: false,
+      },
+    },
   });
 
   // Handle search (debounced via useDeferredValue)

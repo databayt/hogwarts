@@ -18,7 +18,7 @@ import {
   GridEmptyState,
 } from "@/components/platform/shared";
 import { Badge } from "@/components/ui/badge";
-import { Users, User, Mail } from "lucide-react";
+import { Users, User, Mail } from "@aliimam/icons";
 import { useRouter } from "next/navigation";
 import { DeleteToast, ErrorToast, confirmDeleteDialog } from "@/components/atom/toast";
 
@@ -94,8 +94,12 @@ export function TeachersTable({ initialData, total, dictionary, perPage = 20 }: 
       pagination: {
         pageIndex: 0,
         pageSize: data.length || perPage,
-      }
-    }
+      },
+      columnVisibility: {
+        // Default visible: name, emailAddress, status
+        createdAt: false,
+      },
+    },
   });
 
   // Handle search

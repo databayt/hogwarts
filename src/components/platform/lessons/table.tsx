@@ -16,7 +16,7 @@ import {
   GridContainer,
   GridEmptyState,
 } from "@/components/platform/shared";
-import { BookOpen, Clock, User } from "lucide-react";
+import { BookOpen, Clock, User } from "@aliimam/icons";
 import { useRouter } from "next/navigation";
 import { DeleteToast, ErrorToast, confirmDeleteDialog } from "@/components/atom/toast";
 import { Badge } from "@/components/ui/badge";
@@ -93,8 +93,15 @@ export function LessonsTable({ initialData, total, perPage = 20 }: LessonsTableP
       pagination: {
         pageIndex: 0,
         pageSize: data.length || perPage,
-      }
-    }
+      },
+      columnVisibility: {
+        // Default visible: title, className, teacherName, lessonDate, status
+        subjectName: false,
+        startTime: false,
+        endTime: false,
+        createdAt: false,
+      },
+    },
   });
 
   // Handle search
