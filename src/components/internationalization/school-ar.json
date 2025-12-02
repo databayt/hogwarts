@@ -1749,7 +1749,10 @@
       "studentAssignmentInfo": "معلومات الطالب والواجب",
       "gradingInfo": "معلومات التقييم",
       "actions": "الإجراءات",
-      "openMenu": "فتح القائمة"
+      "openMenu": "فتح القائمة",
+      "navAll": "الكل",
+      "navAnalytics": "التحليلات",
+      "navReports": "التقارير"
     },
     "common": {
       "actions": {

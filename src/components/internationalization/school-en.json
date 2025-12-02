@@ -1748,7 +1748,10 @@
       "studentAssignmentInfo": "Student & Assignment Information",
       "gradingInfo": "Grading Information",
       "actions": "Actions",
-      "openMenu": "Open menu"
+      "openMenu": "Open menu",
+      "navAll": "All",
+      "navAnalytics": "Analytics",
+      "navReports": "Reports"
     },
     "common": {
       "actions": {
