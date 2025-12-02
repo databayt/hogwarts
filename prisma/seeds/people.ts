@@ -1,73 +1,46 @@
 /**
- * People Seed Module
- * Creates teachers, students, guardians
+ * People Seed Module - Realistic K-12 School
+ * Creates 25 teachers, 100 students, and their guardians
+ *
+ * Distribution:
+ * - 25 teachers (1:4 student ratio)
+ * - 100 students across 14 grade levels
+ * - 200 guardians (2 per student - father & mother)
  */
 
 import { UserRole } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { faker } from "@faker-js/faker";
-import type { SeedPrisma, UserRef, TeacherRef, StudentRef, GuardianRef, DepartmentRef, YearLevelRef, SchoolYearRef, GuardianTypesRef } from "./types";
-import { DEMO_PASSWORD, MALE_NAMES, FEMALE_NAMES, SURNAMES, getRandomName } from "./constants";
+import type {
+  SeedPrisma,
+  UserRef,
+  TeacherRef,
+  StudentRef,
+  GuardianRef,
+  DepartmentRef,
+  YearLevelRef,
+  SchoolYearRef,
+  GuardianTypesRef,
+} from "./types";
+import {
+  DEMO_PASSWORD,
+  TEACHER_DATA,
+  STUDENT_DISTRIBUTION,
+  MALE_NAMES,
+  FEMALE_NAMES,
+  SURNAMES,
+  getRandomName,
+  getBirthYearForGrade,
+  KHARTOUM_NEIGHBORHOODS,
+} from "./constants";
 
-// Teacher data with departments
-const TEACHER_DATA = [
-  // Languages (10)
-  { givenName: "Ahmed", surname: "Hassan", gender: "M", dept: "Languages" },
-  { givenName: "Fatima", surname: "Ali", gender: "F", dept: "Languages" },
-  { givenName: "Mohamed", surname: "Ibrahim", gender: "M", dept: "Languages" },
-  { givenName: "Mariam", surname: "Yousif", gender: "F", dept: "Languages" },
-  { givenName: "Khalid", surname: "Ahmed", gender: "M", dept: "Languages" },
-  { givenName: "Sara", surname: "Abbas", gender: "F", dept: "Languages" },
-  { givenName: "Omar", surname: "Salih", gender: "M", dept: "Languages" },
-  { givenName: "Huda", surname: "Ibrahim", gender: "F", dept: "Languages" },
-  { givenName: "Tariq", surname: "Bashir", gender: "M", dept: "Languages" },
-  { givenName: "Layla", surname: "Hamza", gender: "F", dept: "Languages" },
-  // Sciences (15)
-  { givenName: "Ibrahim", surname: "Malik", gender: "M", dept: "Sciences" },
-  { givenName: "Amina", surname: "Kamal", gender: "F", dept: "Sciences" },
-  { givenName: "Mustafa", surname: "Idris", gender: "M", dept: "Sciences" },
-  { givenName: "Noura", surname: "Nabil", gender: "F", dept: "Sciences" },
-  { givenName: "Hamza", surname: "Badawi", gender: "M", dept: "Sciences" },
-  { givenName: "Zahra", surname: "Hassan", gender: "F", dept: "Sciences" },
-  { givenName: "Osman", surname: "Ali", gender: "M", dept: "Sciences" },
-  { givenName: "Samira", surname: "Mohamed", gender: "F", dept: "Sciences" },
-  { givenName: "Hassan", surname: "Omar", gender: "M", dept: "Sciences" },
-  { givenName: "Rania", surname: "Khalid", gender: "F", dept: "Sciences" },
-  { givenName: "Jamal", surname: "Abdalla", gender: "M", dept: "Sciences" },
-  { givenName: "Dalal", surname: "Mustafa", gender: "F", dept: "Sciences" },
-  { givenName: "Nabil", surname: "Hassan", gender: "M", dept: "Sciences" },
-  { givenName: "Hana", surname: "Ibrahim", gender: "F", dept: "Sciences" },
-  { givenName: "Rashid", surname: "Osman", gender: "M", dept: "Sciences" },
-  // Humanities (8)
-  { givenName: "Saeed", surname: "Yousif", gender: "M", dept: "Humanities" },
-  { givenName: "Sumaya", surname: "Salih", gender: "F", dept: "Humanities" },
-  { givenName: "Waleed", surname: "Ahmed", gender: "M", dept: "Humanities" },
-  { givenName: "Nawal", surname: "Ali", gender: "F", dept: "Humanities" },
-  { givenName: "Zain", surname: "Mohamed", gender: "M", dept: "Humanities" },
-  { givenName: "Mona", surname: "Ibrahim", gender: "F", dept: "Humanities" },
-  { givenName: "Amin", surname: "Hassan", gender: "M", dept: "Humanities" },
-  { givenName: "Rehab", surname: "Omar", gender: "F", dept: "Humanities" },
-  // Religious Studies (6)
-  { givenName: "Farouk", surname: "Khalid", gender: "M", dept: "Religious Studies" },
-  { givenName: "Aisha", surname: "Yousif", gender: "F", dept: "Religious Studies" },
-  { givenName: "Gamal", surname: "Salih", gender: "M", dept: "Religious Studies" },
-  { givenName: "Khadija", surname: "Ahmed", gender: "F", dept: "Religious Studies" },
-  { givenName: "Hisham", surname: "Ali", gender: "M", dept: "Religious Studies" },
-  { givenName: "Widad", surname: "Mohamed", gender: "F", dept: "Religious Studies" },
-  // ICT (6)
-  { givenName: "Imad", surname: "Ibrahim", gender: "M", dept: "ICT" },
-  { givenName: "Yasmin", surname: "Hassan", gender: "F", dept: "ICT" },
-  { givenName: "Jaafar", surname: "Omar", gender: "M", dept: "ICT" },
-  { givenName: "Zainab", surname: "Khalid", gender: "F", dept: "ICT" },
-  { givenName: "Lutfi", surname: "Yousif", gender: "M", dept: "ICT" },
-  { givenName: "Amal", surname: "Salih", gender: "F", dept: "ICT" },
-  // Arts & PE (5)
-  { givenName: "Munir", surname: "Ahmed", gender: "M", dept: "Arts & Physical Education" },
-  { givenName: "Basma", surname: "Ali", gender: "F", dept: "Arts & Physical Education" },
-  { givenName: "Abdalla", surname: "Mohamed", gender: "M", dept: "Arts & Physical Education" },
-  { givenName: "Dalia", surname: "Ibrahim", gender: "F", dept: "Arts & Physical Education" },
-  { givenName: "Kamal", surname: "Hassan", gender: "M", dept: "Arts & Physical Education" },
-];
+// Track used email suffixes to ensure uniqueness
+let emailCounter = 0;
+
+function generateUniqueEmail(prefix: string, domain: string = "demo.databayt.org"): string {
+  emailCounter++;
+  return `${prefix}${emailCounter}@${domain}`;
+}
 
 export async function seedPeople(
   prisma: SeedPrisma,
@@ -82,20 +55,29 @@ export async function seedPeople(
   guardians: GuardianRef[];
   guardianTypes: GuardianTypesRef;
 }> {
-  console.log("👨‍🏫 Creating teachers (50)...");
+  // Reset email counter
+  emailCounter = 0;
 
   const passwordHash = await bcrypt.hash(DEMO_PASSWORD, 10);
   const users: UserRef[] = [];
   const teachers: TeacherRef[] = [];
+  const students: StudentRef[] = [];
+  const guardians: GuardianRef[] = [];
 
-  // Create teachers
-  for (const t of TEACHER_DATA) {
-    const email = `${t.givenName.toLowerCase()}.${t.surname.toLowerCase()}@demo.databayt.org`;
+  // ============================================
+  // PHASE 1: Create Teachers (25 total)
+  // ============================================
+  console.log("👨‍🏫 Creating teachers (25)...");
 
+  for (const [index, t] of TEACHER_DATA.entries()) {
+    const email = `teacher${index + 1}@demo.databayt.org`;
+    const fullName = `${t.givenName} ${t.surname}`;
+
+    // Create user account
     const user = await prisma.user.create({
       data: {
         email,
-        username: `${t.givenName} ${t.surname}`,
+        username: fullName,
         role: UserRole.TEACHER,
         password: passwordHash,
         emailVerified: new Date(),
@@ -104,6 +86,7 @@ export async function seedPeople(
     });
     users.push({ id: user.id, email, role: UserRole.TEACHER });
 
+    // Create teacher profile
     const teacher = await prisma.teacher.create({
       data: {
         schoolId,
@@ -112,50 +95,99 @@ export async function seedPeople(
         gender: t.gender,
         emailAddress: email,
         userId: user.id,
+        birthDate: faker.date.birthdate({ min: 25, max: 55, mode: "age" }),
+        joiningDate: faker.date.past({ years: 10 }),
       },
     });
     teachers.push({ id: teacher.id, userId: user.id, emailAddress: email });
 
-    // Link to department
+    // Create teacher phone number
+    await prisma.teacherPhoneNumber.create({
+      data: {
+        schoolId,
+        teacherId: teacher.id,
+        phoneNumber: `+249-9${faker.string.numeric(8)}`,
+        isPrimary: true,
+      },
+    });
+
+    // Link teacher to department
     const dept = departments.find((d) => d.departmentName === t.dept);
     if (dept) {
       await prisma.teacherDepartment.create({
-        data: { schoolId, teacherId: teacher.id, departmentId: dept.id, isPrimary: true },
+        data: {
+          schoolId,
+          teacherId: teacher.id,
+          departmentId: dept.id,
+          isPrimary: true,
+        },
       });
     }
   }
 
-  console.log(`   ✅ Created: ${teachers.length} teachers\n`);
+  console.log(`   ✅ Created: ${teachers.length} teachers`);
+  console.log(`      - KG Teachers: 3`);
+  console.log(`      - Primary Teachers: 8`);
+  console.log(`      - Secondary Teachers: 14\n`);
 
-  // Guardian types
+  // ============================================
+  // PHASE 2: Create Guardian Types
+  // ============================================
   console.log("👨‍👩‍👧 Creating guardian types...");
-  const gtFather = await prisma.guardianType.create({ data: { schoolId, name: "Father" } });
-  const gtMother = await prisma.guardianType.create({ data: { schoolId, name: "Mother" } });
-  await prisma.guardianType.create({ data: { schoolId, name: "Uncle" } });
-  await prisma.guardianType.create({ data: { schoolId, name: "Aunt" } });
-  await prisma.guardianType.create({ data: { schoolId, name: "Grandparent" } });
 
-  // Students and guardians
-  console.log("👨‍🎓 Creating students (200) and guardians...");
+  const gtFather = await prisma.guardianType.create({
+    data: { schoolId, name: "Father" },
+  });
+  const gtMother = await prisma.guardianType.create({
+    data: { schoolId, name: "Mother" },
+  });
+  await prisma.guardianType.create({
+    data: { schoolId, name: "Guardian" },
+  });
+  await prisma.guardianType.create({
+    data: { schoolId, name: "Grandparent" },
+  });
+  await prisma.guardianType.create({
+    data: { schoolId, name: "Sibling" },
+  });
 
-  const students: StudentRef[] = [];
-  const guardians: GuardianRef[] = [];
-  const studentsPerLevel = Math.ceil(200 / yearLevels.length);
+  console.log(`   ✅ Created: 5 guardian types\n`);
 
-  for (const [levelIndex, level] of yearLevels.entries()) {
-    const count = levelIndex < yearLevels.length - 1 ? studentsPerLevel : 200 - students.length;
+  // ============================================
+  // PHASE 3: Create Students (100 total) with Guardians
+  // ============================================
+  console.log("👨‍🎓 Creating students (100) with guardians (200)...");
 
-    for (let i = 0; i < count && students.length < 200; i++) {
+  let studentIndex = 0;
+  const studentsByLevel: Record<string, StudentRef[]> = {};
+
+  for (const dist of STUDENT_DISTRIBUTION) {
+    const level = yearLevels.find((l) => l.levelName === dist.level);
+    if (!level) {
+      console.warn(`   ⚠️ Level not found: ${dist.level}`);
+      continue;
+    }
+
+    studentsByLevel[dist.level] = [];
+
+    for (let i = 0; i < dist.count; i++) {
+      studentIndex++;
+
+      // Alternate gender for realistic distribution
       const gender = i % 2 === 0 ? "M" : "F";
       const studentData = getRandomName(gender);
-      const familySurname = SURNAMES[(students.length) % SURNAMES.length];
-      const middleName = gender === "M"
-        ? MALE_NAMES[(students.length + 5) % MALE_NAMES.length]
-        : FEMALE_NAMES[(students.length + 5) % FEMALE_NAMES.length];
 
-      const studentEmail = `student${students.length + 1}@demo.databayt.org`;
+      // Use consistent family surname
+      const familySurname = SURNAMES[studentIndex % SURNAMES.length];
 
-      // Student user
+      // Calculate appropriate birth date for grade level
+      const birthYear = getBirthYearForGrade(dist.level);
+      const birthMonth = faker.number.int({ min: 1, max: 12 });
+      const birthDay = faker.number.int({ min: 1, max: 28 });
+      const dateOfBirth = new Date(Date.UTC(birthYear, birthMonth - 1, birthDay));
+
+      // Create student user
+      const studentEmail = `student${studentIndex}@demo.databayt.org`;
       const studentUser = await prisma.user.create({
         data: {
           email: studentEmail,
@@ -168,26 +200,31 @@ export async function seedPeople(
       });
       users.push({ id: studentUser.id, email: studentEmail, role: UserRole.STUDENT });
 
-      // DOB based on grade level
-      const baseYear = 2025 - (levelIndex + 5);
-      const dobYear = baseYear - faker.number.int({ min: 0, max: 1 });
-      const dob = new Date(Date.UTC(dobYear, faker.number.int({ min: 0, max: 11 }), faker.number.int({ min: 1, max: 28 })));
+      // Create student profile
+      const middleName =
+        gender === "M"
+          ? MALE_NAMES[(studentIndex + 10) % MALE_NAMES.length]
+          : FEMALE_NAMES[(studentIndex + 10) % FEMALE_NAMES.length];
 
-      // Student
       const student = await prisma.student.create({
         data: {
           schoolId,
           givenName: studentData.givenName,
           middleName,
           surname: familySurname,
-          dateOfBirth: dob,
+          dateOfBirth,
           gender,
           userId: studentUser.id,
+          enrollmentDate: new Date("2025-09-01"),
+          studentId: `STU${String(studentIndex).padStart(4, "0")}`,
+          currentAddress: `${faker.helpers.arrayElement(KHARTOUM_NEIGHBORHOODS)}، الخرطوم`,
+          nationality: "Sudanese",
         },
       });
       students.push({ id: student.id, userId: studentUser.id });
+      studentsByLevel[dist.level].push({ id: student.id, userId: studentUser.id });
 
-      // Assign to year level
+      // Assign student to year level
       await prisma.studentYearLevel.create({
         data: {
           schoolId,
@@ -197,9 +234,10 @@ export async function seedPeople(
         },
       });
 
-      // Father
+      // Create Father
       const fatherData = getRandomName("M");
-      const fatherEmail = `father${students.length}@demo.databayt.org`;
+      const fatherEmail = `father${studentIndex}@demo.databayt.org`;
+      const fatherPhone = `+249-9${faker.string.numeric(8)}`;
 
       const fatherUser = await prisma.user.create({
         data: {
@@ -226,14 +264,17 @@ export async function seedPeople(
         data: {
           schoolId,
           guardianId: father.id,
-          phoneNumber: `+249-9${faker.number.int({ min: 10_000_000, max: 99_999_999 })}`,
+          phoneNumber: fatherPhone,
           isPrimary: true,
         },
       });
 
-      // Mother
+      guardians.push({ id: father.id });
+
+      // Create Mother
       const motherData = getRandomName("F");
-      const motherEmail = `mother${students.length}@demo.databayt.org`;
+      const motherEmail = `mother${studentIndex}@demo.databayt.org`;
+      const motherPhone = `+249-9${faker.string.numeric(8)}`;
 
       const motherUser = await prisma.user.create({
         data: {
@@ -260,14 +301,14 @@ export async function seedPeople(
         data: {
           schoolId,
           guardianId: mother.id,
-          phoneNumber: `+249-9${faker.number.int({ min: 10_000_000, max: 99_999_999 })}`,
+          phoneNumber: motherPhone,
           isPrimary: true,
         },
       });
 
-      guardians.push({ id: father.id }, { id: mother.id });
+      guardians.push({ id: mother.id });
 
-      // Link guardians
+      // Link guardians to student
       await prisma.studentGuardian.create({
         data: {
           schoolId,
@@ -290,7 +331,28 @@ export async function seedPeople(
     }
   }
 
-  console.log(`   ✅ Created: ${students.length} students, ${guardians.length} guardians\n`);
+  // Print distribution summary
+  console.log(`   ✅ Created: ${students.length} students, ${guardians.length} guardians`);
+  console.log(`\n   Distribution by Grade Level:`);
+  for (const dist of STUDENT_DISTRIBUTION) {
+    const count = studentsByLevel[dist.level]?.length || 0;
+    const section = dist.level.startsWith("KG")
+      ? "KG"
+      : dist.level.includes("Grade 1") ||
+        dist.level.includes("Grade 2") ||
+        dist.level.includes("Grade 3") ||
+        dist.level.includes("Grade 4") ||
+        dist.level.includes("Grade 5") ||
+        dist.level.includes("Grade 6")
+      ? "Primary"
+      : dist.level.includes("Grade 7") ||
+        dist.level.includes("Grade 8") ||
+        dist.level.includes("Grade 9")
+      ? "Intermediate"
+      : "Secondary";
+    console.log(`      - ${dist.level.padEnd(10)}: ${count} students (${section})`);
+  }
+  console.log("");
 
   return {
     users,

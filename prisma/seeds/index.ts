@@ -1,6 +1,14 @@
 /**
- * Main Seed Orchestrator
+ * Main Seed Orchestrator - Realistic K-12 School (100 Students)
  * Coordinates all seed modules and runs them in proper order
+ *
+ * Creates a complete demo school with:
+ * - 100 students (K-12, 14 grade levels)
+ * - 25 teachers (1:4 student ratio)
+ * - 200 guardians (2 per student)
+ * - Full curriculum (7-13 subjects per grade)
+ * - Realistic class schedules
+ * - Sample grades, attendance, assignments
  */
 
 import { PrismaClient } from "@prisma/client";
@@ -31,7 +39,8 @@ const prisma = new PrismaClient() as SeedPrisma;
 
 async function main() {
   console.log("\n" + "=".repeat(60));
-  console.log("  DEMO SCHOOL SEED - demo.databayt.org");
+  console.log("  🏫 REALISTIC K-12 SCHOOL SEED");
+  console.log("  📍 demo.databayt.org");
   console.log("=".repeat(60) + "\n");
 
   const startTime = Date.now();
@@ -69,7 +78,7 @@ async function main() {
 
     const { classrooms } = await seedClassrooms(prisma, schoolId);
 
-    // Phase 4: People
+    // Phase 4: People (100 students, 25 teachers, 200 guardians)
     console.log("\nPHASE 4: PEOPLE");
     console.log("-".repeat(40));
 
@@ -85,17 +94,16 @@ async function main() {
     console.log("\nPHASE 5: CLASSES & ENROLLMENTS");
     console.log("-".repeat(40));
 
-    const { classes } =
-      await seedClasses(
-        prisma,
-        schoolId,
-        term1.id,
-        periods,
-        classrooms,
-        subjects,
-        teachers,
-        students
-      );
+    const { classes } = await seedClasses(
+      prisma,
+      schoolId,
+      term1.id,
+      periods,
+      classrooms,
+      subjects,
+      teachers,
+      students
+    );
 
     // Phase 6: Resources
     console.log("\nPHASE 6: RESOURCES");
@@ -110,7 +118,14 @@ async function main() {
     console.log("-".repeat(40));
 
     await seedFees(prisma, schoolId, classes, students);
-    await seedFinance(prisma, schoolId, schoolName, [devUser, adminUser, accountantUser, staffUser], teachers, students);
+    await seedFinance(
+      prisma,
+      schoolId,
+      schoolName,
+      [devUser, adminUser, accountantUser, staffUser],
+      teachers,
+      students
+    );
 
     // Phase 8: Assessments
     console.log("\nPHASE 8: ASSESSMENTS");
@@ -149,27 +164,40 @@ async function main() {
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(2);
 
     console.log("\n" + "=".repeat(60));
-    console.log("  SEED COMPLETED SUCCESSFULLY");
+    console.log("  ✅ SEED COMPLETED SUCCESSFULLY");
     console.log("=".repeat(60));
     console.log(`
-  School: ${schoolName}
-  Domain: demo.databayt.org
+  🏫 School: ${schoolName}
+  🌐 Domain: demo.databayt.org
 
-  Login Credentials (password: 1234):
-  - Developer: dev@databayt.org
-  - Admin: admin@databayt.org
-  - Accountant: accountant@databayt.org
-  - Staff: staff@databayt.org
+  📋 Login Credentials (password: 1234):
+  ┌─────────────────────────────────────────────┐
+  │ Role        │ Email                         │
+  ├─────────────────────────────────────────────┤
+  │ Developer   │ dev@databayt.org              │
+  │ Admin       │ admin@databayt.org            │
+  │ Accountant  │ accountant@databayt.org       │
+  │ Staff       │ staff@databayt.org            │
+  │ Teacher     │ teacher1@demo.databayt.org    │
+  │ Student     │ student1@demo.databayt.org    │
+  │ Guardian    │ father1@demo.databayt.org     │
+  └─────────────────────────────────────────────┘
 
-  Data Summary:
-  - ${teachers.length} teachers
-  - ${students.length} students
-  - ${guardians.length} guardians
-  - ${classes.length} classes
-  - ${subjects.length} subjects
-  - ${classrooms.length} classrooms
+  📊 Data Summary:
+  ┌─────────────────────────────────────────────┐
+  │ Entity          │ Count                     │
+  ├─────────────────────────────────────────────┤
+  │ Students        │ ${String(students.length).padStart(3)}  (K-12)               │
+  │ Teachers        │ ${String(teachers.length).padStart(3)}  (1:${Math.round(students.length/teachers.length)} ratio)           │
+  │ Guardians       │ ${String(guardians.length).padStart(3)}  (2 per student)       │
+  │ Classes         │ ${String(classes.length).padStart(3)}  (subjects × levels)  │
+  │ Subjects        │ ${String(subjects.length).padStart(3)}  (curriculum)         │
+  │ Classrooms      │ ${String(classrooms.length).padStart(3)}  (rooms)              │
+  │ Departments     │ ${String(departments.length).padStart(3)}  (academic)           │
+  │ Year Levels     │ ${String(yearLevels.length).padStart(3)}  (KG1 - Grade 12)    │
+  └─────────────────────────────────────────────┘
 
-  Time: ${elapsed}s
+  ⏱️  Time: ${elapsed}s
 `);
     console.log("=".repeat(60) + "\n");
   } catch (error) {
