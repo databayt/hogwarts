@@ -67,19 +67,26 @@ function formatTime(date: Date | string | undefined): string {
   return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
 }
 
-function formatDate(date: Date | string): string {
-  const d = new Date(date)
-  const today = new Date()
-  const yesterday = new Date(today)
-  yesterday.setDate(yesterday.getDate() - 1)
+function formatDate(date: Date | string | null | undefined): string {
+  if (!date) return "-"
+  try {
+    const d = new Date(date)
+    if (isNaN(d.getTime())) return "-"
 
-  if (d.toDateString() === today.toDateString()) {
-    return "Today"
+    const today = new Date()
+    const yesterday = new Date(today)
+    yesterday.setDate(yesterday.getDate() - 1)
+
+    if (d.toDateString() === today.toDateString()) {
+      return "Today"
+    }
+    if (d.toDateString() === yesterday.toDateString()) {
+      return "Yesterday"
+    }
+    return d.toLocaleDateString([], { month: "short", day: "numeric" })
+  } catch {
+    return "-"
   }
-  if (d.toDateString() === yesterday.toDateString()) {
-    return "Yesterday"
-  }
-  return d.toLocaleDateString([], { month: "short", day: "numeric" })
 }
 
 export function RecentTable({ data, limit = 10, dictionary }: RecentTableProps) {
