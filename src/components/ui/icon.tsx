@@ -4,10 +4,53 @@ import * as React from "react"
 import { cn } from "@/lib/utils"
 
 // Re-export all icons from @aliimam/icons for direct usage
-export * from "lucide-react"
+export * from "@aliimam/icons"
+
+// Re-export missing icons from lucide-react that don't exist in @aliimam/icons
+export {
+  // Chart icons
+  BarChart,
+  BarChart2,
+  BarChart3,
+  BarChart4,
+  PieChart,
+  LineChart,
+  AreaChart,
+  FileBarChart,
+  // Status icons with lucide naming
+  AlertCircle,
+  AlertTriangle,
+  AlertOctagon,
+  CheckCircle,
+  CheckCircle2,
+  XCircle,
+  // Action icons
+  MoreHorizontal,
+  MoreVertical,
+  Edit,
+  Edit2,
+  Edit3,
+  Filter,
+  // Loader
+  Loader2,
+  // Calendar
+  CalendarIcon,
+  // Video/File
+  FileVideo,
+  // Book
+  BookA as BookAIcon,
+  // Layout
+  LayoutDashboard,
+  LayoutDashboard as LayoutDashboardIcon,
+  // Grid
+  Grid3X3 as Grid3x3,
+  // Type export
+  type LucideIcon,
+} from "lucide-react"
 
 // Import all icons as a namespace for the Icon component
-import * as AliIcons from "lucide-react"
+import * as AliIcons from "@aliimam/icons"
+import * as LucideIcons from "lucide-react"
 
 // Get the IconProps type from the package
 type AliIconProps = React.ComponentProps<typeof AliIcons.Clock>
@@ -92,12 +135,17 @@ export function Icon({
   // Check if there's a mapping for this icon name
   const mappedName = iconMapping[name] || name
 
-  // Get the icon component from the icons namespace
-  const IconComponent = (AliIcons as unknown as Record<string, React.ComponentType<AliIconProps>>)[mappedName]
+  // Try @aliimam/icons first
+  let IconComponent = (AliIcons as unknown as Record<string, React.ComponentType<AliIconProps>>)[mappedName]
+
+  // Fall back to lucide-react if not found in @aliimam/icons
+  if (!IconComponent) {
+    IconComponent = (LucideIcons as unknown as Record<string, React.ComponentType<AliIconProps>>)[name]
+  }
 
   if (!IconComponent) {
     if (process.env.NODE_ENV === 'development') {
-      console.warn(`Icon "${name}" (mapped to "${mappedName}") not found in @aliimam/icons`)
+      console.warn(`Icon "${name}" not found in @aliimam/icons or lucide-react`)
     }
     return null
   }
