@@ -243,7 +243,7 @@ export default function ActivityGraph({ role = "student", data }: ActivityGraphP
                       <Tooltip key={`${weekIdx}-${dayIdx}`}>
                         <TooltipTrigger asChild>
                           <div
-                            className="size-[10px] rounded-[2px] transition-all cursor-pointer hover:ring-1 hover:ring-foreground/20"
+                            className="size-[11px] rounded-[3px] transition-all cursor-pointer hover:ring-1 hover:ring-foreground/20"
                             style={LEVEL_STYLES[day.level]}
                           />
                         </TooltipTrigger>
@@ -284,7 +284,7 @@ export default function ActivityGraph({ role = "student", data }: ActivityGraphP
               {[0, 1, 2, 3, 4].map((level) => (
                 <div
                   key={level}
-                  className="size-[10px] rounded-[2px]"
+                  className="size-[11px] rounded-[3px]"
                   style={LEVEL_STYLES[level]}
                 />
               ))}
