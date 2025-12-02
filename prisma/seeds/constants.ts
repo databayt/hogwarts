@@ -170,7 +170,7 @@ export const DEPARTMENTS = [
     subjects: [
       { ar: "التربية الفنية", en: "Art" },
       { ar: "التربية الموسيقية", en: "Music" },
-      { ar: "التربية البدنية", en: "PE" },
+      { ar: "التربية البدنية", en: "Physical" },
       { ar: "التربية الصحية", en: "Health" },
     ],
   },
