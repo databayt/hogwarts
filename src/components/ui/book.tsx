@@ -48,15 +48,8 @@ export function Book(props: BookProps) {
           className="rounded-l border border-border rounded-r shadow-book  bg-stone-100 dark:bg-stone-800 bg-[var(--book-color)] size-full absolute overflow-hidden"
         >
           {variant !== 'simple' && (
-            <Stack
-              shrink
-              grow
-              direction="row"
-              className={cn(
-                'min-w-[calc(var(--book-width))] bg-[var(--book-color)] relative overflow-hidden',
-              )}
-            >
-              <div className="absolute inset-y-0 mix-blend-overlay opacity-100 min-w-[8.2%] bg-book-bind-bg z-10" />
+            <div className="flex-1 min-w-[calc(var(--book-width))] bg-[var(--book-color)] relative overflow-hidden">
+              <div className="absolute inset-y-0 left-0 mix-blend-overlay opacity-100 w-[8.2%] bg-book-bind-bg z-10" />
               {coverUrl ? (
                 <img
                   src={coverUrl}
@@ -64,9 +57,9 @@ export function Book(props: BookProps) {
                   className="absolute inset-0 w-full h-full object-cover"
                 />
               ) : illustration ? (
-                <div className="object-cover">{illustration}</div>
+                <div className="absolute inset-0 object-cover">{illustration}</div>
               ) : null}
-            </Stack>
+            </div>
           )}
           <Stack grow={variant === 'simple'} direction="row" className="h-fit">
             <div className="mix-blend-overlay opacity-100 min-w-[8.2%] bg-book-bind-bg h-full" />
