@@ -39,9 +39,9 @@ export function Core() {
 
   return (
     <section className="py-20">
-      <div>
+      <div className="container">
         {/* Header */}
-        <SectionHeading title="Core" description="We create an enchanting 
+        <SectionHeading title="Core" description="We create an enchanting
              inspired by the timeless virtues of courage, wisdom, loyalty, and ambition, these values guide everything we do at our school." />
 
         {/* Core Values */}

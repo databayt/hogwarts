@@ -65,7 +65,7 @@ export function Features() {
 
   return (
     <section className="py-14">
-      <div>
+      <div className="container">
         {/* Header */}
         <SectionHeading title="Features" description="What makes us special" />
 
@@ -91,34 +91,36 @@ export function Features() {
         </div>
 
         {/* Stats Section */}
-        <div className="bg-gradient-to-r from-purple-600 to-blue-600 p-8 md:p-12 text-white full-bleed">
-          <div className="text-center pb-12 container">
-            <h2 className="mb-4">
-              Numbers
-            </h2>
-            <p className="text-purple-100 px-40">
-              Numbers that reflect our commitment to excellence and the magical transformations happening in our classrooms every day.
-            </p>
-          </div>
+        <div className="bg-gradient-to-r from-purple-600 to-blue-600 py-12 text-white full-bleed">
+          <div className="container">
+            <div className="text-center pb-12">
+              <h2 className="mb-4">
+                Numbers
+              </h2>
+              <p className="text-purple-100 max-w-2xl mx-auto">
+                Numbers that reflect our commitment to excellence and the magical transformations happening in our classrooms every day.
+              </p>
+            </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {achievements.map((achievement, index) => (
-              <div key={index} className="text-center">
-                <div className="flex justify-center pb-3">
-                  <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-                    <div className="text-white">
-                      {achievement.icon}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+              {achievements.map((achievement, index) => (
+                <div key={index} className="text-center">
+                  <div className="flex justify-center pb-3">
+                    <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                      <div className="text-white">
+                        {achievement.icon}
+                      </div>
                     </div>
                   </div>
+                  <div className="text-3xl md:text-4xl font-bold pb-2">
+                    {achievement.number}
+                  </div>
+                  <div className="text-purple-100 font-medium">
+                    {achievement.label}
+                  </div>
                 </div>
-                <div className="text-3xl md:text-4xl font-bold pb-2">
-                  {achievement.number}
-                </div>
-                <div className="text-purple-100 font-medium">
-                  {achievement.label}
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
 

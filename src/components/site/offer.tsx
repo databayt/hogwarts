@@ -49,24 +49,23 @@ export function SpecialOffers() {
   ];
 
   return (
-    <div className="py-14">
-      <div>
+    <section className="py-14">
+      <div className="container">
         <SectionHeading title="Benefits" description="Financial support options designed to make your wizarding journey more affordable." />
-        
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 py-14 ps-14">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 py-14">
           {specialOffers.map((offer, index) => (
             <div key={index} className="text-center">
               <div className="flex justify-center pb-6">
                 <div className={`${
-                  index === 0 ? 'text-red-700' : 
-                  index === 1 ? 'text-blue-800' : 
+                  index === 0 ? 'text-red-700' :
+                  index === 1 ? 'text-blue-800' :
                   'text-green-700'
                 }`}>
                   {offer.icon}
                 </div>
               </div>
-              <CardTitle className="text-xl font-bold pb-2 me-14">
+              <CardTitle className="text-xl font-bold pb-2">
                 {offer.title}
               </CardTitle>
               <div className="flex justify-center pb-2">
@@ -74,15 +73,13 @@ export function SpecialOffers() {
                   {offer.badge}
                 </Badge>
               </div>
-              <div className="flex justify-start max-w-[220px]">
-                <CardDescription className="leading-relaxed">
-                  {offer.description}
-                </CardDescription>
-              </div>
+              <CardDescription className="leading-relaxed max-w-xs mx-auto">
+                {offer.description}
+              </CardDescription>
             </div>
           ))}
         </div>
       </div>
-    </div>
+    </section>
   );
 }
