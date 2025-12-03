@@ -1,10 +1,12 @@
-"use client";import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";import {   Heart,   Lightbulb,   Shield,   Zap} from "lucide-react";
+"use client";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import SectionHeading from "../atom/section-heading";
+import Image from "next/image";
 
 export function Core() {
   const coreValues = [
     {
-      icon: <Heart className="w-8 h-8" />,
+      icon: <Image src="/anthropic/claude-code-best-practices.svg" alt="Network Nodes - Courage" width={32} height={32} className="dark:invert" />,
       title: "Courage",
       description: "We encourage students to be brave in their learning, take intellectual risks, and stand up for what's right.",
       color: "text-red-500",
@@ -12,7 +14,7 @@ export function Core() {
       borderColor: "border-red-500"
     },
     {
-      icon: <Lightbulb className="w-8 h-8" />,
+      icon: <Image src="/anthropic/category-06.svg" alt="Growth Flourish - Wisdom" width={32} height={32} className="dark:invert" />,
       title: "Wisdom",
       description: "Knowledge becomes wisdom through reflection, critical thinking, and the pursuit of understanding beyond facts.",
       color: "text-blue-500",
@@ -20,7 +22,7 @@ export function Core() {
       borderColor: "border-blue-500"
     },
     {
-      icon: <Shield className="w-8 h-8" />,
+      icon: <Image src="/anthropic/think-tool.svg" alt="Frame Boundary - Loyalty" width={32} height={32} className="dark:invert" />,
       title: "Loyalty",
       description: "We build strong communities where students support each other and remain committed to shared goals.",
       color: "text-yellow-500",
@@ -28,7 +30,7 @@ export function Core() {
       borderColor: "border-yellow-500"
     },
     {
-      icon: <Zap className="w-8 h-8" />,
+      icon: <Image src="/anthropic/category-03.svg" alt="Reaching Ascent - Ambition" width={32} height={32} className="dark:invert" />,
       title: "Ambition",
       description: "We nurture the drive to excel, innovate, and make positive changes in the world through education.",
       color: "text-green-500",

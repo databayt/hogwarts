@@ -214,6 +214,38 @@ Marketing and landing page graphics.
 
 **Examples**: hero, feature, testimonial, banner, promo
 
+### Anthropic (Design System)
+Icons from Anthropic's design system, used for core values and marketing sections.
+
+**Tag**: `anthropic`
+
+**Available Icons**:
+| ID | Name | Usage | File Path |
+|----|------|-------|-----------|
+| `network-nodes` | Network Nodes | Courage - interconnected circles | `/anthropic/claude-code-best-practices.svg` |
+| `growth-flourish` | Growth Flourish | Wisdom - organic flourishing figure | `/anthropic/category-06.svg` |
+| `frame-boundary` | Frame Boundary | Loyalty - rounded rectangle frame | `/anthropic/think-tool.svg` |
+| `reaching-ascent` | Reaching Ascent | Ambition - figure reaching upward | `/anthropic/category-03.svg` |
+
+**Usage**:
+```tsx
+import Image from "next/image"
+
+// Use as Image component (recommended for SVG files in public/)
+<Image
+  src="/anthropic/claude-code-best-practices.svg"
+  alt="Network Nodes"
+  width={32}
+  height={32}
+  className="dark:invert"
+/>
+```
+
+**Style Notes**:
+- ViewBox varies: `0 0 1000 1000` or `0 0 1200 1200`
+- Colors: `#FAF9F5` (light) and `#141413` (dark) or single `black`
+- Use `dark:invert` class for theme support
+
 ## 🔍 Searching Icons
 
 Browse icons at `/docs/icons` or use the search utilities:

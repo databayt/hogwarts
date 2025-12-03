@@ -37,7 +37,61 @@ import { IconCategory } from "./types"
  *   // ... 240+ more icons
  * ]
  */
-export const iconRegistry: IconRegistry = []
+export const iconRegistry: IconRegistry = [
+  // Anthropic Icons - Core Values
+  {
+    id: "network-nodes",
+    name: "Network Nodes",
+    component: () => null as any,
+    category: IconCategory.ILLUSTRATIONS,
+    tags: ["anthropic", "network", "nodes", "connected", "circles", "courage", "core-values"],
+    description: "Interconnected network of nodes representing courage and connection. From Anthropic design system.",
+    viewBox: "0 0 1200 1200",
+    customizable: false,
+    filePath: "/anthropic/claude-code-best-practices.svg",
+    createdAt: new Date("2025-12-03"),
+    author: "Anthropic",
+  },
+  {
+    id: "growth-flourish",
+    name: "Growth Flourish",
+    component: () => null as any,
+    category: IconCategory.ILLUSTRATIONS,
+    tags: ["anthropic", "growth", "flourish", "person", "organic", "wisdom", "core-values"],
+    description: "Abstract figure with organic flourishing elements representing wisdom and growth. From Anthropic design system.",
+    viewBox: "0 0 1000 1000",
+    customizable: false,
+    filePath: "/anthropic/category-06.svg",
+    createdAt: new Date("2025-12-03"),
+    author: "Anthropic",
+  },
+  {
+    id: "frame-boundary",
+    name: "Frame Boundary",
+    component: () => null as any,
+    category: IconCategory.ILLUSTRATIONS,
+    tags: ["anthropic", "frame", "boundary", "rounded", "rectangle", "loyalty", "core-values"],
+    description: "Rounded rectangle frame representing loyalty and commitment boundaries. From Anthropic design system.",
+    viewBox: "0 0 1200 1200",
+    customizable: false,
+    filePath: "/anthropic/think-tool.svg",
+    createdAt: new Date("2025-12-03"),
+    author: "Anthropic",
+  },
+  {
+    id: "reaching-ascent",
+    name: "Reaching Ascent",
+    component: () => null as any,
+    category: IconCategory.ILLUSTRATIONS,
+    tags: ["anthropic", "reaching", "ascent", "climbing", "aspiring", "ambition", "core-values"],
+    description: "Abstract figure reaching upward with dynamic motion representing ambition. From Anthropic design system.",
+    viewBox: "0 0 1000 1000",
+    customizable: false,
+    filePath: "/anthropic/category-03.svg",
+    createdAt: new Date("2025-12-03"),
+    author: "Anthropic",
+  },
+]
 
 /**
  * Helper function to get icon count
