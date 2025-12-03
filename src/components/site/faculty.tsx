@@ -1,12 +1,6 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
-import { 
-  GraduationCap, 
-  Award, 
-  BookOpen, 
-  Users
-} from "lucide-react";
 import Image from "next/image";
 import SectionHeading from "../atom/section-heading";
 
@@ -63,10 +57,10 @@ export function Faculty() {
   ];
 
   const facultyStats = [
-    { icon: <GraduationCap className="w-6 h-6" />, label: "Average Experience", value: "15+ Years" },
-    { icon: <Award className="w-6 h-6" />, label: "Advanced Degrees", value: "100%" },
-    { icon: <BookOpen className="w-6 h-6" />, label: "Published Researchers", value: "85%" },
-    { icon: <Users className="w-6 h-6" />, label: "Student Satisfaction", value: "98%" }
+    { icon: <Image src="/anthropic/graduation-cap.svg" alt="Experience" width={24} height={24} />, label: "Average Experience", value: "15+ Years", bgColor: "bg-violet-50" },
+    { icon: <Image src="/library/icons/star.svg" alt="Degrees" width={24} height={24} />, label: "Advanced Degrees", value: "100%", bgColor: "bg-amber-50" },
+    { icon: <Image src="/anthropic/book-open.svg" alt="Research" width={24} height={24} />, label: "Published Researchers", value: "85%", bgColor: "bg-sky-50" },
+    { icon: <Image src="/anthropic/user.svg" alt="Satisfaction" width={24} height={24} />, label: "Student Satisfaction", value: "98%", bgColor: "bg-emerald-50" }
   ];
 
   return (
@@ -74,20 +68,18 @@ export function Faculty() {
         <SectionHeading title="Faculty" description="Meet the wizards who make learning magical" />
 
         {/* Faculty Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 my-10 ">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 my-10">
           {facultyStats.map((stat, index) => (
-            <div key={index} className="rounded-md p-6 text-center border border-card-border">
+            <div key={index} className={`rounded-2xl p-6 text-center ${stat.bgColor}`}>
               <div className="flex justify-center mb-3">
-                <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
-                  <div className="text-primary">
-                    {stat.icon}
-                  </div>
+                <div className="w-12 h-12 bg-background rounded-full flex items-center justify-center">
+                  {stat.icon}
                 </div>
               </div>
               <div className="text-2xl font-bold mb-1">
                 {stat.value}
               </div>
-              <div className="text-sm">
+              <div className="text-sm text-muted-foreground">
                 {stat.label}
               </div>
             </div>
