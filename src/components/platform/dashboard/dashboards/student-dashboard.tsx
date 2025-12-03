@@ -251,7 +251,7 @@ export async function StudentDashboard({
               ))
             ) : (
               <EmptyState
-                icon={Calendar}
+                iconName="Calendar"
                 title={dashDict.labels.noClasses}
                 description="Enjoy your day off!"
               />
@@ -331,7 +331,7 @@ export async function StudentDashboard({
               })
             ) : (
               <EmptyState
-                icon={FileText}
+                iconName="FileText"
                 title={dashDict.labels.noAssignments}
                 description="You're all caught up!"
               />
@@ -390,7 +390,7 @@ export async function StudentDashboard({
               ))
             ) : (
               <EmptyState
-                icon={Trophy}
+                iconName="Trophy"
                 title={dashDict.labels.noGrades}
                 description="Grades will appear here after assessments"
               />
@@ -420,7 +420,7 @@ export async function StudentDashboard({
               ))
             ) : (
               <EmptyState
-                icon={Bell}
+                iconName="Bell"
                 title={dashDict.labels.noAnnouncements}
                 description="New announcements will appear here"
               />
@@ -480,7 +480,7 @@ export async function StudentDashboard({
           current={data.attendanceSummary.presentDays}
           total={data.attendanceSummary.totalDays}
           unit="days"
-          icon={Calendar}
+          iconName="Calendar"
           showPercentage
         />
         <ProgressCard
@@ -488,7 +488,7 @@ export async function StudentDashboard({
           current={data.upcomingAssignments.filter(a => a.status !== "NOT_SUBMITTED").length}
           total={data.upcomingAssignments.length || 1}
           unit="tasks"
-          icon={FileText}
+          iconName="FileText"
           showPercentage
         />
         <ProgressCard
@@ -496,7 +496,7 @@ export async function StudentDashboard({
           current={12}
           total={16}
           unit="weeks"
-          icon={Clock}
+          iconName="Clock"
           showPercentage
         />
       </div>
