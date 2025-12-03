@@ -38,8 +38,7 @@ export function Core() {
   ];
 
   return (
-    <section className="py-20">
-      <div className="container">
+    <section className="py-16 md:py-24">
         {/* Header */}
         <SectionHeading title="Core" description="We create an enchanting
              inspired by the timeless virtues of courage, wisdom, loyalty, and ambition, these values guide everything we do at our school." />
@@ -75,7 +74,6 @@ export function Core() {
             </Card>
           ))}
         </div>
-      </div>
     </section>
   );
 } 

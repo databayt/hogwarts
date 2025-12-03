@@ -19,8 +19,7 @@ export default function Newsletter() {
   };
 
   return (
-    <section className="py-14">
-      <div className="container">
+    <section className="py-16 md:py-24">
         <div className="flex justify-center">
           <Image
             src="/site/glass.png"
@@ -52,7 +51,6 @@ export default function Newsletter() {
             Subscribe
           </Button>
         </div>
-      </div>
     </section>
   );
 }

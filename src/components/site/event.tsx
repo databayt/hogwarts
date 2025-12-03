@@ -51,8 +51,7 @@ export default function EventCard() {
   ];
 
   return (
-    <section className="py-14">
-      <div className="container">
+    <section className="py-16 md:py-24">
         <SectionHeading
           title="Events"
           description="what's happening"
@@ -136,7 +135,6 @@ export default function EventCard() {
             </div>
           </div>
         </div>
-      </div>
     </section>
   );
 }

@@ -65,8 +65,7 @@ export function Features() {
 
   return (
     <>
-      <section className="py-14">
-        <div className="container">
+      <section className="py-16 md:py-24">
           {/* Header */}
           <SectionHeading title="Features" description="What makes us special" />
 
@@ -90,13 +89,10 @@ export function Features() {
               </Card>
             ))}
           </div>
-        </div>
       </section>
 
-      {/* Stats Section - Full-bleed like Houses/Faculty */}
-      <div className="full-bleed bg-gradient-to-r from-purple-600 to-blue-600">
-        <section className="py-16 text-white">
-        <div className="container">
+      {/* Stats Section */}
+      <section className="py-16 md:py-24 bg-gradient-to-r from-purple-600 to-blue-600 text-white -mx-[var(--container-px)] px-[var(--container-px)]">
           <div className="text-center pb-12">
             <h2 className="font-heading font-extrabold text-4xl md:text-5xl mb-4">
               Numbers
@@ -125,9 +121,7 @@ export function Features() {
               </div>
             ))}
           </div>
-        </div>
-        </section>
-      </div>
+      </section>
     </>
   );
 } 

@@ -19,8 +19,7 @@ export function Testimonials() {
   ];
 
   return (
-    <section className="py-14">
-      <div className="container">
+    <section className="py-16 md:py-24">
         {/* Header */}
         <SectionHeading title="Testimonials" description="Hear from our students, alumni, and parents about the transformative power of education
            and the magical moments that happen within our school community every day." />
@@ -55,9 +54,6 @@ export function Testimonials() {
             className="pb-8"
           />
         </div>
-
-        
-      </div>
     </section>
   );
 }

@@ -50,9 +50,7 @@ export function Houses() {
   ];
 
   return (
-    <div className="full-bleed bg-muted">
-      <section className="py-14">
-        <div className="container">
+      <section className="py-16 md:py-24 bg-muted -mx-[var(--container-px)] px-[var(--container-px)]">
           <SectionHeading title="Houses" description="Find where your passion belongs." />
           
 
@@ -89,11 +87,9 @@ export function Houses() {
                 Take Sorting Quiz
               </Link>
             </Button>
-            
+
 
           </div>
-        </div>
       </section>
-    </div>
   );
 } 

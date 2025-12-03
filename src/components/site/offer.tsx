@@ -49,8 +49,7 @@ export function SpecialOffers() {
   ];
 
   return (
-    <section className="py-14">
-      <div className="container">
+    <section className="py-16 md:py-24">
         <SectionHeading title="Benefits" description="Financial support options designed to make your wizarding journey more affordable." />
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 py-14">
@@ -79,7 +78,6 @@ export function SpecialOffers() {
             </div>
           ))}
         </div>
-      </div>
     </section>
   );
 }
