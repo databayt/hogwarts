@@ -8,7 +8,6 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { HeaderSection } from "@/components/atom/header-section";
-import MaxWidthWrapper from "@/components/marketing/pricing/shared/max-width-wrapper";
 
 export function ComparePlans() {
   const renderCell = (value: string | boolean | null) => {
@@ -19,14 +18,13 @@ export function ComparePlans() {
   };
 
   return (
-    <div className="py-20">
-    <MaxWidthWrapper>
+    <div className="w-full py-20">
       <HeaderSection
         title="Compare Plans"
         subtitle="Find the perfect plan tailored for your business needs!"
       />
 
-      <div className="my-10 overflow-x-scroll max-lg:-mx-3 md:overflow-x-visible">
+      <div className="my-10 overflow-x-auto">
         <table className="w-full table-fixed">
           <thead>
             <tr className="">
@@ -80,7 +78,6 @@ export function ComparePlans() {
           </tbody>
         </table>
       </div>
-    </MaxWidthWrapper>
     </div>
   );
 }

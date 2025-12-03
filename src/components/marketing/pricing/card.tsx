@@ -62,7 +62,7 @@ export function PricingCard({ offer, isYearly, userId, subscriptionPlan, userRol
               variant: "default",
               size: "sm",
             }),
-            "hover:scale-[1.01] transition-transform rounded-full",
+            "hover:scale-[1.01] transition-transform",
           )}
         >
           {getCtaLabel(offer.title)}
