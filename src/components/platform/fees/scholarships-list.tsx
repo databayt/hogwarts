@@ -11,7 +11,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { IconPlus, IconEdit, IconUsers } from "@tabler/icons-react";
+import { Plus, Pencil, Users } from "lucide-react";
 import { format } from "date-fns";
 import type { Dictionary } from "@/components/internationalization/dictionaries";
 
@@ -63,7 +63,7 @@ export function ScholarshipsList({ scholarships, dictionary }: Props) {
           </CardDescription>
         </div>
         <Button>
-          <IconPlus className="mr-2 h-4 w-4" />
+          <Plus className="mr-2 h-4 w-4" />
           Add Scholarship
         </Button>
       </CardHeader>
@@ -113,10 +113,10 @@ export function ScholarshipsList({ scholarships, dictionary }: Props) {
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
                       <Button variant="ghost" size="sm">
-                        <IconUsers className="h-4 w-4" />
+                        <Users className="h-4 w-4" />
                       </Button>
                       <Button variant="ghost" size="sm">
-                        <IconEdit className="h-4 w-4" />
+                        <Pencil className="h-4 w-4" />
                       </Button>
                     </div>
                   </TableCell>

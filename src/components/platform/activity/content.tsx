@@ -2,7 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { PageHeadingSetter } from "@/components/platform/context/page-heading-setter";
-import { IconPlus } from "@tabler/icons-react";
+import { Plus } from "lucide-react";
 
 export default async function ActivityContent() {
   return (
@@ -29,7 +29,7 @@ export default async function ActivityContent() {
                 </CardDescription>
               </div>
               <Button>
-                <IconPlus className="mr-2 h-4 w-4" />
+                <Plus className="mr-2 h-4 w-4" />
                 Add Sport
               </Button>
             </CardHeader>
@@ -58,7 +58,7 @@ export default async function ActivityContent() {
                 </CardDescription>
               </div>
               <Button>
-                <IconPlus className="mr-2 h-4 w-4" />
+                <Plus className="mr-2 h-4 w-4" />
                 Add Club
               </Button>
             </CardHeader>
@@ -87,7 +87,7 @@ export default async function ActivityContent() {
                 </CardDescription>
               </div>
               <Button>
-                <IconPlus className="mr-2 h-4 w-4" />
+                <Plus className="mr-2 h-4 w-4" />
                 Add Event
               </Button>
             </CardHeader>

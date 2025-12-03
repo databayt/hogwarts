@@ -6,22 +6,22 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  IconCreditCard,
-  IconReceipt,
-  IconTrendingUp,
-  IconAlertCircle,
-  IconCheck,
-  IconX,
-  IconClock,
-  IconDownload,
-  IconPlus,
-  IconSettings,
-  IconArrowUpRight,
-  IconUsers,
-  IconSchool,
-  IconBook,
-  IconDatabase,
-} from "@tabler/icons-react";
+  CreditCard,
+  Receipt,
+  TrendingUp,
+  AlertCircle,
+  Check,
+  X,
+  Clock,
+  Download,
+  Plus,
+  Settings,
+  ArrowUpRight,
+  Users,
+  GraduationCap,
+  Book,
+  Database,
+} from "lucide-react";
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { formatCurrency, SUBSCRIPTION_STATUS, USAGE_THRESHOLDS, getUsageSeverity } from "./config";
 import type { BillingStats, InvoiceWithDetails, PaymentMethodWithUser } from "./types";
@@ -49,11 +49,11 @@ export function BillingDashboard({ stats, invoices, paymentMethods, dictionary }
         </div>
         <div className="flex gap-2">
           <Button variant="outline">
-            <IconSettings className="me-2 h-4 w-4" />
+            <Settings className="me-2 h-4 w-4" />
             Settings
           </Button>
           <Button>
-            <IconArrowUpRight className="me-2 h-4 w-4" />
+            <ArrowUpRight className="me-2 h-4 w-4" />
             Upgrade Plan
           </Button>
         </div>
@@ -112,7 +112,7 @@ export function BillingDashboard({ stats, invoices, paymentMethods, dictionary }
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Current Period</CardTitle>
-            <IconCreditCard className="h-4 w-4 text-muted-foreground" />
+            <CreditCard className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
@@ -127,7 +127,7 @@ export function BillingDashboard({ stats, invoices, paymentMethods, dictionary }
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Successful Payments</CardTitle>
-            <IconCheck className="h-4 w-4 text-green-500" />
+            <Check className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.successfulPayments}</div>
@@ -140,7 +140,7 @@ export function BillingDashboard({ stats, invoices, paymentMethods, dictionary }
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Failed Payments</CardTitle>
-            <IconX className="h-4 w-4 text-red-500" />
+            <X className="h-4 w-4 text-red-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.failedPayments}</div>
@@ -153,7 +153,7 @@ export function BillingDashboard({ stats, invoices, paymentMethods, dictionary }
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Outstanding</CardTitle>
-            <IconAlertCircle className="h-4 w-4 text-orange-500" />
+            <AlertCircle className="h-4 w-4 text-orange-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
@@ -175,10 +175,10 @@ export function BillingDashboard({ stats, invoices, paymentMethods, dictionary }
         <CardContent>
           <div className="space-y-6">
             {[
-              { name: "Students", icon: IconUsers, current: stats.currentUsage.students, limit: stats.limits.students, percentage: stats.usagePercentages.students },
-              { name: "Teachers", icon: IconSchool, current: stats.currentUsage.teachers, limit: stats.limits.teachers, percentage: stats.usagePercentages.teachers },
-              { name: "Classes", icon: IconBook, current: stats.currentUsage.classes, limit: stats.limits.classes, percentage: stats.usagePercentages.classes },
-              { name: "Storage", icon: IconDatabase, current: stats.currentUsage.storage, limit: stats.limits.storage, percentage: stats.usagePercentages.storage, unit: "MB" },
+              { name: "Students", icon: Users, current: stats.currentUsage.students, limit: stats.limits.students, percentage: stats.usagePercentages.students },
+              { name: "Teachers", icon: GraduationCap, current: stats.currentUsage.teachers, limit: stats.limits.teachers, percentage: stats.usagePercentages.teachers },
+              { name: "Classes", icon: Book, current: stats.currentUsage.classes, limit: stats.limits.classes, percentage: stats.usagePercentages.classes },
+              { name: "Storage", icon: Database, current: stats.currentUsage.storage, limit: stats.limits.storage, percentage: stats.usagePercentages.storage, unit: "MB" },
             ].map((resource) => {
               const Icon = resource.icon;
               const severity = getUsageSeverity(resource.percentage);
@@ -289,7 +289,7 @@ export function BillingDashboard({ stats, invoices, paymentMethods, dictionary }
                   <CardDescription>Your billing and invoice history</CardDescription>
                 </div>
                 <Button variant="outline" size="sm">
-                  <IconDownload className="me-2 h-4 w-4" />
+                  <Download className="me-2 h-4 w-4" />
                   Export All
                 </Button>
               </div>
@@ -302,7 +302,7 @@ export function BillingDashboard({ stats, invoices, paymentMethods, dictionary }
                   invoices.slice(0, 5).map((invoice) => (
                     <div key={invoice.id} className="flex items-center justify-between border-b pb-4 last:border-0">
                       <div className="flex items-center gap-4">
-                        <IconReceipt className="h-8 w-8 text-muted-foreground" />
+                        <Receipt className="h-8 w-8 text-muted-foreground" />
                         <div>
                           <p className="font-medium">Invoice #{invoice.stripeInvoiceId.slice(-8)}</p>
                           <p className="text-sm text-muted-foreground">
@@ -318,7 +318,7 @@ export function BillingDashboard({ stats, invoices, paymentMethods, dictionary }
                           </Badge>
                         </div>
                         <Button variant="ghost" size="sm">
-                          <IconDownload className="h-4 w-4" />
+                          <Download className="h-4 w-4" />
                         </Button>
                       </div>
                     </div>
@@ -338,7 +338,7 @@ export function BillingDashboard({ stats, invoices, paymentMethods, dictionary }
                   <CardDescription>Manage your payment methods</CardDescription>
                 </div>
                 <Button size="sm">
-                  <IconPlus className="me-2 h-4 w-4" />
+                  <Plus className="me-2 h-4 w-4" />
                   Add Payment Method
                 </Button>
               </div>
@@ -351,7 +351,7 @@ export function BillingDashboard({ stats, invoices, paymentMethods, dictionary }
                   paymentMethods.map((method) => (
                     <div key={method.id} className="flex items-center justify-between border-b pb-4 last:border-0">
                       <div className="flex items-center gap-4">
-                        <IconCreditCard className="h-8 w-8 text-muted-foreground" />
+                        <CreditCard className="h-8 w-8 text-muted-foreground" />
                         <div>
                           <p className="font-medium">
                             {method.cardBrand ? `${method.cardBrand.toUpperCase()} •••• ${method.cardLast4}` : method.type}

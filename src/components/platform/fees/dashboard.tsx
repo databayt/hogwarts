@@ -3,15 +3,15 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import {
-  IconCurrencyRupee,
-  IconReceipt,
-  IconClock,
-  IconAlertCircle,
-  IconUsers,
-  IconTrendingUp,
-  IconSchool,
-  IconRefresh,
-} from "@tabler/icons-react";
+  IndianRupee,
+  Receipt,
+  Clock,
+  AlertCircle,
+  Users,
+  TrendingUp,
+  GraduationCap,
+  RefreshCw,
+} from "lucide-react";
 import type { FeeStats } from "./types";
 import type { Dictionary } from "@/components/internationalization/dictionaries";
 
@@ -33,49 +33,49 @@ export function FeeDashboard({ stats, dictionary }: Props) {
     {
       title: "Total Due",
       value: formatCurrency(stats.totalDue),
-      icon: IconCurrencyRupee,
+      icon: IndianRupee,
       color: "text-blue-500",
     },
     {
       title: "Collected",
       value: formatCurrency(stats.totalCollected),
-      icon: IconReceipt,
+      icon: Receipt,
       color: "text-green-500",
     },
     {
       title: "Pending",
       value: formatCurrency(stats.totalPending),
-      icon: IconClock,
+      icon: Clock,
       color: "text-yellow-500",
     },
     {
       title: "Overdue",
       value: formatCurrency(stats.totalOverdue),
-      icon: IconAlertCircle,
+      icon: AlertCircle,
       color: "text-red-500",
     },
     {
       title: "Collection Rate",
       value: `${stats.collectionRate.toFixed(1)}%`,
-      icon: IconTrendingUp,
+      icon: TrendingUp,
       color: "text-indigo-500",
     },
     {
       title: "Students with Dues",
       value: stats.studentsWithDues.toString(),
-      icon: IconUsers,
+      icon: Users,
       color: "text-orange-500",
     },
     {
       title: "Scholarships",
       value: stats.scholarshipsAwarded.toString(),
-      icon: IconSchool,
+      icon: GraduationCap,
       color: "text-purple-500",
     },
     {
       title: "Refunds",
       value: stats.refundsProcessed.toString(),
-      icon: IconRefresh,
+      icon: RefreshCw,
       color: "text-cyan-500",
     },
   ];

@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { TrialExpiryCard } from "@/components/billingsdk/trial-expiry-card";
-import { IconCreditCard, IconSettings, IconArrowUpRight } from "@tabler/icons-react";
+import { CreditCard, Settings, ArrowUpRight } from "lucide-react";
 import type { CurrentPlan } from "@/lib/billingsdk-config";
 import { formatDollars } from "../adapters";
 
@@ -52,11 +52,11 @@ export function HeaderSection({
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={onSettings}>
-            <IconSettings className="me-2 h-4 w-4" />
+            <Settings className="me-2 h-4 w-4" />
             Settings
           </Button>
           <Button onClick={onUpgrade}>
-            <IconArrowUpRight className="me-2 h-4 w-4" />
+            <ArrowUpRight className="me-2 h-4 w-4" />
             Upgrade Plan
           </Button>
         </div>
@@ -92,7 +92,7 @@ export function HeaderSection({
             <div>
               <p className="text-sm text-muted-foreground">Payment Method</p>
               <p className="text-2xl font-bold flex items-center gap-2">
-                <IconCreditCard className="h-5 w-5" />
+                <CreditCard className="h-5 w-5" />
                 {currentPlan.paymentMethod}
               </p>
             </div>

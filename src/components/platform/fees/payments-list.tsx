@@ -11,7 +11,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { IconPlus, IconDownload, IconEye } from "@tabler/icons-react";
+import { Plus, Download, Eye } from "lucide-react";
 import { format } from "date-fns";
 import type { Dictionary } from "@/components/internationalization/dictionaries";
 
@@ -76,7 +76,7 @@ export function PaymentsList({ payments, dictionary }: Props) {
           </CardDescription>
         </div>
         <Button>
-          <IconPlus className="mr-2 h-4 w-4" />
+          <Plus className="mr-2 h-4 w-4" />
           Record Payment
         </Button>
       </CardHeader>
@@ -128,10 +128,10 @@ export function PaymentsList({ payments, dictionary }: Props) {
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
                       <Button variant="ghost" size="sm">
-                        <IconEye className="h-4 w-4" />
+                        <Eye className="h-4 w-4" />
                       </Button>
                       <Button variant="ghost" size="sm">
-                        <IconDownload className="h-4 w-4" />
+                        <Download className="h-4 w-4" />
                       </Button>
                     </div>
                   </TableCell>

@@ -12,7 +12,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { IconPlus, IconEdit, IconTrash, IconCopy } from "@tabler/icons-react";
+import { Plus, Pencil, Trash2, Copy } from "lucide-react";
 import type { Dictionary } from "@/components/internationalization/dictionaries";
 
 interface FeeStructure {
@@ -52,7 +52,7 @@ export function FeeStructuresList({ structures, dictionary }: Props) {
           </CardDescription>
         </div>
         <Button>
-          <IconPlus className="mr-2 h-4 w-4" />
+          <Plus className="mr-2 h-4 w-4" />
           Add Structure
         </Button>
       </CardHeader>
@@ -94,13 +94,13 @@ export function FeeStructuresList({ structures, dictionary }: Props) {
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
                       <Button variant="ghost" size="sm">
-                        <IconCopy className="h-4 w-4" />
+                        <Copy className="h-4 w-4" />
                       </Button>
                       <Button variant="ghost" size="sm">
-                        <IconEdit className="h-4 w-4" />
+                        <Pencil className="h-4 w-4" />
                       </Button>
                       <Button variant="ghost" size="sm">
-                        <IconTrash className="h-4 w-4 text-red-500" />
+                        <Trash2 className="h-4 w-4 text-red-500" />
                       </Button>
                     </div>
                   </TableCell>

@@ -3,7 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PageHeadingSetter } from "@/components/platform/context/page-heading-setter";
-import { IconPlus } from "@tabler/icons-react";
+import { Plus } from "lucide-react";
 import type { Dictionary } from "@/components/internationalization/dictionaries";
 
 interface Props {
@@ -75,7 +75,7 @@ export default async function FacilityContent({ dictionary }: Props) {
                 </CardDescription>
               </div>
               <Button>
-                <IconPlus className="mr-2 h-4 w-4" />
+                <Plus className="mr-2 h-4 w-4" />
                 Add Room
               </Button>
             </CardHeader>
@@ -114,7 +114,7 @@ export default async function FacilityContent({ dictionary }: Props) {
                 </CardDescription>
               </div>
               <Button>
-                <IconPlus className="mr-2 h-4 w-4" />
+                <Plus className="mr-2 h-4 w-4" />
                 Add Lab
               </Button>
             </CardHeader>
@@ -189,7 +189,7 @@ export default async function FacilityContent({ dictionary }: Props) {
                 </CardDescription>
               </div>
               <Button>
-                <IconPlus className="mr-2 h-4 w-4" />
+                <Plus className="mr-2 h-4 w-4" />
                 Add Vehicle
               </Button>
             </CardHeader>
