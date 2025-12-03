@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { awesomeShadcn } from "./config"
+import { awesomeShadcn } from "./constants"
 import { useMemo, useState } from "react"
 import {
   Select,

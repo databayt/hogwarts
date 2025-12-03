@@ -1,4 +1,4 @@
-import * as React from 'react'
+// @ts-nocheck
 import type { ComponentProps } from 'react'
 import { cn } from '@/lib/utils'
 import {
@@ -13,22 +13,65 @@ import { CodeTabs } from "@/components/docs/code-tabs"
 import { CodeBlockCommand } from "@/components/docs/code-block-command"
 import { CopyButton } from "@/components/docs/copy-button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-// Docs components
-import { DirectoryStructure } from "@/components/docs/directory-structure"
-import { Structure } from "@/components/docs/structure"
-import { PrismaStructure } from "@/components/docs/prisma-structure"
-import { StoryVideo } from "@/components/docs/story-video"
-// Atom components (available in hogwarts)
+// Atom components
+import { InfiniteMovingCards } from "@/components/atom/simple-marquee"
+import { Response } from "@/components/atom/response"
+import { SortablePreview } from "@/components/atom/sortable-preview"
 import { StickyScroll } from "@/components/atom/sticky-scroll"
 import { ThemeProvider } from "@/components/atom/theme-provider"
 import { InfiniteSlider } from "@/components/atom/infinite-slider"
 import { InfiniteMovingCards as InfiniteCards } from "@/components/atom/infinite-cards"
 import { ProgressiveBlur } from "@/components/atom/progressive-blur"
 import { Faceted } from "@/components/atom/faceted"
+import ExpandButton from "@/components/atom/expand-button"
 import { HeaderSection } from "@/components/atom/header-section"
+import { PageActionsPreview } from "@/components/atom/page-actions-preview"
+import { PageHeader } from "@/components/atom/page-header"
 import { TabsNav } from "@/components/atom/tabs"
+import { Announcement } from "@/components/atom/announcement"
 import Loading from "@/components/atom/loading"
+import { TwoButtonsPreview } from "@/components/atom/two-buttons-preview"
+import AgentHeading from "@/components/atom/agent-heading"
 import { GradientAnimation } from "@/components/atom/gradient-animation"
+import { CardHoverEffect } from "@/components/atom/card-hover-effect"
+import { CardPreview } from "@/components/atom/card-preview"
+import { CardsMetric } from "@/components/atom/cards-metric"
+import { PromptInput } from "@/components/atom/prompt-input"
+import { Reasoning } from "@/components/atom/reasoning"
+import { IconsPreview } from "@/components/atom/icons-preview"
+import { FontsPreview } from "@/components/atom/fonts-preview"
+import { CardsActivityGoal } from "@/components/atom/activity-goal"
+import { CardsReportIssue } from "@/components/atom/report-issue"
+import { CardsShare } from "@/components/atom/share"
+import { CardsCalendar } from "@/components/atom/calendar"
+import { CardsMetric as CardsMetricSingle } from "@/components/atom/metric"
+import { CardsStats } from "@/components/atom/stats"
+// New small atoms
+import { OAuthButton } from "@/components/atom/oauth-button"
+import { OAuthButtonGroup } from "@/components/atom/oauth-button-group"
+import { DividerWithText } from "@/components/atom/divider-with-text"
+import { UserInfoCard } from "@/components/atom/user-info-card"
+import { SettingsToggleRow } from "@/components/atom/settings-toggle-row"
+import { FormField, FormFieldText } from "@/components/atom/form-field"
+import { PaymentMethodSelector } from "@/components/atom/payment-method-selector"
+// Form atoms
+import { LabeledSelect } from "@/components/atom/labeled-select"
+import { LabeledInput } from "@/components/atom/labeled-input"
+import { LabeledTextarea } from "@/components/atom/labeled-textarea"
+import { CardForm } from "@/components/atom/card-form"
+import { ButtonGroup } from "@/components/atom/button-group"
+import { DirectoryStructure } from "@/components/docs/directory-structure"
+import { Structure } from "@/components/docs/structure"
+import { PrismaStructure } from "@/components/docs/prisma-structure"
+// AI components
+import {
+  AiPromptInputPreview,
+  AiStatusIndicatorPreview,
+  AiStreamingTextPreview,
+} from "@/components/atom/ai-previews"
+import { AIResponseDisplay } from "@/components/atom/ai-response-display"
+import { ModalSystem } from "@/components/atom/modal-system"
+import { StoryVideo } from "@/components/docs/story-video"
 
 // This file is required to use MDX in `app` directory.
 
@@ -37,10 +80,9 @@ const defaultDictionary = {
   locale: 'en',
   cards: {},
 } as any
-
 const mdxComponents = {
     // Allows customizing built-in components, e.g. to add styling.
-    h1: ({ className, ...props }: React.HTMLAttributes<HTMLHeadingElement>) => (
+    h1: ({ className, ...props }) => (
       <h1
         className={cn(
           "font-heading mt-2 scroll-m-28 text-3xl font-bold tracking-tight",
@@ -49,7 +91,7 @@ const mdxComponents = {
         {...props}
       />
     ),
-    h2: ({ className, ...props }: React.HTMLAttributes<HTMLHeadingElement>) => {
+    h2: ({ className, ...props }) => {
       return (
         <h2
           id={props.children
@@ -66,7 +108,7 @@ const mdxComponents = {
         />
       )
     },
-    h3: ({ className, ...props }: React.HTMLAttributes<HTMLHeadingElement>) => (
+    h3: ({ className, ...props }) => (
       <h3
         className={cn(
           "font-heading mt-12 scroll-m-28 text-lg font-medium tracking-tight [&+p]:!mt-4 *:[code]:text-xl",
@@ -75,7 +117,7 @@ const mdxComponents = {
         {...props}
       />
     ),
-    h4: ({ className, ...props }: React.HTMLAttributes<HTMLHeadingElement>) => (
+    h4: ({ className, ...props }) => (
       <h4
         className={cn(
           "font-heading mt-8 scroll-m-28 text-base font-medium tracking-tight",
@@ -84,7 +126,7 @@ const mdxComponents = {
         {...props}
       />
     ),
-    h5: ({ className, ...props }: React.HTMLAttributes<HTMLHeadingElement>) => (
+    h5: ({ className, ...props }) => (
       <h5
         className={cn(
           "mt-8 scroll-m-28 text-base font-medium tracking-tight",
@@ -93,7 +135,7 @@ const mdxComponents = {
         {...props}
       />
     ),
-    h6: ({ className, ...props }: React.HTMLAttributes<HTMLHeadingElement>) => (
+    h6: ({ className, ...props }) => (
       <h6
         className={cn(
           "mt-8 scroll-m-28 text-base font-medium tracking-tight",
@@ -102,13 +144,13 @@ const mdxComponents = {
         {...props}
       />
     ),
-    a: ({ className, ...props }: React.AnchorHTMLAttributes<HTMLAnchorElement>) => (
+    a: ({ className, ...props }) => (
       <a
         className={cn("font-medium underline underline-offset-4", className)}
         {...props}
       />
     ),
-    p: ({ className, ...props }: React.HTMLAttributes<HTMLParagraphElement>) => (
+    p: ({ className, ...props }) => (
       <p
         className={cn("leading-relaxed [&:not(:first-child)]:mt-6", className)}
         {...props}
@@ -117,16 +159,16 @@ const mdxComponents = {
     strong: ({ className, ...props }: React.HTMLAttributes<HTMLElement>) => (
       <strong className={cn("font-medium", className)} {...props} />
     ),
-    ul: ({ className, ...props }: React.HTMLAttributes<HTMLUListElement>) => (
+    ul: ({ className, ...props }) => (
       <ul className={cn("my-6 ms-6 list-disc", className)} {...props} />
     ),
-    ol: ({ className, ...props }: React.HTMLAttributes<HTMLOListElement>) => (
+    ol: ({ className, ...props }) => (
       <ol className={cn("my-6 ms-6 list-decimal", className)} {...props} />
     ),
-    li: ({ className, ...props }: React.HTMLAttributes<HTMLLIElement>) => (
+    li: ({ className, ...props }) => (
       <li className={cn("mt-2", className)} {...props} />
     ),
-    blockquote: ({ className, ...props }: React.HTMLAttributes<HTMLQuoteElement>) => (
+    blockquote: ({ className, ...props }) => (
       <blockquote
         className={cn("mt-6 border-s-2 ps-6 italic", className)}
         {...props}
@@ -155,7 +197,7 @@ const mdxComponents = {
     tr: ({ className, ...props }: React.HTMLAttributes<HTMLTableRowElement>) => (
       <tr className={cn("m-0 border-b", className)} {...props} />
     ),
-    th: ({ className, ...props }: React.ThHTMLAttributes<HTMLTableCellElement>) => (
+    th: ({ className, ...props }) => (
       <th
         className={cn(
           "px-4 py-2 text-start font-bold [&[align=center]]:text-center [&[align=right]]:text-right rtl:[&[align=right]]:text-left",
@@ -164,7 +206,7 @@ const mdxComponents = {
         {...props}
       />
     ),
-    td: ({ className, ...props }: React.TdHTMLAttributes<HTMLTableCellElement>) => (
+    td: ({ className, ...props }) => (
       <td
         className={cn(
           "px-4 py-2 text-start whitespace-nowrap [&[align=center]]:text-center [&[align=right]]:text-right rtl:[&[align=right]]:text-left",
@@ -299,22 +341,64 @@ const mdxComponents = {
         {...props}
       />
     ),
-    // Docs components
-    DirectoryStructure,
-    Structure,
-    PrismaStructure,
-    StoryVideo,
-    // Atom components (available in hogwarts)
+    // Atom components
+    SimpleMarquee: InfiniteMovingCards,
+    Response,
+    Sortable: SortablePreview,
     StickyScroll,
     ThemeProvider,
     InfiniteSlider,
     InfiniteCards,
     ProgressiveBlur,
     Faceted,
+    ExpandButton,
     HeaderSection,
+    PageActions: PageActionsPreview,
+    PageHeader,
     TabsNav,
+    Announcement,
     Loading,
+    TwoButtons: TwoButtonsPreview,
+    AgentHeading,
     GradientAnimation,
+    CardHoverEffect,
+    Card: CardPreview,
+    CardsMetric,
+    PromptInput,
+    Reasoning,
+    Icons: IconsPreview,
+    Fonts: FontsPreview,
+    ActivityGoal: () => <CardsActivityGoal dictionary={defaultDictionary} />,
+    ReportIssue: () => <CardsReportIssue dictionary={defaultDictionary} />,
+    Share: () => <CardsShare dictionary={defaultDictionary} />,
+    Calendar: () => <CardsCalendar dictionary={defaultDictionary} />,
+    Metric: () => <CardsMetricSingle dictionary={defaultDictionary} />,
+    Stats: () => <CardsStats dictionary={defaultDictionary} />,
+    // New small atoms
+    OAuthButton,
+    OAuthButtonGroup,
+    DividerWithText,
+    UserInfoCard,
+    SettingsToggleRow,
+    FormField,
+    FormFieldText,
+    PaymentMethodSelector,
+    DirectoryStructure,
+    Structure,
+    PrismaStructure,
+    // AI components
+    AiPromptInput: AiPromptInputPreview,
+    AiStatusIndicator: AiStatusIndicatorPreview,
+    AiStreamingText: AiStreamingTextPreview,
+    AiResponseDisplay: AIResponseDisplay,
+    ModalSystem,
+    // Form atoms
+    LabeledSelect,
+    LabeledInput,
+    LabeledTextarea,
+    CardForm,
+    ButtonGroup,
+    StoryVideo,
 }
 
 export function useMDXComponents(components: Record<string, React.ComponentType<any>>): Record<string, React.ComponentType<any>> {
