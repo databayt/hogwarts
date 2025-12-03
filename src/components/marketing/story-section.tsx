@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react"
 import type { Dictionary } from '@/components/internationalization/dictionaries'
+import { Icons } from '@/components/icons'
 
 interface StorySectionProps {
     dictionary?: Dictionary
@@ -58,14 +59,9 @@ export default function StorySection({ dictionary }: StorySectionProps) {
                 </div>
 
                 {/* Quote - Right side (1/3 width) */}
-                <div className="flex flex-col gap-6">
-                    <span
-                        className="text-8xl md:text-9xl font-bold text-foreground leading-none select-none"
-                        style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}
-                    >
-                        "
-                    </span>
-                    <p className="text-xl md:text-2xl lg:text-[1.75rem] font-medium leading-snug">
+                <div className="flex flex-col">
+                    <Icons.anthropicQuote className="size-16 md:size-20 text-foreground" />
+                    <p className="text-xl md:text-2xl lg:text-[1.75rem] font-medium leading-snug mt-6">
                         {dict.quote}
                     </p>
                 </div>

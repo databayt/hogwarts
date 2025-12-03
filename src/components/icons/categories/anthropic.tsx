@@ -101,6 +101,17 @@ export const AnthropicXTwitterIcon = (props: IconProps) => (
   </svg>
 )
 
+export const AnthropicQuoteIcon = (props: IconProps) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    {...props}
+  >
+    <path fill="currentColor" d="M8.4 6.2a1 1 0 0 1 1.2 1.6c-1.564 1.173-2.46 2.314-2.973 3.31A3.5 3.5 0 1 1 4 14.558a7.6 7.6 0 0 1 .508-3.614C5.105 9.438 6.272 7.796 8.4 6.2m9 0a1 1 0 0 1 1.2 1.6c-1.564 1.173-2.46 2.314-2.973 3.31A3.5 3.5 0 1 1 13 14.558a7.6 7.6 0 0 1 .508-3.614c.598-1.506 1.764-3.148 3.892-4.744"/>
+  </svg>
+)
+
 // ============================================================================
 // Illustrative Icons (brand colors - use CSS variables for theming)
 // These use --icon-dark (#141413) and --icon-light (#FAF9F5) which can be

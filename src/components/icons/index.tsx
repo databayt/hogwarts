@@ -130,6 +130,7 @@ export const Icons = {
   anthropicPlay: AnthropicIcons.AnthropicPlayIcon,
   anthropicYouTube: AnthropicIcons.AnthropicYouTubeIcon,
   anthropicXTwitter: AnthropicIcons.AnthropicXTwitterIcon,
+  anthropicQuote: AnthropicIcons.AnthropicQuoteIcon,
 
   // Anthropic illustrative icons (brand colors)
   handsBuild: AnthropicIcons.HandsBuildIcon,
