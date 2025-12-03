@@ -8,6 +8,7 @@ import { PricingFaq } from "@/components/marketing/pricing/pricing-faq";
 import PricingHeader from "./pricing-header";
 import PricingFAQs from "./pricing-faqs";
 import EnterpriseSection from "./enterprise-section";
+import { SecurePayment } from "./secure-payment";
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import PricingLoaderOverlay from "./loader-overlay";
@@ -42,6 +43,7 @@ export default async function PricingContent(props: Props) {
       <PricingHeader />
       <PricingCards userId={user?.id} subscriptionPlan={subscriptionPlan} userRole={user?.role} lang={lang} />
       <ComparePlans />
+      <SecurePayment />
       {/* <PricingFaq /> */}
       <PricingFAQs />
       <EnterpriseSection lang={lang} />
