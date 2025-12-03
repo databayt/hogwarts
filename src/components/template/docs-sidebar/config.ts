@@ -49,6 +49,7 @@ export const docsConfig: DocsConfig = {
         { title: "Architecture", href: "/docs/architecture", items: [] },
         { title: "Pattern", href: "/docs/pattern", items: [] },
         { title: "Stack", href: "/docs/stack", items: [] },
+        { title: "Icons", href: "/docs/icons", items: [] },
         { title: "Database", href: "/docs/database", items: [] },
         { title: "Localhost", href: "/docs/localhost", items: [] },
         { title: "Contributing", href: "/docs/contributing", items: [] },

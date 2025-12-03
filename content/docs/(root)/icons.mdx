@@ -1,0 +1,341 @@
+---
+title: "Icons"
+description: "Unified icon system with 60+ icons following shadcn patterns"
+---
+
+# Icons
+
+A unified, theme-aware icon system built on the shadcn pattern. All icons use `currentColor` and inherit from parent text color.
+
+## Quick Start
+
+```tsx
+import { Icons } from "@/components/icons"
+
+export function Example() {
+  return (
+    <div className="flex items-center gap-2">
+      <Icons.github className="size-5" />
+      <Icons.react className="size-5 text-primary" />
+      <Icons.typescript className="size-5 icon-accent" />
+    </div>
+  )
+}
+```
+
+## Features
+
+| Feature | Description |
+|---------|-------------|
+| **Theme-aware** | Icons use `currentColor` - automatically adapt to light/dark mode |
+| **60+ icons** | Brand, UI, rating, and illustrative icons in one namespace |
+| **Tree-shakable** | Import individual icons for smaller bundles |
+| **Type-safe** | Full TypeScript support with `IconName` type |
+| **Semantic classes** | `.icon-primary`, `.icon-destructive`, etc. |
+| **Size utilities** | Modern `size-*` classes (size-4, size-5, size-6) |
+
+## Import Patterns
+
+### Namespace Import (Recommended)
+
+```tsx
+import { Icons } from "@/components/icons"
+
+<Icons.github className="size-5" />
+<Icons.react className="size-5" />
+```
+
+### Individual Import (Tree-shaking)
+
+```tsx
+import { GitHubIcon, ReactIcon } from "@/components/icons"
+
+<GitHubIcon className="size-5" />
+<ReactIcon className="size-5" />
+```
+
+### Dynamic Import
+
+```tsx
+import { Icon } from "@/components/icons"
+
+<Icon name="github" className="size-5" />
+```
+
+## Available Icons
+
+### Integration Icons
+
+| Icon | Name | Usage |
+|------|------|-------|
+| `nextjs` | Next.js | `<Icons.nextjs />` |
+| `react` | React | `<Icons.react />` |
+| `typescript` | TypeScript | `<Icons.typescript />` |
+| `tailwindcss` | Tailwind CSS | `<Icons.tailwindcss />` |
+| `shadcnui` | shadcn/ui | `<Icons.shadcnui />` |
+| `prisma` | Prisma | `<Icons.prisma />` |
+| `zod` | Zod | `<Icons.zod />` |
+| `github` | GitHub | `<Icons.github />` |
+| `git` | Git | `<Icons.git />` |
+| `figma` | Figma | `<Icons.figma />` |
+| `discord` | Discord | `<Icons.discord />` |
+| `framer` | Framer | `<Icons.framer />` |
+
+### Development Icons
+
+| Icon | Name | Usage |
+|------|------|-------|
+| `claude` | Claude AI | `<Icons.claude />` |
+| `mcp` | MCP | `<Icons.mcp />` |
+| `cursor` | Cursor | `<Icons.cursor />` |
+| `python` | Python | `<Icons.python />` |
+| `rust` | Rust | `<Icons.rust />` |
+| `r` | R Language | `<Icons.r />` |
+
+### System Icons
+
+| Icon | Name | Usage |
+|------|------|-------|
+| `logo` | Platform Logo | `<Icons.logo />` |
+| `dashboard` | Dashboard | `<Icons.dashboard />` |
+| `authentication` | Auth | `<Icons.authentication />` |
+| `subscription` | Subscription | `<Icons.subscription />` |
+| `invoice` | Invoice | `<Icons.invoice />` |
+| `trash` | Delete | `<Icons.trash />` |
+| `notification` | Notification | `<Icons.notification />` |
+
+### Anthropic Icons
+
+| Icon | Name | Usage |
+|------|------|-------|
+| `anthropicA` | Anthropic Logo | `<Icons.anthropicA />` |
+| `anthropicArrowRight` | Arrow Right | `<Icons.anthropicArrowRight />` |
+| `anthropicChevronDown` | Chevron Down | `<Icons.anthropicChevronDown />` |
+| `anthropicExternalLink` | External Link | `<Icons.anthropicExternalLink />` |
+| `anthropicLinkedIn` | LinkedIn | `<Icons.anthropicLinkedIn />` |
+| `anthropicPlay` | Play | `<Icons.anthropicPlay />` |
+| `anthropicYouTube` | YouTube | `<Icons.anthropicYouTube />` |
+| `anthropicXTwitter` | X/Twitter | `<Icons.anthropicXTwitter />` |
+| `handsBuild` | Hands Build | `<Icons.handsBuild />` |
+
+### Rating Icons
+
+| Icon | Name | Usage |
+|------|------|-------|
+| `excellent` | Excellent | `<Icons.excellent />` |
+| `good` | Good | `<Icons.good />` |
+| `average` | Average | `<Icons.average />` |
+| `poor` | Poor | `<Icons.poor />` |
+
+## Styling
+
+### Size Classes
+
+Use Tailwind's `size-*` utilities for consistent sizing:
+
+```tsx
+<Icons.github className="size-4" />  {/* 16px */}
+<Icons.github className="size-5" />  {/* 20px */}
+<Icons.github className="size-6" />  {/* 24px */}
+<Icons.github className="size-8" />  {/* 32px */}
+```
+
+### Color Inheritance
+
+Icons inherit color from parent by default:
+
+```tsx
+<div className="text-primary">
+  <Icons.github />  {/* Inherits text-primary */}
+</div>
+```
+
+### Direct Color Override
+
+```tsx
+<Icons.github className="text-muted-foreground" />
+<Icons.github className="text-red-500" />
+```
+
+### Semantic Color Classes
+
+Use semantic classes for consistent meaning:
+
+```tsx
+<Icons.check className="icon-success" />      {/* Green */}
+<Icons.trash className="icon-destructive" />  {/* Red */}
+<Icons.info className="icon-muted" />         {/* Muted */}
+<Icons.star className="icon-warning" />       {/* Yellow */}
+<Icons.heart className="icon-accent" />       {/* Primary */}
+```
+
+## Directory Structure
+
+```
+src/components/icons/
+├── index.tsx              # Main exports & Icons namespace
+├── types.ts               # TypeScript types
+├── constants.ts           # Size constants
+├── utils.ts               # Helper functions
+├── registry.ts            # Icon registry for dynamic loading
+├── components/
+│   └── icon-wrapper.tsx   # IconWrapper component
+└── categories/
+    ├── system.tsx         # System/UI icons
+    ├── integrations.tsx   # Brand/integration icons
+    ├── content.tsx        # Content type icons
+    ├── apps.tsx           # Application icons
+    ├── productivity.tsx   # Productivity icons
+    ├── development.tsx    # Development tool icons
+    ├── programming.tsx    # Programming language icons
+    ├── ratings.tsx        # Rating icons
+    ├── shapes.tsx         # Shape icons
+    └── anthropic.tsx      # Anthropic design system icons
+```
+
+## Adding New Icons
+
+### 1. Choose the Right Category
+
+| Category | Use For |
+|----------|---------|
+| `system.tsx` | Core UI icons (logo, dashboard, trash) |
+| `integrations.tsx` | Third-party brands (GitHub, Discord) |
+| `programming.tsx` | Languages (Python, Rust, TypeScript) |
+| `development.tsx` | Dev tools (Cursor, MCP, Claude) |
+| `anthropic.tsx` | Anthropic design system icons |
+
+### 2. Add the Icon Component
+
+```tsx
+// categories/integrations.tsx
+
+export const NewBrandIcon = (props: IconProps) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    {...props}
+  >
+    <path fill="currentColor" d="..." />
+  </svg>
+)
+```
+
+### 3. Register in Index
+
+```tsx
+// index.tsx
+
+export const Icons = {
+  // ... existing icons
+  newBrand: IntegrationIcons.NewBrandIcon,
+} as const
+```
+
+### Icon Guidelines
+
+1. **Always use `currentColor`** for fill/stroke
+2. **Spread `{...props}`** last to allow overrides
+3. **Include `xmlns`** for standalone export
+4. **Prefer `viewBox="0 0 24 24"`** for UI icons
+5. **Use `fill="none"`** for stroke-based icons
+
+## What If Icon Is Missing?
+
+### Option 1: Use Lucide Icons
+
+For UI icons (arrows, chevrons, etc.), use lucide-react directly:
+
+```tsx
+import { ArrowRight, Check, X, Loader2 } from "lucide-react"
+
+<ArrowRight className="size-4" />
+<Check className="size-4 text-green-500" />
+```
+
+### Option 2: Add to Icon System
+
+1. Get SVG from [Lucide](https://lucide.dev), [Simple Icons](https://simpleicons.org), or design
+2. Convert to React component following the pattern above
+3. Add to appropriate category file
+4. Register in `index.tsx`
+
+### Option 3: Use Image for Complex Icons
+
+For complex illustrative icons:
+
+```tsx
+import Image from "next/image"
+import { ANTHROPIC_ILLUSTRATIONS } from "@/components/icons"
+
+<Image
+  src={ANTHROPIC_ILLUSTRATIONS.category01}
+  alt="Category illustration"
+  width={200}
+  height={200}
+/>
+```
+
+## Anthropic Illustrations
+
+Large illustrative icons are available as image paths:
+
+```tsx
+import { ANTHROPIC_ILLUSTRATIONS } from "@/components/icons"
+
+// Available illustrations:
+ANTHROPIC_ILLUSTRATIONS.handsBuild
+ANTHROPIC_ILLUSTRATIONS.handsStack
+ANTHROPIC_ILLUSTRATIONS.objectsPuzzle
+ANTHROPIC_ILLUSTRATIONS.category01  // through category14
+```
+
+These use CSS variables for theming:
+- `--icon-dark` (default: #141413)
+- `--icon-light` (default: #FAF9F5)
+
+Colors automatically invert in dark mode.
+
+## Helper Functions
+
+### Get Icon for Language
+
+```tsx
+import { getIconForLanguage } from "@/components/icons"
+
+const Icon = getIconForLanguage("ts")  // Returns TypeScriptIcon
+const Icon = getIconForLanguage("py")  // Returns PythonIcon
+const Icon = getIconForLanguage("rs")  // Returns RustIcon
+
+<Icon className="size-4" />
+```
+
+### Get All Icon Names
+
+```tsx
+import { getAllIconNames, getIconCount } from "@/components/icons"
+
+const names = getAllIconNames()  // ["logo", "github", "react", ...]
+const count = getIconCount()     // 60+
+```
+
+### Type-Safe Icon Name
+
+```tsx
+import type { IconName } from "@/components/icons"
+
+function IconButton({ icon }: { icon: IconName }) {
+  const IconComponent = Icons[icon]
+  return <IconComponent className="size-4" />
+}
+```
+
+## Best Practices
+
+1. **Prefer namespace import** for consistency
+2. **Use semantic size classes** (`size-4`, `size-5`) not `w-4 h-4`
+3. **Use semantic color classes** for meaning (`.icon-destructive` for delete)
+4. **Let icons inherit color** from parent when possible
+5. **Use lucide-react** for common UI icons (arrows, checks, loaders)
+6. **Add brand icons** to the unified system for consistency
