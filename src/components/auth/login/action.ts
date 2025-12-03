@@ -162,6 +162,17 @@ export const login = async (
       }
     }
 
-    throw error;
+    // Re-throw redirect errors (NEXT_REDIRECT) - this is expected behavior for successful login
+    // Check if it's a redirect error by looking at the digest property
+    if (error && typeof error === 'object' && 'digest' in error) {
+      const digest = (error as { digest?: string }).digest;
+      if (digest?.startsWith('NEXT_REDIRECT')) {
+        throw error;
+      }
+    }
+
+    // For any other error, log it but don't throw to prevent "Something went wrong" flash
+    console.error('[LOGIN-ACTION] Unexpected error during signIn:', error);
+    return { error: "An unexpected error occurred. Please try again." };
   }
 };
