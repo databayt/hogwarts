@@ -92,12 +92,12 @@ export function Features() {
       </section>
 
       {/* Stats Section */}
-      <section className="py-16 md:py-24 bg-gradient-to-r from-purple-600 to-blue-600 text-white -mx-[var(--container-px)] px-[var(--container-px)]">
+      <section className="py-16 md:py-24">
           <div className="text-center pb-12">
             <h2 className="font-heading font-extrabold text-4xl md:text-5xl mb-4">
               Numbers
             </h2>
-            <p className="text-purple-100 max-w-2xl mx-auto">
+            <p className="text-muted-foreground max-w-2xl mx-auto">
               Numbers that reflect our commitment to excellence and the magical transformations happening in our classrooms every day.
             </p>
           </div>
@@ -106,8 +106,8 @@ export function Features() {
             {achievements.map((achievement, index) => (
               <div key={index} className="text-center">
                 <div className="flex justify-center pb-3">
-                  <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-                    <div className="text-white">
+                  <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
+                    <div className="text-primary">
                       {achievement.icon}
                     </div>
                   </div>
@@ -115,7 +115,7 @@ export function Features() {
                 <div className="text-3xl md:text-4xl font-bold pb-2">
                   {achievement.number}
                 </div>
-                <div className="text-purple-100 font-medium">
+                <div className="text-muted-foreground font-medium">
                   {achievement.label}
                 </div>
               </div>

@@ -4,13 +4,13 @@ import { Button } from "../ui/button";
 
 export function BackgroundGradientAnimationDemo() {
   return (
-    <section>
-      <GradientAnimation height="h-[70vh]">
+    <section className="py-16 md:py-24">
+      <GradientAnimation height="h-[400px]" containerClassName="!w-full rounded-lg overflow-hidden">
         <div className="absolute z-50 inset-0 flex items-center justify-center">
-          <div className="text-center">
-            <h1 className="font-heading font-extrabold text-4xl md:text-5xl text-white">
+          <div className="text-center px-6">
+            <h2 className="font-heading font-extrabold text-3xl md:text-4xl text-white">
               Ready to begin a journey of wonder?
-            </h1>
+            </h2>
             <p className="py-4 max-w-2xl mx-auto text-white/80">
               Every great wizard started with a single step. Take yours today and join thousands of students who have discovered their potential in our enchanted halls of learning.
             </p>

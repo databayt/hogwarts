@@ -2,7 +2,13 @@ import React from 'react'
 import { MainNav } from './main-nav'
 import { marketingConfig } from "./config"
 import { auth } from "@/auth"
-import { RightActions } from './right-actions'
+import { ModeSwitcher } from '@/components/template/marketing-header/mode-switcher'
+import { LangSwitcher } from '@/components/template/marketing-header/lang-switcher'
+import { Separator } from "@/components/ui/separator"
+import { Button, buttonVariants } from '@/components/ui/button'
+import { LogoutButton } from '@/components/auth/logout-button'
+import { cn } from '@/lib/utils'
+import Link from 'next/link'
 
 interface School {
   id: string;
@@ -29,16 +35,39 @@ interface SiteHeaderProps {
 
 export default async function SiteHeader({ school, locale }: SiteHeaderProps) {
   const session = await auth();
-    return (
-      <header className="sticky top-0 z-50 bg-background">
-          <div className="flex h-14 items-center justify-between">
-            {/* Left side - Logo and Nav */}
-            <MainNav items={marketingConfig.mainNav} school={school} locale={locale} />
+  const isAuthenticated = !!session?.user;
 
-            {/* Right side - Login/Logout and Theme toggle */}
-            <RightActions isAuthenticated={!!session?.user} locale={locale} />
-          </div>
-      </header>
-    );
-  }
-  
+  return (
+    <header className="sticky top-0 z-50 w-full bg-background">
+      <div className="flex h-14 items-center gap-2 md:gap-4 **:data-[slot=separator]:!h-4">
+        <MainNav items={marketingConfig.mainNav} school={school} locale={locale} />
+        <nav className="flex flex-1 items-center justify-end gap-0.5">
+          <Separator orientation="vertical" className="mx-1" />
+          <LangSwitcher />
+          <ModeSwitcher />
+          <Separator orientation="vertical" className="mx-1" />
+          {isAuthenticated ? (
+            <Button
+              variant="secondary"
+              size="sm"
+              className="px-4 text-muted-foreground"
+              asChild
+            >
+              <LogoutButton>Logout</LogoutButton>
+            </Button>
+          ) : (
+            <Link
+              href={`/${locale}/login`}
+              className={cn(
+                buttonVariants({ variant: "secondary", size: "sm" }),
+                "px-4 text-muted-foreground"
+              )}
+            >
+              Login
+            </Link>
+          )}
+        </nav>
+      </div>
+    </header>
+  );
+}

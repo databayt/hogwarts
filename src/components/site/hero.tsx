@@ -4,7 +4,7 @@ import Image from "next/image";
 
 export function Hero() {
   return (
-    <section className="h-[calc(100vh-3.5rem)] w-full grid grid-cols-1 lg:grid-cols-2">
+    <section className="h-[calc(80vh-3.5rem)] max-h-[700px] w-full grid grid-cols-1 lg:grid-cols-2">
       {/* Image Half */}
       <div className="relative h-full lg:order-last">
         <div

@@ -70,7 +70,7 @@ export function Faculty() {
   ];
 
   return (
-    <section className="py-16 md:py-24 bg-muted -mx-[var(--container-px)] px-[var(--container-px)]">
+    <section className="py-16 md:py-24">
         <SectionHeading title="Faculty" description="Meet the wizards who make learning magical" />
 
         {/* Faculty Stats */}
