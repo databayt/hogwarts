@@ -28,6 +28,7 @@ import {
 } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { faker } from "@faker-js/faker";
+import { seedLibraryBooks } from "../seed/library.seed";
 
 const prisma = new PrismaClient();
 
@@ -577,42 +578,8 @@ async function ensureClasses(
 }
 
 async function ensureLibrary(schoolId: string) {
-  const booksData = [];
-  const genres = ["Fiction", "Science", "History", "Mathematics", "Literature", "Biography", "Technology", "Philosophy", "Arts", "Geography"];
-
-  for (let i = 0; i < 100; i++) {
-    booksData.push({
-      schoolId,
-      title: `Book Title ${i + 1}`,
-      author: `Author ${String.fromCharCode(65 + (i % 26))}`,
-      genre: genres[i % genres.length],
-      rating: Math.floor(Math.random() * 2) + 4, // 4 or 5
-      coverColor: `#${Math.floor(Math.random()*16777215).toString(16)}`,
-      description: `A comprehensive ${genres[i % genres.length].toLowerCase()} book for educational purposes.`,
-      summary: `This book covers important topics in ${genres[i % genres.length].toLowerCase()} and is suitable for students and educators.`,
-      totalCopies: Math.floor(Math.random() * 5) + 1,
-      availableCopies: Math.floor(Math.random() * 5) + 1,
-      coverUrl: "/placeholder-book-cover.jpg",
-    });
-  }
-
-  const existingBooks = await prisma.book.findMany({
-    where: { schoolId },
-    select: { title: true },
-  });
-
-  const existingTitles = new Set(existingBooks.map((b) => b.title));
-  const newBooks = booksData.filter((book) => !existingTitles.has(book.title));
-
-  if (newBooks.length > 0) {
-    await prisma.book.createMany({
-      data: newBooks,
-      skipDuplicates: true,
-    });
-    console.log(`✅ Seeded ${newBooks.length} library books`);
-  } else {
-    console.log("✅ Library books already exist");
-  }
+  // Use the comprehensive library seed with Arabic and English books
+  await seedLibraryBooks(prisma, schoolId);
 }
 
 async function ensureAssignments(
@@ -1996,7 +1963,7 @@ async function main() {
   console.log(`   - Teachers: ${teachers.length}`);
   console.log(`   - Students: ${students.length}`);
   console.log(`   - Classes: ${classes.length}`);
-  console.log(`   - Library Books: 100`);
+  console.log(`   - Library Books: 46 (20 Arabic + 26 English)`);
   console.log(`   - Assignments: 60`);
   console.log(`   - Exams: 12`);
   console.log(`   - Question Bank: ${questionBankCount} questions`);
