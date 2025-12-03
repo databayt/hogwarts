@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
-import { Calendar, Clock, FileText, Users, BookOpen, CircleCheck, Bell, ChevronRight, GraduationCap,  } from "lucide-react"
+import { ChevronRight, Calendar, FileText, GraduationCap, Clock } from "lucide-react"
 import { formatDistanceToNow, format, isToday, isTomorrow } from "date-fns"
 import { getTeacherDashboardData } from "../actions"
 import { QuickActions } from "../quick-actions"
@@ -171,28 +171,28 @@ export async function TeacherDashboard({
         <MetricCard
           title="Today's Classes"
           value={data.todaysClasses.length}
-          icon={BookOpen}
+          iconName="BookOpen"
           iconColor="text-blue-500"
           href={`/${locale}/s/${school?.domain}/subjects`}
         />
         <MetricCard
           title="Total Students"
           value={data.totalStudents}
-          icon={Users}
+          iconName="Users"
           iconColor="text-purple-500"
           href={`/${locale}/s/${school?.domain}/students`}
         />
         <MetricCard
           title="Pending Grading"
           value={data.pendingGrading}
-          icon={FileText}
+          iconName="FileText"
           iconColor={data.pendingGrading > 5 ? "text-destructive" : "text-orange-500"}
           href={`/${locale}/s/${school?.domain}/assignments`}
         />
         <MetricCard
           title="Attendance Due"
           value={data.attendanceDue}
-          icon={CircleCheck}
+          iconName="CheckCircle"
           iconColor={data.attendanceDue > 0 ? "text-amber-500" : "text-green-500"}
           href={`/${locale}/s/${school?.domain}/attendance`}
         />
@@ -230,7 +230,7 @@ export async function TeacherDashboard({
               ))
             ) : (
               <EmptyState
-                icon={Calendar}
+                iconName="Calendar"
                 title={dashDict.labels.noClasses}
                 description="Enjoy your day off!"
               />
@@ -309,7 +309,7 @@ export async function TeacherDashboard({
               })
             ) : (
               <EmptyState
-                icon={FileText}
+                iconName="FileText"
                 title={dashDict.labels.noPending}
                 description="All assignments have been graded"
               />
@@ -358,7 +358,7 @@ export async function TeacherDashboard({
               ))
             ) : (
               <EmptyState
-                icon={GraduationCap}
+                iconName="GraduationCap"
                 title={dashDict.labels.noPerformanceData}
                 description="Performance data will appear after assessments"
               />
@@ -405,7 +405,7 @@ export async function TeacherDashboard({
               })
             ) : (
               <EmptyState
-                icon={Clock}
+                iconName="Clock"
                 title={dashDict.labels.noDeadlines}
                 description="No upcoming deadlines to worry about"
               />
@@ -458,7 +458,7 @@ export async function TeacherDashboard({
           current={Math.max(0, data.pendingAssignments.length - data.pendingGrading)}
           total={Math.max(data.pendingAssignments.length, 1)}
           unit="graded"
-          icon={CircleCheck}
+          iconName="CheckCircle"
           showPercentage
         />
         <ProgressCard
@@ -466,7 +466,7 @@ export async function TeacherDashboard({
           current={data.todaysClasses.length - data.attendanceDue}
           total={Math.max(data.todaysClasses.length, 1)}
           unit="classes"
-          icon={Calendar}
+          iconName="Calendar"
           showPercentage
         />
         <ProgressCard
@@ -474,7 +474,7 @@ export async function TeacherDashboard({
           current={12}
           total={16}
           unit="weeks"
-          icon={Clock}
+          iconName="Clock"
           showPercentage
         />
       </div>

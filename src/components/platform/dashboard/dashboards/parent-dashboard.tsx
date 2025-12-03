@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
-import { Users, Calendar, FileText, Bell, Trophy, ChevronRight, GraduationCap, Clock, DollarSign,  } from "lucide-react"
+import { ChevronRight, Calendar, Users, Trophy, FileText, Bell } from "lucide-react"
 import { format, isToday, isTomorrow, differenceInDays } from "date-fns"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { getParentDashboardData } from "../actions"
@@ -181,28 +181,28 @@ export async function ParentDashboard({
         <MetricCard
           title="Children"
           value={data.children.length}
-          icon={Users}
+          iconName="Users"
           iconColor="text-blue-500"
         />
         <MetricCard
           title="Attendance"
           value={`${data.attendanceSummary.percentage.toFixed(0)}%`}
           description={`${data.attendanceSummary.presentDays}/${data.attendanceSummary.totalDays} days`}
-          icon={Calendar}
+          iconName="Calendar"
           iconColor={data.attendanceSummary.percentage >= 85 ? "text-green-500" : "text-amber-500"}
           href={`/${locale}/s/${school?.domain}/attendance`}
         />
         <MetricCard
           title="Pending Tasks"
           value={pendingAssignments}
-          icon={FileText}
+          iconName="FileText"
           iconColor={pendingAssignments > 3 ? "text-destructive" : "text-purple-500"}
           href={`/${locale}/s/${school?.domain}/assignments`}
         />
         <MetricCard
           title="Announcements"
           value={data.announcements.length}
-          icon={Bell}
+          iconName="Bell"
           iconColor="text-orange-500"
           href={`/${locale}/s/${school?.domain}/announcements`}
         />
@@ -285,7 +285,7 @@ export async function ParentDashboard({
               ))
             ) : (
               <EmptyState
-                icon={Users}
+                iconName="Users"
                 title={dashDict.labels.noChildren}
                 description="Your children will appear here once enrolled"
               />
@@ -350,7 +350,7 @@ export async function ParentDashboard({
               ))
             ) : (
               <EmptyState
-                icon={Trophy}
+                iconName="Trophy"
                 title={dashDict.labels.noGrades}
                 description="Grades will appear here after assessments"
               />
@@ -418,7 +418,7 @@ export async function ParentDashboard({
               })
             ) : (
               <EmptyState
-                icon={FileText}
+                iconName="FileText"
                 title={dashDict.labels.noAssignments}
                 description="All caught up!"
               />
@@ -450,7 +450,7 @@ export async function ParentDashboard({
               ) : (
                 <div className="md:col-span-2">
                   <EmptyState
-                    icon={Bell}
+                    iconName="Bell"
                     title={dashDict.labels.noAnnouncements}
                     description="New announcements will appear here"
                   />
@@ -477,7 +477,7 @@ export async function ParentDashboard({
           current={data.attendanceSummary.presentDays}
           total={data.attendanceSummary.totalDays}
           unit="days"
-          icon={Calendar}
+          iconName="Calendar"
           showPercentage
         />
         <ProgressCard
@@ -485,7 +485,7 @@ export async function ParentDashboard({
           current={data.upcomingAssignments.filter(a => a.status !== "NOT_SUBMITTED").length}
           total={data.upcomingAssignments.length || 1}
           unit="tasks"
-          icon={FileText}
+          iconName="FileText"
           showPercentage
         />
         <ProgressCard
@@ -493,7 +493,7 @@ export async function ParentDashboard({
           current={12}
           total={16}
           unit="weeks"
-          icon={Clock}
+          iconName="Clock"
           showPercentage
         />
       </div>

@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
-import { Clock, Calendar, BookOpen, GraduationCap, FileText, Bell, ChevronRight, Target, Trophy,  } from "lucide-react"
+import { Clock, Target, Trophy, FileText, ChevronRight, Bell, Calendar } from "lucide-react"
 import { format, isToday, isTomorrow, differenceInDays } from "date-fns"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { getStudentDashboardData } from "../actions"
@@ -172,28 +172,28 @@ export async function StudentDashboard({
           title="Attendance"
           value={`${data.attendanceSummary.percentage.toFixed(0)}%`}
           description={`${data.attendanceSummary.presentDays}/${data.attendanceSummary.totalDays} days`}
-          icon={Calendar}
+          iconName="Calendar"
           iconColor={data.attendanceSummary.percentage >= 85 ? "text-green-500" : "text-amber-500"}
           href={`/${locale}/s/${school?.domain}/attendance`}
         />
         <MetricCard
           title="Average Grade"
           value={averageGrade > 0 ? `${averageGrade.toFixed(0)}%` : "N/A"}
-          icon={GraduationCap}
+          iconName="GraduationCap"
           iconColor={averageGrade >= 80 ? "text-green-500" : averageGrade >= 60 ? "text-blue-500" : "text-amber-500"}
           href={`/${locale}/s/${school?.domain}/grades`}
         />
         <MetricCard
           title="Assignments Due"
           value={data.upcomingAssignments.length}
-          icon={FileText}
+          iconName="FileText"
           iconColor={data.upcomingAssignments.length > 3 ? "text-destructive" : "text-purple-500"}
           href={`/${locale}/s/${school?.domain}/assignments`}
         />
         <MetricCard
           title="Classes Today"
           value={data.todaysTimetable.length}
-          icon={BookOpen}
+          iconName="BookOpen"
           iconColor="text-blue-500"
           href={`/${locale}/s/${school?.domain}/timetable`}
         />

@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
-import { Calendar, Clock, TrendingUp, TrendingDown, ChevronRight, Bell, Users, BookOpen, GraduationCap, DollarSign, Settings, ClipboardList, FileText, Award, CalendarDays, MessageSquare, UserPlus, BarChart3, FolderOpen, CheckCircle } from "lucide-react"
+import { Calendar, Clock, TrendingUp, TrendingDown, ChevronRight, Bell, Users, BookOpen, GraduationCap, DollarSign, Settings, ClipboardList, FileText, Award, CalendarDays, MessageSquare, UserPlus, BarChart3, FolderOpen, CheckCircle, Trophy } from "lucide-react"
 import type { ElementType } from "react"
 import Link from "next/link"
 
@@ -33,6 +33,7 @@ const iconMap: Record<string, ElementType> = {
   BarChart3,
   FolderOpen,
   CheckCircle,
+  Trophy,
 }
 
 // ============================================================================
