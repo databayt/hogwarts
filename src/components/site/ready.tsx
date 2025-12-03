@@ -4,7 +4,7 @@ import { Button } from "../ui/button";
 
 export function BackgroundGradientAnimationDemo() {
   return (
-    <div className="full-bleed">
+    <section className="-mx-[var(--container-px)] px-[var(--container-px)]">
     <GradientAnimation height="h-[70vh]">
       <div className="absolute z-50 inset-0">
         <div className="text-center pt-16">
@@ -29,6 +29,6 @@ export function BackgroundGradientAnimationDemo() {
         </div>
       </div>
     </GradientAnimation>
-    </div>
+    </section>
   );
 }

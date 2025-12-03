@@ -43,8 +43,7 @@ export function CTA() {
 
 
   return (
-    <section className=" ">
-      <div>
+    <section className="py-16 md:py-24">
        
 
         {/* Admission Process */}
@@ -231,8 +230,6 @@ export function CTA() {
             </div>
           </div>
         </div>
-
-      </div>
     </section>
   );
 } 

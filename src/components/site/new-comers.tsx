@@ -4,8 +4,7 @@ import { AlertTriangle } from "lucide-react";
 
 export function NewComers() {
   return (
-    <section className="py-16">
-      <div className="container">
+    <section className="py-16 md:py-24">
         <div className="text-center">
             <p className="flex items-center justify-center gap-2 text-muted-foreground"><AlertTriangle className="h-4 w-4" /> Internal</p>
           <h2 className="font-heading font-extrabold text-4xl md:text-5xl pb-4">
@@ -24,12 +23,7 @@ export function NewComers() {
             Onboarding
             </Button>
           </Link>
-
-          
-
-          
         </div>
-      </div>
     </section>
   );
 }

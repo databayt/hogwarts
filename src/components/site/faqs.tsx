@@ -1,8 +1,7 @@
 export default function FAQs() {
     return (
-        <section className="scroll-py-16 py-16 md:scroll-py-32 md:py-32">
-            <div className="mx-auto max-w-5xl px-6">
-                <div className="grid gap-y-12 px-2 lg:[grid-template-columns:1fr_auto]">
+        <section className="py-16 md:py-32">
+                <div className="grid gap-y-12 lg:[grid-template-columns:1fr_auto]">
                     <div className="text-center lg:text-left">
                         <h2 className="font-heading font-extrabold text-4xl md:text-5xl mb-4">
                             Frequently <br className="hidden lg:block" /> Asked <br className="hidden lg:block" />
@@ -42,7 +41,6 @@ export default function FAQs() {
                         </div>
                     </div>
                 </div>
-            </div>
         </section>
     )
 }
