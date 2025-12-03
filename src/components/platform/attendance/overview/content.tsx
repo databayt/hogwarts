@@ -4,7 +4,6 @@ import { StatCard } from "../atom/stat-card"
 import { ActionCard } from "../atom/action-card"
 import { RecentTable } from "../atom/recent-table"
 import { getAttendanceStats, getRecentAttendance } from "../actions"
-import { Users, CircleCheck, CircleAlert, Clock, TrendingUp, Pencil, QrCode, Upload, FileText } from "lucide-react";
 import type { Locale } from "@/components/internationalization/config"
 import type { getDictionary } from "@/components/internationalization/dictionaries"
 
@@ -53,35 +52,35 @@ export async function AttendanceOverviewContent({
             title={d?.stats?.totalStudents || "Total Records"}
             value={statsResult.total}
             description={d?.stats?.enrolledStudents || "All attendance records"}
-            icon={Users}
+            iconName="Users"
             variant="default"
           />
           <StatCard
             title={d?.stats?.present || "Present"}
             value={statsResult.present}
             description={presentPercent}
-            icon={CircleCheck}
+            iconName="CircleCheck"
             variant="success"
           />
           <StatCard
             title={d?.stats?.absent || "Absent"}
             value={statsResult.absent}
             description={absentPercent}
-            icon={CircleAlert}
+            iconName="CircleAlert"
             variant="danger"
           />
           <StatCard
             title={d?.stats?.late || "Late"}
             value={statsResult.late}
             description={latePercent}
-            icon={Clock}
+            iconName="Clock"
             variant="warning"
           />
           <StatCard
             title={d?.stats?.attendanceRate || "Attendance Rate"}
             value={`${statsResult.attendanceRate}%`}
             description={d?.stats?.overallRate || "Overall rate"}
-            icon={TrendingUp}
+            iconName="TrendingUp"
             variant="info"
           />
         </div>
@@ -94,28 +93,28 @@ export async function AttendanceOverviewContent({
               title={d?.quickActions?.markAttendance || "Take Attendance"}
               description="Mark attendance manually for a class"
               href={`${basePath}/manual`}
-              icon={Pencil}
+              iconName="Pencil"
               iconColor="text-green-600"
             />
             <ActionCard
               title="QR Code Session"
               description="Generate QR code for students to scan"
               href={`${basePath}/qr-code`}
-              icon={QrCode}
+              iconName="QrCode"
               iconColor="text-purple-600"
             />
             <ActionCard
               title={d?.quickActions?.bulkImport || "Bulk Upload"}
               description="Import attendance from CSV file"
               href={`${basePath}/bulk-upload`}
-              icon={Upload}
+              iconName="Upload"
               iconColor="text-blue-600"
             />
             <ActionCard
               title={d?.quickActions?.viewReports || "View Reports"}
               description="Generate and export attendance reports"
               href={`${basePath}/reports`}
-              icon={FileText}
+              iconName="FileText"
               iconColor="text-orange-600"
             />
           </div>

@@ -3,12 +3,39 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 import type { ElementType } from "react"
+import {
+  Users,
+  CircleCheck,
+  CircleAlert,
+  Clock,
+  TrendingUp,
+  Calendar,
+  UserCheck,
+  UserX,
+  UserMinus,
+  Activity,
+} from "lucide-react"
+
+// Icon map for string-based icon names (prevents Server Component serialization issues)
+const iconMap: Record<string, ElementType> = {
+  Users,
+  CircleCheck,
+  CircleAlert,
+  Clock,
+  TrendingUp,
+  Calendar,
+  UserCheck,
+  UserX,
+  UserMinus,
+  Activity,
+}
 
 interface StatCardProps {
   title: string
   value: string | number
   description?: string
   icon?: ElementType
+  iconName?: string
   trend?: "up" | "down" | "neutral"
   trendValue?: string
   className?: string
@@ -42,11 +69,14 @@ export function StatCard({
   title,
   value,
   description,
-  icon: Icon,
+  icon: IconProp,
+  iconName,
   className,
   variant = "default",
 }: StatCardProps) {
   const styles = variantStyles[variant]
+  // Prefer iconName (string) over icon (component) to avoid serialization issues
+  const Icon = iconName ? iconMap[iconName] : IconProp
 
   return (
     <Card className={cn("", className)}>

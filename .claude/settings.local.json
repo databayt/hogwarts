@@ -45,7 +45,8 @@
       "mcp__browser__playwright_click",
       "mcp__browser__playwright_get_visible_html",
       "mcp__browser__playwright_close",
-      "mcp__browser__playwright_evaluate"
+      "mcp__browser__playwright_evaluate",
+      "mcp__shadcn__view_items_in_registries"
     ],
     "deny": [],
     "ask": []
