@@ -13,40 +13,34 @@ import Image from "next/image";
 export function Features() {
   const magicalFeatures = [
     {
-      icon: <Image src="/site/teleport.png" alt="Magical Learning" width={48} height={48} className="dark:invert" />,
+      icon: <Image src="/site/teleport.png" alt="Magical Learning" width={32} height={32} className="dark:invert" />,
       title: "Immersive Learning",
-      description: "Interactive and immersive education that transforms traditional learning into an enchanting adventure.",
-      bgColor: "bg-violet-100"
+      description: "Interactive and immersive education that transforms traditional learning into an enchanting adventure."
     },
     {
-      icon: <Image src="/site/tent.png" alt="Curriculum" width={48} height={48} className="dark:invert" />,
+      icon: <Image src="/site/tent.png" alt="Curriculum" width={32} height={32} className="dark:invert" />,
       title: "Dynamic Programs",
-      description: "Carefully crafted programs that blend core academics with creative thinking and real-world applications.",
-      bgColor: "bg-sky-100"
+      description: "Carefully crafted programs that blend core academics with creative thinking and real-world applications."
     },
     {
-      icon: <Image src="/site/community.png" alt="Community" width={48} height={48} className="dark:invert" />,
+      icon: <Image src="/site/community.png" alt="Community" width={32} height={32} className="dark:invert" />,
       title: "House Community",
-      description: "Close-knit learning communities that foster friendship, collaboration, and mutual support among students.",
-      bgColor: "bg-emerald-100"
+      description: "Close-knit learning communities that foster friendship, collaboration, and mutual support among students."
     },
     {
-      icon: <Image src="/site/champion.png" alt="Champions" width={48} height={48} className="dark:invert" />,
+      icon: <Image src="/site/champion.png" alt="Champions" width={32} height={32} className="dark:invert" />,
       title: "Champions League",
-      description: "Academic competitions, sports tournaments, and creative challenges that celebrate every student's unique talents.",
-      bgColor: "bg-amber-100"
+      description: "Academic competitions, sports tournaments, and creative challenges that celebrate every student's unique talents."
     },
     {
-      icon: <Image src="/site/world.png" alt="World Adventures" width={48} height={48} className="dark:invert" />,
+      icon: <Image src="/site/world.png" alt="World Adventures" width={32} height={32} className="dark:invert" />,
       title: "Worldwide Adventures",
-      description: "Global exchange programs and virtual international collaborations that expand horizons beyond our castle walls.",
-      bgColor: "bg-cyan-100"
+      description: "Global exchange programs and virtual international collaborations that expand horizons beyond our castle walls."
     },
     {
-      icon: <Image src="/site/light-bulb.png" alt="Innovation" width={48} height={48} className="dark:invert" />,
+      icon: <Image src="/site/light-bulb.png" alt="Innovation" width={32} height={32} className="dark:invert" />,
       title: "Innovation Potions",
-      description: "STEAM laboratories and maker spaces where students concoct creative solutions to real-world challenges.",
-      bgColor: "bg-rose-100"
+      description: "STEAM laboratories and maker spaces where students concoct creative solutions to real-world challenges."
     }
   ];
 
@@ -68,7 +62,7 @@ export function Features() {
             {magicalFeatures.map((feature, index) => (
               <Card key={index} className="shadow-none rounded-md">
                 <CardHeader className="text-center flex flex-col items-center">
-                  <div className={`mb-4 w-20 h-20 ${feature.bgColor} rounded-2xl flex items-center justify-center`}>
+                  <div className="mb-4">
                     {feature.icon}
                   </div>
                   <CardTitle className="text-xl font-bold mb-2">
