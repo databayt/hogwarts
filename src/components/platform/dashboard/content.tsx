@@ -8,6 +8,7 @@ import { PrincipalDashboard } from "./dashboards/principal-dashboard";
 import { AccountantDashboard } from "./dashboards/accountant-dashboard";
 import { TenantLoginRedirect } from "@/components/auth/tenant-login-redirect";
 import { CookieDebug } from "@/components/auth/cookie-debug";
+import { Card, CardContent } from "@/components/ui/card";
 import type { School } from "@/components/site/types";
 import type { Dictionary } from "@/components/internationalization/dictionaries";
 
@@ -17,6 +18,7 @@ type ExtendedUser = {
   email?: string | null;
   role?: string;
   schoolId?: string | null;
+  name?: string;
 };
 
 interface Props {
@@ -26,56 +28,95 @@ interface Props {
 }
 
 export default async function DashboardContent({ school, dictionary, locale = "en" }: Props = {}) {
-  const user = await currentUser() as ExtendedUser | null;
+  try {
+    // Get current user with error handling
+    let user: ExtendedUser | null = null;
+    try {
+      user = await currentUser() as ExtendedUser | null;
+    } catch (error) {
+      console.error("[DashboardContent] Error getting current user:", error);
+      // Return login redirect on auth error
+      return (
+        <TenantLoginRedirect
+          subdomain={school?.domain || 'unknown'}
+          className="max-w-md mx-auto mt-20"
+        />
+      );
+    }
 
-  // If no user, show login component
-  if (!user) {
+    // If no user, show login component
+    if (!user) {
+      return (
+        <TenantLoginRedirect
+          subdomain={school?.domain || 'unknown'}
+          className="max-w-md mx-auto mt-20"
+        />
+      );
+    }
+
+    // For now, use a default school name if not provided
+    const schoolName = school?.name || dictionary?.dashboard?.yourSchool || "Your School";
+
+    // Provide default translations if dictionary is not provided
+    const dashboardDict = dictionary?.dashboard || {
+      title: "Dashboard",
+      welcome: "Welcome to Hogwarts"
+    };
+
+    const renderDashboard = () => {
+      const userRole = user?.role || 'USER';
+      // Ensure we have a valid dictionary, use empty object as fallback
+      const safeDict = dictionary || {} as Dictionary['school'];
+
+      switch (userRole) {
+        case "STUDENT":
+          return <StudentDashboard user={user!} dictionary={safeDict} locale={locale} />;
+        case "TEACHER":
+          return <TeacherDashboard user={user!} dictionary={safeDict} locale={locale} />;
+        case "GUARDIAN":
+          return <ParentDashboard user={user!} dictionary={safeDict} locale={locale} />;
+        case "STAFF":
+          return <StaffDashboard user={user!} dictionary={safeDict} locale={locale} />;
+        case "ADMIN":
+        case "DEVELOPER":
+          // DEVELOPER (platform admin) sees AdminDashboard when viewing school subdomains
+          return <AdminDashboard user={user!} dictionary={safeDict} locale={locale} />;
+        case "PRINCIPAL":
+          return <PrincipalDashboard user={user!} dictionary={safeDict} locale={locale} />;
+        case "ACCOUNTANT":
+          return <AccountantDashboard user={user!} dictionary={safeDict} locale={locale} />;
+        default:
+          return <DefaultDashboard user={user!} dictionary={safeDict} />;
+      }
+    };
+
     return (
-      <TenantLoginRedirect 
-        subdomain={school?.domain || 'unknown'} 
-        className="max-w-md mx-auto mt-20"
-      />
+      <div className="space-y-6">
+        {renderDashboard()}
+      </div>
+    );
+  } catch (error) {
+    // Catch-all error handler for any unexpected errors
+    console.error("[DashboardContent] Unexpected error:", error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardContent className="p-6">
+            <h3 className="mb-4">Dashboard Error</h3>
+            <p className="text-muted-foreground mb-2">
+              An error occurred while loading the dashboard.
+            </p>
+            <pre className="text-xs bg-muted p-2 rounded overflow-auto max-h-40">
+              {errorMessage}
+            </pre>
+            <CookieDebug />
+          </CardContent>
+        </Card>
+      </div>
     );
   }
-
-  // For now, use a default school name if not provided
-  const schoolName = school?.name || dictionary?.dashboard?.yourSchool || "Your School";
-
-  // Provide default translations if dictionary is not provided
-  const dashboardDict = dictionary?.dashboard || {
-    title: "Dashboard",
-    welcome: "Welcome to Hogwarts"
-  };
-
-  const renderDashboard = () => {
-    const userRole = user.role || 'USER';
-    switch (userRole) {
-      case "STUDENT":
-        return <StudentDashboard user={user} dictionary={dictionary!} locale={locale} />;
-      case "TEACHER":
-        return <TeacherDashboard user={user} dictionary={dictionary!} locale={locale} />;
-      case "GUARDIAN":
-        return <ParentDashboard user={user} dictionary={dictionary!} locale={locale} />;
-      case "STAFF":
-        return <StaffDashboard user={user} dictionary={dictionary!} locale={locale} />;
-      case "ADMIN":
-      case "DEVELOPER":
-        // DEVELOPER (platform admin) sees AdminDashboard when viewing school subdomains
-        return <AdminDashboard user={user} dictionary={dictionary!} locale={locale} />;
-      case "PRINCIPAL":
-        return <PrincipalDashboard user={user} dictionary={dictionary!} locale={locale} />;
-      case "ACCOUNTANT":
-        return <AccountantDashboard user={user} dictionary={dictionary!} locale={locale} />;
-      default:
-        return <DefaultDashboard user={user} dictionary={dictionary!} />;
-    }
-  };
-
-  return (
-    <div className="space-y-6">
-      {renderDashboard()}
-    </div>
-  );
 }
 
 function DefaultDashboard({ user, dictionary }: { user: ExtendedUser, dictionary?: Dictionary['school'] }) {
