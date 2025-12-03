@@ -5,6 +5,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 import type { StreamContentProps } from "../types";
+import { SkillsSection } from "./skills-section";
 
 type Feature = {
   title: string;
@@ -100,6 +101,8 @@ export function StreamHomeContent({
           </Card>
         ))}
       </section>
+
+      <SkillsSection dictionary={dictionary} lang={lang} />
     </>
   );
 }
