@@ -36,6 +36,8 @@ export async function TeacherDashboard({
   dictionary,
   locale = "en",
 }: TeacherDashboardProps) {
+  // Wrap entire component in try-catch for comprehensive error handling (like AdminDashboard)
+  try {
   // Fetch real data from server action with error handling
   let data
   try {
@@ -57,15 +59,22 @@ export async function TeacherDashboard({
   }
 
   // Get tenant context for subdomain
-  const { schoolId } = await getTenantContext()
+  let schoolId: string | null = null
+  try {
+    const tenantContext = await getTenantContext()
+    schoolId = tenantContext.schoolId
+  } catch (error) {
+    console.error("[TeacherDashboard] Error getting tenant context:", error)
+  }
 
   // Get school subdomain for URL construction with error handling
-  let school = null
+  let school: { domain: string | null; name: string | null } | null = null
   try {
     if (schoolId) {
       const { db } = await import("@/lib/db")
+      const id = schoolId // TypeScript narrowing helper
       school = await db.school.findUnique({
-        where: { id: schoolId },
+        where: { id },
         select: { domain: true, name: true },
       })
     }
@@ -191,7 +200,7 @@ export async function TeacherDashboard({
 
       {/* Quick Actions */}
       <QuickActions
-        actions={getQuickActionsByRole("TEACHER", dictionary, school?.domain)}
+        actions={getQuickActionsByRole("TEACHER", dictionary, school?.domain ?? undefined)}
         locale={locale}
       />
 
@@ -471,4 +480,27 @@ export async function TeacherDashboard({
       </div>
     </div>
   )
+  } catch (renderError) {
+    // Catch any rendering errors and log them
+    console.error("[TeacherDashboard] Rendering error:", renderError)
+    const errorMessage = renderError instanceof Error ? renderError.message : String(renderError)
+    const errorStack = renderError instanceof Error ? renderError.stack : undefined
+    console.error("[TeacherDashboard] Error message:", errorMessage)
+    console.error("[TeacherDashboard] Error stack:", errorStack)
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardContent className="p-6">
+            <h3 className="mb-4">Dashboard Rendering Error</h3>
+            <p className="text-muted-foreground mb-2">
+              An error occurred while rendering the dashboard.
+            </p>
+            <pre className="text-xs bg-muted p-2 rounded overflow-auto max-h-40">
+              {errorMessage}
+            </pre>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
 }

@@ -9,8 +9,17 @@ export async function getTeacherDashboardData() {
   const userId = session?.user?.id;
   const schoolId = session?.user?.schoolId;
 
+  // Return default values when user context is missing (like admin dashboard)
   if (!userId || !schoolId) {
-    throw new Error("Missing user context");
+    return {
+      todaysClasses: [],
+      pendingGrading: 0,
+      attendanceDue: 0,
+      totalStudents: 0,
+      pendingAssignments: [],
+      classPerformance: [],
+      upcomingDeadlines: [],
+    };
   }
 
   // Find teacher record
@@ -258,8 +267,19 @@ export async function getStudentDashboardData() {
   const userId = session?.user?.id;
   const schoolId = session?.user?.schoolId;
 
+  // Return default values when user context is missing (like admin dashboard)
   if (!userId || !schoolId) {
-    throw new Error("Missing user context");
+    return {
+      todaysTimetable: [],
+      upcomingAssignments: [],
+      recentGrades: [],
+      announcements: [],
+      attendanceSummary: {
+        totalDays: 0,
+        presentDays: 0,
+        percentage: 0,
+      },
+    };
   }
 
   // Find student record
@@ -499,8 +519,19 @@ export async function getParentDashboardData() {
   const guardianId = session?.user?.id;
   const schoolId = session?.user?.schoolId;
 
+  // Return default values when guardian context is missing (like admin dashboard)
   if (!guardianId || !schoolId) {
-    throw new Error("Missing guardian context");
+    return {
+      children: [],
+      recentGrades: [],
+      upcomingAssignments: [],
+      attendanceSummary: {
+        totalDays: 0,
+        presentDays: 0,
+        percentage: 0,
+      },
+      announcements: [],
+    };
   }
 
   // Get guardian's children
