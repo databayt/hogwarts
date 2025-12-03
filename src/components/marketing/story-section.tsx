@@ -59,9 +59,9 @@ export default function StorySection({ dictionary }: StorySectionProps) {
                 </div>
 
                 {/* Quote - Right side (1/3 width) */}
-                <div className="flex flex-col">
-                    <Icons.anthropicQuote className="size-16 md:size-20 text-foreground" />
-                    <p className="text-xl md:text-2xl lg:text-[1.75rem] font-medium leading-snug mt-6">
+                <div className="flex flex-col items-start">
+                    <Icons.anthropicQuote className="size-10 md:size-12 text-foreground" />
+                    <p className="text-xl md:text-2xl lg:text-[1.75rem] font-medium leading-snug mt-3">
                         {dict.quote}
                     </p>
                 </div>
