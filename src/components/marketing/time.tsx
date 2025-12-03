@@ -13,20 +13,20 @@ const Time = ({ dictionary }: TimeProps) => {
     return (
         <section>
             <GradientAnimation
-                height="h-[200px] md:h-[180px]"
+                height="h-[280px] md:h-[240px]"
                 containerClassName="!w-full rounded-xl overflow-hidden"
             >
-                <div className='absolute z-50 inset-0 flex items-center justify-center'>
-                    <div className='flex flex-col md:flex-row items-center gap-6 md:gap-12 px-6'>
+                <div className='absolute z-50 inset-0 flex items-center'>
+                    <div className='flex flex-col md:flex-row items-center justify-between w-full px-8 md:px-16 gap-8'>
                         <div className='flex flex-col text-center md:text-start'>
-                            <h2 className="font-heading font-extrabold tracking-tight text-4xl md:text-5xl mb-2 text-white">
+                            <h2 className="font-heading font-black tracking-tight text-5xl md:text-7xl mb-3 text-white">
                                 {timeDict.title}
                             </h2>
-                            <p className="font-heading text-base md:text-lg text-white/90">
+                            <p className="font-heading text-lg md:text-xl text-white/90">
                                 {timeDict.subtitle}
                             </p>
                         </div>
-                        <div>
+                        <div className='flex-shrink-0'>
                             <Clock />
                         </div>
                     </div>
