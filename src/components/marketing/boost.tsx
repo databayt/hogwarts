@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import SectionHeading from '../atom/section-heading'
 import { cn } from '@/lib/utils'
-import { Icons } from '@/components/atom/icons'
+import { Icons } from '@/components/icons'
 import type { Dictionary } from '@/components/internationalization/dictionaries'
 
 interface BoostProps {
@@ -35,7 +35,7 @@ const Boost = ({ dictionary }: BoostProps) => {
                         rel="noopener noreferrer"
                         aria-label="Become a Patron"
                     >
-                        <Icons.patreon className="w-4 h-4 mr-2" />
+                        <Icons.patreon className="size-4 mr-2" />
                         <span>{boostDict.becomePatron}</span>
                     </Link>
                     <Link
@@ -49,7 +49,7 @@ const Boost = ({ dictionary }: BoostProps) => {
                         rel="noopener noreferrer"
                         aria-label="Buy me a coffee"
                     >
-                        <Icons.coffee className="w-5 h-5 mr-2" />
+                        <Icons.coffee className="size-5 mr-2" />
                         <span>{boostDict.buyMeCoffee}</span>
                     </Link>
                 </div>

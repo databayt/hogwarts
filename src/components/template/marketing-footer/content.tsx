@@ -1,7 +1,7 @@
 import Link from "next/link";
 import NewsLetter from "./newsletter";
 import { footerSections } from "./config";
-import { Icons } from "@/components/atom/icons";
+import { Icons } from "@/components/icons";
 
 export function MarketingFooter() {
     return (
