@@ -5,8 +5,7 @@ import { Button } from '@/components/ui/button';
 
 const Footer = () => {
   return (
-    <footer className="border-t border-border pt-16 pb-6 bg-muted full-bleed">
-      <div className='container'>
+    <footer className="border-t border-border pt-16 pb-6 bg-muted -mx-[var(--container-px)] px-[var(--container-px)]">
         <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
           {/* Map Section */}
           <div className="lg:flex-[2] lg:min-w-0">
@@ -229,7 +228,6 @@ const Footer = () => {
             </div> */}
           </div>
         </div>
-      </div>
     </footer>
   );
 };
