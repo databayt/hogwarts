@@ -58,9 +58,14 @@ export default function StorySection({ dictionary }: StorySectionProps) {
                 </div>
 
                 {/* Quote - Right side (1/3 width) */}
-                <div className="flex flex-col">
-                    <span className="font-serif text-7xl md:text-8xl font-bold text-foreground leading-none select-none">"</span>
-                    <p className="text-lg md:text-xl lg:text-2xl font-medium leading-relaxed mt-2">
+                <div className="flex flex-col gap-6">
+                    <span
+                        className="text-8xl md:text-9xl font-bold text-foreground leading-none select-none"
+                        style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}
+                    >
+                        "
+                    </span>
+                    <p className="text-xl md:text-2xl lg:text-[1.75rem] font-medium leading-snug">
                         {dict.quote}
                     </p>
                 </div>
