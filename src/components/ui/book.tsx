@@ -10,6 +10,8 @@ interface BookProps {
   variant?: 'default' | 'simple';
   illustration?: React.ReactNode;
   width?: number;
+  coverUrl?: string;
+  hoverAnimation?: boolean;
 }
 
 export function Book(props: BookProps) {
@@ -22,6 +24,8 @@ export function Book(props: BookProps) {
     textColor,
     illustration,
     width,
+    coverUrl,
+    hoverAnimation = true,
   } = props;
   return (
     <div
@@ -35,7 +39,10 @@ export function Book(props: BookProps) {
         } as React.CSSProperties
       }
     >
-      <div className="contain-inline-size aspect-[49/60] w-fit rotate-0 relative [transform-style:preserve-3d] min-w-[calc(var(--book-width))] transition-transform duration-500 ease-out group-hover:[transform:rotateY(-20deg)_scale(1.066)translateX(-8px)]">
+      <div className={cn(
+        "contain-inline-size aspect-[49/60] w-fit rotate-0 relative [transform-style:preserve-3d] min-w-[calc(var(--book-width))]",
+        hoverAnimation && "transition-transform duration-500 ease-out group-hover:[transform:rotateY(-20deg)_scale(1.066)translateX(-8px)]"
+      )}>
         <Stack
           align="stretch"
           className="rounded-l border border-border rounded-r shadow-book  bg-stone-100 dark:bg-stone-800 bg-[var(--book-color)] size-full absolute overflow-hidden"
@@ -49,10 +56,16 @@ export function Book(props: BookProps) {
                 'min-w-[calc(var(--book-width))] bg-[var(--book-color)] relative overflow-hidden',
               )}
             >
-              <div className="absolute inset-y-0 mix-blend-overlay opacity-100 min-w-[8.2%] bg-book-bind-bg" />
-              {illustration && (
+              <div className="absolute inset-y-0 mix-blend-overlay opacity-100 min-w-[8.2%] bg-book-bind-bg z-10" />
+              {coverUrl ? (
+                <img
+                  src={coverUrl}
+                  alt=""
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+              ) : illustration ? (
                 <div className="object-cover">{illustration}</div>
-              )}
+              ) : null}
             </Stack>
           )}
           <Stack grow={variant === 'simple'} direction="row" className="h-fit">

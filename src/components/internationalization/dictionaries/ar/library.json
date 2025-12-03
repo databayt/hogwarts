@@ -31,6 +31,8 @@
     "video": "فيديو الكتاب",
     "dueDate": "تاريخ الإرجاع",
     "borrowedOn": "تاريخ الاستعارة",
+    "newlyArrived": "وصل حديثاً",
+    "browse": "تصفح",
     "status": {
       "available": "متاح",
       "borrowed": "مُستعار",

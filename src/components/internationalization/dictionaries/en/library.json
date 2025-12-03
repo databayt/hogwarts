@@ -31,6 +31,8 @@
     "video": "Book Video",
     "dueDate": "Due Date",
     "borrowedOn": "Borrowed On",
+    "newlyArrived": "Newly Arrived",
+    "browse": "Browse",
     "status": {
       "available": "Available",
       "borrowed": "Borrowed",
