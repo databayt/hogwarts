@@ -19,7 +19,7 @@ export function Hero() {
         </div>
 
         {/* Content for mobile */}
-        <div className="relative h-full flex flex-col items-start justify-center p-6 lg:hidden">
+        <div className="relative h-full flex flex-col items-start justify-center px-container lg:hidden">
           <div className="max-w-xl">
             <div className="flex items-center gap-2 mb-6">
               <Image src="/site/ball.png" alt="Hogwarts Logo" width={100} height={100} className="w-14 h-14 dark:invert"/>
@@ -51,7 +51,7 @@ export function Hero() {
       </div>
 
       {/* Desktop Content */}
-      <div className="relative hidden lg:flex items-center">
+      <div className="relative hidden lg:flex items-center container">
         <div className="max-w-xl">
           <div className="flex items-center gap-2">
             <Image src="/site/ball.png" alt="Hogwarts Logo" width={100} height={100} className="w-14 h-14 dark:invert"/>

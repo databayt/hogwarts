@@ -93,8 +93,9 @@ export function Features() {
         </div>
       </section>
 
-      {/* Stats Section - Outside container for proper full-bleed */}
-      <section className="bg-gradient-to-r from-purple-600 to-blue-600 py-16 text-white">
+      {/* Stats Section - Full-bleed like Houses/Faculty */}
+      <div className="full-bleed bg-gradient-to-r from-purple-600 to-blue-600">
+        <section className="py-16 text-white">
         <div className="container">
           <div className="text-center pb-12">
             <h2 className="font-heading font-extrabold text-4xl md:text-5xl mb-4">
@@ -125,7 +126,8 @@ export function Features() {
             ))}
           </div>
         </div>
-      </section>
+        </section>
+      </div>
     </>
   );
 } 
