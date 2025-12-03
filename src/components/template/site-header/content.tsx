@@ -30,7 +30,7 @@ interface SiteHeaderProps {
 export default async function SiteHeader({ school, locale }: SiteHeaderProps) {
   const session = await auth();
     return (
-      <header className="sticky top-0 z-50 w-full bg-background -mx-[var(--container-px)] px-[var(--container-px)]">
+      <header className="sticky top-0 z-50 bg-background">
           <div className="flex h-14 items-center justify-between">
             {/* Left side - Logo and Nav */}
             <MainNav items={marketingConfig.mainNav} school={school} locale={locale} />
