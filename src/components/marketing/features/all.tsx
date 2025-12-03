@@ -1,6 +1,5 @@
 import Link from "next/link"
 import { features } from "./constants"
-import PageHeading from "@/components/atom/page-heading"
 import { Search } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import type { getDictionary } from "@/components/internationalization/dictionaries";
@@ -14,17 +13,21 @@ interface Props {
 export default function AllFeatures(props: Props) {
   return (
     <div>
-        <div className="flex flex-col items-center space-y-8 mt-8">
-        <PageHeading title="Features" />
-        
-        <div className="relative w-full max-w-xs">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input 
-            type="search"
-            placeholder="Search features..."
-            className="w-full pl-10"
-          />
-        </div>
+        <div className="flex flex-col items-center text-center space-y-4 py-16">
+          <h1 className="font-heading font-bold tracking-tight text-4xl md:text-5xl lg:text-6xl">
+            Features
+          </h1>
+          <p className="text-muted-foreground text-lg md:text-xl max-w-2xl text-balance">
+            Feature-based pricing — pay only for what you need. Scale your school management with modules that grow with you.
+          </p>
+          <div className="relative w-full max-w-xs pt-4">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 translate-y-0.5 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="Search features..."
+              className="w-full pl-10"
+            />
+          </div>
         </div>
     
     <div className="grid grid-cols-1 gap-4 py-12 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
