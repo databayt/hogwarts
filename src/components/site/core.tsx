@@ -6,25 +6,25 @@ import Image from "next/image";
 export function Core() {
   const coreValues = [
     {
-      icon: <Image src="/anthropic/claude-code-best-practices.svg" alt="Network Nodes - Courage" width={48} height={48} className="dark:invert" />,
+      icon: <Image src="/anthropic/claude-code-best-practices.svg" alt="Network Nodes - Courage" width={64} height={64} className="dark:invert" />,
       title: "Courage",
       description: "Be brave, take risks, and stand up for what's right.",
       bgColor: "bg-rose-100"
     },
     {
-      icon: <Image src="/anthropic/category-06.svg" alt="Growth Flourish - Wisdom" width={48} height={48} className="dark:invert" />,
+      icon: <Image src="/anthropic/category-06.svg" alt="Growth Flourish - Wisdom" width={64} height={64} className="dark:invert" />,
       title: "Wisdom",
       description: "Reflect deeply and pursue understanding beyond facts.",
       bgColor: "bg-violet-100"
     },
     {
-      icon: <Image src="/anthropic/think-tool.svg" alt="Frame Boundary - Loyalty" width={48} height={48} className="dark:invert" />,
+      icon: <Image src="/anthropic/think-tool.svg" alt="Frame Boundary - Loyalty" width={64} height={64} className="dark:invert" />,
       title: "Loyalty",
       description: "Support each other and stay committed to shared goals.",
       bgColor: "bg-amber-100"
     },
     {
-      icon: <Image src="/anthropic/category-03.svg" alt="Reaching Ascent - Ambition" width={48} height={48} className="dark:invert" />,
+      icon: <Image src="/anthropic/category-03.svg" alt="Reaching Ascent - Ambition" width={64} height={64} className="dark:invert" />,
       title: "Ambition",
       description: "Excel, innovate, and make positive changes in the world.",
       bgColor: "bg-emerald-100"
@@ -50,7 +50,7 @@ export function Core() {
             </div>
               <CardHeader className="text-center">
                 <div className="flex justify-center">
-                  <div className={`w-20 h-20 ${value.bgColor} rounded-2xl flex items-center justify-center`}>
+                  <div className={`w-24 h-24 ${value.bgColor} rounded-2xl flex items-center justify-center`}>
                     {value.icon}
                   </div>
                 </div>

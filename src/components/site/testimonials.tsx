@@ -2,20 +2,15 @@
 
 import React from "react";
 import { InfiniteMovingCards } from "@/components/atom/infinite-cards";
-import { 
-  Star, 
-  Users,
-  GraduationCap,
-  Heart
-} from "lucide-react";
+import Image from "next/image";
 import SectionHeading from "../atom/section-heading";
 
 export function Testimonials() {
   const stats = [
-    { icon: <Star className="w-6 h-6" />, value: "4.9/5", label: "Parent Satisfaction" },
-    { icon: <GraduationCap className="w-6 h-6" />, value: "98%", label: "College Acceptance" },
-    { icon: <Users className="w-6 h-6" />, value: "500+", label: "Happy Families" },
-    { icon: <Heart className="w-6 h-6" />, value: "25+", label: "Years of Trust" }
+    { icon: <Image src="/anthropic/star-outline.svg" alt="Satisfaction" width={24} height={24} />, value: "4.9/5", label: "Parent Satisfaction" },
+    { icon: <Image src="/anthropic/graduation-cap.svg" alt="Acceptance" width={24} height={24} />, value: "98%", label: "College Acceptance" },
+    { icon: <Image src="/anthropic/users.svg" alt="Families" width={24} height={24} />, value: "500+", label: "Happy Families" },
+    { icon: <Image src="/anthropic/check-circle.svg" alt="Trust" width={24} height={24} />, value: "25+", label: "Years of Trust" }
   ];
 
   return (
@@ -30,9 +25,7 @@ export function Testimonials() {
             <div key={index} className="rounded-md p-6 text-center border border-card-border">
               <div className="flex justify-center pb-3">
                 <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
-                  <div className="text-primary">
-                    {stat.icon}
-                  </div>
+                  {stat.icon}
                 </div>
               </div>
               <div className="text-2xl font-bold pb-1">
