@@ -8,7 +8,7 @@ export function NewComers() {
       <div className="container">
         <div className="text-center">
             <p className="flex items-center justify-center gap-2 text-muted-foreground"><AlertTriangle className="h-4 w-4" /> Internal</p>
-          <h2 className="pb-4 ">
+          <h2 className="font-heading font-extrabold text-4xl md:text-5xl pb-4">
             New Comers
           </h2>
 

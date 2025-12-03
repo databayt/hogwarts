@@ -8,7 +8,7 @@ export function BackgroundGradientAnimationDemo() {
     <GradientAnimation height="h-[70vh]">
       <div className="absolute z-50 inset-0">
         <div className="text-center pt-16">
-          <h1 className="text-4xl font-bold text-primary-foreground dark:invert">
+          <h1 className="font-heading font-extrabold text-4xl md:text-5xl text-primary-foreground dark:invert">
             Ready to begin a journey of wonder?
           </h1>
           <p className="py-4 max-w-2xl mx-auto text-primary-foreground/80 dark:invert">

@@ -4,7 +4,7 @@ export default function FAQs() {
             <div className="mx-auto max-w-5xl px-6">
                 <div className="grid gap-y-12 px-2 lg:[grid-template-columns:1fr_auto]">
                     <div className="text-center lg:text-left">
-                        <h2 className="mb-4 text-3xl font-semibold md:text-4xl">
+                        <h2 className="font-heading font-extrabold text-4xl md:text-5xl mb-4">
                             Frequently <br className="hidden lg:block" /> Asked <br className="hidden lg:block" />
                             Questions
                         </h2>

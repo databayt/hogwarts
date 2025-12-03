@@ -7,7 +7,7 @@ export default function LetsWorkTogether() {
   return (
     <section className="py-20">
       <div className="container">
-        <h2 className="font-bold pb-2">Join the Community</h2>
+        <h2 className="font-heading font-extrabold text-4xl md:text-5xl pb-2">Join the Community</h2>
         <div className="flex flex-col lg:flex-row gap-8 lg:gap-14">
           <div className="flex-1">
             <p>

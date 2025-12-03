@@ -40,25 +40,25 @@
 
   @media (min-width: 640px) {
     :root {
-      --container-px: 2.5rem; /* 40px */
+      --container-px: 1rem; /* 16px */
     }
   }
 
   @media (min-width: 768px) {
     :root {
-      --container-px: 1.5rem; /* 24px */
+      --container-px: 1.25rem; /* 20px */
     }
   }
 
   @media (min-width: 1024px) {
     :root {
-      --container-px: 2rem; /* 32px */
+      --container-px: 1.5rem; /* 24px */
     }
   }
 
   @media (min-width: 1280px) {
     :root {
-      --container-px: 2.5rem; /* 40px */
+      --container-px: 2rem; /* 32px */
     }
   }
 
