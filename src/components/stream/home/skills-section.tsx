@@ -67,13 +67,13 @@ export function SkillsSection({ dictionary, lang }: Omit<StreamContentProps, 'sc
 
   return (
     <section className="py-16 md:py-24">
-      <div className="grid gap-8 lg:grid-cols-12 lg:gap-12 items-start">
-        {/* Left: Heading (3 cols) */}
+      <div className="grid gap-8 lg:grid-cols-12 lg:gap-12 items-center">
+        {/* Left: Heading (3 cols) - matches Udemy's narrow left column */}
         <div className={`lg:col-span-3 ${isRTL ? "lg:order-2 text-right" : ""}`}>
-          <h2 className="text-2xl md:text-3xl font-bold tracking-tight">
+          <h2 className="text-2xl md:text-[28px] font-bold leading-tight">
             {dictionary?.skills?.title || "Learn essential career and life skills"}
           </h2>
-          <p className="mt-4 text-muted-foreground">
+          <p className="mt-4 text-muted-foreground text-[15px] leading-relaxed">
             {dictionary?.skills?.description ||
               "Udemy helps you build in-demand skills fast and advance your career in a changing job market."}
           </p>
@@ -100,32 +100,38 @@ export function SkillsSection({ dictionary, lang }: Omit<StreamContentProps, 'sc
                   className="pl-4 basis-full sm:basis-1/2 lg:basis-1/3"
                 >
                   <Link href={`/${lang}${skill.href}`} className="block group">
-                    {/* Card Container */}
-                    <div className="relative overflow-hidden rounded-2xl bg-card shadow-sm hover:shadow-lg transition-shadow">
-                      {/* Image Section - Background style like Udemy */}
-                      <div className="relative h-56 sm:h-64 overflow-hidden">
+                    {/* Card - Udemy style with rounded corners and shadow */}
+                    <div className="relative overflow-hidden rounded-2xl bg-card border border-border/50 shadow-sm hover:shadow-xl transition-all duration-300 h-[380px] flex flex-col">
+                      {/* Image Section - Takes most of the card */}
+                      <div className="relative flex-1 overflow-hidden">
                         <Image
                           src={skill.image}
                           alt={skill.title}
                           fill
-                          className="object-cover transition-transform duration-300 group-hover:scale-105"
+                          className="object-cover transition-transform duration-500 group-hover:scale-105"
                         />
                       </div>
 
                       {/* Info Section - White bottom area */}
-                      <div className="p-4 bg-card">
-                        {/* Learner Count Badge */}
-                        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 mb-3 rounded-full bg-muted text-xs font-medium text-muted-foreground">
-                          <Users className="h-3.5 w-3.5" />
+                      <div className="p-4 bg-card flex flex-col gap-2">
+                        {/* Learner Count Badge - Small pill with border */}
+                        <div className="inline-flex items-center gap-1 px-2 py-0.5 w-fit rounded-full border border-border text-xs text-muted-foreground">
+                          <Users className="h-3 w-3" />
                           <span>{skill.learners}</span>
                         </div>
 
                         {/* Title with Arrow */}
-                        <div className={`flex items-center justify-between ${isRTL ? "flex-row-reverse" : ""}`}>
-                          <h4 className="font-semibold text-foreground">
+                        <div className={`flex items-end justify-between ${isRTL ? "flex-row-reverse" : ""}`}>
+                          <h4 className="font-medium text-foreground text-base">
                             {skill.title}
                           </h4>
-                          <ArrowRight className={`h-5 w-5 text-muted-foreground transition-transform group-hover:translate-x-1 ${isRTL ? "rotate-180 group-hover:-translate-x-1" : ""}`} />
+                          <ArrowRight
+                            className={cn(
+                              "h-5 w-5 text-muted-foreground transition-transform duration-300",
+                              "group-hover:translate-x-1",
+                              isRTL && "rotate-180 group-hover:-translate-x-1"
+                            )}
+                          />
                         </div>
                       </div>
                     </div>
@@ -134,31 +140,35 @@ export function SkillsSection({ dictionary, lang }: Omit<StreamContentProps, 'sc
               ))}
             </CarouselContent>
 
-            {/* Navigation Controls */}
-            <div className="flex items-center justify-center gap-4 mt-6">
+            {/* Navigation Controls - Centered below cards */}
+            <div className="flex items-center justify-center gap-3 mt-8">
+              {/* Previous Button */}
               <CarouselPrevious
-                className="static translate-y-0 h-10 w-10 rounded-full border-2"
+                variant="outline"
+                className="static translate-y-0 h-10 w-10 rounded-full border border-border bg-background hover:bg-accent"
               />
 
-              {/* Dot Indicators */}
-              <div className="flex items-center gap-2">
+              {/* Dot Indicators - Udemy style */}
+              <div className="flex items-center gap-1.5">
                 {Array.from({ length: count }).map((_, index) => (
                   <button
                     key={index}
                     onClick={() => scrollTo(index)}
                     className={cn(
-                      "h-2.5 w-2.5 rounded-full transition-all",
+                      "rounded-full transition-all duration-300",
                       current === index
-                        ? "bg-primary w-6"
-                        : "bg-muted-foreground/30 hover:bg-muted-foreground/50"
+                        ? "bg-primary h-2 w-5"
+                        : "bg-muted-foreground/25 h-2 w-2 hover:bg-muted-foreground/40"
                     )}
                     aria-label={`Go to slide ${index + 1}`}
                   />
                 ))}
               </div>
 
+              {/* Next Button */}
               <CarouselNext
-                className="static translate-y-0 h-10 w-10 rounded-full border-2"
+                variant="outline"
+                className="static translate-y-0 h-10 w-10 rounded-full border border-border bg-background hover:bg-accent"
               />
             </div>
           </Carousel>
