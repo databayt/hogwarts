@@ -14,9 +14,23 @@
 import { cn } from "@/lib/utils"
 import type { IconProps } from "../types"
 
+/**
+ * Size class mappings (using modern `size-*` utilities)
+ */
+export const SIZE_CLASSES = {
+  xs: "size-3",
+  sm: "size-4",
+  md: "size-5",
+  lg: "size-6",
+  xl: "size-8",
+  "2xl": "size-10",
+} as const
+
+export type IconSize = keyof typeof SIZE_CLASSES
+
 export type IconWrapperProps = IconProps & {
   /** Icon size preset */
-  size?: "xs" | "sm" | "md" | "lg" | "xl" | "2xl"
+  size?: IconSize
 
   /** Loading state */
   loading?: boolean
@@ -29,19 +43,20 @@ export type IconWrapperProps = IconProps & {
 }
 
 /**
- * Size class mappings
- */
-const SIZE_CLASSES = {
-  xs: "w-3 h-3",
-  sm: "w-4 h-4",
-  md: "w-6 h-6",
-  lg: "w-8 h-8",
-  xl: "w-12 h-12",
-  "2xl": "w-16 h-16",
-} as const
-
-/**
  * Icon Wrapper Component
+ *
+ * Use for wrapping custom SVG children:
+ * ```tsx
+ * <IconWrapper size="md" label="Custom icon">
+ *   <path d="..." />
+ * </IconWrapper>
+ * ```
+ *
+ * For named icons, use the Icon component or Icons namespace instead:
+ * ```tsx
+ * import { Icons } from "@/components/icons"
+ * <Icons.github className="size-5" />
+ * ```
  */
 export function IconWrapper({
   size = "md",
@@ -55,7 +70,7 @@ export function IconWrapper({
   // Build className
   const iconClassName = cn(
     SIZE_CLASSES[size],
-    "inline-block",
+    "inline-block shrink-0",
     loading && "animate-pulse opacity-50",
     error && "text-destructive",
     className
@@ -65,10 +80,10 @@ export function IconWrapper({
   const a11yProps = label
     ? {
         "aria-label": label,
-        role: "img",
+        role: "img" as const,
       }
     : {
-        "aria-hidden": "true",
+        "aria-hidden": true as const,
       }
 
   return (
@@ -78,7 +93,7 @@ export function IconWrapper({
       viewBox="0 0 24 24"
       stroke="currentColor"
       className={iconClassName}
-      {...(a11yProps as any)}
+      {...a11yProps}
       {...props}
     >
       {children}

@@ -190,6 +190,28 @@
   }
 }
 
+/* Icon semantic colors - uses existing theme tokens */
+@layer utilities {
+  .icon-primary {
+    color: var(--foreground);
+  }
+  .icon-muted {
+    color: var(--muted-foreground);
+  }
+  .icon-accent {
+    color: var(--primary);
+  }
+  .icon-destructive {
+    color: var(--destructive);
+  }
+  .icon-success {
+    color: var(--chart-2); /* Green from chart palette */
+  }
+  .icon-warning {
+    color: var(--chart-4); /* Yellow from chart palette */
+  }
+}
+
 body {
   overflow-x: hidden;
 }

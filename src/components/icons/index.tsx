@@ -41,8 +41,11 @@ export * from "./categories/shapes"
 /**
  * Icons Namespace
  *
- * Backward-compatible namespace for all icons.
- * Usage: <Icons.github className="w-6 h-6" />
+ * Unified namespace for all icons (shadcn pattern).
+ * Usage: <Icons.github className="size-5" />
+ *
+ * All icons use `currentColor` and inherit parent text color.
+ * Override with className: <Icons.github className="text-primary" />
  */
 export const Icons = {
   // System icons
@@ -59,18 +62,18 @@ export const Icons = {
   timesheet: SystemIcons.TimesheetIcon,
   trash: SystemIcons.TrashIcon,
 
-  // Integration icons
+  // Integration icons (consistent naming: lowercase, no "Icon" suffix in key)
   nextjs: IntegrationIcons.NextjsIcon,
-  reactIcon: IntegrationIcons.ReactIcon,
+  react: IntegrationIcons.ReactIcon,
   typescript: IntegrationIcons.TypescriptIcon,
   tailwindcss: IntegrationIcons.TailwindcssIcon,
   shadcnui: IntegrationIcons.ShadcnuiIcon,
   planetscale: IntegrationIcons.PlanetscaleIcon,
-  prismaIcon: IntegrationIcons.PrismaIcon,
-  zodIcon: IntegrationIcons.ZodIcon,
+  prisma: IntegrationIcons.PrismaIcon,
+  zod: IntegrationIcons.ZodIcon,
   reactHookForm: IntegrationIcons.ReactHookFormIcon,
   claude: IntegrationIcons.ClaudeIcon,
-  gitHub: IntegrationIcons.GitHubIcon,
+  github: IntegrationIcons.GitHubIcon,
   git: IntegrationIcons.GitIcon,
   figma: IntegrationIcons.FigmaIcon,
   discord: IntegrationIcons.DiscordIcon,
@@ -100,18 +103,18 @@ export const Icons = {
   mcp: DevelopmentIcons.McpIcon,
   cursor: DevelopmentIcons.CursorIcon,
   extensions: DevelopmentIcons.ExtensionsIcon,
-  mcpIcon: DevelopmentIcons.McpIconAlt,
+  mcpAlt: DevelopmentIcons.McpIconAlt,
 
   // Programming language icons
-  pythonIcon: ProgrammingIcons.PythonIcon,
-  rustIcon: ProgrammingIcons.RustIcon,
-  rIcon: ProgrammingIcons.RIcon,
+  python: ProgrammingIcons.PythonIcon,
+  rust: ProgrammingIcons.RustIcon,
+  r: ProgrammingIcons.RIcon,
 
   // Rating icons
-  excellentIcon: RatingIcons.ExcellentIcon,
-  goodIcon: RatingIcons.GoodIcon,
-  averageIcon: RatingIcons.AverageIcon,
-  poorIcon: RatingIcons.PoorIcon,
+  excellent: RatingIcons.ExcellentIcon,
+  good: RatingIcons.GoodIcon,
+  average: RatingIcons.AverageIcon,
+  poor: RatingIcons.PoorIcon,
 
   // Shape icons
   triangle: ShapeIcons.TriangleIcon,
@@ -123,7 +126,7 @@ export const Icons = {
  * Load icons by name from registry.
  * Usage: <Icon name="github" className="w-6 h-6" />
  */
-import type { IconProps } from "./types"
+import type { IconProps, IconComponent } from "./types"
 import { iconRegistry } from "./registry"
 
 export function Icon({
@@ -153,3 +156,38 @@ export function getIconCount(): number {
 export function getAllIconNames(): string[] {
   return Object.keys(Icons)
 }
+
+/**
+ * Get icon for programming language/file extension
+ *
+ * Usage:
+ * const Icon = getIconForLanguage("ts")
+ * <Icon className="size-4" />
+ */
+export function getIconForLanguage(language: string): IconComponent {
+  const lang = language.toLowerCase().replace(/^\./, "")
+
+  switch (lang) {
+    case "ts":
+    case "tsx":
+    case "typescript":
+      return Icons.typescript
+    case "py":
+    case "python":
+      return Icons.python
+    case "rs":
+    case "rust":
+      return Icons.rust
+    case "r":
+      return Icons.r
+    case "json":
+      return Icons.docs // fallback to docs for now
+    default:
+      return Icons.docs
+  }
+}
+
+/**
+ * Icon type - union of all icon names
+ */
+export type IconName = keyof typeof Icons
