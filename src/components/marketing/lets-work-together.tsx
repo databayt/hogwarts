@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { Icons } from "@/components/atom/icons"
+import { Icons } from "@/components/icons"
 import Link from "next/link"
 import type { Dictionary } from '@/components/internationalization/dictionaries'
 
@@ -29,15 +29,13 @@ export default function LetsWorkTogether({ dictionary }: LetsWorkTogetherProps) 
             {dict.description}
             </p>
             <div className="flex gap-4 mt-4 items-center">
-              <Link 
-                href="https://github.com/abdout/databayt" 
-                target="_blank" 
+              <Link
+                href="https://github.com/abdout/databayt"
+                target="_blank"
                 rel="noopener noreferrer"
                 className="hover:opacity-80 transition-opacity"
               >
-                <div className="w-[30px] h-[30px]">
-                  <Icons.gitHub />
-                </div>
+                <Icons.github className="size-7" />
               </Link>
               <Link
                 href="https://discord.gg/uPa4gGG62c"
@@ -45,9 +43,7 @@ export default function LetsWorkTogether({ dictionary }: LetsWorkTogetherProps) 
                 rel="noopener noreferrer"
                 className="hover:opacity-80 transition-opacity"
               >
-                <div className="w-[35px] h-[35px]">
-                  <Icons.discord />
-                </div>
+                <Icons.discord className="size-8" />
               </Link>
             </div>
           </div>

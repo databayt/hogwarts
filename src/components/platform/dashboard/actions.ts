@@ -222,7 +222,7 @@ export async function getTeacherDashboardData() {
 
   const upcomingDeadlines = upcomingExams.map((exam) => ({
     id: exam.id,
-    task: `${exam.title} - ${exam.class.name}`,
+    task: `${exam.title} - ${exam.class?.name || "Unknown Class"}`,
     dueDate: exam.examDate.toISOString(),
     type: "exam" as const,
   }));
@@ -230,10 +230,12 @@ export async function getTeacherDashboardData() {
   return {
     todaysClasses: todaysClasses.map((entry) => ({
       id: entry.id,
-      name: entry.class.name,
-      time: `${new Date(entry.period.startTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} - ${new Date(entry.period.endTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`,
+      name: entry.class?.name || "Unknown Class",
+      time: entry.period
+        ? `${new Date(entry.period.startTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} - ${new Date(entry.period.endTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`
+        : "TBA",
       room: entry.classroom?.roomName || "TBA",
-      students: entry.class._count.studentClasses,
+      students: entry.class?._count?.studentClasses || 0,
     })),
     pendingGrading: pendingGradingCount,
     attendanceDue: attendanceDueCount,
@@ -241,9 +243,9 @@ export async function getTeacherDashboardData() {
     pendingAssignments: pendingAssignments.map((assignment) => ({
       id: assignment.id,
       title: assignment.title,
-      className: assignment.class.name,
+      className: assignment.class?.name || "Unknown Class",
       dueDate: assignment.dueDate.toISOString(),
-      submissionsCount: assignment.submissions.length,
+      submissionsCount: assignment.submissions?.length || 0,
     })),
     classPerformance,
     upcomingDeadlines,
@@ -450,28 +452,30 @@ export async function getStudentDashboardData() {
   return {
     todaysTimetable: todaysTimetable.map((entry) => ({
       id: entry.id,
-      subject: entry.class.subject.subjectName,
-      className: entry.class.name,
-      teacher: `${entry.class.teacher.givenName} ${entry.class.teacher.surname}`,
+      subject: entry.class?.subject?.subjectName || "Unknown Subject",
+      className: entry.class?.name || "Unknown Class",
+      teacher: entry.class?.teacher
+        ? `${entry.class.teacher.givenName || ""} ${entry.class.teacher.surname || ""}`.trim() || "Unknown Teacher"
+        : "Unknown Teacher",
       room: entry.classroom?.roomName || "TBA",
-      startTime: entry.period.startTime.toISOString(),
-      endTime: entry.period.endTime.toISOString(),
+      startTime: entry.period?.startTime?.toISOString() || new Date().toISOString(),
+      endTime: entry.period?.endTime?.toISOString() || new Date().toISOString(),
     })),
     upcomingAssignments: upcomingAssignments.map((assignment) => ({
       id: assignment.id,
       title: assignment.title,
-      subject: assignment.class.subject.subjectName,
-      className: assignment.class.name,
+      subject: assignment.class?.subject?.subjectName || "Unknown Subject",
+      className: assignment.class?.name || "Unknown Class",
       dueDate: assignment.dueDate.toISOString(),
       status: assignment.submissions[0]?.status || "NOT_SUBMITTED",
       totalPoints: assignment.totalPoints,
     })),
     recentGrades: recentGrades.map((result) => ({
       id: result.id,
-      examTitle: result.exam.title,
-      subject: result.exam.subject.subjectName,
+      examTitle: result.exam?.title || "Unknown Exam",
+      subject: result.exam?.subject?.subjectName || "Unknown Subject",
       marksObtained: result.marksObtained,
-      totalMarks: result.exam.totalMarks,
+      totalMarks: result.exam?.totalMarks || 100,
       percentage: result.percentage,
       grade: result.grade,
     })),
@@ -663,18 +667,18 @@ export async function getParentDashboardData() {
     children,
     recentGrades: recentGrades.map((result) => ({
       id: result.id,
-      examTitle: result.exam.title,
-      subject: result.exam.subject.subjectName,
+      examTitle: result.exam?.title || "Unknown Exam",
+      subject: result.exam?.subject?.subjectName || "Unknown Subject",
       marksObtained: result.marksObtained,
-      totalMarks: result.exam.totalMarks,
+      totalMarks: result.exam?.totalMarks || 100,
       percentage: result.percentage,
       grade: result.grade,
     })),
     upcomingAssignments: upcomingAssignments.map((assignment) => ({
       id: assignment.id,
       title: assignment.title,
-      subject: assignment.class.subject.subjectName,
-      className: assignment.class.name,
+      subject: assignment.class?.subject?.subjectName || "Unknown Subject",
+      className: assignment.class?.name || "Unknown Class",
       dueDate: assignment.dueDate.toISOString(),
       status: assignment.submissions[0]?.status || "NOT_SUBMITTED",
       score: assignment.submissions[0]?.score ? Number(assignment.submissions[0].score) : null,

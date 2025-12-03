@@ -1,10 +1,11 @@
 import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 
 import { env } from "@/env.mjs";
 import { siteConfig } from "../config/site";
 import { cn, nFormatter } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
-import { Icons } from "../shared/icons";
+import { Icons } from "@/components/icons";
 import type { Locale } from "@/components/internationalization/config";
 
 interface HeroLandingProps {
@@ -41,7 +42,7 @@ export default async function HeroLanding({ lang }: HeroLandingProps) {
         >
           <span className="me-3">🎉</span>
           <span className="hidden md:flex">Introducing&nbsp;</span> Next Auth
-          Roles Template on <Icons.twitter className="ms-2 size-3.5" />
+          Roles Template on <Icons.tweets className="ms-2 size-3.5" />
         </Link>
 
         <h1 className="text-balance tracking-tight">
@@ -72,7 +73,7 @@ export default async function HeroLanding({ lang }: HeroLandingProps) {
             )}
           >
             <span>Go Pricing</span>
-            <Icons.arrowRight className="size-4" />
+            <ArrowRight className="size-4" />
           </Link>
           <Link
             href={siteConfig.links.github}
@@ -86,7 +87,7 @@ export default async function HeroLanding({ lang }: HeroLandingProps) {
               "px-5 rounded-full",
             )}
           >
-            <Icons.gitHub className="me-2 size-4" />
+            <Icons.github className="me-2 size-4" />
             <p>
               <span className="hidden sm:inline-block">Star on</span> GitHub{" "}
               <span>{nFormatter(stars)}</span>

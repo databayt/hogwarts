@@ -1,7 +1,7 @@
 import { LayoutGrid } from "lucide-react";
 import Link from "next/link";
 
-import { Icons } from "@/components/table/icons";
+import { Icons } from "@/components/icons";
 import { ModeToggle } from "@/components/table/layouts/mode-toggle";
 import { Button } from "@/components/ui/button";
 import { siteConfig } from "@/components/table/config/site";
@@ -34,7 +34,7 @@ export function SiteHeader() {
               target="_blank"
               rel="noopener noreferrer"
             >
-              <Icons.gitHub className="size-4" aria-hidden="true" />
+              <Icons.github className="size-4" aria-hidden="true" />
             </Link>
           </Button>
           <ModeToggle />

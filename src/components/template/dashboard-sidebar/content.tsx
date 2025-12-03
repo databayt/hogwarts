@@ -3,7 +3,6 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Sidebar,
   SidebarContent,
@@ -41,30 +40,28 @@ export default function DashboardSidebar({ ...props }: React.ComponentProps<type
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent className="border-0 bg-transparent">
-        <ScrollArea className="h-full">
-          <SidebarGroup className="p-2">
-            <SidebarMenu className="space-y-1">
-              {dashboardNav.map((item) => {
-                const isActive = pathname === item.href;
-                return (
-                  <SidebarMenuItem key={item.href}>
-                    <SidebarMenuButton asChild isActive={isActive} size="sm">
-                      <Link href={item.href} className="muted" onClick={handleLinkClick}>
-                        <span className="mr-2 inline-flex size-4 items-center justify-center">
-                          {(() => {
-                            const Icon = Icons[item.icon];
-                            return Icon ? <Icon className="h-4 w-4" /> : null;
-                          })()}
-                        </span>
-                        {item.title}
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
-          </SidebarGroup>
-        </ScrollArea>
+        <SidebarGroup className="p-2">
+          <SidebarMenu className="space-y-1">
+            {dashboardNav.map((item) => {
+              const isActive = pathname === item.href;
+              return (
+                <SidebarMenuItem key={item.href}>
+                  <SidebarMenuButton asChild isActive={isActive} size="sm">
+                    <Link href={item.href} className="muted" onClick={handleLinkClick}>
+                      <span className="mr-2 inline-flex size-4 items-center justify-center">
+                        {(() => {
+                          const Icon = Icons[item.icon];
+                          return Icon ? <Icon className="h-4 w-4" /> : null;
+                        })()}
+                      </span>
+                      {item.title}
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              );
+            })}
+          </SidebarMenu>
+        </SidebarGroup>
       </SidebarContent>
     </Sidebar>
   );
