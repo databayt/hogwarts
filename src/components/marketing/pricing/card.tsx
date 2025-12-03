@@ -85,7 +85,7 @@ export function PricingCard({ offer, isYearly, userId, subscriptionPlan, userRol
         "relative overflow-hidden rounded-2xl border-none  shadow-none bg-muted text-card-foreground flex flex-col items-start text-left h-full w-full",
       )}
     >
-      <CardHeader className="">
+      <CardHeader className="pb-4">
         <p className="lead text-foreground">{offer.title}</p>
         <CardTitle className="tracking-tight">
           {priceDisplay}
@@ -94,11 +94,11 @@ export function PricingCard({ offer, isYearly, userId, subscriptionPlan, userRol
           </span>
         </CardTitle>
       </CardHeader>
-      <div className="w-full px-6">
+      <div className="w-full px-6 py-2">
         <Separator />
       </div>
 
-      <CardContent className=" flex-1">
+      <CardContent className="pt-4 flex-1">
         <p className="muted mb-2">{includesHeading}</p>
         <ul>
           {offer.benefits.map((feature) => (

@@ -14,7 +14,7 @@ export function ComparePlans() {
   const renderCell = (value: string | boolean | null) => {
     if (value === null) return "—";
     if (typeof value === "boolean")
-      return value ? <CircleCheck className="mx-auto size-[22px]" /> : "—";
+      return value ? <CircleCheck className="mx-auto size-5" /> : "—";
     return value;
   };
 
@@ -26,7 +26,7 @@ export function ComparePlans() {
         subtitle="Find the perfect plan tailored for your business needs!"
       />
 
-      <div className="my-10 overflow-x-scroll max-lg:mx-[-0.8rem] md:overflow-x-visible">
+      <div className="my-10 overflow-x-scroll max-lg:-mx-3 md:overflow-x-visible">
         <table className="w-full table-fixed">
           <thead>
             <tr className="">
@@ -55,7 +55,7 @@ export function ComparePlans() {
                     {row.tooltip && (
                       <Popover>
                         <PopoverTrigger className="rounded p-1 hover:bg-muted">
-                          <Info className="size-[18px] text-muted-foreground" />
+                          <Info className="size-4 text-muted-foreground" />
                         </PopoverTrigger>
                         <PopoverContent
                           side="top"
