@@ -8,7 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 
 export function GitHubLink() {
   return (
-    <Button asChild size="sm" variant="ghost" className="h-8 shadow-none">
+    <Button asChild size="sm" variant="ghost" className="gap-1.5 px-3 has-[>svg]:px-2.5 h-8 shadow-none">
       <Link href={siteConfig.links.github} target="_blank" rel="noreferrer">
         <Icons.gitHub className="size-4" />
         <React.Suspense fallback={<Skeleton className="h-4 w-8" />}>

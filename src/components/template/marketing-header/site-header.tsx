@@ -20,7 +20,7 @@ export function SiteHeader({ dictionary }: SiteHeaderProps) {
                     <MobileNavButton items={marketingConfig.mainNav} dictionary={dictionary} />
                     <nav className="flex flex-1 items-center justify-end gap-0.5">
                         <CommandMenu dictionary={dictionary} />
-                        <Separator orientation="vertical" className="mx-1 hidden md:block" />
+                        <Separator orientation="vertical" className="ms-2 hidden lg:block" />
                         <GitHubLink />
                         <Separator orientation="vertical" className="mx-1" />
                         <LangSwitcher />

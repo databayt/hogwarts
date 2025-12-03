@@ -26,6 +26,7 @@ import * as DevelopmentIcons from "./categories/development"
 import * as ProgrammingIcons from "./categories/programming"
 import * as RatingIcons from "./categories/ratings"
 import * as ShapeIcons from "./categories/shapes"
+import * as AnthropicIcons from "./categories/anthropic"
 
 // Re-export individual icons for tree-shaking
 export * from "./categories/system"
@@ -37,6 +38,7 @@ export * from "./categories/development"
 export * from "./categories/programming"
 export * from "./categories/ratings"
 export * from "./categories/shapes"
+export * from "./categories/anthropic"
 
 /**
  * Icons Namespace
@@ -118,7 +120,28 @@ export const Icons = {
 
   // Shape icons
   triangle: ShapeIcons.TriangleIcon,
+
+  // Anthropic icons (UI - theme-aware)
+  anthropicA: AnthropicIcons.AnthropicAIcon,
+  anthropicArrowRight: AnthropicIcons.AnthropicArrowRightIcon,
+  anthropicChevronDown: AnthropicIcons.AnthropicChevronDownIcon,
+  anthropicExternalLink: AnthropicIcons.AnthropicExternalLinkIcon,
+  anthropicLinkedIn: AnthropicIcons.AnthropicLinkedInIcon,
+  anthropicPlay: AnthropicIcons.AnthropicPlayIcon,
+  anthropicYouTube: AnthropicIcons.AnthropicYouTubeIcon,
+  anthropicXTwitter: AnthropicIcons.AnthropicXTwitterIcon,
+
+  // Anthropic illustrative icons (brand colors)
+  handsBuild: AnthropicIcons.HandsBuildIcon,
 } as const
+
+/**
+ * Anthropic Illustration Paths
+ *
+ * For large illustrative icons, use as img src or Next/Image
+ * Usage: <Image src={ANTHROPIC_ILLUSTRATIONS.category01} alt="..." />
+ */
+export { ANTHROPIC_ILLUSTRATIONS } from "./categories/anthropic"
 
 /**
  * Dynamic Icon Component
