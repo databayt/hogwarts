@@ -11,22 +11,24 @@ const Time = ({ dictionary }: TimeProps) => {
     const timeDict = (dictionary as any).time || { title: 'Time', subtitle: 'We sell the origin of value.' };
 
     return (
-        <section className='my-40 rounded-md overflow-hidden'>
+        <section className='my-20 rounded-md overflow-hidden'>
             <GradientAnimation
                 height="h-auto"
-                containerClassName="py-12 md:py-16 lg:py-20"
-                className="relative z-10 flex flex-col items-center"
+                containerClassName="py-8 md:py-10"
+                className="relative z-10 flex items-center justify-center px-6"
             >
-                <div className='flex flex-col items-center text-center px-6'>
-                    <h1 className="font-heading font-semibold tracking-tight text-4xl md:text-5xl mb-4 text-white">
-                        {timeDict.title}
-                    </h1>
-                    <p className="font-heading text-lg md:text-xl text-white/90 mb-8">
-                        {timeDict.subtitle}
-                    </p>
-                </div>
-                <div>
-                    <Clock />
+                <div className='flex flex-col md:flex-row items-center gap-6 md:gap-12'>
+                    <div className='flex flex-col text-center md:text-start'>
+                        <h2 className="font-heading font-semibold tracking-tight text-3xl md:text-4xl mb-2 text-white">
+                            {timeDict.title}
+                        </h2>
+                        <p className="font-heading text-base md:text-lg text-white/90">
+                            {timeDict.subtitle}
+                        </p>
+                    </div>
+                    <div>
+                        <Clock />
+                    </div>
                 </div>
             </GradientAnimation>
         </section>
