@@ -212,6 +212,17 @@
   }
 }
 
+/* Anthropic brand colors for illustrative icons */
+:root {
+  --icon-dark: #141413;
+  --icon-light: #FAF9F5;
+}
+
+.dark {
+  --icon-dark: #FAF9F5;
+  --icon-light: #141413;
+}
+
 body {
   overflow-x: hidden;
 }
