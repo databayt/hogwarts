@@ -9,8 +9,6 @@ import {
   Carousel,
   CarouselContent,
   CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
   type CarouselApi,
 } from "@/components/ui/carousel"
 import { cn } from "@/lib/utils"
@@ -44,7 +42,7 @@ export function SkillsSection({ dictionary, lang }: Omit<StreamContentProps, 'sc
   const [count, setCount] = React.useState(0)
 
   const plugin = React.useRef(
-    Autoplay({ delay: 4000, stopOnInteraction: true })
+    Autoplay({ delay: 3000, stopOnInteraction: false, stopOnMouseEnter: true })
   )
 
   React.useEffect(() => {
@@ -67,8 +65,8 @@ export function SkillsSection({ dictionary, lang }: Omit<StreamContentProps, 'sc
 
   return (
     <section className="py-16 md:py-24">
-      <div className="grid gap-8 lg:grid-cols-12 lg:gap-12 items-center">
-        {/* Left: Heading (3 cols) - matches Udemy's narrow left column */}
+      <div className="grid gap-12 lg:grid-cols-12 lg:gap-16 items-center">
+        {/* Left: Heading (3 cols) with more padding */}
         <div className={`lg:col-span-3 ${isRTL ? "lg:order-2 text-right" : ""}`}>
           <h2 className="text-2xl md:text-[28px] font-bold leading-tight">
             {dictionary?.skills?.title || "Learn essential career and life skills"}
@@ -90,8 +88,6 @@ export function SkillsSection({ dictionary, lang }: Omit<StreamContentProps, 'sc
             }}
             plugins={[plugin.current]}
             className="w-full"
-            onMouseEnter={plugin.current.stop}
-            onMouseLeave={plugin.current.reset}
           >
             <CarouselContent className="-ml-4">
               {skills.map((skill) => (
@@ -100,10 +96,10 @@ export function SkillsSection({ dictionary, lang }: Omit<StreamContentProps, 'sc
                   className="pl-4 basis-full sm:basis-1/2 lg:basis-1/3"
                 >
                   <Link href={`/${lang}${skill.href}`} className="block group">
-                    {/* Card - Udemy style with rounded corners and shadow */}
-                    <div className="relative overflow-hidden rounded-2xl bg-card border border-border/50 shadow-sm hover:shadow-xl transition-all duration-300 h-[380px] flex flex-col">
-                      {/* Image Section - Takes most of the card */}
-                      <div className="relative flex-1 overflow-hidden">
+                    {/* Card - Udemy style */}
+                    <div className="relative overflow-hidden rounded-2xl bg-card border border-border/40 shadow-sm hover:shadow-xl transition-all duration-300 h-[400px] flex flex-col">
+                      {/* Image Section - Takes ~65% of card */}
+                      <div className="relative h-[65%] overflow-hidden">
                         <Image
                           src={skill.image}
                           alt={skill.title}
@@ -112,9 +108,9 @@ export function SkillsSection({ dictionary, lang }: Omit<StreamContentProps, 'sc
                         />
                       </div>
 
-                      {/* Info Section - White bottom area */}
-                      <div className="p-4 bg-card flex flex-col gap-2">
-                        {/* Learner Count Badge - Small pill with border */}
+                      {/* Info Section - White bottom area ~35% */}
+                      <div className="flex-1 p-4 bg-card flex flex-col justify-between">
+                        {/* Learner Count Badge */}
                         <div className="inline-flex items-center gap-1 px-2 py-0.5 w-fit rounded-full border border-border text-xs text-muted-foreground">
                           <Users className="h-3 w-3" />
                           <span>{skill.learners}</span>
@@ -140,16 +136,9 @@ export function SkillsSection({ dictionary, lang }: Omit<StreamContentProps, 'sc
               ))}
             </CarouselContent>
 
-            {/* Navigation Controls - Centered below cards */}
-            <div className="flex items-center justify-center gap-3 mt-8">
-              {/* Previous Button */}
-              <CarouselPrevious
-                variant="outline"
-                className="static translate-y-0 h-10 w-10 rounded-full border border-border bg-background hover:bg-accent"
-              />
-
-              {/* Dot Indicators - Udemy style */}
-              <div className="flex items-center gap-1.5">
+            {/* Dot Indicators Only - No arrows */}
+            <div className="flex items-center justify-center mt-8">
+              <div className="flex items-center gap-2">
                 {Array.from({ length: count }).map((_, index) => (
                   <button
                     key={index}
@@ -157,19 +146,13 @@ export function SkillsSection({ dictionary, lang }: Omit<StreamContentProps, 'sc
                     className={cn(
                       "rounded-full transition-all duration-300",
                       current === index
-                        ? "bg-primary h-2 w-5"
-                        : "bg-muted-foreground/25 h-2 w-2 hover:bg-muted-foreground/40"
+                        ? "bg-primary h-2.5 w-6"
+                        : "bg-muted-foreground/30 h-2.5 w-2.5 hover:bg-muted-foreground/50"
                     )}
                     aria-label={`Go to slide ${index + 1}`}
                   />
                 ))}
               </div>
-
-              {/* Next Button */}
-              <CarouselNext
-                variant="outline"
-                className="static translate-y-0 h-10 w-10 rounded-full border border-border bg-background hover:bg-accent"
-              />
             </div>
           </Carousel>
         </div>
