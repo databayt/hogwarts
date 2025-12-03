@@ -24,11 +24,11 @@ export function Hero() {
             <div className="flex items-center gap-2 mb-6">
               <Image src="/site/ball.png" alt="Hogwarts Logo" width={100} height={100} className="w-14 h-14 dark:invert"/>
             </div>
-            <h1 className="font-heading font-black text-4xl sm:text-5xl tracking-tight text-white py-4">
+            <h1 className="font-heading font-black text-4xl sm:text-5xl tracking-tighter text-white py-4">
               Beautiful Mind,<br />
               Curious. Wonder.
             </h1>
-            <p className="pb-6 text-white/80">
+            <p className="pb-6 text-white/80 max-w-[80%]">
               The most magical part of the Harry Potter books, is that they eventually used the skills they learned at school
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
@@ -56,11 +56,11 @@ export function Hero() {
           <div className="flex items-center gap-2">
             <Image src="/site/ball.png" alt="Hogwarts Logo" width={100} height={100} className="w-14 h-14 dark:invert"/>
           </div>
-          <h1 className="font-heading font-black text-5xl lg:text-6xl xl:text-7xl tracking-tight py-4">
+          <h1 className="font-heading font-black text-5xl lg:text-6xl xl:text-7xl tracking-tighter py-4">
             Beautiful Mind,<br />
             Curious. Wonder.
           </h1>
-          <p className="pb-6 text-muted-foreground">
+          <p className="pb-6 text-muted-foreground max-w-[80%]">
             The most magical part of the Harry Potter books, is that they eventually used the skills they learned at school
           </p>
           <div className="flex flex-row gap-4">

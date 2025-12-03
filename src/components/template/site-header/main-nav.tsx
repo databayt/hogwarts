@@ -43,24 +43,24 @@ export function MainNav({ items, children, school, locale }: MainNavProps) {
   const displayName = school.domain.charAt(0).toUpperCase() + school.domain.slice(1);
 
   return (
-    <div className="flex gap-6 md:gap-10">
-      <Link href={`/${locale}`} className="hidden items-center gap-2 md:flex">
-        <Image src="/logo.png" alt={`${displayName} Logo`} width={20} height={20} className="dark:invert" />
-        <span className="hidden sm:inline-block  ">
+    <div className="me-4 hidden md:flex">
+      <Link href={`/${locale}`} className="me-4 flex items-center gap-2 text-foreground lg:me-6">
+        <div className="-mt-[2px]">
+          <Image src="/logo.png" alt={`${displayName} Logo`} width={18} height={18} className="dark:invert" />
+        </div>
+        <h6 className="hidden font-bold lg:inline-block">
           {displayName}
-        </span>
+        </h6>
       </Link>
       {items?.length ? (
-        <nav className="hidden gap-6 md:flex">
+        <nav className="flex items-center gap-6 xl:gap-8">
           {items?.map((item, index) => (
             <Link
               key={index}
               href={item.disabled ? "#" : `/${locale}${item.href}`}
               className={cn(
-                "flex items-center text-sm transition-colors hover:text-foreground/80",
-                item.href.startsWith(`/${segment}`)
-                  ? "text-foreground"
-                  : "text-foreground/60",
+                "text-sm text-muted-foreground transition-colors hover:text-foreground",
+                item.href.startsWith(`/${segment}`) && "text-foreground",
                 item.disabled && "cursor-not-allowed opacity-80"
               )}
             >
