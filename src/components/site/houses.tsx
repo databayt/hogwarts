@@ -50,7 +50,7 @@ export function Houses() {
   ];
 
   return (
-      <section className="py-16 md:py-24 bg-muted -mx-[var(--container-px)] px-[var(--container-px)]">
+      <section className="py-16 md:py-24">
           <SectionHeading title="Houses" description="Find where your passion belongs." />
           
 

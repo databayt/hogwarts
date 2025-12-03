@@ -4,10 +4,10 @@ import { Button } from "../ui/button";
 
 export function BackgroundGradientAnimationDemo() {
   return (
-    <section className="-mx-[var(--container-px)]">
+    <section>
       <GradientAnimation height="h-[70vh]">
         <div className="absolute z-50 inset-0 flex items-center justify-center">
-          <div className="text-center px-[var(--container-px)]">
+          <div className="text-center">
             <h1 className="font-heading font-extrabold text-4xl md:text-5xl text-white">
               Ready to begin a journey of wonder?
             </h1>
