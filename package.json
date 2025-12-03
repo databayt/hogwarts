@@ -102,6 +102,7 @@
     "culori": "^4.0.2",
     "currency-codes": "^2.2.0",
     "date-fns": "^4.1.0",
+    "embla-carousel-autoplay": "^8.6.0",
     "embla-carousel-react": "^8.6.0",
     "framer-motion": "^12.23.12",
     "front-matter": "^4.0.2",
