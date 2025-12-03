@@ -8,7 +8,7 @@ export function Core() {
     {
       icon: <Image src="/anthropic/claude-code-best-practices.svg" alt="Network Nodes - Courage" width={32} height={32} className="dark:invert" />,
       title: "Courage",
-      description: "We encourage students to be brave in their learning, take intellectual risks, and stand up for what's right.",
+      description: "Be brave, take risks, and stand up for what's right.",
       color: "text-red-500",
       bgColor: "bg-red-50",
       borderColor: "border-red-500"
@@ -16,7 +16,7 @@ export function Core() {
     {
       icon: <Image src="/anthropic/category-06.svg" alt="Growth Flourish - Wisdom" width={32} height={32} className="dark:invert" />,
       title: "Wisdom",
-      description: "Knowledge becomes wisdom through reflection, critical thinking, and the pursuit of understanding beyond facts.",
+      description: "Reflect deeply and pursue understanding beyond facts.",
       color: "text-blue-500",
       bgColor: "bg-blue-50",
       borderColor: "border-blue-500"
@@ -24,7 +24,7 @@ export function Core() {
     {
       icon: <Image src="/anthropic/think-tool.svg" alt="Frame Boundary - Loyalty" width={32} height={32} className="dark:invert" />,
       title: "Loyalty",
-      description: "We build strong communities where students support each other and remain committed to shared goals.",
+      description: "Support each other and stay committed to shared goals.",
       color: "text-yellow-500",
       bgColor: "bg-yellow-50",
       borderColor: "border-yellow-500"
@@ -32,7 +32,7 @@ export function Core() {
     {
       icon: <Image src="/anthropic/category-03.svg" alt="Reaching Ascent - Ambition" width={32} height={32} className="dark:invert" />,
       title: "Ambition",
-      description: "We nurture the drive to excel, innovate, and make positive changes in the world through education.",
+      description: "Excel, innovate, and make positive changes in the world.",
       color: "text-green-500",
       bgColor: "bg-green-50",
       borderColor: "border-green-500"
