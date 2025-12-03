@@ -51,12 +51,12 @@ export default function EventCard() {
   ];
 
   return (
-    <div className="min-h-screen px-2 md:px-0">
-      <div className="">
+    <section className="py-14">
+      <div className="container">
         <SectionHeading
-        title="Events"
-        description="what's happening"
-      />
+          title="Events"
+          description="what's happening"
+        />
         {/* Events Grid */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-1 py-14">
           {events.map((event, index) => (
@@ -137,7 +137,6 @@ export default function EventCard() {
           </div>
         </div>
       </div>
-    </div>
+    </section>
   );
 }
-  

@@ -20,37 +20,38 @@ export default function Newsletter() {
 
   return (
     <section className="py-14">
-      <div className="flex justify-center pe-66">
-        <Image
-          src="/site/glass.png"
-          alt="Hogwarts Glasses"
-          width={80}
-          height={80}
-          className="object-contain -rotate-32 dark:invert"
+      <div className="container">
+        <div className="flex justify-center">
+          <Image
+            src="/site/glass.png"
+            alt="Hogwarts Glasses"
+            width={80}
+            height={80}
+            className="object-contain -rotate-12 dark:invert"
+          />
+        </div>
+
+        <SectionHeading
+          title="Newsletter"
+          description="Stay Updated with Hogwarts"
         />
-      </div>
-      
-      <SectionHeading
-        title="Newsletter"
-        description="Stay Updated with Hogwarts"
-      />
-      
-    <div className="flex  items-center gap-2 py-6 max-w-xs mx-auto">
-        <Input
-          type="email"
-          placeholder="Email Address"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          className="flex-1"
-        />
-        <Button
-          type="submit"
-          onClick={handleSubmit}
-          
-        >
-          Subscribe
-        </Button>
+
+        <div className="flex items-center gap-2 py-6 max-w-xs mx-auto">
+          <Input
+            type="email"
+            placeholder="Email Address"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            className="flex-1"
+          />
+          <Button
+            type="submit"
+            onClick={handleSubmit}
+          >
+            Subscribe
+          </Button>
+        </div>
       </div>
     </section>
   );

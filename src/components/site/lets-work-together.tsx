@@ -5,11 +5,10 @@ import { Icon } from '@iconify/react'
 
 export default function LetsWorkTogether() {
   return (
-   
-  
-      <div className="py-20">
+    <section className="py-20">
+      <div className="container">
         <h2 className="font-bold pb-2">Join the Community</h2>
-        <div className="flex flex-col lg:flex-row gap-8 lg:gap-14 ">
+        <div className="flex flex-col lg:flex-row gap-8 lg:gap-14">
           <div className="flex-1">
             <p>
             Ready to transform education with innovative learning solutions? Experience personalized programs and enhanced achievement.
@@ -59,6 +58,6 @@ export default function LetsWorkTogether() {
           </div>
         </div>
       </div>
-   
+    </section>
   )
 }
