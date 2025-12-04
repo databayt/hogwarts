@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import SectionHeading from "../atom/section-heading";
 import Link from "next/link";
+import { EncryptedText } from "@/components/atom/encrypted-text";
 
 export function Houses() {
   const houses = [
@@ -84,11 +85,15 @@ export function Houses() {
           <Button variant="ghost" asChild className='flex items-end justify-center hover:bg-transparent hover:underline p-0'>
               <Link href="/#" className="flex ">
                 <Image src="/site/hat.png" alt="Witch" width={40} height={40} className="dark:invert me-1"/>
-                Take Sorting Quiz
+                <EncryptedText
+                  text="Take Sorting Quiz"
+                  encryptedClassName="text-muted-foreground"
+                  revealedClassName="text-foreground"
+                  revealDelayMs={80}
+                  flipDelayMs={50}
+                />
               </Link>
             </Button>
-
-
           </div>
       </section>
   );
