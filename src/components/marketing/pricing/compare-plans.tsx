@@ -26,13 +26,13 @@ export function ComparePlans() {
 
       <div className="my-10 overflow-x-auto">
         <table className="w-full table-fixed">
-          <thead>
-            <tr className="">
-              <th className="sticky left-0 z-20 w-40 bg-background py-5 md:w-1/4 lg:top-14"></th>
+          <thead className="sticky top-14 z-10 bg-background">
+            <tr>
+              <th className="sticky left-0 z-20 w-40 bg-background py-5 md:w-1/4"></th>
               {plansColumns.map((col) => (
                 <th
                   key={col}
-                  className="sticky z-10 w-40 bg-background py-5 font-heading text-center text-black capitalize tracking-wide md:w-auto lg:top-14"
+                  className="w-40 bg-background py-5 font-heading text-center text-black capitalize tracking-wide md:w-auto"
                 >
                   {col}
                 </th>
