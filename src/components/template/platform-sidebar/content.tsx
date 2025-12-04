@@ -56,7 +56,7 @@ export default function PlatformSidebar({ school, lang, ...props }: PlatformSide
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader> */}
-      <SidebarContent className="border-0 bg-transparent [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+      <SidebarContent className="border-0 bg-transparent">
           <SidebarGroup className="p-2 pb-16">
             <SidebarMenu className="space-y-1 list-none">
               {platformNav
