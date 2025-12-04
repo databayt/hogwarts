@@ -10,24 +10,26 @@ const paymentMethods = [
 
 export function SecurePayment() {
   return (
-    <section className="w-full py-16 my-10 rounded-3xl bg-[#6A9BCC]">
-      <div className="flex flex-col md:flex-row gap-8 items-center px-8 md:px-12">
-        {/* Left side - Icon directly on blue bg */}
+    <section className="w-full py-16">
+      <div className="flex flex-col md:flex-row gap-8 items-center">
+        {/* Left side - Icon with blue bg */}
         <div className="w-full md:w-[30%] flex justify-center">
-          <Image
-            src="/anthropic/category-08.svg"
-            alt="Secure Payment"
-            width={200}
-            height={200}
-            className="object-contain"
-          />
+          <div className="w-56 h-56 rounded-3xl bg-[#6A9BCC] flex items-center justify-center">
+            <Image
+              src="/anthropic/category-08.svg"
+              alt="Secure Payment"
+              width={180}
+              height={180}
+              className="object-contain"
+            />
+          </div>
         </div>
 
-        {/* Right side - Content in column */}
+        {/* Right side - Content without bg */}
         <div className="w-full md:w-[70%] flex flex-col gap-4">
           <div>
-            <h2 className="text-white">Secure Payment Gateway</h2>
-            <p className="text-white/80 mt-2 max-w-xl">
+            <h2>Secure Payment Gateway</h2>
+            <p className="text-muted-foreground mt-2 max-w-xl">
               Your security is our priority. We use industry-leading encryption
               and security protocols to ensure your payment information is always protected.
             </p>
@@ -38,7 +40,7 @@ export function SecurePayment() {
             {paymentMethods.map((method) => (
               <div
                 key={method.name}
-                className="flex items-center justify-center w-14 h-9 bg-white rounded-md shadow-sm p-2"
+                className="flex items-center justify-center w-14 h-9 bg-muted rounded-md p-2"
               >
                 <Image
                   src={method.icon}
@@ -53,8 +55,8 @@ export function SecurePayment() {
 
           {/* Powered by Stripe */}
           <div className="flex items-center gap-2 mt-2">
-            <span className="text-white/70 text-sm">Powered by</span>
-            <span className="text-white font-semibold">Stripe</span>
+            <span className="text-sm text-muted-foreground">Powered by</span>
+            <span className="font-semibold">Stripe</span>
           </div>
         </div>
       </div>
