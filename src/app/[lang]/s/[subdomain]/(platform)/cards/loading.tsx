@@ -9,36 +9,52 @@ export default function CardsLoading() {
         <Skeleton className="h-4 w-64" />
       </div>
 
-      {/* 3-column grid layout */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {/* Stats */}
-        <Skeleton className="h-48" />
-        {/* Calendar */}
-        <Skeleton className="h-72" />
-        {/* Activity Goal */}
-        <Skeleton className="h-64" />
-        {/* Metric */}
-        <Skeleton className="h-64" />
-        {/* Exercise Minutes */}
-        <Skeleton className="h-64" />
-        {/* Forms */}
-        <Skeleton className="h-80" />
-        {/* Team Members */}
-        <Skeleton className="h-72" />
-        {/* Cookie Settings */}
-        <Skeleton className="h-64" />
-        {/* Create Account */}
-        <Skeleton className="h-80" />
-        {/* Chat */}
-        <Skeleton className="h-96" />
-        {/* Payment Method */}
-        <Skeleton className="h-80" />
-        {/* Report Issue */}
-        <Skeleton className="h-72" />
-        {/* Share */}
-        <Skeleton className="h-64" />
-        {/* Payments */}
-        <Skeleton className="h-96" />
+      {/* Main grid layout */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-10 xl:grid-cols-11">
+        {/* Left column */}
+        <div className="grid gap-4 lg:col-span-4 xl:col-span-6">
+          {/* Stats row */}
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Skeleton className="h-44" />
+            <Skeleton className="h-44" />
+          </div>
+
+          {/* Forms column */}
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="flex flex-col gap-4">
+              <Skeleton className="h-[500px]" />
+              <Skeleton className="h-48" />
+              <Skeleton className="h-36" />
+            </div>
+            <div className="flex flex-col gap-4">
+              <Skeleton className="h-80" />
+              <Skeleton className="h-72" />
+              <Skeleton className="h-64 hidden xl:block" />
+            </div>
+          </div>
+        </div>
+
+        {/* Right column */}
+        <div className="flex flex-col gap-4 lg:col-span-6 xl:col-span-5">
+          {/* Activity + Exercise */}
+          <div className="hidden gap-4 md:grid sm:grid-cols-2">
+            <Skeleton className="h-72" />
+            <Skeleton className="h-72" />
+            <Skeleton className="h-52 sm:col-span-2" />
+          </div>
+
+          {/* Payments table */}
+          <Skeleton className="h-[400px] hidden md:block" />
+
+          {/* Payment method */}
+          <Skeleton className="h-80" />
+
+          {/* Share card */}
+          <Skeleton className="h-64" />
+
+          {/* Report issue (mobile) */}
+          <Skeleton className="h-64 xl:hidden" />
+        </div>
       </div>
     </div>
   )

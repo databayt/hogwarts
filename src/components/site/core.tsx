@@ -15,13 +15,13 @@ export function Core() {
       icon: <Image src="/anthropic/category-06.svg" alt="Growth Flourish - Wisdom" width={64} height={64} className="dark:invert" />,
       title: "Wisdom",
       description: "Reflect deeply and pursue understanding beyond facts.",
-      bgColor: "bg-[#CBCADB]" // Anthropic lavender
+      bgColor: "bg-[#6A9BCC]" // Anthropic blue
     },
     {
       icon: <Image src="/anthropic/think-tool.svg" alt="Frame Boundary - Loyalty" width={64} height={64} className="dark:invert" />,
       title: "Loyalty",
       description: "Support each other and stay committed to shared goals.",
-      bgColor: "bg-[#E3DACC]" // Anthropic warm tan
+      bgColor: "bg-[#CBCADB]" // Anthropic lavender
     },
     {
       icon: <Image src="/anthropic/category-03.svg" alt="Reaching Ascent - Ambition" width={64} height={64} className="dark:invert" />,
@@ -34,14 +34,13 @@ export function Core() {
   return (
     <section className="py-16 md:py-24">
         {/* Header */}
-        <SectionHeading title="Core" description="We create an enchanting
-             inspired by the timeless virtues of courage, wisdom, loyalty, and ambition, these values guide everything we do at our school." />
+        <SectionHeading title="Core" description="These values guide everything we do at our school." />
 
         {/* Core Values */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 pt-14">
           {coreValues.map((value, index) => (
             <Card key={index} className="group rounded-md relative border-none shadow-none">
-               <div className="border-animation border border-muted absolute inset-0 pointer-events-none">
+               <div className="border-animation border absolute inset-0 pointer-events-none">
               <span className="absolute inset-0"></span>
               <div className="left-top absolute top-0 left-0"></div>
               <div className="left-bottom absolute bottom-0 left-0"></div>
