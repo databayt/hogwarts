@@ -38,18 +38,21 @@ export default async function SubjectsContent({ searchParams, dictionary, lang }
         include: {
           department: {
             select: {
-              departmentName: true
+              departmentName: true,
+              departmentNameAr: true
             }
           }
         }
       }),
       (db as any).subject.count({ where }),
     ])
-    data = rows.map((s: any) => ({ 
-      id: s.id, 
-      subjectName: s.subjectName, 
-      departmentName: s.department?.departmentName || 'Unknown', 
-      createdAt: (s.createdAt as Date).toISOString() 
+    data = rows.map((s: any) => ({
+      id: s.id,
+      subjectName: s.subjectName,
+      subjectNameAr: s.subjectNameAr || null,
+      departmentName: s.department?.departmentName || 'Unknown',
+      departmentNameAr: s.department?.departmentNameAr || null,
+      createdAt: (s.createdAt as Date).toISOString()
     }))
     total = count as number
   }
