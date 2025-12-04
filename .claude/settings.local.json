@@ -48,7 +48,8 @@
       "mcp__browser__playwright_evaluate",
       "mcp__shadcn__view_items_in_registries",
       "Bash(grep:*)",
-      "WebFetch(domain:cb.databayt.org)"
+      "WebFetch(domain:cb.databayt.org)",
+      "mcp__shadcn__get_project_registries"
     ],
     "deny": [],
     "ask": []

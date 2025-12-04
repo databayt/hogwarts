@@ -53,11 +53,11 @@ export function Core() {
                     {value.icon}
                   </div>
                 </div>
-                <CardTitle className="text-xl font-bold">
+                <CardTitle className="text-xl font-bold pt-4">
                   {value.title}
                 </CardTitle>
               </CardHeader>
-              <CardContent className="pt-0">
+              <CardContent className="-mt-2 pt-0">
                 <CardDescription className="text-center leading-relaxed">
                   {value.description}
                 </CardDescription>

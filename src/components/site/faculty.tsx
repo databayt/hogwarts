@@ -110,15 +110,12 @@ export function Faculty() {
                     <div className="w-3/5 ps-2 pe-6 space-y-2">
                       {/* Header */}
                       <div className="">
-                        <h3>
+                        <h3 className="font-bold">
                           {professor.name}
                         </h3>
-                        <p>
+                        <p className="text-muted-foreground">
                           {professor.title} <br />
                           {professor.subject}
-                        </p>
-                        <p>
-                          
                         </p>
                       </div>
 
