@@ -24,8 +24,8 @@ export function ComparePlans() {
         subtitle="Find the perfect plan tailored for your business needs!"
       />
 
-      {/* Sticky header row */}
-      <div className="sticky top-14 z-10 mt-10 bg-background">
+      {/* Sticky header row - flush with page header */}
+      <div className="sticky top-14 z-10 mt-10 bg-background border-b border-border">
         <div className="flex w-full">
           <div className="w-40 shrink-0 py-5 md:w-1/4"></div>
           {plansColumns.map((col) => (

@@ -40,7 +40,7 @@ export function Core() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 pt-14">
           {coreValues.map((value, index) => (
             <Card key={index} className="group rounded-md relative border-none shadow-none">
-               <div className="border-animation border absolute inset-0 pointer-events-none">
+               <div className="border-animation  absolute inset-0 pointer-events-none">
               <span className="absolute inset-0"></span>
               <div className="left-top absolute top-0 left-0"></div>
               <div className="left-bottom absolute bottom-0 left-0"></div>
