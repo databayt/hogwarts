@@ -1,28 +1,26 @@
 import Image from "next/image";
 
 const paymentMethods = [
-  { name: "Visa", color: "#1A1F71" },
-  { name: "Mastercard", color: "#EB001B" },
-  { name: "Amex", color: "#006FCF" },
-  { name: "Apple Pay", color: "#000000" },
-  { name: "Mada", color: "#006A4D" },
+  { name: "Visa", icon: "/payment/visa.svg" },
+  { name: "Mastercard", icon: "/payment/mastercard.svg" },
+  { name: "Amex", icon: "/payment/amex.svg" },
+  { name: "Apple Pay", icon: "/payment/apple-pay.svg" },
+  { name: "Mada", icon: "/payment/mada.svg" },
 ];
 
 export function SecurePayment() {
   return (
     <section className="w-full py-16 my-10 rounded-3xl bg-[#6A9BCC]">
       <div className="flex flex-col md:flex-row gap-8 items-center px-8 md:px-12">
-        {/* Left side - Icon Card */}
+        {/* Left side - Icon directly on blue bg */}
         <div className="w-full md:w-[30%] flex justify-center">
-          <div className="relative w-56 h-56 rounded-3xl bg-[#141413] flex items-center justify-center overflow-hidden">
-            <Image
-              src="/anthropic/category-08.svg"
-              alt="Secure Payment"
-              width={180}
-              height={180}
-              className="object-contain"
-            />
-          </div>
+          <Image
+            src="/anthropic/category-08.svg"
+            alt="Secure Payment"
+            width={200}
+            height={200}
+            className="object-contain"
+          />
         </div>
 
         {/* Right side - Content in column */}
@@ -40,11 +38,15 @@ export function SecurePayment() {
             {paymentMethods.map((method) => (
               <div
                 key={method.name}
-                className="flex items-center justify-center px-4 py-2 bg-white rounded-lg shadow-sm"
+                className="flex items-center justify-center w-14 h-9 bg-white rounded-md shadow-sm p-2"
               >
-                <span className="text-sm font-semibold" style={{ color: method.color }}>
-                  {method.name}
-                </span>
+                <Image
+                  src={method.icon}
+                  alt={method.name}
+                  width={36}
+                  height={24}
+                  className="object-contain"
+                />
               </div>
             ))}
           </div>
