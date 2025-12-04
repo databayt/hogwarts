@@ -1,5 +1,4 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { DashboardHeader } from "@/components/platform/dashboard/header"
 import { StatCard } from "../atom/stat-card"
 import { ActionCard } from "../atom/action-card"
 import { RecentTable } from "../atom/recent-table"
@@ -39,49 +38,43 @@ export async function AttendanceOverviewContent({
     : "0%"
 
   return (
-    <>
-      <DashboardHeader
-        heading={d?.title || "Attendance"}
-        text="Track and manage student attendance"
-      />
-
-      <div className="flex flex-col gap-6 py-4 pb-14">
-        {/* Quick Stats */}
+    <div className="flex flex-col gap-6 pb-14">
+        {/* Quick Stats - Core-inspired colors */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
           <StatCard
             title={d?.stats?.totalStudents || "Total Records"}
             value={statsResult.total}
             description={d?.stats?.enrolledStudents || "All attendance records"}
             iconName="Users"
-            variant="default"
+            iconBgColor="bg-[#6A9BCC]"
           />
           <StatCard
             title={d?.stats?.present || "Present"}
             value={statsResult.present}
             description={presentPercent}
             iconName="CircleCheck"
-            variant="success"
+            iconBgColor="bg-[#BCD1CA]"
           />
           <StatCard
             title={d?.stats?.absent || "Absent"}
             value={statsResult.absent}
             description={absentPercent}
             iconName="CircleAlert"
-            variant="danger"
+            iconBgColor="bg-[#D97757]"
           />
           <StatCard
             title={d?.stats?.late || "Late"}
             value={statsResult.late}
             description={latePercent}
             iconName="Clock"
-            variant="warning"
+            iconBgColor="bg-[#CBCADB]"
           />
           <StatCard
             title={d?.stats?.attendanceRate || "Attendance Rate"}
             value={`${statsResult.attendanceRate}%`}
             description={d?.stats?.overallRate || "Overall rate"}
             iconName="TrendingUp"
-            variant="info"
+            iconBgColor="bg-[#6A9BCC]"
           />
         </div>
 
@@ -151,6 +144,5 @@ export async function AttendanceOverviewContent({
           </CardContent>
         </Card>
       </div>
-    </>
   )
 }

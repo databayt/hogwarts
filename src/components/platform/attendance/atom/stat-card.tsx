@@ -36,6 +36,7 @@ interface StatCardProps {
   description?: string
   icon?: ElementType
   iconName?: string
+  iconBgColor?: string // Core-inspired background color for icon
   trend?: "up" | "down" | "neutral"
   trendValue?: string
   className?: string
@@ -71,6 +72,7 @@ export function StatCard({
   description,
   icon: IconProp,
   iconName,
+  iconBgColor,
   className,
   variant = "default",
 }: StatCardProps) {
@@ -82,7 +84,15 @@ export function StatCard({
     <Card className={cn("", className)}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium">{title}</CardTitle>
-        {Icon && <Icon className={cn("h-4 w-4", styles.icon)} />}
+        {Icon && (
+          iconBgColor ? (
+            <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", iconBgColor)}>
+              <Icon className="h-5 w-5 text-white dark:text-foreground" />
+            </div>
+          ) : (
+            <Icon className={cn("h-4 w-4", styles.icon)} />
+          )
+        )}
       </CardHeader>
       <CardContent>
         <div className={cn("text-2xl font-bold", styles.value)}>{value}</div>

@@ -13,7 +13,6 @@ export default async function AttendanceLayout({ children, params }: Props) {
   const dictionary = await getDictionary(lang as Locale)
   const d = dictionary?.school?.attendance
 
-  // MVP routes only - practical attendance management
   const attendancePages: PageNavItem[] = [
     {
       name: d?.overview || 'Overview',
@@ -24,20 +23,24 @@ export default async function AttendanceLayout({ children, params }: Props) {
       href: `/${lang}/s/${subdomain}/attendance/manual`,
     },
     {
-      name: 'QR Code',
-      href: `/${lang}/s/${subdomain}/attendance/qr-code`,
+      name: d?.qrCode || 'QR Code',
+      href: `/${lang}/s/${subdomain}/attendance/qrcode`,
     },
     {
-      name: (d?.bulkUpload as { title?: string } | undefined)?.title || 'Bulk Upload',
-      href: `/${lang}/s/${subdomain}/attendance/bulk-upload`,
+      name: d?.bulk || 'Bulk',
+      href: `/${lang}/s/${subdomain}/attendance/bulk`,
     },
     {
-      name: d?.reports || 'Reports',
-      href: `/${lang}/s/${subdomain}/attendance/reports`,
+      name: d?.advance || 'Advance',
+      href: `/${lang}/s/${subdomain}/attendance/advance`,
     },
     {
-      name: d?.settings || 'Settings',
-      href: `/${lang}/s/${subdomain}/attendance/settings`,
+      name: d?.config || 'Config',
+      href: `/${lang}/s/${subdomain}/attendance/config`,
+    },
+    {
+      name: d?.report || 'Report',
+      href: `/${lang}/s/${subdomain}/attendance/report`,
     },
   ]
 
