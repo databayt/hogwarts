@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { AnimatedButton } from "@/components/atom/animated-button";
+import { EncryptedText } from "@/components/atom/encrypted-text";
 import Image from "next/image";
 
 export function Hero() {
@@ -28,6 +29,15 @@ export function Hero() {
               Beautiful Mind,<br />
               Curious. Wonder.
             </h1>
+            <p className="pb-2 text-amber-400/90 font-medium italic">
+              <EncryptedText
+                text="The Sorting Hat sees your potential..."
+                encryptedClassName="text-amber-400/50"
+                revealedClassName="text-amber-400"
+                revealDelayMs={60}
+                flipDelayMs={40}
+              />
+            </p>
             <p className="pb-6 text-white/80 max-w-[80%]">
               The most magical part of the Harry Potter books, is that they eventually used the skills they learned at school
             </p>
@@ -51,7 +61,7 @@ export function Hero() {
       </div>
 
       {/* Desktop Content */}
-      <div className="relative hidden lg:flex items-center">
+      <div className="relative hidden lg:flex h-full items-center">
         <div className="max-w-xl">
           <div className="flex items-center gap-2">
             <Image src="/site/ball.png" alt="Hogwarts Logo" width={100} height={100} className="w-14 h-14 dark:invert"/>
@@ -60,6 +70,15 @@ export function Hero() {
             Beautiful Mind,<br />
             Curious. Wonder.
           </h1>
+          <p className="pb-2 text-amber-600 dark:text-amber-400 font-medium italic">
+            <EncryptedText
+              text="The Sorting Hat sees your potential..."
+              encryptedClassName="text-amber-600/50 dark:text-amber-400/50"
+              revealedClassName="text-amber-600 dark:text-amber-400"
+              revealDelayMs={60}
+              flipDelayMs={40}
+            />
+          </p>
           <p className="pb-6 text-muted-foreground max-w-[80%]">
             The most magical part of the Harry Potter books, is that they eventually used the skills they learned at school
           </p>
