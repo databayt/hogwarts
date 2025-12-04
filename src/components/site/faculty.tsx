@@ -57,10 +57,10 @@ export function Faculty() {
   ];
 
   const facultyStats = [
-    { icon: <Image src="/anthropic/graduation-cap.svg" alt="Experience" width={24} height={24} />, label: "Average Experience", value: "15+ Years", bgColor: "bg-violet-50" },
-    { icon: <Image src="/library/icons/star.svg" alt="Degrees" width={24} height={24} />, label: "Advanced Degrees", value: "100%", bgColor: "bg-amber-50" },
-    { icon: <Image src="/anthropic/book-open.svg" alt="Research" width={24} height={24} />, label: "Published Researchers", value: "85%", bgColor: "bg-sky-50" },
-    { icon: <Image src="/anthropic/user.svg" alt="Satisfaction" width={24} height={24} />, label: "Student Satisfaction", value: "98%", bgColor: "bg-emerald-50" }
+    { icon: <Image src="/anthropic/graduation-cap.svg" alt="Experience" width={24} height={24} />, label: "Average Experience", value: "15+ Years", bgColor: "bg-[#CBCADB]" }, // Anthropic lavender
+    { icon: <Image src="/library/icons/star.svg" alt="Degrees" width={24} height={24} />, label: "Advanced Degrees", value: "100%", bgColor: "bg-[#E3DACC]" }, // Anthropic warm tan
+    { icon: <Image src="/anthropic/book-open.svg" alt="Research" width={24} height={24} />, label: "Published Researchers", value: "85%", bgColor: "bg-[#6A9BCC]" }, // Anthropic blue
+    { icon: <Image src="/anthropic/user.svg" alt="Satisfaction" width={24} height={24} />, label: "Student Satisfaction", value: "98%", bgColor: "bg-[#BCD1CA]" } // Anthropic sage
   ];
 
   return (

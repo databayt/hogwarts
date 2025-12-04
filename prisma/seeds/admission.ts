@@ -1,12 +1,12 @@
 /**
- * Admission Seed Module
+ * Admission Seed Module - Bilingual (AR/EN)
  * Creates admission campaigns, applications, and communications
  */
 
 import { AdmissionStatus, AdmissionApplicationStatus, CommunicationType, CommunicationStatus, Gender } from "@prisma/client";
 import { faker } from "@faker-js/faker";
 import type { SeedPrisma, UserRef } from "./types";
-import { MALE_NAMES, FEMALE_NAMES, SURNAMES, getRandomName } from "./constants";
+import { MALE_NAMES, getRandomName } from "./constants";
 
 export async function seedAdmission(
   prisma: SeedPrisma,
@@ -76,9 +76,9 @@ export async function seedAdmission(
       appCounter++;
 
       const gender = Math.random() > 0.5 ? Gender.MALE : Gender.FEMALE;
-      const name = getRandomName(gender === Gender.MALE ? "M" : "F");
-      const fatherName = getRandomName("M");
-      const motherName = getRandomName("F");
+      const name = getRandomName(gender === Gender.MALE ? "M" : "F", appCounter);
+      const fatherName = getRandomName("M", appCounter + 1000);
+      const motherName = getRandomName("F", appCounter + 2000);
 
       const dateOfBirth = faker.date.between({
         from: `${baseYear - 18}-01-01`,
@@ -106,27 +106,30 @@ export async function seedAdmission(
       const isAdmitted = status === AdmissionApplicationStatus.ADMITTED;
       const isSelected = status === AdmissionApplicationStatus.SELECTED || isAdmitted;
 
+      // Use English names for database storage (bilingual)
+      const middleNameEn = MALE_NAMES.givenEn[appCounter % MALE_NAMES.givenEn.length];
+
       const application = await prisma.application.create({
         data: {
           schoolId,
           campaignId: campaign.id,
           applicationNumber: `APP-${baseYear}-${String(appCounter).padStart(4, "0")}`,
-          firstName: name.givenName,
-          middleName: MALE_NAMES[appCounter % MALE_NAMES.length],
-          lastName: name.surname,
+          firstName: name.givenNameEn,
+          middleName: middleNameEn,
+          lastName: name.surnameEn,
           dateOfBirth,
           gender,
           nationality: "Sudanese",
-          email: `${name.givenName.toLowerCase()}.applicant${appCounter}@demo.org`,
+          email: `${name.givenNameEn.toLowerCase()}.applicant${appCounter}@demo.org`,
           phone: `+249${faker.string.numeric(9)}`,
           address: faker.location.streetAddress(),
           city: faker.location.city(),
           state: "Red Sea",
           postalCode: "11111",
           country: "Sudan",
-          fatherName: `${fatherName.givenName} ${fatherName.surname}`,
+          fatherName: `${fatherName.givenNameEn} ${fatherName.surnameEn}`,
           fatherPhone: `+249${faker.string.numeric(9)}`,
-          motherName: `${motherName.givenName} ${motherName.surname}`,
+          motherName: `${motherName.givenNameEn} ${motherName.surnameEn}`,
           motherPhone: `+249${faker.string.numeric(9)}`,
           applyingForClass: grades[Math.floor(Math.random() * grades.length)],
           status,
@@ -148,16 +151,16 @@ export async function seedAdmission(
         status,
       });
 
-      // Communication
+      // Communication (using English names for email templates)
       const commTemplates: Record<AdmissionApplicationStatus, { subject: string; message: string } | null> = {
         [AdmissionApplicationStatus.DRAFT]: null,
-        [AdmissionApplicationStatus.SUBMITTED]: { subject: "Application Received", message: `Dear ${name.givenName}, Thank you for your application.` },
-        [AdmissionApplicationStatus.UNDER_REVIEW]: { subject: "Application Under Review", message: `Dear ${name.givenName}, Your application is under review.` },
-        [AdmissionApplicationStatus.SHORTLISTED]: { subject: "Application Shortlisted", message: `Congratulations ${name.givenName}! You have been shortlisted.` },
-        [AdmissionApplicationStatus.SELECTED]: { subject: "Admission Offer", message: `Congratulations ${name.givenName}! We offer you admission.` },
-        [AdmissionApplicationStatus.ADMITTED]: { subject: "Admission Confirmed", message: `Dear ${name.givenName}, Your admission is confirmed. Welcome!` },
-        [AdmissionApplicationStatus.WAITLISTED]: { subject: "Application Waitlisted", message: `Dear ${name.givenName}, You have been placed on the waitlist.` },
-        [AdmissionApplicationStatus.REJECTED]: { subject: "Application Status", message: `Dear ${name.givenName}, We regret to inform you...` },
+        [AdmissionApplicationStatus.SUBMITTED]: { subject: "Application Received", message: `Dear ${name.givenNameEn}, Thank you for your application.` },
+        [AdmissionApplicationStatus.UNDER_REVIEW]: { subject: "Application Under Review", message: `Dear ${name.givenNameEn}, Your application is under review.` },
+        [AdmissionApplicationStatus.SHORTLISTED]: { subject: "Application Shortlisted", message: `Congratulations ${name.givenNameEn}! You have been shortlisted.` },
+        [AdmissionApplicationStatus.SELECTED]: { subject: "Admission Offer", message: `Congratulations ${name.givenNameEn}! We offer you admission.` },
+        [AdmissionApplicationStatus.ADMITTED]: { subject: "Admission Confirmed", message: `Dear ${name.givenNameEn}, Your admission is confirmed. Welcome!` },
+        [AdmissionApplicationStatus.WAITLISTED]: { subject: "Application Waitlisted", message: `Dear ${name.givenNameEn}, You have been placed on the waitlist.` },
+        [AdmissionApplicationStatus.REJECTED]: { subject: "Application Status", message: `Dear ${name.givenNameEn}, We regret to inform you...` },
         [AdmissionApplicationStatus.ENTRANCE_SCHEDULED]: null,
         [AdmissionApplicationStatus.INTERVIEW_SCHEDULED]: null,
         [AdmissionApplicationStatus.WITHDRAWN]: null,

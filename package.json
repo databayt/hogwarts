@@ -13,6 +13,7 @@
     "lint": "next lint",
     "postinstall": "prisma generate",
     "db:seed": "tsx prisma/seeds/index.ts",
+    "db:seed:single": "tsx prisma/seeds/run-single.ts",
     "test": "vitest",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",

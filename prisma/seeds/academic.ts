@@ -35,7 +35,7 @@ export async function seedAcademic(
       data: {
         schoolId,
         yearId: schoolYear.id,
-        name: p.name,
+        name: p.nameEn, // English for database storage
         startTime: timeAt(p.startHour, p.startMin),
         endTime: timeAt(p.endHour, p.endMin),
       },

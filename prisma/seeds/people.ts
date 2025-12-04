@@ -1,5 +1,5 @@
 /**
- * People Seed Module - Realistic K-12 School
+ * People Seed Module - Bilingual (AR/EN)
  * Creates 25 teachers, 100 students, and their guardians
  *
  * Distribution:
@@ -31,7 +31,7 @@ import {
   SURNAMES,
   getRandomName,
   getBirthYearForGrade,
-  KHARTOUM_NEIGHBORHOODS,
+  getRandomNeighborhood,
 } from "./constants";
 
 // Track used email suffixes to ensure uniqueness
@@ -65,19 +65,19 @@ export async function seedPeople(
   const guardians: GuardianRef[] = [];
 
   // ============================================
-  // PHASE 1: Create Teachers (25 total)
+  // PHASE 1: Create Teachers (25 total) - Bilingual
   // ============================================
-  console.log("👨‍🏫 Creating teachers (25)...");
+  console.log("👨‍🏫 Creating teachers (25, Bilingual AR/EN)...");
 
   for (const [index, t] of TEACHER_DATA.entries()) {
     const email = `teacher${index + 1}@demo.databayt.org`;
-    const fullName = `${t.givenName} ${t.surname}`;
+    const fullNameEn = `${t.givenNameEn} ${t.surnameEn}`;
 
-    // Create user account
+    // Create user account (English name for database)
     const user = await prisma.user.create({
       data: {
         email,
-        username: fullName,
+        username: fullNameEn,
         role: UserRole.TEACHER,
         password: passwordHash,
         emailVerified: new Date(),
@@ -86,12 +86,12 @@ export async function seedPeople(
     });
     users.push({ id: user.id, email, role: UserRole.TEACHER });
 
-    // Create teacher profile
+    // Create teacher profile (English names for database)
     const teacher = await prisma.teacher.create({
       data: {
         schoolId,
-        givenName: t.givenName,
-        surname: t.surname,
+        givenName: t.givenNameEn,
+        surname: t.surnameEn,
         gender: t.gender,
         emailAddress: email,
         userId: user.id,
@@ -111,8 +111,8 @@ export async function seedPeople(
       },
     });
 
-    // Link teacher to department
-    const dept = departments.find((d) => d.departmentName === t.dept);
+    // Link teacher to department (using departmentEn from constants)
+    const dept = departments.find((d) => d.departmentName === t.departmentEn);
     if (dept) {
       await prisma.teacherDepartment.create({
         data: {
@@ -175,10 +175,11 @@ export async function seedPeople(
 
       // Alternate gender for realistic distribution
       const gender = i % 2 === 0 ? "M" : "F";
-      const studentData = getRandomName(gender);
+      const studentData = getRandomName(gender, studentIndex);
 
-      // Use consistent family surname
-      const familySurname = SURNAMES[studentIndex % SURNAMES.length];
+      // Use consistent family surname (English for database)
+      const familySurnameEn = SURNAMES.en[studentIndex % SURNAMES.en.length];
+      const familySurnameAr = SURNAMES.ar[studentIndex % SURNAMES.ar.length];
 
       // Calculate appropriate birth date for grade level
       const birthYear = getBirthYearForGrade(dist.level);
@@ -186,12 +187,12 @@ export async function seedPeople(
       const birthDay = faker.number.int({ min: 1, max: 28 });
       const dateOfBirth = new Date(Date.UTC(birthYear, birthMonth - 1, birthDay));
 
-      // Create student user
+      // Create student user (English name for database)
       const studentEmail = `student${studentIndex}@demo.databayt.org`;
       const studentUser = await prisma.user.create({
         data: {
           email: studentEmail,
-          username: `${studentData.givenName} ${familySurname}`,
+          username: `${studentData.givenNameEn} ${familySurnameEn}`,
           role: UserRole.STUDENT,
           password: passwordHash,
           emailVerified: new Date(),
@@ -200,24 +201,27 @@ export async function seedPeople(
       });
       users.push({ id: studentUser.id, email: studentEmail, role: UserRole.STUDENT });
 
-      // Create student profile
-      const middleName =
+      // Create student profile (English names for database)
+      const middleNameEn =
         gender === "M"
-          ? MALE_NAMES[(studentIndex + 10) % MALE_NAMES.length]
-          : FEMALE_NAMES[(studentIndex + 10) % FEMALE_NAMES.length];
+          ? MALE_NAMES.givenEn[(studentIndex + 10) % MALE_NAMES.givenEn.length]
+          : FEMALE_NAMES.givenEn[(studentIndex + 10) % FEMALE_NAMES.givenEn.length];
+
+      // Get neighborhood in bilingual format
+      const neighborhood = getRandomNeighborhood(studentIndex);
 
       const student = await prisma.student.create({
         data: {
           schoolId,
-          givenName: studentData.givenName,
-          middleName,
-          surname: familySurname,
+          givenName: studentData.givenNameEn,
+          middleName: middleNameEn,
+          surname: familySurnameEn,
           dateOfBirth,
           gender,
           userId: studentUser.id,
           enrollmentDate: new Date("2025-09-01"),
           studentId: `STU${String(studentIndex).padStart(4, "0")}`,
-          currentAddress: `${faker.helpers.arrayElement(KHARTOUM_NEIGHBORHOODS)}، الخرطوم`,
+          currentAddress: `${neighborhood.en}, Khartoum`,
           nationality: "Sudanese",
         },
       });
@@ -234,15 +238,15 @@ export async function seedPeople(
         },
       });
 
-      // Create Father
-      const fatherData = getRandomName("M");
+      // Create Father (English names for database)
+      const fatherData = getRandomName("M", studentIndex + 1000);
       const fatherEmail = `father${studentIndex}@demo.databayt.org`;
       const fatherPhone = `+249-9${faker.string.numeric(8)}`;
 
       const fatherUser = await prisma.user.create({
         data: {
           email: fatherEmail,
-          username: `${fatherData.givenName} ${familySurname}`,
+          username: `${fatherData.givenNameEn} ${familySurnameEn}`,
           role: UserRole.GUARDIAN,
           password: passwordHash,
           emailVerified: new Date(),
@@ -253,8 +257,8 @@ export async function seedPeople(
       const father = await prisma.guardian.create({
         data: {
           schoolId,
-          givenName: fatherData.givenName,
-          surname: familySurname,
+          givenName: fatherData.givenNameEn,
+          surname: familySurnameEn,
           emailAddress: fatherEmail,
           userId: fatherUser.id,
         },
@@ -271,15 +275,15 @@ export async function seedPeople(
 
       guardians.push({ id: father.id });
 
-      // Create Mother
-      const motherData = getRandomName("F");
+      // Create Mother (English names for database)
+      const motherData = getRandomName("F", studentIndex + 2000);
       const motherEmail = `mother${studentIndex}@demo.databayt.org`;
       const motherPhone = `+249-9${faker.string.numeric(8)}`;
 
       const motherUser = await prisma.user.create({
         data: {
           email: motherEmail,
-          username: `${motherData.givenName} ${familySurname}`,
+          username: `${motherData.givenNameEn} ${familySurnameEn}`,
           role: UserRole.GUARDIAN,
           password: passwordHash,
           emailVerified: new Date(),
@@ -290,8 +294,8 @@ export async function seedPeople(
       const mother = await prisma.guardian.create({
         data: {
           schoolId,
-          givenName: motherData.givenName,
-          surname: familySurname,
+          givenName: motherData.givenNameEn,
+          surname: familySurnameEn,
           emailAddress: motherEmail,
           userId: motherUser.id,
         },

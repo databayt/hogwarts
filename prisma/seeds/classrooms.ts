@@ -1,6 +1,6 @@
 /**
- * Classrooms Seed Module - Realistic K-12 School (100 Students)
- * Creates classroom types and rooms with bilingual naming (Arabic/English)
+ * Classrooms Seed Module - Bilingual (AR/EN)
+ * Creates classroom types and rooms with bilingual naming
  *
  * Layout for 100-student school:
  * - 2 KG Rooms
@@ -13,71 +13,45 @@
 import type { SeedPrisma, ClassroomRef } from "./types";
 import { CLASSROOMS } from "./constants";
 
+// Bilingual classroom types
+const CLASSROOM_TYPES = [
+  { en: "KG Classroom", ar: "فصل روضة" },
+  { en: "Standard Classroom", ar: "فصل دراسي" },
+  { en: "Laboratory", ar: "معمل" },
+  { en: "Computer Lab", ar: "معمل حاسوب" },
+  { en: "Library", ar: "مكتبة" },
+  { en: "Art Room", ar: "غرفة فنون" },
+  { en: "Sports Hall", ar: "صالة رياضية" },
+];
+
 export async function seedClassrooms(
   prisma: SeedPrisma,
   schoolId: string
 ): Promise<{ classrooms: ClassroomRef[] }> {
-  console.log("🏛️ Creating classrooms (17 rooms)...");
+  console.log("🏛️ Creating classrooms (17 rooms, Bilingual AR/EN)...");
 
-  // Create classroom types
-  const classroomTypes = [
-    "KG Classroom",
-    "Standard Classroom",
-    "Laboratory",
-    "Computer Lab",
-    "Library",
-    "Art Room",
-    "Sports Hall",
-  ];
-
+  // Create classroom types with bilingual names
   const typeMap = new Map<string, string>();
 
-  for (const typeName of classroomTypes) {
-    const type = await prisma.classroomType.create({
+  for (const type of CLASSROOM_TYPES) {
+    const classroomType = await prisma.classroomType.create({
       data: {
         schoolId,
-        name: typeName,
+        name: type.en, // English for database
       },
     });
-    typeMap.set(typeName, type.id);
+    typeMap.set(type.en, classroomType.id);
   }
 
-  console.log(`   ✅ Created: ${classroomTypes.length} classroom types`);
+  console.log(`   ✅ Created: ${CLASSROOM_TYPES.length} classroom types`);
 
-  // Create classrooms
-  const roomData = [
-    // KG Section
-    { name: "KG Room 1", type: "KG Classroom", capacity: 20 },
-    { name: "KG Room 2", type: "KG Classroom", capacity: 20 },
-
-    // Primary Section (Grades 1-6)
-    { name: "Room 101", type: "Standard Classroom", capacity: 25 },
-    { name: "Room 102", type: "Standard Classroom", capacity: 25 },
-    { name: "Room 103", type: "Standard Classroom", capacity: 25 },
-    { name: "Room 104", type: "Standard Classroom", capacity: 25 },
-    { name: "Room 105", type: "Standard Classroom", capacity: 25 },
-    { name: "Room 106", type: "Standard Classroom", capacity: 25 },
-
-    // Intermediate & Secondary Section (Grades 7-12)
-    { name: "Room 201", type: "Standard Classroom", capacity: 30 },
-    { name: "Room 202", type: "Standard Classroom", capacity: 30 },
-    { name: "Room 203", type: "Standard Classroom", capacity: 30 },
-    { name: "Room 204", type: "Standard Classroom", capacity: 30 },
-
-    // Specialized Rooms
-    { name: "Science Lab", type: "Laboratory", capacity: 25 },
-    { name: "Computer Lab", type: "Computer Lab", capacity: 25 },
-    { name: "Main Library", type: "Library", capacity: 40 },
-    { name: "Art Studio", type: "Art Room", capacity: 20 },
-    { name: "Sports Hall", type: "Sports Hall", capacity: 100 },
-  ];
-
+  // Create classrooms from bilingual constants
   const classrooms: ClassroomRef[] = [];
 
-  for (const r of roomData) {
-    const typeId = typeMap.get(r.type);
+  for (const room of CLASSROOMS) {
+    const typeId = typeMap.get(room.typeEn);
     if (!typeId) {
-      console.warn(`   ⚠️ Type not found: ${r.type}`);
+      console.warn(`   ⚠️ Type not found: ${room.typeEn}`);
       continue;
     }
 
@@ -85,18 +59,22 @@ export async function seedClassrooms(
       data: {
         schoolId,
         typeId,
-        roomName: r.name,
-        capacity: r.capacity,
+        roomName: room.nameEn, // English for database
+        capacity: room.capacity,
       },
     });
     classrooms.push({ id: classroom.id });
   }
 
+  // Count by type
+  const kgCount = CLASSROOMS.filter(r => r.typeEn === "KG Classroom").length;
+  const standardCount = CLASSROOMS.filter(r => r.typeEn === "Standard Classroom").length;
+  const specialCount = CLASSROOMS.filter(r => !["KG Classroom", "Standard Classroom"].includes(r.typeEn)).length;
+
   console.log(`   ✅ Created: ${classrooms.length} classrooms`);
-  console.log(`      - KG Rooms: 2`);
-  console.log(`      - Primary Classrooms: 6`);
-  console.log(`      - Secondary Classrooms: 4`);
-  console.log(`      - Specialized: 5 (Lab, Computer, Library, Art, Sports)\n`);
+  console.log(`      - KG Rooms: ${kgCount}`);
+  console.log(`      - Standard Classrooms: ${standardCount}`);
+  console.log(`      - Specialized: ${specialCount} (Lab, Computer, Library, Art, Sports)\n`);
 
   return { classrooms };
 }

@@ -1,14 +1,19 @@
 /**
- * Main Seed Orchestrator - Realistic K-12 School (100 Students)
+ * Main Seed Orchestrator - Bilingual K-12 School (AR/EN)
  * Coordinates all seed modules and runs them in proper order
  *
- * Creates a complete demo school with:
+ * Creates a complete demo school (demo.databayt.org) with:
  * - 100 students (K-12, 14 grade levels)
  * - 25 teachers (1:4 student ratio)
  * - 200 guardians (2 per student)
- * - Full curriculum (7-13 subjects per grade)
- * - Realistic class schedules
- * - Sample grades, attendance, assignments
+ * - Full bilingual curriculum (Arabic/English)
+ * - Sudanese education system (KG1-2, Grades 1-12)
+ * - SDG currency for finance
+ * - Realistic Arabic names, vendors, and addresses
+ *
+ * All data is bilingual:
+ * - Arabic (AR): Primary display language (RTL)
+ * - English (EN): Database storage for API compatibility
  */
 
 import { PrismaClient } from "@prisma/client";
@@ -39,8 +44,9 @@ const prisma = new PrismaClient() as SeedPrisma;
 
 async function main() {
   console.log("\n" + "=".repeat(60));
-  console.log("  🏫 REALISTIC K-12 SCHOOL SEED");
-  console.log("  📍 demo.databayt.org");
+  console.log("  🏫 BILINGUAL K-12 SCHOOL SEED (AR/EN)");
+  console.log("  📍 demo.databayt.org | مدرسة دار بايت التجريبية");
+  console.log("  🇸🇩 Sudanese Education System | النظام التعليمي السوداني");
   console.log("=".repeat(60) + "\n");
 
   const startTime = Date.now();

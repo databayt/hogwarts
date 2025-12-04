@@ -45,7 +45,7 @@ export function MainNav({ items, children, school, locale }: MainNavProps) {
   return (
     <div className="me-4 hidden md:flex">
       <Link href={`/${locale}`} className="me-4 flex items-center gap-2 text-foreground lg:me-6">
-        <div className="-mt-[2px]">
+        <div className="pt-0.5">
           <Image src="/logo.png" alt={`${displayName} Logo`} width={18} height={18} className="dark:invert" />
         </div>
         <h6 className="hidden font-bold lg:inline-block">

@@ -16,8 +16,10 @@ export function SiteHeader({ dictionary }: SiteHeaderProps) {
     return (
         <header className="sticky top-0 z-50 w-full bg-background">
             <div className="flex h-14 items-center gap-2 md:gap-4 **:data-[slot=separator]:!h-4">
+                    {/* Left: Nav items */}
                     <MainNav dictionary={dictionary} />
                     <MobileNavButton items={marketingConfig.mainNav} dictionary={dictionary} />
+                    {/* Right: Actions */}
                     <nav className="flex flex-1 items-center justify-end gap-0.5">
                         <CommandMenu dictionary={dictionary} />
                         <Separator orientation="vertical" className="ms-2 hidden lg:block" />

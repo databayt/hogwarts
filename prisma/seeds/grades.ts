@@ -1,13 +1,19 @@
 /**
- * Grades Seed Module
+ * Grades Seed Module - Bilingual (AR/EN)
  * Creates academic results (Result model) for the grades module
  * Populates data for K-12 students with various assignments and exams
+ *
+ * Features:
+ * - Bilingual assignment types (Arabic/English)
+ * - Bilingual feedback templates
+ * - Sudanese grading scale
+ * - GPA 4.0 scale calculation
  */
 
 import { faker } from "@faker-js/faker";
 import type { SeedPrisma, ClassRef, StudentRef, SubjectRef, TeacherRef } from "./types";
 
-// Grade calculation helper
+// Grade calculation helper - Sudanese scale
 function calculateGrade(percentage: number): string {
   if (percentage >= 95) return "A+";
   if (percentage >= 90) return "A";
@@ -23,62 +29,79 @@ function calculateGrade(percentage: number): string {
   return "F";
 }
 
-// Assignment types for variety
+// Bilingual assignment types for variety
 const ASSIGNMENT_TYPES = [
-  { title: "Homework Assignment", maxScore: 20 },
-  { title: "Weekly Quiz", maxScore: 25 },
-  { title: "Project Submission", maxScore: 50 },
-  { title: "Lab Report", maxScore: 30 },
-  { title: "Essay Assignment", maxScore: 40 },
-  { title: "Oral Presentation", maxScore: 25 },
-  { title: "Group Project", maxScore: 50 },
-  { title: "Research Paper", maxScore: 100 },
-  { title: "Practical Test", maxScore: 50 },
-  { title: "Class Participation", maxScore: 10 },
+  { titleEn: "Homework Assignment", titleAr: "واجب منزلي", maxScore: 20 },
+  { titleEn: "Weekly Quiz", titleAr: "اختبار أسبوعي", maxScore: 25 },
+  { titleEn: "Project Submission", titleAr: "تسليم مشروع", maxScore: 50 },
+  { titleEn: "Lab Report", titleAr: "تقرير معملي", maxScore: 30 },
+  { titleEn: "Essay Assignment", titleAr: "مقال كتابي", maxScore: 40 },
+  { titleEn: "Oral Presentation", titleAr: "عرض شفهي", maxScore: 25 },
+  { titleEn: "Group Project", titleAr: "مشروع جماعي", maxScore: 50 },
+  { titleEn: "Research Paper", titleAr: "بحث علمي", maxScore: 100 },
+  { titleEn: "Practical Test", titleAr: "اختبار عملي", maxScore: 50 },
+  { titleEn: "Class Participation", titleAr: "مشاركة صفية", maxScore: 10 },
+  { titleEn: "Midterm Exam", titleAr: "اختبار نصف الفصل", maxScore: 50 },
+  { titleEn: "Final Exam", titleAr: "الاختبار النهائي", maxScore: 100 },
+  { titleEn: "Book Report", titleAr: "تقرير كتاب", maxScore: 30 },
+  { titleEn: "Quran Recitation", titleAr: "تلاوة القرآن", maxScore: 25 },
+  { titleEn: "Arabic Dictation", titleAr: "إملاء عربي", maxScore: 20 },
 ];
 
-// Feedback templates
+// Bilingual feedback templates
 const FEEDBACK_TEMPLATES = {
   excellent: [
-    "Outstanding work! Keep it up!",
-    "Excellent performance. Shows deep understanding.",
-    "Impressive work. Very well done!",
-    "Exceptional effort and understanding demonstrated.",
-    "Superb work. You've exceeded expectations.",
+    { en: "Outstanding work! Keep it up!", ar: "عمل متميز! استمر!" },
+    { en: "Excellent performance. Shows deep understanding.", ar: "أداء ممتاز. يُظهر فهماً عميقاً." },
+    { en: "Impressive work. Very well done!", ar: "عمل مثير للإعجاب. أحسنت!" },
+    { en: "Exceptional effort and understanding demonstrated.", ar: "جهد استثنائي وفهم واضح." },
+    { en: "Superb work. You've exceeded expectations.", ar: "عمل رائع. تجاوزت التوقعات." },
+    { en: "A role model for your peers. Excellent!", ar: "قدوة لزملائك. ممتاز!" },
+    { en: "Mastery of the material demonstrated.", ar: "إتقان واضح للمادة." },
   ],
   good: [
-    "Good work. Keep improving!",
-    "Well done. A few areas to strengthen.",
-    "Solid performance. Continue this effort.",
-    "Good understanding shown. Keep practicing.",
-    "Nice work! Some room for improvement.",
+    { en: "Good work. Keep improving!", ar: "عمل جيد. استمر في التحسن!" },
+    { en: "Well done. A few areas to strengthen.", ar: "أحسنت. بعض الجوانب تحتاج تقوية." },
+    { en: "Solid performance. Continue this effort.", ar: "أداء قوي. استمر في هذا الجهد." },
+    { en: "Good understanding shown. Keep practicing.", ar: "فهم جيد. واصل الممارسة." },
+    { en: "Nice work! Some room for improvement.", ar: "عمل جيد! هناك مجال للتحسن." },
+    { en: "Making steady progress. Well done!", ar: "تحرز تقدماً ثابتاً. أحسنت!" },
+    { en: "Shows dedication and effort.", ar: "يُظهر التفاني والجهد." },
   ],
   average: [
-    "Satisfactory work. More practice needed.",
-    "Average performance. Focus on weak areas.",
-    "Acceptable work. Try to be more thorough.",
-    "Basic understanding shown. Keep working hard.",
-    "Decent effort. Review the material again.",
+    { en: "Satisfactory work. More practice needed.", ar: "عمل مرضٍ. يحتاج المزيد من الممارسة." },
+    { en: "Average performance. Focus on weak areas.", ar: "أداء متوسط. ركز على نقاط الضعف." },
+    { en: "Acceptable work. Try to be more thorough.", ar: "عمل مقبول. حاول أن تكون أكثر دقة." },
+    { en: "Basic understanding shown. Keep working hard.", ar: "فهم أساسي. واصل العمل بجد." },
+    { en: "Decent effort. Review the material again.", ar: "جهد لا بأس به. راجع المادة مرة أخرى." },
+    { en: "Can do better with more effort.", ar: "يمكنك الأفضل بمزيد من الجهد." },
+    { en: "Needs more attention to details.", ar: "يحتاج المزيد من الاهتمام بالتفاصيل." },
   ],
   needsImprovement: [
-    "Needs improvement. Please seek help if needed.",
-    "More effort required. Consider extra practice.",
-    "Below expectations. Let's discuss how to improve.",
-    "Struggling with concepts. Extra support recommended.",
-    "Requires more attention. Don't hesitate to ask for help.",
+    { en: "Needs improvement. Please seek help if needed.", ar: "يحتاج تحسناً. اطلب المساعدة إن لزم." },
+    { en: "More effort required. Consider extra practice.", ar: "يتطلب المزيد من الجهد. فكر في الممارسة الإضافية." },
+    { en: "Below expectations. Let's discuss how to improve.", ar: "أقل من المتوقع. دعنا نناقش كيفية التحسن." },
+    { en: "Struggling with concepts. Extra support recommended.", ar: "يواجه صعوبة في المفاهيم. يُنصح بالدعم الإضافي." },
+    { en: "Requires more attention. Don't hesitate to ask for help.", ar: "يحتاج المزيد من الاهتمام. لا تتردد في طلب المساعدة." },
+    { en: "Must improve. Consider tutoring sessions.", ar: "يجب التحسن. فكر في دروس خصوصية." },
+    { en: "Needs significant improvement in this area.", ar: "يحتاج تحسناً كبيراً في هذا المجال." },
   ],
 };
 
 function getFeedback(percentage: number): string {
+  let templateSet;
   if (percentage >= 85) {
-    return faker.helpers.arrayElement(FEEDBACK_TEMPLATES.excellent);
+    templateSet = FEEDBACK_TEMPLATES.excellent;
   } else if (percentage >= 70) {
-    return faker.helpers.arrayElement(FEEDBACK_TEMPLATES.good);
+    templateSet = FEEDBACK_TEMPLATES.good;
   } else if (percentage >= 55) {
-    return faker.helpers.arrayElement(FEEDBACK_TEMPLATES.average);
+    templateSet = FEEDBACK_TEMPLATES.average;
   } else {
-    return faker.helpers.arrayElement(FEEDBACK_TEMPLATES.needsImprovement);
+    templateSet = FEEDBACK_TEMPLATES.needsImprovement;
   }
+
+  const feedback = faker.helpers.arrayElement(templateSet);
+  return `${feedback.ar} | ${feedback.en}`;
 }
 
 export async function seedGrades(
@@ -89,7 +112,7 @@ export async function seedGrades(
   students: StudentRef[],
   teachers: TeacherRef[]
 ): Promise<void> {
-  console.log("📝 Creating academic results (grades)...");
+  console.log("📝 Creating academic results (Bilingual AR/EN)...");
 
   // Get assignments from the database (created by exams seed)
   const assignments = await prisma.assignment.findMany({
@@ -236,7 +259,7 @@ export async function seedGrades(
           maxScore,
           percentage,
           grade,
-          title: `${assignmentType.title} ${i + 1}`,
+          title: `${assignmentType.titleAr} | ${assignmentType.titleEn} ${i + 1}`,
           feedback: getFeedback(percentage),
           gradedAt: faker.date.recent({ days: 45 }),
         });

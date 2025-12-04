@@ -1,107 +1,65 @@
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { CheckCircle, Copy, Terminal, Folder } from "lucide-react"
-import Link from "next/link"
-
-# Local Development Setup
-
-Get Hogwarts running on your machine in under 10 minutes.
+---
+title: "Local Development Setup"
+description: "Get Hogwarts running on your machine in under 10 minutes."
+---
 
 ## Prerequisites
 
-<div className="grid gap-4 mt-6">
-  <div className="flex items-start gap-3 p-4 border rounded-lg">
-    <CheckCircle className="h-5 w-5 text-green-600 mt-0.5" />
-    <div className="flex-1">
-      <h4>Node.js 18.17+</h4>
-      <a href="https://nodejs.org" target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline">
-        Download from nodejs.org →
-      </a>
-    </div>
-  </div>
+**Node.js 18.17+**
 
-  <div className="flex items-start gap-3 p-4 border rounded-lg">
-    <CheckCircle className="h-5 w-5 text-green-600 mt-0.5" />
-    <div className="flex-1">
-      <h4>pnpm 9.x</h4>
-      <div className="mt-2 flex items-center justify-between bg-muted p-3 rounded">
-        <code className="text-sm">npm install -g pnpm@9</code>
-        <button className="p-1 hover:bg-background rounded">
-          <Copy className="h-4 w-4" />
-        </button>
-      </div>
-    </div>
-  </div>
+Download from [nodejs.org](https://nodejs.org)
 
-  <div className="flex items-start gap-3 p-4 border rounded-lg">
-    <CheckCircle className="h-5 w-5 text-green-600 mt-0.5" />
-    <div className="flex-1">
-      <h4>PostgreSQL Database</h4>
-      <div className="mt-2 space-y-2">
-        <a href="https://neon.tech" target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline block">
-          → Neon (Free cloud PostgreSQL)
-        </a>
-        <a href="https://www.postgresql.org/download/" target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline block">
-          → PostgreSQL (Local install)
-        </a>
-        <div className="flex items-center justify-between bg-muted p-3 rounded">
-          <code className="text-sm">docker run -d -p 5432:5432 -e POSTGRES_PASSWORD=postgres postgres:16</code>
-          <button className="p-1 hover:bg-background rounded">
-            <Copy className="h-4 w-4" />
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
+---
+
+**pnpm 9.x**
+```bash
+npm install -g pnpm@9
+```
+
+---
+
+**PostgreSQL Database**
+
+- [Neon](https://neon.tech) - Free cloud PostgreSQL (recommended)
+- [PostgreSQL](https://www.postgresql.org/download/) - Local install
+- Docker:
+```bash
+docker run -d -p 5432:5432 -e POSTGRES_PASSWORD=postgres postgres:16
+```
 
 ## Step 1: Clone Repository
 
-<div className="mt-6 space-y-3">
-  <div className="flex items-center justify-between bg-muted p-3 rounded">
-    <code className="text-sm">git clone https://github.com/databayt/hogwarts.git</code>
-    <button className="p-1 hover:bg-background rounded">
-      <Copy className="h-4 w-4" />
-    </button>
-  </div>
+**01. Clone the repository**
+```bash
+git clone https://github.com/databayt/hogwarts.git
+```
 
-  <div className="flex items-center justify-between bg-muted p-3 rounded">
-    <code className="text-sm">cd hogwarts</code>
-    <button className="p-1 hover:bg-background rounded">
-      <Copy className="h-4 w-4" />
-    </button>
-  </div>
-</div>
+---
+
+**02. Navigate to project**
+```bash
+cd hogwarts
+```
 
 ## Step 2: Install Dependencies
 
-<div className="mt-6 flex items-center justify-between bg-muted p-3 rounded">
-  <code className="text-sm">pnpm install</code>
-  <button className="p-1 hover:bg-background rounded">
-    <Copy className="h-4 w-4" />
-  </button>
-</div>
+```bash
+pnpm install
+```
 
 ## Step 3: Environment Configuration
 
-Create a `.env` file with your configuration:
+**01. Copy example file**
+```bash
+cp .env.example .env
+```
 
-<div className="mt-6 space-y-4">
-  <div className="flex items-center justify-between bg-muted p-3 rounded">
-    <code className="text-sm">cp .env.example .env</code>
-    <button className="p-1 hover:bg-background rounded">
-      <Copy className="h-4 w-4" />
-    </button>
-  </div>
+---
 
-  <div className="relative">
-    <div className="flex items-center justify-between mb-2">
-      <h4 className="text-sm font-medium">Ready-to-use .env file:</h4>
-      <button className="p-1 hover:bg-background rounded">
-        <Copy className="h-4 w-4" />
-      </button>
-    </div>
-    <pre className="bg-muted p-4 rounded overflow-x-auto text-sm">
-      <code>{`# Database Configuration
+**02. Configure .env file**
+
+```env
+# Database Configuration
 DATABASE_URL="postgresql://postgres:password@localhost:5432/hogwarts"
 # For Neon (recommended): Sign up at neon.tech and paste your connection string
 
@@ -121,87 +79,53 @@ EMAIL_FROM="noreply@hogwarts.edu"
 
 # Monitoring (optional)
 SENTRY_DSN=""
-VERCEL_ANALYTICS_ID=""`}</code>
-    </pre>
-  </div>
-</div>
+VERCEL_ANALYTICS_ID=""
+```
 
 ## Step 4: Database Setup
 
-<div className="mt-6 space-y-3">
-  <div className="flex items-center justify-between bg-muted p-3 rounded">
-    <code className="text-sm">pnpm prisma generate</code>
-    <button className="p-1 hover:bg-background rounded">
-      <Copy className="h-4 w-4" />
-    </button>
-  </div>
+**01. Generate Prisma client**
+```bash
+pnpm prisma generate
+```
 
-  <div className="flex items-center justify-between bg-muted p-3 rounded">
-    <code className="text-sm">pnpm prisma migrate dev</code>
-    <button className="p-1 hover:bg-background rounded">
-      <Copy className="h-4 w-4" />
-    </button>
-  </div>
+---
 
-  <div className="flex items-center justify-between bg-muted p-3 rounded">
-    <code className="text-sm">pnpm db:seed</code>
-    <button className="p-1 hover:bg-background rounded">
-      <Copy className="h-4 w-4" />
-    </button>
-  </div>
-</div>
+**02. Run migrations**
+```bash
+pnpm prisma migrate dev
+```
+
+---
+
+**03. Seed database**
+```bash
+pnpm db:seed
+```
 
 ## Step 5: Start Development Server
 
-<div className="mt-6 flex items-center justify-between bg-muted p-3 rounded">
-  <code className="text-sm">pnpm dev</code>
-  <button className="p-1 hover:bg-background rounded">
-    <Copy className="h-4 w-4" />
-  </button>
-</div>
+```bash
+pnpm dev
+```
 
-<Alert className="mt-4">
-  <CheckCircle className="h-4 w-4" />
-  <AlertDescription>
-    **Success!** Hogwarts is running at <a href="http://localhost:3000" className="font-semibold underline">http://localhost:3000</a>
-  </AlertDescription>
-</Alert>
+**Success!** Hogwarts is running at http://localhost:3000
 
 ## Test Accounts
 
-<div className="mt-6 p-4 bg-muted rounded-lg">
-  <div className="space-y-2 text-sm">
-    <div className="flex justify-between">
-      <span><strong>Admin:</strong></span>
-      <code>admin@gryffindor.edu / password123</code>
-    </div>
-    <div className="flex justify-between">
-      <span><strong>Teacher:</strong></span>
-      <code>minerva@gryffindor.edu / password123</code>
-    </div>
-    <div className="flex justify-between">
-      <span><strong>Student:</strong></span>
-      <code>harry@gryffindor.edu / password123</code>
-    </div>
-    <div className="flex justify-between">
-      <span><strong>Parent:</strong></span>
-      <code>james@potter.com / password123</code>
-    </div>
-  </div>
-</div>
+| Role | Email | Password |
+|------|-------|----------|
+| **Admin** | admin@gryffindor.edu | password123 |
+| **Teacher** | minerva@gryffindor.edu | password123 |
+| **Student** | harry@gryffindor.edu | password123 |
+| **Parent** | james@potter.com | password123 |
 
 ## Claude Code Setup
 
 Hogwarts includes advanced AI-powered development tools through Claude Code configuration:
 
-<div className="mt-6 p-4 border rounded-lg">
-  <h3 className="flex items-center gap-2 mb-4">
-    <Folder className="h-5 w-5" />
-    <span className="font-medium">.claude/ Directory Structure</span>
-  </h3>
-
-  <pre className="bg-muted p-4 rounded text-sm">
-    <code>{`.claude/
+```
+.claude/
 ├── agents/              # 33 specialized AI agents
 │   ├── orchestrate.md   # Master coordinator
 │   ├── next.md          # Next.js expert
@@ -221,90 +145,43 @@ Hogwarts includes advanced AI-powered development tools through Claude Code conf
 │   └── pre-commit.md    # Auto-validation
 ├── workflows/           # Automated pipelines
 │   └── ...
-└── settings.json        # Configuration`}</code>
-  </pre>
-</div>
+└── settings.json        # Configuration
+```
 
 ### Key Features
 
-<div className="grid gap-4 mt-6">
-  <div className="p-4 border rounded-lg">
-    <h4 className="font-medium mb-2">AI Agents</h4>
-    <p className="text-sm text-muted-foreground">33 specialized agents for code generation, testing, optimization, and architecture guidance.</p>
-  </div>
+**AI Agents**
 
-  <div className="p-4 border rounded-lg">
-    <h4 className="font-medium mb-2">Smart Commands</h4>
-    <p className="text-sm text-muted-foreground">22+ slash commands for common tasks like /build, /test, /ship, /fix-all.</p>
-  </div>
+33 specialized agents for code generation, testing, optimization, and architecture guidance.
 
-  <div className="p-4 border rounded-lg">
-    <h4 className="font-medium mb-2">Pre-commit Validation</h4>
-    <p className="text-sm text-muted-foreground">Automatic TypeScript, ESLint, and test validation before commits.</p>
-  </div>
+---
 
-  <div className="p-4 border rounded-lg">
-    <h4 className="font-medium mb-2">Error Prevention</h4>
-    <p className="text-sm text-muted-foreground">Detects and fixes 204+ common error patterns automatically.</p>
-  </div>
-</div>
+**Smart Commands**
+
+22+ slash commands for common tasks like /build, /test, /ship, /fix-all.
+
+---
+
+**Pre-commit Validation**
+
+Automatic TypeScript, ESLint, and test validation before commits.
+
+---
+
+**Error Prevention**
+
+Detects and fixes 204+ common error patterns automatically.
 
 ## Useful Commands
 
-<div className="mt-8 space-y-3">
-  <div className="flex items-center justify-between bg-muted p-3 rounded">
-    <div>
-      <code className="text-sm">pnpm build</code>
-      <span className="text-xs text-muted-foreground ml-3">Production build</span>
-    </div>
-    <button className="p-1 hover:bg-background rounded">
-      <Copy className="h-4 w-4" />
-    </button>
-  </div>
-
-  <div className="flex items-center justify-between bg-muted p-3 rounded">
-    <div>
-      <code className="text-sm">pnpm test</code>
-      <span className="text-xs text-muted-foreground ml-3">Run tests</span>
-    </div>
-    <button className="p-1 hover:bg-background rounded">
-      <Copy className="h-4 w-4" />
-    </button>
-  </div>
-
-  <div className="flex items-center justify-between bg-muted p-3 rounded">
-    <div>
-      <code className="text-sm">pnpm prisma studio</code>
-      <span className="text-xs text-muted-foreground ml-3">Visual database browser</span>
-    </div>
-    <button className="p-1 hover:bg-background rounded">
-      <Copy className="h-4 w-4" />
-    </button>
-  </div>
-
-  <div className="flex items-center justify-between bg-muted p-3 rounded">
-    <div>
-      <code className="text-sm">pnpm tsc --noEmit</code>
-      <span className="text-xs text-muted-foreground ml-3">Check TypeScript</span>
-    </div>
-    <button className="p-1 hover:bg-background rounded">
-      <Copy className="h-4 w-4" />
-    </button>
-  </div>
-</div>
+| Command | Description |
+|---------|-------------|
+| `pnpm build` | Production build |
+| `pnpm test` | Run tests |
+| `pnpm prisma studio` | Visual database browser |
+| `pnpm tsc --noEmit` | Check TypeScript |
 
 ## Next Steps
 
-<div className="mt-8 flex gap-4">
-  <Link href="/docs/contributing">
-    <button className="px-6 py-3 bg-primary text-primary-foreground rounded-md hover:opacity-90 transition-opacity">
-      Learn How to Contribute →
-    </button>
-  </Link>
-
-  <Link href="/docs/architecture">
-    <button className="px-6 py-3 border border-primary text-primary rounded-md hover:bg-primary hover:text-primary-foreground transition-colors">
-      Explore Architecture
-    </button>
-  </Link>
-</div>
+- [Learn How to Contribute](/docs/contributing)
+- [Explore Architecture](/docs/architecture)

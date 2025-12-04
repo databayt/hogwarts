@@ -1,105 +1,104 @@
-import { Copy } from "lucide-react"
-import Link from "next/link"
+---
+title: "Get Started"
+description: "Thanks for your interest in contributing to Hogwarts. We're happy to have you here."
+---
 
-# Get Started
-
-## 1. The Idea
+## The Idea
 
 Building a school automation platform like these real-world products:
-- [PowerSchool](https://www.powerschool.com) - $2.8B valuation, 45M students
-- [Skyward](https://www.skyward.com) - 5.7M students, 1,900+ districts
-- [Infinite Campus](https://www.infinitecampus.com) - 7.8M students, 50 US states
-- [Classter](https://www.classter.com) - 500K+ students, 40+ countries
 
-## 2. Run Localhost
+1. [PowerSchool](https://www.powerschool.com/) - $2.8B valuation, 45M students
+2. [Skyward](https://www.skyward.com/) - 5.7M students, 1,900+ districts
+3. [Infinite Campus](https://www.infinitecampus.com/) - 7.8M students, 50 US states
+4. [Classter](https://www.classter.com/) - 500K+ students, 40+ countries
 
-Quick setup in 5 minutes:
+_See more companies at [Competitors](/docs/competitors)._
 
-<div className="space-y-3 mt-4">
-  <div className="flex items-center justify-between bg-muted p-3 rounded">
-    <code className="text-sm">git clone https://github.com/databayt/hogwarts.git && cd hogwarts</code>
-    <button className="p-1 hover:bg-background rounded">
-      <Copy className="h-4 w-4" />
-    </button>
-  </div>
+## Localhost Setup
 
-  <div className="flex items-center justify-between bg-muted p-3 rounded">
-    <code className="text-sm">pnpm install</code>
-    <button className="p-1 hover:bg-background rounded">
-      <Copy className="h-4 w-4" />
-    </button>
-  </div>
+**01. Clone the repository**
+```bash
+git clone https://github.com/databayt/hogwarts.git && cd hogwarts
+```
 
-  <div className="flex items-center justify-between bg-muted p-3 rounded">
-    <code className="text-sm">cp .env.example .env</code>
-    <button className="p-1 hover:bg-background rounded">
-      <Copy className="h-4 w-4" />
-    </button>
-  </div>
+---
 
-  <div className="flex items-center justify-between bg-muted p-3 rounded">
-    <code className="text-sm">pnpm prisma generate && pnpm prisma migrate dev</code>
-    <button className="p-1 hover:bg-background rounded">
-      <Copy className="h-4 w-4" />
-    </button>
-  </div>
+**02. Install dependencies**
+```bash
+pnpm install
+```
 
-  <div className="flex items-center justify-between bg-muted p-3 rounded">
-    <code className="text-sm">pnpm dev</code>
-    <button className="p-1 hover:bg-background rounded">
-      <Copy className="h-4 w-4" />
-    </button>
-  </div>
-</div>
+---
 
-**Running at:** http://localhost:3000
+**03. Create environment file**
+```bash
+cp .env.example .env
+```
 
-<Link href="/docs/local-setup" className="text-sm text-primary hover:underline">
-  → Detailed setup guide with database options
-</Link>
+---
 
-## 3. Submit a PR
+**04. Generate Prisma client**
+```bash
+pnpm prisma generate && pnpm prisma migrate dev
+```
 
-<div className="space-y-3 mt-4">
-  <div className="flex items-center justify-between bg-muted p-3 rounded">
-    <code className="text-sm">git checkout -b feature/your-name</code>
-    <button className="p-1 hover:bg-background rounded">
-      <Copy className="h-4 w-4" />
-    </button>
-  </div>
+---
 
-  <div className="flex items-center justify-between bg-muted p-3 rounded">
-    <code className="text-sm">git add . && git commit -m "feat: add your change"</code>
-    <button className="p-1 hover:bg-background rounded">
-      <Copy className="h-4 w-4" />
-    </button>
-  </div>
+**05. Start dev server**
+```bash
+pnpm dev
+```
 
-  <div className="flex items-center justify-between bg-muted p-3 rounded">
-    <code className="text-sm">git push origin feature/your-name</code>
-    <button className="p-1 hover:bg-background rounded">
-      <Copy className="h-4 w-4" />
-    </button>
-  </div>
-</div>
+---
+
+**06. Open browser**
+
+Go to http://localhost:3000
+
+_For detailed setup, see [Localhost Setup](/docs/local-setup)._
+
+## Submit a PR
+
+**01. Create a new branch**
+```bash
+git checkout -b feature/your-name
+```
+
+---
+
+**02. Stage and commit changes**
+```bash
+git add . && git commit -m "feat: add your change"
+```
+
+---
+
+**03. Push to GitHub**
+```bash
+git push origin feature/your-name
+```
+
+---
 
 **Checklist:**
-- ✅ TypeScript passes (`pnpm tsc --noEmit`)
-- ✅ Tests pass (`pnpm test`)
-- ✅ Build succeeds (`pnpm build`)
-- ✅ Database queries include `schoolId`
+- TypeScript passes (`pnpm tsc --noEmit`)
+- Tests pass (`pnpm test`)
+- Build succeeds (`pnpm build`)
+- Database queries include `schoolId`
 
-<Link href="/docs/contributing" className="text-sm text-primary hover:underline">
-  → Full contribution guide
-</Link>
+_See [Contributing Guide](/docs/contributing) for full details._
 
-## 4. First Contribution
+## First Contribution
 
 Add your name to our contributors showcase:
 
-1. **Create a new file:** `src/app/[lang]/(marketing)/blog/contributors/YOUR-NAME.mdx`
+**01. Create a new file**
 
-2. **Add your info:**
+Create `src/app/[lang]/(marketing)/blog/contributors/YOUR-NAME.mdx`
+
+---
+
+**02. Add your info**
 ```mdx
 ---
 name: Your Name
@@ -112,6 +111,10 @@ date: 2024-11-21
 Hi! I'm contributing to Hogwarts because [your reason].
 ```
 
-3. **Submit PR** with title: `feat: add [Your Name] to contributors`
+---
 
-That's it! Welcome to Hogwarts 🎉
+**03. Submit PR**
+
+Create PR with title: `feat: add [Your Name] to contributors`
+
+**That's it! Welcome to Hogwarts.**

@@ -1,6 +1,12 @@
 /**
- * Attendance Seed Module
+ * Attendance Seed Module - Sudanese K-12 School
  * Creates realistic attendance data for 30 days
+ *
+ * Features:
+ * - Sudanese weekend (Friday/Saturday)
+ * - Realistic distribution: 85% present, 5% late, 8% absent
+ * - Student identifiers (barcode, RFID)
+ * - QR code sessions for check-in
  */
 
 import type { AttendanceStatus, AttendanceMethod, IdentifierType } from "@prisma/client";
@@ -12,7 +18,7 @@ export async function seedAttendance(
   classes: ClassRef[],
   students: StudentRef[]
 ): Promise<void> {
-  console.log("📊 Creating attendance data...");
+  console.log("📊 Creating attendance data (Sudanese K-12 School)...");
 
   // Get class enrollments to know which students are in which class
   const enrollments = await prisma.studentClass.findMany({

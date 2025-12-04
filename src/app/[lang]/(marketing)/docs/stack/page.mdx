@@ -1,38 +1,46 @@
-import Stack from "./stack"
+---
+title: "Technology Stack"
+description: "State-of-art technology powering Hogwarts"
+---
 
-## Technology Stack
+import Stack from "./stack"
 
 <Stack />
 
-This project uses a pragmatic, typed, and component-driven stack that fits a small remote team and Sudan’s constraints (low bandwidth, mobile-first).
+Hogwarts is built on a carefully curated technology stack that prioritizes performance, developer experience, and scalability. Our architecture follows modern best practices and leverages industry-leading tools across the full development lifecycle.
 
-- Next.js (App Router, Server Components, Server Actions)
-- React + TypeScript
-- Tailwind CSS
-- shadcn/ui (Radix primitives)
-- Prisma ORM
-- Neon (Postgres serverless)
-- Auth.js
-- Zod + React Hook Form
-- Vercel (or similar) for deploys
+**Next.js 15**: Our React-based meta-framework providing server-side rendering, static site generation, and powerful developer tooling. Features App Router, streaming, and built-in optimizations for production-ready applications.
 
-### Local development (5-minute setup)
+**React 19**: Component-based UI library enabling declarative, efficient user interfaces with concurrent features, server components, and enhanced developer experience.
 
-```bash
-pnpm install
-pnpm dev
-```
+**TypeScript**: Strongly-typed JavaScript superset enhancing code reliability, maintainability, and developer productivity through comprehensive static analysis and IDE integration.
 
-If Prisma models or env changed:
+**Node.js**: JavaScript runtime built on Chrome's V8 engine, enabling server-side execution with event-driven, non-blocking I/O for scalable network applications.
 
-```bash
-pnpm prisma generate
-pnpm prisma migrate dev --name init
-```
+**Tailwind CSS**: Utility-first CSS framework enabling rapid, consistent, and maintainable styling with excellent performance characteristics and design system integration.
 
-### Why this stack
+**shadcn/ui**: High-quality, accessible React components built on Radix UI primitives, providing a solid foundation for consistent user experiences.
 
-- Type-safety end-to-end (Prisma + TS + Zod)
-- Accessible, consistent UI via shadcn/ui
-- Serverless DB (Neon) fits cost and scale-to-zero
-- Simple deploy story (Vercel) and preview envs
+**Neon**: Serverless PostgreSQL platform providing branching workflows, horizontal scaling, and zero-downtime schema changes with enterprise-grade reliability.
+
+**Prisma**: Next-generation ORM offering type-safe database access, intuitive schema management, and powerful query capabilities with excellent TypeScript integration.
+
+**Vercel**: Frontend cloud platform providing instant deployments, automatic scaling, and edge optimization with seamless Git integration and performance monitoring.
+
+**Zod**: TypeScript-first schema validation library ensuring runtime type safety and comprehensive data validation across API boundaries.
+
+**React Hook Form**: Performant, flexible forms library with minimal re-renders, built-in validation, and excellent developer experience for complex form scenarios.
+
+**Auth.js**: Comprehensive authentication library providing secure, standards-compliant authentication with support for multiple providers and advanced security features.
+
+**Claude**: Advanced AI assistant integrated for intelligent code completion, documentation generation, and development workflow optimization.
+
+**Python**: Versatile programming language powering our AI/ML pipelines, data processing, and backend automation with extensive ecosystem support.
+
+**Rust**: Systems programming language ensuring memory safety and high performance for critical components requiring zero-cost abstractions.
+
+**Figma**: Collaborative design platform enabling seamless design-to-development workflows, component libraries, and cross-functional team alignment.
+
+---
+
+**This stack offers ecosystem harmony, ranks among the best in annual Stack Overflow benchmarks, and supports AI-assisted component creation and improvement.**

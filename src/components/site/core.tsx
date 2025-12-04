@@ -9,25 +9,25 @@ export function Core() {
       icon: <Image src="/anthropic/claude-code-best-practices.svg" alt="Network Nodes - Courage" width={64} height={64} className="dark:invert" />,
       title: "Courage",
       description: "Be brave, take risks, and stand up for what's right.",
-      bgColor: "bg-rose-100"
+      bgColor: "bg-[#D97757]" // Anthropic terracotta
     },
     {
       icon: <Image src="/anthropic/category-06.svg" alt="Growth Flourish - Wisdom" width={64} height={64} className="dark:invert" />,
       title: "Wisdom",
       description: "Reflect deeply and pursue understanding beyond facts.",
-      bgColor: "bg-violet-100"
+      bgColor: "bg-[#CBCADB]" // Anthropic lavender
     },
     {
       icon: <Image src="/anthropic/think-tool.svg" alt="Frame Boundary - Loyalty" width={64} height={64} className="dark:invert" />,
       title: "Loyalty",
       description: "Support each other and stay committed to shared goals.",
-      bgColor: "bg-amber-100"
+      bgColor: "bg-[#E3DACC]" // Anthropic warm tan
     },
     {
       icon: <Image src="/anthropic/category-03.svg" alt="Reaching Ascent - Ambition" width={64} height={64} className="dark:invert" />,
       title: "Ambition",
       description: "Excel, innovate, and make positive changes in the world.",
-      bgColor: "bg-emerald-100"
+      bgColor: "bg-[#BCD1CA]" // Anthropic sage
     }
   ];
 

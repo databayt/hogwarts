@@ -78,14 +78,14 @@ export async function seedClasses(
     select: { id: true, givenName: true, surname: true },
   });
 
-  // Create teacher-specialty map
+  // Create teacher-specialty map (using English specialty for database matching)
   const teacherSpecialtyMap = new Map<string, string>();
   const teacherLevelMap = new Map<string, string[]>();
 
   for (const [index, t] of TEACHER_DATA.entries()) {
     const teacher = teacherRecords[index];
     if (teacher) {
-      teacherSpecialtyMap.set(teacher.id, t.specialty);
+      teacherSpecialtyMap.set(teacher.id, t.specialtyEn);
       teacherLevelMap.set(teacher.id, t.levels);
     }
   }

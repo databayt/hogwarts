@@ -9,6 +9,7 @@ import { Button, buttonVariants } from '@/components/ui/button'
 import { LogoutButton } from '@/components/auth/logout-button'
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
+import { SearchButton } from './search-button'
 
 interface School {
   id: string;
@@ -42,6 +43,7 @@ export default async function SiteHeader({ school, locale }: SiteHeaderProps) {
       <div className="flex h-14 items-center gap-2 md:gap-4 **:data-[slot=separator]:!h-4">
         <MainNav items={marketingConfig.mainNav} school={school} locale={locale} />
         <nav className="flex flex-1 items-center justify-end gap-0.5">
+          <SearchButton />
           <Separator orientation="vertical" className="mx-1" />
           <LangSwitcher />
           <ModeSwitcher />

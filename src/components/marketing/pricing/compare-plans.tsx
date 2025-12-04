@@ -24,27 +24,30 @@ export function ComparePlans() {
         subtitle="Find the perfect plan tailored for your business needs!"
       />
 
-      <div className="my-10 overflow-x-auto">
+      {/* Sticky header row */}
+      <div className="sticky top-14 z-10 mt-10 bg-background">
+        <div className="flex w-full">
+          <div className="w-40 shrink-0 py-5 md:w-1/4"></div>
+          {plansColumns.map((col) => (
+            <div
+              key={col}
+              className="flex-1 py-5 font-heading text-center text-black capitalize tracking-wide"
+            >
+              {col}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Scrollable table body */}
+      <div className="overflow-x-auto">
         <table className="w-full table-fixed">
-          <thead className="sticky top-14 z-10 bg-background">
-            <tr>
-              <th className="sticky left-0 z-20 w-40 bg-background py-5 md:w-1/4"></th>
-              {plansColumns.map((col) => (
-                <th
-                  key={col}
-                  className="w-40 bg-background py-5 font-heading text-center text-black capitalize tracking-wide md:w-auto"
-                >
-                  {col}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody className="">
+          <tbody>
             {comparePlans.map((row: PlansRow, index: number) => (
-              <tr key={index} className="">
+              <tr key={index}>
                 <td
                   data-tip={row.tooltip ? row.tooltip : ""}
-                  className="sticky left-0 bg-background md:bg-transparent"
+                  className="sticky left-0 w-40 bg-background md:w-1/4 md:bg-transparent"
                 >
                   <div className="flex items-center justify-between space-x-2 py-4">
                     <span className="lg:text-base">
