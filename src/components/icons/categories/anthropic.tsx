@@ -1,4 +1,4 @@
-I said/**
+/**
  * Anthropic Icons
  *
  * Icons from Anthropic's design system.
