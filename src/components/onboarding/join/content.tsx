@@ -45,9 +45,9 @@ const JoinContent = (props: Props) => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-16 items-start">
           {/* Left column - Title and description */}
           <div className="space-y-3 sm:space-y-4">
-            <h3>
+            <h1 className="text-3xl font-bold">
               {dict.joinPageTitle || 'How students'}<br /> {dict.joinPageTitleBreak || 'join your school'}
-            </h3>
+            </h1>
             <p className="text-sm sm:text-base text-muted-foreground">
               {dict.joinPageDescription || 'You can change this at any time.'}{' '}
               <button className="underline hover:no-underline text-foreground">

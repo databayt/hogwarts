@@ -175,9 +175,9 @@ const LegalContent = (props: Props) => {
         <div className="">
         {/* Title at the top */}
         <div className="mb-6 sm:mb-8">
-          <h2 className="text-xl sm:text-2xl lg:text-4xl font-medium text-foreground">
+          <h1 className="text-3xl font-bold">
             {dict.shareSafetyDetails || 'Share safety details'}
-          </h2>
+          </h1>
         </div>
 
         {/* Two sections side by side */}

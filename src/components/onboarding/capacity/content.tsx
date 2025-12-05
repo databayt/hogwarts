@@ -74,16 +74,16 @@ export default function CapacityContent({ dictionary }: Props) {
   }
 
   return (
-    <div className="space-y-8">
-      <div className="max-w-6xl mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-20 items-start">
+    <div className="w-full">
+      <div className="w-full">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-start">
           {/* Left side - Text content and preview */}
           <div className="space-y-3 sm:space-y-4">
-            <h3>
-              {dict.howManyStudents || "Share some basics"}
+            <h1 className="text-3xl font-bold">
+              {dict.howManyStudents || "Share some basics about"}
               <br />
-              {dict.aboutYourSchool || "about your school"}
-            </h3>
+              {dict.aboutYourSchool || "your school"}
+            </h1>
             <p className="text-sm sm:text-base text-muted-foreground">
               {dict.capacityDescription || "Tell us about your school's capacity and facilities. These numbers will help us configure your system properly."}
             </p>
@@ -91,7 +91,7 @@ export default function CapacityContent({ dictionary }: Props) {
           </div>
 
           {/* Right side - Form */}
-          <div>
+          <div className="lg:justify-self-end">
             <CapacityForm
               schoolId={schoolId}
               initialData={capacityData || undefined}

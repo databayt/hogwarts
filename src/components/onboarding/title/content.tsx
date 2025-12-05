@@ -128,7 +128,7 @@ export default function TitleContent({ dictionary }: Props) {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-20 items-start">
           {/* Left side - Text content */}
           <div className={`space-y-3 sm:space-y-4 ${isRTL ? 'text-right' : 'text-left'}`}>
-            <h3>{dict.whatsYourSchoolName || "What's your school's name?"}</h3>
+            <h1 className="text-3xl font-bold">{dict.whatsYourSchoolName || "What's your school's name?"}</h1>
             <p className="text-sm sm:text-base text-muted-foreground">
               {dict.schoolNameDescription || "This will be your school's official name in the system."}
             </p>

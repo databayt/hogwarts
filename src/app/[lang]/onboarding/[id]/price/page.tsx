@@ -21,11 +21,11 @@ export default async function Price({ params }: Props) {
     <HostStepLayout
       title={
         <div className="space-y-3 sm:space-y-4">
-          <h3>
+          <h1 className="text-3xl font-bold">
             {dict.pricePageTitle || "Set your school's"}
             <br />
             {dict.pricePageTitleBreak || "tuition fees"}
-          </h3>
+          </h1>
           <p className="text-sm sm:text-base text-muted-foreground">
             {dict.pricePageDescription || "This will be the annual tuition fee for your school. You can change this later in your school settings."}
           </p>
