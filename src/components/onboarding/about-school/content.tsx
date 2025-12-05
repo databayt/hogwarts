@@ -19,9 +19,9 @@ export default function AboutSchoolContent({ dictionary }: Props) {
   }, [enableNext]);
 
   const illustration = (
-    <div className="w-full sm:w-3/4 max-w-xl mx-auto rounded-xl sm:rounded-2xl flex items-center justify-center overflow-hidden h-[300px] sm:aspect-video relative">
+    <div className="w-full sm:w-3/4 max-w-xl mx-auto rounded-xl sm:rounded-2xl flex items-center justify-center overflow-hidden h-[200px] relative">
       <Image
-        src="/onboarding/about-school.png"
+        src="https://www-cdn.anthropic.com/images/4zrzovbb/website/5dfb835ad3cbbf76b85824e969146eac20329e72-1000x1000.svg"
         alt="About School"
         fill
         className="object-contain"

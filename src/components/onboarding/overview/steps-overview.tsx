@@ -42,11 +42,11 @@ const StepsOverview: React.FC<StepsOverviewProps> = ({ onGetStarted, isLoading =
 
   return (
     <div className="h-full flex flex-col px-20">
-      <div className="flex-1">
-        <div className="h-full max-w-7xl mx-auto flex flex-col">
-          <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+      <div className="flex-1 flex items-center">
+        <div className="w-full max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
             {/* Left Side - Title */}
-            <div className="self-start pt-1">
+            <div>
               <h1 className="text-5xl font-extrabold tracking-tight">
                 It's easy to
                 <br />
@@ -55,7 +55,7 @@ const StepsOverview: React.FC<StepsOverviewProps> = ({ onGetStarted, isLoading =
             </div>
 
             {/* Right Side - Steps */}
-            <div className="space-y-6 self-start">
+            <div className="space-y-6">
               {steps.map((step) => (
                 <div key={step.number} className="flex gap-6 items-start">
                   <div className="flex gap-3 flex-1">
@@ -88,23 +88,23 @@ const StepsOverview: React.FC<StepsOverviewProps> = ({ onGetStarted, isLoading =
               ))}
             </div>
           </div>
+        </div>
+      </div>
 
-          {/* Bottom Section with HR and Button */}
-          <div className="">
-            <Separator className="w-full" />
-            <div className="flex justify-end py-4">
-              <Button onClick={onGetStarted} disabled={isLoading}>
-                {isLoading ? (
-                  <>
-                    <Skeleton className="w-4 h-4 me-2" />
-                    Creating school...
-                  </>
-                ) : (
-                  'Get started'
-                )}
-              </Button>
-            </div>
-          </div>
+      {/* Bottom Section with HR and Button */}
+      <div className="max-w-7xl mx-auto w-full">
+        <Separator className="w-full" />
+        <div className="flex justify-end py-4">
+          <Button onClick={onGetStarted} disabled={isLoading}>
+            {isLoading ? (
+              <>
+                <Skeleton className="w-4 h-4 me-2" />
+                Creating school...
+              </>
+            ) : (
+              'Get started'
+            )}
+          </Button>
         </div>
       </div>
     </div>

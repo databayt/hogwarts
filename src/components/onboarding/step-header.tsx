@@ -19,8 +19,8 @@ const StepHeader: React.FC<StepHeaderProps> = ({
 }) => {
   const dict = dictionary?.onboarding || {};
   return (
-    <div className="w-full -mt-6 sm:-mt-10">
-      <div className="grid grid-cols-1 lg:grid-cols-2 items-center gap-6 lg:gap-12">
+    <div className="w-full">
+      <div className="grid grid-cols-1 lg:grid-cols-2 items-start gap-6 lg:gap-12">
         {/* Left Side - Content */}
         <div className="space-y-4 sm:space-y-6">
           {stepNumber && (
