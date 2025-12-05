@@ -1,6 +1,8 @@
 import { ProfileContent } from '@/components/operator/profile/content';
 import { getDictionary } from "@/components/internationalization/dictionaries";
 import { type Locale } from "@/components/internationalization/config";
+import { PageHeadingSetter } from '@/components/platform/context/page-heading-setter';
+import { PageNav, type PageNavItem } from '@/components/atom/page-nav';
 
 export const metadata = {
   title: 'Profile',
@@ -14,6 +16,18 @@ interface Props {
 export default async function Profile({ params }: Props) {
   const { lang } = await params;
   const dictionary = await getDictionary(lang);
+  const d = dictionary?.operator;
 
-  return <ProfileContent dictionary={dictionary} lang={lang} />;
+  // Define profile page navigation
+  const profilePages: PageNavItem[] = [
+    { name: 'Profile', href: `/${lang}/profile` },
+  ];
+
+  return (
+    <div className="space-y-6">
+      <PageHeadingSetter title="Profile" />
+      <PageNav pages={profilePages} />
+      <ProfileContent dictionary={dictionary} lang={lang} />
+    </div>
+  );
 }

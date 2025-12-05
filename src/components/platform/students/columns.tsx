@@ -20,7 +20,11 @@ export type StudentRow = {
   createdAt: string;
 };
 
-export const getStudentColumns = (dictionary?: Dictionary['school']['students'], lang?: Locale): ColumnDef<StudentRow>[] => {
+interface ColumnOptions {
+  onDeleteSuccess?: (id: string) => void;
+}
+
+export const getStudentColumns = (dictionary?: Dictionary['school']['students'], lang?: Locale, options?: ColumnOptions): ColumnDef<StudentRow>[] => {
   const t = {
     name: dictionary?.fullName || (lang === 'ar' ? 'الاسم' : 'Name'),
     class: dictionary?.class || (lang === 'ar' ? 'الفصل' : 'Class'),
@@ -89,8 +93,14 @@ export const getStudentColumns = (dictionary?: Dictionary['school']['students'],
           const deleteMsg = lang === 'ar' ? `حذف ${student.name}؟` : `Delete ${student.name}?`;
           const ok = await confirmDeleteDialog(deleteMsg);
           if (!ok) return;
-          await deleteStudent({ id: student.id });
-          DeleteToast();
+          const result = await deleteStudent({ id: student.id });
+          if (result.success) {
+            DeleteToast();
+            // Call the onDeleteSuccess callback to refresh the list
+            options?.onDeleteSuccess?.(student.id);
+          } else {
+            ErrorToast(lang === 'ar' ? 'فشل حذف الطالب' : 'Failed to delete student');
+          }
         } catch (e) {
           ErrorToast(e instanceof Error ? e.message : (lang === 'ar' ? 'فشل الحذف' : 'Failed to delete'));
         }

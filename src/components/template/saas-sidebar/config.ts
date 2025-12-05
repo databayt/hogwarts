@@ -8,7 +8,7 @@ export type PlatformNavItem = {
 };
 
 export const platformNav: PlatformNavItem[] = [
-  // Developer (operator) – developer only
+  // Operator navigation – accessible to all authenticated users
   { title: "Dashboard", href: "/dashboard", icon: "box" },
   { title: "Kanban", href: "/kanban", icon: "checkCircle" },
   { title: "Products", href: "/product", icon: "file" },

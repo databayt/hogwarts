@@ -4,22 +4,30 @@ import { PageHeadingProvider } from "@/components/platform/context/page-heading-
 import { PageHeadingDisplay } from "@/components/platform/context/page-heading-display";
 import SaasHeader from "@/components/template/saas-header/content";
 import SaasSidebar from "@/components/template/saas-sidebar/content";
+import { isRTL as checkIsRTL, type Locale } from "@/components/internationalization/config";
 
-export default function PlatformLayout({
-  children,
-}: {
+interface OperatorLayoutProps {
   children: React.ReactNode;
-}) {
+  params: Promise<{ lang: string }>;
+}
+
+export default async function OperatorLayout({
+  children,
+  params,
+}: Readonly<OperatorLayoutProps>) {
+  const { lang } = await params;
+  const isRTL = checkIsRTL(lang as Locale);
+
   return (
     <SidebarProvider>
       <ModalProvider>
         <PageHeadingProvider>
-          <div className="flex min-h-svh w-full flex-col">
+          <div className="flex min-h-svh w-full flex-col" dir={isRTL ? 'rtl' : 'ltr'}>
             <SaasHeader />
             <div className="flex pt-6">
               <SaasSidebar />
-              <div className="w-full pb-10">
-                <div className="mb-6 px-4 sm:px-6 lg:px-8">
+              <div className="w-full pb-10 transition-[margin] duration-200 ease-in-out">
+                <div className="mb-6">
                   <PageHeadingDisplay />
                 </div>
                 {children}

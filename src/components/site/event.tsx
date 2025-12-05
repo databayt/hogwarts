@@ -62,7 +62,7 @@ export default function EventCard() {
             <div
               key={index}
               className={`${event.isHighlighted
-                ? 'bg-chart-4 text-white'
+                ? 'bg-[#6A9BCC] text-white'
                 : 'bg-muted'} p-8 flex flex-col h-full`}
             >
               <div className={`text-5xl font-light mb-1 ${
@@ -118,7 +118,7 @@ export default function EventCard() {
               alt="logo"
               width={40}
               height={40}
-              className="rounded-full object-cover w-10 h-10 bg-chart-4 p-1.5"
+              className="rounded-full object-cover w-10 h-10 bg-[#6A9BCC] p-1.5"
               priority
               quality={100}
             />

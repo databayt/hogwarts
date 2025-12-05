@@ -1,5 +1,13 @@
 import { ReceiptsContent } from "@/components/operator/billing/receipts/content";
+import { getDictionary } from "@/components/internationalization/dictionaries";
 import type { Locale } from "@/components/internationalization/config";
+import { PageHeadingSetter } from '@/components/platform/context/page-heading-setter';
+import { PageNav, type PageNavItem } from '@/components/atom/page-nav';
+
+export const metadata = {
+  title: "Receipts",
+  description: "Operator billing receipts"
+};
 
 interface Props {
   params: Promise<{
@@ -16,6 +24,20 @@ interface Props {
 export default async function ReceiptsPage({ params, searchParams }: Props) {
   const { lang } = await params;
   const search = await searchParams;
+  const dictionary = await getDictionary(lang);
+  const d = dictionary?.operator;
 
-  return <ReceiptsContent dictionary={{}} lang={lang} searchParams={search} />;
+  // Define billing page navigation
+  const billingPages: PageNavItem[] = [
+    { name: 'Overview', href: `/${lang}/billing` },
+    { name: 'Receipts', href: `/${lang}/billing/receipts` },
+  ];
+
+  return (
+    <div className="space-y-6">
+      <PageHeadingSetter title="Receipts" />
+      <PageNav pages={billingPages} />
+      <ReceiptsContent dictionary={dictionary} lang={lang} searchParams={search} />
+    </div>
+  );
 }

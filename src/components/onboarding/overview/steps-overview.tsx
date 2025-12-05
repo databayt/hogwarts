@@ -24,19 +24,19 @@ const StepsOverview: React.FC<StepsOverviewProps> = ({ onGetStarted, isLoading =
       number: 1,
       title: "Tell us about your school",
       description: "Share some basic info, like where it is, and how many students it has.",
-      illustration: "/site/tent.png"
+      illustration: "https://www-cdn.anthropic.com/images/4zrzovbb/website/5dfb835ad3cbbf76b85824e969146eac20329e72-1000x1000.svg"
     },
     {
       number: 2,
       title: "Add people and data",
-      description: "Invite staff, and import students and classes—we'll help you out.. ",
-      illustration: "/site/light-bulb.png"
+      description: "Invite staff, and import students and classes—we'll help you out.",
+      illustration: "https://www-cdn.anthropic.com/images/4zrzovbb/website/521a945a74f2d25262db4a002073aaeec9bc1919-1000x1000.svg"
     },
     {
       number: 3,
       title: "Set up and launch",
       description: "Configure timetable and attendance, publish announcements, and go live.",
-      illustration: "/site/world.png"
+      illustration: "https://www-cdn.anthropic.com/images/4zrzovbb/website/0321b0ecbbf53535e93be1310ae1935157bcebdd-1000x1000.svg"
     }
   ];
 
@@ -44,7 +44,7 @@ const StepsOverview: React.FC<StepsOverviewProps> = ({ onGetStarted, isLoading =
     <div className="h-full flex flex-col px-20">
       <div className="flex-1">
         <div className="h-full max-w-7xl mx-auto flex flex-col">
-          <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-12 items-start py-12">
+          <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
             {/* Left Side - Title */}
             <div>
               <h2>

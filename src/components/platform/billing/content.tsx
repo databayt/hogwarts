@@ -1,4 +1,3 @@
-import { DashboardHeader } from "@/components/platform/dashboard/header";
 import { type Locale } from "@/components/internationalization/config";
 import { type getDictionary } from "@/components/internationalization/dictionaries";
 import { SubscriptionManagementDemo } from "./subscription-management-demo";
@@ -20,75 +19,45 @@ interface BillingContentProps {
 
 export default function BillingContent(_props: BillingContentProps) {
   return (
-    <>
-      <DashboardHeader heading="Billing" text="BillingSDK components from billingsdk.com" />
-      <div className="flex flex-col gap-8 py-4 pb-14">
-        {/* Billing 01: Subscription Management */}
-        <section>
-          <h3 className="mb-4 text-lg font-medium">Subscription Management</h3>
-          <SubscriptionManagementDemo />
-        </section>
+    <div className="flex flex-col gap-8 py-4 pb-14">
+      {/* Section 1: Subscription Overview (1 column - full width) */}
+      <section>
+        <SubscriptionManagementDemo />
+      </section>
 
-        {/* Billing 02: Update Plan Card */}
-        <section>
-          <h3 className="mb-4 text-lg font-medium">Update Plan Card</h3>
-          <UpdatePlanCardDemo />
-        </section>
+      {/* Section 2: Plan & Trial Cards (2 columns) */}
+      <section className="grid gap-6 md:grid-cols-2">
+        <UpdatePlanCardDemo />
+        <TrialExpiryCardDemo />
+      </section>
 
-        {/* Billing 03: Trial Expiry Card */}
-        <section>
-          <h3 className="mb-4 text-lg font-medium">Trial Expiry Card</h3>
-          <TrialExpiryCardDemo />
-        </section>
+      {/* Section 3: Usage & Charges (2 columns) */}
+      <section className="grid gap-6 md:grid-cols-2">
+        <UsageBasedPricingDemo />
+        <UpcomingChargesDemo />
+      </section>
 
-        {/* Billing 04: Usage Based Pricing */}
-        <section>
-          <h3 className="mb-4 text-lg font-medium">Usage Based Pricing</h3>
-          <UsageBasedPricingDemo />
-        </section>
+      {/* Section 4: Usage Table (1 column - full width) */}
+      <section>
+        <DetailedUsageTableDemo />
+      </section>
 
-        {/* Billing 05: Detailed Usage Table */}
-        <section>
-          <h3 className="mb-4 text-lg font-medium">Detailed Usage Table</h3>
-          <DetailedUsageTableDemo />
-        </section>
+      {/* Section 5: Invoice History (1 column - full width) */}
+      <section>
+        <InvoiceHistoryDemo />
+      </section>
 
-        {/* Billing 06: Upcoming Charges */}
-        <section>
-          <h3 className="mb-4 text-lg font-medium">Upcoming Charges</h3>
-          <UpcomingChargesDemo />
-        </section>
+      {/* Section 6: Payment Methods (2 columns) */}
+      <section className="grid gap-6 md:grid-cols-2">
+        <PaymentMethodSelectorDemo />
+        <PaymentCardDemo />
+      </section>
 
-        {/* Billing 07: Invoice History */}
-        <section>
-          <h3 className="mb-4 text-lg font-medium">Invoice History</h3>
-          <InvoiceHistoryDemo />
-        </section>
-
-        {/* Billing 08: Payment Method Selector */}
-        <section>
-          <h3 className="mb-4 text-lg font-medium">Payment Method Selector</h3>
-          <PaymentMethodSelectorDemo />
-        </section>
-
-        {/* Billing 09: Payment Card */}
-        <section>
-          <h3 className="mb-4 text-lg font-medium">Payment Card</h3>
-          <PaymentCardDemo />
-        </section>
-
-        {/* Billing 10: Billing Settings */}
-        <section>
-          <h3 className="mb-4 text-lg font-medium">Billing Settings</h3>
-          <BillingSettingsDemo />
-        </section>
-
-        {/* Billing 11: Billing Settings 2 */}
-        <section>
-          <h3 className="mb-4 text-lg font-medium">Billing Settings (Alternate)</h3>
-          <BillingSettings2Demo />
-        </section>
-      </div>
-    </>
+      {/* Section 7: Billing Settings (2 columns) */}
+      <section className="grid gap-6 md:grid-cols-2">
+        <BillingSettingsDemo />
+        <BillingSettings2Demo />
+      </section>
+    </div>
   );
 }

@@ -1,6 +1,8 @@
 import { ProductDetailContent } from '@/components/operator/product/detail';
 import { getDictionary } from "@/components/internationalization/dictionaries";
 import { type Locale } from "@/components/internationalization/config";
+import { PageHeadingSetter } from '@/components/platform/context/page-heading-setter';
+import { PageNav, type PageNavItem } from '@/components/atom/page-nav';
 
 export const metadata = {
   title: 'Product Detail',
@@ -14,6 +16,19 @@ interface Props {
 export default async function ProductDetail({ params }: Props) {
   const { lang, productId } = await params;
   const dictionary = await getDictionary(lang);
+  const d = dictionary?.operator;
 
-  return <ProductDetailContent dictionary={dictionary} lang={lang} productId={productId} />;
+  // Define product page navigation
+  const productPages: PageNavItem[] = [
+    { name: 'All Products', href: `/${lang}/product` },
+    { name: 'Detail', href: `/${lang}/product/${productId}` },
+  ];
+
+  return (
+    <div className="space-y-6">
+      <PageHeadingSetter title="Product Detail" />
+      <PageNav pages={productPages} />
+      <ProductDetailContent dictionary={dictionary} lang={lang} productId={productId} />
+    </div>
+  );
 }

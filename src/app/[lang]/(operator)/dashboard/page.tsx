@@ -1,6 +1,8 @@
 import { DashboardContent } from '@/components/operator/dashboard/content';
 import { getDictionary } from "@/components/internationalization/dictionaries";
 import { type Locale } from "@/components/internationalization/config";
+import { PageHeadingSetter } from '@/components/platform/context/page-heading-setter';
+import { PageNav, type PageNavItem } from '@/components/atom/page-nav';
 
 export const metadata = {
   title: "Dashboard",
@@ -14,9 +16,20 @@ interface Props {
 export default async function Dashboard({ params }: Props) {
   const { lang } = await params;
   const dictionary = await getDictionary(lang);
+  const d = dictionary?.operator;
 
-  return <DashboardContent
-    dictionary={dictionary}
-    lang={lang}
-  />;
+  // Define operator dashboard navigation
+  const dashboardPages: PageNavItem[] = [
+    { name: 'Overview', href: `/${lang}/dashboard` },
+    { name: 'Analytics', href: `/${lang}/analytics` },
+    { name: 'Kanban', href: `/${lang}/kanban` },
+  ];
+
+  return (
+    <div className="space-y-6">
+      <PageHeadingSetter title={d?.dashboard?.title || 'Dashboard'} />
+      <PageNav pages={dashboardPages} />
+      <DashboardContent dictionary={dictionary} lang={lang} />
+    </div>
+  );
 }

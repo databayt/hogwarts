@@ -83,8 +83,15 @@ export function StudentsTable({ initialData, total, dictionary, lang, perPage = 
     filters: searchValue ? { name: searchValue } : undefined,
   });
 
-  // Generate columns on the client side with dictionary and lang
-  const columns = useMemo(() => getStudentColumns(dictionary, lang), [dictionary, lang]);
+  // Callback for column delete success - triggers optimistic remove
+  const handleColumnDeleteSuccess = useCallback((id: string) => {
+    optimisticRemove(id);
+  }, [optimisticRemove]);
+
+  // Generate columns on the client side with dictionary, lang, and delete callback
+  const columns = useMemo(() => getStudentColumns(dictionary, lang, {
+    onDeleteSuccess: handleColumnDeleteSuccess,
+  }), [dictionary, lang, handleColumnDeleteSuccess]);
 
   // Table instance
   const { table } = useDataTable<StudentRow>({

@@ -1,6 +1,8 @@
 import { BillingContent } from "@/components/operator/billing/content";
 import { getDictionary } from "@/components/internationalization/dictionaries";
 import { type Locale } from "@/components/internationalization/config";
+import { PageHeadingSetter } from '@/components/platform/context/page-heading-setter';
+import { PageNav, type PageNavItem } from '@/components/atom/page-nav';
 
 export const metadata = {
   title: "Billing",
@@ -14,8 +16,21 @@ interface Props {
 export default async function Billing({ params }: Props) {
   const { lang } = await params;
   const dictionary = await getDictionary(lang);
+  const d = dictionary?.operator;
 
-  return <BillingContent dictionary={dictionary} lang={lang} />;
+  // Define billing page navigation
+  const billingPages: PageNavItem[] = [
+    { name: 'Overview', href: `/${lang}/billing` },
+    { name: 'Receipts', href: `/${lang}/billing/receipts` },
+  ];
+
+  return (
+    <div className="space-y-6">
+      <PageHeadingSetter title={d?.billing?.title || 'Billing'} />
+      <PageNav pages={billingPages} />
+      <BillingContent dictionary={dictionary} lang={lang} />
+    </div>
+  );
 }
 
 

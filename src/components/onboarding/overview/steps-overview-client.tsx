@@ -33,19 +33,19 @@ const StepsOverviewClient: React.FC<StepsOverviewClientProps> = ({ dictionary, l
       number: 1,
       title: dictionary.steps.step1.title,
       description: dictionary.steps.step1.description,
-      illustration: "/onboarding/about-school.png"
+      illustration: "https://www-cdn.anthropic.com/images/4zrzovbb/website/5dfb835ad3cbbf76b85824e969146eac20329e72-1000x1000.svg"
     },
     {
       number: 2,
       title: dictionary.steps.step2.title,
       description: dictionary.steps.step2.description,
-      illustration: "/onboarding/stand-out.png"
+      illustration: "https://www-cdn.anthropic.com/images/4zrzovbb/website/521a945a74f2d25262db4a002073aaeec9bc1919-1000x1000.svg"
     },
     {
       number: 3,
       title: dictionary.steps.step3.title,
       description: dictionary.steps.step3.description,
-      illustration: "/onboarding/finish-setup.png"
+      illustration: "https://www-cdn.anthropic.com/images/4zrzovbb/website/0321b0ecbbf53535e93be1310ae1935157bcebdd-1000x1000.svg"
     }
   ];
 
@@ -158,7 +158,7 @@ const StepsOverviewClient: React.FC<StepsOverviewClientProps> = ({ dictionary, l
     <div className={`h-full flex flex-col px-20 ${isRTL ? 'rtl' : 'ltr'}`}>
       <div className="flex-1">
         <div className="h-full max-w-7xl mx-auto flex flex-col">
-          <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-12 items-start py-12">
+          <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
             {/* Left Side - Title */}
             <div>
               <h2 className={`text-4xl font-bold ${isRTL ? 'text-right' : 'text-left'}`}>

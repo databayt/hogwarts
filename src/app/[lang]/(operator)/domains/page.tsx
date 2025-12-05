@@ -1,6 +1,8 @@
 import { DomainsContent } from "@/components/operator/domains/content";
 import { getDictionary } from "@/components/internationalization/dictionaries";
 import { type Locale } from "@/components/internationalization/config";
+import { PageHeadingSetter } from '@/components/platform/context/page-heading-setter';
+import { PageNav, type PageNavItem } from '@/components/atom/page-nav';
 
 export const metadata = {
   title: "Domains",
@@ -14,8 +16,21 @@ interface Props {
 export default async function Domains({ params }: Props) {
   const { lang } = await params;
   const dictionary = await getDictionary(lang);
+  const d = dictionary?.operator;
 
-  return <DomainsContent dictionary={dictionary} lang={lang} />;
+  // Define domains page navigation
+  const domainsPages: PageNavItem[] = [
+    { name: 'Overview', href: `/${lang}/tenants` },
+    { name: 'Domains', href: `/${lang}/domains` },
+  ];
+
+  return (
+    <div className="space-y-6">
+      <PageHeadingSetter title="Domains" />
+      <PageNav pages={domainsPages} />
+      <DomainsContent dictionary={dictionary} lang={lang} />
+    </div>
+  );
 }
 
 
