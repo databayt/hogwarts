@@ -45,6 +45,8 @@ interface QuestionBankFormProps {
   subjectId?: string;
   isView?: boolean;
   dictionary?: Dictionary;
+  /** Callback fired on successful create/update - use for optimistic refresh */
+  onSuccess?: () => void;
 }
 
 export function QuestionBankForm({
@@ -52,6 +54,7 @@ export function QuestionBankForm({
   subjectId,
   isView = false,
   dictionary,
+  onSuccess,
 }: QuestionBankFormProps) {
   // Default dictionary fallback for when component is used without i18n
   const dict = dictionary?.generate || {};
@@ -140,7 +143,10 @@ export function QuestionBankForm({
             : "Question created!"
         );
         closeModal();
-        window.location.reload();
+        // Use callback for optimistic update instead of page reload
+        if (onSuccess) {
+          onSuccess();
+        }
       } else {
         ErrorToast(result.error);
       }

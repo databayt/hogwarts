@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useCallback } from "react";
+import { useMemo } from "react";
 import { DataTable } from "@/components/table/data-table";
 import { DataTableToolbar } from "@/components/table/data-table-toolbar";
 import { useDataTable } from "@/components/table/use-data-table";
@@ -12,41 +12,44 @@ import Modal from "@/components/atom/modal/modal";
 import { AssignmentCreateForm } from "@/components/platform/assignments/form";
 import { ExportButton } from "./export-button";
 import { getAssignments } from "./actions";
+import { usePlatformData } from "@/hooks/use-platform-data";
+import type { Dictionary } from "@/components/internationalization/dictionaries";
+import type { Locale } from "@/components/internationalization/config";
 
 interface AssignmentsTableProps {
   initialData: AssignmentRow[];
   total: number;
+  dictionary?: Dictionary['school']['assignments'];
+  lang: Locale;
   perPage?: number;
 }
 
-export function AssignmentsTable({ initialData, total, perPage = 20 }: AssignmentsTableProps) {
-  const columns = useMemo(() => getAssignmentColumns(), []);
+export function AssignmentsTable({ initialData, total, dictionary, lang, perPage = 20 }: AssignmentsTableProps) {
+  // Translations with fallbacks
+  const t = {
+    create: dictionary?.create || (lang === 'ar' ? 'إنشاء' : 'Create'),
+    loading: lang === 'ar' ? 'جاري التحميل...' : 'Loading...',
+  };
 
-  // State for incremental loading
-  const [data, setData] = useState<AssignmentRow[]>(initialData);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [isLoading, setIsLoading] = useState(false);
+  const columns = useMemo(() => getAssignmentColumns(dictionary, lang), [dictionary, lang]);
 
-  const hasMore = data.length < total;
-
-  const handleLoadMore = useCallback(async () => {
-    if (isLoading || !hasMore) return;
-
-    setIsLoading(true);
-    try {
-      const nextPage = currentPage + 1;
-      const result = await getAssignments({ page: nextPage, perPage });
-
-      if (result.rows.length > 0) {
-        setData(prev => [...prev, ...result.rows]);
-        setCurrentPage(nextPage);
-      }
-    } catch (error) {
-      console.error('Failed to load more assignments:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [currentPage, perPage, isLoading, hasMore]);
+  // Data management with optimistic updates
+  const {
+    data,
+    total: dataTotal,
+    isLoading,
+    hasMore,
+    loadMore,
+    refresh,
+  } = usePlatformData<AssignmentRow, { title?: string }>({
+    initialData,
+    total,
+    perPage,
+    fetcher: async (params) => {
+      const result = await getAssignments(params);
+      return { rows: result.rows as AssignmentRow[], total: result.total };
+    },
+  });
 
   // Use pageCount of 1 since we're handling all data client-side
   const { table } = useDataTable<AssignmentRow>({
@@ -56,7 +59,7 @@ export function AssignmentsTable({ initialData, total, perPage = 20 }: Assignmen
     initialState: {
       pagination: {
         pageIndex: 0,
-        pageSize: data.length, // Show all loaded data
+        pageSize: data.length || perPage,
       },
       columnVisibility: {
         // Default visible: title, className, dueDate, status
@@ -75,7 +78,7 @@ export function AssignmentsTable({ initialData, total, perPage = 20 }: Assignmen
       paginationMode="load-more"
       hasMore={hasMore}
       isLoading={isLoading}
-      onLoadMore={handleLoadMore}
+      onLoadMore={loadMore}
     >
       <DataTableToolbar table={table}>
         <div className="flex items-center gap-2">
@@ -85,15 +88,15 @@ export function AssignmentsTable({ initialData, total, perPage = 20 }: Assignmen
             size="sm"
             className="h-8 w-8 p-0 rounded-full"
             onClick={() => openModal()}
-            aria-label="Create"
-            title="Create"
+            aria-label={t.create}
+            title={t.create}
           >
             <Plus className="h-4 w-4" />
           </Button>
           <ExportButton />
         </div>
       </DataTableToolbar>
-      <Modal content={<AssignmentCreateForm />} />
+      <Modal content={<AssignmentCreateForm onSuccess={refresh} />} />
     </DataTable>
   );
 }

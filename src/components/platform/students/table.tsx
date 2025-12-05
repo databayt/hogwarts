@@ -8,6 +8,7 @@ import { useModal } from "@/components/atom/modal/context";
 import Modal from "@/components/atom/modal/modal";
 import { StudentCreateForm } from "@/components/platform/students/form";
 import type { Dictionary } from "@/components/internationalization/dictionaries";
+import type { Locale } from "@/components/internationalization/config";
 import { getStudents, getStudentsCSV, deleteStudent } from "./actions";
 import { usePlatformView } from "@/hooks/use-platform-view";
 import { usePlatformData } from "@/hooks/use-platform-data";
@@ -26,34 +27,34 @@ interface StudentsTableProps {
   initialData: StudentRow[];
   total: number;
   dictionary?: Dictionary['school']['students'];
+  lang: Locale;
   perPage?: number;
 }
 
-export function StudentsTable({ initialData, total, dictionary, perPage = 20 }: StudentsTableProps) {
+export function StudentsTable({ initialData, total, dictionary, lang, perPage = 20 }: StudentsTableProps) {
   const router = useRouter();
   const { openModal } = useModal();
   const [isPending, startTransition] = useTransition();
 
-  // Default translations - safely access dictionary or use fallbacks
+  // Translations with fallbacks
   const t = {
-    fullName: dictionary?.fullName || "Name",
-    class: dictionary?.class || "Class",
-    status: "Status",
-    created: "Created",
-    actions: "Actions",
-    editStudent: dictionary?.editStudent || "Edit Student",
-    deleteStudent: dictionary?.deleteStudent || "Delete Student",
-    viewStudent: "View Student",
-    createStudent: "Create Student",
-    allStudents: dictionary?.allStudents || "All Students",
-    noStudents: "No students found",
-    addNewStudent: "Add a new student to your school",
-    active: "Active",
-    inactive: "Inactive",
-    search: "Search students...",
-    create: "Create",
-    export: "Export",
-    reset: "Reset",
+    fullName: dictionary?.fullName || (lang === 'ar' ? 'الاسم' : 'Name'),
+    class: dictionary?.class || (lang === 'ar' ? 'الفصل' : 'Class'),
+    status: dictionary?.status || (lang === 'ar' ? 'الحالة' : 'Status'),
+    created: dictionary?.created || (lang === 'ar' ? 'تاريخ الإنشاء' : 'Created'),
+    actions: lang === 'ar' ? 'إجراءات' : 'Actions',
+    view: lang === 'ar' ? 'عرض' : 'View',
+    edit: lang === 'ar' ? 'تعديل' : 'Edit',
+    delete: lang === 'ar' ? 'حذف' : 'Delete',
+    allStudents: dictionary?.allStudents || (lang === 'ar' ? 'جميع الطلاب' : 'All Students'),
+    addNewStudent: dictionary?.addNewStudent || (lang === 'ar' ? 'أضف طالباً جديداً إلى مدرستك' : 'Add a new student to your school'),
+    active: dictionary?.active || (lang === 'ar' ? 'نشط' : 'Active'),
+    inactive: dictionary?.inactive || (lang === 'ar' ? 'غير نشط' : 'Inactive'),
+    search: dictionary?.search || (lang === 'ar' ? 'بحث في الطلاب...' : 'Search students...'),
+    create: dictionary?.create || (lang === 'ar' ? 'إنشاء' : 'Create'),
+    export: dictionary?.export || (lang === 'ar' ? 'تصدير' : 'Export'),
+    reset: dictionary?.reset || (lang === 'ar' ? 'إعادة تعيين' : 'Reset'),
+    noAccount: lang === 'ar' ? 'لا يوجد حساب' : 'No Account',
   };
 
   // View mode (table/grid)
@@ -82,8 +83,8 @@ export function StudentsTable({ initialData, total, dictionary, perPage = 20 }: 
     filters: searchValue ? { name: searchValue } : undefined,
   });
 
-  // Generate columns on the client side with hooks
-  const columns = useMemo(() => getStudentColumns(dictionary), [dictionary]);
+  // Generate columns on the client side with dictionary and lang
+  const columns = useMemo(() => getStudentColumns(dictionary, lang), [dictionary, lang]);
 
   // Table instance
   const { table } = useDataTable<StudentRow>({
@@ -113,7 +114,8 @@ export function StudentsTable({ initialData, total, dictionary, perPage = 20 }: 
   // Handle delete with optimistic update
   const handleDelete = useCallback(async (student: StudentRow) => {
     try {
-      const ok = await confirmDeleteDialog(`Delete ${student.name}?`);
+      const deleteMsg = lang === 'ar' ? `حذف ${student.name}؟` : `Delete ${student.name}?`;
+      const ok = await confirmDeleteDialog(deleteMsg);
       if (!ok) return;
 
       // Optimistic remove
@@ -125,13 +127,13 @@ export function StudentsTable({ initialData, total, dictionary, perPage = 20 }: 
       } else {
         // Revert on error
         refresh();
-        ErrorToast("Failed to delete student");
+        ErrorToast(lang === 'ar' ? 'فشل حذف الطالب' : 'Failed to delete student');
       }
     } catch (e) {
       refresh();
-      ErrorToast(e instanceof Error ? e.message : "Failed to delete");
+      ErrorToast(e instanceof Error ? e.message : (lang === 'ar' ? 'فشل الحذف' : 'Failed to delete'));
     }
-  }, [optimisticRemove, refresh]);
+  }, [optimisticRemove, refresh, lang]);
 
   // Handle edit
   const handleEdit = useCallback((id: string) => {
@@ -141,11 +143,11 @@ export function StudentsTable({ initialData, total, dictionary, perPage = 20 }: 
   // Handle view
   const handleView = useCallback((student: StudentRow) => {
     if (!student.userId) {
-      ErrorToast("This student does not have a user account");
+      ErrorToast(lang === 'ar' ? 'هذا الطالب ليس لديه حساب مستخدم' : 'This student does not have a user account');
       return;
     }
     router.push(`/profile/${student.userId}`);
-  }, [router]);
+  }, [router, lang]);
 
   // Get status badge
   const getStatusBadge = (status: string) => {
@@ -161,12 +163,12 @@ export function StudentsTable({ initialData, total, dictionary, perPage = 20 }: 
 
   // Toolbar translations
   const toolbarTranslations = {
-    search: t.search || "Search students...",
-    create: t.create || "Create",
-    reset: t.reset || "Reset",
-    export: t.export || "Export",
-    exportCSV: "Export CSV",
-    exporting: "Exporting...",
+    search: t.search,
+    create: t.create,
+    reset: t.reset,
+    export: t.export,
+    exportCSV: lang === 'ar' ? 'تصدير CSV' : 'Export CSV',
+    exporting: lang === 'ar' ? 'جاري التصدير...' : 'Exporting...',
   };
 
   return (
@@ -177,7 +179,7 @@ export function StudentsTable({ initialData, total, dictionary, perPage = 20 }: 
         onToggleView={toggleView}
         searchValue={searchValue}
         onSearchChange={handleSearchChange}
-        searchPlaceholder={t.search || "Search students..."}
+        searchPlaceholder={t.search}
         onCreate={() => openModal()}
         getCSV={handleExportCSV}
         entityName="students"
@@ -196,8 +198,8 @@ export function StudentsTable({ initialData, total, dictionary, perPage = 20 }: 
         <>
           {data.length === 0 ? (
             <GridEmptyState
-              title={t.allStudents || "All Students"}
-              description={t.addNewStudent || "Add a new student to your school"}
+              title={t.allStudents}
+              description={t.addNewStudent}
               icon={<GraduationCap className="h-12 w-12" />}
             />
           ) : (
@@ -219,28 +221,28 @@ export function StudentsTable({ initialData, total, dictionary, perPage = 20 }: 
                     avatarFallback={initials}
                     status={statusBadge}
                     metadata={[
-                      { label: t.class || "Class", value: student.className },
-                      { label: t.created || "Created", value: new Date(student.createdAt).toLocaleDateString() },
+                      { label: t.class, value: student.className },
+                      { label: t.created, value: new Date(student.createdAt).toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-US') },
                     ]}
                     actions={[
                       ...(student.userId
-                        ? [{ label: t.viewStudent || "View", onClick: () => handleView(student) }]
+                        ? [{ label: t.view, onClick: () => handleView(student) }]
                         : []),
-                      { label: t.editStudent || "Pencil", onClick: () => handleEdit(student.id) },
+                      { label: t.edit, onClick: () => handleEdit(student.id) },
                       {
-                        label: t.deleteStudent || "Delete",
+                        label: t.delete,
                         onClick: () => handleDelete(student),
                         variant: "destructive" as const,
                       },
                     ]}
-                    actionsLabel={t.actions || "Actions"}
+                    actionsLabel={t.actions}
                     onClick={() => student.userId && handleView(student)}
                   >
                     {!student.userId && (
                       <div className="flex items-center gap-2 mt-2">
                         <Badge variant="outline" className="gap-1 text-xs">
                           <User className="h-3 w-3" />
-                          No Account
+                          {t.noAccount}
                         </Badge>
                       </div>
                     )}
@@ -258,7 +260,7 @@ export function StudentsTable({ initialData, total, dictionary, perPage = 20 }: 
                 disabled={isLoading}
                 className="px-4 py-2 text-sm border rounded-md hover:bg-accent disabled:opacity-50"
               >
-                {isLoading ? "Loading..." : "Load More"}
+                {isLoading ? (lang === 'ar' ? 'جاري التحميل...' : 'Loading...') : (lang === 'ar' ? 'تحميل المزيد' : 'Load More')}
               </button>
             </div>
           )}

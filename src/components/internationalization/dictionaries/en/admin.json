@@ -21,6 +21,10 @@
   },
   "stats": {
     "totalUsers": "Total Users",
+    "users": "Users",
+    "health": "Health",
+    "organization": "Organization",
+    "operation": "Operation",
     "systemHealth": "System Health",
     "activeSessions": "Active Sessions",
     "pendingActions": "Pending Actions",
@@ -36,6 +40,26 @@
     "enrolledStudents": "Enrolled students",
     "activeDepartments": "Active departments",
     "totalClassrooms": "Total classrooms"
+  },
+  "quickActions": {
+    "addUser": "Add User",
+    "addUserDesc": "Create new account",
+    "announce": "Announce",
+    "announceDesc": "Send notification",
+    "viewLogs": "View Logs",
+    "viewLogsDesc": "Audit activity",
+    "exportData": "Export Data",
+    "exportDataDesc": "Download reports"
+  },
+  "systemStatus": {
+    "title": "System Status",
+    "operational": "Operational",
+    "description": "Current platform health",
+    "api": "API Services",
+    "database": "Database",
+    "storage": "Storage",
+    "email": "Email Service",
+    "online": "Online"
   },
   "quickAccess": {
     "integration": "OAuth, email & payment gateways",

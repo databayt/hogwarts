@@ -15,32 +15,20 @@ export default async function AttendanceLayout({ children, params }: Props) {
 
   const attendancePages: PageNavItem[] = [
     {
-      name: d?.overview || 'Overview',
+      name: 'Overview',
       href: `/${lang}/s/${subdomain}/attendance`,
     },
     {
-      name: d?.manual || 'Manual',
-      href: `/${lang}/s/${subdomain}/attendance/manual`,
-    },
-    {
-      name: d?.qrCode || 'QR Code',
-      href: `/${lang}/s/${subdomain}/attendance/qrcode`,
-    },
-    {
-      name: d?.bulk || 'Bulk',
+      name: 'Bulk',
       href: `/${lang}/s/${subdomain}/attendance/bulk`,
     },
     {
-      name: d?.advance || 'Advance',
-      href: `/${lang}/s/${subdomain}/attendance/advance`,
+      name: 'Report',
+      href: `/${lang}/s/${subdomain}/attendance/reports`,
     },
     {
-      name: d?.config || 'Config',
+      name: 'Settings',
       href: `/${lang}/s/${subdomain}/attendance/config`,
-    },
-    {
-      name: d?.report || 'Report',
-      href: `/${lang}/s/${subdomain}/attendance/report`,
     },
   ]
 

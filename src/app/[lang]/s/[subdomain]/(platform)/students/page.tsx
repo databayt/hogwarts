@@ -41,7 +41,7 @@ export default async function Students({ params, searchParams }: StudentsProps) 
 
   return (
     <div className="school-content" data-school-id={school.id} data-subdomain={subdomain}>
-      <StudentsContent school={school} searchParams={searchParams} dictionary={dictionary.school} />
+      <StudentsContent school={school} searchParams={searchParams} dictionary={dictionary.school} lang={lang} />
     </div>
   );
 }

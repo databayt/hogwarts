@@ -5,7 +5,11 @@ const paymentMethods = [
   { name: "Mastercard", icon: "/payment/mastercard.svg" },
   { name: "Amex", icon: "/payment/amex.svg" },
   { name: "Apple Pay", icon: "/payment/apple-pay.svg" },
+  { name: "Google Pay", icon: "/payment/google-pay.svg" },
+  { name: "PayPal", icon: "/payment/paypal.svg" },
   { name: "Mada", icon: "/payment/mada.svg" },
+  { name: "STCPay", icon: "/payment/stcpay.svg" },
+  { name: "Fawry", icon: "/payment/fawry.svg" },
 ];
 
 export function SecurePayment() {

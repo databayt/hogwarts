@@ -21,6 +21,10 @@
   },
   "stats": {
     "totalUsers": "إجمالي المستخدمين",
+    "users": "المستخدمون",
+    "health": "الصحة",
+    "organization": "التنظيم",
+    "operation": "العمليات",
     "systemHealth": "صحة النظام",
     "activeSessions": "الجلسات النشطة",
     "pendingActions": "الإجراءات المعلقة",
@@ -36,6 +40,26 @@
     "enrolledStudents": "الطلاب المسجلون",
     "activeDepartments": "الأقسام النشطة",
     "totalClassrooms": "إجمالي الفصول"
+  },
+  "quickActions": {
+    "addUser": "إضافة مستخدم",
+    "addUserDesc": "إنشاء حساب جديد",
+    "announce": "إعلان",
+    "announceDesc": "إرسال إشعار",
+    "viewLogs": "عرض السجلات",
+    "viewLogsDesc": "نشاط التدقيق",
+    "exportData": "تصدير البيانات",
+    "exportDataDesc": "تحميل التقارير"
+  },
+  "systemStatus": {
+    "title": "حالة النظام",
+    "operational": "يعمل",
+    "description": "صحة المنصة الحالية",
+    "api": "خدمات API",
+    "database": "قاعدة البيانات",
+    "storage": "التخزين",
+    "email": "خدمة البريد الإلكتروني",
+    "online": "متصل"
   },
   "quickAccess": {
     "integration": "OAuth والبريد الإلكتروني وبوابات الدفع",

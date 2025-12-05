@@ -8,6 +8,7 @@ import { useModal } from "@/components/atom/modal/context";
 import Modal from "@/components/atom/modal/modal";
 import { TeacherCreateForm } from "@/components/platform/teachers/form";
 import type { Dictionary } from "@/components/internationalization/dictionaries";
+import type { Locale } from "@/components/internationalization/config";
 import { getTeachers, getTeachersCSV, deleteTeacher } from "./actions";
 import { usePlatformView } from "@/hooks/use-platform-view";
 import { usePlatformData } from "@/hooks/use-platform-data";
@@ -26,34 +27,34 @@ interface TeachersTableProps {
   initialData: TeacherRow[];
   total: number;
   dictionary?: Dictionary['school']['teachers'];
+  lang: Locale;
   perPage?: number;
 }
 
-export function TeachersTable({ initialData, total, dictionary, perPage = 20 }: TeachersTableProps) {
+export function TeachersTable({ initialData, total, dictionary, lang, perPage = 20 }: TeachersTableProps) {
   const router = useRouter();
   const { openModal } = useModal();
   const [isPending, startTransition] = useTransition();
 
-  // Default translations - safely access dictionary or use fallbacks
+  // Translations with fallbacks
   const t = {
-    fullName: dictionary?.fullName || "Name",
-    email: dictionary?.email || "Email",
-    status: "Status",
-    created: "Created",
-    actions: "Actions",
-    editTeacher: dictionary?.editTeacher || "Pencil Teacher",
-    deleteTeacher: dictionary?.deleteTeacher || "Delete Teacher",
-    viewTeacher: "View Teacher",
-    createTeacher: "Create Teacher",
-    allTeachers: dictionary?.allTeachers || "All Teachers",
-    noTeachers: "No teachers found",
-    addNewTeacher: "Add a new teacher to your school",
-    active: "Active",
-    inactive: "Inactive",
-    search: "Search teachers...",
-    create: "Create",
-    export: "Export",
-    reset: "Reset",
+    fullName: dictionary?.fullName || (lang === 'ar' ? 'الاسم' : 'Name'),
+    email: dictionary?.email || (lang === 'ar' ? 'البريد الإلكتروني' : 'Email'),
+    status: dictionary?.status || (lang === 'ar' ? 'الحالة' : 'Status'),
+    created: dictionary?.created || (lang === 'ar' ? 'تاريخ الإنشاء' : 'Created'),
+    actions: lang === 'ar' ? 'إجراءات' : 'Actions',
+    view: lang === 'ar' ? 'عرض' : 'View',
+    edit: lang === 'ar' ? 'تعديل' : 'Edit',
+    delete: lang === 'ar' ? 'حذف' : 'Delete',
+    allTeachers: dictionary?.allTeachers || (lang === 'ar' ? 'جميع المعلمين' : 'All Teachers'),
+    addNewTeacher: dictionary?.addNewTeacher || (lang === 'ar' ? 'أضف معلماً جديداً إلى مدرستك' : 'Add a new teacher to your school'),
+    active: dictionary?.active || (lang === 'ar' ? 'نشط' : 'Active'),
+    inactive: dictionary?.inactive || (lang === 'ar' ? 'غير نشط' : 'Inactive'),
+    search: dictionary?.search || (lang === 'ar' ? 'بحث في المعلمين...' : 'Search teachers...'),
+    create: dictionary?.create || (lang === 'ar' ? 'إنشاء' : 'Create'),
+    export: dictionary?.export || (lang === 'ar' ? 'تصدير' : 'Export'),
+    reset: dictionary?.reset || (lang === 'ar' ? 'إعادة تعيين' : 'Reset'),
+    noAccount: lang === 'ar' ? 'لا يوجد حساب' : 'No Account',
   };
 
   // View mode (table/grid)
@@ -82,8 +83,8 @@ export function TeachersTable({ initialData, total, dictionary, perPage = 20 }: 
     filters: searchValue ? { name: searchValue } : undefined,
   });
 
-  // Generate columns on the client side with hooks
-  const columns = useMemo(() => getTeacherColumns(dictionary), [dictionary]);
+  // Generate columns on the client side with dictionary and lang
+  const columns = useMemo(() => getTeacherColumns(dictionary, lang), [dictionary, lang]);
 
   // Table instance
   const { table } = useDataTable<TeacherRow>({
@@ -113,7 +114,8 @@ export function TeachersTable({ initialData, total, dictionary, perPage = 20 }: 
   // Handle delete with optimistic update
   const handleDelete = useCallback(async (teacher: TeacherRow) => {
     try {
-      const ok = await confirmDeleteDialog(`Delete ${teacher.name}?`);
+      const deleteMsg = lang === 'ar' ? `حذف ${teacher.name}؟` : `Delete ${teacher.name}?`;
+      const ok = await confirmDeleteDialog(deleteMsg);
       if (!ok) return;
 
       // Optimistic remove
@@ -125,13 +127,13 @@ export function TeachersTable({ initialData, total, dictionary, perPage = 20 }: 
       } else {
         // Revert on error
         refresh();
-        ErrorToast("Failed to delete teacher");
+        ErrorToast(lang === 'ar' ? 'فشل حذف المعلم' : 'Failed to delete teacher');
       }
     } catch (e) {
       refresh();
-      ErrorToast(e instanceof Error ? e.message : "Failed to delete");
+      ErrorToast(e instanceof Error ? e.message : (lang === 'ar' ? 'فشل الحذف' : 'Failed to delete'));
     }
-  }, [optimisticRemove, refresh]);
+  }, [optimisticRemove, refresh, lang]);
 
   // Handle edit
   const handleEdit = useCallback((id: string) => {
@@ -141,11 +143,11 @@ export function TeachersTable({ initialData, total, dictionary, perPage = 20 }: 
   // Handle view
   const handleView = useCallback((teacher: TeacherRow) => {
     if (!teacher.userId) {
-      ErrorToast("This teacher does not have a user account");
+      ErrorToast(lang === 'ar' ? 'هذا المعلم ليس لديه حساب مستخدم' : 'This teacher does not have a user account');
       return;
     }
     router.push(`/profile/${teacher.userId}`);
-  }, [router]);
+  }, [router, lang]);
 
   // Get status badge
   const getStatusBadge = (status: string) => {
@@ -161,12 +163,12 @@ export function TeachersTable({ initialData, total, dictionary, perPage = 20 }: 
 
   // Toolbar translations
   const toolbarTranslations = {
-    search: t.search || "Search teachers...",
-    create: t.create || "Create",
-    reset: t.reset || "Reset",
-    export: t.export || "Export",
-    exportCSV: "Export CSV",
-    exporting: "Exporting...",
+    search: t.search,
+    create: t.create,
+    reset: t.reset,
+    export: t.export,
+    exportCSV: lang === 'ar' ? 'تصدير CSV' : 'Export CSV',
+    exporting: lang === 'ar' ? 'جاري التصدير...' : 'Exporting...',
   };
 
   return (
@@ -177,7 +179,7 @@ export function TeachersTable({ initialData, total, dictionary, perPage = 20 }: 
         onToggleView={toggleView}
         searchValue={searchValue}
         onSearchChange={handleSearchChange}
-        searchPlaceholder={t.search || "Search teachers..."}
+        searchPlaceholder={t.search}
         onCreate={() => openModal()}
         getCSV={handleExportCSV}
         entityName="teachers"
@@ -196,8 +198,8 @@ export function TeachersTable({ initialData, total, dictionary, perPage = 20 }: 
         <>
           {data.length === 0 ? (
             <GridEmptyState
-              title={t.allTeachers || "All Teachers"}
-              description={t.addNewTeacher || "Add a new teacher to your school"}
+              title={t.allTeachers}
+              description={t.addNewTeacher}
               icon={<Users className="h-12 w-12" />}
             />
           ) : (
@@ -219,21 +221,21 @@ export function TeachersTable({ initialData, total, dictionary, perPage = 20 }: 
                     avatarFallback={initials}
                     status={statusBadge}
                     metadata={[
-                      { label: t.email || "Email", value: teacher.emailAddress },
-                      { label: t.created || "Created", value: new Date(teacher.createdAt).toLocaleDateString() },
+                      { label: t.email, value: teacher.emailAddress },
+                      { label: t.created, value: new Date(teacher.createdAt).toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-US') },
                     ]}
                     actions={[
                       ...(teacher.userId
-                        ? [{ label: t.viewTeacher || "View", onClick: () => handleView(teacher) }]
+                        ? [{ label: t.view, onClick: () => handleView(teacher) }]
                         : []),
-                      { label: t.editTeacher || "Pencil", onClick: () => handleEdit(teacher.id) },
+                      { label: t.edit, onClick: () => handleEdit(teacher.id) },
                       {
-                        label: t.deleteTeacher || "Delete",
+                        label: t.delete,
                         onClick: () => handleDelete(teacher),
                         variant: "destructive" as const,
                       },
                     ]}
-                    actionsLabel={t.actions || "Actions"}
+                    actionsLabel={t.actions}
                     onClick={() => teacher.userId && handleView(teacher)}
                   >
                     <div className="flex flex-col gap-1 mt-2">
@@ -246,7 +248,7 @@ export function TeachersTable({ initialData, total, dictionary, perPage = 20 }: 
                       {!teacher.userId && (
                         <Badge variant="outline" className="gap-1 text-xs w-fit">
                           <User className="h-3 w-3" />
-                          No Account
+                          {t.noAccount}
                         </Badge>
                       )}
                     </div>
@@ -264,7 +266,7 @@ export function TeachersTable({ initialData, total, dictionary, perPage = 20 }: 
                 disabled={isLoading}
                 className="px-4 py-2 text-sm border rounded-md hover:bg-accent disabled:opacity-50"
               >
-                {isLoading ? "Loading..." : "Load More"}
+                {isLoading ? (lang === 'ar' ? 'جاري التحميل...' : 'Loading...') : (lang === 'ar' ? 'تحميل المزيد' : 'Load More')}
               </button>
             </div>
           )}

@@ -66,6 +66,10 @@ const Hero = ({ dictionary, lang }: HeroProps) => {
             <span className="block">wonder.</span>
           </h1>
 
+          <p className="text-2xl text-muted-foreground">
+            open source. open code.
+          </p>
+
           <div className="flex flex-col sm:flex-row gap-3">
             <Link
               href={`/${lang || 'en'}/onboarding`}

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 30" fill="none">
+  <path d="M10 8C10 6.89543 10.8954 6 12 6H18C19.1046 6 20 6.89543 20 8V12C20 13.1046 19.1046 14 18 14H12C10.8954 14 10 13.1046 10 12V8Z" fill="#4F008C"/>
+  <path d="M10 18C10 16.8954 10.8954 16 12 16H18C19.1046 16 20 16.8954 20 18V22C20 23.1046 19.1046 24 18 24H12C10.8954 24 10 23.1046 10 22V18Z" fill="#00D68F"/>
+  <text x="26" y="19" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#4F008C">stc</text>
+  <text x="45" y="19" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#00D68F">pay</text>
+</svg>

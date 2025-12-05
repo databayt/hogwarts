@@ -39,7 +39,9 @@
     "unpaid": "unpaid",
     "connectedAccounts": "Connected accounts",
     "withSalaryStructures": "With salary structures",
-    "requiresApproval": "Requires approval"
+    "requiresApproval": "Requires approval",
+    "unpaidInvoices": "Unpaid Invoices",
+    "invoicesOutstanding": "Outstanding invoices"
   },
   "cards": {
     "invoicing": {

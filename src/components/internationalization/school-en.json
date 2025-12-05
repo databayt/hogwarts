@@ -263,7 +263,13 @@
       "settings": {
         "title": "Student Settings",
         "description": "Grading scales, promotion rules, and module configurations will be available here."
-      }
+      },
+      "created": "Created",
+      "addNewStudent": "Add New Student",
+      "search": "Search",
+      "create": "Create",
+      "export": "Export",
+      "reset": "Reset"
     },
     "teachers": {
       "title": "Teachers",
@@ -316,7 +322,13 @@
       "settings": {
         "title": "Teacher Settings",
         "description": "Module settings and configurations will be available here."
-      }
+      },
+      "created": "Created",
+      "addNewTeacher": "Add New Teacher",
+      "search": "Search",
+      "create": "Create",
+      "export": "Export",
+      "reset": "Reset"
     },
     "classes": {
       "title": "Classes",
@@ -360,7 +372,23 @@
       "settings": {
         "title": "Class Settings",
         "description": "Class size limits, assignment rules, and module configurations will be available here."
-      }
+      },
+      "courseCode": "Course Code",
+      "subject": "Subject",
+      "teacher": "Teacher",
+      "credits": "Credits",
+      "evaluation": "Evaluation",
+      "enrolled": "Enrolled",
+      "term": "Term",
+      "created": "Created",
+      "viewClass": "View Class",
+      "createClass": "Create Class",
+      "noClasses": "No Classes",
+      "addNewClass": "Add New Class",
+      "search": "Search",
+      "export": "Export",
+      "reset": "Reset",
+      "actions": "Actions"
     },
     "subjects": {
       "title": "Subjects",
@@ -377,7 +405,18 @@
       "mandatory": "Mandatory",
       "optional": "Optional",
       "assignTeacher": "Assign Teacher",
-      "curriculum": "Curriculum"
+      "curriculum": "Curriculum",
+      "subject": "Subject",
+      "created": "Created",
+      "addNewSubject": "Add New Subject",
+      "search": "Search",
+      "create": "Create",
+      "export": "Export",
+      "reset": "Reset",
+      "view": "View",
+      "edit": "Edit",
+      "delete": "Delete",
+      "actions": "Actions"
     },
     "timetable": {
       "title": "Timetable",
@@ -553,7 +592,18 @@
       "viewChildProgress": "View Child Progress",
       "viewAttendance": "View Attendance",
       "viewGrades": "View Grades",
-      "communicateWithTeacher": "Communicate with Teacher"
+      "communicateWithTeacher": "Communicate with Teacher",
+      "name": "Name",
+      "email": "Email",
+      "status": "Status",
+      "created": "Created",
+      "active": "Active",
+      "inactive": "Inactive",
+      "addNewParent": "Add New Parent",
+      "search": "Search",
+      "create": "Create",
+      "export": "Export",
+      "reset": "Reset"
     },
     "exams": {
       "title": "Examination Management",
@@ -761,7 +811,20 @@
       "settings": {
         "title": "Lesson Settings",
         "description": "Template defaults, sharing permissions, and module configurations will be available here."
-      }
+      },
+      "class": "Class",
+      "teacher": "Teacher",
+      "subject": "Subject",
+      "date": "Date",
+      "startTime": "Start Time",
+      "endTime": "End Time",
+      "status": "Status",
+      "time": "Time",
+      "allLessons": "All Lessons",
+      "addNewLesson": "Add New Lesson",
+      "search": "Search",
+      "export": "Export",
+      "reset": "Reset"
     },
     "events": {
       "title": "Events",
@@ -801,11 +864,29 @@
       "settings": {
         "title": "Event Settings",
         "description": "Event types, notification rules, and module configurations will be available here."
-      }
+      },
+      "type": "Type",
+      "date": "Date",
+      "startTime": "Start Time",
+      "location": "Location",
+      "organizer": "Organizer",
+      "audience": "Audience",
+      "attendees": "Attendees",
+      "status": "Status",
+      "allEvents": "All Events",
+      "addNewEvent": "Add New Event",
+      "search": "Search",
+      "export": "Export",
+      "reset": "Reset"
     },
     "assignments": {
       "title": "Assignments",
-      "description": "Manage academic assignments and assessments"
+      "description": "Manage academic assignments and assessments",
+      "type": "Type",
+      "points": "Points",
+      "dueDate": "Due Date",
+      "created": "Created",
+      "create": "Create Assignment"
     },
     "settings": {
       "title": "Settings",

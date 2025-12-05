@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { StatCard } from "../atom/stat-card"
 import { ActionCard } from "../atom/action-card"
 import { RecentTable } from "../atom/recent-table"
@@ -40,14 +40,7 @@ export async function AttendanceOverviewContent({
   return (
     <div className="flex flex-col gap-6 pb-14">
         {/* Quick Stats - Core-inspired colors */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
-          <StatCard
-            title={d?.stats?.totalStudents || "Total Records"}
-            value={statsResult.total}
-            description={d?.stats?.enrolledStudents || "All attendance records"}
-            iconName="Users"
-            iconBgColor="bg-[#6A9BCC]"
-          />
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard
             title={d?.stats?.present || "Present"}
             value={statsResult.present}
@@ -83,32 +76,28 @@ export async function AttendanceOverviewContent({
           <h3 className="mb-4 text-lg font-medium">Quick Actions</h3>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <ActionCard
-              title={d?.quickActions?.markAttendance || "Take Attendance"}
-              description="Mark attendance manually for a class"
+              title={"Mark\nAttendance"}
               href={`${basePath}/manual`}
               iconName="Pencil"
-              iconColor="text-green-600"
+              iconBgColor="bg-[#BCD1CA]"
             />
             <ActionCard
-              title="QR Code Session"
-              description="Generate QR code for students to scan"
+              title={"QR Code\nSession"}
               href={`${basePath}/qr-code`}
               iconName="QrCode"
-              iconColor="text-purple-600"
+              iconBgColor="bg-[#CBCADB]"
             />
             <ActionCard
-              title={d?.quickActions?.bulkImport || "Bulk Upload"}
-              description="Import attendance from CSV file"
-              href={`${basePath}/bulk-upload`}
-              iconName="Upload"
-              iconColor="text-blue-600"
+              title={"Live\nTracking"}
+              href={`${basePath}/realtime`}
+              iconName="Activity"
+              iconBgColor="bg-[#6A9BCC]"
             />
             <ActionCard
-              title={d?.quickActions?.viewReports || "View Reports"}
-              description="Generate and export attendance reports"
+              title={"View\nReport"}
               href={`${basePath}/reports`}
               iconName="FileText"
-              iconColor="text-orange-600"
+              iconBgColor="bg-[#D97757]"
             />
           </div>
         </section>

@@ -19,6 +19,7 @@ import {
   ErrorToast,
   confirmDeleteDialog,
 } from "@/components/atom/toast";
+import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import type { QuestionBankRow } from "./types";
 import {
@@ -248,6 +249,7 @@ export const getQuestionBankColumns = (): ColumnDef<QuestionBankRow>[] => [
     cell: ({ row }) => {
       const question = row.original;
       const { openModal } = useModal();
+      const router = useRouter();
 
       const onView = () => {
         const qs =
@@ -266,7 +268,7 @@ export const getQuestionBankColumns = (): ColumnDef<QuestionBankRow>[] => [
           const result = await deleteQuestion(question.id);
           if (result.success) {
             DeleteToast();
-            window.location.reload();
+            router.refresh();
           } else {
             ErrorToast(result.error);
           }
@@ -290,7 +292,7 @@ export const getQuestionBankColumns = (): ColumnDef<QuestionBankRow>[] => [
               <Eye className="mr-2 h-4 w-4" />
               View
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={onEdit}>Pencil</DropdownMenuItem>
+            <DropdownMenuItem onClick={onEdit}>Edit</DropdownMenuItem>
             <DropdownMenuItem onClick={onDelete} className="text-destructive">
               Delete
             </DropdownMenuItem>

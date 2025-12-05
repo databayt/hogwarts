@@ -1,11 +1,10 @@
 "use client"
 
-import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Calendar } from "@/components/ui/calendar"
 import { cn } from "@/lib/utils"
+import { useState, useEffect } from "react"
 import {
   Users,
   GraduationCap,
@@ -26,27 +25,35 @@ import {
   CreditCard,
   Bell,
   CalendarDays,
+  Droplets,
+  Wind,
+  Thermometer,
+  RefreshCcw,
+  ArrowRight,
+  Repeat2,
 } from "lucide-react"
+import Icon from "@mdi/react"
+import {
+  mdiWeatherSunny,
+  mdiWeatherPartlyCloudy,
+  mdiWeatherCloudy,
+  mdiWeatherRainy,
+  mdiWeatherPouring,
+  mdiWeatherSnowy,
+  mdiWeatherWindy,
+} from "@mdi/js"
 import Link from "next/link"
 import {
+  ChartConfig,
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart"
-import { Bar, BarChart, XAxis, YAxis, ResponsiveContainer } from "recharts"
+import { CartesianGrid, Line, LineChart, XAxis } from "recharts"
 
 // ============================================================================
 // TYPES
 // ============================================================================
-
-interface StatusCardData {
-  name: string
-  stat: string
-  goalsAchieved: number
-  totalGoals: number
-  status: "within" | "observe" | "critical"
-  href: string
-}
 
 interface QuickStatData {
   label: string
@@ -77,7 +84,6 @@ interface AdminDashboardClientProps {
   subdomain: string
   userName: string
   schoolName: string
-  statusData: StatusCardData[]
   quickStats: QuickStatData[]
   financeStats: FinanceStatData[]
   recentActivities: ActivityData[]
@@ -85,77 +91,336 @@ interface AdminDashboardClientProps {
 }
 
 // ============================================================================
-// SECTION 1: School Status (Stats-06 Pattern) - 3 Columns
+// SECTION 0: Upcoming Class + Weather
 // ============================================================================
 
-function StatusCard({ name, stat, goalsAchieved, totalGoals, status, href }: StatusCardData) {
+const weatherIconMap: Record<string, string> = {
+  sunny: mdiWeatherSunny,
+  partlycloudy: mdiWeatherPartlyCloudy,
+  cloudy: mdiWeatherCloudy,
+  rainy: mdiWeatherRainy,
+  pouring: mdiWeatherPouring,
+  snowy: mdiWeatherSnowy,
+  windy: mdiWeatherWindy,
+}
+
+function WeatherIcon({ condition, className }: { condition: string; className?: string }) {
+  return <Icon path={weatherIconMap[condition] || mdiWeatherSunny} className={cn("size-6", className)} />
+}
+
+const currentWeather = {
+  day: "Monday",
+  condition: "sunny",
+  conditionLabel: "Sunny",
+  temperature: 24,
+  tempLow: 18,
+  humidity: 45,
+  rainChance: 10,
+  windSpeed: 12,
+}
+
+const forecast = [
+  { day: "Tue", condition: "partlycloudy", temp: 22 },
+  { day: "Wed", condition: "cloudy", temp: 20 },
+  { day: "Thu", condition: "rainy", temp: 18 },
+  { day: "Fri", condition: "pouring", temp: 16 },
+  { day: "Sat", condition: "cloudy", temp: 19 },
+  { day: "Sun", condition: "sunny", temp: 23 },
+]
+
+function UpcomingClassCard({ locale, subdomain }: { locale: string; subdomain: string }) {
+  const [isFlipped, setIsFlipped] = useState(false)
+
+  const upcomingClass = {
+    title: "Upcoming Class",
+    subtitle: "Mathematics - Grade 10",
+    description: "Next scheduled class session",
+    details: [
+      { label: "Time", value: "09:00 AM" },
+      { label: "Room", value: "Hall A" },
+      { label: "Duration", value: "45 min" },
+      { label: "Students", value: "32" },
+    ],
+  }
+
   return (
-    <Card className="p-6 relative">
-      <CardContent className="p-0">
-        <p className="text-sm font-medium text-muted-foreground">{name}</p>
-        <p className="text-3xl font-semibold text-foreground">{stat}</p>
-        <div className="group relative mt-6 flex items-center space-x-4 rounded-md bg-muted/60 p-2 hover:bg-muted">
-          <div className="flex w-full items-center justify-between truncate">
-            <div className="flex items-center space-x-3">
-              <span
-                className={cn(
-                  "flex h-9 w-9 shrink-0 items-center justify-center rounded",
-                  status === "within"
-                    ? "bg-emerald-500 text-white"
-                    : status === "observe"
-                      ? "bg-yellow-500 text-white"
-                      : "bg-red-500 text-white"
-                )}
-              >
-                {status === "within" ? (
-                  <Check className="size-4 shrink-0" aria-hidden={true} />
-                ) : status === "observe" ? (
-                  <Eye className="size-4 shrink-0" aria-hidden={true} />
-                ) : (
-                  <TriangleAlert className="size-4 shrink-0" aria-hidden={true} />
-                )}
-              </span>
-              <div>
-                <p className="text-sm text-muted-foreground">
-                  <Link href={href} className="focus:outline-none">
-                    <span className="absolute inset-0" aria-hidden={true} />
-                    {goalsAchieved}/{totalGoals} goals
-                  </Link>
-                </p>
-                <p
-                  className={cn(
-                    "text-sm font-medium capitalize",
-                    status === "within"
-                      ? "text-emerald-700 dark:text-emerald-500"
-                      : status === "observe"
-                        ? "text-yellow-700 dark:text-yellow-500"
-                        : "text-red-700 dark:text-red-500"
-                  )}
-                >
-                  {status === "within" ? "On Track" : status === "observe" ? "Needs Attention" : "Critical"}
-                </p>
+    <div
+      className="group relative h-[320px] w-full max-w-[320px] [perspective:2000px]"
+      onMouseEnter={() => setIsFlipped(true)}
+      onMouseLeave={() => setIsFlipped(false)}
+    >
+      <div
+        className={cn(
+          "relative h-full w-full",
+          "[transform-style:preserve-3d]",
+          "transition-all duration-700",
+          isFlipped ? "[transform:rotateY(180deg)]" : "[transform:rotateY(0deg)]"
+        )}
+      >
+        {/* Front of card */}
+        <div
+          className={cn(
+            "absolute inset-0 h-full w-full",
+            "[backface-visibility:hidden] [transform:rotateY(0deg)]",
+            "overflow-hidden rounded-2xl",
+            "bg-card",
+            "border",
+            "shadow-sm",
+            "transition-all duration-700",
+            "group-hover:shadow-lg",
+            isFlipped ? "opacity-0" : "opacity-100"
+          )}
+        >
+          <div className="relative h-full overflow-hidden bg-gradient-to-b from-muted/50 to-background">
+            <div className="absolute inset-0 flex items-start justify-center pt-24">
+              <div className="relative flex h-[100px] w-[200px] items-center justify-center">
+                {[...Array(10)].map((_, i) => (
+                  <div
+                    key={i}
+                    className={cn(
+                      "absolute h-[50px] w-[50px]",
+                      "rounded-[140px]",
+                      "animate-pulse",
+                      "opacity-20",
+                      "bg-primary/30"
+                    )}
+                    style={{
+                      animationDelay: `${i * 0.3}s`,
+                      transform: `scale(${1 + i * 0.2})`,
+                    }}
+                  />
+                ))}
               </div>
             </div>
-            <ChevronRight
-              className="size-5 shrink-0 text-muted-foreground/60 group-hover:text-muted-foreground"
-              aria-hidden={true}
-            />
+          </div>
+
+          <div className="absolute bottom-0 left-0 right-0 p-5">
+            <div className="flex items-center justify-between gap-3">
+              <div className="space-y-1.5">
+                <h3 className="text-lg font-semibold leading-snug tracking-tighter text-foreground transition-all duration-500 ease-out group-hover:translate-y-[-4px]">
+                  {upcomingClass.title}
+                </h3>
+                <p className="line-clamp-2 text-sm tracking-tight text-muted-foreground transition-all delay-[50ms] duration-500 ease-out group-hover:translate-y-[-4px]">
+                  {upcomingClass.subtitle}
+                </p>
+              </div>
+              <div className="group/icon relative">
+                <div
+                  className={cn(
+                    "absolute inset-[-8px] rounded-lg transition-opacity duration-300",
+                    "bg-gradient-to-br from-primary/20 via-primary/10 to-transparent"
+                  )}
+                />
+                <Repeat2 className="relative z-10 h-4 w-4 text-primary transition-transform duration-300 group-hover/icon:-rotate-12 group-hover/icon:scale-110" />
+              </div>
+            </div>
           </div>
         </div>
-      </CardContent>
-    </Card>
+
+        {/* Back of card */}
+        <div
+          className={cn(
+            "absolute inset-0 h-full w-full",
+            "[backface-visibility:hidden] [transform:rotateY(180deg)]",
+            "flex flex-col rounded-2xl border p-6",
+            "bg-gradient-to-b from-muted/50 to-background",
+            "shadow-sm",
+            "transition-all duration-700",
+            "group-hover:shadow-lg",
+            !isFlipped ? "opacity-0" : "opacity-100"
+          )}
+        >
+          <div className="flex-1 space-y-6">
+            <div className="space-y-2">
+              <h3 className="text-lg font-semibold leading-snug tracking-tight text-foreground transition-all duration-500 ease-out group-hover:translate-y-[-2px]">
+                {upcomingClass.title}
+              </h3>
+              <p className="line-clamp-2 text-sm tracking-tight text-muted-foreground transition-all duration-500 ease-out group-hover:translate-y-[-2px]">
+                {upcomingClass.description}
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              {upcomingClass.details.map((detail, index) => (
+                <div
+                  key={detail.label}
+                  className="flex items-center justify-between text-sm transition-all duration-500"
+                  style={{
+                    transform: isFlipped ? "translateX(0)" : "translateX(-10px)",
+                    opacity: isFlipped ? 1 : 0,
+                    transitionDelay: `${index * 100 + 200}ms`,
+                  }}
+                >
+                  <span className="text-muted-foreground">{detail.label}</span>
+                  <span className="font-medium text-foreground">{detail.value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="mt-6 border-t pt-6">
+            <Link
+              href={`/${locale}/s/${subdomain}/timetable`}
+              className={cn(
+                "group/start relative",
+                "flex items-center justify-between",
+                "-m-3 rounded-xl p-3",
+                "transition-all duration-300",
+                "bg-muted/50",
+                "hover:bg-primary/10",
+                "hover:scale-[1.02]"
+              )}
+            >
+              <span className="text-sm font-medium text-foreground transition-colors duration-300 group-hover/start:text-primary">
+                View Timetable
+              </span>
+              <div className="group/icon relative">
+                <div
+                  className={cn(
+                    "absolute inset-[-6px] rounded-lg transition-all duration-300",
+                    "bg-gradient-to-br from-primary/20 via-primary/10 to-transparent",
+                    "scale-90 opacity-0 group-hover/start:scale-100 group-hover/start:opacity-100"
+                  )}
+                />
+                <ArrowRight className="relative z-10 h-4 w-4 text-primary transition-all duration-300 group-hover/start:translate-x-0.5 group-hover/start:scale-110" />
+              </div>
+            </Link>
+          </div>
+        </div>
+      </div>
+    </div>
   )
 }
 
-function SchoolStatusSection({ statusData }: { statusData: StatusCardData[] }) {
+function DateTimeDisplay() {
+  const [currentTime, setCurrentTime] = useState(new Date())
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000)
+    return () => clearInterval(timer)
+  }, [])
+
+  const hours = currentTime.getHours()
+  const period = hours >= 12 ? "PM" : "AM"
+  const displayHours = hours % 12 || 12
+  const minutes = currentTime.getMinutes().toString().padStart(2, "0")
+
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString("en-US", {
+      weekday: "long",
+      month: "short",
+      day: "numeric",
+    })
+  }
+
+  return (
+    <div className="flex flex-col items-end justify-center text-right">
+      <p className="text-sm font-medium text-muted-foreground">{period}</p>
+      <p className="text-4xl font-bold tabular-nums">{displayHours}:{minutes}</p>
+      <p className="text-sm text-muted-foreground">{formatDate(currentTime)}</p>
+    </div>
+  )
+}
+
+function WeatherDateTime() {
+  const [currentTime, setCurrentTime] = useState(new Date())
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000)
+    return () => clearInterval(timer)
+  }, [])
+
+  const hours = currentTime.getHours()
+  const period = hours >= 12 ? "PM" : "AM"
+  const displayHours = hours % 12 || 12
+  const minutes = currentTime.getMinutes().toString().padStart(2, "0")
+
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+    })
+  }
+
+  return (
+    <div className="flex flex-col gap-1">
+      <div className="flex items-center gap-2">
+        <Clock className="size-4 text-muted-foreground" />
+        <span className="text-base font-medium text-foreground">{displayHours}:{minutes} {period}</span>
+      </div>
+      <div className="flex items-center gap-2">
+        <CalendarDays className="size-4 text-muted-foreground" />
+        <span className="text-xs text-muted-foreground">{formatDate(currentTime)}</span>
+      </div>
+    </div>
+  )
+}
+
+function TopSection({ locale, subdomain }: { locale: string; subdomain: string }) {
   return (
     <section>
-      <h2 className="mb-4 text-lg font-semibold">School Status</h2>
-      <dl className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {statusData.map((item) => (
-          <StatusCard key={item.name} {...item} />
-        ))}
-      </dl>
+      <div className="flex flex-wrap gap-12 items-start">
+        {/* Upcoming Class Card */}
+        <UpcomingClassCard locale={locale} subdomain={subdomain} />
+
+        {/* Weather - no border, no padding, same height as card */}
+        <div className="w-full max-w-md h-[320px] flex flex-col justify-between">
+          <div>
+            {/* Header with current weather */}
+            <div className="flex items-start justify-between">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <p className="text-lg font-medium">{currentWeather.day}</p>
+                  <div className="flex items-center gap-1 text-muted-foreground">
+                    <WeatherIcon condition={currentWeather.condition} className="size-5" />
+                    <span className="text-sm">({currentWeather.conditionLabel})</span>
+                  </div>
+                </div>
+
+                {/* Weather metrics */}
+                <div className="mt-3 space-y-2">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Droplets className="size-4" />
+                    <span>Humidity: {currentWeather.humidity}%</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <span className="text-primary">Rain: {currentWeather.rainChance}%</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Thermometer className="size-4" />
+                    <span>
+                      {currentWeather.temperature}° ({currentWeather.tempLow}°)
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Wind className="size-4" />
+                    <span>{currentWeather.windSpeed} km/h</span>
+                  </div>
+                  {/* Time and Date */}
+                  <div className="pt-2">
+                    <WeatherDateTime />
+                  </div>
+                </div>
+              </div>
+
+              <Button size="icon" variant="ghost">
+                <RefreshCcw className="size-4" />
+              </Button>
+            </div>
+
+            {/* Forecast strip */}
+            <div className="mt-6 flex justify-between rounded-lg bg-muted/50 p-3">
+              {forecast.map((item) => (
+                <div key={item.day} className="flex flex-col items-center gap-1">
+                  <span className="text-xs text-muted-foreground">{item.day}</span>
+                  <WeatherIcon condition={item.condition} className="size-6" />
+                  <span className="text-sm font-medium">{item.temp}°</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
     </section>
   )
 }
@@ -229,23 +494,28 @@ const financeIconMap: Record<string, React.ElementType> = {
   Overdue: TriangleAlert,
 }
 
+const revenueChartData = [
+  { average: 18000, today: 22000, day: "Monday" },
+  { average: 19000, today: 25000, day: "Tuesday" },
+  { average: 17500, today: 21000, day: "Wednesday" },
+  { average: 20000, today: 28000, day: "Thursday" },
+  { average: 18500, today: 24000, day: "Friday" },
+  { average: 16000, today: 19500, day: "Saturday" },
+  { average: 15000, today: 17000, day: "Sunday" },
+]
+
+const revenueChartConfig = {
+  today: {
+    label: "This Week",
+    color: "var(--primary)",
+  },
+  average: {
+    label: "Average",
+    color: "var(--primary)",
+  },
+} satisfies ChartConfig
+
 function FinancialSection({ financeStats }: { financeStats: FinanceStatData[] }) {
-  const chartData = [
-    { month: "Jan", revenue: 18000 },
-    { month: "Feb", revenue: 22000 },
-    { month: "Mar", revenue: 19500 },
-    { month: "Apr", revenue: 25000 },
-    { month: "May", revenue: 21000 },
-    { month: "Jun", revenue: 19500 },
-  ]
-
-  const chartConfig = {
-    revenue: {
-      label: "Revenue",
-      color: "hsl(var(--chart-1))",
-    },
-  }
-
   return (
     <section>
       <h2 className="mb-4 text-lg font-semibold">Financial Overview</h2>
@@ -268,21 +538,62 @@ function FinancialSection({ financeStats }: { financeStats: FinanceStatData[] })
           })}
         </div>
 
-        {/* Chart */}
-        <Card className="p-6">
-          <CardHeader className="p-0 pb-4">
-            <CardTitle className="text-base">Monthly Revenue</CardTitle>
+        {/* Revenue Chart - Exercise Minutes style */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Revenue Collected</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Your revenue collection is ahead of where you normally are.
+            </p>
           </CardHeader>
-          <CardContent className="p-0">
-            <ChartContainer config={chartConfig} className="h-[200px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData}>
-                  <XAxis dataKey="month" tickLine={false} axisLine={false} />
-                  <YAxis tickLine={false} axisLine={false} tickFormatter={(value) => `$${value / 1000}k`} />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <Bar dataKey="revenue" fill="var(--color-revenue)" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+          <CardContent>
+            <ChartContainer config={revenueChartConfig} className="w-full md:h-[200px]">
+              <LineChart
+                accessibilityLayer
+                data={revenueChartData}
+                margin={{
+                  top: 5,
+                  right: 10,
+                  left: 16,
+                  bottom: 0,
+                }}
+              >
+                <CartesianGrid vertical={false} />
+                <XAxis
+                  dataKey="day"
+                  tickLine={false}
+                  axisLine={false}
+                  tickMargin={8}
+                  tickFormatter={(value) => value.slice(0, 3)}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="today"
+                  strokeWidth={2}
+                  stroke="var(--color-today)"
+                  dot={{
+                    fill: "var(--color-today)",
+                  }}
+                  activeDot={{
+                    r: 5,
+                  }}
+                />
+                <Line
+                  type="monotone"
+                  strokeWidth={2}
+                  dataKey="average"
+                  stroke="var(--color-average)"
+                  strokeOpacity={0.5}
+                  dot={{
+                    fill: "var(--color-average)",
+                    opacity: 0.5,
+                  }}
+                  activeDot={{
+                    r: 5,
+                  }}
+                />
+                <ChartTooltip content={<ChartTooltipContent />} />
+              </LineChart>
             </ChartContainer>
           </CardContent>
         </Card>
@@ -367,62 +678,85 @@ function RecentActivitySection({
 }
 
 // ============================================================================
-// SECTION 5: Schedule - Mini Calendar (1/3) + Event List (2/3)
+// SECTION 0: Quick Look - Announcements, Events, Notifications, Messages
 // ============================================================================
 
-function ScheduleSection() {
-  const [date, setDate] = useState<Date | undefined>(new Date())
-
-  const upcomingEvents = [
-    { date: "Dec 5", title: "Parent Meeting", time: "10:00 AM", location: "Main Hall" },
-    { date: "Dec 10", title: "Mid-term Exams Start", time: "All Day", location: "All Classes" },
-    { date: "Dec 25", title: "Winter Holiday", time: "All Day", location: "School Closed" },
-    { date: "Jan 2", title: "New Semester Begins", time: "8:00 AM", location: "All Classes" },
+function QuickLookSection({ locale, subdomain }: { locale: string; subdomain: string }) {
+  const quickLookItems = [
+    {
+      icon: Megaphone,
+      label: "Announcements",
+      count: 3,
+      newCount: 1,
+      recent: "Holiday Schedule Update",
+      href: `/${locale}/s/${subdomain}/announcements`,
+      color: "text-[#D97757]",
+      bgColor: "bg-[#D97757]/15"
+    },
+    {
+      icon: CalendarDays,
+      label: "Events",
+      count: 5,
+      newCount: 2,
+      recent: "Parent-Teacher Meeting",
+      href: `/${locale}/s/${subdomain}/events`,
+      color: "text-[#6A9BCC]",
+      bgColor: "bg-[#6A9BCC]/15"
+    },
+    {
+      icon: Bell,
+      label: "Notifications",
+      count: 12,
+      newCount: 4,
+      recent: "Fee reminder for Grade 10",
+      href: `/${locale}/s/${subdomain}/admin`,
+      color: "text-[#CBCADB]",
+      bgColor: "bg-[#CBCADB]/15"
+    },
+    {
+      icon: FileText,
+      label: "Messages",
+      count: 8,
+      newCount: 2,
+      recent: "Request for meeting",
+      href: `/${locale}/s/${subdomain}/admin`,
+      color: "text-[#BCD1CA]",
+      bgColor: "bg-[#BCD1CA]/15"
+    },
   ]
 
   return (
     <section>
-      <h2 className="mb-4 text-lg font-semibold">Schedule</h2>
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        {/* Mini Calendar */}
-        <Card className="p-4">
-          <Calendar
-            mode="single"
-            selected={date}
-            onSelect={setDate}
-            className="rounded-md"
-          />
-        </Card>
-
-        {/* Event List */}
-        <Card className="lg:col-span-2 p-6">
-          <CardHeader className="p-0 pb-4 flex flex-row items-center justify-between">
-            <CardTitle className="text-base">Upcoming Events</CardTitle>
-            <Button variant="ghost" size="sm" className="text-xs">
-              View Calendar <ChevronRight className="ml-1 h-3 w-3" />
-            </Button>
-          </CardHeader>
-          <CardContent className="p-0 space-y-3">
-            {upcomingEvents.map((event, index) => (
-              <div key={index} className="flex items-center gap-4 p-3 rounded-lg border hover:bg-muted/50 transition-colors">
-                <div className="flex flex-col items-center justify-center w-14 h-14 rounded-lg bg-primary/10">
-                  <span className="text-xs text-muted-foreground">{event.date.split(" ")[0]}</span>
-                  <span className="text-lg font-bold text-primary">{event.date.split(" ")[1]}</span>
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        {quickLookItems.map((item) => (
+          <Card key={item.label} className="p-4">
+            <CardContent className="p-0 space-y-3">
+              <div className="flex items-center gap-3">
+                <div className={cn("flex h-10 w-10 items-center justify-center rounded-lg", item.bgColor)}>
+                  <item.icon className={cn("h-5 w-5", item.color)} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium">{event.title}</p>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <Clock className="h-3 w-3" />
-                    <span>{event.time}</span>
-                    <span>-</span>
-                    <span>{event.location}</span>
+                  <p className="text-xs text-muted-foreground">{item.label}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-lg font-semibold">{item.count}</p>
+                    {item.newCount > 0 && (
+                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                        +{item.newCount}
+                      </Badge>
+                    )}
                   </div>
                 </div>
-                <ChevronRight className="h-5 w-5 text-muted-foreground" />
               </div>
-            ))}
-          </CardContent>
-        </Card>
+              <p className="text-xs text-muted-foreground truncate">{item.recent}</p>
+              <Link
+                href={item.href}
+                className="inline-flex items-center text-xs text-primary hover:underline"
+              >
+                View All <ChevronRight className="ml-1 h-3 w-3" />
+              </Link>
+            </CardContent>
+          </Card>
+        ))}
       </div>
     </section>
   )
@@ -466,7 +800,6 @@ function QuickActionsSection({ locale, subdomain }: { locale: string; subdomain:
 export function AdminDashboardClient({
   locale,
   subdomain,
-  statusData,
   quickStats,
   financeStats,
   recentActivities,
@@ -474,22 +807,16 @@ export function AdminDashboardClient({
 }: AdminDashboardClientProps) {
   return (
     <div className="space-y-8">
-      {/* Section 1: School Status (Stats-06) */}
-      <SchoolStatusSection statusData={statusData} />
+      {/* Section 0: Upcoming Class + Weather */}
+      <TopSection locale={locale} subdomain={subdomain} />
 
-      {/* Section 2: Quick Stats */}
-      <QuickStatsSection quickStats={quickStats} />
-
-      {/* Section 3: Financial Overview */}
-      <FinancialSection financeStats={financeStats} />
+      {/* Section 1: Quick Look */}
+      <QuickLookSection locale={locale} subdomain={subdomain} />
 
       {/* Section 4: Recent Activity */}
       <RecentActivitySection recentActivities={recentActivities} todaySummary={todaySummary} />
 
-      {/* Section 5: Schedule */}
-      <ScheduleSection />
-
-      {/* Section 6: Quick Actions */}
+      {/* Section 5: Quick Actions */}
       <QuickActionsSection locale={locale} subdomain={subdomain} />
     </div>
   )

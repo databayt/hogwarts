@@ -8,11 +8,15 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { FileText, Receipt, Building2, CreditCard, DollarSign, Users, Clock, Wallet, TrendingUp, BookOpen, CircleAlert, CircleCheck, Calendar, Banknote,  } from "lucide-react"
+import { FileText, Receipt, Building2, CreditCard, DollarSign, Users, Clock, Wallet, TrendingUp, BookOpen, CircleAlert } from "lucide-react"
+import Image from 'next/image'
 import { PieChart, FileBarChart } from "lucide-react"
 import Link from 'next/link'
 import { db } from '@/lib/db'
 import { getTenantContext } from '@/lib/tenant-context'
+import { InteractiveBarChart } from '@/components/platform/dashboard/charts/interactive-bar-chart'
+import { RadialTextChart } from '@/components/platform/dashboard/charts/radial-text-chart'
+import { AreaChartStacked } from '@/components/platform/dashboard/charts/area-chart-stacked'
 
 interface Props {
   dictionary: Dictionary
@@ -124,141 +128,96 @@ export default async function FinanceContent({ dictionary, lang }: Props) {
   return (
     <div className="space-y-6">
       {/* Overview Stats - Financial Health */}
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2">
+        {/* Bank Card with Image */}
+        <div className="flex items-center justify-center">
+          <Image
+            src="/master-card.png"
+            alt="Bank Card"
+            width={1050}
+            height={600}
+            className="w-full h-auto max-w-md"
+            priority
+          />
+        </div>
+
+        {/* 2x2 Grid - Other Stats */}
+        <div className="grid grid-cols-2 gap-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
+              <CardTitle className="text-xs font-medium">
                 {d?.stats?.totalRevenue || 'Total Revenue'}
               </CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+              <TrendingUp className="h-3.5 w-3.5 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
-                ${(totalRevenue / 100).toLocaleString()}
+              <div className="text-lg font-bold">
+                ${Math.floor(totalRevenue / 100).toLocaleString()}
               </div>
               <p className="text-xs text-muted-foreground">
-                {d?.stats?.fromCompletedPayments || 'From completed payments'}
+                {d?.stats?.fromCompletedPayments || 'Completed'}
               </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
+              <CardTitle className="text-xs font-medium">
                 {d?.stats?.totalExpenses || 'Total Expenses'}
               </CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
+              <DollarSign className="h-3.5 w-3.5 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
-                ${(totalExpenses / 100).toLocaleString()}
+              <div className="text-lg font-bold">
+                ${Math.floor(totalExpenses / 100).toLocaleString()}
               </div>
               <p className="text-xs text-muted-foreground">
-                {d?.stats?.approvedExpenses || 'Approved expenses'}
+                {d?.stats?.approvedExpenses || 'Approved'}
               </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                {d?.stats?.pendingPayments || 'Pending Payments'}
+              <CardTitle className="text-xs font-medium">
+                {d?.stats?.pendingPayments || 'Pending'}
               </CardTitle>
-              <CircleAlert className="h-4 w-4 text-muted-foreground" />
+              <CircleAlert className="h-3.5 w-3.5 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
-                ${(pendingPayments / 100).toLocaleString()}
+              <div className="text-lg font-bold">
+                ${Math.floor(pendingPayments / 100).toLocaleString()}
               </div>
               <p className="text-xs text-muted-foreground">
-                {d?.stats?.awaitingProcessing || 'Awaiting processing'}
+                {d?.stats?.awaitingProcessing || 'Awaiting'}
               </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                {d?.stats?.netBalance || 'Net Balance'}
+              <CardTitle className="text-xs font-medium">
+                {d?.stats?.unpaidInvoices || 'Unpaid'}
               </CardTitle>
-              <Banknote className="h-4 w-4 text-muted-foreground" />
+              <FileText className="h-3.5 w-3.5 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
-                ${((totalRevenue - totalExpenses) / 100).toLocaleString()}
-              </div>
+              <div className="text-lg font-bold">{unpaidInvoices}</div>
               <p className="text-xs text-muted-foreground">
-                {d?.stats?.revenueMinusExpenses || 'Revenue minus expenses'}
+                {d?.stats?.invoicesOutstanding || 'Invoices'}
               </p>
             </CardContent>
           </Card>
+        </div>
       </div>
 
-      {/* Module Activity Stats */}
-      <div className="grid gap-4 md:grid-cols-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                {d?.stats?.invoices || 'Invoices'}
-              </CardTitle>
-              <FileText className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{invoicesCount}</div>
-              <p className="text-xs text-muted-foreground">
-                {unpaidInvoices} {d?.stats?.unpaid || 'unpaid'}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                {d?.stats?.bankAccounts || 'Bank Accounts'}
-              </CardTitle>
-              <Building2 className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{bankAccountsCount}</div>
-              <p className="text-xs text-muted-foreground">
-                {d?.stats?.connectedAccounts || 'Connected accounts'}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                {d?.stats?.activeStaff || 'Active Staff'}
-              </CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {teachersWithSalaryCount}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                {d?.stats?.withSalaryStructures || 'With salary structures'}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                {d?.stats?.pendingActions || 'Pending Actions'}
-              </CardTitle>
-              <Clock className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {pendingPayrollCount + pendingTimesheetsCount + pendingExpensesCount}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                {d?.stats?.requiresApproval || 'Requires approval'}
-              </p>
-            </CardContent>
-          </Card>
+      {/* Charts Section */}
+      <div className="space-y-4">
+        <InteractiveBarChart />
+        <div className="grid gap-4 md:grid-cols-2">
+          <RadialTextChart />
+          <AreaChartStacked />
+        </div>
       </div>
 
       {/* More Features - Secondary Navigation Links */}

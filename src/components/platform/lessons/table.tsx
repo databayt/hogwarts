@@ -7,6 +7,8 @@ import { getLessonColumns, type LessonRow } from "./columns";
 import { useModal } from "@/components/atom/modal/context";
 import Modal from "@/components/atom/modal/modal";
 import { LessonCreateForm } from "@/components/platform/lessons/form";
+import type { Dictionary } from "@/components/internationalization/dictionaries";
+import type { Locale } from "@/components/internationalization/config";
 import { getLessons, getLessonsCSV, deleteLesson } from "./actions";
 import { usePlatformView } from "@/hooks/use-platform-view";
 import { usePlatformData } from "@/hooks/use-platform-data";
@@ -24,35 +26,35 @@ import { Badge } from "@/components/ui/badge";
 interface LessonsTableProps {
   initialData: LessonRow[];
   total: number;
+  dictionary?: Dictionary['school']['lessons'];
+  lang: Locale;
   perPage?: number;
 }
 
-export function LessonsTable({ initialData, total, perPage = 20 }: LessonsTableProps) {
+export function LessonsTable({ initialData, total, dictionary, lang, perPage = 20 }: LessonsTableProps) {
   const router = useRouter();
   const { openModal } = useModal();
   const [isPending, startTransition] = useTransition();
 
-  // Translations
+  // Translations with fallbacks
   const t = {
-    title: "Title",
-    class: "Class",
-    teacher: "Teacher",
-    subject: "Subject",
-    date: "Date",
-    time: "Time",
-    status: "Status",
-    actions: "Actions",
-    editLesson: "Edit Lesson",
-    deleteLesson: "Delete Lesson",
-    viewLesson: "View Lesson",
-    createLesson: "Create Lesson",
-    allLessons: "All Lessons",
-    noLessons: "No lessons found",
-    addNewLesson: "Plan a new lesson for your class",
-    search: "Search lessons...",
-    create: "Create",
-    export: "Export",
-    reset: "Reset",
+    title: dictionary?.title || (lang === 'ar' ? 'العنوان' : 'Title'),
+    class: dictionary?.class || (lang === 'ar' ? 'الفصل' : 'Class'),
+    teacher: dictionary?.teacher || (lang === 'ar' ? 'المعلم' : 'Teacher'),
+    subject: dictionary?.subject || (lang === 'ar' ? 'المادة' : 'Subject'),
+    date: dictionary?.date || (lang === 'ar' ? 'التاريخ' : 'Date'),
+    time: dictionary?.time || (lang === 'ar' ? 'الوقت' : 'Time'),
+    status: dictionary?.status || (lang === 'ar' ? 'الحالة' : 'Status'),
+    actions: lang === 'ar' ? 'إجراءات' : 'Actions',
+    view: lang === 'ar' ? 'عرض' : 'View',
+    edit: lang === 'ar' ? 'تعديل' : 'Edit',
+    delete: lang === 'ar' ? 'حذف' : 'Delete',
+    allLessons: dictionary?.allLessons || (lang === 'ar' ? 'جميع الدروس' : 'All Lessons'),
+    addNewLesson: dictionary?.addNewLesson || (lang === 'ar' ? 'خطط درسًا جديدًا لفصلك' : 'Plan a new lesson for your class'),
+    search: dictionary?.search || (lang === 'ar' ? 'بحث في الدروس...' : 'Search lessons...'),
+    create: dictionary?.create || (lang === 'ar' ? 'إنشاء' : 'Create'),
+    export: dictionary?.export || (lang === 'ar' ? 'تصدير' : 'Export'),
+    reset: dictionary?.reset || (lang === 'ar' ? 'إعادة تعيين' : 'Reset'),
   };
 
   // View mode (table/grid)
@@ -81,8 +83,8 @@ export function LessonsTable({ initialData, total, perPage = 20 }: LessonsTableP
     filters: searchValue ? { title: searchValue } : undefined,
   });
 
-  // Generate columns on the client side
-  const columns = useMemo(() => getLessonColumns(), []);
+  // Generate columns on the client side with dictionary and lang
+  const columns = useMemo(() => getLessonColumns(dictionary, lang), [dictionary, lang]);
 
   // Table instance
   const { table } = useDataTable<LessonRow>({
@@ -115,7 +117,8 @@ export function LessonsTable({ initialData, total, perPage = 20 }: LessonsTableP
   // Handle delete with optimistic update
   const handleDelete = useCallback(async (lesson: LessonRow) => {
     try {
-      const ok = await confirmDeleteDialog(`Delete "${lesson.title}"?`);
+      const deleteMsg = lang === 'ar' ? `حذف "${lesson.title}"؟` : `Delete "${lesson.title}"?`;
+      const ok = await confirmDeleteDialog(deleteMsg);
       if (!ok) return;
 
       // Optimistic remove
@@ -127,13 +130,13 @@ export function LessonsTable({ initialData, total, perPage = 20 }: LessonsTableP
       } else {
         // Revert on error
         refresh();
-        ErrorToast("Failed to delete lesson");
+        ErrorToast(lang === 'ar' ? 'فشل حذف الدرس' : 'Failed to delete lesson');
       }
     } catch (e) {
       refresh();
-      ErrorToast(e instanceof Error ? e.message : "Failed to delete");
+      ErrorToast(e instanceof Error ? e.message : (lang === 'ar' ? 'فشل الحذف' : 'Failed to delete'));
     }
-  }, [optimisticRemove, refresh]);
+  }, [optimisticRemove, refresh, lang]);
 
   // Handle edit
   const handleEdit = useCallback((id: string) => {
@@ -158,17 +161,23 @@ export function LessonsTable({ initialData, total, perPage = 20 }: LessonsTableP
       COMPLETED: "outline",
       CANCELLED: "destructive",
     };
-    return { label: status.replace("_", " "), variant: variants[status] || "default" };
+    const labels: Record<string, { en: string; ar: string }> = {
+      PLANNED: { en: 'Planned', ar: 'مخطط' },
+      IN_PROGRESS: { en: 'In Progress', ar: 'قيد التنفيذ' },
+      COMPLETED: { en: 'Completed', ar: 'مكتمل' },
+      CANCELLED: { en: 'Cancelled', ar: 'ملغي' },
+    };
+    return { label: labels[status]?.[lang] || status.replace("_", " "), variant: variants[status] || "default" };
   };
 
   // Toolbar translations
   const toolbarTranslations = {
     search: t.search,
-    create: t.create,
+    create: typeof t.create === 'string' ? t.create : t.addNewLesson,
     reset: t.reset,
     export: t.export,
-    exportCSV: "Export CSV",
-    exporting: "Exporting...",
+    exportCSV: lang === 'ar' ? 'تصدير CSV' : 'Export CSV',
+    exporting: lang === 'ar' ? 'جاري التصدير...' : 'Exporting...',
   };
 
   return (
@@ -231,13 +240,13 @@ export function LessonsTable({ initialData, total, perPage = 20 }: LessonsTableP
                         ),
                       },
                       { label: t.subject, value: lesson.subjectName },
-                      { label: t.date, value: new Date(lesson.lessonDate).toLocaleDateString() },
+                      { label: t.date, value: new Date(lesson.lessonDate).toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-US') },
                     ]}
                     actions={[
-                      { label: t.viewLesson, onClick: () => handleView(lesson.id) },
-                      { label: t.editLesson, onClick: () => handleEdit(lesson.id) },
+                      { label: t.view, onClick: () => handleView(lesson.id) },
+                      { label: t.edit, onClick: () => handleEdit(lesson.id) },
                       {
-                        label: t.deleteLesson,
+                        label: t.delete,
                         onClick: () => handleDelete(lesson),
                         variant: "destructive",
                       },
@@ -263,7 +272,7 @@ export function LessonsTable({ initialData, total, perPage = 20 }: LessonsTableP
                 disabled={isLoading}
                 className="px-4 py-2 text-sm border rounded-md hover:bg-accent disabled:opacity-50"
               >
-                {isLoading ? "Loading..." : "Load More"}
+                {isLoading ? (lang === 'ar' ? 'جاري التحميل...' : 'Loading...') : (lang === 'ar' ? 'تحميل المزيد' : 'Load More')}
               </button>
             </div>
           )}

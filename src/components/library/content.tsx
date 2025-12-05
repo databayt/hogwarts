@@ -2,12 +2,15 @@ import { db } from "@/lib/db";
 import { getTenantContext } from "@/lib/tenant-context";
 import BookOverview from "./book-list/book-overview";
 import BookList from "./book-list/content";
+import { LibraryHeroSection } from "./hero-section";
 
 interface Props {
   userId: string;
+  dictionary?: Record<string, unknown>;
+  lang?: string;
 }
 
-export default async function LibraryContent({ userId }: Props) {
+export default async function LibraryContent({ userId, dictionary, lang }: Props) {
   const { schoolId } = await getTenantContext();
 
   if (!schoolId) {
@@ -21,17 +24,58 @@ export default async function LibraryContent({ userId }: Props) {
     );
   }
 
-  const latestBooks = await db.book.findMany({
-    where: {
-      schoolId,
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
-    take: 13,
-  });
+  // Fetch books in parallel for different sections
+  const [heroBook, latestBooks, featuredBooks, literatureBooks, scienceBooks] = await Promise.all([
+    // Hero Book - the most recent featured book (Harry Potter)
+    db.book.findFirst({
+      where: { schoolId },
+      orderBy: { createdAt: "desc" },
+    }),
+    // Latest Books - skip hero, get next 6 books
+    db.book.findMany({
+      where: { schoolId },
+      orderBy: { createdAt: "desc" },
+      skip: 1,
+      take: 6,
+    }),
+    // Featured - skip latest 7 to show different ones
+    db.book.findMany({
+      where: { schoolId },
+      orderBy: { createdAt: "desc" },
+      skip: 7,
+      take: 6,
+    }),
+    // Literature - fiction, classic, drama, poetry genres
+    db.book.findMany({
+      where: {
+        schoolId,
+        OR: [
+          { genre: { contains: "Fiction" } },
+          { genre: { contains: "Classic" } },
+          { genre: { contains: "Drama" } },
+          { genre: { contains: "أدب" } },
+          { genre: { contains: "شعر" } },
+        ],
+      },
+      take: 6,
+    }),
+    // Science - science, history genres
+    db.book.findMany({
+      where: {
+        schoolId,
+        OR: [
+          { genre: { contains: "Science" } },
+          { genre: { contains: "History" } },
+          { genre: { contains: "فلسفة" } },
+        ],
+      },
+      take: 6,
+    }),
+  ]);
 
-  if (latestBooks.length === 0) {
+  const hasBooks = heroBook || latestBooks.length > 0;
+
+  if (!hasBooks) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh]">
         <div className="w-24 h-24 mb-6 rounded-full bg-muted flex items-center justify-center">
@@ -60,14 +104,46 @@ export default async function LibraryContent({ userId }: Props) {
 
   return (
     <div className="space-y-12">
-      {/* Featured Book */}
-      <BookOverview book={latestBooks[0]} userId={userId} />
+      {/* Hero Section */}
+      <LibraryHeroSection dictionary={dictionary} lang={lang} />
 
-      {/* Latest Books Grid */}
-      {latestBooks.length > 1 && (
+      {/* Featured Book - Single book highlight */}
+      {heroBook && (
+        <BookOverview book={heroBook} userId={userId} />
+      )}
+
+      {/* Row 1: Latest Books */}
+      {latestBooks.length > 0 && (
         <BookList
           title="Latest Books"
-          books={latestBooks.slice(1)}
+          books={latestBooks}
+          containerClassName=""
+        />
+      )}
+
+      {/* Row 2: Featured */}
+      {featuredBooks.length > 0 && (
+        <BookList
+          title="Featured"
+          books={featuredBooks}
+          containerClassName=""
+        />
+      )}
+
+      {/* Row 3: Literature */}
+      {literatureBooks.length > 0 && (
+        <BookList
+          title="Literature"
+          books={literatureBooks}
+          containerClassName=""
+        />
+      )}
+
+      {/* Row 4: Science */}
+      {scienceBooks.length > 0 && (
+        <BookList
+          title="Science"
+          books={scienceBooks}
           containerClassName=""
         />
       )}

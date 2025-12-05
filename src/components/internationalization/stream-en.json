@@ -3,11 +3,11 @@
     "title": "Stream LMS",
     "description": "Learning Management System",
     "home": {
-      "badge": "The Future of Online Education",
-      "title": "Elevate your Learning Experience",
-      "description": "Discover a new way to learn with our modern, interactive learning management system. Access high-quality courses anytime, anywhere.",
+      "badge": "Welcome to Hogwarts",
+      "title": "Lumos",
+      "description": "Shinning a light.",
       "exploreCourses": "Explore Courses",
-      "signIn": "Sign in",
+      "signIn": "Enter the Great Hall",
       "features": [
         {
           "title": "Comprehensive Courses",

@@ -40,12 +40,12 @@ interface RecentTableProps {
 }
 
 const statusVariants: Record<AttendanceStatus, { variant: "default" | "secondary" | "destructive" | "outline"; className?: string }> = {
-  PRESENT: { variant: "default", className: "bg-green-500 hover:bg-green-600" },
-  ABSENT: { variant: "destructive" },
-  LATE: { variant: "secondary", className: "bg-yellow-500 text-yellow-950 hover:bg-yellow-600" },
-  EXCUSED: { variant: "outline" },
-  SICK: { variant: "outline", className: "border-orange-500 text-orange-500" },
-  HOLIDAY: { variant: "secondary" },
+  PRESENT: { variant: "default", className: "!bg-emerald-400 !text-white hover:!bg-emerald-500" },
+  ABSENT: { variant: "destructive", className: "!bg-rose-400 !text-white hover:!bg-rose-500" },
+  LATE: { variant: "secondary", className: "!bg-amber-300 !text-amber-900 hover:!bg-amber-400" },
+  EXCUSED: { variant: "outline", className: "!border-sky-400 !text-sky-500" },
+  SICK: { variant: "outline", className: "!border-rose-400 !text-rose-500" },
+  HOLIDAY: { variant: "secondary", className: "!bg-sky-400 !text-white hover:!bg-sky-500" },
 }
 
 const methodLabels: Record<AttendanceMethod, string> = {

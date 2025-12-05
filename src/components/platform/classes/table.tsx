@@ -3,10 +3,12 @@
 import { useMemo, useState, useCallback, useTransition } from "react";
 import { DataTable } from "@/components/table/data-table";
 import { useDataTable } from "@/components/table/use-data-table";
-import { getClassColumns, type ClassRow } from "./columns";
+import { getClassColumns, getLocalizedClassName, getLocalizedSubjectName, type ClassRow } from "./columns";
 import { useModal } from "@/components/atom/modal/context";
 import Modal from "@/components/atom/modal/modal";
 import { ClassCreateForm } from "@/components/platform/classes/form";
+import type { Dictionary } from "@/components/internationalization/dictionaries";
+import type { Locale } from "@/components/internationalization/config";
 import { getClasses, getClassesCSV, deleteClass } from "./actions";
 import { usePlatformView } from "@/hooks/use-platform-view";
 import { usePlatformData } from "@/hooks/use-platform-data";
@@ -23,33 +25,35 @@ import { DeleteToast, ErrorToast, confirmDeleteDialog } from "@/components/atom/
 interface ClassesTableProps {
   initialData: ClassRow[];
   total: number;
+  dictionary?: Dictionary['school']['classes'];
+  lang: Locale;
   perPage?: number;
 }
 
-export function ClassesTable({ initialData, total, perPage = 20 }: ClassesTableProps) {
+export function ClassesTable({ initialData, total, dictionary, lang, perPage = 20 }: ClassesTableProps) {
   const router = useRouter();
   const { openModal } = useModal();
   const [isPending, startTransition] = useTransition();
 
-  // Translations
+  // Translations with fallbacks
   const t = {
-    className: "Class Name",
-    subject: "Subject",
-    teacher: "Teacher",
-    term: "Term",
-    enrolled: "Enrolled",
-    actions: "Actions",
-    editClass: "Edit Class",
-    deleteClass: "Delete Class",
-    viewClass: "View Class",
-    createClass: "Create Class",
-    allClasses: "All Classes",
-    noClasses: "No classes found",
-    addNewClass: "Add a new class to your school",
-    search: "Search classes...",
-    create: "Create",
-    export: "Export",
-    reset: "Reset",
+    className: dictionary?.className || (lang === 'ar' ? 'اسم الفصل' : 'Class Name'),
+    subject: dictionary?.subject || (lang === 'ar' ? 'المادة' : 'Subject'),
+    teacher: dictionary?.teacher || (lang === 'ar' ? 'المعلم' : 'Teacher'),
+    term: dictionary?.term || (lang === 'ar' ? 'الفصل الدراسي' : 'Term'),
+    enrolled: dictionary?.enrolled || (lang === 'ar' ? 'المسجلين' : 'Enrolled'),
+    actions: dictionary?.actions || (lang === 'ar' ? 'إجراءات' : 'Actions'),
+    editClass: dictionary?.editClass || (lang === 'ar' ? 'تعديل الفصل' : 'Edit Class'),
+    deleteClass: dictionary?.deleteClass || (lang === 'ar' ? 'حذف الفصل' : 'Delete Class'),
+    viewClass: dictionary?.viewClass || (lang === 'ar' ? 'عرض الفصل' : 'View Class'),
+    createClass: dictionary?.createClass || (lang === 'ar' ? 'إنشاء فصل' : 'Create Class'),
+    allClasses: dictionary?.allClasses || (lang === 'ar' ? 'جميع الفصول' : 'All Classes'),
+    noClasses: dictionary?.noClasses || (lang === 'ar' ? 'لا توجد فصول' : 'No classes found'),
+    addNewClass: dictionary?.addNewClass || (lang === 'ar' ? 'أضف فصلاً جديداً' : 'Add a new class to your school'),
+    search: dictionary?.search || (lang === 'ar' ? 'بحث في الفصول...' : 'Search classes...'),
+    create: dictionary?.create || (lang === 'ar' ? 'إنشاء' : 'Create'),
+    export: dictionary?.export || (lang === 'ar' ? 'تصدير' : 'Export'),
+    reset: dictionary?.reset || (lang === 'ar' ? 'إعادة تعيين' : 'Reset'),
   };
 
   // View mode (table/grid)
@@ -78,8 +82,8 @@ export function ClassesTable({ initialData, total, perPage = 20 }: ClassesTableP
     filters: searchValue ? { name: searchValue } : undefined,
   });
 
-  // Generate columns on the client side with hooks
-  const columns = useMemo(() => getClassColumns(), []);
+  // Generate columns on the client side with dictionary and lang
+  const columns = useMemo(() => getClassColumns(dictionary, lang), [dictionary, lang]);
 
   // Table instance
   const { table } = useDataTable<ClassRow>({
@@ -109,8 +113,9 @@ export function ClassesTable({ initialData, total, perPage = 20 }: ClassesTableP
 
   // Handle delete with optimistic update
   const handleDelete = useCallback(async (classItem: ClassRow) => {
+    const displayName = getLocalizedClassName(classItem, lang);
     try {
-      const ok = await confirmDeleteDialog(`Delete ${classItem.name}?`);
+      const ok = await confirmDeleteDialog(`${t.deleteClass} ${displayName}?`);
       if (!ok) return;
 
       // Optimistic remove
@@ -128,7 +133,7 @@ export function ClassesTable({ initialData, total, perPage = 20 }: ClassesTableP
       refresh();
       ErrorToast(e instanceof Error ? e.message : "Failed to delete");
     }
-  }, [optimisticRemove, refresh]);
+  }, [optimisticRemove, refresh, lang, t.deleteClass]);
 
   // Handle edit
   const handleEdit = useCallback((id: string) => {
@@ -148,11 +153,11 @@ export function ClassesTable({ initialData, total, perPage = 20 }: ClassesTableP
   // Toolbar translations
   const toolbarTranslations = {
     search: t.search,
-    create: t.create,
+    create: typeof t.create === 'string' ? t.create : t.createClass,
     reset: t.reset,
     export: t.export,
-    exportCSV: "Export CSV",
-    exporting: "Exporting...",
+    exportCSV: lang === 'ar' ? 'تصدير CSV' : 'Export CSV',
+    exporting: lang === 'ar' ? 'جاري التصدير...' : 'Exporting...',
   };
 
   return (
@@ -189,7 +194,9 @@ export function ClassesTable({ initialData, total, perPage = 20 }: ClassesTableP
           ) : (
             <GridContainer columns={3}>
               {data.map((classItem) => {
-                const initials = classItem.name
+                const displayName = getLocalizedClassName(classItem, lang);
+                const displaySubject = getLocalizedSubjectName(classItem, lang);
+                const initials = displayName
                   .split(" ")
                   .map((n) => n[0])
                   .join("")
@@ -199,8 +206,8 @@ export function ClassesTable({ initialData, total, perPage = 20 }: ClassesTableP
                 return (
                   <GridCard
                     key={classItem.id}
-                    title={classItem.name}
-                    subtitle={classItem.subjectName}
+                    title={displayName}
+                    subtitle={displaySubject}
                     avatarFallback={initials}
                     metadata={[
                       { label: t.teacher, value: classItem.teacherName },

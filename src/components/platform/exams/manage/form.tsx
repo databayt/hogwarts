@@ -16,7 +16,12 @@ import { ScheduleMarksStep } from "./schedule-marks";
 import { InstructionsDetailsStep } from "./instructions-details";
 import { ExamFormFooter } from "./footer";
 
-export function ExamCreateForm() {
+interface ExamCreateFormProps {
+  /** Callback fired on successful create/update - use for optimistic refresh */
+  onSuccess?: () => void;
+}
+
+export function ExamCreateForm({ onSuccess }: ExamCreateFormProps) {
   const { modal, closeModal } = useModal();
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
@@ -81,7 +86,12 @@ export function ExamCreateForm() {
     if (res?.success) {
       toast.success(currentId ? "Exam updated" : "Exam created");
       closeModal();
-      router.refresh();
+      // Use callback for optimistic update, fallback to router.refresh()
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        router.refresh();
+      }
     } else {
       toast.error(currentId ? "Failed to update exam" : "Failed to create exam");
     }

@@ -151,6 +151,7 @@ export const getAnnouncementColumns = (
           if (!ok) return;
           await deleteAnnouncement({ id: announcement.id });
           DeleteToast();
+          router.refresh();
         } catch (e) {
           ErrorToast(e instanceof Error ? e.message : t.failedToDelete);
         }

@@ -5,14 +5,16 @@ import { studentsSearchParams } from '@/components/platform/students/list-params
 import { db } from '@/lib/db'
 import { getTenantContext } from '@/lib/tenant-context'
 import type { Dictionary } from '@/components/internationalization/dictionaries'
+import type { Locale } from '@/components/internationalization/config'
 
 interface Props {
   searchParams: Promise<SearchParams>;
   school?: any;
   dictionary?: Dictionary['school'];
+  lang: Locale;
 }
 
-export default async function StudentsContent({ searchParams, school, dictionary }: Props) {
+export default async function StudentsContent({ searchParams, school, dictionary, lang }: Props) {
   const sp = await studentsSearchParams.parse(await searchParams)
   const { schoolId } = await getTenantContext()
   
@@ -49,7 +51,13 @@ export default async function StudentsContent({ searchParams, school, dictionary
     total = count as number
   }
   return (
-    <StudentsTable initialData={data} total={total} dictionary={dictionary?.students} perPage={sp.perPage} />
+    <StudentsTable
+      initialData={data}
+      total={total}
+      dictionary={dictionary?.students}
+      lang={lang}
+      perPage={sp.perPage}
+    />
   )
 }
 

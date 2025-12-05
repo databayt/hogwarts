@@ -7,6 +7,8 @@ import { getEventColumns, type EventRow } from "./columns";
 import { useModal } from "@/components/atom/modal/context";
 import Modal from "@/components/atom/modal/modal";
 import { EventCreateForm } from "@/components/platform/events/form";
+import type { Dictionary } from "@/components/internationalization/dictionaries";
+import type { Locale } from "@/components/internationalization/config";
 import { getEvents, getEventsCSV, deleteEvent } from "./actions";
 import { usePlatformView } from "@/hooks/use-platform-view";
 import { usePlatformData } from "@/hooks/use-platform-data";
@@ -24,35 +26,35 @@ import { Badge } from "@/components/ui/badge";
 interface EventsTableProps {
   initialData: EventRow[];
   total: number;
+  dictionary?: Dictionary['school']['events'];
+  lang: Locale;
   perPage?: number;
 }
 
-export function EventsTable({ initialData, total, perPage = 20 }: EventsTableProps) {
+export function EventsTable({ initialData, total, dictionary, lang, perPage = 20 }: EventsTableProps) {
   const router = useRouter();
   const { openModal } = useModal();
   const [isPending, startTransition] = useTransition();
 
-  // Translations
+  // Translations with fallbacks
   const t = {
-    title: "Title",
-    type: "Type",
-    date: "Date",
-    location: "Location",
-    organizer: "Organizer",
-    attendees: "Attendees",
-    status: "Status",
-    actions: "Actions",
-    editEvent: "Edit Event",
-    deleteEvent: "Delete Event",
-    viewEvent: "View Event",
-    createEvent: "Create Event",
-    allEvents: "All Events",
-    noEvents: "No events found",
-    addNewEvent: "Schedule a new school event",
-    search: "Search events...",
-    create: "Create",
-    export: "Export",
-    reset: "Reset",
+    title: dictionary?.title || (lang === 'ar' ? 'العنوان' : 'Title'),
+    type: dictionary?.type || (lang === 'ar' ? 'النوع' : 'Type'),
+    date: dictionary?.date || (lang === 'ar' ? 'التاريخ' : 'Date'),
+    location: dictionary?.location || (lang === 'ar' ? 'الموقع' : 'Location'),
+    organizer: dictionary?.organizer || (lang === 'ar' ? 'المنظم' : 'Organizer'),
+    attendees: dictionary?.attendees || (lang === 'ar' ? 'الحضور' : 'Attendees'),
+    status: dictionary?.status || (lang === 'ar' ? 'الحالة' : 'Status'),
+    actions: lang === 'ar' ? 'إجراءات' : 'Actions',
+    view: lang === 'ar' ? 'عرض' : 'View',
+    edit: lang === 'ar' ? 'تعديل' : 'Edit',
+    delete: lang === 'ar' ? 'حذف' : 'Delete',
+    allEvents: dictionary?.allEvents || (lang === 'ar' ? 'جميع الأحداث' : 'All Events'),
+    addNewEvent: dictionary?.addNewEvent || (lang === 'ar' ? 'جدولة حدث مدرسي جديد' : 'Schedule a new school event'),
+    search: dictionary?.search || (lang === 'ar' ? 'بحث في الأحداث...' : 'Search events...'),
+    create: dictionary?.create || (lang === 'ar' ? 'إنشاء' : 'Create'),
+    export: dictionary?.export || (lang === 'ar' ? 'تصدير' : 'Export'),
+    reset: dictionary?.reset || (lang === 'ar' ? 'إعادة تعيين' : 'Reset'),
   };
 
   // View mode (table/grid)
@@ -81,8 +83,8 @@ export function EventsTable({ initialData, total, perPage = 20 }: EventsTablePro
     filters: searchValue ? { title: searchValue } : undefined,
   });
 
-  // Generate columns on the client side
-  const columns = useMemo(() => getEventColumns(), []);
+  // Generate columns on the client side with dictionary and lang
+  const columns = useMemo(() => getEventColumns(dictionary, lang), [dictionary, lang]);
 
   // Table instance
   const { table } = useDataTable<EventRow>({
@@ -165,11 +167,11 @@ export function EventsTable({ initialData, total, perPage = 20 }: EventsTablePro
   // Toolbar translations
   const toolbarTranslations = {
     search: t.search,
-    create: t.create,
+    create: typeof t.create === 'string' ? t.create : t.addNewEvent,
     reset: t.reset,
     export: t.export,
-    exportCSV: "Export CSV",
-    exporting: "Exporting...",
+    exportCSV: lang === 'ar' ? 'تصدير CSV' : 'Export CSV',
+    exporting: lang === 'ar' ? 'جاري التصدير...' : 'Exporting...',
   };
 
   return (
@@ -243,10 +245,10 @@ export function EventsTable({ initialData, total, perPage = 20 }: EventsTablePro
                       },
                     ]}
                     actions={[
-                      { label: t.viewEvent, onClick: () => handleView(event.id) },
-                      { label: t.editEvent, onClick: () => handleEdit(event.id) },
+                      { label: t.view, onClick: () => handleView(event.id) },
+                      { label: t.edit, onClick: () => handleEdit(event.id) },
                       {
-                        label: t.deleteEvent,
+                        label: t.delete,
                         onClick: () => handleDelete(event),
                         variant: "destructive",
                       },

@@ -22,6 +22,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function Library({ params }: Props) {
   const { lang } = await params;
   const session = await auth();
+  const dictionary = await getDictionary(lang);
 
-  return <LibraryContent userId={session?.user?.id as string} />;
+  return (
+    <LibraryContent
+      userId={session?.user?.id as string}
+      dictionary={dictionary}
+      lang={lang}
+    />
+  );
 }

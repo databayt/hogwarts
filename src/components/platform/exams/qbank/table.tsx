@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { DataTable } from "@/components/table/data-table";
 import { DataTableToolbar } from "@/components/table/data-table-toolbar";
 import { useDataTable } from "@/components/table/use-data-table";
@@ -26,12 +27,21 @@ export function QuestionBankTable({
   perPage = 20,
   dictionary,
 }: QuestionBankTableProps) {
+  const router = useRouter();
   const columns = useMemo(() => getQuestionBankColumns(), []);
 
   // State for incremental loading
   const [data, setData] = useState<QuestionBankRow[]>(initialData);
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
+  const [isPending, startTransition] = useTransition();
+
+  // Refresh function for Modal callback
+  const refresh = useCallback(() => {
+    startTransition(() => {
+      router.refresh();
+    });
+  }, [router]);
 
   const hasMore = data.length < total;
 
@@ -128,7 +138,7 @@ export function QuestionBankTable({
             </Button>
           </div>
         </DataTableToolbar>
-        <Modal content={<QuestionBankForm dictionary={dictionary} />} />
+        <Modal content={<QuestionBankForm dictionary={dictionary} onSuccess={refresh} />} />
       </DataTable>
     </div>
   );

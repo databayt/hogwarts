@@ -263,7 +263,13 @@
       "settings": {
         "title": "إعدادات الطلاب",
         "description": "ستكون مقاييس التقدير وقواعد الترقية وتكوينات الوحدة متاحة هنا."
-      }
+      },
+      "created": "تاريخ الإنشاء",
+      "addNewStudent": "إضافة طالب جديد",
+      "search": "بحث",
+      "create": "إنشاء",
+      "export": "تصدير",
+      "reset": "إعادة تعيين"
     },
     "teachers": {
       "title": "المعلمون",
@@ -316,7 +322,13 @@
       "settings": {
         "title": "إعدادات المعلمين",
         "description": "ستكون الإعدادات والتكوينات متاحة هنا."
-      }
+      },
+      "created": "تاريخ الإنشاء",
+      "addNewTeacher": "إضافة معلم جديد",
+      "search": "بحث",
+      "create": "إنشاء",
+      "export": "تصدير",
+      "reset": "إعادة تعيين"
     },
     "classes": {
       "title": "الفصول",
@@ -360,7 +372,23 @@
       "settings": {
         "title": "إعدادات الفصول",
         "description": "ستكون حدود حجم الفصل وقواعد الواجبات وتكوينات الوحدة متاحة هنا."
-      }
+      },
+      "courseCode": "رمز المقرر",
+      "subject": "المادة",
+      "teacher": "المعلم",
+      "credits": "الساعات المعتمدة",
+      "evaluation": "التقييم",
+      "enrolled": "المسجلون",
+      "term": "الفصل الدراسي",
+      "created": "تاريخ الإنشاء",
+      "viewClass": "عرض الفصل",
+      "createClass": "إنشاء فصل",
+      "noClasses": "لا توجد فصول",
+      "addNewClass": "إضافة فصل جديد",
+      "search": "بحث",
+      "export": "تصدير",
+      "reset": "إعادة تعيين",
+      "actions": "إجراءات"
     },
     "subjects": {
       "title": "المواد",
@@ -377,7 +405,18 @@
       "mandatory": "إلزامي",
       "optional": "اختياري",
       "assignTeacher": "تعيين معلم",
-      "curriculum": "المنهج"
+      "curriculum": "المنهج",
+      "subject": "المادة",
+      "created": "تاريخ الإنشاء",
+      "addNewSubject": "إضافة مادة جديدة",
+      "search": "بحث",
+      "create": "إنشاء",
+      "export": "تصدير",
+      "reset": "إعادة تعيين",
+      "view": "عرض",
+      "edit": "تعديل",
+      "delete": "حذف",
+      "actions": "إجراءات"
     },
     "timetable": {
       "title": "الجدول الدراسي",
@@ -553,7 +592,18 @@
       "viewChildProgress": "عرض تقدم الطفل",
       "viewAttendance": "عرض الحضور",
       "viewGrades": "عرض الدرجات",
-      "communicateWithTeacher": "التواصل مع المعلم"
+      "communicateWithTeacher": "التواصل مع المعلم",
+      "name": "الاسم",
+      "email": "البريد الإلكتروني",
+      "status": "الحالة",
+      "created": "تاريخ الإنشاء",
+      "active": "نشط",
+      "inactive": "غير نشط",
+      "addNewParent": "إضافة ولي أمر جديد",
+      "search": "بحث",
+      "create": "إنشاء",
+      "export": "تصدير",
+      "reset": "إعادة تعيين"
     },
     "exams": {
       "title": "إدارة الامتحانات",
@@ -761,7 +811,20 @@
       "settings": {
         "title": "إعدادات الدروس",
         "description": "ستكون الإعدادات الافتراضية للقوالب وأذونات المشاركة وتكوينات الوحدة متاحة هنا."
-      }
+      },
+      "class": "الفصل",
+      "teacher": "المعلم",
+      "subject": "المادة",
+      "date": "التاريخ",
+      "startTime": "وقت البداية",
+      "endTime": "وقت النهاية",
+      "status": "الحالة",
+      "time": "الوقت",
+      "allLessons": "جميع الدروس",
+      "addNewLesson": "إضافة درس جديد",
+      "search": "بحث",
+      "export": "تصدير",
+      "reset": "إعادة تعيين"
     },
     "events": {
       "title": "الفعاليات",
@@ -801,11 +864,29 @@
       "settings": {
         "title": "إعدادات الفعاليات",
         "description": "ستكون أنواع الفعاليات وقواعد الإشعارات وتكوينات الوحدة متاحة هنا."
-      }
+      },
+      "type": "النوع",
+      "date": "التاريخ",
+      "startTime": "وقت البداية",
+      "location": "الموقع",
+      "organizer": "المنظم",
+      "audience": "الجمهور",
+      "attendees": "الحضور",
+      "status": "الحالة",
+      "allEvents": "جميع الفعاليات",
+      "addNewEvent": "إضافة فعالية جديدة",
+      "search": "بحث",
+      "export": "تصدير",
+      "reset": "إعادة تعيين"
     },
     "assignments": {
       "title": "الواجبات",
-      "description": "إدارة الواجبات والتقييمات الأكاديمية"
+      "description": "إدارة الواجبات والتقييمات الأكاديمية",
+      "type": "النوع",
+      "points": "الدرجات",
+      "dueDate": "تاريخ التسليم",
+      "created": "تاريخ الإنشاء",
+      "create": "إنشاء واجب"
     },
     "settings": {
       "title": "الإعدادات",

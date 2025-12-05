@@ -42,7 +42,7 @@ export default function PlatformSidebar({ school, lang, ...props }: PlatformSide
   }, [setOpenMobile]);
 
   return (
-    <Sidebar {...props} className="w-56 top-16" collapsible="offcanvas" side={isRTL ? "right" : "left"}>
+    <Sidebar {...props} className="w-56 top-16 px-2" collapsible="offcanvas" side={isRTL ? "right" : "left"}>
       {/* <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>

@@ -39,7 +39,9 @@
     "unpaid": "غير مدفوع",
     "connectedAccounts": "الحسابات المتصلة",
     "withSalaryStructures": "مع هياكل الرواتب",
-    "requiresApproval": "يتطلب الموافقة"
+    "requiresApproval": "يتطلب الموافقة",
+    "unpaidInvoices": "الفواتير غير المدفوعة",
+    "invoicesOutstanding": "الفواتير المستحقة"
   },
   "cards": {
     "invoicing": {

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { DataTable } from "@/components/table/data-table";
 import { DataTableToolbar } from "@/components/table/data-table-toolbar";
 import { useDataTable } from "@/components/table/use-data-table";
@@ -19,11 +20,20 @@ interface InvoiceTableProps {
 }
 
 export function InvoiceTable({ initialData, total, perPage = 20 }: InvoiceTableProps) {
+  const router = useRouter();
   const columns = useMemo(() => getInvoiceColumns(), []);
   // State for incremental loading
   const [data, setData] = useState<InvoiceRow[]>(initialData);
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
+  const [isPending, startTransition] = useTransition();
+
+  // Refresh function for Modal callback
+  const refresh = useCallback(() => {
+    startTransition(() => {
+      router.refresh();
+    });
+  }, [router]);
 
   const hasMore = data.length < total;
 
@@ -82,7 +92,7 @@ export function InvoiceTable({ initialData, total, perPage = 20 }: InvoiceTableP
           <Plus className="h-4 w-4" />
         </Button>
       </DataTableToolbar>
-      <Modal content={<InvoiceCreateForm />} />
+      <Modal content={<InvoiceCreateForm onSuccess={refresh} />} />
     </DataTable>
   );
 }

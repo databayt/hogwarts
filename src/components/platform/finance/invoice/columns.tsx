@@ -8,6 +8,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { useModal } from "@/components/atom/modal/context";
 import { deleteInvoice } from "@/components/platform/finance/invoice/actions";
 import { DeleteToast, ErrorToast, confirmDeleteDialog } from "@/components/atom/toast";
+import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import type { InvoiceRow } from "./types";
 
@@ -107,20 +108,22 @@ export const getInvoiceColumns = (): ColumnDef<InvoiceRow>[] => [
     cell: ({ row }) => {
       const invoice = row.original;
       const { openModal } = useModal();
-      
+      const router = useRouter();
+
       const onView = () => {
         const qs = typeof window !== 'undefined' ? (window.location.search || "") : "";
         window.location.href = `/invoice/${invoice.id}${qs}`;
       };
-      
+
       const onEdit = () => openModal(invoice.id);
-      
+
       const onDelete = async () => {
         try {
           const ok = await confirmDeleteDialog(`Delete invoice ${invoice.invoice_no}?`);
           if (!ok) return;
           await deleteInvoice({ id: invoice.id });
           DeleteToast();
+          router.refresh();
         } catch (e) {
           ErrorToast(e instanceof Error ? e.message : "Failed to delete");
         }

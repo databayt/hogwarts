@@ -73,7 +73,7 @@ export function SkillsSection({ dictionary, lang }: Omit<StreamContentProps, 'sc
           </h2>
           <p className="mt-4 text-muted-foreground text-[15px] leading-relaxed">
             {dictionary?.skills?.description ||
-              "Udemy helps you build in-demand skills fast and advance your career in a changing job market."}
+              "Hogwarts helps you build in-demand skills fast and advance your career in a changing job market."}
           </p>
         </div>
 
@@ -96,20 +96,18 @@ export function SkillsSection({ dictionary, lang }: Omit<StreamContentProps, 'sc
                   className="pl-4 basis-full sm:basis-1/2 lg:basis-1/3"
                 >
                   <Link href={`/${lang}${skill.href}`} className="block group">
-                    {/* Card - Udemy style */}
-                    <div className="relative overflow-hidden rounded-2xl bg-card border border-border/40 shadow-sm hover:shadow-xl transition-all duration-300 h-[400px] flex flex-col">
-                      {/* Image Section - Takes ~65% of card */}
-                      <div className="relative h-[65%] overflow-hidden">
-                        <Image
-                          src={skill.image}
-                          alt={skill.title}
-                          fill
-                          className="object-cover transition-transform duration-500 group-hover:scale-105"
-                        />
-                      </div>
+                    {/* Card - Hogwarts style */}
+                    <div className="relative overflow-hidden rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 h-[400px]">
+                      {/* Image as full background */}
+                      <Image
+                        src={skill.image}
+                        alt={skill.title}
+                        fill
+                        className="object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
 
-                      {/* Info Section - White bottom area ~35% */}
-                      <div className="flex-1 p-4 bg-card flex flex-col justify-between">
+                      {/* Info Section - White box at bottom with padding on sides */}
+                      <div className="absolute bottom-2 left-2 right-2 p-3 bg-card rounded-xl flex flex-col gap-2">
                         {/* Learner Count Badge */}
                         <div className="inline-flex items-center gap-1 px-2 py-0.5 w-fit rounded-full border border-border text-xs text-muted-foreground">
                           <Users className="h-3 w-3" />
@@ -117,7 +115,7 @@ export function SkillsSection({ dictionary, lang }: Omit<StreamContentProps, 'sc
                         </div>
 
                         {/* Title with Arrow */}
-                        <div className={`flex items-end justify-between ${isRTL ? "flex-row-reverse" : ""}`}>
+                        <div className={`flex items-center justify-between ${isRTL ? "flex-row-reverse" : ""}`}>
                           <h4 className="font-medium text-foreground text-base">
                             {skill.title}
                           </h4>

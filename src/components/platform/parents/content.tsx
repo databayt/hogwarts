@@ -54,7 +54,13 @@ export default async function ParentsContent({ searchParams, dictionary, lang }:
   }
   return (
     <div className="space-y-6">
-      <ParentsTable initialData={data} total={total} perPage={sp.perPage} />
+      <ParentsTable
+        initialData={data}
+        total={total}
+        dictionary={dictionary?.school?.parents}
+        lang={lang}
+        perPage={sp.perPage}
+      />
     </div>
   )
 }

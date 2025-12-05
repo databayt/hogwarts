@@ -8,6 +8,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { useModal } from "@/components/atom/modal/context";
 import { deleteExam } from "./actions";
 import { DeleteToast, ErrorToast, confirmDeleteDialog } from "@/components/atom/toast";
+import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { ExamRow } from "./types";
 
@@ -150,20 +151,22 @@ export const getExamColumns = (): ColumnDef<ExamRow>[] => [
     cell: ({ row }) => {
       const exam = row.original;
       const { openModal } = useModal();
-      
+      const router = useRouter();
+
       const onView = () => {
         const qs = typeof window !== 'undefined' ? (window.location.search || "") : "";
         window.location.href = `/exams/${exam.id}${qs}`;
       };
-      
+
       const onEdit = () => openModal(exam.id);
-      
+
       const onDelete = async () => {
         try {
           const ok = await confirmDeleteDialog(`Delete exam "${exam.title}"?`);
           if (!ok) return;
           await deleteExam({ id: exam.id });
           DeleteToast();
+          router.refresh();
         } catch (e) {
           ErrorToast(e instanceof Error ? e.message : "Failed to delete");
         }
@@ -181,7 +184,7 @@ export const getExamColumns = (): ColumnDef<ExamRow>[] => [
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={onView}>View</DropdownMenuItem>
-            <DropdownMenuItem onClick={onEdit}>Pencil</DropdownMenuItem>
+            <DropdownMenuItem onClick={onEdit}>Edit</DropdownMenuItem>
             <DropdownMenuItem onClick={onDelete}>Delete</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

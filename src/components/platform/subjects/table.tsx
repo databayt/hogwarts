@@ -3,10 +3,12 @@
 import { useMemo, useState, useCallback, useTransition } from "react";
 import { DataTable } from "@/components/table/data-table";
 import { useDataTable } from "@/components/table/use-data-table";
-import { getSubjectColumns, type SubjectRow } from "./columns";
+import { getSubjectColumns, getLocalizedSubjectName, getLocalizedDepartmentName, type SubjectRow } from "./columns";
 import { useModal } from "@/components/atom/modal/context";
 import Modal from "@/components/atom/modal/modal";
 import { SubjectCreateForm } from "@/components/platform/subjects/form";
+import type { Dictionary } from "@/components/internationalization/dictionaries";
+import type { Locale } from "@/components/internationalization/config";
 import { getSubjects, deleteSubject } from "./actions";
 import { usePlatformView } from "@/hooks/use-platform-view";
 import { usePlatformData } from "@/hooks/use-platform-data";
@@ -23,6 +25,8 @@ import { DeleteToast, ErrorToast, confirmDeleteDialog } from "@/components/atom/
 interface SubjectsTableProps {
   initialData: SubjectRow[];
   total: number;
+  dictionary?: Dictionary['school']['subjects'];
+  lang: Locale;
   perPage?: number;
 }
 
@@ -45,10 +49,27 @@ async function getSubjectsCSV(filters?: Record<string, unknown>): Promise<string
   return [headers.join(","), ...csvRows].join("\n");
 }
 
-export function SubjectsTable({ initialData, total, perPage = 20 }: SubjectsTableProps) {
+export function SubjectsTable({ initialData, total, dictionary, lang, perPage = 20 }: SubjectsTableProps) {
   const router = useRouter();
   const { openModal } = useModal();
   const [isPending, startTransition] = useTransition();
+  const t = dictionary;
+
+  // Translations with fallbacks
+  const translations = {
+    allSubjects: t?.allSubjects || (lang === 'ar' ? 'جميع المواد' : 'All Subjects'),
+    addNewSubject: t?.addNewSubject || (lang === 'ar' ? 'أضف مادة جديدة' : 'Add a new subject to your school'),
+    search: t?.search || (lang === 'ar' ? 'بحث في المواد...' : 'Search subjects...'),
+    create: t?.create || (lang === 'ar' ? 'إنشاء' : 'Create'),
+    export: t?.export || (lang === 'ar' ? 'تصدير' : 'Export'),
+    reset: t?.reset || (lang === 'ar' ? 'إعادة تعيين' : 'Reset'),
+    department: t?.department || (lang === 'ar' ? 'القسم' : 'Department'),
+    created: t?.created || (lang === 'ar' ? 'تاريخ الإنشاء' : 'Created'),
+    view: t?.view || (lang === 'ar' ? 'عرض' : 'View'),
+    edit: t?.edit || (lang === 'ar' ? 'تعديل' : 'Edit'),
+    delete: t?.delete || (lang === 'ar' ? 'حذف' : 'Delete'),
+    actions: t?.actions || (lang === 'ar' ? 'إجراءات' : 'Actions'),
+  };
 
   // View mode (table/grid)
   const { view, toggleView } = usePlatformView({ defaultView: "table" });
@@ -76,8 +97,8 @@ export function SubjectsTable({ initialData, total, perPage = 20 }: SubjectsTabl
     filters: searchValue ? { subjectName: searchValue } : undefined,
   });
 
-  // Generate columns on the client side
-  const columns = useMemo(() => getSubjectColumns(), []);
+  // Generate columns on the client side with dictionary and lang
+  const columns = useMemo(() => getSubjectColumns(dictionary, lang), [dictionary, lang]);
 
   // Table instance
   const { table } = useDataTable<SubjectRow>({
@@ -108,8 +129,9 @@ export function SubjectsTable({ initialData, total, perPage = 20 }: SubjectsTabl
 
   // Handle delete with optimistic update
   const handleDelete = useCallback(async (subject: SubjectRow) => {
+    const displayName = getLocalizedSubjectName(subject, lang);
     try {
-      const ok = await confirmDeleteDialog(`Delete ${subject.subjectName}?`);
+      const ok = await confirmDeleteDialog(`${translations.delete} ${displayName}?`);
       if (!ok) return;
 
       // Optimistic remove
@@ -127,7 +149,7 @@ export function SubjectsTable({ initialData, total, perPage = 20 }: SubjectsTabl
       refresh();
       ErrorToast(e instanceof Error ? e.message : "Failed to delete");
     }
-  }, [optimisticRemove, refresh]);
+  }, [optimisticRemove, refresh, lang, translations.delete]);
 
   // Handle edit
   const handleEdit = useCallback((id: string) => {
@@ -141,12 +163,12 @@ export function SubjectsTable({ initialData, total, perPage = 20 }: SubjectsTabl
 
   // Toolbar translations
   const toolbarTranslations = {
-    search: "Search subjects...",
-    create: "Create",
-    reset: "Reset",
-    export: "Export",
-    exportCSV: "Export CSV",
-    exporting: "Exporting...",
+    search: translations.search,
+    create: translations.create,
+    reset: translations.reset,
+    export: translations.export,
+    exportCSV: lang === 'ar' ? 'تصدير CSV' : 'Export CSV',
+    exporting: lang === 'ar' ? 'جاري التصدير...' : 'Exporting...',
   };
 
   return (
@@ -157,7 +179,7 @@ export function SubjectsTable({ initialData, total, perPage = 20 }: SubjectsTabl
         onToggleView={toggleView}
         searchValue={searchValue}
         onSearchChange={handleSearchChange}
-        searchPlaceholder="Search subjects..."
+        searchPlaceholder={translations.search}
         onCreate={() => openModal()}
         getCSV={getSubjectsCSV}
         entityName="subjects"
@@ -176,14 +198,16 @@ export function SubjectsTable({ initialData, total, perPage = 20 }: SubjectsTabl
         <>
           {data.length === 0 ? (
             <GridEmptyState
-              title="All Subjects"
-              description="Add a new subject to your school"
+              title={translations.allSubjects}
+              description={translations.addNewSubject}
               icon={<BookOpen className="h-12 w-12" />}
             />
           ) : (
             <GridContainer columns={3}>
               {data.map((subject) => {
-                const initials = subject.subjectName
+                const displayName = getLocalizedSubjectName(subject, lang);
+                const displayDepartment = getLocalizedDepartmentName(subject, lang);
+                const initials = displayName
                   .split(" ")
                   .map((n) => n[0])
                   .join("")
@@ -193,31 +217,31 @@ export function SubjectsTable({ initialData, total, perPage = 20 }: SubjectsTabl
                 return (
                   <GridCard
                     key={subject.id}
-                    title={subject.subjectName}
-                    subtitle={subject.departmentName}
+                    title={displayName}
+                    subtitle={displayDepartment}
                     avatarFallback={initials}
                     metadata={[
                       {
-                        label: "Department",
+                        label: translations.department,
                         value: (
                           <span className="flex items-center gap-1">
                             <Building2 className="h-3 w-3" />
-                            {subject.departmentName}
+                            {displayDepartment}
                           </span>
                         ),
                       },
-                      { label: "Created", value: new Date(subject.createdAt).toLocaleDateString() },
+                      { label: translations.created, value: new Date(subject.createdAt).toLocaleDateString() },
                     ]}
                     actions={[
-                      { label: "View", onClick: () => handleView(subject.id) },
-                      { label: "Pencil", onClick: () => handleEdit(subject.id) },
+                      { label: translations.view, onClick: () => handleView(subject.id) },
+                      { label: translations.edit, onClick: () => handleEdit(subject.id) },
                       {
-                        label: "Delete",
+                        label: translations.delete,
                         onClick: () => handleDelete(subject),
                         variant: "destructive",
                       },
                     ]}
-                    actionsLabel="Actions"
+                    actionsLabel={translations.actions}
                     onClick={() => handleView(subject.id)}
                   />
                 );

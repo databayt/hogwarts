@@ -67,7 +67,13 @@ export default async function EventsContent({ searchParams, dictionary, lang }: 
   
   return (
     <div className="space-y-6">
-      <EventsTable initialData={data} total={total} perPage={sp.perPage} />
+      <EventsTable
+        initialData={data}
+        total={total}
+        dictionary={dictionary?.events}
+        lang={lang}
+        perPage={sp.perPage}
+      />
     </div>
   )
 }

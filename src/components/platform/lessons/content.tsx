@@ -77,7 +77,13 @@ export default async function LessonsContent({ searchParams, dictionary, lang }:
   
   return (
     <div className="space-y-6">
-      <LessonsTable initialData={data} total={total} perPage={sp.perPage} />
+      <LessonsTable
+        initialData={data}
+        total={total}
+        dictionary={dictionary?.lessons}
+        lang={lang}
+        perPage={sp.perPage}
+      />
     </div>
   )
 }

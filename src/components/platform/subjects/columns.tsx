@@ -8,6 +8,9 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { useModal } from "@/components/atom/modal/context";
 import { deleteSubject } from "@/components/platform/subjects/actions";
 import { DeleteToast, ErrorToast, confirmDeleteDialog } from "@/components/atom/toast";
+import { useRouter } from "next/navigation";
+import type { Dictionary } from "@/components/internationalization/dictionaries";
+import type { Locale } from "@/components/internationalization/config";
 
 export type SubjectRow = {
   id: string;
@@ -18,51 +21,76 @@ export type SubjectRow = {
   createdAt: string;
 };
 
-export const getSubjectColumns = (): ColumnDef<SubjectRow>[] => [
+/**
+ * Get localized subject name based on locale
+ */
+export function getLocalizedSubjectName(row: SubjectRow, locale: Locale): string {
+  if (locale === 'ar') {
+    return row.subjectNameAr || row.subjectName || '';
+  }
+  return row.subjectName || row.subjectNameAr || '';
+}
+
+/**
+ * Get localized department name based on locale
+ */
+export function getLocalizedDepartmentName(row: SubjectRow, locale: Locale): string {
+  if (locale === 'ar') {
+    return row.departmentNameAr || row.departmentName || '';
+  }
+  return row.departmentName || row.departmentNameAr || '';
+}
+
+export const getSubjectColumns = (dictionary?: Dictionary['school']['subjects'], lang?: Locale): ColumnDef<SubjectRow>[] => {
+  const t = {
+    subject: dictionary?.subject || (lang === 'ar' ? 'المادة' : 'Subject'),
+    department: dictionary?.department || (lang === 'ar' ? 'القسم' : 'Department'),
+    created: dictionary?.created || (lang === 'ar' ? 'تاريخ الإنشاء' : 'Created'),
+    actions: lang === 'ar' ? 'إجراءات' : 'Actions',
+    view: lang === 'ar' ? 'عرض' : 'View',
+    edit: lang === 'ar' ? 'تعديل' : 'Edit',
+    delete: lang === 'ar' ? 'حذف' : 'Delete',
+  };
+
+  return [
   {
     accessorKey: "subjectName",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Subject" />,
-    meta: { label: "Subject", variant: "text" },
+    header: ({ column }) => <DataTableColumnHeader column={column} title={t.subject} />,
+    meta: { label: t.subject, variant: "text" },
     id: 'subjectName',
+    cell: ({ row }) => {
+      const displayName = lang ? getLocalizedSubjectName(row.original, lang) : row.original.subjectName;
+      return <span>{displayName}</span>;
+    },
     enableColumnFilter: true,
-  },
-  {
-    accessorKey: "subjectNameAr",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="المادة" />,
-    meta: { label: "المادة", variant: "text" },
-    id: 'subjectNameAr',
-    cell: ({ getValue }) => getValue<string | null>() || "-",
-    enableColumnFilter: false,
   },
   {
     accessorKey: "departmentName",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Department" />,
-    meta: { label: "Department", variant: "text" },
+    header: ({ column }) => <DataTableColumnHeader column={column} title={t.department} />,
+    meta: { label: t.department, variant: "text" },
     id: 'departmentName',
+    cell: ({ row }) => {
+      const displayName = lang ? getLocalizedDepartmentName(row.original, lang) : row.original.departmentName;
+      return <span>{displayName}</span>;
+    },
     enableColumnFilter: true,
   },
   {
-    accessorKey: "departmentNameAr",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="القسم" />,
-    meta: { label: "القسم", variant: "text" },
-    id: 'departmentNameAr',
-    cell: ({ getValue }) => getValue<string | null>() || "-",
-    enableColumnFilter: false,
-  },
-  {
     accessorKey: "createdAt",
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Created" />,
-    meta: { label: "Created", variant: "text" },
+    header: ({ column }) => <DataTableColumnHeader column={column} title={t.created} />,
+    meta: { label: t.created, variant: "text" },
     cell: ({ getValue }) => (
-      <span className="text-xs tabular-nums text-muted-foreground">{new Date(getValue<string>()).toLocaleDateString()}</span>
+      <span className="text-xs tabular-nums text-muted-foreground">{new Date(getValue<string>()).toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-US')}</span>
     ),
   },
   {
     id: "actions",
-    header: () => <span className="sr-only">Actions</span>,
+    header: () => <span className="sr-only">{t.actions}</span>,
     cell: ({ row }) => {
       const subject = row.original;
       const { openModal } = useModal();
+      const router = useRouter();
+      const displayName = lang ? getLocalizedSubjectName(subject, lang) : subject.subjectName;
       const onView = () => {
         const qs = typeof window !== 'undefined' ? (window.location.search || "") : "";
         window.location.href = `/subjects/${subject.id}${qs}`;
@@ -70,10 +98,11 @@ export const getSubjectColumns = (): ColumnDef<SubjectRow>[] => [
       const onEdit = () => openModal(subject.id);
       const onDelete = async () => {
         try {
-          const ok = await confirmDeleteDialog(`Delete ${subject.subjectName}?`);
+          const ok = await confirmDeleteDialog(`${t.delete} ${displayName}?`);
           if (!ok) return;
           await deleteSubject({ id: subject.id });
           DeleteToast();
+          router.refresh();
         } catch (e) {
           ErrorToast(e instanceof Error ? e.message : "Failed to delete");
         }
@@ -87,11 +116,11 @@ export const getSubjectColumns = (): ColumnDef<SubjectRow>[] => [
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+            <DropdownMenuLabel>{t.actions}</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={onView}>View</DropdownMenuItem>
-            <DropdownMenuItem onClick={onEdit}>Pencil</DropdownMenuItem>
-            <DropdownMenuItem onClick={onDelete}>Delete</DropdownMenuItem>
+            <DropdownMenuItem onClick={onView}>{t.view}</DropdownMenuItem>
+            <DropdownMenuItem onClick={onEdit}>{t.edit}</DropdownMenuItem>
+            <DropdownMenuItem onClick={onDelete}>{t.delete}</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       );
@@ -99,7 +128,8 @@ export const getSubjectColumns = (): ColumnDef<SubjectRow>[] => [
     enableSorting: false,
     enableColumnFilter: false,
   },
-];
+  ];
+};
 
 // NOTE: Do NOT export pre-generated columns. Always use getSubjectColumns()
 // inside useMemo in client components to avoid SSR hook issues.

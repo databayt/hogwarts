@@ -134,33 +134,6 @@ export async function AdminDashboard({ user, dictionary, locale = "en" }: Props)
     subdomain: school?.domain || "",
     userName: user.name || user.email?.split("@")[0] || "Admin",
     schoolName: school?.name || "Your School",
-    // Section 1: School Status data
-    statusData: [
-      {
-        name: "Students Enrolled",
-        stat: enrollment.total.toLocaleString(),
-        goalsAchieved: enrollment.total >= 1000 ? 5 : enrollment.total >= 500 ? 4 : 3,
-        totalGoals: 5,
-        status: (enrollment.total >= 1000 ? "within" : enrollment.total >= 500 ? "observe" : "critical") as "within" | "observe" | "critical",
-        href: `/${locale}/s/${school?.domain}/students`,
-      },
-      {
-        name: "Fee Collection",
-        stat: `$${(financialData.collectionRate * 1000).toLocaleString()}`,
-        goalsAchieved: financialData.collectionRate >= 80 ? 5 : financialData.collectionRate >= 60 ? 3 : 1,
-        totalGoals: 5,
-        status: (financialData.collectionRate >= 80 ? "within" : financialData.collectionRate >= 60 ? "observe" : "critical") as "within" | "observe" | "critical",
-        href: `/${locale}/s/${school?.domain}/finance`,
-      },
-      {
-        name: "Attendance Rate",
-        stat: `${attendance.attendanceRate}%`,
-        goalsAchieved: attendance.attendanceRate >= 90 ? 5 : attendance.attendanceRate >= 80 ? 4 : 2,
-        totalGoals: 5,
-        status: (attendance.attendanceRate >= 90 ? "within" : attendance.attendanceRate >= 80 ? "observe" : "critical") as "within" | "observe" | "critical",
-        href: `/${locale}/s/${school?.domain}/attendance`,
-      },
-    ],
     // Section 2: Quick Stats data
     quickStats: [
       { label: "Students", value: enrollment.total.toLocaleString(), change: enrollment.newThisMonth > 0 ? `+${enrollment.newThisMonth}` : "0", changeType: enrollment.newThisMonth > 0 ? "positive" as const : "neutral" as const },
@@ -191,13 +164,6 @@ export async function AdminDashboard({ user, dictionary, locale = "en" }: Props)
 
   return (
     <div className="space-y-8">
-      {/* Welcome Banner */}
-      <WelcomeBanner
-        userName={dashboardProps.userName}
-        role="Administrator"
-        subtitle={`Managing ${dashboardProps.schoolName}`}
-      />
-
       {/* Client-side dashboard sections with interactive features */}
       <AdminDashboardClient {...dashboardProps} />
     </div>

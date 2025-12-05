@@ -8,7 +8,7 @@
 
 import type { SeedPrisma } from "./types";
 
-// Arabic Books - with Arabic metadata and Open Library covers (ISBN-based)
+// Arabic Books - with Arabic metadata and ISBN-based Open Library covers
 const ARABIC_BOOKS = [
   // Sudanese Literature
   {
@@ -16,7 +16,7 @@ const ARABIC_BOOKS = [
     author: "الطيب صالح",
     genre: "أدب سوداني",
     rating: 5,
-    coverUrl: "https://covers.openlibrary.org/b/isbn/9780435902476-L.jpg",
+    coverUrl: "https://covers.openlibrary.org/b/isbn/9780894101908-L.jpg",
     coverColor: "#8B4513",
     description: "رواية عرس الزين للكاتب السوداني الطيب صالح، تروي قصة شاب بسيط في قرية سودانية يعيش حياة مليئة بالبراءة والطيبة. تصور الرواية الحياة الريفية السودانية بكل تفاصيلها وجمالياتها.",
     summary: "قصة الزين، الشاب البسيط الذي يعيش في قرية سودانية، وكيف يتحول زواجه إلى حدث يجمع القرية كلها. رواية تحتفي بالقيم الإنسانية والتقاليد السودانية الأصيلة.",
@@ -28,7 +28,7 @@ const ARABIC_BOOKS = [
     author: "الطيب صالح",
     genre: "أدب سوداني",
     rating: 5,
-    coverUrl: "https://covers.openlibrary.org/b/isbn/9780894101991-L.jpg",
+    coverUrl: "https://covers.openlibrary.org/b/isbn/9780141187020-L.jpg",
     coverColor: "#1a237e",
     description: "رواية موسم الهجرة إلى الشمال، واحدة من أهم الروايات العربية في القرن العشرين. تتناول صراع الهوية بين الشرق والغرب من خلال قصة مصطفى سعيد.",
     summary: "رحلة مصطفى سعيد من السودان إلى إنجلترا وعودته، وما يكشفه ذلك عن التصادم الحضاري والبحث عن الهوية.",
@@ -40,7 +40,7 @@ const ARABIC_BOOKS = [
     author: "الطيب صالح",
     genre: "أدب سوداني",
     rating: 5,
-    coverUrl: "https://covers.openlibrary.org/b/isbn/9780435994174-L.jpg",
+    coverUrl: "https://covers.openlibrary.org/b/isbn/9789953686110-L.jpg",
     coverColor: "#4a148c",
     description: "ملحمة روائية تتألف من جزأين: ضو البيت ومريود. تروي قصة قرية ود حامد وشخصياتها المتعددة عبر أجيال مختلفة.",
     summary: "استمرار لعالم الطيب صالح الروائي في قرية ود حامد، مع شخصيات جديدة وقصص متشابكة.",
@@ -66,7 +66,7 @@ const ARABIC_BOOKS = [
     author: "نجيب محفوظ",
     genre: "أدب مصري",
     rating: 5,
-    coverUrl: "https://covers.openlibrary.org/b/isbn/9780385264419-L.jpg",
+    coverUrl: "https://covers.openlibrary.org/b/isbn/9780385264679-L.jpg",
     coverColor: "#1b5e20",
     description: "الجزء الأول من ثلاثية نجيب محفوظ الشهيرة، تدور أحداثها في حي الجمالية بالقاهرة.",
     summary: "قصة عائلة أحمد عبد الجواد في القاهرة القديمة، مع تصوير دقيق للمجتمع المصري.",
@@ -78,7 +78,7 @@ const ARABIC_BOOKS = [
     author: "نجيب محفوظ",
     genre: "أدب مصري",
     rating: 5,
-    coverUrl: "https://covers.openlibrary.org/b/isbn/9789774160998-L.jpg",
+    coverUrl: "https://covers.openlibrary.org/b/isbn/9780385264624-L.jpg",
     coverColor: "#263238",
     description: "رواية نفسية تتناول قصة سعيد مهران الذي يخرج من السجن ليجد أن زوجته خانته.",
     summary: "رحلة الانتقام والضياع في مصر الستينيات، مع تصوير عميق للصراع الداخلي.",
@@ -92,7 +92,7 @@ const ARABIC_BOOKS = [
     author: "طه حسين",
     genre: "سيرة ذاتية",
     rating: 5,
-    coverUrl: "https://covers.openlibrary.org/b/isbn/9789774246944-L.jpg",
+    coverUrl: "https://covers.openlibrary.org/b/isbn/9789774160066-L.jpg",
     coverColor: "#5d4037",
     description: "السيرة الذاتية لعميد الأدب العربي طه حسين، يروي فيها طفولته في صعيد مصر وفقدانه البصر.",
     summary: "قصة كفاح طه حسين من قرية صغيرة في الصعيد المصري إلى أعلى المناصب الأدبية.",
@@ -104,7 +104,7 @@ const ARABIC_BOOKS = [
     author: "ابن المقفع",
     genre: "أدب كلاسيكي",
     rating: 5,
-    coverUrl: "https://covers.openlibrary.org/b/isbn/9789953631462-L.jpg",
+    coverUrl: "https://covers.openlibrary.org/b/isbn/9780140455076-L.jpg",
     coverColor: "#00695c",
     description: "مجموعة من الحكايات على ألسنة الحيوانات، تحمل حكماً ودروساً في السياسة والأخلاق.",
     summary: "قصص الحيوانات الشهيرة التي تحمل دروساً في الحكمة والسياسة والأخلاق.",
@@ -130,7 +130,7 @@ const ARABIC_BOOKS = [
     author: "الإمام النووي",
     genre: "دراسات إسلامية",
     rating: 5,
-    coverUrl: "https://covers.openlibrary.org/b/isbn/9781567445435-L.jpg",
+    coverUrl: "https://covers.openlibrary.org/b/isbn/9789960892795-L.jpg",
     coverColor: "#1b5e20",
     description: "مجموعة من الأحاديث النبوية الشريفة مرتبة في أبواب تتناول مختلف جوانب الحياة الإسلامية.",
     summary: "كتاب جامع للأحاديث النبوية في الأخلاق والعبادات والمعاملات.",
@@ -142,7 +142,7 @@ const ARABIC_BOOKS = [
     author: "السيد سابق",
     genre: "دراسات إسلامية",
     rating: 5,
-    coverUrl: "https://covers.openlibrary.org/b/isbn/9780892591220-L.jpg",
+    coverUrl: "https://covers.openlibrary.org/b/isbn/9789775880680-L.jpg",
     coverColor: "#004d40",
     description: "موسوعة فقهية شاملة تتناول أحكام العبادات والمعاملات بأسلوب ميسر.",
     summary: "مرجع فقهي شامل يعرض الأحكام الشرعية بأدلتها من الكتاب والسنة.",
@@ -154,7 +154,7 @@ const ARABIC_BOOKS = [
     author: "ابن هشام",
     genre: "دراسات إسلامية",
     rating: 5,
-    coverUrl: "https://covers.openlibrary.org/b/isbn/9781861891822-L.jpg",
+    coverUrl: "https://covers.openlibrary.org/b/isbn/9789953520551-L.jpg",
     coverColor: "#33691e",
     description: "أشهر كتاب في السيرة النبوية، يروي حياة النبي محمد صلى الله عليه وسلم.",
     summary: "السيرة النبوية الكاملة بتفاصيلها من المصادر الأصلية.",
@@ -168,7 +168,7 @@ const ARABIC_BOOKS = [
     author: "محمود درويش",
     genre: "شعر",
     rating: 5,
-    coverUrl: "https://covers.openlibrary.org/b/isbn/9780863565441-L.jpg",
+    coverUrl: "https://covers.openlibrary.org/b/isbn/9781566563499-L.jpg",
     coverColor: "#c62828",
     description: "مجموعة من أشعار الشاعر الفلسطيني الكبير محمود درويش، شاعر المقاومة والهوية.",
     summary: "قصائد تتناول القضية الفلسطينية والوطن والحب والهوية.",
@@ -180,7 +180,7 @@ const ARABIC_BOOKS = [
     author: "أبو الطيب المتنبي",
     genre: "شعر كلاسيكي",
     rating: 5,
-    coverUrl: "https://covers.openlibrary.org/b/isbn/9789953444444-L.jpg",
+    coverUrl: "https://covers.openlibrary.org/b/isbn/9789953445359-L.jpg",
     coverColor: "#ff6f00",
     description: "ديوان أشعار المتنبي، أعظم شعراء العربية، يضم قصائده في المدح والفخر والحكمة.",
     summary: "أشعار المتنبي الخالدة في الحكمة والفخر والمدح.",
@@ -208,7 +208,7 @@ const ARABIC_BOOKS = [
     author: "كامل كيلاني",
     genre: "أدب أطفال",
     rating: 5,
-    coverUrl: "https://covers.openlibrary.org/b/isbn/9789774169533-L.jpg",
+    coverUrl: "https://covers.openlibrary.org/b/isbn/9789770278017-L.jpg",
     coverColor: "#e65100",
     description: "مجموعة من القصص والحكايات للأطفال من تأليف رائد أدب الطفل العربي.",
     summary: "قصص ممتعة ومفيدة للأطفال تجمع بين التسلية والتعليم.",
@@ -220,7 +220,7 @@ const ARABIC_BOOKS = [
     author: "ابن كثير",
     genre: "أدب أطفال إسلامي",
     rating: 5,
-    coverUrl: "https://covers.openlibrary.org/b/isbn/9789960892269-L.jpg",
+    coverUrl: "https://covers.openlibrary.org/b/isbn/9789960892481-L.jpg",
     coverColor: "#2e7d32",
     description: "قصص الأنبياء من القرآن الكريم والسنة النبوية، مقدمة بأسلوب مبسط.",
     summary: "قصص الأنبياء والرسل من آدم إلى محمد عليهم السلام.",
@@ -486,6 +486,20 @@ const ENGLISH_BOOKS = [
   },
 ];
 
+// Featured Book - Harry Potter (created last to appear first)
+const FEATURED_BOOK = {
+  title: "Harry Potter and the Philosopher's Stone",
+  author: "J.K. Rowling",
+  genre: "Fantasy",
+  rating: 5,
+  coverUrl: "https://covers.openlibrary.org/b/isbn/9780747532743-L.jpg",
+  coverColor: "#1a1a2e",
+  description: "Harry Potter has never even heard of Hogwarts when the letters start dropping on the doormat at number four, Privet Drive. Addressed in green ink on yellowish parchment with a purple seal, they are swiftly confiscated by his grisly aunt and uncle. Then, on Harry's eleventh birthday, a great beetle-eyed giant of a man called Rubeus Hagrid bursts in with some astonishing news: Harry Potter is a wizard, and he has a place at Hogwarts School of Witchcraft and Wizardry.",
+  summary: "The magical journey begins as Harry discovers he's a wizard and enters the enchanting world of Hogwarts.",
+  totalCopies: 25,
+  availableCopies: 20,
+};
+
 export async function seedLibrary(
   prisma: SeedPrisma,
   schoolId: string
@@ -511,7 +525,24 @@ export async function seedLibrary(
     skipDuplicates: true,
   });
 
-  console.log(`   ✅ Created: ${allBooks.length} library books`);
+  // Create featured book last so it appears first (newest createdAt)
+  // Delete existing if any, then create fresh
+  await prisma.book.deleteMany({
+    where: {
+      title: FEATURED_BOOK.title,
+      schoolId,
+    },
+  });
+
+  await prisma.book.create({
+    data: {
+      schoolId,
+      ...FEATURED_BOOK,
+    },
+  });
+
+  console.log(`   ✅ Created: ${allBooks.length + 1} library books`);
   console.log(`      - Arabic books: ${ARABIC_BOOKS.length} (Sudanese, Egyptian, Classical Arabic, Islamic)`);
-  console.log(`      - English books: ${ENGLISH_BOOKS.length} (Literature, Science, Young Adult)\n`);
+  console.log(`      - English books: ${ENGLISH_BOOKS.length} (Literature, Science, Young Adult)`);
+  console.log(`      - Featured: Harry Potter and the Philosopher's Stone\n`);
 }

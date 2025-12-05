@@ -14,7 +14,12 @@ import { InformationStep } from "./information";
 import { DetailsStep } from "./details";
 import { AssignmentFormFooter } from "./footer";
 
-export function AssignmentCreateForm() {
+interface AssignmentCreateFormProps {
+  /** Callback fired on successful create/update - use for optimistic refresh */
+  onSuccess?: () => void;
+}
+
+export function AssignmentCreateForm({ onSuccess }: AssignmentCreateFormProps) {
   const { modal, closeModal } = useModal();
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
@@ -63,7 +68,12 @@ export function AssignmentCreateForm() {
     if (res?.success) {
       toast.success(currentId ? "Assignment updated" : "Assignment created");
       closeModal();
-      router.refresh();
+      // Use callback for optimistic update, fallback to router.refresh()
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        router.refresh();
+      }
     } else {
       toast.error(currentId ? "Failed to update assignment" : "Failed to create assignment");
     }

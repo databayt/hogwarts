@@ -22,6 +22,8 @@ interface InvoiceFormProps {
   lastName?: string | null;
   email?: string | null;
   currency?: string | null;
+  /** Callback fired on successful create/update - use for optimistic refresh */
+  onSuccess?: () => void;
 }
 
 export function InvoiceCreateForm({
@@ -29,7 +31,8 @@ export function InvoiceCreateForm({
   firstName,
   lastName,
   email,
-  currency = "USD"
+  currency = "USD",
+  onSuccess,
 }: InvoiceFormProps) {
   const { modal, closeModal } = useModal();
   const router = useRouter();
@@ -169,7 +172,12 @@ export function InvoiceCreateForm({
       if (response.success) {
         SuccessToast("Invoice saved successfully");
         closeModal();
-        router.refresh();
+        // Use callback for optimistic update, fallback to router.refresh()
+        if (onSuccess) {
+          onSuccess();
+        } else {
+          router.refresh();
+        }
       } else {
         ErrorToast(response.error || "Failed to process invoice");
       }

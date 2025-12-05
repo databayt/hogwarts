@@ -67,40 +67,6 @@ export type ResultRow = {
 
 export const resultColumns = (t: Dictionary["school"]["grades"], locale: Locale = 'en'): ColumnDef<ResultRow>[] => [
   {
-    accessorKey: "percentage",
-    header: ({ column }) => <DataTableColumnHeader column={column} title={t.percentage} className="justify-center" />,
-    meta: { label: t.percentage, variant: "number" },
-    id: 'percentage',
-    cell: ({ getValue }) => {
-      const value = getValue<number>() || 0;
-      return (
-        <div className="text-center">
-          <small className="tabular-nums">
-            {new Intl.NumberFormat(locale, {
-              minimumFractionDigits: 0,
-              maximumFractionDigits: 0
-            }).format(value)}%
-          </small>
-        </div>
-      );
-    },
-  },
-  {
-    accessorKey: "grade",
-    header: ({ column }) => <DataTableColumnHeader column={column} title={t.grade} className="justify-center" />,
-    meta: { label: t.grade, variant: "text" },
-    id: 'grade',
-    enableColumnFilter: true,
-    cell: ({ getValue }) => {
-      const grade = getValue<string>() || "";
-      return (
-        <div className="text-center">
-          <Badge variant={getGradeVariant(grade)}>{grade}</Badge>
-        </div>
-      );
-    },
-  },
-  {
     accessorKey: "studentName",
     header: ({ column }) => <DataTableColumnHeader column={column} title={t.student} />,
     meta: { label: t.student, variant: "text" },
@@ -162,6 +128,40 @@ export const resultColumns = (t: Dictionary["school"]["grades"], locale: Locale 
     cell: ({ getValue }) => (
       <small className="tabular-nums">{new Date(getValue<string>()).toLocaleDateString(locale)}</small>
     ),
+  },
+  {
+    accessorKey: "percentage",
+    header: ({ column }) => <DataTableColumnHeader column={column} title={t.percentage} className="justify-end" />,
+    meta: { label: t.percentage, variant: "number" },
+    id: 'percentage',
+    cell: ({ getValue }) => {
+      const value = getValue<number>() || 0;
+      return (
+        <div className="text-end">
+          <small className="tabular-nums">
+            {new Intl.NumberFormat(locale, {
+              minimumFractionDigits: 0,
+              maximumFractionDigits: 0
+            }).format(value)}%
+          </small>
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: "grade",
+    header: ({ column }) => <DataTableColumnHeader column={column} title={t.grade} className="justify-end" />,
+    meta: { label: t.grade, variant: "text" },
+    id: 'grade',
+    enableColumnFilter: true,
+    cell: ({ getValue }) => {
+      const grade = getValue<string>() || "";
+      return (
+        <div className="text-end">
+          <Badge variant={getGradeVariant(grade)}>{grade}</Badge>
+        </div>
+      );
+    },
   },
   {
     id: "actions",

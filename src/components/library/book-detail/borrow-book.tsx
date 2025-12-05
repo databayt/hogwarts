@@ -75,15 +75,14 @@ export default function BorrowBook({
 
   if (hasBorrowedBook) {
     return (
-      <div className="borrow-book-section">
-        <p className="muted mb-2 text-emerald-600">
+      <div>
+        <p className="text-sm text-emerald-600 mb-2">
           You have borrowed this book
         </p>
         <Button
           onClick={handleReturn}
           disabled={isLoading}
           variant="outline"
-          className="w-full"
         >
           {isLoading ? "Returning..." : "Return Book"}
         </Button>
@@ -93,23 +92,15 @@ export default function BorrowBook({
 
   if (availableCopies === 0) {
     return (
-      <div className="borrow-book-section">
-        <Button disabled className="w-full">
-          Currently Unavailable
-        </Button>
-      </div>
+      <Button disabled variant="secondary">
+        Currently Unavailable
+      </Button>
     );
   }
 
   return (
-    <div className="borrow-book-section">
-      <Button
-        onClick={handleBorrow}
-        disabled={isLoading}
-        className="w-full"
-      >
-        {isLoading ? "Borrowing..." : "Borrow Book"}
-      </Button>
-    </div>
+    <Button onClick={handleBorrow} disabled={isLoading}>
+      {isLoading ? "Borrowing..." : "Borrow Book"}
+    </Button>
   );
 }

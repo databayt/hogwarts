@@ -38,6 +38,8 @@ interface ExamTemplateFormProps {
   subjectId?: string;
   isView?: boolean;
   dictionary?: Dictionary;
+  /** Callback fired on successful create/update - use for optimistic refresh */
+  onSuccess?: () => void;
 }
 
 export function ExamTemplateForm({
@@ -45,6 +47,7 @@ export function ExamTemplateForm({
   subjectId,
   isView = false,
   dictionary,
+  onSuccess,
 }: ExamTemplateFormProps) {
   const { closeModal } = useModal();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -94,7 +97,10 @@ export function ExamTemplateForm({
             : (dictionary?.generate?.form?.templateCreated || "Template created!")
         );
         closeModal();
-        window.location.reload();
+        // Use callback for optimistic update instead of page reload
+        if (onSuccess) {
+          onSuccess();
+        }
       } else {
         ErrorToast(result.error);
       }

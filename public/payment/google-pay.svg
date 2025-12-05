@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 30" fill="none">
+  <path d="M15 8.5C15 7.12 16.12 6 17.5 6C18.88 6 20 7.12 20 8.5V11.5H15V8.5Z" fill="#4285F4"/>
+  <path d="M15 18.5V21.5C15 22.88 16.12 24 17.5 24C18.88 24 20 22.88 20 21.5V18.5H15Z" fill="#34A853"/>
+  <path d="M10 13.5C10 12.12 11.12 11 12.5 11H15V19H12.5C11.12 19 10 17.88 10 16.5V13.5Z" fill="#FBBC05"/>
+  <path d="M20 11H22.5C23.88 11 25 12.12 25 13.5V16.5C25 17.88 23.88 19 22.5 19H20V11Z" fill="#EA4335"/>
+  <text x="30" y="19" font-family="Arial, sans-serif" font-size="11" font-weight="500" fill="#5F6368">Pay</text>
+</svg>

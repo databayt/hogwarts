@@ -58,7 +58,13 @@ export default async function SubjectsContent({ searchParams, dictionary, lang }
   }
   return (
     <div className="space-y-6">
-      <SubjectsTable initialData={data} total={total} perPage={sp.perPage} />
+      <SubjectsTable
+        initialData={data}
+        total={total}
+        dictionary={dictionary?.school?.subjects}
+        lang={lang}
+        perPage={sp.perPage}
+      />
     </div>
   )
 }

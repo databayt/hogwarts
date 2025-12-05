@@ -40,7 +40,8 @@ export default async function ClassesContent({ searchParams, dictionary, lang }:
         include: {
           subject: {
             select: {
-              subjectName: true
+              subjectName: true,
+              subjectNameAr: true
             }
           },
           teacher: {
@@ -61,16 +62,29 @@ export default async function ClassesContent({ searchParams, dictionary, lang }:
     data = rows.map((c: any) => ({
       id: c.id,
       name: c.name,
+      nameAr: c.nameAr || null,
       subjectName: c.subject?.subjectName || 'Unknown',
+      subjectNameAr: c.subject?.subjectNameAr || null,
       teacherName: c.teacher ? `${c.teacher.givenName} ${c.teacher.surname}` : 'Unknown',
       termName: c.term?.termNumber ? `Term ${c.term.termNumber}` : 'Unknown',
+      courseCode: c.courseCode || null,
+      credits: c.credits || null,
+      evaluationType: c.evaluationType || 'NORMAL',
+      enrolledStudents: 0, // TODO: Count from studentClasses
+      maxCapacity: c.maxCapacity || 50,
       createdAt: (c.createdAt as Date).toISOString()
     }))
     total = count as number
   }
   return (
     <div className="space-y-6">
-      <ClassesTable initialData={data} total={total} perPage={sp.perPage} />
+      <ClassesTable
+        initialData={data}
+        total={total}
+        dictionary={dictionary?.classes}
+        lang={lang}
+        perPage={sp.perPage}
+      />
     </div>
   )
 }

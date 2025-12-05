@@ -5,13 +5,15 @@ import { teachersSearchParams } from '@/components/platform/teachers/list-params
 import { db } from '@/lib/db'
 import { getTenantContext } from '@/lib/tenant-context'
 import type { Dictionary } from '@/components/internationalization/dictionaries'
+import type { Locale } from '@/components/internationalization/config'
 
 interface Props {
   searchParams: Promise<SearchParams>
   dictionary?: Dictionary['school']
+  lang: Locale
 }
 
-export default async function TeachersContent({ searchParams, dictionary }: Props) {
+export default async function TeachersContent({ searchParams, dictionary, lang }: Props) {
   const sp = await teachersSearchParams.parse(await searchParams)
   const { schoolId } = await getTenantContext()
   let data: TeacherRow[] = []
@@ -52,7 +54,13 @@ export default async function TeachersContent({ searchParams, dictionary }: Prop
   }
   return (
     <div className="space-y-6">
-      <TeachersTable initialData={data} total={total} dictionary={dictionary?.teachers} perPage={sp.perPage} />
+      <TeachersTable
+        initialData={data}
+        total={total}
+        dictionary={dictionary?.teachers}
+        lang={lang}
+        perPage={sp.perPage}
+      />
     </div>
   )
 }

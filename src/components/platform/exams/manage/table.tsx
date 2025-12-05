@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { DataTable } from "@/components/table/data-table";
 import { DataTableToolbar } from "@/components/table/data-table-toolbar";
 import { useDataTable } from "@/components/table/use-data-table";
@@ -20,12 +21,21 @@ interface ExamsTableProps {
 }
 
 export function ExamsTable({ initialData, total, perPage = 20 }: ExamsTableProps) {
+  const router = useRouter();
   const columns = useMemo(() => getExamColumns(), []);
 
   // State for incremental loading
   const [data, setData] = useState<ExamRow[]>(initialData);
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
+  const [isPending, startTransition] = useTransition();
+
+  // Refresh function for Modal callback
+  const refresh = useCallback(() => {
+    startTransition(() => {
+      router.refresh();
+    });
+  }, [router]);
 
   const hasMore = data.length < total;
 
@@ -87,7 +97,7 @@ export function ExamsTable({ initialData, total, perPage = 20 }: ExamsTableProps
           <ExportButton />
         </div>
       </DataTableToolbar>
-      <Modal content={<ExamCreateForm />} />
+      <Modal content={<ExamCreateForm onSuccess={refresh} />} />
     </DataTable>
   );
 }

@@ -102,15 +102,15 @@ export default function TimetablePreview({ dictionary, lang }: Props) {
   if (isLoading) {
     return (
       <div className="space-y-4">
-        <Skeleton className="h-16 w-full rounded-lg" />
-        <Skeleton className="h-96 w-full rounded-lg" />
+        <Skeleton className="h-16 w-full rounded-xl" />
+        <Skeleton className="h-[400px] w-full rounded-xl" />
       </div>
     )
   }
 
   if (!termId) {
     return (
-      <Card>
+      <Card className="rounded-xl shadow-lg">
         <CardContent className="py-12 text-center text-muted-foreground">
           No term configured. Create a term first.
         </CardContent>
@@ -122,28 +122,30 @@ export default function TimetablePreview({ dictionary, lang }: Props) {
   const currentEntity = isTeacherView ? randomTeacher : randomClass
 
   return (
-    <div className="space-y-4">
-      {/* Simple Toggle */}
-      <Card>
-        <CardContent className="py-4">
+    <div className="space-y-6">
+      {/* Header Card */}
+      <Card className="rounded-xl shadow-lg border-border">
+        <CardContent className="py-5 px-8">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              {isTeacherView ? (
-                <Users className="h-5 w-5 text-primary" />
-              ) : (
-                <GraduationCap className="h-5 w-5 text-primary" />
-              )}
+            <div className="flex items-center gap-4">
+              <div className="p-2 rounded-lg bg-primary/10">
+                {isTeacherView ? (
+                  <Users className="h-5 w-5 text-primary" />
+                ) : (
+                  <GraduationCap className="h-5 w-5 text-primary" />
+                )}
+              </div>
               <div>
-                <p className="font-medium">
+                <p className="font-medium text-foreground">
                   {isTeacherView ? 'Teacher View' : 'Student View'}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  {currentEntity?.label || 'No data'}
+                  {currentEntity?.label || 'No data available'}
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4">
               <Label htmlFor="view-toggle" className="text-sm text-muted-foreground">
                 Student
               </Label>
@@ -158,13 +160,13 @@ export default function TimetablePreview({ dictionary, lang }: Props) {
             </div>
           </div>
 
-          {/* Workload badge for teacher */}
+          {/* Workload badges for teacher view */}
           {isTeacherView && teacherWorkload && (
-            <div className="flex gap-2 mt-3">
-              <Badge variant="secondary">
+            <div className="flex gap-2 mt-4">
+              <Badge variant="secondary" className="px-3 py-1">
                 {teacherWorkload.periodsPerWeek} periods/week
               </Badge>
-              <Badge variant="outline">
+              <Badge variant="outline" className="px-3 py-1">
                 {teacherWorkload.classesTeaching} classes
               </Badge>
             </div>
@@ -174,27 +176,28 @@ export default function TimetablePreview({ dictionary, lang }: Props) {
 
       {/* Timetable Grid */}
       {currentSlots.length > 0 && periods.length > 0 ? (
-        <Card>
-          <CardContent className="pt-4">
-            <SimpleGrid
-              slots={currentSlots}
-              workingDays={workingDays}
-              periods={periods}
-              lunchAfterPeriod={4}
-              isRTL={isRTL}
-              viewMode={isTeacherView ? 'teacher' : 'class'}
-              editable={false}
-              highlightToday={true}
-            />
-          </CardContent>
-        </Card>
+        <SimpleGrid
+          slots={currentSlots}
+          workingDays={workingDays}
+          periods={periods}
+          lunchAfterPeriod={4}
+          isRTL={isRTL}
+          viewMode={isTeacherView ? 'teacher' : 'class'}
+          editable={false}
+          highlightToday={true}
+        />
       ) : (
-        <Card>
+        <Card className="rounded-xl shadow-lg border-border">
           <CardContent className="py-12 text-center text-muted-foreground">
             No timetable data available
           </CardContent>
         </Card>
       )}
+
+      {/* Footer info */}
+      <div className="text-center text-sm text-muted-foreground">
+        <p>Timetable Preview</p>
+      </div>
     </div>
   )
 }

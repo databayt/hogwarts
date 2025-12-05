@@ -7,6 +7,8 @@ import { getParentColumns, type ParentRow } from "./columns";
 import { useModal } from "@/components/atom/modal/context";
 import Modal from "@/components/atom/modal/modal";
 import { ParentCreateForm } from "@/components/platform/parents/form";
+import type { Dictionary } from "@/components/internationalization/dictionaries";
+import type { Locale } from "@/components/internationalization/config";
 import { getParents, getParentsCSV, deleteParent } from "./actions";
 import { usePlatformView } from "@/hooks/use-platform-view";
 import { usePlatformData } from "@/hooks/use-platform-data";
@@ -24,33 +26,33 @@ import { Badge } from "@/components/ui/badge";
 interface ParentsTableProps {
   initialData: ParentRow[];
   total: number;
+  dictionary?: Dictionary['school']['parents'];
+  lang: Locale;
   perPage?: number;
 }
 
-export function ParentsTable({ initialData, total, perPage = 20 }: ParentsTableProps) {
+export function ParentsTable({ initialData, total, dictionary, lang, perPage = 20 }: ParentsTableProps) {
   const router = useRouter();
   const { openModal } = useModal();
   const [isPending, startTransition] = useTransition();
 
-  // Translations
+  // Translations with fallbacks
   const t = {
-    name: "Name",
-    email: "Email",
-    status: "Status",
-    actions: "Actions",
-    editParent: "Edit Parent",
-    deleteParent: "Delete Parent",
-    viewParent: "View Profile",
-    createParent: "Create Parent",
-    allParents: "All Parents",
-    noParents: "No parents found",
-    addNewParent: "Add a new parent to your school",
-    search: "Search parents...",
-    create: "Create",
-    export: "Export",
-    reset: "Reset",
-    active: "Active",
-    inactive: "Inactive",
+    name: dictionary?.name || (lang === 'ar' ? 'الاسم' : 'Name'),
+    email: dictionary?.email || (lang === 'ar' ? 'البريد الإلكتروني' : 'Email'),
+    status: dictionary?.status || (lang === 'ar' ? 'الحالة' : 'Status'),
+    actions: lang === 'ar' ? 'إجراءات' : 'Actions',
+    view: lang === 'ar' ? 'عرض' : 'View',
+    edit: lang === 'ar' ? 'تعديل' : 'Edit',
+    delete: lang === 'ar' ? 'حذف' : 'Delete',
+    allParents: dictionary?.allParents || (lang === 'ar' ? 'جميع أولياء الأمور' : 'All Parents'),
+    addNewParent: dictionary?.addNewParent || (lang === 'ar' ? 'أضف ولي أمر جديد إلى مدرستك' : 'Add a new parent to your school'),
+    search: dictionary?.search || (lang === 'ar' ? 'بحث في أولياء الأمور...' : 'Search parents...'),
+    create: dictionary?.create || (lang === 'ar' ? 'إنشاء' : 'Create'),
+    export: dictionary?.export || (lang === 'ar' ? 'تصدير' : 'Export'),
+    reset: dictionary?.reset || (lang === 'ar' ? 'إعادة تعيين' : 'Reset'),
+    active: dictionary?.active || (lang === 'ar' ? 'نشط' : 'Active'),
+    inactive: dictionary?.inactive || (lang === 'ar' ? 'غير نشط' : 'Inactive'),
   };
 
   // View mode (table/grid)
@@ -79,8 +81,8 @@ export function ParentsTable({ initialData, total, perPage = 20 }: ParentsTableP
     filters: searchValue ? { name: searchValue } : undefined,
   });
 
-  // Generate columns on the client side
-  const columns = useMemo(() => getParentColumns(), []);
+  // Generate columns on the client side with dictionary and lang
+  const columns = useMemo(() => getParentColumns(dictionary, lang), [dictionary, lang]);
 
   // Table instance
   const { table } = useDataTable<ParentRow>({
@@ -110,7 +112,8 @@ export function ParentsTable({ initialData, total, perPage = 20 }: ParentsTableP
   // Handle delete with optimistic update
   const handleDelete = useCallback(async (parent: ParentRow) => {
     try {
-      const ok = await confirmDeleteDialog(`Delete ${parent.name}?`);
+      const deleteMsg = lang === 'ar' ? `حذف ${parent.name}؟` : `Delete ${parent.name}?`;
+      const ok = await confirmDeleteDialog(deleteMsg);
       if (!ok) return;
 
       // Optimistic remove
@@ -122,13 +125,13 @@ export function ParentsTable({ initialData, total, perPage = 20 }: ParentsTableP
       } else {
         // Revert on error
         refresh();
-        ErrorToast("Failed to delete parent");
+        ErrorToast(lang === 'ar' ? 'فشل حذف ولي الأمر' : 'Failed to delete parent');
       }
     } catch (e) {
       refresh();
-      ErrorToast(e instanceof Error ? e.message : "Failed to delete");
+      ErrorToast(e instanceof Error ? e.message : (lang === 'ar' ? 'فشل الحذف' : 'Failed to delete'));
     }
-  }, [optimisticRemove, refresh]);
+  }, [optimisticRemove, refresh, lang]);
 
   // Handle edit
   const handleEdit = useCallback((id: string) => {
@@ -138,11 +141,11 @@ export function ParentsTable({ initialData, total, perPage = 20 }: ParentsTableP
   // Handle view
   const handleView = useCallback((parent: ParentRow) => {
     if (!parent.userId) {
-      ErrorToast("This parent does not have a user account");
+      ErrorToast(lang === 'ar' ? 'هذا الوالد ليس لديه حساب مستخدم' : 'This parent does not have a user account');
       return;
     }
     router.push(`/profile/${parent.userId}`);
-  }, [router]);
+  }, [router, lang]);
 
   // Export CSV wrapper
   const handleExportCSV = useCallback(async (filters?: Record<string, unknown>) => {
@@ -163,8 +166,8 @@ export function ParentsTable({ initialData, total, perPage = 20 }: ParentsTableP
     create: t.create,
     reset: t.reset,
     export: t.export,
-    exportCSV: "Export CSV",
-    exporting: "Exporting...",
+    exportCSV: lang === 'ar' ? 'تصدير CSV' : 'Export CSV',
+    exporting: lang === 'ar' ? 'جاري التصدير...' : 'Exporting...',
   };
 
   return (
@@ -241,10 +244,10 @@ export function ParentsTable({ initialData, total, perPage = 20 }: ParentsTableP
                       },
                     ]}
                     actions={[
-                      { label: t.viewParent, onClick: () => handleView(parent) },
-                      { label: t.editParent, onClick: () => handleEdit(parent.id) },
+                      { label: t.view, onClick: () => handleView(parent) },
+                      { label: t.edit, onClick: () => handleEdit(parent.id) },
                       {
-                        label: t.deleteParent,
+                        label: t.delete,
                         onClick: () => handleDelete(parent),
                         variant: "destructive",
                       },
@@ -265,7 +268,7 @@ export function ParentsTable({ initialData, total, perPage = 20 }: ParentsTableP
                 disabled={isLoading}
                 className="px-4 py-2 text-sm border rounded-md hover:bg-accent disabled:opacity-50"
               >
-                {isLoading ? "Loading..." : "Load More"}
+                {isLoading ? (lang === 'ar' ? 'جاري التحميل...' : 'Loading...') : (lang === 'ar' ? 'تحميل المزيد' : 'Load More')}
               </button>
             </div>
           )}

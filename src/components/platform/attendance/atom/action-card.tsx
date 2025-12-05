@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
-import { ChevronRight, Pencil, QrCode, Upload, FileText } from "lucide-react"
+import { ChevronRight, Pencil, QrCode, Upload, FileText, Activity } from "lucide-react"
 import type { ElementType } from "react"
 
 // Icon map for string-based icon names (prevents Server Component serialization issues)
@@ -12,15 +12,17 @@ const iconMap: Record<string, ElementType> = {
   QrCode,
   Upload,
   FileText,
+  Activity,
 }
 
 interface ActionCardProps {
   title: string
-  description: string
+  description?: string
   href: string
   icon?: ElementType
   iconName?: string
   iconColor?: string
+  iconBgColor?: string
   className?: string
 }
 
@@ -30,7 +32,8 @@ export function ActionCard({
   href,
   icon: IconProp,
   iconName,
-  iconColor = "text-primary",
+  iconColor = "text-white",
+  iconBgColor = "bg-muted",
   className,
 }: ActionCardProps) {
   // Prefer iconName (string) over icon (component) to avoid serialization issues
@@ -46,14 +49,16 @@ export function ActionCard({
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="p-3 rounded-lg bg-muted">
+              <div className={cn("p-3 rounded-lg", iconBgColor)}>
                 {Icon && <Icon className={cn("h-6 w-6", iconColor)} />}
               </div>
               <div>
-                <CardTitle className="text-base">{title}</CardTitle>
-                <CardDescription className="text-sm">
-                  {description}
-                </CardDescription>
+                <CardTitle className="text-base whitespace-pre-line">{title}</CardTitle>
+                {description && (
+                  <CardDescription className="text-sm">
+                    {description}
+                  </CardDescription>
+                )}
               </div>
             </div>
             <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />

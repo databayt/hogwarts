@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useCallback, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { DataTable } from "@/components/table/data-table";
 import { DataTableToolbar } from "@/components/table/data-table-toolbar";
 import { useDataTable } from "@/components/table/use-data-table";
@@ -19,7 +20,16 @@ interface TemplatesTableProps {
 }
 
 export function TemplatesTable({ initialData, total, dictionary }: TemplatesTableProps) {
+  const router = useRouter();
   const columns = useMemo(() => getTemplateColumns(dictionary), [dictionary]);
+  const [isPending, startTransition] = useTransition();
+
+  // Refresh function for Modal callback
+  const refresh = useCallback(() => {
+    startTransition(() => {
+      router.refresh();
+    });
+  }, [router]);
 
   const { table } = useDataTable<ExamTemplateRow>({
     data: initialData,
@@ -47,7 +57,7 @@ export function TemplatesTable({ initialData, total, dictionary }: TemplatesTabl
           </Button>
         </div>
       </DataTableToolbar>
-      <Modal content={<ExamTemplateForm dictionary={dictionary} />} />
+      <Modal content={<ExamTemplateForm dictionary={dictionary} onSuccess={refresh} />} />
     </DataTable>
   );
 }

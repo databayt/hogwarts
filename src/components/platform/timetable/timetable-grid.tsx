@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils"
 import { TimetableCell } from "./timetable-cell"
 import type { LegacyTimetableData } from "./types"
 
-const DAY_LABELS = ["Sun","Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 
 interface TimetableGridProps {
   periods: Array<{
@@ -32,8 +32,12 @@ function TimetableGridComponent({
   availableSubjects = []
 }: TimetableGridProps) {
   const days: number[] | undefined = timetableData?.days
-  const labels = days && days.length > 0 ? days.map((d: number) => DAY_LABELS[d] ?? String(d)) : DAY_LABELS.slice(0,5)
+  const labels = days && days.length > 0
+    ? days.map((d: number) => DAY_LABELS[d] ?? String(d))
+    : DAY_LABELS.slice(1, 6) // Default Mon-Fri
+
   const totalCols = (labels?.length ?? 5) + 1
+
   const gridColsClass = (() => {
     switch (totalCols) {
       case 2: return 'grid-cols-2'
@@ -46,6 +50,7 @@ function TimetableGridComponent({
       default: return 'grid-cols-6'
     }
   })()
+
   const lunchColSpan = (() => {
     const span = (labels?.length ?? 5)
     switch (span) {
@@ -59,91 +64,96 @@ function TimetableGridComponent({
       default: return 'col-span-5'
     }
   })()
+
   return (
-    <div className="min-w-full">
-      {/* Header */}
-      <div className={cn('grid bg-muted border-border', gridColsClass)}>
-        <div className="py-3 px-2 text-muted-foreground flex flex-col items-center justify-center border-r border-border print:py-3">
-          <Clock className="w-4 h-4 print:w-5 print:h-5" />
-        </div>
-        {labels.map((day, index) => (
-          <div
-            key={day}
-            className={cn(
-              "py-2 px-4 text-center text-foreground",
-              index < labels.length - 1 ? "border-r border-border" : "",
-              "print:text-base print:font-semibold print:py-3"
-            )}
-          >
-            <h6 className="sm:text-base">{day}</h6>
+    <div className="overflow-x-auto rounded-xl shadow-lg border border-border">
+      <div className="min-w-full bg-card">
+        {/* Header */}
+        <div className={cn("grid bg-muted/50 border-b border-border", gridColsClass)}>
+          <div className="py-5 px-8 text-muted-foreground flex items-center justify-center border-r border-border print:py-3">
+            <Clock className="w-4 h-4 mr-2 print:w-5 print:h-5" />
+            <span className="font-medium">Period</span>
           </div>
-        ))}
-      </div>
-
-      {/* Body */}
-      <div className="divide-border">
-        {periods.map((period) => (
-          <div key={period.id} className={cn('grid avoid-break', gridColsClass)}>
-            <div className="py-3 sm:py-5 bg-muted flex flex-col justify-center items-center border-t border-r border-border print:py-4">
-              <h6 className="sm:text-base text-foreground print:text-base print:font-semibold">
-                {period.id === "Lunch" ? "Lunch" : `Period ${period.id}`}
-              </h6>
-              {period.id !== "Lunch" ? (
-                <p className="muted print:text-sm">
-                  <small className="sm:text-sm">({period.time})</small>
-                </p>
-              ) : null}
+          {labels.map((day, index) => (
+            <div
+              key={day}
+              className={cn(
+                "py-5 px-8 font-medium text-center text-foreground",
+                index < labels.length - 1 ? "border-r border-border" : "",
+                "print:text-base print:font-semibold print:py-3"
+              )}
+            >
+              {day}
             </div>
+          ))}
+        </div>
 
-            {period.id !== "Lunch" ? (
-              period.subjects.map((subject, index) => {
-                const periodIdx = parseInt(period.id) - 1
-                return (
-                  <TimetableCell
-                    key={index}
-                    subject={subject}
-                    index={index}
-                    periodIdx={periodIdx}
-                    timetableData={timetableData}
-                    onTeacherInfoSave={onTeacherInfoSave}
-                    getTeacherInfo={getTeacherInfo}
-                    onSubjectChange={onSubjectChange}
-                    showAllSubjects={showAllSubjects}
-                    availableSubjects={availableSubjects}
-                  />
-                )
-              })
-            ) : (
-              <div className={cn("bg-muted print:py-4 flex items-center justify-center border-t border-border", lunchColSpan)}>
-                <h6 className="text-foreground print:text-base print:font-semibold">
-                  Lunch
-                </h6>
+        {/* Body */}
+        <div className="divide-y divide-border">
+          {periods.map((period) => (
+            <div key={period.id} className={cn("grid", gridColsClass)}>
+              {/* Period Cell */}
+              <div className="py-5 px-8 bg-muted/50 flex flex-col justify-center items-center border-r border-border print:py-4">
+                <span className="font-medium text-foreground print:text-base print:font-semibold">
+                  {period.id === "Lunch" ? "Lunch" : `Period ${period.id}`}
+                </span>
+                {period.id !== "Lunch" && (
+                  <span className="text-xs text-muted-foreground mt-1 print:text-sm">
+                    ({period.time})
+                  </span>
+                )}
               </div>
-            )}
-          </div>
-        ))}
+
+              {/* Subject Cells */}
+              {period.id !== "Lunch" ? (
+                period.subjects.map((subject, index) => {
+                  const periodIdx = parseInt(period.id) - 1
+                  return (
+                    <TimetableCell
+                      key={index}
+                      subject={subject}
+                      index={index}
+                      periodIdx={periodIdx}
+                      timetableData={timetableData}
+                      onTeacherInfoSave={onTeacherInfoSave}
+                      getTeacherInfo={getTeacherInfo}
+                      onSubjectChange={onSubjectChange}
+                      showAllSubjects={showAllSubjects}
+                      availableSubjects={availableSubjects}
+                      isLastColumn={index === labels.length - 1}
+                    />
+                  )
+                })
+              ) : (
+                <div
+                  className={cn(
+                    "py-5 px-8 bg-muted/30 flex items-center justify-center print:py-4",
+                    lunchColSpan
+                  )}
+                >
+                  <span className="font-medium text-muted-foreground print:text-base print:font-semibold">
+                    Lunch Break
+                  </span>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   )
 }
 
 // Memoized export to prevent unnecessary re-renders
-// Only re-render if props actually change
 export const TimetableGrid = memo(TimetableGridComponent, (prevProps, nextProps) => {
-  // Custom comparison for optimal performance
   return (
-    // Compare periods array (checking length and content)
     prevProps.periods.length === nextProps.periods.length &&
     JSON.stringify(prevProps.periods) === JSON.stringify(nextProps.periods) &&
-    // Compare timetable data
     JSON.stringify(prevProps.timetableData) === JSON.stringify(nextProps.timetableData) &&
-    // Compare other primitive props
     prevProps.showAllSubjects === nextProps.showAllSubjects &&
-    // Compare arrays
     JSON.stringify(prevProps.availableSubjects) === JSON.stringify(nextProps.availableSubjects) &&
-    // Functions should be stable (referentially equal)
     prevProps.onTeacherInfoSave === nextProps.onTeacherInfoSave &&
     prevProps.getTeacherInfo === nextProps.getTeacherInfo &&
     prevProps.onSubjectChange === nextProps.onSubjectChange
   )
-}) 
+})

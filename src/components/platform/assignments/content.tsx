@@ -65,7 +65,7 @@ export default async function AssignmentsContent({ searchParams, dictionary, lan
           title={dictionary?.school?.assignments?.title || 'Assignments'}
           description={dictionary?.school?.assignments?.description || 'Manage academic assignments and assessments'}
         />
-        <AssignmentsTable initialData={data} total={total} perPage={sp.perPage} />
+        <AssignmentsTable initialData={data} total={total} dictionary={dictionary?.school?.assignments} lang={lang} perPage={sp.perPage} />
       </div>
     </PageContainer>
   )

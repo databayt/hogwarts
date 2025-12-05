@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 30" fill="none">
+  <path d="M12 6h6c3 0 5 2 5 5s-2 5-5 5h-4l-1 6H9l3-16z" fill="#003087"/>
+  <path d="M16 8h4c2 0 3.5 1.5 3.5 3.5S22 15 20 15h-3l-1 5h-3l3-12z" fill="#009CDE"/>
+  <text x="28" y="19" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#003087">Pay</text>
+  <text x="48" y="19" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#009CDE">Pal</text>
+</svg>
