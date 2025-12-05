@@ -47,11 +47,11 @@ const StepsOverview: React.FC<StepsOverviewProps> = ({ onGetStarted, isLoading =
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
             {/* Left Side - Title */}
             <div>
-              <h1 className="text-5xl font-extrabold tracking-tight">
+              <h2 className="text-3xl font-semibold tracking-tight">
                 It's easy to
                 <br />
                 get started on Hogwarts
-              </h1>
+              </h2>
             </div>
 
             {/* Right Side - Steps */}
@@ -65,7 +65,7 @@ const StepsOverview: React.FC<StepsOverviewProps> = ({ onGetStarted, isLoading =
                       </h4>
                     </div>
                     <div>
-                      <h4 className="mb-1">
+                      <h4 className="mb-1 font-semibold">
                         {step.title}
                       </h4>
                       <p>

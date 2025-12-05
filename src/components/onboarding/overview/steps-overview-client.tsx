@@ -161,14 +161,14 @@ const StepsOverviewClient: React.FC<StepsOverviewClientProps> = ({ dictionary, l
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
             {/* Left Side - Title */}
             <div>
-              <h1 className={`text-5xl font-extrabold tracking-tight ${isRTL ? 'text-right' : 'text-left'}`}>
+              <h2 className={`text-3xl font-semibold tracking-tight ${isRTL ? 'text-right' : 'text-left'}`}>
                 {dictionary.title.split('\n').map((line, index) => (
                   <React.Fragment key={index}>
                     {line}
                     {index < dictionary.title.split('\n').length - 1 && <br />}
                   </React.Fragment>
                 ))}
-              </h1>
+              </h2>
             </div>
 
             {/* Right Side - Steps */}
@@ -182,7 +182,7 @@ const StepsOverviewClient: React.FC<StepsOverviewClientProps> = ({ dictionary, l
                       </h4>
                     </div>
                     <div className={isRTL ? 'text-right' : 'text-left'}>
-                      <h4 className="mb-1">
+                      <h4 className="mb-1 font-semibold">
                         {step.title}
                       </h4>
                       <p>
