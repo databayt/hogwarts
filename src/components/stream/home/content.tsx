@@ -95,7 +95,7 @@ export function StreamHomeContent({
   return (
     <>
       {/* Hero Section with Animation */}
-      <section className="relative py-20">
+      <section className="relative">
         <div className={`flex flex-col lg:flex-row items-center gap-8 lg:gap-16 ${isRTL ? "lg:flex-row-reverse" : ""}`}>
           {/* Text Content */}
           <div className={`flex-1 flex flex-col space-y-6 ${isRTL ? "items-end text-right" : "items-start text-left"} lg:items-start lg:text-left`}>
@@ -120,7 +120,7 @@ export function StreamHomeContent({
               <Link
                 className={buttonVariants({
                   size: "lg",
-                  variant: "outline",
+                  variant: "ghost",
                 })}
                 href={`/${lang}/login`}
               >

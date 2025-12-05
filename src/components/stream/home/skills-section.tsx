@@ -115,17 +115,19 @@ export function SkillsSection({ dictionary, lang }: Omit<StreamContentProps, 'sc
                         </div>
 
                         {/* Title with Arrow */}
-                        <div className={`flex items-center justify-between ${isRTL ? "flex-row-reverse" : ""}`}>
-                          <h4 className="font-medium text-foreground text-base">
+                        <div className="flex flex-col gap-2 w-full">
+                          <h4 className={cn("font-medium text-foreground text-base", isRTL && "text-right")}>
                             {skill.title}
                           </h4>
-                          <ArrowRight
-                            className={cn(
-                              "h-5 w-5 text-muted-foreground transition-transform duration-300",
-                              "group-hover:translate-x-1",
-                              isRTL && "rotate-180 group-hover:-translate-x-1"
-                            )}
-                          />
+                          <div className={cn("flex", isRTL ? "justify-start" : "justify-end")}>
+                            <ArrowRight
+                              className={cn(
+                                "h-5 w-5 text-muted-foreground transition-transform duration-300",
+                                "group-hover:translate-x-1",
+                                isRTL && "rotate-180 group-hover:-translate-x-1"
+                              )}
+                            />
+                          </div>
                         </div>
                       </div>
                     </div>

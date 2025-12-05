@@ -25,7 +25,7 @@ export function LibraryHeroSection({ dictionary, lang = "en" }: HeroSectionProps
   const isRTL = lang === "ar";
 
   return (
-    <section className="relative py-20">
+    <section className="relative">
       <div
         className={`flex flex-col lg:flex-row items-center gap-8 lg:gap-16 ${
           isRTL ? "lg:flex-row-reverse" : ""
@@ -62,7 +62,7 @@ export function LibraryHeroSection({ dictionary, lang = "en" }: HeroSectionProps
             <Link
               className={buttonVariants({
                 size: "lg",
-                variant: "outline",
+                variant: "ghost",
               })}
               href={`/${lang}/library/my-profile`}
             >

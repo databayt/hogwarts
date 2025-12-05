@@ -48,27 +48,29 @@ export function HowToBeginSection({ dictionary, lang }: Omit<StreamContentProps,
       </div>
 
       {/* Tabs with underline */}
-      <div className={cn(
-        "flex justify-center gap-6 md:gap-12 mb-16",
-        isRTL && "flex-row-reverse"
-      )}>
-        {steps.map((step, index) => (
-          <button
-            key={step.id}
-            onClick={() => setActiveStep(index)}
-            className={cn(
-              "pb-3 text-sm md:text-lg font-semibold transition-colors relative",
-              activeStep === index
-                ? "text-foreground"
-                : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            {dictionary?.howToBegin?.[`tab${index + 1}`] || step.title}
-            {activeStep === index && (
-              <span className="absolute bottom-0 left-0 right-0 h-1 bg-foreground rounded-full" />
-            )}
-          </button>
-        ))}
+      <div className="flex justify-center mb-16">
+        <div className={cn(
+          "inline-flex gap-6 md:gap-12 border-b border-border",
+          isRTL && "flex-row-reverse"
+        )}>
+          {steps.map((step, index) => (
+            <button
+              key={step.id}
+              onClick={() => setActiveStep(index)}
+              className={cn(
+                "pb-3 text-sm md:text-lg font-semibold transition-colors relative",
+                activeStep === index
+                  ? "text-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              {dictionary?.howToBegin?.[`tab${index + 1}`] || step.title}
+              {activeStep === index && (
+                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-foreground" />
+              )}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Content - Text left (40%), Image right (60%) */}

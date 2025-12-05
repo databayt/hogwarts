@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { Star } from "lucide-react"
+import { Star, ArrowRight } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { StreamContentProps } from "../types"
 
@@ -55,9 +55,7 @@ export function HotReleasesSection({ dictionary, lang }: Omit<StreamContentProps
             href={`/${lang}/stream/courses`}
             className="text-foreground hover:text-primary transition-colors"
           >
-            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-            </svg>
+            <ArrowRight className={cn("h-5 w-5", isRTL && "rotate-180")} />
           </Link>
         </div>
 
