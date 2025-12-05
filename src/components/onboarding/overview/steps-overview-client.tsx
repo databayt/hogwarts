@@ -160,19 +160,19 @@ const StepsOverviewClient: React.FC<StepsOverviewClientProps> = ({ dictionary, l
         <div className="h-full max-w-7xl mx-auto flex flex-col">
           <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
             {/* Left Side - Title */}
-            <div>
-              <h2 className={`text-4xl font-bold ${isRTL ? 'text-right' : 'text-left'}`}>
+            <div className="self-start pt-1">
+              <h1 className={`text-5xl font-extrabold tracking-tight ${isRTL ? 'text-right' : 'text-left'}`}>
                 {dictionary.title.split('\n').map((line, index) => (
                   <React.Fragment key={index}>
                     {line}
                     {index < dictionary.title.split('\n').length - 1 && <br />}
                   </React.Fragment>
                 ))}
-              </h2>
+              </h1>
             </div>
 
             {/* Right Side - Steps */}
-            <div className="space-y-6">
+            <div className="space-y-6 self-start">
               {steps.map((step) => (
                 <div key={step.number} className={`flex gap-6 items-start justify-between ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
                   <div className={`flex gap-3 flex-1 ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
@@ -191,12 +191,12 @@ const StepsOverviewClient: React.FC<StepsOverviewClientProps> = ({ dictionary, l
                     </div>
                   </div>
                   <div className={`flex-shrink-0 hidden md:flex ${isRTL ? 'justify-start' : 'justify-end'}`}>
-                    <div className="relative w-24 h-24 overflow-hidden">
+                    <div className="relative w-14 h-14 overflow-hidden">
                       <Image
                         src={step.illustration}
                         alt={step.title}
                         fill
-                        sizes="96px"
+                        sizes="56px"
                         className="object-contain"
                       />
                     </div>

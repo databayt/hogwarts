@@ -46,16 +46,16 @@ const StepsOverview: React.FC<StepsOverviewProps> = ({ onGetStarted, isLoading =
         <div className="h-full max-w-7xl mx-auto flex flex-col">
           <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
             {/* Left Side - Title */}
-            <div>
-              <h2>
-                It's easy to 
+            <div className="self-start pt-1">
+              <h1 className="text-5xl font-extrabold tracking-tight">
+                It's easy to
                 <br />
                 get started on Hogwarts
-              </h2>
+              </h1>
             </div>
 
             {/* Right Side - Steps */}
-            <div className="space-y-6">
+            <div className="space-y-6 self-start">
               {steps.map((step) => (
                 <div key={step.number} className="flex gap-6 items-start">
                   <div className="flex gap-3 flex-1">
@@ -74,12 +74,12 @@ const StepsOverview: React.FC<StepsOverviewProps> = ({ onGetStarted, isLoading =
                     </div>
                   </div>
                   <div className="flex-shrink-0 hidden md:block">
-                    <div className="relative w-24 h-24 overflow-hidden">
+                    <div className="relative w-14 h-14 overflow-hidden">
                       <Image
                         src={step.illustration}
                         alt={step.title}
                         fill
-                        sizes="96px"
+                        sizes="56px"
                         className="object-contain"
                       />
                     </div>
