@@ -255,7 +255,7 @@ function HostLayoutContent({ children }: HostLayoutProps) {
   }
 
   return (
-    <div className="px-6 sm:px-10 md:px-16 lg:px-20 h-screen flex flex-col">
+    <div className="px-4 sm:px-8 md:px-12 h-screen flex flex-col">
       <main className="flex-1 flex items-center w-full">
         {children}
       </main>
