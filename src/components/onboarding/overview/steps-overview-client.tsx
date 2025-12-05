@@ -178,7 +178,7 @@ const StepsOverviewClient: React.FC<StepsOverviewClientProps> = ({ dictionary, l
                   <div className={`flex gap-3 flex-1 ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
                     <div className="flex-shrink-0">
                       <h4 className="text-foreground">
-                        {step.number}
+                        {step.number}.
                       </h4>
                     </div>
                     <div className={isRTL ? 'text-right' : 'text-left'}>

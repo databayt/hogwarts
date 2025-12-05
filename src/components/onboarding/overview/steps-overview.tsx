@@ -61,7 +61,7 @@ const StepsOverview: React.FC<StepsOverviewProps> = ({ onGetStarted, isLoading =
                   <div className="flex gap-3 flex-1">
                     <div className="flex-shrink-0">
                       <h4 className="text-foreground">
-                        {step.number}
+                        {step.number}.
                       </h4>
                     </div>
                     <div>
