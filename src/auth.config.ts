@@ -41,9 +41,12 @@ export default {
       },
     }),
     // Facebook provider - always include if credentials exist
+    // Note: Disable PKCE as Facebook OAuth2 doesn't support it properly with NextAuth v5
     Facebook({
       clientId: env.FACEBOOK_CLIENT_ID || "",
       clientSecret: env.FACEBOOK_CLIENT_SECRET || "",
+      // Disable PKCE - Facebook OAuth2 doesn't require it and it causes "Configuration" errors
+      checks: ["state"],
       authorization: {
         params: {
           // Pass additional parameters to Facebook
