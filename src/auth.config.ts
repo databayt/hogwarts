@@ -41,22 +41,14 @@ export default {
       },
     }),
     // Facebook provider - always include if credentials exist
-    // Fix for "id_token detected" error when user has logged in via Facebook mobile app with OIDC
-    // See: https://github.com/nextauthjs/next-auth/discussions/4146
-    // Solution: Enable idToken handling + set issuer for validation
+    // Using working configuration from nov-05 branch
     Facebook({
       clientId: env.FACEBOOK_CLIENT_ID || "",
       clientSecret: env.FACEBOOK_CLIENT_SECRET || "",
-      // Enable id_token handling - required when Facebook returns id_token from OIDC mobile logins
-      idToken: true,
-      // Set issuer for id_token validation
-      issuer: "https://www.facebook.com",
-      // Disable PKCE - Facebook OAuth2 doesn't require it and can cause issues
-      checks: ["state"],
       authorization: {
         params: {
-          // Request openid scope since we're handling id_tokens
-          scope: 'openid email',
+          // Pass additional parameters to Facebook
+          scope: 'email',
         }
       },
       profile(profile) {
@@ -68,6 +60,7 @@ export default {
           emailVerified: new Date(),
         };
       },
+      checks: [], // Disable PKCE temporarily - this was working in nov-05
     }),
     Credentials({
       async authorize(credentials) {
