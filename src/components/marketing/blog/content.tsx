@@ -10,7 +10,7 @@ export default function BlogContent(props: Props) {
   return (
     <div>
         Blog
-        <p>Mohamed Abdelbasit</p>
+        <p>Mohanad Adam</p>
     </div>
   )
 }
