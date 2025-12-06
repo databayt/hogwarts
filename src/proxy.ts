@@ -1,7 +1,19 @@
 import { NextResponse, NextRequest } from "next/server";
 import { i18n, type Locale } from "@/components/internationalization/config";
 
-// Minimal locale detection
+/**
+ * Optimized middleware for Edge Function (<1MB requirement)
+ * - Auth check via cookie (no heavy NextAuth import)
+ * - Inlined routes (no routes.ts import)
+ * - Locale detection and routing
+ * - Subdomain detection and rewriting
+ */
+
+// Inlined route arrays to avoid imports
+const publicRoutes = ["/", "/new-verification", "/features", "/pricing", "/blog"];
+const authRoutes = ["/login", "/join", "/error", "/reset", "/new-password"];
+
+// Lightweight locale detection
 function getLocale(request: NextRequest): Locale {
   const cookieLocale = request.cookies.get('NEXT_LOCALE')?.value;
   if (cookieLocale && i18n.locales.includes(cookieLocale as Locale)) {
@@ -19,11 +31,16 @@ function getLocale(request: NextRequest): Locale {
   return i18n.defaultLocale;
 }
 
-export async function middleware(req: NextRequest) {
+// Check if user is authenticated via session cookie
+function isAuthenticated(request: NextRequest): boolean {
+  return !!request.cookies.get('authjs.session-token')?.value;
+}
+
+export function proxy(req: NextRequest) {
   const url = req.nextUrl.clone();
   const host = req.headers.get("host") || "";
 
-  // Skip static files
+  // Skip static files and API auth routes
   if (
     url.pathname.startsWith("/_next") ||
     url.pathname.startsWith("/api/auth") ||
@@ -45,7 +62,51 @@ export async function middleware(req: NextRequest) {
     locale = getLocale(req);
   }
 
-  // Main domain
+  // Get pathname without locale
+  const pathWithoutLocale = hasLocale
+    ? url.pathname.replace(`/${locale}`, '') || '/'
+    : url.pathname;
+
+  // Detect subdomain early for auth redirects
+  let subdomain: string | null = null;
+
+  if (host.endsWith(".databayt.org") && !host.startsWith("ed.")) {
+    subdomain = host.split(".")[0];
+  } else if (host.includes("---") && host.endsWith(".vercel.app")) {
+    subdomain = host.split("---")[0];
+  } else if (host.includes("localhost") && host.includes(".")) {
+    const parts = host.split(".");
+    if (parts.length > 1 && parts[0] !== "www" && parts[0] !== "localhost") {
+      subdomain = parts[0];
+    }
+  }
+
+  // Check route type
+  const isPublic = publicRoutes.includes(pathWithoutLocale) ||
+                   pathWithoutLocale.startsWith('/docs') ||
+                   pathWithoutLocale.startsWith('/stream');
+  const isAuth = authRoutes.includes(pathWithoutLocale);
+  const authenticated = isAuthenticated(req);
+
+  // Redirect logged-in users away from auth pages
+  if (isAuth && authenticated) {
+    // If on subdomain, redirect to subdomain dashboard
+    const dashboardPath = subdomain
+      ? `/${locale}/s/${subdomain}/dashboard`
+      : `/${locale}/dashboard`;
+    const response = NextResponse.redirect(new URL(dashboardPath, req.url));
+    return response;
+  }
+
+  // Redirect unauthenticated users to login for protected routes
+  if (!isPublic && !isAuth && !authenticated) {
+    const callbackUrl = url.pathname + url.search;
+    const loginUrl = new URL(`/${locale}/login`, req.url);
+    loginUrl.searchParams.set('callbackUrl', callbackUrl);
+    return NextResponse.redirect(loginUrl);
+  }
+
+  // Main domain handling
   if (host === "ed.databayt.org" || host === "localhost:3000" || host === "localhost") {
     if (!hasLocale) {
       url.pathname = `/${locale}${url.pathname}`;
@@ -60,20 +121,7 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // Subdomain detection
-  let subdomain: string | null = null;
-
-  if (host.endsWith(".databayt.org") && !host.startsWith("ed.")) {
-    subdomain = host.split(".")[0];
-  } else if (host.includes("---") && host.endsWith(".vercel.app")) {
-    subdomain = host.split("---")[0];
-  } else if (host.includes("localhost") && host.includes(".")) {
-    const parts = host.split(".");
-    if (parts.length > 1 && parts[0] !== "www" && parts[0] !== "localhost") {
-      subdomain = parts[0];
-    }
-  }
-
+  // Subdomain handling (subdomain already detected earlier)
   if (subdomain) {
     if (!hasLocale) {
       url.pathname = `/${locale}${url.pathname}`;
@@ -86,8 +134,13 @@ export async function middleware(req: NextRequest) {
       return response;
     }
 
+    // Don't rewrite auth routes - they exist globally at /[lang]/(auth)/*
+    // NOT within subdomain structure /[lang]/s/[subdomain]/(auth)/*
+    if (isAuth) {
+      return NextResponse.next();
+    }
+
     // Rewrite to tenant path
-    const pathWithoutLocale = url.pathname.replace(`/${locale}`, '') || '/';
     url.pathname = `/${locale}/s/${subdomain}${pathWithoutLocale}`;
 
     const response = NextResponse.rewrite(url);
