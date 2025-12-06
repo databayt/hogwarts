@@ -46,18 +46,9 @@ export default {
       clientSecret: env.FACEBOOK_CLIENT_SECRET || "",
       authorization: {
         params: {
-          // Use public_profile and email scopes (required by Facebook)
-          // Do NOT include 'openid' to avoid id_token issues with NextAuth v5
-          scope: 'public_profile email',
+          // Pass additional parameters to Facebook
+          scope: 'email',
         }
-      },
-      // Explicitly configure token endpoint to use OAuth2 instead of OIDC
-      token: {
-        url: "https://graph.facebook.com/oauth/access_token",
-      },
-      userinfo: {
-        url: "https://graph.facebook.com/me",
-        params: { fields: "id,name,email,picture" },
       },
       profile(profile) {
         return {
