@@ -4,19 +4,20 @@ import { StreamLessonContent } from "@/components/stream/dashboard/lesson/conten
 import { Metadata } from "next";
 import { getTenantContext } from "@/lib/tenant-context";
 import { auth } from "@/auth";
-import { redirect } from "next/navigation";
+import { redirect, notFound } from "next/navigation";
+import { getLessonWithProgress } from "@/components/stream/data/course/get-lesson-with-progress";
 
 interface Props {
   params: Promise<{ lang: Locale; subdomain: string; slug: string; lessonId: string }>;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { lang } = await params;
-  const dictionary = await getDictionary(lang);
+  const { lessonId } = await params;
+  const lesson = await getLessonWithProgress(lessonId);
 
   return {
-    title: "Lesson",
-    description: "Course lesson content",
+    title: lesson?.title || "Lesson",
+    description: lesson?.description || "Course lesson content",
   };
 }
 
@@ -30,14 +31,19 @@ export default async function StreamLessonPage({ params }: Props) {
     redirect(`/${lang}/s/${subdomain}/auth/login`);
   }
 
+  const lesson = await getLessonWithProgress(lessonId);
+
+  if (!lesson) {
+    notFound();
+  }
+
   return (
     <StreamLessonContent
-      dictionary={dictionary.stream}
+      dictionary={dictionary.stream || {}}
       lang={lang}
       schoolId={schoolId}
-      userId={session.user.id}
-      courseSlug={slug}
-      lessonId={lessonId}
+      subdomain={subdomain}
+      lesson={lesson}
     />
   );
 }
