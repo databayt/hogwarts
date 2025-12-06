@@ -69,8 +69,19 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
     error: "/error",
   },
   secret: process.env.AUTH_SECRET,
-  debug: process.env.NODE_ENV === "development",
+  debug: true, // TEMPORARILY enable debug for all environments to see Facebook OAuth errors
   trustHost: true, // Required for OAuth in production (Vercel proxies)
+  logger: {
+    error(code, ...message) {
+      console.error('[AUTH ERROR]', code, JSON.stringify(message, null, 2));
+    },
+    warn(code, ...message) {
+      console.warn('[AUTH WARN]', code, JSON.stringify(message, null, 2));
+    },
+    debug(code, ...message) {
+      console.log('[AUTH DEBUG]', code, JSON.stringify(message, null, 2));
+    },
+  },
   events: {
     async signIn({ user, account, isNewUser }) {
       if (process.env.NODE_ENV === 'development') {
