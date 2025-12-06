@@ -13,6 +13,7 @@ export default function BlogContent(props: Props) {
         <p>Mohamed Abdelbasit</p>
         <p>Asmaa Sayed</p>
         <p>My name Asmaa</p>
+        <p>Sarah Ahmed</p>
     </div>
   )
 }
