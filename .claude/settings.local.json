@@ -53,5 +53,26 @@
     ],
     "deny": [],
     "ask": []
-  }
+  },
+  "enabledMcpjsonServers": [
+    "vercel",
+    "sentry",
+    "figma",
+    "linear",
+    "github",
+    "browser",
+    "stripe",
+    "postgres-dev",
+    "ref",
+    "posthog",
+    "notion",
+    "memory-bank",
+    "slack",
+    "shadcn",
+    "a11y",
+    "storybook",
+    "design-system-analyzer",
+    "svg-tools"
+  ],
+  "enableAllProjectMcpServers": true
 }
