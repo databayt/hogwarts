@@ -16,15 +16,13 @@ console.log('Auth config - Environment check:', {
   NODE_ENV: process.env.NODE_ENV
 });
 
-// Build providers array conditionally to avoid "Configuration" errors
-const providers: NextAuthConfig["providers"] = [];
-
-// Only add Google if credentials exist
-if (env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET) {
-  providers.push(
+export default {
+  // Ensure we have at least one provider
+  providers: [
+    // Google provider - always include if credentials exist
     Google({
-      clientId: env.GOOGLE_CLIENT_ID,
-      clientSecret: env.GOOGLE_CLIENT_SECRET,
+      clientId: env.GOOGLE_CLIENT_ID || "",
+      clientSecret: env.GOOGLE_CLIENT_SECRET || "",
       authorization: {
         params: {
           prompt: "consent",
@@ -41,20 +39,15 @@ if (env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET) {
           emailVerified: new Date(),
         };
       },
-    })
-  );
-}
-
-// Only add Facebook if credentials exist
-if (env.FACEBOOK_CLIENT_ID && env.FACEBOOK_CLIENT_SECRET) {
-  providers.push(
+    }),
+    // Facebook provider - always include if credentials exist
     Facebook({
-      clientId: env.FACEBOOK_CLIENT_ID,
-      clientSecret: env.FACEBOOK_CLIENT_SECRET,
+      clientId: env.FACEBOOK_CLIENT_ID || "",
+      clientSecret: env.FACEBOOK_CLIENT_SECRET || "",
       authorization: {
         params: {
-          // Facebook requires public_profile scope along with email
-          scope: 'public_profile,email',
+          // Pass additional parameters to Facebook
+          scope: 'email',
         }
       },
       profile(profile) {
@@ -66,13 +59,8 @@ if (env.FACEBOOK_CLIENT_ID && env.FACEBOOK_CLIENT_SECRET) {
           emailVerified: new Date(),
         };
       },
-    })
-  );
-}
-
-// Always add Credentials provider
-providers.push(
-  Credentials({
+    }),
+    Credentials({
       async authorize(credentials) {
         console.log('[CREDENTIALS-AUTH] 🔐 Starting credentials authorization');
         const validatedFields = LoginSchema.safeParse(credentials);
@@ -114,10 +102,7 @@ providers.push(
         return null;
       }
     })
-);
-
-export default {
-  providers,
+  ],
 } satisfies NextAuthConfig;
 
 // Debug logging for loaded providers
