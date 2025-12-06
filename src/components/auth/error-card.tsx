@@ -48,6 +48,10 @@ export const ErrorCard = (props: Props) => {
         {error && (
           <div className="text-xs text-muted-foreground text-center">
             <p>Error code: {error}</p>
+            {/* DEBUG: Show all URL params to capture full error */}
+            <pre className="mt-2 p-2 bg-muted rounded text-left overflow-auto max-w-full text-[10px]">
+              {JSON.stringify(Object.fromEntries(searchParams.entries()), null, 2)}
+            </pre>
             <p className="mt-2">If this problem persists, please contact support.</p>
           </div>
         )}
