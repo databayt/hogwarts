@@ -40,38 +40,12 @@ export default {
         };
       },
     }),
-    // Facebook provider with full OIDC configuration
-    // Fix for users who have previously logged in via Facebook mobile app with OIDC
-    // This causes Facebook to return id_token even for OAuth2 requests
-    // Solution: Configure as OIDC provider to properly handle id_token
-    {
-      id: "facebook",
-      name: "Facebook",
-      type: "oidc",
+    // Facebook provider - SIMPLEST possible configuration
+    // If this doesn't work, the issue is external (Facebook app settings or user account)
+    Facebook({
       clientId: env.FACEBOOK_CLIENT_ID || "",
       clientSecret: env.FACEBOOK_CLIENT_SECRET || "",
-      issuer: "https://www.facebook.com",
-      // Manual endpoint configuration since Facebook's OIDC is incomplete
-      authorization: {
-        url: "https://www.facebook.com/v19.0/dialog/oauth",
-        params: {
-          scope: "openid email public_profile",
-        }
-      },
-      token: "https://graph.facebook.com/v19.0/oauth/access_token",
-      userinfo: "https://graph.facebook.com/me?fields=id,name,email,picture",
-      jwks_endpoint: "https://www.facebook.com/.well-known/oauth/openid/jwks/",
-      checks: ["state"],
-      profile(profile: { id: string; name?: string; email?: string; picture?: { data?: { url?: string } } }) {
-        return {
-          id: profile.id,
-          username: profile.name || "Facebook User",
-          email: profile.email || `${profile.id}@facebook.com`,
-          image: profile.picture?.data?.url || null,
-          emailVerified: new Date(),
-        };
-      },
-    },
+    }),
     Credentials({
       async authorize(credentials) {
         console.log('[CREDENTIALS-AUTH] 🔐 Starting credentials authorization');
