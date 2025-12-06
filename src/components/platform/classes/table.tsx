@@ -77,7 +77,10 @@ export function ClassesTable({ initialData, total, dictionary, lang, perPage = 2
     perPage,
     fetcher: async (params) => {
       const result = await getClasses(params);
-      return { rows: result.rows as ClassRow[], total: result.total };
+      if (!result.success || !result.data) {
+        return { rows: [], total: 0 };
+      }
+      return { rows: result.data.rows as ClassRow[], total: result.data.total };
     },
     filters: searchValue ? { name: searchValue } : undefined,
   });
@@ -147,7 +150,11 @@ export function ClassesTable({ initialData, total, dictionary, lang, perPage = 2
 
   // Export CSV wrapper
   const handleExportCSV = useCallback(async (filters?: Record<string, unknown>) => {
-    return getClassesCSV(filters);
+    const result = await getClassesCSV(filters);
+    if (!result.success || !result.data) {
+      throw new Error('error' in result ? result.error : 'Export failed');
+    }
+    return result.data;
   }, []);
 
   // Toolbar translations

@@ -37,53 +37,72 @@ export async function seedAuth(
   const accountantData = ADMIN_USERS.find(u => u.role === "ACCOUNTANT")!;
   const staffData = ADMIN_USERS.find(u => u.role === "STAFF")!;
 
-  // Developer (platform-wide, not tied to school)
-  const devUser = await prisma.user.create({
-    data: {
-      email: devData.email,
-      username: devData.usernameEn, // English for database
-      role: UserRole.DEVELOPER,
-      password: passwordHash,
-      emailVerified: new Date(),
-      // No schoolId - platform admin has access to all schools
-    },
+  // Developer (platform-wide, not tied to school) - findFirst + create
+  let devUser = await prisma.user.findFirst({
+    where: { email: devData.email, schoolId: null },
   });
+  if (!devUser) {
+    devUser = await prisma.user.create({
+      data: {
+        email: devData.email,
+        username: devData.usernameEn,
+        role: UserRole.DEVELOPER,
+        password: passwordHash,
+        emailVerified: new Date(),
+      },
+    });
+  }
 
-  // School Admin
-  const adminUser = await prisma.user.create({
-    data: {
-      email: adminData.email,
-      username: adminData.usernameEn,
-      role: UserRole.ADMIN,
-      password: passwordHash,
-      emailVerified: new Date(),
-      school: { connect: { id: schoolId } },
-    },
+  // School Admin - findFirst + create (by email + schoolId)
+  let adminUser = await prisma.user.findFirst({
+    where: { email: adminData.email, schoolId },
   });
+  if (!adminUser) {
+    adminUser = await prisma.user.create({
+      data: {
+        email: adminData.email,
+        username: adminData.usernameEn,
+        role: UserRole.ADMIN,
+        password: passwordHash,
+        emailVerified: new Date(),
+        school: { connect: { id: schoolId } },
+      },
+    });
+  }
 
-  // Accountant
-  const accountantUser = await prisma.user.create({
-    data: {
-      email: accountantData.email,
-      username: accountantData.usernameEn,
-      role: UserRole.ACCOUNTANT,
-      password: passwordHash,
-      emailVerified: new Date(),
-      school: { connect: { id: schoolId } },
-    },
+  // Accountant - findFirst + create (by email + schoolId)
+  let accountantUser = await prisma.user.findFirst({
+    where: { email: accountantData.email, schoolId },
   });
+  if (!accountantUser) {
+    accountantUser = await prisma.user.create({
+      data: {
+        email: accountantData.email,
+        username: accountantData.usernameEn,
+        role: UserRole.ACCOUNTANT,
+        password: passwordHash,
+        emailVerified: new Date(),
+        school: { connect: { id: schoolId } },
+      },
+    });
+  }
 
-  // Staff
-  const staffUser = await prisma.user.create({
-    data: {
-      email: staffData.email,
-      username: staffData.usernameEn,
-      role: UserRole.STAFF,
-      password: passwordHash,
-      emailVerified: new Date(),
-      school: { connect: { id: schoolId } },
-    },
+  // Staff - findFirst + create (by email + schoolId)
+  let staffUser = await prisma.user.findFirst({
+    where: { email: staffData.email, schoolId },
   });
+  if (!staffUser) {
+    staffUser = await prisma.user.create({
+      data: {
+        email: staffData.email,
+        username: staffData.usernameEn,
+        role: UserRole.STAFF,
+        password: passwordHash,
+        emailVerified: new Date(),
+        school: { connect: { id: schoolId } },
+      },
+    });
+  }
 
   // Print bilingual information
   console.log("   ✅ Admin Users Created Successfully");

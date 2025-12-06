@@ -78,7 +78,10 @@ export function EventsTable({ initialData, total, dictionary, lang, perPage = 20
     perPage,
     fetcher: async (params) => {
       const result = await getEvents(params);
-      return { rows: result.rows as EventRow[], total: result.total };
+      if (!result.success || !result.data) {
+        return { rows: [], total: 0 };
+      }
+      return { rows: result.data.rows as EventRow[], total: result.data.total };
     },
     filters: searchValue ? { title: searchValue } : undefined,
   });
@@ -150,7 +153,11 @@ export function EventsTable({ initialData, total, dictionary, lang, perPage = 20
 
   // Export CSV wrapper
   const handleExportCSV = useCallback(async (filters?: Record<string, unknown>) => {
-    return getEventsCSV(filters);
+    const result = await getEventsCSV(filters);
+    if (!result.success || !result.data) {
+      throw new Error('error' in result ? result.error : 'Export failed');
+    }
+    return result.data;
   }, []);
 
   // Get status badge variant

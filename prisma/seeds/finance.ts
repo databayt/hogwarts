@@ -47,16 +47,21 @@ export async function seedFinance(
   }
 
   // ===== FISCAL YEAR =====
-  const fiscalYear = await prisma.fiscalYear.create({
-    data: {
-      schoolId,
-      name: "FY 2025-2026",
-      startDate: new Date("2025-07-01T00:00:00Z"),
-      endDate: new Date("2026-06-30T23:59:59Z"),
-      isCurrent: true,
-      isClosed: false,
-    },
+  let fiscalYear = await prisma.fiscalYear.findFirst({
+    where: { schoolId, name: "FY 2025-2026" },
   });
+  if (!fiscalYear) {
+    fiscalYear = await prisma.fiscalYear.create({
+      data: {
+        schoolId,
+        name: "FY 2025-2026",
+        startDate: new Date("2025-07-01T00:00:00Z"),
+        endDate: new Date("2026-06-30T23:59:59Z"),
+        isCurrent: true,
+        isClosed: false,
+      },
+    });
+  }
 
   // ===== CHART OF ACCOUNTS =====
   const accounts = [
@@ -74,9 +79,15 @@ export async function seedFinance(
 
   const createdAccounts = [];
   for (const acc of accounts) {
-    const account = await prisma.chartOfAccount.create({
-      data: { schoolId, ...acc, isActive: true },
+    // Find or create chart of account
+    let account = await prisma.chartOfAccount.findFirst({
+      where: { schoolId, code: acc.code },
     });
+    if (!account) {
+      account = await prisma.chartOfAccount.create({
+        data: { schoolId, ...acc, isActive: true },
+      });
+    }
     createdAccounts.push(account);
   }
 
@@ -85,9 +96,15 @@ export async function seedFinance(
   const createdCategories = new Map<string, string>();
 
   for (const name of expenseCategories) {
-    const cat = await prisma.expenseCategory.create({
-      data: { schoolId, name, isActive: true, requiresApproval: true },
+    // Find or create expense category
+    let cat = await prisma.expenseCategory.findFirst({
+      where: { schoolId, name },
     });
+    if (!cat) {
+      cat = await prisma.expenseCategory.create({
+        data: { schoolId, name, isActive: true, requiresApproval: true },
+      });
+    }
     createdCategories.set(name, cat.id);
   }
 
@@ -96,81 +113,100 @@ export async function seedFinance(
   const salaryStructures: { id: string; baseSalary: number; teacher: TeacherRef }[] = [];
 
   for (const teacher of teachers.slice(0, 30)) {
-    // Teacher salaries in SDG (approximately 600,000 - 1,800,000 SDG/month = ~$1K-3K USD)
-    const baseSalary = faker.number.int({ min: 600000, max: 1800000 });
-
-    const structure = await prisma.salaryStructure.create({
-      data: {
-        schoolId,
-        teacherId: teacher.id,
-        effectiveFrom: new Date("2025-07-01T00:00:00Z"),
-        baseSalary,
-        currency: "SDG",  // Sudanese Pound
-        payFrequency: PayFrequency.MONTHLY,
-        isActive: true,
-      },
+    // Check if salary structure already exists for this teacher
+    let structure = await prisma.salaryStructure.findFirst({
+      where: { schoolId, teacherId: teacher.id, isActive: true },
     });
 
-    await prisma.salaryAllowance.createMany({
-      data: [
-        { schoolId, structureId: structure.id, name: "Housing Allowance", amount: baseSalary * 0.25, isTaxable: true, isRecurring: true },
-        { schoolId, structureId: structure.id, name: "Transport Allowance", amount: baseSalary * 0.10, isTaxable: true, isRecurring: true },
-      ],
-    });
+    if (!structure) {
+      // Teacher salaries in SDG (approximately 600,000 - 1,800,000 SDG/month = ~$1K-3K USD)
+      const baseSalary = faker.number.int({ min: 600000, max: 1800000 });
 
-    await prisma.salaryDeduction.createMany({
-      data: [
-        { schoolId, structureId: structure.id, name: "Income Tax", amount: baseSalary * 0.15, type: DeductionType.TAX, isRecurring: true },
-        { schoolId, structureId: structure.id, name: "Pension", amount: baseSalary * 0.08, type: DeductionType.PENSION, isRecurring: true },
-      ],
-    });
+      structure = await prisma.salaryStructure.create({
+        data: {
+          schoolId,
+          teacherId: teacher.id,
+          effectiveFrom: new Date("2025-07-01T00:00:00Z"),
+          baseSalary,
+          currency: "SDG",  // Sudanese Pound
+          payFrequency: PayFrequency.MONTHLY,
+          isActive: true,
+        },
+      });
 
-    salaryStructures.push({ id: structure.id, baseSalary, teacher });
+      await prisma.salaryAllowance.createMany({
+        data: [
+          { schoolId, structureId: structure.id, name: "Housing Allowance", amount: baseSalary * 0.25, isTaxable: true, isRecurring: true },
+          { schoolId, structureId: structure.id, name: "Transport Allowance", amount: baseSalary * 0.10, isTaxable: true, isRecurring: true },
+        ],
+        skipDuplicates: true,
+      });
+
+      await prisma.salaryDeduction.createMany({
+        data: [
+          { schoolId, structureId: structure.id, name: "Income Tax", amount: baseSalary * 0.15, type: DeductionType.TAX, isRecurring: true },
+          { schoolId, structureId: structure.id, name: "Pension", amount: baseSalary * 0.08, type: DeductionType.PENSION, isRecurring: true },
+        ],
+        skipDuplicates: true,
+      });
+
+      salaryStructures.push({ id: structure.id, baseSalary, teacher });
+    } else {
+      salaryStructures.push({ id: structure.id, baseSalary: Number(structure.baseSalary), teacher });
+    }
   }
 
   // ===== TIMESHEET PERIODS (6 months) =====
   for (let month = 0; month < 6; month++) {
     const startDate = new Date(2025, 6 + month, 1);
     const endDate = new Date(2025, 7 + month, 0);
+    const periodName = `${startDate.toLocaleString('default', { month: 'long' })} ${startDate.getFullYear()}`;
 
-    const period = await prisma.timesheetPeriod.create({
-      data: {
-        schoolId,
-        name: `${startDate.toLocaleString('default', { month: 'long' })} ${startDate.getFullYear()}`,
-        startDate,
-        endDate,
-        status: month < 5 ? PeriodStatus.CLOSED : PeriodStatus.OPEN,
-        closedBy: month < 5 ? accountantUser.id : null,
-        closedAt: month < 5 ? new Date(2025, 7 + month, 5) : null,
-      },
+    // Check if period already exists
+    let period = await prisma.timesheetPeriod.findFirst({
+      where: { schoolId, name: periodName },
     });
 
-    // Timesheet entries for first 10 teachers
-    const entries = [];
-    for (const { teacher } of salaryStructures.slice(0, 10)) {
-      for (let day = 1; day <= 3; day++) {
-        const entryDate = new Date(startDate.getFullYear(), startDate.getMonth(), day);
-        if (entryDate <= new Date()) {
-          entries.push({
-            schoolId,
-            periodId: period.id,
-            teacherId: teacher.id,
-            entryDate,
-            hoursWorked: 8,
-            overtimeHours: 0,
-            leaveHours: 0,
-            status: EntryStatus.APPROVED,
-            submittedBy: teacher.id,
-            submittedAt: new Date(entryDate.getTime() + 24 * 60 * 60 * 1000),
-            approvedBy: adminUser.id,
-            approvedAt: new Date(entryDate.getTime() + 2 * 24 * 60 * 60 * 1000),
-          });
+    if (!period) {
+      period = await prisma.timesheetPeriod.create({
+        data: {
+          schoolId,
+          name: periodName,
+          startDate,
+          endDate,
+          status: month < 5 ? PeriodStatus.CLOSED : PeriodStatus.OPEN,
+          closedBy: month < 5 ? accountantUser.id : null,
+          closedAt: month < 5 ? new Date(2025, 7 + month, 5) : null,
+        },
+      });
+
+      // Timesheet entries for first 10 teachers
+      const entries = [];
+      for (const { teacher } of salaryStructures.slice(0, 10)) {
+        for (let day = 1; day <= 3; day++) {
+          const entryDate = new Date(startDate.getFullYear(), startDate.getMonth(), day);
+          if (entryDate <= new Date()) {
+            entries.push({
+              schoolId,
+              periodId: period.id,
+              teacherId: teacher.id,
+              entryDate,
+              hoursWorked: 8,
+              overtimeHours: 0,
+              leaveHours: 0,
+              status: EntryStatus.APPROVED,
+              submittedBy: teacher.id,
+              submittedAt: new Date(entryDate.getTime() + 24 * 60 * 60 * 1000),
+              approvedBy: adminUser.id,
+              approvedAt: new Date(entryDate.getTime() + 2 * 24 * 60 * 60 * 1000),
+            });
+          }
         }
       }
-    }
 
-    if (entries.length > 0) {
-      await prisma.timesheetEntry.createMany({ data: entries, skipDuplicates: true });
+      if (entries.length > 0) {
+        await prisma.timesheetEntry.createMany({ data: entries, skipDuplicates: true });
+      }
     }
   }
 
@@ -179,95 +215,109 @@ export async function seedFinance(
     const payPeriodStart = new Date(2025, 6 + month, 1);
     const payPeriodEnd = new Date(2025, 7 + month, 0);
     const payDate = new Date(2025, 7 + month, 1);
+    const runNumber = `PR-2025-${String(month + 1).padStart(3, "0")}`;
 
-    const run = await prisma.payrollRun.create({
-      data: {
-        schoolId,
-        runNumber: `PR-2025-${String(month + 1).padStart(3, "0")}`,
-        payPeriodStart,
-        payPeriodEnd,
-        payDate,
-        status: PayrollStatus.PAID,
-        totalGross: 0,
-        totalDeductions: 0,
-        totalNet: 0,
-        processedBy: accountantUser.id,
-        processedAt: new Date(payDate.getTime() - 5 * 24 * 60 * 60 * 1000),
-        approvedBy: adminUser.id,
-        approvedAt: new Date(payDate.getTime() - 2 * 24 * 60 * 60 * 1000),
-      },
+    // Check if payroll run already exists
+    const existingRun = await prisma.payrollRun.findFirst({
+      where: { schoolId, runNumber },
     });
 
-    let totalGross = 0, totalDeductions = 0, totalNet = 0;
-
-    for (const { id: structureId, baseSalary, teacher } of salaryStructures) {
-      const allowanceAmount = baseSalary * 0.35;
-      const grossSalary = baseSalary + allowanceAmount;
-      const taxAmount = baseSalary * 0.15;
-      const pension = baseSalary * 0.08;
-      const deductions = taxAmount + pension;
-      const netSalary = grossSalary - deductions;
-
-      await prisma.salarySlip.create({
+    if (!existingRun) {
+      const run = await prisma.payrollRun.create({
         data: {
           schoolId,
-          payrollRunId: run.id,
-          structureId,
-          teacherId: teacher.id,
-          slipNumber: `SLP-${run.runNumber}-${structureId.substring(0, 8)}`,
+          runNumber,
           payPeriodStart,
           payPeriodEnd,
           payDate,
-          baseSalary,
-          allowances: [{ name: "Housing", amount: baseSalary * 0.25 }, { name: "Transport", amount: baseSalary * 0.10 }],
-          overtime: 0,
-          bonus: 0,
-          grossSalary,
-          taxAmount,
-          insurance: 0,
-          loanDeduction: 0,
-          otherDeductions: [],
-          totalDeductions: deductions,
-          netSalary,
-          daysWorked: 22,
-          daysPresent: 22,
-          daysAbsent: 0,
-          hoursWorked: 176,
-          status: SlipStatus.PAID,
-          paidAt: payDate,
+          status: PayrollStatus.PAID,
+          totalGross: 0,
+          totalDeductions: 0,
+          totalNet: 0,
+          processedBy: accountantUser.id,
+          processedAt: new Date(payDate.getTime() - 5 * 24 * 60 * 60 * 1000),
+          approvedBy: adminUser.id,
+          approvedAt: new Date(payDate.getTime() - 2 * 24 * 60 * 60 * 1000),
         },
       });
 
-      totalGross += grossSalary;
-      totalDeductions += deductions;
-      totalNet += netSalary;
-    }
+      let totalGross = 0, totalDeductions = 0, totalNet = 0;
 
-    await prisma.payrollRun.update({
-      where: { id: run.id },
-      data: { totalGross, totalDeductions, totalNet },
-    });
+      for (const { id: structureId, baseSalary, teacher } of salaryStructures) {
+        const allowanceAmount = baseSalary * 0.35;
+        const grossSalary = baseSalary + allowanceAmount;
+        const taxAmount = baseSalary * 0.15;
+        const pension = baseSalary * 0.08;
+        const deductions = taxAmount + pension;
+        const netSalary = grossSalary - deductions;
+
+        await prisma.salarySlip.create({
+          data: {
+            schoolId,
+            payrollRunId: run.id,
+            structureId,
+            teacherId: teacher.id,
+            slipNumber: `SLP-${run.runNumber}-${structureId.substring(0, 8)}`,
+            payPeriodStart,
+            payPeriodEnd,
+            payDate,
+            baseSalary,
+            allowances: [{ name: "Housing", amount: baseSalary * 0.25 }, { name: "Transport", amount: baseSalary * 0.10 }],
+            overtime: 0,
+            bonus: 0,
+            grossSalary,
+            taxAmount,
+            insurance: 0,
+            loanDeduction: 0,
+            otherDeductions: [],
+            totalDeductions: deductions,
+            netSalary,
+            daysWorked: 22,
+            daysPresent: 22,
+            daysAbsent: 0,
+            hoursWorked: 176,
+            status: SlipStatus.PAID,
+            paidAt: payDate,
+          },
+        });
+
+        totalGross += grossSalary;
+        totalDeductions += deductions;
+        totalNet += netSalary;
+      }
+
+      await prisma.payrollRun.update({
+        where: { id: run.id },
+        data: { totalGross, totalDeductions, totalNet },
+      });
+    }
   }
 
   // ===== BANK ACCOUNTS =====
   // Bank of Khartoum - Main Operating Account (SDG)
-  const mainBank = await prisma.bankAccount.create({
-    data: {
-      schoolId,
-      userId: adminUser.id,
-      bankId: "bank_khartoum",
-      accountId: `ACC-${faker.finance.accountNumber(10)}`,
-      accessToken: "encrypted_token",
-      institutionId: "inst_sudan_001",
-      name: "Main Operating Account - Bank of Khartoum",
-      officialName: `${schoolName} Operating`,
-      mask: "1234",
-      currentBalance: 45000000,  // 45M SDG (~$75K USD)
-      availableBalance: 42000000,  // 42M SDG (~$70K USD)
-      type: "depository",
-      subtype: "checking",
-    },
+  let mainBank = await prisma.bankAccount.findFirst({
+    where: { schoolId, name: "Main Operating Account - Bank of Khartoum" },
   });
+
+  if (!mainBank) {
+    mainBank = await prisma.bankAccount.create({
+      data: {
+        schoolId,
+        userId: adminUser.id,
+        bankId: "bank_khartoum",
+        accountId: `ACC-${faker.finance.accountNumber(10)}`,
+        accessToken: "encrypted_token",
+        institutionId: "inst_sudan_001",
+        name: "Main Operating Account - Bank of Khartoum",
+        officialName: `${schoolName} Operating`,
+        mask: "1234",
+        currentBalance: 45000000,  // 45M SDG (~$75K USD)
+        availableBalance: 42000000,  // 42M SDG (~$70K USD)
+        type: "depository",
+        subtype: "checking",
+      },
+    });
+  }
 
   // Bank transactions (50) in SDG
   for (let i = 0; i < 50; i++) {
@@ -291,179 +341,197 @@ export async function seedFinance(
     });
   }
 
-  // ===== WALLET =====
-  const wallet = await prisma.wallet.create({
-    data: {
-      schoolId,
-      walletType: WalletType.SCHOOL,
-      ownerId: schoolId,
-      balance: 30000000,  // 30M SDG
-      currency: "SDG",
-      isActive: true,
-    },
+  // ===== WALLET (findFirst + create) =====
+  let wallet = await prisma.wallet.findFirst({
+    where: { schoolId, walletType: WalletType.SCHOOL, ownerId: schoolId },
   });
-
-  for (let i = 0; i < 10; i++) {
-    const type = i % 2 === 0 ? TransactionType.CREDIT : TransactionType.DEBIT;
-    const amount = faker.number.float({ min: 60000, max: 1200000, multipleOf: 0.01 });  // SDG amounts
-
-    await prisma.walletTransaction.create({
+  if (!wallet) {
+    wallet = await prisma.wallet.create({
       data: {
         schoolId,
-        walletId: wallet.id,
-        type,
-        amount,
-        balanceAfter: 30000000 + (type === TransactionType.CREDIT ? amount : -amount),
-        description: type === TransactionType.CREDIT ? "استلام دفعة | Payment received" : "معالجة استرداد | Refund processed",
-        sourceModule: "fees",
-        createdBy: accountantUser.id,
+        walletType: WalletType.SCHOOL,
+        ownerId: schoolId,
+        balance: 30000000,  // 30M SDG
+        currency: "SDG",
+        isActive: true,
       },
     });
+
+    // Only create transactions for new wallets
+    for (let i = 0; i < 10; i++) {
+      const type = i % 2 === 0 ? TransactionType.CREDIT : TransactionType.DEBIT;
+      const amount = faker.number.float({ min: 60000, max: 1200000, multipleOf: 0.01 });  // SDG amounts
+
+      await prisma.walletTransaction.create({
+        data: {
+          schoolId,
+          walletId: wallet.id,
+          type,
+          amount,
+          balanceAfter: 30000000 + (type === TransactionType.CREDIT ? amount : -amount),
+          description: type === TransactionType.CREDIT ? "استلام دفعة | Payment received" : "معالجة استرداد | Refund processed",
+          sourceModule: "fees",
+          createdBy: accountantUser.id,
+        },
+      });
+    }
   }
 
-  // ===== BUDGETS =====
-  // Budgets in SDG
-  for (let i = 0; i < 3; i++) {
-    const budget = await prisma.budget.create({
-      data: {
-        schoolId,
-        fiscalYearId: fiscalYear.id,
-        name: `ميزانية ${i + 1} | Budget ${i + 1} - FY 2025-2026`,
-        description: `Department budget ${i + 1} - Comboni School`,
-        totalAmount: faker.number.int({ min: 15000000, max: 45000000 }),  // 15M - 45M SDG (~$25K-75K USD)
-        status: BudgetStatus.ACTIVE,
-        approvedBy: adminUser.id,
-        approvedAt: new Date("2025-07-01"),
-        createdBy: accountantUser.id,
-      },
-    });
+  // ===== BUDGETS (skip if any exist) =====
+  const existingBudgets = await prisma.budget.findFirst({ where: { schoolId } });
+  if (!existingBudgets) {
+    // Budgets in SDG
+    for (let i = 0; i < 3; i++) {
+      const budget = await prisma.budget.create({
+        data: {
+          schoolId,
+          fiscalYearId: fiscalYear.id,
+          name: `ميزانية ${i + 1} | Budget ${i + 1} - FY 2025-2026`,
+          description: `Department budget ${i + 1} - Comboni School`,
+          totalAmount: faker.number.int({ min: 15000000, max: 45000000 }),  // 15M - 45M SDG (~$25K-75K USD)
+          status: BudgetStatus.ACTIVE,
+          approvedBy: adminUser.id,
+          approvedAt: new Date("2025-07-01"),
+          createdBy: accountantUser.id,
+        },
+      });
 
-    const categoryId = Array.from(createdCategories.values())[i % createdCategories.size];
-    const allocated = faker.number.float({ min: 3000000, max: 18000000, multipleOf: 0.01 });  // SDG
-    const spent = faker.number.float({ min: 0, max: allocated * 0.7, multipleOf: 0.01 });
+      const categoryId = Array.from(createdCategories.values())[i % createdCategories.size];
+      const allocated = faker.number.float({ min: 3000000, max: 18000000, multipleOf: 0.01 });  // SDG
+      const spent = faker.number.float({ min: 0, max: allocated * 0.7, multipleOf: 0.01 });
 
-    await prisma.budgetAllocation.create({
-      data: {
-        schoolId,
-        budgetId: budget.id,
-        categoryId,
-        allocated,
-        spent,
-        remaining: allocated - spent,
-      },
-    });
+      await prisma.budgetAllocation.create({
+        data: {
+          schoolId,
+          budgetId: budget.id,
+          categoryId,
+          allocated,
+          spent,
+          remaining: allocated - spent,
+        },
+      });
+    }
   }
 
-  // ===== EXPENSES (30) =====
-  // Expenses in SDG with Sudanese vendors
-  const sudaneseVendors = [
-    "مكتبة الخرطوم | Khartoum Bookstore",
-    "شركة أفرو للتوريدات | Afro Supplies Co.",
-    "مطابع السودان | Sudan Press",
-    "شركة النيل للأثاث | Nile Furniture Co.",
-    "مؤسسة الرياض للمستلزمات | Riyadh Supplies",
-    "شركة البحر الأحمر | Red Sea Company",
-    "مكتبة العلم | Al-Ilm Bookstore",
-    "شركة الشرق للتقنية | East Tech Co.",
-  ];
-  const categoryIds = Array.from(createdCategories.values());
-  for (let i = 0; i < 30; i++) {
-    await prisma.expense.create({
-      data: {
-        schoolId,
-        expenseNumber: `EXP-2025-${String(i + 1).padStart(4, "0")}`,
-        categoryId: categoryIds[i % categoryIds.length],
-        amount: faker.number.float({ min: 30000, max: 1200000, multipleOf: 0.01 }),  // SDG amounts
-        expenseDate: faker.date.between({ from: "2025-07-01", to: new Date() }),
-        vendor: sudaneseVendors[i % sudaneseVendors.length],
-        description: "مصاريف تشغيلية | Operating expense",
-        paymentMethod: ["Cash", "Bank Transfer", "Cheque"][i % 3],
-        status: i < 20 ? ExpenseStatus.PAID : ExpenseStatus.APPROVED,
-        submittedBy: accountantUser.id,
-        submittedAt: faker.date.between({ from: "2025-07-01", to: new Date() }),
-        approvedBy: adminUser.id,
-        approvedAt: faker.date.between({ from: "2025-07-01", to: new Date() }),
-        paidAt: i < 20 ? faker.date.between({ from: "2025-07-01", to: new Date() }) : null,
-      },
-    });
+  // ===== EXPENSES (skip if any exist) =====
+  const existingExpenses = await prisma.expense.findFirst({ where: { schoolId } });
+  if (!existingExpenses) {
+    // Expenses in SDG with Sudanese vendors
+    const sudaneseVendors = [
+      "مكتبة الخرطوم | Khartoum Bookstore",
+      "شركة أفرو للتوريدات | Afro Supplies Co.",
+      "مطابع السودان | Sudan Press",
+      "شركة النيل للأثاث | Nile Furniture Co.",
+      "مؤسسة الرياض للمستلزمات | Riyadh Supplies",
+      "شركة البحر الأحمر | Red Sea Company",
+      "مكتبة العلم | Al-Ilm Bookstore",
+      "شركة الشرق للتقنية | East Tech Co.",
+    ];
+    const categoryIds = Array.from(createdCategories.values());
+    for (let i = 0; i < 30; i++) {
+      await prisma.expense.create({
+        data: {
+          schoolId,
+          expenseNumber: `EXP-2025-${String(i + 1).padStart(4, "0")}`,
+          categoryId: categoryIds[i % categoryIds.length],
+          amount: faker.number.float({ min: 30000, max: 1200000, multipleOf: 0.01 }),  // SDG amounts
+          expenseDate: faker.date.between({ from: "2025-07-01", to: new Date() }),
+          vendor: sudaneseVendors[i % sudaneseVendors.length],
+          description: "مصاريف تشغيلية | Operating expense",
+          paymentMethod: ["Cash", "Bank Transfer", "Cheque"][i % 3],
+          status: i < 20 ? ExpenseStatus.PAID : ExpenseStatus.APPROVED,
+          submittedBy: accountantUser.id,
+          submittedAt: faker.date.between({ from: "2025-07-01", to: new Date() }),
+          approvedBy: adminUser.id,
+          approvedAt: faker.date.between({ from: "2025-07-01", to: new Date() }),
+          paidAt: i < 20 ? faker.date.between({ from: "2025-07-01", to: new Date() }) : null,
+        },
+      });
+    }
   }
 
-  // ===== USER INVOICES (20) =====
-  // Invoices in SDG - Comboni School
-  for (let i = 0; i < 20; i++) {
-    const user = users[i % users.length];
-    const invoiceDate = faker.date.between({ from: "2025-07-01", to: new Date() });
-    const dueDate = new Date(invoiceDate.getTime() + 30 * 24 * 60 * 60 * 1000);
-    const isPaid = i < 12;
+  // ===== USER INVOICES (skip if any exist) =====
+  const existingInvoices = await prisma.userInvoice.findFirst({ where: { schoolId } });
+  if (!existingInvoices) {
+    // Invoices in SDG - Comboni School
+    for (let i = 0; i < 20; i++) {
+      const user = users[i % users.length];
+      const invoiceDate = faker.date.between({ from: "2025-07-01", to: new Date() });
+      const dueDate = new Date(invoiceDate.getTime() + 30 * 24 * 60 * 60 * 1000);
+      const isPaid = i < 12;
 
-    const fromAddress = await prisma.userInvoiceAddress.create({
-      data: {
-        schoolId,
-        name: "مدرسة كمبوني | Comboni School",
-        email: `billing@demo.databayt.org`,
-        address1: "الخرطوم، السودان | Khartoum, Sudan",
-      },
-    });
+      const fromAddress = await prisma.userInvoiceAddress.create({
+        data: {
+          schoolId,
+          name: "مدرسة كمبوني | Comboni School",
+          email: `billing@demo.databayt.org`,
+          address1: "الخرطوم، السودان | Khartoum, Sudan",
+        },
+      });
 
-    const toAddress = await prisma.userInvoiceAddress.create({
-      data: {
-        schoolId,
-        name: faker.person.fullName(),
-        email: user.email,
-        address1: "الخرطوم | Khartoum",
-      },
-    });
+      const toAddress = await prisma.userInvoiceAddress.create({
+        data: {
+          schoolId,
+          name: faker.person.fullName(),
+          email: user.email,
+          address1: "الخرطوم | Khartoum",
+        },
+      });
 
-    const subTotal = faker.number.float({ min: 300000, max: 1800000, multipleOf: 0.01 });  // SDG
-    const tax = subTotal * 0.1;
-    const total = subTotal + tax;
+      const subTotal = faker.number.float({ min: 300000, max: 1800000, multipleOf: 0.01 });  // SDG
+      const tax = subTotal * 0.1;
+      const total = subTotal + tax;
 
-    const invoice = await prisma.userInvoice.create({
-      data: {
-        schoolId,
-        userId: user.id,
-        invoice_no: `INV-2025-${String(i + 1).padStart(4, "0")}`,
-        invoice_date: invoiceDate,
-        due_date: dueDate,
-        currency: "SDG",  // Sudanese Pound
-        fromAddressId: fromAddress.id,
-        toAddressId: toAddress.id,
-        sub_total: subTotal,
-        tax_percentage: 10,
-        total,
-        status: isPaid ? InvoiceStatus.PAID : InvoiceStatus.UNPAID,
-      },
-    });
+      const invoice = await prisma.userInvoice.create({
+        data: {
+          schoolId,
+          userId: user.id,
+          invoice_no: `INV-2025-${String(i + 1).padStart(4, "0")}`,
+          invoice_date: invoiceDate,
+          due_date: dueDate,
+          currency: "SDG",  // Sudanese Pound
+          fromAddressId: fromAddress.id,
+          toAddressId: toAddress.id,
+          sub_total: subTotal,
+          tax_percentage: 10,
+          total,
+          status: isPaid ? InvoiceStatus.PAID : InvoiceStatus.UNPAID,
+        },
+      });
 
-    await prisma.userInvoiceItem.create({
-      data: {
-        schoolId,
-        invoiceId: invoice.id,
-        item_name: "الرسوم الدراسية | Tuition Fee",
-        quantity: 1,
-        price: subTotal,
-        total: subTotal,
-      },
-    });
+      await prisma.userInvoiceItem.create({
+        data: {
+          schoolId,
+          invoiceId: invoice.id,
+          item_name: "الرسوم الدراسية | Tuition Fee",
+          quantity: 1,
+          price: subTotal,
+          total: subTotal,
+        },
+      });
+    }
   }
 
-  // ===== FINANCIAL REPORTS =====
-  const reportTypes = [FinancialReportType.PROFIT_LOSS, FinancialReportType.BALANCE_SHEET, FinancialReportType.CASH_FLOW];
+  // ===== FINANCIAL REPORTS (skip if any exist) =====
+  const existingReports = await prisma.financialReport.findFirst({ where: { schoolId } });
+  if (!existingReports) {
+    const reportTypes = [FinancialReportType.PROFIT_LOSS, FinancialReportType.BALANCE_SHEET, FinancialReportType.CASH_FLOW];
 
-  for (const reportType of reportTypes) {
-    await prisma.financialReport.create({
-      data: {
-        schoolId,
-        reportType,
-        reportName: `${reportType.replace(/_/g, " ")} Report`,
-        fiscalYearId: fiscalYear.id,
-        startDate: new Date("2025-07-01"),
-        endDate: new Date("2025-12-31"),
-        status: FinancialReportStatus.COMPLETED,
-        generatedBy: accountantUser.id,
-        fileUrl: `/reports/${reportType.toLowerCase()}.pdf`,
-      },
-    });
+    for (const reportType of reportTypes) {
+      await prisma.financialReport.create({
+        data: {
+          schoolId,
+          reportType,
+          reportName: `${reportType.replace(/_/g, " ")} Report`,
+          fiscalYearId: fiscalYear.id,
+          startDate: new Date("2025-07-01"),
+          endDate: new Date("2025-12-31"),
+          status: FinancialReportStatus.COMPLETED,
+          generatedBy: accountantUser.id,
+          fileUrl: `/reports/${reportType.toLowerCase()}.pdf`,
+        },
+      });
+    }
   }
 
   console.log(`   ✅ Created: Chart of accounts, Payroll (5 months), Banking, Budgets, Expenses, Invoices\n`);

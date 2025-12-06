@@ -1,174 +1,237 @@
 ---
-title: "Core Authentication"
-description: "Documentation for Core Authentication"
+title: "Authentication"
+description: "Multi-tenant authentication for school management with OAuth and Credentials"
 ---
 
-## Authentication
+## Overview
 
-Our authentication system is built on Next.js App Router with Auth.js (formerly NextAuth), providing a comprehensive solution for user authentication including OAuth providers, email/password login, two-factor authentication, email verification, and password reset functionality. It's designed with multi-tenant architecture in mind, ensuring secure user isolation across different schools and organizations.
+Our authentication system is built on Next.js App Router with Auth.js (NextAuth v5), specifically designed for multi-tenant school management. It supports OAuth providers (Google, Facebook), email/password credentials, two-factor authentication, and seamless cross-subdomain single sign-on.
 
-### Core Features
+## Multi-Tenant Architecture
 
-Our authentication module delivers enterprise-grade security with a developer-friendly experience:
+The authentication system is designed from the ground up for multi-tenant school management:
 
-- **Multi-Provider Authentication** – Support for Credentials, Google, and Facebook OAuth providers with seamless integration
-- **JWT-Based Sessions** – Secure session management with automatic token refresh and validation
-- **Role-Based Access Control** – Granular permissions with roles including DEVELOPER, ADMIN, TEACHER, STUDENT, GUARDIAN, and more
-- **Two-Factor Authentication** – Enhanced security with 2FA support for sensitive operations
-- **Email Verification Flow** – Complete email verification system with token-based confirmation
-- **Password Reset Functionality** – Secure password recovery with time-limited tokens
-- **Multi-Tenant Support** – School isolation ensuring users can only access their designated organization
-- **Elegant Route Protection** – Smart middleware that automatically handles public and protected routes
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    Authentication Flow                          │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  Marketing Page (ed.databayt.org)                               │
+│         │                                                       │
+│         ▼                                                       │
+│  ┌─────────────────┐                                            │
+│  │   Get Started   │ ◄── School Owner/Principal clicks          │
+│  └────────┬────────┘                                            │
+│           │                                                     │
+│           ▼                                                     │
+│  ┌─────────────────┐     ┌─────────────────┐                    │
+│  │   OAuth Login   │ or  │ Credentials     │                    │
+│  │ (Google/FB)     │     │ (Email/Pass)    │                    │
+│  └────────┬────────┘     └────────┬────────┘                    │
+│           │                       │                             │
+│           └───────────┬───────────┘                             │
+│                       ▼                                         │
+│              ┌─────────────────┐                                │
+│              │ User Created    │                                │
+│              └────────┬────────┘                                │
+│                       │                                         │
+│                       ▼                                         │
+│              ┌─────────────────┐                                │
+│              │   Onboarding    │                                │
+│              │ (16 steps)      │                                │
+│              └────────┬────────┘                                │
+│                       │                                         │
+│                       ▼                                         │
+│              ┌─────────────────────────────────────┐            │
+│              │   School Created & Linked          │            │
+│              │   User becomes ADMIN               │            │
+│              └────────┬───────────────────────────┘            │
+│                       │                                         │
+│                       ▼                                         │
+│              ┌─────────────────────────────────────┐            │
+│              │   Subdomain: school.databayt.org   │            │
+│              └─────────────────────────────────────┘            │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
 
-### Architecture Overview
+## Core Features
 
-Our authentication system follows a layered architecture that prioritizes security, scalability, and developer experience:
+### Authentication Methods
 
-#### Core Authentication Files
+- **Multi-Provider Auth**: Google, Facebook, Email/Password
+- **JWT-Based Sessions**: 24-hour expiry with automatic refresh
+- **Cross-Subdomain SSO**: Seamless login across `*.databayt.org`
+- **Email Verification**: Required for credentials, automatic for OAuth
+- **Password Reset**: Secure token-based recovery
+- **Two-Factor Authentication**: Optional 2FA for enhanced security
 
-The foundation of our authentication system consists of several key files that work together to provide a robust authentication experience:
+### Multi-Tenant Features
 
-- **`src/auth.ts`** – Main Auth.js configuration with callbacks and session management
-- **`src/auth.config.ts`** – Provider configurations for Google, Facebook, and Credentials
-- **`src/middleware.ts`** – Auth-based route protection with intelligent public route handling
-- **`src/routes.ts`** – Route definitions for authentication and public access patterns
-- **`src/next-auth.d.ts`** – TypeScript declarations for extended user types and session data
+- **School Isolation**: Every user is associated with a `schoolId`
+- **Compound Uniqueness**: Same email can exist across different schools
+- **Subdomain Routing**: `school.databayt.org` automatically resolves to school context
+- **Smart Redirects**: After login, users go directly to their school's dashboard
+- **Role-Based Access**: 8 roles with clear hierarchy
 
-#### Component Architecture
-
-Our authentication components are organized for maximum reusability and maintainability:
-
-**Core Components (`src/components/auth/`)**
-- `user.ts` – User database queries with multi-tenant support
-- `user-info.tsx` – User information display component
-- `user-button.tsx` – User dropdown/menu button with role-based options
-- `social.tsx` – OAuth provider login buttons with consistent styling
-- `logout-button.tsx` – Secure logout functionality with session cleanup
-- `login-button.tsx` – Login trigger button with provider selection
-- `role-gate.tsx` – Role-based access control component for UI protection
-- `card-wrapper.tsx` – Authentication form wrapper with consistent styling
-- `header.tsx` – Authentication form headers with branding support
-- `back-button.tsx` – Navigation back button for form flows
-- `form-error.tsx` – Error message display with user-friendly formatting
-- `form-success.tsx` – Success message display for positive feedback
-- `validation.ts` – Zod schemas for comprehensive form validation
-- `tokens.ts` – Token generation and management utilities
-- `mail.ts` – Email sending functionality with template support
-- `auth.ts` – Auth utility functions for common operations
-- `account.ts` – Account management utilities
-- `admin-action.ts` – Admin-specific actions and permissions
-- `use-current-user.ts` – Hook for current user data with caching
-- `use-current-role.ts` – Hook for current user role with real-time updates
-
-**Feature-Specific Directories**
-- `login/` – Complete login form and server actions
-- `join/` – User registration form and validation actions
-- `reset/` – Password reset request components and flows
-- `password/` – Password management and reset functionality
-- `verification/` – Email verification and 2FA components
-- `error/` – Comprehensive error handling components
-- `setting/` – User settings and profile management
-
-### Multi-Tenant Architecture
-
-Our authentication system is built with multi-tenancy as a first-class concern, ensuring secure isolation between different organizations:
-
-#### User Model Features
-
-- **School Isolation** – Users are associated with specific schools via `schoolId` field
-- **Compound Unique Constraint** – Same email can exist across different schools securely
-- **Role-Based Access** – Comprehensive role system including DEVELOPER, ADMIN, TEACHER, STUDENT, GUARDIAN, ACCOUNTANT, STAFF, USER
-- **OAuth Integration** – Google and Facebook integration with automatic email verification
-
-#### Database Queries
-
-Our database layer is optimized for multi-tenant operations:
-
-- `getUserByEmail()` uses `findFirst()` to handle multi-tenant email uniqueness
-- `getUserById()` provides secure user lookups by ID with school isolation
-- Account linking for OAuth providers with tenant-aware associations
-
-### Route Protection Strategy
-
-Our middleware implements an intelligent route protection system that balances security with accessibility:
-
-#### Public Routes
-
-The system automatically handles public documentation routes:
+### User Roles
 
 ```typescript
-// All /docs routes are automatically public
-pathname.startsWith("/docs/")
+enum UserRole {
+  DEVELOPER  // Platform admin (cross-school access)
+  ADMIN      // School administrator
+  TEACHER    // Teaching staff
+  STUDENT    // Enrolled student
+  GUARDIAN   // Parent/guardian
+  ACCOUNTANT // Finance staff
+  STAFF      // General staff
+  USER       // Default role
+}
 ```
 
-This elegant solution ensures all documentation routes are public by default without requiring manual configuration updates when adding new docs pages.
+## User Registration Options
 
-#### Protected Routes
+Schools have **flexibility** in how they manage user accounts:
 
-- Platform routes (`/dashboard`, `/project`, `/task`, etc.) require authentication
-- Role-based access control through `RoleGate` component
-- Automatic redirect to login with callback URL preservation for seamless UX
+### Option 1: Self-Registration via OAuth (Recommended)
 
-### Environment Configuration
+Students and teachers authenticate themselves:
 
-Our authentication system requires specific environment variables for full functionality:
-
-```bash
-# Core Authentication
-AUTH_SECRET=your_auth_secret
-
-# OAuth Providers
-GOOGLE_CLIENT_ID=your_google_client_id
-GOOGLE_CLIENT_SECRET=your_google_client_secret
-FACEBOOK_CLIENT_ID=your_facebook_client_id
-FACEBOOK_CLIENT_SECRET=your_facebook_client_secret
-
-# Email Services
-RESEND_API_KEY=your_resend_api_key
-
-# Application URLs
-NEXT_PUBLIC_APP_URL=http://localhost:3000
+```
+Student → school.databayt.org/login → Google/Facebook → Profile Setup
 ```
 
-### Usage Patterns
+**Benefits**:
+- No admin work required
+- Users verify their own email automatically
+- Streamlined experience
+- No password management overhead
 
-#### Protected Route Implementation
+### Option 2: Bulk Account Creation
 
-Use the `auth()` function from your route handlers to protect server-side routes:
+School admin creates accounts in bulk:
+
+```
+Admin → Import CSV → Bulk creation with roles → Send credentials
+```
+
+**Benefits**:
+- Full admin control over who joins
+- Pre-assigned roles
+- Works for users without email access
+
+### Option 3: Invitation System (Coming Soon)
+
+Admin invites specific users:
+
+```
+Admin → Generate invite link → User clicks → OAuth or Credentials → Linked to school
+```
+
+**Benefits**:
+- Controlled onboarding
+- Pre-assigned roles
+- Combines admin control with user convenience
+
+### Option 4: School Join Codes (Coming Soon)
+
+Simple codes for easy joining:
+
+```
+Student → Enter code "HOGWARTS-2024" → Sign up → Auto-linked as STUDENT
+```
+
+**Benefits**:
+- Easy to share (print, announce, etc.)
+- No individual invitations needed
+- Admin sets default role
+
+## Architecture
+
+### Core Files
+
+| File | Purpose |
+|------|---------|
+| `src/auth.ts` | NextAuth configuration, JWT callbacks, session management |
+| `src/auth.config.ts` | OAuth provider configurations |
+| `src/middleware.ts` | Route protection, subdomain detection |
+| `src/routes.ts` | Public/protected route definitions |
+| `src/lib/tenant-context.ts` | School context retrieval |
+| `src/lib/school-access.ts` | School ownership and access control |
+
+### Component Structure
+
+```
+src/components/auth/
+├── login/          # Login form and action
+├── join/           # Registration form and action
+├── reset/          # Password reset request
+├── password/       # Password change
+├── verification/   # Email verification, 2FA
+├── setting/        # User settings
+├── user.ts         # User database queries
+├── social.tsx      # OAuth buttons
+├── role-gate.tsx   # Role-based access control
+└── validation.ts   # Zod schemas
+```
+
+## Session Management
+
+### Extended Session
+
+```typescript
+session.user = {
+  id: string;
+  email: string;
+  role: UserRole;
+  schoolId: string | null;  // Multi-tenant key
+  isPlatformAdmin: boolean;
+}
+```
+
+### Tenant Context
+
+```typescript
+import { getTenantContext } from "@/lib/tenant-context";
+
+const { schoolId, role, isPlatformAdmin } = await getTenantContext();
+// Priority: impersonation cookie → subdomain → session
+```
+
+## Usage
+
+### Server-Side Protection
 
 ```typescript
 import { auth } from "@/auth";
 
 export default async function ProtectedPage() {
   const session = await auth();
-  
+
   if (!session) {
-    // Handle unauthorized access
     redirect("/login");
   }
-  
-  return <div>Protected Content</div>;
+
+  return <Dashboard schoolId={session.user.schoolId} />;
 }
 ```
 
-#### Client Component Integration
-
-Use our provided hooks for seamless client-side authentication:
+### Client-Side Hooks
 
 ```typescript
 "use client";
 import { useCurrentUser } from "@/components/auth/use-current-user";
+import { useCurrentRole } from "@/components/auth/use-current-role";
 
-export default function UserComponent() {
+export function UserProfile() {
   const user = useCurrentUser();
-  
-  return <div>Hello, {user?.name}</div>;
+  const role = useCurrentRole();
+
+  return <div>Welcome, {user?.email} ({role})</div>;
 }
 ```
 
-#### Role-Based Access Control
-
-Implement granular permissions using the `RoleGate` component:
+### Role-Based Access
 
 ```typescript
 import { RoleGate } from "@/components/auth/role-gate";
@@ -179,49 +242,206 @@ import { UserRole } from "@prisma/client";
 </RoleGate>
 ```
 
-### Deployment Considerations
+### Multi-Tenant Queries
 
-#### Vercel Deployment
+```typescript
+import { getTenantContext } from "@/lib/tenant-context";
 
-When deploying to Vercel, ensure proper configuration:
+export async function getStudents() {
+  const { schoolId } = await getTenantContext();
 
-1. **Environment Variables**:
-   - Set `NEXTAUTH_URL` to your production URL (`https://yourdomain.com`)
-   - Configure all OAuth provider credentials in Vercel environment settings
-   - Add `NODE_ENV=production` to environment variables
+  if (!schoolId) throw new Error("No school context");
 
-2. **Facebook OAuth Configuration**:
-   - Callback URL must exactly match: `https://yourdomain.com/api/auth/callback/facebook`
-   - App must be in "Live" mode, not "Development Mode"
-   - "Facebook Login" product must be added with proper permissions
+  return db.student.findMany({
+    where: { schoolId }  // ALWAYS include schoolId!
+  });
+}
+```
 
-3. **Build Configuration**:
-   - Use the provided `next.config.js` with proper Prisma configuration
-   - Ensure `vercel-build.js` is correctly set up to generate Prisma client
-   - Verify your `schema.prisma` has `binaryTargets = ["native", "rhel-openssl-3.0.x"]`
+## OAuth Configuration
 
-### Extending the Module
+### Google Setup
 
-To extend this authentication module for your specific needs:
+1. Create project in Google Cloud Console
+2. Enable OAuth consent screen
+3. Add credentials (OAuth 2.0 Client ID)
+4. Add callback URL: `https://ed.databayt.org/api/auth/callback/google`
+5. Set environment variables
 
-1. **Add New Providers** – Update `auth.config.ts` to include additional OAuth providers
-2. **Custom Logic** – Modify `auth.ts` callbacks for custom authentication flows
-3. **New Components** – Add components in `src/components/auth/` following established patterns
-4. **Database Schema** – Extend the database schema for additional user fields
-5. **Route Protection** – Update middleware for new route protection patterns
+### Facebook Setup
 
-### Troubleshooting
+1. Create app in Facebook Developer Console
+2. Add "Facebook Login" product
+3. Configure Valid OAuth Redirect URIs
+4. Set app to "Live" mode
+5. Set environment variables
 
-Common issues and their solutions:
+## Environment Variables
 
-- **Environment Variables** – Ensure all required variables are properly set
-- **OAuth Callbacks** – Verify callback URLs in provider consoles match your application
-- **Facebook OAuth** – Check app domain and callback URLs are configured correctly
-- **Debug Endpoints** – Use `/api/auth/debug/facebook` for Facebook OAuth debugging
-- **Server Logs** – Review Vercel dashboard logs for detailed error information
+```bash
+# Core
+AUTH_SECRET=your_secret_here
+DATABASE_URL=postgresql://...
+
+# OAuth
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+FACEBOOK_CLIENT_ID=
+FACEBOOK_CLIENT_SECRET=
+
+# Email
+RESEND_API_KEY=
+
+# URLs
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+NEXTAUTH_URL=https://ed.databayt.org
+```
+
+## Cookie Configuration
+
+Production cookies use `.databayt.org` domain for cross-subdomain SSO:
+
+```typescript
+cookies: {
+  sessionToken: {
+    name: "authjs.session-token",
+    options: {
+      httpOnly: true,
+      sameSite: "lax",
+      path: "/",
+      secure: true,
+      domain: ".databayt.org"
+    }
+  }
+}
+```
+
+## Best Practices
+
+### OAuth vs Credentials
+
+| Scenario | Recommended Method |
+|----------|-------------------|
+| Students self-registering | OAuth (Google/Facebook) |
+| Teachers self-registering | OAuth (Google/Facebook) |
+| Admin creating accounts | Credentials (bulk import) |
+| Users without email | Credentials (admin-created) |
+| Quick onboarding | OAuth |
+| Full admin control | Credentials |
+
+**Recommendation**: Offer both options and let schools choose their preferred workflow.
+
+### Security Checklist
+
+- [x] Passwords hashed with bcrypt
+- [x] JWT with 24h expiry
+- [x] Secure cookies (httpOnly, sameSite, secure)
+- [x] CSRF protection via NextAuth
+- [x] schoolId isolation on all models
+- [x] Role-based access control
+
+### Common Patterns
+
+**Always include schoolId in queries**:
+```typescript
+// Good
+db.student.findMany({ where: { schoolId, grade: "10" } });
+
+// Bad - breaks tenant isolation!
+db.student.findMany({ where: { grade: "10" } });
+```
+
+**Check role before sensitive operations**:
+```typescript
+const { role } = await getTenantContext();
+if (role !== "ADMIN" && role !== "DEVELOPER") {
+  throw new Error("Insufficient permissions");
+}
+```
+
+## Troubleshooting
+
+### OAuth Issues
+
+**redirect_uri_mismatch**: Callback URL in provider console doesn't match application
+- Verify exact URL including protocol and port
+- No trailing slashes
+
+**access_denied**: User denied permission or app misconfigured
+- Check OAuth consent screen
+- Verify required scopes
+
+### Session Issues
+
+**User not persisting**: Cookie not being set
+- Check domain configuration
+- Verify AUTH_SECRET is set
+
+**Role not updating**: Session not refreshed
+- Force session refresh after role change
+- Check JWT callback
+
+### Multi-Tenant Issues
+
+**Wrong school context**: Query returning other school's data
+- Always include schoolId in where clause
+- Use getTenantContext()
+
+## Roadmap
+
+### Immediate (P0)
+1. **Remove debug logging** - Clean up console.log statements in production
+
+### Short-term (P1)
+2. **Invitation system** - Schools invite users with pre-assigned roles
+3. **School join codes** - Simple codes like "HOGWARTS-2024" for easy joining
+
+### Medium-term (P1)
+4. **Bulk user creation** - CSV import for students/teachers
+
+## Testing
+
+### Unit Test Coverage
+
+The authentication module has **123 unit tests** covering:
+
+| Test File | Tests | Description |
+|-----------|-------|-------------|
+| `validation.test.ts` | 49 | Zod schema validation for all auth forms |
+| `user.test.ts` | 22 | User utilities and multi-tenant safety |
+| `tokens.test.ts` | 16 | Token generation (2FA, password reset, verification) |
+| `login/action.test.ts` | 24 | Login flow with 2FA and smart redirect |
+| `join/action.test.ts` | 12 | Registration and multi-tenant isolation |
+
+### Running Auth Tests
+
+```bash
+# Run all auth tests
+pnpm test src/components/auth/__tests__
+
+# Run specific test file
+pnpm test src/components/auth/__tests__/validation.test.ts
+
+# Run with watch mode
+pnpm test src/components/auth/__tests__ --watch
+```
+
+### Known Issues (Documented in Tests)
+
+The test suite explicitly documents multi-tenant safety issues:
+
+1. **`getUserByEmail` not tenant-scoped** - Returns any user with email regardless of school
+2. **OAuth users created without schoolId** - New OAuth users exist in limbo until onboarding
+3. **Registration lacks school context** - Users created without multi-tenant isolation
+
+See [ISSUE.md](/src/components/auth/ISSUE.md) for current test status and required fixes.
+
+## Related Documentation
+
+- [Onboarding](/docs/onboarding) - School creation flow
+- [Architecture](/docs/architecture) - System design
+- [Multi-Tenant Safety](/docs/multi-tenant) - Data isolation
 
 ---
 
-This authentication system provides a solid foundation for building secure, scalable applications with enterprise-grade user management capabilities.
-
-
+This authentication system provides enterprise-grade security with flexibility for different school management workflows.

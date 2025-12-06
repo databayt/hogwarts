@@ -152,14 +152,14 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
     async jwt({ token, user, account, trigger }) {
       // Only log in development
       if (process.env.NODE_ENV === 'development') {
-        console.log('🔐 [DEBUG] JWT CALLBACK START:', { 
-          trigger, 
-          hasUser: !!user, 
+        console.log('🔐 [DEBUG] JWT CALLBACK START:', {
+          trigger,
+          hasUser: !!user,
           hasAccount: !!account,
           timestamp: new Date().toISOString()
         });
       }
-      
+
       if (user) {
         if (process.env.NODE_ENV === 'development') {
           console.log('👤 [DEBUG] User data received:', {
@@ -213,6 +213,56 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
         }
       }
 
+      // PRODUCTION-READY: Force refresh schoolId from database during onboarding
+      // This is triggered when:
+      // 1. Session update is requested (trigger === 'update')
+      // 2. Token doesn't have schoolId yet (new OAuth user during onboarding)
+      // This ensures the JWT has the latest schoolId immediately after school creation
+      if (trigger === 'update' || (!token.schoolId && token.id)) {
+        try {
+          if (process.env.NODE_ENV === 'development') {
+            console.log('🔄 [DEBUG] Refreshing schoolId from database:', {
+              trigger,
+              tokenId: token.id,
+              currentSchoolId: token.schoolId,
+              reason: trigger === 'update' ? 'session update requested' : 'no schoolId in token'
+            });
+          }
+
+          const dbUser = await db.user.findUnique({
+            where: { id: token.id as string },
+            select: { schoolId: true, role: true }
+          });
+
+          if (dbUser) {
+            // Only update if database has newer/different values
+            if (dbUser.schoolId && dbUser.schoolId !== token.schoolId) {
+              token.schoolId = dbUser.schoolId;
+              token.updatedAt = Date.now();
+              token.hash = `hash_${Date.now()}`;
+              if (process.env.NODE_ENV === 'development') {
+                console.log('🏫 [DEBUG] SchoolId refreshed from database:', {
+                  newSchoolId: dbUser.schoolId,
+                  previousSchoolId: token.schoolId
+                });
+              }
+            }
+            if (dbUser.role && dbUser.role !== token.role) {
+              token.role = dbUser.role;
+              if (process.env.NODE_ENV === 'development') {
+                console.log('🎭 [DEBUG] Role refreshed from database:', {
+                  newRole: dbUser.role,
+                  previousRole: token.role
+                });
+              }
+            }
+          }
+        } catch (error) {
+          // Don't fail the JWT callback on refresh errors - log and continue
+          console.error('[JWT] Error refreshing schoolId from database:', error);
+        }
+      }
+
       // Debug JWT state
       if (process.env.NODE_ENV === 'development') {
         console.log('🔐 [DEBUG] JWT CALLBACK END:', {
@@ -230,7 +280,7 @@ export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
           hash: token?.hash
         });
       }
-      
+
       return token
     },
     async session({ session, token, user, trigger }) {

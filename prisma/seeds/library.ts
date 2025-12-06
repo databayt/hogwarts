@@ -4,6 +4,8 @@
  * - Arabic books with Arabic metadata
  * - English books relevant to MEA region schools
  * - Actual book cover URLs
+ *
+ * Uses findFirst + create pattern - safe to run multiple times (no deletes)
  */
 
 import type { SeedPrisma } from "./types";
@@ -484,6 +486,20 @@ const ENGLISH_BOOKS = [
     totalCopies: 18,
     availableCopies: 14,
   },
+
+  // NEW: Added incrementally to demonstrate additive seeding
+  {
+    title: "Atomic Habits",
+    author: "James Clear",
+    genre: "Self-Development",
+    rating: 5,
+    coverUrl: "https://covers.openlibrary.org/b/isbn/9780735211292-L.jpg",
+    coverColor: "#ff6f00",
+    description: "An Easy & Proven Way to Build Good Habits & Break Bad Ones. Learn how tiny changes can lead to remarkable results.",
+    summary: "James Clear's guide to building good habits and breaking bad ones through small, incremental changes.",
+    totalCopies: 20,
+    availableCopies: 18,
+  },
 ];
 
 // Featured Book - Harry Potter (created last to appear first)
@@ -506,42 +522,39 @@ export async function seedLibrary(
 ): Promise<void> {
   console.log("📚 Creating library (Arabic, Islamic, Sudanese & International literature)...");
 
-  const allBooks = [...ARABIC_BOOKS, ...ENGLISH_BOOKS];
+  const allBooks = [...ARABIC_BOOKS, ...ENGLISH_BOOKS, FEATURED_BOOK];
+  let createdCount = 0;
+  let skippedCount = 0;
 
-  await prisma.book.createMany({
-    data: allBooks.map((book) => ({
-      schoolId,
-      title: book.title,
-      author: book.author,
-      genre: book.genre,
-      rating: book.rating,
-      coverColor: book.coverColor,
-      coverUrl: book.coverUrl,
-      description: book.description,
-      summary: book.summary,
-      totalCopies: book.totalCopies,
-      availableCopies: book.availableCopies,
-    })),
-    skipDuplicates: true,
-  });
+  // Create books one by one, checking if they exist first
+  for (const book of allBooks) {
+    const existing = await prisma.book.findFirst({
+      where: { schoolId, title: book.title },
+    });
 
-  // Create featured book last so it appears first (newest createdAt)
-  // Delete existing if any, then create fresh
-  await prisma.book.deleteMany({
-    where: {
-      title: FEATURED_BOOK.title,
-      schoolId,
-    },
-  });
+    if (!existing) {
+      await prisma.book.create({
+        data: {
+          schoolId,
+          title: book.title,
+          author: book.author,
+          genre: book.genre,
+          rating: book.rating,
+          coverColor: book.coverColor,
+          coverUrl: book.coverUrl,
+          description: book.description,
+          summary: book.summary,
+          totalCopies: book.totalCopies,
+          availableCopies: book.availableCopies,
+        },
+      });
+      createdCount++;
+    } else {
+      skippedCount++;
+    }
+  }
 
-  await prisma.book.create({
-    data: {
-      schoolId,
-      ...FEATURED_BOOK,
-    },
-  });
-
-  console.log(`   ✅ Created: ${allBooks.length + 1} library books`);
+  console.log(`   ✅ Library: ${createdCount} new books, ${skippedCount} already existed`);
   console.log(`      - Arabic books: ${ARABIC_BOOKS.length} (Sudanese, Egyptian, Classical Arabic, Islamic)`);
   console.log(`      - English books: ${ENGLISH_BOOKS.length} (Literature, Science, Young Adult)`);
   console.log(`      - Featured: Harry Potter and the Philosopher's Stone\n`);

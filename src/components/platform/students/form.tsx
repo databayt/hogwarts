@@ -66,8 +66,8 @@ export function StudentCreateForm({ dictionary, onSuccess }: StudentCreateFormPr
     const load = async () => {
       if (!currentId) return;
       const res = await getStudent({ id: currentId });
-      const s = res.student as any;
-      if (!s) return;
+      if (!res.success || !res.data) return;
+      const s = res.data as any;
       form.reset({
         givenName: s.givenName ?? "",
         middleName: s.middleName ?? "",
@@ -83,26 +83,31 @@ export function StudentCreateForm({ dictionary, onSuccess }: StudentCreateFormPr
   }, [currentId]);
 
   async function onSubmit(values: z.infer<typeof studentCreateSchema>) {
-    const res = currentId
-      ? await updateStudent({ id: currentId, ...values })
-      : await createStudent(values);
-    if (res?.success) {
-      const successMsg = currentId
-        ? (t?.success?.student?.updated() || "Student updated successfully")
-        : (t?.success?.student?.created() || "Student created successfully");
-      toast.success(successMsg);
-      closeModal();
-      // Use callback for optimistic update, fallback to router.refresh()
-      if (onSuccess) {
-        onSuccess();
+    try {
+      const res = currentId
+        ? await updateStudent({ id: currentId, ...values })
+        : await createStudent(values);
+      if (res?.success) {
+        const successMsg = currentId
+          ? (t?.success?.student?.updated() || "Student updated successfully")
+          : (t?.success?.student?.created() || "Student created successfully");
+        toast.success(successMsg);
+        closeModal();
+        // Use callback for optimistic update, fallback to router.refresh()
+        if (onSuccess) {
+          onSuccess();
+        } else {
+          router.refresh();
+        }
       } else {
-        router.refresh();
+        const errorMsg = res?.error || (currentId
+          ? (t?.error?.student?.updateFailed() || "Failed to update student")
+          : (t?.error?.student?.createFailed() || "Failed to create student"));
+        toast.error(errorMsg);
       }
-    } else {
-      const errorMsg = currentId
-        ? (t?.error?.student?.updateFailed() || "Failed to update student")
-        : (t?.error?.student?.createFailed() || "Failed to create student");
-      toast.error(errorMsg);
+    } catch (error) {
+      console.error("Form submission error:", error);
+      toast.error("An unexpected error occurred");
     }
   }
 

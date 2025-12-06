@@ -1,11 +1,17 @@
 /**
  * School Access Control and Management
  * Handles school creation, ownership, and access permissions
+ *
+ * Production-ready implementation following:
+ * - AWS SaaS Lens tenant onboarding best practices
+ * - Vercel Platforms multi-tenant patterns
+ * - Prisma transaction guarantees for atomic operations
  */
 
 import { db } from "@/lib/db";
 import { auth } from "@/auth";
 import { UserRole } from "@prisma/client";
+import { logger } from "@/lib/logger";
 
 /**
  * School access result types
@@ -56,6 +62,7 @@ export async function canUserAccessSchool(
         where: { id: schoolId },
       });
 
+      logger.debug("canUserAccessSchool: Platform admin access granted", { userId, schoolId });
       return {
         hasAccess: true,
         school,
@@ -138,76 +145,125 @@ export async function canUserAccessSchool(
 
 /**
  * Create or get user's school for onboarding
+ *
+ * PRODUCTION-READY: Uses Prisma $transaction for atomic school-user linking
+ * This ensures that either BOTH school creation AND user update succeed,
+ * or NEITHER does - preventing orphaned schools.
+ *
+ * Features:
+ * - Idempotency: Safe to retry - returns existing school if user already has one
+ * - Race condition handling: Unique constraint violations trigger retry
+ * - Atomic transactions: No orphaned schools possible
+ * - Session refresh: Updates user.updatedAt to trigger NextAuth JWT refresh
  */
 export async function ensureUserSchool(userId: string): Promise<SchoolCreationResult> {
   try {
-    // Check if user already has a school
-    const user = await db.user.findUnique({
+    // 1. IDEMPOTENCY CHECK: Return existing school if user already has one
+    const existingUser = await db.user.findUnique({
       where: { id: userId },
-      include: {
-        school: true,
-      },
+      include: { school: true },
     });
 
-    if (!user) {
+    if (!existingUser) {
+      logger.warn("ensureUserSchool: User not found", { userId });
       return {
         success: false,
         error: "User not found",
       };
     }
 
-    // If user already has a school, return it
-    if (user.schoolId && user.school) {
-      console.log("📚 User already has a school:", {
+    // Return existing school (idempotent - safe to call multiple times)
+    if (existingUser.schoolId && existingUser.school) {
+      logger.debug("ensureUserSchool: User already has school", {
         userId,
-        schoolId: user.schoolId,
-        schoolName: user.school.name,
+        schoolId: existingUser.schoolId,
+        schoolName: existingUser.school.name,
       });
 
       return {
         success: true,
-        schoolId: user.schoolId,
-        school: user.school,
+        schoolId: existingUser.schoolId,
+        school: existingUser.school,
       };
     }
 
-    // Create a new school for the user
-    console.log("🏫 Creating new school for user:", userId);
+    // 2. ATOMIC TRANSACTION: Create school AND link user in single transaction
+    // If either operation fails, both are rolled back - no orphaned schools
+    logger.info("ensureUserSchool: Creating new school with atomic transaction", { userId });
 
-    const newSchool = await db.school.create({
-      data: {
-        name: "New School",
-        domain: `school-${Date.now()}`,
-        maxStudents: 500,
-        maxTeachers: 50,
-        isActive: true,
-        planType: "starter",
-      },
+    const result = await db.$transaction(async (tx) => {
+      // Generate unique domain using userId suffix to prevent collisions
+      const uniqueDomain = `school-${userId.slice(-8)}-${Date.now()}`;
+
+      // Create school within transaction
+      // createdByUserId is set as @unique - prevents duplicate schools per user via DB constraint
+      const school = await tx.school.create({
+        data: {
+          name: "New School",
+          domain: uniqueDomain,
+          maxStudents: 500,
+          maxTeachers: 50,
+          isActive: true,
+          planType: "starter",
+          createdByUserId: userId, // Track who created this school (immutable, prevents duplicates)
+        },
+      });
+
+      // Link user to school within SAME transaction (atomic)
+      // Also updates updatedAt to trigger session refresh
+      const updatedUser = await tx.user.update({
+        where: { id: userId },
+        data: {
+          schoolId: school.id,
+          role: existingUser.role === "USER" ? "ADMIN" : existingUser.role,
+          updatedAt: new Date(), // Triggers NextAuth JWT refresh
+        },
+      });
+
+      return { school, user: updatedUser };
     });
 
-    // Update user with the new school
-    await db.user.update({
-      where: { id: userId },
-      data: { 
-        schoolId: newSchool.id,
-        // Set appropriate role if not set
-        role: user.role || "ADMIN",
-      },
-    });
-
-    console.log("✅ School created and linked to user:", {
+    logger.info("ensureUserSchool: School created and linked atomically", {
       userId,
-      schoolId: newSchool.id,
-      schoolName: newSchool.name,
+      schoolId: result.school.id,
+      schoolName: result.school.name,
+      userRole: result.user.role,
     });
 
     return {
       success: true,
-      schoolId: newSchool.id,
-      school: newSchool,
+      schoolId: result.school.id,
+      school: result.school,
     };
-  } catch (error) {
-    console.error("Error ensuring user school:", error);
+  } catch (error: unknown) {
+    // 3. RACE CONDITION HANDLING: Another request may have created school
+    const prismaError = error as { code?: string };
+    if (prismaError.code === "P2002") {
+      // Unique constraint violation - likely race condition
+      // Retry by fetching the user's school that was just created
+      logger.warn("ensureUserSchool: Race condition detected, retrying fetch", { userId });
+
+      const retryUser = await db.user.findUnique({
+        where: { id: userId },
+        include: { school: true },
+      });
+
+      if (retryUser?.school) {
+        const retrySchoolId = retryUser.schoolId!; // Safe assertion - school exists
+        logger.info("ensureUserSchool: Retrieved school from race condition retry", {
+          userId,
+          schoolId: retrySchoolId,
+        });
+
+        return {
+          success: true,
+          schoolId: retrySchoolId,
+          school: retryUser.school,
+        };
+      }
+    }
+
+    logger.error("ensureUserSchool: Failed to create school", error, { userId });
     return {
       success: false,
       error: error instanceof Error ? error.message : "Failed to create school",
@@ -236,20 +292,20 @@ export async function switchUserSchool(
     // Update user's current school
     await db.user.update({
       where: { id: userId },
-      data: { 
+      data: {
         schoolId: newSchoolId,
         updatedAt: new Date(), // Force session refresh
       },
     });
 
-    console.log("🔄 User switched to school:", {
+    logger.info("switchUserSchool: User switched to school", {
       userId,
       newSchoolId,
     });
 
     return { success: true };
   } catch (error) {
-    console.error("Error switching school:", error);
+    logger.error("switchUserSchool: Failed to switch school", error, { userId, newSchoolId });
     return {
       success: false,
       error: "Failed to switch school",
@@ -353,13 +409,14 @@ export async function validateSchoolOwnership(
 
     return { isValid: true };
   } catch (error) {
-    console.error("Error validating ownership:", error);
+    logger.error("validateSchoolOwnership: Validation error", error, { userId, schoolId });
     return { isValid: false, error: "Validation error" };
   }
 }
 
 /**
  * Sync user session with school context
+ * Forces NextAuth to refresh the JWT by updating user.updatedAt
  */
 export async function syncUserSchoolContext(userId: string): Promise<void> {
   try {
@@ -379,12 +436,12 @@ export async function syncUserSchoolContext(userId: string): Promise<void> {
         data: { updatedAt: new Date() },
       });
 
-      console.log("🔄 User school context synced:", {
+      logger.debug("syncUserSchoolContext: User context synced", {
         userId,
-        schoolId: user.schoolId,
+        schoolId: user.schoolId ?? undefined,
       });
     }
   } catch (error) {
-    console.error("Error syncing school context:", error);
+    logger.error("syncUserSchoolContext: Failed to sync context", error, { userId });
   }
 }

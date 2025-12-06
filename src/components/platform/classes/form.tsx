@@ -50,8 +50,8 @@ export function ClassCreateForm({ onSuccess }: ClassCreateFormProps) {
     const load = async () => {
       if (!currentId) return;
       const res = await getClass({ id: currentId });
-      const c = res.class as any;
-      if (!c) return;
+      if (!res.success || !res.data) return;
+      const c = res.data as any;
       form.reset({
         name: c.name ?? "",
         subjectId: c.subjectId ?? "",
@@ -67,20 +67,25 @@ export function ClassCreateForm({ onSuccess }: ClassCreateFormProps) {
   }, [currentId]);
 
   async function onSubmit(values: z.infer<typeof classCreateSchema>) {
-    const res = currentId
-      ? await updateClass({ id: currentId, ...values })
-      : await createClass(values);
-    if (res?.success) {
-      toast.success(currentId ? "Class updated" : "Class created");
-      closeModal();
-      // Use callback for optimistic update, fallback to router.refresh()
-      if (onSuccess) {
-        onSuccess();
+    try {
+      const res = currentId
+        ? await updateClass({ id: currentId, ...values })
+        : await createClass(values);
+      if (res?.success) {
+        toast.success(currentId ? "Class updated" : "Class created");
+        closeModal();
+        // Use callback for optimistic update, fallback to router.refresh()
+        if (onSuccess) {
+          onSuccess();
+        } else {
+          router.refresh();
+        }
       } else {
-        router.refresh();
+        toast.error(res?.error || (currentId ? "Failed to update class" : "Failed to create class"));
       }
-    } else {
-      toast.error(currentId ? "Failed to update class" : "Failed to create class");
+    } catch (error) {
+      console.error("Form submission error:", error);
+      toast.error("An unexpected error occurred");
     }
   }
 

@@ -18,19 +18,23 @@ export async function seedDepartments(
   const departments: DepartmentRef[] = [];
   const subjects: SubjectRef[] = [];
 
-  // Create all departments first
+  // Upsert all departments first
   for (const dept of DEPARTMENTS) {
-    const department = await prisma.department.create({
-      data: {
+    const department = await prisma.department.upsert({
+      where: { schoolId_departmentName: { schoolId, departmentName: dept.en } },
+      update: {
+        departmentNameAr: dept.ar,
+      },
+      create: {
         schoolId,
-        departmentName: dept.en,      // English for database storage
-        departmentNameAr: dept.ar,    // Arabic name for bilingual display
+        departmentName: dept.en,
+        departmentNameAr: dept.ar,
       },
     });
     departments.push({ id: department.id, departmentName: department.departmentName });
   }
 
-  // Create subjects and link to their departments
+  // Upsert subjects and link to their departments
   for (const subj of SUBJECTS) {
     const dept = departments.find(d => d.departmentName === subj.departmentEn);
     if (!dept) {
@@ -38,12 +42,16 @@ export async function seedDepartments(
       continue;
     }
 
-    const subjectRecord = await prisma.subject.create({
-      data: {
+    const subjectRecord = await prisma.subject.upsert({
+      where: { schoolId_departmentId_subjectName: { schoolId, departmentId: dept.id, subjectName: subj.en } },
+      update: {
+        subjectNameAr: subj.ar,
+      },
+      create: {
         schoolId,
         departmentId: dept.id,
-        subjectName: subj.en,        // English for database storage
-        subjectNameAr: subj.ar,      // Arabic name for bilingual display
+        subjectName: subj.en,
+        subjectNameAr: subj.ar,
       },
     });
     subjects.push({ id: subjectRecord.id, subjectName: subjectRecord.subjectName });

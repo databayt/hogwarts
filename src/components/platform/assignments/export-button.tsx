@@ -22,10 +22,13 @@ export function ExportButton({ filters, variant = "outline", size = "sm" }: Expo
   const handleExport = async () => {
     setIsExporting(true);
     try {
-      const csv = await getAssignmentsCSV(filters);
+      const result = await getAssignmentsCSV(filters);
+      if (!result.success || !result.data) {
+        throw new Error('error' in result ? result.error : 'Export failed');
+      }
 
       // Create blob and download
-      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const blob = new Blob([result.data], { type: "text/csv;charset=utf-8;" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;

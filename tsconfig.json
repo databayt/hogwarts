@@ -26,6 +26,9 @@
       "@/*": [
         "./src/*"
       ],
+      "@/mdx-components": [
+        "./mdx-components.tsx"
+      ],
       "@/.source": [
         "./.source"
       ],
@@ -46,6 +49,10 @@
   "exclude": [
     "node_modules",
     "prisma/generator",
-    ".next"
+    ".next",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/__tests__/**",
+    "src/test/**"
   ]
 }

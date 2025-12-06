@@ -17,7 +17,7 @@ export default async function MarketingLayout({
 
   return (
     <div className="px-14">
-      <SiteHeader dictionary={dictionary} />
+      <SiteHeader dictionary={dictionary} locale={lang} />
       {children}
       <SiteFooter dictionary={dictionary} />
     </div>

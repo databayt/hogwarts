@@ -144,14 +144,17 @@ export function RecentActivityContent({ dictionary, locale = 'en', userRole }: P
         getClassesForSelection()
       ])
 
-      // Map the results to match our interface types
-      setRecords(recordsResult.records.map(r => ({
-        ...r,
-        status: String(r.status),
-        method: String(r.method),
-      })))
-      setStats(statsResult)
-      setClasses(classesResult.classes)
+      // Map the results to match our interface types (mixed return types)
+      if (!('success' in recordsResult && !recordsResult.success) && 'records' in recordsResult) {
+        setRecords(recordsResult.records.map((r: any) => ({
+          ...r,
+          status: String(r.status),
+          method: String(r.method),
+        })))
+      }
+      // statsResult returns raw data on success
+      if (!('success' in statsResult && !statsResult.success)) setStats(statsResult as any)
+      if (classesResult.success && classesResult.data) setClasses(classesResult.data.classes)
     } catch (error) {
       console.error('Error fetching recent attendance:', error)
     } finally {

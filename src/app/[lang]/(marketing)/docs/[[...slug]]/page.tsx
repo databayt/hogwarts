@@ -10,7 +10,7 @@ import { DocsCopyPage } from "@/components/docs/docs-copy-page"
 import { DocsTableOfContents } from "@/components/docs/toc"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { mdxComponents } from "../../../../../../mdx-components"
+import { mdxComponents } from "@/mdx-components"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import type { Locale } from "@/components/internationalization/config"
 
@@ -66,11 +66,11 @@ export default async function DocsPage(props: {
     notFound()
   }
 
-  const doc = page.data as any
+  const doc = page.data
   const MDX = doc.body
   const neighbours = findNeighbour(source.pageTree, page.url)
 
-  const raw = await doc.exports?.getText?.("raw") || ""
+  const raw = await (page.data as any).exports?.getText?.("raw") || ""
   const pageUrl = `https://ed.databayt.org${page.url}`
 
   const { attributes } = fm(raw)

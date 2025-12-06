@@ -76,7 +76,10 @@ export function ParentsTable({ initialData, total, dictionary, lang, perPage = 2
     perPage,
     fetcher: async (params) => {
       const result = await getParents(params);
-      return { rows: result.rows as ParentRow[], total: result.total };
+      if (!result.success || !result.data) {
+        return { rows: [], total: 0 };
+      }
+      return { rows: result.data.rows as ParentRow[], total: result.data.total };
     },
     filters: searchValue ? { name: searchValue } : undefined,
   });
@@ -149,7 +152,11 @@ export function ParentsTable({ initialData, total, dictionary, lang, perPage = 2
 
   // Export CSV wrapper
   const handleExportCSV = useCallback(async (filters?: Record<string, unknown>) => {
-    return getParentsCSV(filters);
+    const result = await getParentsCSV(filters);
+    if (!result.success || !result.data) {
+      throw new Error('error' in result ? result.error : 'Export failed');
+    }
+    return result.data;
   }, []);
 
   // Get status badge

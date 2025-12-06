@@ -44,8 +44,8 @@ export function AssignmentCreateForm({ onSuccess }: AssignmentCreateFormProps) {
     const load = async () => {
       if (!currentId) return;
       const res = await getAssignment({ id: currentId });
-      const a = res.assignment as any;
-      if (!a) return;
+      if (!res.success || !res.data) return;
+      const a = res.data as any;
       form.reset({
         title: a.title ?? "",
         description: a.description ?? "",
@@ -62,20 +62,25 @@ export function AssignmentCreateForm({ onSuccess }: AssignmentCreateFormProps) {
   }, [currentId]);
 
   async function onSubmit(values: z.infer<typeof assignmentCreateSchema>) {
-    const res = currentId
-      ? await updateAssignment({ id: currentId, ...values })
-      : await createAssignment(values);
-    if (res?.success) {
-      toast.success(currentId ? "Assignment updated" : "Assignment created");
-      closeModal();
-      // Use callback for optimistic update, fallback to router.refresh()
-      if (onSuccess) {
-        onSuccess();
+    try {
+      const res = currentId
+        ? await updateAssignment({ id: currentId, ...values })
+        : await createAssignment(values);
+      if (res?.success) {
+        toast.success(currentId ? "Assignment updated" : "Assignment created");
+        closeModal();
+        // Use callback for optimistic update, fallback to router.refresh()
+        if (onSuccess) {
+          onSuccess();
+        } else {
+          router.refresh();
+        }
       } else {
-        router.refresh();
+        toast.error(res?.error || (currentId ? "Failed to update assignment" : "Failed to create assignment"));
       }
-    } else {
-      toast.error(currentId ? "Failed to update assignment" : "Failed to create assignment");
+    } catch (error) {
+      console.error("Form submission error:", error);
+      toast.error("An unexpected error occurred");
     }
   }
 
