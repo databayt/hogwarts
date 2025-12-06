@@ -41,15 +41,18 @@ export default {
       },
     }),
     // Facebook provider - always include if credentials exist
-    // Note: Disable PKCE as Facebook OAuth2 doesn't support it properly with NextAuth v5
+    // Fix for "id_token detected" error when user has logged in via Facebook mobile app with OIDC
+    // See: https://github.com/nextauthjs/next-auth/discussions/4146
     Facebook({
       clientId: env.FACEBOOK_CLIENT_ID || "",
       clientSecret: env.FACEBOOK_CLIENT_SECRET || "",
-      // Disable PKCE - Facebook OAuth2 doesn't require it and it causes "Configuration" errors
+      // Set issuer to handle id_token validation when Facebook returns one
+      issuer: "https://www.facebook.com",
+      // Disable PKCE - Facebook OAuth2 doesn't require it and can cause issues
       checks: ["state"],
       authorization: {
         params: {
-          // Pass additional parameters to Facebook
+          // Only request email scope (not openid) to avoid OIDC mode
           scope: 'email',
         }
       },
