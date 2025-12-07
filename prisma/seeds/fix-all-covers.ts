@@ -1,6 +1,6 @@
 /**
  * Fix All Book Covers Script
- * Updates all books with verified working cover URLs
+ * Updates all books with verified working Open Library cover URLs
  */
 
 import { PrismaClient } from "@prisma/client";
@@ -8,81 +8,179 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 const COVER_UPDATES: { title: string; coverUrl: string }[] = [
-  // Harry Potter
+  // Featured Book
   {
     title: "Harry Potter and the Philosopher's Stone",
-    coverUrl: "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1474154022i/3.jpg",
+    coverUrl: "https://covers.openlibrary.org/b/isbn/9780747532743-L.jpg",
   },
-  // Classic English Literature
+
+  // English Literature - Open Library ISBN covers
   {
     title: "To Kill a Mockingbird",
-    coverUrl: "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1553383690i/2657.jpg",
+    coverUrl: "https://covers.openlibrary.org/b/isbn/9780446310789-L.jpg",
   },
   {
     title: "1984",
-    coverUrl: "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1657781256i/61439040.jpg",
+    coverUrl: "https://covers.openlibrary.org/b/isbn/9780451524935-L.jpg",
   },
   {
     title: "Animal Farm",
-    coverUrl: "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1325861570i/170448.jpg",
+    coverUrl: "https://covers.openlibrary.org/b/isbn/9780451526342-L.jpg",
+  },
+  {
+    title: "Lord of the Flies",
+    coverUrl: "https://covers.openlibrary.org/b/isbn/9780399501487-L.jpg",
+  },
+  {
+    title: "Pride and Prejudice",
+    coverUrl: "https://covers.openlibrary.org/b/isbn/9780141439518-L.jpg",
+  },
+  {
+    title: "The Great Gatsby",
+    coverUrl: "https://covers.openlibrary.org/b/isbn/9780743273565-L.jpg",
   },
   {
     title: "Things Fall Apart",
-    coverUrl: "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1352082529i/37781.jpg",
+    coverUrl: "https://covers.openlibrary.org/b/isbn/9780385474542-L.jpg",
   },
   {
     title: "The Kite Runner",
-    coverUrl: "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1579036753i/77203.jpg",
+    coverUrl: "https://covers.openlibrary.org/b/isbn/9781594631931-L.jpg",
   },
   {
     title: "A Thousand Splendid Suns",
-    coverUrl: "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1655336738i/128029.jpg",
+    coverUrl: "https://covers.openlibrary.org/b/isbn/9781594483851-L.jpg",
   },
+
+  // Science
   {
     title: "A Brief History of Time",
-    coverUrl: "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1333578746i/3869.jpg",
+    coverUrl: "https://covers.openlibrary.org/b/isbn/9780553380163-L.jpg",
   },
   {
     title: "Sapiens: A Brief History of Humankind",
-    coverUrl: "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1703329310i/23692271.jpg",
+    coverUrl: "https://covers.openlibrary.org/b/isbn/9780062316110-L.jpg",
   },
-  // Arabic Literature - using color fallbacks since Arabic book covers are harder to find
+  {
+    title: "Cosmos",
+    coverUrl: "https://covers.openlibrary.org/b/isbn/9780345539434-L.jpg",
+  },
+
+  // Young Adult
+  {
+    title: "The Alchemist",
+    coverUrl: "https://covers.openlibrary.org/b/isbn/9780062315007-L.jpg",
+  },
+  {
+    title: "The Little Prince",
+    coverUrl: "https://covers.openlibrary.org/b/isbn/9780156012195-L.jpg",
+  },
+  {
+    title: "The Giver",
+    coverUrl: "https://covers.openlibrary.org/b/isbn/9780544336261-L.jpg",
+  },
+
+  // Shakespeare
+  {
+    title: "Romeo and Juliet",
+    coverUrl: "https://covers.openlibrary.org/b/isbn/9780743477116-L.jpg",
+  },
+  {
+    title: "Hamlet",
+    coverUrl: "https://covers.openlibrary.org/b/isbn/9780743477123-L.jpg",
+  },
+  {
+    title: "Macbeth",
+    coverUrl: "https://covers.openlibrary.org/b/isbn/9780743477109-L.jpg",
+  },
+
+  // Self Development
+  {
+    title: "The 7 Habits of Highly Effective People",
+    coverUrl: "https://covers.openlibrary.org/b/isbn/9781982137274-L.jpg",
+  },
+  {
+    title: "Atomic Habits",
+    coverUrl: "https://covers.openlibrary.org/b/isbn/9780735211292-L.jpg",
+  },
+  {
+    title: "A Short History of Nearly Everything",
+    coverUrl: "https://covers.openlibrary.org/b/isbn/9780767908184-L.jpg",
+  },
+
+  // Arabic Literature - Open Library ISBN covers
   {
     title: "عرس الزين",
-    coverUrl: "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1309286238i/5765836.jpg",
+    coverUrl: "https://covers.openlibrary.org/b/isbn/9780894101908-L.jpg",
   },
   {
     title: "موسم الهجرة إلى الشمال",
-    coverUrl: "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1309211537i/52091.jpg",
+    coverUrl: "https://covers.openlibrary.org/b/isbn/9780141187020-L.jpg",
+  },
+  {
+    title: "بندر شاه",
+    coverUrl: "https://covers.openlibrary.org/b/isbn/9789953686110-L.jpg",
   },
   {
     title: "أولاد حارتنا",
-    coverUrl: "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1291063389i/5860.jpg",
+    coverUrl: "https://covers.openlibrary.org/b/isbn/9780385264730-L.jpg",
   },
   {
     title: "الثلاثية: بين القصرين",
-    coverUrl: "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1291063512i/5861.jpg",
+    coverUrl: "https://covers.openlibrary.org/b/isbn/9780385264679-L.jpg",
   },
   {
     title: "اللص والكلاب",
-    coverUrl: "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1309288506i/5765774.jpg",
+    coverUrl: "https://covers.openlibrary.org/b/isbn/9780385264624-L.jpg",
   },
   {
-    title: "ألف ليلة وليلة",
-    coverUrl: "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1348201841i/93101.jpg",
+    title: "الأيام",
+    coverUrl: "https://covers.openlibrary.org/b/isbn/9789774160066-L.jpg",
   },
   {
     title: "كليلة ودمنة",
-    coverUrl: "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1328754491i/816685.jpg",
+    coverUrl: "https://covers.openlibrary.org/b/isbn/9780140455076-L.jpg",
+  },
+  {
+    title: "ألف ليلة وليلة",
+    coverUrl: "https://covers.openlibrary.org/b/isbn/9780140449389-L.jpg",
+  },
+  {
+    title: "رياض الصالحين",
+    coverUrl: "https://covers.openlibrary.org/b/isbn/9789960892795-L.jpg",
+  },
+  {
+    title: "فقه السنة",
+    coverUrl: "https://covers.openlibrary.org/b/isbn/9789775880680-L.jpg",
+  },
+  {
+    title: "السيرة النبوية",
+    coverUrl: "https://covers.openlibrary.org/b/isbn/9789953520551-L.jpg",
+  },
+  {
+    title: "ديوان محمود درويش",
+    coverUrl: "https://covers.openlibrary.org/b/isbn/9781566563499-L.jpg",
+  },
+  {
+    title: "ديوان المتنبي",
+    coverUrl: "https://covers.openlibrary.org/b/isbn/9789953445359-L.jpg",
   },
   {
     title: "مقدمة ابن خلدون",
-    coverUrl: "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1348978569i/2723411.jpg",
+    coverUrl: "https://covers.openlibrary.org/b/isbn/9780691166285-L.jpg",
+  },
+  {
+    title: "حكايات كامل كيلاني",
+    coverUrl: "https://covers.openlibrary.org/b/isbn/9789770278017-L.jpg",
+  },
+  {
+    title: "قصص الأنبياء",
+    coverUrl: "https://covers.openlibrary.org/b/isbn/9789960892481-L.jpg",
   },
 ];
 
 async function updateCovers() {
-  console.log("📚 Fixing all book covers...\n");
+  console.log("📚 Fixing all book covers with Open Library URLs...\n");
 
   let updated = 0;
   let notFound = 0;
