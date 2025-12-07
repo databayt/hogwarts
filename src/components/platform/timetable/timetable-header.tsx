@@ -141,15 +141,15 @@ export function TimetableHeader({
           onClick={() => onWeekChange(false)}
           disabled={!isNextWeek || isWeekChangeLoading}
           className={cn(
-            "border-border rounded-xl bg-muted hover:bg-muted/80",
-            "px-3",
+            "border-neutral-200 dark:border-neutral-700 rounded-xl bg-neutral-50 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-900",
+            "px-3 transition-all duration-200",
             isWeekChangeLoading && "opacity-50 cursor-not-allowed"
           )}
         >
           <ChevronLeft className={cn(
             "w-4 h-4",
-            "text-foreground",
-            (isWeekChangeLoading || !isNextWeek) && "text-muted-foreground"
+            "text-neutral-700 dark:text-neutral-300",
+            (isWeekChangeLoading || !isNextWeek) && "text-neutral-400 dark:text-neutral-600"
           )} />
         </Button>
         <Button
@@ -157,15 +157,15 @@ export function TimetableHeader({
           onClick={() => onWeekChange(true)}
           disabled={isNextWeek || isWeekChangeLoading}
           className={cn(
-            "border-border rounded-xl bg-muted hover:bg-muted/80",
-            "px-3",
+            "border-neutral-200 dark:border-neutral-700 rounded-xl bg-neutral-50 hover:bg-neutral-100 dark:bg-neutral-800 dark:hover:bg-neutral-900",
+            "px-3 transition-all duration-200",
             isWeekChangeLoading && "opacity-50 cursor-not-allowed"
           )}
         >
           <ChevronRight className={cn(
             "w-4 h-4",
-            "text-foreground",
-            (isWeekChangeLoading || isNextWeek) && "text-muted-foreground"
+            "text-neutral-700 dark:text-neutral-300",
+            (isWeekChangeLoading || isNextWeek) && "text-neutral-400 dark:text-neutral-600"
           )} />
         </Button>
 

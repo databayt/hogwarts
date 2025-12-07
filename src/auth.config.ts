@@ -40,19 +40,10 @@ export default {
         };
       },
     }),
-    // Facebook provider - Use default URLs, only customize profile mapping
+    // Facebook provider - Minimal config to test default behavior
     Facebook({
       clientId: env.FACEBOOK_CLIENT_ID || "",
       clientSecret: env.FACEBOOK_CLIENT_SECRET || "",
-      profile(profile) {
-        console.log("🔵 [Facebook OAuth] Raw profile:", JSON.stringify(profile, null, 2));
-        return {
-          id: profile.id,
-          name: profile.name || "Facebook User",
-          email: profile.email || `${profile.id}@facebook.com`,
-          image: profile.picture?.data?.url || profile.picture || null,
-        };
-      },
     }),
     Credentials({
       async authorize(credentials) {

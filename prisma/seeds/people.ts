@@ -26,7 +26,6 @@ import type {
 } from "./types";
 import {
   DEMO_PASSWORD,
-  TEACHER_DATA,
   STUDENT_DISTRIBUTION,
   MALE_NAMES,
   FEMALE_NAMES,
@@ -34,6 +33,9 @@ import {
   getRandomName,
   getBirthYearForGrade,
   getRandomNeighborhood,
+  generatePersonalEmail,
+  getAllTeachers,
+  TARGET_TEACHER_COUNT,
 } from "./constants";
 
 // Track used email suffixes to ensure uniqueness
@@ -67,12 +69,14 @@ export async function seedPeople(
   const guardians: GuardianRef[] = [];
 
   // ============================================
-  // PHASE 1: Create Teachers (25 total) - Bilingual
+  // PHASE 1: Create Teachers (100 total) - Bilingual
   // ============================================
-  console.log("👨‍🏫 Creating teachers (25, Bilingual AR/EN)...");
+  const allTeachers = getAllTeachers();
+  console.log(`👨‍🏫 Creating teachers (${allTeachers.length}, Bilingual AR/EN)...`);
 
-  for (const [index, t] of TEACHER_DATA.entries()) {
-    const email = `teacher${index + 1}@demo.databayt.org`;
+  for (const [index, t] of allTeachers.entries()) {
+    // Use personal email (e.g., fatima.hassan@gmail.com) instead of numbered IDs
+    const email = generatePersonalEmail(t.givenNameEn, t.surnameEn, index + 30000);
     const fullNameEn = `${t.givenNameEn} ${t.surnameEn}`;
 
     // findFirst + create user account by email + schoolId
@@ -145,9 +149,8 @@ export async function seedPeople(
   }
 
   console.log(`   ✅ Created: ${teachers.length} teachers`);
-  console.log(`      - KG Teachers: 3`);
-  console.log(`      - Primary Teachers: 8`);
-  console.log(`      - Secondary Teachers: 14\n`);
+  console.log(`      - Target: ${TARGET_TEACHER_COUNT} teachers (1:10 student ratio)`);
+  console.log(`      - Covers all K-12 levels with bilingual names\n`);
 
   // ============================================
   // PHASE 2: Create Guardian Types (upsert by name)
@@ -183,9 +186,9 @@ export async function seedPeople(
   console.log(`   ✅ Created: 5 guardian types\n`);
 
   // ============================================
-  // PHASE 3: Create Students (100 total) with Guardians
+  // PHASE 3: Create Students (1000 total) with Guardians
   // ============================================
-  console.log("👨‍🎓 Creating students (100) with guardians (200)...");
+  console.log("👨‍🎓 Creating students (1000) with guardians (2000)...");
 
   let studentIndex = 0;
   const studentsByLevel: Record<string, StudentRef[]> = {};
@@ -216,8 +219,12 @@ export async function seedPeople(
       const birthDay = faker.number.int({ min: 1, max: 28 });
       const dateOfBirth = new Date(Date.UTC(birthYear, birthMonth - 1, birthDay));
 
-      // Upsert student user by email
-      const studentEmail = `student${studentIndex}@demo.databayt.org`;
+      // Upsert student user by email (personal email format)
+      const studentEmail = generatePersonalEmail(
+        studentData.givenNameEn,
+        familySurnameEn,
+        studentIndex
+      );
       let studentUser = await prisma.user.findFirst({
         where: { email: studentEmail, schoolId },
       });
@@ -284,9 +291,13 @@ export async function seedPeople(
         },
       });
 
-      // Create Father (English names for database)
+      // Create Father (English names for database, personal email)
       const fatherData = getRandomName("M", studentIndex + 1000);
-      const fatherEmail = `father${studentIndex}@demo.databayt.org`;
+      const fatherEmail = generatePersonalEmail(
+        fatherData.givenNameEn,
+        familySurnameEn,
+        studentIndex + 10000 // Offset to avoid collision with student emails
+      );
       const fatherPhone = `+249-9${faker.string.numeric(8)}`;
 
       // findFirst + create father user by email + schoolId
@@ -337,9 +348,13 @@ export async function seedPeople(
 
       guardians.push({ id: father.id });
 
-      // Create Mother (English names for database)
+      // Create Mother (English names for database, personal email)
       const motherData = getRandomName("F", studentIndex + 2000);
-      const motherEmail = `mother${studentIndex}@demo.databayt.org`;
+      const motherEmail = generatePersonalEmail(
+        motherData.givenNameEn,
+        familySurnameEn,
+        studentIndex + 20000 // Offset to avoid collision with other emails
+      );
       const motherPhone = `+249-9${faker.string.numeric(8)}`;
 
       // findFirst + create mother user by email + schoolId

@@ -24,7 +24,7 @@
   }
 
   /* Container adjustments */
-  .max-w-4xl {
+  .max-w-4xl, .max-w-6xl, .max-w-7xl {
     max-width: 100% !important;
     margin: 0 !important;
     padding: 0 !important;
@@ -35,19 +35,10 @@
     display: grid !important;
   }
 
-  /* Cell size adjustments */
-  .h-14, .h-18, .h-23 {
+  /* Cell height adjustments */
+  .min-h-14, .min-h-20, .h-14, .h-18, .h-23 {
     height: auto !important;
-    min-height: 3.5rem !important;
-  }
-
-  /* Ensure grid fits within printable width and avoids overflow */
-  .overflow-x-auto {
-    overflow: visible !important;
-  }
-  .max-w-4xl, .min-w-full {
-    width: 100% !important;
-    max-width: 100% !important;
+    min-height: 3rem !important;
   }
 
   /* Font size adjustments */
@@ -81,27 +72,8 @@
     line-height: 1rem !important;
   }
 
-  /* Spacing adjustments */
-  .py-1 {
-    padding-top: 0.25rem !important;
-    padding-bottom: 0.25rem !important;
-  }
-
-  .px-2 {
-    padding-left: 0.5rem !important;
-    padding-right: 0.5rem !important;
-  }
-
-  .mb-2 {
-    margin-bottom: 0.5rem !important;
-  }
-
-  .mb-4 {
-    margin-bottom: 1rem !important;
-  }
-
   /* Border and visual adjustments */
-  .border {
+  .border, .border-neutral-200, .border-neutral-700 {
     border-width: 1px !important;
     border-color: #e5e5e5 !important;
   }
@@ -124,8 +96,24 @@
     box-shadow: none !important;
   }
 
-  /* Background colors for cells */
-  [class*="bg-"] {
+  /* Background colors for cells - force white for printing */
+  [class*="bg-purple-"],
+  [class*="bg-green-"],
+  [class*="bg-pink-"],
+  [class*="bg-blue-"],
+  [class*="bg-orange-"],
+  [class*="bg-yellow-"],
+  [class*="bg-rose-"],
+  [class*="bg-amber-"],
+  [class*="bg-teal-"],
+  [class*="bg-emerald-"],
+  [class*="bg-cyan-"],
+  [class*="bg-indigo-"],
+  [class*="bg-violet-"],
+  [class*="bg-lime-"],
+  [class*="bg-sky-"],
+  [class*="bg-neutral-"],
+  [class*="bg-red-"] {
     background-color: white !important;
     print-color-adjust: exact !important;
     -webkit-print-color-adjust: exact !important;
@@ -142,19 +130,43 @@
   }
 
   /* Specific print classes */
-  .print\:py-4 {
+  .print\:py-2 {
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+  }
+
+  .print\:py-3 {
     padding-top: 0.75rem !important;
     padding-bottom: 0.75rem !important;
   }
 
-  .print\:text-lg {
-    font-size: 1rem !important;
-    line-height: 1.5rem !important;
+  .print\:min-h-12 {
+    min-height: 3rem !important;
+  }
+
+  .print\:text-sm {
+    font-size: 0.875rem !important;
+    line-height: 1.25rem !important;
+  }
+
+  .print\:text-xs {
+    font-size: 0.75rem !important;
+    line-height: 1rem !important;
+  }
+
+  .print\:text-\[10px\] {
+    font-size: 10px !important;
+    line-height: 1rem !important;
   }
 
   .print\:text-base {
     font-size: 0.875rem !important;
     line-height: 1.25rem !important;
+  }
+
+  .print\:text-lg {
+    font-size: 1rem !important;
+    line-height: 1.5rem !important;
   }
 
   .print\:text-4xl {
@@ -166,6 +178,26 @@
     margin-bottom: 1.5rem !important;
   }
 
+  .print\:font-semibold {
+    font-weight: 600 !important;
+  }
+
+  .print\:w-5 {
+    width: 1.25rem !important;
+  }
+
+  .print\:h-5 {
+    height: 1.25rem !important;
+  }
+
+  .print\:shadow-none {
+    box-shadow: none !important;
+  }
+
+  .print\:rounded-none {
+    border-radius: 0 !important;
+  }
+
   /* Force background colors to print */
   .print\:bg-white {
     background-color: white !important;
@@ -173,15 +205,3 @@
     print-color-adjust: exact !important;
   }
 }
-
-/* Page break rules to avoid splitting period rows across pages */
-.avoid-break {
-  break-inside: avoid !important;
-  page-break-inside: avoid !important;
-}
-
-.page-break {
-  break-after: always !important;
-  page-break-after: always !important;
-}
-

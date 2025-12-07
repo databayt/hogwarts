@@ -94,7 +94,7 @@ export const RegisterForm = (props: Props) => {
                         <Input
                           {...field}
                           disabled={isPending}
-                          placeholder={dictionary?.common?.search || "Name"}
+                          placeholder={dictionary?.auth?.username || "Name"}
                         />
                       </FormControl>
                       <FormMessage />
