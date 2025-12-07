@@ -11,7 +11,7 @@
     "start": "NODE_ENV=production node server.js",
     "start:next": "next start",
     "lint": "next lint",
-    "postinstall": "prisma generate",
+    "postinstall": "prisma generate && fumadocs-mdx",
     "db:seed": "tsx prisma/seeds/index.ts",
     "db:seed:single": "tsx prisma/seeds/run-single.ts",
     "test": "vitest",

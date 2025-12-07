@@ -69,7 +69,7 @@ export default function LogoCloud({ dictionary }: LogoCloudProps) {
                     <div className="md:border-r md:pr-6 shrink-0">
                         <p className="whitespace-pre-line text-base font-medium">{text}</p>
                     </div>
-                    <div className="relative py-6 md:w-[calc(100%-11rem)]">
+                    <div className="relative py-6 flex-1 overflow-hidden">
                         <InfiniteSlider
                             speedOnHover={20}
                             speed={40}
@@ -87,18 +87,18 @@ export default function LogoCloud({ dictionary }: LogoCloudProps) {
                             ))}
                         </InfiniteSlider>
 
-                        {/* Gradient overlays for color fade */}
-                        <div className="absolute inset-y-0 left-0 w-20 bg-gradient-to-r from-background to-transparent" />
-                        <div className="absolute inset-y-0 right-0 w-20 bg-gradient-to-l from-background to-transparent" />
+                        {/* Gradient overlays for color fade - both sides */}
+                        <div className="pointer-events-none absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-background via-background/80 to-transparent z-10" />
+                        <div className="pointer-events-none absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-background via-background/80 to-transparent z-10" />
 
                         {/* Progressive blur for smooth effect */}
                         <ProgressiveBlur
-                            className="pointer-events-none absolute left-0 top-0 h-full w-20"
+                            className="pointer-events-none absolute left-0 top-0 h-full w-24 z-20"
                             direction="left"
                             blurIntensity={1}
                         />
                         <ProgressiveBlur
-                            className="pointer-events-none absolute right-0 top-0 h-full w-20"
+                            className="pointer-events-none absolute right-0 top-0 h-full w-24 z-20"
                             direction="right"
                             blurIntensity={1}
                         />
