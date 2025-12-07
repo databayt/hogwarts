@@ -6,9 +6,9 @@ const nextConfig: NextConfig = {
   /* config options here */
   pageExtensions: ['js', 'jsx', 'mdx', 'ts', 'tsx'],
 
-  // Enable MDX support with Turbopack
+  // Optimize package imports
   experimental: {
-    mdxRs: true,
+    optimizePackageImports: ["@assistant-ui/react", "@radix-ui/react-icons"],
   },
 
   // Security headers

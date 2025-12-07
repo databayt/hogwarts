@@ -69,7 +69,7 @@ export default function LogoCloud({ dictionary }: LogoCloudProps) {
                     <div className="md:border-r md:pr-6 shrink-0">
                         <p className="whitespace-pre-line text-base font-medium">{text}</p>
                     </div>
-                    <div className="relative py-6 flex-1">
+                    <div className="relative py-6 md:w-[calc(100%-11rem)]">
                         <InfiniteSlider
                             speedOnHover={20}
                             speed={40}
@@ -87,8 +87,11 @@ export default function LogoCloud({ dictionary }: LogoCloudProps) {
                             ))}
                         </InfiniteSlider>
 
-                        <div className="bg-linear-to-r from-background absolute inset-y-0 left-0 w-20"></div>
-                        <div className="bg-linear-to-l from-background absolute inset-y-0 right-0 w-20"></div>
+                        {/* Gradient overlays for color fade */}
+                        <div className="absolute inset-y-0 left-0 w-20 bg-gradient-to-r from-background to-transparent" />
+                        <div className="absolute inset-y-0 right-0 w-20 bg-gradient-to-l from-background to-transparent" />
+
+                        {/* Progressive blur for smooth effect */}
                         <ProgressiveBlur
                             className="pointer-events-none absolute left-0 top-0 h-full w-20"
                             direction="left"

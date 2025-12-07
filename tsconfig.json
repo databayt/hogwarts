@@ -27,7 +27,7 @@
         "./src/*"
       ],
       "@/mdx-components": [
-        "./mdx-components.tsx"
+        "./src/mdx-components.tsx"
       ],
       "@/.source": [
         "./.source"

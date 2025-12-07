@@ -35,7 +35,7 @@ export default async function OpenSource({ dictionary }: OpenSourceProps) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const dict = (dictionary?.marketing as any)?.openSource || {
         title: "Proudly Open Source",
-        description: "Databayt is open source and powered by open source software.",
+        description: "Hogwarts is open source and powered by open source software.",
         github: "GitHub",
     }
 
