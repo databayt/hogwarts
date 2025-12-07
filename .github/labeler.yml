@@ -1,0 +1,97 @@
+# Label configuration for auto-labeling PRs
+# See: https://github.com/actions/labeler
+
+# Area labels
+"area: platform":
+  - changed-files:
+      - any-glob-to-any-file:
+          - src/components/platform/**/*
+          - src/app/**/s/**/*
+
+"area: auth":
+  - changed-files:
+      - any-glob-to-any-file:
+          - src/auth*
+          - auth.ts
+          - auth.config.ts
+          - src/components/auth/**/*
+
+"area: database":
+  - changed-files:
+      - any-glob-to-any-file:
+          - prisma/**/*
+          - src/lib/db.ts
+
+"area: docs":
+  - changed-files:
+      - any-glob-to-any-file:
+          - docs/**/*
+          - content/**/*
+          - "*.md"
+          - "*.mdx"
+
+"area: ui":
+  - changed-files:
+      - any-glob-to-any-file:
+          - src/components/ui/**/*
+          - src/components/atom/**/*
+
+"area: i18n":
+  - changed-files:
+      - any-glob-to-any-file:
+          - src/components/internationalization/**/*
+          - content/docs-ar/**/*
+
+"area: marketing":
+  - changed-files:
+      - any-glob-to-any-file:
+          - src/app/**/marketing/**/*
+          - src/components/marketing/**/*
+
+"area: finance":
+  - changed-files:
+      - any-glob-to-any-file:
+          - src/components/platform/finance/**/*
+          - prisma/models/fees.prisma
+          - prisma/models/banking.prisma
+          - prisma/models/invoice.prisma
+
+"area: attendance":
+  - changed-files:
+      - any-glob-to-any-file:
+          - src/components/platform/attendance/**/*
+          - prisma/models/attendance.prisma
+
+"area: exams":
+  - changed-files:
+      - any-glob-to-any-file:
+          - src/components/platform/exams/**/*
+          - prisma/models/exam.prisma
+          - prisma/models/assessments.prisma
+
+# Type labels
+"type: config":
+  - changed-files:
+      - any-glob-to-any-file:
+          - "*.config.*"
+          - ".*rc*"
+          - package.json
+          - pnpm-lock.yaml
+          - tsconfig.json
+
+"type: ci":
+  - changed-files:
+      - any-glob-to-any-file:
+          - .github/**/*
+
+"type: tests":
+  - changed-files:
+      - any-glob-to-any-file:
+          - "**/*.test.*"
+          - "**/*.spec.*"
+          - tests/**/*
+          - vitest.config.*
+          - playwright.config.*
+
+# Size labels (based on lines changed - requires additional action)
+# These are placeholders - actual size labeling needs a separate workflow
