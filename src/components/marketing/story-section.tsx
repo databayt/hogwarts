@@ -10,11 +10,9 @@ interface StorySectionProps {
 
 export default function StorySection({ dictionary }: StorySectionProps) {
     const { containerRef, videoRef } = useVideoScrollControl({
-        threshold: 0.5,
-        fadeInDuration: 500,
-        fadeOutDuration: 300,
-        autoPause: true,
-        enableAudio: true,
+        threshold: 0.3, // Start playing earlier
+        autoPause: true, // Pause when out of view
+        enableAudio: false, // Keep muted
     })
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

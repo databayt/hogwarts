@@ -159,12 +159,17 @@ export function useVideoScrollControl(
     if (!video) return
 
     if (isInView) {
+      // Ensure muted for autoplay (browsers require this)
+      if (!enableAudio) {
+        video.muted = true
+      }
+
       // Play video when in view
       video.play().catch(() => {
         // Autoplay may be blocked - that's ok
       })
 
-      // Fade in audio
+      // Fade in audio only if enabled
       if (enableAudio) {
         // Unmute first so we can control volume
         video.muted = false

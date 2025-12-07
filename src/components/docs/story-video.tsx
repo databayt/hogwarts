@@ -4,11 +4,9 @@ import { useVideoScrollControl } from "@/hooks/use-video-scroll-control"
 
 export function StoryVideo() {
   const { containerRef, videoRef } = useVideoScrollControl({
-    threshold: 0.5,
-    fadeInDuration: 500,
-    fadeOutDuration: 300,
-    autoPause: false, // Keep looping behavior - video continues but audio fades
-    enableAudio: true,
+    threshold: 0.3, // Start playing earlier
+    autoPause: true, // Pause when out of view
+    enableAudio: false, // Keep muted
   })
 
   return (
