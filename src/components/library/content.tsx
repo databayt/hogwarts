@@ -24,23 +24,31 @@ export default async function LibraryContent({ userId, dictionary, lang }: Props
     );
   }
 
-  // Fetch books in parallel for different sections
-  const [heroBook, latestBooks, featuredBooks, literatureBooks, scienceBooks] = await Promise.all([
-    // Hero Book - Harry Potter specifically (or fallback to most recent)
-    db.book.findFirst({
+  // First try to get Harry Potter specifically
+  let heroBook = await db.book.findFirst({
+    where: {
+      schoolId,
+      title: { contains: "Harry Potter" }
+    },
+  });
+
+  // Fallback to most recent if Harry Potter not found
+  if (!heroBook) {
+    heroBook = await db.book.findFirst({
+      where: { schoolId },
+      orderBy: { createdAt: "desc" },
+    });
+  }
+
+  // Fetch other books in parallel
+  const [latestBooks, featuredBooks, literatureBooks, scienceBooks] = await Promise.all([
+    // Latest Books - exclude Harry Potter (hero), get 12 books
+    db.book.findMany({
       where: {
         schoolId,
-        title: { contains: "Harry Potter" }
+        NOT: { title: { contains: "Harry Potter" } }
       },
-    }).then(book => book || db.book.findFirst({
-      where: { schoolId },
       orderBy: { createdAt: "desc" },
-    })),
-    // Latest Books - skip hero, get next 12 books
-    db.book.findMany({
-      where: { schoolId },
-      orderBy: { createdAt: "desc" },
-      skip: 1,
       take: 12,
     }),
     // Featured - skip latest 13 to show different ones
