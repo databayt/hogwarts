@@ -68,7 +68,8 @@
     "createNewAccount": "Create a new account",
     "orContinueWith": "Or continue with",
     "twoFactorCode": "Two Factor Code",
-    "confirm": "Confirm"
+    "confirm": "Confirm",
+    "username": "Name"
   },
   "marketing": {
     "hero": {

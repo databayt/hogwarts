@@ -68,7 +68,8 @@
     "createNewAccount": "إنشاء حساب جديد",
     "orContinueWith": "أو تابع بواسطة",
     "twoFactorCode": "رمز المصادقة الثنائية",
-    "confirm": "تأكيد"
+    "confirm": "تأكيد",
+    "username": "الاسم"
   },
   "marketing": {
     "hero": {
