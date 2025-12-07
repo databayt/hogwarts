@@ -2,9 +2,35 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { getTenantContext } from "@/lib/tenant-context";
 import { put } from "@vercel/blob";
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { logger } from "@/lib/logger";
 import { rateLimit, RATE_LIMITS } from "@/lib/rate-limit";
 import { STORAGE_CONFIG, SIZE_LABELS } from "@/lib/storage-config";
+
+// S3 client for large file uploads (lazy initialized)
+let s3Client: S3Client | null = null;
+
+function getS3Client(): S3Client | null {
+  if (!process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY || !process.env.AWS_S3_BUCKET) {
+    return null;
+  }
+
+  if (!s3Client) {
+    s3Client = new S3Client({
+      region: process.env.AWS_REGION || "us-east-1",
+      credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+      },
+    });
+  }
+  return s3Client;
+}
+
+// Check if S3 is configured for large files
+function isS3Configured(): boolean {
+  return !!(process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY && process.env.AWS_S3_BUCKET);
+}
 
 /**
  * Vercel Blob Upload API (with Extended Storage Support)
@@ -140,31 +166,80 @@ export async function POST(request: NextRequest) {
     // 7. Generate unique filename with school context
     const timestamp = Date.now();
     const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
-    const filename = `stream/${schoolId ?? "platform"}/${category}/${timestamp}_${sanitizedName}`;
+    const key = `stream/${schoolId ?? "platform"}/${category}/${timestamp}_${sanitizedName}`;
 
-    // 8. Upload to Vercel Blob
-    const blob = await put(filename, file, {
-      access: "public",
-      addRandomSuffix: true,
-    });
+    // 8. Choose storage provider based on file size
+    const useS3 = category === "video" &&
+                  file.size > STORAGE_CONFIG.MAX_SIZES.VERCEL_BLOB.video &&
+                  isS3Configured();
 
-    // 9. Log successful upload
-    logger.info("Blob upload successful", {
-      action: "blob_upload",
-      schoolId: schoolId ?? "platform",
-      userId: session.user.id,
-      filename: blob.pathname,
-      size: file.size,
-      type: file.type,
-      category,
-      url: blob.url,
-    });
+    let uploadUrl: string;
+    let uploadPath: string;
+    let storageProvider: "vercel_blob" | "aws_s3";
 
-    // 10. Return success response
+    if (useS3) {
+      // Upload large videos to AWS S3
+      const client = getS3Client();
+      if (!client) {
+        return NextResponse.json(
+          { error: "S3 not configured for large file uploads" },
+          { status: 500 }
+        );
+      }
+
+      const buffer = Buffer.from(await file.arrayBuffer());
+
+      await client.send(new PutObjectCommand({
+        Bucket: process.env.AWS_S3_BUCKET!,
+        Key: key,
+        Body: buffer,
+        ContentType: file.type,
+        ContentLength: file.size,
+      }));
+
+      uploadUrl = `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION || "us-east-1"}.amazonaws.com/${key}`;
+      uploadPath = key;
+      storageProvider = "aws_s3";
+
+      logger.info("S3 upload successful", {
+        action: "s3_upload",
+        schoolId: schoolId ?? "platform",
+        userId: session.user.id,
+        key,
+        size: file.size,
+        type: file.type,
+        category,
+        url: uploadUrl,
+      });
+    } else {
+      // Upload to Vercel Blob (default for small files)
+      const blob = await put(key, file, {
+        access: "public",
+        addRandomSuffix: true,
+      });
+
+      uploadUrl = blob.url;
+      uploadPath = blob.pathname;
+      storageProvider = "vercel_blob";
+
+      logger.info("Blob upload successful", {
+        action: "blob_upload",
+        schoolId: schoolId ?? "platform",
+        userId: session.user.id,
+        filename: blob.pathname,
+        size: file.size,
+        type: file.type,
+        category,
+        url: blob.url,
+      });
+    }
+
+    // 9. Return success response
     return NextResponse.json({
       success: true,
-      url: blob.url,
-      pathname: blob.pathname,
+      url: uploadUrl,
+      pathname: uploadPath,
+      storageProvider,
       metadata: {
         size: file.size,
         type: file.type,

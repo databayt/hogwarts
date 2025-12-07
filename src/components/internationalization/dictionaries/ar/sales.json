@@ -1,0 +1,89 @@
+{
+  "title": "المبيعات",
+  "leads": "العملاء المحتملين",
+  "addNewLead": "أضف عميلاً محتملاً جديداً للمتابعة",
+  "search": "بحث في العملاء المحتملين...",
+  "create": "إنشاء",
+  "export": "تصدير",
+  "reset": "إعادة تعيين",
+  "actions": "إجراءات",
+  "view": "عرض",
+  "edit": "تعديل",
+  "delete": "حذف",
+  "loadMore": "تحميل المزيد",
+  "loading": "جاري التحميل...",
+  "form": {
+    "title": "تفاصيل العميل المحتمل",
+    "createTitle": "إنشاء عميل محتمل",
+    "editTitle": "تعديل عميل محتمل",
+    "name": "الاسم",
+    "email": "البريد الإلكتروني",
+    "phone": "الهاتف",
+    "company": "الشركة",
+    "jobTitle": "المسمى الوظيفي",
+    "website": "الموقع الإلكتروني",
+    "linkedin": "لينكدإن",
+    "leadType": "نوع العميل",
+    "industry": "الصناعة",
+    "location": "الموقع",
+    "status": "الحالة",
+    "source": "المصدر",
+    "priority": "الأولوية",
+    "score": "النتيجة",
+    "notes": "ملاحظات",
+    "save": "حفظ",
+    "cancel": "إلغاء",
+    "creating": "جاري الإنشاء...",
+    "updating": "جاري التحديث..."
+  },
+  "table": {
+    "name": "الاسم",
+    "email": "البريد الإلكتروني",
+    "company": "الشركة",
+    "status": "الحالة",
+    "priority": "الأولوية",
+    "score": "النتيجة",
+    "source": "المصدر",
+    "created": "تاريخ الإنشاء"
+  },
+  "status": {
+    "NEW": "جديد",
+    "CONTACTED": "تم التواصل",
+    "QUALIFIED": "مؤهل",
+    "PROPOSAL": "عرض",
+    "NEGOTIATION": "تفاوض",
+    "CLOSED_WON": "تم الإغلاق (ربح)",
+    "CLOSED_LOST": "تم الإغلاق (خسارة)",
+    "ARCHIVED": "مؤرشف"
+  },
+  "source": {
+    "MANUAL": "يدوي",
+    "IMPORT": "استيراد",
+    "WEBSITE": "موقع ويب",
+    "REFERRAL": "إحالة",
+    "SOCIAL_MEDIA": "وسائل التواصل الاجتماعي",
+    "EMAIL_CAMPAIGN": "حملة بريدية",
+    "COLD_CALL": "اتصال بارد",
+    "CONFERENCE": "مؤتمر",
+    "PARTNER": "شريك"
+  },
+  "priority": {
+    "LOW": "منخفض",
+    "MEDIUM": "متوسط",
+    "HIGH": "عالي",
+    "URGENT": "عاجل"
+  },
+  "type": {
+    "SCHOOL": "مدرسة",
+    "PARTNERSHIP": "شراكة",
+    "OTHER": "آخر"
+  },
+  "messages": {
+    "createSuccess": "تم إنشاء العميل المحتمل بنجاح",
+    "updateSuccess": "تم تحديث العميل المحتمل بنجاح",
+    "deleteSuccess": "تم حذف العميل المحتمل بنجاح",
+    "createError": "فشل إنشاء العميل المحتمل",
+    "updateError": "فشل تحديث العميل المحتمل",
+    "deleteError": "فشل حذف العميل المحتمل"
+  }
+}

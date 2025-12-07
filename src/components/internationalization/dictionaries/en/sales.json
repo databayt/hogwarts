@@ -1,0 +1,89 @@
+{
+  "title": "Sales",
+  "leads": "Leads",
+  "addNewLead": "Add a new lead to track",
+  "search": "Search leads...",
+  "create": "Create",
+  "export": "Export",
+  "reset": "Reset",
+  "actions": "Actions",
+  "view": "View",
+  "edit": "Edit",
+  "delete": "Delete",
+  "loadMore": "Load More",
+  "loading": "Loading...",
+  "form": {
+    "title": "Lead Details",
+    "createTitle": "Create Lead",
+    "editTitle": "Edit Lead",
+    "name": "Name",
+    "email": "Email",
+    "phone": "Phone",
+    "company": "Company",
+    "jobTitle": "Job Title",
+    "website": "Website",
+    "linkedin": "LinkedIn",
+    "leadType": "Lead Type",
+    "industry": "Industry",
+    "location": "Location",
+    "status": "Status",
+    "source": "Source",
+    "priority": "Priority",
+    "score": "Score",
+    "notes": "Notes",
+    "save": "Save",
+    "cancel": "Cancel",
+    "creating": "Creating...",
+    "updating": "Updating..."
+  },
+  "table": {
+    "name": "Name",
+    "email": "Email",
+    "company": "Company",
+    "status": "Status",
+    "priority": "Priority",
+    "score": "Score",
+    "source": "Source",
+    "created": "Created"
+  },
+  "status": {
+    "NEW": "New",
+    "CONTACTED": "Contacted",
+    "QUALIFIED": "Qualified",
+    "PROPOSAL": "Proposal",
+    "NEGOTIATION": "Negotiation",
+    "CLOSED_WON": "Closed Won",
+    "CLOSED_LOST": "Closed Lost",
+    "ARCHIVED": "Archived"
+  },
+  "source": {
+    "MANUAL": "Manual",
+    "IMPORT": "Import",
+    "WEBSITE": "Website",
+    "REFERRAL": "Referral",
+    "SOCIAL_MEDIA": "Social Media",
+    "EMAIL_CAMPAIGN": "Email Campaign",
+    "COLD_CALL": "Cold Call",
+    "CONFERENCE": "Conference",
+    "PARTNER": "Partner"
+  },
+  "priority": {
+    "LOW": "Low",
+    "MEDIUM": "Medium",
+    "HIGH": "High",
+    "URGENT": "Urgent"
+  },
+  "type": {
+    "SCHOOL": "School",
+    "PARTNERSHIP": "Partnership",
+    "OTHER": "Other"
+  },
+  "messages": {
+    "createSuccess": "Lead created successfully",
+    "updateSuccess": "Lead updated successfully",
+    "deleteSuccess": "Lead deleted successfully",
+    "createError": "Failed to create lead",
+    "updateError": "Failed to update lead",
+    "deleteError": "Failed to delete lead"
+  }
+}

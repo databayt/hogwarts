@@ -6,7 +6,16 @@
   "chatbot": {
     "title": "Chat Assistant",
     "startMessage": "Start a conversation...",
-    "thinking": "I'm thinking..."
+    "thinking": "I'm thinking...",
+    "openChat": "Open chat",
+    "closeChat": "Close chat",
+    "placeholder": "Type a message...",
+    "welcomeMessage": "Hi! How can I help you today?",
+    "noMessages": "No messages yet",
+    "errorMessage": "Something went wrong. Please try again.",
+    "typing": "Typing...",
+    "send": "Send",
+    "retry": "Retry"
   },
   "common": {
     "loading": "Loading...",

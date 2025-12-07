@@ -218,6 +218,10 @@ model School {
   fileMetadata FileMetadata[]
   uploadQuotas UploadQuota[]
 
+  // Sales Module relations
+  leads          Lead[]
+  leadActivities LeadActivity[]
+
   createdAt             DateTime                @default(now())
   updatedAt             DateTime                @updatedAt
   QuestionBank          QuestionBank[]

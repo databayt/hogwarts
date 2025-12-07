@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -25,6 +26,8 @@ import { ArrowLeft, Loader2, SaveIcon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import Link from "next/link";
+import { FileUpload } from "@/components/stream/shared/file-upload";
+import { updateLesson } from "../edit/actions";
 
 interface LessonFormProps {
   data: {
@@ -58,9 +61,19 @@ export function LessonForm({ data, courseId, chapterId }: LessonFormProps) {
   async function onSubmit(values: CreateLessonInput) {
     setIsPending(true);
     try {
-      // TODO: Implement update lesson action
-      console.log("Update lesson:", values);
-      toast.success("Lesson updated successfully!");
+      const result = await updateLesson(data.id, {
+        title: values.title,
+        description: values.description,
+        videoUrl: values.videoUrl,
+        duration: values.duration,
+        isFree: values.isFree,
+      });
+
+      if (result.status === "success") {
+        toast.success("Lesson updated successfully!");
+      } else {
+        toast.error(result.message || "Failed to update lesson");
+      }
     } catch (error) {
       toast.error("Failed to update lesson");
     } finally {
@@ -131,15 +144,19 @@ export function LessonForm({ data, courseId, chapterId }: LessonFormProps) {
                 name="videoUrl"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Video URL</FormLabel>
+                    <FormLabel>Lesson Video</FormLabel>
                     <FormControl>
-                      <Input
-                        type="url"
-                        placeholder="https://..."
-                        {...field}
-                        value={field.value || ""}
+                      <FileUpload
+                        accept="video"
+                        value={field.value || undefined}
+                        onChange={(url) => field.onChange(url)}
+                        onRemove={() => field.onChange("")}
+                        disabled={isPending}
                       />
                     </FormControl>
+                    <FormDescription>
+                      Upload MP4, WebM, or MOV. Max 2GB for Vercel Blob, up to 5GB with S3.
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
