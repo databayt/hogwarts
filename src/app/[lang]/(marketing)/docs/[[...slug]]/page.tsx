@@ -14,6 +14,7 @@ import { mdxComponents } from "@/mdx-components"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import type { Locale } from "@/components/internationalization/config"
 
+// Force rebuild: 2025-12-07
 export const runtime = "nodejs";
 export const revalidate = false
 export const dynamic = "force-static"
