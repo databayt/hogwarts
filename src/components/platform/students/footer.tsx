@@ -14,11 +14,12 @@ interface FooterProps {
   onNext: () => void;
   onSaveCurrentStep: () => void;
   form: UseFormReturn<z.infer<typeof studentCreateSchema>>;
+  isSubmitting?: boolean;
 }
 
 import { STEPS, STEP_FIELDS, TOTAL_FIELDS } from "./config";
 
-export function StudentFormFooter({ currentStep, isView, currentId, onBack, onNext, onSaveCurrentStep, form }: FooterProps) {
+export function StudentFormFooter({ currentStep, isView, currentId, onBack, onNext, onSaveCurrentStep, form, isSubmitting = false }: FooterProps) {
   // Calculate progress based on filled fields
   // Watch all form fields for changes
   const values = form.watch();
@@ -50,33 +51,35 @@ export function StudentFormFooter({ currentStep, isView, currentId, onBack, onNe
           {STEPS[currentStep as keyof typeof STEPS]}
         </div>
         <div className="flex gap-3">
-          <Button 
-            type="button" 
+          <Button
+            type="button"
             size="sm"
-            variant="ghost" 
+            variant="ghost"
             onClick={onBack}
+            disabled={isSubmitting}
           >
             {currentStep === 1 ? 'Cancel' : 'Back'}
           </Button>
           {!isView && (
             <>
               {currentId && currentStep === 1 && (
-                <Button 
+                <Button
                   type="button"
                   size="sm"
                   variant="outline"
                   onClick={onSaveCurrentStep}
-                  disabled={!form.formState.isDirty}
+                  disabled={!form.formState.isDirty || isSubmitting}
                 >
                   Save
                 </Button>
               )}
-              <Button 
+              <Button
                 type="button"
                 size="sm"
                 onClick={onNext}
+                disabled={isSubmitting}
               >
-                {currentStep === 1 ? 'Next' : currentId ? 'Save' : 'Create'}
+                {isSubmitting ? 'Saving...' : currentStep === 1 ? 'Next' : currentId ? 'Save' : 'Create'}
               </Button>
             </>
           )}

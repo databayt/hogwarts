@@ -26,6 +26,7 @@ export function StudentCreateForm({ dictionary, onSuccess }: StudentCreateFormPr
   const { modal, closeModal } = useModal();
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Create localized schema (memoized)
   const studentCreateSchema = useMemo(() => {
@@ -83,15 +84,21 @@ export function StudentCreateForm({ dictionary, onSuccess }: StudentCreateFormPr
   }, [currentId]);
 
   async function onSubmit(values: z.infer<typeof studentCreateSchema>) {
+    // Prevent double submissions
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+
     try {
       const res = currentId
         ? await updateStudent({ id: currentId, ...values })
         : await createStudent(values);
+
       if (res?.success) {
         const successMsg = currentId
-          ? (t?.success?.student?.updated() || "Student updated successfully")
-          : (t?.success?.student?.created() || "Student created successfully");
+          ? (t?.success?.student?.updated?.() || "Student updated successfully")
+          : (t?.success?.student?.created?.() || "Student created successfully");
         toast.success(successMsg);
+        // Close modal first, then refresh
         closeModal();
         // Use callback for optimistic update, fallback to router.refresh()
         if (onSuccess) {
@@ -100,14 +107,22 @@ export function StudentCreateForm({ dictionary, onSuccess }: StudentCreateFormPr
           router.refresh();
         }
       } else {
+        // Show error but also close modal so user doesn't get stuck
         const errorMsg = res?.error || (currentId
-          ? (t?.error?.student?.updateFailed() || "Failed to update student")
-          : (t?.error?.student?.createFailed() || "Failed to create student"));
+          ? (t?.error?.student?.updateFailed?.() || "Failed to update student")
+          : (t?.error?.student?.createFailed?.() || "Failed to create student"));
         toast.error(errorMsg);
+        // Close modal after showing error - user can try again
+        closeModal();
       }
     } catch (error) {
       console.error("Form submission error:", error);
-      toast.error("An unexpected error occurred");
+      const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred";
+      toast.error(errorMessage);
+      // Close modal even on exception so user doesn't get stuck
+      closeModal();
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
@@ -178,7 +193,7 @@ export function StudentCreateForm({ dictionary, onSuccess }: StudentCreateFormPr
             </div>
           </div>
 
-          <StudentFormFooter 
+          <StudentFormFooter
             currentStep={currentStep}
             isView={isView}
             currentId={currentId}
@@ -186,6 +201,7 @@ export function StudentCreateForm({ dictionary, onSuccess }: StudentCreateFormPr
             onNext={handleNext}
             onSaveCurrentStep={handleSaveCurrentStep}
             form={form}
+            isSubmitting={isSubmitting}
           />
         </form>
       </Form>

@@ -146,8 +146,12 @@ export async function updateStudent(
         data.userId = null;
       }
     }
-    if (typeof rest.dateOfBirth !== "undefined") data.dateOfBirth = new Date(rest.dateOfBirth);
-    if (typeof rest.enrollmentDate !== "undefined") data.enrollmentDate = new Date(rest.enrollmentDate);
+    if (typeof rest.dateOfBirth !== "undefined") {
+      data.dateOfBirth = rest.dateOfBirth ? new Date(rest.dateOfBirth) : null;
+    }
+    if (typeof rest.enrollmentDate !== "undefined") {
+      data.enrollmentDate = rest.enrollmentDate ? new Date(rest.enrollmentDate) : null;
+    }
 
     // Update student (using updateMany for tenant safety)
     await (db as any).student.updateMany({ where: { id, schoolId }, data });
