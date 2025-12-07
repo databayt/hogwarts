@@ -6,7 +6,6 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { CHATBOT_POSITIONS } from './constant';
 import type { ChatButtonProps } from './type';
-import { ChatBotIcon } from './icons';
 
 export function ChatButton({
   onClick,
@@ -95,11 +94,13 @@ export function ChatButton({
           size="icon"
           variant="ghost"
         >
-          {/* Use ChatBotIcon as fallback if robot.png doesn't exist */}
-          <ChatBotIcon
-            size={40}
+          <Image
+            src="/robot.png"
+            alt="Chatbot"
+            width={56}
+            height={56}
             className={cn(
-              "h-full w-full transition-all duration-500",
+              "h-full w-full object-contain transition-all duration-500",
               shouldInvert && "invert"
             )}
           />
