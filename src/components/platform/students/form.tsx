@@ -13,7 +13,6 @@ import { useRouter } from "next/navigation";
 import { InformationStep } from "./information";
 import { EnrollmentStep } from "./enrollment";
 import { StudentFormFooter } from "./footer";
-import { getToastMessages } from "@/components/internationalization/helpers";
 import type { Dictionary } from "@/components/internationalization/dictionaries";
 
 interface StudentCreateFormProps {
@@ -38,13 +37,6 @@ export function StudentCreateForm({ dictionary, onSuccess }: StudentCreateFormPr
     // Create full dictionary object for schema factory
     const fullDict = { messages: dictionary as any } as Dictionary;
     return createStudentCreateSchema(fullDict);
-  }, [dictionary]);
-
-  // Get toast messages
-  const t = useMemo(() => {
-    if (!dictionary) return null;
-    const fullDict = { messages: dictionary as any } as Dictionary;
-    return getToastMessages(fullDict);
   }, [dictionary]);
 
   const form = useForm<z.infer<typeof studentCreateSchema>>({
@@ -95,22 +87,22 @@ export function StudentCreateForm({ dictionary, onSuccess }: StudentCreateFormPr
 
       if (res?.success) {
         const successMsg = currentId
-          ? (t?.success?.student?.updated?.() || "Student updated successfully")
-          : (t?.success?.student?.created?.() || "Student created successfully");
+          ? "Student updated successfully"
+          : "Student created successfully";
         toast.success(successMsg);
-        // Close modal first, then refresh
-        closeModal();
-        // Use callback for optimistic update, fallback to router.refresh()
+        // Refresh data first, then close modal
         if (onSuccess) {
-          onSuccess();
-        } else {
-          router.refresh();
+          await onSuccess();
         }
+        // Always call router.refresh to ensure server data is updated
+        router.refresh();
+        // Close modal after refresh
+        closeModal();
       } else {
         // Show error but also close modal so user doesn't get stuck
         const errorMsg = res?.error || (currentId
-          ? (t?.error?.student?.updateFailed?.() || "Failed to update student")
-          : (t?.error?.student?.createFailed?.() || "Failed to create student"));
+          ? "Failed to update student"
+          : "Failed to create student");
         toast.error(errorMsg);
         // Close modal after showing error - user can try again
         closeModal();
