@@ -72,8 +72,8 @@ export function LibraryHeroSection({ dictionary, lang = "en" }: HeroSectionProps
         </div>
 
         {/* Animated Book */}
-        <div className="flex-1 flex justify-center">
-          <LibraryAnimation className="w-full max-w-md h-56 md:h-72" />
+        <div className="flex-1 flex justify-center overflow-hidden max-w-[40%] lg:max-w-[35%]">
+          <LibraryAnimation className="w-full max-w-xs h-48 md:h-64" />
         </div>
       </div>
     </section>
