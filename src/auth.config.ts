@@ -40,10 +40,36 @@ export default {
         };
       },
     }),
-    // Facebook provider - Minimal config to test default behavior
+    // Facebook provider - Full config with explicit API version and URLs
     Facebook({
       clientId: env.FACEBOOK_CLIENT_ID || "",
       clientSecret: env.FACEBOOK_CLIENT_SECRET || "",
+      authorization: {
+        url: "https://www.facebook.com/v18.0/dialog/oauth",
+        params: {
+          scope: "email public_profile",
+          redirect_uri: process.env.NEXTAUTH_URL
+            ? `${process.env.NEXTAUTH_URL}/api/auth/callback/facebook`
+            : undefined
+        }
+      },
+      token: {
+        url: "https://graph.facebook.com/v18.0/oauth/access_token"
+      },
+      userinfo: {
+        url: "https://graph.facebook.com/me?fields=id,name,email,picture.width(250).height(250)"
+      },
+      profile(profile) {
+        console.log("[Facebook OAuth] Raw profile:", JSON.stringify(profile, null, 2));
+        return {
+          id: profile.id,
+          name: profile.name || "Facebook User",
+          username: profile.name || "Facebook User",
+          email: profile.email || `${profile.id}@facebook.com`,
+          image: profile.picture?.data?.url || null,
+          emailVerified: new Date(),
+        };
+      },
     }),
     Credentials({
       async authorize(credentials) {
