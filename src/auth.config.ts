@@ -40,11 +40,36 @@ export default {
         };
       },
     }),
-    // Facebook provider - SIMPLEST possible configuration
-    // If this doesn't work, the issue is external (Facebook app settings or user account)
+    // Facebook provider - Full configuration with explicit API endpoints
     Facebook({
       clientId: env.FACEBOOK_CLIENT_ID || "",
       clientSecret: env.FACEBOOK_CLIENT_SECRET || "",
+      authorization: {
+        url: "https://www.facebook.com/v18.0/dialog/oauth",
+        params: {
+          scope: "email public_profile",
+          redirect_uri: process.env.NEXTAUTH_URL
+            ? `${process.env.NEXTAUTH_URL}/api/auth/callback/facebook`
+            : undefined
+        }
+      },
+      token: {
+        url: "https://graph.facebook.com/v18.0/oauth/access_token"
+      },
+      userinfo: {
+        url: "https://graph.facebook.com/me?fields=id,name,email,picture.width(250).height(250)"
+      },
+      profile(profile) {
+        console.log("🔵 [Facebook OAuth] Raw profile:", JSON.stringify(profile, null, 2));
+        return {
+          id: profile.id,
+          name: profile.name || "Facebook User",
+          username: profile.name || "Facebook User",
+          email: profile.email || `${profile.id}@facebook.com`,
+          image: profile.picture?.data?.url || null,
+          emailVerified: new Date(),
+        };
+      },
     }),
     Credentials({
       async authorize(credentials) {
