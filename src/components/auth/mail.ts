@@ -1,5 +1,6 @@
 import { Resend } from "resend";
 
+// Email service for authentication flows - using noreply@databayt.org
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 const domain = process.env.NEXT_PUBLIC_APP_URL;
