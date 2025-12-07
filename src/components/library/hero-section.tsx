@@ -41,7 +41,7 @@ export function LibraryHeroSection({ dictionary, lang = "en" }: HeroSectionProps
             Revelio
             <br />
             <span className="text-3xl md:text-4xl lg:text-5xl font-semibold block mt-2">
-              Unlocking hidden.
+              Unlock hidden.
             </span>
           </h1>
 
@@ -73,7 +73,7 @@ export function LibraryHeroSection({ dictionary, lang = "en" }: HeroSectionProps
 
         {/* Animated Book */}
         <div className="flex-1 flex justify-center">
-          <LibraryAnimation className="w-full max-w-lg h-72 md:h-96" />
+          <LibraryAnimation className="w-full max-w-md h-56 md:h-72" />
         </div>
       </div>
     </section>

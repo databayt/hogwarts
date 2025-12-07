@@ -31,19 +31,19 @@ export default async function LibraryContent({ userId, dictionary, lang }: Props
       where: { schoolId },
       orderBy: { createdAt: "desc" },
     }),
-    // Latest Books - skip hero, get next 6 books
+    // Latest Books - skip hero, get next 12 books
     db.book.findMany({
       where: { schoolId },
       orderBy: { createdAt: "desc" },
       skip: 1,
-      take: 6,
+      take: 12,
     }),
-    // Featured - skip latest 7 to show different ones
+    // Featured - skip latest 13 to show different ones
     db.book.findMany({
       where: { schoolId },
       orderBy: { createdAt: "desc" },
-      skip: 7,
-      take: 6,
+      skip: 13,
+      take: 12,
     }),
     // Literature - fiction, classic, drama, poetry genres
     db.book.findMany({
@@ -57,7 +57,7 @@ export default async function LibraryContent({ userId, dictionary, lang }: Props
           { genre: { contains: "شعر" } },
         ],
       },
-      take: 6,
+      take: 12,
     }),
     // Science - science, history genres
     db.book.findMany({
@@ -69,7 +69,7 @@ export default async function LibraryContent({ userId, dictionary, lang }: Props
           { genre: { contains: "فلسفة" } },
         ],
       },
-      take: 6,
+      take: 12,
     }),
   ]);
 
