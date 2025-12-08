@@ -15,6 +15,7 @@ export * from "./registry"
 
 // Export components
 export * from "./components/icon-wrapper"
+export * from "./anthropic-showcase"
 
 // Import all icons from categories
 import * as SystemIcons from "./categories/system"
