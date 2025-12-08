@@ -1,6 +1,9 @@
 {
   "title": "Sales",
   "leads": "Leads",
+  "navAll": "All Leads",
+  "navImport": "Import",
+  "navAnalytics": "Analytics",
   "addNewLead": "Add a new lead to track",
   "search": "Search leads...",
   "create": "Create",
