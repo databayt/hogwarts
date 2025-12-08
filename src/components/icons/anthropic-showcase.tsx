@@ -8,7 +8,6 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 import { Badge } from "@/components/ui/badge"
-import { cn } from "@/lib/utils"
 
 interface AnthropicIcon {
   name: string
@@ -103,58 +102,52 @@ const ANTHROPIC_ASSETS: AnthropicIcon[] = [
   { name: "Chat Bubble", file: "chat-bubble.svg", tags: ["chat", "message", "conversation"], category: "Content" },
   { name: "Dual Chat", file: "dual-chat.svg", tags: ["chat", "conversation", "dialogue"], category: "Content" },
 
-  // Product Features
-  { name: "Agent Skills", file: "agent-skills.svg", tags: ["agent", "skills", "capability"], category: "Features" },
-  { name: "Advanced Tool Use", file: "advanced-tool-use.svg", tags: ["tools", "advanced", "feature"], category: "Features" },
-  { name: "Build with Claude", file: "build-with-claude.svg", tags: ["build", "develop", "create"], category: "Features" },
-  { name: "Building Effective Agents", file: "building-effective-agents.svg", tags: ["agents", "guide", "best-practices"], category: "Features" },
-  { name: "Claude Agent SDK", file: "claude-agent-sdk.svg", tags: ["sdk", "agent", "developer"], category: "Features" },
-  { name: "Claude Code Best Practices", file: "claude-code-best-practices.svg", tags: ["code", "best-practices", "guide"], category: "Features" },
-  { name: "Claude Code Sandboxing", file: "claude-code-sandboxing.svg", tags: ["sandbox", "security", "isolation"], category: "Features" },
-  { name: "Code Execution MCP", file: "code-execution-mcp.svg", tags: ["mcp", "execution", "code"], category: "Features" },
-  { name: "Context Engineering", file: "context-engineering.svg", tags: ["context", "engineering", "prompts"], category: "Features" },
-  { name: "Contextual Retrieval", file: "contextual-retrieval.svg", tags: ["rag", "retrieval", "context"], category: "Features" },
-  { name: "Desktop Extensions", file: "desktop-extensions.svg", tags: ["desktop", "extensions", "apps"], category: "Features" },
-  { name: "Long Running Agents", file: "long-running-agents.svg", tags: ["agents", "async", "background"], category: "Features" },
-  { name: "SWE Bench", file: "swe-bench.svg", tags: ["benchmark", "evaluation", "coding"], category: "Features" },
-  { name: "Think Tool", file: "think-tool.svg", tags: ["thinking", "reasoning", "tool"], category: "Features" },
-  { name: "Transparency", file: "transparency.svg", tags: ["transparency", "trust", "safety"], category: "Features" },
-  { name: "Economic Futures", file: "economic-futures.svg", tags: ["economics", "future", "research"], category: "Features" },
-
-  // Engineering Series
-  { name: "Eng Agent SDK", file: "eng-agent-sdk.svg", tags: ["engineering", "sdk", "agent"], category: "Engineering" },
-  { name: "Eng Agent Skills", file: "eng-agent-skills.svg", tags: ["engineering", "skills", "agent"], category: "Engineering" },
-  { name: "Eng Code Sandboxing", file: "eng-claude-code-sandboxing.svg", tags: ["engineering", "sandbox", "security"], category: "Engineering" },
-  { name: "Eng Code Execution MCP", file: "eng-code-execution-mcp.svg", tags: ["engineering", "mcp", "execution"], category: "Engineering" },
-  { name: "Eng Context Engineering", file: "eng-context-engineering.svg", tags: ["engineering", "context", "prompts"], category: "Engineering" },
-  { name: "Eng Desktop Extensions", file: "eng-desktop-extensions.svg", tags: ["engineering", "desktop", "extensions"], category: "Engineering" },
-  { name: "Eng Long Running Agents", file: "eng-harnesses-long-running-agents.svg", tags: ["engineering", "agents", "async"], category: "Engineering" },
-
   // Pictograms
   { name: "Pictogram Heart", file: "pictogram-heart.svg", tags: ["heart", "love", "care"], category: "Pictograms" },
   { name: "Pictogram Shield", file: "pictogram-shield.svg", tags: ["shield", "security", "protection"], category: "Pictograms" },
 
-  // Illustrations
-  { name: "Hands Build", file: "Hands-Build.svg", tags: ["hands", "build", "illustration"], category: "Illustrations" },
-  { name: "Hands Stack", file: "Hands-Stack.svg", tags: ["hands", "stack", "illustration"], category: "Illustrations" },
-  { name: "Objects Puzzle", file: "Objects-Puzzle.svg", tags: ["puzzle", "objects", "illustration"], category: "Illustrations" },
-  { name: "Claude Abstract", file: "6903d22d0099a66d72e05699_33ddc751e21fb4b116b3f57dd553f0bc55ea09d1-1000x1000.svg", tags: ["claude", "abstract", "illustration", "pattern"], category: "Illustrations" },
-
-  // Categories
-  { name: "Category 01", file: "category-01.svg", tags: ["category", "illustration", "1"], category: "Categories" },
-  { name: "Category 02", file: "category-02.svg", tags: ["category", "illustration", "2"], category: "Categories" },
-  { name: "Category 03", file: "category-03.svg", tags: ["category", "illustration", "3"], category: "Categories" },
-  { name: "Category 04", file: "category-04.svg", tags: ["category", "illustration", "4"], category: "Categories" },
-  { name: "Category 05", file: "category-05.svg", tags: ["category", "illustration", "5"], category: "Categories" },
-  { name: "Category 06", file: "category-06.svg", tags: ["category", "illustration", "6"], category: "Categories" },
-  { name: "Category 07", file: "category-07.svg", tags: ["category", "illustration", "7"], category: "Categories" },
-  { name: "Category 08", file: "category-08.svg", tags: ["category", "illustration", "8"], category: "Categories" },
-  { name: "Category 09", file: "category-09.svg", tags: ["category", "illustration", "9"], category: "Categories" },
-  { name: "Category 10", file: "category-10.svg", tags: ["category", "illustration", "10"], category: "Categories" },
-  { name: "Category 11", file: "category-11.svg", tags: ["category", "illustration", "11"], category: "Categories" },
-  { name: "Category 12", file: "category-12.svg", tags: ["category", "illustration", "12"], category: "Categories" },
-  { name: "Category 13", file: "category-13.svg", tags: ["category", "illustration", "13"], category: "Categories" },
-  { name: "Category 14", file: "category-14.svg", tags: ["category", "illustration", "14"], category: "Categories" },
+  // Anthropic (combined: Features, Engineering, Illustrations, Categories)
+  { name: "Agent Skills", file: "agent-skills.svg", tags: ["agent", "skills", "capability"], category: "Anthropic" },
+  { name: "Advanced Tool Use", file: "advanced-tool-use.svg", tags: ["tools", "advanced", "feature"], category: "Anthropic" },
+  { name: "Build with Claude", file: "build-with-claude.svg", tags: ["build", "develop", "create"], category: "Anthropic" },
+  { name: "Building Effective Agents", file: "building-effective-agents.svg", tags: ["agents", "guide", "best-practices"], category: "Anthropic" },
+  { name: "Claude Agent SDK", file: "claude-agent-sdk.svg", tags: ["sdk", "agent", "developer"], category: "Anthropic" },
+  { name: "Claude Code Best Practices", file: "claude-code-best-practices.svg", tags: ["code", "best-practices", "guide"], category: "Anthropic" },
+  { name: "Claude Code Sandboxing", file: "claude-code-sandboxing.svg", tags: ["sandbox", "security", "isolation"], category: "Anthropic" },
+  { name: "Code Execution MCP", file: "code-execution-mcp.svg", tags: ["mcp", "execution", "code"], category: "Anthropic" },
+  { name: "Context Engineering", file: "context-engineering.svg", tags: ["context", "engineering", "prompts"], category: "Anthropic" },
+  { name: "Contextual Retrieval", file: "contextual-retrieval.svg", tags: ["rag", "retrieval", "context"], category: "Anthropic" },
+  { name: "Desktop Extensions", file: "desktop-extensions.svg", tags: ["desktop", "extensions", "apps"], category: "Anthropic" },
+  { name: "Long Running Agents", file: "long-running-agents.svg", tags: ["agents", "async", "background"], category: "Anthropic" },
+  { name: "SWE Bench", file: "swe-bench.svg", tags: ["benchmark", "evaluation", "coding"], category: "Anthropic" },
+  { name: "Think Tool", file: "think-tool.svg", tags: ["thinking", "reasoning", "tool"], category: "Anthropic" },
+  { name: "Transparency", file: "transparency.svg", tags: ["transparency", "trust", "safety"], category: "Anthropic" },
+  { name: "Economic Futures", file: "economic-futures.svg", tags: ["economics", "future", "research"], category: "Anthropic" },
+  { name: "Eng Agent SDK", file: "eng-agent-sdk.svg", tags: ["engineering", "sdk", "agent"], category: "Anthropic" },
+  { name: "Eng Agent Skills", file: "eng-agent-skills.svg", tags: ["engineering", "skills", "agent"], category: "Anthropic" },
+  { name: "Eng Code Sandboxing", file: "eng-claude-code-sandboxing.svg", tags: ["engineering", "sandbox", "security"], category: "Anthropic" },
+  { name: "Eng Code Execution MCP", file: "eng-code-execution-mcp.svg", tags: ["engineering", "mcp", "execution"], category: "Anthropic" },
+  { name: "Eng Context Engineering", file: "eng-context-engineering.svg", tags: ["engineering", "context", "prompts"], category: "Anthropic" },
+  { name: "Eng Desktop Extensions", file: "eng-desktop-extensions.svg", tags: ["engineering", "desktop", "extensions"], category: "Anthropic" },
+  { name: "Eng Long Running Agents", file: "eng-harnesses-long-running-agents.svg", tags: ["engineering", "agents", "async"], category: "Anthropic" },
+  { name: "Hands Build", file: "Hands-Build.svg", tags: ["hands", "build", "illustration"], category: "Anthropic" },
+  { name: "Hands Stack", file: "Hands-Stack.svg", tags: ["hands", "stack", "illustration"], category: "Anthropic" },
+  { name: "Objects Puzzle", file: "Objects-Puzzle.svg", tags: ["puzzle", "objects", "illustration"], category: "Anthropic" },
+  { name: "Claude Abstract", file: "6903d22d0099a66d72e05699_33ddc751e21fb4b116b3f57dd553f0bc55ea09d1-1000x1000.svg", tags: ["claude", "abstract", "illustration", "pattern"], category: "Anthropic" },
+  { name: "Category 01", file: "category-01.svg", tags: ["category", "illustration"], category: "Anthropic" },
+  { name: "Category 02", file: "category-02.svg", tags: ["category", "illustration"], category: "Anthropic" },
+  { name: "Category 03", file: "category-03.svg", tags: ["category", "illustration"], category: "Anthropic" },
+  { name: "Category 04", file: "category-04.svg", tags: ["category", "illustration"], category: "Anthropic" },
+  { name: "Category 05", file: "category-05.svg", tags: ["category", "illustration"], category: "Anthropic" },
+  { name: "Category 06", file: "category-06.svg", tags: ["category", "illustration"], category: "Anthropic" },
+  { name: "Category 07", file: "category-07.svg", tags: ["category", "illustration"], category: "Anthropic" },
+  { name: "Category 08", file: "category-08.svg", tags: ["category", "illustration"], category: "Anthropic" },
+  { name: "Category 09", file: "category-09.svg", tags: ["category", "illustration"], category: "Anthropic" },
+  { name: "Category 10", file: "category-10.svg", tags: ["category", "illustration"], category: "Anthropic" },
+  { name: "Category 11", file: "category-11.svg", tags: ["category", "illustration"], category: "Anthropic" },
+  { name: "Category 12", file: "category-12.svg", tags: ["category", "illustration"], category: "Anthropic" },
+  { name: "Category 13", file: "category-13.svg", tags: ["category", "illustration"], category: "Anthropic" },
+  { name: "Category 14", file: "category-14.svg", tags: ["category", "illustration"], category: "Anthropic" },
 ]
 
 const CATEGORIES = [
@@ -166,11 +159,8 @@ const CATEGORIES = [
   "Development",
   "Social",
   "Content",
-  "Features",
-  "Engineering",
   "Pictograms",
-  "Illustrations",
-  "Categories",
+  "Anthropic",
 ]
 
 interface IconCardProps {
@@ -178,31 +168,23 @@ interface IconCardProps {
 }
 
 function IconCard({ icon }: IconCardProps) {
-  const isIllustration = icon.category === "Illustrations" || icon.category === "Categories"
-
   return (
     <Popover>
       <PopoverTrigger asChild>
         <button
-          className={cn(
-            "flex flex-col items-center justify-center gap-2 p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors cursor-pointer group",
-            isIllustration && "col-span-2 row-span-2"
-          )}
+          className="flex flex-col items-center justify-center gap-2 p-3 rounded-lg hover:bg-accent/50 transition-colors cursor-pointer group"
         >
-          <div className={cn(
-            "relative flex items-center justify-center",
-            isIllustration ? "size-24" : "size-10"
-          )}>
+          <div className="relative flex items-center justify-center size-10">
             <Image
               src={`/anthropic/${icon.file}`}
               alt={icon.name}
-              width={isIllustration ? 96 : 40}
-              height={isIllustration ? 96 : 40}
+              width={40}
+              height={40}
               className="object-contain dark:invert"
             />
           </div>
           <span className="text-xs text-muted-foreground text-center truncate w-full group-hover:text-foreground transition-colors">
-            {icon.name.length > 15 ? icon.name.slice(0, 15) + "..." : icon.name}
+            {icon.name.length > 12 ? icon.name.slice(0, 12) + "..." : icon.name}
           </span>
         </button>
       </PopoverTrigger>
@@ -320,11 +302,11 @@ export function AnthropicShowcase({ filter, showCategories = true }: AnthropicSh
         {filteredIcons.length} icons found
       </p>
 
-      {/* Icons Grid */}
+      {/* Icons Grid - 6 columns */}
       {Object.entries(groupedIcons).map(([category, icons]) => (
         <div key={category} className="space-y-3">
           <h3 className="text-sm font-semibold text-muted-foreground">{category}</h3>
-          <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-2">
+          <div className="grid grid-cols-6 gap-2">
             {icons.map((icon) => (
               <IconCard key={icon.file} icon={icon} />
             ))}
