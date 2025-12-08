@@ -52,10 +52,10 @@ importers:
         version: 6.0.0(react@19.2.0)
       '@langchain/openai':
         specifier: ^1.0.0
-        version: 1.0.0(@langchain/core@1.0.2(@opentelemetry/api@1.9.0)(@opentelemetry/sdk-trace-base@2.1.0(@opentelemetry/api@1.9.0))(openai@6.7.0(ws@8.18.3)(zod@4.0.14)))(ws@8.18.3)
+        version: 1.0.0(@langchain/core@1.0.2(@opentelemetry/api@1.9.0)(@opentelemetry/sdk-trace-base@2.1.0(@opentelemetry/api@1.9.0))(openai@6.10.0(ws@8.18.3)(zod@4.0.14)))(ws@8.18.3)
       '@langchain/textsplitters':
         specifier: ^1.0.0
-        version: 1.0.0(@langchain/core@1.0.2(@opentelemetry/api@1.9.0)(@opentelemetry/sdk-trace-base@2.1.0(@opentelemetry/api@1.9.0))(openai@6.7.0(ws@8.18.3)(zod@4.0.14)))
+        version: 1.0.0(@langchain/core@1.0.2(@opentelemetry/api@1.9.0)(@opentelemetry/sdk-trace-base@2.1.0(@opentelemetry/api@1.9.0))(openai@6.10.0(ws@8.18.3)(zod@4.0.14)))
       '@mdi/js':
         specifier: ^7.4.47
         version: 7.4.47
@@ -336,8 +336,8 @@ importers:
         specifier: ^2.4.3
         version: 2.4.3(next@16.0.7(@babel/core@7.28.0)(@opentelemetry/api@1.9.0)(@playwright/test@1.57.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react@19.2.0)
       openai:
-        specifier: ^6.7.0
-        version: 6.7.0(ws@8.18.3)(zod@4.0.14)
+        specifier: ^6.10.0
+        version: 6.10.0(ws@8.18.3)(zod@4.0.14)
       pdf-parse:
         specifier: ^2.4.5
         version: 2.4.5
@@ -7282,8 +7282,8 @@ packages:
   oniguruma-to-es@4.3.4:
     resolution: {integrity: sha512-3VhUGN3w2eYxnTzHn+ikMI+fp/96KoRSVK9/kMTcFqj1NRDh2IhQCKvYxDnWePKRXY/AqH+Fuiyb7VHSzBjHfA==}
 
-  openai@6.7.0:
-    resolution: {integrity: sha512-mgSQXa3O/UXTbA8qFzoa7aydbXBJR5dbLQXCRapAOtoNT+v69sLdKMZzgiakpqhclRnhPggPAXoniVGn2kMY2A==}
+  openai@6.10.0:
+    resolution: {integrity: sha512-ITxOGo7rO3XRMiKA5l7tQ43iNNu+iXGFAcf2t+aWVzzqRaS0i7m1K2BhxNdaveB+5eENhO0VY1FkiZzhBk4v3A==}
     hasBin: true
     peerDependencies:
       ws: ^8.18.0
@@ -10397,14 +10397,14 @@ snapshots:
 
   '@kurkle/color@0.3.4': {}
 
-  '@langchain/core@1.0.2(@opentelemetry/api@1.9.0)(@opentelemetry/sdk-trace-base@2.1.0(@opentelemetry/api@1.9.0))(openai@6.7.0(ws@8.18.3)(zod@4.0.14))':
+  '@langchain/core@1.0.2(@opentelemetry/api@1.9.0)(@opentelemetry/sdk-trace-base@2.1.0(@opentelemetry/api@1.9.0))(openai@6.10.0(ws@8.18.3)(zod@4.0.14))':
     dependencies:
       '@cfworker/json-schema': 4.1.1
       ansi-styles: 5.2.0
       camelcase: 6.3.0
       decamelize: 1.2.0
       js-tiktoken: 1.0.21
-      langsmith: 0.3.82(@opentelemetry/api@1.9.0)(@opentelemetry/sdk-trace-base@2.1.0(@opentelemetry/api@1.9.0))(openai@6.7.0(ws@8.18.3)(zod@4.0.14))
+      langsmith: 0.3.82(@opentelemetry/api@1.9.0)(@opentelemetry/sdk-trace-base@2.1.0(@opentelemetry/api@1.9.0))(openai@6.10.0(ws@8.18.3)(zod@4.0.14))
       mustache: 4.2.0
       p-queue: 6.6.2
       p-retry: 4.6.2
@@ -10416,18 +10416,18 @@ snapshots:
       - '@opentelemetry/sdk-trace-base'
       - openai
 
-  '@langchain/openai@1.0.0(@langchain/core@1.0.2(@opentelemetry/api@1.9.0)(@opentelemetry/sdk-trace-base@2.1.0(@opentelemetry/api@1.9.0))(openai@6.7.0(ws@8.18.3)(zod@4.0.14)))(ws@8.18.3)':
+  '@langchain/openai@1.0.0(@langchain/core@1.0.2(@opentelemetry/api@1.9.0)(@opentelemetry/sdk-trace-base@2.1.0(@opentelemetry/api@1.9.0))(openai@6.10.0(ws@8.18.3)(zod@4.0.14)))(ws@8.18.3)':
     dependencies:
-      '@langchain/core': 1.0.2(@opentelemetry/api@1.9.0)(@opentelemetry/sdk-trace-base@2.1.0(@opentelemetry/api@1.9.0))(openai@6.7.0(ws@8.18.3)(zod@4.0.14))
+      '@langchain/core': 1.0.2(@opentelemetry/api@1.9.0)(@opentelemetry/sdk-trace-base@2.1.0(@opentelemetry/api@1.9.0))(openai@6.10.0(ws@8.18.3)(zod@4.0.14))
       js-tiktoken: 1.0.21
-      openai: 6.7.0(ws@8.18.3)(zod@4.0.14)
+      openai: 6.10.0(ws@8.18.3)(zod@4.0.14)
       zod: 4.0.14
     transitivePeerDependencies:
       - ws
 
-  '@langchain/textsplitters@1.0.0(@langchain/core@1.0.2(@opentelemetry/api@1.9.0)(@opentelemetry/sdk-trace-base@2.1.0(@opentelemetry/api@1.9.0))(openai@6.7.0(ws@8.18.3)(zod@4.0.14)))':
+  '@langchain/textsplitters@1.0.0(@langchain/core@1.0.2(@opentelemetry/api@1.9.0)(@opentelemetry/sdk-trace-base@2.1.0(@opentelemetry/api@1.9.0))(openai@6.10.0(ws@8.18.3)(zod@4.0.14)))':
     dependencies:
-      '@langchain/core': 1.0.2(@opentelemetry/api@1.9.0)(@opentelemetry/sdk-trace-base@2.1.0(@opentelemetry/api@1.9.0))(openai@6.7.0(ws@8.18.3)(zod@4.0.14))
+      '@langchain/core': 1.0.2(@opentelemetry/api@1.9.0)(@opentelemetry/sdk-trace-base@2.1.0(@opentelemetry/api@1.9.0))(openai@6.10.0(ws@8.18.3)(zod@4.0.14))
       js-tiktoken: 1.0.21
 
   '@mdi/js@7.4.47': {}
@@ -15978,7 +15978,7 @@ snapshots:
       vscode-languageserver-textdocument: 1.0.12
       vscode-uri: 3.0.8
 
-  langsmith@0.3.82(@opentelemetry/api@1.9.0)(@opentelemetry/sdk-trace-base@2.1.0(@opentelemetry/api@1.9.0))(openai@6.7.0(ws@8.18.3)(zod@4.0.14)):
+  langsmith@0.3.82(@opentelemetry/api@1.9.0)(@opentelemetry/sdk-trace-base@2.1.0(@opentelemetry/api@1.9.0))(openai@6.10.0(ws@8.18.3)(zod@4.0.14)):
     dependencies:
       '@types/uuid': 10.0.0
       chalk: 4.1.2
@@ -15989,7 +15989,7 @@ snapshots:
     optionalDependencies:
       '@opentelemetry/api': 1.9.0
       '@opentelemetry/sdk-trace-base': 2.1.0(@opentelemetry/api@1.9.0)
-      openai: 6.7.0(ws@8.18.3)(zod@4.0.14)
+      openai: 6.10.0(ws@8.18.3)(zod@4.0.14)
 
   language-subtag-registry@0.3.23: {}
 
@@ -16901,7 +16901,7 @@ snapshots:
       regex: 6.0.1
       regex-recursion: 6.0.2
 
-  openai@6.7.0(ws@8.18.3)(zod@4.0.14):
+  openai@6.10.0(ws@8.18.3)(zod@4.0.14):
     optionalDependencies:
       ws: 8.18.3
       zod: 4.0.14
