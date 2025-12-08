@@ -3,6 +3,8 @@ title: "Icons"
 description: "Unified icon system with 60+ icons following shadcn patterns"
 ---
 
+import { Icons } from "@/components/icons"
+
 # Icons
 
 A unified, theme-aware icon system built on the shadcn pattern. All icons use `currentColor` and inherit from parent text color.
@@ -106,6 +108,49 @@ import { Icon } from "@/components/icons"
 
 ### Anthropic Icons
 
+<div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-4 my-6">
+  <div className="flex flex-col items-center gap-2 p-3 rounded-lg border bg-card">
+    <Icons.anthropicA className="size-8" />
+    <span className="text-xs text-muted-foreground">anthropicA</span>
+  </div>
+  <div className="flex flex-col items-center gap-2 p-3 rounded-lg border bg-card">
+    <Icons.anthropicArrowRight className="size-8" />
+    <span className="text-xs text-muted-foreground">arrowRight</span>
+  </div>
+  <div className="flex flex-col items-center gap-2 p-3 rounded-lg border bg-card">
+    <Icons.anthropicChevronDown className="size-8" />
+    <span className="text-xs text-muted-foreground">chevronDown</span>
+  </div>
+  <div className="flex flex-col items-center gap-2 p-3 rounded-lg border bg-card">
+    <Icons.anthropicExternalLink className="size-8" />
+    <span className="text-xs text-muted-foreground">externalLink</span>
+  </div>
+  <div className="flex flex-col items-center gap-2 p-3 rounded-lg border bg-card">
+    <Icons.anthropicLinkedIn className="size-8" />
+    <span className="text-xs text-muted-foreground">linkedIn</span>
+  </div>
+  <div className="flex flex-col items-center gap-2 p-3 rounded-lg border bg-card">
+    <Icons.anthropicPlay className="size-8" />
+    <span className="text-xs text-muted-foreground">play</span>
+  </div>
+  <div className="flex flex-col items-center gap-2 p-3 rounded-lg border bg-card">
+    <Icons.anthropicYouTube className="size-8" />
+    <span className="text-xs text-muted-foreground">youTube</span>
+  </div>
+  <div className="flex flex-col items-center gap-2 p-3 rounded-lg border bg-card">
+    <Icons.anthropicXTwitter className="size-8" />
+    <span className="text-xs text-muted-foreground">xTwitter</span>
+  </div>
+  <div className="flex flex-col items-center gap-2 p-3 rounded-lg border bg-card">
+    <Icons.anthropicQuote className="size-8" />
+    <span className="text-xs text-muted-foreground">quote</span>
+  </div>
+  <div className="flex flex-col items-center gap-2 p-3 rounded-lg border bg-card">
+    <Icons.handsBuild className="size-8" />
+    <span className="text-xs text-muted-foreground">handsBuild</span>
+  </div>
+</div>
+
 | Icon | Name | Usage |
 |------|------|-------|
 | `anthropicA` | Anthropic Logo | `<Icons.anthropicA />` |
@@ -116,6 +161,7 @@ import { Icon } from "@/components/icons"
 | `anthropicPlay` | Play | `<Icons.anthropicPlay />` |
 | `anthropicYouTube` | YouTube | `<Icons.anthropicYouTube />` |
 | `anthropicXTwitter` | X/Twitter | `<Icons.anthropicXTwitter />` |
+| `anthropicQuote` | Quote | `<Icons.anthropicQuote />` |
 | `handsBuild` | Hands Build | `<Icons.handsBuild />` |
 
 ### Rating Icons
