@@ -138,6 +138,7 @@ const ANTHROPIC_ASSETS: AnthropicIcon[] = [
   { name: "Hands Build", file: "Hands-Build.svg", tags: ["hands", "build", "illustration"], category: "Illustrations" },
   { name: "Hands Stack", file: "Hands-Stack.svg", tags: ["hands", "stack", "illustration"], category: "Illustrations" },
   { name: "Objects Puzzle", file: "Objects-Puzzle.svg", tags: ["puzzle", "objects", "illustration"], category: "Illustrations" },
+  { name: "Claude Abstract", file: "6903d22d0099a66d72e05699_33ddc751e21fb4b116b3f57dd553f0bc55ea09d1-1000x1000.svg", tags: ["claude", "abstract", "illustration", "pattern"], category: "Illustrations" },
 
   // Categories
   { name: "Category 01", file: "category-01.svg", tags: ["category", "illustration", "1"], category: "Categories" },
