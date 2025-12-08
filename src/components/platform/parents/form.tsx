@@ -40,8 +40,8 @@ export function ParentCreateForm({ onSuccess }: ParentCreateFormProps) {
     const load = async () => {
       if (!currentId) return;
       const res = await getParent({ id: currentId });
-      const p = res.parent as any;
-      if (!p) return;
+      if (!res.success || !res.data) return;
+      const p = res.data as any;
       form.reset({
         givenName: p.givenName ?? "",
         surname: p.surname ?? "",
@@ -54,20 +54,25 @@ export function ParentCreateForm({ onSuccess }: ParentCreateFormProps) {
   }, [currentId]);
 
   async function onSubmit(values: z.infer<typeof parentCreateSchema>) {
-    const res = currentId
-      ? await updateParent({ id: currentId, ...values })
-      : await createParent(values);
-    if (res?.success) {
-      toast.success(currentId ? "Parent updated" : "Parent created");
-      closeModal();
-      // Use callback for optimistic update, fallback to router.refresh()
-      if (onSuccess) {
-        onSuccess();
+    try {
+      const res = currentId
+        ? await updateParent({ id: currentId, ...values })
+        : await createParent(values);
+      if (res?.success) {
+        toast.success(currentId ? "Parent updated" : "Parent created");
+        closeModal();
+        // Use callback for optimistic update, fallback to router.refresh()
+        if (onSuccess) {
+          onSuccess();
+        } else {
+          router.refresh();
+        }
       } else {
-        router.refresh();
+        toast.error(res?.error || (currentId ? "Failed to update parent" : "Failed to create parent"));
       }
-    } else {
-      toast.error(currentId ? "Failed to update parent" : "Failed to create parent");
+    } catch (error) {
+      console.error("Form submission error:", error);
+      toast.error("An unexpected error occurred");
     }
   }
 

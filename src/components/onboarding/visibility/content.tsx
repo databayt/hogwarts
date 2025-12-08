@@ -39,9 +39,9 @@ const VisibilityContent = (props: Props) => {
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 lg:gap-16 items-start">
           {/* Left column - Title and description */}
           <div className="lg:col-span-2 space-y-3 sm:space-y-4">
-            <h3>
+            <h1 className="text-3xl font-bold">
               {dict.visibilityPageTitle || "Choose your school's information visibility"}
-            </h3>
+            </h1>
             <p className="text-sm sm:text-base text-muted-foreground">
               {dict.visibilityPageDescription || 'This determines what information is shared with parents and students.'}{' '}
               <button className="underline hover:no-underline text-foreground">

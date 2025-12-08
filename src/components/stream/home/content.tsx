@@ -138,7 +138,7 @@ export function StreamHomeContent({
 
       <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-32">
         {features.map((feature, index) => (
-          <Card key={index} className="shadow-none hover:border-foreground hover:border-2 transition-colors">
+          <Card key={index} className="shadow-none border hover:border-foreground transition-colors">
             <CardHeader>
               <div className={`text-4xl mb-4 ${isRTL ? "text-right" : "text-left"}`}>
                 {feature.title === "Comprehensive Courses" ? <ComprehensiveCoursesIcon /> :

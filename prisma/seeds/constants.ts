@@ -53,8 +53,8 @@ export const DEMO_SCHOOL = {
   timezone: "Africa/Khartoum",
   currency: "SDG",
   planType: "enterprise",
-  maxStudents: 500,
-  maxTeachers: 50,
+  maxStudents: 1200,
+  maxTeachers: 120,
 
   // Branding
   mottoAr: "إلى الأمام دائماً",
@@ -85,27 +85,27 @@ export interface YearLevelData {
 
 export const YEAR_LEVELS: YearLevelData[] = [
   // Kindergarten (روضة)
-  { ar: "روضة أولى", en: "KG 1", order: 1, section: "KG", ageRange: [4, 5], studentsPerLevel: 10 },
-  { ar: "روضة ثانية", en: "KG 2", order: 2, section: "KG", ageRange: [5, 6], studentsPerLevel: 10 },
+  { ar: "روضة أولى", en: "KG 1", order: 1, section: "KG", ageRange: [4, 5], studentsPerLevel: 100 },
+  { ar: "روضة ثانية", en: "KG 2", order: 2, section: "KG", ageRange: [5, 6], studentsPerLevel: 100 },
 
   // Primary (ابتدائي)
-  { ar: "الصف الأول", en: "Grade 1", order: 3, section: "Primary", ageRange: [6, 7], studentsPerLevel: 9 },
-  { ar: "الصف الثاني", en: "Grade 2", order: 4, section: "Primary", ageRange: [7, 8], studentsPerLevel: 8 },
-  { ar: "الصف الثالث", en: "Grade 3", order: 5, section: "Primary", ageRange: [8, 9], studentsPerLevel: 8 },
-  { ar: "الصف الرابع", en: "Grade 4", order: 6, section: "Primary", ageRange: [9, 10], studentsPerLevel: 7 },
-  { ar: "الصف الخامس", en: "Grade 5", order: 7, section: "Primary", ageRange: [10, 11], studentsPerLevel: 7 },
-  { ar: "الصف السادس", en: "Grade 6", order: 8, section: "Primary", ageRange: [11, 12], studentsPerLevel: 7 },
+  { ar: "الصف الأول", en: "Grade 1", order: 3, section: "Primary", ageRange: [6, 7], studentsPerLevel: 90 },
+  { ar: "الصف الثاني", en: "Grade 2", order: 4, section: "Primary", ageRange: [7, 8], studentsPerLevel: 80 },
+  { ar: "الصف الثالث", en: "Grade 3", order: 5, section: "Primary", ageRange: [8, 9], studentsPerLevel: 80 },
+  { ar: "الصف الرابع", en: "Grade 4", order: 6, section: "Primary", ageRange: [9, 10], studentsPerLevel: 70 },
+  { ar: "الصف الخامس", en: "Grade 5", order: 7, section: "Primary", ageRange: [10, 11], studentsPerLevel: 70 },
+  { ar: "الصف السادس", en: "Grade 6", order: 8, section: "Primary", ageRange: [11, 12], studentsPerLevel: 70 },
 
   // Intermediate (متوسط)
-  { ar: "الصف السابع", en: "Grade 7", order: 9, section: "Intermediate", ageRange: [12, 13], studentsPerLevel: 6 },
-  { ar: "الصف الثامن", en: "Grade 8", order: 10, section: "Intermediate", ageRange: [13, 14], studentsPerLevel: 6 },
-  { ar: "الصف التاسع", en: "Grade 9", order: 11, section: "Intermediate", ageRange: [14, 15], studentsPerLevel: 6 },
+  { ar: "الصف السابع", en: "Grade 7", order: 9, section: "Intermediate", ageRange: [12, 13], studentsPerLevel: 60 },
+  { ar: "الصف الثامن", en: "Grade 8", order: 10, section: "Intermediate", ageRange: [13, 14], studentsPerLevel: 60 },
+  { ar: "الصف التاسع", en: "Grade 9", order: 11, section: "Intermediate", ageRange: [14, 15], studentsPerLevel: 60 },
 
   // Secondary (ثانوي)
-  { ar: "الصف العاشر", en: "Grade 10", order: 12, section: "Secondary", ageRange: [15, 16], studentsPerLevel: 6 },
-  { ar: "الصف الحادي عشر", en: "Grade 11", order: 13, section: "Secondary", ageRange: [16, 17], studentsPerLevel: 5 },
-  { ar: "الصف الثاني عشر", en: "Grade 12", order: 14, section: "Secondary", ageRange: [17, 18], studentsPerLevel: 5 },
-]; // Total: 100 students
+  { ar: "الصف العاشر", en: "Grade 10", order: 12, section: "Secondary", ageRange: [15, 16], studentsPerLevel: 60 },
+  { ar: "الصف الحادي عشر", en: "Grade 11", order: 13, section: "Secondary", ageRange: [16, 17], studentsPerLevel: 50 },
+  { ar: "الصف الثاني عشر", en: "Grade 12", order: 14, section: "Secondary", ageRange: [17, 18], studentsPerLevel: 50 },
+]; // Total: 1000 students
 
 // Student distribution by gender and level
 export const STUDENT_DISTRIBUTION = YEAR_LEVELS.map(level => ({
@@ -325,6 +325,93 @@ export const TEACHER_DATA: TeacherData[] = [
 ];
 
 // ============================================================================
+// TEACHER SCALING CONFIG (Generate additional teachers to reach 100)
+// ============================================================================
+
+export const TARGET_TEACHER_COUNT = 100;
+
+/**
+ * Teacher specialties with bilingual names for generation
+ */
+export const TEACHER_SPECIALTIES = [
+  { departmentEn: "Languages", specialtyAr: "عربي", specialtyEn: "Arabic", levels: ["all"] },
+  { departmentEn: "Languages", specialtyAr: "إنجليزي", specialtyEn: "English", levels: ["all"] },
+  { departmentEn: "Languages", specialtyAr: "فرنسي", specialtyEn: "French", levels: ["intermediate-secondary"] },
+  { departmentEn: "Sciences", specialtyAr: "رياضيات", specialtyEn: "Mathematics", levels: ["all"] },
+  { departmentEn: "Sciences", specialtyAr: "فيزياء", specialtyEn: "Physics", levels: ["intermediate-secondary"] },
+  { departmentEn: "Sciences", specialtyAr: "كيمياء", specialtyEn: "Chemistry", levels: ["intermediate-secondary"] },
+  { departmentEn: "Sciences", specialtyAr: "أحياء", specialtyEn: "Biology", levels: ["intermediate-secondary"] },
+  { departmentEn: "Sciences", specialtyAr: "علوم", specialtyEn: "Science", levels: ["kg-primary"] },
+  { departmentEn: "Humanities", specialtyAr: "تاريخ", specialtyEn: "History", levels: ["intermediate-secondary"] },
+  { departmentEn: "Humanities", specialtyAr: "جغرافيا", specialtyEn: "Geography", levels: ["intermediate-secondary"] },
+  { departmentEn: "Humanities", specialtyAr: "دراسات اجتماعية", specialtyEn: "Social Studies", levels: ["primary"] },
+  { departmentEn: "Religion", specialtyAr: "تربية إسلامية", specialtyEn: "Islamic Studies", levels: ["all"] },
+  { departmentEn: "Religion", specialtyAr: "قرآن", specialtyEn: "Quran", levels: ["all"] },
+  { departmentEn: "ICT", specialtyAr: "حاسوب", specialtyEn: "Computer Science", levels: ["primary-secondary"] },
+  { departmentEn: "Arts & PE", specialtyAr: "تربية بدنية", specialtyEn: "Physical Education", levels: ["all"] },
+  { departmentEn: "Arts & PE", specialtyAr: "تربية فنية", specialtyEn: "Art", levels: ["all"] },
+  { departmentEn: "Arts & PE", specialtyAr: "موسيقى", specialtyEn: "Music", levels: ["kg-primary"] },
+];
+
+/**
+ * Generate additional teachers dynamically
+ * Supplements the hand-crafted TEACHER_DATA to reach TARGET_TEACHER_COUNT
+ */
+export function generateAdditionalTeachers(startIndex: number = 25): TeacherData[] {
+  const additionalTeachers: TeacherData[] = [];
+  const totalToGenerate = TARGET_TEACHER_COUNT - TEACHER_DATA.length;
+
+  for (let i = 0; i < totalToGenerate; i++) {
+    const index = startIndex + i;
+    const gender = i % 3 === 0 ? "F" : "M"; // 1/3 female, 2/3 male
+    const names = gender === "M" ? MALE_NAMES : FEMALE_NAMES;
+
+    const givenIndex = index % names.givenAr.length;
+    const surnameIndex = Math.floor(index / names.givenAr.length) % SURNAMES.ar.length;
+    const specialty = TEACHER_SPECIALTIES[i % TEACHER_SPECIALTIES.length];
+
+    // Map levels string to actual grade names
+    const levelMapping: Record<string, string[]> = {
+      "all": ["KG 1", "KG 2", "Grade 1", "Grade 2", "Grade 3", "Grade 4", "Grade 5", "Grade 6", "Grade 7", "Grade 8", "Grade 9", "Grade 10", "Grade 11", "Grade 12"],
+      "kg": ["KG 1", "KG 2"],
+      "kg-primary": ["KG 1", "KG 2", "Grade 1", "Grade 2", "Grade 3", "Grade 4", "Grade 5", "Grade 6"],
+      "primary": ["Grade 1", "Grade 2", "Grade 3", "Grade 4", "Grade 5", "Grade 6"],
+      "primary-secondary": ["Grade 4", "Grade 5", "Grade 6", "Grade 7", "Grade 8", "Grade 9", "Grade 10", "Grade 11", "Grade 12"],
+      "intermediate-secondary": ["Grade 7", "Grade 8", "Grade 9", "Grade 10", "Grade 11", "Grade 12"],
+    };
+
+    // Assign a subset of levels (not all) for diversity
+    const allLevels = levelMapping[specialty.levels[0]] || levelMapping["all"];
+    const levelStart = i % Math.max(1, allLevels.length - 3);
+    const levelCount = 3 + (i % 4); // 3-6 levels per teacher
+    const assignedLevels = allLevels.slice(levelStart, Math.min(levelStart + levelCount, allLevels.length));
+
+    additionalTeachers.push({
+      givenNameAr: names.givenAr[givenIndex],
+      givenNameEn: names.givenEn[givenIndex],
+      surnameAr: SURNAMES.ar[surnameIndex],
+      surnameEn: SURNAMES.en[surnameIndex],
+      gender: gender as "M" | "F",
+      departmentEn: specialty.departmentEn,
+      specialtyAr: specialty.specialtyAr,
+      specialtyEn: specialty.specialtyEn,
+      levels: assignedLevels.length > 0 ? assignedLevels : allLevels.slice(0, 3),
+      email: `generated${index}@demo.databayt.org`, // Will be replaced with personal email in people.ts
+    });
+  }
+
+  return additionalTeachers;
+}
+
+/**
+ * Get all teachers (hand-crafted + generated) for seeding
+ * Returns 100 teachers total
+ */
+export function getAllTeachers(): TeacherData[] {
+  return [...TEACHER_DATA, ...generateAdditionalTeachers()];
+}
+
+// ============================================================================
 // SUDANESE NAMES (For generating students and guardians)
 // ============================================================================
 
@@ -414,6 +501,66 @@ export const PERIODS: PeriodData[] = [
 export const WORKING_DAYS = [0, 1, 2, 3, 4]; // Sunday=0 to Thursday=4
 export const WORKING_DAYS_AR = ["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس"];
 export const WORKING_DAYS_EN = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday"];
+
+// ============================================================================
+// EMAIL DOMAINS (Personal emails - NOT numbered IDs)
+// ============================================================================
+
+export interface EmailDomainData {
+  domain: string;
+  weight: number; // Percentage (must sum to 100)
+}
+
+/**
+ * Personal email domains for realistic data
+ * - Use personal emails like osman@gmail.com, fatima.hassan@hotmail.com
+ * - NOT numbered IDs like student001@school.sd
+ */
+export const EMAIL_DOMAINS: EmailDomainData[] = [
+  { domain: "gmail.com", weight: 40 },
+  { domain: "hotmail.com", weight: 25 },
+  { domain: "outlook.com", weight: 15 },
+  { domain: "yahoo.com", weight: 15 },
+  { domain: "sudanet.sd", weight: 5 },
+];
+
+/**
+ * Get a random email domain based on weighted distribution
+ */
+export function getRandomEmailDomain(index: number): string {
+  const cumulativeWeights: number[] = [];
+  let sum = 0;
+  for (const d of EMAIL_DOMAINS) {
+    sum += d.weight;
+    cumulativeWeights.push(sum);
+  }
+
+  // Use index as seed for deterministic but varied distribution
+  const roll = (index * 17 + 13) % 100;
+
+  for (let i = 0; i < cumulativeWeights.length; i++) {
+    if (roll < cumulativeWeights[i]) {
+      return EMAIL_DOMAINS[i].domain;
+    }
+  }
+  return EMAIL_DOMAINS[0].domain;
+}
+
+/**
+ * Generate a personal email address (NOT numbered)
+ * Format: firstnamelastname@domain.com
+ */
+export function generatePersonalEmail(
+  givenName: string,
+  surname: string,
+  index: number
+): string {
+  const domain = getRandomEmailDomain(index);
+  const firstName = givenName.toLowerCase().replace(/\s+/g, "");
+  const lastName = surname.toLowerCase().replace(/\s+/g, "");
+
+  return `${firstName}${lastName}@${domain}`;
+}
 
 // ============================================================================
 // KHARTOUM NEIGHBORHOODS (For addresses)

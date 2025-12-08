@@ -78,7 +78,10 @@ export function TeachersTable({ initialData, total, dictionary, lang, perPage = 
     perPage,
     fetcher: async (params) => {
       const result = await getTeachers(params);
-      return { rows: result.rows as TeacherRow[], total: result.total };
+      if (!result.success || !result.data) {
+        return { rows: [], total: 0 };
+      }
+      return { rows: result.data.rows as TeacherRow[], total: result.data.total };
     },
     filters: searchValue ? { name: searchValue } : undefined,
   });
@@ -158,7 +161,11 @@ export function TeachersTable({ initialData, total, dictionary, lang, perPage = 
 
   // Export CSV wrapper
   const handleExportCSV = useCallback(async (filters?: Record<string, unknown>) => {
-    return getTeachersCSV(filters);
+    const result = await getTeachersCSV(filters);
+    if (!result.success || !result.data) {
+      throw new Error('error' in result ? result.error : 'Export failed');
+    }
+    return result.data;
   }, []);
 
   // Toolbar translations

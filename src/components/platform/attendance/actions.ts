@@ -17,58 +17,76 @@ import {
 import { randomBytes } from 'crypto'
 
 // ============================================================================
+// Types
+// ============================================================================
+
+export type ActionResponse<T = void> =
+  | { success: true; data: T }
+  | { success: false; error: string };
+
+// ============================================================================
 // CORE ATTENDANCE ACTIONS
 // ============================================================================
 
 /**
  * Mark attendance for multiple students in a class
  */
-export async function markAttendance(input: z.infer<typeof markAttendanceSchema>): Promise<{ success: true; count: number }> {
-  const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error('Missing school context')
+export async function markAttendance(input: z.infer<typeof markAttendanceSchema>): Promise<ActionResponse<{ count: number }>> {
+  try {
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) {
+      return { success: false, error: 'Missing school context' }
+    }
 
-  const session = await auth()
-  const parsed = markAttendanceSchema.parse(input)
+    const session = await auth()
+    const parsed = markAttendanceSchema.parse(input)
 
-  const statusMap: Record<'present' | 'absent' | 'late', AttendanceStatus> = {
-    present: 'PRESENT',
-    absent: 'ABSENT',
-    late: 'LATE',
-  }
+    const statusMap: Record<'present' | 'absent' | 'late', AttendanceStatus> = {
+      present: 'PRESENT',
+      absent: 'ABSENT',
+      late: 'LATE',
+    }
 
-  const results = []
-  for (const rec of parsed.records) {
-    const result = await db.attendance.upsert({
-      where: {
-        schoolId_studentId_classId_date: {
+    const results = []
+    for (const rec of parsed.records) {
+      const result = await db.attendance.upsert({
+        where: {
+          schoolId_studentId_classId_date: {
+            schoolId,
+            studentId: rec.studentId,
+            classId: parsed.classId,
+            date: new Date(parsed.date)
+          }
+        },
+        create: {
           schoolId,
           studentId: rec.studentId,
           classId: parsed.classId,
-          date: new Date(parsed.date)
-        }
-      },
-      create: {
-        schoolId,
-        studentId: rec.studentId,
-        classId: parsed.classId,
-        date: new Date(parsed.date),
-        status: statusMap[rec.status],
-        method: 'MANUAL',
-        markedBy: session?.user?.id,
-        markedAt: new Date(),
-        checkInTime: new Date(),
-      },
-      update: {
-        status: statusMap[rec.status],
-        markedBy: session?.user?.id,
-        markedAt: new Date(),
-      },
-    })
-    results.push(result)
-  }
+          date: new Date(parsed.date),
+          status: statusMap[rec.status],
+          method: 'MANUAL',
+          markedBy: session?.user?.id,
+          markedAt: new Date(),
+          checkInTime: new Date(),
+        },
+        update: {
+          status: statusMap[rec.status],
+          markedBy: session?.user?.id,
+          markedAt: new Date(),
+        },
+      })
+      results.push(result)
+    }
 
-  revalidatePath('/attendance')
-  return { success: true as const, count: results.length }
+    revalidatePath('/attendance')
+    return { success: true, data: { count: results.length } }
+  } catch (error) {
+    console.error('[markAttendance] Error:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to mark attendance'
+    }
+  }
 }
 
 /**
@@ -86,55 +104,65 @@ export async function markSingleAttendance(input: {
   notes?: string
   confidence?: number
   deviceId?: string
-}): Promise<{ success: boolean; attendance: unknown }> {
-  const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error('Missing school context')
+}): Promise<ActionResponse<{ attendance: unknown }>> {
+  try {
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) {
+      return { success: false, error: 'Missing school context' }
+    }
 
-  const session = await auth()
+    const session = await auth()
 
-  const result = await db.attendance.upsert({
-    where: {
-      schoolId_studentId_classId_date: {
+    const result = await db.attendance.upsert({
+      where: {
+        schoolId_studentId_classId_date: {
+          schoolId,
+          studentId: input.studentId,
+          classId: input.classId,
+          date: new Date(input.date)
+        }
+      },
+      create: {
         schoolId,
         studentId: input.studentId,
         classId: input.classId,
-        date: new Date(input.date)
-      }
-    },
-    create: {
-      schoolId,
-      studentId: input.studentId,
-      classId: input.classId,
-      date: new Date(input.date),
-      status: input.status,
-      method: input.method,
-      markedBy: session?.user?.id,
-      markedAt: new Date(),
-      checkInTime: input.checkInTime ? new Date(input.checkInTime) : new Date(),
-      checkOutTime: input.checkOutTime ? new Date(input.checkOutTime) : undefined,
-      location: input.location ? input.location : undefined,
-      notes: input.notes,
-      confidence: input.confidence,
-      deviceId: input.deviceId,
-    },
-    update: {
-      status: input.status,
-      method: input.method,
-      markedBy: session?.user?.id,
-      markedAt: new Date(),
-      checkOutTime: input.checkOutTime ? new Date(input.checkOutTime) : undefined,
-      notes: input.notes,
-    },
-  })
+        date: new Date(input.date),
+        status: input.status,
+        method: input.method,
+        markedBy: session?.user?.id,
+        markedAt: new Date(),
+        checkInTime: input.checkInTime ? new Date(input.checkInTime) : new Date(),
+        checkOutTime: input.checkOutTime ? new Date(input.checkOutTime) : undefined,
+        location: input.location ? input.location : undefined,
+        notes: input.notes,
+        confidence: input.confidence,
+        deviceId: input.deviceId,
+      },
+      update: {
+        status: input.status,
+        method: input.method,
+        markedBy: session?.user?.id,
+        markedAt: new Date(),
+        checkOutTime: input.checkOutTime ? new Date(input.checkOutTime) : undefined,
+        notes: input.notes,
+      },
+    })
 
-  revalidatePath('/attendance')
-  return { success: true, attendance: result }
+    revalidatePath('/attendance')
+    return { success: true, data: { attendance: result } }
+  } catch (error) {
+    console.error('[markSingleAttendance] Error:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to mark single attendance'
+    }
+  }
 }
 
 /**
  * Get attendance list for a class on a specific date
  */
-export async function getAttendanceList(input: { classId: string; date: string }): Promise<{
+export async function getAttendanceList(input: { classId: string; date: string }): Promise<ActionResponse<{
   rows: Array<{
     studentId: string
     name: string
@@ -142,89 +170,112 @@ export async function getAttendanceList(input: { classId: string; date: string }
     checkInTime?: Date
     method?: string
   }>
-}> {
-  const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error('Missing school context')
-
-  const parsed = z.object({
-    classId: z.string().min(1),
-    date: z.string().min(1)
-  }).parse(input)
-
-  const [enrollments, marks] = await Promise.all([
-    db.studentClass.findMany({
-      where: { schoolId, classId: parsed.classId },
-      include: {
-        student: {
-          select: {
-            id: true,
-            givenName: true,
-            surname: true,
-            userId: true,
-          }
-        }
-      },
-    }),
-    db.attendance.findMany({
-      where: {
-        schoolId,
-        classId: parsed.classId,
-        date: new Date(parsed.date)
-      }
-    }),
-  ])
-
-  const statusByStudent: Record<string, { status: string; checkInTime?: Date; method?: string }> = {}
-  marks.forEach((m) => {
-    statusByStudent[m.studentId] = {
-      status: String(m.status).toLowerCase(),
-      checkInTime: m.checkInTime || undefined,
-      method: m.method || undefined,
+}>> {
+  try {
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) {
+      return { success: false, error: 'Missing school context' }
     }
-  })
 
-  const rows = enrollments.map((e) => ({
-    studentId: e.studentId,
-    name: [e.student?.givenName, e.student?.surname].filter(Boolean).join(' '),
-    status: (statusByStudent[e.studentId]?.status as 'present' | 'absent' | 'late') || 'present',
-    checkInTime: statusByStudent[e.studentId]?.checkInTime,
-    method: statusByStudent[e.studentId]?.method,
-  }))
+    const parsed = z.object({
+      classId: z.string().min(1),
+      date: z.string().min(1)
+    }).parse(input)
 
-  return { rows }
+    const [enrollments, marks] = await Promise.all([
+      db.studentClass.findMany({
+        where: { schoolId, classId: parsed.classId },
+        include: {
+          student: {
+            select: {
+              id: true,
+              givenName: true,
+              surname: true,
+              userId: true,
+            }
+          }
+        },
+      }),
+      db.attendance.findMany({
+        where: {
+          schoolId,
+          classId: parsed.classId,
+          date: new Date(parsed.date)
+        }
+      }),
+    ])
+
+    const statusByStudent: Record<string, { status: string; checkInTime?: Date; method?: string }> = {}
+    marks.forEach((m) => {
+      statusByStudent[m.studentId] = {
+        status: String(m.status).toLowerCase(),
+        checkInTime: m.checkInTime || undefined,
+        method: m.method || undefined,
+      }
+    })
+
+    const rows = enrollments.map((e) => ({
+      studentId: e.studentId,
+      name: [e.student?.givenName, e.student?.surname].filter(Boolean).join(' '),
+      status: (statusByStudent[e.studentId]?.status as 'present' | 'absent' | 'late') || 'present',
+      checkInTime: statusByStudent[e.studentId]?.checkInTime,
+      method: statusByStudent[e.studentId]?.method,
+    }))
+
+    return { success: true, data: { rows } }
+  } catch (error) {
+    console.error('[getAttendanceList] Error:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to get attendance list'
+    }
+  }
 }
 
 /**
  * Get classes for selection dropdown
  */
-export async function getClassesForSelection(): Promise<{
+export async function getClassesForSelection(): Promise<ActionResponse<{
   classes: Array<{
     id: string
     name: string
     teacher: string | null
   }>
-}> {
-  const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error('Missing school context')
+}>> {
+  try {
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) {
+      return { success: false, error: 'Missing school context' }
+    }
 
-  const classes = await db.class.findMany({
-    where: { schoolId },
-    orderBy: { name: 'asc' },
-    select: {
-      id: true,
-      name: true,
-      teacher: {
-        select: { givenName: true, surname: true }
+    const classes = await db.class.findMany({
+      where: { schoolId },
+      orderBy: { name: 'asc' },
+      select: {
+        id: true,
+        name: true,
+        teacher: {
+          select: { givenName: true, surname: true }
+        }
+      }
+    })
+
+    return {
+      success: true,
+      data: {
+        classes: classes.map(c => ({
+          id: c.id,
+          name: c.name,
+          teacher: c.teacher ? `${c.teacher.givenName} ${c.teacher.surname}` : null
+        }))
       }
     }
-  })
-
-  return {
-    classes: classes.map(c => ({
-      id: c.id,
-      name: c.name,
-      teacher: c.teacher ? `${c.teacher.givenName} ${c.teacher.surname}` : null
-    }))
+  } catch (error) {
+    console.error('[getClassesForSelection] Error:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to get classes for selection'
+    }
   }
 }
 
@@ -310,9 +361,12 @@ export async function getAttendanceTrends(input: {
   dateTo: string
   classId?: string
   groupBy?: 'day' | 'week' | 'month'
-}) {
-  const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error('Missing school context')
+}): Promise<ActionResponse<{ trends: Array<{ date: string; present: number; absent: number; late: number; total: number; rate: number }> }>> {
+  try {
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) {
+      return { success: false, error: 'Missing school context' }
+    }
 
   const where: Prisma.AttendanceWhereInput = {
     schoolId,
@@ -353,7 +407,14 @@ export async function getAttendanceTrends(input: {
     rate: stats.total > 0 ? Math.round(((stats.present + stats.late) / stats.total) * 100) : 0
   }))
 
-  return { trends }
+    return { success: true, data: { trends } }
+  } catch (error) {
+    console.error('[getAttendanceTrends] Error:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to get attendance trends'
+    }
+  }
 }
 
 /**
@@ -364,7 +425,9 @@ export async function getMethodUsageStats(input?: {
   dateTo?: string
 }) {
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error('Missing school context')
+  if (!schoolId) {
+      return { success: false, error: 'Missing school context' }
+    }
 
   const where: Prisma.AttendanceWhereInput = { schoolId }
 
@@ -400,7 +463,9 @@ export async function getDayWisePatterns(input?: {
   classId?: string
 }) {
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error('Missing school context')
+  if (!schoolId) {
+      return { success: false, error: 'Missing school context' }
+    }
 
   const where: Prisma.AttendanceWhereInput = { schoolId }
 
@@ -450,7 +515,9 @@ export async function getClassComparisonStats(input?: {
   dateTo?: string
 }) {
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error('Missing school context')
+  if (!schoolId) {
+      return { success: false, error: 'Missing school context' }
+    }
 
   const where: Prisma.AttendanceWhereInput = { schoolId }
 
@@ -499,7 +566,9 @@ export async function getStudentsAtRisk(input?: {
   dateTo?: string
 }) {
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error('Missing school context')
+  if (!schoolId) {
+      return { success: false, error: 'Missing school context' }
+    }
 
   const threshold = input?.threshold ?? 80
 
@@ -608,7 +677,9 @@ export async function getRecentAttendance(input?: {
  */
 export async function generateQRSession(input: z.infer<typeof qrCodeGenerationSchema>) {
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error('Missing school context')
+  if (!schoolId) {
+      return { success: false, error: 'Missing school context' }
+    }
 
   const session = await auth()
   const parsed = qrCodeGenerationSchema.parse(input)
@@ -662,7 +733,9 @@ export async function processQRScan(input: {
   deviceId?: string
 }) {
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error('Missing school context')
+  if (!schoolId) {
+      return { success: false, error: 'Missing school context' }
+    }
 
   // Find and validate session
   const qrSession = await db.qRCodeSession.findFirst({
@@ -733,7 +806,9 @@ export async function processQRScan(input: {
  */
 export async function getActiveQRSessions(classId?: string) {
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error('Missing school context')
+  if (!schoolId) {
+      return { success: false, error: 'Missing school context' }
+    }
 
   const where: Prisma.QRCodeSessionWhereInput = {
     schoolId,
@@ -773,7 +848,9 @@ export async function getActiveQRSessions(classId?: string) {
  */
 export async function addStudentIdentifier(input: z.infer<typeof studentIdentifierSchema>) {
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error('Missing school context')
+  if (!schoolId) {
+      return { success: false, error: 'Missing school context' }
+    }
 
   const session = await auth()
   const parsed = studentIdentifierSchema.parse(input)
@@ -798,7 +875,9 @@ export async function addStudentIdentifier(input: z.infer<typeof studentIdentifi
  */
 export async function getStudentIdentifiers(studentId?: string) {
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error('Missing school context')
+  if (!schoolId) {
+      return { success: false, error: 'Missing school context' }
+    }
 
   const where: Prisma.StudentIdentifierWhereInput = { schoolId }
   if (studentId) where.studentId = studentId
@@ -841,7 +920,9 @@ export async function findStudentByIdentifier(input: {
   | { found: true; student: { id: string; name: string } }
 > {
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error('Missing school context')
+  if (!schoolId) {
+      return { found: false, error: 'Missing school context' }
+    }
 
   const identifier = await db.studentIdentifier.findFirst({
     where: {
@@ -900,7 +981,9 @@ export async function bulkUploadAttendance(input: z.infer<typeof bulkUploadSchem
   errors: Array<{ studentId: string; error: string }>
 }> {
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error('Missing school context')
+  if (!schoolId) {
+      return { successful: 0, failed: 0, errors: [{ studentId: '', error: 'Missing school context' }] }
+    }
 
   const session = await auth()
   const parsed = bulkUploadSchema.parse(input)
@@ -965,7 +1048,9 @@ export async function bulkUploadAttendance(input: z.infer<typeof bulkUploadSchem
  */
 export async function getAttendanceReport(input: z.infer<typeof attendanceFilterSchema>) {
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error('Missing school context')
+  if (!schoolId) {
+      return { success: false, error: 'Missing school context' }
+    }
 
   const parsed = attendanceFilterSchema.parse(input)
 
@@ -1036,7 +1121,9 @@ export async function getAttendanceReportCsv(input: {
   limit?: number
 }): Promise<string> {
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error('Missing school context')
+  if (!schoolId) {
+      throw new Error('Missing school context')
+    }
 
   const schema = z.object({
     classId: z.string().optional(),
@@ -1100,7 +1187,9 @@ export async function checkOutStudent(input: {
   date: string
 }): Promise<{ success: boolean; error?: string }> {
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error('Missing school context')
+  if (!schoolId) {
+      return { success: false, error: 'Missing school context' }
+    }
 
   const attendance = await db.attendance.findUnique({
     where: {
@@ -1138,7 +1227,9 @@ export async function bulkCheckOut(input: {
   date: string
 }): Promise<{ success: boolean; count: number }> {
   const { schoolId } = await getTenantContext()
-  if (!schoolId) throw new Error('Missing school context')
+  if (!schoolId) {
+      return { success: false, count: 0 }
+    }
 
   const result = await db.attendance.updateMany({
     where: {

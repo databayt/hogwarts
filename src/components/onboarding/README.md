@@ -8,47 +8,134 @@ The onboarding block provides a guided setup process for schools to configure th
 
 ## 📁 Architecture
 
+The onboarding system is **fully consolidated** into two directories following the mirror pattern:
+
+### Directory Structure
+
 ```
 src/
-├── app/onboarding/
-│   ├── page.tsx                    # Landing page
+├── app/[lang]/onboarding/              # Routes (21 files)
+│   ├── page.tsx                        # Landing page
 │   ├── overview/
-│   │   └── page.tsx                # Overview dashboard
-│   └── [id]/                       # Dynamic school ID routes
-│       ├── layout.tsx              # Shared layout with ListingProvider
-│       ├── about-school/           # Static intro step
-│       ├── title/                  # School name
-│       ├── description/            # School details
-│       ├── location/               # Address & location
-│       ├── stand-out/              # Unique features (static)
-│       ├── capacity/               # Student/teacher limits
-│       ├── branding/               # Visual customization
-│       ├── import/                 # Data import
-│       ├── finish-setup/           # Setup completion (static)
-│       ├── join/                   # Platform registration
-│       ├── visibility/             # Privacy settings
-│       ├── price/                  # Tuition & fees
-│       ├── discount/               # Promotional offers
-│       ├── legal/                  # Terms & compliance
-│       └── subdomain/              # Custom domain setup
+│   │   └── page.tsx                    # School list dashboard
+│   └── [id]/                           # Dynamic school routes
+│       ├── layout.tsx                  # Shared layout with providers
+│       ├── route-handler.ts            # Route utilities
+│       ├── about-school/page.tsx
+│       ├── title/page.tsx
+│       ├── description/page.tsx
+│       ├── location/page.tsx
+│       ├── stand-out/page.tsx
+│       ├── capacity/page.tsx
+│       ├── branding/page.tsx
+│       ├── import/page.tsx
+│       ├── finish-setup/page.tsx
+│       ├── join/page.tsx
+│       ├── visibility/page.tsx
+│       ├── price/page.tsx
+│       ├── discount/page.tsx
+│       ├── legal/page.tsx
+│       ├── subdomain/page.tsx
+│       └── congratulations/page.tsx
 │
-└── components/onboarding/
-    ├── actions.ts                  # Server actions (CRUD)
-    ├── config.ts                # Step configurations
-    ├── types.ts                    # TypeScript definitions
-    ├── use-listing.tsx             # Context & state management
-    ├── use-onboarding.ts           # Navigation & validation
-    ├── host-footer.tsx             # Navigation controls
-    ├── host-header.tsx             # Progress indicator
-    ├── error-boundary.tsx          # Error handling
-    └── [step-name]/                # Step-specific components
-        ├── content.tsx             # Main UI component
-        ├── form.tsx                # Form implementation
-        ├── action.ts               # Server actions
-        ├── validation.ts           # Zod schemas
-        ├── config.ts             # Step constants
-        └── type.ts                 # Step types
+├── app/api/onboarding/                 # API routes
+│   └── validate-access/route.ts
+│
+└── components/onboarding/              # Components (145 files)
+    │
+    │ # Core files
+    ├── index.ts                        # Barrel exports
+    ├── actions.ts                      # Server actions (CRUD)
+    ├── auth.ts                         # Authentication utilities
+    ├── config.ts                       # Step configurations
+    ├── config.client.ts                # Client-side config
+    ├── constants.client.ts             # Client constants
+    ├── types.ts                        # TypeScript definitions
+    ├── validation.ts                   # Global validation schemas
+    ├── validation-utils.ts             # Validation helpers
+    ├── util.ts                         # General utilities
+    │
+    │ # State & hooks
+    ├── use-listing.tsx                 # ListingProvider context
+    ├── use-onboarding.ts               # Navigation & validation
+    ├── use-user-schools.tsx            # User schools hook
+    ├── with-school-context.tsx         # HOC for school context
+    │
+    │ # Layout components
+    ├── host-footer.tsx                 # Back/Next navigation
+    ├── host-header.tsx                 # Progress indicator
+    ├── host-step-header.tsx            # Step header
+    ├── host-step-layout.tsx            # Step layout wrapper
+    ├── host-validation-context.tsx     # Validation context
+    ├── step-header.tsx                 # Generic step header
+    ├── step-navigation.tsx             # Navigation controls
+    ├── step-title.tsx                  # Step title component
+    ├── step-wrapper.tsx                # Step wrapper
+    │
+    │ # UI components
+    ├── card.tsx                        # Card layout
+    ├── column.tsx                      # Column layout
+    ├── column-layout.tsx               # Column utilities
+    ├── content.tsx                     # Content wrapper
+    ├── detail.tsx                      # Detail view
+    ├── all.tsx                         # All items view
+    ├── form.tsx                        # Form wrapper
+    ├── form-field.tsx                  # Form field component
+    ├── selection-card.tsx              # Selection card
+    ├── progress-indicator.tsx          # Progress bar
+    │
+    │ # Error handling & monitoring
+    ├── error-boundary.tsx              # Error boundary
+    ├── performance-monitor.ts          # Performance tracking
+    │
+    │ # Completion
+    ├── success-completion-modal.tsx    # Success modal
+    │
+    │ # Step subdirectories (15 steps)
+    ├── about-school/                   # 7 files
+    ├── title/                          # 8 files
+    ├── description/                    # 9 files
+    ├── location/                       # 9 files
+    ├── stand-out/                      # 7 files
+    ├── capacity/                       # 9 files
+    ├── branding/                       # 8 files
+    ├── import/                         # 7 files
+    ├── finish-setup/                   # 7 files
+    ├── join/                           # 5 files
+    ├── visibility/                     # 4 files
+    ├── price/                          # 8 files
+    ├── discount/                       # 4 files
+    ├── legal/                          # 5 files
+    ├── subdomain/                      # 7 files
+    ├── congratulations/                # 2 files
+    ├── overview/                       # 5 files (dashboard)
+    └── floor-plan/                     # 1 file (validation only)
 ```
+
+### Step Directory Pattern
+
+Each step follows a consistent structure:
+
+```
+[step-name]/
+├── action.ts or actions.ts    # Server actions
+├── card.tsx                   # Card UI component
+├── config.ts                  # Step configuration
+├── content.tsx                # Main content (server component)
+├── form.tsx                   # Form implementation (client)
+├── types.ts                   # Type definitions
+├── validation.ts              # Zod schemas
+└── use-[step].tsx            # Optional custom hook
+```
+
+### File Statistics
+
+| Category | Count |
+|----------|-------|
+| Route files | 21 |
+| Component files | 145 |
+| Step directories | 17 |
+| **Total** | **166 files** |
 
 ## 🔄 Onboarding Flow
 
@@ -240,6 +327,30 @@ See [ISSUE.md](./ISSUE.md) for detailed tracking of:
 
 ---
 
-**Last Updated**: December 2024  
-**Status**: Production Ready (with noted limitations)  
-**Version**: 1.0.0
+## 🧹 December 2024 Cleanup
+
+### Phase 1: Legacy Code Removal
+
+| Removed File | Reason |
+|-------------|--------|
+| `action.ts` | Superseded by `actions.ts` |
+| `use-optimized-listing.tsx` | Never integrated (ListingProvider is used) |
+| `enums.ts` | Legacy Airbnb/rental concepts (WiFi, Pool, etc.) |
+| `host-refactor-plan.md` | Old planning document |
+| Legacy types in `types.ts` | Removed: HostStep, StepCompletion, HostingProgress, AmenityOption, etc. |
+
+### Phase 2: External Files Consolidation
+
+| Action | File | From | To |
+|--------|------|------|-----|
+| Moved | `onboarding-auth.ts` | `src/lib/` | `components/onboarding/auth.ts` |
+| Deleted | `onboarding-optimization.ts` | `src/lib/` | (unused - was only imported by deleted file) |
+| Deleted | `onboarding.config.ts` | `src/config/` | (unused - never imported) |
+
+The onboarding system is now **100% consolidated** into the two-directory pattern with no external dependencies.
+
+---
+
+**Last Updated**: December 2024
+**Status**: Production Ready (with noted limitations)
+**Version**: 1.2.0

@@ -78,7 +78,10 @@ export function LessonsTable({ initialData, total, dictionary, lang, perPage = 2
     perPage,
     fetcher: async (params) => {
       const result = await getLessons(params);
-      return { rows: result.rows as LessonRow[], total: result.total };
+      if (!result.success || !result.data) {
+        return { rows: [], total: 0 };
+      }
+      return { rows: result.data.rows as LessonRow[], total: result.data.total };
     },
     filters: searchValue ? { title: searchValue } : undefined,
   });
@@ -150,7 +153,11 @@ export function LessonsTable({ initialData, total, dictionary, lang, perPage = 2
 
   // Export CSV wrapper
   const handleExportCSV = useCallback(async (filters?: Record<string, unknown>) => {
-    return getLessonsCSV(filters);
+    const result = await getLessonsCSV(filters);
+    if (!result.success || !result.data) {
+      throw new Error('error' in result ? result.error : 'Export failed');
+    }
+    return result.data;
   }, []);
 
   // Get status badge variant

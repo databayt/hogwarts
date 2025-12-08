@@ -146,12 +146,6 @@ export function DescriptionForm({ schoolId, initialData, onSuccess, onTypeSelect
           )}
         />
 
-        {isPending && (
-          <div className="flex items-center justify-center mt-4">
-            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-            <span className="ms-2 text-sm text-muted-foreground">Saving your selection...</span>
-          </div>
-        )}
       </form>
     </Form>
   );

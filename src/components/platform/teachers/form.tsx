@@ -57,8 +57,8 @@ export function TeacherCreateForm({ onSuccess }: TeacherCreateFormProps) {
     const load = async () => {
       if (!currentId) return;
       const res = await getTeacher({ id: currentId });
-      const t = res.teacher as any;
-      if (!t) return;
+      if (!res.success || !res.data) return;
+      const t = res.data as any;
       form.reset({
         givenName: t.givenName ?? "",
         surname: t.surname ?? "",
@@ -78,20 +78,25 @@ export function TeacherCreateForm({ onSuccess }: TeacherCreateFormProps) {
   }, [currentId]);
 
   async function onSubmit(values: z.infer<typeof teacherCreateSchema>) {
-    const res = currentId
-      ? await updateTeacher({ id: currentId, ...values })
-      : await createTeacher(values);
-    if (res?.success) {
-      toast.success(currentId ? "Teacher updated" : "Teacher created");
-      closeModal();
-      // Use callback for optimistic update, fallback to router.refresh()
-      if (onSuccess) {
-        onSuccess();
+    try {
+      const res = currentId
+        ? await updateTeacher({ id: currentId, ...values })
+        : await createTeacher(values);
+      if (res?.success) {
+        toast.success(currentId ? "Teacher updated" : "Teacher created");
+        closeModal();
+        // Use callback for optimistic update, fallback to router.refresh()
+        if (onSuccess) {
+          onSuccess();
+        } else {
+          router.refresh();
+        }
       } else {
-        router.refresh();
+        toast.error(res?.error || (currentId ? "Failed to update teacher" : "Failed to create teacher"));
       }
-    } else {
-      toast.error(currentId ? "Failed to update teacher" : "Failed to create teacher");
+    } catch (error) {
+      console.error("Form submission error:", error);
+      toast.error("An unexpected error occurred");
     }
   }
 

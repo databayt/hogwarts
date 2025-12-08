@@ -1,0 +1,150 @@
+name: PR Check
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+  TURBO_TEAM: ${{ vars.TURBO_TEAM }}
+
+jobs:
+  typecheck:
+    name: TypeScript Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma Client
+        run: pnpm prisma generate
+
+      - name: TypeScript Check
+        run: pnpm tsc --noEmit
+
+  lint:
+    name: ESLint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run ESLint
+        run: pnpm lint
+
+  test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma Client
+        run: pnpm prisma generate
+
+      - name: Run Tests
+        run: pnpm test --run
+
+  build:
+    name: Build Verification
+    runs-on: ubuntu-latest
+    needs: [typecheck, lint]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma Client
+        run: pnpm prisma generate
+
+      - name: Build
+        run: pnpm build
+        env:
+          # Skip telemetry during build
+          NEXT_TELEMETRY_DISABLED: 1
+          # Provide required env vars for build
+          DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://placeholder:placeholder@localhost:5432/placeholder' }}
+          AUTH_SECRET: ${{ secrets.AUTH_SECRET || 'placeholder-secret-for-build' }}
+          AUTH_URL: ${{ secrets.AUTH_URL || 'http://localhost:3000' }}
+          SKIP_ENV_VALIDATION: true
+
+  pr-summary:
+    name: PR Summary
+    runs-on: ubuntu-latest
+    needs: [typecheck, lint, test, build]
+    if: always()
+    steps:
+      - name: Check Results
+        run: |
+          echo "## PR Check Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| TypeScript | ${{ needs.typecheck.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| ESLint | ${{ needs.lint.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Tests | ${{ needs.test.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Build | ${{ needs.build.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+
+      - name: Fail if any check failed
+        if: needs.typecheck.result != 'success' || needs.lint.result != 'success' || needs.test.result != 'success' || needs.build.result != 'success'
+        run: exit 1

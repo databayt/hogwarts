@@ -461,8 +461,17 @@ export function AttendanceProvider({
     setLoading(true);
     try {
       const result = await getIdentifiersAction(studentId);
+      // Handle mixed return types
+      if ('success' in result && !result.success) {
+        setStudentIdentifiers([]);
+        return;
+      }
+      if (!('identifiers' in result) || !result.identifiers) {
+        setStudentIdentifiers([]);
+        return;
+      }
 
-      const identifiers: StudentIdentifier[] = result.identifiers.map(i => ({
+      const identifiers: StudentIdentifier[] = result.identifiers.map((i: any) => ({
         id: i.id,
         schoolId: '', // Will be filled by server context
         studentId: i.studentId,

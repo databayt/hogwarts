@@ -82,7 +82,7 @@ Run seeds in order due to dependencies:
 | 4 | **academic** | `pnpm db:seed:single academic` | Year, terms, levels, periods | school |
 | 5 | **departments** | `pnpm db:seed:single departments` | 6 departments, 20 subjects | school |
 | 6 | **classrooms** | `pnpm db:seed:single classrooms` | 17 rooms | school |
-| 7 | **people** | `pnpm db:seed:single people` | 25 teachers, 100 students, 200 guardians | school, academic, departments |
+| 7 | **people** | `pnpm db:seed:single people` | 100 teachers, 1000 students, 2000 guardians | school, academic, departments |
 | 8 | **classes** | `pnpm db:seed:single classes` | Class sections + enrollments | people, classrooms, subjects |
 | 9 | **library** | `pnpm db:seed:single library` | Books (AR/EN) | school |
 | 10 | **announcements** | `pnpm db:seed:single announcements` | Announcements | classes |
@@ -127,8 +127,8 @@ Run seeds in order due to dependencies:
 ```typescript
 {
   planType: "enterprise",
-  maxStudents: 500,
-  maxTeachers: 50,
+  maxStudents: 1200,
+  maxTeachers: 120,
   currency: "SDG",
   workingDays: [0, 1, 2, 3, 4], // Sun-Thu
 }
@@ -164,12 +164,12 @@ All accounts use password: **1234**
 
 | Section | Levels (EN) | Levels (AR) | Students |
 |---------|-------------|-------------|----------|
-| Kindergarten | KG 1, KG 2 | روضة أولى، روضة ثانية | 20 |
-| Primary | Grade 1-6 | الصف الأول - السادس | 46 |
-| Intermediate | Grade 7-9 | الصف السابع - التاسع | 18 |
-| Secondary | Grade 10-12 | الصف العاشر - الثاني عشر | 16 |
+| Kindergarten | KG 1, KG 2 | روضة أولى، روضة ثانية | 200 |
+| Primary | Grade 1-6 | الصف الأول - السادس | 460 |
+| Intermediate | Grade 7-9 | الصف السابع - التاسع | 180 |
+| Secondary | Grade 10-12 | الصف العاشر - الثاني عشر | 160 |
 
-**Total: 100 students**
+**Total: 1000 students** (10x scale for production-realistic demo)
 
 ### Departments (6)
 
@@ -255,11 +255,16 @@ export const PERIODS: PeriodData[];           // 9 periods
 export const CLASSROOMS: ClassroomData[];     // 17 rooms
 
 // People
-export const TEACHER_DATA: TeacherData[];     // 25 teachers
+export const TEACHER_DATA: TeacherData[];     // 25 hand-crafted teachers
+export function getAllTeachers();             // 100 teachers (scaled)
 export const MALE_NAMES: { givenAr, givenEn };
 export const FEMALE_NAMES: { givenAr, givenEn };
 export const SURNAMES: { ar, en };
 export const ADMIN_USERS: AdminUserData[];    // 4 admins
+
+// Email System (Personal emails, NOT numbered IDs)
+export const EMAIL_DOMAINS: EmailDomainData[];
+export function generatePersonalEmail(givenName, surname, index);
 
 // Helpers
 export function getRandomName(gender, index);
@@ -370,6 +375,54 @@ npx prisma db execute --stdin <<< "SELECT domain, name FROM schools"
 | "Duplicate key" | Run `cleanup` first |
 | "Foreign key constraint" | Check dependency order |
 | "Prisma client not found" | Run `pnpm prisma generate` |
+
+---
+
+## Personal Email System
+
+All users are assigned **realistic personal emails** (not numbered IDs):
+
+### Email Format
+
+```typescript
+// ✅ CORRECT - Personal emails like real users (no dots)
+"osman@gmail.com"
+"fatimahassan@hotmail.com"
+"ahmedkhalid@outlook.com"
+"mariam42@yahoo.com"
+
+// ❌ WRONG - Avoid numbered IDs
+"student001@school.sd"
+"teacher_1@demo.databayt.org"
+"parent1@demo.com"
+```
+
+### Email Domains
+
+| Domain | Distribution |
+|--------|-------------|
+| gmail.com | 40% |
+| hotmail.com | 25% |
+| outlook.com | 15% |
+| yahoo.com | 15% |
+| sudanet.sd | 5% (local Sudanese) |
+
+### Format
+
+All emails use the format: `firstnamelastname@domain.com`
+
+---
+
+## Data Scale
+
+| Entity | Count | Notes |
+|--------|-------|-------|
+| Students | 1000 | ~70 per grade average |
+| Teachers | 100 | 1:10 student-teacher ratio |
+| Guardians | 2000 | 2 per student (father + mother) |
+| Subjects | 20 | Full K-12 curriculum |
+| Classes | 200+ | Multiple sections per subject/grade |
+| Classrooms | 17 | Labs, rooms, special facilities |
 
 ---
 

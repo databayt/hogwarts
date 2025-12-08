@@ -6,9 +6,8 @@ import Image from 'next/image';
 import { useListing } from '@/components/onboarding/use-listing';
 import { useHostValidation } from '@/components/onboarding/host-validation-context';
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import { COLOR_OPTIONS, RADIUS_OPTIONS, SHADOW_OPTIONS } from "./config";
 import { FileUploader, ACCEPT_IMAGES, type UploadedFileResult } from "@/components/file-upload/enhanced/file-uploader";
+import { Upload, X } from 'lucide-react';
 
 interface Props {
   dictionary?: any;
@@ -18,45 +17,30 @@ export default function BrandingContent({ dictionary }: Props) {
   const dict = dictionary?.onboarding || {};
   const router = useRouter();
   const params = useParams();
-  const { setCustomNavigation } = useHostValidation();
+  const { setCustomNavigation, enableNext } = useHostValidation();
   const { listing, updateListingData } = useListing();
   const [logo, setLogo] = useState<string>();
-  const [primaryColor, setPrimaryColor] = useState<string>('#0f172a'); // Default dark color
-  const [borderRadius, setBorderRadius] = useState<'none' | 'sm' | 'md' | 'lg'>('md');
-  const [shadow, setShadow] = useState<'none' | 'sm' | 'md' | 'lg'>('md');
   const [showUploader, setShowUploader] = useState(false);
 
-  // Get the ID from the URL params
   const id = params?.id as string;
 
-  // Load existing data from listing
+  // Load existing logo from listing
   useEffect(() => {
-    if (listing) {
-      if (listing.logoUrl !== undefined && listing.logoUrl !== null) setLogo(listing.logoUrl);
-      if (listing.primaryColor) setPrimaryColor(listing.primaryColor);
-      if (listing.borderRadius && ['none', 'sm', 'md', 'lg'].includes(listing.borderRadius)) {
-        setBorderRadius(listing.borderRadius as 'none' | 'sm' | 'md' | 'lg');
-      }
-      if (listing.shadow && ['none', 'sm', 'md', 'lg'].includes(listing.shadow)) {
-        setShadow(listing.shadow as 'none' | 'sm' | 'md' | 'lg');
-      }
+    if (listing?.logoUrl) {
+      setLogo(listing.logoUrl);
     }
   }, [listing]);
 
-  const handleBack = () => {
-    router.push(`/onboarding/${id}/description`);
-  };
+  // Always enable next (logo is optional)
+  useEffect(() => {
+    enableNext();
+  }, [enableNext]);
 
   const handleNext = async () => {
     try {
-      // Save the data silently without affecting UI loading state
-      updateListingData({
-        logoUrl: logo,
-        primaryColor,
-        borderRadius,
-        shadow
-      });
-      // Navigate immediately without waiting for the save to complete
+      if (logo) {
+        updateListingData({ logoUrl: logo });
+      }
       router.push(`/onboarding/${id}/import`);
     } catch (error) {
       console.error('Error updating branding:', error);
@@ -64,14 +48,11 @@ export default function BrandingContent({ dictionary }: Props) {
   };
 
   const handleUploadComplete = (files: UploadedFileResult[]) => {
-    // Use the CDN URL if available, otherwise fall back to the regular URL
     if (files.length > 0) {
       const uploadedFile = files[0];
       const logoUrl = uploadedFile.cdnUrl || uploadedFile.url;
       setLogo(logoUrl);
       setShowUploader(false);
-
-      // Auto-save the logo URL
       updateListingData({ logoUrl });
     }
   };
@@ -80,12 +61,15 @@ export default function BrandingContent({ dictionary }: Props) {
     console.error('Upload error:', error);
   };
 
-  // Set custom navigation in context
+  const handleRemoveLogo = () => {
+    setLogo(undefined);
+    updateListingData({ logoUrl: undefined });
+  };
+
+  // Set custom navigation
   useEffect(() => {
     setCustomNavigation({
-      onBack: handleBack,
-      onNext: handleNext,
-      nextDisabled: !logo
+      onNext: handleNext
     });
 
     return () => {
@@ -94,151 +78,43 @@ export default function BrandingContent({ dictionary }: Props) {
   }, [logo]);
 
   return (
-    <div className="max-w-6xl mx-auto">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-20 items-start">
-        {/* Left side - Text content and controls */}
-        <div className="space-y-6">
-          <div className="space-y-3">
-            <h3>
-              {dict.schoolBranding || "Create your school's"}
-              <br />
-              {dict.brandIdentity || "brand identity"}
-            </h3>
-            <p className="muted sm:text-base text-muted-foreground">
-              {dict.brandingDescription || "Upload your logo and customize your school's visual style."}
-            </p>
-          </div>
-
-          {/* Style Controls */}
-          <div className="space-y-5">
-            {/* Color Selection */}
-            <div className="flex items-center gap-4">
-              <label className="font-medium w-24"><small>{dict.color || "Color"}</small></label>
-              <div className="flex gap-2">
-                {COLOR_OPTIONS.map((option) => (
-                  <button
-                    key={option.id}
-                    onClick={() => setPrimaryColor(option.color)}
-                    className={cn(
-                      "w-6 h-6 rounded-full transition-all",
-                      primaryColor === option.color ? "ring-2 ring-offset-2 ring-foreground" : ""
-                    )}
-                    style={{ backgroundColor: option.color }}
-                    title={option.name}
-                  />
-                ))}
-              </div>
-            </div>
-
-            <div className="h-[0.5px] w-80 bg-border/50" />
-
-            {/* Border Radius Selection */}
-            <div className="flex items-center gap-4">
-              <label className="font-medium w-24"><small>{dict.rounded || "Rounded"}</small></label>
-              <div className="flex gap-2">
-                {RADIUS_OPTIONS.map((option) => (
-                  <Button
-                    key={option.id}
-                    onClick={() => setBorderRadius(option.id as any)}
-                    variant="outline"
-                    size="sm"
-                    className={cn(
-                      "px-2 min-w-[40px] w-[40px] text-xs transition-all",
-                      borderRadius === option.id
-                        ? "border-2 border-foreground bg-background opacity-100"
-                        : "opacity-70 hover:opacity-90"
-                    )}
-                  >
-                    {option.label}
-                  </Button>
-                ))}
-              </div>
-            </div>
-
-            <div className="h-[0.5px] w-80 bg-border/50" />
-
-            {/* Shadow Selection */}
-            <div className="flex items-center gap-4">
-              <label className="font-medium w-24"><small>{dict.shadow || "Shadow"}</small></label>
-              <div className="flex gap-2">
-                {SHADOW_OPTIONS.map((option) => (
-                  <Button
-                    key={option.id}
-                    onClick={() => setShadow(option.id as any)}
-                    variant="outline"
-                    size="sm"
-                    className={cn(
-                      "px-2 min-w-[40px] w-[40px] text-xs transition-all",
-                      shadow === option.id
-                        ? "border-2 border-foreground bg-background opacity-100"
-                        : "opacity-70 hover:opacity-90"
-                    )}
-                  >
-                    {option.label}
-                  </Button>
-                ))}
-              </div>
-            </div>
-          </div>
+    <div className="w-full">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-start">
+        {/* Left side - Text content */}
+        <div className="space-y-3 sm:space-y-4">
+          <h1 className="text-3xl font-bold">
+            {dict.schoolBranding || "Upload your school logo"}
+          </h1>
+          <p className="text-sm sm:text-base text-muted-foreground">
+            {dict.brandingDescription || "Add your school's logo to personalize your platform. This is optional - you can always add it later."}
+          </p>
         </div>
 
-        {/* Right side - Logo Upload and Preview */}
-        <div>
+        {/* Right side - Simple Logo Upload */}
+        <div className="lg:justify-self-end">
           {!logo && !showUploader ? (
-            // Initial large upload box
-            <div className={cn(
-              "border border-dashed border-muted-foreground text-center bg-muted h-[300px] flex flex-col justify-center",
-              {
-                'rounded-none': borderRadius === 'none',
-                'rounded-sm': borderRadius === 'sm',
-                'rounded-md': borderRadius === 'md',
-                'rounded-lg': borderRadius === 'lg',
-                'shadow-none': shadow === 'none',
-                'shadow-sm': shadow === 'sm',
-                'shadow-md': shadow === 'md',
-                'shadow-lg': shadow === 'lg',
-              }
-            )}>
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <h6>{dict.uploadSchoolLogo || "Upload your school logo"}</h6>
-                  <small className="block text-muted-foreground">
-                    {dict.logoFileTypes || "SVG, PNG, JPG (max. 800x800px)"}
-                  </small>
-                  <div className="flex flex-col items-center gap-1">
-                    <Button
-                      onClick={() => setShowUploader(true)}
-                      className={cn("mt-2", {
-                        'rounded-none': borderRadius === 'none',
-                        'rounded-sm': borderRadius === 'sm',
-                        'rounded-md': borderRadius === 'md',
-                        'rounded-lg': borderRadius === 'lg',
-                        'shadow-none': shadow === 'none',
-                        'shadow-sm': shadow === 'sm',
-                        'shadow-md': shadow === 'md',
-                        'shadow-lg': shadow === 'lg',
-                      })}
-                      style={{
-                        backgroundColor: primaryColor,
-                        '--theme-primary': primaryColor
-                      } as React.CSSProperties}
-                    >
-                      {dict.chooseFile || "Choose file"}
-                    </Button>
-                  </div>
-                </div>
-              </div>
+            <div
+              onClick={() => setShowUploader(true)}
+              className="border-2 border-dashed border-muted-foreground/30 rounded-lg h-[250px] w-[400px] flex flex-col items-center justify-center cursor-pointer hover:border-muted-foreground/50 transition-colors"
+            >
+              <Upload className="h-10 w-10 text-muted-foreground mb-4" />
+              <p className="font-medium">{dict.uploadLogo || "Upload logo"}</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                {dict.logoFileTypes || "SVG, PNG, JPG"}
+              </p>
+              <p className="text-xs text-muted-foreground mt-2">
+                {dict.optional || "(Optional)"}
+              </p>
             </div>
           ) : showUploader ? (
-            // File uploader component
-            <div className="space-y-4">
+            <div className="space-y-4 w-[400px]">
               <FileUploader
                 category="IMAGE"
                 folder="school-logos"
                 accept={ACCEPT_IMAGES}
                 maxFiles={1}
                 multiple={false}
-                maxSize={5 * 1024 * 1024} // 5MB max for logos
+                maxSize={5 * 1024 * 1024}
                 optimizeImages={true}
                 onUploadComplete={handleUploadComplete}
                 onUploadError={handleUploadError}
@@ -252,22 +128,7 @@ export default function BrandingContent({ dictionary }: Props) {
               </Button>
             </div>
           ) : (
-            // Logo preview
-            <div
-              className={cn(
-                "border border-dashed border-muted-foreground rounded-lg h-[300px] relative overflow-hidden",
-                {
-                  'rounded-none': borderRadius === 'none',
-                  'rounded-sm': borderRadius === 'sm',
-                  'rounded-md': borderRadius === 'md',
-                  'rounded-lg': borderRadius === 'lg',
-                  'shadow-none': shadow === 'none',
-                  'shadow-sm': shadow === 'sm',
-                  'shadow-md': shadow === 'md',
-                  'shadow-lg': shadow === 'lg',
-                }
-              )}
-            >
+            <div className="relative h-[250px] w-[400px] border rounded-lg overflow-hidden">
               {logo && (
                 <Image
                   src={logo}
@@ -278,26 +139,11 @@ export default function BrandingContent({ dictionary }: Props) {
               )}
               <Button
                 size="icon"
-                className={cn("absolute top-2 right-2", {
-                  'rounded-none': borderRadius === 'none',
-                  'rounded-sm': borderRadius === 'sm',
-                  'rounded-md': borderRadius === 'md',
-                  'rounded-lg': borderRadius === 'lg',
-                  'shadow-none': shadow === 'none',
-                  'shadow-sm': shadow === 'sm',
-                  'shadow-md': shadow === 'md',
-                  'shadow-lg': shadow === 'lg',
-                })}
-                onClick={() => {
-                  setLogo(undefined);
-                  setShowUploader(true);
-                }}
-                style={{
-                  backgroundColor: primaryColor,
-                  '--theme-primary': primaryColor
-                } as React.CSSProperties}
+                variant="destructive"
+                className="absolute top-2 right-2"
+                onClick={handleRemoveLogo}
               >
-                ×
+                <X className="h-4 w-4" />
               </Button>
             </div>
           )}

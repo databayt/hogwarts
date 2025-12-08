@@ -1,95 +1,317 @@
 ---
 title: "Onboarding"
-description: "Documentation for Onboarding"
+description: "Complete guide to the school onboarding system"
 ---
 
-## Onboarding (Blocks, Flows, and Patterns)
+## Overview
 
-This guide documents the reusable Onboarding block that handles user joining and school setup flows: create school, invite admins/teachers/parents, add students, subjects, and initial timetable basics.
+The onboarding block is a multi-step wizard that guides new schools through the platform registration process. It handles school creation, configuration, branding, and business setup.
 
-### Architecture Overview
+## Architecture
 
-- UI: shadcn/ui primitives (Input, Button, Select, Dialog, Sheet) composed into small steps.
-- Forms: React Hook Form for controlled state with minimal re-renders.
-- Validation: Zod schemas collocated per feature; parsed again on the server.
-- Actions: Next.js Server Actions ("use server") for mutations, revalidate and redirect on success.
-- Tenancy: all writes include schoolId, derived from subdomain/session.
+The system is **100% consolidated** into two directories following the mirror pattern:
 
-### Folder Pattern (per feature)
+| Directory | Purpose | Files |
+|-----------|---------|-------|
+| `src/app/[lang]/onboarding/` | Next.js routes | 21 |
+| `src/components/onboarding/` | Components | 145 |
+
+### Core Technologies
+
+- **UI**: shadcn/ui primitives (Input, Button, Select, Dialog)
+- **Forms**: React Hook Form with minimal re-renders
+- **Validation**: Zod schemas (client + server validation)
+- **Actions**: Next.js Server Actions ("use server")
+- **State**: Context providers (ListingProvider)
+- **Tenancy**: All writes include schoolId from session
+
+## Complete File Structure
+
+### Routes (`src/app/[lang]/onboarding/`)
 
 ```
-src/components/onboarding/
-  actions.ts        # server actions (createSchool, inviteUser, seedDefaults)
-  validation.ts     # zod schemas
-  types.ts          # shared types
-  form.tsx          # RHF form(s)
-  content.tsx       # step content composition
+onboarding/
+├── page.tsx                        # Landing page
+├── overview/
+│   └── page.tsx                    # School list dashboard
+└── [id]/                           # Dynamic school routes (17 steps)
+    ├── layout.tsx                  # Shared layout with providers
+    ├── route-handler.ts            # Route utilities
+    ├── about-school/page.tsx       # Step 1: Welcome
+    ├── title/page.tsx              # Step 2: School name
+    ├── description/page.tsx        # Step 3: Details
+    ├── location/page.tsx           # Step 4: Address
+    ├── stand-out/page.tsx          # Step 5: Features
+    ├── capacity/page.tsx           # Step 6: Limits
+    ├── branding/page.tsx           # Step 7: Visual theme
+    ├── import/page.tsx             # Step 8: Data import
+    ├── finish-setup/page.tsx       # Step 9: Review
+    ├── join/page.tsx               # Step 10: Registration
+    ├── visibility/page.tsx         # Step 11: Privacy
+    ├── price/page.tsx              # Step 12: Tuition
+    ├── discount/page.tsx           # Step 13: Promotions
+    ├── legal/page.tsx              # Step 14: Terms
+    ├── subdomain/page.tsx          # Step 15: Domain
+    └── congratulations/page.tsx    # Step 16: Completion
 ```
 
-### Zod + RHF Example
+### API Routes
+
+```
+src/app/api/onboarding/
+└── validate-access/route.ts        # Access validation endpoint
+```
+
+### Components (`src/components/onboarding/`)
+
+```
+onboarding/
+│
+│ # Core files
+├── index.ts                        # Barrel exports
+├── actions.ts                      # Server actions (CRUD)
+├── auth.ts                         # Authentication utilities
+├── config.ts                       # Step configurations
+├── config.client.ts                # Client-side config
+├── constants.client.ts             # Client constants
+├── types.ts                        # TypeScript definitions
+├── validation.ts                   # Global validation schemas
+├── validation-utils.ts             # Validation helpers
+├── util.ts                         # General utilities
+│
+│ # State & hooks
+├── use-listing.tsx                 # ListingProvider context
+├── use-onboarding.ts               # Navigation & validation
+├── use-user-schools.tsx            # User schools hook
+├── with-school-context.tsx         # HOC for school context
+│
+│ # Layout components
+├── host-footer.tsx                 # Back/Next navigation
+├── host-header.tsx                 # Progress indicator
+├── host-step-header.tsx            # Step header
+├── host-step-layout.tsx            # Step layout wrapper
+├── host-validation-context.tsx     # Validation context
+├── step-header.tsx                 # Generic step header
+├── step-navigation.tsx             # Navigation controls
+├── step-title.tsx                  # Step title component
+├── step-wrapper.tsx                # Step wrapper
+│
+│ # UI components
+├── card.tsx                        # Card layout
+├── column.tsx                      # Column layout
+├── column-layout.tsx               # Column utilities
+├── content.tsx                     # Content wrapper
+├── detail.tsx                      # Detail view
+├── all.tsx                         # All items view
+├── form.tsx                        # Form wrapper
+├── form-field.tsx                  # Form field component
+├── selection-card.tsx              # Selection card
+├── progress-indicator.tsx          # Progress bar
+│
+│ # Error handling & monitoring
+├── error-boundary.tsx              # Error boundary
+├── performance-monitor.ts          # Performance tracking
+├── success-completion-modal.tsx    # Success modal
+│
+│ # Step subdirectories (17 total)
+├── about-school/                   # 7 files
+├── title/                          # 8 files
+├── description/                    # 9 files
+├── location/                       # 9 files
+├── stand-out/                      # 7 files
+├── capacity/                       # 9 files
+├── branding/                       # 8 files
+├── import/                         # 7 files
+├── finish-setup/                   # 7 files
+├── join/                           # 5 files
+├── visibility/                     # 4 files
+├── price/                          # 8 files
+├── discount/                       # 4 files
+├── legal/                          # 5 files
+├── subdomain/                      # 7 files
+├── congratulations/                # 2 files
+├── overview/                       # 5 files (dashboard)
+└── floor-plan/                     # 1 file (validation)
+```
+
+### Step Directory Pattern
+
+Each step follows a consistent structure:
+
+```
+[step-name]/
+├── action.ts or actions.ts    # Server actions
+├── card.tsx                   # Card UI component
+├── config.ts                  # Step configuration
+├── content.tsx                # Main content (server component)
+├── form.tsx                   # Form implementation (client)
+├── types.ts                   # Type definitions
+├── validation.ts              # Zod schemas
+└── use-[step].tsx            # Optional custom hook
+```
+
+## Onboarding Steps
+
+The flow is organized into 3 groups with 16 steps:
+
+### Group 1: Basic Information
+
+| Step | Path | Description |
+|------|------|-------------|
+| About School | `/about-school` | Welcome and introduction |
+| Title | `/title` | School name |
+| Description | `/description` | School type and details |
+| Location | `/location` | Address and map |
+| Stand Out | `/stand-out` | Unique features highlight |
+
+### Group 2: School Setup
+
+| Step | Path | Description |
+|------|------|-------------|
+| Capacity | `/capacity` | Student/teacher limits |
+| Branding | `/branding` | Logo, colors, theme |
+| Import | `/import` | Bulk data import |
+| Finish Setup | `/finish-setup` | Setup review |
+
+### Group 3: Business & Legal
+
+| Step | Path | Description |
+|------|------|-------------|
+| Join | `/join` | Platform registration |
+| Visibility | `/visibility` | Public/private settings |
+| Price | `/price` | Tuition and fees |
+| Discount | `/discount` | Promotional codes |
+| Legal | `/legal` | Terms and compliance |
+| Subdomain | `/subdomain` | Custom domain setup |
+| Congratulations | `/congratulations` | Completion page |
+
+## Implementation Patterns
+
+### Server Action Pattern
 
 ```tsx
-import { z } from "zod"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
+// actions.ts
+"use server"
 
-const schema = z.object({
-  schoolName: z.string().min(2),
-  email: z.string().email(),
+import { auth } from "@/auth"
+import { db } from "@/lib/db"
+import { revalidatePath } from "next/cache"
+import { schema } from "./validation"
+
+export async function updateSchool(data: FormData) {
+  const session = await auth()
+  const schoolId = session?.user?.schoolId
+
+  if (!schoolId) throw new Error("Unauthorized")
+
+  const validated = schema.parse(Object.fromEntries(data))
+
+  await db.school.update({
+    where: { id: schoolId },
+    data: validated
+  })
+
+  revalidatePath("/onboarding")
+  return { success: true }
+}
+```
+
+### Form + Validation Pattern
+
+```tsx
+// validation.ts
+import { z } from "zod"
+
+export const titleSchema = z.object({
+  name: z.string().min(2, "Name is required"),
 })
 
-export function CreateSchoolForm({ onSubmit }: { onSubmit: (v: z.infer<typeof schema>) => Promise<void> }) {
-  const form = useForm<z.infer<typeof schema>>({ resolver: zodResolver(schema) })
+// form.tsx
+"use client"
+
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { titleSchema } from "./validation"
+
+export function TitleForm() {
+  const form = useForm({
+    resolver: zodResolver(titleSchema),
+  })
 
   return (
-    <form onSubmit={form.handleSubmit(async (v) => { await onSubmit(v) })} className="space-y-3">
-      <Input placeholder="School name" {...form.register("schoolName")} />
-      <Input type="email" placeholder="Email" {...form.register("email")} />
-      <Button type="submit">Create</Button>
+    <form onSubmit={form.handleSubmit(onSubmit)}>
+      <Input {...form.register("name")} />
+      <Button type="submit">Save</Button>
     </form>
   )
 }
 ```
 
-### Server Action Pattern
+### Context Provider Pattern
 
-```ts
-"use server"
-import { z } from "zod"
-import { db } from "@/lib/db"
+```tsx
+// Layout provides ListingProvider to all steps
+<ListingProvider>
+  <HostValidationProvider>
+    {children}
+  </HostValidationProvider>
+</ListingProvider>
 
-const createSchool = z.object({ schoolName: z.string().min(2), email: z.string().email() })
-
-export async function createSchoolAction(values: z.infer<typeof createSchool>) {
-  const parsed = createSchool.parse(values)
-  const school = await db.school.create({ data: { name: parsed.schoolName, email: parsed.email } })
-  return { ok: true, schoolId: school.id }
-}
+// Steps access via hook
+const { listing, updateListing } = useListing()
 ```
 
-### Flow Orchestration
+## Data Flow
 
-1) Owner: Create school -> choose plan (trial by default) -> invite admin.
-2) Admin: Configure classes and subjects -> invite teachers and parents.
-3) Teacher: Join class -> mark attendance -> post first announcement.
-4) Parent: Accept invite -> verify -> view child.
+```
+User navigates to step
+        ↓
+Layout mounts ListingProvider
+        ↓
+ListingProvider loads school data
+        ↓
+Step component renders with data
+        ↓
+User submits form
+        ↓
+Server action validates & updates DB
+        ↓
+revalidatePath() refreshes data
+        ↓
+User proceeds to next step
+```
 
-Use sheets/dialogs to segment steps, keep forms minimal, and show toasts for feedback. Mirror UI for RTL.
+## Multi-Tenant Security
 
-### Multi-tenant Considerations
+- All queries include `schoolId` from session
+- Ownership verified before any mutation
+- Cross-tenant access blocked by `auth.ts` utilities
+- Subdomain scoping via middleware
 
-- Derive schoolId from subdomain/session and include in every mutation.
-- Seed defaults per school (roles, example classes/subjects) via server action.
-- Enforce unique constraints scoped by schoolId in Prisma schema.
+## Key Components
 
-### Checklists
+| Component | Purpose |
+|-----------|---------|
+| `HostFooter` | Back/Next navigation with validation |
+| `HostHeader` | Progress indicator |
+| `ListingProvider` | School data context (via `use-listing.tsx`) |
+| `HostValidationProvider` | Form validation state |
+| `ErrorBoundary` | Error handling wrapper |
 
-- Form + schema + action exist and are wired.
-- Success and error toasts present.
-- Revalidate path or redirect after mutations.
-- Add tests or manual steps in PR.
+## File Statistics
 
+| Category | Count |
+|----------|-------|
+| Route files | 21 |
+| Component files | 145 |
+| Step directories | 17 |
+| **Total** | **166 files** |
 
+## Related Documentation
 
+- [README.md](https://github.com/databayt/hogwarts/blob/main/src/components/onboarding/README.md) - Detailed component docs
+- [ISSUE.md](https://github.com/databayt/hogwarts/blob/main/src/components/onboarding/ISSUE.md) - Production readiness tracker
+
+---
+
+**Last Updated**: December 2024

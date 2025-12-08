@@ -1,51 +1,33 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
 import type { Dictionary } from '@/components/internationalization/dictionaries'
 import { Icons } from '@/components/icons'
+import { useVideoScrollControl } from "@/hooks/use-video-scroll-control"
 
 interface StorySectionProps {
     dictionary?: Dictionary
 }
 
 export default function StorySection({ dictionary }: StorySectionProps) {
-    const videoRef = useRef<HTMLVideoElement>(null)
-    const containerRef = useRef<HTMLDivElement>(null)
-    const [isInView, setIsInView] = useState(false)
+    const { containerRef, videoRef } = useVideoScrollControl({
+        threshold: 0.3, // Start playing earlier
+        autoPause: true, // Pause when out of view
+        enableAudio: false, // Keep muted
+    })
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const dict = (dictionary?.marketing as any)?.storySection || {
         quote: "When schools automate the mundane, what do educators focus on?",
     }
 
-    // Intersection Observer for auto-play based on visibility
-    useEffect(() => {
-        const observer = new IntersectionObserver(
-            ([entry]) => {
-                setIsInView(entry.isIntersecting)
-            },
-            { threshold: 0.5 }
-        )
-
-        if (containerRef.current) {
-            observer.observe(containerRef.current)
-        }
-
-        return () => observer.disconnect()
-    }, [])
-
-    // Auto-play when in view
-    useEffect(() => {
-        if (videoRef.current && isInView) {
-            videoRef.current.play()
-        }
-    }, [isInView])
-
     return (
-        <section ref={containerRef} className="py-16 md:py-24">
+        <section className="py-16 md:py-24">
             <div className="grid gap-8 lg:grid-cols-3 lg:gap-12 items-center">
                 {/* Video - Left side (2/3 width) */}
-                <div className="lg:col-span-2 relative rounded-lg overflow-hidden bg-[#2C2418]">
+                <div
+                    ref={containerRef}
+                    className="lg:col-span-2 relative rounded-lg overflow-hidden bg-[#2C2418]"
+                >
                     <video
                         ref={videoRef}
                         className="w-full aspect-video object-cover"

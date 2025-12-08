@@ -535,17 +535,22 @@ export async function seedStream(
 ): Promise<void> {
   console.log("🎓 Creating comprehensive LMS platform...");
 
-  // Categories - Create all categories
+  // Categories - Find or create all categories
   const categoryNames = ["Islamic Studies", "Languages", "Mathematics", "Science", "Programming", "Humanities"];
   const categories = new Map<string, string>();
 
   for (const name of categoryNames) {
-    const cat = await prisma.streamCategory.create({
-      data: { name, schoolId },
+    let cat = await prisma.streamCategory.findFirst({
+      where: { schoolId, name },
     });
+    if (!cat) {
+      cat = await prisma.streamCategory.create({
+        data: { name, schoolId },
+      });
+    }
     categories.set(name, cat.id);
   }
-  console.log(`   ✅ Created: ${categoryNames.length} course categories`);
+  console.log(`   ✅ Categories: ${categoryNames.length} course categories (existing + new)`);
 
   // Courses and content
   let courseCount = 0;
@@ -556,54 +561,61 @@ export async function seedStream(
   for (const courseData of COURSES_DATA) {
     const { chapters, categoryName, level, imageUrl, ...courseInfo } = courseData;
 
-    // Assign random teacher from available teachers
-    const assignedTeacher = teachers[courseCount % teachers.length];
-
-    const course = await prisma.streamCourse.create({
-      data: {
-        ...courseInfo,
-        schoolId,
-        userId: assignedTeacher?.userId,
-        categoryId: categories.get(categoryName),
-        isPublished: true,
-        imageUrl,
-        level: level || StreamCourseLevel.BEGINNER,
-      },
+    // Check if course already exists
+    let course = await prisma.streamCourse.findFirst({
+      where: { schoolId, slug: courseInfo.slug },
     });
-    createdCourses.push({ id: course.id, title: course.title });
 
-    // Chapters and lessons
-    for (let ci = 0; ci < chapters.length; ci++) {
-      const chapterData = chapters[ci];
-      const chapter = await prisma.streamChapter.create({
+    if (!course) {
+      // Assign random teacher from available teachers
+      const assignedTeacher = teachers[courseCount % teachers.length];
+
+      course = await prisma.streamCourse.create({
         data: {
-          title: chapterData.title,
-          description: chapterData.description,
-          position: ci + 1,
+          ...courseInfo,
+          schoolId,
+          userId: assignedTeacher?.userId,
+          categoryId: categories.get(categoryName),
           isPublished: true,
-          courseId: course.id,
+          imageUrl,
+          level: level || StreamCourseLevel.BEGINNER,
         },
       });
-      chapterCount++;
 
-      for (let li = 0; li < chapterData.lessons.length; li++) {
-        const lessonData = chapterData.lessons[li];
-        await prisma.streamLesson.create({
+      // Chapters and lessons - only create for new courses
+      for (let ci = 0; ci < chapters.length; ci++) {
+        const chapterData = chapters[ci];
+        const chapter = await prisma.streamChapter.create({
           data: {
-            title: lessonData.title,
-            description: lessonData.description || `Lesson ${li + 1} of ${chapterData.title}`,
-            position: li + 1,
-            duration: lessonData.duration || faker.number.int({ min: 20, max: 50 }),
-            videoUrl: lessonData.videoUrl,
+            title: chapterData.title,
+            description: chapterData.description,
+            position: ci + 1,
             isPublished: true,
-            isFree: li === 0, // First lesson of each chapter is free
-            chapterId: chapter.id,
+            courseId: course.id,
           },
         });
-        lessonCount++;
+        chapterCount++;
+
+        for (let li = 0; li < chapterData.lessons.length; li++) {
+          const lessonData = chapterData.lessons[li];
+          await prisma.streamLesson.create({
+            data: {
+              title: lessonData.title,
+              description: lessonData.description || `Lesson ${li + 1} of ${chapterData.title}`,
+              position: li + 1,
+              duration: lessonData.duration || faker.number.int({ min: 20, max: 50 }),
+              videoUrl: lessonData.videoUrl,
+              isPublished: true,
+              isFree: li === 0, // First lesson of each chapter is free
+              chapterId: chapter.id,
+            },
+          });
+          lessonCount++;
+        }
       }
     }
 
+    createdCourses.push({ id: course.id, title: course.title });
     courseCount++;
   }
 

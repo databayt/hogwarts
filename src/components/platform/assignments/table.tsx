@@ -47,7 +47,10 @@ export function AssignmentsTable({ initialData, total, dictionary, lang, perPage
     perPage,
     fetcher: async (params) => {
       const result = await getAssignments(params);
-      return { rows: result.rows as AssignmentRow[], total: result.total };
+      if (!result.success || !result.data) {
+        return { rows: [], total: 0 };
+      }
+      return { rows: result.data.rows as AssignmentRow[], total: result.data.total };
     },
   });
 

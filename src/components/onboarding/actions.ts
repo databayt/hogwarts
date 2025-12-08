@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
-import { getSchoolWithOnboardingFallback } from "@/lib/onboarding-auth";
+import { getSchoolWithOnboardingFallback } from "./auth";
 import { 
   getAuthContext, 
   requireSchoolAccess,
@@ -246,10 +246,26 @@ export async function getUserSchools(): Promise<ActionResponse> {
   }
 }
 
+/**
+ * Initialize school setup for onboarding
+ *
+ * PRODUCTION-READY: Atomic school-user linking with session refresh
+ *
+ * Flow:
+ * 1. Check idempotency (user may already have a school)
+ * 2. Create school + link user in atomic transaction
+ * 3. Trigger session refresh for immediate schoolId access
+ * 4. Return school with redirect hint for client-side navigation
+ *
+ * Returns:
+ * - school: The created or existing school
+ * - _redirect: Suggested redirect path to first onboarding step
+ * - _sessionRefreshRequired: Hint for client to call updateSession()
+ */
 export async function initializeSchoolSetup(): Promise<ActionResponse> {
   const timestamp = new Date().toISOString();
   logger.debug('initializeSchoolSetup started', { timestamp });
-  
+
   try {
     logger.debug('Getting auth context');
     const authContext = await getAuthContext();
@@ -259,32 +275,40 @@ export async function initializeSchoolSetup(): Promise<ActionResponse> {
       hasSessionSchoolId: !!authContext.schoolId
     });
 
-    // Use the new school access system
+    // Use the production-ready school access system with atomic transactions
     const { ensureUserSchool } = await import('@/lib/school-access');
     const schoolResult = await ensureUserSchool(authContext.userId);
-    
+
     if (!schoolResult.success) {
       logger.error('Failed to ensure user school:', schoolResult.error);
       return createActionResponse(undefined, {
         message: schoolResult.error || 'Failed to initialize school',
-        code: 'SCHOOL_INIT_FAILED'
+        code: 'SCHOOL_CREATION_FAILED'
       });
     }
-    
-    logger.debug('School ensured successfully:', {
+
+    logger.info('School ensured successfully', {
       schoolId: schoolResult.schoolId,
-      schoolName: schoolResult.school?.name
+      schoolName: schoolResult.school?.name,
+      userId: authContext.userId
     });
-    
-    // Revalidate the onboarding path
+
+    // Revalidate the onboarding path for server-side cache
     revalidatePath("/onboarding");
-    
-    return createActionResponse(schoolResult.school);
+
+    // Return school with navigation hints for the client
+    // Client should:
+    // 1. Call updateSession() to refresh JWT with new schoolId
+    // 2. Navigate to _redirect path
+    return createActionResponse({
+      ...schoolResult.school,
+      _redirect: `/onboarding/${schoolResult.schoolId}/about-school`,
+      _sessionRefreshRequired: true,
+    });
   } catch (error) {
-    logger.error("initializeSchoolSetup FAILED at some step:", {
+    logger.error("initializeSchoolSetup FAILED:", {
       error: error instanceof Error ? error.message : 'Unknown error',
       errorType: error?.constructor?.name,
-      errorStack: error instanceof Error ? error.stack : undefined,
       failureTimestamp: new Date().toISOString()
     });
     return createActionResponse(undefined, error);

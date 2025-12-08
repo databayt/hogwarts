@@ -71,7 +71,7 @@ export function TeacherInfoPopup({ subject, onSave, initialInfo = "", children }
 
   const TeacherInfoForm = (
     <div className="grid gap-2">
-      <Label htmlFor="teacher">Teacher name</Label>
+      <Label htmlFor="teacher" className="dark:text-neutral-200">Teacher name</Label>
       <Input
         ref={inputRef}
         id="teacher"
@@ -80,12 +80,12 @@ export function TeacherInfoPopup({ subject, onSave, initialInfo = "", children }
         onKeyDown={handleKeyDown}
         maxLength={10}
         className={cn(
-          "h-8",
-          error && "border-destructive"
+          "h-8 dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-100 dark:placeholder-neutral-400",
+          error && "border-red-500 dark:border-red-500"
         )}
       />
       {error && (
-        <p className="muted text-destructive">{error}</p>
+        <p className="text-sm text-red-500 dark:text-red-400">{error}</p>
       )}
     </div>
   )
@@ -93,8 +93,8 @@ export function TeacherInfoPopup({ subject, onSave, initialInfo = "", children }
   const content = (
     <>
       <div className="space-y-2">
-        <h4>Pencil teacher info</h4>
-        <p className="muted">
+        <h4 className="font-medium leading-none dark:text-neutral-100">Edit teacher info</h4>
+        <p className="text-sm text-muted-foreground dark:text-neutral-400">
           Enter info for {subject}. It will be stored in your browser.
         </p>
       </div>
@@ -106,10 +106,10 @@ export function TeacherInfoPopup({ subject, onSave, initialInfo = "", children }
     return (
       <Drawer open={isOpen} onOpenChange={handleOpenChange}>
         <DrawerTrigger asChild>{children}</DrawerTrigger>
-        <DrawerContent className="h-[40%]">
+        <DrawerContent className="h-[40%] dark:bg-neutral-900 dark:border-neutral-800">
           <DrawerHeader>
-            <DrawerTitle>Pencil teacher info</DrawerTitle>
-            <DrawerDescription>
+            <DrawerTitle className="dark:text-neutral-100">Edit teacher info</DrawerTitle>
+            <DrawerDescription className="dark:text-neutral-400">
               Enter info for {subject}. It will be stored in your browser.
             </DrawerDescription>
           </DrawerHeader>
@@ -131,7 +131,7 @@ export function TeacherInfoPopup({ subject, onSave, initialInfo = "", children }
       <PopoverTrigger asChild>{children}</PopoverTrigger>
       <PopoverContent
         className={cn(
-          "w-80",
+          "w-80 dark:bg-neutral-900 dark:border-neutral-800",
           "data-[state=open]:animate-slideUpAndFade data-[state=open]:duration-300",
           "data-[state=closed]:animate-fadeOut data-[state=closed]:duration-200"
         )}

@@ -51,9 +51,9 @@ export function EventCreateForm({ onSuccess }: EventCreateFormProps) {
     const load = async () => {
       if (!currentId) return;
       const res = await getEvent({ id: currentId });
-      const e = res.event as any;
-      if (!e) return;
-      
+      if (!res.success || !res.data) return;
+      const e = res.data as any;
+
       form.reset({
         title: e.title ?? "",
         description: e.description ?? "",
@@ -75,21 +75,26 @@ export function EventCreateForm({ onSuccess }: EventCreateFormProps) {
   }, [currentId]);
 
   async function onSubmit(values: z.infer<typeof eventCreateSchema>) {
-    const res = currentId
-      ? await updateEvent({ id: currentId, ...values })
-      : await createEvent(values);
+    try {
+      const res = currentId
+        ? await updateEvent({ id: currentId, ...values })
+        : await createEvent(values);
 
-    if (res?.success) {
-      toast.success(currentId ? "Event updated" : "Event created");
-      closeModal();
-      // Use callback for optimistic update, fallback to router.refresh()
-      if (onSuccess) {
-        onSuccess();
+      if (res?.success) {
+        toast.success(currentId ? "Event updated" : "Event created");
+        closeModal();
+        // Use callback for optimistic update, fallback to router.refresh()
+        if (onSuccess) {
+          onSuccess();
+        } else {
+          router.refresh();
+        }
       } else {
-        router.refresh();
+        toast.error(res?.error || (currentId ? "Failed to update event" : "Failed to create event"));
       }
-    } else {
-      toast.error(currentId ? "Failed to update event" : "Failed to create event");
+    } catch (error) {
+      console.error("Form submission error:", error);
+      toast.error("An unexpected error occurred");
     }
   }
 

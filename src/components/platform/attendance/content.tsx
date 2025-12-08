@@ -32,8 +32,10 @@ export function AttendanceContent({ dictionary }: Props) {
     setIsLoading(true)
     try {
       if (!classId) { setRows([]); return }
-      const { rows } = await getAttendanceList({ classId, date })
-      setRows(rows)
+      const result = await getAttendanceList({ classId, date })
+      if (result.success && result.data) {
+        setRows(result.data.rows)
+      }
     } finally {
       setIsLoading(false)
     }
@@ -42,8 +44,9 @@ export function AttendanceContent({ dictionary }: Props) {
   React.useEffect(() => {
     ;(async () => {
       const res = await getClassesForSelection()
-      setClasses(res.classes)
-      if (!classId && res.classes[0]) setClassId(res.classes[0].id)
+      if (!res.success || !res.data) return
+      setClasses(res.data.classes)
+      if (!classId && res.data.classes[0]) setClassId(res.data.classes[0].id)
     })()
   }, [])
   const [changed, setChanged] = React.useState<Record<string, AttendanceRow['status']>>({})

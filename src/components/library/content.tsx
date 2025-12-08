@@ -24,26 +24,39 @@ export default async function LibraryContent({ userId, dictionary, lang }: Props
     );
   }
 
-  // Fetch books in parallel for different sections
-  const [heroBook, latestBooks, featuredBooks, literatureBooks, scienceBooks] = await Promise.all([
-    // Hero Book - the most recent featured book (Harry Potter)
-    db.book.findFirst({
+  // First try to get Harry Potter specifically
+  let heroBook = await db.book.findFirst({
+    where: {
+      schoolId,
+      title: { contains: "Harry Potter" }
+    },
+  });
+
+  // Fallback to most recent if Harry Potter not found
+  if (!heroBook) {
+    heroBook = await db.book.findFirst({
       where: { schoolId },
       orderBy: { createdAt: "desc" },
+    });
+  }
+
+  // Fetch other books in parallel
+  const [latestBooks, featuredBooks, literatureBooks, scienceBooks] = await Promise.all([
+    // Latest Books - exclude Harry Potter (hero), get 12 books
+    db.book.findMany({
+      where: {
+        schoolId,
+        NOT: { title: { contains: "Harry Potter" } }
+      },
+      orderBy: { createdAt: "desc" },
+      take: 12,
     }),
-    // Latest Books - skip hero, get next 6 books
+    // Featured - skip latest 13 to show different ones
     db.book.findMany({
       where: { schoolId },
       orderBy: { createdAt: "desc" },
-      skip: 1,
-      take: 6,
-    }),
-    // Featured - skip latest 7 to show different ones
-    db.book.findMany({
-      where: { schoolId },
-      orderBy: { createdAt: "desc" },
-      skip: 7,
-      take: 6,
+      skip: 13,
+      take: 12,
     }),
     // Literature - fiction, classic, drama, poetry genres
     db.book.findMany({
@@ -57,7 +70,7 @@ export default async function LibraryContent({ userId, dictionary, lang }: Props
           { genre: { contains: "شعر" } },
         ],
       },
-      take: 6,
+      take: 12,
     }),
     // Science - science, history genres
     db.book.findMany({
@@ -69,7 +82,7 @@ export default async function LibraryContent({ userId, dictionary, lang }: Props
           { genre: { contains: "فلسفة" } },
         ],
       },
-      take: 6,
+      take: 12,
     }),
   ]);
 

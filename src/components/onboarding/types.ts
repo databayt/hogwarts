@@ -160,42 +160,10 @@ export interface SchoolTemplate {
 }
 
 // ============================================================================
-// LEGACY TYPES (Backward Compatibility)
+// ADDITIONAL UTILITY TYPES
 // ============================================================================
 
-// Keep Prisma types minimal here, avoid PropertyType usage on client
-import { Amenity, Highlight } from './enums'
-
-export interface HostStep {
-  step: string
-  title: string
-  description?: string
-  isCompleted: boolean
-  isRequired: boolean
-}
-
-export interface PropertyTypeOption {
-  // Migrating away from Prisma PropertyType for school
-  id: string
-  title: string
-  description: string
-  icon?: string
-}
-
-export interface AmenityOption {
-  id: Amenity
-  title: string
-  icon?: string
-  category?: 'essential' | 'features' | 'location' | 'safety'
-}
-
-export interface HighlightOption {
-  id: Highlight
-  title: string
-  description?: string
-  icon?: string
-}
-
+// Location data structure
 export interface LocationData {
   address: string
   city: string
@@ -206,87 +174,14 @@ export interface LocationData {
   longitude?: number
 }
 
-export interface PricingData {
-  pricePerNight: number
-  securityDeposit?: number
-  applicationFee?: number
-  weeklyDiscount?: number
-  monthlyDiscount?: number
-}
-
-export interface BasicInfoData {
-  title: string
-  description: string
-  // Temporary string while migrating to school types
-  propertyType: string
-}
-
-export interface SpaceInfoData {
-  bedrooms: number
-  bathrooms: number
-  guestCount: number
-  squareFeet?: number
-}
-
-export interface SettingsData {
-  isPetsAllowed: boolean
-  isParkingIncluded: boolean
-  instantBook: boolean
-}
-
-export interface PhotoData {
-  photoUrls: string[]
-}
-
 // Form validation interfaces
 export interface FormStep {
   name: string
   isValid: boolean
-  data: any
+  data: unknown
 }
 
 export interface ValidationError {
   field: string
   message: string
-}
-
-// Step completion tracking
-export interface StepCompletion {
-  'about-place': boolean
-  'structure': boolean
-  'privacy-type': boolean
-  'location': boolean
-  'floor-plan': boolean
-  'stand-out': boolean
-  'amenities': boolean
-  'photos': boolean
-  'title': boolean
-  'description': boolean
-  'instant-book': boolean
-  'price': boolean
-  'discount': boolean
-  'legal': boolean
-  'visibility': boolean
-  'finish-setup': boolean
-}
-
-// Progress tracking
-export interface HostingProgress {
-  currentStep: keyof StepCompletion
-  completedSteps: (keyof StepCompletion)[]
-  totalSteps: number
-  progressPercentage: number
-}
-
-export type StepKey = keyof StepCompletion
-
-// Export legacy types for backward compatibility
-export interface ListingFormData extends OnboardingSchoolData {
-  // Legacy fields that might be used in existing code
-  propertyType?: string;
-  pricePerNight?: number;
-  guestCount?: number;
-  bedrooms?: number;
-  bathrooms?: number;
-  amenities?: string[];
 }

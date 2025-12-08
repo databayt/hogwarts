@@ -25,7 +25,7 @@ const HostStepLayout: React.FC<HostStepLayoutProps> = ({
             {title && title !== ' ' && (
               <div className="leading-tight text-start">
                 {typeof title === 'string' ? (
-                  <h3>{title}</h3>
+                  <h1 className="text-3xl font-bold">{title}</h1>
                 ) : (
                   title
                 )}

@@ -29,7 +29,7 @@ const StepHeader: React.FC<StepHeaderProps> = ({
             </div>
           )}
           
-          <h1 className="text-xl sm:text-2xl lg:text-4xl font-medium text-foreground leading-tight">
+          <h1 className="text-4xl font-bold text-foreground leading-tight">
             {title}
           </h1>
           

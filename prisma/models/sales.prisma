@@ -1,0 +1,137 @@
+// ============================================================================
+// SALES MODULE - B2B SaaS Lead Management
+// ============================================================================
+
+// Lead Status Pipeline
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  PROPOSAL
+  NEGOTIATION
+  CLOSED_WON
+  CLOSED_LOST
+  ARCHIVED
+}
+
+// Lead Source Tracking
+enum LeadSource {
+  MANUAL
+  IMPORT
+  WEBSITE
+  REFERRAL
+  SOCIAL_MEDIA
+  EMAIL_CAMPAIGN
+  COLD_CALL
+  CONFERENCE
+  PARTNER
+}
+
+// Lead Priority Levels
+enum LeadPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+// Lead Type Classification
+enum LeadType {
+  SCHOOL
+  PARTNERSHIP
+  OTHER
+}
+
+// B2B Sales Lead
+model Lead {
+  id              String       @id @default(cuid())
+  schoolId        String       // Multi-tenant scoping
+
+  // Contact Information
+  name            String
+  email           String?
+  phone           String?
+  alternatePhone  String?
+
+  // Organization Details
+  company         String?      // School/Organization name
+  title           String?      // Contact's title/role
+  website         String?
+  linkedinUrl     String?
+
+  // Classification
+  leadType        LeadType     @default(SCHOOL)
+  industry        String?
+  location        String?
+  country         String?
+
+  // Pipeline Status
+  status          LeadStatus   @default(NEW)
+  source          LeadSource   @default(MANUAL)
+  priority        LeadPriority @default(MEDIUM)
+
+  // Scoring
+  score           Int          @default(0)      // 0-100
+  verified        Boolean      @default(false)
+  emailVerified   Boolean      @default(false)
+  phoneVerified   Boolean      @default(false)
+
+  // Assignment
+  assignedToId    String?
+  assignedTo      User?        @relation("LeadAssignment", fields: [assignedToId], references: [id])
+
+  // Activity Tracking
+  lastContactedAt DateTime?
+  nextFollowUpAt  DateTime?
+
+  // Notes and Tags
+  notes           String?      @db.Text
+  tags            String[]     @default([])
+
+  // Import Tracking
+  importId        String?
+  importedAt      DateTime?
+
+  // Metadata
+  metadata        Json?
+
+  // Relations
+  school          School       @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  activities      LeadActivity[]
+
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  @@unique([schoolId, email])
+  @@index([schoolId])
+  @@index([schoolId, status])
+  @@index([schoolId, source])
+  @@index([schoolId, leadType])
+  @@index([schoolId, assignedToId])
+  @@index([schoolId, score])
+  @@map("leads")
+}
+
+// Lead Activity Tracking
+model LeadActivity {
+  id          String   @id @default(cuid())
+  schoolId    String
+  leadId      String
+
+  type        String   // email_sent, call, meeting, note, status_change
+  description String
+  metadata    Json?
+
+  createdById String
+  createdBy   User     @relation("LeadActivityCreator", fields: [createdById], references: [id])
+
+  school      School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  lead        Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime @default(now())
+
+  @@index([schoolId])
+  @@index([leadId])
+  @@index([createdById])
+  @@map("lead_activities")
+}

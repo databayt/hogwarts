@@ -22,9 +22,9 @@ export default function FinishSetupContent({ dictionary }: Props) {
   }, [enableNext]);
 
   const illustration = (
-    <div className="w-full sm:w-3/4 max-w-xl mx-auto rounded-xl sm:rounded-2xl flex items-center justify-center overflow-hidden h-[300px] sm:aspect-video relative">
+    <div className="w-full sm:w-3/4 max-w-xl mx-auto rounded-xl sm:rounded-2xl flex items-center justify-center overflow-hidden h-[200px] relative">
       <Image
-        src="/onboarding/finish-setup.png"
+        src="https://www-cdn.anthropic.com/images/4zrzovbb/website/0321b0ecbbf53535e93be1310ae1935157bcebdd-1000x1000.svg"
         alt="Finish Setup"
         fill
         className="object-contain"

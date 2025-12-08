@@ -29,7 +29,7 @@ const CATEGORY_MAP = {
 };
 
 const MAX_SIZE = {
-  video: 2 * 1024 * 1024 * 1024, // 2GB for videos
+  video: 5 * 1024 * 1024 * 1024, // 5GB for videos (with S3), 500MB for Vercel Blob
   material: 50 * 1024 * 1024, // 50MB for documents
   image: 10 * 1024 * 1024, // 10MB for images
 };

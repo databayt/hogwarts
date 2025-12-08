@@ -30,14 +30,16 @@ export async function seedClassrooms(
 ): Promise<{ classrooms: ClassroomRef[] }> {
   console.log("🏛️ Creating classrooms (17 rooms, Bilingual AR/EN)...");
 
-  // Create classroom types with bilingual names
+  // Upsert classroom types with bilingual names
   const typeMap = new Map<string, string>();
 
   for (const type of CLASSROOM_TYPES) {
-    const classroomType = await prisma.classroomType.create({
-      data: {
+    const classroomType = await prisma.classroomType.upsert({
+      where: { schoolId_name: { schoolId, name: type.en } },
+      update: {}, // No updates needed
+      create: {
         schoolId,
-        name: type.en, // English for database
+        name: type.en,
       },
     });
     typeMap.set(type.en, classroomType.id);
@@ -45,7 +47,7 @@ export async function seedClassrooms(
 
   console.log(`   ✅ Created: ${CLASSROOM_TYPES.length} classroom types`);
 
-  // Create classrooms from bilingual constants
+  // Upsert classrooms from bilingual constants
   const classrooms: ClassroomRef[] = [];
 
   for (const room of CLASSROOMS) {
@@ -55,11 +57,16 @@ export async function seedClassrooms(
       continue;
     }
 
-    const classroom = await prisma.classroom.create({
-      data: {
+    const classroom = await prisma.classroom.upsert({
+      where: { schoolId_roomName: { schoolId, roomName: room.nameEn } },
+      update: {
+        typeId,
+        capacity: room.capacity,
+      },
+      create: {
         schoolId,
         typeId,
-        roomName: room.nameEn, // English for database
+        roomName: room.nameEn,
         capacity: room.capacity,
       },
     });

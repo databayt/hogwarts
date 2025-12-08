@@ -19,9 +19,14 @@ export async function seedAcademic(
 }> {
   console.log("📚 Creating academic structure (Sudanese Calendar)...");
 
-  // School Year - Sudanese academic year (September - June)
-  const schoolYear = await prisma.schoolYear.create({
-    data: {
+  // School Year - Sudanese academic year (September - June) - upsert by yearName
+  const schoolYear = await prisma.schoolYear.upsert({
+    where: { schoolId_yearName: { schoolId, yearName: "2025-2026" } },
+    update: {
+      startDate: new Date("2025-09-01T00:00:00Z"),
+      endDate: new Date("2026-06-30T00:00:00Z"),
+    },
+    create: {
       schoolId,
       yearName: "2025-2026",
       startDate: new Date("2025-09-01T00:00:00Z"),
@@ -29,13 +34,18 @@ export async function seedAcademic(
     },
   });
 
-  // Periods - Sudanese school day (7:45 AM - 3:20 PM, Sun-Thu)
+  // Periods - Sudanese school day (7:45 AM - 3:20 PM, Sun-Thu) - upsert by name
   for (const p of PERIODS) {
-    await prisma.period.create({
-      data: {
+    await prisma.period.upsert({
+      where: { schoolId_yearId_name: { schoolId, yearId: schoolYear.id, name: p.nameEn } },
+      update: {
+        startTime: timeAt(p.startHour, p.startMin),
+        endTime: timeAt(p.endHour, p.endMin),
+      },
+      create: {
         schoolId,
         yearId: schoolYear.id,
-        name: p.nameEn, // English for database storage
+        name: p.nameEn,
         startTime: timeAt(p.startHour, p.startMin),
         endTime: timeAt(p.endHour, p.endMin),
       },
@@ -46,9 +56,14 @@ export async function seedAcademic(
     orderBy: { name: "asc" },
   });
 
-  // Terms - Sudanese school terms
-  const term1 = await prisma.term.create({
-    data: {
+  // Terms - Sudanese school terms - upsert by termNumber
+  const term1 = await prisma.term.upsert({
+    where: { schoolId_yearId_termNumber: { schoolId, yearId: schoolYear.id, termNumber: 1 } },
+    update: {
+      startDate: new Date("2025-09-01T00:00:00Z"),
+      endDate: new Date("2026-01-15T00:00:00Z"),
+    },
+    create: {
       schoolId,
       yearId: schoolYear.id,
       termNumber: 1,
@@ -57,8 +72,13 @@ export async function seedAcademic(
     },
   });
 
-  const term2 = await prisma.term.create({
-    data: {
+  const term2 = await prisma.term.upsert({
+    where: { schoolId_yearId_termNumber: { schoolId, yearId: schoolYear.id, termNumber: 2 } },
+    update: {
+      startDate: new Date("2026-01-16T00:00:00Z"),
+      endDate: new Date("2026-06-30T00:00:00Z"),
+    },
+    create: {
       schoolId,
       yearId: schoolYear.id,
       termNumber: 2,
@@ -67,13 +87,18 @@ export async function seedAcademic(
     },
   });
 
-  // Year Levels - Sudanese education system (bilingual AR/EN)
+  // Year Levels - Sudanese education system (bilingual AR/EN) - upsert by levelName
   for (const level of YEAR_LEVELS) {
-    await prisma.yearLevel.create({
-      data: {
+    await prisma.yearLevel.upsert({
+      where: { schoolId_levelName: { schoolId, levelName: level.en } },
+      update: {
+        levelNameAr: level.ar,
+        levelOrder: level.order,
+      },
+      create: {
         schoolId,
         levelName: level.en,
-        levelNameAr: level.ar,  // Arabic name for bilingual support
+        levelNameAr: level.ar,
         levelOrder: level.order,
       },
     });

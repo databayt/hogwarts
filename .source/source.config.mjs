@@ -1,67 +1,73 @@
 // source.config.ts
 import { defineConfig, defineDocs } from "fumadocs-mdx/config";
 import rehypePrettyCode from "rehype-pretty-code";
+
+// src/lib/highlight-code.ts
+import { codeToHtml } from "shiki";
 var transformers = [
   {
     code(node) {
-      const raw = node.children?.[0]?.value ?? "";
-      node.properties ||= {};
-      node.properties["__raw__"] = raw;
-      if (raw.startsWith("npm install") || raw.startsWith("npm i ")) {
-        const npmCommand = raw;
-        const yarnCommand = raw.replace(/^npm install/, "yarn add").replace(/^npm i /, "yarn add ").replace(/ --save-dev/g, " --dev").replace(/ -D/g, " --dev");
-        const pnpmCommand = raw.replace(/^npm install/, "pnpm add").replace(/^npm i /, "pnpm add ");
-        const bunCommand = raw.replace(/^npm install/, "bun add").replace(/^npm i /, "bun add ");
-        node.properties["__npm__"] = npmCommand;
-        node.properties["__yarn__"] = yarnCommand;
-        node.properties["__pnpm__"] = pnpmCommand;
-        node.properties["__bun__"] = bunCommand;
-      }
-      if (raw.startsWith("npx ")) {
-        const npmCommand = raw;
-        const yarnCommand = raw.replace(/^npx /, "yarn dlx ");
-        const pnpmCommand = raw.replace(/^npx /, "pnpm dlx ");
-        const bunCommand = raw.replace(/^npx /, "bunx ");
-        node.properties["__npm__"] = npmCommand;
-        node.properties["__yarn__"] = yarnCommand;
-        node.properties["__pnpm__"] = pnpmCommand;
-        node.properties["__bun__"] = bunCommand;
+      if (node.tagName === "code") {
+        const raw = this.source;
+        node.properties["__raw__"] = raw;
+        if (raw.startsWith("npm install")) {
+          node.properties["__npm__"] = raw;
+          node.properties["__yarn__"] = raw.replace("npm install", "yarn add");
+          node.properties["__pnpm__"] = raw.replace("npm install", "pnpm add");
+          node.properties["__bun__"] = raw.replace("npm install", "bun add");
+        }
+        if (raw.startsWith("npx create-")) {
+          node.properties["__npm__"] = raw;
+          node.properties["__yarn__"] = raw.replace(
+            "npx create-",
+            "yarn create "
+          );
+          node.properties["__pnpm__"] = raw.replace(
+            "npx create-",
+            "pnpm create "
+          );
+          node.properties["__bun__"] = raw.replace("npx", "bunx --bun");
+        }
+        if (raw.startsWith("npm create")) {
+          node.properties["__npm__"] = raw;
+          node.properties["__yarn__"] = raw.replace("npm create", "yarn create");
+          node.properties["__pnpm__"] = raw.replace("npm create", "pnpm create");
+          node.properties["__bun__"] = raw.replace("npm create", "bun create");
+        }
+        if (raw.startsWith("npx")) {
+          node.properties["__npm__"] = raw;
+          node.properties["__yarn__"] = raw.replace("npx", "yarn");
+          node.properties["__pnpm__"] = raw.replace("npx", "pnpm dlx");
+          node.properties["__bun__"] = raw.replace("npx", "bunx --bun");
+        }
+        if (raw.startsWith("npm run")) {
+          node.properties["__npm__"] = raw;
+          node.properties["__yarn__"] = raw.replace("npm run", "yarn");
+          node.properties["__pnpm__"] = raw.replace("npm run", "pnpm");
+          node.properties["__bun__"] = raw.replace("npm run", "bun");
+        }
       }
     }
   }
 ];
+
+// source.config.ts
 var source_config_default = defineConfig({
   mdxOptions: {
-    rehypePlugins: [
-      [
+    rehypePlugins: (plugins) => {
+      plugins.shift();
+      plugins.push([
         rehypePrettyCode,
         {
           theme: {
             dark: "github-dark",
             light: "github-light-default"
           },
-          transformers,
-          defaultLang: "typescript",
-          grid: true,
-          // Add support for diff highlighting
-          onVisitLine(node) {
-            if (node.children.length === 0) {
-              node.children = [{ type: "text", value: " " }];
-            }
-          },
-          onVisitHighlightedLine(node) {
-            if (!node.properties.className) {
-              node.properties.className = [];
-            }
-            node.properties.className.push("highlighted");
-          },
-          onVisitHighlightedChars(node) {
-            node.properties.className = ["word"];
-          }
+          transformers
         }
-      ]
-    ],
-    remarkPlugins: []
+      ]);
+      return plugins;
+    }
   }
 });
 var docs = defineDocs({

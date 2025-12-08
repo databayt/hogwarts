@@ -115,11 +115,15 @@ export function ReportsContent({ dictionary, locale = 'en', initialFilters }: Pr
         })
       ])
 
-      setRecords(reportResult.records)
-      setTotal(reportResult.total)
-      setTotalPages(reportResult.totalPages)
-      setClasses(classesResult.classes)
-      setStats(statsResult)
+      // Handle mixed return types
+      if (!('success' in reportResult && !reportResult.success) && 'records' in reportResult) {
+        if (reportResult.records) setRecords(reportResult.records as any)
+        if (reportResult.total != null) setTotal(reportResult.total)
+        if (reportResult.totalPages != null) setTotalPages(reportResult.totalPages)
+      }
+      if (classesResult.success && classesResult.data) setClasses(classesResult.data.classes)
+      // statsResult returns raw data on success
+      if (!('success' in statsResult && !statsResult.success)) setStats(statsResult as any)
     } catch (error) {
       console.error('Error fetching report data:', error)
     } finally {

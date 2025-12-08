@@ -16,50 +16,77 @@ export async function seedAdmission(
 ): Promise<void> {
   console.log("🎓 Creating admission campaigns and applications...");
 
-  // Campaign 1: Completed (previous year)
-  const campaignCompleted = await prisma.admissionCampaign.create({
-    data: {
-      schoolId,
-      name: "Admissions 2024-2025",
-      academicYear: "2024-2025",
-      startDate: new Date("2024-01-01T00:00:00Z"),
-      endDate: new Date("2024-05-31T23:59:59Z"),
-      status: AdmissionStatus.COMPLETED,
-      description: "Admissions for Academic Year 2024-2025",
-      applicationFee: 500,
-      totalSeats: 300,
-    },
-  });
+  let campaignCreatedCount = 0;
+  let campaignSkippedCount = 0;
 
-  // Campaign 2: Closed (current year)
-  const campaignClosed = await prisma.admissionCampaign.create({
-    data: {
-      schoolId,
-      name: "Admissions 2025-2026",
-      academicYear: "2025-2026",
-      startDate: new Date("2025-01-01T00:00:00Z"),
-      endDate: new Date("2025-05-31T23:59:59Z"),
-      status: AdmissionStatus.CLOSED,
-      description: "Admissions for Academic Year 2025-2026",
-      applicationFee: 500,
-      totalSeats: 350,
-    },
+  // Campaign 1: Completed (previous year) - findFirst + create
+  let campaignCompleted = await prisma.admissionCampaign.findFirst({
+    where: { schoolId, name: "Admissions 2024-2025", academicYear: "2024-2025" },
   });
+  if (!campaignCompleted) {
+    campaignCompleted = await prisma.admissionCampaign.create({
+      data: {
+        schoolId,
+        name: "Admissions 2024-2025",
+        academicYear: "2024-2025",
+        startDate: new Date("2024-01-01T00:00:00Z"),
+        endDate: new Date("2024-05-31T23:59:59Z"),
+        status: AdmissionStatus.COMPLETED,
+        description: "Admissions for Academic Year 2024-2025",
+        applicationFee: 500,
+        totalSeats: 300,
+      },
+    });
+    campaignCreatedCount++;
+  } else {
+    campaignSkippedCount++;
+  }
 
-  // Campaign 3: Open (upcoming year)
-  const campaignOpen = await prisma.admissionCampaign.create({
-    data: {
-      schoolId,
-      name: "Admissions 2026-2027",
-      academicYear: "2026-2027",
-      startDate: new Date("2026-01-01T00:00:00Z"),
-      endDate: new Date("2026-05-31T23:59:59Z"),
-      status: AdmissionStatus.OPEN,
-      description: "Admissions for Academic Year 2026-2027",
-      applicationFee: 550,
-      totalSeats: 350,
-    },
+  // Campaign 2: Closed (current year) - findFirst + create
+  let campaignClosed = await prisma.admissionCampaign.findFirst({
+    where: { schoolId, name: "Admissions 2025-2026", academicYear: "2025-2026" },
   });
+  if (!campaignClosed) {
+    campaignClosed = await prisma.admissionCampaign.create({
+      data: {
+        schoolId,
+        name: "Admissions 2025-2026",
+        academicYear: "2025-2026",
+        startDate: new Date("2025-01-01T00:00:00Z"),
+        endDate: new Date("2025-05-31T23:59:59Z"),
+        status: AdmissionStatus.CLOSED,
+        description: "Admissions for Academic Year 2025-2026",
+        applicationFee: 500,
+        totalSeats: 350,
+      },
+    });
+    campaignCreatedCount++;
+  } else {
+    campaignSkippedCount++;
+  }
+
+  // Campaign 3: Open (upcoming year) - findFirst + create
+  let campaignOpen = await prisma.admissionCampaign.findFirst({
+    where: { schoolId, name: "Admissions 2026-2027", academicYear: "2026-2027" },
+  });
+  if (!campaignOpen) {
+    campaignOpen = await prisma.admissionCampaign.create({
+      data: {
+        schoolId,
+        name: "Admissions 2026-2027",
+        academicYear: "2026-2027",
+        startDate: new Date("2026-01-01T00:00:00Z"),
+        endDate: new Date("2026-05-31T23:59:59Z"),
+        status: AdmissionStatus.OPEN,
+        description: "Admissions for Academic Year 2026-2027",
+        applicationFee: 550,
+        totalSeats: 350,
+      },
+    });
+    campaignCreatedCount++;
+  } else {
+    campaignSkippedCount++;
+  }
 
   const campaigns = [
     { campaign: campaignCompleted, count: 30, baseYear: 2024 },
@@ -69,11 +96,34 @@ export async function seedAdmission(
 
   const grades = ["Grade 7", "Grade 8", "Grade 9", "Grade 10", "Grade 11", "Grade 12"];
   let appCounter = 0;
+  let appCreatedCount = 0;
+  let appSkippedCount = 0;
+  let commCreatedCount = 0;
   const allApplications: { id: string; applicationNumber: string; firstName: string; enrollmentNumber: string | null; waitlistNumber: number | null; status: AdmissionApplicationStatus }[] = [];
 
   for (const { campaign, count, baseYear } of campaigns) {
     for (let i = 0; i < count; i++) {
       appCounter++;
+
+      const applicationNumber = `APP-${baseYear}-${String(appCounter).padStart(4, "0")}`;
+
+      // Check if application already exists
+      const existingApp = await prisma.application.findFirst({
+        where: { schoolId, applicationNumber },
+      });
+
+      if (existingApp) {
+        appSkippedCount++;
+        allApplications.push({
+          id: existingApp.id,
+          applicationNumber: existingApp.applicationNumber,
+          firstName: existingApp.firstName,
+          enrollmentNumber: existingApp.enrollmentNumber,
+          waitlistNumber: null,
+          status: existingApp.status,
+        });
+        continue; // Skip - application already exists
+      }
 
       const gender = Math.random() > 0.5 ? Gender.MALE : Gender.FEMALE;
       const name = getRandomName(gender === Gender.MALE ? "M" : "F", appCounter);
@@ -113,7 +163,7 @@ export async function seedAdmission(
         data: {
           schoolId,
           campaignId: campaign.id,
-          applicationNumber: `APP-${baseYear}-${String(appCounter).padStart(4, "0")}`,
+          applicationNumber,
           firstName: name.givenNameEn,
           middleName: middleNameEn,
           lastName: name.surnameEn,
@@ -141,6 +191,7 @@ export async function seedAdmission(
           paymentDate: faker.date.between({ from: campaign.startDate, to: campaign.endDate }),
         },
       });
+      appCreatedCount++;
 
       allApplications.push({
         id: application.id,
@@ -151,7 +202,7 @@ export async function seedAdmission(
         status,
       });
 
-      // Communication (using English names for email templates)
+      // Communication (using English names for email templates) - findFirst + create
       const commTemplates: Record<AdmissionApplicationStatus, { subject: string; message: string } | null> = {
         [AdmissionApplicationStatus.DRAFT]: null,
         [AdmissionApplicationStatus.SUBMITTED]: { subject: "Application Received", message: `Dear ${name.givenNameEn}, Thank you for your application.` },
@@ -168,20 +219,31 @@ export async function seedAdmission(
 
       const template = commTemplates[status];
       if (template) {
-        await prisma.communication.create({
-          data: {
-            schoolId,
-            applicationId: application.id,
-            type: CommunicationType.EMAIL,
-            subject: template.subject,
-            message: template.message,
-            sentBy: adminUser.id,
-            status: CommunicationStatus.DELIVERED,
-          },
+        // Check if communication already exists for this application + subject
+        const existingComm = await prisma.communication.findFirst({
+          where: { schoolId, applicationId: application.id, subject: template.subject },
         });
+
+        if (!existingComm) {
+          await prisma.communication.create({
+            data: {
+              schoolId,
+              applicationId: application.id,
+              type: CommunicationType.EMAIL,
+              subject: template.subject,
+              message: template.message,
+              sentBy: adminUser.id,
+              status: CommunicationStatus.DELIVERED,
+            },
+          });
+          commCreatedCount++;
+        }
       }
     }
   }
 
-  console.log(`   ✅ Created: 3 campaigns, ${allApplications.length} applications\n`);
+  const totalCampaigns = campaignCreatedCount + campaignSkippedCount;
+  console.log(`   ✅ Created: ${campaignCreatedCount}/${totalCampaigns} campaigns${campaignSkippedCount > 0 ? ` (${campaignSkippedCount} existing)` : ""}`);
+  console.log(`   ✅ Created: ${appCreatedCount} applications${appSkippedCount > 0 ? ` (${appSkippedCount} existing skipped)` : ""}`);
+  console.log(`   ✅ Created: ${commCreatedCount} communications\n`);
 }

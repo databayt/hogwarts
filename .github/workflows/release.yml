@@ -1,0 +1,91 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., v1.0.0)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "version=${{ inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Generate Changelog
+        id: changelog
+        uses: orhun/git-cliff-action@v4
+        with:
+          config: cliff.toml
+          args: --latest --strip header
+        env:
+          OUTPUT: CHANGELOG.md
+        continue-on-error: true
+
+      - name: Generate Release Notes (fallback)
+        if: steps.changelog.outcome == 'failure'
+        id: release-notes
+        run: |
+          echo "## What's Changed" > RELEASE_NOTES.md
+          echo "" >> RELEASE_NOTES.md
+
+          # Get commits since last tag
+          LAST_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          if [ -n "$LAST_TAG" ]; then
+            echo "### Commits since $LAST_TAG" >> RELEASE_NOTES.md
+            git log $LAST_TAG..HEAD --pretty=format:"- %s (%h)" >> RELEASE_NOTES.md
+          else
+            echo "### Recent Commits" >> RELEASE_NOTES.md
+            git log -20 --pretty=format:"- %s (%h)" >> RELEASE_NOTES.md
+          fi
+
+          echo "" >> RELEASE_NOTES.md
+          echo "" >> RELEASE_NOTES.md
+          echo "**Full Changelog**: https://github.com/${{ github.repository }}/commits/${{ steps.version.outputs.version }}" >> RELEASE_NOTES.md
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.version }}
+          name: Release ${{ steps.version.outputs.version }}
+          body_path: ${{ steps.changelog.outcome == 'success' && 'CHANGELOG.md' || 'RELEASE_NOTES.md' }}
+          draft: false
+          prerelease: ${{ contains(steps.version.outputs.version, '-') }}
+          generate_release_notes: ${{ steps.changelog.outcome == 'failure' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  notify:
+    name: Notify Release
+    runs-on: ubuntu-latest
+    needs: release
+    steps:
+      - name: Post Summary
+        run: |
+          echo "## Release Published! 🎉" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Version: **${{ needs.release.outputs.version || github.ref_name }}**" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "View the release: https://github.com/${{ github.repository }}/releases/latest" >> $GITHUB_STEP_SUMMARY

@@ -37,8 +37,8 @@ export function SubjectCreateForm({ onSuccess }: SubjectCreateFormProps) {
     const load = async () => {
       if (!currentId) return;
       const res = await getSubject({ id: currentId });
-      const s = res.subject as any;
-      if (!s) return;
+      if (!res.success || !res.data) return;
+      const s = res.data as any;
       form.reset({
         subjectName: s.subjectName ?? "",
         departmentId: s.departmentId ?? "",
@@ -49,20 +49,25 @@ export function SubjectCreateForm({ onSuccess }: SubjectCreateFormProps) {
   }, [currentId]);
 
   async function onSubmit(values: z.infer<typeof subjectCreateSchema>) {
-    const res = currentId
-      ? await updateSubject({ id: currentId, ...values })
-      : await createSubject(values);
-    if (res?.success) {
-      toast.success(currentId ? "Subject updated" : "Subject created");
-      closeModal();
-      // Use callback for optimistic update, fallback to router.refresh()
-      if (onSuccess) {
-        onSuccess();
+    try {
+      const res = currentId
+        ? await updateSubject({ id: currentId, ...values })
+        : await createSubject(values);
+      if (res?.success) {
+        toast.success(currentId ? "Subject updated" : "Subject created");
+        closeModal();
+        // Use callback for optimistic update, fallback to router.refresh()
+        if (onSuccess) {
+          onSuccess();
+        } else {
+          router.refresh();
+        }
       } else {
-        router.refresh();
+        toast.error(res?.error || (currentId ? "Failed to update subject" : "Failed to create subject"));
       }
-    } else {
-      toast.error(currentId ? "Failed to update subject" : "Failed to create subject");
+    } catch (error) {
+      console.error("Form submission error:", error);
+      toast.error("An unexpected error occurred");
     }
   }
 

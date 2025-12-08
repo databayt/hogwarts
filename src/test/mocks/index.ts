@@ -367,3 +367,482 @@ export function setupNextMocks() {
     useSearchParams: vi.fn(() => new URLSearchParams()),
   }))
 }
+
+// ============================================================================
+// AUTH-SPECIFIC MOCKS
+// ============================================================================
+
+/**
+ * Mock bcrypt functions
+ *
+ * Mocks bcryptjs hash and compare functions for password testing.
+ *
+ * @example
+ * ```ts
+ * import { mockBcrypt } from '@/test/mocks'
+ *
+ * vi.mock('bcryptjs', () => mockBcrypt())
+ *
+ * // Override specific behavior:
+ * vi.mock('bcryptjs', () => mockBcrypt({ compareResult: false }))
+ * ```
+ */
+export function mockBcrypt(options?: {
+  hashResult?: string
+  compareResult?: boolean
+}) {
+  return {
+    hash: vi.fn().mockResolvedValue(options?.hashResult ?? '$2a$10$mockedHash'),
+    compare: vi.fn().mockResolvedValue(options?.compareResult ?? true),
+    hashSync: vi.fn().mockReturnValue(options?.hashResult ?? '$2a$10$mockedHash'),
+    compareSync: vi.fn().mockReturnValue(options?.compareResult ?? true),
+  }
+}
+
+/**
+ * Mock NextAuth signIn function
+ *
+ * Mocks the NextAuth signIn function for testing login flows.
+ *
+ * @example
+ * ```ts
+ * import { mockSignIn } from '@/test/mocks'
+ *
+ * vi.mock('next-auth/react', () => ({
+ *   signIn: mockSignIn()
+ * }))
+ *
+ * // Test error scenarios:
+ * vi.mock('next-auth/react', () => ({
+ *   signIn: mockSignIn({ error: 'CredentialsSignin' })
+ * }))
+ * ```
+ */
+export function mockSignIn(options?: {
+  error?: string
+  url?: string
+  ok?: boolean
+}) {
+  return vi.fn().mockResolvedValue({
+    error: options?.error ?? null,
+    url: options?.url ?? '/dashboard',
+    ok: options?.ok ?? true,
+    status: options?.error ? 401 : 200,
+  })
+}
+
+/**
+ * Mock NextAuth signOut function
+ *
+ * Mocks the NextAuth signOut function for testing logout flows.
+ *
+ * @example
+ * ```ts
+ * import { mockSignOut } from '@/test/mocks'
+ *
+ * vi.mock('next-auth/react', () => ({
+ *   signOut: mockSignOut()
+ * }))
+ * ```
+ */
+export function mockSignOut() {
+  return vi.fn().mockResolvedValue({ url: '/login' })
+}
+
+/**
+ * Mock Resend email service
+ *
+ * Mocks the Resend email service for testing email flows.
+ *
+ * @example
+ * ```ts
+ * import { mockResend } from '@/test/mocks'
+ *
+ * vi.mock('resend', () => ({
+ *   Resend: vi.fn().mockImplementation(() => mockResend())
+ * }))
+ *
+ * // Test error scenarios:
+ * vi.mock('resend', () => ({
+ *   Resend: vi.fn().mockImplementation(() => mockResend({ error: true }))
+ * }))
+ * ```
+ */
+export function mockResend(options?: {
+  error?: boolean
+  errorMessage?: string
+}) {
+  if (options?.error) {
+    return {
+      emails: {
+        send: vi.fn().mockResolvedValue({
+          data: null,
+          error: { message: options.errorMessage ?? 'Failed to send email' },
+        }),
+      },
+    }
+  }
+
+  return {
+    emails: {
+      send: vi.fn().mockResolvedValue({
+        data: { id: 'mock-email-id' },
+        error: null,
+      }),
+    },
+  }
+}
+
+/**
+ * Mock auth-related email functions
+ *
+ * Mocks the email functions used in authentication flows.
+ *
+ * @example
+ * ```ts
+ * import { mockAuthMail } from '@/test/mocks'
+ *
+ * vi.mock('@/components/auth/mail', () => mockAuthMail())
+ * ```
+ */
+export function mockAuthMail() {
+  return {
+    sendVerificationEmail: vi.fn().mockResolvedValue(undefined),
+    sendPasswordResetEmail: vi.fn().mockResolvedValue(undefined),
+    sendTwoFactorTokenEmail: vi.fn().mockResolvedValue(undefined),
+  }
+}
+
+/**
+ * Mock auth-related Prisma models
+ *
+ * Extends mockPrisma with auth-specific models.
+ * Includes: verificationToken, passwordResetToken, twoFactorToken,
+ * twoFactorConfirmation, account
+ *
+ * @example
+ * ```ts
+ * import { mockPrismaAuth } from '@/test/mocks'
+ *
+ * vi.mock('@/lib/db', () => ({ db: mockPrismaAuth() }))
+ *
+ * // Setup specific token behavior:
+ * const db = mockPrismaAuth()
+ * db.verificationToken.findFirst.mockResolvedValue({
+ *   id: 'vt1',
+ *   email: 'test@example.com',
+ *   token: 'mock-token',
+ *   expires: new Date(Date.now() + 3600000)
+ * })
+ * ```
+ */
+export function mockPrismaAuth() {
+  const basePrisma = mockPrisma()
+
+  return {
+    ...basePrisma,
+    // Auth-specific models
+    verificationToken: {
+      findFirst: vi.fn(),
+      findUnique: vi.fn(),
+      create: vi.fn(),
+      delete: vi.fn(),
+      deleteMany: vi.fn(),
+    },
+    passwordResetToken: {
+      findFirst: vi.fn(),
+      findUnique: vi.fn(),
+      create: vi.fn(),
+      delete: vi.fn(),
+      deleteMany: vi.fn(),
+    },
+    twoFactorToken: {
+      findFirst: vi.fn(),
+      findUnique: vi.fn(),
+      create: vi.fn(),
+      delete: vi.fn(),
+      deleteMany: vi.fn(),
+    },
+    twoFactorConfirmation: {
+      findFirst: vi.fn(),
+      findUnique: vi.fn(),
+      create: vi.fn(),
+      delete: vi.fn(),
+      deleteMany: vi.fn(),
+    },
+    account: {
+      findFirst: vi.fn(),
+      findUnique: vi.fn(),
+      findMany: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+    },
+  } as unknown as PrismaClient
+}
+
+/**
+ * Create mock user for auth tests
+ *
+ * Factory function to create mock user objects with auth-related fields.
+ *
+ * @example
+ * ```ts
+ * import { createMockUser } from '@/test/mocks'
+ *
+ * const user = createMockUser({ email: 'custom@example.com' })
+ * db.user.findUnique.mockResolvedValue(user)
+ * ```
+ */
+export function createMockUser(overrides?: {
+  id?: string
+  email?: string
+  emailVerified?: Date | null
+  password?: string | null
+  role?: 'ADMIN' | 'TEACHER' | 'STUDENT' | 'DEVELOPER' | 'USER' | 'GUARDIAN' | 'ACCOUNTANT' | 'STAFF'
+  schoolId?: string | null
+  isTwoFactorEnabled?: boolean
+  image?: string | null
+  username?: string | null
+}) {
+  return {
+    id: overrides?.id ?? 'user-1',
+    email: overrides?.email ?? 'test@example.com',
+    emailVerified: overrides?.emailVerified ?? new Date(),
+    password: overrides?.password ?? '$2a$10$hashedPassword',
+    role: overrides?.role ?? 'USER',
+    schoolId: overrides?.schoolId ?? 'school-1',
+    isTwoFactorEnabled: overrides?.isTwoFactorEnabled ?? false,
+    image: overrides?.image ?? null,
+    username: overrides?.username ?? null,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  }
+}
+
+/**
+ * Create mock verification token
+ *
+ * Factory function to create mock verification tokens.
+ *
+ * @example
+ * ```ts
+ * import { createMockVerificationToken } from '@/test/mocks'
+ *
+ * const token = createMockVerificationToken({ expired: true })
+ * db.verificationToken.findFirst.mockResolvedValue(token)
+ * ```
+ */
+export function createMockVerificationToken(overrides?: {
+  id?: string
+  email?: string
+  token?: string
+  expired?: boolean
+}) {
+  const expires = overrides?.expired
+    ? new Date(Date.now() - 3600000) // 1 hour ago
+    : new Date(Date.now() + 3600000) // 1 hour from now
+
+  return {
+    id: overrides?.id ?? 'vt-1',
+    email: overrides?.email ?? 'test@example.com',
+    token: overrides?.token ?? 'mock-verification-token',
+    expires,
+  }
+}
+
+/**
+ * Create mock password reset token
+ *
+ * Factory function to create mock password reset tokens.
+ *
+ * @example
+ * ```ts
+ * import { createMockPasswordResetToken } from '@/test/mocks'
+ *
+ * const token = createMockPasswordResetToken()
+ * db.passwordResetToken.findFirst.mockResolvedValue(token)
+ * ```
+ */
+export function createMockPasswordResetToken(overrides?: {
+  id?: string
+  email?: string
+  token?: string
+  expired?: boolean
+}) {
+  const expires = overrides?.expired
+    ? new Date(Date.now() - 3600000)
+    : new Date(Date.now() + 3600000)
+
+  return {
+    id: overrides?.id ?? 'prt-1',
+    email: overrides?.email ?? 'test@example.com',
+    token: overrides?.token ?? 'mock-reset-token',
+    expires,
+  }
+}
+
+/**
+ * Create mock two-factor token
+ *
+ * Factory function to create mock 2FA tokens.
+ *
+ * @example
+ * ```ts
+ * import { createMockTwoFactorToken } from '@/test/mocks'
+ *
+ * const token = createMockTwoFactorToken({ token: '123456' })
+ * db.twoFactorToken.findFirst.mockResolvedValue(token)
+ * ```
+ */
+export function createMockTwoFactorToken(overrides?: {
+  id?: string
+  email?: string
+  token?: string
+  expired?: boolean
+}) {
+  const expires = overrides?.expired
+    ? new Date(Date.now() - 300000) // 5 minutes ago
+    : new Date(Date.now() + 300000) // 5 minutes from now
+
+  return {
+    id: overrides?.id ?? '2fa-1',
+    email: overrides?.email ?? 'test@example.com',
+    token: overrides?.token ?? '123456',
+    expires,
+  }
+}
+
+/**
+ * Create mock account (OAuth provider)
+ *
+ * Factory function to create mock OAuth accounts.
+ *
+ * @example
+ * ```ts
+ * import { createMockAccount } from '@/test/mocks'
+ *
+ * const account = createMockAccount({ provider: 'google' })
+ * db.account.findFirst.mockResolvedValue(account)
+ * ```
+ */
+export function createMockAccount(overrides?: {
+  id?: string
+  userId?: string
+  type?: string
+  provider?: 'google' | 'facebook' | 'credentials'
+  providerAccountId?: string
+}) {
+  return {
+    id: overrides?.id ?? 'acc-1',
+    userId: overrides?.userId ?? 'user-1',
+    type: overrides?.type ?? 'oauth',
+    provider: overrides?.provider ?? 'google',
+    providerAccountId: overrides?.providerAccountId ?? 'google-account-id',
+    refresh_token: null,
+    access_token: 'mock-access-token',
+    expires_at: Math.floor(Date.now() / 1000) + 3600,
+    token_type: 'Bearer',
+    scope: 'openid email profile',
+    id_token: null,
+    session_state: null,
+  }
+}
+
+/**
+ * Create mock school
+ *
+ * Factory function to create mock school objects.
+ *
+ * @example
+ * ```ts
+ * import { createMockSchool } from '@/test/mocks'
+ *
+ * const school = createMockSchool({ name: 'Hogwarts' })
+ * db.school.findUnique.mockResolvedValue(school)
+ * ```
+ */
+export function createMockSchool(overrides?: {
+  id?: string
+  name?: string
+  domain?: string
+  address?: string
+  website?: string
+  planType?: string
+}) {
+  return {
+    id: overrides?.id ?? 'school-1',
+    name: overrides?.name ?? 'Test School',
+    domain: overrides?.domain ?? 'testschool',
+    address: overrides?.address ?? '123 Test St',
+    website: overrides?.website ?? null,
+    planType: overrides?.planType ?? 'basic',
+    maxStudents: 100,
+    maxTeachers: 20,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  }
+}
+
+/**
+ * Complete Auth Mock Setup
+ *
+ * Combines all auth-related mocks into a setup function.
+ * Useful for setting up all auth mocks at once.
+ *
+ * @example
+ * ```ts
+ * import { setupAuthMocks } from '@/test/mocks'
+ *
+ * beforeEach(() => {
+ *   setupAuthMocks()
+ * })
+ * ```
+ */
+export function setupAuthMocks() {
+  vi.mock('bcryptjs', () => mockBcrypt())
+
+  vi.mock('next-auth/react', () => ({
+    signIn: mockSignIn(),
+    signOut: mockSignOut(),
+    useSession: vi.fn(() => ({
+      data: mockSession(),
+      status: 'authenticated',
+    })),
+  }))
+
+  vi.mock('@/components/auth/mail', () => mockAuthMail())
+
+  vi.mock('@/lib/db', () => ({ db: mockPrismaAuth() }))
+}
+
+/**
+ * Mock Auth.js (NextAuth v5) server-side functions
+ *
+ * Mocks the server-side auth functions from @/auth.
+ *
+ * @example
+ * ```ts
+ * import { mockAuthServer } from '@/test/mocks'
+ *
+ * vi.mock('@/auth', () => mockAuthServer())
+ *
+ * // Or with custom session:
+ * vi.mock('@/auth', () => mockAuthServer({
+ *   session: { user: { role: 'ADMIN', schoolId: 'school-1' } }
+ * }))
+ * ```
+ */
+export function mockAuthServer(options?: {
+  session?: ReturnType<typeof mockSession> | null
+}) {
+  return {
+    auth: vi.fn().mockResolvedValue(options?.session ?? mockSession()),
+    signIn: vi.fn().mockResolvedValue({ error: null }),
+    signOut: vi.fn().mockResolvedValue(undefined),
+    handlers: {
+      GET: vi.fn(),
+      POST: vi.fn(),
+    },
+  }
+}

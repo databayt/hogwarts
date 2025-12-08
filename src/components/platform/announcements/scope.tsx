@@ -40,7 +40,9 @@ export function ScopeStep({ form, isView, dictionary }: ScopeStepProps) {
     const loadClasses = async () => {
       try {
         const res = await getClassesForSelection();
-        setClasses(res.classes || []);
+        if (res.success && res.data) {
+          setClasses(res.data.classes || []);
+        }
       } catch (error) {
         console.error("Failed to load classes:", error);
       }

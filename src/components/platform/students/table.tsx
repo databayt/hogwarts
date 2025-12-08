@@ -78,7 +78,10 @@ export function StudentsTable({ initialData, total, dictionary, lang, perPage = 
     perPage,
     fetcher: async (params) => {
       const result = await getStudents(params);
-      return { rows: result.rows as StudentRow[], total: result.total };
+      if (!result.success || !result.data) {
+        return { rows: [], total: 0 };
+      }
+      return { rows: result.data.rows as StudentRow[], total: result.data.total };
     },
     filters: searchValue ? { name: searchValue } : undefined,
   });
@@ -165,7 +168,11 @@ export function StudentsTable({ initialData, total, dictionary, lang, perPage = 
 
   // Export CSV wrapper
   const handleExportCSV = useCallback(async (filters?: Record<string, unknown>) => {
-    return getStudentsCSV(filters);
+    const result = await getStudentsCSV(filters);
+    if (!result.success || !result.data) {
+      throw new Error('error' in result ? result.error : 'Export failed');
+    }
+    return result.data;
   }, []);
 
   // Toolbar translations

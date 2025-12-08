@@ -18,6 +18,10 @@ model School {
   maxTeachers Int     @default(10)
   isActive    Boolean @default(true)
 
+  // Owner tracking - immutable, set during school creation
+  // Ensures one user can only create one school (prevents duplicates from race conditions)
+  createdByUserId String? @unique
+
   // Onboarding status (uncomment after migration)
   // onboardingCompletedAt DateTime?
   // operationalStatus     String? // existing school, new school
@@ -213,6 +217,10 @@ model School {
   // File upload relations
   fileMetadata FileMetadata[]
   uploadQuotas UploadQuota[]
+
+  // Sales Module relations
+  leads          Lead[]
+  leadActivities LeadActivity[]
 
   createdAt             DateTime                @default(now())
   updatedAt             DateTime                @updatedAt

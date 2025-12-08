@@ -34,12 +34,12 @@ export default function BookList({ title, books, containerClassName, showViewAll
         )}
       </div>
 
-      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4">
+      <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar snap-x snap-mandatory -mx-4 px-4">
         {books.map((book) => (
           <Link
             key={book.id}
             href={`/${locale}/library/books/${book.id}`}
-            className="block"
+            className="flex-shrink-0 w-32 sm:w-36 md:w-40 snap-start"
           >
             <div
               className="aspect-[2/3] rounded-md overflow-hidden"

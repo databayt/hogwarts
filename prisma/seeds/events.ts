@@ -369,11 +369,24 @@ Special collections:
     },
   ];
 
+  let createdCount = 0;
+  let skippedCount = 0;
+
   for (const event of events) {
-    await prisma.event.create({
-      data: { schoolId, ...event },
+    // Check if event already exists (by title + schoolId)
+    const existing = await prisma.event.findFirst({
+      where: { schoolId, title: event.title },
     });
+
+    if (!existing) {
+      await prisma.event.create({
+        data: { schoolId, ...event },
+      });
+      createdCount++;
+    } else {
+      skippedCount++;
+    }
   }
 
-  console.log(`   ✅ Created: ${events.length} school events (academic, sports, cultural, celebrations)\n`);
+  console.log(`   ✅ Events: ${createdCount} new, ${skippedCount} already existed\n`);
 }

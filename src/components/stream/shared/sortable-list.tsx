@@ -21,13 +21,12 @@ import { CSS } from "@dnd-kit/utilities";
 import { GripVertical } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-interface SortableItem {
+interface BaseSortableItem {
   id: string;
   position: number;
-  [key: string]: unknown;
 }
 
-interface SortableListProps<T extends SortableItem> {
+interface SortableListProps<T extends BaseSortableItem> {
   items: T[];
   onReorder: (items: T[]) => void;
   renderItem: (item: T, index: number) => React.ReactNode;
@@ -83,7 +82,7 @@ function SortableListItem({
   );
 }
 
-export function SortableList<T extends SortableItem>({
+export function SortableList<T extends BaseSortableItem>({
   items,
   onReorder,
   renderItem,
