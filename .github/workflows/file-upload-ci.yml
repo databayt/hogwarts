@@ -74,7 +74,7 @@ jobs:
             --enableExperimental
 
       - name: Upload security reports
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         if: always()
         with:
           name: security-reports
@@ -293,7 +293,7 @@ jobs:
         run: pnpm test:e2e:upload
 
       - name: Upload Playwright report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         if: always()
         with:
           name: playwright-report
