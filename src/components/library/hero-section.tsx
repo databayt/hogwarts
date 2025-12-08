@@ -27,13 +27,13 @@ export function LibraryHeroSection({ dictionary, lang = "en" }: HeroSectionProps
   return (
     <section className="relative">
       <div
-        className={`flex flex-col lg:flex-row items-center gap-8 lg:gap-16 ${
+        className={`flex flex-col lg:flex-row items-center gap-8 lg:gap-12 ${
           isRTL ? "lg:flex-row-reverse" : ""
         }`}
       >
         {/* Text Content */}
         <div
-          className={`flex-1 flex flex-col space-y-6 ${
+          className={`flex flex-col space-y-6 ${
             isRTL ? "items-end text-right" : "items-start text-left"
           } lg:items-start lg:text-left`}
         >
@@ -41,7 +41,7 @@ export function LibraryHeroSection({ dictionary, lang = "en" }: HeroSectionProps
             Revelio
             <br />
             <span className="text-3xl md:text-4xl lg:text-5xl font-semibold block mt-2">
-              Unlocking hidden.
+              Unlock hidden.
             </span>
           </h1>
 
@@ -72,8 +72,8 @@ export function LibraryHeroSection({ dictionary, lang = "en" }: HeroSectionProps
         </div>
 
         {/* Animated Book */}
-        <div className="flex-1 flex justify-center">
-          <LibraryAnimation className="w-full max-w-lg h-72 md:h-96" />
+        <div className="shrink-0 -ml-5">
+          <LibraryAnimation className="w-64 lg:w-80 h-64 lg:h-80" />
         </div>
       </div>
     </section>
