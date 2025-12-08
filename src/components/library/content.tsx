@@ -3,6 +3,7 @@ import { getTenantContext } from "@/lib/tenant-context";
 import BookOverview from "./book-list/book-overview";
 import BookList from "./book-list/content";
 import { LibraryHeroSection } from "./hero-section";
+import { CollaborateSection } from "./collaborate-section";
 
 interface Props {
   userId: string;
@@ -119,6 +120,9 @@ export default async function LibraryContent({ userId, dictionary, lang }: Props
     <div className="space-y-12">
       {/* Hero Section */}
       <LibraryHeroSection dictionary={dictionary} lang={lang} />
+
+      {/* Collaborate Section - Claude style */}
+      <CollaborateSection lang={lang} />
 
       {/* Featured Book - Single book highlight */}
       {heroBook && (
