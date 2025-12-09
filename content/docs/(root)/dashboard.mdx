@@ -1,0 +1,182 @@
+---
+title: "Dashboard"
+description: "Comprehensive overview of the role-based dashboard system providing personalized views for all user types in the school automation platform."
+---
+
+The dashboard system provides **role-based personalized views** for 8 different user types. Each dashboard is tailored to the specific needs and responsibilities of its target user, displaying relevant metrics, quick actions, and data visualizations.
+
+## Role-Based Architecture
+
+The dashboard uses a **switch-case routing pattern** in `content.tsx` to render the appropriate dashboard component based on the user's role:
+
+```tsx
+switch (userRole) {
+  case "STUDENT":
+    return <StudentDashboard user={user} dictionary={safeDict} locale={locale} />;
+  case "TEACHER":
+    return <TeacherDashboard user={user} dictionary={safeDict} locale={locale} />;
+  case "GUARDIAN":
+    return <ParentDashboard user={user} dictionary={safeDict} locale={locale} />;
+  case "STAFF":
+    return <StaffDashboard user={user} dictionary={safeDict} locale={locale} />;
+  case "ADMIN":
+  case "DEVELOPER":
+    return <AdminDashboard user={user} dictionary={safeDict} locale={locale} />;
+  case "PRINCIPAL":
+    return <PrincipalDashboard user={user} dictionary={safeDict} locale={locale} />;
+  case "ACCOUNTANT":
+    return <AccountantDashboard user={user} dictionary={safeDict} locale={locale} />;
+  default:
+    return <DefaultDashboard user={user} dictionary={safeDict} />;
+}
+```
+
+## Dashboard Overview by Role
+
+| Role | Dashboard | Primary Focus | Key Metrics |
+|------|-----------|---------------|-------------|
+| **ADMIN/DEVELOPER** | AdminDashboard | System overview, billing | Resource usage, invoices, quick actions |
+| **PRINCIPAL** | PrincipalDashboard | School performance | Scorecard, alerts, budget, staff evaluations |
+| **TEACHER** | TeacherDashboard | Teaching activities | Classes today, grading, attendance, students |
+| **STUDENT** | StudentDashboard | Academic progress | Grades, assignments, attendance, schedule |
+| **GUARDIAN** | ParentDashboard | Child monitoring | Children overview, grades, attendance, fees |
+| **ACCOUNTANT** | AccountantDashboard | Financial management | Collections, invoices, revenue, transactions |
+| **STAFF** | StaffDashboard | Operations | Tasks, requests, approvals, maintenance |
+| **USER** | DefaultDashboard | Basic info | Welcome message, role placeholder |
+
+## Multi-Tenant Architecture
+
+All dashboards follow the **multi-tenant safety pattern** with `schoolId` scoping:
+
+```tsx
+// Get tenant context for subdomain
+const { schoolId } = await getTenantContext();
+
+// All database queries include schoolId
+const students = await db.student.count({ where: { schoolId } });
+```
+
+## Common UI Components
+
+Every dashboard uses these shared widgets from `widgets/index.tsx`:
+
+| Widget | Purpose | Used By |
+|--------|---------|---------|
+| `WelcomeBanner` | Personalized greeting with time | All roles |
+| `MetricCard` | Key stat with icon and trend | All roles |
+| `ActivityRings` | Apple-style progress indicators | All roles |
+| `ScheduleItem` | Timetable entries | Teacher, Student |
+| `ProgressCard` | Goal tracking with progress bar | All roles |
+| `AnnouncementCard` | School announcements | Student, Parent |
+| `QuickActionsGrid` | Shortcut buttons | All roles |
+| `EmptyState` | No data placeholder | All roles |
+
+## Chart Components
+
+From `widgets/dashboard-charts.tsx`:
+
+| Chart | Purpose | Used By |
+|-------|---------|---------|
+| `AttendanceTrendChart` | Attendance over time | Principal, Admin |
+| `GradeDistributionChart` | Grade breakdown | Principal, Teacher |
+| `RevenueChart` | Revenue vs expenses | Accountant |
+| `PerformanceGauge` | Single metric radial | Student, Accountant, Staff |
+| `WeeklyActivityChart` | Weekly bar chart | Teacher, Accountant, Staff |
+| `ComparisonLineChart` | Period comparison | Student, Parent |
+
+## Quick Actions by Role
+
+Each role has 6 predefined quick actions in `quick-actions-config.ts`:
+
+| Role | Quick Actions |
+|------|---------------|
+| **ADMIN** | Reports, Approvals, Announce, Users, Settings, Analytics |
+| **PRINCIPAL** | Reports, Staff, Announce, Approvals, Performance, Events |
+| **TEACHER** | Attendance, Grades, Assignments, Messages, Timetable, Lessons |
+| **STUDENT** | Assignments, Grades, Timetable, Messages, Library, Attendance |
+| **GUARDIAN** | Children, Grades, Attendance, Messages, Fees, Announce |
+| **ACCOUNTANT** | Invoices, Receipts, Reports, Fees, Approvals, Budget |
+| **STAFF** | Tasks, Schedule, Messages, Announce, Reports, Directory |
+
+## Server Actions
+
+Dashboard data is fetched via server actions in `dashboards/actions.ts`:
+
+| Action | Returns | Used By |
+|--------|---------|---------|
+| `getDashboardSummary()` | All metrics aggregated | Admin |
+| `getEnrollmentMetrics()` | Student counts | Admin, Principal |
+| `getAttendanceMetrics()` | Attendance rates | Admin, Principal, Teacher |
+| `getStaffMetrics()` | Teacher counts | Admin, Principal |
+| `getAcademicPerformanceMetrics()` | GPA, exams, assignments | Principal, Teacher |
+| `getAnnouncementsMetrics()` | Announcement counts | All roles |
+| `getClassesMetrics()` | Class counts, ratios | Admin, Principal |
+| `getRecentActivities()` | Activity feed | Admin |
+
+Role-specific actions exist in separate files:
+- `actions/principal.ts` - Principal dashboard data
+- `actions.ts` - Teacher, Student, Parent actions
+
+## Directory Structure
+
+```
+src/components/platform/dashboard/
+├── content.tsx              # Role routing
+├── quick-actions.tsx        # Quick actions component
+├── quick-actions-config.ts  # Actions per role
+├── error-boundary.tsx       # Error handling
+├── dashboards/
+│   ├── actions.ts           # Shared server actions
+│   ├── admin-dashboard.tsx  # Server wrapper
+│   ├── admin-dashboard-client.tsx
+│   ├── principal-dashboard.tsx
+│   ├── teacher-dashboard.tsx
+│   ├── student-dashboard.tsx
+│   ├── parent-dashboard.tsx
+│   ├── accountant-dashboard.tsx
+│   └── staff-dashboard.tsx
+├── widgets/
+│   ├── index.tsx            # Widget components
+│   └── dashboard-charts.tsx # Chart components
+└── actions/
+    └── principal.ts         # Principal-specific actions
+```
+
+## Error Handling
+
+All dashboards implement comprehensive error handling:
+
+```tsx
+try {
+  const data = await getDashboardData();
+  return <DashboardContent data={data} />;
+} catch (error) {
+  console.error("[Dashboard] Error:", error);
+  return <DashboardSectionError title="Unable to Load" message="..." />;
+}
+```
+
+## Internationalization
+
+Dashboards support Arabic (RTL) and English (LTR):
+
+```tsx
+const dashDict = dictionary?.teacherDashboard || {
+  stats: { todaysClasses: "Today's Classes", ... },
+  sections: { todaysClasses: "Today's Classes", ... },
+  labels: { room: "Room", students: "students", ... },
+};
+```
+
+## Related Documentation
+
+- [Dashboard - Admin](/docs/dashboard-admin) - Admin/Developer dashboard
+- [Dashboard - Principal](/docs/dashboard-principal) - Principal dashboard
+- [Dashboard - Teacher](/docs/dashboard-teacher) - Teacher dashboard
+- [Dashboard - Student](/docs/dashboard-student) - Student dashboard
+- [Dashboard - Parent](/docs/dashboard-parent) - Parent/Guardian dashboard
+- [Dashboard - Accountant](/docs/dashboard-accountant) - Accountant dashboard
+- [Dashboard - Staff](/docs/dashboard-staff) - Staff dashboard
+- [Dashboard - Widgets](/docs/dashboard-widgets) - Widget reference
+- [Dashboard - Charts](/docs/dashboard-charts) - Chart reference
+- [Dashboard - Actions](/docs/dashboard-actions) - Server actions reference

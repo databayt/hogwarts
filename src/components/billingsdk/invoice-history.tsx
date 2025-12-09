@@ -2,13 +2,6 @@
 
 import { cn } from "@/lib/utils"
 import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from "@/components/ui/card"
-import {
     Table,
     TableBody,
     TableCell,
@@ -61,23 +54,23 @@ export function InvoiceHistory({
     }
 
     return (
-        <Card className={cn("w-full", className)}>
+        <div className={cn("w-full", className)}>
             {(title || description) && (
-                <CardHeader className="space-y-1">
+                <div className="mb-4">
                     {title && (
-                        <CardTitle className="text-base font-medium leading-tight truncate flex items-center gap-2 sm:gap-3 text-lg sm:text-xl">
+                        <h3 className="text-lg font-semibold flex items-center gap-2">
                             <ReceiptText className="h-4 w-4 text-primary" />
                             {title}
-                        </CardTitle>
+                        </h3>
                     )}
                     {description && (
-                        <CardDescription className="text-sm text-muted-foreground">
+                        <p className="text-sm text-muted-foreground">
                             {description}
-                        </CardDescription>
+                        </p>
                     )}
-                </CardHeader>
+                </div>
             )}
-            <CardContent>
+            <div className="rounded-md border">
                 <Table>
                     <TableCaption className="sr-only">List of past invoices with dates, amounts, status and download actions</TableCaption>
                     <TableHeader>
@@ -136,8 +129,8 @@ export function InvoiceHistory({
                         ))}
                     </TableBody>
                 </Table>
-            </CardContent>
-        </Card>
+            </div>
+        </div>
     )
 }
 

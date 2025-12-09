@@ -9,7 +9,6 @@ import { announcementCreateSchema, type AnnouncementFormValues } from "@/compone
 import { Form } from "@/components/ui/form";
 import { useModal } from "@/components/atom/modal/context";
 import { useRouter } from "next/navigation";
-import { TemplatesStep } from "./templates-step";
 import { InformationStep } from "./information";
 import { ScopeStep } from "./scope";
 import { ModalFormLayout } from "@/components/atom/modal/modal-form-layout";
@@ -29,7 +28,7 @@ export function AnnouncementCreateForm({ dictionary, lang, onSuccess }: Announce
   const { modal, closeModal } = useModal();
   const router = useRouter();
   const t = dictionary;
-  // Start at step 2 when editing (skip templates), step 1 when creating new
+  // Two steps only: 1 = Content, 2 = Scope
   const [currentStep, setCurrentStep] = useState(1);
   const [isTranslating, setIsTranslating] = useState(false);
 
@@ -50,13 +49,6 @@ export function AnnouncementCreateForm({ dictionary, lang, onSuccess }: Announce
 
   const isView = !!(modal.id && modal.id.startsWith("view:"));
   const currentId = modal.id ? (modal.id.startsWith("view:") ? modal.id.split(":")[1] : modal.id) : undefined;
-
-  // Skip to step 2 when editing (no templates selection needed)
-  useEffect(() => {
-    if (currentId) {
-      setCurrentStep(2);
-    }
-  }, [currentId]);
 
   useEffect(() => {
     const load = async () => {
@@ -140,19 +132,16 @@ export function AnnouncementCreateForm({ dictionary, lang, onSuccess }: Announce
 
   const handleNext = async () => {
     if (currentStep === 1) {
-      // Templates step - no validation needed, just move forward
-      setCurrentStep(2);
-    } else if (currentStep === 2) {
       // Content step - validate title and body for current language
       const isArabic = lang === 'ar';
-      const step2Fields = isArabic
+      const contentFields = isArabic
         ? ['titleAr', 'bodyAr'] as const
         : ['titleEn', 'bodyEn'] as const;
-      const step2Valid = await form.trigger(step2Fields);
-      if (step2Valid) {
-        setCurrentStep(3);
+      const contentValid = await form.trigger(contentFields);
+      if (contentValid) {
+        setCurrentStep(2);
       }
-    } else if (currentStep === 3) {
+    } else if (currentStep === 2) {
       // Scope step - submit
       await form.handleSubmit(onSubmit)();
     }
@@ -165,8 +154,8 @@ export function AnnouncementCreateForm({ dictionary, lang, onSuccess }: Announce
       const contentFields: (keyof AnnouncementFormValues)[] = isArabic
         ? ['titleAr', 'bodyAr']
         : ['titleEn', 'bodyEn'];
-      const scopeFields: (keyof AnnouncementFormValues)[] = ['scope', 'classId', 'role', 'published'];
-      const currentStepFields = currentStep === 2 ? contentFields : scopeFields;
+      const scopeFields: (keyof AnnouncementFormValues)[] = ['scope', 'classId', 'role', 'published', 'priority'];
+      const currentStepFields = currentStep === 1 ? contentFields : scopeFields;
 
       const stepValid = await form.trigger(currentStepFields as readonly (keyof AnnouncementFormValues)[]);
       if (stepValid) {
@@ -179,15 +168,8 @@ export function AnnouncementCreateForm({ dictionary, lang, onSuccess }: Announce
   };
 
   const handleBack = () => {
-    if (currentStep === 3) {
-      setCurrentStep(2);
-    } else if (currentStep === 2) {
-      // Only go back to templates if creating new (not editing)
-      if (currentId) {
-        closeModal();
-      } else {
-        setCurrentStep(1);
-      }
+    if (currentStep === 2) {
+      setCurrentStep(1);
     } else {
       closeModal();
     }
@@ -196,32 +178,21 @@ export function AnnouncementCreateForm({ dictionary, lang, onSuccess }: Announce
   const renderCurrentStep = () => {
     switch (currentStep) {
       case 1:
-        return (
-          <TemplatesStep
-            form={form}
-            lang={lang}
-            onTemplateSelect={() => {}}
-          />
-        );
-      case 2:
         return <InformationStep form={form} isView={isView} dictionary={dictionary} lang={lang} />;
-      case 3:
-        return <ScopeStep form={form} isView={isView} dictionary={dictionary} />;
+      case 2:
+        return <ScopeStep form={form} isView={isView} dictionary={dictionary} lang={lang} />;
       default:
         return null;
     }
   };
 
   const stepLabels: Record<number, string> = {
-    1: lang === 'ar' ? 'اختر قالب' : 'Choose Template',
-    2: t.basicInformation,
-    3: t.scopeAndPublishing,
+    1: t.basicInformation,
+    2: t.scopeAndPublishing,
   };
 
-  // Total steps is 3 for new, 2 for editing (skips templates)
-  const totalSteps = currentId ? 2 : 3;
-  // Adjust display step number for editing mode
-  const displayStep = currentId ? currentStep - 1 : currentStep;
+  // Always 2 steps: Content → Scope
+  const totalSteps = 2;
 
   return (
     <Form {...form}>
@@ -234,7 +205,7 @@ export function AnnouncementCreateForm({ dictionary, lang, onSuccess }: Announce
         </ModalFormLayout>
 
         <ModalFooter
-          currentStep={displayStep}
+          currentStep={currentStep}
           totalSteps={totalSteps}
           stepLabel={stepLabels[currentStep]}
           isView={isView}

@@ -770,33 +770,31 @@ function QuickLookSection({ locale, subdomain }: { locale: string; subdomain: st
 }
 
 // ============================================================================
-// SECTION 6: Quick Actions - Horizontal Button Row
+// SECTION 6: Quick Actions - Grid like /admin page
 // ============================================================================
 
 function QuickActionsSection({ locale, subdomain }: { locale: string; subdomain: string }) {
   const actions = [
-    { icon: Plus, label: "Add Student", href: `/${locale}/s/${subdomain}/students/new`, variant: "default" as const },
-    { icon: Megaphone, label: "Announcement", href: `/${locale}/s/${subdomain}/announcements/new`, variant: "secondary" as const },
-    { icon: FileText, label: "Report", href: `/${locale}/s/${subdomain}/admin/reports`, variant: "secondary" as const },
-    { icon: Receipt, label: "Invoice", href: `/${locale}/s/${subdomain}/finance/invoices/new`, variant: "secondary" as const },
+    { icon: UserPlus, label: "Add Student", description: "Enroll new student", href: `/${locale}/s/${subdomain}/students/new` },
+    { icon: Bell, label: "Announce", description: "Send notification", href: `/${locale}/s/${subdomain}/announcements/new` },
+    { icon: FileText, label: "View Reports", description: "Analytics & data", href: `/${locale}/s/${subdomain}/admin/reports` },
+    { icon: CreditCard, label: "Billing", description: "Manage payments", href: `/${locale}/s/${subdomain}/billing` },
   ]
 
   return (
-    <section>
-      <h2 className="mb-4 text-lg font-semibold">Quick Actions</h2>
-      <Card className="p-6">
-        <div className="flex flex-wrap gap-4">
-          {actions.map((action) => (
-            <Button key={action.label} variant={action.variant} asChild>
-              <Link href={action.href}>
-                <action.icon className="mr-2 h-4 w-4" />
-                {action.label}
-              </Link>
-            </Button>
-          ))}
-        </div>
-      </Card>
-    </section>
+    <div className="grid gap-3 grid-cols-4">
+      {actions.map((action) => (
+        <Button key={action.label} asChild variant="outline" className="justify-start h-auto py-3">
+          <Link href={action.href}>
+            <action.icon className="mr-2 h-4 w-4" />
+            <span className="flex flex-col items-start">
+              <span className="font-medium">{action.label}</span>
+              <span className="text-xs text-muted-foreground">{action.description}</span>
+            </span>
+          </Link>
+        </Button>
+      ))}
+    </div>
   )
 }
 
@@ -826,10 +824,7 @@ export function AdminDashboardClient({
       {/* Section 3: Invoice History */}
       <InvoiceHistoryDemo />
 
-      {/* Section 4: Recent Activity */}
-      <RecentActivitySection recentActivities={recentActivities} todaySummary={todaySummary} />
-
-      {/* Section 5: Quick Actions */}
+      {/* Section 4: Quick Actions */}
       <QuickActionsSection locale={locale} subdomain={subdomain} />
     </div>
   )

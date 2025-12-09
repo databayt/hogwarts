@@ -40,7 +40,7 @@ export function StreamCoursesContent({
   });
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-6 space-y-10">
+    <div className="max-w-5xl mx-auto py-6 space-y-10">
       {/* Hero Section - Like "Come teach with us" */}
       <section className="py-8">
         <div className={cn(
@@ -103,7 +103,7 @@ export function StreamCoursesContent({
 
 export function StreamCoursesLoadingSkeleton() {
   return (
-    <div className="max-w-5xl mx-auto px-4 py-6 space-y-10">
+    <div className="max-w-5xl mx-auto py-6 space-y-10">
       {/* Hero Section Skeleton */}
       <section className="py-8">
         <div className="flex flex-col md:flex-row items-center gap-8">

@@ -21,7 +21,8 @@ import {
   PromptInputTextarea,
   type PromptInputMessage
 } from '@/components/atom/prompt-input';
-import { PlusIcon, RefreshCw, Paperclip, Send, Mic, Brain, Sparkles } from 'lucide-react';
+import { PlusIcon, AttachIcon, VoiceIcon, SendUpIcon, AILogoIcon, AIBrainIcon } from '@/components/atom/icons';
+import { RefreshCw } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -250,11 +251,13 @@ An error occurred while processing your request. Please try again.`);
       <div className="flex-1 flex flex-col items-center justify-center container max-w-4xl px-4 mx-auto" suppressHydrationWarning>
         <div className="flex flex-col items-center text-center flex-1 w-full justify-center">
           {!hasInteracted && (
-            <AgentHeading
-              title="Lead Agent"
-              scrollTarget="sales-content"
-              scrollText="explore existing leads"
-            />
+            <div className="mb-8">
+              <AgentHeading
+                title="Lead Agent"
+                scrollTarget="sales-content"
+                scrollText="explore existing leads"
+              />
+            </div>
           )}
 
           {hasInteracted && (
@@ -308,7 +311,7 @@ An error occurred while processing your request. Please try again.`);
             <PromptInput
               onSubmit={handleSubmit}
               className={cn(
-                "group flex gap-2 w-full rounded-[1.75rem] border border-muted-foreground/10 bg-muted text-base shadow-sm transition-all duration-300 ease-in-out focus-within:border-foreground/20 hover:border-foreground/10 focus-within:hover:border-foreground/20",
+                "group flex gap-2 w-full rounded-[2rem] border border-muted-foreground/10 bg-muted text-base shadow-sm transition-all duration-300 ease-in-out focus-within:border-foreground/20 hover:border-foreground/10 focus-within:hover:border-foreground/20",
                 hasInteracted && !isInputFocused ? "h-14 items-center p-2" : "flex-col p-3"
               )}
               multiple
@@ -357,7 +360,7 @@ An error occurred while processing your request. Please try again.`);
                     <PromptInputButton
                       className="h-8 w-8 rounded-full bg-muted hover:bg-blue-100"
                     >
-                      <Mic className="h-5 w-5" />
+                      <VoiceIcon className="h-5 w-5" />
                     </PromptInputButton>
 
                     <PromptInputSubmit
@@ -367,7 +370,7 @@ An error occurred while processing your request. Please try again.`);
                       variant="default"
                       size="icon"
                     >
-                      <Send className="h-5 w-5" />
+                      <SendUpIcon className="h-5 w-5" />
                     </PromptInputSubmit>
                   </div>
                 )}
@@ -388,13 +391,13 @@ An error occurred while processing your request. Please try again.`);
                     className="inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-colors duration-100 ease-in-out focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-input bg-muted hover:bg-blue-100 hover:border-transparent py-2 h-8 gap-1.5 rounded-full px-3 text-muted-foreground hover:text-foreground"
                     onClick={() => document.getElementById('file-upload')?.click()}
                   >
-                    <Paperclip className="shrink-0 h-4 w-4" />
+                    <AttachIcon className="shrink-0 h-4 w-4" />
                     <span className="hidden md:flex">Attach</span>
                   </PromptInputButton>
 
                   <Select value={selectedModel} onValueChange={(value) => setSelectedModel(value as 'groq' | 'claude')}>
                     <SelectTrigger
-                      className="inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-colors duration-100 ease-in-out focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-input bg-muted hover:bg-blue-100 hover:border-transparent h-8 gap-1.5 rounded-full px-3 text-muted-foreground hover:text-foreground w-auto min-w-[120px]"
+                      className="inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-colors duration-100 ease-in-out focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-input bg-muted hover:bg-blue-100 hover:border-transparent py-2 h-8 gap-1.5 rounded-full px-3 text-muted-foreground hover:text-foreground"
                     >
                       <div className="flex items-center gap-1.5">
                         <SelectValue />
@@ -403,13 +406,13 @@ An error occurred while processing your request. Please try again.`);
                     <SelectContent>
                       <SelectItem value="groq">
                         <div className="flex items-center gap-2">
-                          <Sparkles className="h-4 w-4" />
+                          <AILogoIcon className="h-4 w-4" />
                           <span>Groq</span>
                         </div>
                       </SelectItem>
                       <SelectItem value="claude">
                         <div className="flex items-center gap-2">
-                          <Brain className="h-4 w-4" />
+                          <AIBrainIcon className="h-4 w-4" />
                           <span>Claude</span>
                         </div>
                       </SelectItem>
@@ -421,7 +424,7 @@ An error occurred while processing your request. Please try again.`);
                       <PromptInputButton
                         className="gap-2 whitespace-nowrap text-sm font-medium ease-in-out focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none border border-input bg-muted hover:bg-blue-100 hover:border-transparent relative z-10 flex rounded-full p-0 text-muted-foreground transition-opacity duration-150 disabled:cursor-not-allowed disabled:opacity-50 items-center justify-center h-8 w-8"
                       >
-                        <Mic className="shrink-0 relative z-10 h-5 w-5" />
+                        <VoiceIcon className="shrink-0 relative z-10 h-5 w-5" />
                       </PromptInputButton>
 
                       <PromptInputSubmit
@@ -431,7 +434,7 @@ An error occurred while processing your request. Please try again.`);
                         variant="default"
                         size="icon"
                       >
-                        <Send className="shrink-0 h-5 w-5" />
+                        <SendUpIcon className="shrink-0 h-5 w-5" />
                       </PromptInputSubmit>
                     </div>
                   </div>

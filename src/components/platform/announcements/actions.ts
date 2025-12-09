@@ -631,3 +631,52 @@ export async function getAnnouncements(
     };
   }
 }
+
+/**
+ * Get previous announcements for autocomplete suggestions
+ * Returns recent announcements with titles and bodies
+ */
+export async function getPreviousAnnouncements(): Promise<ActionResponse<Array<{
+  id: string;
+  titleEn: string | null;
+  titleAr: string | null;
+  bodyEn: string | null;
+  bodyAr: string | null;
+}>>> {
+  try {
+    // Get authentication context
+    const session = await auth();
+    const authContext = getAuthContext(session);
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" };
+    }
+
+    // Get tenant context
+    const { schoolId } = await getTenantContext();
+    if (!schoolId) {
+      return { success: false, error: "Missing school context" };
+    }
+
+    // Fetch recent announcements for suggestions (limit to 20 most recent)
+    const announcements = await db.announcement.findMany({
+      where: { schoolId },
+      orderBy: { createdAt: 'desc' },
+      take: 20,
+      select: {
+        id: true,
+        titleEn: true,
+        titleAr: true,
+        bodyEn: true,
+        bodyAr: true,
+      },
+    });
+
+    return { success: true, data: announcements };
+  } catch (error) {
+    console.error("[getPreviousAnnouncements] Error:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to fetch suggestions"
+    };
+  }
+}

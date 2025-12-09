@@ -1,0 +1,234 @@
+---
+title: "Dashboard - Admin"
+description: "Complete guide to the Admin/Developer dashboard including system overview, billing integration, resource usage, and quick management actions."
+---
+
+The **Admin Dashboard** serves school administrators and platform developers with a comprehensive system overview, billing management tools, and quick access to administrative functions.
+
+## Target Users
+
+- **ADMIN**: School administrators managing their institution
+- **DEVELOPER**: Platform administrators with cross-school access
+
+## Layout Structure
+
+The admin dashboard follows a **5-section vertical layout**:
+
+```tsx
+<div className="space-y-8">
+  {/* Section 0: Upcoming Class + Weather */}
+  <TopSection locale={locale} subdomain={subdomain} />
+
+  {/* Section 1: Quick Look - 4 metric cards */}
+  <QuickLookSection locale={locale} subdomain={subdomain} />
+
+  {/* Section 2: Resource Usage */}
+  <DetailedUsageTableDemo />
+
+  {/* Section 3: Invoice History */}
+  <InvoiceHistoryDemo />
+
+  {/* Section 4: Quick Actions */}
+  <QuickActionsSection locale={locale} subdomain={subdomain} />
+</div>
+```
+
+## Top Section
+
+Displays upcoming class information and weather widget:
+
+| Component | Purpose |
+|-----------|---------|
+| Upcoming Class Card | Next scheduled class with time, subject, teacher |
+| Weather Widget | Current weather conditions for school location |
+
+## Quick Look Section
+
+**4-column responsive grid** with metric cards:
+
+```tsx
+<div className="grid gap-3 grid-cols-4">
+  <MetricCard title="Students" value={enrollment.total} icon={Users} />
+  <MetricCard title="Teachers" value={staff.total} icon={GraduationCap} />
+  <MetricCard title="Attendance" value={`${attendance.rate}%`} icon={CalendarCheck} />
+  <MetricCard title="Classes" value={classes.total} icon={BookOpen} />
+</div>
+```
+
+Each metric card includes:
+- **Title**: Metric name
+- **Value**: Current count/percentage
+- **Icon**: Visual indicator
+- **Link**: Navigation to detailed view
+
+## Resource Usage Section
+
+Shared component from billing module displaying:
+
+| Resource | Display | Threshold |
+|----------|---------|-----------|
+| Students | Current / Limit | Warning at 80% |
+| Teachers | Current / Limit | Warning at 80% |
+| Classes | Current / Limit | Warning at 80% |
+| Storage | MB Used / Limit | Warning at 80% |
+
+```tsx
+import { DetailedUsageTableDemo } from "@/components/platform/billing/detailed-usage-table-demo"
+
+<DetailedUsageTableDemo />
+```
+
+Features:
+- Progress bars with color-coded status
+- Usage percentage display
+- Upgrade prompts when approaching limits
+
+## Invoice History Section
+
+Tabbed interface for financial data:
+
+```tsx
+import { InvoiceHistoryDemo } from "@/components/platform/billing/invoice-history-demo"
+
+<InvoiceHistoryDemo />
+```
+
+**Invoices Tab**:
+- Invoice number (last 8 chars of Stripe ID)
+- Period dates
+- Amount due
+- Payment status badge
+- Download action
+
+**Payment Methods Tab**:
+- Card brand and last 4 digits
+- Billing name
+- Default indicator
+- Remove action
+
+## Quick Actions Section
+
+**4-column grid** with icon + title + description:
+
+```tsx
+const actions = [
+  { icon: UserPlus, label: "Add Student", description: "Enroll new student", href: "/students/new" },
+  { icon: Bell, label: "Announce", description: "Send notification", href: "/announcements/new" },
+  { icon: FileText, label: "View Reports", description: "Analytics & data", href: "/admin/reports" },
+  { icon: CreditCard, label: "Billing", description: "Manage payments", href: "/billing" },
+];
+```
+
+Layout pattern:
+```tsx
+<Button variant="outline" className="justify-start h-auto py-3">
+  <Link href={action.href}>
+    <action.icon className="mr-2 h-4 w-4" />
+    <span className="flex flex-col items-start">
+      <span className="font-medium">{action.label}</span>
+      <span className="text-xs text-muted-foreground">{action.description}</span>
+    </span>
+  </Link>
+</Button>
+```
+
+## Data Fetching
+
+The admin dashboard uses `getDashboardSummary()` which aggregates:
+
+```tsx
+const [
+  enrollment,
+  attendance,
+  staff,
+  academicPerformance,
+  announcements,
+  classes,
+  activities,
+] = await Promise.all([
+  getEnrollmentMetrics(),
+  getAttendanceMetrics(),
+  getStaffMetrics(),
+  getAcademicPerformanceMetrics(),
+  getAnnouncementsMetrics(),
+  getClassesMetrics(),
+  getRecentActivities(),
+]);
+```
+
+## Multi-Tenant Scoping
+
+All queries include `schoolId`:
+
+```tsx
+const { schoolId } = await getTenantContext();
+
+// Enrollment metrics
+const total = await db.student.count({ where: { schoolId } });
+
+// Attendance metrics
+const todayAttendance = await db.attendance.groupBy({
+  by: ["status"],
+  where: { schoolId, date: today },
+  _count: true,
+});
+```
+
+## Client/Server Split
+
+The dashboard uses a **server wrapper + client component** pattern:
+
+```
+admin-dashboard.tsx        # Server component (data fetching)
+admin-dashboard-client.tsx # Client component (UI rendering)
+```
+
+This enables:
+- Server-side data fetching with `async/await`
+- Client-side interactivity (hooks, state)
+- Proper error boundaries
+
+## Error Handling
+
+```tsx
+try {
+  const dashboardData = await getDashboardSummary();
+  return <AdminDashboardClient data={dashboardData} />;
+} catch (error) {
+  return (
+    <Card>
+      <CardContent className="p-6">
+        <h3>Dashboard Error</h3>
+        <p className="text-muted-foreground">
+          An error occurred while loading the dashboard.
+        </p>
+      </CardContent>
+    </Card>
+  );
+}
+```
+
+## File Locations
+
+| File | Purpose |
+|------|---------|
+| `dashboards/admin-dashboard.tsx` | Server wrapper |
+| `dashboards/admin-dashboard-client.tsx` | UI rendering |
+| `dashboards/actions.ts` | Server actions |
+| `billing/detailed-usage-table-demo.tsx` | Resource usage |
+| `billing/invoice-history-demo.tsx` | Invoice history |
+
+## Customization
+
+To modify the admin dashboard:
+
+1. **Add metrics**: Edit `QuickLookSection` in `admin-dashboard-client.tsx`
+2. **Change quick actions**: Edit `QuickActionsSection` actions array
+3. **Add sections**: Insert new components in the main render
+4. **Modify data**: Update `getDashboardSummary()` in `actions.ts`
+
+## Related
+
+- [Dashboard Overview](/docs/dashboard)
+- [Billing System](/docs/billing)
+- [Resource Usage](/docs/billing#resource-usage)
