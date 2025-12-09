@@ -237,7 +237,7 @@ export function Explore({ lang, dictionary }: ExploreProps) {
             </div>
 
             {/* Footer */}
-            <div className="border-t px-8 py-5 bg-muted/30 rounded-b-2xl">
+            <div className="border-t py-5 bg-muted/30 rounded-b-2xl">
               <p className="text-sm text-muted-foreground">
                 {dictionary?.explore?.notSure || "Not sure where to begin?"}{" "}
                 <Link
