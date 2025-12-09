@@ -3,10 +3,6 @@
 import { createGroq } from '@ai-sdk/groq';
 import { generateText, CoreMessage } from 'ai';
 
-const groq = createGroq({
-  apiKey: process.env.GROQ_API_KEY || ''
-});
-
 // System prompts for different contexts
 export const SYSTEM_PROMPTS = {
   // SaaS Marketing - for databayt.org marketing pages
@@ -75,6 +71,11 @@ export async function sendMessage(
     }
 
     const systemPrompt = SYSTEM_PROMPTS[systemPromptType];
+
+    // Create groq instance inside function to ensure env var is available
+    const groq = createGroq({
+      apiKey: apiKey
+    });
 
     const result = await generateText({
       model: groq('llama-3.1-8b-instant'),

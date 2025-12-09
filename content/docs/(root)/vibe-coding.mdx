@@ -223,4 +223,301 @@ Community-proven workflow:
 
 ---
 
+## Claude Code Setup & Usage Guide
+
+### Our Configuration
+
+We use **Claude Code** (Anthropic's official CLI) with a sophisticated multi-agent architecture:
+
+| Component | Details |
+|-----------|---------|
+| **Model** | Opus 4.5 (all agents) |
+| **Global Agents** | 24 specialized agents at `~/.claude/agents/` |
+| **Project Agents** | 47 project-specific agents at `.claude/agents/` |
+| **Total Unique** | 71 agents (no duplicates) |
+| **Stack** | Next.js 16 + React 19 + Prisma 6 + TypeScript 5 |
+
+### Agent Categories
+
+**Stack (7)**: nextjs, react, typescript, tailwind, prisma, shadcn, authjs
+
+**Design (4)**: orchestration, architecture, pattern, structure
+
+**UI (4)**: shadcn, atom, template, block
+
+**DevOps (3)**: build, deploy, test
+
+**VCS (2)**: git, github
+
+**Specialized (4)**: middleware, internationalization, semantic, sse
+
+### Directory Structure
+
+```
+~/.claude/                    # Global (all projects)
+├── agents/                   # 24 specialized agents
+│   ├── _index.md            # Agent registry
+│   ├── architecture.md      # System design
+│   ├── nextjs.md            # App Router expert
+│   └── ...
+├── CLAUDE.md                # Global instructions
+└── settings.json            # Configuration
+
+.claude/                      # Project-specific
+├── agents/                   # 47 project agents
+├── commands/                 # Custom slash commands
+├── skills/                   # Reusable skills
+└── hooks/                    # Automation hooks
+```
+
+### Usage Patterns
+
+**Invoke agents by name:**
+```
+Use the architecture agent to design the data model.
+Use the nextjs agent to create a new page with server actions.
+Use the build agent to fix TypeScript errors.
+```
+
+**Task delegation syntax:**
+```
+@orchestration: Coordinate this complex feature
+@architecture: Design the multi-tenant schema
+@shadcn: Add required UI components
+@build: Validate and build
+@deploy: Ship to production
+```
+
+**Quick reference:**
+
+| Need | Command |
+|------|---------|
+| New page/route | `Use nextjs agent` |
+| Component optimization | `Use react agent` |
+| Type errors | `Use typescript agent` |
+| Database schema | `Use prisma agent` |
+| UI components | `Use shadcn agent` |
+| System design | `Use architecture agent` |
+| File organization | `Use structure agent` |
+| Build issues | `Use build agent` |
+| Server errors | `Use sse agent` |
+
+---
+
+## Claude Code Performance Monitoring
+
+### Key Metrics to Track
+
+| Metric | How to Measure | Target |
+|--------|----------------|--------|
+| **Response Time** | Observe latency per request | <5s for simple, <30s for complex |
+| **Token Usage** | Check Claude dashboard | Optimize prompts to reduce |
+| **Agent Hit Rate** | Track which agents are used | >80% appropriate delegation |
+| **Error Rate** | Count failed generations | <5% retry rate |
+| **Context Efficiency** | Monitor context window usage | <70% capacity |
+
+### Monitoring Commands
+
+```bash
+# Check session history
+cat ~/.claude/history.jsonl | tail -20
+
+# View agent usage stats
+ls -la ~/.claude/agents/*.md | wc -l
+
+# Check recent debug logs
+ls ~/.claude/debug/ | tail -10
+
+# Monitor active tasks
+cat ~/.claude/todos/*.json 2>/dev/null | head -20
+```
+
+### Performance Dashboard Checklist
+
+Track these weekly:
+
+- [ ] Average response time per agent type
+- [ ] Most frequently used agents
+- [ ] Common error patterns
+- [ ] Context window overflow incidents
+- [ ] Token consumption trends
+- [ ] Build success rate with AI assistance
+
+### Session Analytics
+
+**What to log:**
+```markdown
+## Session: 2024-01-15
+
+### Tasks Completed
+- Created student management feature (architecture + nextjs + prisma)
+- Fixed 12 TypeScript errors (typescript agent)
+- Deployed to staging (deploy agent)
+
+### Agent Performance
+| Agent | Invocations | Success Rate | Avg Time |
+|-------|-------------|--------------|----------|
+| architecture | 3 | 100% | 15s |
+| nextjs | 5 | 100% | 8s |
+| typescript | 12 | 92% | 3s |
+
+### Issues Encountered
+- Context overflow on large file reads
+- Needed 2 retries for complex Prisma schema
+
+### Improvements Made
+- Split large prompts into smaller chunks
+- Added more context in initial prompt
+```
+
+---
+
+## Optimization Tips
+
+### What We Could Do Better
+
+#### 1. Prompt Optimization
+
+**Before (inefficient):**
+```
+Create a component
+```
+
+**After (optimized):**
+```
+Use the shadcn agent to create a StudentCard component:
+- Props: student object with name, email, grade
+- Style: shadcn/ui Card with Avatar
+- Include: edit and delete action buttons
+- Follow: mirror pattern in components/platform/students/
+```
+
+#### 2. Context Management
+
+**Problem**: Context window fills up with large files
+
+**Solutions:**
+- Read specific line ranges: `Read file lines 50-100`
+- Use glob patterns for targeted searches
+- Summarize large contexts before proceeding
+- Clear irrelevant context between tasks
+
+#### 3. Agent Selection
+
+**Anti-pattern**: Using generic prompts
+```
+Fix this bug
+```
+
+**Best practice**: Invoke specific agents
+```
+Use the sse agent to diagnose server-side exception in /api/students
+```
+
+#### 4. Batch Operations
+
+**Inefficient**: One file at a time
+```
+Create form.tsx
+... wait ...
+Create actions.ts
+... wait ...
+Create validation.ts
+```
+
+**Efficient**: Batch related tasks
+```
+Create the complete student feature following mirror pattern:
+- components/platform/students/content.tsx
+- components/platform/students/actions.ts
+- components/platform/students/validation.ts
+- components/platform/students/form.tsx
+```
+
+#### 5. Handoff Chain Optimization
+
+**Use the handoff protocol:**
+```
+orchestration (coordinator)
+├── architecture → pattern → structure
+├── nextjs → react → typescript
+├── shadcn → atom → template → block
+└── build → deploy
+```
+
+**Example efficient flow:**
+```
+1. @architecture: Design student enrollment feature
+2. @structure: Confirm file organization
+3. @nextjs: Implement pages and server actions
+4. @shadcn: Add UI components
+5. @build: Validate and build
+6. @deploy: Ship to staging
+```
+
+### Configuration Improvements
+
+#### Agent Registry (`~/.claude/agents/_index.md`)
+
+Keep it updated with:
+- Accurate agent count
+- Current technology versions
+- Clear handoff chains
+- Quick reference table
+
+#### Global Instructions (`~/.claude/CLAUDE.md`)
+
+Include:
+- Default model preference (Opus 4.5)
+- Package manager (pnpm)
+- Tech stack versions
+- Common patterns reference
+
+#### Project Instructions (`.claude/CLAUDE.md`)
+
+Document:
+- Project-specific patterns
+- Multi-tenant requirements
+- Build commands
+- Testing requirements
+
+### Performance Checklist
+
+**Daily:**
+- [ ] Use specific agents for tasks
+- [ ] Batch related operations
+- [ ] Clear context between major tasks
+
+**Weekly:**
+- [ ] Review agent usage patterns
+- [ ] Update outdated agent versions
+- [ ] Clean up unused project agents
+- [ ] Check for duplicate agents
+
+**Monthly:**
+- [ ] Audit global vs project agents
+- [ ] Update technology versions in agents
+- [ ] Review and optimize handoff chains
+- [ ] Document new patterns discovered
+
+### Cost Optimization
+
+| Strategy | Savings |
+|----------|---------|
+| Use Haiku for simple tasks | 10x cheaper |
+| Batch related operations | Fewer API calls |
+| Optimize prompts | Fewer tokens |
+| Cache common patterns | Reuse instead of regenerate |
+| Use specific agents | Faster, more accurate |
+
+### Red Flags to Watch
+
+- **Context overflow**: Split large tasks
+- **Repeated retries**: Improve prompt clarity
+- **Wrong agent used**: Update quick reference
+- **Slow responses**: Check network, simplify prompt
+- **Inconsistent output**: Add more constraints
+
+---
+
 *Vibe coding represents the future of development - where human creativity meets AI capability. Focus on the big picture and let AI handle the details.* 
