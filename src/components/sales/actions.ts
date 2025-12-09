@@ -12,11 +12,13 @@ import {
   bulkUpdateSchema,
   leadFilterSchema,
   leadActivitySchema,
+  aiExtractionInputSchema,
   type CreateLeadInput,
   type UpdateLeadInput,
   type BulkUpdateInput,
   type LeadFilterInput,
   type LeadActivityInput,
+  type AIExtractionInput,
 } from "./validation";
 import type { Lead, LeadListResponse, LeadAnalytics } from "./types";
 
@@ -716,6 +718,220 @@ export async function getLeadAnalytics(): Promise<ActionResponse<LeadAnalytics>>
     return {
       success: false,
       error: error instanceof Error ? error.message : "Failed to get analytics",
+    };
+  }
+}
+
+// ============================================================================
+// AI Extraction
+// ============================================================================
+
+export interface AIExtractionResult {
+  leads: Array<{
+    name: string;
+    email?: string;
+    company?: string;
+    title?: string;
+    phone?: string;
+    score: number;
+    confidence: number;
+  }>;
+  created: number;
+  duplicates: number;
+  duplicateEmails: string[];
+  feedbackMessage: string;
+  metadata: {
+    model: string;
+    processingTime: number;
+  };
+}
+
+/**
+ * Extract leads from raw text using AI
+ */
+export async function extractLeadsFromText(
+  input: AIExtractionInput
+): Promise<ActionResponse<AIExtractionResult>> {
+  const startTime = Date.now();
+
+  try {
+    const { schoolId } = await getAuthContext();
+
+    const validated = aiExtractionInputSchema.parse(input);
+    const { rawText, source, model, options } = validated;
+
+    // Import text extraction utilities
+    const { extractMultipleLeads, extractLeadFromText } = await import(
+      "@/lib/text-extraction"
+    );
+
+    // Try pattern-based extraction first
+    let extractedLeads = extractMultipleLeads(rawText);
+
+    // If no leads found with multiple extraction, try single extraction
+    if (extractedLeads.length === 0) {
+      const singleLead = extractLeadFromText(rawText);
+      if (singleLead.name || singleLead.email || singleLead.company) {
+        extractedLeads = [singleLead];
+      }
+    }
+
+    // If still no leads and AI is available, use AI extraction
+    if (extractedLeads.length === 0 && model) {
+      try {
+        const { generateObject } = await import("ai");
+        const { selectProvider } = await import("@/lib/ai/providers");
+
+        const provider = selectProvider("extraction");
+
+        const result = await generateObject({
+          model: provider,
+          prompt: `Extract contact information from this text. Return an array of leads with name, email, company, title, and phone fields. Text:\n\n${rawText}`,
+          schema: z.object({
+            leads: z.array(
+              z.object({
+                name: z.string().optional(),
+                email: z.string().optional(),
+                company: z.string().optional(),
+                title: z.string().optional(),
+                phone: z.string().optional(),
+              })
+            ),
+          }),
+        });
+
+        extractedLeads = result.object.leads.map((l) => ({
+          name: l.name,
+          email: l.email,
+          company: l.company,
+          phone: l.phone,
+          rawInput: rawText,
+        }));
+      } catch (aiError) {
+        console.warn("[extractLeadsFromText] AI extraction failed:", aiError);
+        // Continue with pattern-based results
+      }
+    }
+
+    // Filter out leads without meaningful data
+    extractedLeads = extractedLeads.filter(
+      (lead) => lead.name || lead.email || lead.company
+    );
+
+    if (extractedLeads.length === 0) {
+      return {
+        success: true,
+        data: {
+          leads: [],
+          created: 0,
+          duplicates: 0,
+          duplicateEmails: [],
+          feedbackMessage: "No valid leads could be extracted from the text",
+          metadata: {
+            model: model || "pattern",
+            processingTime: Date.now() - startTime,
+          },
+        },
+      };
+    }
+
+    // Check for duplicates and create leads
+    const createdLeads: AIExtractionResult["leads"] = [];
+    const duplicateEmails: string[] = [];
+
+    for (const extracted of extractedLeads) {
+      // Skip if no name
+      if (!extracted.name) continue;
+
+      // Check for duplicate email
+      if (extracted.email && options?.detectDuplicates !== false) {
+        const existing = await db.lead.findFirst({
+          where: {
+            schoolId,
+            email: extracted.email.toLowerCase(),
+          },
+        });
+
+        if (existing) {
+          duplicateEmails.push(extracted.email);
+          continue;
+        }
+      }
+
+      // Calculate score based on completeness
+      let score = 50;
+      if (options?.autoScore !== false) {
+        if (extracted.email) score += 15;
+        if (extracted.phone) score += 10;
+        if (extracted.company) score += 10;
+        if (extracted.website) score += 5;
+        score = Math.min(score, 100);
+      }
+
+      // Create the lead
+      const lead = await db.lead.create({
+        data: {
+          schoolId,
+          name: extracted.name,
+          email: extracted.email?.toLowerCase() || null,
+          phone: extracted.phone || null,
+          company: extracted.company || null,
+          title: extracted.name ? null : null, // title extracted separately
+          status: "NEW" as LeadStatus,
+          source: (source === "web"
+            ? "WEBSITE"
+            : source === "file"
+              ? "IMPORT"
+              : "MANUAL") as LeadSource,
+          priority: "MEDIUM" as LeadPriority,
+          leadType: "SCHOOL" as LeadType,
+          score,
+          notes: extracted.notes || null,
+        },
+      });
+
+      createdLeads.push({
+        name: lead.name,
+        email: lead.email || undefined,
+        company: lead.company || undefined,
+        phone: lead.phone || undefined,
+        score: lead.score,
+        confidence: 0.8,
+      });
+    }
+
+    revalidatePath(SALES_PATH);
+
+    const processingTime = Date.now() - startTime;
+
+    return {
+      success: true,
+      data: {
+        leads: createdLeads,
+        created: createdLeads.length,
+        duplicates: duplicateEmails.length,
+        duplicateEmails,
+        feedbackMessage: `Successfully extracted ${createdLeads.length} leads${duplicateEmails.length > 0 ? ` (${duplicateEmails.length} duplicates skipped)` : ""}`,
+        metadata: {
+          model: model || "pattern",
+          processingTime,
+        },
+      },
+    };
+  } catch (error) {
+    console.error("[extractLeadsFromText] Error:", error);
+
+    if (error instanceof z.ZodError) {
+      return {
+        success: false,
+        error: `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
+      };
+    }
+
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Failed to extract leads",
     };
   }
 }

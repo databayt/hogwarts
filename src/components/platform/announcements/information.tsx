@@ -4,30 +4,53 @@ import { type UseFormReturn } from "react-hook-form";
 import { FormControl, FormField, FormItem, FormMessage, FormLabel } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Languages } from "lucide-react";
 import type { Dictionary } from "@/components/internationalization/dictionaries";
+import type { Locale } from "@/components/internationalization/config";
+import type { AnnouncementFormValues } from "./validation";
 
-import { AnnouncementFormStepProps } from "./types";
-
-interface InformationStepProps extends AnnouncementFormStepProps {
+interface InformationStepProps {
+  form: UseFormReturn<AnnouncementFormValues>;
+  isView: boolean;
   dictionary: Dictionary['school']['announcements'];
+  lang: Locale;
 }
 
-export function InformationStep({ form, isView, dictionary }: InformationStepProps) {
+export function InformationStep({ form, isView, dictionary, lang }: InformationStepProps) {
   const t = dictionary;
+  const isRTL = lang === 'ar';
+
+  // Determine which fields to show based on language
+  const titleField = isRTL ? 'titleAr' : 'titleEn';
+  const bodyField = isRTL ? 'bodyAr' : 'bodyEn';
 
   return (
     <div className="space-y-4 w-full">
-      {/* English Title */}
+      {/* Translation notice */}
+      {!isView && (
+        <Alert variant="default" className="bg-muted/50">
+          <Languages className="h-4 w-4" />
+          <AlertDescription className="text-sm">
+            {isRTL
+              ? 'اكتب بالعربية - سيتم ترجمة المحتوى للإنجليزية تلقائياً عند الحفظ'
+              : 'Write in English - content will be auto-translated to Arabic on save'}
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Title field - single language */}
       <FormField
         control={form.control}
-        name="titleEn"
+        name={titleField}
         render={({ field }) => (
           <FormItem>
-            <FormLabel>{t.titleLabel} (English)</FormLabel>
+            <FormLabel>{t.titleLabel}</FormLabel>
             <FormControl>
               <Input
-                placeholder="Enter title in English"
+                placeholder={isRTL ? "أدخل عنوان الإعلان" : "Enter announcement title"}
                 disabled={isView}
+                dir={isRTL ? "rtl" : "ltr"}
                 {...field}
                 value={field.value ?? ""}
               />
@@ -37,61 +60,19 @@ export function InformationStep({ form, isView, dictionary }: InformationStepPro
         )}
       />
 
-      {/* Arabic Title */}
+      {/* Body field - single language */}
       <FormField
         control={form.control}
-        name="titleAr"
+        name={bodyField}
         render={({ field }) => (
           <FormItem>
-            <FormLabel>{t.titleLabel} (العربية)</FormLabel>
-            <FormControl>
-              <Input
-                placeholder="أدخل العنوان بالعربية"
-                disabled={isView}
-                dir="rtl"
-                {...field}
-                value={field.value ?? ""}
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-
-      {/* English Body */}
-      <FormField
-        control={form.control}
-        name="bodyEn"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>{t.contentLabel} (English)</FormLabel>
+            <FormLabel>{t.contentLabel}</FormLabel>
             <FormControl>
               <Textarea
-                placeholder="Enter content in English"
-                className="min-h-[120px]"
+                placeholder={isRTL ? "أدخل محتوى الإعلان..." : "Enter announcement content..."}
+                className="min-h-[160px]"
                 disabled={isView}
-                {...field}
-                value={field.value ?? ""}
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-
-      {/* Arabic Body */}
-      <FormField
-        control={form.control}
-        name="bodyAr"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>{t.contentLabel} (العربية)</FormLabel>
-            <FormControl>
-              <Textarea
-                placeholder="أدخل المحتوى بالعربية"
-                className="min-h-[120px]"
-                disabled={isView}
-                dir="rtl"
+                dir={isRTL ? "rtl" : "ltr"}
                 {...field}
                 value={field.value ?? ""}
               />

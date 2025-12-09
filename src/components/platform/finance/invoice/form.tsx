@@ -12,8 +12,9 @@ import { useRouter } from "next/navigation";
 import { BasicInformationStep } from "./steps/basic-information";
 import { ClientItemsStep } from "./steps/client-items";
 import { ReviewSubmitStep } from "./steps/review-submit";
-import { InvoiceFormFooter } from "./footer";
-import { STEPS, STEP_FIELDS } from "./config";
+import { ModalFormLayout } from "@/components/atom/modal/modal-form-layout";
+import { ModalFooter } from "@/components/atom/modal/modal-footer";
+import { STEP_FIELDS } from "./config";
 import { ErrorToast, SuccessToast } from "@/components/atom/toast";
 
 interface InvoiceFormProps {
@@ -255,46 +256,40 @@ export function InvoiceCreateForm({
     );
   }
 
+  const stepLabels: Record<number, string> = {
+    1: "Basic Information",
+    2: "Client & Items",
+    3: "Review & Submit",
+  };
+
   return (
-    <div className="flex h-full flex-col">
-      <Form {...form}>
-        <form className="flex flex-col h-full" onSubmit={(e) => e.preventDefault()}>
-          <div className="flex-grow flex gap-6">
-            {/* Title Section */}
-            <div className="w-1/3">
-              <h2 className="text-2xl font-semibold">
-                {isView ? "View Invoice" : currentId ? "Edit Invoice" : "Create Invoice"}
-              </h2>
-              <p className="text-sm text-muted-foreground mt-2">
-                {isView 
-                  ? "View invoice details" 
-                  : currentId 
-                    ? "Update invoice details" 
-                    : "Create a new invoice for your client"
-                }
-              </p>
-            </div>
+    <Form {...form}>
+      <form onSubmit={(e) => e.preventDefault()}>
+        <ModalFormLayout
+          title={isView ? "View Invoice" : currentId ? "Edit Invoice" : "Create Invoice"}
+          description={isView
+            ? "View invoice details"
+            : currentId
+              ? "Update invoice details"
+              : "Create a new invoice for your client"
+          }
+        >
+          {renderCurrentStep()}
+        </ModalFormLayout>
 
-            {/* Form Content */}
-            <div className="flex-1">
-              <div className="overflow-y-auto">
-                {renderCurrentStep()}
-              </div>
-            </div>
-          </div>
-
-          <InvoiceFormFooter 
-            currentStep={currentStep}
-            isView={isView}
-            currentId={currentId}
-            onBack={handleBack}
-            onNext={handleNext}
-            onSaveCurrentStep={handleSaveCurrentStep}
-            form={form}
-          />
-        </form>
-      </Form>
-    </div>
+        <ModalFooter
+          currentStep={currentStep}
+          totalSteps={3}
+          stepLabel={stepLabels[currentStep]}
+          isView={isView}
+          isEdit={!!currentId}
+          isDirty={form.formState.isDirty}
+          onBack={handleBack}
+          onNext={handleNext}
+          onSaveStep={handleSaveCurrentStep}
+        />
+      </form>
+    </Form>
   );
 }
 

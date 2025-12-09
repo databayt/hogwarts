@@ -35,7 +35,8 @@ import {
   Download,
   Book,
 } from "lucide-react"
-import { Progress } from "@/components/ui/progress"
+import { ResourceUsage } from "@/components/platform/billing/resource-usage"
+import { InvoiceHistory } from "@/components/platform/billing/invoice-history"
 import Icon from "@mdi/react"
 import {
   mdiWeatherSunny,
@@ -54,6 +55,7 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart"
 import { CartesianGrid, Line, LineChart, XAxis } from "recharts"
+import {DetailedUsageTableDemo} from "@/components/platform/billing/detailed-usage-table-demo";
 
 // ============================================================================
 // TYPES
@@ -610,6 +612,8 @@ function FinancialSection({ financeStats }: { financeStats: FinanceStatData[] })
 // SECTION 4: Recent Activity - Feed (2/3) + Summary Stats (1/3)
 // ============================================================================
 
+<DetailedUsageTableDemo />
+
 const activityIconMap: Record<string, React.ElementType> = {
   enrollment: UserPlus,
   payment: CreditCard,
@@ -682,169 +686,28 @@ function RecentActivitySection({
 }
 
 // ============================================================================
-// SECTION: Resource Usage
+// SECTION: Billing Data (Demo data for Resource Usage & Invoice History)
 // ============================================================================
 
-// Usage thresholds
-const USAGE_THRESHOLDS = {
-  INFO: 70,
-  WARNING: 85,
-  CRITICAL: 95,
-} as const
-
-function getUsageSeverity(percentage: number): "info" | "warning" | "critical" {
-  if (percentage >= USAGE_THRESHOLDS.CRITICAL) return "critical"
-  if (percentage >= USAGE_THRESHOLDS.WARNING) return "warning"
-  return "info"
+// Demo stats data (matches BillingStats interface)
+const billingStats = {
+  currentUsage: { students: 245, teachers: 28, classes: 18, storage: 2400 },
+  limits: { students: 300, teachers: 50, classes: 25, storage: 5000 },
+  usagePercentages: { students: 82, teachers: 56, classes: 72, storage: 48 },
 }
 
-// Demo data for resource usage
-const resourceUsageData = {
-  students: { current: 245, limit: 300, percentage: 82 },
-  teachers: { current: 28, limit: 50, percentage: 56 },
-  classes: { current: 18, limit: 25, percentage: 72 },
-  storage: { current: 2400, limit: 5000, percentage: 48 },
-}
+// Demo invoices data
+const demoInvoices = [
+  { id: "inv_1", stripeInvoiceId: "INV-2024-001", periodStart: new Date("2024-11-01"), periodEnd: new Date("2024-11-30"), amountDue: 29900, status: "paid" },
+  { id: "inv_2", stripeInvoiceId: "INV-2024-002", periodStart: new Date("2024-10-01"), periodEnd: new Date("2024-10-31"), amountDue: 29900, status: "paid" },
+  { id: "inv_3", stripeInvoiceId: "INV-2024-003", periodStart: new Date("2024-09-01"), periodEnd: new Date("2024-09-30"), amountDue: 24900, status: "paid" },
+  { id: "inv_4", stripeInvoiceId: "INV-2024-004", periodStart: new Date("2024-08-01"), periodEnd: new Date("2024-08-31"), amountDue: 24900, status: "paid" },
+] as any[]
 
-function ResourceUsageSection({ locale, subdomain }: { locale: string; subdomain: string }) {
-  const resources = [
-    { name: "Students", icon: Users, ...resourceUsageData.students },
-    { name: "Teachers", icon: GraduationCap, ...resourceUsageData.teachers },
-    { name: "Classes", icon: Book, ...resourceUsageData.classes },
-    { name: "Storage", icon: Database, ...resourceUsageData.storage, unit: "MB" },
-  ]
-
-  return (
-    <section>
-      <h2 className="mb-4 text-lg font-semibold">Resource Usage</h2>
-      <Card className="p-6">
-        <CardContent className="p-0">
-          <p className="text-sm text-muted-foreground mb-6">Current usage against your plan limits</p>
-          <div className="space-y-6">
-            {resources.map((resource) => {
-              const Icon = resource.icon
-              const severity = getUsageSeverity(resource.percentage)
-              const color = severity === "critical" ? "bg-red-500" : severity === "warning" ? "bg-yellow-500" : "bg-green-500"
-
-              return (
-                <div key={resource.name} className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Icon className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm font-medium">{resource.name}</span>
-                    </div>
-                    <span className="text-sm text-muted-foreground">
-                      {resource.current.toLocaleString()} / {resource.limit.toLocaleString()} {resource.unit || ""}
-                      <span className="ms-2 font-medium">({resource.percentage}%)</span>
-                    </span>
-                  </div>
-                  <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
-                    <div className={`h-full ${color} transition-all`} style={{ width: `${resource.percentage}%` }} />
-                  </div>
-                  {resource.percentage >= USAGE_THRESHOLDS.WARNING && (
-                    <p className="text-xs text-orange-600">
-                      {severity === "critical" ? "⚠️ " : ""}
-                      You&apos;re approaching your {resource.name.toLowerCase()} limit. Consider upgrading your plan.
-                    </p>
-                  )}
-                </div>
-              )
-            })}
-          </div>
-        </CardContent>
-        <div className="mt-6 pt-4 border-t">
-          <Link
-            href={`/${locale}/s/${subdomain}/billing`}
-            className="inline-flex items-center text-sm text-primary hover:underline"
-          >
-            View Billing Details <ChevronRight className="ml-1 h-4 w-4" />
-          </Link>
-        </div>
-      </Card>
-    </section>
-  )
-}
-
-// ============================================================================
-// SECTION: Invoice History
-// ============================================================================
-
-// Demo data for invoices
-const invoicesData = [
-  { id: "inv_1", invoiceId: "INV-2024-001", periodStart: "2024-11-01", periodEnd: "2024-11-30", amountDue: 29900, status: "paid" },
-  { id: "inv_2", invoiceId: "INV-2024-002", periodStart: "2024-10-01", periodEnd: "2024-10-31", amountDue: 29900, status: "paid" },
-  { id: "inv_3", invoiceId: "INV-2024-003", periodStart: "2024-09-01", periodEnd: "2024-09-30", amountDue: 24900, status: "paid" },
-  { id: "inv_4", invoiceId: "INV-2024-004", periodStart: "2024-08-01", periodEnd: "2024-08-31", amountDue: 24900, status: "paid" },
-]
-
-function formatCurrency(amount: number, currency: string = "USD"): string {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency,
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 2,
-  }).format(amount / 100)
-}
-
-function InvoiceHistorySection({ locale, subdomain }: { locale: string; subdomain: string }) {
-  return (
-    <section>
-      <h2 className="mb-4 text-lg font-semibold">Invoice History</h2>
-      <Card className="p-6">
-        <CardHeader className="p-0 pb-4 flex flex-row items-center justify-between">
-          <div>
-            <CardTitle className="text-base">Recent Invoices</CardTitle>
-            <p className="text-sm text-muted-foreground">Your billing and invoice history</p>
-          </div>
-          <Button variant="outline" size="sm">
-            <Download className="me-2 h-4 w-4" />
-            Export All
-          </Button>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="space-y-4">
-            {invoicesData.length === 0 ? (
-              <p className="text-center py-8 text-muted-foreground">No invoices yet</p>
-            ) : (
-              invoicesData.slice(0, 5).map((invoice) => (
-                <div key={invoice.id} className="flex items-center justify-between border-b pb-4 last:border-0">
-                  <div className="flex items-center gap-4">
-                    <Receipt className="h-8 w-8 text-muted-foreground" />
-                    <div>
-                      <p className="font-medium">Invoice #{invoice.invoiceId.slice(-8)}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {new Date(invoice.periodStart).toLocaleDateString()} - {new Date(invoice.periodEnd).toLocaleDateString()}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <div className="text-right">
-                      <p className="font-medium">{formatCurrency(invoice.amountDue)}</p>
-                      <Badge variant={invoice.status === "paid" ? "default" : "outline"} className="mt-1">
-                        {invoice.status}
-                      </Badge>
-                    </div>
-                    <Button variant="ghost" size="sm">
-                      <Download className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </CardContent>
-        <div className="mt-6 pt-4 border-t">
-          <Link
-            href={`/${locale}/s/${subdomain}/billing`}
-            className="inline-flex items-center text-sm text-primary hover:underline"
-          >
-            View All Invoices <ChevronRight className="ml-1 h-4 w-4" />
-          </Link>
-        </div>
-      </Card>
-    </section>
-  )
-}
+// Demo payment methods data
+const demoPaymentMethods = [
+  { id: "pm_1", cardBrand: "visa", cardLast4: "4242", type: "card", billingName: "John Doe", isDefault: true, user: { username: "johndoe" } },
+] as any[]
 
 // ============================================================================
 // SECTION 0: Quick Look - Announcements, Events, Notifications, Messages
@@ -983,10 +846,10 @@ export function AdminDashboardClient({
       <QuickLookSection locale={locale} subdomain={subdomain} />
 
       {/* Section 2: Resource Usage */}
-      <ResourceUsageSection locale={locale} subdomain={subdomain} />
+      <ResourceUsage stats={billingStats} />
 
       {/* Section 3: Invoice History */}
-      <InvoiceHistorySection locale={locale} subdomain={subdomain} />
+      <InvoiceHistory invoices={demoInvoices} paymentMethods={demoPaymentMethods} />
 
       {/* Section 4: Recent Activity */}
       <RecentActivitySection recentActivities={recentActivities} todaySummary={todaySummary} />

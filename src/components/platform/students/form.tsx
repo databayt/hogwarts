@@ -12,7 +12,9 @@ import { useModal } from "@/components/atom/modal/context";
 import { useRouter } from "next/navigation";
 import { InformationStep } from "./information";
 import { EnrollmentStep } from "./enrollment";
-import { StudentFormFooter } from "./footer";
+import { ModalFormLayout } from "@/components/atom/modal/modal-form-layout";
+import { ModalFooter } from "@/components/atom/modal/modal-footer";
+import { STEPS, STEP_FIELDS, TOTAL_FIELDS } from "./config";
 import type { Dictionary } from "@/components/internationalization/dictionaries";
 
 interface StudentCreateFormProps {
@@ -166,38 +168,43 @@ export function StudentCreateForm({ dictionary, onSuccess }: StudentCreateFormPr
     }
   };
 
+  // Calculate progress based on filled fields
+  const values = form.watch();
+  const getFilledFieldsCount = () => {
+    const allFields = [...STEP_FIELDS[1], ...STEP_FIELDS[2]];
+    const filledCount = allFields.filter(field => {
+      const value = values[field as keyof typeof values];
+      return value !== undefined && value !== "" && value !== null;
+    }).length;
+    return filledCount;
+  };
+  const progressPercentage = (getFilledFieldsCount() / TOTAL_FIELDS) * 100;
+
   return (
-    <div className="flex h-full flex-col">
-      <Form {...form}>
-        <form className="flex flex-col h-full" onSubmit={(e) => e.preventDefault()}>
-          <div className="flex-grow flex flex-col md:flex-row gap-6">
-            {/* Title Section */}
-            <div className="md:w-1/3">
-              <h2 className="text-2xl font-semibold">{isView ? "View Student" : currentId ? "Edit Student" : "Create Student"}</h2>
-              <p className="text-sm text-muted-foreground mt-2">{isView ? "View student details" : currentId ? "Update student details" : "Add a new student to your school"}</p>
-            </div>
+    <Form {...form}>
+      <form onSubmit={(e) => e.preventDefault()}>
+        <ModalFormLayout
+          title={isView ? "View Student" : currentId ? "Edit Student" : "Create Student"}
+          description={isView ? "View student details" : currentId ? "Update student details" : "Add a new student to your school"}
+        >
+          {renderCurrentStep()}
+        </ModalFormLayout>
 
-            {/* Form Content */}
-            <div className="flex-1">
-              <div className="overflow-y-auto">
-                {renderCurrentStep()}
-              </div>
-            </div>
-          </div>
-
-          <StudentFormFooter
-            currentStep={currentStep}
-            isView={isView}
-            currentId={currentId}
-            onBack={handleBack}
-            onNext={handleNext}
-            onSaveCurrentStep={handleSaveCurrentStep}
-            form={form}
-            isSubmitting={isSubmitting}
-          />
-        </form>
-      </Form>
-    </div>
+        <ModalFooter
+          currentStep={currentStep}
+          totalSteps={2}
+          stepLabel={STEPS[currentStep as keyof typeof STEPS]}
+          isView={isView}
+          isEdit={!!currentId}
+          isSubmitting={isSubmitting}
+          isDirty={form.formState.isDirty}
+          progress={progressPercentage}
+          onBack={handleBack}
+          onNext={handleNext}
+          onSaveStep={handleSaveCurrentStep}
+        />
+      </form>
+    </Form>
   );
 }
 

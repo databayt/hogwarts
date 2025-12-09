@@ -9,6 +9,9 @@ import {
 } from "@/components/site/metadata";
 import { getDictionary } from "@/components/internationalization/dictionaries";
 import { type Locale } from "@/components/internationalization/config";
+import { db } from "@/lib/db";
+import { getTenantContext } from "@/lib/tenant-context";
+import type { Lead } from "@/components/sales/types";
 
 interface SalesProps {
   params: Promise<{ subdomain: string; lang: Locale }>;
@@ -36,7 +39,7 @@ export async function generateMetadata({
   };
 }
 
-export default async function Sales({ params, searchParams }: SalesProps) {
+export default async function Sales({ params }: SalesProps) {
   const { subdomain, lang } = await params;
   const dictionary = await getDictionary(lang);
   const result = await getSchoolBySubdomain(subdomain);
@@ -47,6 +50,30 @@ export default async function Sales({ params, searchParams }: SalesProps) {
 
   const school = result.data;
 
+  // Fetch initial leads for the school
+  const { schoolId } = await getTenantContext();
+  let initialLeads: Lead[] = [];
+
+  if (schoolId) {
+    const leads = await db.lead.findMany({
+      where: { schoolId },
+      include: {
+        assignedTo: {
+          select: {
+            id: true,
+            username: true,
+            email: true,
+            image: true,
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 100, // Initial load limit
+    });
+
+    initialLeads = leads as Lead[];
+  }
+
   return (
     <div
       className="school-content"
@@ -54,7 +81,7 @@ export default async function Sales({ params, searchParams }: SalesProps) {
       data-subdomain={subdomain}
     >
       <SalesContent
-        searchParams={searchParams}
+        initialLeads={initialLeads}
         dictionary={dictionary.sales}
         lang={lang}
       />

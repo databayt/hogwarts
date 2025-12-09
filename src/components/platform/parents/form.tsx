@@ -12,7 +12,8 @@ import { useModal } from "@/components/atom/modal/context";
 import { useRouter } from "next/navigation";
 import { InformationStep } from "./information";
 import { ContactStep } from "./contact";
-import { ParentFormFooter } from "./footer";
+import { ModalFormLayout } from "@/components/atom/modal/modal-form-layout";
+import { ModalFooter } from "@/components/atom/modal/modal-footer";
 
 interface ParentCreateFormProps {
   /** Callback fired on successful create/update - use for optimistic refresh */
@@ -124,37 +125,34 @@ export function ParentCreateForm({ onSuccess }: ParentCreateFormProps) {
     }
   };
 
+  const stepLabels: Record<number, string> = {
+    1: "Basic Information",
+    2: "Contact Details",
+  };
+
   return (
-    <div className="flex h-full flex-col">
-      <Form {...form}>
-        <form className="flex flex-col h-full" onSubmit={(e) => e.preventDefault()}>
-          <div className="flex-grow flex flex-col md:flex-row gap-6">
-            {/* Title Section */}
-            <div className="md:w-1/3">
-              <h2 className="text-2xl font-semibold">{isView ? "View Parent" : currentId ? "Edit Parent" : "Create Parent"}</h2>
-              <p className="text-sm text-muted-foreground mt-2">{isView ? "View parent details" : currentId ? "Update parent details" : "Add a new parent to your school"}</p>
-            </div>
+    <Form {...form}>
+      <form onSubmit={(e) => e.preventDefault()}>
+        <ModalFormLayout
+          title={isView ? "View Parent" : currentId ? "Edit Parent" : "Create Parent"}
+          description={isView ? "View parent details" : currentId ? "Update parent details" : "Add a new parent to your school"}
+        >
+          {renderCurrentStep()}
+        </ModalFormLayout>
 
-            {/* Form Content */}
-            <div className="flex-1">
-              <div className="overflow-y-auto">
-                {renderCurrentStep()}
-              </div>
-            </div>
-          </div>
-
-          <ParentFormFooter 
-            currentStep={currentStep}
-            isView={isView}
-            currentId={currentId}
-            onBack={handleBack}
-            onNext={handleNext}
-            onSaveCurrentStep={handleSaveCurrentStep}
-            form={form}
-          />
-        </form>
-      </Form>
-    </div>
+        <ModalFooter
+          currentStep={currentStep}
+          totalSteps={2}
+          stepLabel={stepLabels[currentStep]}
+          isView={isView}
+          isEdit={!!currentId}
+          isDirty={form.formState.isDirty}
+          onBack={handleBack}
+          onNext={handleNext}
+          onSaveStep={handleSaveCurrentStep}
+        />
+      </form>
+    </Form>
   );
 }
 

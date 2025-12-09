@@ -3,7 +3,7 @@
 import * as React from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { ChevronDown, Search as SearchIcon, X } from "lucide-react"
+import { Search as SearchIcon, X, Sparkles, TrendingUp, BookOpen, GraduationCap } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
@@ -21,52 +21,45 @@ interface SearchBarProps {
   className?: string
 }
 
-const exploreRoles = [
-  { title: "Data Analyst", href: "/courses?role=data-analyst" },
-  { title: "Project Manager", href: "/courses?role=project-manager" },
-  { title: "Cyber Security Analyst", href: "/courses?role=cyber-security" },
-  { title: "Data Scientist", href: "/courses?role=data-scientist" },
-  { title: "Business Intelligence Analyst", href: "/courses?role=bi-analyst" },
-  { title: "Digital Marketing Specialist", href: "/courses?role=digital-marketing" },
-  { title: "UI / UX Designer", href: "/courses?role=ui-ux" },
-  { title: "Machine Learning Engineer", href: "/courses?role=ml-engineer" },
+const quickLinks = [
+  {
+    title: "AI & Machine Learning",
+    href: "/courses?category=ai",
+    icon: Sparkles,
+    color: "text-violet-500"
+  },
+  {
+    title: "Data Science",
+    href: "/courses?category=data-science",
+    icon: TrendingUp,
+    color: "text-blue-500"
+  },
+  {
+    title: "Business",
+    href: "/courses?category=business",
+    icon: BookOpen,
+    color: "text-emerald-500"
+  },
+  {
+    title: "Degrees",
+    href: "/degrees",
+    icon: GraduationCap,
+    color: "text-amber-500"
+  },
 ]
 
-const exploreCategories = [
-  { title: "Artificial Intelligence", href: "/courses?category=ai" },
-  { title: "Business", href: "/courses?category=business" },
-  { title: "Data Science", href: "/courses?category=data-science" },
-  { title: "Information Technology", href: "/courses?category=it" },
-  { title: "Computer Science", href: "/courses?category=cs" },
-  { title: "Healthcare", href: "/courses?category=healthcare" },
-  { title: "Physical Science and Engineering", href: "/courses?category=engineering" },
-  { title: "Personal Development", href: "/courses?category=personal-dev" },
-  { title: "Social Sciences", href: "/courses?category=social-sciences" },
-  { title: "Language Learning", href: "/courses?category=languages" },
+const popularSearches = [
+  "Python",
+  "Excel",
+  "Data Analysis",
+  "Project Management",
+  "Machine Learning",
+  "SQL",
 ]
 
-const certificates = [
-  { title: "Business", href: "/certificates?field=business" },
-  { title: "Computer Science", href: "/certificates?field=cs" },
-  { title: "Data Science", href: "/certificates?field=data-science" },
-  { title: "Information Technology", href: "/certificates?field=it" },
-]
-
-const degrees = [
-  { title: "Bachelor's Degrees", href: "/degrees?level=bachelors" },
-  { title: "Master's Degrees", href: "/degrees?level=masters" },
-  { title: "Postgraduate Programs", href: "/degrees?level=postgraduate" },
-]
-
-const trendingSkills = [
-  { title: "Python", href: "/courses?skill=python" },
-  { title: "Artificial Intelligence", href: "/courses?skill=ai" },
-  { title: "Excel", href: "/courses?skill=excel" },
-  { title: "Machine Learning", href: "/courses?skill=ml" },
-  { title: "SQL", href: "/courses?skill=sql" },
-  { title: "Project Management", href: "/courses?skill=project-management" },
-  { title: "Power BI", href: "/courses?skill=power-bi" },
-  { title: "Marketing", href: "/courses?skill=marketing" },
+const recentCourses = [
+  { title: "Introduction to AI", category: "Technology" },
+  { title: "Business Analytics", category: "Business" },
 ]
 
 export function SearchBar({ lang, dictionary, className }: SearchBarProps) {
@@ -88,10 +81,14 @@ export function SearchBar({ lang, dictionary, className }: SearchBarProps) {
     inputRef.current?.focus()
   }
 
+  const handleQuickSearch = (term: string) => {
+    router.push(`/${lang}/stream/courses?search=${encodeURIComponent(term)}`)
+  }
+
   return (
     <form
       onSubmit={handleSubmit}
-      className={cn("relative w-full", className)}
+      className={cn("relative w-full max-w-2xl mx-auto", className)}
     >
       <div
         className={cn(
@@ -118,183 +115,75 @@ export function SearchBar({ lang, dictionary, className }: SearchBarProps) {
                 </span>
               </NavigationMenuTrigger>
               <NavigationMenuContent>
-                <div className={cn(
-                  "grid gap-8 p-8 w-[52rem] lg:w-[58rem] grid-cols-4",
-                  isRTL && "direction-rtl"
-                )}>
-                  {/* Column 1: Explore roles */}
-                  <div className="space-y-3">
-                    <h4 className="font-semibold text-sm">
-                      {dictionary?.explore?.roles || "Explore roles"}
-                    </h4>
-                    <ul className="space-y-2">
-                      {exploreRoles.map((role) => (
-                        <li key={role.href}>
-                          <NavigationMenuLink asChild>
-                            <Link
-                              href={`/${lang}/stream${role.href}`}
-                              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                            >
-                              {role.title}
-                            </Link>
-                          </NavigationMenuLink>
-                        </li>
-                      ))}
-                      <li>
+                <div className="p-4 w-80">
+                  {/* Quick Links with Icons */}
+                  <div className="grid grid-cols-2 gap-2 mb-4">
+                    {quickLinks.map((link) => (
+                      <NavigationMenuLink key={link.href} asChild>
                         <Link
-                          href={`/${lang}/stream/courses`}
-                          className="text-sm font-medium underline underline-offset-2 hover:text-primary"
+                          href={`/${lang}/stream${link.href}`}
+                          className="flex items-center gap-2 p-2.5 rounded-lg hover:bg-background transition-colors"
                         >
-                          {dictionary?.explore?.viewAll || "View all"}
+                          <link.icon className={cn("size-4", link.color)} />
+                          <span className="text-sm font-medium">{link.title}</span>
                         </Link>
-                      </li>
-                    </ul>
+                      </NavigationMenuLink>
+                    ))}
                   </div>
 
-                  {/* Column 2: Explore categories */}
-                  <div className="space-y-3">
-                    <h4 className="font-semibold text-sm">
-                      {dictionary?.explore?.categories || "Explore categories"}
-                    </h4>
-                    <ul className="space-y-2">
-                      {exploreCategories.map((category) => (
-                        <li key={category.href}>
-                          <NavigationMenuLink asChild>
-                            <Link
-                              href={`/${lang}/stream${category.href}`}
-                              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                            >
-                              {category.title}
-                            </Link>
-                          </NavigationMenuLink>
-                        </li>
+                  {/* Popular Searches */}
+                  <div className="pt-3 border-t border-background">
+                    <p className="text-xs text-muted-foreground mb-2 font-medium">
+                      {dictionary?.explore?.popular || "Popular searches"}
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {popularSearches.map((term) => (
+                        <button
+                          key={term}
+                          type="button"
+                          onClick={() => handleQuickSearch(term)}
+                          className="px-2.5 py-1 text-xs bg-background rounded-full hover:bg-accent transition-colors"
+                        >
+                          {term}
+                        </button>
                       ))}
-                      <li>
-                        <Link
-                          href={`/${lang}/stream/courses`}
-                          className="text-sm font-medium underline underline-offset-2 hover:text-primary"
-                        >
-                          {dictionary?.explore?.viewAll || "View all"}
-                        </Link>
-                      </li>
-                    </ul>
+                    </div>
                   </div>
 
-                  {/* Column 3: Certificates & Degrees */}
-                  <div className="space-y-6">
-                    <div className="space-y-3">
-                      <h4 className="font-semibold text-sm">
-                        {dictionary?.explore?.certificates || "Earn a Professional Certificate"}
-                      </h4>
-                      <ul className="space-y-2">
-                        {certificates.map((cert) => (
-                          <li key={cert.href}>
-                            <NavigationMenuLink asChild>
-                              <Link
-                                href={`/${lang}/stream${cert.href}`}
-                                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                              >
-                                {cert.title}
-                              </Link>
-                            </NavigationMenuLink>
-                          </li>
-                        ))}
-                        <li>
+                  {/* Recent */}
+                  {recentCourses.length > 0 && (
+                    <div className="pt-3 mt-3 border-t border-background">
+                      <p className="text-xs text-muted-foreground mb-2 font-medium">
+                        {dictionary?.explore?.recent || "Recently viewed"}
+                      </p>
+                      <div className="space-y-1">
+                        {recentCourses.map((course, i) => (
                           <Link
-                            href={`/${lang}/stream/certificates`}
-                            className="text-sm font-medium underline underline-offset-2 hover:text-primary"
+                            key={i}
+                            href={`/${lang}/stream/courses`}
+                            className="flex items-center gap-2 p-2 rounded-lg hover:bg-background transition-colors"
                           >
-                            {dictionary?.explore?.viewAll || "View all"}
+                            <div className="size-8 rounded bg-background flex items-center justify-center">
+                              <BookOpen className="size-4 text-muted-foreground" />
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-sm font-medium truncate">{course.title}</p>
+                              <p className="text-xs text-muted-foreground">{course.category}</p>
+                            </div>
                           </Link>
-                        </li>
-                      </ul>
-                    </div>
-
-                    <div className="space-y-3">
-                      <h4 className="font-semibold text-sm">
-                        {dictionary?.explore?.degrees || "Earn an online degree"}
-                      </h4>
-                      <ul className="space-y-2">
-                        {degrees.map((degree) => (
-                          <li key={degree.href}>
-                            <NavigationMenuLink asChild>
-                              <Link
-                                href={`/${lang}/stream${degree.href}`}
-                                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                              >
-                                {degree.title}
-                              </Link>
-                            </NavigationMenuLink>
-                          </li>
                         ))}
-                        <li>
-                          <Link
-                            href={`/${lang}/stream/degrees`}
-                            className="text-sm font-medium underline underline-offset-2 hover:text-primary"
-                          >
-                            {dictionary?.explore?.viewAll || "View all"}
-                          </Link>
-                        </li>
-                      </ul>
+                      </div>
                     </div>
-                  </div>
-
-                  {/* Column 4: Trending skills */}
-                  <div className="space-y-6">
-                    <div className="space-y-3">
-                      <h4 className="font-semibold text-sm">
-                        {dictionary?.explore?.trending || "Explore trending skills"}
-                      </h4>
-                      <ul className="space-y-2">
-                        {trendingSkills.map((skill) => (
-                          <li key={skill.href}>
-                            <NavigationMenuLink asChild>
-                              <Link
-                                href={`/${lang}/stream${skill.href}`}
-                                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                              >
-                                {skill.title}
-                              </Link>
-                            </NavigationMenuLink>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-
-                    <div className="space-y-3">
-                      <h4 className="font-semibold text-sm">
-                        {dictionary?.explore?.certification || "Prepare for a certification exam"}
-                      </h4>
-                      <Link
-                        href={`/${lang}/stream/certifications`}
-                        className="text-sm font-medium underline underline-offset-2 hover:text-primary"
-                      >
-                        {dictionary?.explore?.viewAll || "View all"}
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Footer */}
-                <div className="border-t px-8 py-5 bg-muted/30 rounded-b-2xl">
-                  <p className="text-sm text-muted-foreground">
-                    {dictionary?.explore?.notSure || "Not sure where to begin?"}{" "}
-                    <Link
-                      href={`/${lang}/stream/courses?filter=free`}
-                      className="font-medium text-foreground underline underline-offset-2 hover:text-primary"
-                    >
-                      {dictionary?.explore?.browseFree || "Browse free courses"}
-                    </Link>
-                  </p>
+                  )}
                 </div>
               </NavigationMenuContent>
             </NavigationMenuItem>
           </NavigationMenuList>
         </NavigationMenu>
 
-        {/* Vertical Separator */}
+        {/* Vertical Separator - Edge to Edge */}
         <div className={cn(
-          "h-6 w-px bg-border",
+          "w-px bg-border self-stretch",
           isRTL && "order-2"
         )} />
 

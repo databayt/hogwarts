@@ -641,6 +641,202 @@ const isEdit = !!currentId && !isView;
 const isCreate = !currentId;
 ```
 
+## Modal Form Layout
+
+All listing modals follow the **onboarding layout pattern** with:
+- Fullscreen modal with vertical centering
+- Two-column grid layout (title/description + form)
+- Fixed footer with progress bar and step navigation
+- Consistent typography and spacing
+
+### Layout Structure
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                                                                      │
+│   ┌─────────────────────────────────────────────────────────────┐   │
+│   │                                                             │   │
+│   │  ┌──────────────────┐    ┌────────────────────────────┐   │   │
+│   │  │  Title (h1)      │    │  Form Fields               │   │   │
+│   │  │  Description     │    │  - Input 1                 │   │   │
+│   │  │  (muted text)    │    │  - Input 2                 │   │   │
+│   │  │                  │    │  - ...                     │   │   │
+│   │  └──────────────────┘    └────────────────────────────┘   │   │
+│   │                                                             │   │
+│   └─────────────────────────────────────────────────────────────┘   │
+│                                                                      │
+├──────────────────────────────────────────────────────────────────────┤
+│  [Progress Bar]                                                      │
+│  Step 1 of 3: Basic Information            [Cancel] [Save] [Next]   │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+### Core Components
+
+#### ModalFormLayout
+
+Shared two-column layout wrapper for all listing forms:
+
+```typescript
+import { ModalFormLayout } from "@/components/atom/modal/modal-form-layout";
+
+<ModalFormLayout
+  title={isView ? "View Student" : currentId ? "Edit Student" : "Create Student"}
+  description={isView
+    ? "View student details"
+    : currentId
+      ? "Update student information"
+      : "Add a new student to the school"
+  }
+>
+  {renderCurrentStep()}
+</ModalFormLayout>
+```
+
+**Props:**
+- `title`: Modal heading (text-3xl font-bold)
+- `description`: Subtitle (text-muted-foreground)
+- `children`: Form content for current step
+
+#### ModalFooter
+
+Fixed footer with progress bar and navigation:
+
+```typescript
+import { ModalFooter } from "@/components/atom/modal/modal-footer";
+
+<ModalFooter
+  currentStep={currentStep}
+  totalSteps={3}
+  stepLabel={stepLabels[currentStep]}
+  isView={isView}
+  isEdit={!!currentId}
+  isDirty={form.formState.isDirty}
+  onBack={handleBack}
+  onNext={handleNext}
+  onSaveStep={handleSaveCurrentStep}
+  labels={{
+    cancel: dictionary?.cancel,
+    back: dictionary?.back,
+    next: dictionary?.next,
+    save: dictionary?.save,
+    create: dictionary?.create,
+  }}
+/>
+```
+
+**Props:**
+- `currentStep`: Current step number (1-indexed)
+- `totalSteps`: Total number of steps
+- `stepLabel`: Label for current step (e.g., "Basic Information")
+- `isView`: Read-only mode
+- `isEdit`: Edit mode (shows Save button)
+- `isDirty`: Form has unsaved changes
+- `onBack`: Back/Cancel handler
+- `onNext`: Next/Create handler
+- `onSaveStep`: Save current step handler (edit mode)
+- `labels`: Optional i18n labels object
+
+### Complete Form Example
+
+```typescript
+"use client";
+
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Form } from "@/components/ui/form";
+import { useModal } from "@/components/atom/modal/context";
+import { ModalFormLayout } from "@/components/atom/modal/modal-form-layout";
+import { ModalFooter } from "@/components/atom/modal/modal-footer";
+import { BasicInfoStep } from "./basic-info";
+import { DetailsStep } from "./details";
+import { schema } from "./validation";
+
+export function CreateForm({ onSuccess }: { onSuccess?: () => void }) {
+  const { modal, closeModal } = useModal();
+  const [currentStep, setCurrentStep] = useState(1);
+
+  const form = useForm({
+    resolver: zodResolver(schema),
+    defaultValues: { /* ... */ },
+  });
+
+  const isView = modal.id?.startsWith("view:");
+  const currentId = modal.id
+    ? (modal.id.startsWith("view:") ? modal.id.split(":")[1] : modal.id)
+    : undefined;
+
+  const stepLabels: Record<number, string> = {
+    1: "Basic Information",
+    2: "Details",
+  };
+
+  const handleNext = async () => {
+    if (currentStep === 1) {
+      const valid = await form.trigger(['name', 'email']);
+      if (valid) setCurrentStep(2);
+    } else {
+      await form.handleSubmit(onSubmit)();
+    }
+  };
+
+  const handleBack = () => {
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1);
+    } else {
+      closeModal();
+    }
+  };
+
+  return (
+    <Form {...form}>
+      <form onSubmit={(e) => e.preventDefault()}>
+        <ModalFormLayout
+          title={isView ? "View Item" : currentId ? "Edit Item" : "Create Item"}
+          description={isView ? "View details" : currentId ? "Update details" : "Add new item"}
+        >
+          {currentStep === 1 && <BasicInfoStep form={form} isView={isView} />}
+          {currentStep === 2 && <DetailsStep form={form} isView={isView} />}
+        </ModalFormLayout>
+
+        <ModalFooter
+          currentStep={currentStep}
+          totalSteps={2}
+          stepLabel={stepLabels[currentStep]}
+          isView={isView}
+          isEdit={!!currentId}
+          isDirty={form.formState.isDirty}
+          onBack={handleBack}
+          onNext={handleNext}
+          onSaveStep={handleNext}
+        />
+      </form>
+    </Form>
+  );
+}
+```
+
+### Styling Reference
+
+The modal layout uses these key patterns:
+
+| Element | Classes |
+|---------|---------|
+| Modal wrapper | `flex-1 flex items-center justify-center pb-20` |
+| Content max-width | `max-w-6xl mx-auto w-full` |
+| Grid layout | `grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-20` |
+| Title | `text-3xl font-bold` |
+| Description | `text-sm sm:text-base text-muted-foreground leading-relaxed` |
+| Footer | `fixed bottom-0 left-0 right-0 bg-background border-t` |
+| Progress bar | `h-1` (Progress component) |
+
+### Footer Height Calculation
+
+The `pb-20` (80px) accounts for the fixed footer height:
+- Progress bar container: ~12px
+- Button row with padding: ~68px
+- Total: ~80px
+
 ## Optimistic Updates
 
 ### Why Optimistic Updates?

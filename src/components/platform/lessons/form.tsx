@@ -13,7 +13,8 @@ import { useRouter } from "next/navigation";
 import { BasicInformationStep } from "./basic-information";
 import { ScheduleDetailsStep } from "./schedule-details";
 import { ContentAssessmentStep } from "./content-assessment";
-import { LessonFormFooter } from "./footer";
+import { ModalFormLayout } from "@/components/atom/modal/modal-form-layout";
+import { ModalFooter } from "@/components/atom/modal/modal-footer";
 
 interface LessonCreateFormProps {
   /** Callback fired on successful create/update - use for optimistic refresh */
@@ -154,41 +155,35 @@ export function LessonCreateForm({ onSuccess }: LessonCreateFormProps) {
     }
   };
 
+  const stepLabels: Record<number, string> = {
+    1: "Basic Information",
+    2: "Schedule Details",
+    3: "Content & Assessment",
+  };
+
   return (
-    <div className="flex h-full flex-col">
-      <Form {...form}>
-        <form className="flex flex-col h-full" onSubmit={(e) => e.preventDefault()}>
-          <div className="flex-grow flex flex-col md:flex-row gap-6">
-            {/* Title Section */}
-            <div className="md:w-1/3">
-              <h2 className="text-2xl font-semibold">
-                {isView ? "View Lesson" : currentId ? "Edit Lesson" : "Create Lesson"}
-              </h2>
-              <p className="text-sm text-muted-foreground mt-2">
-                {isView ? "View lesson details" : currentId ? "Update lesson details" : "Plan a new lesson for your class"}
-              </p>
-            </div>
+    <Form {...form}>
+      <form onSubmit={(e) => e.preventDefault()}>
+        <ModalFormLayout
+          title={isView ? "View Lesson" : currentId ? "Edit Lesson" : "Create Lesson"}
+          description={isView ? "View lesson details" : currentId ? "Update lesson details" : "Plan a new lesson for your class"}
+        >
+          {renderCurrentStep()}
+        </ModalFormLayout>
 
-            {/* Form Content */}
-            <div className="flex-1">
-              <div className="overflow-y-auto">
-                {renderCurrentStep()}
-              </div>
-            </div>
-          </div>
-
-          <LessonFormFooter 
-            currentStep={currentStep}
-            isView={isView}
-            currentId={currentId}
-            onBack={handleBack}
-            onNext={handleNext}
-            onSaveCurrentStep={handleSaveCurrentStep}
-            form={form}
-          />
-        </form>
-      </Form>
-    </div>
+        <ModalFooter
+          currentStep={currentStep}
+          totalSteps={3}
+          stepLabel={stepLabels[currentStep]}
+          isView={isView}
+          isEdit={!!currentId}
+          isDirty={form.formState.isDirty}
+          onBack={handleBack}
+          onNext={handleNext}
+          onSaveStep={handleSaveCurrentStep}
+        />
+      </form>
+    </Form>
   );
 }
 

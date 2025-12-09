@@ -11,7 +11,8 @@ import { Form } from "@/components/ui/form";
 import { useModal } from "@/components/atom/modal/context";
 import { useRouter } from "next/navigation";
 import { InformationStep } from "./information";
-import { SubjectFormFooter } from "./footer";
+import { ModalFormLayout } from "@/components/atom/modal/modal-form-layout";
+import { ModalFooter } from "@/components/atom/modal/modal-footer";
 
 interface SubjectCreateFormProps {
   /** Callback fired on successful create/update - use for optimistic refresh */
@@ -109,36 +110,28 @@ export function SubjectCreateForm({ onSuccess }: SubjectCreateFormProps) {
   };
 
   return (
-    <div className="flex h-full flex-col">
-      <Form {...form}>
-        <form className="flex flex-col h-full" onSubmit={(e) => e.preventDefault()}>
-          <div className="flex-grow flex flex-col md:flex-row gap-6">
-            {/* Title Section */}
-            <div className="md:w-1/3">
-              <h2 className="text-2xl font-semibold">{isView ? "View Subject" : currentId ? "Pencil Subject" : "Create Subject"}</h2>
-              <p className="text-sm text-muted-foreground mt-2">{isView ? "View subject details" : currentId ? "Update subject details" : "Add a new subject to your school"}</p>
-            </div>
+    <Form {...form}>
+      <form onSubmit={(e) => e.preventDefault()}>
+        <ModalFormLayout
+          title={isView ? "View Subject" : currentId ? "Edit Subject" : "Create Subject"}
+          description={isView ? "View subject details" : currentId ? "Update subject details" : "Add a new subject to your school"}
+        >
+          {renderCurrentStep()}
+        </ModalFormLayout>
 
-            {/* Form Content */}
-            <div className="flex-1">
-              <div className="overflow-y-auto">
-                {renderCurrentStep()}
-              </div>
-            </div>
-          </div>
-
-          <SubjectFormFooter 
-            currentStep={currentStep}
-            isView={isView}
-            currentId={currentId}
-            onBack={handleBack}
-            onNext={handleNext}
-            onSaveCurrentStep={handleSaveCurrentStep}
-            form={form}
-          />
-        </form>
-      </Form>
-    </div>
+        <ModalFooter
+          currentStep={currentStep}
+          totalSteps={1}
+          stepLabel="Subject Details"
+          isView={isView}
+          isEdit={!!currentId}
+          isDirty={form.formState.isDirty}
+          onBack={handleBack}
+          onNext={handleNext}
+          onSaveStep={handleSaveCurrentStep}
+        />
+      </form>
+    </Form>
   );
 }
 

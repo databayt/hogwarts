@@ -33,6 +33,7 @@ type AnnouncementSelectResult = {
   bodyEn: string | null;
   bodyAr: string | null;
   scope: string;
+  priority: string;
   classId: string | null;
   role: string | null;
   published: boolean;
@@ -474,6 +475,7 @@ export async function getAnnouncement(
         bodyEn: true,
         bodyAr: true,
         scope: true,
+        priority: true,
         classId: true,
         role: true,
         published: true,

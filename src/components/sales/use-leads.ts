@@ -1,0 +1,333 @@
+/**
+ * Custom hook for managing lead state and operations
+ * Provides a centralized way to interact with lead data
+ */
+
+'use client';
+
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useDebounce } from '@/hooks/use-debounce';
+import { getLeads, getLeadAnalytics, extractLeadsFromText } from './actions';
+import type { Lead, LeadFilters, LeadAnalytics } from './types';
+import type { AIExtractionInput } from './validation';
+import { PAGINATION_OPTIONS } from './constants';
+
+interface UseLeadsOptions {
+  initialLeads?: Lead[];
+  initialFilters?: LeadFilters;
+  pageSize?: number;
+  autoRefresh?: boolean;
+  refreshInterval?: number;
+}
+
+interface UseLeadsReturn {
+  // Data
+  leads: Lead[];
+  analytics: LeadAnalytics | null;
+
+  // Loading states
+  isLoading: boolean;
+  isRefreshing: boolean;
+  isExtracting: boolean;
+
+  // Filters & Pagination
+  filters: LeadFilters;
+  setFilters: (filters: LeadFilters) => void;
+  page: number;
+  setPage: (page: number) => void;
+  pageSize: number;
+  setPageSize: (size: number) => void;
+  totalPages: number;
+  total: number;
+
+  // Selection
+  selectedLeads: string[];
+  setSelectedLeads: (ids: string[]) => void;
+  selectAll: () => void;
+  clearSelection: () => void;
+
+  // Actions
+  refreshLeads: () => Promise<void>;
+  refreshAnalytics: () => Promise<void>;
+  extractFromText: (input: AIExtractionInput) => Promise<{
+    success: boolean;
+    created?: number;
+    duplicates?: number;
+    error?: string;
+  }>;
+
+  // Computed
+  hasFilters: boolean;
+  canLoadMore: boolean;
+}
+
+export function useLeads(options: UseLeadsOptions = {}): UseLeadsReturn {
+  const {
+    initialLeads = [],
+    initialFilters = {},
+    pageSize: initialPageSize = PAGINATION_OPTIONS.DEFAULT_PAGE_SIZE,
+    autoRefresh = false,
+    refreshInterval = 30000, // 30 seconds
+  } = options;
+
+  // State
+  const [leads, setLeads] = useState<Lead[]>(initialLeads);
+  const [analytics, setAnalytics] = useState<LeadAnalytics | null>(null);
+  const [isLoading, setIsLoading] = useState(!initialLeads.length);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isExtracting, setIsExtracting] = useState(false);
+  const [filters, setFilters] = useState<LeadFilters>(initialFilters);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(initialPageSize);
+  const [total, setTotal] = useState(initialLeads.length);
+  const [selectedLeads, setSelectedLeads] = useState<string[]>([]);
+
+  // Debounce search filter
+  const debouncedSearch = useDebounce(filters.search, 300);
+
+  // Computed values
+  const totalPages = useMemo(() => Math.ceil(total / pageSize), [total, pageSize]);
+  const canLoadMore = useMemo(() => page < totalPages, [page, totalPages]);
+  const hasFilters = useMemo(() => {
+    return Object.keys(filters).some(key => {
+      const value = filters[key as keyof LeadFilters];
+      return value !== undefined && value !== '' && value !== null;
+    });
+  }, [filters]);
+
+  // Fetch leads
+  const fetchLeads = useCallback(async (showLoading = true) => {
+    if (showLoading) {
+      setIsLoading(true);
+    } else {
+      setIsRefreshing(true);
+    }
+
+    try {
+      const filtersWithSearch = {
+        ...filters,
+        search: debouncedSearch,
+      };
+
+      const response = await getLeads(filtersWithSearch, page, pageSize);
+
+      if (response.success && response.data) {
+        setLeads(response.data.leads);
+        setTotal(response.data.pagination.total);
+      } else if (!response.success) {
+        console.error('[useLeads] Failed to fetch leads:', response.error);
+      }
+    } catch (error) {
+      console.error('[useLeads] Error fetching leads:', error);
+    } finally {
+      setIsLoading(false);
+      setIsRefreshing(false);
+    }
+  }, [filters, debouncedSearch, page, pageSize]);
+
+  // Fetch analytics
+  const fetchAnalytics = useCallback(async () => {
+    try {
+      const result = await getLeadAnalytics();
+      if (result.success && result.data) {
+        setAnalytics(result.data);
+      }
+    } catch (error) {
+      console.error('[useLeads] Failed to fetch analytics:', error);
+    }
+  }, []);
+
+  // Refresh functions
+  const refreshLeads = useCallback(async () => {
+    await fetchLeads(false);
+  }, [fetchLeads]);
+
+  const refreshAnalytics = useCallback(async () => {
+    await fetchAnalytics();
+  }, [fetchAnalytics]);
+
+  // Extract leads from text
+  const extractFromText = useCallback(async (input: AIExtractionInput) => {
+    setIsExtracting(true);
+
+    try {
+      const result = await extractLeadsFromText(input);
+
+      if (result.success && result.data) {
+        // Refresh leads list to show new entries
+        await refreshLeads();
+        await refreshAnalytics();
+
+        return {
+          success: true,
+          created: result.data.created,
+          duplicates: result.data.duplicates,
+        };
+      } else {
+        return {
+          success: false,
+          error: !result.success ? result.error : 'Extraction failed',
+        };
+      }
+    } catch (error) {
+      console.error('[useLeads] Extraction error:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Extraction failed',
+      };
+    } finally {
+      setIsExtracting(false);
+    }
+  }, [refreshLeads, refreshAnalytics]);
+
+  // Selection helpers
+  const selectAll = useCallback(() => {
+    setSelectedLeads(leads.map(l => l.id));
+  }, [leads]);
+
+  const clearSelection = useCallback(() => {
+    setSelectedLeads([]);
+  }, []);
+
+  // Initial load - only if no initial data provided
+  useEffect(() => {
+    if (initialLeads.length === 0) {
+      fetchLeads();
+    }
+    fetchAnalytics();
+  }, []);
+
+  // Refetch when page, pageSize, or search changes
+  useEffect(() => {
+    fetchLeads();
+  }, [page, pageSize, debouncedSearch]);
+
+  // Auto-refresh
+  useEffect(() => {
+    if (!autoRefresh) return;
+
+    const interval = setInterval(() => {
+      refreshLeads();
+    }, refreshInterval);
+
+    return () => clearInterval(interval);
+  }, [autoRefresh, refreshInterval, refreshLeads]);
+
+  // Clear selection when filters change
+  useEffect(() => {
+    clearSelection();
+  }, [filters, clearSelection]);
+
+  // Reset page when filters change
+  useEffect(() => {
+    setPage(1);
+  }, [filters]);
+
+  return {
+    // Data
+    leads,
+    analytics,
+
+    // Loading states
+    isLoading,
+    isRefreshing,
+    isExtracting,
+
+    // Filters & Pagination
+    filters,
+    setFilters,
+    page,
+    setPage,
+    pageSize,
+    setPageSize,
+    totalPages,
+    total,
+
+    // Selection
+    selectedLeads,
+    setSelectedLeads,
+    selectAll,
+    clearSelection,
+
+    // Actions
+    refreshLeads,
+    refreshAnalytics,
+    extractFromText,
+
+    // Computed
+    hasFilters,
+    canLoadMore,
+  };
+}
+
+// Additional hooks for specific use cases
+
+/**
+ * Hook for managing a single lead
+ */
+export function useLead(id: string) {
+  const [lead, setLead] = useState<Lead | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchLead = async () => {
+      setIsLoading(true);
+      try {
+        const result = await getLeads({ search: id }, 1, 1);
+        if (result.success && result.data && result.data.leads.length > 0) {
+          setLead(result.data.leads[0]);
+        } else {
+          setError('Lead not found');
+        }
+      } catch (err) {
+        setError('Failed to fetch lead');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (id) {
+      fetchLead();
+    }
+  }, [id]);
+
+  return { lead, isLoading, error };
+}
+
+/**
+ * Hook for lead search suggestions
+ */
+export function useLeadSearch(query: string) {
+  const [suggestions, setSuggestions] = useState<Lead[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const debouncedQuery = useDebounce(query, 300);
+
+  useEffect(() => {
+    const search = async () => {
+      if (!debouncedQuery || debouncedQuery.length < 2) {
+        setSuggestions([]);
+        return;
+      }
+
+      setIsSearching(true);
+      try {
+        const result = await getLeads({ search: debouncedQuery }, 1, 5);
+        if (result.success && result.data) {
+          setSuggestions(result.data.leads);
+        } else {
+          setSuggestions([]);
+        }
+      } catch (error) {
+        console.error('[useLeadSearch] Search failed:', error);
+        setSuggestions([]);
+      } finally {
+        setIsSearching(false);
+      }
+    };
+
+    search();
+  }, [debouncedQuery]);
+
+  return { suggestions, isSearching };
+}

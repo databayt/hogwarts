@@ -1,95 +1,203 @@
-import { LeadsTable } from "@/components/sales/table";
-import { type LeadRow } from "@/components/sales/columns";
-import { SearchParams } from "nuqs/server";
-import { salesSearchParams } from "@/components/sales/list-params";
-import { db } from "@/lib/db";
-import { getTenantContext } from "@/lib/tenant-context";
-import type { Dictionary } from "@/components/internationalization/dictionaries";
-import type { Locale } from "@/components/internationalization/config";
-import type { Lead, LeadStatus, LeadSource, LeadPriority, LeadType } from "@prisma/client";
+/**
+ * Content orchestration component for the Sales/Leads feature
+ * Main UI component with Lead Agent prompt and tabbed interface
+ */
+
+'use client';
+
+import { useState, useEffect, useCallback } from 'react';
+import { Button } from '@/components/ui/button';
+import { Plus } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { All } from './all';
+import { Featured } from './featured';
+import { Cards } from './cards';
+import { PasteImport } from './paste-import';
+import { Analytics } from './analytics';
+import { Form } from './form';
+import { useLeads } from './use-leads';
+import SalesPrompt from './prompt';
+import type { Lead } from './types';
+import type { Dictionary } from '@/components/internationalization/dictionaries';
+import type { Locale } from '@/components/internationalization/config';
 
 interface Props {
-  searchParams: Promise<SearchParams>;
-  dictionary?: Dictionary["sales"];
+  initialLeads?: Lead[];
+  dictionary?: Dictionary['sales'];
   lang: Locale;
 }
 
-export default async function SalesContent({
-  searchParams,
+export default function SalesContent({
+  initialLeads = [],
   dictionary,
   lang,
 }: Props) {
-  const sp = await salesSearchParams.parse(await searchParams);
-  const { schoolId } = await getTenantContext();
+  const d = dictionary;
 
-  let data: LeadRow[] = [];
-  let total = 0;
+  const {
+    leads,
+    analytics,
+    isLoading,
+    filters,
+    setFilters,
+    selectedLeads,
+    setSelectedLeads,
+    refreshLeads,
+    refreshAnalytics,
+  } = useLeads({
+    initialLeads,
+    autoRefresh: false,
+  });
 
-  if (schoolId) {
-    // Build where clause
-    const where: Record<string, unknown> = { schoolId };
+  const [activeTab, setActiveTab] = useState('all');
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [editLead, setEditLead] = useState<Lead | null>(null);
+  const [showAnalytics, setShowAnalytics] = useState(false);
 
-    if (sp.search) {
-      where.OR = [
-        { name: { contains: sp.search, mode: "insensitive" } },
-        { email: { contains: sp.search, mode: "insensitive" } },
-        { company: { contains: sp.search, mode: "insensitive" } },
-      ];
-    }
+  // Handle keyboard shortcuts
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'n') {
+        e.preventDefault();
+        setShowCreateForm(true);
+      }
+    };
 
-    if (sp.status) where.status = sp.status;
-    if (sp.source) where.source = sp.source;
-    if (sp.priority) where.priority = sp.priority;
-    if (sp.leadType) where.leadType = sp.leadType;
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, []);
 
-    const skip = (sp.page - 1) * sp.perPage;
-    const take = sp.perPage;
+  const handleLeadsCreated = useCallback((count: number) => {
+    refreshLeads();
+    refreshAnalytics();
+  }, [refreshLeads, refreshAnalytics]);
 
-    // Build order by
-    const orderBy =
-      sp.sort && Array.isArray(sp.sort) && sp.sort.length
-        ? sp.sort.map((s: string) => {
-            const [field, direction] = s.split(":");
-            return { [field]: direction === "desc" ? "desc" : "asc" };
-          })
-        : [{ createdAt: "desc" }];
-
-    const [rows, count] = await Promise.all([
-      db.lead.findMany({
-        where,
-        orderBy,
-        skip,
-        take,
-      }),
-      db.lead.count({ where }),
-    ]);
-
-    // Map to LeadRow type
-    data = rows.map((lead: Lead) => ({
-      id: lead.id,
-      name: lead.name,
-      email: lead.email,
-      phone: lead.phone,
-      company: lead.company,
-      title: lead.title,
-      status: lead.status as LeadRow["status"],
-      source: lead.source,
-      priority: lead.priority as LeadRow["priority"],
-      score: lead.score,
-      verified: lead.verified,
-      createdAt: lead.createdAt.toISOString(),
-    }));
-
-    total = count;
-  }
+  const handleEditLead = useCallback((lead: Lead) => {
+    setEditLead(lead);
+  }, []);
 
   return (
-    <LeadsTable
-      initialData={data}
-      total={total}
-      dictionary={dictionary}
-      lang={lang}
-      perPage={sp.perPage}
-    />
+    <>
+      {/* Lead Agent Prompt */}
+      <SalesPrompt
+        onLeadsCreated={handleLeadsCreated}
+        dictionary={d as unknown as Record<string, string>}
+      />
+
+      <div id="sales-content" className="flex flex-col gap-6 py-6" suppressHydrationWarning>
+        {/* Header Actions */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Button onClick={() => setShowCreateForm(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              {d?.addNewLead || 'Add Lead'}
+            </Button>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">
+              {leads.length} {d?.leads || 'leads'}
+            </span>
+          </div>
+        </div>
+
+        {/* Tabs Navigation */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-5">
+            <TabsTrigger value="all">{d?.navAll || 'All Leads'}</TabsTrigger>
+            <TabsTrigger value="featured">{'Featured'}</TabsTrigger>
+            <TabsTrigger value="cards">{'Cards'}</TabsTrigger>
+            <TabsTrigger value="import">{d?.navImport || 'AI Import'}</TabsTrigger>
+            <TabsTrigger value="analytics">{d?.navAnalytics || 'Analytics'}</TabsTrigger>
+          </TabsList>
+
+          {/* All Leads Tab */}
+          <TabsContent value="all" className="mt-6">
+            <All
+              leads={leads}
+              isLoading={isLoading}
+              filters={filters}
+              onFiltersChange={setFilters}
+              selectedLeads={selectedLeads}
+              onSelectionChange={setSelectedLeads}
+              onRefresh={refreshLeads}
+              onEditLead={handleEditLead}
+              dictionary={d as unknown as Record<string, string>}
+            />
+          </TabsContent>
+
+          {/* Featured Tab */}
+          <TabsContent value="featured" className="mt-6">
+            <Featured
+              leads={leads}
+              isLoading={isLoading}
+              dictionary={d as unknown as Record<string, string>}
+            />
+          </TabsContent>
+
+          {/* Cards Tab */}
+          <TabsContent value="cards" className="mt-6">
+            <Cards
+              leads={leads}
+              isLoading={isLoading}
+              onRefresh={refreshLeads}
+              onEditLead={handleEditLead}
+              dictionary={d as unknown as Record<string, string>}
+            />
+          </TabsContent>
+
+          {/* AI Import Tab */}
+          <TabsContent value="import" className="mt-6">
+            <PasteImport
+              onComplete={refreshLeads}
+              dictionary={d as unknown as Record<string, string>}
+            />
+          </TabsContent>
+
+          {/* Analytics Tab */}
+          <TabsContent value="analytics" className="mt-6">
+            <Analytics
+              analytics={analytics}
+              isLoading={isLoading}
+              dictionary={d as unknown as Record<string, string>}
+            />
+          </TabsContent>
+        </Tabs>
+      </div>
+
+      {/* Create Form Dialog */}
+      {showCreateForm && (
+        <Form
+          open={showCreateForm}
+          onClose={() => setShowCreateForm(false)}
+          onSuccess={() => {
+            setShowCreateForm(false);
+            refreshLeads();
+            refreshAnalytics();
+          }}
+          dictionary={d as unknown as Record<string, string>}
+        />
+      )}
+
+      {/* Edit Form Dialog */}
+      {editLead && (
+        <Form
+          open={!!editLead}
+          onClose={() => setEditLead(null)}
+          onSuccess={() => {
+            setEditLead(null);
+            refreshLeads();
+          }}
+          lead={editLead}
+          mode="edit"
+          dictionary={d as unknown as Record<string, string>}
+        />
+      )}
+    </>
   );
 }

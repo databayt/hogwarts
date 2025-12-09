@@ -9,10 +9,12 @@ import { announcementCreateSchema, type AnnouncementFormValues } from "@/compone
 import { Form } from "@/components/ui/form";
 import { useModal } from "@/components/atom/modal/context";
 import { useRouter } from "next/navigation";
+import { TemplatesStep } from "./templates-step";
 import { InformationStep } from "./information";
 import { ScopeStep } from "./scope";
-import { AnnouncementFormFooter } from "./footer";
-import PageHeading from "@/components/atom/page-heading";
+import { ModalFormLayout } from "@/components/atom/modal/modal-form-layout";
+import { ModalFooter } from "@/components/atom/modal/modal-footer";
+import { translateAnnouncement } from "./translate";
 import type { Dictionary } from "@/components/internationalization/dictionaries";
 import type { Locale } from "@/components/internationalization/config";
 
@@ -27,7 +29,10 @@ export function AnnouncementCreateForm({ dictionary, lang, onSuccess }: Announce
   const { modal, closeModal } = useModal();
   const router = useRouter();
   const t = dictionary;
+  // Start at step 2 when editing (skip templates), step 1 when creating new
   const [currentStep, setCurrentStep] = useState(1);
+  const [isTranslating, setIsTranslating] = useState(false);
+
   const form = useForm<AnnouncementFormValues>({
     resolver: zodResolver(announcementCreateSchema),
     defaultValues: {
@@ -39,11 +44,19 @@ export function AnnouncementCreateForm({ dictionary, lang, onSuccess }: Announce
       classId: "",
       role: "",
       published: false,
+      priority: "normal",
     },
   });
 
   const isView = !!(modal.id && modal.id.startsWith("view:"));
   const currentId = modal.id ? (modal.id.startsWith("view:") ? modal.id.split(":")[1] : modal.id) : undefined;
+
+  // Skip to step 2 when editing (no templates selection needed)
+  useEffect(() => {
+    if (currentId) {
+      setCurrentStep(2);
+    }
+  }, [currentId]);
 
   useEffect(() => {
     const load = async () => {
@@ -60,6 +73,7 @@ export function AnnouncementCreateForm({ dictionary, lang, onSuccess }: Announce
         classId: a.classId ?? "",
         role: a.role ?? "",
         published: a.published ?? false,
+        priority: (a.priority as 'low' | 'normal' | 'high' | 'urgent') ?? "normal",
       });
     };
     void load();
@@ -67,13 +81,53 @@ export function AnnouncementCreateForm({ dictionary, lang, onSuccess }: Announce
   }, [currentId]);
 
   async function onSubmit(values: AnnouncementFormValues) {
+    // Determine source language based on app locale
+    const isArabicSource = lang === 'ar';
+    const sourceTitle = isArabicSource ? values.titleAr : values.titleEn;
+    const sourceBody = isArabicSource ? values.bodyAr : values.bodyEn;
+
+    // Only translate if we have source content and missing target
+    const needsTranslation = sourceTitle && sourceBody && (
+      (isArabicSource && (!values.titleEn || !values.bodyEn)) ||
+      (!isArabicSource && (!values.titleAr || !values.bodyAr))
+    );
+
+    if (needsTranslation) {
+      setIsTranslating(true);
+      try {
+        const translateResult = await translateAnnouncement({
+          title: sourceTitle!,
+          body: sourceBody!,
+          sourceLanguage: lang,
+        });
+
+        if (translateResult.success && translateResult.data) {
+          if (isArabicSource) {
+            values.titleEn = translateResult.data.translatedTitle;
+            values.bodyEn = translateResult.data.translatedBody;
+          } else {
+            values.titleAr = translateResult.data.translatedTitle;
+            values.bodyAr = translateResult.data.translatedBody;
+          }
+        } else {
+          // Translation failed - continue with single language
+          console.warn("Translation failed:", translateResult.error);
+          toast.warning(lang === 'ar' ? 'فشلت الترجمة، سيتم النشر بلغة واحدة' : 'Translation failed, publishing in single language');
+        }
+      } catch (error) {
+        console.error("Translation error:", error);
+      } finally {
+        setIsTranslating(false);
+      }
+    }
+
     const res = currentId
       ? await updateAnnouncement({ id: currentId, ...values })
       : await createAnnouncement(values);
+
     if (res?.success) {
       toast.success(currentId ? t.announcementUpdated : t.announcementCreated);
       closeModal();
-      // Use callback for optimistic update, fallback to router.refresh()
       if (onSuccess) {
         onSuccess();
       } else {
@@ -86,12 +140,20 @@ export function AnnouncementCreateForm({ dictionary, lang, onSuccess }: Announce
 
   const handleNext = async () => {
     if (currentStep === 1) {
-      const step1Fields = ['titleEn', 'titleAr', 'bodyEn', 'bodyAr'] as const;
-      const step1Valid = await form.trigger(step1Fields);
-      if (step1Valid) {
-        setCurrentStep(2);
-      }
+      // Templates step - no validation needed, just move forward
+      setCurrentStep(2);
     } else if (currentStep === 2) {
+      // Content step - validate title and body for current language
+      const isArabic = lang === 'ar';
+      const step2Fields = isArabic
+        ? ['titleAr', 'bodyAr'] as const
+        : ['titleEn', 'bodyEn'] as const;
+      const step2Valid = await form.trigger(step2Fields);
+      if (step2Valid) {
+        setCurrentStep(3);
+      }
+    } else if (currentStep === 3) {
+      // Scope step - submit
       await form.handleSubmit(onSubmit)();
     }
   };
@@ -99,11 +161,14 @@ export function AnnouncementCreateForm({ dictionary, lang, onSuccess }: Announce
   const handleSaveCurrentStep = async () => {
     if (currentId) {
       // For editing, save current step data
-      const currentStepFields = currentStep === 1
-        ? ['titleEn', 'titleAr', 'bodyEn', 'bodyAr'] as const
-        : ['scope', 'classId', 'role', 'published'] as const;
+      const isArabic = lang === 'ar';
+      const contentFields: (keyof AnnouncementFormValues)[] = isArabic
+        ? ['titleAr', 'bodyAr']
+        : ['titleEn', 'bodyEn'];
+      const scopeFields: (keyof AnnouncementFormValues)[] = ['scope', 'classId', 'role', 'published'];
+      const currentStepFields = currentStep === 2 ? contentFields : scopeFields;
 
-      const stepValid = await form.trigger(currentStepFields);
+      const stepValid = await form.trigger(currentStepFields as readonly (keyof AnnouncementFormValues)[]);
       if (stepValid) {
         await form.handleSubmit(onSubmit)();
       }
@@ -114,8 +179,15 @@ export function AnnouncementCreateForm({ dictionary, lang, onSuccess }: Announce
   };
 
   const handleBack = () => {
-    if (currentStep === 2) {
-      setCurrentStep(1);
+    if (currentStep === 3) {
+      setCurrentStep(2);
+    } else if (currentStep === 2) {
+      // Only go back to templates if creating new (not editing)
+      if (currentId) {
+        closeModal();
+      } else {
+        setCurrentStep(1);
+      }
     } else {
       closeModal();
     }
@@ -124,48 +196,64 @@ export function AnnouncementCreateForm({ dictionary, lang, onSuccess }: Announce
   const renderCurrentStep = () => {
     switch (currentStep) {
       case 1:
-        return <InformationStep form={form} isView={isView} dictionary={dictionary} />;
+        return (
+          <TemplatesStep
+            form={form}
+            lang={lang}
+            onTemplateSelect={() => {}}
+          />
+        );
       case 2:
+        return <InformationStep form={form} isView={isView} dictionary={dictionary} lang={lang} />;
+      case 3:
         return <ScopeStep form={form} isView={isView} dictionary={dictionary} />;
       default:
         return null;
     }
   };
 
+  const stepLabels: Record<number, string> = {
+    1: lang === 'ar' ? 'اختر قالب' : 'Choose Template',
+    2: t.basicInformation,
+    3: t.scopeAndPublishing,
+  };
+
+  // Total steps is 3 for new, 2 for editing (skips templates)
+  const totalSteps = currentId ? 2 : 3;
+  // Adjust display step number for editing mode
+  const displayStep = currentId ? currentStep - 1 : currentStep;
+
   return (
-    <div className="flex h-full flex-col">
-      <Form {...form}>
-        <form className="flex flex-col h-full" onSubmit={(e) => e.preventDefault()}>
-          <div className="flex-grow flex flex-col md:flex-row gap-6">
-            {/* Title Section */}
-            <div className="md:w-1/3">
-              <PageHeading
-                title={isView ? t.viewAnnouncement : currentId ? t.editAnnouncement : t.createAnnouncement}
-                description={isView ? t.viewAnnouncementDetails : currentId ? t.updateAnnouncementDetails : t.createNewAnnouncement}
-              />
-            </div>
+    <Form {...form}>
+      <form onSubmit={(e) => e.preventDefault()}>
+        <ModalFormLayout
+          title={isView ? t.viewAnnouncement : currentId ? t.editAnnouncement : t.createAnnouncement}
+          description={isView ? t.viewAnnouncementDetails : currentId ? t.updateAnnouncementDetails : t.createNewAnnouncement}
+        >
+          {renderCurrentStep()}
+        </ModalFormLayout>
 
-            {/* Form Content */}
-            <div className="flex-1">
-              <div className="overflow-y-auto">
-                {renderCurrentStep()}
-              </div>
-            </div>
-          </div>
-
-          <AnnouncementFormFooter
-            currentStep={currentStep}
-            isView={isView}
-            currentId={currentId}
-            onBack={handleBack}
-            onNext={handleNext}
-            onSaveCurrentStep={handleSaveCurrentStep}
-            form={form}
-            dictionary={dictionary}
-          />
-        </form>
-      </Form>
-    </div>
+        <ModalFooter
+          currentStep={displayStep}
+          totalSteps={totalSteps}
+          stepLabel={stepLabels[currentStep]}
+          isView={isView}
+          isEdit={!!currentId}
+          isDirty={form.formState.isDirty}
+          isSubmitting={isTranslating}
+          onBack={handleBack}
+          onNext={handleNext}
+          onSaveStep={handleSaveCurrentStep}
+          labels={{
+            cancel: t.cancel,
+            back: t.back,
+            next: isTranslating ? (lang === 'ar' ? 'جاري الترجمة...' : 'Translating...') : t.next,
+            save: isTranslating ? (lang === 'ar' ? 'جاري الحفظ...' : 'Saving...') : t.save,
+            create: isTranslating ? (lang === 'ar' ? 'جاري الإنشاء...' : 'Creating...') : t.create,
+          }}
+        />
+      </form>
+    </Form>
   );
 }
 

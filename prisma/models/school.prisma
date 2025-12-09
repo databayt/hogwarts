@@ -58,6 +58,7 @@ model School {
   assignmentSubmissions   AssignmentSubmission[]
   attendances             Attendance[]
   announcements           Announcement[]
+  announcementTemplates   AnnouncementTemplate[]
   domainRequests          DomainRequest[]
   subscriptions           Subscription[]
   invoices                Invoice[]

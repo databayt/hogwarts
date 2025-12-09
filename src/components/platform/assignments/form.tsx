@@ -12,7 +12,8 @@ import { useModal } from "@/components/atom/modal/context";
 import { useRouter } from "next/navigation";
 import { InformationStep } from "./information";
 import { DetailsStep } from "./details";
-import { AssignmentFormFooter } from "./footer";
+import { ModalFormLayout } from "@/components/atom/modal/modal-form-layout";
+import { ModalFooter } from "@/components/atom/modal/modal-footer";
 
 interface AssignmentCreateFormProps {
   /** Callback fired on successful create/update - use for optimistic refresh */
@@ -132,37 +133,34 @@ export function AssignmentCreateForm({ onSuccess }: AssignmentCreateFormProps) {
     }
   };
 
+  const stepLabels: Record<number, string> = {
+    1: "Basic Information",
+    2: "Assignment Details",
+  };
+
   return (
-    <div className="flex h-full flex-col">
-      <Form {...form}>
-        <form className="flex flex-col h-full" onSubmit={(e) => e.preventDefault()}>
-          <div className="flex-grow flex flex-col md:flex-row gap-6">
-            {/* Title Section */}
-            <div className="md:w-1/3">
-              <h2 className="text-2xl font-semibold">{isView ? "View Assignment" : currentId ? "Edit Assignment" : "Create Assignment"}</h2>
-              <p className="text-sm text-muted-foreground mt-2">{isView ? "View assignment details" : currentId ? "Update assignment details" : "Create a new assignment for your class"}</p>
-            </div>
+    <Form {...form}>
+      <form onSubmit={(e) => e.preventDefault()}>
+        <ModalFormLayout
+          title={isView ? "View Assignment" : currentId ? "Edit Assignment" : "Create Assignment"}
+          description={isView ? "View assignment details" : currentId ? "Update assignment details" : "Create a new assignment for your class"}
+        >
+          {renderCurrentStep()}
+        </ModalFormLayout>
 
-            {/* Form Content */}
-            <div className="flex-1">
-              <div className="overflow-y-auto">
-                {renderCurrentStep()}
-              </div>
-            </div>
-          </div>
-
-          <AssignmentFormFooter 
-            currentStep={currentStep}
-            isView={isView}
-            currentId={currentId}
-            onBack={handleBack}
-            onNext={handleNext}
-            onSaveCurrentStep={handleSaveCurrentStep}
-            form={form}
-          />
-        </form>
-      </Form>
-    </div>
+        <ModalFooter
+          currentStep={currentStep}
+          totalSteps={2}
+          stepLabel={stepLabels[currentStep]}
+          isView={isView}
+          isEdit={!!currentId}
+          isDirty={form.formState.isDirty}
+          onBack={handleBack}
+          onNext={handleNext}
+          onSaveStep={handleSaveCurrentStep}
+        />
+      </form>
+    </Form>
   );
 }
 

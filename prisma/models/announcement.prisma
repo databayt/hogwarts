@@ -101,3 +101,49 @@ model AnnouncementNotification {
   @@index([announcementId])
   @@map("announcement_notifications")
 }
+
+// Template types for quick announcement creation
+enum AnnouncementTemplateType {
+  holiday
+  exam
+  event
+  meeting
+  policy
+  emergency
+  general
+  custom
+}
+
+// Announcement templates for quick creation
+model AnnouncementTemplate {
+  id          String                   @id @default(cuid())
+  schoolId    String
+  name        String
+  description String?
+  type        AnnouncementTemplateType @default(custom)
+
+  // Content templates (bilingual)
+  titleEn String?
+  titleAr String?
+  bodyEn  String? @db.Text
+  bodyAr  String? @db.Text
+
+  // Preset configurations
+  scope    AnnouncementScope    @default(school)
+  priority AnnouncementPriority @default(normal)
+  classId  String?
+  role     UserRole?
+
+  // Ownership
+  isSystem  Boolean @default(false)
+  createdBy String?
+  creator   User?   @relation("TemplateCreator", fields: [createdBy], references: [id])
+  school    School  @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([schoolId, name])
+  @@index([schoolId, type])
+  @@map("announcement_templates")
+}

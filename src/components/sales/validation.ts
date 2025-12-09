@@ -201,6 +201,30 @@ export const exportConfigSchema = z.object({
     .optional(),
 });
 
+// AI extraction schema
+export const aiExtractionInputSchema = z.object({
+  rawText: z
+    .string()
+    .min(10, 'Text must be at least 10 characters')
+    .max(50000, 'Text must be less than 50,000 characters'),
+
+  source: z
+    .enum(['manual', 'web', 'file', 'api'])
+    .default('manual'),
+
+  model: z
+    .enum(['groq', 'claude', 'openai'])
+    .default('groq'),
+
+  options: z
+    .object({
+      autoScore: z.boolean().default(true),
+      detectDuplicates: z.boolean().default(true),
+      enrichWithAI: z.boolean().default(false),
+    })
+    .optional(),
+});
+
 // Type exports from schemas
 export type CreateLeadInput = z.infer<typeof createLeadSchema>;
 export type UpdateLeadInput = z.infer<typeof updateLeadSchema>;
@@ -208,3 +232,4 @@ export type BulkUpdateInput = z.infer<typeof bulkUpdateSchema>;
 export type LeadFilterInput = z.infer<typeof leadFilterSchema>;
 export type LeadActivityInput = z.infer<typeof leadActivitySchema>;
 export type ExportConfigInput = z.infer<typeof exportConfigSchema>;
+export type AIExtractionInput = z.infer<typeof aiExtractionInputSchema>;

@@ -87,6 +87,7 @@ model User {
   createdAnnouncements      Announcement[]             @relation("AnnouncementCreator")
   announcementReads         AnnouncementRead[]         @relation("AnnouncementReads")
   announcementNotifications AnnouncementNotification[] @relation("AnnouncementNotifications")
+  announcementTemplates     AnnouncementTemplate[]     @relation("TemplateCreator")
 
   // Notification relations
   notifications             Notification[]             @relation("UserNotifications")

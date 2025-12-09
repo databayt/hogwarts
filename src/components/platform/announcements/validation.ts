@@ -63,6 +63,9 @@ export const announcementCreateSchema = announcementBaseSchema
 // Type for form values (use with react-hook-form)
 export type AnnouncementFormValues = z.infer<typeof announcementCreateSchema>
 
+// Alias for compatibility
+export type AnnouncementFormData = AnnouncementFormValues
+
 export const announcementUpdateSchema = announcementBaseSchema.partial().extend({
   id: z.string().min(1, "Required"),
 })
