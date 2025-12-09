@@ -3,8 +3,8 @@ import { getTenantContext } from "@/lib/tenant-context"
 import { redirect } from "next/navigation"
 import { getUserNotificationPreferences } from "./queries"
 import { NotificationPreferencesForm } from "./preferences-form"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Settings } from "lucide-react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Settings, Bell, Mail, Smartphone, MessageSquare, Moon, Inbox, AlertTriangle } from "lucide-react"
 import { getNotificationDictionary } from "@/components/internationalization/dictionaries"
 import type { Locale } from "@/components/internationalization/config"
 
@@ -49,9 +49,11 @@ export async function NotificationPreferencesContent({
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-foreground">Notification Preferences</h1>
-        <p className="text-muted-foreground">
-          Customize how and when you receive notifications
+        <h1 className="scroll-m-20 text-3xl font-bold tracking-tight">
+          {dict.notifications.preferences.title}
+        </h1>
+        <p className="text-muted-foreground mt-1">
+          {dict.notifications.preferences.description}
         </p>
       </div>
 
@@ -66,42 +68,87 @@ export async function NotificationPreferencesContent({
       <Card>
         <CardHeader>
           <div className="flex items-center gap-2">
-            <Settings className="h-5 w-5" />
-            <CardTitle>About Notification Preferences</CardTitle>
+            <Settings className="h-5 w-5 text-muted-foreground" />
+            <CardTitle className="text-lg">{dict.notifications.preferences.channelSettings}</CardTitle>
           </div>
         </CardHeader>
-        <CardContent className="space-y-4 text-sm text-muted-foreground">
+        <CardContent className="space-y-6">
+          {/* Notification Channels */}
           <div>
-            <h4 className="font-medium text-foreground mb-1">Notification Channels</h4>
-            <ul className="list-disc list-inside space-y-1">
-              <li><strong>In-App:</strong> Notifications appear in the notification bell icon</li>
-              <li><strong>Email:</strong> Notifications sent to your registered email address</li>
-              <li><strong>Push:</strong> Browser push notifications (requires permission)</li>
-              <li><strong>SMS:</strong> Text messages to your registered phone number</li>
-            </ul>
+            <h4 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+              <Bell className="h-4 w-4" />
+              {dict.notifications.preferences.deliveryMethods}
+            </h4>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="flex items-start gap-2 p-3 rounded-lg bg-muted/50">
+                <Bell className="h-4 w-4 text-muted-foreground mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium">{dict.notifications.channels.in_app}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {dict.notifications.channels.descriptions.in_app}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-start gap-2 p-3 rounded-lg bg-muted/50">
+                <Mail className="h-4 w-4 text-muted-foreground mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium">{dict.notifications.channels.email}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {dict.notifications.channels.descriptions.email}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-start gap-2 p-3 rounded-lg bg-muted/50">
+                <Smartphone className="h-4 w-4 text-muted-foreground mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium">{dict.notifications.channels.push}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {dict.notifications.channels.descriptions.push}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-start gap-2 p-3 rounded-lg bg-muted/50">
+                <MessageSquare className="h-4 w-4 text-muted-foreground mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium">{dict.notifications.channels.sms}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {dict.notifications.channels.descriptions.sms}
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div>
-            <h4 className="font-medium text-foreground mb-1">Quiet Hours</h4>
-            <p>
-              During quiet hours, notifications will not be sent except for urgent priority notifications.
-              Notifications will be queued and delivered after quiet hours end.
+          {/* Quiet Hours */}
+          <div className="border-t pt-4">
+            <h4 className="text-sm font-semibold text-foreground mb-2 flex items-center gap-2">
+              <Moon className="h-4 w-4" />
+              {dict.notifications.preferences.quietHours.title}
+            </h4>
+            <p className="text-sm text-muted-foreground">
+              {dict.notifications.preferences.quietHours.description}
             </p>
           </div>
 
-          <div>
-            <h4 className="font-medium text-foreground mb-1">Notification Digest</h4>
-            <p>
-              Instead of receiving individual email notifications, you can opt for a daily or weekly digest
-              that summarizes all your notifications in a single email.
+          {/* Notification Digest */}
+          <div className="border-t pt-4">
+            <h4 className="text-sm font-semibold text-foreground mb-2 flex items-center gap-2">
+              <Inbox className="h-4 w-4" />
+              {dict.notifications.preferences.digest.title}
+            </h4>
+            <p className="text-sm text-muted-foreground">
+              {dict.notifications.preferences.digest.description}
             </p>
           </div>
 
-          <div>
-            <h4 className="font-medium text-foreground mb-1">Action Required</h4>
-            <p>
-              Some notification types are marked as "Action Required" - these are important notifications
-              that typically need your response (e.g., assignment submissions, fee payments).
+          {/* Action Required */}
+          <div className="border-t pt-4">
+            <h4 className="text-sm font-semibold text-foreground mb-2 flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4" />
+              {dict.notifications.preferences.actionRequired}
+            </h4>
+            <p className="text-sm text-muted-foreground">
+              {dict.notifications.preferences.notificationTypes.description}
             </p>
           </div>
         </CardContent>

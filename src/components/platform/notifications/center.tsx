@@ -1,33 +1,53 @@
-"use client";
+"use client"
 
-import * as React from 'react';
-import { useState, useMemo, useCallback, useEffect } from 'react';
-import { format, formatDistanceToNow, isToday, isYesterday, startOfDay, differenceInDays, isPast } from 'date-fns';
-import { Bell, BellOff, Check, CheckCheck, X, Archive, Star, Trash2, MessageSquare, Calendar, DollarSign, Award, TriangleAlert, Users, BookOpen, Clock, ListFilter, Settings, Volume2, VolumeX, Info, CircleCheck, CircleX, CircleAlert, Zap, TrendingUp } from "lucide-react";
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
+import * as React from "react"
+import { useState, useMemo, useCallback, useTransition } from "react"
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+  format,
+  formatDistanceToNow,
+  isToday,
+  isYesterday,
+  startOfDay,
+  differenceInDays,
+  isPast,
+} from "date-fns"
+import { ar, enUS } from "date-fns/locale"
+import {
+  Bell,
+  Check,
+  CheckCheck,
+  Archive,
+  Star,
+  Trash2,
+  MessageSquare,
+  Calendar,
+  DollarSign,
+  Award,
+  TriangleAlert,
+  Users,
+  BookOpen,
+  Settings,
+  Loader2,
+  MoreHorizontal,
+  Filter,
+  X,
+} from "lucide-react"
+import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Switch } from "@/components/ui/switch"
+import { Label } from "@/components/ui/label"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Separator } from "@/components/ui/separator"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from "@/components/ui/dropdown-menu"
 import {
   Dialog,
   DialogContent,
@@ -35,255 +55,210 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Checkbox } from '@/components/ui/checkbox';
-import { toast } from 'sonner';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+} from "@/components/ui/dialog"
+import { Checkbox } from "@/components/ui/checkbox"
+import { toast } from "@/components/ui/use-toast"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { motion, AnimatePresence } from "framer-motion"
+import type { NotificationDTO } from "./types"
+import type { Dictionary } from "@/components/internationalization/dictionaries"
+import { NOTIFICATION_TYPE_CONFIG, PRIORITY_CONFIG } from "./config"
+import type { NotificationType, NotificationPriority } from "@prisma/client"
 
-interface Notification {
-  id: string;
-  type: 'message' | 'assignment' | 'grade' | 'attendance' | 'fee' | 'event' | 'announcement' | 'system';
-  priority: 'low' | 'medium' | 'high' | 'urgent';
-  title: string;
-  content: string;
-  timestamp: Date;
-  read: boolean;
-  starred: boolean;
-  archived: boolean;
-  sender?: {
-    name: string;
-    role: string;
-    avatar?: string;
-  };
-  actionUrl?: string;
-  actionLabel?: string;
-  data?: any; // Additional data specific to notification type
-  expiresAt?: Date;
-}
-
-interface NotificationPreferences {
-  email: boolean;
-  push: boolean;
-  sms: boolean;
-  sound: boolean;
-  categories: {
-    messages: boolean;
-    assignments: boolean;
-    grades: boolean;
-    attendance: boolean;
-    fees: boolean;
-    events: boolean;
-    announcements: boolean;
-    system: boolean;
-  };
-  quietHours: {
-    enabled: boolean;
-    start: string; // "22:00"
-    end: string; // "07:00"
-  };
+// Notification type icons using existing config
+const typeIcons: Record<string, React.ElementType> = {
+  message: MessageSquare,
+  message_mention: MessageSquare,
+  assignment_created: BookOpen,
+  assignment_due: Calendar,
+  assignment_graded: Award,
+  grade_posted: Award,
+  attendance_marked: Users,
+  attendance_alert: TriangleAlert,
+  fee_due: DollarSign,
+  fee_overdue: TriangleAlert,
+  fee_paid: DollarSign,
+  announcement: Bell,
+  event_reminder: Calendar,
+  class_cancelled: TriangleAlert,
+  class_rescheduled: Calendar,
+  system_alert: Bell,
+  account_created: Users,
+  password_reset: Settings,
+  login_alert: TriangleAlert,
+  document_shared: BookOpen,
+  report_ready: Award,
 }
 
 interface NotificationCenterProps {
-  notifications: Notification[];
-  preferences: NotificationPreferences;
-  onMarkAsRead: (notificationIds: string[]) => Promise<void>;
-  onMarkAllAsRead: () => Promise<void>;
-  onDelete: (notificationIds: string[]) => Promise<void>;
-  onArchive: (notificationIds: string[]) => Promise<void>;
-  onStar: (notificationId: string) => Promise<void>;
-  onUpdatePreferences: (preferences: NotificationPreferences) => Promise<void>;
-  onActionClick?: (notification: Notification) => void;
-  enableRealTime?: boolean;
+  notifications: NotificationDTO[]
+  locale?: "ar" | "en"
+  dictionary: Dictionary["notifications"]
+  onMarkAsRead: (notificationIds: string[]) => Promise<void>
+  onMarkAllAsRead: () => Promise<void>
+  onDelete: (notificationIds: string[]) => Promise<void>
+  onArchive?: (notificationIds: string[]) => Promise<void>
+  onStar?: (notificationId: string) => Promise<void>
+  onActionClick?: (notification: NotificationDTO) => void
+  showBulkActions?: boolean
 }
-
-const typeIcons = {
-  message: MessageSquare,
-  assignment: BookOpen,
-  grade: Award,
-  attendance: Users,
-  fee: DollarSign,
-  event: Calendar,
-  announcement: CircleAlert,
-  system: Settings,
-};
-
-const typeColors = {
-  message: 'bg-blue-100 text-blue-800',
-  assignment: 'bg-purple-100 text-purple-800',
-  grade: 'bg-green-100 text-green-800',
-  attendance: 'bg-yellow-100 text-yellow-800',
-  fee: 'bg-red-100 text-red-800',
-  event: 'bg-indigo-100 text-indigo-800',
-  announcement: 'bg-orange-100 text-orange-800',
-  system: 'bg-gray-100 text-gray-800',
-};
-
-const priorityConfig = {
-  low: { color: 'text-gray-500', badge: 'secondary' },
-  medium: { color: 'text-blue-500', badge: 'default' },
-  high: { color: 'text-orange-500', badge: 'destructive' },
-  urgent: { color: 'text-red-500', badge: 'destructive', pulse: true },
-};
 
 export function NotificationCenter({
   notifications,
-  preferences,
+  locale = "en",
+  dictionary,
   onMarkAsRead,
   onMarkAllAsRead,
   onDelete,
   onArchive,
   onStar,
-  onUpdatePreferences,
   onActionClick,
-  enableRealTime = true,
+  showBulkActions = true,
 }: NotificationCenterProps) {
-  const [selectedTab, setSelectedTab] = useState<'all' | 'unread' | 'starred' | 'archived'>('all');
-  const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
-  const [selectedNotifications, setSelectedNotifications] = useState<string[]>([]);
-  const [preferencesOpen, setPreferencesOpen] = useState(false);
-  const [localPreferences, setLocalPreferences] = useState(preferences);
-  const [bulkActionMode, setBulkActionMode] = useState(false);
+  const [isPending, startTransition] = useTransition()
+  const [selectedTab, setSelectedTab] = useState<"all" | "unread">("all")
+  const [selectedTypes, setSelectedTypes] = useState<string[]>([])
+  const [selectedNotifications, setSelectedNotifications] = useState<string[]>(
+    []
+  )
+  const [bulkActionMode, setBulkActionMode] = useState(false)
+  const [showFilters, setShowFilters] = useState(false)
 
   // Filter notifications
   const filteredNotifications = useMemo(() => {
-    let filtered = notifications;
+    let filtered = notifications
 
     // Tab filter
-    switch (selectedTab) {
-      case 'unread':
-        filtered = filtered.filter(n => !n.read && !n.archived);
-        break;
-      case 'starred':
-        filtered = filtered.filter(n => n.starred && !n.archived);
-        break;
-      case 'archived':
-        filtered = filtered.filter(n => n.archived);
-        break;
-      default:
-        filtered = filtered.filter(n => !n.archived);
+    if (selectedTab === "unread") {
+      filtered = filtered.filter((n) => !n.read)
     }
 
     // Type filter
     if (selectedTypes.length > 0) {
-      filtered = filtered.filter(n => selectedTypes.includes(n.type));
+      filtered = filtered.filter((n) => selectedTypes.includes(n.type))
     }
 
-    // Sort by timestamp (newest first) and priority
+    // Sort by priority (urgent first) then by date
     return filtered.sort((a, b) => {
-      // Urgent notifications first
-      if (a.priority === 'urgent' && b.priority !== 'urgent') return -1;
-      if (b.priority === 'urgent' && a.priority !== 'urgent') return 1;
-
-      // Then by timestamp
-      return b.timestamp.getTime() - a.timestamp.getTime();
-    });
-  }, [notifications, selectedTab, selectedTypes]);
+      if (a.priority === "urgent" && b.priority !== "urgent") return -1
+      if (b.priority === "urgent" && a.priority !== "urgent") return 1
+      return (
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      )
+    })
+  }, [notifications, selectedTab, selectedTypes])
 
   // Group notifications by date
   const groupedNotifications = useMemo(() => {
-    const groups: Record<string, Notification[]> = {};
+    const groups: Record<string, NotificationDTO[]> = {}
 
-    filteredNotifications.forEach(notification => {
-      const date = startOfDay(notification.timestamp);
-      const key = isToday(date) ? 'Today' :
-                  isYesterday(date) ? 'Yesterday' :
-                  differenceInDays(new Date(), date) < 7 ? format(date, 'EEEE') :
-                  format(date, 'MMM dd, yyyy');
+    filteredNotifications.forEach((notification) => {
+      const date = startOfDay(new Date(notification.createdAt))
+      const key = isToday(date)
+        ? dictionary.grouping.today
+        : isYesterday(date)
+          ? dictionary.grouping.yesterday
+          : differenceInDays(new Date(), date) < 7
+            ? format(date, "EEEE", { locale: locale === "ar" ? ar : enUS })
+            : format(date, "MMM dd, yyyy", {
+                locale: locale === "ar" ? ar : enUS,
+              })
 
       if (!groups[key]) {
-        groups[key] = [];
+        groups[key] = []
       }
-      groups[key].push(notification);
-    });
+      groups[key].push(notification)
+    })
 
-    return groups;
-  }, [filteredNotifications]);
+    return groups
+  }, [filteredNotifications, dictionary, locale])
 
   // Statistics
   const stats = useMemo(() => {
-    const unreadCount = notifications.filter(n => !n.read && !n.archived).length;
-    const urgentCount = notifications.filter(n => n.priority === 'urgent' && !n.read).length;
-    const starredCount = notifications.filter(n => n.starred).length;
-    const archivedCount = notifications.filter(n => n.archived).length;
+    const unreadCount = notifications.filter((n) => !n.read).length
+    const urgentCount = notifications.filter(
+      (n) => n.priority === "urgent" && !n.read
+    ).length
 
-    return { unreadCount, urgentCount, starredCount, archivedCount };
-  }, [notifications]);
+    return { unreadCount, urgentCount }
+  }, [notifications])
 
-  // Real-time simulation (would connect to WebSocket in production)
-  useEffect(() => {
-    if (!enableRealTime) return;
-
-    const interval = setInterval(() => {
-      // Check for new notifications (mock)
-      const hasNew = Math.random() > 0.8;
-      if (hasNew) {
-        toast.info("New notification received", {
-          description: "You have a new message",
-          action: {
-            label: "View",
-            onClick: () => setSelectedTab('unread'),
-          },
-        });
-
-        // Play sound if enabled
-        if (preferences.sound) {
-          // Play notification sound
-        }
-      }
-    }, 30000); // Check every 30 seconds
-
-    return () => clearInterval(interval);
-  }, [enableRealTime, preferences.sound]);
-
-  const handleBulkAction = async (action: 'read' | 'archive' | 'delete') => {
+  const handleBulkAction = async (action: "read" | "archive" | "delete") => {
     if (selectedNotifications.length === 0) {
-      toast.error('No notifications selected');
-      return;
+      toast({
+        title: dictionary.errors.title,
+        description: dictionary.empty.noNotifications,
+      })
+      return
     }
 
-    try {
-      switch (action) {
-        case 'read':
-          await onMarkAsRead(selectedNotifications);
-          toast.success(`Marked ${selectedNotifications.length} notifications as read`);
-          break;
-        case 'archive':
-          await onArchive(selectedNotifications);
-          toast.success(`Archived ${selectedNotifications.length} notifications`);
-          break;
-        case 'delete':
-          await onDelete(selectedNotifications);
-          toast.success(`Deleted ${selectedNotifications.length} notifications`);
-          break;
+    startTransition(async () => {
+      try {
+        switch (action) {
+          case "read":
+            await onMarkAsRead(selectedNotifications)
+            toast({
+              title: dictionary.success.markedAsRead,
+            })
+            break
+          case "archive":
+            if (onArchive) {
+              await onArchive(selectedNotifications)
+              toast({
+                title: dictionary.success.archived,
+              })
+            }
+            break
+          case "delete":
+            await onDelete(selectedNotifications)
+            toast({
+              title: dictionary.success.deleted,
+            })
+            break
+        }
+        setSelectedNotifications([])
+        setBulkActionMode(false)
+      } catch {
+        toast({
+          title: dictionary.errors.title,
+        })
       }
-      setSelectedNotifications([]);
-      setBulkActionMode(false);
-    } catch (error) {
-      toast.error(`Failed to ${action} notifications`);
-    }
-  };
+    })
+  }
 
-  const handleSavePreferences = async () => {
-    try {
-      await onUpdatePreferences(localPreferences);
-      toast.success('Preferences saved');
-      setPreferencesOpen(false);
-    } catch (error) {
-      toast.error('Failed to save preferences');
+  const handleSelectAll = () => {
+    if (selectedNotifications.length === filteredNotifications.length) {
+      setSelectedNotifications([])
+    } else {
+      setSelectedNotifications(filteredNotifications.map((n) => n.id))
     }
-  };
+  }
 
-  const NotificationItem = ({ notification }: { notification: Notification }) => {
-    const Icon = typeIcons[notification.type];
-    const isExpired = notification.expiresAt && isPast(notification.expiresAt);
+  const NotificationItem = ({
+    notification,
+  }: {
+    notification: NotificationDTO
+  }) => {
+    const Icon = typeIcons[notification.type] || Bell
+    const priorityConfig = PRIORITY_CONFIG[notification.priority]
+
+    const timeAgo = formatDistanceToNow(new Date(notification.createdAt), {
+      addSuffix: true,
+      locale: locale === "ar" ? ar : enUS,
+    })
 
     return (
-      <div
+      <motion.div
+        layout
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, x: -20 }}
         className={cn(
-          "group flex items-start gap-3 p-3 rounded-lg transition-colors",
-          !notification.read && "bg-muted/50",
-          notification.starred && "border-l-4 border-l-yellow-500",
-          isExpired && "opacity-60"
+          "group flex items-start gap-3 p-4 rounded-lg transition-colors",
+          !notification.read && "bg-accent/50",
+          notification.priority === "urgent" &&
+            !notification.read &&
+            "border-l-4 border-l-destructive"
         )}
       >
         {bulkActionMode && (
@@ -291,439 +266,370 @@ export function NotificationCenter({
             checked={selectedNotifications.includes(notification.id)}
             onCheckedChange={(checked) => {
               if (checked) {
-                setSelectedNotifications(prev => [...prev, notification.id]);
+                setSelectedNotifications((prev) => [...prev, notification.id])
               } else {
-                setSelectedNotifications(prev => prev.filter(id => id !== notification.id));
+                setSelectedNotifications((prev) =>
+                  prev.filter((id) => id !== notification.id)
+                )
               }
             }}
+            className="mt-1"
           />
         )}
 
-        <div className={cn(
-          "flex h-10 w-10 items-center justify-center rounded-lg",
-          typeColors[notification.type]
-        )}>
-          <Icon className="h-5 w-5" />
-          {notification.priority === 'urgent' && priorityConfig.urgent.pulse && (
+        <div
+          className={cn(
+            "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg",
+            notification.priority === "urgent"
+              ? "bg-destructive/10"
+              : "bg-muted"
+          )}
+        >
+          <Icon
+            className={cn(
+              "h-5 w-5",
+              notification.priority === "urgent"
+                ? "text-destructive"
+                : "text-muted-foreground"
+            )}
+          />
+          {notification.priority === "urgent" && !notification.read && (
             <span className="absolute inline-flex h-3 w-3 -top-1 ltr:-right-1 rtl:-left-1">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500" />
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-destructive opacity-75" />
+              <span className="relative inline-flex h-3 w-3 rounded-full bg-destructive" />
             </span>
           )}
         </div>
 
         <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between mb-1">
-            <div>
-              <p className={cn(
-                "font-medium",
-                !notification.read && "font-semibold"
-              )}>
+          <div className="flex items-start justify-between gap-2 mb-1">
+            <div className="flex-1 min-w-0">
+              <p
+                className={cn(
+                  "text-sm truncate",
+                  !notification.read
+                    ? "font-semibold text-foreground"
+                    : "font-medium text-muted-foreground"
+                )}
+              >
                 {notification.title}
               </p>
-              {notification.sender && (
+              {notification.actor && (
                 <p className="text-xs text-muted-foreground">
-                  from {notification.sender.name} • {notification.sender.role}
+                  {notification.actor.username || notification.actor.email}
                 </p>
               )}
             </div>
-            <div className="flex items-center gap-1">
-              {notification.starred && (
-                <Star className="h-4 w-4 fill-yellow-500 text-yellow-500" />
+            <div className="flex items-center gap-2 shrink-0">
+              {notification.priority !== "normal" && (
+                <Badge
+                  variant={priorityConfig.badgeVariant}
+                  className="text-xs"
+                >
+                  {dictionary.priorities.badge[notification.priority]}
+                </Badge>
               )}
-              <span className="text-xs text-muted-foreground">
-                {formatDistanceToNow(notification.timestamp, { addSuffix: true })}
+              <span className="text-xs text-muted-foreground whitespace-nowrap">
+                {timeAgo}
               </span>
             </div>
           </div>
 
           <p className="text-sm text-muted-foreground line-clamp-2 mb-2">
-            {notification.content}
+            {notification.body}
           </p>
 
-          {notification.actionUrl && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onActionClick?.(notification)}
-              className="mb-2"
-            >
-              {notification.actionLabel || 'View Details'}
-            </Button>
-          )}
-
-          <div className="flex items-center gap-2">
-            <Badge variant={priorityConfig[notification.priority].badge as any} className="text-xs">
-              {notification.priority}
-            </Badge>
-            {isExpired && (
-              <Badge variant="outline" className="text-xs">
-                Expired
-              </Badge>
+          {notification.metadata &&
+            typeof notification.metadata === "object" &&
+            "url" in notification.metadata && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onActionClick?.(notification)}
+                className="mb-2"
+              >
+                {dictionary.actions.viewDetails}
+              </Button>
             )}
-          </div>
         </div>
 
         {!bulkActionMode && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100">
-                •••
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                <MoreHorizontal className="h-4 w-4" />
+                <span className="sr-only">
+                  {dictionary.actions.settings}
+                </span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               {!notification.read && (
-                <DropdownMenuItem onClick={() => onMarkAsRead([notification.id])}>
+                <DropdownMenuItem
+                  onClick={() => onMarkAsRead([notification.id])}
+                >
                   <Check className="h-4 w-4 me-2" />
-                  Mark as read
+                  {dictionary.actions.markAsRead}
                 </DropdownMenuItem>
               )}
-              <DropdownMenuItem onClick={() => onStar(notification.id)}>
-                <Star className="h-4 w-4 me-2" />
-                {notification.starred ? 'Unstar' : 'Star'}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onArchive([notification.id])}>
-                <Archive className="h-4 w-4 me-2" />
-                Archive
-              </DropdownMenuItem>
+              {onStar && (
+                <DropdownMenuItem onClick={() => onStar(notification.id)}>
+                  <Star className="h-4 w-4 me-2" />
+                  Star
+                </DropdownMenuItem>
+              )}
+              {onArchive && (
+                <DropdownMenuItem onClick={() => onArchive([notification.id])}>
+                  <Archive className="h-4 w-4 me-2" />
+                  {dictionary.actions.archive}
+                </DropdownMenuItem>
+              )}
               <DropdownMenuSeparator />
               <DropdownMenuItem
-                className="text-red-600"
+                className="text-destructive focus:text-destructive"
                 onClick={() => onDelete([notification.id])}
               >
                 <Trash2 className="h-4 w-4 me-2" />
-                Delete
+                {dictionary.actions.delete}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         )}
-      </div>
-    );
-  };
+      </motion.div>
+    )
+  }
 
   return (
     <div className="space-y-4">
       {/* Header */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <CardTitle>Notifications</CardTitle>
-              {stats.unreadCount > 0 && (
-                <Badge variant="destructive">
-                  {stats.unreadCount} unread
-                </Badge>
-              )}
-              {stats.urgentCount > 0 && (
-                <Badge variant="destructive" className="animate-pulse">
-                  {stats.urgentCount} urgent
-                </Badge>
-              )}
-            </div>
-            <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        <div className="flex items-center gap-3">
+          <h2 className="scroll-m-20 text-2xl font-semibold tracking-tight">
+            {dictionary.title}
+          </h2>
+          {stats.unreadCount > 0 && (
+            <Badge variant="secondary">{stats.unreadCount}</Badge>
+          )}
+          {stats.urgentCount > 0 && (
+            <Badge variant="destructive" className="animate-pulse">
+              {stats.urgentCount} {dictionary.priorities.badge.urgent}
+            </Badge>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2">
+          {showBulkActions && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setBulkActionMode(!bulkActionMode)
+                setSelectedNotifications([])
+              }}
+            >
+              {bulkActionMode ? dictionary.confirmations.cancel : dictionary.bulk.selectAll.split(" ")[0]}
+            </Button>
+          )}
+
+          {bulkActionMode && selectedNotifications.length > 0 && (
+            <>
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setBulkActionMode(!bulkActionMode)}
+                onClick={() => handleBulkAction("read")}
+                disabled={isPending}
               >
-                {bulkActionMode ? 'Cancel' : 'Select'}
+                {isPending && <Loader2 className="h-4 w-4 me-2 animate-spin" />}
+                {dictionary.actions.markAsRead}
               </Button>
-              {bulkActionMode && selectedNotifications.length > 0 && (
-                <>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleBulkAction('read')}
-                  >
-                    Mark as Read
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleBulkAction('archive')}
-                  >
-                    Archive
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleBulkAction('delete')}
-                  >
-                    Delete
-                  </Button>
-                </>
-              )}
-              {!bulkActionMode && (
-                <>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={onMarkAllAsRead}
-                    disabled={stats.unreadCount === 0}
-                  >
-                    <CheckCheck className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setPreferencesOpen(true)}
-                  >
-                    <Settings className="h-4 w-4" />
-                  </Button>
-                </>
-              )}
-            </div>
-          </div>
-        </CardHeader>
-      </Card>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleBulkAction("delete")}
+                disabled={isPending}
+              >
+                {dictionary.actions.delete}
+              </Button>
+            </>
+          )}
 
-      {/* Filter Bar */}
-      <div className="flex items-center gap-2 flex-wrap">
-        <span className="text-sm text-muted-foreground">Filter by type:</span>
-        {Object.entries(typeIcons).map(([type, Icon]) => (
-          <Button
-            key={type}
-            variant={selectedTypes.includes(type) ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => {
-              if (selectedTypes.includes(type)) {
-                setSelectedTypes(prev => prev.filter(t => t !== type));
-              } else {
-                setSelectedTypes(prev => [...prev, type]);
-              }
-            }}
-          >
-            <Icon className="h-4 w-4 me-1" />
-            {type.charAt(0).toUpperCase() + type.slice(1)}
-          </Button>
-        ))}
-        {selectedTypes.length > 0 && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setSelectedTypes([])}
-          >
-            Clear filters
-          </Button>
-        )}
+          {!bulkActionMode && (
+            <>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setShowFilters(!showFilters)}
+                className={cn(showFilters && "bg-accent")}
+              >
+                <Filter className="h-4 w-4" />
+                <span className="sr-only">{dictionary.filters.filterBy}</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() =>
+                  startTransition(async () => {
+                    await onMarkAllAsRead()
+                  })
+                }
+                disabled={stats.unreadCount === 0 || isPending}
+              >
+                {isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <CheckCheck className="h-4 w-4" />
+                )}
+                <span className="sr-only">{dictionary.markAllAsRead}</span>
+              </Button>
+            </>
+          )}
+        </div>
       </div>
 
-      {/* Notifications List */}
-      <Card>
-        <Tabs value={selectedTab} onValueChange={(v) => setSelectedTab(v as any)}>
-          <CardHeader className="pb-3">
-            <TabsList className="grid grid-cols-4 w-full max-w-lg">
-              <TabsTrigger value="all">
-                All
-                {notifications.filter(n => !n.archived).length > 0 && (
-                  <Badge variant="outline" className="ml-2">
-                    {notifications.filter(n => !n.archived).length}
-                  </Badge>
-                )}
-              </TabsTrigger>
-              <TabsTrigger value="unread">
-                Unread
-                {stats.unreadCount > 0 && (
-                  <Badge variant="destructive" className="ml-2">
-                    {stats.unreadCount}
-                  </Badge>
-                )}
-              </TabsTrigger>
-              <TabsTrigger value="starred">
-                Starred
-                {stats.starredCount > 0 && (
-                  <Badge variant="outline" className="ml-2">
-                    {stats.starredCount}
-                  </Badge>
-                )}
-              </TabsTrigger>
-              <TabsTrigger value="archived">
-                Archived
-                {stats.archivedCount > 0 && (
-                  <Badge variant="outline" className="ml-2">
-                    {stats.archivedCount}
-                  </Badge>
-                )}
-              </TabsTrigger>
-            </TabsList>
-          </CardHeader>
+      {/* Filter Bar */}
+      <AnimatePresence>
+        {showFilters && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="overflow-hidden"
+          >
+            <Card>
+              <CardContent className="pt-4">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-sm text-muted-foreground">
+                    {dictionary.filters.filterBy}:
+                  </span>
+                  {Object.entries(typeIcons)
+                    .slice(0, 8)
+                    .map(([type, Icon]) => (
+                      <Button
+                        key={type}
+                        variant={
+                          selectedTypes.includes(type) ? "default" : "outline"
+                        }
+                        size="sm"
+                        onClick={() => {
+                          if (selectedTypes.includes(type)) {
+                            setSelectedTypes((prev) =>
+                              prev.filter((t) => t !== type)
+                            )
+                          } else {
+                            setSelectedTypes((prev) => [...prev, type])
+                          }
+                        }}
+                        className="gap-1"
+                      >
+                        <Icon className="h-3.5 w-3.5" />
+                        <span className="hidden sm:inline">
+                          {dictionary.types[type as NotificationType] || type}
+                        </span>
+                      </Button>
+                    ))}
+                  {selectedTypes.length > 0 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setSelectedTypes([])}
+                    >
+                      <X className="h-4 w-4 me-1" />
+                      {dictionary.filters.clearFilters}
+                    </Button>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-          <CardContent className="p-0">
-            <ScrollArea className="h-[600px]">
+      {/* Tabs & Notification List */}
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <Tabs
+              value={selectedTab}
+              onValueChange={(v) => setSelectedTab(v as typeof selectedTab)}
+            >
+              <TabsList>
+                <TabsTrigger value="all">
+                  {dictionary.tabs.all}
+                  {notifications.length > 0 && (
+                    <Badge variant="outline" className="ms-2">
+                      {notifications.length}
+                    </Badge>
+                  )}
+                </TabsTrigger>
+                <TabsTrigger value="unread">
+                  {dictionary.tabs.unread}
+                  {stats.unreadCount > 0 && (
+                    <Badge variant="destructive" className="ms-2">
+                      {stats.unreadCount}
+                    </Badge>
+                  )}
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+
+            {bulkActionMode && filteredNotifications.length > 0 && (
+              <Button variant="ghost" size="sm" onClick={handleSelectAll}>
+                {selectedNotifications.length === filteredNotifications.length
+                  ? dictionary.bulk.deselectAll
+                  : dictionary.bulk.selectAll}
+              </Button>
+            )}
+          </div>
+        </CardHeader>
+
+        <CardContent className="p-0">
+          <ScrollArea className="h-[500px]">
+            <AnimatePresence mode="popLayout">
               {Object.keys(groupedNotifications).length > 0 ? (
                 <div className="p-4 space-y-4">
-                  {Object.entries(groupedNotifications).map(([date, notifications]) => (
-                    <div key={date}>
-                      <h3 className="text-sm font-medium text-muted-foreground mb-2">{date}</h3>
-                      <div className="space-y-1">
-                        {notifications.map(notification => (
-                          <NotificationItem key={notification.id} notification={notification} />
-                        ))}
+                  {Object.entries(groupedNotifications).map(
+                    ([date, notifications]) => (
+                      <div key={date}>
+                        <h3 className="text-sm font-medium text-muted-foreground mb-2 sticky top-0 bg-card py-1">
+                          {date}
+                        </h3>
+                        <div className="space-y-1">
+                          {notifications.map((notification) => (
+                            <NotificationItem
+                              key={notification.id}
+                              notification={notification}
+                            />
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    )
+                  )}
                 </div>
               ) : (
-                <div className="flex flex-col items-center justify-center py-12">
-                  <Bell className="h-12 w-12 text-muted-foreground mb-4" />
-                  <p className="text-muted-foreground">No notifications</p>
-                </div>
-              )}
-            </ScrollArea>
-          </CardContent>
-        </Tabs>
-      </Card>
-
-      {/* Preferences Dialog */}
-      <Dialog open={preferencesOpen} onOpenChange={setPreferencesOpen}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Notification Preferences</DialogTitle>
-            <DialogDescription>
-              Customize how and when you receive notifications
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-6">
-            {/* Delivery Methods */}
-            <div>
-              <h4 className="font-medium mb-3">Delivery Methods</h4>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="email">Email Notifications</Label>
-                  <Switch
-                    id="email"
-                    checked={localPreferences.email}
-                    onCheckedChange={(checked) =>
-                      setLocalPreferences(prev => ({ ...prev, email: checked }))
-                    }
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="push">Push Notifications</Label>
-                  <Switch
-                    id="push"
-                    checked={localPreferences.push}
-                    onCheckedChange={(checked) =>
-                      setLocalPreferences(prev => ({ ...prev, push: checked }))
-                    }
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="sms">SMS Notifications</Label>
-                  <Switch
-                    id="sms"
-                    checked={localPreferences.sms}
-                    onCheckedChange={(checked) =>
-                      setLocalPreferences(prev => ({ ...prev, sms: checked }))
-                    }
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="sound">
-                    <div className="flex items-center gap-2">
-                      {localPreferences.sound ? (
-                        <Volume2 className="h-4 w-4" />
-                      ) : (
-                        <VolumeX className="h-4 w-4" />
-                      )}
-                      Sound
-                    </div>
-                  </Label>
-                  <Switch
-                    id="sound"
-                    checked={localPreferences.sound}
-                    onCheckedChange={(checked) =>
-                      setLocalPreferences(prev => ({ ...prev, sound: checked }))
-                    }
-                  />
-                </div>
-              </div>
-            </div>
-
-            <Separator />
-
-            {/* Categories */}
-            <div>
-              <h4 className="font-medium mb-3">Notification Categories</h4>
-              <div className="grid grid-cols-2 gap-3">
-                {Object.entries(localPreferences.categories).map(([category, enabled]) => (
-                  <div key={category} className="flex items-center justify-between">
-                    <Label htmlFor={category} className="text-sm">
-                      {category.charAt(0).toUpperCase() + category.slice(1)}
-                    </Label>
-                    <Switch
-                      id={category}
-                      checked={enabled}
-                      onCheckedChange={(checked) =>
-                        setLocalPreferences(prev => ({
-                          ...prev,
-                          categories: { ...prev.categories, [category]: checked }
-                        }))
-                      }
-                    />
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="flex flex-col items-center justify-center py-16"
+                >
+                  <div className="rounded-full bg-muted p-4 mb-4">
+                    <Bell className="h-8 w-8 text-muted-foreground" />
                   </div>
-                ))}
-              </div>
-            </div>
-
-            <Separator />
-
-            {/* Quiet Hours */}
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <h4 className="font-medium">Quiet Hours</h4>
-                <Switch
-                  checked={localPreferences.quietHours.enabled}
-                  onCheckedChange={(checked) =>
-                    setLocalPreferences(prev => ({
-                      ...prev,
-                      quietHours: { ...prev.quietHours, enabled: checked }
-                    }))
-                  }
-                />
-              </div>
-              {localPreferences.quietHours.enabled && (
-                <div className="flex items-center gap-2 text-sm">
-                  <span>From</span>
-                  <input
-                    type="time"
-                    value={localPreferences.quietHours.start}
-                    onChange={(e) =>
-                      setLocalPreferences(prev => ({
-                        ...prev,
-                        quietHours: { ...prev.quietHours, start: e.target.value }
-                      }))
-                    }
-                    className="border rounded px-2 py-1"
-                  />
-                  <span>to</span>
-                  <input
-                    type="time"
-                    value={localPreferences.quietHours.end}
-                    onChange={(e) =>
-                      setLocalPreferences(prev => ({
-                        ...prev,
-                        quietHours: { ...prev.quietHours, end: e.target.value }
-                      }))
-                    }
-                    className="border rounded px-2 py-1"
-                  />
-                </div>
+                  <h3 className="scroll-m-20 text-lg font-semibold tracking-tight mb-1">
+                    {dictionary.empty.noNotifications}
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    {dictionary.empty.noNotificationsDescription}
+                  </p>
+                </motion.div>
               )}
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setPreferencesOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleSavePreferences}>
-              Save Preferences
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            </AnimatePresence>
+          </ScrollArea>
+        </CardContent>
+      </Card>
     </div>
-  );
+  )
 }

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useState, useCallback } from "react"
 import { Bell } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/popover"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
+import { motion, AnimatePresence } from "framer-motion"
 import { useNotificationBell } from "./use-notifications"
 import { NotificationListScrollable } from "./list"
 import { useRouter } from "next/navigation"
@@ -28,7 +29,6 @@ export function NotificationBellIcon({
   className,
   showConnectionStatus = false,
 }: NotificationBellIconProps) {
-  const router = useRouter()
   const [isOpen, setIsOpen] = useState(false)
   const {
     isConnected,
@@ -38,79 +38,79 @@ export function NotificationBellIcon({
     markAllAsRead,
   } = useNotificationBell()
 
-  const handleNotificationRead = (notificationId: string) => {
+  const handleNotificationRead = useCallback((notificationId: string) => {
     markAsRead(notificationId)
-  }
+  }, [markAsRead])
 
-  const handleNotificationDelete = (notificationId: string) => {
+  const handleNotificationDelete = useCallback(() => {
     // Optimistic update handled by the hook
-  }
+  }, [])
 
-  const handleMarkAllAsRead = async () => {
+  const handleMarkAllAsRead = useCallback(async () => {
     await markAllAsRead()
     setIsOpen(false)
-  }
-
-  // Close popover when clicking outside
-  useEffect(() => {
-    if (!isOpen) return
-
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as HTMLElement
-      // Check if click is outside popover
-      if (!target.closest("[data-notification-bell]")) {
-        setIsOpen(false)
-      }
-    }
-
-    document.addEventListener("mousedown", handleClickOutside)
-    return () => document.removeEventListener("mousedown", handleClickOutside)
-  }, [isOpen])
+  }, [markAllAsRead])
 
   return (
-    <div
-      className={cn("relative", className)}
-      data-notification-bell
-    >
+    <div className={cn("relative", className)} data-notification-bell>
       <Popover open={isOpen} onOpenChange={setIsOpen}>
         <PopoverTrigger asChild>
           <Button
             variant="ghost"
             size="icon"
-            className="relative"
+            className="relative transition-transform hover:scale-105 active:scale-95"
             aria-label={
               unreadCount > 0
-                ? dictionary.accessibility.unreadCount.replace('{{count}}', unreadCount.toString())
+                ? dictionary.accessibility.unreadCount.replace(
+                    "{{count}}",
+                    unreadCount.toString()
+                  )
                 : dictionary.accessibility.notificationsBell
             }
+            aria-haspopup="dialog"
+            aria-expanded={isOpen}
           >
             <Bell className="h-5 w-5" />
 
-            {/* Unread count badge */}
-            {unreadCount > 0 && (
-              <Badge
-                variant="destructive"
-                className="absolute -top-1 -right-1 h-5 min-w-5 px-1 flex items-center justify-center text-xs"
-              >
-                {unreadCount > 99 ? "99+" : unreadCount}
-              </Badge>
-            )}
+            {/* Unread count badge with animation */}
+            <AnimatePresence>
+              {unreadCount > 0 && (
+                <motion.div
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0, opacity: 0 }}
+                  transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                  className="absolute -top-1 ltr:-right-1 rtl:-left-1"
+                >
+                  <Badge
+                    variant="destructive"
+                    className="h-5 min-w-5 px-1 flex items-center justify-center text-xs font-semibold"
+                  >
+                    {unreadCount > 99 ? "99+" : unreadCount}
+                  </Badge>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* Connection status indicator */}
             {showConnectionStatus && (
               <span
                 className={cn(
-                  "absolute bottom-0 right-0 h-2 w-2 rounded-full border-2 border-background",
-                  isConnected ? "bg-green-500" : "bg-muted-foreground"
+                  "absolute bottom-0 ltr:right-0 rtl:left-0 h-2 w-2 rounded-full border-2 border-background transition-colors",
+                  isConnected ? "bg-emerald-500" : "bg-muted-foreground animate-pulse"
                 )}
-                aria-label={isConnected ? dictionary.accessibility.connected : dictionary.accessibility.disconnected}
+                aria-label={
+                  isConnected
+                    ? dictionary.accessibility.connected
+                    : dictionary.accessibility.disconnected
+                }
               />
             )}
           </Button>
         </PopoverTrigger>
 
         <PopoverContent
-          className="w-[400px] p-0"
+          className="w-[380px] sm:w-[420px] p-0 overflow-hidden"
           align="end"
           sideOffset={8}
         >
@@ -121,7 +121,7 @@ export function NotificationBellIcon({
             onRead={handleNotificationRead}
             onDelete={handleNotificationDelete}
             onMarkAllRead={unreadCount > 0 ? handleMarkAllAsRead : undefined}
-            maxHeight={500}
+            maxHeight={450}
           />
         </PopoverContent>
       </Popover>
@@ -140,33 +140,46 @@ export function NotificationBellIconCompact({
   const router = useRouter()
   const { unreadCount } = useNotificationBell()
 
-  const handleClick = () => {
+  const handleClick = useCallback(() => {
     router.push(`/${locale}/notifications`)
-  }
+  }, [router, locale])
 
   return (
     <Button
       variant="ghost"
       size="icon"
-      className={cn("relative", className)}
+      className={cn("relative transition-transform hover:scale-105 active:scale-95", className)}
       onClick={handleClick}
       aria-label={
         unreadCount > 0
-          ? dictionary.accessibility.unreadCount.replace('{{count}}', unreadCount.toString())
+          ? dictionary.accessibility.unreadCount.replace(
+              "{{count}}",
+              unreadCount.toString()
+            )
           : dictionary.accessibility.notificationsBell
       }
     >
       <Bell className="h-5 w-5" />
 
-      {/* Unread count badge */}
-      {unreadCount > 0 && (
-        <Badge
-          variant="destructive"
-          className="absolute -top-1 -right-1 h-5 min-w-5 px-1 flex items-center justify-center text-xs"
-        >
-          {unreadCount > 99 ? "99+" : unreadCount}
-        </Badge>
-      )}
+      {/* Unread count badge with animation */}
+      <AnimatePresence>
+        {unreadCount > 0 && (
+          <motion.div
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0, opacity: 0 }}
+            transition={{ type: "spring", stiffness: 500, damping: 30 }}
+            className="absolute -top-1 ltr:-right-1 rtl:-left-1"
+          >
+            <Badge
+              variant="destructive"
+              className="h-5 min-w-5 px-1 flex items-center justify-center text-xs font-semibold"
+            >
+              {unreadCount > 99 ? "99+" : unreadCount}
+            </Badge>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </Button>
   )
 }

@@ -3,10 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { TriangleAlert, DollarSign } from "lucide-react"
-import { getPrincipalDashboardData } from "../actions/principal"
-import { DashboardSectionError } from "../error-boundary"
-import { QuickActions } from "../quick-actions"
-import { getQuickActionsByRole } from "../quick-actions-config"
+import { getPrincipalDashboardData } from "./actions"
+import { DashboardSectionError } from "./error-boundary"
+import { QuickActions, getQuickActionsByRole } from "./quick-action"
 import { getTenantContext } from "@/lib/tenant-context"
 import { PrincipalDashboardStats } from "@/components/platform/shared/stats"
 
@@ -16,11 +15,7 @@ interface PrincipalDashboardProps {
   locale?: string
 }
 
-export async function PrincipalDashboard({
-  user,
-  dictionary,
-  locale = "en",
-}: PrincipalDashboardProps) {
+export async function PrincipalDashboard({ user, dictionary, locale = "en" }: PrincipalDashboardProps) {
   // Get tenant context for subdomain
   const { schoolId } = await getTenantContext()
 
@@ -48,12 +43,7 @@ export async function PrincipalDashboard({
     dashboardData = await getPrincipalDashboardData()
   } catch (error) {
     console.error("Error fetching principal data:", error)
-    return (
-      <DashboardSectionError
-        title={t.dashboardUnavailable}
-        message={t.unableToLoadData}
-      />
-    )
+    return <DashboardSectionError title={t.dashboardUnavailable} message={t.unableToLoadData} />
   }
 
   const {
@@ -94,10 +84,7 @@ export async function PrincipalDashboard({
           <CardContent>
             <div className="space-y-3">
               {criticalAlerts.map((alert, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between p-3 border rounded-lg"
-                >
+                <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
                   <div className="flex items-center space-x-3">
                     <TriangleAlert
                       className={`h-5 w-5 ${
@@ -114,9 +101,7 @@ export async function PrincipalDashboard({
                   <div className="text-right">
                     <Badge
                       variant={
-                        alert.severity === "critical" || alert.severity === "high"
-                          ? "destructive"
-                          : "secondary"
+                        alert.severity === "critical" || alert.severity === "high" ? "destructive" : "secondary"
                       }
                     >
                       {alert.severity}
@@ -131,10 +116,7 @@ export async function PrincipalDashboard({
       )}
 
       {/* Quick Actions */}
-      <QuickActions
-        actions={getQuickActionsByRole("PRINCIPAL", dictionary, school?.domain)}
-        locale={locale}
-      />
+      <QuickActions actions={getQuickActionsByRole("PRINCIPAL", dictionary, school?.domain)} locale={locale} />
 
       {/* Main Content Grid */}
       <div className="grid gap-6 md:grid-cols-2">
@@ -146,23 +128,16 @@ export async function PrincipalDashboard({
           <CardContent className="space-y-3">
             {todaysPriorities.length > 0 ? (
               todaysPriorities.map((priority, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between p-3 border rounded-lg"
-                >
+                <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
                   <div>
                     <p className="font-medium">{priority.priority}</p>
                     <p className="text-sm text-muted-foreground">{priority.time}</p>
                   </div>
-                  <Badge variant={priority.status === "scheduled" ? "default" : "secondary"}>
-                    {priority.status}
-                  </Badge>
+                  <Badge variant={priority.status === "scheduled" ? "default" : "secondary"}>{priority.status}</Badge>
                 </div>
               ))
             ) : (
-              <p className="text-sm text-muted-foreground text-center py-4">
-                {t.todaysPriorities.noPriorities}
-              </p>
+              <p className="text-sm text-muted-foreground text-center py-4">{t.todaysPriorities.noPriorities}</p>
             )}
           </CardContent>
         </Card>
@@ -175,10 +150,7 @@ export async function PrincipalDashboard({
           <CardContent className="space-y-3">
             {academicTrends.length > 0 ? (
               academicTrends.map((subject, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between p-3 border rounded-lg"
-                >
+                <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
                   <div>
                     <p className="font-medium">{subject.subject}</p>
                     <p className="text-sm text-muted-foreground">
@@ -188,23 +160,16 @@ export async function PrincipalDashboard({
                   <div className="text-right">
                     <Badge
                       variant={
-                        subject.trend === "up"
-                          ? "default"
-                          : subject.trend === "down"
-                            ? "destructive"
-                            : "secondary"
+                        subject.trend === "up" ? "default" : subject.trend === "down" ? "destructive" : "secondary"
                       }
                     >
-                      {subject.trend === "up" ? "↗" : subject.trend === "down" ? "↘" : "→"}{" "}
-                      {subject.improvement}
+                      {subject.trend === "up" ? "↗" : subject.trend === "down" ? "↘" : "→"} {subject.improvement}
                     </Badge>
                   </div>
                 </div>
               ))
             ) : (
-              <p className="text-sm text-muted-foreground text-center py-4">
-                {t.academicPerformance.noData}
-              </p>
+              <p className="text-sm text-muted-foreground text-center py-4">{t.academicPerformance.noData}</p>
             )}
           </CardContent>
         </Card>
@@ -218,32 +183,22 @@ export async function PrincipalDashboard({
             <div className="grid grid-cols-3 gap-4 text-center">
               <div>
                 <p className="text-2xl font-bold">{disciplinarySummary.totalIncidents}</p>
-                <p className="text-xs text-muted-foreground">
-                  {t.disciplinarySummary.totalIncidents}
-                </p>
+                <p className="text-xs text-muted-foreground">{t.disciplinarySummary.totalIncidents}</p>
               </div>
               <div>
                 <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
                   {disciplinarySummary.resolved}
                 </p>
-                <p className="text-xs text-muted-foreground">
-                  {t.disciplinarySummary.resolved}
-                </p>
+                <p className="text-xs text-muted-foreground">{t.disciplinarySummary.resolved}</p>
               </div>
               <div>
-                <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">
-                  {disciplinarySummary.pending}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {t.disciplinarySummary.pending}
-                </p>
+                <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">{disciplinarySummary.pending}</p>
+                <p className="text-xs text-muted-foreground">{t.disciplinarySummary.pending}</p>
               </div>
             </div>
             {disciplinarySummary.topIssues.length > 0 && (
               <div className="pt-2 border-t">
-                <p className="text-sm text-muted-foreground mb-2">
-                  {t.disciplinarySummary.topIssues}
-                </p>
+                <p className="text-sm text-muted-foreground mb-2">{t.disciplinarySummary.topIssues}</p>
                 <div className="space-y-1">
                   {disciplinarySummary.topIssues.map((issue, index) => (
                     <Badge key={index} variant="outline" className="mr-1">
@@ -264,31 +219,23 @@ export async function PrincipalDashboard({
           <CardContent className="space-y-3">
             {staffEvaluations.length > 0 ? (
               staffEvaluations.map((evaluation, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between p-3 border rounded-lg"
-                >
+                <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
                   <div>
                     <p className="font-medium">{evaluation.teacher}</p>
                     <p className="text-sm text-muted-foreground">{evaluation.department}</p>
                   </div>
                   <div className="text-right">
-                    <Badge
-                      variant={evaluation.status === "in-progress" ? "default" : "secondary"}
-                    >
+                    <Badge variant={evaluation.status === "in-progress" ? "default" : "secondary"}>
                       {evaluation.status}
                     </Badge>
                     <p className="text-xs text-muted-foreground mt-1">
-                      {t.staffEvaluations.due}:{" "}
-                      {new Date(evaluation.dueDate).toLocaleDateString()}
+                      {t.staffEvaluations.due}: {new Date(evaluation.dueDate).toLocaleDateString()}
                     </p>
                   </div>
                 </div>
               ))
             ) : (
-              <p className="text-sm text-muted-foreground text-center py-4">
-                {t.staffEvaluations.noEvaluations}
-              </p>
+              <p className="text-sm text-muted-foreground text-center py-4">{t.staffEvaluations.noEvaluations}</p>
             )}
           </CardContent>
         </Card>
@@ -301,15 +248,11 @@ export async function PrincipalDashboard({
           <CardContent className="space-y-4">
             <div className="flex justify-between items-center">
               <span className="text-sm text-muted-foreground">{t.budgetStatus.allocated}</span>
-              <span className="font-medium">
-                ${(budgetStatus.allocated / 1000000).toFixed(1)}M
-              </span>
+              <span className="font-medium">${(budgetStatus.allocated / 1000000).toFixed(1)}M</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-muted-foreground">{t.budgetStatus.spent}</span>
-              <span className="font-medium text-destructive">
-                ${(budgetStatus.spent / 1000000).toFixed(1)}M
-              </span>
+              <span className="font-medium text-destructive">${(budgetStatus.spent / 1000000).toFixed(1)}M</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-muted-foreground">{t.budgetStatus.remaining}</span>
@@ -319,9 +262,7 @@ export async function PrincipalDashboard({
             </div>
             <div className="pt-2 border-t">
               <div className="flex justify-between items-center mb-2">
-                <span className="text-sm text-muted-foreground">
-                  {t.budgetStatus.utilization}
-                </span>
+                <span className="text-sm text-muted-foreground">{t.budgetStatus.utilization}</span>
                 <span className="font-medium">{budgetStatus.utilization.toFixed(1)}%</span>
               </div>
               <Progress value={budgetStatus.utilization} className="mt-2" />
@@ -342,45 +283,33 @@ export async function PrincipalDashboard({
               <span className="text-sm">{t.parentFeedback.satisfaction}</span>
               <div className="flex items-center space-x-2">
                 <Progress value={parentFeedback.satisfaction} className="w-20" />
-                <span className="text-sm font-medium">
-                  {parentFeedback.satisfaction.toFixed(1)}%
-                </span>
+                <span className="text-sm font-medium">{parentFeedback.satisfaction.toFixed(1)}%</span>
               </div>
             </div>
             <div className="flex items-center justify-between p-2 border rounded">
               <span className="text-sm">{t.parentFeedback.communication}</span>
               <div className="flex items-center space-x-2">
                 <Progress value={parentFeedback.communication} className="w-20" />
-                <span className="text-sm font-medium">
-                  {parentFeedback.communication.toFixed(1)}%
-                </span>
+                <span className="text-sm font-medium">{parentFeedback.communication.toFixed(1)}%</span>
               </div>
             </div>
             <div className="flex items-center justify-between p-2 border rounded">
               <span className="text-sm">{t.parentFeedback.academicQuality}</span>
               <div className="flex items-center space-x-2">
                 <Progress value={parentFeedback.academicQuality} className="w-20" />
-                <span className="text-sm font-medium">
-                  {parentFeedback.academicQuality.toFixed(1)}%
-                </span>
+                <span className="text-sm font-medium">{parentFeedback.academicQuality.toFixed(1)}%</span>
               </div>
             </div>
             <div className="flex items-center justify-between p-2 border rounded">
               <span className="text-sm">{t.parentFeedback.facilities}</span>
               <div className="flex items-center space-x-2">
                 <Progress value={parentFeedback.facilities} className="w-20" />
-                <span className="text-sm font-medium">
-                  {parentFeedback.facilities.toFixed(1)}%
-                </span>
+                <span className="text-sm font-medium">{parentFeedback.facilities.toFixed(1)}%</span>
               </div>
             </div>
             <div className="pt-2 border-t text-center">
-              <p className="text-lg font-bold text-primary">
-                {parentFeedback.overall.toFixed(1)}%
-              </p>
-              <p className="text-xs text-muted-foreground">
-                {t.parentFeedback.overallSatisfaction}
-              </p>
+              <p className="text-lg font-bold text-primary">{parentFeedback.overall.toFixed(1)}%</p>
+              <p className="text-xs text-muted-foreground">{t.parentFeedback.overallSatisfaction}</p>
             </div>
           </CardContent>
         </Card>
@@ -401,18 +330,14 @@ export async function PrincipalDashboard({
                   monthlyHighlights.map((highlight, index) => (
                     <div key={index} className="p-3 border rounded-lg">
                       <div className="flex items-center space-x-2 mb-2">
-                        <Badge variant={highlight.impact === "high" ? "default" : "secondary"}>
-                          {highlight.impact}
-                        </Badge>
+                        <Badge variant={highlight.impact === "high" ? "default" : "secondary"}>{highlight.impact}</Badge>
                       </div>
                       <p className="font-medium">{highlight.highlight}</p>
                       <p className="text-sm text-muted-foreground">{highlight.description}</p>
                     </div>
                   ))
                 ) : (
-                  <p className="text-sm text-muted-foreground">
-                    {t.executiveSummary.noHighlights}
-                  </p>
+                  <p className="text-sm text-muted-foreground">{t.executiveSummary.noHighlights}</p>
                 )}
               </div>
             </div>
@@ -449,20 +374,13 @@ export async function PrincipalDashboard({
         <CardContent>
           <div className="space-y-3">
             {boardMeetings.map((meeting, index) => (
-              <div
-                key={index}
-                className="flex items-center justify-between p-3 border rounded-lg"
-              >
+              <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
                 <div>
                   <p className="font-medium">{meeting.topic}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {new Date(meeting.date).toLocaleDateString()}
-                  </p>
+                  <p className="text-sm text-muted-foreground">{new Date(meeting.date).toLocaleDateString()}</p>
                 </div>
                 <div className="text-right">
-                  <Badge variant={meeting.status === "confirmed" ? "default" : "secondary"}>
-                    {meeting.status}
-                  </Badge>
+                  <Badge variant={meeting.status === "confirmed" ? "default" : "secondary"}>{meeting.status}</Badge>
                   <p className="text-xs text-muted-foreground mt-1">
                     {meeting.attendees} {t.upcomingBoardMeetings.attendees}
                   </p>
@@ -484,24 +402,16 @@ export async function PrincipalDashboard({
         <CardContent>
           <div className="grid gap-4 md:grid-cols-3">
             <div className="text-center">
-              <p className="text-sm text-muted-foreground mb-2">
-                {t.financialHealth.collectionRate}
-              </p>
+              <p className="text-sm text-muted-foreground mb-2">{t.financialHealth.collectionRate}</p>
               <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
                 {performanceScorecard.financialHealth?.toFixed(1) || "85"}%
               </p>
             </div>
             <div className="text-center">
-              <p className="text-sm text-muted-foreground mb-2">
-                {t.financialHealth.budgetStatus}
-              </p>
+              <p className="text-sm text-muted-foreground mb-2">{t.financialHealth.budgetStatus}</p>
               <Badge
                 variant={
-                  budgetStatus.utilization > 90
-                    ? "destructive"
-                    : budgetStatus.utilization > 75
-                      ? "secondary"
-                      : "default"
+                  budgetStatus.utilization > 90 ? "destructive" : budgetStatus.utilization > 75 ? "secondary" : "default"
                 }
                 className="text-lg px-4 py-1"
               >
@@ -509,9 +419,7 @@ export async function PrincipalDashboard({
               </Badge>
             </div>
             <div className="text-center">
-              <p className="text-sm text-muted-foreground mb-2">
-                {t.financialHealth.yearToDate}
-              </p>
+              <p className="text-sm text-muted-foreground mb-2">{t.financialHealth.yearToDate}</p>
               <p className="text-2xl font-bold">
                 $
                 {(budgetStatus.yearToDate?.spent || 0) > 1000000

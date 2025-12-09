@@ -1,14 +1,15 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useTransition } from "react"
 import { NotificationCard, NotificationCardCompact } from "./card"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Bell, CheckCheck, LoaderCircle } from "lucide-react"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Bell, CheckCheck, Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { motion, AnimatePresence } from "framer-motion"
 import type { NotificationDTO } from "./types"
-import { NotificationType, NotificationPriority } from "@prisma/client"
+import { NotificationType } from "@prisma/client"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 interface NotificationListProps {
@@ -37,34 +38,47 @@ export function NotificationList({
   loading = false,
 }: NotificationListProps) {
   const [filter, setFilter] = useState<"all" | "unread">("all")
-  const [typeFilter, setTypeFilter] = useState<NotificationType | "all">("all")
+  const [isPending, startTransition] = useTransition()
 
   // Filter notifications with defensive check
   const filteredNotifications = (notifications ?? []).filter((notification) => {
     if (filter === "unread" && notification.read) return false
-    if (typeFilter !== "all" && notification.type !== typeFilter) return false
     return true
   })
 
   const unreadCount = (notifications ?? []).filter((n) => !n.read).length
 
+  const handleMarkAllRead = () => {
+    startTransition(() => {
+      onMarkAllRead?.()
+    })
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <LoaderCircle className="h-6 w-6 animate-spin text-muted-foreground" />
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
       </div>
     )
   }
 
   if ((notifications?.length ?? 0) === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 text-center">
-        <Bell className="h-12 w-12 text-muted-foreground mb-4" />
-        <h3>{dictionary.empty.noNotifications}</h3>
-        <p className="muted">
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex flex-col items-center justify-center py-12 text-center"
+      >
+        <div className="rounded-full bg-muted p-4 mb-4">
+          <Bell className="h-8 w-8 text-muted-foreground" />
+        </div>
+        <h3 className="scroll-m-20 text-lg font-semibold tracking-tight mb-1">
+          {dictionary.empty.noNotifications}
+        </h3>
+        <p className="text-sm text-muted-foreground max-w-[250px]">
           {emptyMessage || dictionary.empty.noNotificationsDescription}
         </p>
-      </div>
+      </motion.div>
     )
   }
 
@@ -86,10 +100,15 @@ export function NotificationList({
             <Button
               variant="ghost"
               size="sm"
-              onClick={onMarkAllRead}
+              onClick={handleMarkAllRead}
+              disabled={isPending}
               className="gap-2"
             >
-              <CheckCheck className="h-4 w-4" />
+              {isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <CheckCheck className="h-4 w-4" />
+              )}
               {dictionary.markAllAsRead}
             </Button>
           )}
@@ -98,37 +117,43 @@ export function NotificationList({
 
       {/* Notification List */}
       {filteredNotifications.length === 0 ? (
-        <div className="py-8 text-center">
-          <p className="muted">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="py-8 text-center"
+        >
+          <p className="text-sm text-muted-foreground">
             {filter === "unread"
               ? dictionary.empty.noUnread
               : dictionary.empty.noResults}
           </p>
-        </div>
+        </motion.div>
       ) : (
-        <div className="space-y-2">
-          {filteredNotifications.map((notification) =>
-            compact ? (
-              <NotificationCardCompact
-                key={notification.id}
-                notification={notification}
-                locale={locale}
-                dictionary={dictionary}
-                onRead={onRead}
-                onDelete={onDelete}
-              />
-            ) : (
-              <NotificationCard
-                key={notification.id}
-                notification={notification}
-                locale={locale}
-                dictionary={dictionary}
-                onRead={onRead}
-                onDelete={onDelete}
-              />
-            )
-          )}
-        </div>
+        <AnimatePresence mode="popLayout">
+          <div className="space-y-2">
+            {filteredNotifications.map((notification) =>
+              compact ? (
+                <NotificationCardCompact
+                  key={notification.id}
+                  notification={notification}
+                  locale={locale}
+                  dictionary={dictionary}
+                  onRead={onRead}
+                  onDelete={onDelete}
+                />
+              ) : (
+                <NotificationCard
+                  key={notification.id}
+                  notification={notification}
+                  locale={locale}
+                  dictionary={dictionary}
+                  onRead={onRead}
+                  onDelete={onDelete}
+                />
+              )
+            )}
+          </div>
+        </AnimatePresence>
       )}
     </div>
   )
@@ -146,22 +171,27 @@ export function NotificationListScrollable({
   onMarkAllRead,
   maxHeight = 400,
 }: NotificationListProps & { maxHeight?: number }) {
+  const [isPending, startTransition] = useTransition()
   const unreadCount = (notifications ?? []).filter((n) => !n.read).length
+
+  const handleMarkAllRead = () => {
+    startTransition(() => {
+      onMarkAllRead?.()
+    })
+  }
 
   return (
     <div className="w-full">
       {/* Header */}
-      <div className="px-4 py-3 border-b">
+      <div className="px-4 py-3 border-b bg-card">
         <div className="flex items-center justify-between">
           <div>
-            <h3>{dictionary.notificationCenter}</h3>
+            <h3 className="text-sm font-semibold">{dictionary.notificationCenter}</h3>
             {unreadCount > 0 && (
-              <p className="muted">
-                <small>
-                  {unreadCount > 1
-                    ? dictionary.unreadCount_other.replace('{{count}}', unreadCount.toString())
-                    : dictionary.unreadCount_one.replace('{{count}}', '1')}
-                </small>
+              <p className="text-xs text-muted-foreground">
+                {unreadCount > 1
+                  ? dictionary.unreadCount_other.replace('{{count}}', unreadCount.toString())
+                  : dictionary.unreadCount_one.replace('{{count}}', '1')}
               </p>
             )}
           </div>
@@ -169,10 +199,16 @@ export function NotificationListScrollable({
             <Button
               variant="ghost"
               size="sm"
-              onClick={onMarkAllRead}
-              className="h-8"
+              onClick={handleMarkAllRead}
+              disabled={isPending}
+              className="h-8 text-xs"
             >
-              <small>{dictionary.markAllAsRead}</small>
+              {isPending ? (
+                <Loader2 className="h-3 w-3 animate-spin me-1" />
+              ) : (
+                <CheckCheck className="h-3 w-3 me-1" />
+              )}
+              {dictionary.markAllAsRead}
             </Button>
           )}
         </div>
@@ -181,31 +217,39 @@ export function NotificationListScrollable({
       {/* Scrollable List */}
       <ScrollArea className="h-full" style={{ maxHeight }}>
         {(notifications?.length ?? 0) === 0 ? (
-          <div className="flex flex-col items-center justify-center py-8 text-center px-4">
-            <Bell className="h-8 w-8 text-muted-foreground mb-2" />
-            <p className="muted">{dictionary.empty.noNotifications}</p>
-          </div>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="flex flex-col items-center justify-center py-8 text-center px-4"
+          >
+            <div className="rounded-full bg-muted p-3 mb-3">
+              <Bell className="h-6 w-6 text-muted-foreground" />
+            </div>
+            <p className="text-sm text-muted-foreground">{dictionary.empty.noNotifications}</p>
+          </motion.div>
         ) : (
-          <div className="p-2 space-y-1">
-            {(notifications ?? []).map((notification) => (
-              <NotificationCardCompact
-                key={notification.id}
-                notification={notification}
-                locale={locale}
-                dictionary={dictionary}
-                onRead={onRead}
-                onDelete={onDelete}
-              />
-            ))}
-          </div>
+          <AnimatePresence mode="popLayout">
+            <div className="p-2 space-y-1">
+              {(notifications ?? []).map((notification) => (
+                <NotificationCardCompact
+                  key={notification.id}
+                  notification={notification}
+                  locale={locale}
+                  dictionary={dictionary}
+                  onRead={onRead}
+                  onDelete={onDelete}
+                />
+              ))}
+            </div>
+          </AnimatePresence>
         )}
       </ScrollArea>
 
       {/* Footer */}
       {(notifications?.length ?? 0) > 0 && (
-        <div className="px-4 py-3 border-t">
-          <Button variant="ghost" size="sm" className="w-full" asChild>
-            <a href="/notifications">{dictionary.viewAll}</a>
+        <div className="px-4 py-3 border-t bg-card">
+          <Button variant="ghost" size="sm" className="w-full text-xs" asChild>
+            <a href={`/${locale}/notifications`}>{dictionary.viewAll}</a>
           </Button>
         </div>
       )}
@@ -250,11 +294,21 @@ export function NotificationListGrouped({
 
   if (sortedGroups.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 text-center">
-        <Bell className="h-12 w-12 text-muted-foreground mb-4" />
-        <h3>{dictionary.empty.noNotifications}</h3>
-        <p className="muted">{dictionary.empty.noNotificationsDescription}</p>
-      </div>
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex flex-col items-center justify-center py-12 text-center"
+      >
+        <div className="rounded-full bg-muted p-4 mb-4">
+          <Bell className="h-8 w-8 text-muted-foreground" />
+        </div>
+        <h3 className="scroll-m-20 text-lg font-semibold tracking-tight mb-1">
+          {dictionary.empty.noNotifications}
+        </h3>
+        <p className="text-sm text-muted-foreground">
+          {dictionary.empty.noNotificationsDescription}
+        </p>
+      </motion.div>
     )
   }
 
@@ -267,23 +321,32 @@ export function NotificationListGrouped({
 
   return (
     <div className="space-y-6">
-      {sortedGroups.map((group) => (
-        <div key={group} className="space-y-2">
-          <h4 className="text-sm font-medium text-muted-foreground">{groupLabels[group]}</h4>
-          <div className="space-y-2">
-            {grouped[group].map((notification) => (
-              <NotificationCard
-                key={notification.id}
-                notification={notification}
-                locale={locale}
-                dictionary={dictionary}
-                onRead={onRead}
-                onDelete={onDelete}
-              />
-            ))}
-          </div>
-        </div>
-      ))}
+      <AnimatePresence mode="popLayout">
+        {sortedGroups.map((group) => (
+          <motion.div
+            key={group}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="space-y-2"
+          >
+            <h4 className="text-sm font-medium text-muted-foreground sticky top-0 bg-background py-1">
+              {groupLabels[group]}
+            </h4>
+            <div className="space-y-2">
+              {grouped[group].map((notification) => (
+                <NotificationCard
+                  key={notification.id}
+                  notification={notification}
+                  locale={locale}
+                  dictionary={dictionary}
+                  onRead={onRead}
+                  onDelete={onDelete}
+                />
+              ))}
+            </div>
+          </motion.div>
+        ))}
+      </AnimatePresence>
     </div>
   )
 }

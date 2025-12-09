@@ -1,20 +1,19 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
-import { Calendar, DollarSign, Receipt, CreditCard, CircleAlert, Clock, ChevronRight, FileText, Wallet, PiggyBank, ArrowDownRight, ArrowUpRight,  } from "lucide-react"
+import { Calendar, DollarSign, Receipt, CreditCard, CircleAlert, Clock, ChevronRight, FileText, Wallet, PiggyBank, ArrowDownRight, ArrowUpRight } from "lucide-react"
 import { format, isToday, isTomorrow } from "date-fns"
-import { QuickActions } from "../quick-actions"
-import { getQuickActionsByRole } from "../quick-actions-config"
+import { QuickActionsGrid, getQuickActionsByRole } from "./quick-action"
 import { getTenantContext } from "@/lib/tenant-context"
 import { db } from "@/lib/db"
-import {
-  WelcomeBanner,
-  MetricCard,
-  ActivityRings,
-  ProgressCard,
-  EmptyState,
-} from "../widgets"
-import { RevenueChart, PerformanceGauge, WeeklyActivityChart } from "../widgets/dashboard-charts"
+import { WelcomeBanner } from "./welcome-banner"
+import { MetricCard } from "./metric-card"
+import { ActivityRings } from "./activity-rings"
+import { ProgressCard } from "./progress-card"
+import { EmptyState } from "./empty-state"
+import { RevenueChart } from "./revenue-chart"
+import { PerformanceGauge } from "./performance-gauge"
+import { WeeklyActivityChart } from "./weekly-chart"
 import Link from "next/link"
 
 interface AccountantDashboardProps {
@@ -185,7 +184,7 @@ export async function AccountantDashboard({
       </div>
 
       {/* Quick Actions */}
-      <QuickActions
+      <QuickActionsGrid
         actions={getQuickActionsByRole("ACCOUNTANT", dictionary, school?.domain)}
         locale={locale}
       />

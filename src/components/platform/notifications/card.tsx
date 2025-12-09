@@ -1,13 +1,14 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useTransition } from "react"
 import { formatDistanceToNow } from "date-fns"
 import { ar, enUS } from "date-fns/locale"
-import { Check, Trash2, X } from "lucide-react"
+import { Check, Trash2, Loader2 } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
+import { motion } from "framer-motion"
 import type { NotificationDTO } from "./types"
 import { NOTIFICATION_TYPE_CONFIG, PRIORITY_CONFIG } from "./config"
 import { markNotificationAsRead, deleteNotification } from "./actions"
@@ -33,7 +34,7 @@ export function NotificationCard({
   compact = false,
 }: NotificationCardProps) {
   const router = useRouter()
-  const [isLoading, setIsLoading] = useState(false)
+  const [isPending, startTransition] = useTransition()
   const [isDeleting, setIsDeleting] = useState(false)
 
   const config = NOTIFICATION_TYPE_CONFIG[notification.type]
@@ -44,28 +45,29 @@ export function NotificationCard({
     e.stopPropagation()
     if (notification.read) return
 
-    setIsLoading(true)
-    const result = await markNotificationAsRead({
-      notificationId: notification.id,
-    })
+    startTransition(async () => {
+      const result = await markNotificationAsRead({
+        notificationId: notification.id,
+      })
 
-    if (result.success) {
-      onRead?.(notification.id)
-      toast({
-        title: dictionary.success.markedAsRead,
-      })
-    } else {
-      toast({
-        title: dictionary.errors.markAsReadFailed,
-        description: result.error,
-      })
-    }
-    setIsLoading(false)
+      if (result.success) {
+        onRead?.(notification.id)
+        toast({
+          title: dictionary.success.markedAsRead,
+        })
+      } else {
+        toast({
+          title: dictionary.errors.markAsReadFailed,
+          description: result.error,
+        })
+      }
+    })
   }
 
   const handleDelete = async (e: React.MouseEvent) => {
     e.stopPropagation()
     setIsDeleting(true)
+
     const result = await deleteNotification({
       notificationId: notification.id,
     })
@@ -80,8 +82,8 @@ export function NotificationCard({
         title: dictionary.errors.deleteFailed,
         description: result.error,
       })
+      setIsDeleting(false)
     }
-    setIsDeleting(false)
   }
 
   const handleClick = () => {
@@ -105,127 +107,146 @@ export function NotificationCard({
   })
 
   return (
-    <Card
-      className={cn(
-        "relative cursor-pointer transition-colors hover:bg-accent/50",
-        !notification.read && "bg-accent/20 border-l-4 border-l-primary",
-        compact ? "p-3" : "p-4",
-        isDeleting && "opacity-50 pointer-events-none"
-      )}
-      onClick={handleClick}
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      transition={{ duration: 0.2 }}
     >
-      <div className="flex gap-3">
-        {/* Icon */}
-        <div
-          className={cn(
-            "flex-shrink-0 rounded-full p-2",
-            notification.priority === "urgent"
-              ? "bg-destructive/10"
-              : "bg-muted"
-          )}
-        >
-          <Icon
+      <Card
+        className={cn(
+          "relative cursor-pointer transition-all duration-200 hover:bg-accent/50 hover:shadow-sm",
+          !notification.read && "bg-accent/30 border-l-4 border-l-primary",
+          notification.priority === "urgent" && !notification.read && "border-l-destructive",
+          compact ? "p-3" : "p-4",
+          isDeleting && "opacity-50 pointer-events-none scale-95"
+        )}
+        onClick={handleClick}
+      >
+        <div className="flex gap-3">
+          {/* Icon */}
+          <div
             className={cn(
-              "h-5 w-5",
+              "flex-shrink-0 rounded-full p-2 transition-colors",
               notification.priority === "urgent"
-                ? "text-destructive"
-                : "text-muted-foreground"
-            )}
-          />
-        </div>
-
-        {/* Content */}
-        <div className="flex-1 min-w-0">
-          {/* Header */}
-          <div className="flex items-start justify-between gap-2 mb-1">
-            <div className="flex-1 min-w-0">
-              <h4
-                className={cn(
-                  "text-sm font-medium truncate",
-                  notification.read ? "text-muted-foreground" : "text-foreground"
-                )}
-              >
-                {notification.title}
-              </h4>
-            </div>
-
-            {/* Priority Badge */}
-            {notification.priority !== "normal" && !compact && (
-              <Badge variant={priorityConfig.badgeVariant}>
-                <small>{dictionary.priorities.badge[notification.priority]}</small>
-              </Badge>
-            )}
-          </div>
-
-          {/* Body */}
-          <p
-            className={cn(
-              "muted",
-              compact ? "line-clamp-1" : "line-clamp-2"
+                ? "bg-destructive/10"
+                : "bg-muted"
             )}
           >
-            {notification.body}
-          </p>
+            <Icon
+              className={cn(
+                "h-5 w-5",
+                notification.priority === "urgent"
+                  ? "text-destructive"
+                  : "text-muted-foreground"
+              )}
+            />
+          </div>
 
-          {/* Footer */}
-          <div className="flex items-center justify-between mt-2">
-            {/* Actor & Time */}
-            <div className="flex items-center gap-2">
-              <small className="text-muted-foreground">
-                {notification.actor && (
-                  <>
-                    <span className="truncate max-w-[120px]">
-                      {notification.actor.username || notification.actor.email}
-                    </span>
-                    <span className="mx-1">•</span>
-                  </>
-                )}
-                <time dateTime={notification.createdAt}>
-                  {timeAgo}
-                </time>
-              </small>
+          {/* Content */}
+          <div className="flex-1 min-w-0">
+            {/* Header */}
+            <div className="flex items-start justify-between gap-2 mb-1">
+              <div className="flex-1 min-w-0">
+                <p
+                  className={cn(
+                    "text-sm truncate",
+                    notification.read
+                      ? "font-medium text-muted-foreground"
+                      : "font-semibold text-foreground"
+                  )}
+                >
+                  {notification.title}
+                </p>
+              </div>
+
+              {/* Priority Badge */}
+              {notification.priority !== "normal" && !compact && (
+                <Badge variant={priorityConfig.badgeVariant} className="shrink-0">
+                  <span className="text-xs">{dictionary.priorities.badge[notification.priority]}</span>
+                </Badge>
+              )}
             </div>
 
-            {/* Actions */}
-            {!compact && (
-              <div className="flex items-center gap-1">
-                {!notification.read && (
+            {/* Body */}
+            <p
+              className={cn(
+                "text-sm text-muted-foreground",
+                compact ? "line-clamp-1" : "line-clamp-2"
+              )}
+            >
+              {notification.body}
+            </p>
+
+            {/* Footer */}
+            <div className="flex items-center justify-between mt-2">
+              {/* Actor & Time */}
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">
+                  {notification.actor && (
+                    <>
+                      <span className="truncate max-w-[120px] inline-block align-bottom">
+                        {notification.actor.username || notification.actor.email}
+                      </span>
+                      <span className="mx-1">•</span>
+                    </>
+                  )}
+                  <time dateTime={notification.createdAt}>
+                    {timeAgo}
+                  </time>
+                </span>
+              </div>
+
+              {/* Actions */}
+              {!compact && (
+                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  {!notification.read && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 px-2"
+                      onClick={handleMarkAsRead}
+                      disabled={isPending}
+                      aria-label={dictionary.accessibility.markAsReadButton}
+                    >
+                      {isPending ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <Check className="h-3.5 w-3.5" />
+                      )}
+                      <span className="sr-only">{dictionary.actions.markAsRead}</span>
+                    </Button>
+                  )}
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-7 px-2"
-                    onClick={handleMarkAsRead}
-                    disabled={isLoading}
-                    aria-label={dictionary.accessibility.markAsReadButton}
+                    className="h-7 px-2 text-destructive hover:text-destructive hover:bg-destructive/10"
+                    onClick={handleDelete}
+                    disabled={isDeleting}
+                    aria-label={dictionary.accessibility.deleteButton}
                   >
-                    <Check className="h-3.5 w-3.5" />
-                    <span className="sr-only">{dictionary.actions.markAsRead}</span>
+                    {isDeleting ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <Trash2 className="h-3.5 w-3.5" />
+                    )}
+                    <span className="sr-only">{dictionary.actions.delete}</span>
                   </Button>
-                )}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 px-2 text-destructive hover:text-destructive"
-                  onClick={handleDelete}
-                  disabled={isDeleting}
-                  aria-label={dictionary.accessibility.deleteButton}
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                  <span className="sr-only">{dictionary.actions.delete}</span>
-                </Button>
-              </div>
-            )}
+                </div>
+              )}
+            </div>
           </div>
-        </div>
 
-        {/* Unread Indicator */}
-        {!notification.read && compact && (
-          <div className="flex-shrink-0">
-            <div className="w-2 h-2 rounded-full bg-primary" />
-          </div>
-        )}
-      </div>
-    </Card>
+          {/* Unread Indicator */}
+          {!notification.read && compact && (
+            <div className="flex-shrink-0 self-center">
+              <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+            </div>
+          )}
+        </div>
+      </Card>
+    </motion.div>
   )
 }
 

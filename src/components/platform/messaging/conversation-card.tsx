@@ -92,7 +92,7 @@ export function ConversationCard({
     <div
       onClick={() => onClick?.(conversation.id)}
       className={cn(
-        "relative flex items-center gap-3 px-4 py-3",
+        "group relative flex items-center gap-3 px-4 py-3",
         "cursor-pointer transition-all duration-200",
         "border-b border-border",
         // iMessage-style hover and active states

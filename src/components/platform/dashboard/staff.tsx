@@ -1,20 +1,18 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
-import { Calendar, Clock, CircleCheckBig, TriangleAlert, Users, Bell, ClipboardList, Building, Wrench, Package, ChevronRight, ListTodo, UserCheck, FileCheck,  } from "lucide-react"
+import { Calendar, Clock, CircleCheckBig, TriangleAlert, Users, ClipboardList, Building, Wrench, Package, ChevronRight, ListTodo, UserCheck, FileCheck } from "lucide-react"
 import { format } from "date-fns"
-import { QuickActions } from "../quick-actions"
-import { getQuickActionsByRole } from "../quick-actions-config"
+import { QuickActionsGrid, getQuickActionsByRole } from "./quick-action"
 import { getTenantContext } from "@/lib/tenant-context"
 import { db } from "@/lib/db"
-import {
-  WelcomeBanner,
-  MetricCard,
-  ActivityRings,
-  ProgressCard,
-  EmptyState,
-} from "../widgets"
-import { WeeklyActivityChart, PerformanceGauge } from "../widgets/dashboard-charts"
+import { WelcomeBanner } from "./welcome-banner"
+import { MetricCard } from "./metric-card"
+import { ActivityRings } from "./activity-rings"
+import { ProgressCard } from "./progress-card"
+import { EmptyState } from "./empty-state"
+import { WeeklyActivityChart } from "./weekly-chart"
+import { PerformanceGauge } from "./performance-gauge"
 import Link from "next/link"
 
 interface StaffDashboardProps {
@@ -51,7 +49,7 @@ export async function StaffDashboard({
   }
 
   // Fetch real data from database
-  let announcements: any[] = []
+  let announcements: { id: string; titleEn: string | null; createdAt: Date }[] = []
   try {
     announcements = await db.announcement.findMany({
       where: {
@@ -61,6 +59,11 @@ export async function StaffDashboard({
       take: 5,
       orderBy: {
         createdAt: "desc",
+      },
+      select: {
+        id: true,
+        titleEn: true,
+        createdAt: true,
       },
     })
   } catch (error) {
@@ -191,7 +194,7 @@ export async function StaffDashboard({
       </div>
 
       {/* Quick Actions */}
-      <QuickActions
+      <QuickActionsGrid
         actions={getQuickActionsByRole("STAFF", dictionary, school?.domain)}
         locale={locale}
       />
