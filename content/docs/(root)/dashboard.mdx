@@ -58,35 +58,36 @@ const students = await db.student.count({ where: { schoolId } });
 
 ## Common UI Components
 
-Every dashboard uses these shared widgets from `widgets/index.tsx`:
+Every dashboard uses shared widgets as flat files:
 
-| Widget | Purpose | Used By |
-|--------|---------|---------|
-| `WelcomeBanner` | Personalized greeting with time | All roles |
-| `MetricCard` | Key stat with icon and trend | All roles |
-| `ActivityRings` | Apple-style progress indicators | All roles |
-| `ScheduleItem` | Timetable entries | Teacher, Student |
-| `ProgressCard` | Goal tracking with progress bar | All roles |
-| `AnnouncementCard` | School announcements | Student, Parent |
-| `QuickActionsGrid` | Shortcut buttons | All roles |
-| `EmptyState` | No data placeholder | All roles |
+| Widget | File | Purpose | Used By |
+|--------|------|---------|---------|
+| `WelcomeBanner` | `welcome-banner.tsx` | Personalized greeting with time | All roles |
+| `MetricCard` | `metric-card.tsx` | Key stat with icon and trend | All roles |
+| `ActivityRings` | `activity-rings.tsx` | Apple-style progress indicators | All roles |
+| `ScheduleItem` | `schedule-item.tsx` | Timetable entries | Teacher, Student |
+| `ProgressCard` | `progress-card.tsx` | Goal tracking with progress bar | All roles |
+| `AnnouncementCard` | `announcement-card.tsx` | School announcements | Student, Parent |
+| `QuickActionsGrid` | `quick-action.tsx` | Shortcut buttons with variants | All roles |
+| `EmptyState` | `empty-state.tsx` | No data placeholder | All roles |
+| `ChartCard` | `chart-card.tsx` | Chart container wrapper | All roles |
 
 ## Chart Components
 
-From `widgets/dashboard-charts.tsx`:
+Chart components are flat files with descriptive names:
 
-| Chart | Purpose | Used By |
-|-------|---------|---------|
-| `AttendanceTrendChart` | Attendance over time | Principal, Admin |
-| `GradeDistributionChart` | Grade breakdown | Principal, Teacher |
-| `RevenueChart` | Revenue vs expenses | Accountant |
-| `PerformanceGauge` | Single metric radial | Student, Accountant, Staff |
-| `WeeklyActivityChart` | Weekly bar chart | Teacher, Accountant, Staff |
-| `ComparisonLineChart` | Period comparison | Student, Parent |
+| Chart | File | Purpose | Used By |
+|-------|------|---------|---------|
+| `AttendanceTrendChart` | `attendance-chart.tsx` | Attendance over time | Principal, Admin |
+| `GradeDistributionChart` | `grade-chart.tsx` | Grade breakdown | Principal, Teacher |
+| `RevenueChart` | `revenue-chart.tsx` | Revenue vs expenses | Accountant |
+| `PerformanceGauge` | `performance-gauge.tsx` | Single metric radial | Student, Accountant, Staff |
+| `WeeklyActivityChart` | `weekly-chart.tsx` | Weekly bar chart | Teacher, Accountant, Staff |
+| `ComparisonLineChart` | `comparison-chart.tsx` | Period comparison | Student, Parent |
 
 ## Quick Actions by Role
 
-Each role has 6 predefined quick actions in `quick-actions-config.ts`:
+Each role has 6 predefined quick actions in `quick-action.tsx` with 4 variants (grid, list, compact, icon-only):
 
 | Role | Quick Actions |
 |------|---------------|
@@ -100,7 +101,7 @@ Each role has 6 predefined quick actions in `quick-actions-config.ts`:
 
 ## Server Actions
 
-Dashboard data is fetched via server actions in `dashboards/actions.ts`:
+Dashboard data is fetched via consolidated server actions in `actions.ts` (~2300 lines):
 
 | Action | Returns | Used By |
 |--------|---------|---------|
@@ -112,34 +113,71 @@ Dashboard data is fetched via server actions in `dashboards/actions.ts`:
 | `getAnnouncementsMetrics()` | Announcement counts | All roles |
 | `getClassesMetrics()` | Class counts, ratios | Admin, Principal |
 | `getRecentActivities()` | Activity feed | Admin |
-
-Role-specific actions exist in separate files:
-- `actions/principal.ts` - Principal dashboard data
-- `actions.ts` - Teacher, Student, Parent actions
+| `getTeacherDashboardData()` | Teacher-specific data | Teacher |
+| `getStudentDashboardData()` | Student-specific data | Student |
+| `getParentDashboardData()` | Parent-specific data | Parent |
+| `getPrincipalDashboardData()` | Principal-specific data | Principal |
 
 ## Directory Structure
 
+The dashboard follows a **flat file structure** (~80 files):
+
 ```
 src/components/platform/dashboard/
-├── content.tsx              # Role routing
-├── quick-actions.tsx        # Quick actions component
-├── quick-actions-config.ts  # Actions per role
+│ # Standardized Files
+├── content.tsx              # Role routing (main entry)
+├── content-client.tsx       # Client wrapper
+├── actions.ts               # Consolidated server actions (~2300 lines)
+├── config.ts                # Role mappings, icons, colors
+├── types.ts                 # TypeScript interfaces
+│
+│ # Role-Based Dashboards (flat)
+├── admin.tsx                # Admin dashboard (server)
+├── admin-client.tsx         # Admin dashboard (client)
+├── student.tsx              # Student dashboard
+├── teacher.tsx              # Teacher dashboard
+├── parent.tsx               # Parent dashboard
+├── principal.tsx            # Principal dashboard
+├── accountant.tsx           # Accountant dashboard
+├── staff.tsx                # Staff dashboard
+│
+│ # Shared Widgets (flat)
+├── welcome-banner.tsx       # Personalized greeting
+├── metric-card.tsx          # Key stat with icon/trend
+├── activity-rings.tsx       # Apple-style progress rings
+├── schedule-item.tsx        # Timetable entries
+├── announcement-card.tsx    # Announcement display
+├── progress-card.tsx        # Goal tracking
+├── quick-action.tsx         # Quick actions with 4 variants
+├── chart-card.tsx           # Chart container
+├── empty-state.tsx          # No data placeholder
+│
+│ # Chart Components (flat)
+├── attendance-chart.tsx     # Attendance trends
+├── grade-chart.tsx          # Grade distribution
+├── revenue-chart.tsx        # Revenue vs expenses
+├── performance-gauge.tsx    # Single metric radial
+├── weekly-chart.tsx         # Weekly bar chart
+├── comparison-chart.tsx     # Period comparison
+│
+│ # Showcase Components (flat, prefixed)
+├── card-*.tsx               # 14 card showcase files
+├── chart-*.tsx              # 10 chart showcase files
+├── stat-*.tsx               # 17 stat showcase files
+├── card-showcase.tsx        # Cards showcase entry
+├── chart-showcase.tsx       # Charts showcase entry
+├── stat-showcase.tsx        # Stats showcase entry
+│
+│ # Infrastructure
+├── header.tsx               # Dashboard header
+├── loading.tsx              # Loading state
 ├── error-boundary.tsx       # Error handling
-├── dashboards/
-│   ├── actions.ts           # Shared server actions
-│   ├── admin-dashboard.tsx  # Server wrapper
-│   ├── admin-dashboard-client.tsx
-│   ├── principal-dashboard.tsx
-│   ├── teacher-dashboard.tsx
-│   ├── student-dashboard.tsx
-│   ├── parent-dashboard.tsx
-│   ├── accountant-dashboard.tsx
-│   └── staff-dashboard.tsx
-├── widgets/
-│   ├── index.tsx            # Widget components
-│   └── dashboard-charts.tsx # Chart components
-└── actions/
-    └── principal.ts         # Principal-specific actions
+├── search-command.tsx       # Search command palette
+│
+│ # Exception: Settings subdirectory
+└── settings/
+    ├── content.tsx
+    └── user-name-form.tsx
 ```
 
 ## Error Handling

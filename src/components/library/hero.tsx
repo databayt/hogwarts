@@ -1,85 +1,55 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { buttonVariants } from "@/components/ui/button";
-import { useLocale } from "@/components/internationalization/use-locale";
-import { useDictionary } from "@/components/internationalization/use-dictionary";
+import { EducationAnimation } from "@/components/stream/home/education-animation";
 
 interface LibraryHeroProps {
   lang?: string;
+  dictionary?: Record<string, unknown>;
 }
 
-export function LibraryHero({ lang = "en" }: LibraryHeroProps) {
-  const { isRTL, locale } = useLocale();
-  const { dictionary } = useDictionary();
-  const currentLang = lang || locale;
-
-  const libraryDict = dictionary?.library;
+export function LibraryHero({ lang = "en", dictionary }: LibraryHeroProps) {
+  const isRTL = lang === "ar";
 
   return (
     <section className="relative">
-      <div
-        className={`flex flex-col lg:flex-row items-center gap-8 lg:gap-16 ${
-          isRTL ? "lg:flex-row-reverse" : ""
-        }`}
-      >
+      <div className={`flex flex-col lg:flex-row items-center gap-8 lg:gap-16 ${isRTL ? "lg:flex-row-reverse" : ""}`}>
         {/* Text Content */}
-        <div
-          className={`flex-1 flex flex-col space-y-6 ${
-            isRTL ? "items-end text-right" : "items-start text-left"
-          } lg:items-start lg:text-left`}
-        >
+        <div className={`flex-1 flex flex-col space-y-6 ${isRTL ? "items-end text-right" : "items-start text-left"} lg:items-start lg:text-left`}>
           <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tighter leading-none">
-            {libraryDict?.title || "Library"}
+            {(dictionary as any)?.home?.title || "Lumos"}
             <br />
-            <span className="text-3xl md:text-4xl lg:text-5xl font-semibold block mt-2 text-muted-foreground">
-              {libraryDict?.subtitle || "Discover worlds within pages"}
+            <span className="text-3xl md:text-4xl lg:text-5xl font-semibold block mt-2">
+              {(dictionary as any)?.home?.description || "Shinning a light."}
             </span>
           </h1>
 
-          <p className="text-lg text-muted-foreground max-w-xl">
-            {libraryDict?.description ||
-              "Your gateway to knowledge and adventure—from ancient scrolls to modern masterpieces, every book holds a spell waiting to be cast."}
-          </p>
-
-          <div
-            className={`flex flex-col sm:flex-row gap-4 ${
-              isRTL ? "sm:flex-row-reverse" : ""
-            }`}
-          >
+          <div className={`flex flex-col sm:flex-row gap-4 ${isRTL ? "sm:flex-row-reverse" : ""}`}>
             <Link
               className={buttonVariants({
                 size: "lg",
               })}
-              href={`/${currentLang}/library/books`}
+              href={`/${lang}/stream/courses`}
             >
-              {libraryDict?.navigation?.browse || "Browse Books"}
+              {(dictionary as any)?.home?.exploreCourses || "Explore Courses"}
             </Link>
 
             <Link
               className={buttonVariants({
                 size: "lg",
-                variant: "outline",
+                variant: "ghost",
               })}
-              href={`/${currentLang}/library/my-profile`}
+              href={`/${lang}/login`}
             >
-              {libraryDict?.navigation?.myBooks || "My Books"}
+              {(dictionary as any)?.home?.signIn || "Sign in"}
             </Link>
           </div>
         </div>
 
-        {/* Illustration */}
+        {/* Animation */}
         <div className="flex-1 flex justify-center">
-          <div className="relative w-full max-w-lg aspect-square">
-            <Image
-              src="/site/harry-potter.png"
-              alt="Library illustration"
-              fill
-              className="object-contain"
-              priority
-            />
-          </div>
+          <EducationAnimation className="w-full max-w-lg h-72 md:h-96" />
         </div>
       </div>
     </section>
