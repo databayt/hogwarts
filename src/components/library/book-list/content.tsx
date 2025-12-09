@@ -34,7 +34,7 @@ export default function BookList({ title, books, containerClassName, showViewAll
         )}
       </div>
 
-      <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar snap-x snap-mandatory -mx-4 px-4">
+      <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar snap-x snap-mandatory">
         {books.map((book) => (
           <Link
             key={book.id}
