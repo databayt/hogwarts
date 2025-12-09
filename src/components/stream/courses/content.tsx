@@ -5,8 +5,7 @@ import { BookOpen } from "lucide-react";
 import { PublicCourseType } from "@/components/stream/data/course/get-all-courses";
 import { CourseCard, CourseCardSkeleton } from "./course-card";
 import { cn } from "@/lib/utils";
-import { Explore } from "@/components/stream/explore";
-import { Search } from "@/components/stream/search";
+import { SearchBar } from "@/components/stream/search-bar";
 
 interface Props {
   dictionary: any;
@@ -74,13 +73,9 @@ export function StreamCoursesContent({
         </div>
       </section>
 
-      {/* Explore & Search Row */}
-      <section className={cn(
-        "flex flex-col sm:flex-row items-center gap-4",
-        isRTL && "sm:flex-row-reverse"
-      )}>
-        <Explore lang={lang} dictionary={dictionary} />
-        <Search lang={lang} dictionary={dictionary} variant="expanded" className="flex-1" />
+      {/* Search Bar with Explore */}
+      <section>
+        <SearchBar lang={lang} dictionary={dictionary} />
       </section>
 
       {filteredCourses.length === 0 ? (
@@ -131,10 +126,9 @@ export function StreamCoursesLoadingSkeleton() {
         </div>
       </section>
 
-      {/* Explore & Search Row Skeleton */}
-      <section className="flex flex-col sm:flex-row items-center gap-4">
-        <div className="h-10 w-24 bg-muted rounded-lg animate-pulse" />
-        <div className="flex-1 h-11 w-full max-w-2xl bg-muted rounded-full animate-pulse" />
+      {/* Search Bar Skeleton */}
+      <section>
+        <div className="h-11 w-full bg-muted rounded-full animate-pulse" />
       </section>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
