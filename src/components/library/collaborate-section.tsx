@@ -8,7 +8,7 @@ interface CollaborateSectionProps {
 
 export function CollaborateSection({ lang = "en" }: CollaborateSectionProps) {
   return (
-    <section className="bg-[#F5F5F0] rounded-2xl overflow-hidden">
+    <section className="bg-[#F5F5F0] rounded-2xl overflow-hidden w-full max-w-full">
       <div className="flex flex-col lg:flex-row">
         {/* Image - Left side */}
         <div className="lg:w-1/2 relative aspect-[4/3] lg:aspect-auto">
