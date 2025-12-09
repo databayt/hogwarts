@@ -49,12 +49,12 @@ export function StreamCoursesContent({
           {/* Hero Image */}
           <div
             className="relative flex items-center justify-center rounded-xl p-6 min-w-[160px] min-h-[160px] md:min-w-[180px] md:min-h-[180px]"
-            style={{ backgroundColor: "#7C3AED" }}
+            style={{ backgroundColor: "#D97757" }}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/anthropic/6903d22d0099a66d72e05699_33ddc751e21fb4b116b3f57dd553f0bc55ea09d1-1000x1000.svg"
-              alt="Magical courses"
+              alt="Courses"
               width={140}
               height={140}
             />
@@ -66,11 +66,11 @@ export function StreamCoursesContent({
             isRTL ? "text-right" : "text-left"
           )}>
             <h1 className="text-4xl md:text-5xl font-bold leading-tight">
-              {dictionary?.courses?.heroTitle || "The Restricted Section"}
+              {dictionary?.courses?.heroTitle || "The Library"}
             </h1>
             <p className="text-lg text-muted-foreground max-w-lg">
               {dictionary?.courses?.heroDescription ||
-                "Unlock ancient knowledge and master the magical arts — every spell begins with a single lesson"}
+                "Explore our collection of courses and begin your learning journey"}
             </p>
           </div>
         </div>
@@ -107,22 +107,22 @@ export function StreamCoursesLoadingSkeleton() {
         <div className="flex flex-col md:flex-row items-center gap-8">
           <div
             className="relative flex items-center justify-center rounded-xl p-6 min-w-[160px] min-h-[160px] md:min-w-[180px] md:min-h-[180px]"
-            style={{ backgroundColor: "#7C3AED" }}
+            style={{ backgroundColor: "#D97757" }}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/anthropic/6903d22d0099a66d72e05699_33ddc751e21fb4b116b3f57dd553f0bc55ea09d1-1000x1000.svg"
-              alt="Magical courses"
+              alt="Courses"
               width={140}
               height={140}
             />
           </div>
           <div className="space-y-3">
             <h1 className="text-4xl md:text-5xl font-bold leading-tight">
-              The Restricted Section
+              The Library
             </h1>
             <p className="text-lg text-muted-foreground max-w-lg">
-              Unlock ancient knowledge and master the magical arts — every spell begins with a single lesson
+              Explore our collection of courses and begin your learning journey
             </p>
           </div>
         </div>
