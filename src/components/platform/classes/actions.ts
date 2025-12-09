@@ -264,6 +264,166 @@ export async function getClass(
   }
 }
 
+// Full class detail with related data
+export type ClassDetailResult = {
+  id: string;
+  name: string;
+  nameAr: string | null;
+  courseCode: string | null;
+  credits: number | null;
+  evaluationType: string;
+  minCapacity: number | null;
+  maxCapacity: number | null;
+  duration: number | null;
+  createdAt: Date;
+  subject: {
+    id: string;
+    subjectName: string;
+    subjectNameAr: string | null;
+  } | null;
+  teacher: {
+    id: string;
+    givenName: string;
+    surname: string;
+    userId: string | null;
+  } | null;
+  term: {
+    id: string;
+    termName: string;
+    termNumber: number;
+  } | null;
+  classroom: {
+    id: string;
+    roomName: string;
+    capacity: number | null;
+  } | null;
+  enrolledStudents: Array<{
+    id: string;
+    student: {
+      id: string;
+      givenName: string;
+      surname: string;
+      userId: string | null;
+    };
+    enrolledAt: Date;
+  }>;
+  _count: {
+    studentClasses: number;
+  };
+};
+
+export async function getClassById(
+  input: { id: string }
+): Promise<ActionResponse<ClassDetailResult | null>> {
+  try {
+    const { schoolId } = await getTenantContext();
+    if (!schoolId) {
+      return { success: false, error: "Missing school context" };
+    }
+
+    const { id } = z.object({ id: z.string().min(1) }).parse(input);
+
+    const classItem = await (db as any).class.findFirst({
+      where: { id, schoolId },
+      include: {
+        subject: {
+          select: {
+            id: true,
+            subjectName: true,
+            subjectNameAr: true,
+          },
+        },
+        teacher: {
+          select: {
+            id: true,
+            givenName: true,
+            surname: true,
+            userId: true,
+          },
+        },
+        term: {
+          select: {
+            id: true,
+            termName: true,
+            termNumber: true,
+          },
+        },
+        classroom: {
+          select: {
+            id: true,
+            roomName: true,
+            capacity: true,
+          },
+        },
+        studentClasses: {
+          include: {
+            student: {
+              select: {
+                id: true,
+                givenName: true,
+                surname: true,
+                userId: true,
+              },
+            },
+          },
+          orderBy: {
+            createdAt: "desc",
+          },
+        },
+        _count: {
+          select: {
+            studentClasses: true,
+          },
+        },
+      },
+    });
+
+    if (!classItem) {
+      return { success: true, data: null };
+    }
+
+    // Map the result
+    const result: ClassDetailResult = {
+      id: classItem.id,
+      name: classItem.name,
+      nameAr: classItem.nameAr,
+      courseCode: classItem.courseCode,
+      credits: classItem.credits ? Number(classItem.credits) : null,
+      evaluationType: classItem.evaluationType,
+      minCapacity: classItem.minCapacity,
+      maxCapacity: classItem.maxCapacity,
+      duration: classItem.duration,
+      createdAt: classItem.createdAt,
+      subject: classItem.subject,
+      teacher: classItem.teacher,
+      term: classItem.term,
+      classroom: classItem.classroom,
+      enrolledStudents: classItem.studentClasses.map((sc: any) => ({
+        id: sc.id,
+        student: sc.student,
+        enrolledAt: sc.createdAt,
+      })),
+      _count: classItem._count,
+    };
+
+    return { success: true, data: result };
+  } catch (error) {
+    console.error("[getClassById] Error:", error);
+
+    if (error instanceof z.ZodError) {
+      return {
+        success: false,
+        error: `Validation error: ${error.issues.map(e => e.message).join(", ")}`
+      };
+    }
+
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to fetch class"
+    };
+  }
+}
+
 export async function getClasses(
   input: Partial<z.infer<typeof getClassesSchema>>
 ): Promise<ActionResponse<{ rows: ClassListResult[]; total: number }>> {

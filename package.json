@@ -114,6 +114,7 @@
     "fumadocs-ui": "16.0.5",
     "geist": "^1.4.2",
     "html2canvas": "^1.4.1",
+    "imagekit": "^6.0.0",
     "jotai": "^2.15.2",
     "jsbarcode": "^3.12.1",
     "jspdf": "^3.0.3",

@@ -25,7 +25,7 @@ export default async function SiteLayout({
   const school = result.data;
 
   return (
-    <div data-slot="site-layout" className="px-14">
+    <div data-slot="site-layout" className="marketing-container">
       <SiteHeader school={school} locale={lang} />
       <main
         data-slot="main-content"

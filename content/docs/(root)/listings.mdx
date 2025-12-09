@@ -1175,4 +1175,419 @@ import {
 
 ---
 
-The Listings pattern ensures consistency across all data-driven features in the platform. By following this pattern, you get auto-refresh, optimistic updates, view toggles, and export functionality—all out of the box.
+## From CRUD to Connected System
+
+Basic CRUD listings are useful, but **production-ready listings connect to each other**. The difference:
+
+```
+ISOLATED (Level 1)              CONNECTED (Level 3+)
+┌─────────┐ ┌─────────┐        ┌─────────────────────────────┐
+│Students │ │ Grades  │        │   STUDENTS                  │
+│  CRUD   │ │  CRUD   │   →    │ ┌─────────────────────────┐ │
+└─────────┘ └─────────┘        │ │ Ahmed (10A)             │ │
+    ↓           ↓              │ │ 3 classes | 92% attend  │ │
+ (nothing connects them)       │ │ [→ Grades] [→ Classes]  │ │
+                               │ └─────────────────────────┘ │
+                               └─────────────────────────────┘
+```
+
+### 5 Levels of Listing Maturity
+
+| Level | Feature | Status |
+|-------|---------|--------|
+| **1** | Basic CRUD (create, read, update, delete) | ✅ Complete |
+| **2** | Relationship context (counts, quick links) | 🔄 In Progress |
+| **3** | Rich detail pages with related data tabs | 🔄 In Progress |
+| **4** | Cross-listing actions (bulk operations) | 🔄 In Progress |
+| **5** | Automated workflows (triggers, notifications) | ⏳ Planned |
+
+---
+
+## Relationship Data in Rows
+
+Show computed relationship data directly in listing rows:
+
+```typescript
+// content.tsx - Query with relationship counts
+const students = await db.student.findMany({
+  where: { schoolId },
+  include: {
+    _count: {
+      select: {
+        studentClasses: true,  // How many classes enrolled
+        attendances: true,     // For attendance calculation
+        results: true,         // How many grades
+      }
+    }
+  }
+});
+
+// Map to row type with computed fields
+const rows = students.map(s => ({
+  ...s,
+  classCount: s._count.studentClasses,
+  gradeCount: s._count.results,
+  // Calculate attendance % if needed
+}));
+```
+
+```typescript
+// columns.tsx - Display relationship counts
+{
+  accessorKey: "classCount",
+  header: "Classes",
+  cell: ({ getValue }) => (
+    <Badge variant="outline">{getValue<number>()} classes</Badge>
+  ),
+},
+{
+  accessorKey: "gradeCount",
+  header: "Grades",
+  cell: ({ getValue }) => (
+    <Badge variant="outline">{getValue<number>()} grades</Badge>
+  ),
+},
+```
+
+**Apply to:**
+- **Students**: class count, attendance %, grade count
+- **Classes**: enrolled students (real count, not hardcoded!)
+- **Teachers**: classes taught, student count
+
+---
+
+## Quick Actions Pattern
+
+Add navigation links in action dropdowns to jump to related data:
+
+```typescript
+// columns.tsx - In actions cell
+<DropdownMenu>
+  <DropdownMenuTrigger asChild>
+    <Button variant="ghost" size="icon">
+      <MoreHorizontal className="h-4 w-4" />
+    </Button>
+  </DropdownMenuTrigger>
+  <DropdownMenuContent align="end">
+    <DropdownMenuItem onClick={() => openModal(`view:${row.id}`)}>
+      <Eye className="mr-2 h-4 w-4" />
+      {locale === 'ar' ? 'عرض' : 'View'}
+    </DropdownMenuItem>
+    <DropdownMenuItem onClick={() => openModal(row.id)}>
+      <Pencil className="mr-2 h-4 w-4" />
+      {locale === 'ar' ? 'تعديل' : 'Edit'}
+    </DropdownMenuItem>
+
+    <DropdownMenuSeparator />
+
+    {/* Quick navigation to related data */}
+    <DropdownMenuItem asChild>
+      <Link href={`/${locale}/grades?studentId=${row.id}`}>
+        <GraduationCap className="mr-2 h-4 w-4" />
+        {locale === 'ar' ? 'عرض الدرجات' : 'View Grades'}
+      </Link>
+    </DropdownMenuItem>
+    <DropdownMenuItem asChild>
+      <Link href={`/${locale}/attendance?studentId=${row.id}`}>
+        <CalendarCheck className="mr-2 h-4 w-4" />
+        {locale === 'ar' ? 'عرض الحضور' : 'View Attendance'}
+      </Link>
+    </DropdownMenuItem>
+    <DropdownMenuItem asChild>
+      <Link href={`/${locale}/classes?studentId=${row.id}`}>
+        <School className="mr-2 h-4 w-4" />
+        {locale === 'ar' ? 'عرض الفصول' : 'View Classes'}
+      </Link>
+    </DropdownMenuItem>
+
+    <DropdownMenuSeparator />
+
+    <DropdownMenuItem onClick={onDelete} className="text-destructive">
+      <Trash2 className="mr-2 h-4 w-4" />
+      {locale === 'ar' ? 'حذف' : 'Delete'}
+    </DropdownMenuItem>
+  </DropdownMenuContent>
+</DropdownMenu>
+```
+
+**Standard quick links by entity:**
+- **Student** → View Grades, View Attendance, View Classes
+- **Class** → View Students, View Assignments, View Exams
+- **Teacher** → View Classes, View Schedule
+- **Grade** → View Student, View Class
+- **Assignment** → View Submissions
+
+---
+
+## Detail Pages with Related Data
+
+Rich detail pages show the entity plus all related data in tabs:
+
+```typescript
+// [id]/page.tsx - Detail page with tabs
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+export default async function StudentDetailPage({ params }) {
+  const student = await getStudentWithRelations(params.id);
+
+  return (
+    <div className="space-y-6">
+      {/* Header with basic info */}
+      <StudentHeader student={student} />
+
+      {/* Tabs for related data */}
+      <Tabs defaultValue="overview">
+        <TabsList>
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="classes">
+            Classes ({student.classes.length})
+          </TabsTrigger>
+          <TabsTrigger value="grades">
+            Grades ({student.grades.length})
+          </TabsTrigger>
+          <TabsTrigger value="attendance">
+            Attendance ({student.attendanceRate}%)
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview">
+          <StudentOverview student={student} />
+        </TabsContent>
+        <TabsContent value="classes">
+          <StudentClasses classes={student.classes} />
+        </TabsContent>
+        <TabsContent value="grades">
+          <StudentGrades grades={student.grades} />
+        </TabsContent>
+        <TabsContent value="attendance">
+          <StudentAttendance records={student.attendances} />
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
+```
+
+**Required detail pages:**
+- **Student** → Overview, Classes, Grades, Attendance
+- **Class** → Overview, Students, Assignments, Schedule
+- **Teacher** → Overview, Classes, Schedule
+
+---
+
+## Bulk Operations Pattern
+
+Enable multi-select and batch actions across listings:
+
+### 1. Add Selection Column
+
+```typescript
+// columns.tsx - Add selection column as first column
+import { Checkbox } from "@/components/ui/checkbox";
+
+export const getColumns = (/* ... */): ColumnDef<RowType>[] => [
+  {
+    id: "select",
+    header: ({ table }) => (
+      <Checkbox
+        checked={table.getIsAllPageRowsSelected()}
+        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+        aria-label="Select all"
+      />
+    ),
+    cell: ({ row }) => (
+      <Checkbox
+        checked={row.getIsSelected()}
+        onCheckedChange={(value) => row.toggleSelected(!!value)}
+        aria-label="Select row"
+      />
+    ),
+    enableSorting: false,
+    enableHiding: false,
+  },
+  // ... other columns
+];
+```
+
+### 2. Bulk Actions Toolbar
+
+```typescript
+// table.tsx - Show bulk actions when rows selected
+const selectedRows = table.getFilteredSelectedRowModel().rows;
+
+return (
+  <>
+    {selectedRows.length > 0 && (
+      <BulkActionsToolbar
+        selectedCount={selectedRows.length}
+        onClearSelection={() => table.resetRowSelection()}
+        actions={[
+          {
+            label: locale === 'ar' ? 'حذف المحدد' : 'Delete Selected',
+            icon: <Trash2 className="h-4 w-4" />,
+            variant: 'destructive',
+            onClick: () => handleBulkDelete(selectedRows.map(r => r.original)),
+          },
+          {
+            label: locale === 'ar' ? 'تغيير الحالة' : 'Change Status',
+            icon: <RefreshCw className="h-4 w-4" />,
+            onClick: () => handleBulkStatusChange(selectedRows.map(r => r.original)),
+          },
+          // Custom actions per listing
+          {
+            label: locale === 'ar' ? 'إضافة لفصل' : 'Enroll in Class',
+            icon: <UserPlus className="h-4 w-4" />,
+            onClick: () => handleBulkEnroll(selectedRows.map(r => r.original)),
+          },
+        ]}
+      />
+    )}
+
+    <DataTable table={table} /* ... */ />
+  </>
+);
+```
+
+### 3. Bulk Server Actions
+
+```typescript
+// actions.ts - Bulk operations
+export async function bulkDeleteStudents(input: { ids: string[] }) {
+  const { schoolId } = await getTenantContext();
+  if (!schoolId) throw new Error("Missing school context");
+
+  await db.student.deleteMany({
+    where: {
+      id: { in: input.ids },
+      schoolId, // Always scope by tenant!
+    },
+  });
+
+  revalidatePath("/students");
+  return { success: true, count: input.ids.length };
+}
+
+export async function bulkEnrollInClass(input: {
+  studentIds: string[];
+  classId: string;
+}) {
+  const { schoolId } = await getTenantContext();
+  if (!schoolId) throw new Error("Missing school context");
+
+  // Create StudentClass records for each student
+  await db.studentClass.createMany({
+    data: input.studentIds.map(studentId => ({
+      studentId,
+      classId: input.classId,
+      schoolId,
+    })),
+    skipDuplicates: true, // Don't fail if already enrolled
+  });
+
+  revalidatePath("/students");
+  revalidatePath("/classes");
+  return { success: true, count: input.studentIds.length };
+}
+```
+
+---
+
+## Dashboard Drill-Down
+
+Make dashboard stats clickable to navigate to filtered listings:
+
+```typescript
+// stats-card.tsx - Clickable stat card
+import Link from "next/link";
+
+interface StatCardProps {
+  title: string;
+  value: number;
+  href?: string;  // Optional link to listing
+  locale: string;
+}
+
+export function StatCard({ title, value, href, locale }: StatCardProps) {
+  const content = (
+    <Card className={href ? "cursor-pointer hover:bg-accent/50 transition-colors" : ""}>
+      <CardHeader>
+        <CardTitle className="text-2xl">{value}</CardTitle>
+        <CardDescription>{title}</CardDescription>
+      </CardHeader>
+    </Card>
+  );
+
+  if (href) {
+    return <Link href={`/${locale}${href}`}>{content}</Link>;
+  }
+
+  return content;
+}
+
+// Usage in dashboard
+<StatCard
+  title="Students"
+  value={500}
+  href="/students"
+  locale={locale}
+/>
+<StatCard
+  title="Active Classes"
+  value={32}
+  href="/classes?status=active"
+  locale={locale}
+/>
+```
+
+---
+
+## Common Relationship Patterns
+
+### Student ↔ Class (Many-to-Many via StudentClass)
+
+```typescript
+// Get student's classes
+const studentClasses = await db.studentClass.findMany({
+  where: { studentId, schoolId },
+  include: {
+    class: {
+      include: { subject: true, teacher: true }
+    }
+  }
+});
+
+// Get class's students
+const classStudents = await db.studentClass.findMany({
+  where: { classId, schoolId },
+  include: { student: true }
+});
+```
+
+### Student ↔ Grades (via Result)
+
+```typescript
+// Get student's grades
+const grades = await db.result.findMany({
+  where: { studentId, schoolId },
+  include: {
+    class: true,
+    assignment: true,
+    exam: true,
+  },
+  orderBy: { createdAt: 'desc' }
+});
+```
+
+### Class ↔ Teacher (Direct FK)
+
+```typescript
+// Get teacher's classes
+const classes = await db.class.findMany({
+  where: { teacherId, schoolId },
+  include: { subject: true }
+});
+```
+
+---
+
+The Listings pattern ensures consistency across all data-driven features in the platform. By following this pattern, you get auto-refresh, optimistic updates, view toggles, and export functionality—all out of the box. **Connected listings** take it further by linking related data, enabling bulk operations, and providing rich detail pages.

@@ -63,6 +63,11 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'www-cdn.anthropic.com',
       },
+      {
+        protocol: 'https',
+        hostname: 'ik.imagekit.io',
+        pathname: '/abdout/**',
+      },
     ],
   },
 

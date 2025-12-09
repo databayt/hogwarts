@@ -78,7 +78,7 @@ export interface QuickActionItem {
   label: string
   icon?: ElementType
   iconName?: string
-  href: string
+  href?: string
   color?: string
   description?: string
 }

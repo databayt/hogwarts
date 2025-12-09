@@ -3,7 +3,8 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { DataTableColumnHeader } from "@/components/table/data-table-column-header";
 import { Button } from "@/components/ui/button";
-import { Ellipsis } from "lucide-react";
+import { Ellipsis, Users, GraduationCap, CalendarCheck } from "lucide-react";
+import Link from "next/link";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useModal } from "@/components/atom/modal/context";
 import type { Dictionary } from "@/components/internationalization/dictionaries";
@@ -64,6 +65,9 @@ export const getClassColumns = (dictionary?: Dictionary['school']['classes'], la
     view: lang === 'ar' ? 'عرض' : 'View',
     edit: lang === 'ar' ? 'تعديل' : 'Edit',
     delete: lang === 'ar' ? 'حذف' : 'Delete',
+    viewStudents: lang === 'ar' ? 'عرض الطلاب' : 'View Students',
+    viewGrades: lang === 'ar' ? 'عرض الدرجات' : 'View Grades',
+    viewAttendance: lang === 'ar' ? 'عرض الحضور' : 'View Attendance',
   };
 
   return [
@@ -165,11 +169,6 @@ export const getClassColumns = (dictionary?: Dictionary['school']['classes'], la
       const classItem = row.original;
       const { openModal } = useModal();
 
-      const onView = () => {
-        const qs = typeof window !== 'undefined' ? (window.location.search || "") : "";
-        window.location.href = `/classes/${classItem.id}${qs}`;
-      };
-
       const onEdit = () => openModal(classItem.id);
 
       const onDelete = () => {
@@ -187,8 +186,32 @@ export const getClassColumns = (dictionary?: Dictionary['school']['classes'], la
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>{t.actions}</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={onView}>{t.view}</DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href={`/${lang}/classes/${classItem.id}`}>
+                {t.view}
+              </Link>
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={onEdit}>{t.edit}</DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem asChild>
+              <Link href={`/${lang}/students?classId=${classItem.id}`}>
+                <Users className="mr-2 h-4 w-4" />
+                {t.viewStudents}
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href={`/${lang}/grades?classId=${classItem.id}`}>
+                <GraduationCap className="mr-2 h-4 w-4" />
+                {t.viewGrades}
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href={`/${lang}/attendance?classId=${classItem.id}`}>
+                <CalendarCheck className="mr-2 h-4 w-4" />
+                {t.viewAttendance}
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
             <DropdownMenuItem onClick={onDelete}>{t.delete}</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

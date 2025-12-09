@@ -17,9 +17,11 @@ export default async function MarketingLayout({
   const dictionary = await getDictionary(lang as Locale);
 
   return (
-    <div className="px-14">
+    <div className="marketing-container min-h-screen flex flex-col">
       <SiteHeader dictionary={dictionary} locale={lang} />
-      {children}
+      <main className="flex-1">
+        {children}
+      </main>
       <SiteFooter dictionary={dictionary} />
       <Chatbot lang={lang as Locale} promptType="saasMarketing" />
     </div>
