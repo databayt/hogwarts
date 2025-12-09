@@ -4,8 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { BookOpen } from "lucide-react";
 import { PublicCourseType } from "@/components/stream/data/course/get-all-courses";
 import { CourseCard, CourseCardSkeleton } from "./course-card";
-import { Suspense } from "react";
-import Image from "next/image";
+import { cn } from "@/lib/utils";
 
 interface Props {
   dictionary: any;
@@ -22,6 +21,8 @@ export function StreamCoursesContent({
   courses,
   searchParams
 }: Props) {
+  const isRTL = lang === "ar";
+
   // Filter courses based on search params
   const filteredCourses = courses.filter((course) => {
     if (searchParams?.category && course.category?.name !== searchParams.category) {
@@ -38,21 +39,42 @@ export function StreamCoursesContent({
   });
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
-      <div className="flex flex-col space-y-4">
-        <Image
-          src="/anthropic/6903d22d0099a66d72e05699_33ddc751e21fb4b116b3f57dd553f0bc55ea09d1-1000x1000.svg"
-          alt="Courses"
-          width={120}
-          height={120}
-          className="mb-2"
-        />
-        <h2>Explore Courses</h2>
-        <p className="muted">
-          Discover our wide range of courses designed to help you achieve your
-          learning goals.
-        </p>
-      </div>
+    <div className="container mx-auto py-6 space-y-10">
+      {/* Hero Section - Like "Come teach with us" */}
+      <section className="py-8">
+        <div className={cn(
+          "flex flex-col md:flex-row items-center gap-8",
+          isRTL && "md:flex-row-reverse"
+        )}>
+          {/* Hero Image */}
+          <div
+            className="relative flex items-center justify-center rounded-xl p-6 min-w-[160px] min-h-[160px] md:min-w-[180px] md:min-h-[180px]"
+            style={{ backgroundColor: "#7C3AED" }}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/anthropic/6903d22d0099a66d72e05699_33ddc751e21fb4b116b3f57dd553f0bc55ea09d1-1000x1000.svg"
+              alt="Magical courses"
+              width={140}
+              height={140}
+            />
+          </div>
+
+          {/* Text Content */}
+          <div className={cn(
+            "space-y-3",
+            isRTL ? "text-right" : "text-left"
+          )}>
+            <h1 className="text-4xl md:text-5xl font-bold leading-tight">
+              {dictionary?.courses?.heroTitle || "The Restricted Section"}
+            </h1>
+            <p className="text-lg text-muted-foreground max-w-lg">
+              {dictionary?.courses?.heroDescription ||
+                "Unlock ancient knowledge and master the magical arts — every spell begins with a single lesson"}
+            </p>
+          </div>
+        </div>
+      </section>
 
       {filteredCourses.length === 0 ? (
         <Card>
@@ -79,14 +101,32 @@ export function StreamCoursesContent({
 
 export function StreamCoursesLoadingSkeleton() {
   return (
-    <div className="container mx-auto py-6 space-y-6">
-      <div className="flex flex-col space-y-2">
-        <h2>Explore Courses</h2>
-        <p className="muted">
-          Discover our wide range of courses designed to help you achieve your
-          learning goals.
-        </p>
-      </div>
+    <div className="container mx-auto py-6 space-y-10">
+      {/* Hero Section Skeleton */}
+      <section className="py-8">
+        <div className="flex flex-col md:flex-row items-center gap-8">
+          <div
+            className="relative flex items-center justify-center rounded-xl p-6 min-w-[160px] min-h-[160px] md:min-w-[180px] md:min-h-[180px]"
+            style={{ backgroundColor: "#7C3AED" }}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/anthropic/6903d22d0099a66d72e05699_33ddc751e21fb4b116b3f57dd553f0bc55ea09d1-1000x1000.svg"
+              alt="Magical courses"
+              width={140}
+              height={140}
+            />
+          </div>
+          <div className="space-y-3">
+            <h1 className="text-4xl md:text-5xl font-bold leading-tight">
+              The Restricted Section
+            </h1>
+            <p className="text-lg text-muted-foreground max-w-lg">
+              Unlock ancient knowledge and master the magical arts — every spell begins with a single lesson
+            </p>
+          </div>
+        </div>
+      </section>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {Array.from({ length: 6 }).map((_, index) => (
