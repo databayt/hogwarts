@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { sendMessage as sendMessageAction, type SystemPromptType } from './actions';
+import { sendMessage as sendMessageAction } from './actions';
+import type { SystemPromptType } from './prompts';
 import type { ChatbotState, ChatMessage } from './type';
 import type { CoreMessage } from 'ai';
 
