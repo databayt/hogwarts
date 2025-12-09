@@ -114,7 +114,7 @@ export const ACTIVITY_TYPES = {
 
 // Feature flags
 export const FEATURE_FLAGS = {
-  AI_EXTRACTION: false, // TODO: Enable when AI is configured
+  AI_EXTRACTION: true, // Enable AI Extraction tab
   BULK_OPERATIONS: true,
   EMAIL_INTEGRATION: false, // TODO: Enable when email is configured
 } as const;

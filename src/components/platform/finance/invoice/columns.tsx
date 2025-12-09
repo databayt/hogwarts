@@ -6,13 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Ellipsis, Eye, Pencil, Trash2 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useModal } from "@/components/atom/modal/context";
-import { deleteInvoice } from "@/components/platform/finance/invoice/actions";
-import { DeleteToast, ErrorToast, confirmDeleteDialog } from "@/components/atom/toast";
-import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import type { InvoiceRow } from "./types";
 
 export type { InvoiceRow };
+
+export interface InvoiceColumnCallbacks {
+  onDelete?: (row: InvoiceRow) => void;
+}
 
 const getStatusBadge = (status: string) => {
   const statusConfig = {
@@ -31,7 +32,7 @@ const getStatusBadge = (status: string) => {
   );
 };
 
-export const getInvoiceColumns = (): ColumnDef<InvoiceRow>[] => [
+export const getInvoiceColumns = (callbacks?: InvoiceColumnCallbacks): ColumnDef<InvoiceRow>[] => [
   { 
     accessorKey: "invoice_no", 
     id: 'invoice_no', 
@@ -108,7 +109,6 @@ export const getInvoiceColumns = (): ColumnDef<InvoiceRow>[] => [
     cell: ({ row }) => {
       const invoice = row.original;
       const { openModal } = useModal();
-      const router = useRouter();
 
       const onView = () => {
         const qs = typeof window !== 'undefined' ? (window.location.search || "") : "";
@@ -117,18 +117,10 @@ export const getInvoiceColumns = (): ColumnDef<InvoiceRow>[] => [
 
       const onEdit = () => openModal(invoice.id);
 
-      const onDelete = async () => {
-        try {
-          const ok = await confirmDeleteDialog(`Delete invoice ${invoice.invoice_no}?`);
-          if (!ok) return;
-          await deleteInvoice({ id: invoice.id });
-          DeleteToast();
-          router.refresh();
-        } catch (e) {
-          ErrorToast(e instanceof Error ? e.message : "Failed to delete");
-        }
+      const onDelete = () => {
+        callbacks?.onDelete?.(invoice);
       };
-      
+
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

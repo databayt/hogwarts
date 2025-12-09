@@ -86,8 +86,42 @@ export function EventsTable({ initialData, total, dictionary, lang, perPage = 20
     filters: searchValue ? { title: searchValue } : undefined,
   });
 
-  // Generate columns on the client side with dictionary and lang
-  const columns = useMemo(() => getEventColumns(dictionary, lang), [dictionary, lang]);
+  // Handle search
+  const handleSearchChange = useCallback((value: string) => {
+    setSearchValue(value);
+    startTransition(() => {
+      router.refresh();
+    });
+  }, [router]);
+
+  // Handle delete with optimistic update (must be before columns useMemo)
+  const handleDelete = useCallback(async (event: EventRow) => {
+    try {
+      const deleteMsg = lang === 'ar' ? `حذف "${event.title}"؟` : `Delete "${event.title}"?`;
+      const ok = await confirmDeleteDialog(deleteMsg);
+      if (!ok) return;
+
+      // Optimistic remove
+      optimisticRemove(event.id);
+
+      const result = await deleteEvent({ id: event.id });
+      if (result.success) {
+        DeleteToast();
+      } else {
+        // Revert on error
+        refresh();
+        ErrorToast(lang === 'ar' ? 'فشل حذف الحدث' : 'Failed to delete event');
+      }
+    } catch (e) {
+      refresh();
+      ErrorToast(e instanceof Error ? e.message : (lang === 'ar' ? 'فشل الحذف' : 'Failed to delete'));
+    }
+  }, [optimisticRemove, refresh, lang]);
+
+  // Generate columns on the client side with dictionary, lang, and callbacks
+  const columns = useMemo(() => getEventColumns(dictionary, lang, {
+    onDelete: handleDelete,
+  }), [dictionary, lang, handleDelete]);
 
   // Table instance
   const { table } = useDataTable<EventRow>({
@@ -109,37 +143,6 @@ export function EventsTable({ initialData, total, dictionary, lang, perPage = 20
       },
     },
   });
-
-  // Handle search
-  const handleSearchChange = useCallback((value: string) => {
-    setSearchValue(value);
-    startTransition(() => {
-      router.refresh();
-    });
-  }, [router]);
-
-  // Handle delete with optimistic update
-  const handleDelete = useCallback(async (event: EventRow) => {
-    try {
-      const ok = await confirmDeleteDialog(`Delete "${event.title}"?`);
-      if (!ok) return;
-
-      // Optimistic remove
-      optimisticRemove(event.id);
-
-      const result = await deleteEvent({ id: event.id });
-      if (result.success) {
-        DeleteToast();
-      } else {
-        // Revert on error
-        refresh();
-        ErrorToast("Failed to delete event");
-      }
-    } catch (e) {
-      refresh();
-      ErrorToast(e instanceof Error ? e.message : "Failed to delete");
-    }
-  }, [optimisticRemove, refresh]);
 
   // Handle edit
   const handleEdit = useCallback((id: string) => {

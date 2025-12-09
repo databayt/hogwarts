@@ -6,8 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Ellipsis } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useModal } from "@/components/atom/modal/context";
-import { deleteTeacher } from "@/components/platform/teachers/actions";
-import { DeleteToast, ErrorToast, confirmDeleteDialog } from "@/components/atom/toast";
+import { ErrorToast } from "@/components/atom/toast";
 import type { Dictionary } from "@/components/internationalization/dictionaries";
 import type { Locale } from "@/components/internationalization/config";
 
@@ -20,7 +19,11 @@ export type TeacherRow = {
   createdAt: string;
 };
 
-export const getTeacherColumns = (dictionary?: Dictionary['school']['teachers'], lang?: Locale): ColumnDef<TeacherRow>[] => {
+export interface TeacherColumnCallbacks {
+  onDelete?: (row: TeacherRow) => void;
+}
+
+export const getTeacherColumns = (dictionary?: Dictionary['school']['teachers'], lang?: Locale, callbacks?: TeacherColumnCallbacks): ColumnDef<TeacherRow>[] => {
   const t = {
     name: dictionary?.fullName || (lang === 'ar' ? 'الاسم' : 'Name'),
     email: dictionary?.email || (lang === 'ar' ? 'البريد الإلكتروني' : 'Email'),
@@ -85,16 +88,8 @@ export const getTeacherColumns = (dictionary?: Dictionary['school']['teachers'],
         window.location.href = `/profile/${teacher.userId}${qs}`;
       };
       const onEdit = () => openModal(teacher.id);
-      const onDelete = async () => {
-        try {
-          const deleteMsg = lang === 'ar' ? `حذف ${teacher.name}؟` : `Delete ${teacher.name}?`;
-          const ok = await confirmDeleteDialog(deleteMsg);
-          if (!ok) return;
-          await deleteTeacher({ id: teacher.id });
-          DeleteToast();
-        } catch (e) {
-          ErrorToast(e instanceof Error ? e.message : (lang === 'ar' ? 'فشل الحذف' : 'Failed to delete'));
-        }
+      const onDelete = () => {
+        callbacks?.onDelete?.(teacher);
       };
       return (
         <DropdownMenu>

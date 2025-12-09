@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -18,6 +18,9 @@ import {
   Trash2,
   Calendar,
   GraduationCap,
+  Download,
+  FileText,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,7 +28,15 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useModal } from "@/components/atom/modal/context";
+import { generateGradeCertificate } from "./certificate/actions";
 import Modal from "@/components/atom/modal/modal";
 import { ResultCreateForm } from "@/components/platform/grades/form";
 import { deleteResult } from "@/components/platform/grades/actions";
@@ -108,6 +119,7 @@ export function GradeDetailContent({
   const router = useRouter();
   const { openModal } = useModal();
   const t = dictionary.school.grades;
+  const [isDownloading, setIsDownloading] = useState<"certificate" | "print" | null>(null);
 
   // Format student name
   const studentName = grade.student
@@ -175,6 +187,36 @@ export function GradeDetailContent({
     window.print();
   };
 
+  // Handle certificate download
+  const handleDownload = async (type: "certificate" | "print") => {
+    try {
+      setIsDownloading(type);
+      const result = await generateGradeCertificate({
+        gradeId: grade.id,
+        type,
+        language: lang,
+        includeSignatures: true,
+        includeFeedback: true,
+      });
+
+      if (result.success && result.pdfUrl && result.fileName) {
+        // Create download link
+        const link = document.createElement("a");
+        link.href = result.pdfUrl;
+        link.download = result.fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } else {
+        ErrorToast(result.error || t.downloadFailed);
+      }
+    } catch (e) {
+      ErrorToast(e instanceof Error ? e.message : t.downloadFailed);
+    } finally {
+      setIsDownloading(null);
+    }
+  };
+
   // Format date
   const formatDate = (date: Date | string | null | undefined) => {
     if (!date) return "-";
@@ -199,10 +241,40 @@ export function GradeDetailContent({
             </Button>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={handlePrint}>
-              <Printer className="h-4 w-4 me-2" />
-              {t.printGrade}
-            </Button>
+            {/* Download dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" disabled={!!isDownloading}>
+                  {isDownloading ? (
+                    <Loader2 className="h-4 w-4 me-2 animate-spin" />
+                  ) : (
+                    <Download className="h-4 w-4 me-2" />
+                  )}
+                  {t.download}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  onClick={() => handleDownload("certificate")}
+                  disabled={!!isDownloading}
+                >
+                  <Award className="h-4 w-4 me-2" />
+                  {t.downloadCertificate}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => handleDownload("print")}
+                  disabled={!!isDownloading}
+                >
+                  <FileText className="h-4 w-4 me-2" />
+                  {t.downloadReport}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handlePrint}>
+                  <Printer className="h-4 w-4 me-2" />
+                  {t.printGrade}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <Button variant="outline" size="sm" onClick={() => openModal(grade.id)}>
               <Pencil className="h-4 w-4 me-2" />
               {t.editGrade}

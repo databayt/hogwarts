@@ -11,7 +11,8 @@ import { Plus, Sparkles } from "lucide-react";
 import { useModal } from "@/components/atom/modal/context";
 import Modal from "@/components/atom/modal/modal";
 import { QuestionBankForm } from "./form";
-import { getQuestions } from "./actions";
+import { getQuestions, deleteQuestion } from "./actions";
+import { DeleteToast, ErrorToast, confirmDeleteDialog } from "@/components/atom/toast";
 import type { Dictionary } from "@/components/internationalization/dictionaries";
 
 interface QuestionBankTableProps {
@@ -28,7 +29,6 @@ export function QuestionBankTable({
   dictionary,
 }: QuestionBankTableProps) {
   const router = useRouter();
-  const columns = useMemo(() => getQuestionBankColumns(), []);
 
   // State for incremental loading
   const [data, setData] = useState<QuestionBankRow[]>(initialData);
@@ -44,6 +44,36 @@ export function QuestionBankTable({
   }, [router]);
 
   const hasMore = data.length < total;
+
+  // Handle delete with optimistic update (must be before columns useMemo)
+  const handleDelete = useCallback(async (question: QuestionBankRow) => {
+    try {
+      const ok = await confirmDeleteDialog(
+        `Delete question "${question.questionText.substring(0, 50)}..."?`
+      );
+      if (!ok) return;
+
+      // Optimistic remove
+      setData(prev => prev.filter(q => q.id !== question.id));
+
+      const result = await deleteQuestion(question.id);
+      if (result.success) {
+        DeleteToast();
+      } else {
+        // Revert on error
+        refresh();
+        ErrorToast(result.error || "Failed to delete");
+      }
+    } catch (e) {
+      refresh();
+      ErrorToast(e instanceof Error ? e.message : "Failed to delete");
+    }
+  }, [refresh]);
+
+  // Generate columns with callbacks
+  const columns = useMemo(() => getQuestionBankColumns({
+    onDelete: handleDelete,
+  }), [handleDelete]);
 
   const handleLoadMore = useCallback(async () => {
     if (isLoading || !hasMore) return;

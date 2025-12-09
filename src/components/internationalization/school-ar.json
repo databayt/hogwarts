@@ -1872,7 +1872,11 @@
       "studentsInClass": "طالب في الفصل",
       "yourScore": "درجتك",
       "passStatus": "ناجح",
-      "failStatus": "راسب"
+      "failStatus": "راسب",
+      "download": "تحميل",
+      "downloadCertificate": "شهادة (للعرض على الحائط)",
+      "downloadReport": "تقرير الدرجة (للطباعة)",
+      "downloadFailed": "فشل التحميل"
     },
     "common": {
       "actions": {

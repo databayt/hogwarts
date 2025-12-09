@@ -80,11 +80,7 @@ export default async function Sales({ params }: SalesProps) {
       data-school-id={school.id}
       data-subdomain={subdomain}
     >
-      <SalesContent
-        initialLeads={initialLeads}
-        dictionary={dictionary.sales}
-        lang={lang}
-      />
+      <SalesContent />
     </div>
   );
 }

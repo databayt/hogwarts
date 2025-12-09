@@ -1,64 +1,58 @@
 /**
  * Content orchestration component for the Sales/Leads feature
- * Main UI component with Lead Agent prompt and tabbed interface
+ * Main UI component that brings together all lead-related functionality
  */
 
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { PageHeader } from '@/components/atom/page-header';
 import { All } from './all';
 import { Featured } from './featured';
-import { Cards } from './cards';
-import { PasteImport } from './paste-import';
-import { Analytics } from './analytics';
 import { Form } from './form';
+import { LeadCard } from './card';
 import { useLeads } from './use-leads';
+import { LeadAnalytics } from './analytics';
+import { PasteImport } from './paste-import';
+import { FEATURE_FLAGS } from './constants';
 import SalesPrompt from './prompt';
-import type { Lead } from './types';
-import type { Dictionary } from '@/components/internationalization/dictionaries';
-import type { Locale } from '@/components/internationalization/config';
 
-interface Props {
-  initialLeads?: Lead[];
-  dictionary?: Dictionary['sales'];
-  lang: Locale;
-}
-
-export default function SalesContent({
-  initialLeads = [],
-  dictionary,
-  lang,
-}: Props) {
-  const d = dictionary;
-
+export default function SalesContent() {
   const {
     leads,
-    analytics,
     isLoading,
     filters,
     setFilters,
     selectedLeads,
     setSelectedLeads,
     refreshLeads,
-    refreshAnalytics,
   } = useLeads({
-    initialLeads,
-    autoRefresh: false,
+    autoRefresh: true,
+    refreshInterval: 5000, // Refresh every 5 seconds for real-time updates
   });
 
-  const [activeTab, setActiveTab] = useState('all');
+  console.log('🎯 [SalesContent] Component rendered with:', {
+    leadsCount: leads.length,
+    isLoading,
+    hasFilters: Object.keys(filters).length > 0,
+    selectedCount: selectedLeads.length
+  });
+
+  const [activeTab, setActiveTab] = useState('/sales/all');
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const [editLead, setEditLead] = useState<Lead | null>(null);
   const [showAnalytics, setShowAnalytics] = useState(false);
+
+  console.log('📄 [SalesContent] State:', {
+    activeTab,
+    showCreateForm
+  });
 
   // Handle keyboard shortcuts
   useEffect(() => {
@@ -73,131 +67,145 @@ export default function SalesContent({
     return () => window.removeEventListener('keydown', handleKeyPress);
   }, []);
 
-  const handleLeadsCreated = useCallback((count: number) => {
+  const handleLeadsCreated = (count: number) => {
+    console.log(`📊 [SalesContent] ${count} new leads created, refreshing...`);
     refreshLeads();
-    refreshAnalytics();
-  }, [refreshLeads, refreshAnalytics]);
-
-  const handleEditLead = useCallback((lead: Lead) => {
-    setEditLead(lead);
-  }, []);
+  };
 
   return (
     <>
-      {/* Lead Agent Prompt */}
-      <SalesPrompt
-        onLeadsCreated={handleLeadsCreated}
-        dictionary={d as unknown as Record<string, string>}
-      />
+      <SalesPrompt onLeadsCreated={handleLeadsCreated} />
+      <div id="sales-content" className="flex flex-col gap-6 p-6" suppressHydrationWarning>
+        {/* Header Section */}
+        <PageHeader
+          heading="Leads Management"
+          description="Efficiently manage, track, and convert your sales pipeline. Transform prospects into customers with intelligent lead scoring and automation."
+          headingClassName="text-3xl font-bold tracking-tight"
+          actions={
+            <div className="flex flex-wrap gap-4">
+              <Button
+                onClick={() => setShowCreateForm(true)}
+              >
+                Add Lead
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={() => setActiveTab('/sales/all')}
+              >
+                Browse Leads
+              </Button>
+            </div>
+          }
+        />
 
-      <div id="sales-content" className="flex flex-col gap-6 py-6" suppressHydrationWarning>
-        {/* Header Actions */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Button onClick={() => setShowCreateForm(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              {d?.addNewLead || 'Add Lead'}
-            </Button>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">
-              {leads.length} {d?.leads || 'leads'}
-            </span>
-          </div>
+      {/* Tabs Navigation */}
+      <div className="border-t border-b">
+        <div className="flex items-center gap-2 py-2">
+          <button
+            className={`flex h-7 items-center justify-center rounded-full px-4 text-center transition-colors hover:text-primary ${
+              activeTab === '/sales/all' ? 'bg-muted text-primary' : ''
+            }`}
+            onClick={() => setActiveTab('/sales/all')}
+          >
+            All Leads
+          </button>
+          <button
+            className={`flex h-7 items-center justify-center rounded-full px-4 text-center transition-colors hover:text-primary ${
+              activeTab === '/sales/featured' ? 'bg-muted text-primary' : ''
+            }`}
+            onClick={() => setActiveTab('/sales/featured')}
+          >
+            Featured
+          </button>
+          <button
+            className={`flex h-7 items-center justify-center rounded-full px-4 text-center transition-colors hover:text-primary ${
+              activeTab === '/sales/cards' ? 'bg-muted text-primary' : ''
+            }`}
+            onClick={() => setActiveTab('/sales/cards')}
+          >
+            Card View
+          </button>
+          {FEATURE_FLAGS.AI_EXTRACTION && (
+            <button
+              className={`flex h-7 items-center justify-center rounded-full px-4 text-center transition-colors hover:text-primary ${
+                activeTab === '/sales/ai' ? 'bg-muted text-primary' : ''
+              }`}
+              onClick={() => setActiveTab('/sales/ai')}
+            >
+              AI Extraction
+            </button>
+          )}
         </div>
-
-        {/* Tabs Navigation */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="all">{d?.navAll || 'All Leads'}</TabsTrigger>
-            <TabsTrigger value="featured">{'Featured'}</TabsTrigger>
-            <TabsTrigger value="cards">{'Cards'}</TabsTrigger>
-            <TabsTrigger value="import">{d?.navImport || 'AI Import'}</TabsTrigger>
-            <TabsTrigger value="analytics">{d?.navAnalytics || 'Analytics'}</TabsTrigger>
-          </TabsList>
-
-          {/* All Leads Tab */}
-          <TabsContent value="all" className="mt-6">
-            <All
-              leads={leads}
-              isLoading={isLoading}
-              filters={filters}
-              onFiltersChange={setFilters}
-              selectedLeads={selectedLeads}
-              onSelectionChange={setSelectedLeads}
-              onRefresh={refreshLeads}
-              onEditLead={handleEditLead}
-              dictionary={d as unknown as Record<string, string>}
-            />
-          </TabsContent>
-
-          {/* Featured Tab */}
-          <TabsContent value="featured" className="mt-6">
-            <Featured
-              leads={leads}
-              isLoading={isLoading}
-              dictionary={d as unknown as Record<string, string>}
-            />
-          </TabsContent>
-
-          {/* Cards Tab */}
-          <TabsContent value="cards" className="mt-6">
-            <Cards
-              leads={leads}
-              isLoading={isLoading}
-              onRefresh={refreshLeads}
-              onEditLead={handleEditLead}
-              dictionary={d as unknown as Record<string, string>}
-            />
-          </TabsContent>
-
-          {/* AI Import Tab */}
-          <TabsContent value="import" className="mt-6">
-            <PasteImport
-              onComplete={refreshLeads}
-              dictionary={d as unknown as Record<string, string>}
-            />
-          </TabsContent>
-
-          {/* Analytics Tab */}
-          <TabsContent value="analytics" className="mt-6">
-            <Analytics
-              analytics={analytics}
-              isLoading={isLoading}
-              dictionary={d as unknown as Record<string, string>}
-            />
-          </TabsContent>
-        </Tabs>
       </div>
 
-      {/* Create Form Dialog */}
+      {/* Main Content */}
+      <div className="mt-4">
+        {activeTab === '/sales/all' && (
+          <All
+            leads={leads}
+            isLoading={isLoading}
+            filters={filters}
+            showFilters={true}
+            onFiltersChange={setFilters}
+            selectedLeads={selectedLeads}
+            onSelectionChange={setSelectedLeads}
+            onRefresh={refreshLeads}
+            onAnalyticsClick={() => setShowAnalytics(true)}
+          />
+        )}
+        {activeTab === '/sales/featured' && (
+          <Featured
+            leads={leads.filter(l => l.score >= 80)}
+            isLoading={isLoading}
+            onRefresh={refreshLeads}
+          />
+        )}
+        {activeTab === '/sales/cards' && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {leads.map((lead) => (
+              <LeadCard
+                key={lead.id}
+                lead={lead}
+                onUpdate={refreshLeads}
+                onDelete={refreshLeads}
+              />
+            ))}
+          </div>
+        )}
+        {FEATURE_FLAGS.AI_EXTRACTION && activeTab === '/sales/ai' && (
+          <PasteImport onComplete={refreshLeads} />
+        )}
+      </div>
+
+      {/* Dialogs */}
       {showCreateForm && (
         <Form
           open={showCreateForm}
-          onClose={() => setShowCreateForm(false)}
+          onClose={() => {
+            console.log('🔘 [SalesContent] Form.onClose callback triggered');
+            setShowCreateForm(false);
+          }}
           onSuccess={() => {
+            console.log('📤 [SalesContent] Form.onSuccess callback triggered');
+            console.log('🔄 [SalesContent] Closing form and refreshing leads...');
             setShowCreateForm(false);
             refreshLeads();
-            refreshAnalytics();
           }}
-          dictionary={d as unknown as Record<string, string>}
         />
       )}
 
-      {/* Edit Form Dialog */}
-      {editLead && (
-        <Form
-          open={!!editLead}
-          onClose={() => setEditLead(null)}
-          onSuccess={() => {
-            setEditLead(null);
-            refreshLeads();
-          }}
-          lead={editLead}
-          mode="edit"
-          dictionary={d as unknown as Record<string, string>}
-        />
-      )}
+      {/* Analytics Dialog */}
+      <Dialog open={showAnalytics} onOpenChange={setShowAnalytics}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle className="sr-only">Lead Analytics</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 grid-cols-2">
+            <LeadAnalytics />
+          </div>
+        </DialogContent>
+      </Dialog>
+      </div>
     </>
   );
 }

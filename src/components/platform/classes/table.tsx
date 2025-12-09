@@ -85,8 +85,34 @@ export function ClassesTable({ initialData, total, dictionary, lang, perPage = 2
     filters: searchValue ? { name: searchValue } : undefined,
   });
 
-  // Generate columns on the client side with dictionary and lang
-  const columns = useMemo(() => getClassColumns(dictionary, lang), [dictionary, lang]);
+  // Handle delete with optimistic update (must be before columns useMemo)
+  const handleDelete = useCallback(async (classItem: ClassRow) => {
+    const displayName = getLocalizedClassName(classItem, lang);
+    try {
+      const ok = await confirmDeleteDialog(`${t.deleteClass} ${displayName}?`);
+      if (!ok) return;
+
+      // Optimistic remove
+      optimisticRemove(classItem.id);
+
+      const result = await deleteClass({ id: classItem.id });
+      if (result.success) {
+        DeleteToast();
+      } else {
+        // Revert on error
+        refresh();
+        ErrorToast("Failed to delete class");
+      }
+    } catch (e) {
+      refresh();
+      ErrorToast(e instanceof Error ? e.message : "Failed to delete");
+    }
+  }, [optimisticRemove, refresh, lang, t.deleteClass]);
+
+  // Generate columns on the client side with dictionary, lang, and callbacks
+  const columns = useMemo(() => getClassColumns(dictionary, lang, {
+    onDelete: handleDelete,
+  }), [dictionary, lang, handleDelete]);
 
   // Table instance
   const { table } = useDataTable<ClassRow>({
@@ -113,30 +139,6 @@ export function ClassesTable({ initialData, total, dictionary, lang, perPage = 2
       router.refresh();
     });
   }, [router]);
-
-  // Handle delete with optimistic update
-  const handleDelete = useCallback(async (classItem: ClassRow) => {
-    const displayName = getLocalizedClassName(classItem, lang);
-    try {
-      const ok = await confirmDeleteDialog(`${t.deleteClass} ${displayName}?`);
-      if (!ok) return;
-
-      // Optimistic remove
-      optimisticRemove(classItem.id);
-
-      const result = await deleteClass({ id: classItem.id });
-      if (result.success) {
-        DeleteToast();
-      } else {
-        // Revert on error
-        refresh();
-        ErrorToast("Failed to delete class");
-      }
-    } catch (e) {
-      refresh();
-      ErrorToast(e instanceof Error ? e.message : "Failed to delete");
-    }
-  }, [optimisticRemove, refresh, lang, t.deleteClass]);
 
   // Handle edit
   const handleEdit = useCallback((id: string) => {

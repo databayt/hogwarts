@@ -116,7 +116,7 @@ export default async function LibraryContent({ userId, dictionary, lang }: Props
   }
 
   return (
-    <div className="space-y-12 min-w-0 w-full overflow-hidden px-container">
+    <div className="space-y-12 min-w-0 w-full overflow-hidden">
       {/* Collaborate Section - Claude style */}
       <CollaborateSection lang={lang} />
 

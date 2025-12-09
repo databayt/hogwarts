@@ -1,6 +1,5 @@
 /**
- * Lead Agent prompt component for Sales
- * AI-powered lead extraction and import
+ * Full-screen prompt component for Leads
  */
 
 'use client';
@@ -36,11 +35,9 @@ import { extractLeadsFromText, createLead } from './actions';
 
 interface SalesPromptProps {
   onLeadsCreated?: (count: number) => void;
-  dictionary?: Record<string, string>;
 }
 
-export default function SalesPrompt({ onLeadsCreated, dictionary }: SalesPromptProps) {
-  const d = dictionary;
+export default function SalesPrompt({ onLeadsCreated }: SalesPromptProps) {
   const [prompt, setPrompt] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectedModel, setSelectedModel] = useState<'groq' | 'claude'>('groq');
@@ -51,6 +48,9 @@ export default function SalesPrompt({ onLeadsCreated, dictionary }: SalesPromptP
   const [isInputFocused, setIsInputFocused] = useState(false);
   const { toast } = useToast();
 
+  console.log('🎯 [SalesPrompt] Component rendered');
+  console.log('🤖 [SalesPrompt] Selected model:', selectedModel);
+
   const handleRefresh = () => {
     if (onLeadsCreated) {
       onLeadsCreated(leadsGenerated);
@@ -59,21 +59,30 @@ export default function SalesPrompt({ onLeadsCreated, dictionary }: SalesPromptP
   };
 
   const handleSubmit = async (message: PromptInputMessage) => {
+    console.log('📥 [SalesPrompt.handleSubmit] Called with message:', {
+      hasText: !!message.text?.trim(),
+      textLength: message.text?.length || 0,
+      filesCount: message.files?.length || 0,
+    });
+
     if (!message.text?.trim() && !message.files?.length) {
+      console.log('⚠️ [SalesPrompt.handleSubmit] No text or files provided, aborting');
       return;
     }
+
+    console.log('🚀 [SalesPrompt.handleSubmit] Starting import process...');
 
     setHasInteracted(true);
     setIsProcessing(true);
 
     if (message.text?.trim()) {
-      setAiReasoning(`## ${d?.extractionProcess || 'Lead Extraction Process'}
+      setAiReasoning(`## Lead Extraction Process
 
-1. **${d?.analyzing || 'Analyzing Input'}**: ${d?.parsingText || 'Parsing the provided text to identify potential leads'}
-2. **${d?.extracting || 'Data Extraction'}**: ${d?.usingModel || 'Using'} ${selectedModel === 'groq' ? 'Groq' : 'Claude'} ${d?.toExtract || 'model to extract relevant information'}
-3. **${d?.validating || 'Validation'}**: ${d?.ensuringValid || 'Ensuring all extracted leads have valid contact information'}
-4. **${d?.enriching || 'Enrichment'}**: ${d?.addingScores || 'Adding scores and metadata to prioritize leads'}
-5. **${d?.deduplicating || 'Deduplication'}**: ${d?.removingDupes || 'Removing any duplicate entries to maintain data quality'}`);
+1. **Analyzing Input**: Parsing the provided text to identify potential leads
+2. **Data Extraction**: Using ${selectedModel === 'groq' ? 'Groq' : 'Claude'} model to extract relevant information
+3. **Validation**: Ensuring all extracted leads have valid contact information
+4. **Enrichment**: Adding scores and metadata to prioritize leads
+5. **Deduplication**: Removing any duplicate entries to maintain data quality`);
     } else {
       setAiReasoning('');
     }
@@ -81,11 +90,11 @@ export default function SalesPrompt({ onLeadsCreated, dictionary }: SalesPromptP
     let leadsCreated = 0;
 
     try {
-      // Process text prompt for AI lead extraction
       if (message.text?.trim()) {
+        console.log('📝 [SalesPrompt.handleSubmit] Processing text input');
         toast({
-          title: d?.processing || 'Processing',
-          description: d?.extractingLeads || 'Extracting leads from text...',
+          title: 'Processing',
+          description: 'Extracting leads from text...',
         });
 
         const result = await extractLeadsFromText({
@@ -105,54 +114,55 @@ export default function SalesPrompt({ onLeadsCreated, dictionary }: SalesPromptP
           setLeadsGenerated(extractedCount);
 
           const leadsList = result.data.leads?.map((lead, idx) =>
-            `${idx + 1}. **${lead.name}** - ${lead.company || 'N/A'} (${lead.email || d?.noEmail || 'No email'})`
+            `${idx + 1}. **${lead.name}** - ${lead.company || 'N/A'} (${lead.email || 'No email'})`
           ).join('\n');
 
-          setAiResponse(`## ${d?.extractionResults || 'Lead Extraction Results'}
+          setAiResponse(`## Lead Extraction Results
 
-${d?.successfullyExtracted || 'Successfully extracted'} **${extractedCount} ${d?.leads || 'leads'}** ${d?.fromInput || 'from your input'}.
+Successfully extracted **${extractedCount} leads** from your input.
 
-### ${d?.extractedLeads || 'Extracted Leads'}:
-${leadsList || d?.noLeadsFound || 'No leads found'}
+### Extracted Leads:
+${leadsList || 'No leads found'}
 
-### ${d?.actionsAvailable || 'Actions Available'}:
-- ${d?.clickRefresh || 'Click **Refresh Table** below to view the new leads'}
-- ${d?.continueAdding || 'Continue adding more leads using the input'}
-- ${d?.exportWhenReady || 'Export leads when ready'}`);
+### Actions Available:
+- Click **Refresh Table** below to view the new leads
+- Continue adding more leads using the input
+- Export leads when ready`);
 
           if (onLeadsCreated) {
             onLeadsCreated(extractedCount);
           }
+
         } else {
-          const errorMsg = !result.success ? result.error : (d?.unknownError || 'Unknown error occurred');
-          setAiResponse(`## ${d?.extractionFailed || 'Extraction Failed'}
+          console.error('❌ [SalesPrompt.handleSubmit] Text extraction failed');
+          setAiResponse(`## Extraction Failed
 
-${d?.unableToExtract || 'Unable to extract leads from the provided input.'}
+Unable to extract leads from the provided input.
 
-### ${d?.errorDetails || 'Error Details'}:
-${errorMsg}
+### Error Details:
+Unknown error occurred
 
-### ${d?.suggestions || 'Suggestions'}:
-- ${d?.ensureValidContact || 'Ensure your input contains valid contact information'}
-- ${d?.tryDifferentFormat || 'Try using a different format or structure'}
-- ${d?.checkFormatting || 'Check for any formatting issues in your data'}`);
+### Suggestions:
+- Ensure your input contains valid contact information
+- Try using a different format or structure
+- Check for any formatting issues in your data`);
         }
       }
 
-      // Process file uploads for CSV import
       if (message.files?.length) {
+        console.log('📁 [SalesPrompt.handleSubmit] Processing', message.files.length, 'file(s)');
         toast({
-          title: d?.importing || 'Importing',
-          description: `${d?.processingFiles || 'Processing'} ${message.files.length} ${d?.files || 'file(s)'}...`,
+          title: 'Importing',
+          description: `Processing ${message.files.length} file(s)...`,
         });
 
-        for (const file of message.files) {
-          if (file.url) {
-            const response = await fetch(file.url);
-            const text = await response.text();
-            const imported = await processCSVContent(text);
-            leadsCreated += imported;
-          }
+        for (let i = 0; i < message.files.length; i++) {
+          const file = message.files[i];
+          const response = await fetch(file.url!);
+          const text = await response.text();
+
+          const imported = await processCSVContent(text);
+          leadsCreated += imported;
         }
 
         setLeadsGenerated(prev => prev + leadsCreated);
@@ -162,33 +172,40 @@ ${errorMsg}
         }
       }
 
+      console.log(`🎯 [SalesPrompt.handleSubmit] FINAL RESULT: Total leads created: ${leadsCreated}`);
+
       if (leadsCreated > 0) {
         toast({
-          title: d?.success || 'Success!',
-          description: `${d?.successfullyImported || 'Successfully imported'} ${leadsCreated} ${d?.newLeads || 'new leads'}. ${d?.clickRefreshView || 'Click "Refresh Table" to view them.'}`,
+          title: 'Success!',
+          description: `Successfully imported ${leadsCreated} new leads. Click "Refresh Table" to view them.`,
         });
-      } else if (!aiResponse) {
-        setAiResponse(`## ${d?.noLeadsFound || 'No Leads Found'}
 
-${d?.noValidLeads || 'No valid leads could be extracted from your input.'}
+        console.log('✋ [SalesPrompt.handleSubmit] Waiting for user action to refresh...');
+      } else {
+        console.log('⚠️ [SalesPrompt.handleSubmit] No leads were created');
+        if (!aiResponse) {
+          setAiResponse(`## No Leads Found
 
-### ${d?.tipsForBetter || 'Tips for Better Results'}:
-- ${d?.includeClearContact || 'Include clear contact information (names, emails, companies)'}
-- ${d?.useStructuredFormats || 'Use structured formats like CSV or lists'}
-- ${d?.provideMoreDetailed || 'Provide more detailed descriptions of your target audience'}`);
+No valid leads could be extracted from your input.
+
+### Tips for Better Results:
+- Include clear contact information (names, emails, companies)
+- Use structured formats like CSV or lists
+- Provide more detailed descriptions of your target audience`);
+        }
       }
     } catch (error) {
-      console.error('[SalesPrompt] Error processing prompt:', error);
-      setAiResponse(`## ${d?.errorOccurred || 'Error Occurred'}
+      console.error('❌ [SalesPrompt.handleSubmit] Error processing prompt:', error);
+      setAiResponse(`## Error Occurred
 
-${d?.errorWhileProcessing || 'An error occurred while processing your request. Please try again.'}`);
+An error occurred while processing your request. Please try again.`);
     } finally {
+      console.log('🏁 [SalesPrompt.handleSubmit] Cleanup: resetting processing state');
       setIsProcessing(false);
       setPrompt('');
     }
   };
 
-  // Helper function to process CSV content
   const processCSVContent = async (csvText: string): Promise<number> => {
     const lines = csvText.split('\n').filter(line => line.trim());
     if (lines.length === 0) return 0;
@@ -205,6 +222,10 @@ ${d?.errorWhileProcessing || 'An error occurred while processing your request. P
         status: 'NEW',
         source: 'IMPORT',
         score: Math.floor(Math.random() * 30) + 70,
+        leadType: 'SCHOOL',
+        priority: 'MEDIUM',
+        verified: false,
+        tags: [],
       };
 
       headers.forEach((header, index) => {
@@ -225,14 +246,14 @@ ${d?.errorWhileProcessing || 'An error occurred while processing your request. P
   };
 
   return (
-    <section className="flex flex-col bg-gradient-to-b from-background to-muted/20" suppressHydrationWarning>
-      <div className="flex-1 flex flex-col items-center justify-center container max-w-4xl px-4 mx-auto py-8" suppressHydrationWarning>
-        <div className="flex flex-col items-center text-center w-full">
+    <section className="h-screen flex flex-col bg-gradient-to-b from-background to-muted/20" suppressHydrationWarning>
+      <div className="flex-1 flex flex-col items-center justify-center container max-w-4xl px-4 mx-auto" suppressHydrationWarning>
+        <div className="flex flex-col items-center text-center flex-1 w-full justify-center">
           {!hasInteracted && (
             <AgentHeading
-              title={d?.leadAgent || "Lead Agent"}
+              title="Lead Agent"
               scrollTarget="sales-content"
-              scrollText={d?.exploreExisting || "explore existing leads"}
+              scrollText="explore existing leads"
             />
           )}
 
@@ -240,9 +261,13 @@ ${d?.errorWhileProcessing || 'An error occurred while processing your request. P
             <div
               id="ai-response-container"
               className={cn(
-                "w-full max-w-3xl space-y-4 overflow-y-auto overflow-x-hidden rounded-lg relative",
-                isInputFocused ? "max-h-[200px]" : "max-h-[400px]"
+                "w-full max-w-3xl space-y-4 overflow-y-auto overflow-x-hidden rounded-lg relative flex-1",
+                isInputFocused ? "max-h-[200px]" : "max-h-[500px]"
               )}
+              style={{
+                scrollbarWidth: 'thin',
+                scrollbarColor: 'rgba(155, 155, 155, 0.2) transparent',
+              }}
             >
               <AIResponseDisplay
                 response={aiResponse}
@@ -254,14 +279,14 @@ ${d?.errorWhileProcessing || 'An error occurred while processing your request. P
               />
 
               {leadsGenerated > 0 && !isProcessing && (
-                <div className="flex justify-center gap-4 pt-4">
+                <div className="flex justify-center gap-4">
                   <Button
                     onClick={handleRefresh}
                     className="gap-2"
                     size="lg"
                   >
                     <RefreshCw className="h-4 w-4" />
-                    {d?.refreshTable || 'Refresh Table'} ({leadsGenerated} {d?.newLeads || 'new leads'})
+                    Refresh Table ({leadsGenerated} new leads)
                   </Button>
                   <Button
                     variant="outline"
@@ -272,14 +297,14 @@ ${d?.errorWhileProcessing || 'An error occurred while processing your request. P
                       setLeadsGenerated(0);
                     }}
                   >
-                    {d?.startNew || 'Start New'}
+                    Start New
                   </Button>
                 </div>
               )}
             </div>
           )}
 
-          <div className="w-full max-w-3xl relative mt-6">
+          <div className="w-full max-w-3xl relative">
             <PromptInput
               onSubmit={handleSubmit}
               className={cn(
@@ -301,7 +326,7 @@ ${d?.errorWhileProcessing || 'An error occurred while processing your request. P
                       <PlusIcon className="h-5 w-5" />
                     </PromptInputActionMenuTrigger>
                     <PromptInputActionMenuContent>
-                      <PromptInputActionAddAttachments label={d?.uploadCSV || "Upload CSV or Excel file"} />
+                      <PromptInputActionAddAttachments label="Upload CSV or Excel file" />
                     </PromptInputActionMenuContent>
                   </PromptInputActionMenu>
                 )}
@@ -317,9 +342,7 @@ ${d?.errorWhileProcessing || 'An error occurred while processing your request. P
                   onChange={(e) => setPrompt(e.target.value)}
                   onFocus={() => setIsInputFocused(true)}
                   onBlur={() => setIsInputFocused(false)}
-                  placeholder={hasInteracted && !isInputFocused
-                    ? (d?.addMoreLeads || "Add more leads...")
-                    : (d?.describeTarget || "Describe your target audience or paste contact info...")}
+                  placeholder={hasInteracted && !isInputFocused ? "Add more leads..." : "Describe your target audience..."}
                   className={cn(
                     "flex w-full rounded-md ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 resize-none text-[16px] bg-transparent focus:bg-transparent flex-1",
                     hasInteracted && !isInputFocused
@@ -357,7 +380,7 @@ ${d?.errorWhileProcessing || 'An error occurred while processing your request. P
                       <PlusIcon className="shrink-0 h-5 w-5 text-muted-foreground" />
                     </PromptInputActionMenuTrigger>
                     <PromptInputActionMenuContent>
-                      <PromptInputActionAddAttachments label={d?.uploadCSV || "Upload CSV or Excel file"} />
+                      <PromptInputActionAddAttachments label="Upload CSV or Excel file" />
                     </PromptInputActionMenuContent>
                   </PromptInputActionMenu>
 
@@ -366,7 +389,7 @@ ${d?.errorWhileProcessing || 'An error occurred while processing your request. P
                     onClick={() => document.getElementById('file-upload')?.click()}
                   >
                     <Paperclip className="shrink-0 h-4 w-4" />
-                    <span className="hidden md:flex">{d?.attach || 'Attach'}</span>
+                    <span className="hidden md:flex">Attach</span>
                   </PromptInputButton>
 
                   <Select value={selectedModel} onValueChange={(value) => setSelectedModel(value as 'groq' | 'claude')}>

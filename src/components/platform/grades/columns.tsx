@@ -7,8 +7,6 @@ import { Badge } from "@/components/ui/badge";
 import { Ellipsis } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useModal } from "@/components/atom/modal/context";
-import { deleteResult } from "@/components/platform/grades/actions";
-import { DeleteToast, ErrorToast, confirmDeleteDialog } from "@/components/atom/toast";
 import { type Dictionary } from "@/components/internationalization/dictionaries";
 import { type Locale } from "@/components/internationalization/config";
 
@@ -65,7 +63,11 @@ export type ResultRow = {
   createdAt: string;
 };
 
-export const resultColumns = (t: Dictionary["school"]["grades"], locale: Locale = 'en'): ColumnDef<ResultRow>[] => [
+export interface ResultColumnCallbacks {
+  onDelete?: (row: ResultRow) => void;
+}
+
+export const resultColumns = (t: Dictionary["school"]["grades"], locale: Locale = 'en', callbacks?: ResultColumnCallbacks): ColumnDef<ResultRow>[] => [
   {
     accessorKey: "studentName",
     header: ({ column }) => <DataTableColumnHeader column={column} title={t.student} />,
@@ -168,15 +170,8 @@ export const resultColumns = (t: Dictionary["school"]["grades"], locale: Locale 
         window.location.href = `/grades/${result.id}${qs}`;
       };
       const onEdit = () => openModal(result.id);
-      const onDelete = async () => {
-        try {
-          const ok = await confirmDeleteDialog(t.deleteResultConfirm.replace('{studentName}', result.studentName));
-          if (!ok) return;
-          await deleteResult({ id: result.id });
-          DeleteToast();
-        } catch (e) {
-          ErrorToast(e instanceof Error ? e.message : t.failedToUpdate);
-        }
+      const onDelete = () => {
+        callbacks?.onDelete?.(result);
       };
       return (
         <DropdownMenu>
@@ -189,9 +184,9 @@ export const resultColumns = (t: Dictionary["school"]["grades"], locale: Locale 
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>{t.actions}</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={onView}>{t.viewGrade}</DropdownMenuItem>
-            <DropdownMenuItem onClick={onEdit}>{t.editGrade}</DropdownMenuItem>
-            <DropdownMenuItem onClick={onDelete}>{t.deleteGrade}</DropdownMenuItem>
+            <DropdownMenuItem onClick={onView}>{locale === 'ar' ? 'عرض' : 'View'}</DropdownMenuItem>
+            <DropdownMenuItem onClick={onEdit}>{locale === 'ar' ? 'تعديل' : 'Edit'}</DropdownMenuItem>
+            <DropdownMenuItem onClick={onDelete}>{locale === 'ar' ? 'حذف' : 'Delete'}</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       );

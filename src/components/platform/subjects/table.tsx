@@ -103,8 +103,34 @@ export function SubjectsTable({ initialData, total, dictionary, lang, perPage = 
     filters: searchValue ? { subjectName: searchValue } : undefined,
   });
 
-  // Generate columns on the client side with dictionary and lang
-  const columns = useMemo(() => getSubjectColumns(dictionary, lang), [dictionary, lang]);
+  // Handle delete with optimistic update (must be before columns useMemo)
+  const handleDelete = useCallback(async (subject: SubjectRow) => {
+    const displayName = getLocalizedSubjectName(subject, lang);
+    try {
+      const ok = await confirmDeleteDialog(`${translations.delete} ${displayName}?`);
+      if (!ok) return;
+
+      // Optimistic remove
+      optimisticRemove(subject.id);
+
+      const result = await deleteSubject({ id: subject.id });
+      if (result.success) {
+        DeleteToast();
+      } else {
+        // Revert on error
+        refresh();
+        ErrorToast("Failed to delete subject");
+      }
+    } catch (e) {
+      refresh();
+      ErrorToast(e instanceof Error ? e.message : "Failed to delete");
+    }
+  }, [optimisticRemove, refresh, lang, translations.delete]);
+
+  // Generate columns on the client side with dictionary, lang, and callbacks
+  const columns = useMemo(() => getSubjectColumns(dictionary, lang, {
+    onDelete: handleDelete,
+  }), [dictionary, lang, handleDelete]);
 
   // Table instance
   const { table } = useDataTable<SubjectRow>({
@@ -132,30 +158,6 @@ export function SubjectsTable({ initialData, total, dictionary, lang, perPage = 
       router.refresh();
     });
   }, [router]);
-
-  // Handle delete with optimistic update
-  const handleDelete = useCallback(async (subject: SubjectRow) => {
-    const displayName = getLocalizedSubjectName(subject, lang);
-    try {
-      const ok = await confirmDeleteDialog(`${translations.delete} ${displayName}?`);
-      if (!ok) return;
-
-      // Optimistic remove
-      optimisticRemove(subject.id);
-
-      const result = await deleteSubject({ id: subject.id });
-      if (result.success) {
-        DeleteToast();
-      } else {
-        // Revert on error
-        refresh();
-        ErrorToast("Failed to delete subject");
-      }
-    } catch (e) {
-      refresh();
-      ErrorToast(e instanceof Error ? e.message : "Failed to delete");
-    }
-  }, [optimisticRemove, refresh, lang, translations.delete]);
 
   // Handle edit
   const handleEdit = useCallback((id: string) => {

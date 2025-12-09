@@ -86,29 +86,6 @@ export function LessonsTable({ initialData, total, dictionary, lang, perPage = 2
     filters: searchValue ? { title: searchValue } : undefined,
   });
 
-  // Generate columns on the client side with dictionary and lang
-  const columns = useMemo(() => getLessonColumns(dictionary, lang), [dictionary, lang]);
-
-  // Table instance
-  const { table } = useDataTable<LessonRow>({
-    data,
-    columns,
-    pageCount: 1,
-    initialState: {
-      pagination: {
-        pageIndex: 0,
-        pageSize: data.length || perPage,
-      },
-      columnVisibility: {
-        // Default visible: title, className, teacherName, lessonDate, status
-        subjectName: false,
-        startTime: false,
-        endTime: false,
-        createdAt: false,
-      },
-    },
-  });
-
   // Handle search
   const handleSearchChange = useCallback((value: string) => {
     setSearchValue(value);
@@ -117,7 +94,7 @@ export function LessonsTable({ initialData, total, dictionary, lang, perPage = 2
     });
   }, [router]);
 
-  // Handle delete with optimistic update
+  // Handle delete with optimistic update (must be before columns useMemo)
   const handleDelete = useCallback(async (lesson: LessonRow) => {
     try {
       const deleteMsg = lang === 'ar' ? `حذف "${lesson.title}"؟` : `Delete "${lesson.title}"?`;
@@ -140,6 +117,31 @@ export function LessonsTable({ initialData, total, dictionary, lang, perPage = 2
       ErrorToast(e instanceof Error ? e.message : (lang === 'ar' ? 'فشل الحذف' : 'Failed to delete'));
     }
   }, [optimisticRemove, refresh, lang]);
+
+  // Generate columns on the client side with dictionary, lang, and callbacks
+  const columns = useMemo(() => getLessonColumns(dictionary, lang, {
+    onDelete: handleDelete,
+  }), [dictionary, lang, handleDelete]);
+
+  // Table instance
+  const { table } = useDataTable<LessonRow>({
+    data,
+    columns,
+    pageCount: 1,
+    initialState: {
+      pagination: {
+        pageIndex: 0,
+        pageSize: data.length || perPage,
+      },
+      columnVisibility: {
+        // Default visible: title, className, teacherName, lessonDate, status
+        subjectName: false,
+        startTime: false,
+        endTime: false,
+        createdAt: false,
+      },
+    },
+  });
 
   // Handle edit
   const handleEdit = useCallback((id: string) => {

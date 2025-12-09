@@ -300,6 +300,109 @@ const filterDropdowns = (
 - Status, scope, type, category filters
 - Any filterable column already displayed
 
+## Optimistic Callbacks Pattern
+
+### Why Use Callbacks?
+
+The **callback pattern** separates delete logic from column definitions, enabling:
+
+1. **Optimistic Updates**: Remove items instantly before server confirms
+2. **Better Separation**: Columns define UI, table handles logic
+3. **Easier Testing**: Logic in table component, not nested in columns
+4. **No SSR Issues**: Hooks remain in client components only
+
+### Column Callbacks Interface
+
+```typescript
+// columns.tsx
+export interface ColumnCallbacks {
+  onDelete?: (row: RowType) => void;
+  onToggleStatus?: (row: RowType) => void;
+  // Add other actions as needed
+}
+
+export const getColumns = (
+  dictionary: Dictionary['school']['feature'],
+  locale: Locale,
+  callbacks?: ColumnCallbacks
+): ColumnDef<RowType>[] => [
+  // ... column definitions
+  {
+    id: "actions",
+    cell: ({ row }) => {
+      const item = row.original;
+      const { openModal } = useModal();
+
+      const onDelete = () => {
+        callbacks?.onDelete?.(item);  // Use callback instead of inline delete
+      };
+
+      return (
+        <DropdownMenu>
+          {/* ... */}
+          <DropdownMenuItem onClick={onDelete}>Delete</DropdownMenuItem>
+        </DropdownMenu>
+      );
+    },
+  },
+];
+```
+
+### Pass Callbacks from Table
+
+```typescript
+// table.tsx
+// IMPORTANT: Define handleDelete BEFORE the columns useMemo
+const handleDelete = useCallback(async (item: RowType) => {
+  const ok = await confirmDeleteDialog(`Delete ${item.name}?`);
+  if (!ok) return;
+
+  // Optimistic remove
+  optimisticRemove(item.id);
+
+  const result = await deleteItem({ id: item.id });
+  if (result.success) {
+    DeleteToast();
+  } else {
+    // Revert on error
+    refresh();
+    ErrorToast("Failed to delete");
+  }
+}, [optimisticRemove, refresh]);
+
+// Pass callback to columns
+const columns = useMemo(() => getColumns(dictionary, lang, {
+  onDelete: handleDelete,
+}), [dictionary, lang, handleDelete]);
+```
+
+### Simplified Action Labels
+
+Use simple, generic labels in dropdown menus instead of entity-specific labels:
+
+```typescript
+// columns.tsx - Action cell
+<DropdownMenuItem onClick={onView}>
+  {locale === 'ar' ? 'عرض' : 'View'}
+</DropdownMenuItem>
+<DropdownMenuItem onClick={onEdit}>
+  {locale === 'ar' ? 'تعديل' : 'Edit'}
+</DropdownMenuItem>
+<DropdownMenuItem onClick={onDelete}>
+  {locale === 'ar' ? 'حذف' : 'Delete'}
+</DropdownMenuItem>
+
+// ✅ CORRECT: "View", "Edit", "Delete"
+// ❌ AVOID: "View Student", "Edit Student", "Delete Student"
+```
+
+**Benefits:**
+- Cleaner UI with shorter labels
+- No need for entity-specific dictionary keys
+- Consistent across all modules
+
+---
+
 ## Implementation Guide
 
 ### 1. Table Component (table.tsx)

@@ -27,6 +27,7 @@ import { LEAD_STATUS, LEAD_SCORE_RANGES } from './constants';
 interface FeaturedProps {
   leads: Lead[];
   isLoading?: boolean;
+  onRefresh?: () => void;
   dictionary?: Record<string, string>;
 }
 

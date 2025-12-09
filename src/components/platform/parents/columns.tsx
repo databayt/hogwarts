@@ -6,8 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Ellipsis } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useModal } from "@/components/atom/modal/context";
-import { deleteParent } from "@/components/platform/parents/actions";
-import { DeleteToast, ErrorToast, confirmDeleteDialog } from "@/components/atom/toast";
+import { ErrorToast } from "@/components/atom/toast";
 import type { Dictionary } from "@/components/internationalization/dictionaries";
 import type { Locale } from "@/components/internationalization/config";
 
@@ -20,7 +19,11 @@ export type ParentRow = {
   createdAt: string;
 };
 
-export const getParentColumns = (dictionary?: Dictionary['school']['parents'], lang?: Locale): ColumnDef<ParentRow>[] => {
+export interface ParentColumnCallbacks {
+  onDelete?: (row: ParentRow) => void;
+}
+
+export const getParentColumns = (dictionary?: Dictionary['school']['parents'], lang?: Locale, callbacks?: ParentColumnCallbacks): ColumnDef<ParentRow>[] => {
   const t = {
     name: dictionary?.name || (lang === 'ar' ? 'الاسم' : 'Name'),
     email: dictionary?.email || (lang === 'ar' ? 'البريد الإلكتروني' : 'Email'),
@@ -85,16 +88,8 @@ export const getParentColumns = (dictionary?: Dictionary['school']['parents'], l
         window.location.href = `/profile/${parent.userId}${qs}`;
       };
       const onEdit = () => openModal(parent.id);
-      const onDelete = async () => {
-        try {
-          const deleteMsg = lang === 'ar' ? `حذف ${parent.name}؟` : `Delete ${parent.name}?`;
-          const ok = await confirmDeleteDialog(deleteMsg);
-          if (!ok) return;
-          await deleteParent({ id: parent.id });
-          DeleteToast();
-        } catch (e) {
-          ErrorToast(e instanceof Error ? e.message : (lang === 'ar' ? 'فشل الحذف' : 'Failed to delete'));
-        }
+      const onDelete = () => {
+        callbacks?.onDelete?.(parent);
       };
       return (
         <DropdownMenu>

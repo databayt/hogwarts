@@ -1,183 +1,129 @@
 /**
- * Analytics component for Sales/Leads
- * Displays key metrics and visualizations
+ * Lead analytics dashboard component
+ * Displays key metrics and insights about leads
  */
 
 'use client';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
+import { useEffect, useState } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
-  Users,
   TrendingUp,
+  Users,
   Target,
   Award,
-  Calendar,
-  Mail,
-  Building,
-  Activity,
 } from 'lucide-react';
-import type { LeadAnalytics as LeadAnalyticsType } from './types';
+import { getLeadAnalytics } from './actions';
 import { LEAD_STATUS, LEAD_SOURCE } from './constants';
 
 interface AnalyticsProps {
-  analytics: LeadAnalyticsType | null;
-  isLoading?: boolean;
-  dictionary?: Record<string, string>;
+  className?: string;
 }
 
-export function Analytics({ analytics, isLoading, dictionary }: AnalyticsProps) {
-  const d = dictionary;
+export function LeadAnalytics({ className = '' }: AnalyticsProps) {
+  const [analytics, setAnalytics] = useState<{
+    totalLeads: number;
+    newLeadsThisWeek: number;
+    statusDistribution?: Array<{ status: string; _count: number }>;
+    sourceDistribution?: Array<{ source: string; _count: number }>;
+  } | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  if (isLoading || !analytics) {
+  useEffect(() => {
+    const fetchAnalytics = async () => {
+      try {
+        const result = await getLeadAnalytics();
+        if (result.success && result.data) {
+          setAnalytics({
+            totalLeads: result.data.totalLeads,
+            newLeadsThisWeek: result.data.newLeadsThisWeek,
+            statusDistribution: result.data.statusDistribution?.map(s => ({
+              status: s.status,
+              _count: s.count,
+            })),
+            sourceDistribution: result.data.topSources?.map(s => ({
+              source: s.source,
+              _count: s.count,
+            })),
+          });
+        }
+      } catch (error) {
+        console.error('Failed to fetch analytics:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchAnalytics();
+  }, []);
+
+  if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-muted-foreground">{d?.loading || 'Loading analytics...'}</div>
-      </div>
+      <>
+        {[...Array(4)].map((_, i) => (
+          <Card key={i} className="shadow-none h-fit">
+            <CardContent className="flex flex-col items-start p-2.5">
+              <Skeleton className="h-8 w-8 rounded-full mb-1.5" />
+              <Skeleton className="h-8 w-16" />
+              <Skeleton className="h-4 w-20" />
+            </CardContent>
+          </Card>
+        ))}
+      </>
     );
   }
 
+  if (!analytics) {
+    return null;
+  }
+
+  // Calculate conversion rate (mock calculation)
+  const conversionRate = analytics.totalLeads > 0
+    ? Math.round((analytics.statusDistribution?.find((s) => s.status === 'CLOSED_WON')?._count || 0) / analytics.totalLeads * 100)
+    : 0;
+
   return (
-    <div className="space-y-6">
-      {/* Key Metrics */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">{d?.totalLeads || 'Total Leads'}</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{analytics.totalLeads}</div>
-            <p className="text-xs text-muted-foreground">
-              {d?.allTimeTotal || 'All time total'}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">{d?.newThisWeek || 'New This Week'}</CardTitle>
-            <TrendingUp className="h-4 w-4 text-green-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">{analytics.newLeadsThisWeek}</div>
-            <p className="text-xs text-muted-foreground">
-              {d?.last7Days || 'Last 7 days'}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">{d?.conversionRate || 'Conversion Rate'}</CardTitle>
-            <Target className="h-4 w-4 text-blue-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{analytics.conversionRate.toFixed(1)}%</div>
-            <p className="text-xs text-muted-foreground">
-              {d?.closedWon || 'Closed won'}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">{d?.avgScore || 'Average Score'}</CardTitle>
-            <Award className="h-4 w-4 text-yellow-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{Math.round(analytics.averageScore)}</div>
-            <p className="text-xs text-muted-foreground">
-              {d?.outOf100 || 'Out of 100'}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Status Distribution */}
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Activity className="h-5 w-5" />
-              {d?.statusDistribution || 'Status Distribution'}
-            </CardTitle>
-            <CardDescription>
-              {d?.leadsbyStatus || 'Leads by status'}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {analytics.statusDistribution.map((item) => (
-              <div key={item.status} className="space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="flex items-center gap-2">
-                    <Badge variant="outline" className="text-xs">
-                      {LEAD_STATUS[item.status] || item.status}
-                    </Badge>
-                  </span>
-                  <span className="text-muted-foreground">
-                    {item.count} ({item.percentage.toFixed(1)}%)
-                  </span>
-                </div>
-                <Progress value={item.percentage} className="h-2" />
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Mail className="h-5 w-5" />
-              {d?.topSources || 'Top Sources'}
-            </CardTitle>
-            <CardDescription>
-              {d?.whereLeadsCome || 'Where leads come from'}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {analytics.topSources.map((item) => (
-              <div key={item.source} className="space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="flex items-center gap-2">
-                    <Badge variant="secondary" className="text-xs">
-                      {LEAD_SOURCE[item.source] || item.source}
-                    </Badge>
-                  </span>
-                  <span className="text-muted-foreground">
-                    {item.count} ({item.percentage.toFixed(1)}%)
-                  </span>
-                </div>
-                <Progress value={item.percentage} className="h-2" />
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Score Distribution */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Award className="h-5 w-5" />
-            {d?.scoreDistribution || 'Score Distribution'}
-          </CardTitle>
-          <CardDescription>
-            {d?.leadQuality || 'Lead quality breakdown'}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 md:grid-cols-4">
-            {analytics.scoreDistribution.map((item) => (
-              <div key={item.range} className="text-center p-4 rounded-lg bg-muted/50">
-                <div className="text-2xl font-bold">{item.count}</div>
-                <div className="text-sm text-muted-foreground">{item.range}</div>
-              </div>
-            ))}
-          </div>
+    <>
+      {/* Total Leads Card */}
+      <Card className="shadow-none h-fit">
+        <CardContent className="flex flex-col items-start p-2.5">
+          <Users className="h-8 w-8 text-muted-foreground mb-1.5" />
+          <div className="text-3xl font-bold leading-tight">{analytics.totalLeads}</div>
+          <p className="text-sm text-muted-foreground">Total Leads</p>
         </CardContent>
       </Card>
-    </div>
+
+      {/* New This Week Card */}
+      <Card className="shadow-none h-fit">
+        <CardContent className="flex flex-col items-start p-2.5">
+          <TrendingUp className="h-8 w-8 text-muted-foreground mb-1.5" />
+          <div className="text-3xl font-bold leading-tight">{analytics.newLeadsThisWeek}</div>
+          <p className="text-sm text-muted-foreground">New This Week</p>
+        </CardContent>
+      </Card>
+
+      {/* Conversion Rate Card */}
+      <Card className="shadow-none h-fit">
+        <CardContent className="flex flex-col items-start p-2.5">
+          <Target className="h-8 w-8 text-muted-foreground mb-1.5" />
+          <div className="text-3xl font-bold leading-tight">{conversionRate}%</div>
+          <p className="text-sm text-muted-foreground">Conversion Rate</p>
+        </CardContent>
+      </Card>
+
+      {/* Top Source Card */}
+      <Card className="shadow-none h-fit">
+        <CardContent className="flex flex-col items-start p-2.5">
+          <Award className="h-8 w-8 text-muted-foreground mb-1.5" />
+          <div className="text-3xl font-bold leading-tight">
+            {analytics.sourceDistribution?.[0]?.source
+              ? LEAD_SOURCE[analytics.sourceDistribution[0].source as keyof typeof LEAD_SOURCE]
+              : 'N/A'}
+          </div>
+          <p className="text-sm text-muted-foreground">Top Source</p>
+        </CardContent>
+      </Card>
+    </>
   );
 }

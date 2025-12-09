@@ -1871,7 +1871,11 @@
       "studentsInClass": "students in class",
       "yourScore": "Your Score",
       "passStatus": "Pass",
-      "failStatus": "Fail"
+      "failStatus": "Fail",
+      "download": "Download",
+      "downloadCertificate": "Certificate (Wall Display)",
+      "downloadReport": "Grade Report (Print)",
+      "downloadFailed": "Failed to download"
     },
     "common": {
       "actions": {

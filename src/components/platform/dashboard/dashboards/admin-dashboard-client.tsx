@@ -35,8 +35,8 @@ import {
   Download,
   Book,
 } from "lucide-react"
-import { ResourceUsage } from "@/components/platform/billing/resource-usage"
-import { InvoiceHistory } from "@/components/platform/billing/invoice-history"
+import { DetailedUsageTableDemo } from "@/components/platform/billing/detailed-usage-table-demo"
+import { InvoiceHistoryDemo } from "@/components/platform/billing/invoice-history-demo"
 import Icon from "@mdi/react"
 import {
   mdiWeatherSunny,
@@ -55,7 +55,6 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart"
 import { CartesianGrid, Line, LineChart, XAxis } from "recharts"
-import {DetailedUsageTableDemo} from "@/components/platform/billing/detailed-usage-table-demo";
 
 // ============================================================================
 // TYPES
@@ -686,30 +685,6 @@ function RecentActivitySection({
 }
 
 // ============================================================================
-// SECTION: Billing Data (Demo data for Resource Usage & Invoice History)
-// ============================================================================
-
-// Demo stats data (matches BillingStats interface)
-const billingStats = {
-  currentUsage: { students: 245, teachers: 28, classes: 18, storage: 2400 },
-  limits: { students: 300, teachers: 50, classes: 25, storage: 5000 },
-  usagePercentages: { students: 82, teachers: 56, classes: 72, storage: 48 },
-}
-
-// Demo invoices data
-const demoInvoices = [
-  { id: "inv_1", stripeInvoiceId: "INV-2024-001", periodStart: new Date("2024-11-01"), periodEnd: new Date("2024-11-30"), amountDue: 29900, status: "paid" },
-  { id: "inv_2", stripeInvoiceId: "INV-2024-002", periodStart: new Date("2024-10-01"), periodEnd: new Date("2024-10-31"), amountDue: 29900, status: "paid" },
-  { id: "inv_3", stripeInvoiceId: "INV-2024-003", periodStart: new Date("2024-09-01"), periodEnd: new Date("2024-09-30"), amountDue: 24900, status: "paid" },
-  { id: "inv_4", stripeInvoiceId: "INV-2024-004", periodStart: new Date("2024-08-01"), periodEnd: new Date("2024-08-31"), amountDue: 24900, status: "paid" },
-] as any[]
-
-// Demo payment methods data
-const demoPaymentMethods = [
-  { id: "pm_1", cardBrand: "visa", cardLast4: "4242", type: "card", billingName: "John Doe", isDefault: true, user: { username: "johndoe" } },
-] as any[]
-
-// ============================================================================
 // SECTION 0: Quick Look - Announcements, Events, Notifications, Messages
 // ============================================================================
 
@@ -846,10 +821,10 @@ export function AdminDashboardClient({
       <QuickLookSection locale={locale} subdomain={subdomain} />
 
       {/* Section 2: Resource Usage */}
-      <ResourceUsage stats={billingStats} />
+      <DetailedUsageTableDemo />
 
       {/* Section 3: Invoice History */}
-      <InvoiceHistory invoices={demoInvoices} paymentMethods={demoPaymentMethods} />
+      <InvoiceHistoryDemo />
 
       {/* Section 4: Recent Activity */}
       <RecentActivitySection recentActivities={recentActivities} todaySummary={todaySummary} />
