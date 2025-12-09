@@ -58,11 +58,6 @@ export function Search({ lang, dictionary, className, variant = "default" }: Sea
           "bg-background"
         )}
       >
-        {/* Search Icon (for non-RTL) */}
-        {!isRTL && variant === "expanded" && (
-          <SearchIcon className="absolute left-4 size-5 text-muted-foreground pointer-events-none" />
-        )}
-
         <Input
           ref={inputRef}
           type="search"
@@ -74,9 +69,7 @@ export function Search({ lang, dictionary, className, variant = "default" }: Sea
           placeholder={dictionary?.search?.placeholder || "What do you want to learn?"}
           className={cn(
             "border-0 bg-transparent shadow-none focus-visible:ring-0 h-11",
-            variant === "expanded"
-              ? isRTL ? "pr-4 pl-12" : "pl-12 pr-12"
-              : isRTL ? "pr-4 pl-12" : "pl-4 pr-12",
+            isRTL ? "pr-4 pl-14" : "pl-4 pr-14",
             "rounded-full"
           )}
           aria-label={dictionary?.search?.ariaLabel || "Search courses"}

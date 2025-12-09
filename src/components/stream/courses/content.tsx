@@ -49,16 +49,12 @@ export function StreamCoursesContent({
           isRTL && "md:flex-row-reverse"
         )}>
           {/* Hero Image */}
-          <div
-            className="relative flex items-center justify-center rounded-xl p-6 min-w-[160px] min-h-[160px] md:min-w-[180px] md:min-h-[180px]"
-            style={{ backgroundColor: "#D97757" }}
-          >
+          <div className="relative flex items-center justify-center rounded-xl p-6 size-40 md:size-44 bg-[#D97757] shrink-0">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/anthropic/6903d22d0099a66d72e05699_33ddc751e21fb4b116b3f57dd553f0bc55ea09d1-1000x1000.svg"
               alt="Courses"
-              width={140}
-              height={140}
+              className="size-32 md:size-36"
             />
           </div>
 
@@ -116,16 +112,12 @@ export function StreamCoursesLoadingSkeleton() {
       {/* Hero Section Skeleton */}
       <section className="py-8">
         <div className="flex flex-col md:flex-row items-center gap-8">
-          <div
-            className="relative flex items-center justify-center rounded-xl p-6 min-w-[160px] min-h-[160px] md:min-w-[180px] md:min-h-[180px]"
-            style={{ backgroundColor: "#D97757" }}
-          >
+          <div className="relative flex items-center justify-center rounded-xl p-6 size-40 md:size-44 bg-[#D97757] shrink-0">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/anthropic/6903d22d0099a66d72e05699_33ddc751e21fb4b116b3f57dd553f0bc55ea09d1-1000x1000.svg"
               alt="Courses"
-              width={140}
-              height={140}
+              className="size-32 md:size-36"
             />
           </div>
           <div className="space-y-3">
@@ -141,7 +133,7 @@ export function StreamCoursesLoadingSkeleton() {
 
       {/* Explore & Search Row Skeleton */}
       <section className="flex flex-col sm:flex-row items-center gap-4">
-        <div className="h-10 w-24 bg-muted rounded-md animate-pulse" />
+        <div className="h-10 w-24 bg-muted rounded-lg animate-pulse" />
         <div className="flex-1 h-11 w-full max-w-2xl bg-muted rounded-full animate-pulse" />
       </section>
 

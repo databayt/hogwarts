@@ -73,14 +73,14 @@ export function Explore({ lang, dictionary }: ExploreProps) {
     <NavigationMenu>
       <NavigationMenuList>
         <NavigationMenuItem>
-          <NavigationMenuTrigger className="bg-transparent hover:bg-accent/50 data-[state=open]:bg-accent/50">
+          <NavigationMenuTrigger className="bg-muted hover:bg-muted/80 data-[state=open]:bg-muted rounded-lg">
             <span className="font-medium">
               {dictionary?.explore?.title || "Explore"}
             </span>
           </NavigationMenuTrigger>
           <NavigationMenuContent>
             <div className={cn(
-              "grid gap-6 p-6 w-[800px] lg:w-[900px] grid-cols-4",
+              "grid gap-8 p-8 w-[52rem] lg:w-[58rem] grid-cols-4",
               isRTL && "direction-rtl"
             )}>
               {/* Column 1: Explore roles */}
@@ -237,7 +237,7 @@ export function Explore({ lang, dictionary }: ExploreProps) {
             </div>
 
             {/* Footer */}
-            <div className="border-t px-6 py-4 bg-muted/30">
+            <div className="border-t px-8 py-5 bg-muted/30 rounded-b-2xl">
               <p className="text-sm text-muted-foreground">
                 {dictionary?.explore?.notSure || "Not sure where to begin?"}{" "}
                 <Link
