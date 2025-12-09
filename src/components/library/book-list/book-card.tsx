@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { useState, useMemo } from "react";
+import { BookCoverImage } from "@/components/ui/imagekit-image";
 import Image from "next/image";
-import { useState } from "react";
 import type { Book } from "../types";
 
 interface Props {
@@ -11,10 +12,30 @@ interface Props {
 
 export default function BookCard({ book }: Props) {
   const [imageError, setImageError] = useState(false);
+
+  // Check if it's a valid ImageKit URL
+  const isImageKitUrl = useMemo(() => {
+    if (!book.coverUrl) return false;
+    return (
+      book.coverUrl.includes("ik.imagekit.io") ||
+      book.coverUrl.startsWith("hogwarts/")
+    );
+  }, [book.coverUrl]);
+
   const hasValidImage =
     book.coverUrl &&
     !book.coverUrl.includes("placeholder") &&
     !imageError;
+
+  // Fallback content for missing images
+  const FallbackContent = () => (
+    <div className="flex flex-col items-center justify-center h-full p-4 text-center">
+      <h3 className="font-bold text-white text-lg line-clamp-3 mb-2">
+        {book.title}
+      </h3>
+      <p className="text-white/80 text-sm">{book.author}</p>
+    </div>
+  );
 
   return (
     <li className="list-none">
@@ -28,20 +49,27 @@ export default function BookCard({ book }: Props) {
           style={{ backgroundColor: book.coverColor || "#1a1a2e" }}
         >
           {hasValidImage ? (
-            <Image
-              src={book.coverUrl}
-              alt={book.title}
-              fill
-              className="object-cover"
-              onError={() => setImageError(true)}
-            />
+            isImageKitUrl ? (
+              <BookCoverImage
+                src={book.coverUrl}
+                alt={book.title}
+                fill
+                preset="card"
+                className="object-cover"
+                onError={() => setImageError(true)}
+                fallback={<FallbackContent />}
+              />
+            ) : (
+              <Image
+                src={book.coverUrl}
+                alt={book.title}
+                fill
+                className="object-cover"
+                onError={() => setImageError(true)}
+              />
+            )
           ) : (
-            <div className="flex flex-col items-center justify-center h-full p-4 text-center">
-              <h3 className="font-bold text-white text-lg line-clamp-3 mb-2">
-                {book.title}
-              </h3>
-              <p className="text-white/80 text-sm">{book.author}</p>
-            </div>
+            <FallbackContent />
           )}
         </div>
 

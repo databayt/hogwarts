@@ -100,16 +100,29 @@ export async function AdminDashboard({ user, dictionary, locale = "en" }: Props)
       subdomain: school?.domain || "",
       userName: user.name || user.email?.split("@")[0] || "Admin",
       schoolName: school?.name || "Your School",
-      // Section 2: Quick Stats data
+      // Section 2: Quick Stats data (with drill-down links)
       quickStats: [
         {
           label: "Students",
           value: enrollment.total.toLocaleString(),
           change: enrollment.newThisMonth > 0 ? `+${enrollment.newThisMonth}` : "0",
           changeType: enrollment.newThisMonth > 0 ? ("positive" as const) : ("neutral" as const),
+          href: `/${locale}/s/${school?.domain || ""}/students`,
         },
-        { label: "Teachers", value: staff.total.toString(), change: "+5%", changeType: "positive" as const },
-        { label: "Classes", value: classes.total.toString(), change: "0%", changeType: "neutral" as const },
+        {
+          label: "Teachers",
+          value: staff.total.toString(),
+          change: "+5%",
+          changeType: "positive" as const,
+          href: `/${locale}/s/${school?.domain || ""}/teachers`,
+        },
+        {
+          label: "Classes",
+          value: classes.total.toString(),
+          change: "0%",
+          changeType: "neutral" as const,
+          href: `/${locale}/s/${school?.domain || ""}/classes`,
+        },
       ],
       // Section 3: Financial data
       financeStats: [
