@@ -27,7 +27,7 @@ import * as DevelopmentIcons from "./categories/development"
 import * as ProgrammingIcons from "./categories/programming"
 import * as RatingIcons from "./categories/ratings"
 import * as ShapeIcons from "./categories/shapes"
-import * as AnthropicIcons from "./anthropic"
+import { AnthropicIcons, ANTHROPIC_ILLUSTRATIONS } from "./anthropic"
 
 // Re-export individual icons for tree-shaking
 export * from "./categories/system"
@@ -39,7 +39,8 @@ export * from "./categories/development"
 export * from "./categories/programming"
 export * from "./categories/ratings"
 export * from "./categories/shapes"
-export * from "./anthropic"
+export { AnthropicIcons, ANTHROPIC_ILLUSTRATIONS } from "./anthropic"
+export type { AnthropicIllustration } from "./anthropic"
 
 /**
  * Icons Namespace
@@ -123,27 +124,19 @@ export const Icons = {
   triangle: ShapeIcons.TriangleIcon,
 
   // Anthropic icons (UI - theme-aware)
-  anthropicA: AnthropicIcons.AnthropicAIcon,
-  anthropicArrowRight: AnthropicIcons.AnthropicArrowRightIcon,
-  anthropicChevronDown: AnthropicIcons.AnthropicChevronDownIcon,
-  anthropicExternalLink: AnthropicIcons.AnthropicExternalLinkIcon,
-  anthropicLinkedIn: AnthropicIcons.AnthropicLinkedInIcon,
-  anthropicPlay: AnthropicIcons.AnthropicPlayIcon,
-  anthropicYouTube: AnthropicIcons.AnthropicYouTubeIcon,
-  anthropicXTwitter: AnthropicIcons.AnthropicXTwitterIcon,
-  anthropicQuote: AnthropicIcons.AnthropicQuoteIcon,
+  anthropicA: AnthropicIcons.A,
+  anthropicArrowRight: AnthropicIcons.ArrowRight,
+  anthropicChevronDown: AnthropicIcons.ChevronDown,
+  anthropicExternalLink: AnthropicIcons.ExternalLink,
+  anthropicLinkedIn: AnthropicIcons.LinkedIn,
+  anthropicPlay: AnthropicIcons.Play,
+  anthropicYouTube: AnthropicIcons.YouTube,
+  anthropicXTwitter: AnthropicIcons.XTwitter,
+  anthropicQuote: AnthropicIcons.Quote,
 
   // Anthropic illustrative icons (brand colors)
-  handsBuild: AnthropicIcons.HandsBuildIcon,
+  handsBuild: AnthropicIcons.HandsBuild,
 } as const
-
-/**
- * Anthropic Illustration Paths
- *
- * For large illustrative icons, use as img src or Next/Image
- * Usage: <Image src={ANTHROPIC_ILLUSTRATIONS.category01} alt="..." />
- */
-export { ANTHROPIC_ILLUSTRATIONS } from "./anthropic"
 
 /**
  * Dynamic Icon Component
