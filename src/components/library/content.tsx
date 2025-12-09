@@ -2,11 +2,7 @@ import { db } from "@/lib/db";
 import { getTenantContext } from "@/lib/tenant-context";
 import BookOverview from "./book-list/book-overview";
 import BookList from "./book-list/content";
-import { LibraryHeroSection } from "./hero-section";
 import { CollaborateSection } from "./collaborate-section";
-import Link from "next/link";
-import {buttonVariants} from "@/components/ui/button";
-import {EducationAnimation} from "@/components/stream/home/education-animation";
 
 interface Props {
   userId: string;
@@ -16,10 +12,6 @@ interface Props {
 
 export default async function LibraryContent({ userId, dictionary, lang }: Props) {
   const { schoolId } = await getTenantContext();
-  const isRTL = lang === "ar";
-
-  // Safe access to dictionary with fallbacks
-  const home = dictionary?.home as Record<string, string> | undefined;
 
   if (!schoolId) {
     return (
@@ -125,43 +117,6 @@ export default async function LibraryContent({ userId, dictionary, lang }: Props
 
   return (
     <div className="space-y-12">
-      {/* Hero Section with Animation */}
-      <section className="relative">
-        <div className={`flex flex-col lg:flex-row items-center gap-8 lg:gap-16 ${isRTL ? "lg:flex-row-reverse" : ""}`}>
-          {/* Text Content */}
-          <div className={`flex-1 flex flex-col space-y-6 ${isRTL ? "items-end text-right" : "items-start text-left"} lg:items-start lg:text-left`}>
-            <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tighter leading-none">
-              {home?.title || "Lumos"}
-              <br />
-              <span className="text-3xl md:text-4xl lg:text-5xl font-semibold block mt-2">
-                {home?.description || "Shinning a light."}
-              </span>
-            </h1>
-
-            <div className={`flex flex-col sm:flex-row gap-4 ${isRTL ? "sm:flex-row-reverse" : ""}`}>
-              <Link
-                className={buttonVariants({ size: "lg" })}
-                href={`/${lang}/stream/courses`}
-              >
-                {home?.exploreCourses || "Explore Courses"}
-              </Link>
-
-              <Link
-                className={buttonVariants({ size: "lg", variant: "ghost" })}
-                href={`/${lang}/login`}
-              >
-                {home?.signIn || "Sign in"}
-              </Link>
-            </div>
-          </div>
-
-          {/* Animation */}
-          <div className="flex-1 flex justify-center">
-            <EducationAnimation className="w-full max-w-lg h-72 md:h-96" />
-          </div>
-        </div>
-      </section>
-
       {/* Collaborate Section - Claude style */}
       <CollaborateSection lang={lang} />
 

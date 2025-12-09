@@ -27,7 +27,7 @@ import * as DevelopmentIcons from "./categories/development"
 import * as ProgrammingIcons from "./categories/programming"
 import * as RatingIcons from "./categories/ratings"
 import * as ShapeIcons from "./categories/shapes"
-import * as AnthropicIcons from "./categories/anthropic"
+import * as AnthropicIcons from "./anthropic"
 
 // Re-export individual icons for tree-shaking
 export * from "./categories/system"
@@ -39,7 +39,7 @@ export * from "./categories/development"
 export * from "./categories/programming"
 export * from "./categories/ratings"
 export * from "./categories/shapes"
-export * from "./categories/anthropic"
+export * from "./anthropic"
 
 /**
  * Icons Namespace
@@ -143,7 +143,7 @@ export const Icons = {
  * For large illustrative icons, use as img src or Next/Image
  * Usage: <Image src={ANTHROPIC_ILLUSTRATIONS.category01} alt="..." />
  */
-export { ANTHROPIC_ILLUSTRATIONS } from "./categories/anthropic"
+export { ANTHROPIC_ILLUSTRATIONS } from "./anthropic"
 
 /**
  * Dynamic Icon Component

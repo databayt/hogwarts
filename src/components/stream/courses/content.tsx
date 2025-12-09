@@ -5,6 +5,7 @@ import { BookOpen } from "lucide-react";
 import { PublicCourseType } from "@/components/stream/data/course/get-all-courses";
 import { CourseCard, CourseCardSkeleton } from "./course-card";
 import { Suspense } from "react";
+import Image from "next/image";
 
 interface Props {
   dictionary: any;
@@ -38,7 +39,14 @@ export function StreamCoursesContent({
 
   return (
     <div className="container mx-auto py-6 space-y-6">
-      <div className="flex flex-col space-y-2">
+      <div className="flex flex-col space-y-4">
+        <Image
+          src="/anthropic/6903d22d0099a66d72e05699_33ddc751e21fb4b116b3f57dd553f0bc55ea09d1-1000x1000.svg"
+          alt="Courses"
+          width={120}
+          height={120}
+          className="mb-2"
+        />
         <h2>Explore Courses</h2>
         <p className="muted">
           Discover our wide range of courses designed to help you achieve your

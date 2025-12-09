@@ -6,7 +6,7 @@
  * Illustrative icons use brand colors (#141413 dark, #FAF9F5 light).
  */
 
-import type { IconProps } from "../types"
+import type { IconProps } from "./types"
 
 // ============================================================================
 // UI Icons (use currentColor - theme-aware)
