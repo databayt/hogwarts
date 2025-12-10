@@ -1,11 +1,182 @@
 ---
 title: "Dashboard"
-description: "Comprehensive overview of the role-based dashboard system providing personalized views for all user types in the school automation platform."
+description: "Comprehensive overview of the dashboard system providing role-based, financial, operator, and learning management views across the school automation platform."
 ---
 
-The dashboard system provides **role-based personalized views** for 8 different user types. Each dashboard is tailored to the specific needs and responsibilities of its target user, displaying relevant metrics, quick actions, and data visualizations.
+The platform features **6 distinct dashboard types** serving different audiences and purposes. Each dashboard provides tailored metrics, visualizations, and actions optimized for its target users.
 
-## Role-Based Architecture
+## Dashboard Types Overview
+
+| Dashboard | Location | Route | Purpose | Target Users |
+|-----------|----------|-------|---------|--------------|
+| **Platform Dashboard** | `components/platform/dashboard/` | `/[lang]/s/[subdomain]/dashboard` | School operations overview | All school roles (8 types) |
+| **Operator Dashboard** | `components/operator/dashboard/` | `/[lang]/dashboard` | Platform-wide management | Platform operators |
+| **Finance Dashboard** | `components/platform/finance/dashboard/` | `/[lang]/s/[subdomain]/finance/dashboard` | Financial KPIs & analytics | Admin, Accountant |
+| **Banking Dashboard** | `components/platform/finance/banking/dashboard/` | `/[lang]/s/[subdomain]/finance/banking` | Bank account management | Admin, Accountant |
+| **Invoice Dashboard** | `components/platform/finance/invoice/dashboard/` | `/[lang]/s/[subdomain]/finance/invoice` | Invoice tracking & stats | Admin, Accountant |
+| **Stream Dashboard** | `components/stream/dashboard/` | `/[lang]/s/[subdomain]/stream/dashboard` | Learning management | Students, Teachers |
+
+---
+
+## Directory Structure
+
+### Complete Dashboard Architecture
+
+```
+src/
+├── app/
+│   ├── [lang]/
+│   │   ├── (operator)/
+│   │   │   └── dashboard/
+│   │   │       └── page.tsx                    # Operator Dashboard route
+│   │   │
+│   │   └── s/[subdomain]/(platform)/
+│   │       ├── dashboard/
+│   │       │   ├── page.tsx                    # Platform Dashboard route
+│   │       │   ├── layout.tsx                  # Dashboard layout
+│   │       │   ├── loading.tsx                 # Loading state
+│   │       │   ├── error.tsx                   # Error boundary
+│   │       │   └── settings/
+│   │       │       └── page.tsx                # Dashboard settings
+│   │       │
+│   │       ├── finance/
+│   │       │   ├── dashboard/
+│   │       │   │   └── page.tsx                # Finance Dashboard route
+│   │       │   ├── banking/
+│   │       │   │   └── page.tsx                # Banking Dashboard route
+│   │       │   └── invoice/(dashboard)/
+│   │       │       └── page.tsx                # Invoice Dashboard route
+│   │       │
+│   │       └── stream/
+│   │           └── dashboard/
+│   │               ├── page.tsx                # Stream Dashboard route
+│   │               └── [slug]/
+│   │                   ├── page.tsx            # Course details
+│   │                   └── [lessonId]/
+│   │                       └── page.tsx        # Lesson view
+│   │
+│   └── api/
+│       └── dashboard/
+│           └── route.ts                        # Dashboard API endpoint
+│
+└── components/
+    ├── platform/
+    │   ├── dashboard/                          # Platform Dashboard (~90 files)
+    │   │   ├── content.tsx                     # Role routing (main entry)
+    │   │   ├── content-client.tsx              # Client wrapper
+    │   │   ├── actions.ts                      # Server actions (~63KB)
+    │   │   ├── config.ts                       # Role mappings, icons
+    │   │   ├── validation.ts                   # Zod schemas
+    │   │   │
+    │   │   │ # Role-Based Dashboards
+    │   │   ├── admin.tsx                       # Admin dashboard (server)
+    │   │   ├── admin-client.tsx                # Admin dashboard (client)
+    │   │   ├── student.tsx                     # Student dashboard
+    │   │   ├── teacher.tsx                     # Teacher dashboard
+    │   │   ├── parent.tsx                      # Parent/Guardian dashboard
+    │   │   ├── principal.tsx                   # Principal dashboard
+    │   │   ├── accountant.tsx                  # Accountant dashboard
+    │   │   ├── staff.tsx                       # Staff dashboard
+    │   │   │
+    │   │   │ # Shared Widgets
+    │   │   ├── welcome-banner.tsx              # Personalized greeting
+    │   │   ├── metric-card.tsx                 # Key stat with trend
+    │   │   ├── activity-rings.tsx              # Apple-style progress
+    │   │   ├── schedule-item.tsx               # Timetable entries
+    │   │   ├── announcement-card.tsx           # School announcements
+    │   │   ├── progress-card.tsx               # Goal tracking
+    │   │   ├── quick-actions.tsx               # Action shortcuts
+    │   │   ├── quick-actions-config.ts         # Action definitions
+    │   │   ├── chart-card.tsx                  # Chart container
+    │   │   ├── empty-state.tsx                 # No data placeholder
+    │   │   │
+    │   │   │ # Chart Components
+    │   │   ├── attendance-chart.tsx            # Attendance trends
+    │   │   ├── grade-chart.tsx                 # Grade distribution
+    │   │   ├── revenue-chart.tsx               # Revenue vs expenses
+    │   │   ├── performance-gauge.tsx           # Radial gauge
+    │   │   ├── weekly-chart.tsx                # Weekly bar chart
+    │   │   ├── comparison-chart.tsx            # Period comparison
+    │   │   │
+    │   │   │ # Showcase Components (card-*, chart-*, stat-*)
+    │   │   ├── card-*.tsx                      # 14 card components
+    │   │   ├── chart-*.tsx                     # 10 chart components
+    │   │   ├── stat-*.tsx                      # 17 stat components
+    │   │   ├── dashboard-showcase.tsx          # Full showcase
+    │   │   │
+    │   │   │ # Infrastructure
+    │   │   ├── header.tsx                      # Dashboard header
+    │   │   ├── loading.tsx                     # Loading skeleton
+    │   │   ├── error-boundary.tsx              # Error handling
+    │   │   ├── search-command.tsx              # Command palette
+    │   │   │
+    │   │   └── settings/                       # Settings subdirectory
+    │   │       ├── content.tsx
+    │   │       └── user-name-form.tsx
+    │   │
+    │   └── finance/
+    │       ├── dashboard/                      # Finance Dashboard (~12 files)
+    │       │   ├── content.tsx                 # Main entry
+    │       │   ├── actions.ts                  # Server actions
+    │       │   ├── types.ts                    # TypeScript types
+    │       │   ├── kpi-card.tsx                # KPI cards
+    │       │   ├── revenue-chart.tsx           # Revenue chart
+    │       │   ├── expense-chart.tsx           # Expense breakdown
+    │       │   ├── cash-flow-chart.tsx         # Cash flow
+    │       │   ├── bank-accounts-summary.tsx   # Bank summary
+    │       │   ├── quick-actions.tsx           # Finance actions
+    │       │   ├── alert-card.tsx              # Financial alerts
+    │       │   └── transaction-list.tsx        # Recent transactions
+    │       │
+    │       ├── banking/dashboard/              # Banking Dashboard (~7 files)
+    │       │   ├── content.tsx                 # Main entry
+    │       │   ├── header.tsx                  # Header with balance
+    │       │   ├── main-content.tsx            # Account details
+    │       │   ├── sidebar.tsx                 # Account list
+    │       │   ├── account-tabs.tsx            # Tab navigation
+    │       │   ├── recent-transactions.tsx     # Transaction list
+    │       │   └── skeleton.tsx                # Loading state
+    │       │
+    │       └── invoice/dashboard/              # Invoice Dashboard (~7 files)
+    │           ├── content.tsx                 # Main entry
+    │           ├── actions.ts                  # Server actions
+    │           ├── config.ts                   # Chart config
+    │           ├── header.tsx                  # Dashboard header
+    │           ├── card.tsx                    # Stats cards
+    │           ├── chart-invoice.tsx           # Invoice chart
+    │           └── data-table.tsx              # Invoice table
+    │
+    ├── operator/
+    │   └── dashboard/                          # Operator Dashboard (~14 files)
+    │       ├── content.tsx                     # Main entry
+    │       ├── config.ts                       # Configuration
+    │       ├── card.tsx                        # Stat cards
+    │       ├── metrics-cards.tsx               # KPI metrics
+    │       ├── period-switcher.tsx             # Time period selector
+    │       ├── overview.tsx                    # Overview section
+    │       ├── recent-sales.tsx                # Recent subscriptions
+    │       ├── recent-sales-skeleton.tsx       # Loading state
+    │       ├── bar-graph.tsx                   # Bar chart
+    │       ├── bar-graph-skeleton.tsx          # Loading state
+    │       ├── area-graph.tsx                  # Area chart
+    │       ├── area-graph-skeleton.tsx         # Loading state
+    │       ├── pie-graph.tsx                   # Pie chart
+    │       └── pie-graph-skeleton.tsx          # Loading state
+    │
+    └── stream/
+        └── dashboard/                          # Stream Dashboard (~3 files)
+            ├── content.tsx                     # Main entry
+            └── lesson/
+                └── actions.ts                  # Lesson actions
+```
+
+---
+
+## 1. Platform Dashboard (Role-Based)
+
+The main school dashboard provides **role-based personalized views** for 8 different user types. Each dashboard is tailored to the specific needs and responsibilities of its target user.
+
+### Role-Based Architecture
 
 The dashboard uses a **switch-case routing pattern** in `content.tsx` to render the appropriate dashboard component based on the user's role:
 
@@ -31,7 +202,7 @@ switch (userRole) {
 }
 ```
 
-## Dashboard Overview by Role
+### Dashboard Overview by Role
 
 | Role | Dashboard | Primary Focus | Key Metrics |
 |------|-----------|---------------|-------------|
@@ -43,6 +214,146 @@ switch (userRole) {
 | **ACCOUNTANT** | AccountantDashboard | Financial management | Collections, invoices, revenue, transactions |
 | **STAFF** | StaffDashboard | Operations | Tasks, requests, approvals, maintenance |
 | **USER** | DefaultDashboard | Basic info | Welcome message, role placeholder |
+
+### Quick Actions by Role
+
+Each role has 6 predefined quick actions:
+
+| Role | Quick Actions |
+|------|---------------|
+| **ADMIN** | Reports, Approvals, Announce, Users, Settings, Analytics |
+| **PRINCIPAL** | Reports, Staff, Announce, Approvals, Performance, Events |
+| **TEACHER** | Attendance, Grades, Assignments, Messages, Timetable, Lessons |
+| **STUDENT** | Assignments, Grades, Timetable, Messages, Library, Attendance |
+| **GUARDIAN** | Children, Grades, Attendance, Messages, Fees, Announce |
+| **ACCOUNTANT** | Invoices, Receipts, Reports, Fees, Approvals, Budget |
+| **STAFF** | Tasks, Schedule, Messages, Announce, Reports, Directory |
+
+---
+
+## 2. Operator Dashboard (Platform Admin)
+
+The operator dashboard is for **platform administrators** managing all schools across the system. It provides MRR (Monthly Recurring Revenue) metrics, churn rates, and platform-wide analytics.
+
+### Key Features
+
+- **MRR Tracking**: Current monthly recurring revenue with growth percentage
+- **Annual Run Rate**: Projected yearly revenue based on current MRR
+- **Churn Rate**: School cancellation rate with churned count
+- **Platform Metrics**: Total schools, active schools, users, students
+- **Revenue Charts**: Bar, area, and pie graphs for financial visualization
+- **Recent Sales**: Latest subscription activity
+
+### Components
+
+| Component | Purpose |
+|-----------|---------|
+| `MetricsCards` | Total schools, active schools, users, students |
+| `PeriodSwitcher` | Toggle between time periods |
+| `BarGraph` | Revenue comparison by period |
+| `AreaGraph` | Revenue trends over time |
+| `PieGraph` | Revenue distribution |
+| `RecentSales` | Latest subscription transactions |
+
+---
+
+## 3. Finance Dashboard
+
+The finance dashboard provides **comprehensive financial analytics** for school administrators and accountants.
+
+### Role-Based Access
+
+| Access Level | Roles | Features |
+|--------------|-------|----------|
+| **Full Access** | ADMIN, ACCOUNTANT | All KPIs, charts, transactions, budget |
+| **Limited Access** | TEACHER, STAFF | Net profit, payroll expense |
+| **Minimal Access** | STUDENT, GUARDIAN | Payment status, outstanding invoices |
+
+### KPI Cards (8 Metrics)
+
+| KPI | Description |
+|-----|-------------|
+| Total Revenue | Total invoiced amount with trend |
+| Collected Revenue | Paid amount with collection rate |
+| Total Expenses | All expenses this period |
+| Net Profit | Revenue minus expenses with margin |
+| Cash Balance | Current balance with runway |
+| Outstanding | Unpaid invoices with overdue count |
+| Students Paid | Fee payment status ratio |
+| Payroll | Processed and pending payroll |
+
+### Charts
+
+- **Revenue Chart**: Revenue vs expenses vs profit over time
+- **Expense Chart**: Expense breakdown by category
+- **Cash Flow Chart**: Inflow, outflow, and balance
+- **Bank Accounts Summary**: Multi-account overview
+- **Budget Overview**: Category-wise budget utilization
+
+---
+
+## 4. Banking Dashboard
+
+The banking dashboard manages **connected bank accounts** with real-time balances and transaction history.
+
+### Features
+
+- **Account Overview**: Total balance across all accounts
+- **Account Tabs**: Switch between connected accounts
+- **Transaction List**: Recent transactions with filtering
+- **Permission-Based**: Requires banking view permission
+
+### Components
+
+| Component | Purpose |
+|-----------|---------|
+| `DashboardHeader` | User info, total balance |
+| `DashboardMainContent` | Account details, transactions |
+| `DashboardSidebar` | Account list |
+| `AccountTabs` | Tab navigation |
+| `RecentTransactions` | Transaction list |
+
+---
+
+## 5. Invoice Dashboard
+
+The invoice dashboard tracks **invoice metrics and recent activity**.
+
+### Features
+
+- **Total Revenue**: Cumulative invoiced amount
+- **Invoice Counts**: Total, paid, unpaid
+- **Invoice Chart**: Visual breakdown by status
+- **Recent Invoices**: Latest 10 invoices (30 days)
+
+### Components
+
+| Component | Purpose |
+|-----------|---------|
+| `StatsCards` | Revenue, total, paid, unpaid counts |
+| `ChartInvoice` | Visual invoice breakdown |
+| `RecentInvoicesCard` | Data table of recent invoices |
+
+---
+
+## 6. Stream Dashboard (LMS)
+
+The stream dashboard is for the **Learning Management System**, showing enrolled courses and available courses.
+
+### Sections
+
+- **Enrolled Courses**: Courses the user has access to
+- **Available Courses**: Courses available for purchase/enrollment
+
+### Nested Routes
+
+```
+/stream/dashboard
+  └── /[slug]           # Course details
+      └── /[lessonId]   # Lesson view
+```
+
+---
 
 ## Multi-Tenant Architecture
 
@@ -56,52 +367,29 @@ const { schoolId } = await getTenantContext();
 const students = await db.student.count({ where: { schoolId } });
 ```
 
+---
+
 ## Common UI Components
 
-Every dashboard uses shared widgets as flat files:
+Every dashboard uses shared widgets:
 
 | Widget | File | Purpose | Used By |
 |--------|------|---------|---------|
-| `WelcomeBanner` | `welcome-banner.tsx` | Personalized greeting with time | All roles |
-| `MetricCard` | `metric-card.tsx` | Key stat with icon and trend | All roles |
-| `ActivityRings` | `activity-rings.tsx` | Apple-style progress indicators | All roles |
+| `WelcomeBanner` | `welcome-banner.tsx` | Personalized greeting | All roles |
+| `MetricCard` | `metric-card.tsx` | Key stat with trend | All roles |
+| `ActivityRings` | `activity-rings.tsx` | Apple-style progress | All roles |
 | `ScheduleItem` | `schedule-item.tsx` | Timetable entries | Teacher, Student |
-| `ProgressCard` | `progress-card.tsx` | Goal tracking with progress bar | All roles |
+| `ProgressCard` | `progress-card.tsx` | Goal tracking | All roles |
 | `AnnouncementCard` | `announcement-card.tsx` | School announcements | Student, Parent |
-| `QuickActionsGrid` | `quick-action.tsx` | Shortcut buttons with variants | All roles |
+| `QuickActionsGrid` | `quick-action.tsx` | Shortcut buttons | All roles |
 | `EmptyState` | `empty-state.tsx` | No data placeholder | All roles |
-| `ChartCard` | `chart-card.tsx` | Chart container wrapper | All roles |
+| `ChartCard` | `chart-card.tsx` | Chart container | All roles |
 
-## Chart Components
-
-Chart components are flat files with descriptive names:
-
-| Chart | File | Purpose | Used By |
-|-------|------|---------|---------|
-| `AttendanceTrendChart` | `attendance-chart.tsx` | Attendance over time | Principal, Admin |
-| `GradeDistributionChart` | `grade-chart.tsx` | Grade breakdown | Principal, Teacher |
-| `RevenueChart` | `revenue-chart.tsx` | Revenue vs expenses | Accountant |
-| `PerformanceGauge` | `performance-gauge.tsx` | Single metric radial | Student, Accountant, Staff |
-| `WeeklyActivityChart` | `weekly-chart.tsx` | Weekly bar chart | Teacher, Accountant, Staff |
-| `ComparisonLineChart` | `comparison-chart.tsx` | Period comparison | Student, Parent |
-
-## Quick Actions by Role
-
-Each role has 6 predefined quick actions in `quick-action.tsx` with 4 variants (grid, list, compact, icon-only):
-
-| Role | Quick Actions |
-|------|---------------|
-| **ADMIN** | Reports, Approvals, Announce, Users, Settings, Analytics |
-| **PRINCIPAL** | Reports, Staff, Announce, Approvals, Performance, Events |
-| **TEACHER** | Attendance, Grades, Assignments, Messages, Timetable, Lessons |
-| **STUDENT** | Assignments, Grades, Timetable, Messages, Library, Attendance |
-| **GUARDIAN** | Children, Grades, Attendance, Messages, Fees, Announce |
-| **ACCOUNTANT** | Invoices, Receipts, Reports, Fees, Approvals, Budget |
-| **STAFF** | Tasks, Schedule, Messages, Announce, Reports, Directory |
+---
 
 ## Server Actions
 
-Dashboard data is fetched via consolidated server actions in `actions.ts` (~2300 lines):
+Dashboard data is fetched via server actions:
 
 | Action | Returns | Used By |
 |--------|---------|---------|
@@ -117,68 +405,27 @@ Dashboard data is fetched via consolidated server actions in `actions.ts` (~2300
 | `getStudentDashboardData()` | Student-specific data | Student |
 | `getParentDashboardData()` | Parent-specific data | Parent |
 | `getPrincipalDashboardData()` | Principal-specific data | Principal |
+| `getDashboardStats()` | Finance dashboard stats | Accountant, Admin |
+| `getRecentTransactions()` | Transaction list | Accountant, Admin |
+| `getFinancialAlerts()` | Financial warnings | Accountant, Admin |
+| `calculateMRR()` | Monthly recurring revenue | Operator |
+| `calculateChurnRate()` | Churn percentage | Operator |
 
-## Directory Structure
+---
 
-The dashboard follows a **flat file structure** (~80 files):
+## Internationalization
 
+Dashboards support Arabic (RTL) and English (LTR):
+
+```tsx
+const dashDict = dictionary?.teacherDashboard || {
+  stats: { todaysClasses: "Today's Classes", ... },
+  sections: { todaysClasses: "Today's Classes", ... },
+  labels: { room: "Room", students: "students", ... },
+};
 ```
-src/components/platform/dashboard/
-│ # Standardized Files
-├── content.tsx              # Role routing (main entry)
-├── content-client.tsx       # Client wrapper
-├── actions.ts               # Consolidated server actions (~2300 lines)
-├── config.ts                # Role mappings, icons, colors
-├── types.ts                 # TypeScript interfaces
-│
-│ # Role-Based Dashboards (flat)
-├── admin.tsx                # Admin dashboard (server)
-├── admin-client.tsx         # Admin dashboard (client)
-├── student.tsx              # Student dashboard
-├── teacher.tsx              # Teacher dashboard
-├── parent.tsx               # Parent dashboard
-├── principal.tsx            # Principal dashboard
-├── accountant.tsx           # Accountant dashboard
-├── staff.tsx                # Staff dashboard
-│
-│ # Shared Widgets (flat)
-├── welcome-banner.tsx       # Personalized greeting
-├── metric-card.tsx          # Key stat with icon/trend
-├── activity-rings.tsx       # Apple-style progress rings
-├── schedule-item.tsx        # Timetable entries
-├── announcement-card.tsx    # Announcement display
-├── progress-card.tsx        # Goal tracking
-├── quick-action.tsx         # Quick actions with 4 variants
-├── chart-card.tsx           # Chart container
-├── empty-state.tsx          # No data placeholder
-│
-│ # Chart Components (flat)
-├── attendance-chart.tsx     # Attendance trends
-├── grade-chart.tsx          # Grade distribution
-├── revenue-chart.tsx        # Revenue vs expenses
-├── performance-gauge.tsx    # Single metric radial
-├── weekly-chart.tsx         # Weekly bar chart
-├── comparison-chart.tsx     # Period comparison
-│
-│ # Showcase Components (flat, prefixed)
-├── card-*.tsx               # 14 card showcase files
-├── chart-*.tsx              # 10 chart showcase files
-├── stat-*.tsx               # 17 stat showcase files
-├── card-showcase.tsx        # Cards showcase entry
-├── chart-showcase.tsx       # Charts showcase entry
-├── stat-showcase.tsx        # Stats showcase entry
-│
-│ # Infrastructure
-├── header.tsx               # Dashboard header
-├── loading.tsx              # Loading state
-├── error-boundary.tsx       # Error handling
-├── search-command.tsx       # Search command palette
-│
-│ # Exception: Settings subdirectory
-└── settings/
-    ├── content.tsx
-    └── user-name-form.tsx
-```
+
+---
 
 ## Error Handling
 
@@ -194,17 +441,7 @@ try {
 }
 ```
 
-## Internationalization
-
-Dashboards support Arabic (RTL) and English (LTR):
-
-```tsx
-const dashDict = dictionary?.teacherDashboard || {
-  stats: { todaysClasses: "Today's Classes", ... },
-  sections: { todaysClasses: "Today's Classes", ... },
-  labels: { room: "Room", students: "students", ... },
-};
-```
+---
 
 ## Related Documentation
 
