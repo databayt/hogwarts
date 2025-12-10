@@ -42,6 +42,7 @@ import {
 import { DetailedUsageTableDemo } from "@/components/platform/billing/detailed-usage-table-demo"
 import { InvoiceHistoryDemo } from "@/components/platform/billing/invoice-history-demo"
 import { TopSection } from "./top-section"
+import { QuickLookSection } from "./quick-look-section"
 import Link from "next/link"
 import {
   ChartConfig,
@@ -230,93 +231,7 @@ function QuickStatsSection({ quickStats }: { quickStats: QuickStatData[] }) {
 }
 
 // ============================================================================
-// SECTION 5: Quick Look (Announcements, Events, Notifications, Messages)
-// ============================================================================
-
-function QuickLookSection({ locale, subdomain }: { locale: string; subdomain: string }) {
-  const quickLookItems = [
-    {
-      icon: Megaphone,
-      label: "Announcements",
-      count: 3,
-      newCount: 1,
-      recent: "Holiday Schedule Update",
-      href: `/${locale}/s/${subdomain}/announcements`,
-      color: "text-[#D97757]",
-      bgColor: "bg-[#D97757]/15"
-    },
-    {
-      icon: CalendarDays,
-      label: "Events",
-      count: 5,
-      newCount: 2,
-      recent: "Parent-Teacher Meeting",
-      href: `/${locale}/s/${subdomain}/events`,
-      color: "text-[#6A9BCC]",
-      bgColor: "bg-[#6A9BCC]/15"
-    },
-    {
-      icon: Bell,
-      label: "Notifications",
-      count: 12,
-      newCount: 4,
-      recent: "Fee reminder for Grade 10",
-      href: `/${locale}/s/${subdomain}/admin`,
-      color: "text-[#CBCADB]",
-      bgColor: "bg-[#CBCADB]/15"
-    },
-    {
-      icon: FileText,
-      label: "Messages",
-      count: 8,
-      newCount: 2,
-      recent: "Request for meeting",
-      href: `/${locale}/s/${subdomain}/admin`,
-      color: "text-[#BCD1CA]",
-      bgColor: "bg-[#BCD1CA]/15"
-    },
-  ]
-
-  return (
-    <section>
-      <h2 className="mb-4 text-lg font-semibold">Quick Look</h2>
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        {quickLookItems.map((item) => (
-          <Card key={item.label} className="p-4">
-            <CardContent className="p-0 space-y-3">
-              <div className="flex items-center gap-3">
-                <div className={cn("flex h-10 w-10 items-center justify-center rounded-lg", item.bgColor)}>
-                  <item.icon className={cn("h-5 w-5", item.color)} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs text-muted-foreground">{item.label}</p>
-                  <div className="flex items-center gap-2">
-                    <p className="text-lg font-semibold">{item.count}</p>
-                    {item.newCount > 0 && (
-                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                        +{item.newCount}
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-              </div>
-              <p className="text-xs text-muted-foreground truncate">{item.recent}</p>
-              <Link
-                href={item.href}
-                className="inline-flex items-center text-xs text-primary hover:underline"
-              >
-                View All <ChevronRight className="ml-1 h-3 w-3" />
-              </Link>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    </section>
-  )
-}
-
-// ============================================================================
-// SECTION 6: Financial Overview
+// SECTION 5: Financial Overview
 // ============================================================================
 
 const financeIconMap: Record<string, React.ElementType> = {
@@ -750,22 +665,22 @@ export function AdminDashboardClient({
 }: AdminDashboardClientProps) {
   return (
     <div className="space-y-8">
-      {/* ============ TOP HERO SECTION (3 sections together) ============ */}
+      {/* ============ TOP HERO SECTION ============ */}
       <div className="space-y-6">
         {/* Section 1: Upcoming Class + Weather (FIRST) */}
         <TopSection locale={locale} subdomain={subdomain} />
 
-        {/* Section 2: System Health */}
+        {/* Section 2: Quick Look */}
+        <QuickLookSection locale={locale} subdomain={subdomain} />
+
+        {/* Section 3: System Health */}
         <SystemHealthSection />
 
-        {/* Section 3: Quick Stats */}
+        {/* Section 4: Quick Stats */}
         <QuickStatsSection quickStats={quickStats} />
       </div>
 
       {/* ============ MAIN CONTENT ============ */}
-
-      {/* Section 5: Quick Look */}
-      <QuickLookSection locale={locale} subdomain={subdomain} />
 
       {/* Section 6: Financial Overview */}
       <FinancialSection financeStats={financeStats} />

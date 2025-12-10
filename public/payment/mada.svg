@@ -1,4 +1,17 @@
-<svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-  <title>Mada</title>
-  <path fill="#006A4D" d="M2 6h20v12H2V6zm2 2v8h16V8H4zm2 2h2v1H7v3H6v-4zm3 0h2l.5 2 .5-2h2v4h-1v-3l-.7 3h-.6l-.7-3v3H9v-4zm6 0h2c.6 0 1 .4 1 1v2c0 .6-.4 1-1 1h-2v-4zm1 1v2h1v-2h-1z"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 750 471">
+  <g fill="none" fill-rule="evenodd">
+    <rect fill="#fff" width="750" height="471" rx="40"/>
+    <rect stroke="#D9D9D9" x="1" y="1" width="748" height="469" rx="40"/>
+    <!-- Mada Logo - Saudi Payment Network -->
+    <g transform="translate(175, 135)">
+      <!-- Blue swoosh -->
+      <path d="M0 100c0-55.228 44.772-100 100-100h200c55.228 0 100 44.772 100 100v0c0 55.228-44.772 100-100 100H100C44.772 200 0 155.228 0 100z" fill="#1E3A5F"/>
+      <!-- Teal accent -->
+      <path d="M50 100c0-27.614 22.386-50 50-50h200c27.614 0 50 22.386 50 50v0c0 27.614-22.386 50-50 50H100c-27.614 0-50-22.386-50-50z" fill="#00A4A6"/>
+      <!-- White M letter -->
+      <path d="M120 60h30l25 50 25-50h30v80h-22v-55l-28 55h-10l-28-55v55h-22V60z" fill="#fff"/>
+      <!-- White A letter -->
+      <path d="M260 60h35l30 80h-25l-5-15h-35l-5 15h-25l30-80zm17.5 20l-10 30h20l-10-30z" fill="#fff"/>
+    </g>
+  </g>
 </svg>

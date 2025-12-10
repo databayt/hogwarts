@@ -10,68 +10,8 @@ interface DocumentsTabProps {
 }
 
 export function DocumentsTab({ student }: DocumentsTabProps) {
-  // Mock documents for demonstration
-  const documents: StudentDocument[] = student.documents || [
-    {
-      id: "1",
-      schoolId: student.schoolId,
-      studentId: student.id,
-      documentType: "BIRTH_CERTIFICATE",
-      documentName: "Birth Certificate.pdf",
-      fileUrl: "#",
-      fileSize: 245678,
-      mimeType: "application/pdf",
-      uploadedAt: new Date("2024-01-15"),
-      isVerified: true,
-      verifiedAt: new Date("2024-01-16"),
-      verifiedBy: "Admin User",
-      tags: ["Official", "Required"],
-    },
-    {
-      id: "2",
-      schoolId: student.schoolId,
-      studentId: student.id,
-      documentType: "TRANSFER_CERTIFICATE",
-      documentName: "Transfer Certificate.pdf",
-      fileUrl: "#",
-      fileSize: 189234,
-      mimeType: "application/pdf",
-      uploadedAt: new Date("2024-01-15"),
-      isVerified: true,
-      verifiedAt: new Date("2024-01-16"),
-      verifiedBy: "Admin User",
-      tags: ["Official", "Transfer"],
-    },
-    {
-      id: "3",
-      schoolId: student.schoolId,
-      studentId: student.id,
-      documentType: "MEDICAL_REPORT",
-      documentName: "Medical Fitness Report.pdf",
-      fileUrl: "#",
-      fileSize: 567890,
-      mimeType: "application/pdf",
-      uploadedAt: new Date("2024-02-01"),
-      isVerified: false,
-      tags: ["Medical", "Pending"],
-    },
-    {
-      id: "4",
-      schoolId: student.schoolId,
-      studentId: student.id,
-      documentType: "PASSPORT_COPY",
-      documentName: "Passport.jpg",
-      fileUrl: "#",
-      fileSize: 1234567,
-      mimeType: "image/jpeg",
-      uploadedAt: new Date("2024-01-20"),
-      isVerified: true,
-      verifiedAt: new Date("2024-01-21"),
-      verifiedBy: "Admin User",
-      expiryDate: new Date("2028-05-15"),
-      tags: ["ID", "Travel"],
-    },
-  ];
+  // Use real documents from database
+  const documents = student.documents || [];
 
   const getDocumentTypeLabel = (type: string) => {
     return type.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase());
@@ -282,33 +222,39 @@ export function DocumentsTab({ student }: DocumentsTabProps) {
         <CardContent>
           <div className="space-y-2">
             {[
-              { name: "Birth Certificate", required: true, uploaded: true },
-              { name: "Transfer Certificate", required: student.studentType === "TRANSFER", uploaded: true },
-              { name: "Medical Report", required: true, uploaded: true },
-              { name: "Passport Copy", required: student.studentType === "INTERNATIONAL", uploaded: true },
-              { name: "Visa Copy", required: student.studentType === "INTERNATIONAL", uploaded: false },
-              { name: "Previous Academic Records", required: student.studentType === "TRANSFER", uploaded: false },
-            ].map((doc, index) => (
-              <div key={index} className="flex items-center justify-between p-2">
-                <div className="flex items-center gap-2">
-                  {doc.uploaded ? (
-                    <CircleCheck className="h-4 w-4 text-green-600" />
-                  ) : doc.required ? (
-                    <CircleX className="h-4 w-4 text-red-600" />
-                  ) : (
-                    <div className="h-4 w-4 rounded-full border-2 border-gray-300" />
+              { name: "Birth Certificate", type: "BIRTH_CERTIFICATE", required: true },
+              { name: "Transfer Certificate", type: "TRANSFER_CERTIFICATE", required: student.studentType === "TRANSFER" },
+              { name: "Medical Report", type: "MEDICAL_REPORT", required: true },
+              { name: "Passport Copy", type: "PASSPORT_COPY", required: student.studentType === "INTERNATIONAL" },
+              { name: "Visa Copy", type: "VISA_COPY", required: student.studentType === "INTERNATIONAL" },
+              { name: "Previous Academic Records", type: "ACADEMIC_RECORDS", required: student.studentType === "TRANSFER" },
+            ].map((doc, index) => {
+              const uploaded = documents.some((d: any) =>
+                d.documentType?.toUpperCase() === doc.type ||
+                d.documentType?.toUpperCase().includes(doc.type.split('_')[0])
+              );
+              return (
+                <div key={index} className="flex items-center justify-between p-2">
+                  <div className="flex items-center gap-2">
+                    {uploaded ? (
+                      <CircleCheck className="h-4 w-4 text-green-600" />
+                    ) : doc.required ? (
+                      <CircleX className="h-4 w-4 text-red-600" />
+                    ) : (
+                      <div className="h-4 w-4 rounded-full border-2 border-muted" />
+                    )}
+                    <span className={uploaded ? "line-through text-muted-foreground" : ""}>
+                      {doc.name}
+                    </span>
+                  </div>
+                  {doc.required && (
+                    <Badge variant="secondary" className="text-xs">
+                      Required
+                    </Badge>
                   )}
-                  <span className={doc.uploaded ? "line-through text-muted-foreground" : ""}>
-                    {doc.name}
-                  </span>
                 </div>
-                {doc.required && (
-                  <Badge variant="secondary" className="text-xs">
-                    Required
-                  </Badge>
-                )}
-              </div>
-            ))}
+              );
+            })}
           </div>
         </CardContent>
       </Card>

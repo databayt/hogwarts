@@ -283,34 +283,45 @@ export function AttendanceTab({ student }: AttendanceTabProps) {
           <CardTitle>Recent Attendance Records</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-2">
-            {attendanceRecords
-              .filter(r => r.status !== "future" && r.status !== "weekend")
-              .slice(-10)
-              .reverse()
-              .map((record, index) => (
-                <div key={index} className="flex items-center justify-between p-2 hover:bg-muted/50 rounded">
-                  <div className="flex items-center gap-3">
-                    {getStatusIcon(record.status)}
-                    <div>
-                      <p className="font-medium">{format(record.date, "EEEE, MMM dd")}</p>
-                      {record.checkInTime && (
-                        <p className="text-xs text-muted-foreground">
-                          In: {record.checkInTime} • Out: {record.checkOutTime}
-                        </p>
-                      )}
+          {attendanceRecords.filter(r => r.status !== "future" && r.status !== "weekend").length > 0 ? (
+            <div className="space-y-2">
+              {attendanceRecords
+                .filter(r => r.status !== "future" && r.status !== "weekend")
+                .slice(-10)
+                .reverse()
+                .map((record, index) => (
+                  <div key={index} className="flex items-center justify-between p-2 hover:bg-muted/50 rounded">
+                    <div className="flex items-center gap-3">
+                      {getStatusIcon(record.status)}
+                      <div>
+                        <p className="font-medium">{format(record.date, "EEEE, MMM dd")}</p>
+                        {record.checkInTime && (
+                          <p className="text-xs text-muted-foreground">
+                            In: {record.checkInTime}{record.checkOutTime ? ` • Out: ${record.checkOutTime}` : ''}
+                          </p>
+                        )}
+                        {record.notes && (
+                          <p className="text-xs text-muted-foreground">Note: {record.notes}</p>
+                        )}
+                      </div>
                     </div>
+                    <Badge variant={
+                      record.status === "present" ? "default" :
+                      record.status === "absent" ? "destructive" :
+                      record.status === "excused" ? "outline" :
+                      "secondary"
+                    }>
+                      {record.status}
+                    </Badge>
                   </div>
-                  <Badge variant={
-                    record.status === "present" ? "default" :
-                    record.status === "absent" ? "destructive" :
-                    "secondary"
-                  }>
-                    {record.status}
-                  </Badge>
-                </div>
-              ))}
-          </div>
+                ))}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
+              <CalendarIcon className="h-12 w-12 mb-4" />
+              <p>No attendance records yet</p>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

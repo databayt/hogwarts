@@ -18,6 +18,7 @@ import { EmptyState } from "./empty-state"
 import { PerformanceGauge } from "./performance-gauge"
 import { ComparisonLineChart } from "./comparison-chart"
 import { TopSection } from "./top-section"
+import { QuickLookSection } from "./quick-look-section"
 import Link from "next/link"
 
 interface StudentDashboardProps {
@@ -151,6 +152,9 @@ export async function StudentDashboard({ user, dictionary, locale = "en" }: Stud
       <div className="space-y-6">
         {/* Section 1: Upcoming Class + Weather (FIRST) */}
         <TopSection locale={locale} subdomain={school?.domain || ""} />
+
+        {/* Section 2: Quick Look */}
+        <QuickLookSection locale={locale} subdomain={school?.domain || ""} />
 
         {/* Key Metrics Row */}
         <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">

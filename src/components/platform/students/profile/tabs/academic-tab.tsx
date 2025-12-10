@@ -73,8 +73,8 @@ export function AcademicTab({ student }: AcademicTabProps) {
           )
         : "-",
       score: examResults.find((er: any) => er.subjectId === sc.class?.subject?.id)?.score
-        ? Math.round((examResults.find((er: any) => er.subjectId === sc.class?.subject?.id).score /
-            examResults.find((er: any) => er.subjectId === sc.class?.subject?.id).maxScore) * 100)
+        ? Math.round(((examResults.find((er: any) => er.subjectId === sc.class?.subject?.id)?.score || 0) /
+            (examResults.find((er: any) => er.subjectId === sc.class?.subject?.id)?.maxScore || 100)) * 100)
         : 0
     }))
   } : null;

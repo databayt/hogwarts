@@ -16,6 +16,7 @@ import { AnnouncementCard } from "./announcement-card"
 import { EmptyState } from "./empty-state"
 import { ComparisonLineChart } from "./comparison-chart"
 import { TopSection } from "./top-section"
+import { QuickLookSection } from "./quick-look-section"
 import Link from "next/link"
 
 interface ParentDashboardProps {
@@ -158,6 +159,9 @@ export async function ParentDashboard({ user, dictionary, locale = "en" }: Paren
       <div className="space-y-6">
         {/* Section 1: Upcoming Class + Weather (FIRST) */}
         <TopSection locale={locale} subdomain={school?.domain || ""} />
+
+        {/* Section 2: Quick Look */}
+        <QuickLookSection locale={locale} subdomain={school?.domain || ""} />
 
         {/* Key Metrics Row */}
         <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">

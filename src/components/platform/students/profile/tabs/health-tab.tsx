@@ -11,58 +11,11 @@ interface HealthTabProps {
 }
 
 export function HealthTab({ student }: HealthTabProps) {
-  // Mock health records for demonstration
-  const healthRecords: HealthRecord[] = student.healthRecords || [
-    {
-      id: "1",
-      schoolId: student.schoolId,
-      studentId: student.id,
-      recordDate: new Date("2024-01-15"),
-      recordType: "VACCINATION",
-      title: "COVID-19 Booster",
-      description: "Pfizer-BioNTech COVID-19 Vaccine, Booster Dose",
-      severity: "LOW",
-      doctorName: "Dr. Sarah Johnson",
-      hospitalName: "City Medical Center",
-      recordedBy: "School Nurse",
-      createdAt: new Date("2024-01-15"),
-      updatedAt: new Date("2024-01-15"),
-    },
-    {
-      id: "2",
-      schoolId: student.schoolId,
-      studentId: student.id,
-      recordDate: new Date("2024-02-20"),
-      recordType: "MEDICAL_CHECKUP",
-      title: "Annual Health Checkup",
-      description: "Routine annual health examination. All parameters normal.",
-      severity: "LOW",
-      doctorName: "Dr. Michael Brown",
-      hospitalName: "School Health Clinic",
-      recordedBy: "School Nurse",
-      createdAt: new Date("2024-02-20"),
-      updatedAt: new Date("2024-02-20"),
-    },
-    {
-      id: "3",
-      schoolId: student.schoolId,
-      studentId: student.id,
-      recordDate: new Date("2024-03-10"),
-      recordType: "INCIDENT",
-      title: "Minor Sports Injury",
-      description: "Sprained ankle during football practice. Rest recommended for 1 week.",
-      severity: "MEDIUM",
-      doctorName: "Dr. Emily White",
-      followUpDate: new Date("2024-03-17"),
-      prescription: "Ibuprofen 400mg twice daily for 5 days",
-      recordedBy: "PE Teacher",
-      createdAt: new Date("2024-03-10"),
-      updatedAt: new Date("2024-03-10"),
-    },
-  ];
+  // Use real health records from database
+  const healthRecords = student.healthRecords || [];
 
-  const vaccinations = healthRecords.filter(r => r.recordType === "VACCINATION");
-  const incidents = healthRecords.filter(r => r.recordType === "INCIDENT");
+  const vaccinations = healthRecords.filter((r: any) => r.recordType === "VACCINATION" || r.recordType === "Vaccination");
+  const incidents = healthRecords.filter((r: any) => r.recordType === "INCIDENT" || r.recordType === "Incident");
 
   const getSeverityColor = (severity?: string) => {
     switch (severity) {
