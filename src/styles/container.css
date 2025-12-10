@@ -58,7 +58,7 @@
     :root {
       --container-px: 1.25rem;
       --marketing-px: 1.5rem; /* 24px */
-      --dashboard-px: 0.5rem; /* 8px */
+      --dashboard-px: 0.375rem; /* 6px */
     }
   }
 
@@ -67,7 +67,7 @@
     :root {
       --container-px: 1.5rem;
       --marketing-px: 2rem; /* 32px */
-      --dashboard-px: 0.5rem; /* 8px */
+      --dashboard-px: 0.375rem; /* 6px */
     }
   }
 
@@ -76,7 +76,7 @@
     :root {
       --container-px: 2rem;
       --marketing-px: 3rem; /* 48px */
-      --dashboard-px: 0.5rem; /* 8px */
+      --dashboard-px: 0.375rem; /* 6px */
     }
   }
 
@@ -84,7 +84,7 @@
   @media (min-width: 1536px) {
     :root {
       --marketing-px: 4rem; /* 64px - breathing room on large screens */
-      --dashboard-px: 0.5rem; /* 8px */
+      --dashboard-px: 0.375rem; /* 6px */
     }
   }
 

@@ -39,15 +39,15 @@ interface SiteProps {
   school: School; // Required - we always pass school data now
   dictionary: Dictionary;
   lang: Locale;
+  subdomain?: string;
 }
 
-export default function SiteContent({ school, dictionary, lang }: SiteProps) {
-  // For now, we'll just render static content
-  // Later, you can use this data to make components dynamic
+export default function SiteContent({ school, dictionary, lang, subdomain }: SiteProps) {
+  const subdomainValue = subdomain || school.domain;
 
   return (
     <div>
-      <Hero />
+      <Hero lang={lang} subdomain={subdomainValue} />
       <Houses />
       <Features />
       <Core />
@@ -58,7 +58,7 @@ export default function SiteContent({ school, dictionary, lang }: SiteProps) {
       <LogoCloud />
       <EventCard />
       <LetsWorkTogether />
-      <BackgroundGradientAnimationDemo />
+      <BackgroundGradientAnimationDemo lang={lang} subdomain={subdomainValue} />
       <Newsletter />
       <FAQs />
       <NewComers />

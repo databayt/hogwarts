@@ -200,6 +200,19 @@ export function Weather({
     )
   }
 
+  // Get current time and date
+  const now = new Date()
+  const currentTime = now.toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  })
+  const currentDate = now.toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "short",
+    day: "numeric",
+  })
+
   return (
     <div
       className={cn(
@@ -208,18 +221,17 @@ export function Weather({
       )}
     >
       <div>
-        {/* Header with day, condition, and refresh */}
+        {/* Header with condition and refresh */}
         <div className="flex items-start justify-between">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <p className="text-lg font-medium">{currentWeather.day}</p>
               <div className="flex items-center gap-1 text-muted-foreground">
                 <WeatherIcon
                   condition={currentWeather.condition}
                   className="size-5"
                 />
                 <span className="text-sm">
-                  ({currentWeather.conditionLabel})
+                  {currentWeather.conditionLabel}
                 </span>
               </div>
             </div>
@@ -229,7 +241,7 @@ export function Weather({
             )}
 
             {/* Weather details */}
-            <div className="mt-3 space-y-2">
+            <div className="mt-2 space-y-1">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Droplets className="size-4" />
                 <span>Humidity: {currentWeather.humidity}%</span>
@@ -270,13 +282,19 @@ export function Weather({
           </Button>
         </div>
 
+        {/* Time and Date - Big font */}
+        <div className="mt-3 space-y-0">
+          <p className="text-3xl font-bold tracking-tight">{currentTime}</p>
+          <p className="text-base text-muted-foreground">{currentDate}</p>
+        </div>
+
         {/* 6-day forecast strip */}
-        <div className="mt-4 flex justify-between rounded-lg bg-muted/50 p-3">
+        <div className="mt-3 flex justify-between rounded-lg bg-muted/50 p-2">
           {forecastData.slice(0, 6).map((item) => (
-            <div key={item.day} className="flex flex-col items-center gap-1">
+            <div key={item.day} className="flex flex-col items-center gap-0.5">
               <span className="text-xs text-muted-foreground">{item.day}</span>
-              <WeatherIcon condition={item.condition} className="size-5" />
-              <span className="text-sm font-medium">
+              <WeatherIcon condition={item.condition} className="size-4" />
+              <span className="text-xs font-medium">
                 {item.temp}°{tempUnit.charAt(0)}
               </span>
             </div>

@@ -438,27 +438,7 @@ export function Upcoming({ role, data, locale, subdomain, className }: UpcomingP
           )}
         >
           <div className="relative h-full overflow-hidden bg-gradient-to-b from-muted/50 to-background">
-            <div className="absolute inset-0 flex items-start justify-center pt-16">
-              <div className="relative flex h-[80px] w-[160px] items-center justify-center">
-                {[...Array(8)].map((_, i) => (
-                  <div
-                    key={i}
-                    className={cn(
-                      "absolute h-[40px] w-[40px]",
-                      "rounded-[140px]",
-                      "animate-pulse",
-                      "opacity-20",
-                      "bg-primary/30"
-                    )}
-                    style={{
-                      animationDelay: `${i * 0.3}s`,
-                      transform: `scale(${1 + i * 0.2})`,
-                    }}
-                  />
-                ))}
-                <Icon className="relative z-10 h-8 w-8 text-primary" />
-              </div>
-            </div>
+            {/* Clean empty space - no icon */}
           </div>
 
           <div className="absolute bottom-0 left-0 right-0 p-4">
