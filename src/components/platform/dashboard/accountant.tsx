@@ -5,7 +5,6 @@ import { format, isToday, isTomorrow } from "date-fns"
 import { QuickActions } from "./quick-action"
 import { getQuickActionsByRole } from "./quick-actions-config"
 import { getTenantContext } from "@/lib/tenant-context"
-import { WelcomeBanner } from "./welcome-banner"
 import { MetricCard } from "./metric-card"
 import { ActivityRings } from "./activity-rings"
 import { ProgressCard } from "./progress-card"
@@ -13,6 +12,7 @@ import { EmptyState } from "./empty-state"
 import { RevenueChart } from "./revenue-chart"
 import { PerformanceGauge } from "./performance-gauge"
 import { WeeklyActivityChart } from "./weekly-chart"
+import { TopSection } from "./top-section"
 import Link from "next/link"
 import { ChevronRight, ArrowDownRight, ArrowUpRight } from "lucide-react"
 
@@ -161,12 +161,8 @@ export async function AccountantDashboard({
 
     return (
       <div className="space-y-6">
-        {/* Welcome Banner */}
-        <WelcomeBanner
-          userName={user.name || user.email?.split("@")[0]}
-          role="Accountant"
-          subtitle={`Today's collections: $${todayTotal.toLocaleString()}`}
-        />
+        {/* Section 1: Upcoming Class + Weather (FIRST) */}
+        <TopSection locale={locale} subdomain={school?.domain || ""} />
 
         {/* Key Metrics Row */}
         <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">

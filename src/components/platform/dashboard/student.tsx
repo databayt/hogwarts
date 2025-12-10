@@ -9,7 +9,6 @@ import { QuickActions } from "./quick-action"
 import { getQuickActionsByRole } from "./quick-actions-config"
 import { getTenantContext } from "@/lib/tenant-context"
 import { StudentDashboardStats } from "@/components/platform/shared/stats"
-import { WelcomeBanner } from "./welcome-banner"
 import { MetricCard } from "./metric-card"
 import { ActivityRings } from "./activity-rings"
 import { ScheduleItem } from "./schedule-item"
@@ -18,6 +17,7 @@ import { AnnouncementCard } from "./announcement-card"
 import { EmptyState } from "./empty-state"
 import { PerformanceGauge } from "./performance-gauge"
 import { ComparisonLineChart } from "./comparison-chart"
+import { TopSection } from "./top-section"
 import Link from "next/link"
 
 interface StudentDashboardProps {
@@ -149,16 +149,8 @@ export async function StudentDashboard({ user, dictionary, locale = "en" }: Stud
 
     return (
       <div className="space-y-6">
-        {/* Welcome Banner */}
-        <WelcomeBanner
-          userName={user.name || user.email?.split("@")[0]}
-          role="Student"
-          subtitle={
-            data.upcomingAssignments.length > 0
-              ? `You have ${data.upcomingAssignments.length} assignments due soon`
-              : "You're all caught up!"
-          }
-        />
+        {/* Section 1: Upcoming Class + Weather (FIRST) */}
+        <TopSection locale={locale} subdomain={school?.domain || ""} />
 
         {/* Key Metrics Row */}
         <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">

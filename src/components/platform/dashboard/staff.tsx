@@ -5,13 +5,13 @@ import { format } from "date-fns"
 import { QuickActions } from "./quick-action"
 import { getQuickActionsByRole } from "./quick-actions-config"
 import { getTenantContext } from "@/lib/tenant-context"
-import { WelcomeBanner } from "./welcome-banner"
 import { MetricCard } from "./metric-card"
 import { ActivityRings } from "./activity-rings"
 import { ProgressCard } from "./progress-card"
 import { EmptyState } from "./empty-state"
 import { WeeklyActivityChart } from "./weekly-chart"
 import { PerformanceGauge } from "./performance-gauge"
+import { TopSection } from "./top-section"
 import Link from "next/link"
 import { ChevronRight } from "lucide-react"
 
@@ -169,12 +169,8 @@ export async function StaffDashboard({
 
     return (
       <div className="space-y-6">
-        {/* Welcome Banner */}
-        <WelcomeBanner
-          userName={user.name || user.email?.split("@")[0]}
-          role="Staff"
-          subtitle={`${completedTasksToday} of ${mockTodayTasks.length} tasks completed today`}
-        />
+        {/* Section 1: Upcoming Class + Weather (FIRST) */}
+        <TopSection locale={locale} subdomain={school?.domain || ""} />
 
         {/* Key Metrics Row */}
         <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">

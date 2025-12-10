@@ -8,13 +8,13 @@ import { QuickActions } from "./quick-action"
 import { getQuickActionsByRole } from "./quick-actions-config"
 import { getTenantContext } from "@/lib/tenant-context"
 import { TeacherDashboardStats } from "@/components/platform/shared/stats"
-import { WelcomeBanner } from "./welcome-banner"
 import { MetricCard } from "./metric-card"
 import { ActivityRings } from "./activity-rings"
 import { ScheduleItem } from "./schedule-item"
 import { ProgressCard } from "./progress-card"
 import { EmptyState } from "./empty-state"
 import { WeeklyActivityChart } from "./weekly-chart"
+import { TopSection } from "./top-section"
 import Link from "next/link"
 
 interface TeacherDashboardProps {
@@ -153,12 +153,8 @@ export async function TeacherDashboard({ user, dictionary, locale = "en" }: Teac
 
     return (
       <div className="space-y-6">
-        {/* Welcome Banner */}
-        <WelcomeBanner
-          userName={user.name || user.email?.split("@")[0]}
-          role="Teacher"
-          subtitle={`You have ${data.todaysClasses.length} classes scheduled for today`}
-        />
+        {/* Section 1: Upcoming Class + Weather (FIRST) */}
+        <TopSection locale={locale} subdomain={school?.domain || ""} />
 
         {/* Key Metrics Row */}
         <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">

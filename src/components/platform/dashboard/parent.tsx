@@ -9,13 +9,13 @@ import { QuickActions } from "./quick-action"
 import { getQuickActionsByRole } from "./quick-actions-config"
 import { getTenantContext } from "@/lib/tenant-context"
 import { ParentDashboardStats } from "@/components/platform/shared/stats"
-import { WelcomeBanner } from "./welcome-banner"
 import { MetricCard } from "./metric-card"
 import { ActivityRings } from "./activity-rings"
 import { ProgressCard } from "./progress-card"
 import { AnnouncementCard } from "./announcement-card"
 import { EmptyState } from "./empty-state"
 import { ComparisonLineChart } from "./comparison-chart"
+import { TopSection } from "./top-section"
 import Link from "next/link"
 
 interface ParentDashboardProps {
@@ -156,16 +156,8 @@ export async function ParentDashboard({ user, dictionary, locale = "en" }: Paren
 
     return (
       <div className="space-y-6">
-        {/* Welcome Banner */}
-        <WelcomeBanner
-          userName={user.name || user.email?.split("@")[0]}
-          role="Parent"
-          subtitle={
-            data.children.length > 0
-              ? `Monitoring ${data.children.length} ${data.children.length === 1 ? "child" : "children"}`
-              : "Welcome to the parent portal"
-          }
-        />
+        {/* Section 1: Upcoming Class + Weather (FIRST) */}
+        <TopSection locale={locale} subdomain={school?.domain || ""} />
 
         {/* Key Metrics Row */}
         <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
