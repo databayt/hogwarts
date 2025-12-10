@@ -2,40 +2,43 @@
 
 import * as React from "react"
 import { useTheme } from "next-themes"
-import { Moon, Sun } from "lucide-react"
+import { Button } from "@/components/ui/button"
 
 export function ModeSwitcher() {
   const { setTheme, resolvedTheme } = useTheme()
-  const [mounted, setMounted] = React.useState(false)
-
-  React.useEffect(() => {
-    setMounted(true)
-  }, [])
 
   const toggleTheme = React.useCallback(() => {
     setTheme(resolvedTheme === "dark" ? "light" : "dark")
   }, [resolvedTheme, setTheme])
 
-  if (!mounted) {
-    return (
-      <button className="p-2 rounded hover:bg-[#3c4b5e] transition-colors text-white">
-        <Sun className="h-4 w-4" />
-      </button>
-    )
-  }
-
   return (
-    <button
-      className="p-2 rounded hover:bg-[#3c4b5e] transition-colors text-white"
+    <Button
+      variant="ghost"
+      size="icon"
+      className="group/toggle size-8"
       onClick={toggleTheme}
       title="Toggle theme"
     >
-      {resolvedTheme === "dark" ? (
-        <Moon className="h-4 w-4" />
-      ) : (
-        <Sun className="h-4 w-4" />
-      )}
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className="size-4.5"
+      >
+        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+        <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" />
+        <path d="M12 3l0 18" />
+        <path d="M12 9l4.65 -4.65" />
+        <path d="M12 14.3l7.37 -7.37" />
+        <path d="M12 19.6l8.85 -8.85" />
+      </svg>
       <span className="sr-only">Toggle theme</span>
-    </button>
+    </Button>
   )
 }
