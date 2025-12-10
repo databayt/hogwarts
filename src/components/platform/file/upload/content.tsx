@@ -115,12 +115,11 @@ export function UploadContent({
 
   const handleFilesChange = (files: UploadResult[]) => {
     // Update progress tracking
-    const progressItems: UploadProgress[] = files.map((f) => ({
-      filename: f.originalName,
-      loaded: f.size,
-      total: f.size,
-      percentage: 100,
-      status: "completed" as const,
+    const progressItems: UploadProgress[] = files.map((f, idx) => ({
+      fileId: f.id || `file-${idx}`,
+      fileName: f.originalName || `file-${idx}`,
+      progress: 100,
+      status: "success" as const,
     }));
     setUploadProgress(progressItems);
   };

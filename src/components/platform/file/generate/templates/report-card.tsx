@@ -408,7 +408,7 @@ export function ReportCardTemplate({ data, style = "standard" }: ReportCardTempl
           {data.subjects.map((subject, idx) => (
             <View
               key={idx}
-              style={[styles.tableRow, idx % 2 === 0 ? styles.evenRow : undefined]}
+              style={[styles.tableRow, idx % 2 === 0 ? styles.evenRow : {}]}
             >
               <Text style={[styles.cell, styles.subjectCol]}>
                 {isRTL ? subject.nameAr || subject.name : subject.name}

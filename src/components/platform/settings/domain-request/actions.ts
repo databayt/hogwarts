@@ -176,7 +176,7 @@ export async function approveDomainRequest(requestId: string) {
       schoolId: request.schoolId,
     });
 
-    revalidatePath('/admin/domain-requests');
+    revalidatePath('/school/domain-requests');
     return { success: true };
   } catch (error) {
     logger.error('Failed to approve domain request', error instanceof Error ? error : new Error('Unknown error'), {
@@ -207,7 +207,7 @@ export async function rejectDomainRequest(requestId: string, reason?: string) {
       reason,
     });
 
-    revalidatePath('/admin/domain-requests');
+    revalidatePath('/school/domain-requests');
     return { success: true };
   } catch (error) {
     logger.error('Failed to reject domain request', error instanceof Error ? error : new Error('Unknown error'), {

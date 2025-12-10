@@ -5,7 +5,7 @@ import { ChevronRight, Calendar, Users, Trophy, FileText, Bell } from "lucide-re
 import { isToday, isTomorrow, differenceInDays } from "date-fns"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { getParentDashboardData } from "./actions"
-import { QuickActions } from "./quick-action"
+import { QuickActions } from "./quick-actions"
 import { getQuickActionsByRole } from "./quick-actions-config"
 import { getTenantContext } from "@/lib/tenant-context"
 import { ParentDashboardStats } from "@/components/platform/shared/stats"
@@ -15,8 +15,13 @@ import { ProgressCard } from "./progress-card"
 import { AnnouncementCard } from "./announcement-card"
 import { EmptyState } from "./empty-state"
 import { ComparisonLineChart } from "./comparison-chart"
-import { TopSection } from "./top-section"
+import { Upcoming } from "./upcoming"
+import { Weather } from "./weather"
 import { QuickLookSection } from "./quick-look-section"
+import { ResourceUsageSection } from "./resource-usage-section"
+import { InvoiceHistorySection } from "./invoice-history-section"
+import { FinancialOverviewSection } from "./financial-overview-section"
+import { SectionHeading } from "./section-heading"
 import Link from "next/link"
 
 interface ParentDashboardProps {
@@ -157,18 +162,35 @@ export async function ParentDashboard({ user, dictionary, locale = "en" }: Paren
 
     return (
       <div className="space-y-6">
-        {/* Section 1: Upcoming Class + Weather (FIRST) */}
-        <TopSection locale={locale} subdomain={school?.domain || ""} />
+        {/* ============ TOP HERO SECTION (Unified Order) ============ */}
+        {/* Section 1: Upcoming + Weather */}
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <Upcoming role="GUARDIAN" locale={locale} subdomain={school?.domain || ""} />
+          <Weather />
+        </div>
 
-        {/* Section 2: Quick Look */}
+        {/* Section 2: Quick Look (no title) */}
         <QuickLookSection locale={locale} subdomain={school?.domain || ""} />
 
-        {/* Section 3: Quick Actions */}
-        <QuickActions
-          actions={getQuickActionsByRole("GUARDIAN", dictionary, school?.domain ?? undefined)}
-          locale={locale}
-        />
+        {/* Section 3: Quick Actions (4 focused actions) */}
+        <section>
+          <SectionHeading title="Quick Actions" />
+          <QuickActions
+            actions={getQuickActionsByRole("GUARDIAN", dictionary, school?.domain ?? undefined)}
+            locale={locale}
+          />
+        </section>
 
+        {/* Section 4: Resource Usage */}
+        <ResourceUsageSection role="GUARDIAN" />
+
+        {/* Section 5: Invoice History (Children's Fees) */}
+        <InvoiceHistorySection role="GUARDIAN" />
+
+        {/* Section 6: Financial Overview */}
+        <FinancialOverviewSection role="GUARDIAN" />
+
+        {/* ============ PARENT-SPECIFIC SECTIONS ============ */}
         {/* Key Metrics Row */}
         <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
           <MetricCard title="Children" value={data.children.length} iconName="Users" iconColor="text-blue-500" />

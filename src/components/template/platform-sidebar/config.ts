@@ -32,7 +32,7 @@ const ALL_ROLES: Role[] = [
 export const platformNav: PlatformNavItem[] = [
   // Admin lab – admin only
   { title: "Overview", href: "/dashboard", icon: "pieChart", roles: ALL_ROLES },
-  { title: "Admin", href: "/admin", icon: "admin", roles: ["ADMIN", "DEVELOPER"], className: "-ml-[1.5px] h-4.5 w-4.5" },
+  { title: "School", href: "/school", icon: "admin", roles: ["ADMIN", "DEVELOPER"], className: "-ml-[1.5px] h-4.5 w-4.5" },
   { title: "Sales", href: "/sales", icon: "sales", roles: ["ADMIN", "DEVELOPER"] },
 
   // School platform – recommended visibility

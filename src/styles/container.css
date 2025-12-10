@@ -41,7 +41,7 @@
     --marketing-max: 80rem; /* 1280px max-width */
 
     /* Dashboard: minimal spacing for data-dense views */
-    --dashboard-px: 0; /* 0px mobile */
+    --dashboard-px: 0.375rem; /* 6px mobile */
   }
 
   /* sm breakpoint (640px) */
@@ -62,12 +62,12 @@
     }
   }
 
-  /* lg breakpoint (1024px) */
+  /* lg breakpoint (1024px+) - laptop and above */
   @media (min-width: 1024px) {
     :root {
       --container-px: 1.5rem;
       --marketing-px: 2rem; /* 32px */
-      --dashboard-px: 0.625rem; /* 10px */
+      --dashboard-px: 0.5rem; /* 8px */
     }
   }
 
@@ -76,7 +76,7 @@
     :root {
       --container-px: 2rem;
       --marketing-px: 3rem; /* 48px */
-      --dashboard-px: 0.75rem; /* 12px */
+      --dashboard-px: 0.5rem; /* 8px */
     }
   }
 
@@ -84,7 +84,7 @@
   @media (min-width: 1536px) {
     :root {
       --marketing-px: 4rem; /* 64px - breathing room on large screens */
-      --dashboard-px: 1rem; /* 16px */
+      --dashboard-px: 0.5rem; /* 8px */
     }
   }
 

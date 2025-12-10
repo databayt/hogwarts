@@ -113,7 +113,7 @@ export function validateValue(
         row: rowIndex,
         column: column.key,
         value,
-        message: result.error.errors[0]?.message || `Invalid ${column.label}`,
+        message: result.error.issues[0]?.message || `Invalid ${column.label}`,
         type: "validation",
       };
     }
@@ -198,7 +198,7 @@ export function processRow<T>(
   // Parse all columns
   for (const column of columns) {
     const rawValue = rawRow[column.header || column.key] ?? "";
-    const parsedValue = parseValue(rawValue, column, rawRow);
+    const parsedValue = parseValue(rawValue, column as ImportColumn, rawRow);
 
     // Apply transform if provided
     const finalValue = column.transform ? column.transform(parsedValue) : parsedValue;
@@ -206,7 +206,7 @@ export function processRow<T>(
     data[column.key] = finalValue;
 
     // Validate
-    const error = validateValue(finalValue, column, data, rowIndex);
+    const error = validateValue(finalValue, column as ImportColumn, data, rowIndex);
     if (error) {
       errors.push(error);
       if (config.stopOnError) {

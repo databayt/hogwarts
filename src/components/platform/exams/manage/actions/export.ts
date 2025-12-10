@@ -327,3 +327,112 @@ export async function getAnalyticsCSV(input: {
     };
   }
 }
+
+/**
+ * Get exams data for unified File Block export
+ * Returns typed array for multi-format export (CSV, Excel, PDF)
+ */
+export async function getExamsExportData(
+  input?: Partial<z.infer<typeof getExamsSchema>>
+): Promise<ActionResponse<Array<{
+  id: string;
+  title: string;
+  description: string | null;
+  subjectName: string | null;
+  className: string | null;
+  examDate: Date;
+  startTime: string;
+  endTime: string;
+  duration: number;
+  totalMarks: number;
+  passingMarks: number;
+  examType: string;
+  status: string;
+  studentCount: number;
+  averageScore: number | null;
+  createdAt: Date;
+}>>> {
+  try {
+    const { schoolId } = await getTenantContext();
+    if (!schoolId) {
+      return { success: false, error: "Missing school context" };
+    }
+
+    const searchParams = getExamsSchema.parse(input ?? {});
+
+    // Build where clause with filters
+    const where: Record<string, unknown> = {
+      schoolId,
+      ...(searchParams.title
+        ? { title: { contains: searchParams.title, mode: "insensitive" } }
+        : {}),
+      ...(searchParams.classId ? { classId: searchParams.classId } : {}),
+      ...(searchParams.subjectId ? { subjectId: searchParams.subjectId } : {}),
+      ...(searchParams.examType ? { examType: searchParams.examType } : {}),
+      ...(searchParams.status ? { status: searchParams.status } : {}),
+      ...(searchParams.examDate
+        ? { examDate: new Date(searchParams.examDate) }
+        : {}),
+    };
+
+    // Fetch ALL exams matching filters (no pagination for export)
+    const exams = await db.exam.findMany({
+      where,
+      include: {
+        class: {
+          select: {
+            name: true,
+          },
+        },
+        subject: {
+          select: {
+            subjectName: true,
+          },
+        },
+        examResults: {
+          select: {
+            marksObtained: true,
+            isAbsent: true,
+          },
+        },
+      },
+      orderBy: [{ examDate: "desc" }, { startTime: "asc" }],
+    });
+
+    // Transform data for export
+    const exportData = exams.map((exam) => {
+      // Calculate average score from results
+      const presentResults = exam.examResults.filter((r: { marksObtained: number; isAbsent: boolean }) => !r.isAbsent);
+      const averageScore = presentResults.length > 0
+        ? (presentResults.reduce((sum: number, r: { marksObtained: number }) => sum + r.marksObtained, 0) / presentResults.length / (exam.totalMarks || 100)) * 100
+        : null;
+
+      return {
+        id: exam.id,
+        title: exam.title,
+        description: exam.description,
+        subjectName: exam.subject?.subjectName || null,
+        className: exam.class?.name || null,
+        examDate: exam.examDate,
+        startTime: exam.startTime,
+        endTime: exam.endTime,
+        duration: exam.duration,
+        totalMarks: exam.totalMarks,
+        passingMarks: exam.passingMarks,
+        examType: exam.examType,
+        status: exam.status,
+        studentCount: exam.examResults.length,
+        averageScore,
+        createdAt: exam.createdAt,
+      };
+    });
+
+    return { success: true, data: exportData };
+  } catch (error) {
+    console.error("[getExamsExportData] Error:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to fetch exam export data",
+    };
+  }
+}

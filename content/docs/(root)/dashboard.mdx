@@ -1,21 +1,34 @@
 ---
 title: "Platform Dashboard"
-description: "Role-based dashboard system providing personalized views for 8 user types with tailored metrics, widgets, and actions."
+description: "Role-based dashboard system providing personalized views for 8 user types with unified sections, role-specific metrics, and focused quick actions."
 ---
 
-The Platform Dashboard provides **role-based personalized views** for 8 different user types. Each dashboard is tailored to the specific needs and responsibilities of its target user, displaying relevant metrics, quick actions, and data visualizations.
+The Platform Dashboard provides **role-based personalized views** for 8 different user types. All dashboards follow a **unified 6-section layout** with role-specific content for relevant metrics, quick actions, and data visualizations.
+
+---
+
+## Unified Section Order (All Dashboards)
+
+| # | Section | Component | Description |
+|---|---------|-----------|-------------|
+| 1 | **Upcoming + Weather** | `Upcoming` + `Weather` | Role-specific flip card with weather |
+| 2 | **Quick Look** | `QuickLookSection` | User-specific counts (no title) |
+| 3 | **Quick Actions** | `QuickActionsSection` | 4 focused actions per role |
+| 4 | **Resource Usage** | `ResourceUsageSection` | Role-specific metrics |
+| 5 | **Invoice History** | `InvoiceHistorySection` | Role-relevant invoices |
+| 6 | **Financial Overview** | `FinancialOverviewSection` | Role-relevant financial data + charts |
 
 ---
 
 ## Directory Structure
 
 ```
-src/components/platform/dashboard/           # ~90 files
+src/components/platform/dashboard/           # ~100 files
 │
 │ # Core Files
 ├── content.tsx                              # Role routing (main entry point)
 ├── content-client.tsx                       # Client wrapper component
-├── actions.ts                               # Server actions (~63KB, ~2300 lines)
+├── actions.ts                               # Server actions (~80KB, ~3200 lines)
 ├── config.ts                                # Role mappings, icons, colors
 ├── validation.ts                            # Zod schemas
 ├── types.ts                                 # TypeScript interfaces
@@ -30,16 +43,23 @@ src/components/platform/dashboard/           # ~90 files
 ├── accountant.tsx                           # Accountant dashboard
 ├── staff.tsx                                # Staff dashboard
 │
+│ # Unified Section Components (NEW)
+├── section-heading.tsx                      # Unified section title styling
+├── upcoming.tsx                             # Role-specific flip card (3D animation)
+├── weather.tsx                              # Functional weather component
+├── quick-look-section.tsx                   # User-specific counts (no title)
+├── quick-actions.tsx                        # Quick actions grid
+├── quick-actions-config.ts                  # Role-specific action definitions (4 per role)
+├── resource-usage-section.tsx               # Role-specific usage metrics
+├── invoice-history-section.tsx              # Role-relevant invoice history
+├── financial-overview-section.tsx           # Role-relevant financial stats + charts
+│
 │ # Shared Widgets
-├── welcome-banner.tsx                       # Personalized greeting with time
 ├── metric-card.tsx                          # Key stat with icon and trend
 ├── activity-rings.tsx                       # Apple-style progress indicators
 ├── schedule-item.tsx                        # Timetable entries
 ├── announcement-card.tsx                    # School announcements
 ├── progress-card.tsx                        # Goal tracking with progress bar
-├── quick-action.tsx                         # Quick actions component
-├── quick-actions.tsx                        # Quick actions grid
-├── quick-actions-config.ts                  # Role-specific action definitions
 ├── chart-card.tsx                           # Chart container wrapper
 ├── empty-state.tsx                          # No data placeholder
 │
@@ -145,20 +165,116 @@ switch (userRole) {
 
 ---
 
+## Unified Section Components
+
+### SectionHeading
+
+Unified section title styling for all dashboards.
+
+```tsx
+interface SectionHeadingProps {
+  title: string
+  icon?: LucideIcon
+  badge?: { label: string; variant?: string }
+  action?: { label: string; href: string }
+  description?: string
+  className?: string
+}
+```
+
+### Upcoming (Flip Card)
+
+Role-specific critical info with 3D flip animation:
+
+| Role | Primary Content | Secondary Content |
+|------|-----------------|-------------------|
+| **Student** | Assignments due (with overdue warnings) | Next class info |
+| **Teacher** | Next class details | Pending grading, attendance due |
+| **Parent** | Children's pending/overdue items | Upcoming events for kids |
+| **Staff** | Urgent tasks, pending requests | Today's priorities |
+| **Accountant** | Pending payments, overdue invoices | Financial deadlines |
+| **Principal** | Critical alerts | Today's priorities, strategic deadlines |
+| **Admin** | System alerts, pending approvals | Urgent notifications |
+
+### Weather
+
+Functional weather component with:
+- Current conditions (temp, humidity, wind, rain chance)
+- 6-day forecast strip
+- Refresh button
+- Mock data fallback
+
+### ResourceUsageSection
+
+Role-specific usage metrics (4 metrics per role):
+
+| Role | Metrics |
+|------|---------|
+| **Student** | Assignment Completion, Attendance Rate, Grade Average, Library Books |
+| **Teacher** | Classes Taught, Students Count, Pending Grading, Assignments Created |
+| **Parent** | Children Enrolled, Attendance Avg, Pending Tasks, Upcoming Events |
+| **Staff** | Tasks Completed, Requests Processed, Approvals Pending, Efficiency |
+| **Accountant** | Collection Rate, Invoices Processed, Outstanding, Payments Today |
+| **Principal** | School Capacity, Staff Utilization, Budget Usage, Satisfaction |
+| **Admin** | System Usage, Storage, Active Users, API Calls |
+
+### InvoiceHistorySection
+
+Role-based invoice visibility:
+
+| Role | Title | Shows |
+|------|-------|-------|
+| **Student** | Fee History | Own fee invoices |
+| **Teacher** | Expense Claims | Expense claims, reimbursements |
+| **Parent** | Children's Fees | Fee invoices for all children |
+| **Staff** | Expense Reports | Expense reports, reimbursements |
+| **Accountant** | Invoice Management | All school invoices |
+| **Principal** | Budget Invoices | Budget-related invoices |
+| **Admin** | System Invoices | All platform invoices |
+
+### FinancialOverviewSection
+
+Role-relevant financial metrics with optional charts:
+
+| Role | Financial View | Chart |
+|------|----------------|-------|
+| **Student** | Personal fee status, payment due | No |
+| **Teacher** | Department budget (if applicable) | No |
+| **Parent** | Combined children's fee status | No |
+| **Staff** | Department budget status | No |
+| **Accountant** | Full dashboard (revenue, collection) | Yes (Revenue Collection) |
+| **Principal** | School budget overview | Yes (Monthly Budget) |
+| **Admin** | Platform financial metrics | Yes (Platform Revenue) |
+
+---
+
+## Quick Actions by Role (4 Actions Each)
+
+| Role | Actions |
+|------|---------|
+| **ADMIN** | Users, Settings, Reports, Analytics |
+| **DEVELOPER** | Users, Settings, Reports, Analytics |
+| **PRINCIPAL** | Reports, Staff, Performance, Analytics |
+| **TEACHER** | Attendance, Grades, Assignments, Timetable |
+| **STUDENT** | Assignments, Grades, Timetable, Messages |
+| **GUARDIAN** | Children, Grades, Attendance, Messages |
+| **ACCOUNTANT** | Invoices, Fees, Reports, Receipts |
+| **STAFF** | Tasks, Requests, Schedule, Directory |
+
+---
+
 ## Dashboard Section Layouts
 
 ### Admin Dashboard
 
 | # | Section | Components Used | Description |
 |---|---------|-----------------|-------------|
-| 1 | **Welcome Banner** | `WelcomeBannerSection` | Greeting with live clock and date |
-| 2 | **System Health** | Custom cards | Database, API, Storage, Network status |
-| 3 | **Quick Stats** | `MetricCard` grid | Students, Teachers, Classes with drill-down links |
-| 4 | **Finance Stats** | `FinanceStatCard` | Revenue, Collected, Pending, Overdue |
-| 5 | **Recent Activity** | Activity list | Latest actions with user and timestamp |
-| 6 | **Today's Summary** | Summary cards | New Enrollments, Fees, Announcements, Classes |
-| 7 | **Usage Table** | `DetailedUsageTableDemo` | Detailed resource usage |
-| 8 | **Invoice History** | `InvoiceHistoryDemo` | Billing and invoice records |
+| 1 | **Upcoming + Weather** | `Upcoming` + `Weather` | System alerts flip card with weather |
+| 2 | **Quick Look** | `QuickLookSection` | Announcements, Events, Notifications, Messages |
+| 3 | **Quick Actions** | `QuickActionsSection` | Users, Settings, Reports, Analytics |
+| 4 | **Resource Usage** | `ResourceUsageSection` | System Usage, Storage, Active Users, API Calls |
+| 5 | **Invoice History** | `InvoiceHistorySection` | All platform invoices |
+| 6 | **Financial Overview** | `FinancialOverviewSection` | Platform metrics with revenue chart |
 
 ---
 
@@ -166,19 +282,12 @@ switch (userRole) {
 
 | # | Section | Components Used | Description |
 |---|---------|-----------------|-------------|
-| 1 | **Welcome Banner** | `WelcomeBanner` | Personalized greeting with assignment status |
-| 2 | **Key Metrics** | `MetricCard` ×4 | Attendance, Average Grade, Assignments Due, Classes Today |
-| 3 | **Attendance Goal** | `Progress` + `Badge` | Visual progress toward 90% target |
-| 4 | **Quick Actions** | `QuickActions` | Assignments, Grades, Timetable, Messages, Library, Attendance |
-| 5 | **Today's Schedule** | `ScheduleItem` list | Classes with room, time, teacher |
-| 6 | **Activity Rings** | `ActivityRings` | Attendance, Grades, Tasks progress |
-| 7 | **Performance Gauge** | `PerformanceGauge` | Current academic performance radial |
-| 8 | **Upcoming Assignments** | Card list | Title, subject, due date with status badges |
-| 9 | **Recent Grades** | Card list | Exam title, subject, marks with percentage |
-| 10 | **Announcements** | `AnnouncementCard` | School announcements with priority |
-| 11 | **Grade Trend** | `ComparisonLineChart` | This term vs last term comparison |
-| 12 | **Academic Summary** | Stats grid | Attendance, Average, Assessments, Submitted |
-| 13 | **Progress Cards** | `ProgressCard` ×3 | Attendance Goal, Assignments, Term Progress |
+| 1 | **Upcoming + Weather** | `Upcoming` + `Weather` | Assignments due flip card with weather |
+| 2 | **Quick Look** | `QuickLookSection` | Announcements, Events, Notifications, Messages |
+| 3 | **Quick Actions** | `QuickActionsSection` | Assignments, Grades, Timetable, Messages |
+| 4 | **Resource Usage** | `ResourceUsageSection` | Assignment Completion, Attendance, Grades, Library |
+| 5 | **Invoice History** | `InvoiceHistorySection` | Fee History - own invoices |
+| 6 | **Financial Overview** | `FinancialOverviewSection` | Personal fee status |
 
 ---
 
@@ -186,17 +295,12 @@ switch (userRole) {
 
 | # | Section | Components Used | Description |
 |---|---------|-----------------|-------------|
-| 1 | **Welcome Banner** | `WelcomeBanner` | Greeting with classes count |
-| 2 | **Key Metrics** | `MetricCard` ×4 | Today's Classes, Total Students, Pending Grading, Attendance Due |
-| 3 | **Quick Actions** | `QuickActions` | Attendance, Grades, Assignments, Messages, Timetable, Lessons |
-| 4 | **Today's Schedule** | `ScheduleItem` list | Classes with room, student count |
-| 5 | **Activity Rings** | `ActivityRings` | Classes, Grading, Students progress |
-| 6 | **Weekly Classes** | `WeeklyActivityChart` | Bar chart of classes per day |
-| 7 | **Pending Assignments** | Card list | Assignments to grade with submissions count |
-| 8 | **Class Performance** | Card list | Class name with average and status badge |
-| 9 | **Upcoming Deadlines** | Card list | Task, due date, days remaining |
-| 10 | **Teaching Overview** | Stats grid | Classes Today, Students, Assignments, Avg Performance |
-| 11 | **Progress Cards** | `ProgressCard` ×3 | Grading Progress, Attendance Taken, Term Progress |
+| 1 | **Upcoming + Weather** | `Upcoming` + `Weather` | Next class flip card with weather |
+| 2 | **Quick Look** | `QuickLookSection` | Announcements, Events, Notifications, Messages |
+| 3 | **Quick Actions** | `QuickActionsSection` | Attendance, Grades, Assignments, Timetable |
+| 4 | **Resource Usage** | `ResourceUsageSection` | Classes, Students, Grading, Assignments |
+| 5 | **Invoice History** | `InvoiceHistorySection` | Expense Claims - reimbursements |
+| 6 | **Financial Overview** | `FinancialOverviewSection` | Department budget |
 
 ---
 
@@ -204,23 +308,12 @@ switch (userRole) {
 
 | # | Section | Components Used | Description |
 |---|---------|-----------------|-------------|
-| 1 | **Welcome Banner** | `WelcomeBanner` | Greeting with school name and overall score |
-| 2 | **Key Metrics** | `MetricCard` ×4 | Students, Teachers, Classes, Student:Teacher Ratio |
-| 3 | **Critical Alerts** | Alert cards | High-priority issues requiring attention |
-| 4 | **Quick Actions** | `QuickActions` | Reports, Staff, Announce, Approvals, Performance, Events |
-| 5 | **Performance Trend** | `ComparisonLineChart` | Current vs previous year academics |
-| 6 | **Performance Rings** | `ActivityRings` | Academic, Attendance, Satisfaction scores |
-| 7 | **Weekly Attendance** | `WeeklyActivityChart` | Daily attendance rates |
-| 8 | **School Score Gauge** | `PerformanceGauge` | Overall performance index |
-| 9 | **Today's Priorities** | Schedule list | Meetings and priorities with status |
-| 10 | **Subject Performance** | Card list | Subject averages with trend indicators |
-| 11 | **Discipline Summary** | Stats grid | Total, Resolved, Pending incidents |
-| 12 | **Staff Evaluations** | Card list | Teacher name, department, due date |
-| 13 | **Budget Status** | Progress card | Allocated, Spent, Remaining with utilization |
-| 14 | **Parent Satisfaction** | Stats grid | Overall, Satisfaction, Communication, Academics, Facilities |
-| 15 | **Strategic Goals** | Progress list | Goal, target, current, progress bar |
-| 16 | **Board Meetings** | Card list | Topic, date, status, attendees |
-| 17 | **Progress Cards** | `ProgressCard` ×3 | Academic Year, Budget Utilization, Evaluations |
+| 1 | **Upcoming + Weather** | `Upcoming` + `Weather` | Critical alerts flip card with weather |
+| 2 | **Quick Look** | `QuickLookSection` | Announcements, Events, Notifications, Messages |
+| 3 | **Quick Actions** | `QuickActionsSection` | Reports, Staff, Performance, Analytics |
+| 4 | **Resource Usage** | `ResourceUsageSection` | Capacity, Staff, Budget, Satisfaction |
+| 5 | **Invoice History** | `InvoiceHistorySection` | Budget Invoices |
+| 6 | **Financial Overview** | `FinancialOverviewSection` | School budget with chart |
 
 ---
 
@@ -228,17 +321,12 @@ switch (userRole) {
 
 | # | Section | Components Used | Description |
 |---|---------|-----------------|-------------|
-| 1 | **Welcome Banner** | `WelcomeBanner` | Greeting with children count |
-| 2 | **Key Metrics** | `MetricCard` ×4 | Children, Attendance, Pending Tasks, Announcements |
-| 3 | **Attendance Progress** | `Progress` + `Badge` | Overall attendance toward target |
-| 4 | **Quick Actions** | `QuickActions` | Children, Grades, Attendance, Messages, Fees, Announce |
-| 5 | **Children Overview** | Child cards | Name, ID, attendance, grades, tasks per child |
-| 6 | **Activity Rings** | `ActivityRings` | Attendance, Grades, Tasks progress |
-| 7 | **Recent Grades** | Card list | Exam results with percentage and grade |
-| 8 | **Upcoming Assignments** | Card list | Assignment status and due dates |
-| 9 | **Announcements** | `AnnouncementCard` grid | School announcements with priority |
-| 10 | **Grade Trend** | `ComparisonLineChart` | This term vs last term |
-| 11 | **Progress Cards** | `ProgressCard` ×3 | Attendance Goal, Assignments, Term Progress |
+| 1 | **Upcoming + Weather** | `Upcoming` + `Weather` | Children overview flip card with weather |
+| 2 | **Quick Look** | `QuickLookSection` | Announcements, Events, Notifications, Messages |
+| 3 | **Quick Actions** | `QuickActionsSection` | Children, Grades, Attendance, Messages |
+| 4 | **Resource Usage** | `ResourceUsageSection` | Children, Attendance, Tasks, Events |
+| 5 | **Invoice History** | `InvoiceHistorySection` | Children's Fees |
+| 6 | **Financial Overview** | `FinancialOverviewSection` | Combined fee status |
 
 ---
 
@@ -246,18 +334,12 @@ switch (userRole) {
 
 | # | Section | Components Used | Description |
 |---|---------|-----------------|-------------|
-| 1 | **Welcome Banner** | `WelcomeBanner` | Greeting with today's collections |
-| 2 | **Key Metrics** | `MetricCard` ×4 | Fees Collected, Outstanding, Total Invoices, Overdue |
-| 3 | **Quick Actions** | `QuickActions` | Invoices, Receipts, Reports, Fees, Approvals, Budget |
-| 4 | **Revenue Chart** | `RevenueChart` | Revenue vs Expenses monthly comparison |
-| 5 | **Financial Rings** | `ActivityRings` | Collection, Invoices, Outstanding progress |
-| 6 | **Weekly Collections** | `WeeklyActivityChart` | Daily collection amounts |
-| 7 | **Collection Gauge** | `PerformanceGauge` | Collection rate toward 95% target |
-| 8 | **Today's Transactions** | Card list | Payments/refunds with amount and status |
-| 9 | **Pending Payments** | Card list | Student, grade, amount, due date |
-| 10 | **Financial Calendar** | Card grid | Upcoming reports, audits, deadlines |
-| 11 | **Financial Summary** | Stats grid | Collected, Outstanding, Invoices, Collection Rate |
-| 12 | **Progress Cards** | `ProgressCard` ×3 | Fee Collection, Invoices Paid, Fiscal Year |
+| 1 | **Upcoming + Weather** | `Upcoming` + `Weather` | Financial status flip card with weather |
+| 2 | **Quick Look** | `QuickLookSection` | Announcements, Events, Notifications, Messages |
+| 3 | **Quick Actions** | `QuickActionsSection` | Invoices, Fees, Reports, Receipts |
+| 4 | **Resource Usage** | `ResourceUsageSection` | Collection, Invoices, Outstanding, Payments |
+| 5 | **Invoice History** | `InvoiceHistorySection` | Invoice Management |
+| 6 | **Financial Overview** | `FinancialOverviewSection` | Full dashboard with revenue chart |
 
 ---
 
@@ -265,20 +347,12 @@ switch (userRole) {
 
 | # | Section | Components Used | Description |
 |---|---------|-----------------|-------------|
-| 1 | **Welcome Banner** | `WelcomeBanner` | Greeting with task completion status |
-| 2 | **Key Metrics** | `MetricCard` ×4 | Today's Tasks, Pending Requests, Visitors, Alerts |
-| 3 | **Quick Actions** | `QuickActions` | Tasks, Schedule, Messages, Announce, Reports, Directory |
-| 4 | **Today's Tasks** | Task list | Task, priority, status, due time |
-| 5 | **Productivity Rings** | `ActivityRings` | Tasks, Requests, Queue progress |
-| 6 | **Weekly Tasks** | `WeeklyActivityChart` | Daily task completion |
-| 7 | **Efficiency Gauge** | `PerformanceGauge` | Daily completion rate |
-| 8 | **Pending Requests** | Card list | Request type, requester, urgency, days open |
-| 9 | **Pending Approvals** | Card list | Item, requester, days left |
-| 10 | **Maintenance** | Card list | Issue, priority, assigned, status |
-| 11 | **Inventory Alerts** | Card list | Item, status, quantity, threshold |
-| 12 | **Visitor Log** | Card list | Visitor, purpose, time, check-in status |
-| 13 | **Workflow Summary** | Stats grid | In Queue, Completed, Overdue, Completion Rate |
-| 14 | **Progress Cards** | `ProgressCard` ×3 | Daily Tasks, Request Processing, Week Progress |
+| 1 | **Upcoming + Weather** | `Upcoming` + `Weather` | Tasks flip card with weather |
+| 2 | **Quick Look** | `QuickLookSection` | Announcements, Events, Notifications, Messages |
+| 3 | **Quick Actions** | `QuickActionsSection` | Tasks, Requests, Schedule, Directory |
+| 4 | **Resource Usage** | `ResourceUsageSection` | Tasks, Requests, Approvals, Efficiency |
+| 5 | **Invoice History** | `InvoiceHistorySection` | Expense Reports |
+| 6 | **Financial Overview** | `FinancialOverviewSection` | Department budget |
 
 ---
 
@@ -286,33 +360,21 @@ switch (userRole) {
 
 | Widget | File | Props | Description |
 |--------|------|-------|-------------|
-| `WelcomeBanner` | `welcome-banner.tsx` | `userName`, `role`, `subtitle` | Personalized greeting with time-based salutation |
+| `SectionHeading` | `section-heading.tsx` | `title`, `icon?`, `badge?`, `action?`, `description?` | Unified section title styling |
+| `Upcoming` | `upcoming.tsx` | `role`, `data?`, `locale`, `subdomain` | Role-specific flip card with 3D animation |
+| `Weather` | `weather.tsx` | `current?`, `forecast?`, `onRefresh?`, `isLoading?` | Functional weather component |
 | `MetricCard` | `metric-card.tsx` | `title`, `value`, `iconName`, `iconColor`, `change`, `changeType`, `href`, `description` | Key stat with icon, optional trend, and drill-down link |
 | `ActivityRings` | `activity-rings.tsx` | `activities[]`, `title` | Apple-style concentric progress rings |
 | `ScheduleItem` | `schedule-item.tsx` | `time`, `title`, `subtitle`, `badge`, `badgeVariant`, `isActive` | Timetable entry with status indicator |
 | `ProgressCard` | `progress-card.tsx` | `title`, `current`, `total`, `unit`, `iconName`, `showPercentage` | Goal tracking with progress bar |
 | `AnnouncementCard` | `announcement-card.tsx` | `title`, `content`, `date`, `priority` | School announcement with priority styling |
-| `QuickActions` | `quick-action.tsx` | `actions[]`, `locale` | Role-specific shortcut buttons |
+| `QuickActions` | `quick-actions.tsx` | `actions[]`, `locale` | Role-specific shortcut buttons |
 | `EmptyState` | `empty-state.tsx` | `iconName`, `title`, `description` | No data placeholder |
 | `ChartCard` | `chart-card.tsx` | `title`, `children` | Chart container wrapper |
 | `PerformanceGauge` | `performance-gauge.tsx` | `value`, `label`, `description`, `maxValue`, `color` | Radial gauge for single metric |
 | `WeeklyActivityChart` | `weekly-chart.tsx` | `data[]`, `title`, `label`, `color` | Weekly bar chart |
 | `ComparisonLineChart` | `comparison-chart.tsx` | `data[]`, `title`, `description`, `currentLabel`, `previousLabel` | Period comparison line chart |
 | `RevenueChart` | `revenue-chart.tsx` | `data[]`, `title`, `description`, `currency` | Revenue vs expenses area chart |
-
----
-
-## Quick Actions by Role
-
-| Role | Actions |
-|------|---------|
-| **ADMIN** | Reports, Approvals, Announce, Users, Settings, Analytics |
-| **PRINCIPAL** | Reports, Staff, Announce, Approvals, Performance, Events |
-| **TEACHER** | Attendance, Grades, Assignments, Messages, Timetable, Lessons |
-| **STUDENT** | Assignments, Grades, Timetable, Messages, Library, Attendance |
-| **GUARDIAN** | Children, Grades, Attendance, Messages, Fees, Announce |
-| **ACCOUNTANT** | Invoices, Receipts, Reports, Fees, Approvals, Budget |
-| **STAFF** | Tasks, Schedule, Messages, Announce, Reports, Directory |
 
 ---
 
@@ -330,6 +392,11 @@ Dashboard data is fetched via server actions in `actions.ts`:
 | `getAnnouncementsMetrics()` | Announcement counts | All roles |
 | `getClassesMetrics()` | Class counts, ratios | Admin, Principal |
 | `getRecentActivities()` | Activity feed | Admin |
+| `getQuickActionsByRole()` | Role-specific actions | All roles |
+| `getUpcomingDataByRole()` | Role-specific upcoming | All roles |
+| `getResourceUsageByRole()` | Role-specific metrics | All roles |
+| `getInvoicesByRole()` | Role-specific invoices | All roles |
+| `getFinancialOverviewByRole()` | Role-specific financials | All roles |
 | `getTeacherDashboardData()` | Teacher-specific data | Teacher |
 | `getStudentDashboardData()` | Student-specific data | Student |
 | `getParentDashboardData()` | Parent-specific data | Parent |
@@ -339,39 +406,43 @@ Dashboard data is fetched via server actions in `actions.ts`:
 
 ## Component Architecture Pattern
 
-Each role-based dashboard follows the same structure:
+Each role-based dashboard follows the unified section structure:
 
 ```tsx
 export async function RoleDashboard({ user, dictionary, locale }: Props) {
   try {
-    // 1. Fetch data from server action
-    const data = await getRoleDashboardData();
-
-    // 2. Get tenant context
+    // 1. Get tenant context
     const { schoolId } = await getTenantContext();
-
-    // 3. Get school info for URLs
     const school = await db.school.findUnique({ where: { id: schoolId } });
+    const subdomain = school?.domain || "";
 
-    // 4. Get dictionary with fallback
-    const dashDict = dictionary?.roleDashboard || { /* defaults */ };
-
-    // 5. Prepare derived data (rings, charts, etc.)
-    const activityData = [/* ... */];
-
-    // 6. Render sections
+    // 2. Render unified sections
     return (
       <div className="space-y-6">
-        <WelcomeBanner ... />
-        <MetricCards ... />
-        <QuickActions ... />
-        <MainContentGrid ... />
-        <SecondaryContentGrid ... />
-        <ProgressCards ... />
+        {/* Section 1: Upcoming + Weather */}
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <Upcoming role="ROLE" locale={locale} subdomain={subdomain} />
+          <Weather />
+        </div>
+
+        {/* Section 2: Quick Look (no title) */}
+        <QuickLookSection />
+
+        {/* Section 3: Quick Actions */}
+        <SectionHeading title="Quick Actions" icon={Zap} />
+        <QuickActionsSection role="ROLE" locale={locale} subdomain={subdomain} />
+
+        {/* Section 4: Resource Usage */}
+        <ResourceUsageSection role="ROLE" />
+
+        {/* Section 5: Invoice History */}
+        <InvoiceHistorySection role="ROLE" />
+
+        {/* Section 6: Financial Overview */}
+        <FinancialOverviewSection role="ROLE" />
       </div>
     );
   } catch (error) {
-    // Error handling
     return <ErrorCard message={error.message} />;
   }
 }

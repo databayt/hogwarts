@@ -1,59 +1,125 @@
+/**
+ * Class Export Button
+ * Uses unified File Block ExportButton for multi-format exports
+ */
+
 "use client";
 
 import * as React from "react";
-import { Download } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { getClassesCSV } from "./actions";
-import { generateCSVFilename } from "@/lib/csv-export";
+import { useCallback, useEffect, useState } from "react";
+import { ExportButton as UnifiedExportButton } from "@/components/platform/file";
+import { CLASS_EXPORT_COLUMNS, type ClassExportData } from "./columns/export";
+import { getClassesExportData } from "./actions";
+import type { Locale } from "@/components/internationalization/config";
+
+// ============================================================================
+// Types
+// ============================================================================
 
 interface ExportButtonProps {
+  /** Optional filters to apply to export data */
   filters?: {
     name?: string;
     subjectId?: string;
     teacherId?: string;
     termId?: string;
   };
-  variant?: "default" | "outline" | "ghost";
+  /** Button variant */
+  variant?: "default" | "outline" | "ghost" | "secondary";
+  /** Button size */
   size?: "default" | "sm" | "lg";
+  /** Current locale for i18n */
+  locale?: Locale;
+  /** Custom label */
+  label?: string;
+  /** Export formats to enable */
+  formats?: ("csv" | "excel" | "pdf")[];
+  /** Show column selector dialog */
+  showColumnSelector?: boolean;
+  /** Dictionary for translations */
+  dictionary?: {
+    export?: string;
+    exportAs?: string;
+    csv?: string;
+    excel?: string;
+    pdf?: string;
+    exporting?: string;
+  };
 }
 
-export function ExportButton({ filters, variant = "outline", size = "sm" }: ExportButtonProps) {
-  const [isExporting, setIsExporting] = React.useState(false);
+// ============================================================================
+// Component
+// ============================================================================
 
-  const handleExport = async () => {
-    setIsExporting(true);
+export function ExportButton({
+  filters,
+  variant = "outline",
+  size = "sm",
+  locale = "en",
+  label,
+  formats = ["csv", "excel", "pdf"],
+  showColumnSelector = false,
+  dictionary,
+}: ExportButtonProps) {
+  const [data, setData] = useState<ClassExportData[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch data for export
+  const fetchData = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
     try {
-      const result = await getClassesCSV(filters);
-      if (!result.success || !result.data) {
-        throw new Error('error' in result ? result.error : 'Export failed');
+      const result = await getClassesExportData(filters);
+      if (result.success && result.data) {
+        setData(result.data as ClassExportData[]);
+      } else {
+        setError("error" in result ? result.error : "Failed to fetch data");
       }
-
-      // Create blob and download
-      const blob = new Blob([result.data], { type: "text/csv;charset=utf-8;" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = generateCSVFilename("classes");
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error("Export failed:", error);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to fetch data");
     } finally {
-      setIsExporting(false);
+      setIsLoading(false);
     }
-  };
+  }, [filters]);
+
+  // Fetch on mount and filter changes
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   return (
-    <Button
-      onClick={handleExport}
-      disabled={isExporting}
+    <UnifiedExportButton
+      config={{
+        filename: "classes",
+        columns: CLASS_EXPORT_COLUMNS,
+        locale,
+        title: dictionary?.export || (locale === "ar" ? "قائمة الفصول" : "Class List"),
+      }}
+      data={data}
+      formats={formats}
       variant={variant}
       size={size}
-    >
-      <Download className="mr-2 h-4 w-4" />
-      {isExporting ? "Exporting..." : "Export CSV"}
-    </Button>
+      label={label}
+      showColumnSelector={showColumnSelector}
+      disabled={isLoading || data.length === 0}
+      dictionary={{
+        export: dictionary?.export || (locale === "ar" ? "تصدير" : "Export"),
+        exportAs: dictionary?.exportAs || (locale === "ar" ? "تصدير كـ" : "Export as"),
+        csv: dictionary?.csv || "CSV",
+        excel: dictionary?.excel || "Excel",
+        pdf: dictionary?.pdf || "PDF",
+        exporting: dictionary?.exporting || (locale === "ar" ? "جاري التصدير..." : "Exporting..."),
+      }}
+      onExportError={(err) => {
+        console.error("Export failed:", err);
+      }}
+    />
   );
 }
+
+// ============================================================================
+// Re-export for backwards compatibility
+// ============================================================================
+
+export { ExportButton as ClassExportButton };

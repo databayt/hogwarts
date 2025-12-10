@@ -762,3 +762,144 @@ export async function getTeachersCSV(
     };
   }
 }
+
+/**
+ * Get teachers data for export (used by File Block ExportButton)
+ * Returns raw data for client-side export generation
+ * @param input - Query parameters
+ * @returns Array of teacher export data
+ */
+export async function getTeachersExportData(
+  input?: Partial<z.infer<typeof getTeachersSchema>>
+): Promise<ActionResponse<Array<{
+  id: string;
+  employeeId: string | null;
+  givenName: string;
+  surname: string;
+  fullName: string;
+  gender: string;
+  email: string | null;
+  userEmail: string | null;
+  phone: string | null;
+  department: string | null;
+  qualification: string | null;
+  specialization: string | null;
+  hireDate: Date | null;
+  status: string;
+  createdAt: Date;
+}>>> {
+  try {
+    // Get tenant context
+    const { schoolId } = await getTenantContext();
+    if (!schoolId) {
+      return { success: false, error: "Missing school context" };
+    }
+
+    // Parse and validate input
+    const sp = getTeachersSchema.parse(input ?? {});
+
+    // Check if teacher model exists
+    if (!(db as any).teacher) {
+      return { success: true, data: [] };
+    }
+
+    // Build where clause with filters
+    const where: any = {
+      schoolId,
+      ...(sp.name
+        ? {
+            OR: [
+              { givenName: { contains: sp.name, mode: "insensitive" } },
+              { surname: { contains: sp.name, mode: "insensitive" } },
+            ],
+          }
+        : {}),
+      ...(sp.emailAddress
+        ? { emailAddress: { contains: sp.emailAddress, mode: "insensitive" } }
+        : {}),
+      ...(sp.status
+        ? sp.status === "active"
+          ? { NOT: { userId: null } }
+          : sp.status === "inactive"
+            ? { userId: null }
+            : {}
+          : {}),
+    };
+
+    // Fetch ALL teachers matching filters (no pagination for export)
+    const teachers = await (db as any).teacher.findMany({
+      where,
+      include: {
+        user: {
+          select: {
+            email: true,
+          },
+        },
+        teacherDepartments: {
+          include: {
+            department: {
+              select: {
+                departmentName: true,
+              },
+            },
+          },
+          take: 1,
+        },
+        teacherPhoneNumbers: {
+          where: {
+            isPrimary: true,
+          },
+          select: {
+            phoneNumber: true,
+          },
+          take: 1,
+        },
+      },
+      orderBy: [{ givenName: "asc" }, { surname: "asc" }],
+    });
+
+    // Transform data for export
+    const exportData = teachers.map((teacher: any) => ({
+      id: teacher.id,
+      employeeId: teacher.employeeId || null,
+      givenName: teacher.givenName || "",
+      surname: teacher.surname || "",
+      fullName: [teacher.givenName, teacher.surname].filter(Boolean).join(" "),
+      gender: teacher.gender || "",
+      email: teacher.emailAddress || null,
+      userEmail: teacher.user?.email || null,
+      phone:
+        teacher.teacherPhoneNumbers && teacher.teacherPhoneNumbers.length > 0
+          ? teacher.teacherPhoneNumbers[0].phoneNumber
+          : null,
+      department:
+        teacher.teacherDepartments && teacher.teacherDepartments.length > 0
+          ? teacher.teacherDepartments[0].department.departmentName
+          : null,
+      qualification: teacher.qualification || null,
+      specialization: teacher.specialization || null,
+      hireDate: teacher.hireDate ? new Date(teacher.hireDate) : null,
+      status: teacher.userId ? "Active" : "Inactive",
+      createdAt: new Date(teacher.createdAt),
+    }));
+
+    return { success: true, data: exportData };
+  } catch (error) {
+    console.error("[getTeachersExportData] Error:", error, {
+      input,
+      timestamp: new Date().toISOString(),
+    });
+
+    if (error instanceof z.ZodError) {
+      return {
+        success: false,
+        error: `Validation error: ${error.issues.map(e => e.message).join(", ")}`
+      };
+    }
+
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to fetch export data"
+    };
+  }
+}

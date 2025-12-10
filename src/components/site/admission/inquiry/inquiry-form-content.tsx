@@ -392,7 +392,7 @@ export default function InquiryFormContent({
                 {isRTL ? "قدم طلب التحاق" : "Apply Now"}
               </Button>
             </Link>
-            <Link href={`/${lang}/s/${subdomain}/schedule-tour`}>
+            <Link href={`/${lang}/s/${subdomain}/tour`}>
               <Button variant="outline" className="w-full justify-start">
                 {isRTL ? "حجز جولة" : "Schedule a Tour"}
               </Button>

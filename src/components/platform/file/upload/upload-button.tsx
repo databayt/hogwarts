@@ -17,9 +17,9 @@ import { useUpload, type UploadResult } from "./use-upload";
 // Types
 // ============================================================================
 
-interface UploadButtonProps extends Omit<ButtonProps, "onClick"> {
+interface UploadButtonProps extends Omit<ButtonProps, "onClick" | "type"> {
   category: FileCategory;
-  type?: FileType;
+  fileType?: FileType;
   folder?: string;
   provider?: StorageProvider;
   tier?: StorageTier;
@@ -39,7 +39,7 @@ interface UploadButtonProps extends Omit<ButtonProps, "onClick"> {
 
 export function UploadButton({
   category,
-  type,
+  fileType,
   folder,
   provider,
   tier,
@@ -65,7 +65,7 @@ export function UploadButton({
     uploadMultiple,
   } = useUpload({
     category,
-    type,
+    type: fileType,
     folder,
     provider,
     tier,

@@ -414,3 +414,106 @@ export async function getAssignmentsCSV(
     };
   }
 }
+
+/**
+ * Get assignments data for unified File Block export
+ * Returns typed array for multi-format export (CSV, Excel, PDF)
+ */
+export async function getAssignmentsExportData(
+  input?: Partial<z.infer<typeof getAssignmentsSchema>>
+): Promise<ActionResponse<Array<{
+  id: string;
+  title: string;
+  description: string | null;
+  className: string | null;
+  subjectName: string | null;
+  teacherName: string | null;
+  dueDate: Date | null;
+  totalPoints: number | null;
+  status: string;
+  submissionCount: number;
+  gradedCount: number;
+  createdAt: Date;
+}>>> {
+  try {
+    const { schoolId } = await getTenantContext();
+    if (!schoolId) {
+      return { success: false, error: "Missing school context" };
+    }
+
+    const sp = getAssignmentsSchema.parse(input ?? {});
+
+    if (!(db as any).assignment) {
+      return { success: true, data: [] };
+    }
+
+    // Build where clause with filters
+    const where: any = {
+      schoolId,
+      ...(sp.title ? { title: { contains: sp.title, mode: "insensitive" } } : {}),
+      ...(sp.type ? { type: sp.type } : {}),
+      ...(sp.classId ? { classId: sp.classId } : {}),
+    };
+
+    // Fetch ALL assignments matching filters (no pagination for export)
+    const assignments = await (db as any).assignment.findMany({
+      where,
+      include: {
+        class: {
+          select: {
+            name: true,
+            subject: {
+              select: {
+                subjectName: true,
+              },
+            },
+            teacher: {
+              select: {
+                givenName: true,
+                surname: true,
+              },
+            },
+          },
+        },
+        _count: {
+          select: {
+            assignmentSubmissions: true,
+          },
+        },
+        assignmentSubmissions: {
+          select: {
+            gradedAt: true,
+          },
+        },
+      },
+      orderBy: [{ dueDate: "asc" }],
+    });
+
+    // Transform data for export
+    const exportData = assignments.map((assignment: any) => ({
+      id: assignment.id as string,
+      title: assignment.title as string,
+      description: assignment.description as string | null,
+      className: (assignment.class?.name as string) || null,
+      subjectName: (assignment.class?.subject?.subjectName as string) || null,
+      teacherName: assignment.class?.teacher
+        ? `${assignment.class.teacher.givenName} ${assignment.class.teacher.surname}`.trim()
+        : null,
+      dueDate: assignment.dueDate as Date | null,
+      totalPoints: assignment.totalPoints as number | null,
+      status: assignment.status as string,
+      submissionCount: assignment._count.assignmentSubmissions as number,
+      gradedCount: assignment.assignmentSubmissions?.filter((s: any) => s.gradedAt !== null).length || 0,
+      createdAt: assignment.createdAt as Date,
+    }));
+
+    return { success: true, data: exportData };
+  } catch (error) {
+    console.error("[getAssignmentsExportData] Error:", error);
+
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to fetch assignment export data"
+    };
+  }
+}

@@ -531,6 +531,173 @@ export async function getStudentsCSV(
 }
 
 /**
+ * Get students data for export (used by File Block ExportButton)
+ * Returns raw data for client-side export generation
+ * @param input - Query parameters
+ * @returns Array of student export data
+ */
+export async function getStudentsExportData(
+  input?: Partial<z.infer<typeof getStudentsSchema>>
+): Promise<ActionResponse<Array<{
+  id: string;
+  studentId: string | null;
+  grNumber: string | null;
+  givenName: string;
+  middleName: string | null;
+  surname: string;
+  fullName: string;
+  dateOfBirth: Date | null;
+  gender: string;
+  email: string | null;
+  mobileNumber: string | null;
+  status: string;
+  studentType: string;
+  enrollmentDate: Date;
+  admissionNumber: string | null;
+  nationality: string | null;
+  className: string | null;
+  yearLevel: string | null;
+  guardianName: string | null;
+  guardianPhone: string | null;
+  createdAt: Date;
+}>>> {
+  try {
+    // Get tenant context
+    const { schoolId } = await getTenantContext();
+    if (!schoolId) {
+      return { success: false, error: "Missing school context" };
+    }
+
+    // Parse and validate input
+    const sp = getStudentsSchema.parse(input ?? {});
+
+    // Check if student model exists
+    if (!(db as any).student) {
+      return { success: true, data: [] };
+    }
+
+    // Build where clause with filters
+    const where: any = {
+      schoolId,
+      ...(sp.name
+        ? {
+            OR: [
+              { givenName: { contains: sp.name, mode: "insensitive" } },
+              { surname: { contains: sp.name, mode: "insensitive" } },
+            ],
+          }
+        : {}),
+      ...(sp.status
+        ? sp.status === "active"
+          ? { status: "ACTIVE" }
+          : sp.status === "inactive"
+            ? { status: "INACTIVE" }
+            : {}
+        : {}),
+    };
+
+    // Fetch ALL students matching filters (no pagination for export)
+    const students = await (db as any).student.findMany({
+      where,
+      include: {
+        user: {
+          select: {
+            email: true,
+          },
+        },
+        studentClasses: {
+          include: {
+            class: {
+              select: {
+                name: true,
+              },
+            },
+          },
+          take: 1,
+        },
+        studentYearLevels: {
+          include: {
+            yearLevel: {
+              select: {
+                name: true,
+              },
+            },
+          },
+          take: 1,
+        },
+        studentGuardians: {
+          where: { isPrimary: true },
+          include: {
+            guardian: {
+              include: {
+                phoneNumbers: {
+                  where: { isPrimary: true },
+                  take: 1,
+                },
+              },
+            },
+          },
+          take: 1,
+        },
+      },
+      orderBy: [{ givenName: "asc" }, { surname: "asc" }],
+    });
+
+    // Transform data for export
+    const exportData = students.map((student: any) => ({
+      id: student.id,
+      studentId: student.studentId || null,
+      grNumber: student.grNumber || null,
+      givenName: student.givenName || "",
+      middleName: student.middleName || null,
+      surname: student.surname || "",
+      fullName: [student.givenName, student.middleName, student.surname]
+        .filter(Boolean)
+        .join(" "),
+      dateOfBirth: student.dateOfBirth ? new Date(student.dateOfBirth) : null,
+      gender: student.gender || "",
+      email: student.user?.email || null,
+      mobileNumber: student.mobileNumber || null,
+      status: student.status || "ACTIVE",
+      studentType: student.studentType || "REGULAR",
+      enrollmentDate: new Date(student.enrollmentDate),
+      admissionNumber: student.admissionNumber || null,
+      nationality: student.nationality || null,
+      className: student.studentClasses?.[0]?.class?.name || null,
+      yearLevel: student.studentYearLevels?.[0]?.yearLevel?.name || null,
+      guardianName: student.studentGuardians?.[0]?.guardian
+        ? [
+            student.studentGuardians[0].guardian.givenName,
+            student.studentGuardians[0].guardian.surname,
+          ].filter(Boolean).join(" ")
+        : null,
+      guardianPhone:
+        student.studentGuardians?.[0]?.guardian?.phoneNumbers?.[0]?.phoneNumber || null,
+      createdAt: new Date(student.createdAt),
+    }));
+
+    return { success: true, data: exportData };
+  } catch (error) {
+    console.error("[getStudentsExportData] Error:", error, {
+      input,
+      timestamp: new Date().toISOString(),
+    });
+
+    if (error instanceof z.ZodError) {
+      return {
+        success: false,
+        error: `Validation error: ${error.issues.map(e => e.message).join(", ")}`
+      };
+    }
+
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to fetch export data"
+    };
+  }
+}
+
+/**
  * Register a new student with comprehensive information
  * @param input - Complete student registration data
  * @returns Action response with student data

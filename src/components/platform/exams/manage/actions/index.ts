@@ -32,7 +32,7 @@ export {
 } from "./results";
 
 // Export Operations
-export { getExamsCSV, getExamResultsCSV, getAnalyticsCSV } from "./export";
+export { getExamsCSV, getExamResultsCSV, getAnalyticsCSV, getExamsExportData } from "./export";
 
 // Conflict Detection Operations
 export {

@@ -24,6 +24,9 @@ import type {
 import { InvoiceTemplate } from "./templates/invoice";
 import { CertificateTemplate } from "./templates/certificate";
 import { ReportCardTemplate } from "./templates/report-card";
+import { IdCardTemplate } from "./templates/id-card";
+import { ReceiptTemplate } from "./templates/receipt";
+import { TranscriptTemplate } from "./templates/transcript";
 import { downloadBlob } from "../export/csv-generator";
 
 // ============================================================================
@@ -58,13 +61,21 @@ export function useGenerate(): UseGenerateReturn {
           case "invoice":
             component = InvoiceTemplate({ data: data as InvoiceData, style });
             break;
+          case "receipt":
+            component = ReceiptTemplate({ data: data as ReceiptData, style });
+            break;
           case "certificate":
             component = CertificateTemplate({ data: data as CertificateData, style });
             break;
           case "report_card":
             component = ReportCardTemplate({ data: data as ReportCardData, style });
             break;
-          // TODO: Add receipt, id_card, transcript templates
+          case "id_card":
+            component = IdCardTemplate({ data: data as IdCardData, style });
+            break;
+          case "transcript":
+            component = TranscriptTemplate({ data: data as TranscriptData, style });
+            break;
           default:
             throw new Error(`Unknown document type: ${type}`);
         }
@@ -75,8 +86,9 @@ export function useGenerate(): UseGenerateReturn {
 
         setProgress({ status: "generating", progress: 60, message: "Rendering PDF..." });
 
-        // Generate PDF blob
-        const blob = await pdf(component).toBlob();
+        // Generate PDF blob - cast to any to satisfy @react-pdf/renderer types
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const blob = await pdf(component as any).toBlob();
 
         setProgress({ status: "generating", progress: 90, message: "Preparing download..." });
 

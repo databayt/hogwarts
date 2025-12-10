@@ -2310,3 +2310,877 @@ export async function getEmergencyProtocols() {
     },
   }
 }
+
+// ============================================================================
+// UNIFIED DASHBOARD SECTIONS - Role-Specific Data
+// ============================================================================
+
+/**
+ * Get upcoming data based on user role
+ * Returns role-specific critical information for the Upcoming component
+ */
+export async function getUpcomingDataByRole(role: string) {
+  const session = await auth()
+  const userId = session?.user?.id
+  const schoolId = session?.user?.schoolId
+
+  if (!userId || !schoolId) {
+    return null
+  }
+
+  switch (role.toUpperCase()) {
+    case "STUDENT":
+      return getStudentUpcomingData(userId, schoolId)
+    case "TEACHER":
+      return getTeacherUpcomingData(userId, schoolId)
+    case "GUARDIAN":
+      return getParentUpcomingData(userId, schoolId)
+    case "STAFF":
+      return getStaffUpcomingData(userId, schoolId)
+    case "ACCOUNTANT":
+      return getAccountantUpcomingData(schoolId)
+    case "PRINCIPAL":
+      return getPrincipalUpcomingData(schoolId)
+    case "ADMIN":
+    case "DEVELOPER":
+    default:
+      return getAdminUpcomingData(schoolId)
+  }
+}
+
+async function getStudentUpcomingData(userId: string, schoolId: string) {
+  const student = await db.student.findFirst({
+    where: { userId, schoolId },
+    select: { id: true },
+  })
+
+  if (!student) return null
+
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  const studentClasses = await db.studentClass.findMany({
+    where: { studentId: student.id, schoolId },
+    select: { classId: true },
+  })
+  const classIds = studentClasses.map((sc) => sc.classId)
+
+  // Get assignments with status
+  const assignments = await db.assignment.findMany({
+    where: {
+      schoolId,
+      classId: { in: classIds },
+      status: "PUBLISHED",
+    },
+    include: {
+      class: { select: { subject: { select: { subjectName: true } } } },
+      submissions: {
+        where: { studentId: student.id },
+        select: { status: true },
+      },
+    },
+    orderBy: { dueDate: "asc" },
+    take: 5,
+  })
+
+  // Get next class
+  const dayOfWeek = today.getDay()
+  const nextClass = await db.timetable.findFirst({
+    where: { schoolId, dayOfWeek, classId: { in: classIds } },
+    include: {
+      class: { select: { subject: { select: { subjectName: true } } } },
+      classroom: { select: { roomName: true } },
+      period: { select: { startTime: true } },
+    },
+    orderBy: { period: { startTime: "asc" } },
+  })
+
+  return {
+    assignments: assignments.map((a) => ({
+      id: a.id,
+      title: a.title,
+      subject: a.class?.subject?.subjectName || "Unknown",
+      dueDate: a.dueDate < today ? "Overdue" : a.dueDate.toLocaleDateString(),
+      isOverdue: a.dueDate < today,
+      status: (a.submissions[0]?.status?.toLowerCase() || "not_submitted") as
+        | "not_submitted"
+        | "submitted"
+        | "graded",
+    })),
+    nextClass: nextClass
+      ? {
+          subject: nextClass.class?.subject?.subjectName || "Unknown",
+          time: nextClass.period?.startTime
+            ? new Date(nextClass.period.startTime).toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              })
+            : "TBA",
+          room: nextClass.classroom?.roomName || "TBA",
+        }
+      : undefined,
+  }
+}
+
+async function getTeacherUpcomingData(userId: string, schoolId: string) {
+  const teacher = await db.teacher.findFirst({
+    where: { userId, schoolId },
+    select: { id: true },
+  })
+
+  if (!teacher) return null
+
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const tomorrow = new Date(today)
+  tomorrow.setDate(tomorrow.getDate() + 1)
+  const dayOfWeek = today.getDay()
+
+  // Get today's classes
+  const todaysClasses = await db.timetable.findMany({
+    where: {
+      schoolId,
+      dayOfWeek,
+      class: { teacherId: teacher.id },
+    },
+    include: {
+      class: {
+        select: {
+          name: true,
+          subject: { select: { subjectName: true } },
+          _count: { select: { studentClasses: true } },
+        },
+      },
+      classroom: { select: { roomName: true } },
+      period: { select: { startTime: true } },
+    },
+    orderBy: { period: { startTime: "asc" } },
+  })
+
+  // Get pending grading count
+  const pendingGrading = await db.assignmentSubmission.count({
+    where: {
+      schoolId,
+      status: "SUBMITTED",
+      assignment: { class: { teacherId: teacher.id } },
+    },
+  })
+
+  // Get attendance due count
+  const attendanceDue = await db.class.count({
+    where: {
+      teacherId: teacher.id,
+      schoolId,
+      NOT: {
+        studentClasses: {
+          every: {
+            student: {
+              attendances: { some: { date: { gte: today, lt: tomorrow } } },
+            },
+          },
+        },
+      },
+    },
+  })
+
+  const nextClass = todaysClasses[0]
+
+  return {
+    nextClass: nextClass
+      ? {
+          subject: nextClass.class?.subject?.subjectName || nextClass.class?.name || "Unknown",
+          time: nextClass.period?.startTime
+            ? new Date(nextClass.period.startTime).toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              })
+            : "TBA",
+          room: nextClass.classroom?.roomName || "TBA",
+          students: nextClass.class?._count?.studentClasses || 0,
+        }
+      : undefined,
+    pendingGrading,
+    attendanceDue,
+    classesToday: todaysClasses.length,
+  }
+}
+
+async function getParentUpcomingData(userId: string, schoolId: string) {
+  const studentGuardians = await db.studentGuardian.findMany({
+    where: { guardianId: userId, schoolId },
+    include: {
+      student: {
+        select: {
+          id: true,
+          givenName: true,
+          surname: true,
+        },
+      },
+    },
+  })
+
+  if (studentGuardians.length === 0) return null
+
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  const children = await Promise.all(
+    studentGuardians.map(async (sg) => {
+      const studentClasses = await db.studentClass.findMany({
+        where: { studentId: sg.student.id, schoolId },
+        select: { classId: true },
+      })
+      const classIds = studentClasses.map((sc) => sc.classId)
+
+      const [pendingAssignments, overdueAssignments] = await Promise.all([
+        db.assignment.count({
+          where: {
+            schoolId,
+            classId: { in: classIds },
+            status: "PUBLISHED",
+            dueDate: { gte: today },
+            submissions: {
+              none: { studentId: sg.student.id, status: { in: ["SUBMITTED", "GRADED"] } },
+            },
+          },
+        }),
+        db.assignment.count({
+          where: {
+            schoolId,
+            classId: { in: classIds },
+            status: "PUBLISHED",
+            dueDate: { lt: today },
+            submissions: {
+              none: { studentId: sg.student.id, status: { in: ["SUBMITTED", "GRADED"] } },
+            },
+          },
+        }),
+      ])
+
+      return {
+        id: sg.student.id,
+        name: `${sg.student.givenName} ${sg.student.surname}`.trim(),
+        pendingAssignments,
+        overdueAssignments,
+      }
+    })
+  )
+
+  // Get upcoming events
+  const upcomingEvents = await db.announcement.findMany({
+    where: {
+      schoolId,
+      published: true,
+      createdAt: { gte: today },
+    },
+    select: { titleEn: true, titleAr: true, createdAt: true },
+    orderBy: { createdAt: "asc" },
+    take: 3,
+  })
+
+  return {
+    children,
+    upcomingEvents: upcomingEvents.map((e) => ({
+      title: e.titleEn || e.titleAr || "Event",
+      date: e.createdAt.toLocaleDateString(),
+    })),
+  }
+}
+
+async function getStaffUpcomingData(userId: string, schoolId: string) {
+  // For now, return mock data as staff tasks aren't fully modeled in Prisma
+  return {
+    urgentTasks: [
+      { id: "1", title: "Review pending requests", priority: "high" as const },
+      { id: "2", title: "Update inventory", priority: "medium" as const },
+    ],
+    pendingRequests: 5,
+    todaysTasks: 8,
+  }
+}
+
+async function getAccountantUpcomingData(schoolId: string) {
+  // Get invoice/payment data
+  const [pendingInvoices, overdueInvoices] = await Promise.all([
+    db.userInvoice.count({ where: { schoolId, status: "UNPAID" } }),
+    db.userInvoice.count({ where: { schoolId, status: "OVERDUE" } }),
+  ])
+
+  const pendingAmount = await db.userInvoice.aggregate({
+    where: { schoolId, status: "UNPAID" },
+    _sum: { total: true },
+  })
+
+  const overdueAmount = await db.userInvoice.aggregate({
+    where: { schoolId, status: "OVERDUE" },
+    _sum: { total: true },
+  })
+
+  return {
+    pendingPayments: {
+      count: pendingInvoices,
+      totalAmount: pendingAmount._sum.total || 0,
+    },
+    overdueInvoices: {
+      count: overdueInvoices,
+      totalAmount: overdueAmount._sum.total || 0,
+    },
+    todayCollections: 0, // Would need payment tracking
+  }
+}
+
+async function getPrincipalUpcomingData(schoolId: string) {
+  const [criticalAlerts, pendingAnnouncements] = await Promise.all([
+    getCriticalAlerts(),
+    db.announcement.count({ where: { schoolId, published: false } }),
+  ])
+
+  return {
+    criticalAlerts: criticalAlerts.map((a) => ({
+      type: a.type,
+      message: a.message,
+      severity: a.severity as "high" | "medium" | "low",
+    })),
+    todayMeetings: 3, // Would need calendar integration
+    pendingApprovals: pendingAnnouncements,
+  }
+}
+
+async function getAdminUpcomingData(schoolId: string) {
+  const [activeAlerts, pendingAnnouncements] = await Promise.all([
+    getActiveAlerts(),
+    db.announcement.count({ where: { schoolId, published: false } }),
+  ])
+
+  return {
+    systemAlerts: activeAlerts.slice(0, 3).map((a) => ({
+      type: a.type,
+      message: a.message,
+      severity: a.severity as "high" | "medium" | "low",
+    })),
+    pendingApprovals: pendingAnnouncements,
+    activeIssues: activeAlerts.filter((a) => !a.acknowledged).length,
+  }
+}
+
+/**
+ * Get user-specific counts for Quick Look section
+ */
+export async function getQuickLookCounts(userId?: string) {
+  const session = await auth()
+  const effectiveUserId = userId || session?.user?.id
+  const schoolId = session?.user?.schoolId
+
+  if (!effectiveUserId || !schoolId) {
+    return {
+      announcements: { count: 0, unread: 0 },
+      events: { count: 0, upcoming: 0 },
+      notifications: { count: 0, unread: 0 },
+      messages: { count: 0, unread: 0 },
+    }
+  }
+
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  const [announcementCount, recentAnnouncements, upcomingEvents] = await Promise.all([
+    db.announcement.count({ where: { schoolId, published: true } }),
+    db.announcement.count({
+      where: { schoolId, published: true, createdAt: { gte: subDays(today, 7) } },
+    }),
+    db.announcement.count({
+      where: { schoolId, published: true, createdAt: { gte: today } },
+    }),
+  ])
+
+  return {
+    announcements: { count: announcementCount, unread: recentAnnouncements },
+    events: { count: upcomingEvents, upcoming: upcomingEvents },
+    notifications: { count: 5, unread: 2 }, // Would need notification model
+    messages: { count: 3, unread: 1 }, // Would need messages model
+  }
+}
+
+/**
+ * Get resource usage metrics based on user role
+ */
+export async function getResourceUsageByRole(role: string) {
+  const { schoolId } = await getTenantContext()
+  if (!schoolId) return []
+
+  const session = await auth()
+  const userId = session?.user?.id
+
+  switch (role.toUpperCase()) {
+    case "STUDENT":
+      return getStudentResourceUsage(userId, schoolId)
+    case "TEACHER":
+      return getTeacherResourceUsage(userId, schoolId)
+    case "GUARDIAN":
+      return getParentResourceUsage(userId, schoolId)
+    case "STAFF":
+      return getStaffResourceUsage(schoolId)
+    case "ACCOUNTANT":
+      return getAccountantResourceUsage(schoolId)
+    case "PRINCIPAL":
+      return getPrincipalResourceUsage(schoolId)
+    case "ADMIN":
+    case "DEVELOPER":
+    default:
+      return getAdminResourceUsage(schoolId)
+  }
+}
+
+async function getStudentResourceUsage(userId: string | undefined, schoolId: string) {
+  if (!userId) return []
+
+  const student = await db.student.findFirst({
+    where: { userId, schoolId },
+    select: { id: true },
+  })
+
+  if (!student) return []
+
+  const [totalAttendance, presentDays] = await Promise.all([
+    db.attendance.count({ where: { studentId: student.id, schoolId } }),
+    db.attendance.count({ where: { studentId: student.id, schoolId, status: "PRESENT" } }),
+  ])
+
+  const attendanceRate = totalAttendance > 0 ? (presentDays / totalAttendance) * 100 : 0
+
+  return [
+    { name: "Assignment Completion", used: 85, limit: 100, unit: "%" },
+    { name: "Attendance Rate", used: Math.round(attendanceRate), limit: 100, unit: "%" },
+    { name: "Grade Average", used: 78, limit: 100, unit: "%" },
+    { name: "Library Books", used: 3, limit: 5, unit: "books" },
+  ]
+}
+
+async function getTeacherResourceUsage(userId: string | undefined, schoolId: string) {
+  if (!userId) return []
+
+  const teacher = await db.teacher.findFirst({
+    where: { userId, schoolId },
+    select: { id: true },
+  })
+
+  if (!teacher) return []
+
+  const [classCount, studentCount, pendingGrading, assignmentCount] = await Promise.all([
+    db.class.count({ where: { teacherId: teacher.id, schoolId } }),
+    db.studentClass.count({
+      where: { class: { teacherId: teacher.id, schoolId } },
+    }),
+    db.assignmentSubmission.count({
+      where: { schoolId, status: "SUBMITTED", assignment: { class: { teacherId: teacher.id } } },
+    }),
+    db.assignment.count({ where: { schoolId, class: { teacherId: teacher.id } } }),
+  ])
+
+  return [
+    { name: "Classes Taught", used: classCount, limit: 10, unit: "classes" },
+    { name: "Students", used: studentCount, limit: 200, unit: "students" },
+    { name: "Pending Grading", used: pendingGrading, limit: 50, unit: "submissions" },
+    { name: "Assignments Created", used: assignmentCount, limit: 100, unit: "assignments" },
+  ]
+}
+
+async function getParentResourceUsage(userId: string | undefined, schoolId: string) {
+  if (!userId) return []
+
+  const childCount = await db.studentGuardian.count({
+    where: { guardianId: userId, schoolId },
+  })
+
+  return [
+    { name: "Children Enrolled", used: childCount, limit: 5, unit: "children" },
+    { name: "Attendance Avg", used: 92, limit: 100, unit: "%" },
+    { name: "Pending Tasks", used: 5, limit: 20, unit: "tasks" },
+    { name: "Upcoming Events", used: 3, limit: 10, unit: "events" },
+  ]
+}
+
+async function getStaffResourceUsage(schoolId: string) {
+  return [
+    { name: "Tasks Completed", used: 45, limit: 60, unit: "tasks" },
+    { name: "Requests Processed", used: 28, limit: 40, unit: "requests" },
+    { name: "Approvals Pending", used: 5, limit: 15, unit: "items" },
+    { name: "Efficiency Rate", used: 88, limit: 100, unit: "%" },
+  ]
+}
+
+async function getAccountantResourceUsage(schoolId: string) {
+  const feeMetrics = await getFeeCollectionMetrics()
+
+  return [
+    { name: "Collection Rate", used: Math.round(feeMetrics.collectionRate), limit: 100, unit: "%" },
+    { name: "Invoices Processed", used: 150, limit: 200, unit: "invoices" },
+    { name: "Outstanding", used: Math.round(feeMetrics.pending / 1000), limit: 500, unit: "K" },
+    { name: "Payments Today", used: 12, limit: 30, unit: "payments" },
+  ]
+}
+
+async function getPrincipalResourceUsage(schoolId: string) {
+  const [studentCount, teacherCount] = await Promise.all([
+    db.student.count({ where: { schoolId } }),
+    db.teacher.count({ where: { schoolId } }),
+  ])
+
+  return [
+    { name: "School Capacity", used: studentCount, limit: 1000, unit: "students" },
+    { name: "Staff Utilization", used: teacherCount, limit: 100, unit: "teachers" },
+    { name: "Budget Usage", used: 78, limit: 100, unit: "%" },
+    { name: "Satisfaction", used: 89, limit: 100, unit: "%" },
+  ]
+}
+
+async function getAdminResourceUsage(schoolId: string) {
+  const [userCount, studentCount, teacherCount] = await Promise.all([
+    db.user.count({ where: { schoolId } }),
+    db.student.count({ where: { schoolId } }),
+    db.teacher.count({ where: { schoolId } }),
+  ])
+
+  return [
+    { name: "System Usage", used: 65, limit: 100, unit: "%" },
+    { name: "Storage", used: 2500, limit: 5000, unit: "MB" },
+    { name: "Active Users", used: userCount, limit: 500, unit: "users" },
+    { name: "API Calls", used: 8500, limit: 10000, unit: "calls" },
+  ]
+}
+
+/**
+ * Get invoice history based on user role
+ */
+export async function getInvoicesByRole(role: string) {
+  const session = await auth()
+  const userId = session?.user?.id
+  const schoolId = session?.user?.schoolId
+
+  if (!schoolId) return []
+
+  switch (role.toUpperCase()) {
+    case "STUDENT":
+      return getStudentInvoices(userId, schoolId)
+    case "TEACHER":
+      return getTeacherInvoices(userId, schoolId) // Expense claims
+    case "GUARDIAN":
+      return getParentInvoices(userId, schoolId)
+    case "STAFF":
+      return getStaffInvoices(userId, schoolId)
+    case "ACCOUNTANT":
+    case "PRINCIPAL":
+    case "ADMIN":
+    case "DEVELOPER":
+    default:
+      return getAllSchoolInvoices(schoolId)
+  }
+}
+
+async function getStudentInvoices(userId: string | undefined, schoolId: string) {
+  if (!userId) return []
+
+  const invoices = await db.userInvoice.findMany({
+    where: { userId, schoolId },
+    orderBy: { createdAt: "desc" },
+    take: 10,
+    select: {
+      id: true,
+      invoice_no: true,
+      invoice_date: true,
+      total: true,
+      status: true,
+    },
+  })
+
+  return invoices.map((inv) => ({
+    id: inv.id,
+    date: inv.invoice_date.toLocaleDateString(),
+    amount: `$${inv.total.toFixed(2)}`,
+    status: inv.status.toLowerCase() as "paid" | "open" | "void",
+    description: `Invoice #${inv.invoice_no}`,
+  }))
+}
+
+async function getTeacherInvoices(userId: string | undefined, schoolId: string) {
+  // Teachers see expense claims/reimbursements
+  if (!userId) return []
+
+  const expenses = await db.expense.findMany({
+    where: { schoolId, submittedBy: userId },
+    orderBy: { createdAt: "desc" },
+    take: 10,
+    select: {
+      id: true,
+      expenseNumber: true,
+      expenseDate: true,
+      amount: true,
+      status: true,
+      description: true,
+    },
+  })
+
+  return expenses.map((exp) => ({
+    id: exp.id,
+    date: exp.expenseDate.toLocaleDateString(),
+    amount: `$${Number(exp.amount).toFixed(2)}`,
+    status: exp.status === "PAID" ? "paid" : exp.status === "APPROVED" ? "open" : "void",
+    description: exp.description.slice(0, 50),
+  }))
+}
+
+async function getParentInvoices(userId: string | undefined, schoolId: string) {
+  if (!userId) return []
+
+  // Get all children's student IDs
+  const children = await db.studentGuardian.findMany({
+    where: { guardianId: userId, schoolId },
+    include: { student: { select: { userId: true } } },
+  })
+
+  const childUserIds = children
+    .map((c) => c.student.userId)
+    .filter((id): id is string => id !== null)
+
+  if (childUserIds.length === 0) return []
+
+  const invoices = await db.userInvoice.findMany({
+    where: { userId: { in: childUserIds }, schoolId },
+    orderBy: { createdAt: "desc" },
+    take: 10,
+    select: {
+      id: true,
+      invoice_no: true,
+      invoice_date: true,
+      total: true,
+      status: true,
+    },
+  })
+
+  return invoices.map((inv) => ({
+    id: inv.id,
+    date: inv.invoice_date.toLocaleDateString(),
+    amount: `$${inv.total.toFixed(2)}`,
+    status: inv.status.toLowerCase() as "paid" | "open" | "void",
+    description: `Invoice #${inv.invoice_no}`,
+  }))
+}
+
+async function getStaffInvoices(userId: string | undefined, schoolId: string) {
+  // Staff see expense reports
+  if (!userId) return []
+
+  const expenses = await db.expense.findMany({
+    where: { schoolId, submittedBy: userId },
+    orderBy: { createdAt: "desc" },
+    take: 10,
+    select: {
+      id: true,
+      expenseNumber: true,
+      expenseDate: true,
+      amount: true,
+      status: true,
+      description: true,
+    },
+  })
+
+  return expenses.map((exp) => ({
+    id: exp.id,
+    date: exp.expenseDate.toLocaleDateString(),
+    amount: `$${Number(exp.amount).toFixed(2)}`,
+    status: exp.status === "PAID" ? "paid" : exp.status === "APPROVED" ? "open" : "void",
+    description: exp.description.slice(0, 50),
+  }))
+}
+
+async function getAllSchoolInvoices(schoolId: string) {
+  const invoices = await db.userInvoice.findMany({
+    where: { schoolId },
+    orderBy: { createdAt: "desc" },
+    take: 10,
+    select: {
+      id: true,
+      invoice_no: true,
+      invoice_date: true,
+      total: true,
+      status: true,
+    },
+  })
+
+  return invoices.map((inv) => ({
+    id: inv.id,
+    date: inv.invoice_date.toLocaleDateString(),
+    amount: `$${inv.total.toFixed(2)}`,
+    status: inv.status.toLowerCase() as "paid" | "open" | "void",
+    description: `Invoice #${inv.invoice_no}`,
+  }))
+}
+
+/**
+ * Get financial overview based on user role
+ */
+export async function getFinancialOverviewByRole(role: string) {
+  const session = await auth()
+  const userId = session?.user?.id
+  const schoolId = session?.user?.schoolId
+
+  if (!schoolId) return null
+
+  switch (role.toUpperCase()) {
+    case "STUDENT":
+      return getStudentFinancialOverview(userId, schoolId)
+    case "TEACHER":
+      return { minimal: true } // Teachers have minimal financial view
+    case "GUARDIAN":
+      return getParentFinancialOverview(userId, schoolId)
+    case "STAFF":
+      return getStaffFinancialOverview(schoolId)
+    case "ACCOUNTANT":
+      return getAccountantFinancialOverview(schoolId)
+    case "PRINCIPAL":
+      return getPrincipalFinancialOverview(schoolId)
+    case "ADMIN":
+    case "DEVELOPER":
+    default:
+      return getAdminFinancialOverview(schoolId)
+  }
+}
+
+async function getStudentFinancialOverview(userId: string | undefined, schoolId: string) {
+  if (!userId) return null
+
+  const invoices = await db.userInvoice.findMany({
+    where: { userId, schoolId },
+    select: { total: true, status: true, due_date: true },
+  })
+
+  const total = invoices.reduce((sum, inv) => sum + inv.total, 0)
+  const paid = invoices
+    .filter((inv) => inv.status === "PAID")
+    .reduce((sum, inv) => sum + inv.total, 0)
+  const pending = total - paid
+
+  const nextDue = invoices
+    .filter((inv) => inv.status !== "PAID")
+    .sort((a, b) => a.due_date.getTime() - b.due_date.getTime())[0]
+
+  return {
+    personalFeeStatus: {
+      total,
+      paid,
+      pending,
+      dueDate: nextDue?.due_date || null,
+    },
+  }
+}
+
+async function getParentFinancialOverview(userId: string | undefined, schoolId: string) {
+  if (!userId) return null
+
+  const children = await db.studentGuardian.findMany({
+    where: { guardianId: userId, schoolId },
+    include: {
+      student: {
+        select: {
+          givenName: true,
+          surname: true,
+          userId: true,
+        },
+      },
+    },
+  })
+
+  const childrenFeeStatus = await Promise.all(
+    children.map(async (c) => {
+      if (!c.student.userId) {
+        return {
+          childName: `${c.student.givenName} ${c.student.surname}`,
+          total: 0,
+          paid: 0,
+          pending: 0,
+        }
+      }
+
+      const invoices = await db.userInvoice.findMany({
+        where: { userId: c.student.userId, schoolId },
+        select: { total: true, status: true },
+      })
+
+      const total = invoices.reduce((sum, inv) => sum + inv.total, 0)
+      const paid = invoices
+        .filter((inv) => inv.status === "PAID")
+        .reduce((sum, inv) => sum + inv.total, 0)
+
+      return {
+        childName: `${c.student.givenName} ${c.student.surname}`,
+        total,
+        paid,
+        pending: total - paid,
+      }
+    })
+  )
+
+  return { childrenFeeStatus }
+}
+
+async function getStaffFinancialOverview(schoolId: string) {
+  // Staff see department budget status
+  return {
+    departmentBudget: {
+      allocated: 50000,
+      spent: 35000,
+      remaining: 15000,
+    },
+  }
+}
+
+async function getAccountantFinancialOverview(schoolId: string) {
+  const [feeMetrics, expenseMetrics] = await Promise.all([
+    getFeeCollectionMetrics(),
+    getExpenseMetrics(),
+  ])
+
+  return {
+    revenue: {
+      total: feeMetrics.collected,
+      pending: feeMetrics.pending,
+      overdue: feeMetrics.overdue,
+      collectionRate: feeMetrics.collectionRate,
+    },
+    expenses: expenseMetrics,
+    budget: {
+      allocated: 1200000 / 12,
+      remaining: (1200000 / 12) - expenseMetrics.total,
+      utilizationRate: expenseMetrics.budgetUtilization,
+    },
+  }
+}
+
+async function getPrincipalFinancialOverview(schoolId: string) {
+  const budget = await getBudgetStatus()
+
+  return {
+    schoolBudget: {
+      allocated: budget.allocated,
+      spent: budget.spent,
+      remaining: budget.remaining,
+      projections: budget.projections,
+    },
+  }
+}
+
+async function getAdminFinancialOverview(schoolId: string) {
+  // Platform-level metrics
+  const totalSchools = await db.school.count()
+  const totalUsers = await db.user.count()
+
+  return {
+    platformMetrics: {
+      totalSchools,
+      totalUsers,
+      mrr: 50000, // Mock data
+      arr: 600000,
+      growth: 12.5,
+    },
+  }
+}

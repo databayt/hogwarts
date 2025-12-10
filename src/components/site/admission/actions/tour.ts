@@ -258,7 +258,7 @@ export async function createTourBooking(
               </tr>
             </table>
             <p>If you need to reschedule or cancel, please visit:</p>
-            <p><a href="https://${subdomain}.databayt.org/schedule-tour/${bookingNumber}">Manage Booking</a></p>
+            <p><a href="https://${subdomain}.databayt.org/tour/${bookingNumber}">Manage Booking</a></p>
             <p>We look forward to meeting you!</p>
             <p>Best regards,<br>${schoolResult.data.name}</p>
           `,
@@ -402,7 +402,7 @@ export async function cancelTourBooking(
             <p>Your tour booking (${bookingNumber}) has been cancelled.</p>
             ${reason ? `<p><strong>Reason:</strong> ${reason}</p>` : ""}
             <p>If you'd like to schedule a new tour, please visit:</p>
-            <p><a href="https://${booking.school.domain}.databayt.org/schedule-tour">Schedule Tour</a></p>
+            <p><a href="https://${booking.school.domain}.databayt.org/tour">Schedule Tour</a></p>
             <p>Best regards,<br>${booking.school.name}</p>
           `,
         });

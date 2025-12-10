@@ -7,6 +7,93 @@ description: "Complete guide to the attendance management module - track and man
 
 The Attendance module provides a comprehensive, production-ready system for tracking student attendance. It supports multiple tracking methods, parent engagement features, early warning systems for chronic absenteeism, and flexible reporting capabilities.
 
+### Module Flow
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                         ENTRY POINTS                                     │
+├─────────────────────────────────────────────────────────────────────────┤
+│  Platform: /s/[subdomain]/attendance → Overview Dashboard               │
+│  Parent:   /parent/attendance        → Parent Portal View               │
+└─────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                      TAKING ATTENDANCE                                   │
+├──────────────┬──────────────┬──────────────┬────────────────────────────┤
+│    Manual    │   QR Code    │   Barcode    │      Bulk Upload           │
+│  /manual     │  /qr-code    │  /barcode    │     /bulk-upload           │
+└──────┬───────┴──────┬───────┴──────┬───────┴────────────┬───────────────┘
+       │              │              │                    │
+       └──────────────┴──────────────┴────────────────────┘
+                                    │
+                                    ▼
+                    ┌───────────────────────────────┐
+                    │   Period Selector (optional)  │
+                    │   Auto-detects current period │
+                    │   from timetable integration  │
+                    └───────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│              actions.ts: markAttendance() / markPeriodAttendance()      │
+└─────────────────────────────────────────────────────────────────────────┘
+                                    │
+                          ┌─────────┴─────────┐
+                          │  Status = ABSENT? │
+                          └─────────┬─────────┘
+                                    │ YES
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│              triggerAbsenceNotification()                               │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────────────────┐  │
+│  │   Email     │  │    SMS      │  │      In-app Notification        │  │
+│  │  (Resend)   │  │  (Twilio)   │  │        (Parent Portal)          │  │
+│  └─────────────┘  └─────────────┘  └─────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                    PARENT EXCUSE WORKFLOW                               │
+├─────────────────────────────────────────────────────────────────────────┤
+│  1. Parent receives notification                                        │
+│  2. Views absence in parent portal → excuse-form.tsx                    │
+│  3. Submits excuse with reason + attachments → submitExcuse()           │
+│  4. Teacher/Admin reviews → excuse-review.tsx → reviewExcuse()          │
+│  5. Status: APPROVED → Attendance updated to EXCUSED                    │
+│             REJECTED → Remains unexcused                                │
+└─────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                     EARLY WARNING SYSTEM                                │
+├─────────────────────────────────────────────────────────────────────────┤
+│  getStudentsAtRisk() → Groups by US DoE Risk Levels:                    │
+│  ┌────────────────┬────────────────┬────────────────┬────────────────┐  │
+│  │  Satisfactory  │    At-Risk     │   Moderately   │    Severely    │  │
+│  │     ≥95%       │   90-94.9%     │  Chronic 80-89%│  Chronic <80%  │  │
+│  └────────────────┴────────────────┴────────────────┴────────────────┘  │
+│                                    │                                    │
+│                                    ▼                                    │
+│              intervention-tracker.tsx → Create/Track/Escalate           │
+│              14 intervention types • 5 statuses • Priority 1-4          │
+└─────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                      REPORTING & ANALYTICS                              │
+├─────────────────────────────────────────────────────────────────────────┤
+│  /analytics → charts.tsx (trends, breakdowns, period analysis)          │
+│  /reports   → content.tsx (filterable table with export)                │
+│                                    │                                    │
+│                      export-button.tsx                                  │
+│              ┌─────────┬─────────────┬─────────────┐                    │
+│              │   CSV   │    Excel    │     PDF     │                    │
+│              │         │  (5 sheets) │  (branded)  │                    │
+│              └─────────┴─────────────┴─────────────┘                    │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
 ### Key Features
 
 | Feature | Status | Description |
@@ -20,6 +107,69 @@ The Attendance module provides a comprehensive, production-ready system for trac
 | Parent Excuse Submission | **Production** | Parents can submit excuses for absences |
 | Early Warning System | **Production** | Detect chronic absenteeism and track interventions |
 | Reports Export | **Production** | CSV, Excel, and PDF export options |
+
+### File Structure
+
+```
+src/
+├── app/[lang]/s/[subdomain]/(platform)/attendance/
+│   ├── page.tsx              # Overview dashboard
+│   ├── manual/page.tsx       # Manual attendance marking
+│   ├── qr-code/page.tsx      # QR code sessions
+│   ├── barcode/page.tsx      # Barcode scanning
+│   ├── bulk-upload/page.tsx  # CSV bulk import
+│   ├── analytics/page.tsx    # Charts and trends
+│   └── reports/page.tsx      # Filterable reports + export
+│
+├── components/platform/attendance/
+│   ├── content.tsx           # Overview dashboard content
+│   ├── actions.ts            # Server actions (~4000 lines, 30+ functions)
+│   ├── validation.ts         # Zod schemas for all forms
+│   ├── types.ts              # TypeScript type definitions
+│   ├── tracking.tsx          # Manual attendance marking UI
+│   │
+│   ├── qr-code/
+│   │   ├── content.tsx       # QR code session management
+│   │   ├── qr-generator.tsx  # QR code generation
+│   │   ├── qr-scanner.tsx    # Student QR scanning
+│   │   └── actions.ts        # QR-specific server actions
+│   │
+│   ├── barcode/
+│   │   ├── content.tsx       # Barcode scanning UI
+│   │   └── barcode-scanner.tsx
+│   │
+│   ├── bulk-upload/
+│   │   ├── content.tsx       # CSV import UI
+│   │   └── upload-form.tsx
+│   │
+│   ├── period/
+│   │   ├── period-selector.tsx    # Period dropdown with timetable
+│   │   └── current-period.tsx     # Current period indicator
+│   │
+│   ├── early-warning/
+│   │   ├── content.tsx            # Early warning dashboard
+│   │   ├── at-risk-list.tsx       # Students by risk level
+│   │   └── intervention-tracker.tsx
+│   │
+│   ├── excuses/
+│   │   ├── excuse-form.tsx        # Parent excuse submission
+│   │   ├── excuse-review.tsx      # Teacher/admin review
+│   │   └── actions.ts
+│   │
+│   ├── analytics/
+│   │   ├── content.tsx            # Analytics dashboard
+│   │   └── charts.tsx             # Recharts visualizations
+│   │
+│   └── reports/
+│       ├── content.tsx            # Reports page
+│       ├── export-button.tsx      # CSV/Excel/PDF dropdown
+│       ├── pdf-generator.tsx      # @react-pdf/renderer
+│       └── excel-generator.ts     # xlsx library
+│
+└── components/platform/parent-portal/attendance/
+    ├── view.tsx                   # Parent attendance view
+    └── excuse-form.tsx            # Parent excuse submission
+```
 
 ## Quick Start
 
@@ -394,7 +544,27 @@ Configure attendance module behavior:
 
 ## API Reference
 
-### Server Actions
+### Server Actions Quick Reference
+
+| Action | Purpose | Key Parameters |
+|--------|---------|----------------|
+| `markAttendance()` | Mark daily attendance | classId, date, records[] |
+| `markPeriodAttendance()` | Mark period-specific | classId, date, periodId, records[] |
+| `getPeriodsForClass()` | Get timetable periods | classId, date |
+| `getCurrentPeriod()` | Auto-detect current period | classId (optional) |
+| `getStudentsAtRisk()` | Get at-risk students | classId?, riskLevel?, limit? |
+| `createIntervention()` | Create intervention record | studentId, type, title, description |
+| `updateIntervention()` | Update intervention status | interventionId, status, outcome? |
+| `escalateIntervention()` | Escalate to higher level | interventionId, newType, notes |
+| `submitExcuse()` | Parent submits excuse | attendanceId, reason, attachments? |
+| `reviewExcuse()` | Teacher reviews excuse | excuseId, status, reviewNotes? |
+| `triggerAbsenceNotification()` | Send absence alerts | studentId, classId, date |
+| `getAttendanceReport()` | Fetch filtered records | filters, limit, offset |
+| `getAttendanceStats()` | Get statistics summary | classId?, dateRange? |
+| `getPeriodAttendanceAnalytics()` | Period-level analytics | classId?, dateRange? |
+| `getStudentDayAttendance()` | Full day for student | studentId, date |
+
+### Server Actions Details
 
 The attendance module uses server actions for data operations:
 

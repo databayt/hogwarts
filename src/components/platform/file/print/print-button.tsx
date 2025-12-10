@@ -17,7 +17,7 @@ import { usePrint } from "./use-print";
 // Types
 // ============================================================================
 
-interface PrintButtonProps extends Omit<ButtonProps, "onClick"> {
+interface PrintButtonProps extends Omit<ButtonProps, "onClick" | "onError"> {
   /** Element to print (optional - prints whole page if not provided) */
   elementRef?: React.RefObject<HTMLElement | null>;
 

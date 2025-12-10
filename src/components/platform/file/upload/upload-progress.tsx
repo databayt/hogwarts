@@ -43,17 +43,17 @@ export function UploadProgress({
   showDetails = true,
   className,
 }: UploadProgressProps) {
-  const statusColors = {
+  const statusColors: Record<UploadProgressType["status"], string> = {
     pending: "text-muted-foreground",
     uploading: "text-primary",
-    completed: "text-green-500",
+    success: "text-green-500",
     error: "text-destructive",
   };
 
-  const statusIcons = {
+  const statusIcons: Record<UploadProgressType["status"], React.ReactElement> = {
     pending: <File className="h-4 w-4" />,
     uploading: <Loader2 className="h-4 w-4 animate-spin" />,
-    completed: <CheckCircle className="h-4 w-4" />,
+    success: <CheckCircle className="h-4 w-4" />,
     error: <AlertCircle className="h-4 w-4" />,
   };
 
@@ -68,11 +68,11 @@ export function UploadProgress({
         {/* Content */}
         <div className="flex-1 min-w-0">
           {/* Filename */}
-          <p className="truncate font-medium text-sm">{progress.filename}</p>
+          <p className="truncate font-medium text-sm">{progress.filename || progress.fileName}</p>
 
           {/* Progress Bar */}
           {progress.status === "uploading" && (
-            <Progress value={progress.percentage} className="mt-2 h-1.5" />
+            <Progress value={progress.percentage ?? progress.progress} className="mt-2 h-1.5" />
           )}
 
           {/* Details */}
@@ -80,12 +80,12 @@ export function UploadProgress({
             <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
               {progress.status === "uploading" && (
                 <>
-                  <span>{formatBytes(progress.loaded)} / {formatBytes(progress.total)}</span>
+                  <span>{formatBytes(progress.loaded ?? 0)} / {formatBytes(progress.total ?? 0)}</span>
                   <span>•</span>
-                  <span>{Math.round(progress.percentage)}%</span>
+                  <span>{Math.round(progress.percentage ?? progress.progress)}%</span>
                 </>
               )}
-              {progress.status === "completed" && (
+              {progress.status === "success" && (
                 <span>Upload complete</span>
               )}
               {progress.status === "error" && progress.error && (
@@ -140,12 +140,12 @@ export function BatchUploadProgress({
   onRetry,
   className,
 }: BatchUploadProgressProps) {
-  const completed = items.filter((i) => i.status === "completed").length;
+  const completed = items.filter((i) => i.status === "success").length;
   const failed = items.filter((i) => i.status === "error").length;
   const uploading = items.filter((i) => i.status === "uploading").length;
   const pending = items.filter((i) => i.status === "pending").length;
 
-  const totalProgress = items.reduce((sum, item) => sum + item.percentage, 0) / items.length;
+  const totalProgress = items.reduce((sum, item) => sum + (item.percentage ?? item.progress), 0) / items.length;
 
   return (
     <div className={cn("rounded-lg border border-border bg-card", className)}>
@@ -184,14 +184,14 @@ export function BatchUploadProgress({
           >
             {/* Status Icon */}
             <div className={cn(
-              item.status === "completed" && "text-green-500",
+              item.status === "success" && "text-green-500",
               item.status === "error" && "text-destructive",
               item.status === "uploading" && "text-primary",
               item.status === "pending" && "text-muted-foreground"
             )}>
               {item.status === "uploading" ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
-              ) : item.status === "completed" ? (
+              ) : item.status === "success" ? (
                 <CheckCircle className="h-4 w-4" />
               ) : item.status === "error" ? (
                 <AlertCircle className="h-4 w-4" />
@@ -202,9 +202,9 @@ export function BatchUploadProgress({
 
             {/* Filename */}
             <div className="flex-1 min-w-0">
-              <p className="truncate text-sm">{item.filename}</p>
+              <p className="truncate text-sm">{item.filename || item.fileName}</p>
               {item.status === "uploading" && (
-                <Progress value={item.percentage} className="mt-1 h-1" />
+                <Progress value={item.percentage ?? item.progress} className="mt-1 h-1" />
               )}
               {item.error && (
                 <p className="text-xs text-destructive truncate">{item.error}</p>
@@ -213,13 +213,13 @@ export function BatchUploadProgress({
 
             {/* Percentage / Actions */}
             <div className="text-sm text-muted-foreground">
-              {item.status === "uploading" && `${Math.round(item.percentage)}%`}
+              {item.status === "uploading" && `${Math.round(item.percentage ?? item.progress)}%`}
               {item.status === "error" && onRetry && (
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
-                  onClick={() => onRetry(item.filename)}
+                  onClick={() => onRetry(item.filename || item.fileName)}
                   className="h-6 px-2 text-xs"
                 >
                   Retry
@@ -252,7 +252,7 @@ export function MinimalProgress({ percentage, status, className }: MinimalProgre
           <span className="text-sm">{Math.round(percentage)}%</span>
         </>
       )}
-      {status === "completed" && (
+      {status === "success" && (
         <CheckCircle className="h-4 w-4 text-green-500" />
       )}
       {status === "error" && (

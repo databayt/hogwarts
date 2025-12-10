@@ -138,10 +138,7 @@ export function ExportButton<T>({
     config.columns.filter((col) => !col.hidden).map((col) => col.key)
   );
 
-  const { isExporting, progress, error, exportTo, reset } = useExport({
-    ...config,
-    data,
-  });
+  const { isExporting, progress, error, exportTo, reset } = useExport(config);
 
   // Handle export
   const handleExport = useCallback(
@@ -371,10 +368,7 @@ export function SimpleExportButton<T>({
   onExportComplete,
   onExportError,
 }: SimpleExportButtonProps<T>) {
-  const { isExporting, exportTo } = useExport({
-    ...config,
-    data,
-  });
+  const { isExporting, exportTo } = useExport(config);
 
   const handleClick = useCallback(async () => {
     const result = await exportTo(format, data);

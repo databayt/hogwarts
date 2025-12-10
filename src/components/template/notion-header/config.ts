@@ -160,7 +160,7 @@ export const marketingConfig: MarketingConfig = {
 
     {
       title: "Admission",
-      href: "/admission",
+      href: "/admissions",
     },
 
     {

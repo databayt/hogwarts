@@ -164,6 +164,14 @@ interface PDFDocumentProps<T> {
   styles: ReturnType<typeof createStyles>;
 }
 
+// Map page size to react-pdf format
+const pageSizeMap: Record<string, "A4" | "LETTER" | "LEGAL" | "A3"> = {
+  "A4": "A4",
+  "Letter": "LETTER",
+  "Legal": "LEGAL",
+  "A3": "A3",
+};
+
 function PDFDocument<T>({ config, styles }: PDFDocumentProps<T>) {
   const {
     columns,
@@ -178,6 +186,8 @@ function PDFDocument<T>({ config, styles }: PDFDocumentProps<T>) {
     includeHeader = true,
   } = config;
 
+  const pdfPageSize = pageSizeMap[pageSize] || "A4";
+
   // Filter columns for PDF
   const pdfColumns = columns.filter(
     (col) => !col.hidden && col.includeInPdf !== false
@@ -191,7 +201,7 @@ function PDFDocument<T>({ config, styles }: PDFDocumentProps<T>) {
 
   return (
     <Document>
-      <Page size={pageSize} orientation={orientation} style={styles.page}>
+      <Page size={pdfPageSize} orientation={orientation} style={styles.page}>
         {/* Header */}
         <View style={styles.header}>
           {logoUrl && <Image src={logoUrl} style={styles.logo} />}
@@ -239,8 +249,8 @@ function PDFDocument<T>({ config, styles }: PDFDocumentProps<T>) {
                     style={[
                       styles.tableCell,
                       { width: columnWidths[colIdx] },
-                      col.align === "right" && { textAlign: "right" },
-                      col.align === "center" && { textAlign: "center" },
+                      col.align === "right" ? { textAlign: "right" } : {},
+                      col.align === "center" ? { textAlign: "center" } : {},
                     ]}
                   >
                     <Text>{formatted}</Text>

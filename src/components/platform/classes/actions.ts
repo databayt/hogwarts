@@ -619,3 +619,105 @@ export async function getClassesCSV(
     };
   }
 }
+
+/**
+ * Get classes data for export (used by File Block ExportButton)
+ * Returns raw data for client-side export generation
+ */
+export async function getClassesExportData(
+  input?: Partial<z.infer<typeof getClassesSchema>>
+): Promise<ActionResponse<Array<{
+  id: string;
+  name: string;
+  code: string | null;
+  description: string | null;
+  subjectName: string | null;
+  teacherName: string | null;
+  termName: string | null;
+  yearLevelName: string | null;
+  capacity: number | null;
+  studentCount: number;
+  schedule: string | null;
+  room: string | null;
+  isActive: boolean;
+  createdAt: Date;
+}>>> {
+  try {
+    const { schoolId } = await getTenantContext();
+    if (!schoolId) {
+      return { success: false, error: "Missing school context" };
+    }
+
+    const sp = getClassesSchema.parse(input ?? {});
+
+    const where: any = {
+      schoolId,
+      ...(sp.name ? { name: { contains: sp.name, mode: "insensitive" } } : {}),
+      ...(sp.subjectId ? { subjectId: sp.subjectId } : {}),
+      ...(sp.teacherId ? { teacherId: sp.teacherId } : {}),
+      ...(sp.termId ? { termId: sp.termId } : {}),
+    };
+
+    const classes = await db.class.findMany({
+      where,
+      include: {
+        subject: {
+          select: {
+            subjectName: true,
+          },
+        },
+        teacher: {
+          select: {
+            givenName: true,
+            surname: true,
+          },
+        },
+        term: {
+          select: {
+            termNumber: true,
+          },
+        },
+        classroom: {
+          select: {
+            roomName: true,
+            capacity: true,
+          },
+        },
+        _count: {
+          select: {
+            studentClasses: true,
+          },
+        },
+      },
+      orderBy: [{ name: "asc" }],
+    });
+
+    const exportData = classes.map((classItem: any) => ({
+      id: classItem.id,
+      name: classItem.name || "",
+      code: classItem.courseCode || null,
+      description: classItem.description || null,
+      subjectName: classItem.subject?.subjectName || null,
+      teacherName: classItem.teacher
+        ? `${classItem.teacher.givenName} ${classItem.teacher.surname}`
+        : null,
+      termName: classItem.term?.termNumber ? `Term ${classItem.term.termNumber}` : null,
+      yearLevelName: null, // Class model doesn't have yearLevel relation
+      capacity: classItem.maxCapacity || null,
+      studentCount: classItem._count.studentClasses,
+      schedule: classItem.schedule || null,
+      room: classItem.classroom?.roomName || null,
+      isActive: classItem.isActive ?? true,
+      createdAt: new Date(classItem.createdAt),
+    }));
+
+    return { success: true, data: exportData };
+  } catch (error) {
+    console.error("[getClassesExportData] Error:", error);
+
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to fetch export data"
+    };
+  }
+}

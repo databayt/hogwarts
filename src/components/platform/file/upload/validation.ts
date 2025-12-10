@@ -54,10 +54,10 @@ export const uploadOptionsSchema = z.object({
   provider: z.enum(["vercel_blob", "aws_s3", "cloudflare_r2", "imagekit"] as const).optional(),
   tier: z.enum(["hot", "warm", "cold"] as const).optional(),
   access: z.enum(["public", "private"] as const).optional(),
-  metadata: z.record(z.string()).optional(),
+  metadata: z.record(z.string(), z.string()).optional(),
   maxSize: z.number().optional(),
   allowedTypes: z.array(z.string()).optional(),
-  onProgress: z.function().args(z.number()).returns(z.void()).optional(),
+  onProgress: z.any().optional(),
 });
 
 /**
@@ -197,7 +197,7 @@ export const uploadResultSchema = z.object({
   width: z.number().optional(),
   height: z.number().optional(),
   duration: z.number().optional(),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
 /**

@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { format, isToday, isTomorrow } from "date-fns"
-import { QuickActions } from "./quick-action"
+import { QuickActions } from "./quick-actions"
 import { getQuickActionsByRole } from "./quick-actions-config"
 import { getTenantContext } from "@/lib/tenant-context"
 import { MetricCard } from "./metric-card"
@@ -12,8 +12,13 @@ import { EmptyState } from "./empty-state"
 import { RevenueChart } from "./revenue-chart"
 import { PerformanceGauge } from "./performance-gauge"
 import { WeeklyActivityChart } from "./weekly-chart"
-import { TopSection } from "./top-section"
+import { Upcoming } from "./upcoming"
+import { Weather } from "./weather"
 import { QuickLookSection } from "./quick-look-section"
+import { ResourceUsageSection } from "./resource-usage-section"
+import { InvoiceHistorySection } from "./invoice-history-section"
+import { FinancialOverviewSection } from "./financial-overview-section"
+import { SectionHeading } from "./section-heading"
 import Link from "next/link"
 import { ChevronRight, ArrowDownRight, ArrowUpRight } from "lucide-react"
 
@@ -162,18 +167,35 @@ export async function AccountantDashboard({
 
     return (
       <div className="space-y-6">
-        {/* Section 1: Upcoming Class + Weather (FIRST) */}
-        <TopSection locale={locale} subdomain={school?.domain || ""} />
+        {/* ============ TOP HERO SECTION (Unified Order) ============ */}
+        {/* Section 1: Upcoming + Weather */}
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <Upcoming role="ACCOUNTANT" locale={locale} subdomain={school?.domain || ""} />
+          <Weather />
+        </div>
 
-        {/* Section 2: Quick Look */}
+        {/* Section 2: Quick Look (no title) */}
         <QuickLookSection locale={locale} subdomain={school?.domain || ""} />
 
-        {/* Section 3: Quick Actions */}
-        <QuickActions
-          actions={getQuickActionsByRole("ACCOUNTANT", dictionary, school?.domain ?? undefined)}
-          locale={locale}
-        />
+        {/* Section 3: Quick Actions (4 focused actions) */}
+        <section>
+          <SectionHeading title="Quick Actions" />
+          <QuickActions
+            actions={getQuickActionsByRole("ACCOUNTANT", dictionary, school?.domain ?? undefined)}
+            locale={locale}
+          />
+        </section>
 
+        {/* Section 4: Resource Usage */}
+        <ResourceUsageSection role="ACCOUNTANT" />
+
+        {/* Section 5: Invoice History */}
+        <InvoiceHistorySection role="ACCOUNTANT" />
+
+        {/* Section 6: Financial Overview */}
+        <FinancialOverviewSection role="ACCOUNTANT" />
+
+        {/* ============ ACCOUNTANT-SPECIFIC SECTIONS ============ */}
         {/* Key Metrics Row */}
         <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
           <MetricCard

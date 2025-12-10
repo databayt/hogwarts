@@ -92,9 +92,17 @@ export interface UploadConfig {
 export interface UploadProgress {
   fileId: string;
   fileName: string;
+  /** Alias for fileName (backward compatibility) */
+  filename?: string;
   progress: number;
+  /** Alias for progress (backward compatibility) */
+  percentage?: number;
   status: "pending" | "uploading" | "success" | "error";
   error?: string;
+  loaded?: number;
+  total?: number;
+  currentFile?: number;
+  totalFiles?: number;
 }
 
 export interface UploadResult {
@@ -139,10 +147,10 @@ export type ExportFormat = "csv" | "excel" | "pdf" | "json";
 export interface ExportColumn<T = unknown> {
   /** Key in the data object */
   key: keyof T | string;
-  /** Display label (English) */
-  label: string;
-  /** Arabic label for i18n */
-  labelAr?: string;
+  /** Column header text (English) */
+  header: string;
+  /** Arabic header for i18n */
+  headerAr?: string;
   /** Column width for Excel/PDF */
   width?: number;
   /** Value formatter */

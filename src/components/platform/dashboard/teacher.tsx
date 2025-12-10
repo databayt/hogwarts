@@ -4,7 +4,7 @@ import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { ChevronRight, Calendar, FileText, GraduationCap, Clock } from "lucide-react"
 import { format, isToday, isTomorrow } from "date-fns"
 import { getTeacherDashboardData } from "./actions"
-import { QuickActions } from "./quick-action"
+import { QuickActions } from "./quick-actions"
 import { getQuickActionsByRole } from "./quick-actions-config"
 import { getTenantContext } from "@/lib/tenant-context"
 import { TeacherDashboardStats } from "@/components/platform/shared/stats"
@@ -14,8 +14,13 @@ import { ScheduleItem } from "./schedule-item"
 import { ProgressCard } from "./progress-card"
 import { EmptyState } from "./empty-state"
 import { WeeklyActivityChart } from "./weekly-chart"
-import { TopSection } from "./top-section"
+import { Upcoming } from "./upcoming"
+import { Weather } from "./weather"
 import { QuickLookSection } from "./quick-look-section"
+import { ResourceUsageSection } from "./resource-usage-section"
+import { InvoiceHistorySection } from "./invoice-history-section"
+import { FinancialOverviewSection } from "./financial-overview-section"
+import { SectionHeading } from "./section-heading"
 import Link from "next/link"
 
 interface TeacherDashboardProps {
@@ -154,18 +159,35 @@ export async function TeacherDashboard({ user, dictionary, locale = "en" }: Teac
 
     return (
       <div className="space-y-6">
-        {/* Section 1: Upcoming Class + Weather (FIRST) */}
-        <TopSection locale={locale} subdomain={school?.domain || ""} />
+        {/* ============ TOP HERO SECTION (Unified Order) ============ */}
+        {/* Section 1: Upcoming + Weather */}
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <Upcoming role="TEACHER" locale={locale} subdomain={school?.domain || ""} />
+          <Weather />
+        </div>
 
-        {/* Section 2: Quick Look */}
+        {/* Section 2: Quick Look (no title) */}
         <QuickLookSection locale={locale} subdomain={school?.domain || ""} />
 
-        {/* Section 3: Quick Actions */}
-        <QuickActions
-          actions={getQuickActionsByRole("TEACHER", dictionary, school?.domain ?? undefined)}
-          locale={locale}
-        />
+        {/* Section 3: Quick Actions (4 focused actions) */}
+        <section>
+          <SectionHeading title="Quick Actions" />
+          <QuickActions
+            actions={getQuickActionsByRole("TEACHER", dictionary, school?.domain ?? undefined)}
+            locale={locale}
+          />
+        </section>
 
+        {/* Section 4: Resource Usage */}
+        <ResourceUsageSection role="TEACHER" />
+
+        {/* Section 5: Invoice History (Expense Claims) */}
+        <InvoiceHistorySection role="TEACHER" />
+
+        {/* Section 6: Financial Overview */}
+        <FinancialOverviewSection role="TEACHER" />
+
+        {/* ============ TEACHER-SPECIFIC SECTIONS ============ */}
         {/* Key Metrics Row */}
         <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
           <MetricCard

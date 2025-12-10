@@ -90,7 +90,7 @@ export async function submitInquiry(
             ${validated.studentName ? `<p>We look forward to learning more about <strong>${validated.studentName}</strong>.</p>` : ""}
             <p>In the meantime, you can:</p>
             <ul>
-              <li><a href="https://${subdomain}.databayt.org/schedule-tour">Schedule a Campus Tour</a></li>
+              <li><a href="https://${subdomain}.databayt.org/tour">Schedule a Campus Tour</a></li>
               <li><a href="https://${subdomain}.databayt.org/apply">Start an Application</a></li>
             </ul>
             <p>Best regards,<br>Admissions Team<br>${schoolResult.data.name}</p>

@@ -7,21 +7,21 @@ export const sidebarLinks: SidebarNavItem[] = [
     title: "MENU",
     items: [
       {
-        href: "/admin",
+        href: "/school",
         icon: "laptop",
-        title: "Admin Panel",
+        title: "School Panel",
         authorizeOnly: UserRole.ADMIN,
       },
       { href: "/dashboard", icon: "dashboard", title: "Dashboard" },
       {
-        href: "/admin/billing",
+        href: "/school/billing",
         icon: "billing",
         title: "Billing",
         authorizeOnly: UserRole.ADMIN,
       },
       { href: "/dashboard/charts", icon: "lineChart", title: "Charts" },
       {
-        href: "/admin/orders",
+        href: "/school/orders",
         icon: "package",
         title: "Orders",
         badge: 2,

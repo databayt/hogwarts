@@ -125,10 +125,13 @@ export function useUpload(options: UseUploadOptions): UseUploadReturn {
       setIsUploading(true);
       setError(null);
       setProgress({
+        fileId: `upload-${Date.now()}`,
+        fileName: file.name,
         filename: file.name,
+        progress: 0,
+        percentage: 0,
         loaded: 0,
         total: file.size,
-        percentage: 0,
         status: "uploading",
       });
 
@@ -140,12 +143,13 @@ export function useUpload(options: UseUploadOptions): UseUploadReturn {
         // Simulate progress (actual progress tracking requires different approach)
         const progressInterval = setInterval(() => {
           setProgress((prev) => {
-            if (!prev || prev.percentage >= 90) return prev;
-            const newPercentage = Math.min(prev.percentage + 10, 90);
+            if (!prev || (prev.percentage ?? prev.progress) >= 90) return prev;
+            const newPercentage = Math.min((prev.percentage ?? prev.progress) + 10, 90);
             return {
               ...prev,
-              loaded: Math.floor((newPercentage / 100) * prev.total),
+              loaded: Math.floor((newPercentage / 100) * (prev.total ?? 0)),
               percentage: newPercentage,
+              progress: newPercentage,
             };
           });
         }, 200);
@@ -185,21 +189,27 @@ export function useUpload(options: UseUploadOptions): UseUploadReturn {
         };
 
         setProgress({
+          fileId: `upload-${Date.now()}`,
+          fileName: file.name,
           filename: file.name,
           loaded: file.size,
           total: file.size,
+          progress: 100,
           percentage: 100,
-          status: "completed",
+          status: "success",
         });
 
         setUploadedFiles((prev) => [...prev, uploadResult]);
         options.onSuccess?.(uploadResult);
         options.onProgress?.({
+          fileId: `upload-${Date.now()}`,
+          fileName: file.name,
           filename: file.name,
           loaded: file.size,
           total: file.size,
+          progress: 100,
           percentage: 100,
-          status: "completed",
+          status: "success",
         });
 
         return uploadResult;
@@ -240,10 +250,13 @@ export function useUpload(options: UseUploadOptions): UseUploadReturn {
         const file = files[i];
 
         setProgress({
+          fileId: `upload-${Date.now()}-${i}`,
+          fileName: file.name,
           filename: file.name,
+          progress: 0,
+          percentage: 0,
           loaded: 0,
           total: file.size,
-          percentage: 0,
           status: "uploading",
           currentFile: i + 1,
           totalFiles: files.length,

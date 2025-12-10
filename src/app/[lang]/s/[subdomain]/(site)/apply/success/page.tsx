@@ -167,7 +167,7 @@ export default async function SuccessPage({ params, searchParams }: SuccessPageP
             </Card>
           </Link>
 
-          <Link href={`/${lang}/s/${subdomain}/schedule-tour`}>
+          <Link href={`/${lang}/s/${subdomain}/tour`}>
             <Card className="h-full hover:border-primary transition-colors cursor-pointer">
               <CardContent className="flex items-center gap-4 pt-6">
                 <Calendar className="h-8 w-8 text-primary" />

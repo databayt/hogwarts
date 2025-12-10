@@ -5,28 +5,18 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { cn } from "@/lib/utils"
-import { useState, useEffect, useMemo } from "react"
 import {
   Users,
   GraduationCap,
   BookOpen,
-  DollarSign,
   TrendingUp,
   TrendingDown,
-  Check,
-  TriangleAlert,
   ChevronRight,
-  Megaphone,
   FileText,
-  Clock,
   UserPlus,
   CreditCard,
   Bell,
-  CalendarDays,
-  Settings,
   Activity,
-  Zap,
-  Shield,
   Database,
   Server,
   HardDrive,
@@ -34,15 +24,20 @@ import {
   CheckCircle,
   AlertCircle,
   XCircle,
-  BarChart3,
-  PieChart,
-  LineChart as LineChartIcon,
-  TrendingDown as TrendingDownIcon,
+  TriangleAlert,
 } from "lucide-react"
-import { DetailedUsageTableDemo } from "@/components/platform/billing/detailed-usage-table-demo"
-import { InvoiceHistoryDemo } from "@/components/platform/billing/invoice-history-demo"
-import { TopSection } from "./top-section"
+
+// New unified components
+import { Upcoming } from "./upcoming"
+import { Weather } from "./weather"
 import { QuickLookSection } from "./quick-look-section"
+import { QuickActions } from "./quick-actions"
+import { getQuickActionsByRole } from "./quick-actions-config"
+import { ResourceUsageSection } from "./resource-usage-section"
+import { InvoiceHistorySection } from "./invoice-history-section"
+import { FinancialOverviewSection } from "./financial-overview-section"
+import { SectionHeading } from "./section-heading"
+
 import Link from "next/link"
 import {
   ChartConfig,
@@ -50,7 +45,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart"
-import { CartesianGrid, Line, LineChart, XAxis, Bar, BarChart, Area, AreaChart, Cell, Pie, PieChart as RechartsPieChart, ResponsiveContainer, RadialBarChart, RadialBar, Legend } from "recharts"
+import { CartesianGrid, Bar, BarChart, XAxis } from "recharts"
 
 // ============================================================================
 // TYPES
@@ -62,11 +57,6 @@ interface QuickStatData {
   change: string
   changeType: "positive" | "negative" | "neutral"
   href?: string
-}
-
-interface FinanceStatData {
-  label: string
-  value: string
 }
 
 interface ActivityData {
@@ -87,13 +77,12 @@ interface AdminDashboardClientProps {
   userName: string
   schoolName: string
   quickStats: QuickStatData[]
-  financeStats: FinanceStatData[]
   recentActivities: ActivityData[]
   todaySummary: SummaryData[]
 }
 
 // ============================================================================
-// SECTION 2: System Health Status
+// SECTION: System Health Status
 // ============================================================================
 
 function SystemHealthSection() {
@@ -126,15 +115,15 @@ function SystemHealthSection() {
 
   return (
     <section>
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold flex items-center gap-2">
-          <Activity className="h-5 w-5" />
-          System Health
-        </h2>
-        <Badge variant={operationalCount === systemStatus.length ? "default" : "secondary"} className={operationalCount === systemStatus.length ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400" : ""}>
-          {operationalCount}/{systemStatus.length} Operational
-        </Badge>
-      </div>
+      <SectionHeading
+        title="System Health"
+        icon={Activity}
+        badge={{
+          label: `${operationalCount}/${systemStatus.length} Operational`,
+          variant: operationalCount === systemStatus.length ? "default" : "secondary",
+          className: operationalCount === systemStatus.length ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400" : "",
+        }}
+      />
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {systemStatus.map((system) => {
           const StatusIcon = getStatusIcon(system.status)
@@ -162,7 +151,7 @@ function SystemHealthSection() {
 }
 
 // ============================================================================
-// SECTION 3: Quick Stats (3 Cards with Icons)
+// SECTION: Quick Stats (3 Cards with Icons)
 // ============================================================================
 
 const iconMap = {
@@ -220,7 +209,7 @@ function StatBadge({ label, value, change, changeType, href }: QuickStatData) {
 function QuickStatsSection({ quickStats }: { quickStats: QuickStatData[] }) {
   return (
     <section>
-      <h2 className="mb-4 text-lg font-semibold">Quick Stats</h2>
+      <SectionHeading title="Quick Stats" />
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
         {quickStats.map((stat) => (
           <StatBadge key={stat.label} {...stat} />
@@ -231,110 +220,7 @@ function QuickStatsSection({ quickStats }: { quickStats: QuickStatData[] }) {
 }
 
 // ============================================================================
-// SECTION 5: Financial Overview
-// ============================================================================
-
-const financeIconMap: Record<string, React.ElementType> = {
-  Revenue: DollarSign,
-  Collected: Check,
-  Pending: Clock,
-  Overdue: TriangleAlert,
-}
-
-const revenueChartData = [
-  { average: 18000, today: 22000, day: "Monday" },
-  { average: 19000, today: 25000, day: "Tuesday" },
-  { average: 17500, today: 21000, day: "Wednesday" },
-  { average: 20000, today: 28000, day: "Thursday" },
-  { average: 18500, today: 24000, day: "Friday" },
-  { average: 16000, today: 19500, day: "Saturday" },
-  { average: 15000, today: 17000, day: "Sunday" },
-]
-
-const revenueChartConfig = {
-  today: {
-    label: "This Week",
-    color: "var(--primary)",
-  },
-  average: {
-    label: "Average",
-    color: "var(--primary)",
-  },
-} satisfies ChartConfig
-
-function FinancialSection({ financeStats }: { financeStats: FinanceStatData[] }) {
-  return (
-    <section>
-      <h2 className="mb-4 text-lg font-semibold">Financial Overview</h2>
-      <div className="space-y-6">
-        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-          {financeStats.map((stat) => {
-            const IconComponent = financeIconMap[stat.label] || DollarSign
-            return (
-              <Card key={stat.label} className="p-4">
-                <CardContent className="p-0 flex items-center gap-3">
-                  <IconComponent className="h-5 w-5 text-muted-foreground" />
-                  <div>
-                    <p className="text-xs text-muted-foreground">{stat.label}</p>
-                    <p className="text-lg font-semibold">{stat.value}</p>
-                  </div>
-                </CardContent>
-              </Card>
-            )
-          })}
-        </div>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Revenue Collected</CardTitle>
-            <p className="text-sm text-muted-foreground">
-              Your revenue collection is ahead of where you normally are.
-            </p>
-          </CardHeader>
-          <CardContent>
-            <ChartContainer config={revenueChartConfig} className="w-full md:h-[200px]">
-              <LineChart
-                accessibilityLayer
-                data={revenueChartData}
-                margin={{ top: 5, right: 10, left: 16, bottom: 0 }}
-              >
-                <CartesianGrid vertical={false} />
-                <XAxis
-                  dataKey="day"
-                  tickLine={false}
-                  axisLine={false}
-                  tickMargin={8}
-                  tickFormatter={(value) => value.slice(0, 3)}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="today"
-                  strokeWidth={2}
-                  stroke="var(--color-today)"
-                  dot={{ fill: "var(--color-today)" }}
-                  activeDot={{ r: 5 }}
-                />
-                <Line
-                  type="monotone"
-                  strokeWidth={2}
-                  dataKey="average"
-                  stroke="var(--color-average)"
-                  strokeOpacity={0.5}
-                  dot={{ fill: "var(--color-average)", opacity: 0.5 }}
-                  activeDot={{ r: 5 }}
-                />
-                <ChartTooltip content={<ChartTooltipContent />} />
-              </LineChart>
-            </ChartContainer>
-          </CardContent>
-        </Card>
-      </div>
-    </section>
-  )
-}
-
-// ============================================================================
-// SECTION 7: Attendance Overview
+// SECTION: Attendance Overview
 // ============================================================================
 
 const attendanceData = [
@@ -359,7 +245,7 @@ function AttendanceSection() {
 
   return (
     <section>
-      <h2 className="mb-4 text-lg font-semibold">Attendance Overview</h2>
+      <SectionHeading title="Attendance Overview" />
       <div className="grid gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader>
@@ -418,7 +304,7 @@ function AttendanceSection() {
 }
 
 // ============================================================================
-// SECTION 8: Academic Performance
+// SECTION: Academic Performance
 // ============================================================================
 
 const performanceData = [
@@ -432,7 +318,7 @@ const performanceData = [
 function AcademicPerformanceSection() {
   return (
     <section>
-      <h2 className="mb-4 text-lg font-semibold">Academic Performance</h2>
+      <SectionHeading title="Academic Performance" />
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Subject Performance</CardTitle>
@@ -454,7 +340,7 @@ function AcademicPerformanceSection() {
                         : "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400"
                     )}
                   >
-                    {subject.change.startsWith("+") ? <TrendingUp className="h-3 w-3 mr-1" /> : <TrendingDownIcon className="h-3 w-3 mr-1" />}
+                    {subject.change.startsWith("+") ? <TrendingUp className="h-3 w-3 mr-1" /> : <TrendingDown className="h-3 w-3 mr-1" />}
                     {subject.change}
                   </Badge>
                 </div>
@@ -469,7 +355,7 @@ function AcademicPerformanceSection() {
 }
 
 // ============================================================================
-// SECTION 9: Recent Activity
+// SECTION: Recent Activity
 // ============================================================================
 
 const activityIconMap: Record<string, React.ElementType> = {
@@ -488,7 +374,7 @@ function RecentActivitySection({
 }) {
   return (
     <section>
-      <h2 className="mb-4 text-lg font-semibold">Recent Activity</h2>
+      <SectionHeading title="Recent Activity" />
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-2 p-6">
           <CardHeader className="p-0 pb-4 flex flex-row items-center justify-between">
@@ -542,67 +428,7 @@ function RecentActivitySection({
 }
 
 // ============================================================================
-// SECTION 10: Resource Usage (from billingsdk)
-// ============================================================================
-
-function ResourceUsageSection() {
-  return (
-    <section>
-      <h2 className="mb-4 text-lg font-semibold">Resource Usage</h2>
-      <DetailedUsageTableDemo />
-    </section>
-  )
-}
-
-// ============================================================================
-// SECTION 11: Invoice History (from billingsdk)
-// ============================================================================
-
-function InvoiceSection() {
-  return (
-    <section>
-      <h2 className="mb-4 text-lg font-semibold">Billing History</h2>
-      <InvoiceHistoryDemo />
-    </section>
-  )
-}
-
-// ============================================================================
-// SECTION 12: Quick Actions
-// ============================================================================
-
-function QuickActionsSection({ locale, subdomain }: { locale: string; subdomain: string }) {
-  const actions = [
-    { icon: UserPlus, label: "Add Student", description: "Enroll new student", href: `/${locale}/s/${subdomain}/students/new` },
-    { icon: Bell, label: "Announce", description: "Send notification", href: `/${locale}/s/${subdomain}/announcements/new` },
-    { icon: FileText, label: "View Reports", description: "Analytics & data", href: `/${locale}/s/${subdomain}/admin/reports` },
-    { icon: CreditCard, label: "Billing", description: "Manage payments", href: `/${locale}/s/${subdomain}/billing` },
-    { icon: Settings, label: "Settings", description: "School config", href: `/${locale}/s/${subdomain}/admin/settings` },
-    { icon: Shield, label: "Security", description: "Access control", href: `/${locale}/s/${subdomain}/admin` },
-  ]
-
-  return (
-    <section>
-      <h2 className="mb-4 text-lg font-semibold">Quick Actions</h2>
-      <div className="grid gap-3 grid-cols-2 lg:grid-cols-6">
-        {actions.map((action) => (
-          <Button key={action.label} asChild variant="outline" className="justify-start h-auto py-3">
-            <Link href={action.href}>
-              <action.icon className="mr-2 h-4 w-4" />
-              <span className="flex flex-col items-start">
-                <span className="font-medium">{action.label}</span>
-                <span className="text-xs text-muted-foreground">{action.description}</span>
-              </span>
-            </Link>
-          </Button>
-        ))}
-      </div>
-    </section>
-  )
-}
-
-// ============================================================================
-// SECTION 13: School Statistics Summary
+// SECTION: School Statistics Summary
 // ============================================================================
 
 function SchoolStatsSummary() {
@@ -615,7 +441,7 @@ function SchoolStatsSummary() {
 
   return (
     <section>
-      <h2 className="mb-4 text-lg font-semibold">School Statistics</h2>
+      <SectionHeading title="School Statistics" />
       <div className="grid grid-cols-1 gap-px rounded-xl bg-border sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat, index) => (
           <Card
@@ -650,6 +476,34 @@ function SchoolStatsSummary() {
 }
 
 // ============================================================================
+// SECTION: Quick Actions (Using unified component)
+// ============================================================================
+
+function QuickActionsSection({ locale, subdomain }: { locale: string; subdomain: string }) {
+  const actions = getQuickActionsByRole("ADMIN", undefined, subdomain)
+
+  return (
+    <section>
+      <SectionHeading title="Quick Actions" />
+      <QuickActions actions={actions} locale={locale} />
+    </section>
+  )
+}
+
+// ============================================================================
+// SECTION: Hero Section (Upcoming + Weather)
+// ============================================================================
+
+function HeroSection({ locale, subdomain }: { locale: string; subdomain: string }) {
+  return (
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <Upcoming role="ADMIN" locale={locale} subdomain={subdomain} />
+      <Weather />
+    </div>
+  )
+}
+
+// ============================================================================
 // MAIN CLIENT COMPONENT
 // ============================================================================
 
@@ -659,34 +513,33 @@ export function AdminDashboardClient({
   userName,
   schoolName,
   quickStats,
-  financeStats,
   recentActivities,
   todaySummary,
 }: AdminDashboardClientProps) {
   return (
     <div className="space-y-8">
-      {/* ============ TOP HERO SECTION ============ */}
+      {/* ============ TOP HERO SECTION (Unified Order) ============ */}
       <div className="space-y-6">
-        {/* Section 1: Upcoming Class + Weather (FIRST) */}
-        <TopSection locale={locale} subdomain={subdomain} />
+        {/* Section 1: Upcoming + Weather */}
+        <HeroSection locale={locale} subdomain={subdomain} />
 
-        {/* Section 2: Quick Look */}
+        {/* Section 2: Quick Look (no title) */}
         <QuickLookSection locale={locale} subdomain={subdomain} />
 
-        {/* Section 3: Quick Actions */}
+        {/* Section 3: Quick Actions (4 focused actions) */}
         <QuickActionsSection locale={locale} subdomain={subdomain} />
 
         {/* Section 4: Resource Usage */}
-        <ResourceUsageSection />
+        <ResourceUsageSection role="ADMIN" />
 
         {/* Section 5: Invoice History */}
-        <InvoiceSection />
+        <InvoiceHistorySection role="ADMIN" />
 
         {/* Section 6: Financial Overview */}
-        <FinancialSection financeStats={financeStats} />
+        <FinancialOverviewSection role="ADMIN" />
       </div>
 
-      {/* ============ MAIN CONTENT ============ */}
+      {/* ============ ADMIN-SPECIFIC SECTIONS ============ */}
 
       {/* Section 7: System Health */}
       <SystemHealthSection />
