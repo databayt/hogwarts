@@ -26,8 +26,8 @@ const TEACHERS_PATH = "/teachers";
 // ============================================================================
 
 /**
- * Create a new teacher
- * @param input - Teacher data
+ * Create a new teacher with all related data
+ * @param input - Teacher data including qualifications, experience, expertise
  * @returns Action response with teacher ID
  */
 export async function createTeacher(
@@ -43,21 +43,92 @@ export async function createTeacher(
     // Parse and validate input
     const parsed = teacherCreateSchema.parse(input);
 
-    // Create teacher
-    const row = await (db as any).teacher.create({
-      data: {
-        schoolId,
-        givenName: parsed.givenName,
-        surname: parsed.surname,
-        gender: parsed.gender,
-        emailAddress: parsed.emailAddress,
-      },
+    // Use transaction to ensure all related data is created atomically
+    const result = await (db as any).$transaction(async (tx: any) => {
+      // Create teacher with all basic + employment fields
+      const teacher = await tx.teacher.create({
+        data: {
+          schoolId,
+          givenName: parsed.givenName,
+          surname: parsed.surname,
+          gender: parsed.gender,
+          emailAddress: parsed.emailAddress,
+          birthDate: parsed.birthDate,
+          employeeId: parsed.employeeId,
+          joiningDate: parsed.joiningDate,
+          employmentStatus: parsed.employmentStatus || "ACTIVE",
+          employmentType: parsed.employmentType || "FULL_TIME",
+          contractStartDate: parsed.contractStartDate,
+          contractEndDate: parsed.contractEndDate,
+        },
+      });
+
+      // Create phone numbers if provided
+      if (parsed.phoneNumbers && parsed.phoneNumbers.length > 0) {
+        await tx.teacherPhoneNumber.createMany({
+          data: parsed.phoneNumbers.map((phone) => ({
+            schoolId,
+            teacherId: teacher.id,
+            phoneNumber: phone.phoneNumber,
+            phoneType: phone.phoneType,
+            isPrimary: phone.isPrimary,
+          })),
+        });
+      }
+
+      // Create qualifications if provided
+      if (parsed.qualifications && parsed.qualifications.length > 0) {
+        await tx.teacherQualification.createMany({
+          data: parsed.qualifications.map((qual) => ({
+            schoolId,
+            teacherId: teacher.id,
+            qualificationType: qual.qualificationType,
+            name: qual.name,
+            institution: qual.institution,
+            major: qual.major,
+            dateObtained: qual.dateObtained,
+            expiryDate: qual.expiryDate,
+            licenseNumber: qual.licenseNumber,
+            documentUrl: qual.documentUrl,
+          })),
+        });
+      }
+
+      // Create experiences if provided
+      if (parsed.experiences && parsed.experiences.length > 0) {
+        await tx.teacherExperience.createMany({
+          data: parsed.experiences.map((exp) => ({
+            schoolId,
+            teacherId: teacher.id,
+            institution: exp.institution,
+            position: exp.position,
+            startDate: exp.startDate,
+            endDate: exp.endDate,
+            isCurrent: exp.isCurrent,
+            description: exp.description,
+          })),
+        });
+      }
+
+      // Create subject expertise if provided
+      if (parsed.subjectExpertise && parsed.subjectExpertise.length > 0) {
+        await tx.teacherSubjectExpertise.createMany({
+          data: parsed.subjectExpertise.map((expertise) => ({
+            schoolId,
+            teacherId: teacher.id,
+            subjectId: expertise.subjectId,
+            expertiseLevel: expertise.expertiseLevel,
+          })),
+        });
+      }
+
+      return teacher;
     });
 
     // Revalidate cache
     revalidatePath(TEACHERS_PATH);
 
-    return { success: true, data: { id: row.id as string } };
+    return { success: true, data: { id: result.id as string } };
   } catch (error) {
     console.error("[createTeacher] Error:", error, {
       input,
@@ -79,7 +150,7 @@ export async function createTeacher(
 }
 
 /**
- * Update an existing teacher
+ * Update an existing teacher with all related data
  * @param input - Teacher update data
  * @returns Action response
  */
@@ -95,17 +166,82 @@ export async function updateTeacher(
 
     // Parse and validate input
     const parsed = teacherUpdateSchema.parse(input);
-    const { id, ...rest } = parsed;
+    const { id, qualifications, experiences, subjectExpertise, ...rest } = parsed;
 
-    // Build update data object
+    // Build update data object for teacher
     const data: Record<string, unknown> = {};
     if (typeof rest.givenName !== "undefined") data.givenName = rest.givenName;
     if (typeof rest.surname !== "undefined") data.surname = rest.surname;
     if (typeof rest.gender !== "undefined") data.gender = rest.gender;
     if (typeof rest.emailAddress !== "undefined") data.emailAddress = rest.emailAddress;
+    if (typeof rest.birthDate !== "undefined") data.birthDate = rest.birthDate;
+    if (typeof rest.employeeId !== "undefined") data.employeeId = rest.employeeId;
+    if (typeof rest.joiningDate !== "undefined") data.joiningDate = rest.joiningDate;
+    if (typeof rest.employmentStatus !== "undefined") data.employmentStatus = rest.employmentStatus;
+    if (typeof rest.employmentType !== "undefined") data.employmentType = rest.employmentType;
+    if (typeof rest.contractStartDate !== "undefined") data.contractStartDate = rest.contractStartDate;
+    if (typeof rest.contractEndDate !== "undefined") data.contractEndDate = rest.contractEndDate;
 
-    // Update teacher (using updateMany for tenant safety)
-    await (db as any).teacher.updateMany({ where: { id, schoolId }, data });
+    // Use transaction for atomic updates
+    await (db as any).$transaction(async (tx: any) => {
+      // Update teacher basic info
+      await tx.teacher.updateMany({ where: { id, schoolId }, data });
+
+      // Update qualifications if provided (delete and recreate for simplicity)
+      if (qualifications !== undefined) {
+        await tx.teacherQualification.deleteMany({ where: { teacherId: id, schoolId } });
+        if (qualifications.length > 0) {
+          await tx.teacherQualification.createMany({
+            data: qualifications.map((qual) => ({
+              schoolId,
+              teacherId: id,
+              qualificationType: qual.qualificationType,
+              name: qual.name,
+              institution: qual.institution,
+              major: qual.major,
+              dateObtained: qual.dateObtained,
+              expiryDate: qual.expiryDate,
+              licenseNumber: qual.licenseNumber,
+              documentUrl: qual.documentUrl,
+            })),
+          });
+        }
+      }
+
+      // Update experiences if provided
+      if (experiences !== undefined) {
+        await tx.teacherExperience.deleteMany({ where: { teacherId: id, schoolId } });
+        if (experiences.length > 0) {
+          await tx.teacherExperience.createMany({
+            data: experiences.map((exp) => ({
+              schoolId,
+              teacherId: id,
+              institution: exp.institution,
+              position: exp.position,
+              startDate: exp.startDate,
+              endDate: exp.endDate,
+              isCurrent: exp.isCurrent,
+              description: exp.description,
+            })),
+          });
+        }
+      }
+
+      // Update subject expertise if provided
+      if (subjectExpertise !== undefined) {
+        await tx.teacherSubjectExpertise.deleteMany({ where: { teacherId: id, schoolId } });
+        if (subjectExpertise.length > 0) {
+          await tx.teacherSubjectExpertise.createMany({
+            data: subjectExpertise.map((expertise) => ({
+              schoolId,
+              teacherId: id,
+              subjectId: expertise.subjectId,
+              expertiseLevel: expertise.expertiseLevel,
+            })),
+          });
+        }
+      }
+    });
 
     // Revalidate cache
     revalidatePath(TEACHERS_PATH);
@@ -181,7 +317,7 @@ export async function deleteTeacher(
 // ============================================================================
 
 /**
- * Get a single teacher by ID
+ * Get a single teacher by ID with all related data
  * @param input - Teacher ID
  * @returns Action response with teacher data
  */
@@ -203,19 +339,87 @@ export async function getTeacher(
       return { success: true, data: null };
     }
 
-    // Fetch teacher
+    // Fetch teacher with all related data
     const teacher = await (db as any).teacher.findFirst({
       where: { id, schoolId },
-      select: {
-        id: true,
-        schoolId: true,
-        givenName: true,
-        surname: true,
-        gender: true,
-        emailAddress: true,
-        userId: true,
-        createdAt: true,
-        updatedAt: true,
+      include: {
+        phoneNumbers: {
+          select: {
+            id: true,
+            phoneNumber: true,
+            phoneType: true,
+            isPrimary: true,
+          },
+          orderBy: { isPrimary: "desc" },
+        },
+        qualifications: {
+          select: {
+            id: true,
+            qualificationType: true,
+            name: true,
+            institution: true,
+            major: true,
+            dateObtained: true,
+            expiryDate: true,
+            licenseNumber: true,
+            documentUrl: true,
+          },
+          orderBy: { dateObtained: "desc" },
+        },
+        experiences: {
+          select: {
+            id: true,
+            institution: true,
+            position: true,
+            startDate: true,
+            endDate: true,
+            isCurrent: true,
+            description: true,
+          },
+          orderBy: { startDate: "desc" },
+        },
+        subjectExpertise: {
+          select: {
+            id: true,
+            subjectId: true,
+            expertiseLevel: true,
+            subject: {
+              select: {
+                id: true,
+                subjectName: true,
+                subjectNameAr: true,
+              },
+            },
+          },
+        },
+        teacherDepartments: {
+          select: {
+            id: true,
+            departmentId: true,
+            isPrimary: true,
+            department: {
+              select: {
+                id: true,
+                departmentName: true,
+                departmentNameAr: true,
+              },
+            },
+          },
+        },
+        classes: {
+          select: {
+            id: true,
+            className: true,
+            classNameAr: true,
+          },
+        },
+        user: {
+          select: {
+            id: true,
+            email: true,
+            image: true,
+          },
+        },
       },
     });
 
@@ -236,6 +440,95 @@ export async function getTeacher(
     return {
       success: false,
       error: error instanceof Error ? error.message : "Failed to fetch teacher"
+    };
+  }
+}
+
+/**
+ * Get teacher workload and schedule data
+ * @param input - Teacher ID and optional term filter
+ * @returns Action response with workload data
+ */
+export async function getTeacherWorkload(
+  input: { teacherId: string; termId?: string }
+): Promise<ActionResponse<{
+  totalPeriods: number;
+  classCount: number;
+  subjectCount: number;
+  schedule: Array<{
+    day: number;
+    period: number;
+    subject: string;
+    className: string;
+  }>;
+  workloadStatus: "UNDERUTILIZED" | "NORMAL" | "OVERLOAD";
+}>> {
+  try {
+    const { schoolId } = await getTenantContext();
+    if (!schoolId) {
+      return { success: false, error: "Missing school context" };
+    }
+
+    const { teacherId, termId } = input;
+
+    // Get teacher's timetable slots
+    const timetableSlots = await (db as any).timetableSlot?.findMany?.({
+      where: {
+        schoolId,
+        teacherId,
+        ...(termId ? { timetable: { termId } } : {}),
+      },
+      include: {
+        subject: { select: { subjectName: true } },
+        class: { select: { className: true } },
+        period: { select: { periodNumber: true, dayOfWeek: true } },
+      },
+    }) || [];
+
+    // Get workload config for school
+    const workloadConfig = await (db as any).workloadConfig?.findUnique?.({
+      where: { schoolId },
+    }) || {
+      minPeriodsPerWeek: 15,
+      normalPeriodsPerWeek: 20,
+      maxPeriodsPerWeek: 25,
+      overloadThreshold: 25,
+    };
+
+    const totalPeriods = timetableSlots.length;
+    const uniqueClasses = new Set(timetableSlots.map((s: any) => s.classId));
+    const uniqueSubjects = new Set(timetableSlots.map((s: any) => s.subjectId));
+
+    // Determine workload status
+    let workloadStatus: "UNDERUTILIZED" | "NORMAL" | "OVERLOAD" = "NORMAL";
+    if (totalPeriods < workloadConfig.minPeriodsPerWeek) {
+      workloadStatus = "UNDERUTILIZED";
+    } else if (totalPeriods > workloadConfig.overloadThreshold) {
+      workloadStatus = "OVERLOAD";
+    }
+
+    const schedule = timetableSlots.map((slot: any) => ({
+      day: slot.period?.dayOfWeek || 0,
+      period: slot.period?.periodNumber || 0,
+      subject: slot.subject?.subjectName || "Unknown",
+      className: slot.class?.className || "Unknown",
+    }));
+
+    return {
+      success: true,
+      data: {
+        totalPeriods,
+        classCount: uniqueClasses.size,
+        subjectCount: uniqueSubjects.size,
+        schedule,
+        workloadStatus,
+      },
+    };
+  } catch (error) {
+    console.error("[getTeacherWorkload] Error:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to fetch workload",
     };
   }
 }

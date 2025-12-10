@@ -1,61 +1,100 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Calendar } from "@/components/ui/calendar";
-import { CircleCheck, CircleX, Clock, TrendingUp, TrendingDown } from "lucide-react";
+import { CircleCheck, CircleX, Clock, TrendingUp, TrendingDown, Calendar as CalendarIcon } from "lucide-react";
 import type { Student } from "../../registration/types";
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay } from "date-fns";
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, isSameDay } from "date-fns";
 
 interface AttendanceTabProps {
   student: Student;
 }
 
 export function AttendanceTab({ student }: AttendanceTabProps) {
-  // Mock attendance data
+  // Use real attendance data from the database
+  const realAttendances = student.attendances || [];
+
+  // Build calendar with real data
   const currentMonth = new Date();
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
   const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd });
 
-  // Mock attendance records for current month
+  // Map real attendance records to calendar format
   const attendanceRecords = daysInMonth.map(date => {
     const dayOfWeek = getDay(date);
-    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
-    const isToday = format(date, "yyyy-MM-dd") === format(new Date(), "yyyy-MM-dd");
+    const isWeekend = dayOfWeek === 5 || dayOfWeek === 6; // Friday and Saturday in Saudi Arabia
     const isFuture = date > new Date();
 
-    let status: "present" | "absent" | "late" | "weekend" | "future" = "future";
+    // Find real attendance record for this date
+    const realRecord = realAttendances.find((a: any) =>
+      a.date && isSameDay(new Date(a.date), date)
+    );
+
+    let status: "present" | "absent" | "late" | "excused" | "weekend" | "future" = "future";
+    let checkInTime: string | null = null;
+    let checkOutTime: string | null = null;
 
     if (isFuture) {
       status = "future";
     } else if (isWeekend) {
       status = "weekend";
-    } else if (Math.random() > 0.15) { // 85% attendance rate
-      status = Math.random() > 0.9 ? "late" : "present";
-    } else {
-      status = "absent";
+    } else if (realRecord) {
+      // Map real status to display status
+      const recordStatus = realRecord.status?.toUpperCase();
+      if (recordStatus === "PRESENT") {
+        status = "present";
+      } else if (recordStatus === "ABSENT") {
+        status = "absent";
+      } else if (recordStatus === "LATE") {
+        status = "late";
+      } else if (recordStatus === "EXCUSED") {
+        status = "excused";
+      } else {
+        status = "present"; // Default
+      }
+
+      // Use real check-in/out times if available
+      if (realRecord.checkInTime) {
+        checkInTime = format(new Date(realRecord.checkInTime), "hh:mm a");
+      }
+      if (realRecord.checkOutTime) {
+        checkOutTime = format(new Date(realRecord.checkOutTime), "hh:mm a");
+      }
     }
 
     return {
       date,
       status,
-      checkInTime: status === "present" ? "08:00 AM" : status === "late" ? "08:30 AM" : null,
-      checkOutTime: status === "present" || status === "late" ? "03:00 PM" : null,
+      checkInTime,
+      checkOutTime,
+      notes: realRecord?.notes || null,
     };
   });
+
+  // Calculate stats from real data
+  const allSchoolDays = attendanceRecords.filter(r =>
+    r.status !== "weekend" && r.status !== "future"
+  );
 
   const stats = {
     present: attendanceRecords.filter(r => r.status === "present").length,
     absent: attendanceRecords.filter(r => r.status === "absent").length,
     late: attendanceRecords.filter(r => r.status === "late").length,
-    totalSchoolDays: attendanceRecords.filter(r =>
-      r.status !== "weekend" && r.status !== "future"
-    ).length,
+    excused: attendanceRecords.filter(r => r.status === "excused").length,
+    totalSchoolDays: allSchoolDays.length,
   };
 
-  const attendancePercentage = stats.totalSchoolDays > 0
-    ? ((stats.present + stats.late) / stats.totalSchoolDays) * 100
-    : 0;
+  // Calculate attendance from real database records (more accurate)
+  const totalRealRecords = realAttendances.length;
+  const presentRecords = realAttendances.filter((a: any) =>
+    a.status === "PRESENT" || a.status === "LATE" || a.status === "EXCUSED"
+  ).length;
+
+  const attendancePercentage = totalRealRecords > 0
+    ? (presentRecords / totalRealRecords) * 100
+    : stats.totalSchoolDays > 0
+      ? ((stats.present + stats.late + stats.excused) / stats.totalSchoolDays) * 100
+      : 0;
 
   const getAttendanceColor = (percentage: number) => {
     if (percentage >= 90) return "text-green-600";
