@@ -12,7 +12,7 @@ export default function StorySection({ dictionary }: StorySectionProps) {
     const { containerRef, videoRef } = useVideoScrollControl({
         threshold: 0.3, // Start playing earlier
         autoPause: true, // Pause when out of view
-        enableAudio: false, // Keep muted
+        enableAudio: true, // Auto mute/unmute based on scroll position
     })
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -41,8 +41,8 @@ export default function StorySection({ dictionary }: StorySectionProps) {
                 </div>
 
                 {/* Quote - Right side (1/3 width) */}
-                <div className="flex flex-col items-start">
-                    <Icons.anthropicQuote className="size-10 md:size-12 text-foreground" />
+                <div className="flex flex-col items-start ps-4 lg:ps-8 pt-4 lg:pt-8">
+                    <Icons.anthropicQuote className="size-10 md:size-12 text-foreground -ms-1" />
                     <p className="text-xl md:text-2xl lg:text-[1.75rem] font-medium leading-snug mt-3">
                         {dict.quote}
                     </p>
