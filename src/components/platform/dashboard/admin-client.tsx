@@ -676,32 +676,32 @@ export function AdminDashboardClient({
         {/* Section 3: Quick Actions */}
         <QuickActionsSection locale={locale} subdomain={subdomain} />
 
-        {/* Section 4: System Health */}
-        <SystemHealthSection />
+        {/* Section 4: Resource Usage */}
+        <ResourceUsageSection />
 
-        {/* Section 5: Quick Stats */}
-        <QuickStatsSection quickStats={quickStats} />
+        {/* Section 5: Invoice History */}
+        <InvoiceSection />
+
+        {/* Section 6: Financial Overview */}
+        <FinancialSection financeStats={financeStats} />
       </div>
 
       {/* ============ MAIN CONTENT ============ */}
 
-      {/* Section 6: Financial Overview */}
-      <FinancialSection financeStats={financeStats} />
+      {/* Section 7: System Health */}
+      <SystemHealthSection />
 
-      {/* Section 7: Attendance Overview */}
+      {/* Section 8: Quick Stats */}
+      <QuickStatsSection quickStats={quickStats} />
+
+      {/* Section 9: Attendance Overview */}
       <AttendanceSection />
 
-      {/* Section 8: Academic Performance */}
+      {/* Section 10: Academic Performance */}
       <AcademicPerformanceSection />
 
-      {/* Section 9: Recent Activity */}
+      {/* Section 11: Recent Activity */}
       <RecentActivitySection recentActivities={recentActivities} todaySummary={todaySummary} />
-
-      {/* Section 10: Resource Usage */}
-      <ResourceUsageSection />
-
-      {/* Section 11: Invoice History */}
-      <InvoiceSection />
 
       {/* Section 12: School Statistics Summary */}
       <SchoolStatsSummary />
