@@ -673,10 +673,13 @@ export function AdminDashboardClient({
         {/* Section 2: Quick Look */}
         <QuickLookSection locale={locale} subdomain={subdomain} />
 
-        {/* Section 3: System Health */}
+        {/* Section 3: Quick Actions */}
+        <QuickActionsSection locale={locale} subdomain={subdomain} />
+
+        {/* Section 4: System Health */}
         <SystemHealthSection />
 
-        {/* Section 4: Quick Stats */}
+        {/* Section 5: Quick Stats */}
         <QuickStatsSection quickStats={quickStats} />
       </div>
 
@@ -700,10 +703,7 @@ export function AdminDashboardClient({
       {/* Section 11: Invoice History */}
       <InvoiceSection />
 
-      {/* Section 12: Quick Actions */}
-      <QuickActionsSection locale={locale} subdomain={subdomain} />
-
-      {/* Section 13: School Statistics Summary */}
+      {/* Section 12: School Statistics Summary */}
       <SchoolStatsSummary />
     </div>
   )

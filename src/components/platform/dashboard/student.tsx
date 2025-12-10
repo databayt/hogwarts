@@ -156,6 +156,12 @@ export async function StudentDashboard({ user, dictionary, locale = "en" }: Stud
         {/* Section 2: Quick Look */}
         <QuickLookSection locale={locale} subdomain={school?.domain || ""} />
 
+        {/* Section 3: Quick Actions */}
+        <QuickActions
+          actions={getQuickActionsByRole("STUDENT", dictionary, school?.domain ?? undefined)}
+          locale={locale}
+        />
+
         {/* Key Metrics Row */}
         <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
           <MetricCard
@@ -210,12 +216,6 @@ export async function StudentDashboard({ user, dictionary, locale = "en" }: Stud
             </div>
           </CardContent>
         </Card>
-
-        {/* Quick Actions */}
-        <QuickActions
-          actions={getQuickActionsByRole("STUDENT", dictionary, school?.domain ?? undefined)}
-          locale={locale}
-        />
 
         {/* Main Content Grid */}
         <div className="grid gap-6 lg:grid-cols-3">

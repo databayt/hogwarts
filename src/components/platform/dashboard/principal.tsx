@@ -213,6 +213,12 @@ export async function PrincipalDashboard({
         {/* Section 2: Quick Look */}
         <QuickLookSection locale={locale} subdomain={school?.domain || ""} />
 
+        {/* Section 3: Quick Actions */}
+        <QuickActions
+          actions={getQuickActionsByRole("PRINCIPAL", dictionary, school?.domain ?? undefined)}
+          locale={locale}
+        />
+
         {/* Key Metrics Row */}
         <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
           <MetricCard
@@ -276,12 +282,6 @@ export async function PrincipalDashboard({
             </CardContent>
           </Card>
         )}
-
-        {/* Quick Actions */}
-        <QuickActions
-          actions={getQuickActionsByRole("PRINCIPAL", dictionary, school?.domain ?? undefined)}
-          locale={locale}
-        />
 
         {/* Main Content Grid */}
         <div className="grid gap-6 lg:grid-cols-3">
