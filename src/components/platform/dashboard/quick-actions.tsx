@@ -4,14 +4,12 @@ import React from "react";
 import { cn } from "@/lib/utils";
 import * as LucideIcons from "lucide-react";
 import Link from "next/link";
-import { Card, CardContent } from "@/components/ui/card";
 
 /**
  * QuickActions Component
- * Displays a grid of quick action items for lab
- * - No outer cards, just action items
- * - Icon and text in columns (icon on top, text below)
- * - Full width, responsive grid
+ * Displays a row of quick action items
+ * - Icon and text in a row (horizontal layout)
+ * - 4 actions taking full width
  * - Role-specific and reusable
  */
 
@@ -40,6 +38,12 @@ const iconMap: Record<string, React.ComponentType<{ className?: string; "aria-hi
   BarChart3: LucideIcons.BarChart3,
   Clock: LucideIcons.Clock,
   FolderOpen: LucideIcons.FolderOpen,
+  Receipt: LucideIcons.Receipt,
+  Briefcase: LucideIcons.Briefcase,
+  GraduationCap: LucideIcons.GraduationCap,
+  TrendingUp: LucideIcons.TrendingUp,
+  Building: LucideIcons.Building,
+  Contact: LucideIcons.Contact,
 };
 
 interface QuickActionsProps {
@@ -51,18 +55,18 @@ interface QuickActionsProps {
 export function QuickActions({ actions, locale = "en", className }: QuickActionsProps) {
   return (
     <div className={cn("w-full", className)}>
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-        {actions.map((action, index) => {
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {actions.slice(0, 4).map((action, index) => {
           // Get icon component from map, fallback to FileText if not found
           const Icon = iconMap[action.iconName] || LucideIcons.FileText;
 
           const content = (
-            <Card className="aspect-square">
-              <CardContent className="flex flex-col items-center justify-center gap-2 p-4 h-full">
-                <Icon className="h-6 w-6" aria-hidden={true} />
-                <span className="text-sm font-medium text-center">{action.label}</span>
-              </CardContent>
-            </Card>
+            <div className="flex items-center gap-3 p-3 rounded-lg border bg-card transition-colors hover:bg-muted/50">
+              <div className="flex-shrink-0 rounded-md bg-muted p-2">
+                <Icon className="h-5 w-5 text-muted-foreground" aria-hidden={true} />
+              </div>
+              <span className="text-sm font-medium truncate">{action.label}</span>
+            </div>
           );
 
           if (action.href) {
@@ -81,7 +85,7 @@ export function QuickActions({ actions, locale = "en", className }: QuickActions
             <button
               key={`${action.label}-${index}`}
               onClick={action.onClick}
-              className="block w-full"
+              className="block w-full text-left"
               type="button"
             >
               {content}
