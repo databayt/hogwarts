@@ -1,17 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 750 471">
-  <g fill="none" fill-rule="evenodd">
-    <rect fill="#fff" width="750" height="471" rx="40"/>
-    <rect stroke="#D9D9D9" x="1" y="1" width="748" height="469" rx="40"/>
-    <!-- Fawry Logo - Egyptian Payment -->
-    <g transform="translate(175, 160)">
-      <!-- F icon with orange circle -->
-      <circle cx="75" cy="75" r="75" fill="#F7941D"/>
-      <path d="M45 40h60v15H60v15h40v15H60v40H45V40z" fill="#fff"/>
-      <!-- AWRY text -->
-      <path d="M180 80l-5 15h-15l22-50h18l22 50h-15l-5-15h-22zm11-28l-7 18h14l-7-18z" fill="#F7941D"/>
-      <path d="M230 45h14l8 35 10-35h12l10 35 8-35h14l-14 50h-14l-10-35-10 35h-14l-14-50z" fill="#F7941D"/>
-      <path d="M320 45h20c14 0 22 8 22 18 0 8-4 14-11 17l14 15h-18l-12-14h-1v14h-14V45zm14 26h4c5 0 8-3 8-7s-3-7-8-7h-4v14z" fill="#F7941D"/>
-      <path d="M380 45h14l12 20 12-20h14l-20 32v18h-14V77l-18-32z" fill="#F7941D"/>
-    </g>
-  </g>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 316">
+  <rect fill="#fff" width="512" height="316" rx="15"/>
+  <!-- Fawry Logo - Simplified -->
+  <circle cx="130" cy="158" r="70" fill="#F7941D"/>
+  <path d="M100 115h60v18h-40v20h35v18h-35v34h-20V115z" fill="#fff"/>
+  <!-- AWRY text -->
+  <path d="M230 190l-6 20h-18l30-70h22l30 70h-18l-6-20h-34zm17-45l-11 30h22l-11-30z" fill="#F7941D"/>
+  <path d="M300 120h18l10 45 13-45h14l13 45 10-45h18l-18 70h-17l-13-45-13 45h-17l-18-70z" fill="#F7941D"/>
+  <path d="M415 120h24c17 0 28 10 28 24 0 10-5 18-14 22l18 24h-22l-15-20h-1v20h-18v-70zm18 36h5c7 0 11-4 11-10s-4-10-11-10h-5v20z" fill="#F7941D"/>
+  <path d="M310 190h18l15-25 15 25h18l-25-40v-30h-18v30l-23 40z" fill="#F7941D"/>
 </svg>

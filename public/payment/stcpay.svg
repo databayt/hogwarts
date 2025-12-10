@@ -1,20 +1,14 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 750 471">
-  <g fill="none" fill-rule="evenodd">
-    <rect fill="#fff" width="750" height="471" rx="40"/>
-    <rect stroke="#D9D9D9" x="1" y="1" width="748" height="469" rx="40"/>
-    <!-- STC Pay Logo -->
-    <g transform="translate(175, 135)">
-      <!-- Purple squares -->
-      <rect x="0" y="0" width="80" height="80" rx="12" fill="#4F008C"/>
-      <rect x="0" y="100" width="80" height="80" rx="12" fill="#00D68F"/>
-      <!-- STC text in purple -->
-      <path d="M120 50c0-5 2-10 6-14s9-6 15-6c5 0 10 2 14 5l-8 12c-2-2-4-3-6-3-2 0-4 1-5 2s-2 3-2 5 1 4 2 5 3 2 5 2c2 0 4-1 6-3l8 12c-4 3-9 5-14 5-6 0-11-2-15-6s-6-9-6-14z" fill="#4F008C"/>
-      <path d="M170 30h50v14h-18v56h-14V44h-18V30z" fill="#4F008C"/>
-      <path d="M230 50c0-5 2-10 6-14s9-6 15-6c5 0 10 2 14 5l-8 12c-2-2-4-3-6-3-2 0-4 1-5 2s-2 3-2 5 1 4 2 5 3 2 5 2c2 0 4-1 6-3l8 12c-4 3-9 5-14 5-6 0-11-2-15-6s-6-9-6-14z" fill="#4F008C"/>
-      <!-- Pay text in green -->
-      <path d="M120 130h20c10 0 17 7 17 17s-7 17-17 17h-6v16h-14v-50zm14 24h4c3 0 5-2 5-5s-2-5-5-5h-4v10z" fill="#00D68F"/>
-      <path d="M180 165l-5 15h-15l22-50h18l22 50h-15l-5-15h-22zm11-28l-7 18h14l-7-18z" fill="#00D68F"/>
-      <path d="M230 130h14l12 20 12-20h14l-20 32v18h-14v-18l-18-32z" fill="#00D68F"/>
-    </g>
-  </g>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 316">
+  <rect fill="#fff" width="512" height="316" rx="15"/>
+  <!-- STC Pay Logo - Simplified -->
+  <rect x="80" y="70" width="70" height="70" rx="10" fill="#4F008C"/>
+  <rect x="80" y="176" width="70" height="70" rx="10" fill="#00D68F"/>
+  <!-- STC -->
+  <path d="M180 90c-3-3-8-5-13-5s-9 2-9 6c0 3 2 5 8 6l5 1c12 2 18 8 18 17 0 12-10 20-25 20-10 0-19-3-25-10l9-10c4 4 10 7 17 7s10-2 10-6c0-4-3-5-10-7l-5-1c-11-2-16-8-16-16 0-12 10-19 23-19 9 0 17 3 22 8l-9 9z" fill="#4F008C"/>
+  <path d="M220 73h55v13h-20v49h-15V86h-20V73z" fill="#4F008C"/>
+  <path d="M290 108c0-21 16-37 37-37 9 0 17 3 23 8l-9 11c-4-3-9-5-14-5-12 0-21 10-21 23s9 23 21 23c5 0 10-2 14-5l9 11c-6 5-14 8-23 8-21 0-37-16-37-37z" fill="#4F008C"/>
+  <!-- Pay -->
+  <path d="M180 195h22c15 0 24 9 24 22s-9 22-24 22h-7v21h-15v-65zm15 32h5c7 0 11-4 11-10s-4-10-11-10h-5v20z" fill="#00D68F"/>
+  <path d="M240 260l-6 0h-12l28-65h20l28 65h-16l-6-15h-30l-6 15zm21-50l-9 24h18l-9-24z" fill="#00D68F"/>
+  <path d="M310 195h16l15 26 15-26h16l-25 42v23h-15v-23l-22-42z" fill="#00D68F"/>
 </svg>
