@@ -107,9 +107,12 @@ export function AttendanceTab({ student }: AttendanceTabProps) {
       case "present": return <CircleCheck className="h-4 w-4 text-green-600" />;
       case "absent": return <CircleX className="h-4 w-4 text-red-600" />;
       case "late": return <Clock className="h-4 w-4 text-yellow-600" />;
+      case "excused": return <CircleCheck className="h-4 w-4 text-blue-600" />;
       default: return null;
     }
   };
+
+  const hasAttendanceData = realAttendances.length > 0 || stats.totalSchoolDays > 0;
 
   return (
     <div className="space-y-6">
@@ -196,11 +199,12 @@ export function AttendanceTab({ student }: AttendanceTabProps) {
                     key={record.date.toString()}
                     className={`
                       p-2 border rounded-lg text-center relative
-                      ${record.status === "weekend" ? "bg-gray-50" : ""}
-                      ${record.status === "present" ? "bg-green-50 border-green-200" : ""}
-                      ${record.status === "absent" ? "bg-red-50 border-red-200" : ""}
-                      ${record.status === "late" ? "bg-yellow-50 border-yellow-200" : ""}
-                      ${record.status === "future" ? "bg-gray-50 opacity-50" : ""}
+                      ${record.status === "weekend" ? "bg-muted" : ""}
+                      ${record.status === "present" ? "bg-green-50 border-green-200 dark:bg-green-950/30 dark:border-green-800" : ""}
+                      ${record.status === "absent" ? "bg-red-50 border-red-200 dark:bg-red-950/30 dark:border-red-800" : ""}
+                      ${record.status === "late" ? "bg-yellow-50 border-yellow-200 dark:bg-yellow-950/30 dark:border-yellow-800" : ""}
+                      ${record.status === "excused" ? "bg-blue-50 border-blue-200 dark:bg-blue-950/30 dark:border-blue-800" : ""}
+                      ${record.status === "future" ? "bg-muted opacity-50" : ""}
                     `}
                   >
                     <div className="text-sm font-medium">{format(record.date, "d")}</div>
@@ -228,7 +232,11 @@ export function AttendanceTab({ student }: AttendanceTabProps) {
               <span>Late</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="h-4 w-4 bg-gray-200 rounded" />
+              <CircleCheck className="h-4 w-4 text-blue-600" />
+              <span>Excused</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="h-4 w-4 bg-muted rounded" />
               <span>Weekend/Holiday</span>
             </div>
           </div>
