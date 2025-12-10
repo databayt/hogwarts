@@ -26,7 +26,7 @@ export default async function ReceiptDetailPage({ params }: Props) {
   }
 
   return (
-    <div className="container mx-auto py-8">
+    <div className="py-8">
       <ReceiptDetail receipt={result.data} locale="en" />
     </div>
   )

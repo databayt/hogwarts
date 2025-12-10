@@ -29,10 +29,10 @@ export default function ViewInvoiceModalContent({ invoiceId, dictionary, lang = 
     run();
   }, [invoiceId]);
 
-  if (!invoice) return <div className="p-6">Loading...</div>;
+  if (!invoice) return <div>Loading...</div>;
 
   return (
-    <div className="p-6 max-w-3xl w-full">
+    <div className="max-w-3xl w-full">
       <div className="flex justify-between items-start mb-6">
         <div>
           <h1 className="text-xl font-bold mb-1">Invoice</h1>

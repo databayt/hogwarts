@@ -40,7 +40,7 @@ export default async function Admission({ params }: AdmissionProps) {
 
   return (
     <div className="school-content" data-school-id={school.id} data-subdomain={subdomain}>
-      <AdmissionContent school={school} dictionary={dictionary} lang={lang} />
+      <AdmissionContent school={school} dictionary={dictionary} lang={lang} subdomain={subdomain} />
     </div>
   );
 }

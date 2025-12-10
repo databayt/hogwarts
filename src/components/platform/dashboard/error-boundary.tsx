@@ -79,8 +79,8 @@ export function DefaultErrorFallback({
   const isDevelopment = process.env.NODE_ENV === "development";
 
   return (
-    <div className="container mx-auto p-6">
-      <Alert variant="destructive" className="mb-6">
+    <div className="space-y-6">
+      <Alert variant="destructive">
         <CircleAlert className="h-4 w-4" />
         <AlertTitle>Dashboard Error</AlertTitle>
         <AlertDescription>

@@ -129,9 +129,15 @@ model School {
   dwollaCustomers DwollaCustomer[]
 
   // Admission relations
-  admissionCampaigns AdmissionCampaign[]
-  applications       Application[]
-  communications     Communication[]
+  admissionCampaigns  AdmissionCampaign[]
+  applications        Application[]
+  communications      Communication[]
+  admissionInquiries  AdmissionInquiry[]
+  admissionTimeSlots  AdmissionTimeSlot[]
+  tourBookings        TourBooking[]
+  applicationSessions ApplicationSession[]
+  admissionSettings   AdmissionSettings?
+  admissionOTPs       AdmissionOTP[]
 
   // Fees relations
   feeStructures           FeeStructure[]
@@ -158,16 +164,18 @@ model School {
   billingPreferences BillingPreferences?
 
   // Enhanced Attendance relations
-  studentIdentifiers StudentIdentifier[]
-  attendanceDevices  AttendanceDevice[]
-  attendanceSessions AttendanceSession[]
-  attendanceEvents   AttendanceEvent[]
-  qrCodeSessions     QRCodeSession[]
+  studentIdentifiers  StudentIdentifier[]
+  attendanceDevices   AttendanceDevice[]
+  attendanceSessions  AttendanceSession[]
+  attendanceEvents    AttendanceEvent[]
+  attendanceExcuses   AttendanceExcuse[]
+  qrCodeSessions      QRCodeSession[]
   biometricTemplates BiometricTemplate[]
   accessCards        AccessCard[]
   bluetoothBeacons   BluetoothBeacon[]
-  attendancePolicies AttendancePolicy[]
-  attendanceReports  AttendanceReport[]
+  attendancePolicies       AttendancePolicy[]
+  attendanceReports        AttendanceReport[]
+  attendanceInterventions  AttendanceIntervention[]
 
   // Quiz relations
   quizGames         QuizGame[]
@@ -218,6 +226,7 @@ model School {
   // File upload relations
   fileMetadata FileMetadata[]
   uploadQuotas UploadQuota[]
+  fileRecords  FileRecord[]
 
   // Sales Module relations
   leads          Lead[]

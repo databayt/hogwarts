@@ -18,7 +18,7 @@ export default async function MyBanksContent(props: Props) {
   // Fetch user's bank accounts
   if (!props.user.id) {
     return (
-      <div className="container mx-auto py-8">
+      <div className="py-8">
         <p className="text-muted-foreground">User ID not found</p>
       </div>
     );

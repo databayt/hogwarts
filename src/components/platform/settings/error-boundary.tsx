@@ -46,7 +46,7 @@ export class SettingsErrorBoundary extends React.Component<Props, State> {
       const { dictionary } = this.props;
 
       return (
-        <div className="container mx-auto py-10">
+        <div className="py-10">
           <Card className="border-destructive">
             <CardHeader>
               <div className="flex items-center gap-2 rtl:flex-row-reverse">

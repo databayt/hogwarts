@@ -1,19 +1,25 @@
 ---
 title: "Attendance"
-description: "Complete guide to the attendance management module - track and manage student attendance with multiple methods"
+description: "Complete guide to the attendance management module - track and manage student attendance with multiple methods, parent engagement, early warning systems, and comprehensive reporting"
 ---
 
 ## Overview
 
-The Attendance module provides a practical, production-ready system for tracking student attendance. It supports multiple tracking methods and provides comprehensive reporting capabilities.
+The Attendance module provides a comprehensive, production-ready system for tracking student attendance. It supports multiple tracking methods, parent engagement features, early warning systems for chronic absenteeism, and flexible reporting capabilities.
 
 ### Key Features
 
-- **Manual Attendance** - Mark attendance for classes with student lists
-- **QR Code Sessions** - Generate QR codes for students to scan
-- **Bulk Upload** - Import attendance records from CSV files
-- **Reports** - Generate and export attendance data
-- **Real-time Stats** - View attendance rates and trends
+| Feature | Status | Description |
+|---------|--------|-------------|
+| Manual Attendance | **Production** | Mark attendance for classes with student lists |
+| QR Code Sessions | **Production** | Generate QR codes for students to scan |
+| Barcode Scanning | **Production** | Use student ID barcodes for check-in |
+| Bulk Upload | **Production** | Import attendance records from CSV files |
+| Period-by-Period | **Production** | Track attendance per timetable period |
+| Parent Notifications | **Production** | Real-time alerts for absences (Email + SMS) |
+| Parent Excuse Submission | **Production** | Parents can submit excuses for absences |
+| Early Warning System | **Production** | Detect chronic absenteeism and track interventions |
+| Reports Export | **Production** | CSV, Excel, and PDF export options |
 
 ## Quick Start
 
@@ -23,6 +29,7 @@ Navigate to **Attendance** in the platform sidebar to access the module.
 
 The overview page displays:
 - **Quick Stats** - Total records, present, absent, late counts, and overall attendance rate
+- **At-Risk Students** - Students with attendance below 90%
 - **Quick Actions** - Shortcuts to common tasks
 - **Recent Activity** - Latest attendance records
 
@@ -50,7 +57,13 @@ Pick the date for attendance (defaults to today)
 
 ---
 
-**04. Mark status for each student**
+**04. Select period (optional)**
+
+For period-based schools, select the specific period. The system auto-detects the current period based on timetable.
+
+---
+
+**05. Mark status for each student**
 
 Use the toggle buttons to mark each student as:
 - **Present** (green)
@@ -59,9 +72,29 @@ Use the toggle buttons to mark each student as:
 
 ---
 
-**05. Submit**
+**06. Submit**
 
-Click "Save Attendance" to record all entries
+Click "Save Attendance" to record all entries. Absent students' guardians are automatically notified.
+
+### Period-by-Period Tracking
+
+For secondary schools with timetable-based attendance:
+
+**Current Period Indicator**
+
+Shows the current period based on school timetable with quick action to mark attendance.
+
+**Period Selector**
+
+- Lists all periods for the selected class and day
+- Shows which periods already have attendance marked
+- Highlights the current period
+- Displays subject and teacher information
+
+**Period Analytics**
+
+- View attendance patterns by period (e.g., which periods have worst attendance)
+- Subject-specific attendance reports
 
 ### QR Code Sessions
 
@@ -93,7 +126,27 @@ Click "Generate" to create a unique QR code
 
 **05. Display the QR code**
 
-Students scan with their devices to check in
+Students scan with their devices to check in. The system validates student enrollment and prevents duplicate scans.
+
+### Barcode Scanning
+
+Use student ID barcodes for quick attendance:
+
+**01. Go to Barcode Scanner page**
+
+Navigate to Attendance → Barcode
+
+---
+
+**02. Select a class**
+
+Choose the class for attendance
+
+---
+
+**03. Scan student IDs**
+
+Use a barcode scanner or device camera to scan student ID barcodes. The system looks up the student identifier and marks attendance.
 
 ### Bulk Upload
 
@@ -132,6 +185,148 @@ Select your CSV file and click "Upload"
 
 Check the import summary for successful and failed records
 
+## Parent Engagement
+
+### Absence Notifications
+
+When a student is marked absent, the system automatically notifies guardians:
+
+**Notification Channels:**
+- **In-app notification** - Visible in parent portal
+- **Email** - Detailed notification via Resend
+- **SMS** - Immediate text alert via Twilio
+
+**Notification Content:**
+- Student name
+- Class name
+- Date and time
+- Link to submit excuse
+
+**Multi-language Support:**
+- Arabic and English templates
+- Automatically uses parent's preferred language
+
+### Parent Excuse Submission
+
+Parents can submit excuses for their children's absences:
+
+**01. View Absence**
+
+Parents see unexcused absences in their portal
+
+---
+
+**02. Click "Submit Excuse"**
+
+Opens the excuse submission form
+
+---
+
+**03. Select Reason**
+
+Choose from:
+- Medical
+- Family Emergency
+- Religious Observance
+- School Activity
+- Transportation Issue
+- Weather
+- Other
+
+---
+
+**04. Provide Details**
+
+Add description and upload supporting documents (medical notes, etc.)
+
+---
+
+**05. Submit**
+
+Excuse goes to teacher/admin for review
+
+**Excuse Status:**
+- **Pending** - Awaiting review
+- **Approved** - Attendance updated to EXCUSED
+- **Rejected** - Remains as unexcused absence
+
+### Enhanced Parent View
+
+Parents see comprehensive attendance information:
+
+- **Attendance percentage** with trend indicator
+- **Calendar view** of attendance history
+- **Status breakdown** (present, absent, late, excused)
+- **Excuse submission** for unexcused absences
+- **Notification history**
+
+## Early Warning System
+
+### Chronic Absenteeism Detection
+
+The system automatically monitors student attendance and identifies at-risk students:
+
+**Risk Levels (US DoE Guidelines):**
+
+| Risk Level | Attendance Rate | Absence Rate |
+|------------|-----------------|--------------|
+| Satisfactory | ≥95% | Less than 5% |
+| At-Risk | 90-94.9% | 5-9.9% |
+| Moderately Chronic | 80-89.9% | 10-19.9% |
+| Severely Chronic | Less than 80% | ≥20% |
+
+**Dashboard Features:**
+- Students grouped by risk level
+- Trend analysis (improving/declining)
+- Class-level and school-level views
+- Automatic alerts for severely chronic students
+
+### Intervention Tracking
+
+Track and manage interventions for at-risk students:
+
+**Intervention Types:**
+- Parent phone call
+- Parent email
+- Parent meeting
+- Home visit
+- Counselor referral
+- Social worker referral
+- Administrator meeting
+- Attendance contract
+- Truancy referral
+- Community resource connection
+- Academic support
+- Mentorship assignment
+- Incentive program enrollment
+
+**Intervention Workflow:**
+
+**01. Create Intervention**
+
+Select intervention type, set priority, assign staff member
+
+---
+
+**02. Schedule**
+
+Set scheduled date and any follow-up dates
+
+---
+
+**03. Track Progress**
+
+Update status: Scheduled → In Progress → Completed/Escalated
+
+---
+
+**04. Document Outcome**
+
+Record results and next steps
+
+**Escalation:**
+Interventions can be escalated to higher levels (e.g., parent call → parent meeting → administrator meeting)
+
 ## Reports
 
 Generate and export attendance reports:
@@ -142,18 +337,31 @@ Generate and export attendance reports:
 - **Student** - Filter by individual student
 - **Status** - Filter by attendance status (Present, Absent, Late, etc.)
 - **Date Range** - Select custom date range
+- **Period** - Filter by specific period (for period-based tracking)
 
 ### Export Options
 
 - **CSV** - Comma-separated values for spreadsheets
-- **Excel** - Microsoft Excel format
-- **PDF** - Printable document
+- **Excel** - Microsoft Excel format with multiple sheets:
+  - Summary sheet with statistics
+  - Detailed records sheet
+  - Analytics by status
+  - Breakdown by class
+  - Breakdown by date
+- **PDF** - Branded printable document with:
+  - School header
+  - Statistics summary
+  - Detailed attendance table
+  - Date range and filter information
 
 ### Report Types
 
 1. **Summary Report** - Overview statistics by class or student
 2. **Detailed Report** - Individual attendance records
 3. **Trend Report** - Attendance patterns over time
+4. **At-Risk Report** - Students below attendance thresholds
+5. **Intervention Report** - Intervention history and outcomes
+6. **Period Analysis** - Attendance by period/subject
 
 ## Settings
 
@@ -164,12 +372,25 @@ Configure attendance module behavior:
 - **Default Check-in Time** - Set standard arrival time
 - **Late Threshold** - Minutes after which students are marked late
 - **Attendance Methods** - Enable/disable specific methods
+- **Period-Based Mode** - Enable period-by-period tracking
 
 ### QR Code Settings
 
 - **Session Duration** - How long QR codes remain valid
 - **Location Verification** - Require GPS location on scan
 - **Single Use** - Allow multiple scans per student
+
+### Notification Settings
+
+- **Enable Email** - Send email notifications for absences
+- **Enable SMS** - Send SMS notifications for absences
+- **Notification Delay** - Wait time before sending (to allow corrections)
+
+### Early Warning Settings
+
+- **At-Risk Threshold** - Percentage below which students are flagged (default: 90%)
+- **Chronic Threshold** - Percentage for chronic absenteeism (default: 80%)
+- **Alert Recipients** - Who receives automatic alerts
 
 ## API Reference
 
@@ -178,15 +399,7 @@ Configure attendance module behavior:
 The attendance module uses server actions for data operations:
 
 ```typescript
-// Get attendance statistics
-getAttendanceStats(input?: {
-  classId?: string
-  dateFrom?: string
-  dateTo?: string
-  studentId?: string
-})
-
-// Mark attendance for multiple students
+// Mark daily attendance
 markAttendance(input: {
   classId: string
   date: string
@@ -196,17 +409,66 @@ markAttendance(input: {
   }>
 })
 
-// Get recent attendance records
-getRecentAttendance(input?: {
-  limit?: number
-  classId?: string
+// Mark period-specific attendance
+markPeriodAttendance(input: {
+  classId: string
+  date: string
+  periodId: string
+  records: Array<{
+    studentId: string
+    status: 'PRESENT' | 'ABSENT' | 'LATE'
+    notes?: string
+  }>
 })
 
-// Generate QR code session
-generateQRSession(input: {
+// Get periods for a class on a specific day
+getPeriodsForClass(input: {
   classId: string
-  validFor: number // seconds
-  includeLocation?: boolean
+  date: string
+})
+
+// Get current period based on time
+getCurrentPeriod(classId?: string)
+
+// Get at-risk students
+getStudentsAtRisk(input?: {
+  classId?: string
+  riskLevel?: 'AT_RISK' | 'MODERATELY_CHRONIC' | 'SEVERELY_CHRONIC'
+  limit?: number
+})
+
+// Create intervention
+createIntervention(input: {
+  studentId: string
+  type: InterventionType
+  title: string
+  description: string
+  priority?: number
+  scheduledDate?: string
+  assignedTo?: string
+})
+
+// Update intervention
+updateIntervention(input: {
+  interventionId: string
+  status?: InterventionStatus
+  outcome?: string
+  completedDate?: string
+})
+
+// Submit excuse (parent)
+submitExcuse(input: {
+  attendanceId: string
+  reason: ExcuseReason
+  description?: string
+  attachments?: string[]
+})
+
+// Review excuse (teacher/admin)
+reviewExcuse(input: {
+  excuseId: string
+  status: 'APPROVED' | 'REJECTED'
+  reviewNotes?: string
 })
 ```
 
@@ -224,24 +486,48 @@ type AttendanceStatus =
 type AttendanceMethod =
   | 'MANUAL'
   | 'QR_CODE'
+  | 'BARCODE'
   | 'BULK_UPLOAD'
-  | 'GEOFENCE'    // Phase 2
-  | 'BARCODE'     // Phase 2
-  | 'RFID'        // Phase 2
-  | 'BIOMETRIC'   // Phase 2
+  | 'GEOFENCE'
+  | 'RFID'
+  | 'FINGERPRINT'
+  | 'FACE_RECOGNITION'
+  | 'NFC'
+  | 'BLUETOOTH'
 
-interface AttendanceRecord {
-  id: string
-  schoolId: string
-  studentId: string
-  classId: string
-  date: Date
-  status: AttendanceStatus
-  method: AttendanceMethod
-  checkInTime?: Date
-  checkOutTime?: Date
-  notes?: string
-}
+type InterventionType =
+  | 'PARENT_PHONE_CALL'
+  | 'PARENT_EMAIL'
+  | 'PARENT_MEETING'
+  | 'HOME_VISIT'
+  | 'COUNSELOR_REFERRAL'
+  | 'SOCIAL_WORKER_REFERRAL'
+  | 'ADMINISTRATOR_MEETING'
+  | 'ATTENDANCE_CONTRACT'
+  | 'TRUANCY_REFERRAL'
+  | 'COMMUNITY_RESOURCE'
+  | 'ACADEMIC_SUPPORT'
+  | 'MENTORSHIP_ASSIGNMENT'
+  | 'INCENTIVE_PROGRAM'
+  | 'OTHER'
+
+type InterventionStatus =
+  | 'SCHEDULED'
+  | 'IN_PROGRESS'
+  | 'COMPLETED'
+  | 'CANCELLED'
+  | 'ESCALATED'
+
+type ExcuseReason =
+  | 'MEDICAL'
+  | 'FAMILY_EMERGENCY'
+  | 'RELIGIOUS'
+  | 'SCHOOL_ACTIVITY'
+  | 'TRANSPORTATION'
+  | 'WEATHER'
+  | 'OTHER'
+
+type ExcuseStatus = 'PENDING' | 'APPROVED' | 'REJECTED'
 ```
 
 ## Database Schema
@@ -250,24 +536,57 @@ The attendance module uses these Prisma models:
 
 ```prisma
 model Attendance {
-  id          String           @id @default(cuid())
-  schoolId    String
-  studentId   String
-  classId     String
-  date        DateTime
-  status      AttendanceStatus
-  method      AttendanceMethod
-  checkInTime DateTime?
+  id           String           @id @default(cuid())
+  schoolId     String
+  studentId    String
+  classId      String
+  date         DateTime         @db.Date
+  status       AttendanceStatus
+  method       AttendanceMethod @default(MANUAL)
+  checkInTime  DateTime?
   checkOutTime DateTime?
-  location    Json?
-  notes       String?
-  markedBy    String?
-  markedAt    DateTime
+  notes        String?
+  markedBy     String?
+  markedAt     DateTime         @default(now())
 
-  @@unique([schoolId, studentId, classId, date])
-  @@index([schoolId])
-  @@index([classId])
-  @@index([date])
+  // Period tracking
+  periodId    String?
+  timetableId String?
+  periodName  String?
+
+  @@unique([schoolId, studentId, classId, date, periodId])
+  @@index([schoolId, date, periodId])
+}
+
+model AttendanceExcuse {
+  id           String       @id @default(cuid())
+  schoolId     String
+  attendanceId String       @unique
+  reason       ExcuseReason
+  description  String?
+  attachments  String[]
+  status       ExcuseStatus @default(PENDING)
+  submittedBy  String
+  reviewedBy   String?
+  reviewNotes  String?
+}
+
+model AttendanceIntervention {
+  id             String             @id @default(cuid())
+  schoolId       String
+  studentId      String
+  type           InterventionType
+  title          String
+  description    String
+  outcome        String?
+  status         InterventionStatus @default(SCHEDULED)
+  priority       Int                @default(1)
+  scheduledDate  DateTime?
+  completedDate  DateTime?
+  followUpDate   DateTime?
+  initiatedBy    String
+  assignedTo     String?
+  escalatedFrom  String?
 }
 
 model QRCodeSession {
@@ -280,6 +599,16 @@ model QRCodeSession {
   scanCount   Int      @default(0)
   scannedBy   Json     @default("[]")
 }
+
+model StudentIdentifier {
+  id         String         @id @default(cuid())
+  schoolId   String
+  studentId  String
+  type       IdentifierType // BARCODE, QR_CODE, RFID_CARD, etc.
+  value      String
+  isActive   Boolean        @default(true)
+  isPrimary  Boolean        @default(false)
+}
 ```
 
 ## Seed Data
@@ -291,6 +620,8 @@ The attendance seed creates realistic test data:
 - Day-of-week variations (more late on Sundays, more absences mid-week)
 - Student identifiers for scanning (barcode, RFID)
 - Sample QR code sessions
+- Sample excuses with various statuses
+- Sample interventions at different stages
 
 Run seed:
 ```bash
@@ -301,17 +632,29 @@ pnpm db:seed
 
 ### For Teachers
 
-1. Mark attendance at the start of each class
+1. Mark attendance at the start of each class/period
 2. Use QR codes for quick group check-ins
 3. Add notes for excused absences
 4. Review weekly reports for patterns
+5. Respond to excuse submissions promptly
+6. Document all parent communications
 
 ### For Administrators
 
 1. Configure sensible late thresholds
 2. Monitor school-wide attendance rates
-3. Follow up on students below 80% attendance
-4. Export monthly reports for records
+3. Review the early warning dashboard daily
+4. Follow up on students below 80% attendance
+5. Track interventions to completion
+6. Export monthly reports for records
+7. Configure notification settings appropriately
+
+### For Parents
+
+1. Check the parent portal regularly
+2. Submit excuses promptly with documentation
+3. Respond to school communications
+4. Work with school on intervention plans
 
 ## Troubleshooting
 
@@ -320,26 +663,31 @@ pnpm db:seed
 - Check QR code hasn't expired
 - Ensure good lighting for camera
 - Try refreshing the page to generate new code
+- Verify student is enrolled in the class
 
 ### Missing Attendance Records
 
 - Verify the correct date is selected
 - Check if student is enrolled in the class
 - Confirm school context is correct
+- For period-based, ensure correct period is selected
 
 ### Bulk Upload Errors
 
 - Ensure CSV format matches template exactly
 - Check student IDs exist in the system
 - Verify dates are in YYYY-MM-DD format
+- Status must match enum values exactly
 
-## Roadmap (Phase 2)
+### Notifications Not Sending
 
-Future enhancements planned:
+- Verify guardian contact information is correct
+- Check notification settings are enabled
+- Review Twilio/Resend integration status
+- Check spam/junk folders for emails
 
-- **Geofence Check-in** - Automatic attendance when entering campus
-- **Barcode Scanning** - Use student ID barcodes
-- **RFID/NFC** - Tap cards for quick check-in
-- **Biometric** - Fingerprint and face recognition
-- **Advanced Analytics** - Predictive attendance patterns
-- **Parent Notifications** - Automatic alerts for absences
+### Excuse Submission Issues
+
+- Ensure file uploads are under size limit
+- Verify attendance record exists for the date
+- Check parent is linked to the student

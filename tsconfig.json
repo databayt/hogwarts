@@ -53,6 +53,7 @@
     "**/*.test.ts",
     "**/*.test.tsx",
     "**/__tests__/**",
-    "src/test/**"
+    "src/test/**",
+    "src/components/platform/file/**"
   ]
 }

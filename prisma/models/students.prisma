@@ -121,11 +121,12 @@ model Student {
   geoAttendanceEvents GeoAttendanceEvent[]
 
   // Enhanced Attendance relations
-  studentIdentifiers StudentIdentifier[]
-  attendanceSessions AttendanceSession[]
-  attendanceEvents   AttendanceEvent[]
-  biometricTemplates BiometricTemplate[]
-  accessCards        AccessCard[]
+  studentIdentifiers      StudentIdentifier[]
+  attendanceSessions      AttendanceSession[]
+  attendanceEvents        AttendanceEvent[]
+  biometricTemplates      BiometricTemplate[]
+  accessCards             AccessCard[]
+  attendanceInterventions AttendanceIntervention[]
 
   // Auth relationship
   userId String? @unique

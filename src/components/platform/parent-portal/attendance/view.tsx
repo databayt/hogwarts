@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useTransition } from "react";
 import { format, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay, subDays } from "date-fns";
-import { Calendar, CircleCheck, CircleX, Clock, CircleAlert, TrendingUp, TrendingDown } from "lucide-react";
+import { Calendar, CircleCheck, CircleX, Clock, CircleAlert, TrendingUp, TrendingDown, FileText, AlertTriangle } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +10,8 @@ import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { ExcuseForm, UnexcusedAbsenceCard, ExcuseStatusBadge } from "./excuse-form";
+import { getUnexcusedAbsences, getExcusesForStudent } from "@/components/platform/attendance/actions";
 
 interface Attendance {
   id: string;
@@ -18,6 +20,34 @@ interface Attendance {
   classId: string;
   className: string;
   notes: string | null;
+  excuse?: {
+    id: string;
+    status: string;
+    reason: string;
+  } | null;
+}
+
+interface UnexcusedAbsence {
+  id: string;
+  studentId: string;
+  studentName: string;
+  classId: string;
+  className: string;
+  date: string;
+  status: string;
+}
+
+interface StudentExcuse {
+  id: string;
+  attendanceId: string;
+  date: string;
+  className: string;
+  reason: string;
+  description: string | null;
+  status: string;
+  submittedAt: string;
+  reviewedAt: string | null;
+  reviewNotes: string | null;
 }
 
 interface Student {
@@ -34,14 +64,51 @@ interface Student {
 
 interface AttendanceViewProps {
   students: Student[];
+  locale?: string;
 }
 
-export function AttendanceView({ students }: AttendanceViewProps) {
+export function AttendanceView({ students, locale = 'en' }: AttendanceViewProps) {
   const [selectedStudent, setSelectedStudent] = useState(students[0]?.id || '');
   const [selectedClass, setSelectedClass] = useState<string>('all');
   const [dateRange, setDateRange] = useState<'week' | 'month' | '90days'>('week');
 
+  // Excuse management state
+  const [unexcusedAbsences, setUnexcusedAbsences] = useState<UnexcusedAbsence[]>([]);
+  const [selectedAbsence, setSelectedAbsence] = useState<UnexcusedAbsence | null>(null);
+  const [isExcuseFormOpen, setIsExcuseFormOpen] = useState(false);
+  const [isPending, startTransition] = useTransition();
+
   const student = students.find(s => s.id === selectedStudent);
+  const isArabic = locale === 'ar';
+
+  // Fetch unexcused absences when student changes
+  useEffect(() => {
+    if (selectedStudent) {
+      startTransition(async () => {
+        const result = await getUnexcusedAbsences(selectedStudent);
+        if (result.success && result.data) {
+          setUnexcusedAbsences(result.data.absences);
+        }
+      });
+    }
+  }, [selectedStudent]);
+
+  const handleSubmitExcuse = (absence: UnexcusedAbsence) => {
+    setSelectedAbsence(absence);
+    setIsExcuseFormOpen(true);
+  };
+
+  const handleExcuseSuccess = () => {
+    // Refresh unexcused absences list
+    if (selectedStudent) {
+      startTransition(async () => {
+        const result = await getUnexcusedAbsences(selectedStudent);
+        if (result.success && result.data) {
+          setUnexcusedAbsences(result.data.absences);
+        }
+      });
+    }
+  };
 
   const filteredAttendances = useMemo(() => {
     if (!student) return [];
@@ -344,6 +411,48 @@ export function AttendanceView({ students }: AttendanceViewProps) {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Unexcused Absences Section */}
+      {unexcusedAbsences.length > 0 && (
+        <Card className="border-red-200 bg-red-50/30">
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-red-600" />
+              <CardTitle className="text-red-900">
+                {isArabic ? 'غياب بدون عذر' : 'Unexcused Absences'}
+              </CardTitle>
+            </div>
+            <CardDescription>
+              {isArabic
+                ? 'يمكنك تقديم عذر لهذه الغيابات للمراجعة'
+                : 'You can submit an excuse for these absences for review'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {unexcusedAbsences.map(absence => (
+                <UnexcusedAbsenceCard
+                  key={absence.id}
+                  absence={absence}
+                  onSubmitExcuse={handleSubmitExcuse}
+                  locale={locale}
+                />
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Excuse Form Dialog */}
+      {selectedAbsence && (
+        <ExcuseForm
+          absence={selectedAbsence}
+          open={isExcuseFormOpen}
+          onOpenChange={setIsExcuseFormOpen}
+          onSuccess={handleExcuseSuccess}
+          locale={locale}
+        />
+      )}
     </div>
   );
 }

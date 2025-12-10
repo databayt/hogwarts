@@ -61,8 +61,8 @@ export default function PaidInvoiceContent({ invoiceId, dictionary, lang }: Prop
   }
 
   return (
-    <div className="p-4">
-      <div className="flex items-center  gap-4 relative z-10">
+    <div className="space-y-6">
+      <div className="flex items-center gap-4 relative z-10">
         <Link href={`/${lang}/invoice`} className={buttonVariants({ size: "icon" })}>
           <ArrowLeft />
         </Link>

@@ -34,7 +34,7 @@ export function ProfileContent() {
   // Loading state (dictionary or session)
   if (status === 'loading' || isDictionaryLoading || !dictionary) {
     return (
-      <div className="container mx-auto p-6 space-y-6">
+      <div className="space-y-6">
         <Skeleton className="h-48 w-full" />
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div className="lg:col-span-3">
@@ -51,7 +51,7 @@ export function ProfileContent() {
   // Unauthenticated state
   if (status === 'unauthenticated' || !session) {
     return (
-      <div className="container mx-auto p-6">
+      <div className="space-y-4">
         <Alert>
           <CircleAlert className="h-4 w-4" />
           <AlertTitle>Authentication Required</AlertTitle>
@@ -124,7 +124,7 @@ export function ProfileContent() {
     default:
       // Fallback for USER or unknown roles
       return (
-        <div className="container mx-auto p-6">
+        <div className="space-y-6">
           <Card>
             <CardHeader>
               <CardTitle>Profile Setup Required</CardTitle>

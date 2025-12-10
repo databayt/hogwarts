@@ -72,7 +72,7 @@ export function ClassDetailContent({
   // Error state
   if (error || !classData) {
     return (
-      <div className="space-y-4 p-6">
+      <div className="space-y-4">
         <Button variant="ghost" onClick={() => router.back()}>
           <ArrowLeft className="mr-2 h-4 w-4" />
           {t.back}
@@ -339,7 +339,7 @@ export function ClassDetailContent({
 
 export function ClassDetailLoading() {
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6">
       <div className="flex items-center gap-4">
         <Skeleton className="h-10 w-10 rounded" />
         <div className="space-y-2">

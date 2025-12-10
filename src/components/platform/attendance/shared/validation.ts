@@ -256,6 +256,39 @@ export const attendanceUpdateSchema = z.object({
   data: attendanceRecordSchema.partial().optional()
 });
 
+// Excuse reason schema
+export const excuseReasonSchema = z.enum([
+  'MEDICAL',
+  'FAMILY_EMERGENCY',
+  'RELIGIOUS',
+  'SCHOOL_ACTIVITY',
+  'TRANSPORTATION',
+  'WEATHER',
+  'OTHER'
+]);
+
+// Excuse status schema
+export const excuseStatusSchema = z.enum([
+  'PENDING',
+  'APPROVED',
+  'REJECTED'
+]);
+
+// Submit excuse schema (for parents/guardians)
+export const submitExcuseSchema = z.object({
+  attendanceId: z.string().min(1, 'Attendance record is required'),
+  reason: excuseReasonSchema,
+  description: z.string().max(2000, 'Description must be less than 2000 characters').optional(),
+  attachments: z.array(z.string().url()).max(5, 'Maximum 5 attachments allowed').optional().default([])
+});
+
+// Review excuse schema (for teachers/admins)
+export const reviewExcuseSchema = z.object({
+  excuseId: z.string().min(1, 'Excuse ID is required'),
+  status: z.enum(['APPROVED', 'REJECTED']),
+  reviewNotes: z.string().max(500, 'Review notes must be less than 500 characters').optional()
+});
+
 // Type exports
 export type AttendanceRecord = z.infer<typeof attendanceRecordSchema>;
 export type ManualAttendance = z.infer<typeof manualAttendanceSchema>;
@@ -267,3 +300,7 @@ export type BiometricScan = z.infer<typeof biometricScanSchema>;
 export type StudentIdentifier = z.infer<typeof studentIdentifierSchema>;
 export type AttendanceFilter = z.infer<typeof attendanceFilterSchema>;
 export type AttendanceSettings = z.infer<typeof attendanceSettingsSchema>;
+export type ExcuseReason = z.infer<typeof excuseReasonSchema>;
+export type ExcuseStatus = z.infer<typeof excuseStatusSchema>;
+export type SubmitExcuse = z.infer<typeof submitExcuseSchema>;
+export type ReviewExcuse = z.infer<typeof reviewExcuseSchema>;

@@ -23,7 +23,7 @@ export default function CreateEditInvoiceModalContent({
   lang,
 }: Props) {
   return (
-    <div className="p-2 sm:p-4 h-full">
+    <div className="h-full">
       <InvoiceCreateForm
         invoiceId={invoiceId}
         firstName={defaults?.firstName || undefined}

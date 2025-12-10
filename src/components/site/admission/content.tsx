@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AnimatedButton } from "@/components/atom/animated-button";
@@ -28,9 +29,11 @@ interface Props {
   school: School;
   dictionary: Dictionary;
   lang: Locale;
+  subdomain: string;
 }
 
-export default function AdmissionContent({ school, dictionary, lang }: Props) {
+export default function AdmissionContent({ school, dictionary, lang, subdomain }: Props) {
+  const isRTL = lang === "ar";
   const admissionSteps = [
     {
       title: "Submit Application",
@@ -143,12 +146,16 @@ export default function AdmissionContent({ school, dictionary, lang }: Props) {
            Streamlined guide.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
-            <AnimatedButton size="lg">
-              Start Application
-            </AnimatedButton>
-            <Button variant="outline" size="lg">
-              Schedule Tour
-            </Button>
+            <Link href={`/${lang}/s/${subdomain}/apply`}>
+              <AnimatedButton size="lg">
+                {isRTL ? "بدء التقديم" : "Start Application"}
+              </AnimatedButton>
+            </Link>
+            <Link href={`/${lang}/s/${subdomain}/schedule-tour`}>
+              <Button variant="outline" size="lg">
+                {isRTL ? "حجز جولة" : "Schedule Tour"}
+              </Button>
+            </Link>
           </div>
         </div>
       </div>
@@ -342,12 +349,16 @@ export default function AdmissionContent({ school, dictionary, lang }: Props) {
             Take the first step towards an extraordinary education. Our admissions team is here to guide you through every step of the process.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <AnimatedButton size="lg" className="bg-white text-blue-600 hover:bg-gray-100">
-              Start Application
-            </AnimatedButton>
-            <Button variant="outline" size="lg" className="border-white text-white hover:bg-white/10">
-              Contact Admissions
-            </Button>
+            <Link href={`/${lang}/s/${subdomain}/apply`}>
+              <AnimatedButton size="lg" className="bg-white text-blue-600 hover:bg-gray-100">
+                {isRTL ? "بدء التقديم" : "Start Application"}
+              </AnimatedButton>
+            </Link>
+            <Link href={`/${lang}/s/${subdomain}/inquiry`}>
+              <Button variant="outline" size="lg" className="border-white text-white hover:bg-white/10">
+                {isRTL ? "تواصل معنا" : "Contact Admissions"}
+              </Button>
+            </Link>
           </div>
         </div>
       </section>

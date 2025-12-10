@@ -17,12 +17,12 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { FileSpreadsheet, Download, Search, ListFilter, RefreshCw, LoaderCircle, CircleCheck, CircleX, Clock, CircleAlert } from "lucide-react";
+import { FileSpreadsheet, Search, ListFilter, RefreshCw, LoaderCircle, CircleCheck, CircleX, Clock, CircleAlert } from "lucide-react";
+import { AttendanceReportExportButton } from "./export-button";
 import { cn } from '@/lib/utils'
 import type { Dictionary } from '@/components/internationalization/dictionaries'
 import {
   getAttendanceReport,
-  getAttendanceReportCsv,
   getClassesForSelection,
   getAttendanceStats
 } from '../actions'
@@ -73,7 +73,6 @@ export function ReportsContent({ dictionary, locale = 'en', initialFilters }: Pr
   const [records, setRecords] = useState<ReportRecord[]>([])
   const [classes, setClasses] = useState<{ id: string; name: string }[]>([])
   const [loading, setLoading] = useState(true)
-  const [exporting, setExporting] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
 
   // ListFilter state
@@ -141,31 +140,10 @@ export function ReportsContent({ dictionary, locale = 'en', initialFilters }: Pr
     setTimeout(() => setRefreshing(false), 500)
   }, [fetchData])
 
-  const handleExport = useCallback(async () => {
-    try {
-      setExporting(true)
-      const csv = await getAttendanceReportCsv({
-        classId: selectedClass !== 'all' ? selectedClass : undefined,
-        status: selectedStatus !== 'all' ? selectedStatus : undefined,
-        from: dateRange.from.toISOString(),
-        to: dateRange.to.toISOString(),
-        limit: 5000,
-      })
-
-      // Download CSV
-      const blob = new Blob([csv], { type: 'text/csv' })
-      const url = window.URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `attendance_report_${dateRange.from.toISOString().split('T')[0]}_${dateRange.to.toISOString().split('T')[0]}.csv`
-      a.click()
-      window.URL.revokeObjectURL(url)
-    } catch (error) {
-      console.error('Error exporting report:', error)
-    } finally {
-      setExporting(false)
-    }
-  }, [selectedClass, selectedStatus, dateRange])
+  // Get selected class name for export
+  const selectedClassName = selectedClass !== 'all'
+    ? classes.find(c => c.id === selectedClass)?.name
+    : undefined
 
   // Memoize filtered records to prevent recalculation on every render
   const filteredRecords = React.useMemo(() => {
@@ -204,14 +182,16 @@ export function ReportsContent({ dictionary, locale = 'en', initialFilters }: Pr
             <RefreshCw className={cn("h-4 w-4 mr-2", refreshing && "animate-spin")} />
             Refresh
           </Button>
-          <Button onClick={handleExport} disabled={exporting}>
-            {exporting ? (
-              <LoaderCircle className="h-4 w-4 mr-2 animate-spin" />
-            ) : (
-              <Download className="h-4 w-4 mr-2" />
-            )}
-            Export CSV
-          </Button>
+          <AttendanceReportExportButton
+            filters={{
+              classId: selectedClass !== 'all' ? selectedClass : undefined,
+              status: selectedStatus !== 'all' ? selectedStatus : undefined,
+              from: dateRange.from.toISOString(),
+              to: dateRange.to.toISOString(),
+            }}
+            className={selectedClassName}
+            locale={locale}
+          />
         </div>
       </div>
 
