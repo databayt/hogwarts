@@ -216,7 +216,7 @@ export function Weather({
   return (
     <div
       className={cn(
-        "w-full max-w-sm h-[280px] flex flex-col justify-between",
+        "w-full max-w-sm h-[320px] flex flex-col justify-between",
         className
       )}
     >

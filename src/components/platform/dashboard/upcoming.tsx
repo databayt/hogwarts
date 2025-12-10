@@ -409,7 +409,7 @@ export function Upcoming({ role, data, locale, subdomain, className }: UpcomingP
   return (
     <div
       className={cn(
-        "group relative h-[280px] w-full max-w-[280px] [perspective:2000px]",
+        "group relative h-[320px] w-full max-w-[280px] [perspective:2000px]",
         className
       )}
       onMouseEnter={() => setIsFlipped(true)}
@@ -438,26 +438,54 @@ export function Upcoming({ role, data, locale, subdomain, className }: UpcomingP
           )}
         >
           <div className="relative h-full overflow-hidden bg-gradient-to-b from-muted/50 to-background">
-            {/* Clean empty space - no icon */}
+            {/* Pulsing circles animation like exam card */}
+            <div className="absolute inset-0 flex items-start justify-center pt-24">
+              <div className="relative flex h-[100px] w-[200px] items-center justify-center">
+                {[...Array(10)].map((_, i) => (
+                  <div
+                    key={i}
+                    className={cn(
+                      "absolute h-[50px] w-[50px]",
+                      "rounded-[140px]",
+                      "animate-pulse",
+                      "opacity-20",
+                      "bg-primary/30"
+                    )}
+                    style={{
+                      animationDelay: `${i * 0.3}s`,
+                      transform: `scale(${1 + i * 0.2})`,
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
           </div>
 
-          <div className="absolute bottom-0 left-0 right-0 p-4">
+          <div className="absolute bottom-0 left-0 right-0 p-5">
             <div className="flex items-center justify-between gap-3">
-              <div className="space-y-1">
-                <h3 className="text-base font-semibold leading-snug tracking-tighter text-foreground">
+              <div className="space-y-1.5">
+                <h3 className="text-lg font-semibold leading-snug tracking-tighter text-foreground transition-all duration-500 ease-out group-hover:translate-y-[-4px]">
                   {cardConfig.title}
                 </h3>
-                <p className="text-sm text-muted-foreground">
+                <p className="line-clamp-2 text-sm tracking-tight text-muted-foreground transition-all delay-[50ms] duration-500 ease-out group-hover:translate-y-[-4px]">
                   {cardConfig.subtitle}
                 </p>
               </div>
-              {cardConfig.badge ? (
-                <Badge variant={cardConfig.badge.variant} className="text-xs">
-                  {cardConfig.badge.label}
-                </Badge>
-              ) : (
-                <Repeat2 className="h-4 w-4 text-primary" />
-              )}
+              <div className="group/icon relative">
+                <div
+                  className={cn(
+                    "absolute inset-[-8px] rounded-lg transition-opacity duration-300",
+                    "bg-gradient-to-br from-primary/20 via-primary/10 to-transparent"
+                  )}
+                />
+                {cardConfig.badge ? (
+                  <Badge variant={cardConfig.badge.variant} className="text-xs relative z-10">
+                    {cardConfig.badge.label}
+                  </Badge>
+                ) : (
+                  <Repeat2 className="relative z-10 h-4 w-4 text-primary transition-transform duration-300 group-hover/icon:-rotate-12 group-hover/icon:scale-110" />
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -467,34 +495,39 @@ export function Upcoming({ role, data, locale, subdomain, className }: UpcomingP
           className={cn(
             "absolute inset-0 h-full w-full",
             "[backface-visibility:hidden] [transform:rotateY(180deg)]",
-            "flex flex-col rounded-2xl border p-5",
+            "flex flex-col rounded-2xl border p-6",
             "bg-gradient-to-b from-muted/50 to-background",
             "shadow-sm",
+            "transition-all duration-700",
+            "group-hover:shadow-lg",
             !isFlipped ? "opacity-0" : "opacity-100"
           )}
         >
-          <div className="flex-1 space-y-4">
-            <div className="space-y-1">
-              <h3 className="text-base font-semibold">{cardConfig.title}</h3>
-              <p className="text-sm text-muted-foreground">{cardConfig.subtitle}</p>
+          <div className="flex-1 space-y-6">
+            <div className="space-y-2">
+              <h3 className="text-lg font-semibold leading-snug tracking-tight text-foreground transition-all duration-500 ease-out group-hover:translate-y-[-2px]">
+                {cardConfig.title}
+              </h3>
+              <p className="line-clamp-2 text-sm tracking-tight text-muted-foreground transition-all duration-500 ease-out group-hover:translate-y-[-2px]">
+                {cardConfig.subtitle}
+              </p>
             </div>
 
             <div className="space-y-2">
               {cardConfig.details.slice(0, 4).map((detail, index) => (
                 <div
                   key={detail.label}
-                  className="flex items-center justify-between text-sm"
+                  className="flex items-center justify-between text-sm transition-all duration-500"
                   style={{
                     transform: isFlipped ? "translateX(0)" : "translateX(-10px)",
                     opacity: isFlipped ? 1 : 0,
                     transitionDelay: `${index * 100 + 200}ms`,
-                    transition: "all 0.3s ease-out",
                   }}
                 >
                   <span className="text-muted-foreground">{detail.label}</span>
                   <span
                     className={cn(
-                      "font-medium",
+                      "font-medium text-foreground",
                       detail.highlight && "text-destructive"
                     )}
                   >
@@ -505,13 +538,32 @@ export function Upcoming({ role, data, locale, subdomain, className }: UpcomingP
             </div>
           </div>
 
-          <div className="mt-4 border-t pt-4">
+          <div className="mt-6 border-t pt-6">
             <Link
               href={cardConfig.linkHref}
-              className="flex items-center justify-between p-2 rounded-lg bg-muted/50 hover:bg-primary/10 transition-colors"
+              className={cn(
+                "group/start relative",
+                "flex items-center justify-between",
+                "-m-3 rounded-xl p-3",
+                "transition-all duration-300",
+                "bg-muted/50",
+                "hover:bg-primary/10",
+                "hover:scale-[1.02]"
+              )}
             >
-              <span className="text-sm font-medium">{cardConfig.linkLabel}</span>
-              <ArrowRight className="h-4 w-4 text-primary" />
+              <span className="text-sm font-medium text-foreground transition-colors duration-300 group-hover/start:text-primary">
+                {cardConfig.linkLabel}
+              </span>
+              <div className="group/icon relative">
+                <div
+                  className={cn(
+                    "absolute inset-[-6px] rounded-lg transition-all duration-300",
+                    "bg-gradient-to-br from-primary/20 via-primary/10 to-transparent",
+                    "scale-90 opacity-0 group-hover/start:scale-100 group-hover/start:opacity-100"
+                  )}
+                />
+                <ArrowRight className="relative z-10 h-4 w-4 text-primary transition-all duration-300 group-hover/start:translate-x-0.5 group-hover/start:scale-110" />
+              </div>
             </Link>
           </div>
         </div>
