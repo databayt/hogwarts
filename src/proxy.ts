@@ -13,6 +13,16 @@ import { i18n, type Locale } from "@/components/internationalization/config";
 const publicRoutes = ["/", "/new-verification", "/features", "/pricing", "/blog"];
 const authRoutes = ["/login", "/join", "/error", "/reset", "/new-password"];
 
+// Public site routes (school subdomain public pages - no auth required)
+const publicSiteRoutes = [
+  "/about",
+  "/academic",
+  "/admissions",
+  "/apply",
+  "/tour",
+  "/inquiry",
+];
+
 // Lightweight locale detection
 function getLocale(request: NextRequest): Locale {
   const cookieLocale = request.cookies.get('NEXT_LOCALE')?.value;
@@ -85,6 +95,15 @@ export function proxy(req: NextRequest) {
   const isPublic = publicRoutes.includes(pathWithoutLocale) ||
                    pathWithoutLocale.startsWith('/docs') ||
                    pathWithoutLocale.startsWith('/stream');
+
+  // Check if it's a public site route (for subdomains)
+  const isPublicSiteRoute = subdomain && (
+    pathWithoutLocale === '/' ||
+    publicSiteRoutes.some(route =>
+      pathWithoutLocale === route || pathWithoutLocale.startsWith(`${route}/`)
+    )
+  );
+
   const isAuth = authRoutes.includes(pathWithoutLocale);
   const authenticated = isAuthenticated(req);
 
@@ -99,7 +118,8 @@ export function proxy(req: NextRequest) {
   }
 
   // Redirect unauthenticated users to login for protected routes
-  if (!isPublic && !isAuth && !authenticated) {
+  // Skip redirect for public site routes on subdomains (admission portal, etc.)
+  if (!isPublic && !isPublicSiteRoute && !isAuth && !authenticated) {
     const callbackUrl = url.pathname + url.search;
     const loginUrl = new URL(`/${locale}/login`, req.url);
     loginUrl.searchParams.set('callbackUrl', callbackUrl);
