@@ -161,9 +161,9 @@ export async function TeacherDashboard({ user, dictionary, locale = "en" }: Teac
       <div className="space-y-6">
         {/* ============ TOP HERO SECTION (Unified Order) ============ */}
         {/* Section 1: Upcoming + Weather */}
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
           <Upcoming role="TEACHER" locale={locale} subdomain={school?.domain || ""} />
-          <Weather />
+          <Weather className="lg:ml-auto" />
         </div>
 
         {/* Section 2: Quick Look (no title) */}

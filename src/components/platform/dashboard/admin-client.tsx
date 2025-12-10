@@ -496,9 +496,9 @@ function QuickActionsSection({ locale, subdomain }: { locale: string; subdomain:
 
 function HeroSection({ locale, subdomain }: { locale: string; subdomain: string }) {
   return (
-    <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+    <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
       <Upcoming role="ADMIN" locale={locale} subdomain={subdomain} />
-      <Weather />
+      <Weather className="lg:ml-auto" />
     </div>
   )
 }

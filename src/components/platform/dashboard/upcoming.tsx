@@ -409,7 +409,7 @@ export function Upcoming({ role, data, locale, subdomain, className }: UpcomingP
   return (
     <div
       className={cn(
-        "group relative h-[320px] w-full max-w-[280px] [perspective:2000px]",
+        "group relative h-[320px] w-full max-w-[280px] lg:max-w-[320px] [perspective:2000px]",
         className
       )}
       onMouseEnter={() => setIsFlipped(true)}

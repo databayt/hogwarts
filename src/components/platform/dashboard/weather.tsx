@@ -1,14 +1,11 @@
 "use client"
 
 import { useState, useCallback } from "react"
-import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import {
   Droplets,
   Wind,
   Thermometer,
-  RefreshCcw,
-  Loader2,
 } from "lucide-react"
 import Icon from "@mdi/react"
 import {
@@ -183,19 +180,13 @@ export function Weather({
     return (
       <div
         className={cn(
-          "w-full max-w-sm h-[280px] flex flex-col items-center justify-center text-center p-4",
+          "w-full max-w-[200px] h-[320px] flex flex-col items-center justify-center text-center p-4",
           className
         )}
       >
-        <p className="text-sm text-muted-foreground mb-2">
+        <p className="text-sm text-muted-foreground">
           Unable to load weather data
         </p>
-        {onRefresh && (
-          <Button variant="ghost" size="sm" onClick={handleRefresh}>
-            <RefreshCcw className="size-4 mr-2" />
-            Retry
-          </Button>
-        )}
       </div>
     )
   }
@@ -216,76 +207,60 @@ export function Weather({
   return (
     <div
       className={cn(
-        "w-full max-w-sm h-[320px] flex flex-col justify-between",
+        "w-full max-w-[200px] h-[320px] flex flex-col justify-between",
         className
       )}
     >
       <div>
-        {/* Header with condition and refresh */}
-        <div className="flex items-start justify-between">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1 text-muted-foreground">
-                <WeatherIcon
-                  condition={currentWeather.condition}
-                  className="size-5"
-                />
-                <span className="text-sm">
-                  {currentWeather.conditionLabel}
-                </span>
-              </div>
-            </div>
-
-            {location && (
-              <p className="text-sm text-muted-foreground">{location}</p>
-            )}
-
-            {/* Weather details */}
-            <div className="mt-2 space-y-1">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Droplets className="size-4" />
-                <span>Humidity: {currentWeather.humidity}%</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <span className="text-primary">
-                  Rain: {currentWeather.rainChance}%
-                </span>
-              </div>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Thermometer className="size-4" />
-                <span>
-                  {currentWeather.temperature}°{tempUnit} (
-                  {currentWeather.tempLow}°{tempUnit})
-                </span>
-              </div>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Wind className="size-4" />
-                <span>
-                  {currentWeather.windSpeed} {speedUnit}
-                </span>
-              </div>
+        {/* Header with condition */}
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 text-muted-foreground">
+              <WeatherIcon
+                condition={currentWeather.condition}
+                className="size-5"
+              />
+              <span className="text-sm">
+                {currentWeather.conditionLabel}
+              </span>
             </div>
           </div>
 
-          {/* Refresh button */}
-          <Button
-            size="icon"
-            variant="ghost"
-            onClick={handleRefresh}
-            disabled={refreshing || isLoading}
-          >
-            {refreshing || isLoading ? (
-              <Loader2 className="size-4 animate-spin" />
-            ) : (
-              <RefreshCcw className="size-4" />
-            )}
-          </Button>
+          {location && (
+            <p className="text-sm text-muted-foreground">{location}</p>
+          )}
+
+          {/* Weather details */}
+          <div className="mt-2 space-y-1">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Droplets className="size-4" />
+              <span>Humidity: {currentWeather.humidity}%</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <span className="text-primary">
+                Rain: {currentWeather.rainChance}%
+              </span>
+            </div>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Thermometer className="size-4" />
+              <span>
+                {currentWeather.temperature}°{tempUnit} (
+                {currentWeather.tempLow}°{tempUnit})
+              </span>
+            </div>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Wind className="size-4" />
+              <span>
+                {currentWeather.windSpeed} {speedUnit}
+              </span>
+            </div>
+          </div>
         </div>
 
-        {/* Time and Date - Big font */}
+        {/* Time and Date - smaller text */}
         <div className="mt-3 space-y-0">
-          <p className="text-3xl font-bold tracking-tight">{currentTime}</p>
-          <p className="text-base text-muted-foreground">{currentDate}</p>
+          <p className="text-xl font-bold tracking-tight">{currentTime}</p>
+          <p className="text-sm text-muted-foreground">{currentDate}</p>
         </div>
 
         {/* 6-day forecast strip */}
