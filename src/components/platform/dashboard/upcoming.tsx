@@ -4,7 +4,6 @@ import { useState } from "react"
 import { cn } from "@/lib/utils"
 import {
   ArrowRight,
-  Repeat2,
   AlertTriangle,
   Clock,
   CheckCircle,
@@ -17,6 +16,7 @@ import {
   ClipboardList,
   BookOpen,
 } from "lucide-react"
+import { AnthropicIcons } from "@/components/icons/anthropic"
 import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
 
@@ -483,7 +483,7 @@ export function Upcoming({ role, data, locale, subdomain, className }: UpcomingP
                     {cardConfig.badge.label}
                   </Badge>
                 ) : (
-                  <Repeat2 className="relative z-10 h-4 w-4 text-primary transition-transform duration-300 group-hover/icon:-rotate-12 group-hover/icon:scale-110" />
+                  <AnthropicIcons.Redo className="relative z-10 h-4 w-4 text-primary transition-transform duration-300 group-hover/icon:-rotate-12 group-hover/icon:scale-110" />
                 )}
               </div>
             </div>
