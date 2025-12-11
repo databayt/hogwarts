@@ -23,8 +23,8 @@ export interface QuickAction {
 
 // Card background colors (matching Quick Look section)
 const cardColors = [
-  { bg: "bg-[#D97757]", text: "text-white" },      // Coral/orange
-  { bg: "bg-[#6A9BCC]", text: "text-white" },      // Blue
+  { bg: "bg-[#D97757]", text: "text-foreground" }, // Coral/orange
+  { bg: "bg-[#6A9BCC]", text: "text-foreground" }, // Blue
   { bg: "bg-[#CBCADB]", text: "text-foreground" }, // Lavender
   { bg: "bg-[#BCD1CA]", text: "text-foreground" }, // Mint
 ];
