@@ -22,17 +22,13 @@ export function AdmissionHero({ lang, dictionary }: AdmissionHeroProps) {
           <h1 className="font-heading font-black text-5xl sm:text-6xl lg:text-7xl xl:text-8xl tracking-tight">
             {isRTL ? (
               <>
-                <span className="block">كيف أحصل</span>
-                <span className="block">على خطاب</span>
+                <span className="block">خطاب</span>
                 <span className="block">هوجورتس</span>
-                <span className="block">الخاص بي؟</span>
               </>
             ) : (
               <>
-                <span className="block">How do I</span>
-                <span className="block">get my</span>
                 <span className="block">Hogwarts</span>
-                <span className="block">letter?</span>
+                <span className="block">letter</span>
               </>
             )}
           </h1>
