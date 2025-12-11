@@ -37,6 +37,12 @@ export function AdmissionHero({ lang, dictionary }: AdmissionHeroProps) {
             )}
           </h1>
 
+          <p className="text-muted-foreground text-lg max-w-md">
+            {isRTL
+              ? "سيتم تسليم خطاب هوجورتس الخاص بك عبر بريد البوم في عيد ميلادك الحادي عشر. إذا لم تستلمه بحلول ذلك الوقت، يرجى مراجعة مكتب وزارة السحر المحلي."
+              : "Your Hogwarts letter will be delivered by owl post on your 11th birthday. If you haven't received it by then, please check with your local Ministry of Magic office."}
+          </p>
+
           <div className="flex flex-col sm:flex-row gap-3">
             <Link
               href={`/${lang}/apply`}
