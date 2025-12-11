@@ -54,6 +54,7 @@
     "**/*.test.tsx",
     "**/__tests__/**",
     "src/test/**",
-    "src/components/platform/file/**"
+    "src/components/platform/file/**",
+    "src/components/site/apply/**"
   ]
 }

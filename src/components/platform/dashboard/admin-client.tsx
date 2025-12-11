@@ -114,15 +114,15 @@ function SystemHealthSection() {
 
   return (
     <section>
-      <SectionHeading
-        title="System Health"
-        icon={Activity}
-        badge={{
-          label: `${operationalCount}/${systemStatus.length} Operational`,
-          variant: operationalCount === systemStatus.length ? "default" : "secondary",
-          className: operationalCount === systemStatus.length ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400" : "",
-        }}
-      />
+      <div className="flex items-center justify-between">
+        <SectionHeading title="System Health" />
+        <Badge
+          variant={operationalCount === systemStatus.length ? "default" : "secondary"}
+          className={operationalCount === systemStatus.length ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400" : ""}
+        >
+          {operationalCount}/{systemStatus.length} Operational
+        </Badge>
+      </div>
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {systemStatus.map((system) => {
           const StatusIcon = getStatusIcon(system.status)
