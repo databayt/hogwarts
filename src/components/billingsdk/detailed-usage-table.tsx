@@ -67,10 +67,10 @@ export function DetailedUsageTable({
           </TableCaption>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[180px]">Resource</TableHead>
-              <TableHead className="text-end">Used</TableHead>
-              <TableHead className="text-end">Limit</TableHead>
-              <TableHead className="text-end min-w-[160px]">Usage</TableHead>
+              <TableHead className="w-[180px] px-6">Resource</TableHead>
+              <TableHead className="text-end px-6">Used</TableHead>
+              <TableHead className="text-end px-6">Limit</TableHead>
+              <TableHead className="text-end min-w-[160px] px-6">Usage</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -95,18 +95,18 @@ export function DetailedUsageTable({
 
                 return (
                   <TableRow key={resource.name || index}>
-                    <TableCell className="font-medium">
+                    <TableCell className="font-medium px-6">
                       {resource.name}
                     </TableCell>
-                    <TableCell className="text-end tabular-nums">
+                    <TableCell className="text-end tabular-nums px-6">
                       {formatNumber(resource.used)}
                       {unit}
                     </TableCell>
-                    <TableCell className="text-end tabular-nums text-muted-foreground">
+                    <TableCell className="text-end tabular-nums text-muted-foreground px-6">
                       {formatNumber(resource.limit)}
                       {unit}
                     </TableCell>
-                    <TableCell className="text-end">
+                    <TableCell className="text-end px-6">
                       {getPercentageBar(percentage)}
                     </TableCell>
                   </TableRow>

@@ -75,11 +75,11 @@ export function InvoiceHistory({
                     <TableCaption className="sr-only">List of past invoices with dates, amounts, status and download actions</TableCaption>
                     <TableHeader>
                         <TableRow>
-                            <TableHead className="w-[120px]">Date</TableHead>
-                            <TableHead>Description</TableHead>
-                            <TableHead className="text-end">Amount</TableHead>
-                            <TableHead className="text-end">Status</TableHead>
-                            <TableHead className="text-end">Action</TableHead>
+                            <TableHead className="w-[120px] px-6">Date</TableHead>
+                            <TableHead className="px-6">Description</TableHead>
+                            <TableHead className="text-end px-6">Amount</TableHead>
+                            <TableHead className="text-end px-6">Status</TableHead>
+                            <TableHead className="text-end px-6">Action</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -92,24 +92,24 @@ export function InvoiceHistory({
                         )}
                         {invoices.map((inv) => (
                             <TableRow key={inv.id} className="group">
-                                <TableCell className="text-muted-foreground">
+                                <TableCell className="text-muted-foreground px-6">
                                     <div className="inline-flex items-center gap-2">
                                         <CalendarDays className="h-3.5 w-3.5" />
                                         {inv.date}
                                     </div>
                                 </TableCell>
-                                <TableCell className="max-w-[320px]">
+                                <TableCell className="max-w-[320px] px-6">
                                     <div className="truncate" title={inv.description || "Invoice"}>
                                         {inv.description || "Invoice"}
                                     </div>
                                 </TableCell>
-                                <TableCell className="text-end font-medium">
+                                <TableCell className="text-end font-medium px-6">
                                     {inv.amount}
                                 </TableCell>
-                                <TableCell className="text-end">
+                                <TableCell className="text-end px-6">
                                     {statusBadge(inv.status)}
                                 </TableCell>
-                                <TableCell className="text-end">
+                                <TableCell className="text-end px-6">
                                     <Button
                                         variant="outline"
                                         size="sm"
