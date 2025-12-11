@@ -57,20 +57,22 @@ const iconMap: Record<string, React.ComponentType<{ className?: string; "aria-hi
   ShieldCheck: AnthropicIcons.ShieldCheck,
   Announcement: AnthropicIcons.Announcement,
   Sparkle: AnthropicIcons.Sparkle,
-  // Mapped aliases using available Anthropic icons
-  Users: AnthropicIcons.Devices,           // People/users
+  Gear: AnthropicIcons.Gear,
+  Users: AnthropicIcons.Users,
+  BarChart: AnthropicIcons.BarChart,
+  // Mapped aliases
+  Settings: AnthropicIcons.Gear,           // Settings → Gear
+  UserPlus: AnthropicIcons.Users,          // Add user → Users
+  BarChart3: AnthropicIcons.BarChart,      // Analytics → BarChart
+  TrendingUp: AnthropicIcons.BarChart,     // Growth → BarChart
   CheckCircle: AnthropicIcons.Checklist,   // Completion
   BookOpen: AnthropicIcons.Book,           // Reading
   Award: AnthropicIcons.Sparkle,           // Achievement
   MessageSquare: AnthropicIcons.Chat,      // Communication
   ClipboardList: AnthropicIcons.TaskList,  // Tasks
-  DollarSign: AnthropicIcons.Notebook,     // Finance (using notebook)
-  Settings: AnthropicIcons.Flow,           // Configuration
-  UserPlus: AnthropicIcons.Devices,        // Add user
-  BarChart3: AnthropicIcons.CalendarChart, // Analytics
+  DollarSign: AnthropicIcons.Notebook,     // Finance
   Receipt: AnthropicIcons.Notebook,        // Documents
   GraduationCap: AnthropicIcons.Book,      // Education
-  TrendingUp: AnthropicIcons.Sparkle,      // Growth
   Building: AnthropicIcons.Briefcase,      // Organization
   Contact: AnthropicIcons.Chat,            // Contact
 };

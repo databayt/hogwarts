@@ -11,8 +11,7 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { CalendarDays, Download, ReceiptText } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Download, ReceiptText } from "lucide-react"
 
 export interface InvoiceItem {
     id: string
@@ -93,10 +92,7 @@ export function InvoiceHistory({
                         {invoices.map((inv) => (
                             <TableRow key={inv.id} className="group">
                                 <TableCell className="text-muted-foreground px-6">
-                                    <div className="inline-flex items-center gap-2">
-                                        <CalendarDays className="h-3.5 w-3.5" />
-                                        {inv.date}
-                                    </div>
+                                    {inv.date}
                                 </TableCell>
                                 <TableCell className="max-w-[320px] px-6">
                                     <div className="truncate" title={inv.description || "Invoice"}>
@@ -110,10 +106,8 @@ export function InvoiceHistory({
                                     {statusBadge(inv.status)}
                                 </TableCell>
                                 <TableCell className="text-end px-6">
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        className="h-8 text-xs"
+                                    <button
+                                        className="p-2 rounded-md hover:bg-muted transition-colors"
                                         onClick={() =>
                                             inv.invoiceUrl
                                                 ? window.open(inv.invoiceUrl, "_blank", "noopener,noreferrer")
@@ -121,9 +115,8 @@ export function InvoiceHistory({
                                         }
                                         aria-label={`Download invoice ${inv.id}`}
                                     >
-                                        <Download className="h-3.5 w-3.5" />
-                                        Download
-                                    </Button>
+                                        <Download className="h-4 w-4 text-muted-foreground" />
+                                    </button>
                                 </TableCell>
                             </TableRow>
                         ))}
