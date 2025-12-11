@@ -205,11 +205,11 @@ export default function TourBookingContent({
         <div className="flex gap-4 justify-center">
           <Button
             variant="outline"
-            onClick={() => router.push(`/${lang}/s/${subdomain}`)}
+            onClick={() => router.push(`/${lang}`)}
           >
             {isRTL ? "العودة للرئيسية" : "Back to Home"}
           </Button>
-          <Button onClick={() => router.push(`/${lang}/s/${subdomain}/apply`)}>
+          <Button onClick={() => router.push(`/${lang}/apply`)}>
             {isRTL ? "قدم الآن" : "Apply Now"}
           </Button>
         </div>

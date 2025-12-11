@@ -68,7 +68,7 @@ export default function ContinueApplicationContent({
         const campaignId = (result.data.formData as { campaignId?: string })?.campaignId || result.data.campaignId;
         if (campaignId) {
           router.push(
-            `/${lang}/s/${subdomain}/apply/${campaignId}?token=${data.sessionToken}`
+            `/${lang}/apply/${campaignId}?token=${data.sessionToken}`
           );
         } else {
           toast.error(isRTL ? "لم يتم العثور على الحملة" : "Campaign not found");
@@ -172,7 +172,7 @@ export default function ContinueApplicationContent({
         <p className="text-sm text-muted-foreground">
           {isRTL ? "ليس لديك طلب محفوظ؟" : "Don't have a saved application?"}
         </p>
-        <Link href={`/${lang}/s/${subdomain}/apply`}>
+        <Link href={`/${lang}/apply`}>
           <Button variant="outline">
             {isRTL ? "بدء طلب جديد" : "Start New Application"}
           </Button>

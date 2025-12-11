@@ -26,12 +26,12 @@ export function BackgroundGradientAnimationDemo({ lang = "en", subdomain = "demo
                 : "Every great wizard started with a single step. Take yours today and join thousands of students who have discovered their potential in our enchanted halls of learning."}
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4 pt-4">
-              <Link href={`/${lang}/s/${subdomain}/apply`}>
+              <Link href={`/${lang}/apply`}>
                 <Button size="lg" className="bg-white text-primary hover:bg-white/90">
                   {isRTL ? "قدم للقبول" : "Apply for Admission"}
                 </Button>
               </Link>
-              <Link href={`/${lang}/s/${subdomain}/tour`}>
+              <Link href={`/${lang}/tour`}>
                 <Button variant="outline" size="lg" className="bg-transparent text-white hover:text-white/80 border-white hover:bg-white/10">
                   {isRTL ? "احجز جولة" : "Schedule a Tour"}
                 </Button>

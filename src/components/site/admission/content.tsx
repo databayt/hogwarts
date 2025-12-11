@@ -229,13 +229,13 @@ export default function AdmissionContent({ school, dictionary, lang, subdomain }
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
-              <Link href={`/${lang}/s/${subdomain}/apply`}>
+              <Link href={`/${lang}/apply`}>
                 <AnimatedButton size="lg" className="w-full sm:w-auto">
                   {isRTL ? "ابدأ التقديم" : "Start Application"}
                   <ArrowRight className="w-4 h-4 ms-2" />
                 </AnimatedButton>
               </Link>
-              <Link href={`/${lang}/s/${subdomain}/tour`}>
+              <Link href={`/${lang}/tour`}>
                 <Button
                   variant="outline"
                   size="lg"
@@ -473,13 +473,13 @@ export default function AdmissionContent({ school, dictionary, lang, subdomain }
                   : "Take the first step towards an extraordinary education. Our admissions team is here to guide you"}
               </p>
               <div className="flex flex-col sm:flex-row justify-center gap-4">
-                <Link href={`/${lang}/s/${subdomain}/apply`}>
+                <Link href={`/${lang}/apply`}>
                   <Button size="lg" className="bg-white text-primary hover:bg-white/90 w-full sm:w-auto">
                     {isRTL ? "ابدأ التقديم الآن" : "Start Application Now"}
                     <ArrowRight className="w-4 h-4 ms-2" />
                   </Button>
                 </Link>
-                <Link href={`/${lang}/s/${subdomain}/inquiry`}>
+                <Link href={`/${lang}/inquiry`}>
                   <Button
                     variant="outline"
                     size="lg"

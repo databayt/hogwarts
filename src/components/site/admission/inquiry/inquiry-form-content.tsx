@@ -139,12 +139,12 @@ export default function InquiryFormContent({
         </Card>
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Link href={`/${lang}/s/${subdomain}`}>
+          <Link href={`/${lang}`}>
             <Button variant="outline">
               {isRTL ? "العودة للرئيسية" : "Back to Home"}
             </Button>
           </Link>
-          <Link href={`/${lang}/s/${subdomain}/apply`}>
+          <Link href={`/${lang}/apply`}>
             <Button>
               {isRTL ? "قدم الآن" : "Apply Now"}
               <ArrowRight className="w-4 h-4 ms-2" />
@@ -387,12 +387,12 @@ export default function InquiryFormContent({
         <CardContent className="pt-6">
           <h3 className="font-medium mb-4">{isRTL ? "روابط سريعة" : "Quick Links"}</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            <Link href={`/${lang}/s/${subdomain}/apply`}>
+            <Link href={`/${lang}/apply`}>
               <Button variant="outline" className="w-full justify-start">
                 {isRTL ? "قدم طلب التحاق" : "Apply Now"}
               </Button>
             </Link>
-            <Link href={`/${lang}/s/${subdomain}/tour`}>
+            <Link href={`/${lang}/tour`}>
               <Button variant="outline" className="w-full justify-start">
                 {isRTL ? "حجز جولة" : "Schedule a Tour"}
               </Button>

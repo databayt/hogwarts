@@ -35,7 +35,7 @@ export default function CampaignSelectorContent({
 
   const handleStartApplication = () => {
     if (selectedCampaign) {
-      router.push(`/${lang}/s/${subdomain}/apply/${selectedCampaign}`);
+      router.push(`/${lang}/apply/${selectedCampaign}`);
     }
   };
 
@@ -59,7 +59,7 @@ export default function CampaignSelectorContent({
             ? "لا توجد حاليًا برامج قبول مفتوحة. يرجى التحقق مرة أخرى لاحقًا."
             : "There are currently no open admission programs. Please check back later."}
         </p>
-        <Button variant="outline" onClick={() => router.push(`/${lang}/s/${subdomain}`)}>
+        <Button variant="outline" onClick={() => router.push(`/${lang}`)}>
           {lang === "ar" ? "العودة للصفحة الرئيسية" : "Back to Home"}
         </Button>
       </div>
@@ -158,11 +158,11 @@ export default function CampaignSelectorContent({
 
       {/* Info Links */}
       <div className="flex flex-wrap justify-center gap-4 text-sm text-muted-foreground pt-4">
-        <Button variant="link" onClick={() => router.push(`/${lang}/s/${subdomain}/apply/status`)}>
+        <Button variant="link" onClick={() => router.push(`/${lang}/apply/status`)}>
           {lang === "ar" ? "تتبع طلب موجود" : "Track Existing Application"}
         </Button>
         <span className="text-muted-foreground">•</span>
-        <Button variant="link" onClick={() => router.push(`/${lang}/s/${subdomain}/apply/continue`)}>
+        <Button variant="link" onClick={() => router.push(`/${lang}/apply/continue`)}>
           {lang === "ar" ? "استئناف طلب محفوظ" : "Resume Saved Application"}
         </Button>
       </div>

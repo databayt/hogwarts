@@ -232,7 +232,7 @@ export default function ApplicationFormContent({
 
         // Redirect to success page
         router.push(
-          `/${lang}/s/${subdomain}/apply/success?number=${result.data.applicationNumber}&token=${result.data.accessToken}`
+          `/${lang}/apply/success?number=${result.data.applicationNumber}&token=${result.data.accessToken}`
         );
       } else {
         toast.error(result.error || "Failed to submit application");

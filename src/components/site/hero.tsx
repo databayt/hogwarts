@@ -46,7 +46,7 @@ export function Hero({ lang = "en", subdomain = "demo" }: HeroProps) {
                 : "The most magical part of the Harry Potter books, is that they eventually used the skills they learned at school"}
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <Link href={`/${lang}/s/${subdomain}/tour`}>
+              <Link href={`/${lang}/tour`}>
                 <AnimatedButton
                   size="lg"
                   className="w-full sm:w-auto"
@@ -54,7 +54,7 @@ export function Hero({ lang = "en", subdomain = "demo" }: HeroProps) {
                   {isRTL ? "احجز زيارة" : "Schedule a Visit"}
                 </AnimatedButton>
               </Link>
-              <Link href={`/${lang}/s/${subdomain}/admissions`}>
+              <Link href={`/${lang}/admissions`}>
                 <Button
                   variant="outline"
                   size="lg"
@@ -87,12 +87,12 @@ export function Hero({ lang = "en", subdomain = "demo" }: HeroProps) {
               : "The most magical part of the Harry Potter books, is that they eventually used the skills they learned at school"}
           </p>
           <div className="flex flex-row gap-4">
-            <Link href={`/${lang}/s/${subdomain}/tour`}>
+            <Link href={`/${lang}/tour`}>
               <AnimatedButton size="lg">
                 {isRTL ? "احجز زيارة" : "Schedule a Visit"}
               </AnimatedButton>
             </Link>
-            <Link href={`/${lang}/s/${subdomain}/admissions`}>
+            <Link href={`/${lang}/admissions`}>
               <Button variant="outline" size="lg">
                 {isRTL ? "اعرف المزيد" : "Learn More"}
               </Button>
