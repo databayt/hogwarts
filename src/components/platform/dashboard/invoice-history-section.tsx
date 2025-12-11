@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react"
 import { InvoiceHistory, type InvoiceItem } from "@/components/billingsdk/invoice-history"
 import { SectionHeading } from "./section-heading"
-import { ReceiptText } from "lucide-react"
 import { getInvoicesByRole } from "./actions"
 import type { DashboardRole } from "./resource-usage-section"
 
@@ -15,32 +14,6 @@ export interface InvoiceHistorySectionProps {
   role: DashboardRole
   className?: string
   onDownload?: (invoiceId: string) => void
-}
-
-// ============================================================================
-// ROLE-SPECIFIC DESCRIPTIONS
-// ============================================================================
-
-const roleDescriptions: Record<DashboardRole, string> = {
-  STUDENT: "Your fee payment history and receipts",
-  TEACHER: "Your expense claims and reimbursements",
-  GUARDIAN: "Fee invoices for your children",
-  STAFF: "Your expense reports and reimbursements",
-  ACCOUNTANT: "All school invoices and transactions",
-  PRINCIPAL: "Budget-related invoices and expenses",
-  ADMIN: "All platform billing and invoices",
-  DEVELOPER: "Platform subscription billing history",
-}
-
-const roleTitles: Record<DashboardRole, string> = {
-  STUDENT: "Fee History",
-  TEACHER: "Expense Claims",
-  GUARDIAN: "Children's Fees",
-  STAFF: "Expense Reports",
-  ACCOUNTANT: "Invoice History",
-  PRINCIPAL: "Budget Invoices",
-  ADMIN: "Billing History",
-  DEVELOPER: "Platform Billing",
 }
 
 // ============================================================================
@@ -145,25 +118,17 @@ export function InvoiceHistorySection({
     fetchData()
   }, [role])
 
-  const title = roleTitles[role] || "Invoice History"
-  const description = roleDescriptions[role] || roleDescriptions.ADMIN
-
   const handleDownload = (invoiceId: string) => {
     if (onDownload) {
       onDownload(invoiceId)
     } else {
-      // Default behavior - could open a modal or trigger download
       console.log("Download invoice:", invoiceId)
     }
   }
 
   return (
     <section className={className}>
-      <SectionHeading
-        title={title}
-        icon={ReceiptText}
-        description={description}
-      />
+      <SectionHeading title="Billing History" />
       <InvoiceHistory
         invoices={invoices}
         title=""
@@ -196,16 +161,10 @@ export function StaticInvoiceHistorySection({
   onDownload,
 }: StaticInvoiceHistorySectionProps) {
   const data = invoices || defaultInvoicesByRole[role] || defaultInvoicesByRole.ADMIN
-  const title = roleTitles[role] || "Invoice History"
-  const description = roleDescriptions[role] || roleDescriptions.ADMIN
 
   return (
     <section className={className}>
-      <SectionHeading
-        title={title}
-        icon={ReceiptText}
-        description={description}
-      />
+      <SectionHeading title="Billing History" />
       <InvoiceHistory
         invoices={data}
         title=""

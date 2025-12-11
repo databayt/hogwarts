@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react"
 import { DetailedUsageTable, type UsageResource } from "@/components/billingsdk/detailed-usage-table"
 import { SectionHeading } from "./section-heading"
-import { BarChart3 } from "lucide-react"
 import { getResourceUsageByRole } from "./actions"
 
 // ============================================================================
@@ -23,21 +22,6 @@ export type DashboardRole =
 export interface ResourceUsageSectionProps {
   role: DashboardRole
   className?: string
-}
-
-// ============================================================================
-// ROLE-SPECIFIC DESCRIPTIONS
-// ============================================================================
-
-const roleDescriptions: Record<DashboardRole, string> = {
-  STUDENT: "Track your academic progress and resource usage",
-  TEACHER: "Monitor your teaching metrics and classroom statistics",
-  GUARDIAN: "Overview of your children's engagement and activities",
-  STAFF: "Track your task completion and operational metrics",
-  ACCOUNTANT: "Financial collection and processing metrics",
-  PRINCIPAL: "School-wide resource utilization overview",
-  ADMIN: "System-wide resource usage and capacity metrics",
-  DEVELOPER: "Platform-level resource and API usage",
 }
 
 // ============================================================================
@@ -135,15 +119,9 @@ export function ResourceUsageSection({ role, className }: ResourceUsageSectionPr
     fetchData()
   }, [role])
 
-  const description = roleDescriptions[role] || roleDescriptions.ADMIN
-
   return (
     <section className={className}>
-      <SectionHeading
-        title="Resource Usage"
-        icon={BarChart3}
-        description={description}
-      />
+      <SectionHeading title="Resource Usage" />
       <DetailedUsageTable
         resources={resources}
         title=""
@@ -173,15 +151,10 @@ export function StaticResourceUsageSection({
   className,
 }: StaticResourceUsageSectionProps) {
   const data = resources || defaultResourcesByRole[role] || defaultResourcesByRole.ADMIN
-  const description = roleDescriptions[role] || roleDescriptions.ADMIN
 
   return (
     <section className={className}>
-      <SectionHeading
-        title="Resource Usage"
-        icon={BarChart3}
-        description={description}
-      />
+      <SectionHeading title="Resource Usage" />
       <DetailedUsageTable
         resources={data}
         title=""
