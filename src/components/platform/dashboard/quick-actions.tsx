@@ -2,7 +2,6 @@
 
 import React from "react";
 import { cn } from "@/lib/utils";
-import * as LucideIcons from "lucide-react";
 import { AnthropicIcons } from "@/components/icons/anthropic";
 import Link from "next/link";
 
@@ -10,9 +9,9 @@ import Link from "next/link";
  * QuickActions Component
  * Displays a row of quick action items
  * - Icon and text in a row (horizontal layout)
- * - 4 actions taking full width
+ * - 4 actions taking full width with solid colored backgrounds
  * - Role-specific and reusable
- * - Uses Anthropic icons where available
+ * - Uses Anthropic icons exclusively
  */
 
 export interface QuickAction {
@@ -22,9 +21,17 @@ export interface QuickAction {
   onClick?: () => void;
 }
 
-// Map icon names to icon components (Anthropic icons preferred, Lucide fallback)
+// Card background colors (matching Quick Look section)
+const cardColors = [
+  { bg: "bg-[#D97757]", text: "text-white" },      // Coral/orange
+  { bg: "bg-[#6A9BCC]", text: "text-white" },      // Blue
+  { bg: "bg-[#CBCADB]", text: "text-foreground" }, // Lavender
+  { bg: "bg-[#BCD1CA]", text: "text-foreground" }, // Mint
+];
+
+// Map icon names to Anthropic icon components
 const iconMap: Record<string, React.ComponentType<{ className?: string; "aria-hidden"?: boolean }>> = {
-  // Anthropic icons
+  // Core Anthropic icons
   Checklist: AnthropicIcons.Checklist,
   TaskList: AnthropicIcons.TaskList,
   Book: AnthropicIcons.Book,
@@ -50,22 +57,22 @@ const iconMap: Record<string, React.ComponentType<{ className?: string; "aria-hi
   ShieldCheck: AnthropicIcons.ShieldCheck,
   Announcement: AnthropicIcons.Announcement,
   Sparkle: AnthropicIcons.Sparkle,
-  // Lucide fallbacks for icons without Anthropic equivalents
-  Users: LucideIcons.Users,
-  CheckCircle: LucideIcons.CheckCircle,
-  BookOpen: LucideIcons.BookOpen,
-  Award: LucideIcons.Award,
-  MessageSquare: LucideIcons.MessageSquare,
-  ClipboardList: LucideIcons.ClipboardList,
-  DollarSign: LucideIcons.DollarSign,
-  Settings: LucideIcons.Settings,
-  UserPlus: LucideIcons.UserPlus,
-  BarChart3: LucideIcons.BarChart3,
-  Receipt: LucideIcons.Receipt,
-  GraduationCap: LucideIcons.GraduationCap,
-  TrendingUp: LucideIcons.TrendingUp,
-  Building: LucideIcons.Building,
-  Contact: LucideIcons.Contact,
+  // Mapped aliases using available Anthropic icons
+  Users: AnthropicIcons.Devices,           // People/users
+  CheckCircle: AnthropicIcons.Checklist,   // Completion
+  BookOpen: AnthropicIcons.Book,           // Reading
+  Award: AnthropicIcons.Sparkle,           // Achievement
+  MessageSquare: AnthropicIcons.Chat,      // Communication
+  ClipboardList: AnthropicIcons.TaskList,  // Tasks
+  DollarSign: AnthropicIcons.Notebook,     // Finance (using notebook)
+  Settings: AnthropicIcons.Flow,           // Configuration
+  UserPlus: AnthropicIcons.Devices,        // Add user
+  BarChart3: AnthropicIcons.CalendarChart, // Analytics
+  Receipt: AnthropicIcons.Notebook,        // Documents
+  GraduationCap: AnthropicIcons.Book,      // Education
+  TrendingUp: AnthropicIcons.Sparkle,      // Growth
+  Building: AnthropicIcons.Briefcase,      // Organization
+  Contact: AnthropicIcons.Chat,            // Contact
 };
 
 interface QuickActionsProps {
@@ -79,15 +86,20 @@ export function QuickActions({ actions, locale = "en", className }: QuickActions
     <div className={cn("w-full", className)}>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {actions.slice(0, 4).map((action, index) => {
-          // Get icon component from map, fallback to FileText if not found
-          const Icon = iconMap[action.iconName] || LucideIcons.FileText;
+          // Get icon component from map, fallback to Notebook if not found
+          const Icon = iconMap[action.iconName] || AnthropicIcons.Notebook;
+          // Cycle through colors for each card
+          const color = cardColors[index % cardColors.length];
 
           const content = (
-            <div className="flex items-center gap-3 p-3 rounded-lg border bg-card transition-colors hover:bg-muted/50">
-              <div className="flex-shrink-0 rounded-md bg-muted p-2">
-                <Icon className="h-5 w-5 text-muted-foreground" aria-hidden={true} />
+            <div className={cn(
+              "flex items-center gap-3 p-3 rounded-lg transition-all hover:opacity-90 hover:scale-[1.02]",
+              color.bg
+            )}>
+              <div className="flex-shrink-0 rounded-md bg-white/20 p-2">
+                <Icon className={cn("h-5 w-5", color.text)} aria-hidden={true} />
               </div>
-              <span className="text-sm font-medium truncate">{action.label}</span>
+              <span className={cn("text-sm font-medium truncate", color.text)}>{action.label}</span>
             </div>
           );
 
