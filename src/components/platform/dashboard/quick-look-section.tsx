@@ -3,13 +3,8 @@
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
-import {
-  Megaphone,
-  CalendarDays,
-  Bell,
-  FileText,
-  ChevronRight,
-} from "lucide-react"
+import { ChevronRight } from "lucide-react"
+import { AnthropicIcons } from "@/components/icons/anthropic"
 import Link from "next/link"
 
 export interface QuickLookSectionProps {
@@ -20,7 +15,7 @@ export interface QuickLookSectionProps {
 export function QuickLookSection({ locale, subdomain }: QuickLookSectionProps) {
   const quickLookItems = [
     {
-      icon: Megaphone,
+      icon: AnthropicIcons.Announcement,
       label: "Announcements",
       count: 3,
       newCount: 1,
@@ -30,7 +25,7 @@ export function QuickLookSection({ locale, subdomain }: QuickLookSectionProps) {
       bgColor: "bg-[#D97757]/15"
     },
     {
-      icon: CalendarDays,
+      icon: AnthropicIcons.CalendarChart,
       label: "Events",
       count: 5,
       newCount: 2,
@@ -40,7 +35,7 @@ export function QuickLookSection({ locale, subdomain }: QuickLookSectionProps) {
       bgColor: "bg-[#6A9BCC]/15"
     },
     {
-      icon: Bell,
+      icon: AnthropicIcons.Lightning,
       label: "Notifications",
       count: 12,
       newCount: 4,
@@ -50,7 +45,7 @@ export function QuickLookSection({ locale, subdomain }: QuickLookSectionProps) {
       bgColor: "bg-[#CBCADB]/15"
     },
     {
-      icon: FileText,
+      icon: AnthropicIcons.Chat,
       label: "Messages",
       count: 8,
       newCount: 2,

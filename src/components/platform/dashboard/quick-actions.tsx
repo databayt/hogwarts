@@ -3,6 +3,7 @@
 import React from "react";
 import { cn } from "@/lib/utils";
 import * as LucideIcons from "lucide-react";
+import { AnthropicIcons } from "@/components/icons/anthropic";
 import Link from "next/link";
 
 /**
@@ -11,6 +12,7 @@ import Link from "next/link";
  * - Icon and text in a row (horizontal layout)
  * - 4 actions taking full width
  * - Role-specific and reusable
+ * - Uses Anthropic icons where available
  */
 
 export interface QuickAction {
@@ -20,26 +22,46 @@ export interface QuickAction {
   onClick?: () => void;
 }
 
-// Map icon names to Lucide icon components
+// Map icon names to icon components (Anthropic icons preferred, Lucide fallback)
 const iconMap: Record<string, React.ComponentType<{ className?: string; "aria-hidden"?: boolean }>> = {
+  // Anthropic icons
+  Checklist: AnthropicIcons.Checklist,
+  TaskList: AnthropicIcons.TaskList,
+  Book: AnthropicIcons.Book,
+  Briefcase: AnthropicIcons.Briefcase,
+  Chat: AnthropicIcons.Chat,
+  Calendar: AnthropicIcons.CalendarChart,
+  CalendarDays: AnthropicIcons.CalendarChart,
+  CalendarChart: AnthropicIcons.CalendarChart,
+  Clock: AnthropicIcons.Stopwatch,
+  Stopwatch: AnthropicIcons.Stopwatch,
+  Archive: AnthropicIcons.Archive,
+  FolderOpen: AnthropicIcons.Archive,
+  Notebook: AnthropicIcons.Notebook,
+  FileText: AnthropicIcons.Notebook,
+  Pencil: AnthropicIcons.Pencil,
+  Globe: AnthropicIcons.Globe,
+  Lightning: AnthropicIcons.Lightning,
+  Bell: AnthropicIcons.Lightning,
+  Terminal: AnthropicIcons.Terminal,
+  CodeWindow: AnthropicIcons.CodeWindow,
+  Copy: AnthropicIcons.Copy,
+  Flow: AnthropicIcons.Flow,
+  ShieldCheck: AnthropicIcons.ShieldCheck,
+  Announcement: AnthropicIcons.Announcement,
+  Sparkle: AnthropicIcons.Sparkle,
+  // Lucide fallbacks for icons without Anthropic equivalents
   Users: LucideIcons.Users,
-  FileText: LucideIcons.FileText,
-  Bell: LucideIcons.Bell,
   CheckCircle: LucideIcons.CheckCircle,
-  Calendar: LucideIcons.Calendar,
   BookOpen: LucideIcons.BookOpen,
   Award: LucideIcons.Award,
-  CalendarDays: LucideIcons.CalendarDays,
   MessageSquare: LucideIcons.MessageSquare,
   ClipboardList: LucideIcons.ClipboardList,
   DollarSign: LucideIcons.DollarSign,
   Settings: LucideIcons.Settings,
   UserPlus: LucideIcons.UserPlus,
   BarChart3: LucideIcons.BarChart3,
-  Clock: LucideIcons.Clock,
-  FolderOpen: LucideIcons.FolderOpen,
   Receipt: LucideIcons.Receipt,
-  Briefcase: LucideIcons.Briefcase,
   GraduationCap: LucideIcons.GraduationCap,
   TrendingUp: LucideIcons.TrendingUp,
   Building: LucideIcons.Building,
