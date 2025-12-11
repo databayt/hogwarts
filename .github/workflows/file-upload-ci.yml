@@ -169,7 +169,7 @@ jobs:
         run: pnpm test:integration
 
       - name: Upload test coverage
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           flags: unittests-shard-${{ matrix.shard }}
