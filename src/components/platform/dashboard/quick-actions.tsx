@@ -95,11 +95,11 @@ export function QuickActions({ actions, locale = "en", className }: QuickActions
 
           const content = (
             <div className={cn(
-              "flex items-center gap-3 p-3 rounded-lg transition-all hover:opacity-90 hover:scale-[1.02]",
+              "flex items-center gap-4 p-4 rounded-lg transition-all hover:opacity-90 hover:scale-[1.02]",
               color.bg
             )}>
-              <Icon className={cn("h-5 w-5 flex-shrink-0", color.text)} aria-hidden={true} />
-              <span className={cn("text-sm font-medium truncate", color.text)}>{action.label}</span>
+              <Icon className={cn("h-6 w-6 flex-shrink-0", color.text)} aria-hidden={true} />
+              <span className={cn("text-base font-medium truncate", color.text)}>{action.label}</span>
             </div>
           );
 
