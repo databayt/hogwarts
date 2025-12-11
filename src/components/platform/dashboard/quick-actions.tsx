@@ -99,7 +99,7 @@ export function QuickActions({ actions, locale = "en", className }: QuickActions
               color.bg
             )}>
               <Icon className={cn("h-6 w-6 flex-shrink-0", color.text)} aria-hidden={true} />
-              <span className={cn("text-base font-medium truncate", color.text)}>{action.label}</span>
+              <span className={cn("text-base font-semibold truncate", color.text)}>{action.label}</span>
             </div>
           );
 
