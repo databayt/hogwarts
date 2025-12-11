@@ -496,7 +496,7 @@ function QuickActionsSection({ locale, subdomain }: { locale: string; subdomain:
 
 function HeroSection({ locale, subdomain }: { locale: string; subdomain: string }) {
   return (
-    <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
+    <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:gap-8">
       <Upcoming role="ADMIN" locale={locale} subdomain={subdomain} />
       <Weather />
     </div>

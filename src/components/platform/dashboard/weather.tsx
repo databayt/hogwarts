@@ -257,10 +257,10 @@ export function Weather({
           </div>
         </div>
 
-        {/* Time and Date - smaller text */}
+        {/* Time and Date - matching sizes */}
         <div className="mt-3 space-y-0">
           <p className="text-xl font-bold tracking-tight">{currentTime}</p>
-          <p className="text-sm text-muted-foreground">{currentDate}</p>
+          <p className="text-xl font-bold tracking-tight text-muted-foreground">{currentDate}</p>
         </div>
 
         {/* 6-day forecast strip */}

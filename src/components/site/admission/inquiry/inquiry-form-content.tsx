@@ -17,7 +17,6 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-  FormDescription,
 } from "@/components/ui/form";
 import {
   Select,
@@ -26,7 +25,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, MessageSquare, CheckCircle2, ArrowRight } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import { AnthropicIcons } from "@/components/icons/anthropic";
 import { toast } from "sonner";
 import type { School } from "../../types";
 import type { Dictionary } from "@/components/internationalization/dictionaries";
@@ -113,24 +113,25 @@ export default function InquiryFormContent({
 
   if (isSubmitted) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-8">
         <div className="text-center">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-green-100 dark:bg-green-900/30 mb-4">
-            <CheckCircle2 className="w-10 h-10 text-green-600" />
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-primary/10 mb-6">
+            <AnthropicIcons.Sparkle className="w-10 h-10 text-primary" />
           </div>
-          <h1 className="text-2xl font-bold">
+          <h1 className="scroll-m-20 text-2xl font-bold tracking-tight">
             {isRTL ? "شكراً لتواصلك معنا!" : "Thank You for Reaching Out!"}
           </h1>
-          <p className="text-muted-foreground mt-2">
+          <p className="text-muted-foreground mt-3 max-w-md mx-auto leading-relaxed">
             {isRTL
               ? "تم استلام استفسارك وسنتواصل معك قريباً"
               : "We've received your inquiry and will get back to you soon"}
           </p>
         </div>
 
-        <Card>
+        <Card className="bg-muted/30">
           <CardContent className="pt-6">
             <p className="text-center text-muted-foreground">
+              <AnthropicIcons.Lightning className="w-4 h-4 inline me-2" />
               {isRTL
                 ? "عادة ما نرد خلال 24-48 ساعة عمل"
                 : "We typically respond within 24-48 business hours"}
@@ -145,9 +146,9 @@ export default function InquiryFormContent({
             </Button>
           </Link>
           <Link href={`/${lang}/apply`}>
-            <Button>
+            <Button className="group">
               {isRTL ? "قدم الآن" : "Apply Now"}
-              <ArrowRight className="w-4 h-4 ms-2" />
+              <AnthropicIcons.ArrowRight className="w-4 h-4 ms-2 transition-transform group-hover:translate-x-1 rtl:group-hover:-translate-x-1" />
             </Button>
           </Link>
         </div>
@@ -156,13 +157,15 @@ export default function InquiryFormContent({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div className="text-center">
-        <MessageSquare className="h-12 w-12 mx-auto text-primary mb-4" />
-        <h1 className="text-2xl font-bold">
+        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-6">
+          <AnthropicIcons.Chat className="h-8 w-8 text-primary" />
+        </div>
+        <h1 className="scroll-m-20 text-2xl font-bold tracking-tight">
           {isRTL ? "تواصل معنا" : "Contact Admissions"}
         </h1>
-        <p className="text-muted-foreground mt-2">
+        <p className="text-muted-foreground mt-3 max-w-md mx-auto leading-relaxed">
           {isRTL
             ? `هل لديك أسئلة حول ${school.name}؟ نحن هنا للمساعدة.`
             : `Have questions about ${school.name}? We're here to help.`}
@@ -364,7 +367,7 @@ export default function InquiryFormContent({
                 )}
               />
 
-              <Button type="submit" className="w-full" disabled={isSubmitting}>
+              <Button type="submit" className="w-full group" disabled={isSubmitting}>
                 {isSubmitting ? (
                   <>
                     <Loader2 className="w-4 h-4 me-2 animate-spin" />
@@ -372,7 +375,7 @@ export default function InquiryFormContent({
                   </>
                 ) : (
                   <>
-                    <MessageSquare className="w-4 h-4 me-2" />
+                    <AnthropicIcons.Sparkle className="w-4 h-4 me-2" />
                     {isRTL ? "إرسال الاستفسار" : "Submit Inquiry"}
                   </>
                 )}
@@ -383,20 +386,29 @@ export default function InquiryFormContent({
       </Card>
 
       {/* Quick Links */}
-      <Card className="bg-muted/50">
+      <Card className="bg-muted/30 border-dashed">
         <CardContent className="pt-6">
-          <h3 className="font-medium mb-4">{isRTL ? "روابط سريعة" : "Quick Links"}</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            <Link href={`/${lang}/apply`}>
-              <Button variant="outline" className="w-full justify-start">
-                {isRTL ? "قدم طلب التحاق" : "Apply Now"}
-              </Button>
-            </Link>
-            <Link href={`/${lang}/tour`}>
-              <Button variant="outline" className="w-full justify-start">
-                {isRTL ? "حجز جولة" : "Schedule a Tour"}
-              </Button>
-            </Link>
+          <div className="flex items-start gap-3">
+            <AnthropicIcons.Checklist className="w-5 h-5 text-muted-foreground shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <h3 className="font-medium mb-4">{isRTL ? "روابط سريعة" : "Quick Links"}</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <Link href={`/${lang}/apply`}>
+                  <Button variant="outline" className="w-full justify-start group">
+                    <AnthropicIcons.Book className="w-4 h-4 me-2" />
+                    {isRTL ? "قدم طلب التحاق" : "Apply Now"}
+                    <AnthropicIcons.ArrowRight className="w-3 h-3 ms-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </Button>
+                </Link>
+                <Link href={`/${lang}/tour`}>
+                  <Button variant="outline" className="w-full justify-start group">
+                    <AnthropicIcons.CalendarChart className="w-4 h-4 me-2" />
+                    {isRTL ? "حجز جولة" : "Schedule a Tour"}
+                    <AnthropicIcons.ArrowRight className="w-3 h-3 ms-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </Button>
+                </Link>
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>

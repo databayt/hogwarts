@@ -8,7 +8,8 @@ import { z } from "zod";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Loader2, ArrowLeft, ArrowRight, Save, Send } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import { AnthropicIcons } from "@/components/icons/anthropic";
 import { toast } from "sonner";
 
 import type { School } from "../../types";
@@ -272,17 +273,17 @@ export default function ApplicationFormContent({
   return (
     <FormProvider {...methods}>
       <form onSubmit={handleSubmit(onSubmit)}>
-        <div className="space-y-6">
+        <div className="space-y-8">
           {/* Header */}
           <div className="text-center mb-8">
-            <h1 className="text-2xl md:text-3xl font-bold">{campaign.name}</h1>
-            <p className="text-muted-foreground mt-1">{school.name}</p>
+            <h1 className="scroll-m-20 text-2xl md:text-3xl font-bold tracking-tight">{campaign.name}</h1>
+            <p className="text-muted-foreground mt-2">{school.name}</p>
           </div>
 
           {/* Progress */}
-          <div className="space-y-2">
+          <div className="space-y-3">
             <div className="flex justify-between text-sm text-muted-foreground">
-              <span>
+              <span className="font-medium">
                 {lang === "ar" ? "الخطوة" : "Step"} {currentStep + 1} / {totalSteps}
               </span>
               <span>
@@ -293,19 +294,23 @@ export default function ApplicationFormContent({
           </div>
 
           {/* Step indicators */}
-          <div className="flex justify-center gap-2 overflow-x-auto py-2">
+          <div className="flex justify-center gap-3 overflow-x-auto py-2">
             {steps.map((step, index) => (
               <div
                 key={step.id}
-                className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${
+                className={`flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-sm font-medium transition-all duration-200 ${
                   index === currentStep
-                    ? "bg-primary text-primary-foreground"
+                    ? "bg-primary text-primary-foreground shadow-sm"
                     : index < currentStep
                     ? "bg-primary/20 text-primary"
                     : "bg-muted text-muted-foreground"
                 }`}
               >
-                {index + 1}
+                {index < currentStep ? (
+                  <AnthropicIcons.Checklist className="w-4 h-4" />
+                ) : (
+                  index + 1
+                )}
               </div>
             ))}
           </div>
@@ -324,47 +329,49 @@ export default function ApplicationFormContent({
           </Card>
 
           {/* Navigation */}
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between pt-4">
             <Button
               type="button"
               variant="outline"
               onClick={handlePrevious}
               disabled={currentStep === 0}
+              className="group"
             >
-              <ArrowLeft className="w-4 h-4 me-2" />
+              <AnthropicIcons.ArrowRight className="w-4 h-4 me-2 rotate-180 transition-transform group-hover:-translate-x-1 rtl:group-hover:translate-x-1" />
               {lang === "ar" ? "السابق" : "Previous"}
             </Button>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
               {/* Save button */}
               <Button
                 type="button"
                 variant="ghost"
                 onClick={handleSave}
                 disabled={isSaving || !formData.email}
+                className="text-muted-foreground hover:text-foreground"
               >
                 {isSaving ? (
                   <Loader2 className="w-4 h-4 me-2 animate-spin" />
                 ) : (
-                  <Save className="w-4 h-4 me-2" />
+                  <AnthropicIcons.Archive className="w-4 h-4 me-2" />
                 )}
                 {lang === "ar" ? "حفظ" : "Save"}
               </Button>
 
               {/* Next/Submit button */}
               {isLastStep ? (
-                <Button type="submit" disabled={isSubmitting}>
+                <Button type="submit" disabled={isSubmitting} className="group">
                   {isSubmitting ? (
                     <Loader2 className="w-4 h-4 me-2 animate-spin" />
                   ) : (
-                    <Send className="w-4 h-4 me-2" />
+                    <AnthropicIcons.Sparkle className="w-4 h-4 me-2" />
                   )}
                   {lang === "ar" ? "تقديم الطلب" : "Submit Application"}
                 </Button>
               ) : (
-                <Button type="button" onClick={handleNext}>
+                <Button type="button" onClick={handleNext} className="group">
                   {lang === "ar" ? "التالي" : "Next"}
-                  <ArrowRight className="w-4 h-4 ms-2" />
+                  <AnthropicIcons.ArrowRight className="w-4 h-4 ms-2 transition-transform group-hover:translate-x-1 rtl:group-hover:-translate-x-1" />
                 </Button>
               )}
             </div>
@@ -372,7 +379,8 @@ export default function ApplicationFormContent({
 
           {/* Last saved indicator */}
           {lastSaved && (
-            <p className="text-center text-xs text-muted-foreground">
+            <p className="text-center text-xs text-muted-foreground pt-2">
+              <AnthropicIcons.Checklist className="w-3 h-3 inline me-1" />
               {lang === "ar" ? "آخر حفظ:" : "Last saved:"}{" "}
               {lastSaved.toLocaleTimeString(lang === "ar" ? "ar-SA" : "en-US")}
             </p>

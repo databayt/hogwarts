@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Users, DollarSign, ChevronRight, GraduationCap } from "lucide-react";
+import { AnthropicIcons } from "@/components/icons/anthropic";
 import type { School } from "../../types";
 import type { Dictionary } from "@/components/internationalization/dictionaries";
 import type { Locale } from "@/components/internationalization/config";
@@ -49,17 +49,19 @@ export default function CampaignSelectorContent({
 
   if (campaigns.length === 0) {
     return (
-      <div className="text-center py-16">
-        <GraduationCap className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-        <h2 className="text-2xl font-bold mb-2">
+      <div className="text-center py-16 px-4">
+        <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-muted mb-6">
+          <AnthropicIcons.Book className="w-10 h-10 text-muted-foreground" />
+        </div>
+        <h2 className="scroll-m-20 text-2xl font-semibold tracking-tight mb-3">
           {lang === "ar" ? "لا توجد برامج قبول متاحة" : "No Admission Programs Available"}
         </h2>
-        <p className="text-muted-foreground mb-6">
+        <p className="text-muted-foreground max-w-md mx-auto mb-8">
           {lang === "ar"
             ? "لا توجد حاليًا برامج قبول مفتوحة. يرجى التحقق مرة أخرى لاحقًا."
             : "There are currently no open admission programs. Please check back later."}
         </p>
-        <Button variant="outline" onClick={() => router.push(`/${lang}`)}>
+        <Button variant="outline" onClick={() => router.push(`/${lang}`)} className="group">
           {lang === "ar" ? "العودة للصفحة الرئيسية" : "Back to Home"}
         </Button>
       </div>
@@ -67,14 +69,17 @@ export default function CampaignSelectorContent({
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-10">
       {/* Header */}
       <div className="text-center">
-        <Badge className="mb-4">{lang === "ar" ? "القبول مفتوح" : "Admissions Open"}</Badge>
-        <h1 className="text-3xl md:text-4xl font-bold mb-2">
+        <Badge variant="secondary" className="mb-4 px-4 py-1">
+          <AnthropicIcons.Announcement className="w-3 h-3 me-2" />
+          {lang === "ar" ? "القبول مفتوح" : "Admissions Open"}
+        </Badge>
+        <h1 className="scroll-m-20 text-3xl md:text-4xl font-bold tracking-tight mb-3">
           {lang === "ar" ? "ابدأ رحلتك معنا" : "Start Your Journey With Us"}
         </h1>
-        <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+        <p className="text-muted-foreground text-lg max-w-2xl mx-auto leading-relaxed">
           {lang === "ar"
             ? `اختر برنامج القبول وابدأ طلبك للانضمام إلى ${school.name}`
             : `Select an admission program and start your application to join ${school.name}`}
@@ -82,26 +87,29 @@ export default function CampaignSelectorContent({
       </div>
 
       {/* Campaign Cards */}
-      <div className="grid gap-6">
+      <div className="grid gap-4">
         {campaigns.map((campaign) => (
           <Card
             key={campaign.id}
-            className={`cursor-pointer transition-all duration-200 ${
+            className={`cursor-pointer transition-all duration-200 hover:scale-[1.01] ${
               selectedCampaign === campaign.id
-                ? "ring-2 ring-primary border-primary"
-                : "hover:border-primary/50"
+                ? "ring-2 ring-primary border-primary shadow-sm"
+                : "hover:border-primary/50 hover:shadow-sm"
             }`}
             onClick={() => handleCampaignSelect(campaign.id)}
           >
-            <CardHeader>
-              <div className="flex items-start justify-between">
-                <div>
-                  <CardTitle className="text-xl">{campaign.name}</CardTitle>
+            <CardHeader className="pb-3">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1">
+                  <CardTitle className="text-xl font-semibold">{campaign.name}</CardTitle>
                   <CardDescription className="mt-1">
                     {lang === "ar" ? `العام الدراسي ${campaign.academicYear}` : `Academic Year ${campaign.academicYear}`}
                   </CardDescription>
                 </div>
-                <Badge variant={campaign.availableSeats > 0 ? "default" : "secondary"}>
+                <Badge
+                  variant={campaign.availableSeats > 0 ? "default" : "secondary"}
+                  className="shrink-0"
+                >
                   {campaign.availableSeats > 0
                     ? lang === "ar"
                       ? `${campaign.availableSeats} مقعد متاح`
@@ -112,26 +120,26 @@ export default function CampaignSelectorContent({
                 </Badge>
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-0">
               {campaign.description && (
-                <p className="text-muted-foreground mb-4">{campaign.description}</p>
+                <p className="text-muted-foreground mb-4 leading-relaxed">{campaign.description}</p>
               )}
               <div className="flex flex-wrap gap-4 text-sm">
                 <div className="flex items-center gap-2 text-muted-foreground">
-                  <Calendar className="w-4 h-4" />
+                  <AnthropicIcons.CalendarChart className="w-4 h-4" />
                   <span>
                     {formatDate(campaign.startDate)} - {formatDate(campaign.endDate)}
                   </span>
                 </div>
                 <div className="flex items-center gap-2 text-muted-foreground">
-                  <Users className="w-4 h-4" />
+                  <AnthropicIcons.Checklist className="w-4 h-4" />
                   <span>
                     {campaign.totalSeats} {lang === "ar" ? "مقعد إجمالي" : "total seats"}
                   </span>
                 </div>
                 {campaign.applicationFee && campaign.applicationFee > 0 && (
                   <div className="flex items-center gap-2 text-muted-foreground">
-                    <DollarSign className="w-4 h-4" />
+                    <AnthropicIcons.Lightning className="w-4 h-4" />
                     <span>
                       {lang === "ar" ? "رسوم التقديم:" : "Application Fee:"} ${campaign.applicationFee}
                     </span>
@@ -144,25 +152,34 @@ export default function CampaignSelectorContent({
       </div>
 
       {/* Action Button */}
-      <div className="flex justify-center pt-4">
+      <div className="flex justify-center pt-6">
         <Button
           size="lg"
           disabled={!selectedCampaign || campaigns.find(c => c.id === selectedCampaign)?.availableSeats === 0}
           onClick={handleStartApplication}
-          className="min-w-[200px]"
+          className="min-w-[200px] group"
         >
           {lang === "ar" ? "ابدأ الطلب" : "Start Application"}
-          <ChevronRight className="w-5 h-5 ms-2" />
+          <AnthropicIcons.ArrowRight className="w-4 h-4 ms-2 transition-transform group-hover:translate-x-1 rtl:group-hover:-translate-x-1" />
         </Button>
       </div>
 
       {/* Info Links */}
-      <div className="flex flex-wrap justify-center gap-4 text-sm text-muted-foreground pt-4">
-        <Button variant="link" onClick={() => router.push(`/${lang}/apply/status`)}>
+      <div className="flex flex-wrap justify-center gap-6 text-sm pt-6 border-t border-border/50">
+        <Button
+          variant="ghost"
+          onClick={() => router.push(`/${lang}/apply/status`)}
+          className="text-muted-foreground hover:text-foreground"
+        >
+          <AnthropicIcons.Checklist className="w-4 h-4 me-2" />
           {lang === "ar" ? "تتبع طلب موجود" : "Track Existing Application"}
         </Button>
-        <span className="text-muted-foreground">•</span>
-        <Button variant="link" onClick={() => router.push(`/${lang}/apply/continue`)}>
+        <Button
+          variant="ghost"
+          onClick={() => router.push(`/${lang}/apply/continue`)}
+          className="text-muted-foreground hover:text-foreground"
+        >
+          <AnthropicIcons.Archive className="w-4 h-4 me-2" />
           {lang === "ar" ? "استئناف طلب محفوظ" : "Resume Saved Application"}
         </Button>
       </div>

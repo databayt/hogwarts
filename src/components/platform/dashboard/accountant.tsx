@@ -169,7 +169,7 @@ export async function AccountantDashboard({
       <div className="space-y-6">
         {/* ============ TOP HERO SECTION (Unified Order) ============ */}
         {/* Section 1: Upcoming + Weather */}
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:gap-8">
           <Upcoming role="ACCOUNTANT" locale={locale} subdomain={school?.domain || ""} />
           <Weather />
         </div>

@@ -16,7 +16,8 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Loader2, ArrowRight, FileText } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import { AnthropicIcons } from "@/components/icons/anthropic";
 import { toast } from "sonner";
 import Link from "next/link";
 import type { School } from "../../types";
@@ -84,13 +85,15 @@ export default function ContinueApplicationContent({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div className="text-center">
-        <FileText className="h-12 w-12 mx-auto text-primary mb-4" />
-        <h1 className="text-2xl font-bold">
+        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-6">
+          <AnthropicIcons.Archive className="h-8 w-8 text-primary" />
+        </div>
+        <h1 className="scroll-m-20 text-2xl font-bold tracking-tight">
           {isRTL ? "استئناف طلبك" : "Continue Your Application"}
         </h1>
-        <p className="text-muted-foreground mt-2">
+        <p className="text-muted-foreground mt-3 max-w-md mx-auto leading-relaxed">
           {isRTL
             ? "أدخل بريدك الإلكتروني لاستئناف طلبك المحفوظ"
             : "Enter your email to resume your saved application"}
@@ -150,7 +153,7 @@ export default function ContinueApplicationContent({
                 />
               )}
 
-              <Button type="submit" className="w-full" disabled={isLoading}>
+              <Button type="submit" className="w-full group" disabled={isLoading}>
                 {isLoading ? (
                   <>
                     <Loader2 className="w-4 h-4 me-2 animate-spin" />
@@ -159,7 +162,7 @@ export default function ContinueApplicationContent({
                 ) : (
                   <>
                     {isRTL ? "استئناف الطلب" : "Resume Application"}
-                    <ArrowRight className="w-4 h-4 ms-2" />
+                    <AnthropicIcons.ArrowRight className="w-4 h-4 ms-2 transition-transform group-hover:translate-x-1 rtl:group-hover:-translate-x-1" />
                   </>
                 )}
               </Button>
@@ -179,28 +182,36 @@ export default function ContinueApplicationContent({
         </Link>
       </div>
 
-      <Card className="bg-muted/50">
+      <Card className="bg-muted/30 border-dashed">
         <CardContent className="pt-6">
-          <h3 className="font-medium mb-2">
-            {isRTL ? "معلومات مهمة" : "Important Information"}
-          </h3>
-          <ul className="text-sm text-muted-foreground space-y-1">
-            <li>
-              {isRTL
-                ? "• يتم حفظ الطلبات تلقائياً كل 30 ثانية"
-                : "• Applications are auto-saved every 30 seconds"}
-            </li>
-            <li>
-              {isRTL
-                ? "• تنتهي صلاحية الجلسات المحفوظة بعد 7 أيام"
-                : "• Saved sessions expire after 7 days"}
-            </li>
-            <li>
-              {isRTL
-                ? "• يمكنك أيضاً استئناف من الرابط المرسل إلى بريدك الإلكتروني"
-                : "• You can also resume from the link sent to your email"}
-            </li>
-          </ul>
+          <div className="flex items-start gap-3">
+            <AnthropicIcons.Checklist className="w-5 h-5 text-muted-foreground shrink-0 mt-0.5" />
+            <div>
+              <h3 className="font-medium mb-2">
+                {isRTL ? "معلومات مهمة" : "Important Information"}
+              </h3>
+              <ul className="text-sm text-muted-foreground space-y-2">
+                <li className="flex items-start gap-2">
+                  <span className="text-primary">•</span>
+                  {isRTL
+                    ? "يتم حفظ الطلبات تلقائياً كل 30 ثانية"
+                    : "Applications are auto-saved every 30 seconds"}
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary">•</span>
+                  {isRTL
+                    ? "تنتهي صلاحية الجلسات المحفوظة بعد 7 أيام"
+                    : "Saved sessions expire after 7 days"}
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary">•</span>
+                  {isRTL
+                    ? "يمكنك أيضاً استئناف من الرابط المرسل إلى بريدك الإلكتروني"
+                    : "You can also resume from the link sent to your email"}
+                </li>
+              </ul>
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>

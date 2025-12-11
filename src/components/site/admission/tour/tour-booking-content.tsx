@@ -16,7 +16,6 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-  FormDescription,
 } from "@/components/ui/form";
 import {
   Select,
@@ -26,8 +25,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
-import { Badge } from "@/components/ui/badge";
-import { Loader2, Calendar as CalendarIcon, Clock, MapPin, Users, CheckCircle2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import { AnthropicIcons } from "@/components/icons/anthropic";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ar, enUS } from "date-fns/locale";
@@ -148,33 +147,33 @@ export default function TourBookingContent({
   // Show confirmation if booking was successful
   if (confirmation) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-8">
         <div className="text-center">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-green-100 dark:bg-green-900/30 mb-4">
-            <CheckCircle2 className="w-10 h-10 text-green-600" />
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-primary/10 mb-6">
+            <AnthropicIcons.Sparkle className="w-10 h-10 text-primary" />
           </div>
-          <h1 className="text-2xl font-bold">
+          <h1 className="scroll-m-20 text-2xl font-bold tracking-tight">
             {isRTL ? "تم تأكيد الحجز!" : "Tour Booked!"}
           </h1>
-          <p className="text-muted-foreground mt-2">
+          <p className="text-muted-foreground mt-3 max-w-md mx-auto leading-relaxed">
             {isRTL
               ? "سيتم إرسال تفاصيل الحجز إلى بريدك الإلكتروني"
               : "Booking details have been sent to your email"}
           </p>
         </div>
 
-        <Card>
-          <CardHeader>
+        <Card className="overflow-hidden">
+          <CardHeader className="bg-muted/30 border-b">
             <CardDescription>
               {isRTL ? "رقم الحجز" : "Booking Number"}
             </CardDescription>
-            <CardTitle className="text-xl font-mono">
+            <CardTitle className="text-xl font-mono tracking-wider">
               {confirmation.bookingNumber}
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="pt-6 space-y-4">
             <div className="flex items-center gap-3">
-              <CalendarIcon className="h-5 w-5 text-muted-foreground" />
+              <AnthropicIcons.CalendarChart className="h-5 w-5 text-muted-foreground" />
               <span>
                 {format(new Date(confirmation.slot.date), "EEEE, MMMM d, yyyy", {
                   locale: isRTL ? ar : enUS,
@@ -182,19 +181,19 @@ export default function TourBookingContent({
               </span>
             </div>
             <div className="flex items-center gap-3">
-              <Clock className="h-5 w-5 text-muted-foreground" />
+              <AnthropicIcons.Lightning className="h-5 w-5 text-muted-foreground" />
               <span>
                 {confirmation.slot.startTime} - {confirmation.slot.endTime}
               </span>
             </div>
             {confirmation.slot.location && (
               <div className="flex items-center gap-3">
-                <MapPin className="h-5 w-5 text-muted-foreground" />
+                <AnthropicIcons.Checklist className="h-5 w-5 text-muted-foreground" />
                 <span>{confirmation.slot.location}</span>
               </div>
             )}
             <div className="flex items-center gap-3">
-              <Users className="h-5 w-5 text-muted-foreground" />
+              <AnthropicIcons.Chat className="h-5 w-5 text-muted-foreground" />
               <span>
                 {confirmation.numberOfAttendees} {isRTL ? "شخص" : "attendee(s)"}
               </span>
@@ -209,8 +208,9 @@ export default function TourBookingContent({
           >
             {isRTL ? "العودة للرئيسية" : "Back to Home"}
           </Button>
-          <Button onClick={() => router.push(`/${lang}/apply`)}>
+          <Button onClick={() => router.push(`/${lang}/apply`)} className="group">
             {isRTL ? "قدم الآن" : "Apply Now"}
+            <AnthropicIcons.ArrowRight className="w-4 h-4 ms-2 transition-transform group-hover:translate-x-1 rtl:group-hover:-translate-x-1" />
           </Button>
         </div>
       </div>
@@ -218,12 +218,15 @@ export default function TourBookingContent({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div className="text-center">
-        <h1 className="text-2xl font-bold">
+        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-6">
+          <AnthropicIcons.CalendarChart className="h-8 w-8 text-primary" />
+        </div>
+        <h1 className="scroll-m-20 text-2xl font-bold tracking-tight">
           {isRTL ? "حجز جولة في الحرم الجامعي" : "Schedule a Campus Tour"}
         </h1>
-        <p className="text-muted-foreground mt-2">
+        <p className="text-muted-foreground mt-3 max-w-md mx-auto leading-relaxed">
           {isRTL
             ? `زر ${school.name} واكتشف مرافقنا`
             : `Visit ${school.name} and explore our facilities`}
@@ -450,7 +453,7 @@ export default function TourBookingContent({
                   )}
                 />
 
-                <Button type="submit" className="w-full" disabled={isSubmitting}>
+                <Button type="submit" className="w-full group" disabled={isSubmitting}>
                   {isSubmitting ? (
                     <>
                       <Loader2 className="w-4 h-4 me-2 animate-spin" />
@@ -458,7 +461,7 @@ export default function TourBookingContent({
                     </>
                   ) : (
                     <>
-                      <CalendarIcon className="w-4 h-4 me-2" />
+                      <AnthropicIcons.Sparkle className="w-4 h-4 me-2" />
                       {isRTL ? "تأكيد الحجز" : "Confirm Booking"}
                     </>
                   )}
@@ -470,26 +473,34 @@ export default function TourBookingContent({
       )}
 
       {/* Info Card */}
-      <Card className="bg-muted/50">
+      <Card className="bg-muted/30 border-dashed">
         <CardContent className="pt-6">
-          <h3 className="font-medium mb-2">{isRTL ? "معلومات الجولة" : "Tour Information"}</h3>
-          <ul className="text-sm text-muted-foreground space-y-1">
-            <li>
-              {isRTL
-                ? "• مدة الجولة حوالي 60 دقيقة"
-                : "• Tours typically last about 60 minutes"}
-            </li>
-            <li>
-              {isRTL
-                ? "• يرجى الوصول قبل 10 دقائق من الموعد"
-                : "• Please arrive 10 minutes before your scheduled time"}
-            </li>
-            <li>
-              {isRTL
-                ? "• يمكنك إلغاء أو إعادة جدولة الجولة قبل 24 ساعة"
-                : "• You can cancel or reschedule up to 24 hours in advance"}
-            </li>
-          </ul>
+          <div className="flex items-start gap-3">
+            <AnthropicIcons.Checklist className="w-5 h-5 text-muted-foreground shrink-0 mt-0.5" />
+            <div>
+              <h3 className="font-medium mb-2">{isRTL ? "معلومات الجولة" : "Tour Information"}</h3>
+              <ul className="text-sm text-muted-foreground space-y-2">
+                <li className="flex items-start gap-2">
+                  <span className="text-primary">•</span>
+                  {isRTL
+                    ? "مدة الجولة حوالي 60 دقيقة"
+                    : "Tours typically last about 60 minutes"}
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary">•</span>
+                  {isRTL
+                    ? "يرجى الوصول قبل 10 دقائق من الموعد"
+                    : "Please arrive 10 minutes before your scheduled time"}
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary">•</span>
+                  {isRTL
+                    ? "يمكنك إلغاء أو إعادة جدولة الجولة قبل 24 ساعة"
+                    : "You can cancel or reschedule up to 24 hours in advance"}
+                </li>
+              </ul>
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>
