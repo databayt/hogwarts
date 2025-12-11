@@ -97,10 +97,16 @@ export function proxy(req: NextRequest) {
                    pathWithoutLocale.startsWith('/stream');
 
   // Check if it's a public site route (for subdomains)
+  // Handle both clean URLs (/apply) and internal paths (/s/{subdomain}/apply)
+  const pathForRouteCheck = pathWithoutLocale.startsWith(`/s/${subdomain}/`)
+    ? pathWithoutLocale.replace(`/s/${subdomain}`, '')
+    : pathWithoutLocale;
+
   const isPublicSiteRoute = subdomain && (
     pathWithoutLocale === '/' ||
+    pathWithoutLocale === `/s/${subdomain}` ||
     publicSiteRoutes.some(route =>
-      pathWithoutLocale === route || pathWithoutLocale.startsWith(`${route}/`)
+      pathForRouteCheck === route || pathForRouteCheck.startsWith(`${route}/`)
     )
   );
 
