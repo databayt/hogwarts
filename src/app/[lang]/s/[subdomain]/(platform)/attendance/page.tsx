@@ -19,11 +19,9 @@ interface Props {
 
 export default async function Page({ params }: Props) {
   const { lang, subdomain } = await params
-  const dictionary = await getDictionary(lang)
 
   return (
     <AttendanceOverviewContent
-      dictionary={dictionary}
       locale={lang}
       subdomain={subdomain}
     />

@@ -3900,3 +3900,598 @@ export async function getStudentDayAttendance(input: {
     }
   }
 }
+
+// ============================================================================
+// PRACTICAL DASHBOARD ACTIONS
+// ============================================================================
+
+/**
+ * Get comprehensive today's attendance dashboard
+ * Returns everything needed for actionable overview
+ */
+export async function getTodaysDashboard(): Promise<ActionResponse<{
+  today: {
+    date: string
+    dayName: string
+  }
+  stats: {
+    totalStudents: number
+    markedToday: number
+    present: number
+    absent: number
+    late: number
+    attendanceRate: number
+  }
+  unmarkedClasses: Array<{
+    id: string
+    name: string
+    studentCount: number
+    scheduledTime?: string
+  }>
+  followUpNeeded: Array<{
+    studentId: string
+    studentName: string
+    className: string
+    issue: 'consecutive_absence' | 'chronic' | 'unexcused_pending'
+    details: string
+    priority: 'high' | 'medium' | 'low'
+  }>
+  recentActivity: Array<{
+    id: string
+    studentName: string
+    className: string
+    status: string
+    time: string
+  }>
+}>> {
+  try {
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) {
+      return { success: false, error: 'Missing school context' }
+    }
+
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+
+    // Get all classes with student counts
+    const classes = await db.class.findMany({
+      where: { schoolId },
+      select: {
+        id: true,
+        name: true,
+        _count: { select: { studentClasses: true } }
+      }
+    })
+
+    // Get today's attendance records
+    const todayAttendance = await db.attendance.findMany({
+      where: {
+        schoolId,
+        date: today,
+      },
+      select: {
+        id: true,
+        classId: true,
+        studentId: true,
+        status: true,
+        markedAt: true,
+        student: { select: { givenName: true, surname: true } },
+        class: { select: { name: true } }
+      },
+      orderBy: { markedAt: 'desc' }
+    })
+
+    // Calculate stats
+    const markedClassIds = new Set(todayAttendance.map(a => a.classId))
+    const unmarkedClasses = classes.filter(c => !markedClassIds.has(c.id) && c._count.studentClasses > 0)
+
+    const totalStudents = classes.reduce((sum, c) => sum + c._count.studentClasses, 0)
+    const uniqueStudentsMarked = new Set(todayAttendance.map(a => a.studentId)).size
+    const present = todayAttendance.filter(a => a.status === 'PRESENT').length
+    const absent = todayAttendance.filter(a => a.status === 'ABSENT').length
+    const late = todayAttendance.filter(a => a.status === 'LATE').length
+
+    // Get students with consecutive absences (3+ days)
+    const threeDaysAgo = new Date(today)
+    threeDaysAgo.setDate(threeDaysAgo.getDate() - 3)
+
+    const recentAbsences = await db.attendance.findMany({
+      where: {
+        schoolId,
+        status: 'ABSENT',
+        date: { gte: threeDaysAgo, lte: today }
+      },
+      select: {
+        studentId: true,
+        date: true,
+        student: { select: { givenName: true, surname: true } },
+        class: { select: { name: true } }
+      },
+      orderBy: { date: 'desc' }
+    })
+
+    // Group absences by student
+    const studentAbsences = new Map<string, { name: string; className: string; dates: Date[] }>()
+    for (const absence of recentAbsences) {
+      const key = absence.studentId
+      if (!studentAbsences.has(key)) {
+        studentAbsences.set(key, {
+          name: `${absence.student.givenName} ${absence.student.surname}`,
+          className: absence.class.name,
+          dates: []
+        })
+      }
+      studentAbsences.get(key)!.dates.push(absence.date)
+    }
+
+    // Build follow-up list
+    const followUpNeeded: Array<{
+      studentId: string
+      studentName: string
+      className: string
+      issue: 'consecutive_absence' | 'chronic' | 'unexcused_pending'
+      details: string
+      priority: 'high' | 'medium' | 'low'
+    }> = []
+
+    for (const [studentId, data] of studentAbsences) {
+      // Check for consecutive absences
+      const sortedDates = data.dates.sort((a, b) => b.getTime() - a.getTime())
+      let consecutiveCount = 1
+      for (let i = 1; i < sortedDates.length; i++) {
+        const diff = (sortedDates[i - 1].getTime() - sortedDates[i].getTime()) / (1000 * 60 * 60 * 24)
+        if (diff <= 1) {
+          consecutiveCount++
+        } else {
+          break
+        }
+      }
+
+      if (consecutiveCount >= 3) {
+        followUpNeeded.push({
+          studentId,
+          studentName: data.name,
+          className: data.className,
+          issue: 'consecutive_absence',
+          details: `Absent ${consecutiveCount} consecutive days`,
+          priority: consecutiveCount >= 5 ? 'high' : 'medium'
+        })
+      }
+    }
+
+    // Get recent activity (last 10)
+    const recentActivity = todayAttendance.slice(0, 10).map(a => ({
+      id: a.id,
+      studentName: `${a.student.givenName} ${a.student.surname}`,
+      className: a.class.name,
+      status: a.status,
+      time: a.markedAt.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+    }))
+
+    return {
+      success: true,
+      data: {
+        today: {
+          date: today.toISOString().split('T')[0],
+          dayName: dayNames[today.getDay()]
+        },
+        stats: {
+          totalStudents,
+          markedToday: uniqueStudentsMarked,
+          present,
+          absent,
+          late,
+          attendanceRate: totalStudents > 0 ? Math.round((present / Math.max(uniqueStudentsMarked, 1)) * 100) : 0
+        },
+        unmarkedClasses: unmarkedClasses.map(c => ({
+          id: c.id,
+          name: c.name,
+          studentCount: c._count.studentClasses
+        })),
+        followUpNeeded: followUpNeeded.slice(0, 5), // Top 5 priority
+        recentActivity
+      }
+    }
+  } catch (error) {
+    console.error('[getTodaysDashboard] Error:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to get today\'s dashboard'
+    }
+  }
+}
+
+/**
+ * Get teacher's classes for today based on timetable
+ */
+export async function getTeacherClassesToday(): Promise<ActionResponse<{
+  classes: Array<{
+    id: string
+    name: string
+    studentCount: number
+    period?: string
+    time?: string
+    isMarked: boolean
+    markedCount: number
+  }>
+}>> {
+  try {
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) {
+      return { success: false, error: 'Missing school context' }
+    }
+
+    const session = await auth()
+    if (!session?.user?.id) {
+      return { success: false, error: 'Authentication required' }
+    }
+
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+
+    // Get teacher's assigned classes (Teacher has direct relation to Class via teacherId)
+    const teacher = await db.teacher.findFirst({
+      where: { userId: session.user.id, schoolId },
+      select: {
+        id: true,
+        classes: {
+          select: {
+            id: true,
+            name: true,
+            _count: { select: { studentClasses: true } }
+          }
+        }
+      }
+    })
+
+    if (!teacher) {
+      // If not a teacher, get all classes (admin view)
+      const allClasses = await db.class.findMany({
+        where: { schoolId },
+        select: {
+          id: true,
+          name: true,
+          _count: { select: { studentClasses: true } }
+        }
+      })
+
+      // Get today's attendance counts per class
+      const attendanceCounts = await db.attendance.groupBy({
+        by: ['classId'],
+        where: { schoolId, date: today },
+        _count: true
+      })
+
+      const countsMap = new Map(attendanceCounts.map(a => [a.classId, a._count]))
+
+      return {
+        success: true,
+        data: {
+          classes: allClasses.map(c => ({
+            id: c.id,
+            name: c.name,
+            studentCount: c._count.studentClasses,
+            isMarked: (countsMap.get(c.id) || 0) > 0,
+            markedCount: countsMap.get(c.id) || 0
+          }))
+        }
+      }
+    }
+
+    // Get classes directly from teacher
+    const teacherClasses = teacher.classes
+
+    // Get today's attendance counts per class
+    const classIds = teacherClasses.map(c => c.id)
+    const attendanceCounts = await db.attendance.groupBy({
+      by: ['classId'],
+      where: { schoolId, date: today, classId: { in: classIds } },
+      _count: true
+    })
+
+    const countsMap = new Map(attendanceCounts.map(a => [a.classId, a._count]))
+
+    return {
+      success: true,
+      data: {
+        classes: teacherClasses.map(c => ({
+          id: c.id,
+          name: c.name,
+          studentCount: c._count.studentClasses,
+          isMarked: (countsMap.get(c.id) || 0) > 0,
+          markedCount: countsMap.get(c.id) || 0
+        }))
+      }
+    }
+  } catch (error) {
+    console.error('[getTeacherClassesToday] Error:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to get teacher classes'
+    }
+  }
+}
+
+/**
+ * Quick mark all students present in a class
+ * Returns list of students so teacher can mark exceptions
+ */
+export async function quickMarkAllPresent(input: {
+  classId: string
+  date?: string
+}): Promise<ActionResponse<{
+  markedCount: number
+  students: Array<{
+    id: string
+    name: string
+    status: 'PRESENT'
+  }>
+}>> {
+  try {
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) {
+      return { success: false, error: 'Missing school context' }
+    }
+
+    const session = await auth()
+    if (!session?.user?.id) {
+      return { success: false, error: 'Authentication required' }
+    }
+
+    const date = input.date ? new Date(input.date) : new Date()
+    date.setHours(0, 0, 0, 0)
+
+    // Get all students in the class via StudentClass join table
+    const classData = await db.class.findFirst({
+      where: { id: input.classId, schoolId },
+      select: {
+        id: true,
+        studentClasses: {
+          select: {
+            student: {
+              select: {
+                id: true,
+                givenName: true,
+                surname: true
+              }
+            }
+          }
+        }
+      }
+    })
+
+    if (!classData) {
+      return { success: false, error: 'Class not found' }
+    }
+
+    // Extract students from StudentClass join table
+    const students = classData.studentClasses.map(sc => sc.student)
+
+    // Mark all students present
+    const now = new Date()
+    const results = []
+
+    for (const student of students) {
+      // Check if already marked
+      const existing = await db.attendance.findFirst({
+        where: {
+          schoolId,
+          studentId: student.id,
+          classId: input.classId,
+          date,
+          periodId: null
+        }
+      })
+
+      if (existing) {
+        // Update to present
+        await db.attendance.update({
+          where: { id: existing.id },
+          data: {
+            status: 'PRESENT',
+            markedBy: session.user.id,
+            markedAt: now
+          }
+        })
+      } else {
+        // Create new
+        await db.attendance.create({
+          data: {
+            schoolId,
+            studentId: student.id,
+            classId: input.classId,
+            date,
+            status: 'PRESENT',
+            method: 'MANUAL',
+            markedBy: session.user.id,
+            markedAt: now,
+            checkInTime: now
+          }
+        })
+      }
+
+      results.push({
+        id: student.id,
+        name: `${student.givenName} ${student.surname}`,
+        status: 'PRESENT' as const
+      })
+    }
+
+    revalidatePath('/attendance')
+
+    return {
+      success: true,
+      data: {
+        markedCount: results.length,
+        students: results
+      }
+    }
+  } catch (error) {
+    console.error('[quickMarkAllPresent] Error:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to mark attendance'
+    }
+  }
+}
+
+/**
+ * Get students needing follow-up attention
+ * - Consecutive absences (3+ days)
+ * - Low attendance rate (<80%)
+ * - Pending unexcused absences
+ */
+export async function getFollowUpStudents(input?: {
+  limit?: number
+}): Promise<ActionResponse<{
+  students: Array<{
+    studentId: string
+    studentName: string
+    className: string
+    issue: 'consecutive_absence' | 'low_attendance' | 'unexcused_pending'
+    severity: 'critical' | 'warning' | 'info'
+    details: string
+    actionUrl?: string
+  }>
+  summary: {
+    critical: number
+    warning: number
+    info: number
+  }
+}>> {
+  try {
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) {
+      return { success: false, error: 'Missing school context' }
+    }
+
+    const limit = input?.limit || 20
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+
+    const results: Array<{
+      studentId: string
+      studentName: string
+      className: string
+      issue: 'consecutive_absence' | 'low_attendance' | 'unexcused_pending'
+      severity: 'critical' | 'warning' | 'info'
+      details: string
+      actionUrl?: string
+    }> = []
+
+    // 1. Get students with recent absences for consecutive check
+    const sevenDaysAgo = new Date(today)
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+
+    const recentAbsences = await db.attendance.findMany({
+      where: {
+        schoolId,
+        status: 'ABSENT',
+        date: { gte: sevenDaysAgo, lte: today }
+      },
+      select: {
+        studentId: true,
+        date: true,
+        student: { select: { givenName: true, surname: true } },
+        class: { select: { name: true } }
+      },
+      orderBy: { date: 'desc' }
+    })
+
+    // Group and find consecutive absences
+    const studentAbsenceMap = new Map<string, { name: string; className: string; dates: Date[] }>()
+    for (const absence of recentAbsences) {
+      if (!studentAbsenceMap.has(absence.studentId)) {
+        studentAbsenceMap.set(absence.studentId, {
+          name: `${absence.student.givenName} ${absence.student.surname}`,
+          className: absence.class.name,
+          dates: []
+        })
+      }
+      studentAbsenceMap.get(absence.studentId)!.dates.push(absence.date)
+    }
+
+    for (const [studentId, data] of studentAbsenceMap) {
+      const sortedDates = data.dates.sort((a, b) => b.getTime() - a.getTime())
+      let consecutive = 1
+
+      for (let i = 1; i < sortedDates.length; i++) {
+        const diffDays = Math.round((sortedDates[i - 1].getTime() - sortedDates[i].getTime()) / (1000 * 60 * 60 * 24))
+        if (diffDays <= 1) {
+          consecutive++
+        } else {
+          break
+        }
+      }
+
+      if (consecutive >= 3) {
+        results.push({
+          studentId,
+          studentName: data.name,
+          className: data.className,
+          issue: 'consecutive_absence',
+          severity: consecutive >= 5 ? 'critical' : 'warning',
+          details: `Absent ${consecutive} consecutive days`,
+          actionUrl: `/students/${studentId}`
+        })
+      }
+    }
+
+    // 2. Get pending unexcused absences
+    const pendingExcuses = await db.attendanceExcuse.findMany({
+      where: {
+        schoolId,
+        status: 'PENDING'
+      },
+      select: {
+        id: true,
+        attendance: {
+          select: {
+            studentId: true,
+            date: true,
+            student: { select: { givenName: true, surname: true } },
+            class: { select: { name: true } }
+          }
+        }
+      },
+      take: 10
+    })
+
+    for (const excuse of pendingExcuses) {
+      results.push({
+        studentId: excuse.attendance.studentId,
+        studentName: `${excuse.attendance.student.givenName} ${excuse.attendance.student.surname}`,
+        className: excuse.attendance.class.name,
+        issue: 'unexcused_pending',
+        severity: 'info',
+        details: `Excuse pending review since ${excuse.attendance.date.toLocaleDateString()}`,
+        actionUrl: `/attendance/excuses/${excuse.id}`
+      })
+    }
+
+    // Sort by severity and limit
+    const severityOrder = { critical: 0, warning: 1, info: 2 }
+    results.sort((a, b) => severityOrder[a.severity] - severityOrder[b.severity])
+
+    const summary = {
+      critical: results.filter(r => r.severity === 'critical').length,
+      warning: results.filter(r => r.severity === 'warning').length,
+      info: results.filter(r => r.severity === 'info').length
+    }
+
+    return {
+      success: true,
+      data: {
+        students: results.slice(0, limit),
+        summary
+      }
+    }
+  } catch (error) {
+    console.error('[getFollowUpStudents] Error:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to get follow-up students'
+    }
+  }
+}
