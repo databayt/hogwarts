@@ -23,10 +23,10 @@ export interface QuickAction {
 
 // Card background colors (matching Quick Look section)
 const cardColors = [
-  { bg: "bg-[#D97757]", text: "text-foreground" }, // Coral/orange
-  { bg: "bg-[#6A9BCC]", text: "text-foreground" }, // Blue
-  { bg: "bg-[#CBCADB]", text: "text-foreground" }, // Lavender
-  { bg: "bg-[#BCD1CA]", text: "text-foreground" }, // Mint
+  { bg: "bg-[#D97757]", text: "text-background" }, // Coral/orange
+  { bg: "bg-[#6A9BCC]", text: "text-background" }, // Blue
+  { bg: "bg-[#CBCADB]", text: "text-background" }, // Lavender
+  { bg: "bg-[#BCD1CA]", text: "text-background" }, // Mint
 ];
 
 // Map icon names to Anthropic icon components
