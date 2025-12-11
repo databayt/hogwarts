@@ -315,7 +315,6 @@ export default function TeacherView({
                   isRTL={isRTL}
                   viewMode="teacher"
                   editable={false}
-                  highlightToday={true}
                 />
               </CardContent>
             </Card>

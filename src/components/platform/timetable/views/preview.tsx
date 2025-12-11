@@ -184,7 +184,6 @@ export default function TimetablePreview({ dictionary, lang }: Props) {
           isRTL={isRTL}
           viewMode={isTeacherView ? 'teacher' : 'class'}
           editable={false}
-          highlightToday={true}
         />
       ) : (
         <Card className="rounded-xl shadow-lg border-border">

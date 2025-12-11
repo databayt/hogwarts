@@ -80,7 +80,7 @@ export function AcademicSection({ schoolId, currentAcademicYear, stats, lang }: 
             Create an academic year to start organizing your school calendar
           </p>
           <Button size="sm" asChild>
-            <Link href={`/${lang}/admin/configuration/academic/new`}>
+            <Link href={`/${lang}/school/bulk`}>
               <Plus className="h-4 w-4 mr-1" />
               Create Academic Year
             </Link>
@@ -93,7 +93,7 @@ export function AcademicSection({ schoolId, currentAcademicYear, stats, lang }: 
       {/* Stats Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <Link
-          href={`/${lang}/admin/configuration/academic`}
+          href={`/${lang}/school/bulk`}
           className="flex items-center gap-2 p-3 rounded-lg border hover:bg-muted/50 transition-colors group"
         >
           <Calendar className="h-4 w-4 text-green-500" />
@@ -104,7 +104,7 @@ export function AcademicSection({ schoolId, currentAcademicYear, stats, lang }: 
         </Link>
 
         <Link
-          href={`/${lang}/admin/configuration/academic`}
+          href={`/${lang}/school/bulk`}
           className="flex items-center gap-2 p-3 rounded-lg border hover:bg-muted/50 transition-colors group"
         >
           <Clock className="h-4 w-4 text-blue-500" />
@@ -115,7 +115,7 @@ export function AcademicSection({ schoolId, currentAcademicYear, stats, lang }: 
         </Link>
 
         <Link
-          href={`/${lang}/admin/configuration/year-levels`}
+          href={`/${lang}/school/bulk`}
           className="flex items-center gap-2 p-3 rounded-lg border hover:bg-muted/50 transition-colors group"
         >
           <BookOpen className="h-4 w-4 text-orange-500" />
@@ -126,7 +126,7 @@ export function AcademicSection({ schoolId, currentAcademicYear, stats, lang }: 
         </Link>
 
         <Link
-          href={`/${lang}/admin/configuration/grading`}
+          href={`/${lang}/school/bulk`}
           className="flex items-center gap-2 p-3 rounded-lg border hover:bg-muted/50 transition-colors group"
         >
           <GraduationCap className="h-4 w-4 text-purple-500" />
@@ -140,13 +140,13 @@ export function AcademicSection({ schoolId, currentAcademicYear, stats, lang }: 
       {/* Quick Actions */}
       <div className="flex flex-wrap gap-2">
         <Button variant="outline" size="sm" asChild>
-          <Link href={`/${lang}/admin/configuration/academic`}>
+          <Link href={`/${lang}/school/bulk`}>
             <Settings className="h-4 w-4 mr-1" />
-            Manage Academic Years
+            Manage Academic Structure
           </Link>
         </Button>
         <Button variant="outline" size="sm" asChild>
-          <Link href={`/${lang}/admin/configuration/grading`}>
+          <Link href={`/${lang}/school/bulk`}>
             <GraduationCap className="h-4 w-4 mr-1" />
             Configure Grading
           </Link>

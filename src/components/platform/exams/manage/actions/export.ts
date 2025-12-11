@@ -99,7 +99,7 @@ export async function getExamsCSV(
       { key: "createdAt" as const, label: "Created Date" },
     ];
 
-    return arrayToCSV(exportData, { columns });
+    return arrayToCSV(exportData as unknown as Record<string, unknown>[], { columns });
   } catch (error) {
     console.error("Error exporting exams to CSV:", error);
     throw error;

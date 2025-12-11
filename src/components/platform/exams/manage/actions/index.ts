@@ -43,6 +43,15 @@ export {
   type AvailableSlot,
 } from "./conflict-detection";
 
+// Status Management Operations
+export {
+  startExam,
+  completeExam,
+  cancelExam,
+  getExamForTaking,
+  submitExamAnswers,
+} from "./status";
+
 // Type Exports
 export type {
   ActionResponse,

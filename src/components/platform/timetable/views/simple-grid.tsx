@@ -66,8 +66,9 @@ interface SimpleGridProps {
   isRTL?: boolean
   viewMode?: 'class' | 'teacher' | 'room'
   editable?: boolean
-  highlightToday?: boolean
   onSlotClick?: (day: number, periodId: string, slot?: Slot) => void
+  /** Highlight the current day column */
+  highlightToday?: boolean
 }
 
 function getSubjectColor(subject: string): string {
@@ -98,10 +99,11 @@ export default function SimpleGrid({
   isRTL = false,
   viewMode = 'class',
   editable = false,
-  highlightToday = false,
-  onSlotClick
+  onSlotClick,
+  highlightToday = false
 }: SimpleGridProps) {
-  const today = new Date().getDay()
+  // Get current day for highlighting
+  const today = highlightToday ? new Date().getDay() : -1
 
   // Build a map for quick slot lookup
   const slotMap = useMemo(() => {
@@ -187,10 +189,7 @@ export default function SimpleGrid({
             <div
               key={day}
               className={cn(
-                "text-sm sm:text-base py-2 sm:py-5 px-4 sm:px-8 font-medium text-center",
-                highlightToday && day === today
-                  ? "bg-primary/10 text-primary"
-                  : "text-neutral-700 dark:text-neutral-300",
+                "text-sm sm:text-base py-2 sm:py-5 px-4 sm:px-8 font-medium text-center text-neutral-700 dark:text-neutral-300",
                 index < sortedDays.length - 1 ? "border-r border-neutral-200 dark:border-neutral-700" : "",
                 "print:text-base print:font-semibold print:py-3"
               )}
@@ -246,7 +245,6 @@ export default function SimpleGrid({
                           ? getSubjectColor(display.primary)
                           : "bg-neutral-50 dark:bg-neutral-800/30",
                         dayIdx < sortedDays.length - 1 ? "border-r border-neutral-200 dark:border-neutral-700" : "",
-                        highlightToday && day === today && "ring-2 ring-inset ring-primary/20",
                         editable && "cursor-pointer hover:shadow-inner",
                         "print:min-h-12 print:py-2"
                       )}

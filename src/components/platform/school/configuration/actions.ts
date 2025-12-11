@@ -143,3 +143,97 @@ export async function updateSchoolBranding(
     return { success: false, error: "Failed to update branding" }
   }
 }
+
+// Schema for plan and limits update
+const planLimitsSchema = z.object({
+  planType: z.enum(["basic", "premium", "enterprise"]),
+  maxStudents: z.number().min(1).max(100000),
+  maxTeachers: z.number().min(1).max(10000),
+  isActive: z.boolean(),
+})
+
+export async function updatePlanLimits(
+  schoolId: string,
+  data: z.infer<typeof planLimitsSchema>
+): Promise<ActionResult> {
+  try {
+    const session = await auth()
+    const userSchoolId = session?.user?.schoolId
+
+    if (!userSchoolId || userSchoolId !== schoolId) {
+      return { success: false, error: "Unauthorized" }
+    }
+
+    // Validate input
+    const validatedData = planLimitsSchema.parse(data)
+
+    // Update school
+    const updated = await db.school.update({
+      where: { id: schoolId },
+      data: {
+        planType: validatedData.planType,
+        maxStudents: validatedData.maxStudents,
+        maxTeachers: validatedData.maxTeachers,
+        isActive: validatedData.isActive,
+      },
+    })
+
+    revalidatePath("/school/configuration")
+
+    return { success: true, data: updated }
+  } catch (error) {
+    console.error("Error updating plan limits:", error)
+    if (error instanceof z.ZodError) {
+      return {
+        success: false,
+        error: error.issues.map((e) => e.message).join(", "),
+      }
+    }
+    return { success: false, error: "Failed to update plan limits" }
+  }
+}
+
+// Schema for capacity update (max limits the school can configure)
+const capacitySchema = z.object({
+  maxStudents: z.number().min(1).max(100000),
+  maxTeachers: z.number().min(1).max(10000),
+})
+
+export async function updateSchoolCapacity(
+  schoolId: string,
+  data: z.infer<typeof capacitySchema>
+): Promise<ActionResult> {
+  try {
+    const session = await auth()
+    const userSchoolId = session?.user?.schoolId
+
+    if (!userSchoolId || userSchoolId !== schoolId) {
+      return { success: false, error: "Unauthorized" }
+    }
+
+    // Validate input
+    const validatedData = capacitySchema.parse(data)
+
+    // Update school
+    const updated = await db.school.update({
+      where: { id: schoolId },
+      data: {
+        maxStudents: validatedData.maxStudents,
+        maxTeachers: validatedData.maxTeachers,
+      },
+    })
+
+    revalidatePath("/school/configuration")
+
+    return { success: true, data: updated }
+  } catch (error) {
+    console.error("Error updating school capacity:", error)
+    if (error instanceof z.ZodError) {
+      return {
+        success: false,
+        error: error.issues.map((e) => e.message).join(", "),
+      }
+    }
+    return { success: false, error: "Failed to update capacity" }
+  }
+}

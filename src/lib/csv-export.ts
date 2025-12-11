@@ -1,15 +1,58 @@
 /**
- * CSV Export Utility
- * Provides reusable functions for exporting data to CSV format
+ * CSV Export Utility - DEPRECATED
+ *
+ * @deprecated Use @/components/platform/file exports instead.
+ *
+ * @example
+ * ```tsx
+ * // OLD (deprecated)
+ * import { arrayToCSV, generateCSVFilename, downloadCSV } from "@/lib/csv-export"
+ *
+ * // NEW (recommended)
+ * import {
+ *   generateCsvContent,
+ *   generateExportFilename,
+ *   downloadBlob,
+ *   type ExportColumn
+ * } from "@/components/platform/file"
+ *
+ * const columns: ExportColumn<YourType>[] = [
+ *   { key: "name", header: "Name", headerAr: "الاسم" },
+ *   // ...
+ * ]
+ *
+ * const csv = generateCsvContent(data, columns, { locale: "en" })
+ * const blob = new Blob([csv], { type: "text/csv;charset=utf-8" })
+ * downloadBlob(blob, generateExportFilename("export", "csv"))
+ * ```
  */
+
+import {
+  generateExportFilename as newGenerateExportFilename,
+  downloadBlob,
+} from "@/components/platform/file";
+
+// ============================================================================
+// Legacy Types
+// ============================================================================
+
+export interface LegacyColumn<T = Record<string, unknown>> {
+  key: keyof T | string;
+  label: string;
+}
+
+// ============================================================================
+// Legacy Functions (maintained for backward compatibility)
+// ============================================================================
 
 /**
  * Convert array of objects to CSV string
+ * @deprecated Use generateCsvContent from @/components/platform/file instead
  */
-export function arrayToCSV<T extends Record<string, any>>(
+export function arrayToCSV<T extends Record<string, unknown>>(
   data: T[],
   options?: {
-    columns?: Array<{ key: keyof T; label: string }>;
+    columns?: Array<{ key: keyof T | string; label: string }>;
     includeHeaders?: boolean;
     delimiter?: string;
   }
@@ -39,7 +82,7 @@ export function arrayToCSV<T extends Record<string, any>>(
   for (const item of data) {
     const row = cols
       .map((col) => {
-        const value = item[col.key];
+        const value = item[col.key as keyof T];
         return escapeCSVValue(formatValue(value));
       })
       .join(delimiter);
@@ -74,7 +117,7 @@ function escapeCSVValue(value: string): string {
 /**
  * Format value for CSV output
  */
-function formatValue(value: any): string {
+function formatValue(value: unknown): string {
   if (value === null || value === undefined) {
     return "";
   }
@@ -96,6 +139,7 @@ function formatValue(value: any): string {
 
 /**
  * Generate filename with timestamp
+ * @deprecated Use generateExportFilename from @/components/platform/file instead
  */
 export function generateCSVFilename(
   prefix: string,
@@ -117,26 +161,21 @@ export function generateCSVFilename(
 
 /**
  * Create CSV download from data
+ * @deprecated Use downloadBlob from @/components/platform/file instead
  */
 export function downloadCSV(
-  data: any[],
+  data: Record<string, unknown>[],
   filename: string,
   columns?: Array<{ key: string; label: string }>
 ): void {
   const csv = arrayToCSV(data, { columns });
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
+  downloadBlob(blob, filename);
 }
 
 /**
  * Common column definitions for standard entities
+ * @deprecated Define columns using ExportColumn<T> from @/components/platform/file
  */
 export const COMMON_COLUMNS = {
   student: [
@@ -215,3 +254,17 @@ export const COMMON_COLUMNS = {
     { key: "isPrimary", label: "Primary Contact" },
   ],
 } as const;
+
+// ============================================================================
+// Re-exports from File Module (for easier migration)
+// ============================================================================
+
+export {
+  generateExportFilename,
+  downloadBlob,
+  generateCsvContent,
+  type ExportColumn,
+} from "@/components/platform/file";
+
+// Map legacy function to new one
+export { newGenerateExportFilename as generateFilename };
