@@ -3,7 +3,6 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
 import { cn } from "@/lib/utils"
 import {
   Users,
@@ -303,56 +302,6 @@ function AttendanceSection() {
   )
 }
 
-// ============================================================================
-// SECTION: Academic Performance
-// ============================================================================
-
-const performanceData = [
-  { subject: "Mathematics", average: 78, change: "+3%" },
-  { subject: "Science", average: 82, change: "+5%" },
-  { subject: "English", average: 75, change: "-2%" },
-  { subject: "History", average: 80, change: "+1%" },
-  { subject: "Geography", average: 77, change: "+2%" },
-]
-
-function AcademicPerformanceSection() {
-  return (
-    <section>
-      <SectionHeading title="Academic Performance" />
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Subject Performance</CardTitle>
-          <CardDescription>Average scores across all grades</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {performanceData.map((subject) => (
-            <div key={subject.subject} className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">{subject.subject}</span>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-bold">{subject.average}%</span>
-                  <Badge
-                    variant="secondary"
-                    className={cn(
-                      "text-xs",
-                      subject.change.startsWith("+")
-                        ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400"
-                        : "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400"
-                    )}
-                  >
-                    {subject.change.startsWith("+") ? <TrendingUp className="h-3 w-3 mr-1" /> : <TrendingDown className="h-3 w-3 mr-1" />}
-                    {subject.change}
-                  </Badge>
-                </div>
-              </div>
-              <Progress value={subject.average} className="h-2" />
-            </div>
-          ))}
-        </CardContent>
-      </Card>
-    </section>
-  )
-}
 
 // ============================================================================
 // SECTION: Recent Activity
@@ -427,53 +376,6 @@ function RecentActivitySection({
   )
 }
 
-// ============================================================================
-// SECTION: School Statistics Summary
-// ============================================================================
-
-function SchoolStatsSummary() {
-  const stats = [
-    { label: "Active Students", value: "1,245", change: "+5.2%", changeType: "positive" as const },
-    { label: "Teaching Staff", value: "86", change: "+2", changeType: "positive" as const },
-    { label: "Fee Collection Rate", value: "87%", change: "-3%", changeType: "negative" as const },
-    { label: "Avg Attendance", value: "91%", change: "+1.5%", changeType: "positive" as const },
-  ]
-
-  return (
-    <section>
-      <SectionHeading title="School Statistics" />
-      <div className="grid grid-cols-1 gap-px rounded-xl bg-border sm:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat, index) => (
-          <Card
-            key={stat.label}
-            className={cn(
-              "rounded-none border-0 shadow-none py-0",
-              index === 0 && "rounded-l-xl",
-              index === stats.length - 1 && "rounded-r-xl"
-            )}
-          >
-            <CardContent className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2 p-4 sm:p-6">
-              <p className="text-sm font-medium text-muted-foreground">{stat.label}</p>
-              <p
-                className={cn(
-                  "text-xs font-medium",
-                  stat.changeType === "positive"
-                    ? "text-emerald-700 dark:text-emerald-400"
-                    : "text-red-700 dark:text-red-400"
-                )}
-              >
-                {stat.change}
-              </p>
-              <p className="w-full flex-none text-3xl font-medium tracking-tight text-foreground">
-                {stat.value}
-              </p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    </section>
-  )
-}
 
 // ============================================================================
 // SECTION: Quick Actions (Using unified component)
@@ -550,14 +452,8 @@ export function AdminDashboardClient({
       {/* Section 9: Attendance Overview */}
       <AttendanceSection />
 
-      {/* Section 10: Academic Performance */}
-      <AcademicPerformanceSection />
-
-      {/* Section 11: Recent Activity */}
+      {/* Section 10: Recent Activity */}
       <RecentActivitySection recentActivities={recentActivities} todaySummary={todaySummary} />
-
-      {/* Section 12: School Statistics Summary */}
-      <SchoolStatsSummary />
     </div>
   )
 }
