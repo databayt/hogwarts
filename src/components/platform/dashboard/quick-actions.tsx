@@ -98,9 +98,7 @@ export function QuickActions({ actions, locale = "en", className }: QuickActions
               "flex items-center gap-3 p-3 rounded-lg transition-all hover:opacity-90 hover:scale-[1.02]",
               color.bg
             )}>
-              <div className="flex-shrink-0 rounded-md bg-white/20 p-2">
-                <Icon className={cn("h-5 w-5", color.text)} aria-hidden={true} />
-              </div>
+              <Icon className={cn("h-5 w-5 flex-shrink-0", color.text)} aria-hidden={true} />
               <span className={cn("text-sm font-medium truncate", color.text)}>{action.label}</span>
             </div>
           );
