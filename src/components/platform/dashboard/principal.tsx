@@ -214,9 +214,9 @@ export async function PrincipalDashboard({
       <div className="space-y-6">
         {/* ============ TOP HERO SECTION (Unified Order) ============ */}
         {/* Section 1: Upcoming + Weather */}
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
           <Upcoming role="PRINCIPAL" locale={locale} subdomain={school?.domain || ""} />
-          <Weather className="lg:ml-auto" />
+          <Weather />
         </div>
 
         {/* Section 2: Quick Look (no title) */}
