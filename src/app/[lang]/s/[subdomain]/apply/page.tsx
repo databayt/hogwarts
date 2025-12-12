@@ -37,8 +37,8 @@ export default async function ApplyPage({ params }: ApplyPageProps) {
   const campaigns = campaignsResult.success ? campaignsResult.data || [] : [];
 
   return (
-    <div className="min-h-screen py-12">
-      <div className="container max-w-4xl mx-auto px-4">
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="w-full max-w-xl mx-auto px-3 sm:px-4">
         <CampaignSelectorContent
           school={schoolResult.data}
           campaigns={campaigns}

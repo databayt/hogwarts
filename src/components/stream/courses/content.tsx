@@ -47,31 +47,29 @@ export function StreamCoursesContent({
       {/* Hero Section - Like "Come teach with us" */}
       <section className="py-8">
         <div className={cn(
-          "flex flex-col md:flex-row items-center gap-8",
+          "flex flex-col md:flex-row items-center justify-center gap-6 max-w-2xl mx-auto",
           isRTL && "md:flex-row-reverse"
         )}>
           {/* Hero Image */}
-          <div className="relative flex items-center justify-center rounded-xl p-6 size-40 md:size-44 bg-[#D97757] shrink-0">
+          <div className="relative flex items-center justify-center rounded-xl p-4 size-28 md:size-32 bg-[#D97757] shrink-0">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/anthropic/6903d22d0099a66d72e05699_33ddc751e21fb4b116b3f57dd553f0bc55ea09d1-1000x1000.svg"
               alt="Courses"
-              className="size-32 md:size-36"
+              className="size-20 md:size-24"
             />
           </div>
 
           {/* Text Content */}
           <div className={cn(
-            "space-y-3",
-            isRTL ? "text-right" : "text-left"
+            "text-center md:text-left",
+            isRTL && "md:text-right"
           )}>
-            <h1 className="text-4xl md:text-5xl font-bold leading-tight">
-              {dictionary?.courses?.heroTitle || "Explore courses"}
+            <h1 className="text-4xl md:text-5xl font-bold leading-none">
+              {dictionary?.courses?.heroTitle || "Explore"}
+              <br />
+              {dictionary?.courses?.heroSubtitle || "courses"}
             </h1>
-            <p className="text-lg text-muted-foreground max-w-lg">
-              {dictionary?.courses?.heroDescription ||
-                "Explore our collection of courses and begin your learning journey"}
-            </p>
           </div>
         </div>
       </section>
@@ -94,7 +92,7 @@ export function StreamCoursesContent({
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {filteredCourses.map((course, idx) => (
             <div
               key={course.id}

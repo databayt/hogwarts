@@ -53,7 +53,7 @@ function ApplyLayoutContent({ children }: ApplyLayoutProps) {
   // Show loading state while initializing session
   if (isLoading) {
     return (
-      <div className="px-4 sm:px-6 md:px-12 min-h-screen">
+      <div className="px-4 sm:px-6 md:px-12 h-screen">
         <main className="h-screen pt-16">
           {renderSkeleton()}
         </main>
@@ -65,7 +65,7 @@ function ApplyLayoutContent({ children }: ApplyLayoutProps) {
   // Show error state if initialization failed
   if (error) {
     return (
-      <div className="px-4 sm:px-6 md:px-12 min-h-screen">
+      <div className="px-4 sm:px-6 md:px-12 h-screen">
         <main className="h-screen pt-16 flex items-center justify-center">
           <div className="text-center max-w-md">
             <div className="text-6xl mb-4">⚠️</div>
@@ -95,8 +95,8 @@ function ApplyLayoutContent({ children }: ApplyLayoutProps) {
   }
 
   return (
-    <div className="px-4 sm:px-8 md:px-12 min-h-screen flex flex-col">
-      <main className="flex-1 flex items-center justify-center w-full py-8 pb-32">
+    <div className="px-4 sm:px-8 md:px-12 h-screen flex flex-col">
+      <main className="flex-1 flex items-center w-full pb-20">
         {children}
       </main>
       <ApplyFooter dictionary={dictionary ?? undefined} locale={locale} />
