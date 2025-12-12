@@ -57,33 +57,24 @@ export default function CampaignSelectorContent({
 
         <div className="space-y-2">
           <Card
-            className="border hover:border-foreground/50 py-2 sm:py-3 bg-card hover:bg-accent transition-all cursor-pointer shadow-none hover:shadow-none rounded-lg min-h-[50px] sm:min-h-[60px]"
+            className="border hover:border-foreground/50 bg-card hover:bg-accent transition-all cursor-pointer shadow-none hover:shadow-none rounded-lg"
             onClick={() => activeCampaign && handleStartNew(activeCampaign.id)}
           >
-            <CardContent className="flex items-center px-2 sm:px-3">
-              <div className={`flex items-center ${isRTL ? 'space-x-reverse space-x-2' : 'space-x-2'} flex-1`}>
-                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-muted rounded-md flex items-center justify-center flex-shrink-0">
-                  <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <h5 className="text-xs sm:text-sm font-medium truncate">
-                      {applicationInfo.campaignName}
-                    </h5>
-                    <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-800">
-                      {lang === "ar" ? "مسودة" : "Draft"}
-                    </Badge>
-                  </div>
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2 mt-0.5">
-                    <p className="text-xs text-muted-foreground">
-                      {lang === "ar" ? "الخطوة" : "Step"} {applicationInfo.stepNumber}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      <span className="hidden sm:inline">•</span> {applicationInfo.step}
-                    </p>
-                  </div>
-                </div>
+            <CardContent className="flex flex-col items-center justify-center py-6 sm:py-8 px-4">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-muted rounded-md flex items-center justify-center mb-3">
+                <FileText className="w-5 h-5 sm:w-6 sm:h-6" />
               </div>
+              <div className="flex items-center gap-2 mb-1">
+                <h5 className="text-sm sm:text-base font-medium">
+                  {applicationInfo.campaignName}
+                </h5>
+                <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-800">
+                  {lang === "ar" ? "مسودة" : "Draft"}
+                </Badge>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {lang === "ar" ? "الخطوة" : "Step"} {applicationInfo.stepNumber} • {applicationInfo.step}
+              </p>
             </CardContent>
           </Card>
         </div>
