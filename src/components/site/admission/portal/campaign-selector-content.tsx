@@ -2,10 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { AnthropicIcons } from "@/components/icons/anthropic";
+import { GraduationCap, ChevronRight, ChevronLeft, Bookmark, Clock } from "lucide-react";
 import type { School } from "../../types";
 import type { Dictionary } from "@/components/internationalization/dictionaries";
 import type { Locale } from "@/components/internationalization/config";
@@ -28,6 +27,8 @@ export default function CampaignSelectorContent({
 }: Props) {
   const router = useRouter();
   const [selectedCampaign, setSelectedCampaign] = useState<string | null>(null);
+  const isRTL = lang === 'ar';
+  const ChevronIcon = isRTL ? ChevronLeft : ChevronRight;
 
   const handleCampaignSelect = (campaignId: string) => {
     setSelectedCampaign(campaignId);
@@ -41,147 +42,193 @@ export default function CampaignSelectorContent({
 
   const formatDate = (date: Date) => {
     return new Date(date).toLocaleDateString(lang === "ar" ? "ar-SA" : "en-US", {
-      year: "numeric",
-      month: "long",
+      month: "short",
       day: "numeric",
     });
   };
 
   if (campaigns.length === 0) {
     return (
-      <div className="text-center py-16 px-4">
-        <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-muted mb-6">
-          <AnthropicIcons.Book className="w-10 h-10 text-muted-foreground" />
+      <div className="w-full max-w-xl mx-auto px-3 sm:px-4 space-y-3 sm:space-y-4">
+        {/* Header */}
+        <div>
+          <h3 className="mb-3 sm:mb-4 text-lg sm:text-xl lg:text-2xl">
+            {lang === "ar" ? "تقديم طلب الالتحاق" : "Apply for Admission"}
+          </h3>
         </div>
-        <h2 className="scroll-m-20 text-2xl font-semibold tracking-tight mb-3">
-          {lang === "ar" ? "لا توجد برامج قبول متاحة" : "No Admission Programs Available"}
-        </h2>
-        <p className="text-muted-foreground max-w-md mx-auto mb-8">
-          {lang === "ar"
-            ? "لا توجد حاليًا برامج قبول مفتوحة. يرجى التحقق مرة أخرى لاحقًا."
-            : "There are currently no open admission programs. Please check back later."}
-        </p>
-        <Button variant="outline" onClick={() => router.push(`/${lang}`)} className="group">
-          {lang === "ar" ? "العودة للصفحة الرئيسية" : "Back to Home"}
-        </Button>
+
+        {/* No campaigns message */}
+        <div className="space-y-2 sm:space-y-3">
+          <div className="py-8 text-center">
+            <div className="w-12 h-12 sm:w-14 sm:h-14 bg-muted rounded-lg flex items-center justify-center mx-auto mb-3">
+              <GraduationCap className="w-6 h-6 sm:w-7 sm:h-7 text-muted-foreground" />
+            </div>
+            <h5 className="text-base sm:text-lg font-semibold mb-1">
+              {lang === "ar" ? "لا توجد برامج قبول متاحة" : "No Admission Programs Available"}
+            </h5>
+            <p className="text-sm text-muted-foreground">
+              {lang === "ar"
+                ? "يرجى التحقق مرة أخرى لاحقًا"
+                : "Please check back later"}
+            </p>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-10">
+    <div className="w-full max-w-xl mx-auto px-3 sm:px-4 space-y-3 sm:space-y-4">
       {/* Header */}
-      <div className="text-center">
-        <Badge variant="secondary" className="mb-4 px-4 py-1">
-          <AnthropicIcons.Announcement className="w-3 h-3 me-2" />
-          {lang === "ar" ? "القبول مفتوح" : "Admissions Open"}
-        </Badge>
-        <h1 className="scroll-m-20 text-3xl md:text-4xl font-bold tracking-tight mb-3">
-          {lang === "ar" ? "ابدأ رحلتك معنا" : "Start Your Journey With Us"}
-        </h1>
-        <p className="text-muted-foreground text-lg max-w-2xl mx-auto leading-relaxed">
-          {lang === "ar"
-            ? `اختر برنامج القبول وابدأ طلبك للانضمام إلى ${school.name}`
-            : `Select an admission program and start your application to join ${school.name}`}
-        </p>
+      <div>
+        <h3 className="mb-3 sm:mb-4 text-lg sm:text-xl lg:text-2xl">
+          {lang === "ar" ? "تقديم طلب الالتحاق" : "Apply for Admission"}
+        </h3>
       </div>
 
       {/* Campaign Cards */}
-      <div className="grid gap-4">
-        {campaigns.map((campaign) => (
-          <Card
-            key={campaign.id}
-            className={`cursor-pointer transition-all duration-200 hover:scale-[1.01] ${
-              selectedCampaign === campaign.id
-                ? "ring-2 ring-primary border-primary shadow-sm"
-                : "hover:border-primary/50 hover:shadow-sm"
-            }`}
-            onClick={() => handleCampaignSelect(campaign.id)}
-          >
-            <CardHeader className="pb-3">
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1">
-                  <CardTitle className="text-xl font-semibold">{campaign.name}</CardTitle>
-                  <CardDescription className="mt-1">
-                    {lang === "ar" ? `العام الدراسي ${campaign.academicYear}` : `Academic Year ${campaign.academicYear}`}
-                  </CardDescription>
-                </div>
-                <Badge
-                  variant={campaign.availableSeats > 0 ? "default" : "secondary"}
-                  className="shrink-0"
-                >
-                  {campaign.availableSeats > 0
-                    ? lang === "ar"
-                      ? `${campaign.availableSeats} مقعد متاح`
-                      : `${campaign.availableSeats} seats available`
-                    : lang === "ar"
-                    ? "مكتمل"
-                    : "Full"}
-                </Badge>
-              </div>
-            </CardHeader>
-            <CardContent className="pt-0">
-              {campaign.description && (
-                <p className="text-muted-foreground mb-4 leading-relaxed">{campaign.description}</p>
-              )}
-              <div className="flex flex-wrap gap-4 text-sm">
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <AnthropicIcons.CalendarChart className="w-4 h-4" />
-                  <span>
-                    {formatDate(campaign.startDate)} - {formatDate(campaign.endDate)}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <AnthropicIcons.Checklist className="w-4 h-4" />
-                  <span>
-                    {campaign.totalSeats} {lang === "ar" ? "مقعد إجمالي" : "total seats"}
-                  </span>
-                </div>
-                {campaign.applicationFee && campaign.applicationFee > 0 && (
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <AnthropicIcons.Lightning className="w-4 h-4" />
-                    <span>
-                      {lang === "ar" ? "رسوم التقديم:" : "Application Fee:"} ${campaign.applicationFee}
-                    </span>
+      <div className="space-y-2 sm:space-y-3">
+        <h5 className="text-base sm:text-lg font-semibold">
+          {lang === "ar" ? "اختر برنامج القبول" : "Select an admission program"}
+        </h5>
+
+        <div className="space-y-2">
+          {campaigns.map((campaign) => (
+            <Card
+              key={campaign.id}
+              className={`border py-2 sm:py-3 bg-card transition-all cursor-pointer shadow-none hover:shadow-none rounded-lg min-h-[50px] sm:min-h-[60px] ${
+                selectedCampaign === campaign.id
+                  ? "border-foreground bg-accent"
+                  : "hover:border-foreground/50 hover:bg-accent"
+              }`}
+              onClick={() => handleCampaignSelect(campaign.id)}
+            >
+              <CardContent className="flex items-center px-2 sm:px-3">
+                <div className="flex items-center space-x-2 flex-1">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-muted rounded-md flex items-center justify-center flex-shrink-0">
+                    <GraduationCap className="w-4 h-4 sm:w-5 sm:h-5" />
                   </div>
-                )}
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <h5 className="text-xs sm:text-sm font-medium truncate">
+                        {campaign.name}
+                      </h5>
+                      <Badge
+                        variant="secondary"
+                        className={`text-xs ${
+                          campaign.availableSeats > 0
+                            ? "bg-green-100 text-green-800"
+                            : "bg-red-100 text-red-800"
+                        }`}
+                      >
+                        {campaign.availableSeats > 0
+                          ? lang === "ar"
+                            ? `${campaign.availableSeats} مقعد`
+                            : `${campaign.availableSeats} seats`
+                          : lang === "ar"
+                          ? "مكتمل"
+                          : "Full"}
+                      </Badge>
+                    </div>
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2 mt-0.5">
+                      <p className="text-xs text-muted-foreground">
+                        {formatDate(campaign.startDate)} - {formatDate(campaign.endDate)}
+                      </p>
+                      {campaign.applicationFee && campaign.applicationFee > 0 && (
+                        <p className="text-xs text-muted-foreground">
+                          <span className="hidden sm:inline">•</span> ${campaign.applicationFee}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+
+      {/* Start Application Button */}
+      {selectedCampaign && (
+        <div className="space-y-2 sm:space-y-3">
+          <h5>
+            {lang === "ar" ? "متابعة" : "Continue"}
+          </h5>
+
+          <div className="space-y-2">
+            <button
+              onClick={handleStartApplication}
+              disabled={campaigns.find(c => c.id === selectedCampaign)?.availableSeats === 0}
+              className="w-full flex items-center justify-between h-auto py-2 sm:py-3 border-b border-border transition-all group min-h-[50px] sm:min-h-[60px] disabled:opacity-50"
+            >
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-muted rounded-lg flex items-center justify-center flex-shrink-0">
+                  <GraduationCap className="w-4 h-4 sm:w-5 sm:h-5 text-foreground" />
+                </div>
+                <div className={`min-w-0 flex-1 ${isRTL ? 'text-right' : 'text-left'}`}>
+                  <h5>
+                    {lang === "ar" ? "ابدأ الطلب" : "Start Application"}
+                  </h5>
+                  <p className="muted mt-0.5">
+                    {lang === "ar" ? "ابدأ طلب التحاق جديد" : "Begin a new application"}
+                  </p>
+                </div>
               </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+              <ChevronIcon className="w-4 h-4 sm:w-5 sm:h-5 text-foreground group-hover:text-foreground transition-colors flex-shrink-0" />
+            </button>
+          </div>
+        </div>
+      )}
 
-      {/* Action Button */}
-      <div className="flex justify-center pt-6">
-        <Button
-          size="lg"
-          disabled={!selectedCampaign || campaigns.find(c => c.id === selectedCampaign)?.availableSeats === 0}
-          onClick={handleStartApplication}
-          className="min-w-[200px] group"
-        >
-          {lang === "ar" ? "ابدأ الطلب" : "Start Application"}
-          <AnthropicIcons.ArrowRight className="w-4 h-4 ms-2 transition-transform group-hover:translate-x-1 rtl:group-hover:-translate-x-1" />
-        </Button>
-      </div>
+      {/* Other Options */}
+      <div className="space-y-2 sm:space-y-3">
+        <h5>
+          {lang === "ar" ? "خيارات أخرى" : "Other options"}
+        </h5>
 
-      {/* Info Links */}
-      <div className="flex flex-wrap justify-center gap-6 text-sm pt-6 border-t border-border/50">
-        <Button
-          variant="ghost"
-          onClick={() => router.push(`/${lang}/apply/status`)}
-          className="text-muted-foreground hover:text-foreground"
-        >
-          <AnthropicIcons.Checklist className="w-4 h-4 me-2" />
-          {lang === "ar" ? "تتبع طلب موجود" : "Track Existing Application"}
-        </Button>
-        <Button
-          variant="ghost"
-          onClick={() => router.push(`/${lang}/apply/continue`)}
-          className="text-muted-foreground hover:text-foreground"
-        >
-          <AnthropicIcons.Archive className="w-4 h-4 me-2" />
-          {lang === "ar" ? "استئناف طلب محفوظ" : "Resume Saved Application"}
-        </Button>
+        <div className="space-y-2">
+          {/* Track Existing Application */}
+          <button
+            onClick={() => router.push(`/${lang}/apply/status`)}
+            className="w-full flex items-center justify-between h-auto py-2 sm:py-3 border-b border-border transition-all group min-h-[50px] sm:min-h-[60px]"
+          >
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-muted rounded-lg flex items-center justify-center flex-shrink-0">
+                <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-foreground" />
+              </div>
+              <div className={`min-w-0 flex-1 ${isRTL ? 'text-right' : 'text-left'}`}>
+                <h5>
+                  {lang === "ar" ? "تتبع طلب موجود" : "Track Existing Application"}
+                </h5>
+                <p className="muted mt-0.5">
+                  {lang === "ar" ? "تحقق من حالة طلبك" : "Check your application status"}
+                </p>
+              </div>
+            </div>
+            <ChevronIcon className="w-4 h-4 sm:w-5 sm:h-5 text-foreground group-hover:text-foreground transition-colors flex-shrink-0" />
+          </button>
+
+          {/* Resume Saved Application */}
+          <button
+            onClick={() => router.push(`/${lang}/apply/continue`)}
+            className="w-full flex items-center justify-between h-auto py-2 sm:py-3 border-b border-border transition-all group min-h-[50px] sm:min-h-[60px]"
+          >
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-muted rounded-lg flex items-center justify-center flex-shrink-0">
+                <Bookmark className="w-4 h-4 sm:w-5 sm:h-5 text-foreground" />
+              </div>
+              <div className={`min-w-0 flex-1 ${isRTL ? 'text-right' : 'text-left'}`}>
+                <h5>
+                  {lang === "ar" ? "استئناف طلب محفوظ" : "Resume Saved Application"}
+                </h5>
+                <p className="muted mt-0.5">
+                  {lang === "ar" ? "أكمل طلبًا بدأته سابقًا" : "Continue where you left off"}
+                </p>
+              </div>
+            </div>
+            <ChevronIcon className="w-4 h-4 sm:w-5 sm:h-5 text-foreground group-hover:text-foreground transition-colors flex-shrink-0" />
+          </button>
+        </div>
       </div>
     </div>
   );
