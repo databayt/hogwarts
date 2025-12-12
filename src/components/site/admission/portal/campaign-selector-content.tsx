@@ -51,9 +51,9 @@ export default function CampaignSelectorContent({
 
       {/* Complete your application section - shows draft like onboarding "Complete your school setup" */}
       <div className="space-y-2 sm:space-y-3">
-        <h5 className="text-base sm:text-lg font-semibold">
+        <p className="text-sm font-semibold">
           {lang === "ar" ? "أكمل طلبك" : "Complete your application"}
-        </h5>
+        </p>
 
         <div className="space-y-2">
           <Card
@@ -66,14 +66,14 @@ export default function CampaignSelectorContent({
               </div>
               <div className={isRTL ? 'text-right' : 'text-left'}>
                 <div className="flex items-center gap-2">
-                  <h5>
+                  <p className="text-sm font-medium">
                     {applicationInfo.campaignName}
-                  </h5>
+                  </p>
                   <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-800">
                     {lang === "ar" ? "مسودة" : "Draft"}
                   </Badge>
                 </div>
-                <p className="muted mt-0.5">
+                <p className="text-xs text-muted-foreground mt-0.5">
                   {lang === "ar" ? "الخطوة" : "Step"} {applicationInfo.stepNumber} • {applicationInfo.step}
                 </p>
               </div>
@@ -84,9 +84,9 @@ export default function CampaignSelectorContent({
 
       {/* Start a new application section */}
       <div className="space-y-2 sm:space-y-3">
-        <h5>
+        <p className="text-sm font-semibold">
           {lang === "ar" ? "ابدأ طلباً جديداً" : "Start a new application"}
-        </h5>
+        </p>
 
         <div className="space-y-2">
           {/* Start from scratch */}
@@ -100,10 +100,10 @@ export default function CampaignSelectorContent({
                 <GraduationCap className="w-4 h-4 sm:w-5 sm:h-5 text-foreground" />
               </div>
               <div className={`min-w-0 flex-1 ${isRTL ? 'text-right' : 'text-left'}`}>
-                <h5>
+                <p className="text-sm font-medium">
                   {lang === "ar" ? "ابدأ من الصفر" : "Start from scratch"}
-                </h5>
-                <p className="muted mt-0.5">
+                </p>
+                <p className="text-xs text-muted-foreground mt-0.5">
                   {lang === "ar"
                     ? "ابدأ طلباً جديداً بالإعدادات الأساسية"
                     : "Begin a new application with basic setup"}
@@ -124,10 +124,10 @@ export default function CampaignSelectorContent({
                 <BookOpen className="w-4 h-4 sm:w-5 sm:h-5 text-foreground" />
               </div>
               <div className={`min-w-0 flex-1 ${isRTL ? 'text-right' : 'text-left'}`}>
-                <h5>
+                <p className="text-sm font-medium">
                   {lang === "ar" ? "استيراد من ملف شخصي" : "Import from profile"}
-                </h5>
-                <p className="muted mt-0.5">
+                </p>
+                <p className="text-xs text-muted-foreground mt-0.5">
                   {lang === "ar"
                     ? "استخرج البيانات من المستندات أو LinkedIn"
                     : "Auto-fill from documents or LinkedIn"}
