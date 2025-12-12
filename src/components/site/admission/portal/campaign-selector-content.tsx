@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { GraduationCap, ChevronRight, ChevronLeft, FileText, Clock } from "lucide-react";
+import { GraduationCap, ChevronRight, ChevronLeft, FileText, BookOpen } from "lucide-react";
 import type { School } from "../../types";
 import type { Dictionary } from "@/components/internationalization/dictionaries";
 import type { Locale } from "@/components/internationalization/config";
@@ -51,8 +51,12 @@ export default function CampaignSelectorContent({
     }
   }, [subdomain]);
 
-  const handleCampaignClick = (campaignId: string) => {
+  const handleStartNew = (campaignId: string) => {
     router.push(`/${lang}/apply/${campaignId}`);
+  };
+
+  const handleContinueSaved = () => {
+    router.push(`/${lang}/apply/continue`);
   };
 
   const handleResumeApplication = (sessionToken: string, campaignId: string) => {
@@ -60,14 +64,8 @@ export default function CampaignSelectorContent({
     router.push(`/${lang}/apply/${campaignId}/personal`);
   };
 
-  const formatDate = (date: Date) => {
-    return new Date(date).toLocaleDateString(lang === "ar" ? "ar-SA" : "en-US", {
-      month: "short",
-      day: "numeric",
-    });
-  };
-
   const hasSavedApplications = savedApplications.length > 0;
+  const activeCampaign = campaigns.find(c => c.availableSeats > 0) || campaigns[0];
 
   return (
     <div className="w-full max-w-xl mx-auto px-3 sm:px-4 space-y-3 sm:space-y-4">
@@ -129,50 +127,54 @@ export default function CampaignSelectorContent({
           {lang === "ar" ? "ابدأ طلباً جديداً" : "Start a new application"}
         </h5>
 
-        {campaigns.length === 0 ? (
-          <div className="py-6 text-center border rounded-lg">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-muted rounded-lg flex items-center justify-center mx-auto mb-2">
-              <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-muted-foreground" />
+        <div className="space-y-2">
+          {/* Start from scratch */}
+          <button
+            onClick={() => activeCampaign && handleStartNew(activeCampaign.id)}
+            disabled={!activeCampaign || activeCampaign.availableSeats === 0}
+            className="w-full flex items-center justify-between h-auto py-2 sm:py-3 border-b border-border transition-all group min-h-[50px] sm:min-h-[60px] disabled:opacity-50"
+          >
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-muted rounded-lg flex items-center justify-center flex-shrink-0">
+                <GraduationCap className="w-4 h-4 sm:w-5 sm:h-5 text-foreground" />
+              </div>
+              <div className={`min-w-0 flex-1 ${isRTL ? 'text-right' : 'text-left'}`}>
+                <h5>
+                  {lang === "ar" ? "ابدأ من الصفر" : "Start from scratch"}
+                </h5>
+                <p className="muted mt-0.5">
+                  {lang === "ar"
+                    ? "ابدأ طلباً جديداً بالإعدادات الأساسية"
+                    : "Begin a new application with basic setup"}
+                </p>
+              </div>
             </div>
-            <p className="text-sm text-muted-foreground">
-              {lang === "ar"
-                ? "لا توجد برامج قبول متاحة حالياً"
-                : "No admission programs available at the moment"}
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {campaigns.map((campaign) => (
-              <button
-                key={campaign.id}
-                onClick={() => handleCampaignClick(campaign.id)}
-                disabled={campaign.availableSeats === 0}
-                className="w-full flex items-center justify-between h-auto py-2 sm:py-3 border-b border-border transition-all group min-h-[50px] sm:min-h-[60px] disabled:opacity-50"
-              >
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-muted rounded-lg flex items-center justify-center flex-shrink-0">
-                    <GraduationCap className="w-4 h-4 sm:w-5 sm:h-5 text-foreground" />
-                  </div>
-                  <div className={`min-w-0 flex-1 ${isRTL ? 'text-right' : 'text-left'}`}>
-                    <h5>
-                      {campaign.name}
-                    </h5>
-                    <p className="muted mt-0.5">
-                      {campaign.availableSeats > 0
-                        ? lang === "ar"
-                          ? `${campaign.availableSeats} مقعد متاح • ${formatDate(campaign.startDate)} - ${formatDate(campaign.endDate)}`
-                          : `${campaign.availableSeats} seats available • ${formatDate(campaign.startDate)} - ${formatDate(campaign.endDate)}`
-                        : lang === "ar"
-                        ? "لا توجد مقاعد متاحة"
-                        : "No seats available"}
-                    </p>
-                  </div>
-                </div>
-                <ChevronIcon className="w-4 h-4 sm:w-5 sm:h-5 text-foreground group-hover:text-foreground transition-colors flex-shrink-0" />
-              </button>
-            ))}
-          </div>
-        )}
+            <ChevronIcon className="w-4 h-4 sm:w-5 sm:h-5 text-foreground group-hover:text-foreground transition-colors flex-shrink-0" />
+          </button>
+
+          {/* Continue saved application */}
+          <button
+            onClick={handleContinueSaved}
+            className="w-full flex items-center justify-between h-auto py-2 sm:py-3 border-b border-border transition-all group min-h-[50px] sm:min-h-[60px]"
+          >
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-muted rounded-lg flex items-center justify-center flex-shrink-0">
+                <BookOpen className="w-4 h-4 sm:w-5 sm:h-5 text-foreground" />
+              </div>
+              <div className={`min-w-0 flex-1 ${isRTL ? 'text-right' : 'text-left'}`}>
+                <h5>
+                  {lang === "ar" ? "استئناف طلب محفوظ" : "Resume saved application"}
+                </h5>
+                <p className="muted mt-0.5">
+                  {lang === "ar"
+                    ? "أكمل طلباً بدأته سابقاً"
+                    : "Continue where you left off"}
+                </p>
+              </div>
+            </div>
+            <ChevronIcon className="w-4 h-4 sm:w-5 sm:h-5 text-foreground group-hover:text-foreground transition-colors flex-shrink-0" />
+          </button>
+        </div>
       </div>
     </div>
   );
