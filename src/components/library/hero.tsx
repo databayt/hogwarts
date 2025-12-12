@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
-import { EducationAnimation } from "@/components/stream/home/education-animation";
+import { LibraryAnimation } from "./library-animation";
 
 interface LibraryHeroProps {
   lang?: string;
@@ -18,10 +18,10 @@ export function LibraryHero({ lang = "en", dictionary }: LibraryHeroProps) {
         {/* Text Content */}
         <div className={`flex-1 flex flex-col space-y-6 ${isRTL ? "items-end text-right" : "items-start text-left"} lg:items-start lg:text-left`}>
           <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tighter leading-none">
-            {(dictionary as any)?.home?.title || "Lumos"}
+            Revelio
             <br />
             <span className="text-3xl md:text-4xl lg:text-5xl font-semibold block mt-2">
-              {(dictionary as any)?.home?.description || "Shinning a light."}
+              Unlock hidden.
             </span>
           </h1>
 
@@ -30,9 +30,9 @@ export function LibraryHero({ lang = "en", dictionary }: LibraryHeroProps) {
               className={buttonVariants({
                 size: "lg",
               })}
-              href={`/${lang}/stream/courses`}
+              href={`/${lang}/library/books`}
             >
-              {(dictionary as any)?.home?.exploreCourses || "Explore Courses"}
+              {(dictionary as any)?.library?.navigation?.browse || "Browse Books"}
             </Link>
 
             <Link
@@ -40,16 +40,16 @@ export function LibraryHero({ lang = "en", dictionary }: LibraryHeroProps) {
                 size: "lg",
                 variant: "ghost",
               })}
-              href={`/${lang}/login`}
+              href={`/${lang}/library/my-profile`}
             >
-              {(dictionary as any)?.home?.signIn || "Sign in"}
+              Favorite
             </Link>
           </div>
         </div>
 
         {/* Animation */}
         <div className="flex-1 flex justify-center">
-          <EducationAnimation className="w-full max-w-lg h-72 md:h-96" />
+          <LibraryAnimation className="w-full max-w-md h-56 md:h-72" />
         </div>
       </div>
     </section>

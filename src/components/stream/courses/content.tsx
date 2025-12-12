@@ -1,7 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { BookOpen } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 import { PublicCourseType } from "@/components/stream/data/course/get-all-courses";
 import { CourseCard, CourseCardSkeleton } from "./course-card";
 import { cn } from "@/lib/utils";
@@ -23,6 +25,7 @@ export function StreamCoursesContent({
   searchParams
 }: Props) {
   const isRTL = lang === "ar";
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
   // Filter courses based on search params
   const filteredCourses = courses.filter((course) => {
@@ -40,7 +43,7 @@ export function StreamCoursesContent({
   });
 
   return (
-    <div className="max-w-5xl mx-auto py-6 space-y-10">
+    <div className="py-6 space-y-10">
       {/* Hero Section - Like "Come teach with us" */}
       <section className="py-8">
         <div className={cn(
@@ -63,7 +66,7 @@ export function StreamCoursesContent({
             isRTL ? "text-right" : "text-left"
           )}>
             <h1 className="text-4xl md:text-5xl font-bold leading-tight">
-              {dictionary?.courses?.heroTitle || "The Library"}
+              {dictionary?.courses?.heroTitle || "Explore courses"}
             </h1>
             <p className="text-lg text-muted-foreground max-w-lg">
               {dictionary?.courses?.heroDescription ||
@@ -91,9 +94,35 @@ export function StreamCoursesContent({
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredCourses.map((course) => (
-            <CourseCard key={course.id} course={course} lang={lang} />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredCourses.map((course, idx) => (
+            <div
+              key={course.id}
+              className="relative group block p-2 h-full w-full"
+              onMouseEnter={() => setHoveredIndex(idx)}
+              onMouseLeave={() => setHoveredIndex(null)}
+            >
+              <AnimatePresence>
+                {hoveredIndex === idx && (
+                  <motion.span
+                    className="absolute inset-0 h-full w-full bg-muted dark:bg-muted/80 block rounded-2xl"
+                    layoutId="courseHoverBackground"
+                    initial={{ opacity: 0 }}
+                    animate={{
+                      opacity: 1,
+                      transition: { duration: 0.15 },
+                    }}
+                    exit={{
+                      opacity: 0,
+                      transition: { duration: 0.15, delay: 0.2 },
+                    }}
+                  />
+                )}
+              </AnimatePresence>
+              <div className="relative z-10">
+                <CourseCard course={course} lang={lang} />
+              </div>
+            </div>
           ))}
         </div>
       )}
@@ -103,7 +132,7 @@ export function StreamCoursesContent({
 
 export function StreamCoursesLoadingSkeleton() {
   return (
-    <div className="max-w-5xl mx-auto py-6 space-y-10">
+    <div className="py-6 space-y-10">
       {/* Hero Section Skeleton */}
       <section className="py-8">
         <div className="flex flex-col md:flex-row items-center gap-8">
@@ -117,7 +146,7 @@ export function StreamCoursesLoadingSkeleton() {
           </div>
           <div className="space-y-3">
             <h1 className="text-4xl md:text-5xl font-bold leading-tight">
-              The Library
+              Explore courses
             </h1>
             <p className="text-lg text-muted-foreground max-w-lg">
               Explore our collection of courses and begin your learning journey

@@ -45,7 +45,7 @@ export function HotReleasesSection({ dictionary, lang }: Omit<StreamContentProps
 
   return (
     <section className="py-6 mb-16 bg-[#BCD1CA] rounded-xl">
-      <div>
+      <div className="px-6">
         {/* Title Row */}
         <div className={cn("mb-4 flex items-center justify-between", isRTL && "flex-row-reverse")}>
           <h2 className="text-lg font-semibold">

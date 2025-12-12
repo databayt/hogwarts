@@ -103,7 +103,7 @@ export function StreamHomeContent({
               {dictionary?.home?.title || "Lumos"}
               <br />
               <span className="text-3xl md:text-4xl lg:text-5xl font-semibold block mt-2">
-                {dictionary?.home?.description || "Shinning a light."}
+                {dictionary?.home?.description || "Shine a light."}
               </span>
             </h1>
 
@@ -131,7 +131,7 @@ export function StreamHomeContent({
 
           {/* Animation */}
           <div className="flex-1 flex justify-center">
-            <EducationAnimation className="w-full max-w-lg h-72 md:h-96" />
+            <EducationAnimation className="w-full max-w-md h-58 md:h-70" />
           </div>
         </div>
       </section>

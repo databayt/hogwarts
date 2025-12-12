@@ -12,7 +12,7 @@ export function LibraryAnimation({ className }: LibraryAnimationProps) {
 
   useEffect(() => {
     fetch(
-      "https://cdn.prod.website-files.com/6889473510b50328dbb70ae6/6930dae98ed924a2ab62c6a3_Government.json"
+      "https://cdn.prod.website-files.com/6889473510b50328dbb70ae6/6931c5426a3fbb9a2be31b1e_Claude_for_Excel.json"
     )
       .then((res) => res.json())
       .then((data) => setAnimationData(data))

@@ -124,11 +124,6 @@ export default async function LibraryContent({ userId, dictionary, lang }: Props
       {/* Collaborate Section */}
       <CollaborateSection lang={lang} />
 
-      {/* Featured Book - Single book highlight */}
-      {heroBook && (
-        <BookOverview book={heroBook} userId={userId} />
-      )}
-
       {/* Row 1: Latest Books */}
       {latestBooks.length > 0 && (
         <BookList
@@ -138,28 +133,28 @@ export default async function LibraryContent({ userId, dictionary, lang }: Props
         />
       )}
 
-      {/* Row 2: Featured */}
+      {/* Row 2: Featured Books */}
       {featuredBooks.length > 0 && (
         <BookList
-          title="Featured"
+          title="Featured Books"
           books={featuredBooks}
           containerClassName=""
         />
       )}
 
-      {/* Row 3: Literature */}
+      {/* Row 3: Literature Books */}
       {literatureBooks.length > 0 && (
         <BookList
-          title="Literature"
+          title="Literature Books"
           books={literatureBooks}
           containerClassName=""
         />
       )}
 
-      {/* Row 4: Science */}
+      {/* Row 4: Science Books */}
       {scienceBooks.length > 0 && (
         <BookList
-          title="Science"
+          title="Science Books"
           books={scienceBooks}
           containerClassName=""
         />

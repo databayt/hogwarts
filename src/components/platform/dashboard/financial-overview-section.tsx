@@ -2,9 +2,9 @@
 
 import * as React from "react"
 import { useEffect, useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { SectionHeading } from "./section-heading"
-import { Check, Eye, TriangleAlert, ChevronRight } from "lucide-react"
+import { Check, Eye, TriangleAlert, ChevronRight, TrendingUp } from "lucide-react"
 import { cn } from "@/lib/utils"
 import {
   ChartConfig,
@@ -12,7 +12,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart"
-import { Bar, BarChart, CartesianGrid, XAxis } from "recharts"
+import { Bar, BarChart, CartesianGrid, XAxis, Area, AreaChart, RadialBarChart, RadialBar, PolarGrid, PolarRadiusAxis, Label } from "recharts"
 import { getFinancialOverviewByRole } from "./actions"
 import type { DashboardRole } from "./resource-usage-section"
 import Link from "next/link"
@@ -47,20 +47,54 @@ export interface FinancialOverviewSectionProps {
 }
 
 // ============================================================================
-// CHART CONFIG
+// CHART CONFIGS
 // ============================================================================
 
-const chartConfig = {
+const barChartConfig = {
   views: {
     label: "Amount",
   },
   income: {
     label: "Income",
-    color: "var(--chart-2)",
+    color: "hsl(var(--chart-1))",
   },
   expenses: {
     label: "Expenses",
-    color: "var(--chart-1)",
+    color: "hsl(var(--chart-2))",
+  },
+} satisfies ChartConfig
+
+const radialChartData = [
+  { browser: "safari", visitors: 87, fill: "var(--color-safari)" },
+]
+
+const radialChartConfig = {
+  visitors: {
+    label: "Collection",
+  },
+  safari: {
+    label: "Rate",
+    color: "hsl(var(--chart-2))",
+  },
+} satisfies ChartConfig
+
+const areaChartData = [
+  { month: "January", income: 186000, expenses: 80000 },
+  { month: "February", income: 305000, expenses: 200000 },
+  { month: "March", income: 237000, expenses: 120000 },
+  { month: "April", income: 273000, expenses: 190000 },
+  { month: "May", income: 209000, expenses: 130000 },
+  { month: "June", income: 314000, expenses: 140000 },
+]
+
+const areaChartConfig = {
+  income: {
+    label: "Income",
+    color: "hsl(var(--chart-1))",
+  },
+  expenses: {
+    label: "Expenses",
+    color: "hsl(var(--chart-2))",
   },
 } satisfies ChartConfig
 
@@ -215,7 +249,7 @@ function StatsStatusCard({ item }: { item: FinancialStat }) {
 }
 
 // ============================================================================
-// INTERACTIVE BAR CHART COMPONENT
+// INTERACTIVE BAR CHART (from finance page)
 // ============================================================================
 
 function InteractiveBarChart({ data }: { data: ChartDataPoint[] }) {
@@ -230,9 +264,9 @@ function InteractiveBarChart({ data }: { data: ChartDataPoint[] }) {
   )
 
   return (
-    <Card className="py-0">
-      <CardHeader className="flex flex-col items-stretch border-b !p-0 sm:flex-row">
-        <div className="flex flex-1 flex-col justify-center gap-1 px-6 pt-4 pb-3 sm:!py-0">
+    <Card className="border-none shadow-none bg-muted">
+      <CardHeader className="flex flex-col items-stretch space-y-0 border-b p-0 sm:flex-row">
+        <div className="flex flex-1 flex-col justify-center gap-1 px-6 py-5 sm:py-6">
           <CardTitle>Financial Trend</CardTitle>
           <CardDescription>
             Showing total for the last 3 months
@@ -244,13 +278,13 @@ function InteractiveBarChart({ data }: { data: ChartDataPoint[] }) {
               <button
                 key={key}
                 data-active={activeChart === key}
-                className="data-[active=true]:bg-muted/50 relative z-30 flex flex-1 flex-col justify-center gap-1 border-t px-6 py-4 text-left even:border-l sm:border-t-0 sm:border-l sm:px-8 sm:py-6"
+                className="relative z-30 flex flex-1 flex-col justify-center gap-1 border-t px-6 py-4 text-left even:border-l data-[active=true]:bg-muted/50 sm:border-l sm:border-t-0 sm:px-8 sm:py-6"
                 onClick={() => setActiveChart(key)}
               >
-                <span className="text-muted-foreground text-xs">
-                  {chartConfig[key].label}
+                <span className="text-xs text-muted-foreground">
+                  {barChartConfig[key].label}
                 </span>
-                <span className="text-lg leading-none font-bold sm:text-3xl">
+                <span className="text-lg font-bold leading-none sm:text-3xl">
                   {total[key].toLocaleString()}
                 </span>
               </button>
@@ -260,7 +294,7 @@ function InteractiveBarChart({ data }: { data: ChartDataPoint[] }) {
       </CardHeader>
       <CardContent className="px-2 sm:p-6">
         <ChartContainer
-          config={chartConfig}
+          config={barChartConfig}
           className="aspect-auto h-[250px] w-full"
         >
           <BarChart
@@ -310,12 +344,147 @@ function InteractiveBarChart({ data }: { data: ChartDataPoint[] }) {
 }
 
 // ============================================================================
+// RADIAL TEXT CHART (from finance page)
+// ============================================================================
+
+function RadialTextChart() {
+  return (
+    <Card className="flex flex-col border-none shadow-none bg-muted">
+      <CardContent className="flex-1 pb-0">
+        <ChartContainer
+          config={radialChartConfig}
+          className="mx-auto aspect-square max-h-[250px]"
+        >
+          <RadialBarChart
+            data={radialChartData}
+            startAngle={0}
+            endAngle={250}
+            innerRadius={80}
+            outerRadius={110}
+          >
+            <PolarGrid
+              gridType="circle"
+              radialLines={false}
+              stroke="none"
+              className="first:fill-muted last:fill-background"
+              polarRadius={[86, 74]}
+            />
+            <RadialBar dataKey="visitors" background cornerRadius={10} />
+            <PolarRadiusAxis tick={false} tickLine={false} axisLine={false}>
+              <Label
+                content={({ viewBox }) => {
+                  if (viewBox && "cx" in viewBox && "cy" in viewBox) {
+                    return (
+                      <text
+                        x={viewBox.cx}
+                        y={viewBox.cy}
+                        textAnchor="middle"
+                        dominantBaseline="middle"
+                      >
+                        <tspan
+                          x={viewBox.cx}
+                          y={viewBox.cy}
+                          className="fill-foreground text-4xl font-bold"
+                        >
+                          {radialChartData[0].visitors}%
+                        </tspan>
+                        <tspan
+                          x={viewBox.cx}
+                          y={(viewBox.cy || 0) + 24}
+                          className="fill-muted-foreground"
+                        >
+                          Collection
+                        </tspan>
+                      </text>
+                    )
+                  }
+                }}
+              />
+            </PolarRadiusAxis>
+          </RadialBarChart>
+        </ChartContainer>
+      </CardContent>
+      <CardFooter className="flex-col gap-2 text-pretty text-center text-sm">
+        <div className="flex items-center gap-2 font-medium leading-none">
+          Trending up by 5.2% this month <TrendingUp className="size-4" />
+        </div>
+        <div className="leading-none text-muted-foreground">
+          Fee collection rate
+        </div>
+      </CardFooter>
+    </Card>
+  )
+}
+
+// ============================================================================
+// AREA CHART STACKED (from finance page)
+// ============================================================================
+
+function AreaChartStacked() {
+  return (
+    <Card className="flex flex-col border-none shadow-none bg-muted">
+      <CardHeader>
+      </CardHeader>
+      <CardContent className="flex-1">
+        <ChartContainer config={areaChartConfig}>
+          <AreaChart
+            accessibilityLayer
+            data={areaChartData}
+            margin={{
+              left: 12,
+              right: 12,
+            }}
+          >
+            <CartesianGrid vertical={false} />
+            <XAxis
+              dataKey="month"
+              tickLine={false}
+              axisLine={false}
+              tickMargin={8}
+              tickFormatter={(value) => value.slice(0, 3)}
+            />
+            <ChartTooltip
+              cursor={false}
+              content={<ChartTooltipContent indicator="dot" />}
+            />
+            <Area
+              dataKey="expenses"
+              type="natural"
+              fill="var(--color-expenses)"
+              fillOpacity={0.4}
+              stroke="var(--color-expenses)"
+              stackId="a"
+            />
+            <Area
+              dataKey="income"
+              type="natural"
+              fill="var(--color-income)"
+              fillOpacity={0.4}
+              stroke="var(--color-income)"
+              stackId="a"
+            />
+          </AreaChart>
+        </ChartContainer>
+      </CardContent>
+      <CardFooter className="flex-col gap-2 text-pretty text-center text-sm">
+        <div className="flex items-center gap-2 font-medium leading-none">
+          Trending up by 5.2% this month <TrendingUp className="size-4" />
+        </div>
+        <div className="leading-none text-muted-foreground">
+          January - June 2024
+        </div>
+      </CardFooter>
+    </Card>
+  )
+}
+
+// ============================================================================
 // FINANCIAL OVERVIEW SECTION COMPONENT
 // ============================================================================
 
 /**
  * Role-specific financial overview section for dashboards.
- * Uses Stats with Status (stats-06) pattern and Interactive Bar Chart.
+ * Uses Stats with Status (stats-06) pattern and Finance page charts.
  */
 export function FinancialOverviewSection({
   role,
@@ -354,7 +523,7 @@ export function FinancialOverviewSection({
   return (
     <section className={className}>
       <SectionHeading title="Financial Overview" />
-      <div className="space-y-6">
+      <div className="space-y-4">
         {/* Stats with Status (stats-06 pattern) */}
         <dl className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {data.stats.map((item) => (
@@ -362,8 +531,16 @@ export function FinancialOverviewSection({
           ))}
         </dl>
 
-        {/* Interactive Bar Chart */}
-        {showChart && <InteractiveBarChart data={data.chartData!} />}
+        {/* Charts (same as finance page) */}
+        {showChart && (
+          <>
+            <InteractiveBarChart data={data.chartData!} />
+            <div className="grid gap-4 md:grid-cols-2">
+              <RadialTextChart />
+              <AreaChartStacked />
+            </div>
+          </>
+        )}
       </div>
     </section>
   )
@@ -393,7 +570,7 @@ export function StaticFinancialOverviewSection({
   return (
     <section className={className}>
       <SectionHeading title="Financial Overview" />
-      <div className="space-y-6">
+      <div className="space-y-4">
         {/* Stats with Status (stats-06 pattern) */}
         <dl className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {financialData.stats.map((item) => (
@@ -403,7 +580,7 @@ export function StaticFinancialOverviewSection({
 
         {/* Chart placeholder for static version */}
         {showChart && (
-          <Card>
+          <Card className="bg-muted border-none shadow-none">
             <CardHeader>
               <CardTitle>Financial Trend</CardTitle>
               <CardDescription>
