@@ -59,6 +59,7 @@ model School {
   attendances             Attendance[]
   announcements           Announcement[]
   announcementTemplates   AnnouncementTemplate[]
+  announcementConfig      AnnouncementConfig?
   domainRequests          DomainRequest[]
   subscriptions           Subscription[]
   invoices                Invoice[]
