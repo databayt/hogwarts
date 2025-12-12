@@ -1474,6 +1474,15 @@
             "description": "Configure timetable and attendance, publish announcements, and go live."
           }
         }
+      },
+      "apply": {
+        "title": "How would you like to start?",
+        "subtitle": "Choose the way that suits you best to create your school",
+        "createFromScratch": "Create from scratch",
+        "createFromScratchDescription": "Start with basic setup and customize everything",
+        "useTemplate": "Use a template",
+        "useTemplateDescription": "Start with pre-configured settings",
+        "back": "Back"
       }
     },
     "library": {

@@ -1475,6 +1475,15 @@
             "description": "اضبط الجدول الدراسي والحضور، وانشر الإعلانات، وابدأ العمل."
           }
         }
+      },
+      "apply": {
+        "title": "كيف تريد البدء؟",
+        "subtitle": "اختر الطريقة التي تناسبك لإنشاء مدرستك",
+        "createFromScratch": "إنشاء من الصفر",
+        "createFromScratchDescription": "ابدأ بإعداد أساسي وخصّص كل شيء",
+        "useTemplate": "استخدم قالب جاهز",
+        "useTemplateDescription": "ابدأ بإعدادات مُهيأة مسبقاً",
+        "back": "العودة"
       }
     },
     "library": {
