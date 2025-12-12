@@ -56,7 +56,6 @@ export default function CampaignSelectorContent({
   };
 
   const handleResumeApplication = (sessionToken: string, campaignId: string) => {
-    // Set the session token and navigate
     sessionStorage.setItem('apply_session_token', sessionToken);
     router.push(`/${lang}/apply/${campaignId}/personal`);
   };
@@ -126,7 +125,7 @@ export default function CampaignSelectorContent({
 
       {/* Start a new application section */}
       <div className="space-y-2 sm:space-y-3">
-        <h5 className="text-base sm:text-lg font-semibold">
+        <h5>
           {lang === "ar" ? "ابدأ طلباً جديداً" : "Start a new application"}
         </h5>
 
@@ -155,29 +154,21 @@ export default function CampaignSelectorContent({
                     <GraduationCap className="w-4 h-4 sm:w-5 sm:h-5 text-foreground" />
                   </div>
                   <div className={`min-w-0 flex-1 ${isRTL ? 'text-right' : 'text-left'}`}>
-                    <div className="flex items-center gap-2">
-                      <h5 className="text-sm font-medium">
-                        {campaign.name}
-                      </h5>
-                      {campaign.availableSeats > 0 ? (
-                        <Badge variant="secondary" className="text-xs bg-green-100 text-green-800">
-                          {campaign.availableSeats} {lang === "ar" ? "مقعد" : "seats"}
-                        </Badge>
-                      ) : (
-                        <Badge variant="secondary" className="text-xs bg-red-100 text-red-800">
-                          {lang === "ar" ? "مكتمل" : "Full"}
-                        </Badge>
-                      )}
-                    </div>
+                    <h5>
+                      {campaign.name}
+                    </h5>
                     <p className="muted mt-0.5">
-                      {formatDate(campaign.startDate)} - {formatDate(campaign.endDate)}
-                      {campaign.applicationFee && campaign.applicationFee > 0 && (
-                        <span> • ${campaign.applicationFee}</span>
-                      )}
+                      {campaign.availableSeats > 0
+                        ? lang === "ar"
+                          ? `${campaign.availableSeats} مقعد متاح • ${formatDate(campaign.startDate)} - ${formatDate(campaign.endDate)}`
+                          : `${campaign.availableSeats} seats available • ${formatDate(campaign.startDate)} - ${formatDate(campaign.endDate)}`
+                        : lang === "ar"
+                        ? "لا توجد مقاعد متاحة"
+                        : "No seats available"}
                     </p>
                   </div>
                 </div>
-                <ChevronIcon className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground group-hover:text-foreground transition-colors flex-shrink-0" />
+                <ChevronIcon className="w-4 h-4 sm:w-5 sm:h-5 text-foreground group-hover:text-foreground transition-colors flex-shrink-0" />
               </button>
             ))}
           </div>
