@@ -1,22 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { GraduationCap, ChevronRight, ChevronLeft, FileText, BookOpen } from "lucide-react";
+import { GraduationCap, ChevronRight, ChevronLeft, BookOpen } from "lucide-react";
 import type { School } from "../../types";
 import type { Dictionary } from "@/components/internationalization/dictionaries";
 import type { Locale } from "@/components/internationalization/config";
 import type { PublicCampaign } from "../types";
-
-interface SavedApplication {
-  id: string;
-  sessionToken: string;
-  campaignName: string;
-  step: string;
-  lastUpdated: string;
-}
 
 interface Props {
   school: School;
@@ -36,36 +27,23 @@ export default function CampaignSelectorContent({
   const router = useRouter();
   const isRTL = lang === 'ar';
   const ChevronIcon = isRTL ? ChevronLeft : ChevronRight;
-  const [savedApplications, setSavedApplications] = useState<SavedApplication[]>([]);
-
-  // Check for saved applications in localStorage
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem(`apply_sessions_${subdomain}`);
-      if (saved) {
-        const sessions = JSON.parse(saved);
-        setSavedApplications(sessions);
-      }
-    } catch (e) {
-      console.error('Failed to load saved applications:', e);
-    }
-  }, [subdomain]);
-
   const handleStartNew = (campaignId: string) => {
     router.push(`/${lang}/apply/${campaignId}`);
   };
 
-  const handleContinueSaved = () => {
-    router.push(`/${lang}/apply/continue`);
-  };
-
-  const handleResumeApplication = (sessionToken: string, campaignId: string) => {
-    sessionStorage.setItem('apply_session_token', sessionToken);
-    router.push(`/${lang}/apply/${campaignId}/personal`);
-  };
-
-  const hasSavedApplications = savedApplications.length > 0;
   const activeCampaign = campaigns.find(c => c.availableSeats > 0) || campaigns[0];
+
+  // Demo draft application - always show like onboarding shows "Demo School"
+  const draftApplication = {
+    id: activeCampaign?.id || 'demo',
+    name: school.name || 'Demo School',
+    startDate: new Date().toLocaleDateString(lang === 'ar' ? 'ar-EG' : 'en-US', {
+      year: 'numeric',
+      month: 'numeric',
+      day: 'numeric'
+    }),
+    subdomain: subdomain,
+  };
 
   return (
     <div className="w-full max-w-xl mx-auto px-3 sm:px-4 space-y-3 sm:space-y-4">
@@ -76,50 +54,45 @@ export default function CampaignSelectorContent({
         </h3>
       </div>
 
-      {/* Complete your application section - shows saved/in-progress applications */}
-      {hasSavedApplications && (
-        <div className="space-y-2 sm:space-y-3">
-          <h5 className="text-base sm:text-lg font-semibold">
-            {lang === "ar" ? "أكمل طلبك" : "Complete your application"}
-          </h5>
+      {/* Complete your application section - shows draft like onboarding "Complete your school setup" */}
+      <div className="space-y-2 sm:space-y-3">
+        <h5 className="text-base sm:text-lg font-semibold">
+          {lang === "ar" ? "أكمل طلبك" : "Complete your application"}
+        </h5>
 
-          <div className="space-y-2">
-            {savedApplications.map((app) => (
-              <Card
-                key={app.id}
-                className="border hover:border-foreground/50 py-2 sm:py-3 bg-card hover:bg-accent transition-all cursor-pointer shadow-none hover:shadow-none rounded-lg min-h-[50px] sm:min-h-[60px]"
-                onClick={() => handleResumeApplication(app.sessionToken, app.id)}
-              >
-                <CardContent className="flex items-center px-2 sm:px-3">
-                  <div className="flex items-center space-x-2 flex-1">
-                    <div className="w-8 h-8 sm:w-10 sm:h-10 bg-muted rounded-md flex items-center justify-center flex-shrink-0">
-                      <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <h5 className="text-xs sm:text-sm font-medium truncate">
-                          {app.campaignName}
-                        </h5>
-                        <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-800">
-                          {lang === "ar" ? "مسودة" : "Draft"}
-                        </Badge>
-                      </div>
-                      <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2 mt-0.5">
-                        <p className="text-xs text-muted-foreground">
-                          {lang === "ar" ? `الخطوة: ${app.step}` : `Step: ${app.step}`}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          <span className="hidden sm:inline">•</span> {app.lastUpdated}
-                        </p>
-                      </div>
-                    </div>
+        <div className="space-y-2">
+          <Card
+            className="border hover:border-foreground/50 py-2 sm:py-3 bg-card hover:bg-accent transition-all cursor-pointer shadow-none hover:shadow-none rounded-lg min-h-[50px] sm:min-h-[60px]"
+            onClick={() => activeCampaign && handleStartNew(activeCampaign.id)}
+          >
+            <CardContent className="flex items-center px-2 sm:px-3">
+              <div className={`flex items-center ${isRTL ? 'space-x-reverse space-x-2' : 'space-x-2'} flex-1`}>
+                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-muted rounded-md flex items-center justify-center flex-shrink-0">
+                  <GraduationCap className="w-4 h-4 sm:w-5 sm:h-5" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <h5 className="text-xs sm:text-sm font-medium truncate">
+                      {draftApplication.name}
+                    </h5>
+                    <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-800">
+                      {lang === "ar" ? "مسودة" : "Draft"}
+                    </Badge>
                   </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2 mt-0.5">
+                    <p className="text-xs text-muted-foreground">
+                      {lang === "ar" ? "بدأ في" : "Started"} {draftApplication.startDate}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      <span className="hidden sm:inline">•</span> {draftApplication.subdomain}.databayt.org
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
-      )}
+      </div>
 
       {/* Start a new application section */}
       <div className="space-y-2 sm:space-y-3">
