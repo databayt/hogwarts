@@ -65,15 +65,15 @@ export default function CampaignSelectorContent({
                 <FileText className="w-5 h-5 sm:w-6 sm:h-6" />
               </div>
               <div className={isRTL ? 'text-right' : 'text-left'}>
-                <div className="flex items-center gap-2 mb-0.5">
-                  <h5 className="text-sm sm:text-base font-medium">
+                <div className="flex items-center gap-2">
+                  <h5>
                     {applicationInfo.campaignName}
                   </h5>
                   <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-800">
                     {lang === "ar" ? "مسودة" : "Draft"}
                   </Badge>
                 </div>
-                <p className="text-xs text-muted-foreground">
+                <p className="muted mt-0.5">
                   {lang === "ar" ? "الخطوة" : "Step"} {applicationInfo.stepNumber} • {applicationInfo.step}
                 </p>
               </div>
