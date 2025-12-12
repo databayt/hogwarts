@@ -60,21 +60,23 @@ export default function CampaignSelectorContent({
             className="border hover:border-foreground/50 bg-card hover:bg-accent transition-all cursor-pointer shadow-none hover:shadow-none rounded-lg"
             onClick={() => activeCampaign && handleStartNew(activeCampaign.id)}
           >
-            <CardContent className="flex flex-col items-center justify-center py-6 sm:py-8 px-4">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-muted rounded-md flex items-center justify-center mb-3">
+            <CardContent className="flex items-center justify-center py-6 sm:py-8 px-4 gap-3">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-muted rounded-md flex items-center justify-center flex-shrink-0">
                 <FileText className="w-5 h-5 sm:w-6 sm:h-6" />
               </div>
-              <div className="flex items-center gap-2 mb-1">
-                <h5 className="text-sm sm:text-base font-medium">
-                  {applicationInfo.campaignName}
-                </h5>
-                <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-800">
-                  {lang === "ar" ? "مسودة" : "Draft"}
-                </Badge>
+              <div className={isRTL ? 'text-right' : 'text-left'}>
+                <div className="flex items-center gap-2 mb-0.5">
+                  <h5 className="text-sm sm:text-base font-medium">
+                    {applicationInfo.campaignName}
+                  </h5>
+                  <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-800">
+                    {lang === "ar" ? "مسودة" : "Draft"}
+                  </Badge>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {lang === "ar" ? "الخطوة" : "Step"} {applicationInfo.stepNumber} • {applicationInfo.step}
+                </p>
               </div>
-              <p className="text-xs text-muted-foreground">
-                {lang === "ar" ? "الخطوة" : "Step"} {applicationInfo.stepNumber} • {applicationInfo.step}
-              </p>
             </CardContent>
           </Card>
         </div>
