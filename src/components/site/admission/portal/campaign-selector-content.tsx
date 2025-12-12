@@ -51,7 +51,7 @@ export default function CampaignSelectorContent({
 
       {/* Complete your application section - shows draft like onboarding "Complete your school setup" */}
       <div className="space-y-2 sm:space-y-3">
-        <p className="text-sm font-semibold">
+        <p className="text-sm font-medium">
           {lang === "ar" ? "أكمل طلبك" : "Complete your application"}
         </p>
 
@@ -84,7 +84,7 @@ export default function CampaignSelectorContent({
 
       {/* Start a new application section */}
       <div className="space-y-2 sm:space-y-3">
-        <p className="text-sm font-semibold">
+        <p className="text-sm font-medium">
           {lang === "ar" ? "ابدأ طلباً جديداً" : "Start a new application"}
         </p>
 
