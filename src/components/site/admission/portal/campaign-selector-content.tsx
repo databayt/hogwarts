@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { GraduationCap, ChevronRight, ChevronLeft, BookOpen } from "lucide-react";
+import { GraduationCap, ChevronRight, ChevronLeft, BookOpen, FileText } from "lucide-react";
 import type { School } from "../../types";
 import type { Dictionary } from "@/components/internationalization/dictionaries";
 import type { Locale } from "@/components/internationalization/config";
@@ -33,16 +33,11 @@ export default function CampaignSelectorContent({
 
   const activeCampaign = campaigns.find(c => c.availableSeats > 0) || campaigns[0];
 
-  // Demo draft application - always show like onboarding shows "Demo School"
-  const draftApplication = {
-    id: activeCampaign?.id || 'demo',
-    name: school.name || 'Demo School',
-    startDate: new Date().toLocaleDateString(lang === 'ar' ? 'ar-EG' : 'en-US', {
-      year: 'numeric',
-      month: 'numeric',
-      day: 'numeric'
-    }),
-    subdomain: subdomain,
+  // Application info for the draft card
+  const applicationInfo = {
+    campaignName: activeCampaign?.name || (lang === 'ar' ? 'القبول 2025-2026' : 'Admissions 2025-2026'),
+    step: lang === 'ar' ? 'المعلومات الشخصية' : 'Personal Information',
+    stepNumber: '1/6',
   };
 
   return (
@@ -68,12 +63,12 @@ export default function CampaignSelectorContent({
             <CardContent className="flex items-center px-2 sm:px-3">
               <div className={`flex items-center ${isRTL ? 'space-x-reverse space-x-2' : 'space-x-2'} flex-1`}>
                 <div className="w-8 h-8 sm:w-10 sm:h-10 bg-muted rounded-md flex items-center justify-center flex-shrink-0">
-                  <GraduationCap className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <h5 className="text-xs sm:text-sm font-medium truncate">
-                      {draftApplication.name}
+                      {applicationInfo.campaignName}
                     </h5>
                     <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-800">
                       {lang === "ar" ? "مسودة" : "Draft"}
@@ -81,10 +76,10 @@ export default function CampaignSelectorContent({
                   </div>
                   <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2 mt-0.5">
                     <p className="text-xs text-muted-foreground">
-                      {lang === "ar" ? "بدأ في" : "Started"} {draftApplication.startDate}
+                      {lang === "ar" ? "الخطوة" : "Step"} {applicationInfo.stepNumber}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      <span className="hidden sm:inline">•</span> {draftApplication.subdomain}.databayt.org
+                      <span className="hidden sm:inline">•</span> {applicationInfo.step}
                     </p>
                   </div>
                 </div>
