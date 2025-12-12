@@ -151,7 +151,7 @@ export default async function SuccessPage({ params, searchParams }: SuccessPageP
         </Card>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Link href={`/${lang}/s/${subdomain}/apply/status`}>
+          <Link href={`/${lang}/apply/status`}>
             <Card className="h-full hover:border-primary transition-colors cursor-pointer">
               <CardContent className="flex items-center gap-4 pt-6">
                 <FileText className="h-8 w-8 text-primary" />
@@ -167,7 +167,7 @@ export default async function SuccessPage({ params, searchParams }: SuccessPageP
             </Card>
           </Link>
 
-          <Link href={`/${lang}/s/${subdomain}/tour`}>
+          <Link href={`/${lang}/tour`}>
             <Card className="h-full hover:border-primary transition-colors cursor-pointer">
               <CardContent className="flex items-center gap-4 pt-6">
                 <Calendar className="h-8 w-8 text-primary" />
@@ -185,7 +185,7 @@ export default async function SuccessPage({ params, searchParams }: SuccessPageP
         </div>
 
         <div className="mt-8 text-center">
-          <Link href={`/${lang}/s/${subdomain}`}>
+          <Link href={`/${lang}`}>
             <Button variant="outline">
               {isRTL ? "العودة إلى الصفحة الرئيسية" : "Back to Home"}
               <ArrowRight className="w-4 h-4 ms-2" />

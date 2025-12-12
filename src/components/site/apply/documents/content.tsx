@@ -33,7 +33,7 @@ export default function DocumentsContent({ dictionary }: Props) {
     if (documentsFormRef.current) {
       try {
         await documentsFormRef.current.saveAndNext();
-        router.push(`/${locale}/s/${subdomain}/apply/${campaignId}/review`);
+        router.push(`/${locale}/apply/${campaignId}/review`);
       } catch (error) {
         console.error('Error saving documents step:', error);
       }

@@ -33,7 +33,7 @@ export default function AcademicContent({ dictionary }: Props) {
     if (academicFormRef.current) {
       try {
         await academicFormRef.current.saveAndNext();
-        router.push(`/${locale}/s/${subdomain}/apply/${campaignId}/documents`);
+        router.push(`/${locale}/apply/${campaignId}/documents`);
       } catch (error) {
         console.error('Error saving academic step:', error);
       }

@@ -81,7 +81,7 @@ const ApplyFooter: React.FC<ApplyFooterProps> = ({
 
     if (currentStepIndex > 0) {
       const prevStep = APPLY_STEPS[currentStepIndex - 1];
-      router.push(`/${locale}/s/${subdomain}/apply/${campaignId}/${prevStep}`);
+      router.push(`/${locale}/apply/${campaignId}/${prevStep}`);
     }
   };
 
@@ -99,7 +99,7 @@ const ApplyFooter: React.FC<ApplyFooterProps> = ({
 
     if (currentStepIndex < APPLY_STEPS.length - 1) {
       const nextStep = APPLY_STEPS[currentStepIndex + 1];
-      router.push(`/${locale}/s/${subdomain}/apply/${campaignId}/${nextStep}`);
+      router.push(`/${locale}/apply/${campaignId}/${nextStep}`);
     }
   };
 

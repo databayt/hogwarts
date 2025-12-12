@@ -81,7 +81,7 @@ function ApplyLayoutContent({ children }: ApplyLayoutProps) {
                 {dict.tryAgain || (isRTL ? 'حاول مرة أخرى' : 'Try Again')}
               </button>
               <button
-                onClick={() => window.location.href = `/${locale}/s/${subdomain}/apply`}
+                onClick={() => window.location.href = `/${locale}/apply`}
                 className="px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/90 transition-colors"
               >
                 {dict.backToCampaigns || (isRTL ? 'العودة للحملات' : 'Back to Campaigns')}

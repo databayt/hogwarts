@@ -33,7 +33,7 @@ export default function GuardianContent({ dictionary }: Props) {
     if (guardianFormRef.current) {
       try {
         await guardianFormRef.current.saveAndNext();
-        router.push(`/${locale}/s/${subdomain}/apply/${campaignId}/academic`);
+        router.push(`/${locale}/apply/${campaignId}/academic`);
       } catch (error) {
         console.error('Error saving guardian step:', error);
       }
