@@ -24,11 +24,11 @@ export const searchParamsCache = createSearchParamsCache({
   ]),
   title: parseAsString.withDefault(""),
   status: parseAsArrayOf(
-    z.enum(["todo", "in_progress", "done", "canceled"])
+    parseAsStringEnum(["todo", "in_progress", "done", "canceled"])
   ).withDefault([]),
-  priority: parseAsArrayOf(z.enum(["low", "medium", "high"])).withDefault([]),
-  estimatedHours: parseAsArrayOf(z.coerce.number()).withDefault([]),
-  createdAt: parseAsArrayOf(z.coerce.number()).withDefault([]),
+  priority: parseAsArrayOf(parseAsStringEnum(["low", "medium", "high"])).withDefault([]),
+  estimatedHours: parseAsArrayOf(parseAsInteger).withDefault([]),
+  createdAt: parseAsArrayOf(parseAsInteger).withDefault([]),
   // advanced filter
   filters: getFiltersStateParser().withDefault([]),
   joinOperator: parseAsStringEnum(["and", "or"]).withDefault("and"),
