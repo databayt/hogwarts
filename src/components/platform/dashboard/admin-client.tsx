@@ -50,14 +50,6 @@ import { CartesianGrid, Bar, BarChart, XAxis } from "recharts"
 // TYPES
 // ============================================================================
 
-interface QuickStatData {
-  label: string
-  value: string
-  change: string
-  changeType: "positive" | "negative" | "neutral"
-  href?: string
-}
-
 interface ActivityData {
   action: string
   user: string
@@ -75,7 +67,6 @@ interface AdminDashboardClientProps {
   subdomain: string
   userName: string
   schoolName: string
-  quickStats: QuickStatData[]
   recentActivities: ActivityData[]
   todaySummary: SummaryData[]
 }
@@ -157,65 +148,6 @@ const iconMap = {
   Students: Users,
   Teachers: GraduationCap,
   Classes: BookOpen,
-}
-
-function StatBadge({ label, value, change, changeType, href }: QuickStatData) {
-  const IconComponent = iconMap[label as keyof typeof iconMap] || Users
-
-  const content = (
-    <CardContent className="p-0">
-      <div className="flex items-center gap-3">
-        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
-          <IconComponent className="h-6 w-6 text-primary" />
-        </div>
-        <div className="flex-1">
-          <p className="text-sm text-muted-foreground">{label}</p>
-          <div className="flex items-center gap-2">
-            <p className="text-2xl font-bold">{value}</p>
-            <Badge
-              variant="secondary"
-              className={cn(
-                "text-xs",
-                changeType === "positive" && "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
-                changeType === "negative" && "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
-                changeType === "neutral" && "bg-muted text-muted-foreground"
-              )}
-            >
-              {changeType === "positive" && <TrendingUp className="mr-1 h-3 w-3" />}
-              {changeType === "negative" && <TrendingDown className="mr-1 h-3 w-3" />}
-              {change}
-            </Badge>
-          </div>
-        </div>
-        {href && <ChevronRight className="h-5 w-5 text-muted-foreground" />}
-      </div>
-    </CardContent>
-  )
-
-  if (href) {
-    return (
-      <Link href={href}>
-        <Card className="p-6 cursor-pointer hover:bg-accent/50 transition-colors">
-          {content}
-        </Card>
-      </Link>
-    )
-  }
-
-  return <Card className="p-6">{content}</Card>
-}
-
-function QuickStatsSection({ quickStats }: { quickStats: QuickStatData[] }) {
-  return (
-    <section>
-      <SectionHeading title="Quick Stats" />
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
-        {quickStats.map((stat) => (
-          <StatBadge key={stat.label} {...stat} />
-        ))}
-      </div>
-    </section>
-  )
 }
 
 // ============================================================================
@@ -414,7 +346,6 @@ export function AdminDashboardClient({
   subdomain,
   userName,
   schoolName,
-  quickStats,
   recentActivities,
   todaySummary,
 }: AdminDashboardClientProps) {
@@ -446,10 +377,7 @@ export function AdminDashboardClient({
       {/* Section 7: System Health */}
       <SystemHealthSection />
 
-      {/* Section 8: Quick Stats */}
-      <QuickStatsSection quickStats={quickStats} />
-
-      {/* Section 9: Attendance Overview */}
+      {/* Section 8: Attendance Overview */}
       <AttendanceSection />
 
       {/* Section 10: Recent Activity */}
