@@ -602,13 +602,6 @@ export function FinancialOverviewSection({
     <section className={className}>
       <SectionHeading title="Financial Overview" />
       <div className="space-y-4">
-        {/* Stats with Status (stats-06 pattern) */}
-        <dl className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {data.stats.map((item) => (
-            <StatsStatusCard key={item.name} item={item} />
-          ))}
-        </dl>
-
         {/* Charts (same as finance page) */}
         {showChart && (
           <>
@@ -649,13 +642,6 @@ export function StaticFinancialOverviewSection({
     <section className={className}>
       <SectionHeading title="Financial Overview" />
       <div className="space-y-4">
-        {/* Stats with Status (stats-06 pattern) */}
-        <dl className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {financialData.stats.map((item) => (
-            <StatsStatusCard key={item.name} item={item} />
-          ))}
-        </dl>
-
         {/* Chart placeholder for static version */}
         {showChart && (
           <Card className="bg-muted border-none shadow-none">
