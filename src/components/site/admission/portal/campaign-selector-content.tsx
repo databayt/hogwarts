@@ -152,10 +152,11 @@ export default function CampaignSelectorContent({
             <ChevronIcon className="w-4 h-4 sm:w-5 sm:h-5 text-foreground group-hover:text-foreground transition-colors flex-shrink-0" />
           </button>
 
-          {/* Continue saved application */}
+          {/* Import from profile/documents */}
           <button
-            onClick={handleContinueSaved}
-            className="w-full flex items-center justify-between h-auto py-2 sm:py-3 border-b border-border transition-all group min-h-[50px] sm:min-h-[60px]"
+            onClick={() => activeCampaign && router.push(`/${lang}/apply/${activeCampaign.id}?import=true`)}
+            disabled={!activeCampaign || activeCampaign.availableSeats === 0}
+            className="w-full flex items-center justify-between h-auto py-2 sm:py-3 border-b border-border transition-all group min-h-[50px] sm:min-h-[60px] disabled:opacity-50"
           >
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 sm:w-10 sm:h-10 bg-muted rounded-lg flex items-center justify-center flex-shrink-0">
@@ -163,12 +164,12 @@ export default function CampaignSelectorContent({
               </div>
               <div className={`min-w-0 flex-1 ${isRTL ? 'text-right' : 'text-left'}`}>
                 <h5>
-                  {lang === "ar" ? "استئناف طلب محفوظ" : "Resume saved application"}
+                  {lang === "ar" ? "استيراد من ملف شخصي" : "Import from profile"}
                 </h5>
                 <p className="muted mt-0.5">
                   {lang === "ar"
-                    ? "أكمل طلباً بدأته سابقاً"
-                    : "Continue where you left off"}
+                    ? "استخرج البيانات من المستندات أو LinkedIn"
+                    : "Auto-fill from documents or LinkedIn"}
                 </p>
               </div>
             </div>
