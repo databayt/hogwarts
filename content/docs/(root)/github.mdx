@@ -1,162 +1,344 @@
 ---
-title: "Clone a repository"
-description: "Documentation for Clone a repository"
+title: "GitHub Workflow"
+description: "Complete guide to GitHub collaboration, pull requests, branch protection, and CI/CD automation for Hogwarts"
 ---
 
-## GitHub
+## Overview
 
-Master GitHub workflows and collaboration patterns for contributing to Databayt projects.
+Hogwarts follows industry-standard GitHub practices inspired by projects like [Next.js](https://github.com/vercel/next.js), [Cal.com](https://github.com/calcom/cal.com), and [shadcn/ui](https://github.com/shadcn-ui/ui). This guide covers everything you need to contribute effectively.
 
 <div className="text-sm text-muted-foreground pt-4 bg-muted rounded-lg px-4 flex items-center">
-  <strong>Essential knowledge:</strong> Repository workflows → Collaboration best practices → Code quality standards → Community resources
+  <strong>Key principle:</strong> All changes go through Pull Requests → Code Review → CI Checks → Merge
 </div>
 
-## Workflow Essentials
+## Branch Protection
 
-Learn the core GitHub workflows that power effective collaboration.
-
-#### Understanding GitHub Features
+The `main` branch is protected. This means:
 
 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-8">
-  <div className="p-6 border rounded-lg">
-    <h4 className="font-semibold mb-2">Repositories</h4>
-    <div className="text-sm text-muted-foreground">
-      Learn how to fork, clone, and manage repositories for your contributions.
+  <div className="p-6 border rounded-lg border-destructive/50">
+    <h4 className="font-semibold mb-2 text-destructive">Not Allowed</h4>
+    <div className="text-sm text-muted-foreground space-y-1">
+      <div>• Direct pushes to main</div>
+      <div>• Force pushes</div>
+      <div>• Deleting the branch</div>
+      <div>• Merging without approval</div>
     </div>
   </div>
-  <div className="p-6 border rounded-lg">
-    <h4 className="font-semibold mb-2">Issues & Pull Requests</h4>
-    <div className="text-sm text-muted-foreground">
-      Understand how to create issues, submit pull requests, and collaborate.
-    </div>
-  </div>
-  <div className="p-6 border rounded-lg">
-    <h4 className="font-semibold mb-2">Branches</h4>
-    <div className="text-sm text-muted-foreground">
-      Master the art of branching for feature development and bug fixes.
-    </div>
-  </div>
-  <div className="p-6 border rounded-lg">
-    <h4 className="font-semibold mb-2">Collaboration</h4>
-    <div className="text-sm text-muted-foreground">
-      Learn GitHub's collaborative features like reviews, discussions, and projects.
+  <div className="p-6 border rounded-lg border-green-500/50">
+    <h4 className="font-semibold mb-2 text-green-600">Required</h4>
+    <div className="text-sm text-muted-foreground space-y-1">
+      <div>• Pull Request for all changes</div>
+      <div>• 1 approval from CODEOWNER</div>
+      <div>• All CI checks passing</div>
+      <div>• Conversation resolution</div>
     </div>
   </div>
 </div>
 
-#### Essential Git Commands
+### Why Branch Protection?
 
-**Repository Management:**
+Branch protection ensures:
+- **Code Quality**: Every change is reviewed before merging
+- **Stability**: CI checks catch bugs before they reach production
+- **Accountability**: Clear history of who approved what
+- **Security**: No unauthorized changes to the codebase
+
+## Pull Request Workflow
+
+### Step 1: Fork & Clone
+
 ```bash
-# Clone a repository
-git clone git@github.com:username/repository.git
+# Fork via GitHub UI, then clone your fork
+git clone git@github.com:YOUR_USERNAME/hogwarts.git
+cd hogwarts
 
-# Check repository status
-git status
-
-# View commit history
-git log --oneline
+# Add upstream remote
+git remote add upstream git@github.com:abdout/hogwarts.git
 ```
 
-**Branch Management:**
-```bash
-# Create and switch to new branch
-git checkout -b feature/your-feature
+### Step 2: Create Feature Branch
 
-# Switch between branches
+```bash
+# Always start from latest main
 git checkout main
-git checkout feature/your-feature
+git pull upstream main
 
-# List all branches
-git branch -a
+# Create your feature branch
+git checkout -b feature/your-feature-name
 ```
 
-**Making Changes:**
+**Branch Naming Convention:**
+- `feature/` - New features (e.g., `feature/student-attendance-export`)
+- `fix/` - Bug fixes (e.g., `fix/login-redirect-issue`)
+- `docs/` - Documentation (e.g., `docs/api-reference`)
+- `refactor/` - Code refactoring (e.g., `refactor/auth-module`)
+
+### Step 3: Make Changes & Commit
+
 ```bash
-# Stage changes
+# Make your changes, then stage
 git add .
-git add specific-file.txt
 
-# Commit changes
-git commit -m "feat: add new feature"
-
-# Push changes
-git push origin feature/your-feature
+# Commit with conventional message
+git commit -m "feat(platform): add attendance export to CSV"
 ```
 
-**Staying Updated:**
+**Commit Message Format:**
+```
+<type>(<scope>): <description>
+
+[optional body]
+
+[optional footer]
+```
+
+Types: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`, `ci`
+
+### Step 4: Push & Create PR
+
 ```bash
-# Fetch latest changes
-git fetch origin
-
-# Pull latest changes
-git pull origin main
-
-# Merge changes
-git merge origin/main
+# Push to your fork
+git push origin feature/your-feature-name
 ```
 
-## Best Practices
+Then open a Pull Request via GitHub. Our PR template will guide you through:
+- Description of changes
+- Type of change
+- Screenshots/videos (for UI changes)
+- Checklist of requirements
 
-#### Quality Standards
+### Step 5: CI Checks Run Automatically
+
+<div className="grid grid-cols-2 md:grid-cols-4 gap-4 my-8">
+  <div className="p-4 border rounded-lg text-center">
+    <div className="text-2xl mb-2">TypeScript</div>
+    <div className="text-sm text-muted-foreground">Type checking</div>
+  </div>
+  <div className="p-4 border rounded-lg text-center">
+    <div className="text-2xl mb-2">ESLint</div>
+    <div className="text-sm text-muted-foreground">Code linting</div>
+  </div>
+  <div className="p-4 border rounded-lg text-center">
+    <div className="text-2xl mb-2">Vitest</div>
+    <div className="text-sm text-muted-foreground">Unit tests</div>
+  </div>
+  <div className="p-4 border rounded-lg text-center">
+    <div className="text-2xl mb-2">Build</div>
+    <div className="text-sm text-muted-foreground">Production build</div>
+  </div>
+</div>
+
+**All checks must pass before merging.**
+
+### Step 6: Code Review
+
+A maintainer will review your PR. They may:
+- **Approve**: Ready to merge
+- **Request Changes**: Needs modifications
+- **Comment**: Questions or suggestions
+
+Address feedback by pushing new commits to your branch.
+
+### Step 7: Merge
+
+Once approved and all checks pass, a maintainer will merge your PR. Your contribution is now live!
+
+## Issue Templates
+
+When reporting issues or requesting features, use our templates:
+
+### Bug Reports
+
+Include:
+- Clear description of the bug
+- Steps to reproduce
+- Expected vs actual behavior
+- Screenshots/videos
+- Browser and OS information
+- Affected area (Platform, Auth, Finance, etc.)
+
+### Feature Requests
+
+Include:
+- Problem statement
+- Proposed solution
+- Alternatives considered
+- Priority level
+- Willingness to contribute
+
+### Documentation Issues
+
+Include:
+- Location of incorrect/missing docs
+- What's wrong or missing
+- Suggested improvement
+
+## CI/CD Pipeline
+
+### PR Checks (`pr-check.yml`)
+
+Every PR triggers:
+
+| Job | Description | Must Pass |
+|-----|-------------|-----------|
+| `typecheck` | TypeScript compilation | Yes |
+| `lint` | ESLint validation | Yes |
+| `test` | Vitest unit tests | Yes |
+| `build` | Production build | Yes |
+
+### Security Scanning (`codeql.yml`)
+
+- **CodeQL Analysis**: Scans for security vulnerabilities
+- Runs on: Every PR and weekly schedule
+- Languages: JavaScript/TypeScript
+
+### Dependency Updates (`dependabot.yml`)
+
+- **Weekly updates**: Every Monday
+- **Grouped PRs**: Development, testing, React, Next.js dependencies
+- **Auto-labeled**: `dependencies`, `automated`
+
+### Auto-Labeling
+
+PRs are automatically labeled based on files changed:
+
+| Label | Files |
+|-------|-------|
+| `area: platform` | `src/components/platform/**` |
+| `area: auth` | `src/auth*`, `auth.ts` |
+| `area: database` | `prisma/**` |
+| `area: docs` | `docs/**`, `content/**`, `*.md` |
+| `area: ui` | `src/components/ui/**` |
+| `type: ci` | `.github/**` |
+| `type: tests` | `*.test.*`, `tests/**` |
+
+### Stale Issue Management
+
+- Issues/PRs marked stale after 30 days of inactivity
+- Closed after 7 more days
+- Exempt: `pinned`, `security`, `help wanted`, `good first issue`
+
+## CODEOWNERS
+
+The [CODEOWNERS](https://github.com/abdout/hogwarts/blob/main/.github/CODEOWNERS) file defines who must review changes to specific areas:
+
+```
+# Default owner
+* @abdout
+
+# Specific areas
+/src/components/platform/ @abdout
+/prisma/ @abdout
+/src/auth* @abdout
+/.github/ @abdout
+```
+
+When you modify files in these areas, the corresponding owner is automatically requested for review.
+
+## Security
+
+### Reporting Vulnerabilities
+
+**DO NOT** open public issues for security vulnerabilities.
+
+Instead:
+1. Email `security@databayt.org`
+2. Include: type, affected files, reproduction steps, impact
+3. We'll respond within 48 hours
+
+See [SECURITY.md](https://github.com/abdout/hogwarts/blob/main/SECURITY.md) for full policy.
+
+### Security Best Practices
+
+When contributing:
+- Always include `schoolId` in database queries (multi-tenant safety)
+- Use Zod schemas for input validation
+- Never commit secrets or credentials
+- Keep dependencies updated
+
+## Essential Git Commands
+
+### Staying Synced
+
+```bash
+# Update your fork with upstream changes
+git checkout main
+git fetch upstream
+git merge upstream/main
+git push origin main
+
+# Rebase your feature branch
+git checkout feature/your-feature
+git rebase main
+```
+
+### Fixing Mistakes
+
+```bash
+# Undo last commit (keep changes)
+git reset --soft HEAD~1
+
+# Undo last commit (discard changes)
+git reset --hard HEAD~1
+
+# Amend last commit message
+git commit --amend -m "new message"
+
+# Undo changes to a file
+git checkout -- filename
+```
+
+### Cleaning Up
+
+```bash
+# Delete local branch
+git branch -d feature/your-feature
+
+# Delete remote branch
+git push origin --delete feature/your-feature
+
+# Prune deleted remote branches
+git remote prune origin
+```
+
+## Quick Reference
 
 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-8">
   <div className="p-6 border rounded-lg">
-    <h4 className="font-semibold mb-2">Repository Management</h4>
+    <h4 className="font-semibold mb-2">For Contributors</h4>
     <div className="text-sm text-muted-foreground space-y-1">
-      <div>• Clear, descriptive naming</div>
-      <div>• Comprehensive README files</div>
-      <div>• Proper .gitignore setup</div>
-      <div>• Semantic version releases</div>
+      <div>1. Fork the repository</div>
+      <div>2. Create a feature branch</div>
+      <div>3. Make changes with conventional commits</div>
+      <div>4. Push and open a PR</div>
+      <div>5. Wait for review and CI checks</div>
+      <div>6. Address feedback</div>
+      <div>7. Get merged!</div>
     </div>
   </div>
   <div className="p-6 border rounded-lg">
-    <h4 className="font-semibold mb-2">Pull Requests</h4>
+    <h4 className="font-semibold mb-2">Before Submitting PR</h4>
     <div className="text-sm text-muted-foreground space-y-1">
-      <div>• Descriptive titles and descriptions</div>
-      <div>• Reference related issues (#123)</div>
-      <div>• Request appropriate reviews</div>
-      <div>• Keep scope focused and atomic</div>
+      <div>• Run `pnpm tsc --noEmit`</div>
+      <div>• Run `pnpm lint`</div>
+      <div>• Run `pnpm test`</div>
+      <div>• Test your changes locally</div>
+      <div>• Update documentation if needed</div>
+      <div>• Fill out PR template completely</div>
     </div>
   </div>
 </div>
 
-#### Commit Message Format
+## Resources
 
-Use conventional commits for consistent history:
-```bash
-feat: add new user authentication system
-fix: resolve login page redirect issue
-docs: update API documentation
-style: fix code formatting issues
-refactor: restructure service logic
-test: add comprehensive unit tests
-```
-
-## Getting Help
-
-<div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-8">
-  <div className="p-6 border rounded-lg">
-    <h4 className="font-semibold mb-2">Documentation</h4>
-    <div className="text-sm text-muted-foreground">
-      Check <a href="https://docs.github.com" className="underline hover:text-primary" target="_blank">GitHub Docs</a> for official guides and <a href="/docs/pattern" className="underline hover:text-primary">our patterns</a> for project-specific standards.
-    </div>
-  </div>
-  <div className="p-6 border rounded-lg">
-    <h4 className="font-semibold mb-2">Community</h4>
-    <div className="text-sm text-muted-foreground">
-      Join our Discord for real-time collaboration help and connect with other contributors.
-    </div>
-  </div>
-</div>
-
-#### Quick Reference Links
-
-* [Git Cheat Sheet](https://education.github.com/git-cheat-sheet-education.pdf) - Essential Git commands
-* [GitHub Flow](https://guides.github.com/introduction/flow/) - Understanding GitHub workflow
-* [Markdown Guide](https://guides.github.com/features/mastering-markdown/) - Writing better README files
-* [Conventional Commits](https://www.conventionalcommits.org/) - Commit message standards
+- [Contributing Guide](/docs/contributing) - Detailed contribution guide
+- [First PR Guide](/docs/first-pr) - Your first pull request
+- [Code of Conduct](/docs/code-of-conduct) - Community standards
+- [GitHub Docs](https://docs.github.com) - Official GitHub documentation
+- [Conventional Commits](https://www.conventionalcommits.org/) - Commit message standard
+- [GitHub Flow](https://docs.github.com/en/get-started/using-github/github-flow) - Branch-based workflow
 
 ---
 
-**🎉 Congratulations!** Your GitHub account is now fully configured and ready for contributing to open source projects. You can now fork repositories, make changes, and submit pull requests with confidence! 
+**Questions?** Join our [Discord](https://discord.gg/uPa4gGG62c) or open a [Discussion](https://github.com/abdout/hogwarts/discussions).

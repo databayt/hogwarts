@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -25,6 +26,7 @@ interface StepsOverviewClientProps {
 const StepsOverviewClient: React.FC<StepsOverviewClientProps> = ({ dictionary, lang }) => {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { update: updateSession } = useSession();
   const [isCreating, setIsCreating] = React.useState(false);
   const { isRTL } = useLocale();
 
@@ -105,25 +107,37 @@ const StepsOverviewClient: React.FC<StepsOverviewClientProps> = ({ dictionary, l
         });
 
         if (result.success && result.data) {
-          console.log('✅ [DEBUG] School created successfully, preparing redirect:', {
+          console.log('✅ [DEBUG] School created successfully:', {
             schoolId: result.data.id,
             schoolName: result.data.name,
-            redirectTarget: `/${lang}/onboarding/${result.data.id}/about-school`,
-            waitingBeforeRedirect: true,
-            waitTime: '2000ms'
+            hasRedirectHint: !!result.data._redirect,
+            redirectHint: result.data._redirect,
+            sessionRefreshRequired: result.data._sessionRefreshRequired,
+            timestamp: new Date().toISOString()
           });
 
-          // Wait longer for the database update and session refresh to propagate
-          await new Promise(resolve => setTimeout(resolve, 2000));
+          // PRODUCTION-READY: Force session refresh to get new schoolId in JWT immediately
+          // This is critical for the atomic transaction flow to work correctly
+          if (result.data._sessionRefreshRequired) {
+            console.log('🔄 [DEBUG] Refreshing session to sync schoolId...');
+            try {
+              await updateSession();
+              console.log('✅ [DEBUG] Session refreshed successfully');
+            } catch (sessionError) {
+              console.warn('⚠️ [DEBUG] Session refresh failed, continuing with redirect:', sessionError);
+            }
+          }
 
-          console.log('🔄 [DEBUG] Executing redirect to about-school page:', {
-            targetUrl: `/${lang}/onboarding/${result.data.id}/about-school`,
-            redirectMethod: 'window.location.href',
-            redirectTimestamp: new Date().toISOString()
+          // Use the redirect hint from the server if available
+          const redirectPath = result.data._redirect || `/${lang}/onboarding/${result.data.id}/about-school`;
+          console.log('🔄 [DEBUG] Executing redirect:', {
+            targetUrl: redirectPath,
+            redirectMethod: 'router.push',
+            timestamp: new Date().toISOString()
           });
 
-          // Force a full page refresh to ensure session is updated
-          window.location.href = `/${lang}/onboarding/${result.data.id}/about-school`;
+          // Use router.push for faster client-side navigation (session is now synced)
+          router.push(redirectPath);
         } else {
           console.error('❌ [DEBUG] Failed to create school:', {
             error: result.error,

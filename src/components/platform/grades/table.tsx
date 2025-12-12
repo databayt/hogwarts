@@ -65,28 +65,6 @@ export function ResultsTable({ initialData, total, dictionary, lang, perPage = 2
     filters: searchValue ? { studentName: searchValue } : undefined,
   });
 
-  // Generate columns on the client side with hooks
-  const columns = useMemo(() => resultColumns(t, lang), [t, lang]);
-
-  // Table instance
-  const { table } = useDataTable<ResultRow>({
-    data,
-    columns,
-    pageCount: 1,
-    initialState: {
-      pagination: {
-        pageIndex: 0,
-        pageSize: data.length || perPage,
-      },
-      columnVisibility: {
-        // Default visible: studentName, assignmentTitle, className, percentage, grade, actions
-        score: false,
-        maxScore: false,
-        createdAt: false,
-      },
-    }
-  });
-
   // Handle search
   const handleSearchChange = useCallback((value: string) => {
     setSearchValue(value);
@@ -95,7 +73,7 @@ export function ResultsTable({ initialData, total, dictionary, lang, perPage = 2
     });
   }, [router]);
 
-  // Handle delete with optimistic update
+  // Handle delete with optimistic update (must be before columns useMemo)
   const handleDelete = useCallback(async (result: ResultRow) => {
     try {
       const ok = await confirmDeleteDialog(t.deleteResultConfirm.replace("{studentName}", result.studentName));
@@ -117,6 +95,30 @@ export function ResultsTable({ initialData, total, dictionary, lang, perPage = 2
       ErrorToast(e instanceof Error ? e.message : t.failedToUpdate);
     }
   }, [optimisticRemove, refresh, t]);
+
+  // Generate columns on the client side with hooks and callbacks
+  const columns = useMemo(() => resultColumns(t, lang, {
+    onDelete: handleDelete,
+  }), [t, lang, handleDelete]);
+
+  // Table instance
+  const { table } = useDataTable<ResultRow>({
+    data,
+    columns,
+    pageCount: 1,
+    initialState: {
+      pagination: {
+        pageIndex: 0,
+        pageSize: data.length || perPage,
+      },
+      columnVisibility: {
+        // Default visible: studentName, assignmentTitle, className, percentage, grade, actions
+        score: false,
+        maxScore: false,
+        createdAt: false,
+      },
+    }
+  });
 
   // Handle edit
   const handleEdit = useCallback((id: string) => {

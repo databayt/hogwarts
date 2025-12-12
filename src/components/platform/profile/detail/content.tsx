@@ -37,7 +37,7 @@ export function ProfileDetailContent({
   // Error state
   if (error || !profileData) {
     return (
-      <div className="container mx-auto p-6">
+      <div className="space-y-4">
         <Alert variant="destructive">
           <CircleAlert className="h-4 w-4" />
           <AlertTitle>Error</AlertTitle>
@@ -55,7 +55,7 @@ export function ProfileDetailContent({
   // No permission to view
   if (!profileData.canViewFullProfile && permissionLevel === "PUBLIC") {
     return (
-      <div className="container mx-auto p-6">
+      <div className="space-y-4">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -148,7 +148,7 @@ export function ProfileDetailContent({
     default:
       // Generic user profile (no specific type assigned yet)
       return (
-        <div className="container mx-auto p-6">
+        <div className="space-y-6">
           <Card>
             <CardHeader>
               <CardTitle>User Profile</CardTitle>
@@ -212,7 +212,7 @@ export function ProfileDetailContent({
  */
 export function ProfileDetailLoading() {
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="space-y-6">
       <Skeleton className="h-48 w-full" />
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <div className="lg:col-span-3">

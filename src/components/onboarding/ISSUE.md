@@ -16,11 +16,15 @@ if (process.env.NODE_ENV === 'development') {
 }
 ```
 
-#### 2. Authentication Fallback Logic
+#### 2. Authentication Fallback Logic ✅ RESOLVED
 - **Issue**: Complex try-catch fallback in `getListing()` suggests auth flow issues
-- **Files**: `src/components/onboarding/actions.ts`
-- **Impact**: Potential security vulnerability, unreliable auth state
-- **Fix**: Implement proper auth middleware and session management
+- **Files**: `src/components/onboarding/actions.ts`, `src/lib/school-access.ts`
+- **Impact**: ~~Potential security vulnerability, unreliable auth state~~
+- **Fix**: Implemented atomic transactions with Prisma `$transaction` in `school-access.ts`
+  - School creation and user linking now happen atomically
+  - Race conditions handled with idempotent responses
+  - Session refresh triggers ensure immediate schoolId access
+  - Fallback logic deprecated (logged as warning for monitoring)
 
 #### 3. Missing Error Boundaries
 - **Issue**: Some steps lack proper error handling for failed data fetches
@@ -139,7 +143,7 @@ if (process.env.NODE_ENV === 'development') {
 - [ ] Rate limiting implemented
 - [ ] SQL injection prevention
 - [ ] XSS protection
-- [ ] Authentication properly secured
+- [x] Authentication properly secured (atomic transactions, session sync)
 
 ### Performance
 - [ ] Page load time < 3s
@@ -172,16 +176,61 @@ if (process.env.NODE_ENV === 'development') {
 - ✅ Form validation with Zod schemas
 - ✅ Server actions with auth
 - ✅ Database schema defined
+- ✅ **Legacy code cleanup** (December 6, 2024):
+  - Removed `action.ts` (superseded by `actions.ts`)
+  - Removed `use-optimized-listing.tsx` (unused)
+  - Removed `enums.ts` (Airbnb/rental legacy)
+  - Removed `host-refactor-plan.md` (old planning doc)
+  - Cleaned up legacy types in `types.ts`
 
 ### In Progress
-- 🔄 Removing debug logging
 - 🔄 External service integrations
 - 🔄 Testing implementation
+
+### Recently Completed (December 6, 2024)
+- ✅ **Production-ready atomic school-user linking**
+  - Implemented Prisma `$transaction` for atomic operations
+  - Added `createdByUserId` field for owner tracking
+  - Race condition handling with idempotent responses
+  - Session refresh triggers for immediate schoolId access
+  - New API endpoint: `/api/onboarding/create-school`
 
 ### Blocked
 - ❌ Maps API (waiting for API key)
 - ❌ Stripe integration (waiting for account setup)
 - ❌ DNS provider (waiting for decision)
+
+---
+
+## ✅ External Dependencies Investigation (COMPLETED)
+
+**Status**: RESOLVED (December 6, 2024)
+
+Investigation results:
+
+| File | Usage | Action Taken |
+|------|-------|--------------|
+| `onboarding-auth.ts` | Only used by `actions.ts` | Moved to `components/onboarding/auth.ts` |
+| `onboarding-optimization.ts` | Never imported (dead code) | Deleted |
+| `onboarding.config.ts` | Never imported (dead code) | Deleted |
+
+**Result**: Onboarding system is now **100% consolidated** into two directories:
+- `src/app/[lang]/onboarding/` (routes)
+- `src/components/onboarding/` (components)
+
+---
+
+## 🧹 Technical Debt Backlog
+
+### Configuration Consolidation
+- [ ] **HOSTING_STEPS defined in 3 locations**: `host-footer.tsx`, `config.client.ts`, `config.ts`
+  - Consolidate to single source of truth in `config.ts`
+  - Make `STEP_GROUPS` a derived utility
+  - Remove hardcoded arrays from `host-footer.tsx`
+
+### Naming Consistency
+- [ ] **Action file naming inconsistency**: Some subdirectories use `action.ts`, others use `actions.ts`
+  - Standardize to `actions.ts` (plural) across all steps
 
 ## 🎯 Sprint Planning
 
@@ -210,6 +259,58 @@ if (process.env.NODE_ENV === 'development') {
 - Prioritize security fixes before feature additions
 - Consider gradual rollout with feature flags
 
+---
+
+## 🔐 Authentication Integration
+
+### Current Flow
+```
+Marketing Page → Get Started → OAuth/Credentials → User Created (no schoolId)
+       ↓
+Redirect to /onboarding → initializeSchoolSetup()
+       ↓
+School Created + User.schoolId Linked + User.role = ADMIN
+       ↓
+Complete 16 Steps → Subdomain Setup → Smart Redirect to school.databayt.org
+```
+
+### Key Integration Points
+
+| Step | Auth Action | Notes |
+|------|-------------|-------|
+| Get Started | Triggers auth flow | User must login/register first |
+| initializeSchoolSetup() | Creates school, links user | Sets user.schoolId, user.role = ADMIN |
+| Subdomain Step | Sets school.domain | Enables school.databayt.org routing |
+| Congratulations | Redirects to subdomain | Smart redirect in auth.ts |
+
+### Authentication Requirements
+
+1. **All onboarding actions require authentication** via `getAuthContext()`
+2. **School ownership verified** via `requireSchoolOwnership()`
+3. **schoolId linked** at initializeSchoolSetup() step
+4. **Role set to ADMIN** for school creator
+
+### User Registration Options (Post-Onboarding)
+
+After school setup, admins can add users via:
+
+| Option | Status | Notes |
+|--------|--------|-------|
+| OAuth Self-Registration | Available | Students/teachers use Google/Facebook |
+| Credentials (Bulk) | Not Implemented | CSV import with role assignment |
+| Invitation Links | Not Implemented | Pre-assigned roles |
+| School Join Codes | Not Implemented | Simple codes like "HOGWARTS-2024" |
+
+### Related Auth Issues
+
+See [Authentication ISSUE.md](/src/components/auth/ISSUE.md) for:
+- **P0**: New OAuth users lack school context initially
+- **P1**: Missing invitation system for member onboarding
+- **P1**: Missing bulk user creation for school admins
+- **P1**: Missing school join codes
+
+---
+
 ## 🚀 Launch Criteria
 
 Minimum requirements for production launch:
@@ -222,6 +323,6 @@ Minimum requirements for production launch:
 
 ---
 
-**Last Updated**: December 2024  
-**Assigned Team**: Platform Engineering  
+**Last Updated**: December 6, 2024
+**Assigned Team**: Platform Engineering
 **Target Launch**: Q1 2025

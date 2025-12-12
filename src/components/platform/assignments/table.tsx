@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useCallback } from "react";
 import { DataTable } from "@/components/table/data-table";
 import { DataTableToolbar } from "@/components/table/data-table-toolbar";
 import { useDataTable } from "@/components/table/use-data-table";
@@ -11,8 +11,9 @@ import { useModal } from "@/components/atom/modal/context";
 import Modal from "@/components/atom/modal/modal";
 import { AssignmentCreateForm } from "@/components/platform/assignments/form";
 import { ExportButton } from "./export-button";
-import { getAssignments } from "./actions";
+import { getAssignments, deleteAssignment } from "./actions";
 import { usePlatformData } from "@/hooks/use-platform-data";
+import { DeleteToast, ErrorToast, confirmDeleteDialog } from "@/components/atom/toast";
 import type { Dictionary } from "@/components/internationalization/dictionaries";
 import type { Locale } from "@/components/internationalization/config";
 
@@ -31,8 +32,6 @@ export function AssignmentsTable({ initialData, total, dictionary, lang, perPage
     loading: lang === 'ar' ? 'جاري التحميل...' : 'Loading...',
   };
 
-  const columns = useMemo(() => getAssignmentColumns(dictionary, lang), [dictionary, lang]);
-
   // Data management with optimistic updates
   const {
     data,
@@ -41,15 +40,48 @@ export function AssignmentsTable({ initialData, total, dictionary, lang, perPage
     hasMore,
     loadMore,
     refresh,
+    optimisticRemove,
   } = usePlatformData<AssignmentRow, { title?: string }>({
     initialData,
     total,
     perPage,
     fetcher: async (params) => {
       const result = await getAssignments(params);
-      return { rows: result.rows as AssignmentRow[], total: result.total };
+      if (!result.success || !result.data) {
+        return { rows: [], total: 0 };
+      }
+      return { rows: result.data.rows as AssignmentRow[], total: result.data.total };
     },
   });
+
+  // Handle delete with optimistic update (must be before columns useMemo)
+  const handleDelete = useCallback(async (assignment: AssignmentRow) => {
+    try {
+      const deleteMsg = lang === 'ar' ? `حذف "${assignment.title}"؟` : `Delete "${assignment.title}"?`;
+      const ok = await confirmDeleteDialog(deleteMsg);
+      if (!ok) return;
+
+      // Optimistic remove
+      optimisticRemove(assignment.id);
+
+      const result = await deleteAssignment({ id: assignment.id });
+      if (result.success) {
+        DeleteToast();
+      } else {
+        // Revert on error
+        refresh();
+        ErrorToast(lang === 'ar' ? 'فشل حذف الواجب' : 'Failed to delete assignment');
+      }
+    } catch (e) {
+      refresh();
+      ErrorToast(e instanceof Error ? e.message : (lang === 'ar' ? 'فشل الحذف' : 'Failed to delete'));
+    }
+  }, [optimisticRemove, refresh, lang]);
+
+  // Generate columns on the client side with dictionary, lang, and callbacks
+  const columns = useMemo(() => getAssignmentColumns(dictionary, lang, {
+    onDelete: handleDelete,
+  }), [dictionary, lang, handleDelete]);
 
   // Use pageCount of 1 since we're handling all data client-side
   const { table } = useDataTable<AssignmentRow>({

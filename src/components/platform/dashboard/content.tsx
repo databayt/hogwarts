@@ -1,11 +1,11 @@
 import { currentUser } from "@/components/auth/auth";
-import { StudentDashboard } from "./dashboards/student-dashboard";
-import { TeacherDashboard } from "./dashboards/teacher-dashboard";
-import { ParentDashboard } from "./dashboards/parent-dashboard";
-import { StaffDashboard } from "./dashboards/staff-dashboard";
-import { AdminDashboard } from "./dashboards/admin-dashboard";
-import { PrincipalDashboard } from "./dashboards/principal-dashboard";
-import { AccountantDashboard } from "./dashboards/accountant-dashboard";
+import { StudentDashboard } from "./student";
+import { TeacherDashboard } from "./teacher";
+import { ParentDashboard } from "./parent";
+import { StaffDashboard } from "./staff";
+import { AdminDashboard } from "./admin";
+import { PrincipalDashboard } from "./principal";
+import { AccountantDashboard } from "./accountant";
 import { TenantLoginRedirect } from "@/components/auth/tenant-login-redirect";
 import { CookieDebug } from "@/components/auth/cookie-debug";
 import { Card, CardContent } from "@/components/ui/card";

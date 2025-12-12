@@ -128,7 +128,7 @@ export function ParentAnnouncementsContent() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto py-8 px-4">
+      <div className="py-8">
         <div className="flex items-center justify-center py-12">
           <p className="muted">Loading announcements...</p>
         </div>
@@ -137,7 +137,7 @@ export function ParentAnnouncementsContent() {
   }
 
   return (
-    <div className="container mx-auto py-8 px-4">
+    <div className="py-8">
       <PageHeadingSetter
         title="Announcements"
         description="Stay updated with school and class announcements"

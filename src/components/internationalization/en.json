@@ -6,7 +6,16 @@
   "chatbot": {
     "title": "Chat Assistant",
     "startMessage": "Start a conversation...",
-    "thinking": "I'm thinking..."
+    "thinking": "I'm thinking...",
+    "openChat": "Open chat",
+    "closeChat": "Close chat",
+    "placeholder": "Type a message...",
+    "welcomeMessage": "Hi! How can I help you today?",
+    "noMessages": "No messages yet",
+    "errorMessage": "Something went wrong. Please try again.",
+    "typing": "Typing...",
+    "send": "Send",
+    "retry": "Retry"
   },
   "common": {
     "loading": "Loading...",
@@ -68,7 +77,8 @@
     "createNewAccount": "Create a new account",
     "orContinueWith": "Or continue with",
     "twoFactorCode": "Two Factor Code",
-    "confirm": "Confirm"
+    "confirm": "Confirm",
+    "username": "Name"
   },
   "marketing": {
     "hero": {
@@ -296,7 +306,7 @@
     },
     "openSource": {
       "title": "Proudly Open Source",
-      "description": "Databayt is open source and powered by open source software.",
+      "description": "Hogwarts is open source and powered by open source software.",
       "descriptionLine2": "The code is available on",
       "github": "GitHub",
       "contributors": "Contributors"

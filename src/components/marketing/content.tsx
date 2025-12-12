@@ -25,7 +25,7 @@ interface Props {
 export default function HomeContent(props: Props) {
   const { dictionary, lang } = props;
   return (
-    <main className="flex min-h-screen flex-col">
+    <main className="flex min-h-screen flex-col bg-background">
       <Hero dictionary={dictionary} lang={lang} />
       <StorySection dictionary={dictionary} />
       <MissionCards dictionary={dictionary} />

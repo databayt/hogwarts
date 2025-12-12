@@ -15,6 +15,7 @@ export * from "./registry"
 
 // Export components
 export * from "./components/icon-wrapper"
+export * from "./anthropic-showcase"
 
 // Import all icons from categories
 import * as SystemIcons from "./categories/system"
@@ -26,7 +27,7 @@ import * as DevelopmentIcons from "./categories/development"
 import * as ProgrammingIcons from "./categories/programming"
 import * as RatingIcons from "./categories/ratings"
 import * as ShapeIcons from "./categories/shapes"
-import * as AnthropicIcons from "./categories/anthropic"
+import { AnthropicIcons, ANTHROPIC_ILLUSTRATIONS } from "./anthropic"
 
 // Re-export individual icons for tree-shaking
 export * from "./categories/system"
@@ -38,7 +39,8 @@ export * from "./categories/development"
 export * from "./categories/programming"
 export * from "./categories/ratings"
 export * from "./categories/shapes"
-export * from "./categories/anthropic"
+export { AnthropicIcons, ANTHROPIC_ILLUSTRATIONS } from "./anthropic"
+export type { AnthropicIllustration } from "./anthropic"
 
 /**
  * Icons Namespace
@@ -122,27 +124,41 @@ export const Icons = {
   triangle: ShapeIcons.TriangleIcon,
 
   // Anthropic icons (UI - theme-aware)
-  anthropicA: AnthropicIcons.AnthropicAIcon,
-  anthropicArrowRight: AnthropicIcons.AnthropicArrowRightIcon,
-  anthropicChevronDown: AnthropicIcons.AnthropicChevronDownIcon,
-  anthropicExternalLink: AnthropicIcons.AnthropicExternalLinkIcon,
-  anthropicLinkedIn: AnthropicIcons.AnthropicLinkedInIcon,
-  anthropicPlay: AnthropicIcons.AnthropicPlayIcon,
-  anthropicYouTube: AnthropicIcons.AnthropicYouTubeIcon,
-  anthropicXTwitter: AnthropicIcons.AnthropicXTwitterIcon,
-  anthropicQuote: AnthropicIcons.AnthropicQuoteIcon,
-
-  // Anthropic illustrative icons (brand colors)
-  handsBuild: AnthropicIcons.HandsBuildIcon,
+  anthropicA: AnthropicIcons.A,
+  anthropicArrowRight: AnthropicIcons.ArrowRight,
+  anthropicChevronDown: AnthropicIcons.ChevronDown,
+  anthropicExternalLink: AnthropicIcons.ExternalLink,
+  anthropicLinkedIn: AnthropicIcons.LinkedIn,
+  anthropicPlay: AnthropicIcons.Play,
+  anthropicYouTube: AnthropicIcons.YouTube,
+  anthropicXTwitter: AnthropicIcons.XTwitter,
+  anthropicQuote: AnthropicIcons.Quote,
+  anthropicAnnouncement: AnthropicIcons.Announcement,
+  anthropicChecklist: AnthropicIcons.Checklist,
+  anthropicBook: AnthropicIcons.Book,
+  anthropicArchive: AnthropicIcons.Archive,
+  anthropicFuelPump: AnthropicIcons.FuelPump,
+  anthropicDevices: AnthropicIcons.Devices,
+  anthropicRedo: AnthropicIcons.Redo,
+  anthropicStopwatch: AnthropicIcons.Stopwatch,
+  anthropicCalendarChart: AnthropicIcons.CalendarChart,
+  anthropicSparkle: AnthropicIcons.Sparkle,
+  anthropicGrantProposal: AnthropicIcons.GrantProposal,
+  anthropicHandsBuild: AnthropicIcons.HandsBuild,
+  anthropicCodeWindow: AnthropicIcons.CodeWindow,
+  anthropicLocationPin: AnthropicIcons.LocationPin,
+  anthropicNotebook: AnthropicIcons.Notebook,
+  anthropicShieldCheck: AnthropicIcons.ShieldCheck,
+  anthropicPencil: AnthropicIcons.Pencil,
+  anthropicBriefcase: AnthropicIcons.Briefcase,
+  anthropicFlow: AnthropicIcons.Flow,
+  anthropicTaskList: AnthropicIcons.TaskList,
+  anthropicCopy: AnthropicIcons.Copy,
+  anthropicGlobe: AnthropicIcons.Globe,
+  anthropicChat: AnthropicIcons.Chat,
+  anthropicLightning: AnthropicIcons.Lightning,
+  anthropicTerminal: AnthropicIcons.Terminal,
 } as const
-
-/**
- * Anthropic Illustration Paths
- *
- * For large illustrative icons, use as img src or Next/Image
- * Usage: <Image src={ANTHROPIC_ILLUSTRATIONS.category01} alt="..." />
- */
-export { ANTHROPIC_ILLUSTRATIONS } from "./categories/anthropic"
 
 /**
  * Dynamic Icon Component

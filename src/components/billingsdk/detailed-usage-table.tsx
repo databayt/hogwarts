@@ -1,13 +1,6 @@
 "use client"
 
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import {
   Table,
   TableBody,
   TableCaption,
@@ -62,69 +55,67 @@ export function DetailedUsageTable({
   }
 
   return (
-    <Card className={cn("w-full", className)}>
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        {description && <CardDescription>{description}</CardDescription>}
-      </CardHeader>
-      <CardContent>
-        <div className="rounded-md border overflow-x-auto">
-          <Table>
-            <TableCaption className="sr-only">
-              Detailed usage of resources
-            </TableCaption>
-            <TableHeader>
+    <div className={cn("w-full", className)}>
+      <div className="mb-4">
+        <h3 className="text-lg font-semibold">{title}</h3>
+        {description && <p className="text-sm text-muted-foreground">{description}</p>}
+      </div>
+      <div className="rounded-md border overflow-x-auto">
+        <Table>
+          <TableCaption className="sr-only">
+            Detailed usage of resources
+          </TableCaption>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-[180px] px-6">Resource</TableHead>
+              <TableHead className="text-end px-6">Used</TableHead>
+              <TableHead className="text-end px-6">Limit</TableHead>
+              <TableHead className="text-end min-w-[160px] px-6">Usage</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {resources.length === 0 ? (
               <TableRow>
-                <TableHead className="w-[180px]">Resource</TableHead>
-                <TableHead className="text-end">Used</TableHead>
-                <TableHead className="text-end">Limit</TableHead>
-                <TableHead className="text-end min-w-[160px]">Usage</TableHead>
+                <TableCell
+                  colSpan={4}
+                  className="h-24 text-center text-muted-foreground"
+                >
+                  No resources found
+                </TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {resources.length === 0 ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={4}
-                    className="h-24 text-center text-muted-foreground"
-                  >
-                    No resources found
-                  </TableCell>
-                </TableRow>
-              ) : (
-                resources.map((resource, index) => {
-                  const percentage =
-                    resource.percentage ??
-                    (resource.limit > 0
-                      ? (resource.used / resource.limit) * 100
-                      : 0)
+            ) : (
+              resources.map((resource, index) => {
+                const percentage =
+                  resource.percentage ??
+                  (resource.limit > 0
+                    ? (resource.used / resource.limit) * 100
+                    : 0)
 
-                  const unit = resource.unit ? ` ${resource.unit}` : ""
+                const unit = resource.unit ? ` ${resource.unit}` : ""
 
-                  return (
-                    <TableRow key={resource.name || index}>
-                      <TableCell className="font-medium">
-                        {resource.name}
-                      </TableCell>
-                      <TableCell className="text-end tabular-nums">
-                        {formatNumber(resource.used)}
-                        {unit}
-                      </TableCell>
-                      <TableCell className="text-end tabular-nums text-muted-foreground">
-                        {formatNumber(resource.limit)}
-                        {unit}
-                      </TableCell>
-                      <TableCell className="text-end">
-                        {getPercentageBar(percentage)}
-                      </TableCell>
-                    </TableRow>
-                  )
-                })
-              )}
-            </TableBody>
-          </Table>
-        </div>
-      </CardContent>
-    </Card>
+                return (
+                  <TableRow key={resource.name || index}>
+                    <TableCell className="font-medium px-6">
+                      {resource.name}
+                    </TableCell>
+                    <TableCell className="text-end tabular-nums px-6">
+                      {formatNumber(resource.used)}
+                      {unit}
+                    </TableCell>
+                    <TableCell className="text-end tabular-nums text-muted-foreground px-6">
+                      {formatNumber(resource.limit)}
+                      {unit}
+                    </TableCell>
+                    <TableCell className="text-end px-6">
+                      {getPercentageBar(percentage)}
+                    </TableCell>
+                  </TableRow>
+                )
+              })
+            )}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
   )
 }

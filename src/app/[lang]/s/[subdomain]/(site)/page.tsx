@@ -39,10 +39,8 @@ export default async function Site({ params }: SiteProps) {
   const school = result.data;
 
   return (
-
-      <div className="school-content" data-school-id={school.id} data-subdomain={subdomain}>
-        <SiteContent school={school} dictionary={dictionary} lang={lang} />
-      </div>
-
+    <div className="school-content" data-school-id={school.id} data-subdomain={subdomain}>
+      <SiteContent school={school} dictionary={dictionary} lang={lang} subdomain={subdomain} />
+    </div>
   );
 }

@@ -78,32 +78,12 @@ export function LessonsTable({ initialData, total, dictionary, lang, perPage = 2
     perPage,
     fetcher: async (params) => {
       const result = await getLessons(params);
-      return { rows: result.rows as LessonRow[], total: result.total };
+      if (!result.success || !result.data) {
+        return { rows: [], total: 0 };
+      }
+      return { rows: result.data.rows as LessonRow[], total: result.data.total };
     },
     filters: searchValue ? { title: searchValue } : undefined,
-  });
-
-  // Generate columns on the client side with dictionary and lang
-  const columns = useMemo(() => getLessonColumns(dictionary, lang), [dictionary, lang]);
-
-  // Table instance
-  const { table } = useDataTable<LessonRow>({
-    data,
-    columns,
-    pageCount: 1,
-    initialState: {
-      pagination: {
-        pageIndex: 0,
-        pageSize: data.length || perPage,
-      },
-      columnVisibility: {
-        // Default visible: title, className, teacherName, lessonDate, status
-        subjectName: false,
-        startTime: false,
-        endTime: false,
-        createdAt: false,
-      },
-    },
   });
 
   // Handle search
@@ -114,7 +94,7 @@ export function LessonsTable({ initialData, total, dictionary, lang, perPage = 2
     });
   }, [router]);
 
-  // Handle delete with optimistic update
+  // Handle delete with optimistic update (must be before columns useMemo)
   const handleDelete = useCallback(async (lesson: LessonRow) => {
     try {
       const deleteMsg = lang === 'ar' ? `حذف "${lesson.title}"؟` : `Delete "${lesson.title}"?`;
@@ -138,6 +118,31 @@ export function LessonsTable({ initialData, total, dictionary, lang, perPage = 2
     }
   }, [optimisticRemove, refresh, lang]);
 
+  // Generate columns on the client side with dictionary, lang, and callbacks
+  const columns = useMemo(() => getLessonColumns(dictionary, lang, {
+    onDelete: handleDelete,
+  }), [dictionary, lang, handleDelete]);
+
+  // Table instance
+  const { table } = useDataTable<LessonRow>({
+    data,
+    columns,
+    pageCount: 1,
+    initialState: {
+      pagination: {
+        pageIndex: 0,
+        pageSize: data.length || perPage,
+      },
+      columnVisibility: {
+        // Default visible: title, className, teacherName, lessonDate, status
+        subjectName: false,
+        startTime: false,
+        endTime: false,
+        createdAt: false,
+      },
+    },
+  });
+
   // Handle edit
   const handleEdit = useCallback((id: string) => {
     openModal(id);
@@ -150,7 +155,11 @@ export function LessonsTable({ initialData, total, dictionary, lang, perPage = 2
 
   // Export CSV wrapper
   const handleExportCSV = useCallback(async (filters?: Record<string, unknown>) => {
-    return getLessonsCSV(filters);
+    const result = await getLessonsCSV(filters);
+    if (!result.success || !result.data) {
+      throw new Error('error' in result ? result.error : 'Export failed');
+    }
+    return result.data;
   }, []);
 
   // Get status badge variant

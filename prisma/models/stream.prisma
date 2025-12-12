@@ -24,6 +24,7 @@ enum StreamEnrollmentStatus {
 model StreamCourse {
   id          String             @id @default(cuid())
   schoolId    String // Multi-tenant support
+  lang        String             @default("en") // Language code: "en" or "ar"
   title       String
   slug        String
   description String?            @db.Text
@@ -47,8 +48,9 @@ model StreamCourse {
 
   school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
 
-  @@unique([slug, schoolId]) // Unique slug per school
+  @@unique([slug, schoolId, lang]) // Unique slug per school per language
   @@index([schoolId])
+  @@index([schoolId, lang]) // Filter by school and language
   @@index([categoryId])
   @@index([userId])
   @@map("stream_course")
@@ -57,14 +59,16 @@ model StreamCourse {
 model StreamCategory {
   id       String @id @default(cuid())
   schoolId String // Multi-tenant support
+  lang     String @default("en") // Language code: "en" or "ar"
   name     String
 
   courses StreamCourse[]
 
   school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
 
-  @@unique([name, schoolId]) // Unique category name per school
+  @@unique([name, schoolId, lang]) // Unique category name per school per language
   @@index([schoolId])
+  @@index([schoolId, lang]) // Filter by school and language
   @@map("stream_category")
 }
 

@@ -429,4 +429,21 @@ export const Icons = {
   subject: ({ ...props }: LucideProps) => (
     <svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 24 24"><path fill="currentColor" d="M5.616 18.212q-.262 0-.439-.171T5 17.617t.177-.435t.439-.182H12.5q.213 0 .356.15t.144.37q0 .212-.143.356t-.338.143zM5.5 14.327q-.213 0-.356-.144T5 13.826t.144-.356t.356-.143h13q.213 0 .356.144q.144.144.144.357t-.144.356t-.356.143zm0-3.654q-.213 0-.356-.144Q5 10.385 5 10.173q0-.213.144-.357t.356-.143h13q.213 0 .356.144t.144.357t-.144.356t-.356.143zM5.616 7q-.262 0-.439-.177T5 6.385t.177-.439t.439-.177h12.769q.261 0 .438.177t.177.439t-.177.438t-.438.177z" stroke-width="0.5" stroke="currentColor"/></svg>
   ),
+  sales: ({ ...props }: LucideProps) => (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={props.className}
+      {...props}
+    >
+      <circle cx="12" cy="12" r="10"></circle>
+      <circle cx="12" cy="12" r="6"></circle>
+      <circle cx="12" cy="12" r="2"></circle>
+    </svg>
+  ),
 };

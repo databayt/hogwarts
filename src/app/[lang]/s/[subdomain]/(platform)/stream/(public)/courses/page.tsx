@@ -52,7 +52,8 @@ async function CoursesRenderer({
   dictionary: any;
   searchParams?: { category?: string; search?: string };
 }) {
-  const courses = await getAllCourses(schoolId);
+  // Fetch courses filtered by language
+  const courses = await getAllCourses(schoolId, lang);
 
   return (
     <StreamCoursesContent

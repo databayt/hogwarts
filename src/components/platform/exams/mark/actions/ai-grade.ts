@@ -68,7 +68,7 @@ export async function aiGradeAnswer(
     }
 
     // Check if question type is AI-gradable
-    if (!["ESSAY", "SHORT_ANSWER", "LONG_ANSWER"].includes(question.questionType)) {
+    if (!["ESSAY", "SHORT_ANSWER"].includes(question.questionType)) {
       return {
         success: false,
         error: `Question type ${question.questionType} is not AI-gradable`,
@@ -179,7 +179,7 @@ export async function batchAIGrade(
       examId,
       question: {
         questionType: {
-          in: ["ESSAY", "SHORT_ANSWER", "LONG_ANSWER"],
+          in: ["ESSAY", "SHORT_ANSWER"],
         },
       },
     };

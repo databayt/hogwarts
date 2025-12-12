@@ -6,6 +6,8 @@ import { Menu, X } from "lucide-react"
 import type { ConversationDTO, MessageDTO } from "./types"
 import { ConversationList } from "./conversation-list"
 import { ChatInterface, ChatInterfaceSkeleton } from "./chat-interface"
+import { NewConversationDialog } from "./new-conversation-dialog"
+import { NoActiveConversation } from "./empty-state"
 import {
   sendMessage,
   editMessage,
@@ -15,6 +17,10 @@ import {
   archiveConversation,
   markMessageAsRead,
   markConversationAsRead,
+  pinConversation,
+  muteConversation,
+  unmuteConversation,
+  leaveConversation,
 } from "./actions"
 import { toast } from "@/components/ui/use-toast"
 import { Button } from "@/components/ui/button"
@@ -44,6 +50,7 @@ export function MessagingClient({
   const [messages, setMessages] = useState<MessageDTO[]>(initialMessages)
   const [isConnected, setIsConnected] = useState(false)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const [showNewConversationDialog, setShowNewConversationDialog] = useState(false)
 
   // Connect to Socket.IO
   useEffect(() => {
@@ -116,11 +123,12 @@ export function MessagingClient({
   }
 
   const handleNewConversation = () => {
-    // TODO: Open new conversation dialog
-    toast({
-      title: locale === "ar" ? "قريباً" : "Coming soon",
-      description: locale === "ar" ? "ميزة إنشاء محادثة جديدة قريباً" : "New conversation feature coming soon",
-    })
+    setShowNewConversationDialog(true)
+  }
+
+  const handleConversationCreated = (conversationId: string) => {
+    router.push(`/messages?conversation=${conversationId}`)
+    router.refresh()
   }
 
   const handleSendMessage = async (content: string, replyToId?: string) => {
@@ -202,27 +210,100 @@ export function MessagingClient({
   }
 
   const handleDeleteConversation = async (conversationId: string) => {
-    // TODO: Implement delete conversation action
-    toast({
-      title: locale === "ar" ? "قريباً" : "Coming soon",
-      description: locale === "ar" ? "ميزة حذف المحادثة قريباً" : "Delete conversation feature coming soon",
-    })
+    const result = await leaveConversation({ conversationId })
+
+    if (result.success) {
+      setConversations(prev => prev.filter(c => c.id !== conversationId))
+      if (activeConversation?.id === conversationId) {
+        setActiveConversation(null)
+        router.push("/messages")
+      }
+      toast({
+        title: locale === "ar" ? "تم الحذف" : "Deleted",
+        description: locale === "ar" ? "تم حذف المحادثة بنجاح" : "Conversation deleted successfully",
+      })
+    } else {
+      toast({
+        title: locale === "ar" ? "خطأ" : "Error",
+        description: result.error,
+      })
+    }
   }
 
   const handlePinConversation = async (conversationId: string) => {
-    // TODO: Implement pin conversation action
-    toast({
-      title: locale === "ar" ? "قريباً" : "Coming soon",
-      description: locale === "ar" ? "ميزة تثبيت المحادثة قريباً" : "Pin conversation feature coming soon",
+    const conversation = conversations.find(c => c.id === conversationId)
+    const currentParticipant = conversation?.participants?.find(p => p.userId === currentUserId)
+    const isPinned = currentParticipant?.isPinned ?? false
+
+    const result = await pinConversation({
+      conversationId,
+      isPinned: !isPinned,
     })
+
+    if (result.success) {
+      // Update local state
+      setConversations(prev => prev.map(c => {
+        if (c.id === conversationId) {
+          return {
+            ...c,
+            participants: c.participants?.map(p =>
+              p.userId === currentUserId ? { ...p, isPinned: !isPinned } : p
+            ),
+          }
+        }
+        return c
+      }))
+      toast({
+        title: locale === "ar" ? (isPinned ? "تم إلغاء التثبيت" : "تم التثبيت") : (isPinned ? "Unpinned" : "Pinned"),
+        description: locale === "ar"
+          ? (isPinned ? "تم إلغاء تثبيت المحادثة" : "تم تثبيت المحادثة")
+          : (isPinned ? "Conversation unpinned" : "Conversation pinned"),
+      })
+    } else {
+      toast({
+        title: locale === "ar" ? "خطأ" : "Error",
+        description: result.error,
+      })
+    }
   }
 
   const handleMuteConversation = async (conversationId: string) => {
-    // TODO: Implement mute conversation action
-    toast({
-      title: locale === "ar" ? "قريباً" : "Coming soon",
-      description: locale === "ar" ? "ميزة كتم المحادثة قريباً" : "Mute conversation feature coming soon",
-    })
+    const conversation = conversations.find(c => c.id === conversationId)
+    const currentParticipant = conversation?.participants?.find(p => p.userId === currentUserId)
+    const isMuted = currentParticipant?.isMuted ?? false
+
+    let result
+    if (isMuted) {
+      result = await unmuteConversation({ conversationId })
+    } else {
+      result = await muteConversation({ conversationId })
+    }
+
+    if (result.success) {
+      // Update local state
+      setConversations(prev => prev.map(c => {
+        if (c.id === conversationId) {
+          return {
+            ...c,
+            participants: c.participants?.map(p =>
+              p.userId === currentUserId ? { ...p, isMuted: !isMuted } : p
+            ),
+          }
+        }
+        return c
+      }))
+      toast({
+        title: locale === "ar" ? (isMuted ? "تم إلغاء الكتم" : "تم الكتم") : (isMuted ? "Unmuted" : "Muted"),
+        description: locale === "ar"
+          ? (isMuted ? "تم إلغاء كتم المحادثة" : "تم كتم المحادثة")
+          : (isMuted ? "Conversation unmuted" : "Conversation muted"),
+      })
+    } else {
+      toast({
+        title: locale === "ar" ? "خطأ" : "Error",
+        description: result.error,
+      })
+    }
   }
 
   return (
@@ -328,21 +409,22 @@ export function MessagingClient({
               onRemoveReaction={handleRemoveReaction}
             />
           ) : (
-            <div className="flex items-center justify-center h-full bg-muted/20">
-              <div className="text-center space-y-2 px-4">
-                <p className="text-foreground font-medium">
-                  {locale === "ar" ? "اختر محادثة للبدء" : "Select a conversation to start"}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  {locale === "ar"
-                    ? "اختر محادثة من القائمة أو ابدأ محادثة جديدة"
-                    : "Choose a conversation from the list or start a new one"}
-                </p>
-              </div>
-            </div>
+            <NoActiveConversation
+              locale={locale}
+              onNewConversation={handleNewConversation}
+            />
           )}
         </div>
       </div>
+
+      {/* New Conversation Dialog */}
+      <NewConversationDialog
+        open={showNewConversationDialog}
+        onOpenChange={setShowNewConversationDialog}
+        locale={locale}
+        currentUserId={currentUserId}
+        onConversationCreated={handleConversationCreated}
+      />
     </div>
   )
 }

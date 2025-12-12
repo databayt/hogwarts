@@ -79,6 +79,11 @@ export interface Student {
   documents?: StudentDocument[];
   healthRecords?: HealthRecord[];
   achievements?: Achievement[];
+  disciplinaryRecords?: DisciplinaryRecord[];
+  feeRecords?: FeeRecord[];
+  attendances?: Attendance[];
+  examResults?: ExamResult[];
+  submissions?: Submission[];
 
   createdAt: Date;
   updatedAt: Date;
@@ -399,4 +404,92 @@ export interface StudentStatistics {
   };
   typeDistribution: Record<StudentType, number>;
   yearLevelDistribution: Record<string, number>;
+}
+
+// Attendance
+export interface Attendance {
+  id: string;
+  schoolId: string;
+  studentId: string;
+  date: Date;
+  status: AttendanceStatus;
+  checkInTime?: Date;
+  checkOutTime?: Date;
+  notes?: string;
+  recordedBy?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export type AttendanceStatus =
+  | "PRESENT"
+  | "ABSENT"
+  | "LATE"
+  | "EXCUSED"
+  | "HALF_DAY";
+
+// Exam Results
+export interface ExamResult {
+  id: string;
+  schoolId: string;
+  studentId: string;
+  examId: string;
+  subjectId: string;
+  score: number;
+  maxScore: number;
+  grade?: string;
+  remarks?: string;
+  exam?: Exam;
+  subject?: Subject;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface Exam {
+  id: string;
+  schoolId: string;
+  name: string;
+  examType: string;
+  startDate: Date;
+  endDate: Date;
+}
+
+export interface Subject {
+  id: string;
+  schoolId: string;
+  name: string;
+  code?: string;
+}
+
+// Assignment Submissions
+export interface Submission {
+  id: string;
+  schoolId: string;
+  studentId: string;
+  assignmentId: string;
+  content?: string;
+  fileUrl?: string;
+  submittedAt: Date;
+  grade?: number;
+  feedback?: string;
+  status: SubmissionStatus;
+  assignment?: Assignment;
+}
+
+export type SubmissionStatus =
+  | "PENDING"
+  | "SUBMITTED"
+  | "GRADED"
+  | "LATE"
+  | "RETURNED";
+
+export interface Assignment {
+  id: string;
+  schoolId: string;
+  title: string;
+  description?: string;
+  dueDate: Date;
+  totalPoints: number;
+  subjectId?: string;
+  subject?: Subject;
 }

@@ -11,6 +11,9 @@ export default function BlogContent(props: Props) {
     <div>
         Blog
         <p>Mohamed Ali</p>
+        <p>Mohanad Adam</p>
+        <p>Mohamed Abdelbasit</p>
+        <p>Asmaa Sayed</p>
     </div>
   )
 }

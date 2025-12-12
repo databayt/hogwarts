@@ -63,6 +63,9 @@ export const announcementCreateSchema = announcementBaseSchema
 // Type for form values (use with react-hook-form)
 export type AnnouncementFormValues = z.infer<typeof announcementCreateSchema>
 
+// Alias for compatibility
+export type AnnouncementFormData = AnnouncementFormValues
+
 export const announcementUpdateSchema = announcementBaseSchema.partial().extend({
   id: z.string().min(1, "Required"),
 })
@@ -77,3 +80,34 @@ export const getAnnouncementsSchema = z.object({
   published: z.string().optional().default(""),
   sort: z.array(sortItemSchema).optional().default([]),
 })
+
+// ============================================================================
+// Announcement Config Schema
+// ============================================================================
+
+export const announcementConfigSchema = z.object({
+  // Publishing Defaults
+  defaultScope: z.enum(["school", "class", "role"]),
+  defaultPriority: z.enum(["low", "normal", "high", "urgent"]),
+  autoPublish: z.boolean(),
+  defaultExpiryDays: z.number().int().min(1).max(365),
+
+  // Notifications
+  emailOnPublish: z.boolean(),
+  pushNotifications: z.boolean(),
+  quietHoursStart: z.string().nullable(),
+  quietHoursEnd: z.string().nullable(),
+  digestFrequency: z.enum(["none", "daily", "weekly"]),
+
+  // Templates
+  defaultTemplateId: z.string().nullable().optional(),
+  allowCustomTemplates: z.boolean(),
+
+  // Tracking & Retention
+  readTracking: z.boolean(),
+  retentionDays: z.number().int().min(1).max(365),
+  autoArchive: z.boolean(),
+  archiveAfterDays: z.number().int().min(1).max(365),
+})
+
+export type AnnouncementConfigFormValues = z.infer<typeof announcementConfigSchema>

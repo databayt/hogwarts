@@ -7,6 +7,8 @@
  * - Subject-specific classes linked to appropriate teachers
  * - Student enrollments based on grade level
  * - Assignments and initial attendance
+ *
+ * Uses UPSERT + skipDuplicates patterns - safe to run multiple times
  */
 
 import { AssessmentStatus, AssessmentType, SubmissionStatus, AttendanceStatus } from "@prisma/client";
@@ -157,7 +159,7 @@ export async function seedClasses(
       const startPeriod = teachingPeriods[periodIndex];
       const endPeriod = teachingPeriods[(periodIndex + 1) % teachingPeriods.length];
 
-      // Create class with bilingual names
+      // Create class with bilingual names - upsert by schoolId + name
       const className = `${subjectName} - ${levelName}`;
       const subjectAr = findSubjectAr(subjectName);
       const levelAr = await prisma.yearLevel.findFirst({
@@ -166,8 +168,18 @@ export async function seedClasses(
       });
       const classNameAr = `${subjectAr} - ${levelAr?.levelNameAr || levelName}`;
 
-      const clazz = await prisma.class.create({
-        data: {
+      const clazz = await prisma.class.upsert({
+        where: { schoolId_name: { schoolId, name: className } },
+        update: {
+          nameAr: classNameAr,
+          subjectId: subject.id,
+          teacherId: assignedTeacher.id,
+          termId,
+          startPeriodId: startPeriod.id,
+          endPeriodId: endPeriod.id,
+          classroomId: classroom.id,
+        },
+        create: {
           schoolId,
           name: className,
           nameAr: classNameAr,
@@ -182,7 +194,7 @@ export async function seedClasses(
 
       classes.push({ id: clazz.id, name: className });
 
-      // Enroll all students in this level
+      // Enroll all students in this level - skipDuplicates
       await prisma.studentClass.createMany({
         data: levelStudents.map((studentId) => ({
           schoolId,
@@ -192,42 +204,59 @@ export async function seedClasses(
         skipDuplicates: true,
       });
 
-      // Create assignment for core subjects
+      // Create assignment for core subjects (only if doesn't exist)
       const coreSubjects = ["Arabic", "English", "Mathematics", "Science", "Physics", "Chemistry", "Biology"];
       if (coreSubjects.includes(subjectName)) {
-        const assignment = await prisma.assignment.create({
-          data: {
-            schoolId,
-            classId: clazz.id,
-            title: `${subjectName} Assignment - Week 1`,
-            description: faker.lorem.sentences({ min: 2, max: 4 }),
-            type: AssessmentType.HOMEWORK,
-            status: AssessmentStatus.PUBLISHED,
-            totalPoints: "100.00",
-            weight: "10.00",
-            dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-            publishDate: new Date(),
-          },
+        const assignmentTitle = `${subjectName} Assignment - Week 1`;
+
+        // Check if assignment already exists
+        const existingAssignment = await prisma.assignment.findFirst({
+          where: { schoolId, classId: clazz.id, title: assignmentTitle },
         });
 
-        // Create submissions for some students
-        const submittingStudents = levelStudents.slice(0, Math.ceil(levelStudents.length * 0.8));
-        for (const studentId of submittingStudents) {
-          await prisma.assignmentSubmission.create({
+        if (!existingAssignment) {
+          const assignment = await prisma.assignment.create({
             data: {
               schoolId,
-              assignmentId: assignment.id,
-              studentId,
-              status: faker.helpers.arrayElement([
-                SubmissionStatus.SUBMITTED,
-                SubmissionStatus.SUBMITTED,
-                SubmissionStatus.GRADED,
-              ]),
-              attachments: [],
-              content: faker.lorem.paragraph(),
-              submittedAt: faker.date.recent({ days: 5 }),
+              classId: clazz.id,
+              title: assignmentTitle,
+              description: faker.lorem.sentences({ min: 2, max: 4 }),
+              type: AssessmentType.HOMEWORK,
+              status: AssessmentStatus.PUBLISHED,
+              totalPoints: "100.00",
+              weight: "10.00",
+              dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+              publishDate: new Date(),
             },
           });
+
+          // Create submissions for some students - upsert by unique constraint
+          const submittingStudents = levelStudents.slice(0, Math.ceil(levelStudents.length * 0.8));
+          for (const studentId of submittingStudents) {
+            await prisma.assignmentSubmission.upsert({
+              where: { schoolId_assignmentId_studentId: { schoolId, assignmentId: assignment.id, studentId } },
+              update: {
+                status: faker.helpers.arrayElement([
+                  SubmissionStatus.SUBMITTED,
+                  SubmissionStatus.SUBMITTED,
+                  SubmissionStatus.GRADED,
+                ]),
+              },
+              create: {
+                schoolId,
+                assignmentId: assignment.id,
+                studentId,
+                status: faker.helpers.arrayElement([
+                  SubmissionStatus.SUBMITTED,
+                  SubmissionStatus.SUBMITTED,
+                  SubmissionStatus.GRADED,
+                ]),
+                attachments: [],
+                content: faker.lorem.paragraph(),
+                submittedAt: faker.date.recent({ days: 5 }),
+              },
+            });
+          }
         }
       }
 
@@ -235,19 +264,24 @@ export async function seedClasses(
     }
   }
 
-  // Create score ranges
-  await prisma.scoreRange.createMany({
-    data: [
-      { schoolId, minScore: "90.00", maxScore: "100.00", grade: "A" },
-      { schoolId, minScore: "80.00", maxScore: "89.99", grade: "B" },
-      { schoolId, minScore: "70.00", maxScore: "79.99", grade: "C" },
-      { schoolId, minScore: "60.00", maxScore: "69.99", grade: "D" },
-      { schoolId, minScore: "0.00", maxScore: "59.99", grade: "F" },
-    ],
-    skipDuplicates: true,
-  });
+  // Upsert score ranges by schoolId + grade
+  const scoreRanges = [
+    { minScore: "90.00", maxScore: "100.00", grade: "A" },
+    { minScore: "80.00", maxScore: "89.99", grade: "B" },
+    { minScore: "70.00", maxScore: "79.99", grade: "C" },
+    { minScore: "60.00", maxScore: "69.99", grade: "D" },
+    { minScore: "0.00", maxScore: "59.99", grade: "F" },
+  ];
 
-  // Create sample attendance for today
+  for (const range of scoreRanges) {
+    await prisma.scoreRange.upsert({
+      where: { schoolId_grade: { schoolId, grade: range.grade } },
+      update: { minScore: range.minScore, maxScore: range.maxScore },
+      create: { schoolId, minScore: range.minScore, maxScore: range.maxScore, grade: range.grade },
+    });
+  }
+
+  // Create sample attendance for today - skipDuplicates
   const today = new Date();
   const dateOnly = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()));
 

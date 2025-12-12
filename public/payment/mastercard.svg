@@ -1,6 +1,8 @@
-<svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-  <title>Mastercard</title>
-  <circle cx="7" cy="12" r="7" fill="#EB001B"/>
-  <circle cx="17" cy="12" r="7" fill="#F79E1B"/>
-  <path fill="#FF5F00" d="M12 5.5a7 7 0 0 0 0 13 7 7 0 0 0 0-13z"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 750 471">
+  <g fill="none" fill-rule="evenodd">
+    <rect fill="#000" width="750" height="471" rx="40"/>
+    <circle fill="#EB001B" cx="250" cy="235" r="150"/>
+    <circle fill="#F79E1B" cx="500" cy="235" r="150"/>
+    <path fill="#FF5F00" d="M375 113.5c-41.5 32.4-68.2 82.4-68.2 138.5s26.7 106.1 68.2 138.5c41.5-32.4 68.2-82.4 68.2-138.5s-26.7-106.1-68.2-138.5z"/>
+  </g>
 </svg>

@@ -26,7 +26,7 @@ export default async function OperatorLayout({
             <SaasHeader />
             <div className="flex pt-6">
               <SaasSidebar />
-              <div className="w-full pb-10 transition-[margin] duration-200 ease-in-out">
+              <div className="dashboard-container pb-10 transition-[margin] duration-200 ease-in-out">
                 <div className="mb-6">
                   <PageHeadingDisplay />
                 </div>

@@ -145,13 +145,41 @@ export default function AnalyticsContent({ dictionary, locale = 'en', schoolId }
         getClassesForSelection()
       ]);
 
-      setStats(statsResult);
-      setTrends(trendsResult.trends);
-      setMethodStats(methodResult.stats);
-      setDayPatterns(dayResult.patterns);
-      setClassStats(classResult.stats);
-      setAtRiskStudents(riskResult.students);
-      setClasses(classesResult.classes);
+      // Handle results - data is at root level on success, { success: false, error } on failure
+      // statsResult returns data directly (not wrapped)
+      if (statsResult && !('success' in statsResult && statsResult.success === false)) {
+        setStats(statsResult as StatsData);
+      }
+
+      // trendsResult returns { trends: [...] } on success
+      if (trendsResult && 'trends' in trendsResult && trendsResult.trends) {
+        setTrends(trendsResult.trends as TrendData[]);
+      }
+
+      // methodResult returns { stats: [...], total: number } on success
+      if (methodResult && 'stats' in methodResult && methodResult.stats) {
+        setMethodStats(methodResult.stats as MethodData[]);
+      }
+
+      // dayResult returns { patterns: [...] } on success
+      if (dayResult && 'patterns' in dayResult && dayResult.patterns) {
+        setDayPatterns(dayResult.patterns as DayPattern[]);
+      }
+
+      // classResult returns { stats: [...] } on success
+      if (classResult && 'stats' in classResult && classResult.stats) {
+        setClassStats(classResult.stats as ClassStats[]);
+      }
+
+      // riskResult returns { students: [...], threshold: number } on success
+      if (riskResult && 'students' in riskResult && riskResult.students) {
+        setAtRiskStudents(riskResult.students as AtRiskStudent[]);
+      }
+
+      // classesResult uses ActionResponse<{ classes: ... }>
+      if (classesResult && classesResult.success && classesResult.data?.classes) {
+        setClasses(classesResult.data.classes);
+      }
 
     } catch (error) {
       console.error('Error fetching analytics data:', error);

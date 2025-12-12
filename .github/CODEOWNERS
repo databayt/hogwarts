@@ -1,0 +1,41 @@
+# CODEOWNERS - Hogwarts School Automation Platform
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Default owner for everything in the repository
+* @abdout
+
+# Core Platform
+/src/components/platform/ @abdout
+/src/app/[lang]/s/ @abdout
+
+# Authentication & Security
+/src/auth* @abdout
+/auth.ts @abdout
+/auth.config.ts @abdout
+/src/middleware.ts @abdout
+
+# Database & Prisma
+/prisma/ @abdout
+/src/lib/db.ts @abdout
+
+# UI Components
+/src/components/ui/ @abdout
+/src/components/atom/ @abdout
+
+# GitHub Configuration
+/.github/ @abdout
+
+# Documentation
+/docs/ @abdout
+/content/ @abdout
+/CLAUDE.md @abdout
+/CONTRIBUTING.md @abdout
+
+# Configuration Files
+/next.config.ts @abdout
+/tailwind.config.ts @abdout
+/tsconfig.json @abdout
+/package.json @abdout
+
+# Internationalization
+/src/components/internationalization/ @abdout

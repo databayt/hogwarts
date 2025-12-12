@@ -5,6 +5,7 @@ import { ar, enUS } from "date-fns/locale"
 import { LoaderCircle, ArrowDown } from "lucide-react"
 import type { MessageDTO } from "./types"
 import { MessageGroup, groupMessages } from "./message-group"
+import { ChatEmpty } from "./empty-state"
 import { AutoScroller, useIsAtBottom } from "./auto-scroller"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -163,17 +164,8 @@ export function MessageList({
 
   if (messages.length === 0 && !isLoading) {
     return (
-      <div className={cn("flex items-center justify-center h-full bg-background", className)}>
-        <div className="text-center space-y-2 px-4">
-          <p className="text-foreground font-medium">
-            {locale === "ar" ? "لا توجد رسائل بعد" : "No messages yet"}
-          </p>
-          <p className="text-sm text-muted-foreground">
-            {locale === "ar"
-              ? "ابدأ المحادثة بإرسال رسالة"
-              : "Start the conversation by sending a message"}
-          </p>
-        </div>
+      <div className={cn("flex-1", className)}>
+        <ChatEmpty locale={locale} />
       </div>
     )
   }

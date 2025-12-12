@@ -23,7 +23,7 @@ export async function generateMetadata({ params }: NotificationPreferencesPagePr
 
 function PreferencesSkeleton() {
   return (
-    <div className="container py-6 space-y-6">
+    <div className="py-6 space-y-6">
       {/* Header Skeleton */}
       <div className="space-y-2">
         <Skeleton className="h-8 w-64" />
@@ -68,7 +68,7 @@ export default async function NotificationPreferencesPage({
   const { lang } = await params
 
   return (
-    <div className="container py-6">
+    <div className="py-6">
       <Suspense fallback={<PreferencesSkeleton />}>
         <NotificationPreferencesContent locale={lang} />
       </Suspense>

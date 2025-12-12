@@ -1,6 +1,19 @@
 /**
- * CSV Import Service
- * Handles bulk import of students and teachers from CSV files
+ * CSV Import Service - Domain-specific bulk import
+ *
+ * This file handles domain-specific student/teacher bulk import with database operations.
+ * For generic client-side file import with UI wizard, use @/components/platform/file/import.
+ *
+ * @see {@link @/components/platform/file} - Generic file import/export module
+ *
+ * @example
+ * ```tsx
+ * // For UI-based file import with preview and mapping:
+ * import { Importer, useImport } from "@/components/platform/file"
+ *
+ * // For bulk database import (this module):
+ * import { importStudents, importTeachers } from "@/lib/csv-import"
+ * ```
  */
 
 import { parse } from 'csv-parse/sync';

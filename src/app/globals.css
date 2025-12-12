@@ -237,15 +237,11 @@ body {
   scrollbar-width: none;
 }
 
-/* Extend touch target for better mobile UX */
-.extend-touch-target {
-  position: relative;
-}
-
-.extend-touch-target::after {
-  content: "";
-  position: absolute;
-  inset: -0.5rem;
+/* Extend touch target for better mobile UX (Tailwind v4 utility) */
+@utility extend-touch-target {
+  @media (pointer: coarse) {
+    @apply relative touch-manipulation after:absolute after:-inset-2 after:content-[''];
+  }
 }
 
 /* Custom size utility for 4.5 (1.125rem / 18px) */

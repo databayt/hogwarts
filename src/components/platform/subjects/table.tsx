@@ -33,9 +33,12 @@ interface SubjectsTableProps {
 // Export CSV function
 async function getSubjectsCSV(filters?: Record<string, unknown>): Promise<string> {
   const result = await getSubjects({ page: 1, perPage: 1000, ...filters });
-  const rows = result.rows;
+  if (!result.success || !result.data) {
+    return '';
+  }
+  const rows = result.data.rows;
   const headers = ["ID", "Subject Name", "المادة", "Department", "القسم", "Created At"];
-  const csvRows = rows.map((row) =>
+  const csvRows = rows.map((row: SubjectRow) =>
     [
       row.id,
       `"${row.subjectName.replace(/"/g, '""')}"`,
@@ -92,13 +95,42 @@ export function SubjectsTable({ initialData, total, dictionary, lang, perPage = 
     perPage,
     fetcher: async (params) => {
       const result = await getSubjects(params);
-      return { rows: result.rows, total: result.total };
+      if (!result.success || !result.data) {
+        return { rows: [], total: 0 };
+      }
+      return { rows: result.data.rows, total: result.data.total };
     },
     filters: searchValue ? { subjectName: searchValue } : undefined,
   });
 
-  // Generate columns on the client side with dictionary and lang
-  const columns = useMemo(() => getSubjectColumns(dictionary, lang), [dictionary, lang]);
+  // Handle delete with optimistic update (must be before columns useMemo)
+  const handleDelete = useCallback(async (subject: SubjectRow) => {
+    const displayName = getLocalizedSubjectName(subject, lang);
+    try {
+      const ok = await confirmDeleteDialog(`${translations.delete} ${displayName}?`);
+      if (!ok) return;
+
+      // Optimistic remove
+      optimisticRemove(subject.id);
+
+      const result = await deleteSubject({ id: subject.id });
+      if (result.success) {
+        DeleteToast();
+      } else {
+        // Revert on error
+        refresh();
+        ErrorToast("Failed to delete subject");
+      }
+    } catch (e) {
+      refresh();
+      ErrorToast(e instanceof Error ? e.message : "Failed to delete");
+    }
+  }, [optimisticRemove, refresh, lang, translations.delete]);
+
+  // Generate columns on the client side with dictionary, lang, and callbacks
+  const columns = useMemo(() => getSubjectColumns(dictionary, lang, {
+    onDelete: handleDelete,
+  }), [dictionary, lang, handleDelete]);
 
   // Table instance
   const { table } = useDataTable<SubjectRow>({
@@ -126,30 +158,6 @@ export function SubjectsTable({ initialData, total, dictionary, lang, perPage = 
       router.refresh();
     });
   }, [router]);
-
-  // Handle delete with optimistic update
-  const handleDelete = useCallback(async (subject: SubjectRow) => {
-    const displayName = getLocalizedSubjectName(subject, lang);
-    try {
-      const ok = await confirmDeleteDialog(`${translations.delete} ${displayName}?`);
-      if (!ok) return;
-
-      // Optimistic remove
-      optimisticRemove(subject.id);
-
-      const result = await deleteSubject({ id: subject.id });
-      if (result.success) {
-        DeleteToast();
-      } else {
-        // Revert on error
-        refresh();
-        ErrorToast("Failed to delete subject");
-      }
-    } catch (e) {
-      refresh();
-      ErrorToast(e instanceof Error ? e.message : "Failed to delete");
-    }
-  }, [optimisticRemove, refresh, lang, translations.delete]);
 
   // Handle edit
   const handleEdit = useCallback((id: string) => {

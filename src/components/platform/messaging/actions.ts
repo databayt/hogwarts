@@ -963,6 +963,179 @@ export async function loadMoreMessages(input: {
   }
 }
 
+/**
+ * Pin/Unpin a conversation for the current user
+ */
+export async function pinConversation(input: {
+  conversationId: string
+  isPinned: boolean
+}): Promise<ActionResponse<void>> {
+  try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
+    // Update user's participant record
+    await db.conversationParticipant.updateMany({
+      where: {
+        conversationId: input.conversationId,
+        userId: authContext.userId,
+      },
+      data: {
+        isPinned: input.isPinned,
+      },
+    })
+
+    revalidatePath(MESSAGES_PATH)
+    revalidateTag(`conversation-${input.conversationId}`, "max")
+
+    return { success: true, data: undefined }
+  } catch (error) {
+    console.error("[pinConversation] Error:", error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to update pin status",
+    }
+  }
+}
+
+/**
+ * Mute a conversation for the current user
+ */
+export async function muteConversation(input: {
+  conversationId: string
+}): Promise<ActionResponse<void>> {
+  try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
+    // Update user's participant record
+    await db.conversationParticipant.updateMany({
+      where: {
+        conversationId: input.conversationId,
+        userId: authContext.userId,
+      },
+      data: {
+        isMuted: true,
+      },
+    })
+
+    revalidatePath(MESSAGES_PATH)
+    revalidateTag(`conversation-${input.conversationId}`, "max")
+
+    return { success: true, data: undefined }
+  } catch (error) {
+    console.error("[muteConversation] Error:", error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to mute conversation",
+    }
+  }
+}
+
+/**
+ * Unmute a conversation for the current user
+ */
+export async function unmuteConversation(input: {
+  conversationId: string
+}): Promise<ActionResponse<void>> {
+  try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
+    // Update user's participant record
+    await db.conversationParticipant.updateMany({
+      where: {
+        conversationId: input.conversationId,
+        userId: authContext.userId,
+      },
+      data: {
+        isMuted: false,
+      },
+    })
+
+    revalidatePath(MESSAGES_PATH)
+    revalidateTag(`conversation-${input.conversationId}`, "max")
+
+    return { success: true, data: undefined }
+  } catch (error) {
+    console.error("[unmuteConversation] Error:", error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to unmute conversation",
+    }
+  }
+}
+
+/**
+ * Leave (delete from user's view) a conversation
+ * For direct conversations, this archives it
+ * For group conversations, this removes the user from participants
+ */
+export async function leaveConversation(input: {
+  conversationId: string
+}): Promise<ActionResponse<void>> {
+  try {
+    const session = await auth()
+    const authContext = getAuthContext(session)
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" }
+    }
+
+    const { schoolId } = await getTenantContext()
+    if (!schoolId) {
+      return { success: false, error: "Missing school context" }
+    }
+
+    // Get conversation to check type
+    const conversation = await getConversation(
+      schoolId,
+      authContext.userId,
+      input.conversationId
+    )
+
+    if (!conversation) {
+      return { success: false, error: "Conversation not found" }
+    }
+
+    if (conversation.type === "direct") {
+      // For direct conversations, archive it
+      await db.conversation.update({
+        where: { id: input.conversationId },
+        data: { isArchived: true },
+      })
+    } else {
+      // For group conversations, remove the participant
+      await db.conversationParticipant.deleteMany({
+        where: {
+          conversationId: input.conversationId,
+          userId: authContext.userId,
+        },
+      })
+    }
+
+    revalidatePath(MESSAGES_PATH)
+    revalidateTag(`conversations-${schoolId}`, "max")
+    revalidateTag(`conversation-${input.conversationId}`, "max")
+
+    return { success: true, data: undefined }
+  } catch (error) {
+    console.error("[leaveConversation] Error:", error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to leave conversation",
+    }
+  }
+}
+
 // Export all actions
 export const messagingActions = {
   createConversation,
@@ -978,4 +1151,8 @@ export const messagingActions = {
   addReaction,
   removeReaction,
   loadMoreMessages,
+  pinConversation,
+  muteConversation,
+  unmuteConversation,
+  leaveConversation,
 } as const

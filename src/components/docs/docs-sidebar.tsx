@@ -26,6 +26,9 @@ const DOCS_LINKS = [
   { key: "structure", href: "/docs/structure", fallback: "Structure" },
   { key: "pattern", href: "/docs/pattern", fallback: "Pattern" },
   { key: "stack", href: "/docs/stack", fallback: "Stack" },
+  { key: "icons", href: "/docs/icons", fallback: "Icons" },
+  { key: "dashboard", href: "/docs/dashboard", fallback: "Dashboard" },
+  { key: "rebound", href: "/docs/rebound", fallback: "Rebound" },
   { key: "database", href: "/docs/database", fallback: "Database" },
   { key: "attendance", href: "/docs/attendance", fallback: "Attendance" },
   { key: "localhost", href: "/docs/localhost", fallback: "Localhost" },
@@ -56,7 +59,7 @@ export function DocsSidebar({
       collapsible="none"
       {...props}
     >
-      <SidebarContent className="no-scrollbar overflow-x-hidden">
+      <SidebarContent className="overflow-y-auto overflow-x-hidden">
         <div className="pb-4 pt-2 pl-0">
           <SidebarGroup className="p-0">
             <SidebarGroupContent>

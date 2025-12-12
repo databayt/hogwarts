@@ -38,7 +38,7 @@ export function CurriculumSection({ dictionary, lang }: Omit<StreamContentProps,
 
   return (
     <section className="py-16 mb-16 bg-[#6A9BCC] rounded-xl">
-      <div className="px-8 md:px-12 text-white">
+      <div className="px-6 text-white">
         <div className={`flex flex-col md:flex-row gap-12 items-start ${isRTL ? "flex-row-reverse" : ""}`}>
           {/* Title Section */}
           <div className={`md:w-1/2 ${isRTL ? "text-right" : "text-left"}`}>

@@ -32,6 +32,7 @@ import {
   TrendingUp,
   UserPlus,
   Pencil,
+  Target,
 } from "lucide-react";
 
 export const Icons = {
@@ -68,4 +69,5 @@ export const Icons = {
   user: User,
   trendingUp: TrendingUp,
   userPlus: UserPlus,
+  sales: Target,
 };

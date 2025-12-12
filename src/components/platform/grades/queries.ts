@@ -544,6 +544,173 @@ export async function getResultsByIds(schoolId: string, resultIds: string[]) {
 }
 
 // ============================================================================
+// Analytics Functions (for Detail Page)
+// ============================================================================
+
+/**
+ * Get student's grade history for sparkline/trend visualization
+ * @param schoolId - School ID
+ * @param studentId - Student ID
+ * @param limit - Number of recent grades to fetch (default 10)
+ * @returns Promise with recent grades ordered by date
+ */
+export async function getStudentGradeHistory(
+  schoolId: string,
+  studentId: string,
+  limit = 10
+) {
+  const results = await db.result.findMany({
+    where: {
+      schoolId,
+      studentId,
+    },
+    orderBy: { gradedAt: Prisma.SortOrder.desc },
+    take: limit,
+    select: {
+      id: true,
+      percentage: true,
+      grade: true,
+      gradedAt: true,
+      assignment: { select: { title: true } },
+      exam: { select: { title: true } },
+      subject: { select: { subjectName: true } },
+    },
+  });
+
+  // Calculate trend
+  if (results.length < 2) {
+    return { results: results.reverse(), trend: "stable" as const, average: results[0]?.percentage || 0 };
+  }
+
+  const reversed = [...results].reverse(); // Oldest to newest
+  const avgPercentage = reversed.reduce((sum, r) => sum + r.percentage, 0) / reversed.length;
+
+  // Compare first half to second half for trend
+  const midpoint = Math.floor(reversed.length / 2);
+  const firstHalf = reversed.slice(0, midpoint);
+  const secondHalf = reversed.slice(midpoint);
+
+  const firstAvg = firstHalf.reduce((sum, r) => sum + r.percentage, 0) / firstHalf.length;
+  const secondAvg = secondHalf.reduce((sum, r) => sum + r.percentage, 0) / secondHalf.length;
+
+  let trend: "improving" | "declining" | "stable" = "stable";
+  if (secondAvg - firstAvg > 5) trend = "improving";
+  else if (firstAvg - secondAvg > 5) trend = "declining";
+
+  return { results: reversed, trend, average: avgPercentage };
+}
+
+/**
+ * Get class grade statistics for comparison
+ * @param schoolId - School ID
+ * @param classId - Class ID
+ * @param assignmentId - Optional assignment ID for specific assignment stats
+ * @param examId - Optional exam ID for specific exam stats
+ * @returns Promise with class statistics
+ */
+export async function getClassGradeStats(
+  schoolId: string,
+  classId: string,
+  assignmentId?: string | null,
+  examId?: string | null
+) {
+  const where: Prisma.ResultWhereInput = {
+    schoolId,
+    classId,
+  };
+
+  // Filter by specific assignment or exam if provided
+  if (assignmentId) {
+    where.assignmentId = assignmentId;
+  } else if (examId) {
+    where.examId = examId;
+  }
+
+  const [results, gradeDistribution] = await Promise.all([
+    db.result.findMany({
+      where,
+      select: {
+        id: true,
+        studentId: true,
+        percentage: true,
+        grade: true,
+      },
+      orderBy: { percentage: Prisma.SortOrder.desc },
+    }),
+    db.result.groupBy({
+      by: ["grade"],
+      where,
+      _count: { grade: true },
+    }),
+  ]);
+
+  if (results.length === 0) {
+    return {
+      classAverage: 0,
+      highestScore: 0,
+      lowestScore: 0,
+      totalStudents: 0,
+      gradeDistribution: {} as Record<string, number>,
+      rankings: [] as Array<{ studentId: string; percentage: number; rank: number }>,
+    };
+  }
+
+  const percentages = results.map((r) => r.percentage);
+  const classAverage = percentages.reduce((sum, p) => sum + p, 0) / percentages.length;
+  const highestScore = Math.max(...percentages);
+  const lowestScore = Math.min(...percentages);
+
+  // Build grade distribution
+  const distribution: Record<string, number> = {};
+  gradeDistribution.forEach((item) => {
+    distribution[item.grade] = item._count.grade;
+  });
+
+  // Build rankings (already sorted by percentage desc)
+  const rankings = results.map((r, index) => ({
+    studentId: r.studentId,
+    percentage: r.percentage,
+    rank: index + 1,
+  }));
+
+  return {
+    classAverage,
+    highestScore,
+    lowestScore,
+    totalStudents: results.length,
+    gradeDistribution: distribution,
+    rankings,
+  };
+}
+
+/**
+ * Get student's rank in class for a specific result
+ * @param schoolId - School ID
+ * @param studentId - Student ID
+ * @param classStats - Pre-fetched class stats
+ * @returns Rank and percentile
+ */
+export function getStudentRank(
+  studentId: string,
+  classStats: Awaited<ReturnType<typeof getClassGradeStats>>
+) {
+  const studentRanking = classStats.rankings.find((r) => r.studentId === studentId);
+  if (!studentRanking) {
+    return { rank: 0, percentile: 0, totalStudents: classStats.totalStudents };
+  }
+
+  const percentile = Math.round(
+    ((classStats.totalStudents - studentRanking.rank + 1) / classStats.totalStudents) * 100
+  );
+
+  return {
+    rank: studentRanking.rank,
+    percentile,
+    totalStudents: classStats.totalStudents,
+  };
+}
+
+// ============================================================================
 // Helper Functions
 // ============================================================================
 

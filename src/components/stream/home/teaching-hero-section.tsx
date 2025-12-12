@@ -9,8 +9,8 @@ export function TeachingHeroSection({ dictionary, lang }: Omit<StreamContentProp
   const isRTL = lang === "ar"
 
   return (
-    <section className="py-16 md:py-24 mb-16 bg-[#FAF9F5] rounded-xl">
-      <div className="px-8 md:px-12">
+    <section className="py-16 md:py-24 mb-16">
+      <div>
         <div className={cn(
           "flex flex-col md:flex-row items-start gap-8",
           isRTL && "md:flex-row-reverse"

@@ -6,9 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Ellipsis } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useModal } from "@/components/atom/modal/context";
-import { deleteAssignment } from "@/components/platform/assignments/actions";
-import { DeleteToast, ErrorToast, confirmDeleteDialog } from "@/components/atom/toast";
-import { useRouter } from "next/navigation";
 import type { Dictionary } from "@/components/internationalization/dictionaries";
 import type { Locale } from "@/components/internationalization/config";
 
@@ -21,7 +18,11 @@ export type AssignmentRow = {
   createdAt: string;
 };
 
-export const getAssignmentColumns = (dictionary?: Dictionary['school']['assignments'], lang?: Locale): ColumnDef<AssignmentRow>[] => {
+export interface AssignmentColumnCallbacks {
+  onDelete?: (row: AssignmentRow) => void;
+}
+
+export const getAssignmentColumns = (dictionary?: Dictionary['school']['assignments'], lang?: Locale, callbacks?: AssignmentColumnCallbacks): ColumnDef<AssignmentRow>[] => {
   const t = {
     title: dictionary?.title || (lang === 'ar' ? 'العنوان' : 'Title'),
     type: dictionary?.type || (lang === 'ar' ? 'النوع' : 'Type'),
@@ -79,23 +80,13 @@ export const getAssignmentColumns = (dictionary?: Dictionary['school']['assignme
     cell: ({ row }) => {
       const assignment = row.original;
       const { openModal } = useModal();
-      const router = useRouter();
       const onView = () => {
         const qs = typeof window !== 'undefined' ? (window.location.search || "") : "";
         window.location.href = `/assignments/${assignment.id}${qs}`;
       };
       const onEdit = () => openModal(assignment.id);
-      const onDelete = async () => {
-        try {
-          const deleteMsg = lang === 'ar' ? `حذف ${assignment.title}؟` : `Delete ${assignment.title}?`;
-          const ok = await confirmDeleteDialog(deleteMsg);
-          if (!ok) return;
-          await deleteAssignment({ id: assignment.id });
-          DeleteToast();
-          router.refresh();
-        } catch (e) {
-          ErrorToast(e instanceof Error ? e.message : (lang === 'ar' ? 'فشل الحذف' : 'Failed to delete'));
-        }
+      const onDelete = () => {
+        callbacks?.onDelete?.(assignment);
       };
       return (
         <DropdownMenu>

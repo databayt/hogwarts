@@ -1,4 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 30" fill="none">
-  <rect x="5" y="5" width="20" height="20" rx="4" fill="#F7941D"/>
-  <text x="30" y="19" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#F7941D">fawry</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 316">
+  <rect fill="#fff" width="512" height="316" rx="15"/>
+  <!-- Fawry Logo - Simplified -->
+  <circle cx="130" cy="158" r="70" fill="#F7941D"/>
+  <path d="M100 115h60v18h-40v20h35v18h-35v34h-20V115z" fill="#fff"/>
+  <!-- AWRY text -->
+  <path d="M230 190l-6 20h-18l30-70h22l30 70h-18l-6-20h-34zm17-45l-11 30h22l-11-30z" fill="#F7941D"/>
+  <path d="M300 120h18l10 45 13-45h14l13 45 10-45h18l-18 70h-17l-13-45-13 45h-17l-18-70z" fill="#F7941D"/>
+  <path d="M415 120h24c17 0 28 10 28 24 0 10-5 18-14 22l18 24h-22l-15-20h-1v20h-18v-70zm18 36h5c7 0 11-4 11-10s-4-10-11-10h-5v20z" fill="#F7941D"/>
+  <path d="M310 190h18l15-25 15 25h18l-25-40v-30h-18v30l-23 40z" fill="#F7941D"/>
 </svg>

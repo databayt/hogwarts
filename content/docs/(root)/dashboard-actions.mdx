@@ -1,0 +1,495 @@
+---
+title: "Dashboard - Server Actions"
+description: "Complete reference for dashboard server actions including data fetching patterns, multi-tenant scoping, and role-specific actions."
+---
+
+Dashboard data is fetched using **server actions** with `"use server"` directive. All actions follow the multi-tenant pattern with `schoolId` scoping for data isolation.
+
+## File Locations
+
+| File | Actions |
+|------|---------|
+| `dashboards/actions.ts` | Shared metrics and aggregates |
+| `actions/principal.ts` | Principal-specific data |
+| `actions.ts` (root) | Teacher, Student, Parent data |
+
+## Core Actions
+
+### getDashboardSummary
+
+Aggregates all metrics in a single call.
+
+```tsx
+// dashboards/actions.ts
+"use server"
+
+export async function getDashboardSummary() {
+  const { schoolId } = await getTenantContext();
+
+  const [
+    enrollment,
+    attendance,
+    staff,
+    academicPerformance,
+    announcements,
+    classes,
+    activities,
+  ] = await Promise.all([
+    getEnrollmentMetrics(),
+    getAttendanceMetrics(),
+    getStaffMetrics(),
+    getAcademicPerformanceMetrics(),
+    getAnnouncementsMetrics(),
+    getClassesMetrics(),
+    getRecentActivities(),
+  ]);
+
+  return {
+    enrollment,
+    attendance,
+    staff,
+    academicPerformance,
+    announcements,
+    classes,
+    activities,
+  };
+}
+```
+
+**Used by**: AdminDashboard
+
+## Enrollment Metrics
+
+### getEnrollmentMetrics
+
+Returns student enrollment statistics.
+
+```tsx
+export async function getEnrollmentMetrics() {
+  const { schoolId } = await getTenantContext();
+  if (!schoolId) {
+    return {
+      total: 0,
+      newThisMonth: 0,
+      active: 0,
+      inactive: 0,
+      graduated: 0,
+      transferIn: 0,
+      transferOut: 0,
+    };
+  }
+
+  const now = new Date();
+  const firstOfMonth = startOfMonth(now);
+  const lastOfMonth = endOfMonth(now);
+
+  const [total, newThisMonth] = await Promise.all([
+    db.student.count({ where: { schoolId } }),
+    db.student.count({
+      where: {
+        schoolId,
+        createdAt: { gte: firstOfMonth, lte: lastOfMonth },
+      },
+    }),
+  ]);
+
+  return {
+    total,
+    newThisMonth,
+    active: total,
+    inactive: 0,
+    graduated: 0,
+    transferIn: 0,
+    transferOut: 0,
+  };
+}
+```
+
+**Returns**:
+| Field | Type | Description |
+|-------|------|-------------|
+| total | number | Total enrolled students |
+| newThisMonth | number | New enrollments this month |
+| active | number | Active students |
+| inactive | number | Inactive students |
+| graduated | number | Graduated students |
+| transferIn | number | Transfer in count |
+| transferOut | number | Transfer out count |
+
+## Attendance Metrics
+
+### getAttendanceMetrics
+
+Returns today's attendance statistics.
+
+```tsx
+export async function getAttendanceMetrics() {
+  const { schoolId } = await getTenantContext();
+  if (!schoolId) {
+    return { attendanceRate: 0, present: 0, absent: 0, late: 0, total: 0 };
+  }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const [todayAttendance, totalStudents] = await Promise.all([
+    db.attendance.groupBy({
+      by: ["status"],
+      where: { schoolId, date: today },
+      _count: true,
+    }),
+    db.student.count({ where: { schoolId } }),
+  ]);
+
+  const presentCount = todayAttendance.find(a => a.status === "PRESENT")?._count || 0;
+  const absentCount = todayAttendance.find(a => a.status === "ABSENT")?._count || 0;
+  const lateCount = todayAttendance.find(a => a.status === "LATE")?._count || 0;
+
+  const attendanceRate = totalStudents > 0
+    ? ((presentCount + lateCount) / totalStudents * 100).toFixed(1)
+    : "0.0";
+
+  return {
+    attendanceRate: parseFloat(attendanceRate),
+    present: presentCount,
+    absent: absentCount,
+    late: lateCount,
+    total: totalStudents,
+  };
+}
+```
+
+**Returns**:
+| Field | Type | Description |
+|-------|------|-------------|
+| attendanceRate | number | Percentage (present + late) |
+| present | number | Present count |
+| absent | number | Absent count |
+| late | number | Late count |
+| total | number | Total students |
+
+## Staff Metrics
+
+### getStaffMetrics
+
+Returns teacher and department counts.
+
+```tsx
+export async function getStaffMetrics() {
+  const { schoolId } = await getTenantContext();
+  if (!schoolId) {
+    return { total: 0, departments: 0, presenceRate: 0 };
+  }
+
+  const [totalTeachers, departments] = await Promise.all([
+    db.teacher.count({ where: { schoolId } }),
+    db.department.count({ where: { schoolId } }),
+  ]);
+
+  return {
+    total: totalTeachers,
+    departments,
+    presenceRate: 0,  // TODO: Implement staff attendance
+  };
+}
+```
+
+## Academic Metrics
+
+### getAcademicPerformanceMetrics
+
+Returns exam and assignment statistics.
+
+```tsx
+export async function getAcademicPerformanceMetrics() {
+  const { schoolId } = await getTenantContext();
+  if (!schoolId) {
+    return {
+      averageGPA: null,
+      passRate: null,
+      improvement: null,
+      topPerformers: null,
+      totalExams: 0,
+      totalAssignments: 0,
+    };
+  }
+
+  const totalExams = await db.exam.count({ where: { schoolId } });
+  const totalAssignments = await db.assignment.count({ where: { schoolId } });
+
+  return {
+    averageGPA: null,
+    passRate: null,
+    improvement: null,
+    topPerformers: null,
+    totalExams,
+    totalAssignments,
+  };
+}
+```
+
+## Announcement Metrics
+
+### getAnnouncementsMetrics
+
+Returns announcement statistics.
+
+```tsx
+export async function getAnnouncementsMetrics() {
+  const { schoolId } = await getTenantContext();
+  if (!schoolId) {
+    return { total: 0, published: 0, unpublished: 0, recentCount: 0 };
+  }
+
+  const [total, published, unpublished, recentCount] = await Promise.all([
+    db.announcement.count({ where: { schoolId } }),
+    db.announcement.count({ where: { schoolId, published: true } }),
+    db.announcement.count({ where: { schoolId, published: false } }),
+    db.announcement.count({
+      where: {
+        schoolId,
+        createdAt: { gte: subDays(new Date(), 7) },
+      },
+    }),
+  ]);
+
+  return { total, published, unpublished, recentCount };
+}
+```
+
+## Class Metrics
+
+### getClassesMetrics
+
+Returns class and ratio statistics.
+
+```tsx
+export async function getClassesMetrics() {
+  const { schoolId } = await getTenantContext();
+  if (!schoolId) {
+    return { total: 0, active: 0, studentTeacherRatio: 0 };
+  }
+
+  const [totalClasses, students, teachers] = await Promise.all([
+    db.class.count({ where: { schoolId } }),
+    db.student.count({ where: { schoolId } }),
+    db.teacher.count({ where: { schoolId } }),
+  ]);
+
+  const studentTeacherRatio = teachers > 0 ? (students / teachers).toFixed(1) : "0";
+
+  return {
+    total: totalClasses,
+    active: totalClasses,
+    studentTeacherRatio: parseFloat(studentTeacherRatio),
+  };
+}
+```
+
+## Recent Activities
+
+### getRecentActivities
+
+Returns activity feed from multiple sources.
+
+```tsx
+export async function getRecentActivities() {
+  const { schoolId } = await getTenantContext();
+  if (!schoolId) return [];
+
+  const [recentStudents, recentAnnouncements, recentExams, recentAssignments] = await Promise.all([
+    db.student.findMany({
+      where: { schoolId },
+      orderBy: { createdAt: "desc" },
+      take: 5,
+      select: { id: true, givenName: true, surname: true, createdAt: true },
+    }),
+    db.announcement.findMany({
+      where: { schoolId, published: true },
+      orderBy: { createdAt: "desc" },
+      take: 5,
+      select: { id: true, titleEn: true, titleAr: true, createdAt: true },
+    }),
+    db.exam.findMany({
+      where: { schoolId },
+      orderBy: { createdAt: "desc" },
+      take: 5,
+      select: { id: true, title: true, examDate: true, createdAt: true },
+    }),
+    db.assignment.findMany({
+      where: { schoolId },
+      orderBy: { createdAt: "desc" },
+      take: 5,
+      select: { id: true, title: true, dueDate: true, createdAt: true },
+    }),
+  ]);
+
+  // Combine and sort by timestamp
+  const activities = [
+    ...recentStudents.map(s => ({
+      type: "enrollment",
+      action: `New student enrolled: ${s.givenName} ${s.surname}`,
+      timestamp: s.createdAt,
+      user: "Admin",
+    })),
+    ...recentAnnouncements.map(a => ({
+      type: "announcement",
+      action: `New announcement: ${a.titleEn || a.titleAr}`,
+      timestamp: a.createdAt,
+      user: "Admin",
+    })),
+    ...recentExams.map(e => ({
+      type: "exam",
+      action: `Exam scheduled: ${e.title}`,
+      timestamp: e.examDate || e.createdAt,
+      user: "Admin",
+    })),
+    ...recentAssignments.map(a => ({
+      type: "assignment",
+      action: `Assignment created: ${a.title}`,
+      timestamp: a.createdAt,
+      user: "Teacher",
+    })),
+  ]
+    .filter(a => a.timestamp != null)
+    .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+    .slice(0, 10);
+
+  return activities;
+}
+```
+
+## Role-Specific Actions
+
+### getTeacherDashboardData
+
+```tsx
+export async function getTeacherDashboardData() {
+  return {
+    todaysClasses: [...],
+    pendingGrading: number,
+    attendanceDue: number,
+    totalStudents: number,
+    pendingAssignments: [...],
+    classPerformance: [...],
+    upcomingDeadlines: [...],
+  };
+}
+```
+
+### getStudentDashboardData
+
+```tsx
+export async function getStudentDashboardData() {
+  return {
+    attendanceSummary: { presentDays, totalDays, percentage },
+    todaysTimetable: [...],
+    upcomingAssignments: [...],
+    recentGrades: [...],
+    announcements: [...],
+  };
+}
+```
+
+### getParentDashboardData
+
+```tsx
+export async function getParentDashboardData() {
+  return {
+    children: [...],
+    attendanceSummary: { presentDays, totalDays, percentage },
+    upcomingAssignments: [...],
+    recentGrades: [...],
+    announcements: [...],
+  };
+}
+```
+
+### getPrincipalDashboardData
+
+```tsx
+// actions/principal.ts
+export async function getPrincipalDashboardData() {
+  return {
+    performanceScorecard: {...},
+    criticalAlerts: [...],
+    todaysPriorities: [...],
+    academicTrends: [...],
+    disciplinarySummary: {...},
+    staffEvaluations: [...],
+    budgetStatus: {...},
+    parentFeedback: {...},
+    goalProgress: [...],
+    boardMeetings: [...],
+    monthlyHighlights: [...],
+  };
+}
+```
+
+## Multi-Tenant Pattern
+
+All actions follow this pattern:
+
+```tsx
+"use server"
+
+import { getTenantContext } from "@/lib/tenant-context";
+import { db } from "@/lib/db";
+
+export async function someAction() {
+  // 1. Get tenant context
+  const { schoolId } = await getTenantContext();
+
+  // 2. Handle missing context
+  if (!schoolId) {
+    return defaultValue;
+  }
+
+  // 3. Query with schoolId scope
+  const data = await db.model.findMany({
+    where: { schoolId, ...otherFilters },
+  });
+
+  return data;
+}
+```
+
+## Error Handling
+
+Actions use graceful fallbacks:
+
+```tsx
+export async function getMetrics() {
+  const { schoolId } = await getTenantContext();
+
+  // Return defaults when school context is missing
+  if (!schoolId) {
+    return {
+      total: 0,
+      active: 0,
+      // ... default values
+    };
+  }
+
+  try {
+    // Database operations
+  } catch (error) {
+    console.error("[getMetrics] Error:", error);
+    return defaultValues;
+  }
+}
+```
+
+## Dependencies
+
+```tsx
+import { db } from "@/lib/db";
+import { getTenantContext } from "@/lib/tenant-context";
+import { subDays, startOfMonth, endOfMonth } from "date-fns";
+```
+
+## Related
+
+- [Dashboard Overview](/docs/dashboard)
+- [Multi-Tenant Architecture](/docs/architecture)
+- [Server Actions](/docs/server-actions)

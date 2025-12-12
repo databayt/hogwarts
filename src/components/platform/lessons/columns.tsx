@@ -6,9 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Ellipsis } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useModal } from "@/components/atom/modal/context";
-import { deleteLesson } from "@/components/platform/lessons/actions";
-import { DeleteToast, ErrorToast, confirmDeleteDialog } from "@/components/atom/toast";
-import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import type { Dictionary } from "@/components/internationalization/dictionaries";
 import type { Locale } from "@/components/internationalization/config";
@@ -25,6 +22,10 @@ export type LessonRow = {
   status: string;
   createdAt: string;
 };
+
+export interface LessonColumnCallbacks {
+  onDelete?: (row: LessonRow) => void;
+}
 
 const getStatusBadge = (status: string, lang?: Locale) => {
   const variants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
@@ -50,7 +51,7 @@ const getStatusBadge = (status: string, lang?: Locale) => {
   );
 };
 
-export const getLessonColumns = (dictionary?: Dictionary['school']['lessons'], lang?: Locale): ColumnDef<LessonRow>[] => {
+export const getLessonColumns = (dictionary?: Dictionary['school']['lessons'], lang?: Locale, callbacks?: LessonColumnCallbacks): ColumnDef<LessonRow>[] => {
   const t = {
     title: dictionary?.title || (lang === 'ar' ? 'العنوان' : 'Title'),
     class: dictionary?.class || (lang === 'ar' ? 'الفصل' : 'Class'),
@@ -144,7 +145,6 @@ export const getLessonColumns = (dictionary?: Dictionary['school']['lessons'], l
     cell: ({ row }) => {
       const lesson = row.original;
       const { openModal } = useModal();
-      const router = useRouter();
 
       const onView = () => {
         const qs = typeof window !== 'undefined' ? (window.location.search || "") : "";
@@ -153,17 +153,8 @@ export const getLessonColumns = (dictionary?: Dictionary['school']['lessons'], l
 
       const onEdit = () => openModal(lesson.id);
 
-      const onDelete = async () => {
-        try {
-          const deleteMsg = lang === 'ar' ? `حذف الدرس "${lesson.title}"؟` : `Delete lesson "${lesson.title}"?`;
-          const ok = await confirmDeleteDialog(deleteMsg);
-          if (!ok) return;
-          await deleteLesson({ id: lesson.id });
-          DeleteToast();
-          router.refresh();
-        } catch (e) {
-          ErrorToast(e instanceof Error ? e.message : (lang === 'ar' ? 'فشل الحذف' : 'Failed to delete'));
-        }
+      const onDelete = () => {
+        callbacks?.onDelete?.(lesson);
       };
 
       return (

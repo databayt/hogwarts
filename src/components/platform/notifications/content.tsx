@@ -1,31 +1,24 @@
-import { Suspense } from "react"
 import { auth } from "@/auth"
 import { getTenantContext } from "@/lib/tenant-context"
 import { redirect } from "next/navigation"
-import { NotificationList } from "./list"
 import { getNotificationsList, getNotificationStats } from "./queries"
 import type { NotificationListFilters } from "./queries"
 import type { NotificationDTO } from "./types"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { NotificationCenterClient } from "./notification-center-client"
-import { Bell, ListFilter, Settings } from "lucide-react"
+import { Bell, Calendar, TrendingUp, Inbox, Settings, ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { getNotificationDictionary } from "@/components/internationalization/dictionaries"
 import type { Locale } from "@/components/internationalization/config"
 
 // Helper function to safely serialize dates
-// Returns current date as fallback for null/undefined/invalid dates
 function safeSerializeDate(date: Date | null | undefined): string {
-  if (!date) {
-    console.warn('[safeSerializeDate] Null/undefined date, using current time as fallback')
-    return new Date().toISOString()
-  }
+  if (!date) return new Date().toISOString()
   try {
     return new Date(date).toISOString()
-  } catch (error) {
-    console.error('[safeSerializeDate] Invalid date:', date, error)
+  } catch {
     return new Date().toISOString()
   }
 }
@@ -96,8 +89,7 @@ export async function NotificationCenterContent({
     totalCount = notificationsResult.count
     stats = statsResult
   } catch (error) {
-    console.error('[NotificationCenterContent] Error fetching notifications:', error)
-    // Continue with empty data - shows "No notifications" instead of crash
+    console.error("[NotificationCenterContent] Error fetching notifications:", error)
   }
 
   const totalPages = Math.ceil(totalCount / perPage)
@@ -105,74 +97,90 @@ export async function NotificationCenterContent({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1>{dict.notifications.title}</h1>
-          <p className="muted">
+          <h1 className="scroll-m-20 text-3xl font-bold tracking-tight">
+            {dict.notifications.title}
+          </h1>
+          <p className="text-muted-foreground mt-1">
             {dict.notifications.subtitle}
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" asChild>
-            <Link href={`/${locale}/notifications/preferences`}>
-              <Settings className="h-4 w-4 mr-2" />
-              {String(dict.notifications.preferences)}
-            </Link>
-          </Button>
-        </div>
+        <Button variant="outline" size="sm" asChild>
+          <Link href={`/${locale}/notifications/preferences`}>
+            <Settings className="h-4 w-4 me-2" />
+            {dict.notifications.preferences.title}
+          </Link>
+        </Button>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <Card className="transition-shadow hover:shadow-md">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{dict.notifications.statistics.totalReceived}</CardTitle>
-            <Bell className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">
+              {dict.notifications.statistics.totalReceived}
+            </CardTitle>
+            <div className="rounded-full bg-muted p-2">
+              <Inbox className="h-4 w-4 text-muted-foreground" />
+            </div>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.total}</div>
-            <p className="muted">
+            <p className="text-xs text-muted-foreground mt-1">
               {dict.notifications.tabs.all}
             </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="transition-shadow hover:shadow-md">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{dict.notifications.tabs.unread}</CardTitle>
-            <Bell className="h-4 w-4 text-destructive" />
+            <CardTitle className="text-sm font-medium">
+              {dict.notifications.tabs.unread}
+            </CardTitle>
+            <div className="rounded-full bg-destructive/10 p-2">
+              <Bell className="h-4 w-4 text-destructive" />
+            </div>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.unread}</div>
-            <p className="muted">
+            <p className="text-xs text-muted-foreground mt-1">
               {dict.notifications.statistics.totalUnread}
             </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="transition-shadow hover:shadow-md">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{dict.notifications.grouping.today}</CardTitle>
-            <Bell className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">
+              {dict.notifications.grouping.today}
+            </CardTitle>
+            <div className="rounded-full bg-muted p-2">
+              <Calendar className="h-4 w-4 text-muted-foreground" />
+            </div>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.today}</div>
-            <p className="muted">
+            <p className="text-xs text-muted-foreground mt-1">
               {dict.notifications.grouping.today}
             </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="transition-shadow hover:shadow-md">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{dict.notifications.statistics.thisWeek}</CardTitle>
-            <Bell className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">
+              {dict.notifications.statistics.thisWeek}
+            </CardTitle>
+            <div className="rounded-full bg-muted p-2">
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            </div>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.thisWeek}</div>
-            <p className="muted">
-              {dict.notifications.statistics.thisWeek}
+            <p className="text-xs text-muted-foreground mt-1">
+              {dict.notifications.grouping.thisWeek}
             </p>
           </CardContent>
         </Card>
@@ -180,33 +188,27 @@ export async function NotificationCenterContent({
 
       {/* Notification List with Client-side Updates */}
       <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
+        <CardHeader className="pb-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div>
               <CardTitle>{dict.notifications.tabs.all}</CardTitle>
-              <CardDescription>
+              <CardDescription className="mt-1">
                 {totalCount > 0
                   ? `${dict.notifications.common.showing} ${(page - 1) * perPage + 1}-${Math.min(page * perPage, totalCount)} ${dict.notifications.common.of} ${totalCount}`
                   : dict.notifications.empty.noNotifications}
               </CardDescription>
             </div>
-            <Button variant="outline" size="sm" asChild>
-              <Link href={`/${locale}/notifications?${new URLSearchParams(searchParams as Record<string, string>).toString()}`}>
-                <ListFilter className="h-4 w-4 mr-2" />
-                {dict.notifications.filters.filterBy}
-              </Link>
-            </Button>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-0">
           <NotificationCenterClient
-            initialNotifications={(notifications ?? []).map(n => ({
+            initialNotifications={(notifications ?? []).map((n) => ({
               ...n,
               createdAt: safeSerializeDate(n?.createdAt),
               updatedAt: safeSerializeDate(n?.updatedAt),
               readAt: n?.readAt ? safeSerializeDate(n.readAt) : null,
               emailSentAt: n?.emailSentAt ? safeSerializeDate(n.emailSentAt) : null,
-              metadata: (n?.metadata as Record<string, unknown> | null) ?? null
+              metadata: (n?.metadata as Record<string, unknown> | null) ?? null,
             })) as NotificationDTO[]}
             locale={locale}
             dictionary={dict.notifications}
@@ -223,18 +225,23 @@ export async function NotificationCenterContent({
             size="sm"
             disabled={page <= 1}
             asChild={page > 1}
+            className="gap-1"
           >
             {page > 1 ? (
               <Link
                 href={`/${locale}/notifications?${new URLSearchParams({
-                  ...searchParams as Record<string, string>,
+                  ...(searchParams as Record<string, string>),
                   page: String(page - 1),
                 }).toString()}`}
               >
+                <ChevronLeft className="h-4 w-4" />
                 Previous
               </Link>
             ) : (
-              <span>Previous</span>
+              <span>
+                <ChevronLeft className="h-4 w-4" />
+                Previous
+              </span>
             )}
           </Button>
 
@@ -256,6 +263,7 @@ export async function NotificationCenterContent({
                   key={pageNum}
                   variant={page === pageNum ? "default" : "outline"}
                   size="sm"
+                  className="h-8 w-8 p-0"
                   asChild={page !== pageNum}
                 >
                   {page === pageNum ? (
@@ -263,7 +271,7 @@ export async function NotificationCenterContent({
                   ) : (
                     <Link
                       href={`/${locale}/notifications?${new URLSearchParams({
-                        ...searchParams as Record<string, string>,
+                        ...(searchParams as Record<string, string>),
                         page: String(pageNum),
                       }).toString()}`}
                     >
@@ -280,18 +288,23 @@ export async function NotificationCenterContent({
             size="sm"
             disabled={page >= totalPages}
             asChild={page < totalPages}
+            className="gap-1"
           >
             {page < totalPages ? (
               <Link
                 href={`/${locale}/notifications?${new URLSearchParams({
-                  ...searchParams as Record<string, string>,
+                  ...(searchParams as Record<string, string>),
                   page: String(page + 1),
                 }).toString()}`}
               >
                 Next
+                <ChevronRight className="h-4 w-4" />
               </Link>
             ) : (
-              <span>Next</span>
+              <span>
+                Next
+                <ChevronRight className="h-4 w-4" />
+              </span>
             )}
           </Button>
         </div>

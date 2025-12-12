@@ -1,6 +1,14 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 30" fill="none">
-  <path d="M10 8C10 6.89543 10.8954 6 12 6H18C19.1046 6 20 6.89543 20 8V12C20 13.1046 19.1046 14 18 14H12C10.8954 14 10 13.1046 10 12V8Z" fill="#4F008C"/>
-  <path d="M10 18C10 16.8954 10.8954 16 12 16H18C19.1046 16 20 16.8954 20 18V22C20 23.1046 19.1046 24 18 24H12C10.8954 24 10 23.1046 10 22V18Z" fill="#00D68F"/>
-  <text x="26" y="19" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#4F008C">stc</text>
-  <text x="45" y="19" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#00D68F">pay</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 316">
+  <rect fill="#fff" width="512" height="316" rx="15"/>
+  <!-- STC Pay Logo - Simplified -->
+  <rect x="80" y="70" width="70" height="70" rx="10" fill="#4F008C"/>
+  <rect x="80" y="176" width="70" height="70" rx="10" fill="#00D68F"/>
+  <!-- STC -->
+  <path d="M180 90c-3-3-8-5-13-5s-9 2-9 6c0 3 2 5 8 6l5 1c12 2 18 8 18 17 0 12-10 20-25 20-10 0-19-3-25-10l9-10c4 4 10 7 17 7s10-2 10-6c0-4-3-5-10-7l-5-1c-11-2-16-8-16-16 0-12 10-19 23-19 9 0 17 3 22 8l-9 9z" fill="#4F008C"/>
+  <path d="M220 73h55v13h-20v49h-15V86h-20V73z" fill="#4F008C"/>
+  <path d="M290 108c0-21 16-37 37-37 9 0 17 3 23 8l-9 11c-4-3-9-5-14-5-12 0-21 10-21 23s9 23 21 23c5 0 10-2 14-5l9 11c-6 5-14 8-23 8-21 0-37-16-37-37z" fill="#4F008C"/>
+  <!-- Pay -->
+  <path d="M180 195h22c15 0 24 9 24 22s-9 22-24 22h-7v21h-15v-65zm15 32h5c7 0 11-4 11-10s-4-10-11-10h-5v20z" fill="#00D68F"/>
+  <path d="M240 260l-6 0h-12l28-65h20l28 65h-16l-6-15h-30l-6 15zm21-50l-9 24h18l-9-24z" fill="#00D68F"/>
+  <path d="M310 195h16l15 26 15-26h16l-25 42v23h-15v-23l-22-42z" fill="#00D68F"/>
 </svg>

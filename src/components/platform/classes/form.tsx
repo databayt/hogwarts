@@ -12,7 +12,8 @@ import { useModal } from "@/components/atom/modal/context";
 import { useRouter } from "next/navigation";
 import { InformationStep } from "./information";
 import { ScheduleStep } from "./schedule";
-import { ClassFormFooter } from "./footer";
+import { ModalFormLayout } from "@/components/atom/modal/modal-form-layout";
+import { ModalFooter } from "@/components/atom/modal/modal-footer";
 
 interface ClassCreateFormProps {
   /** Callback fired on successful create/update - use for optimistic refresh */
@@ -50,8 +51,8 @@ export function ClassCreateForm({ onSuccess }: ClassCreateFormProps) {
     const load = async () => {
       if (!currentId) return;
       const res = await getClass({ id: currentId });
-      const c = res.class as any;
-      if (!c) return;
+      if (!res.success || !res.data) return;
+      const c = res.data as any;
       form.reset({
         name: c.name ?? "",
         subjectId: c.subjectId ?? "",
@@ -67,20 +68,25 @@ export function ClassCreateForm({ onSuccess }: ClassCreateFormProps) {
   }, [currentId]);
 
   async function onSubmit(values: z.infer<typeof classCreateSchema>) {
-    const res = currentId
-      ? await updateClass({ id: currentId, ...values })
-      : await createClass(values);
-    if (res?.success) {
-      toast.success(currentId ? "Class updated" : "Class created");
-      closeModal();
-      // Use callback for optimistic update, fallback to router.refresh()
-      if (onSuccess) {
-        onSuccess();
+    try {
+      const res = currentId
+        ? await updateClass({ id: currentId, ...values })
+        : await createClass(values);
+      if (res?.success) {
+        toast.success(currentId ? "Class updated" : "Class created");
+        closeModal();
+        // Use callback for optimistic update, fallback to router.refresh()
+        if (onSuccess) {
+          onSuccess();
+        } else {
+          router.refresh();
+        }
       } else {
-        router.refresh();
+        toast.error(res?.error || (currentId ? "Failed to update class" : "Failed to create class"));
       }
-    } else {
-      toast.error(currentId ? "Failed to update class" : "Failed to create class");
+    } catch (error) {
+      console.error("Form submission error:", error);
+      toast.error("An unexpected error occurred");
     }
   }
 
@@ -132,37 +138,34 @@ export function ClassCreateForm({ onSuccess }: ClassCreateFormProps) {
     }
   };
 
+  const stepLabels: Record<number, string> = {
+    1: "Basic Information",
+    2: "Schedule Details",
+  };
+
   return (
-    <div className="flex h-full flex-col">
-      <Form {...form}>
-        <form className="flex flex-col h-full" onSubmit={(e) => e.preventDefault()}>
-          <div className="flex-grow flex flex-col md:flex-row gap-6">
-            {/* Title Section */}
-            <div className="md:w-1/3">
-              <h2 className="text-2xl font-semibold">{isView ? "View Class" : currentId ? "Edit Class" : "Create Class"}</h2>
-              <p className="text-sm text-muted-foreground mt-2">{isView ? "View class details" : currentId ? "Update class details" : "Create a new class for your school"}</p>
-            </div>
+    <Form {...form}>
+      <form onSubmit={(e) => e.preventDefault()}>
+        <ModalFormLayout
+          title={isView ? "View Class" : currentId ? "Edit Class" : "Create Class"}
+          description={isView ? "View class details" : currentId ? "Update class details" : "Create a new class for your school"}
+        >
+          {renderCurrentStep()}
+        </ModalFormLayout>
 
-            {/* Form Content */}
-            <div className="flex-1">
-              <div className="overflow-y-auto">
-                {renderCurrentStep()}
-              </div>
-            </div>
-          </div>
-
-          <ClassFormFooter 
-            currentStep={currentStep}
-            isView={isView}
-            currentId={currentId}
-            onBack={handleBack}
-            onNext={handleNext}
-            onSaveCurrentStep={handleSaveCurrentStep}
-            form={form}
-          />
-        </form>
-      </Form>
-    </div>
+        <ModalFooter
+          currentStep={currentStep}
+          totalSteps={2}
+          stepLabel={stepLabels[currentStep]}
+          isView={isView}
+          isEdit={!!currentId}
+          isDirty={form.formState.isDirty}
+          onBack={handleBack}
+          onNext={handleNext}
+          onSaveStep={handleSaveCurrentStep}
+        />
+      </form>
+    </Form>
   );
 }
 

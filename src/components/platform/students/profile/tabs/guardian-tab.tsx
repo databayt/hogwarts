@@ -10,45 +10,8 @@ interface GuardianTabProps {
 }
 
 export function GuardianTab({ student }: GuardianTabProps) {
-  // In real implementation, fetch guardian data from database
+  // Use real guardian data from database
   const guardians = student.studentGuardians || [];
-
-  // Mock data for demonstration
-  const mockGuardians = [
-    {
-      id: "1",
-      guardian: {
-        givenName: "John",
-        surname: "Doe",
-        emailAddress: "john.doe@example.com",
-        phoneNumbers: [
-          { phoneNumber: "+966 50 123 4567", phoneType: "mobile", isPrimary: true },
-          { phoneNumber: "+966 11 234 5678", phoneType: "home", isPrimary: false },
-        ],
-      },
-      guardianType: { name: "Father" },
-      isPrimary: true,
-      occupation: "Software Engineer",
-      workplace: "Tech Corp",
-    },
-    {
-      id: "2",
-      guardian: {
-        givenName: "Jane",
-        surname: "Doe",
-        emailAddress: "jane.doe@example.com",
-        phoneNumbers: [
-          { phoneNumber: "+966 50 987 6543", phoneType: "mobile", isPrimary: true },
-        ],
-      },
-      guardianType: { name: "Mother" },
-      isPrimary: false,
-      occupation: "Doctor",
-      workplace: "City Hospital",
-    },
-  ];
-
-  const displayGuardians = guardians.length > 0 ? guardians : mockGuardians;
 
   const getInitials = (givenName: string, surname: string) => {
     return `${givenName?.[0] || ""}${surname?.[0] || ""}`.toUpperCase();
@@ -74,7 +37,7 @@ export function GuardianTab({ student }: GuardianTabProps) {
         </Button>
       </div>
 
-      {displayGuardians.map((guardianRel: any, index) => {
+      {guardians.map((guardianRel: any, index: number) => {
         const guardian = guardianRel.guardian;
         const guardianType = guardianRel.guardianType?.name || guardianRel.relation;
         const fullName = `${guardian.givenName} ${guardian.surname}`;
@@ -190,7 +153,7 @@ export function GuardianTab({ student }: GuardianTabProps) {
         );
       })}
 
-      {displayGuardians.length === 0 && (
+      {guardians.length === 0 && (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-8">
             <User className="h-12 w-12 text-muted-foreground mb-4" />

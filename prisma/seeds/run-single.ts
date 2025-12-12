@@ -1,29 +1,30 @@
 /**
- * Individual Seed Runner
+ * Individual Seed Runner (SAFE - No cleanup, data preserved)
  * Run seeds one at a time: npx tsx prisma/seeds/run-single.ts <phase>
  *
+ * All phases use UPSERT - existing data is preserved, duplicates are skipped.
+ *
  * Phases (in order):
- *   1. cleanup     - Clear existing data
- *   2. school      - Create demo school + branding
- *   3. auth        - Create admin users (dev, admin, accountant, staff)
- *   4. academic    - School year, terms, year levels, periods
- *   5. departments - Departments + subjects (57 subjects AR/EN)
- *   6. classrooms  - Physical rooms (17 rooms)
- *   7. people      - Teachers (25), Students (100), Guardians (200)
- *   8. classes     - Class sections + enrollments
- *   9. library     - Books collection (AR/EN)
- *  10. announcements - School announcements
- *  11. events      - School events calendar
- *  12. fees        - Fee structures + student fees
- *  13. finance     - Accounts, transactions, payroll
- *  14. exams       - Exam schedules + results
- *  15. grades      - Student grades + assessments
- *  16. timetable   - Class schedules
- *  17. stream      - LMS courses + lessons
- *  18. lessons     - Lesson plans
- *  19. reports     - Student reports
- *  20. attendance  - Attendance records
- *  21. admission   - Admission applications
+ *   1. school      - Create demo school + branding
+ *   2. auth        - Create admin users (dev, admin, accountant, staff)
+ *   3. academic    - School year, terms, year levels, periods
+ *   4. departments - Departments + subjects (57 subjects AR/EN)
+ *   5. classrooms  - Physical rooms (17 rooms)
+ *   6. people      - Teachers (25), Students (100), Guardians (200)
+ *   7. classes     - Class sections + enrollments
+ *   8. library     - Books collection (AR/EN)
+ *   9. announcements - School announcements
+ *  10. events      - School events calendar
+ *  11. fees        - Fee structures + student fees
+ *  12. finance     - Accounts, transactions, payroll
+ *  13. exams       - Exam schedules + results
+ *  14. grades      - Student grades + assessments
+ *  15. timetable   - Class schedules
+ *  16. stream      - LMS courses + lessons
+ *  17. lessons     - Lesson plans
+ *  18. reports     - Student reports
+ *  19. attendance  - Attendance records
+ *  20. admission   - Admission applications
  *
  * Usage:
  *   npx tsx prisma/seeds/run-single.ts school
@@ -32,7 +33,6 @@
  */
 
 import { PrismaClient } from "@prisma/client";
-import { seedCleanup } from "./cleanup";
 import { seedSchool } from "./school";
 import { seedAuth } from "./auth";
 import { seedAcademic } from "./academic";
@@ -116,12 +116,6 @@ async function runPhase(phase: string) {
 
   try {
     switch (phase) {
-      case "cleanup": {
-        await seedCleanup(prisma);
-        console.log("✅ Cleanup complete - database cleared");
-        break;
-      }
-
       case "school": {
         const school = await seedSchool(prisma);
         console.log(`✅ School created: ${school.name} (domain: ${school.domain})`);
@@ -298,28 +292,28 @@ async function runPhase(phase: string) {
 
       default:
         console.log(`❌ Unknown phase: ${phase}`);
+        console.log("\n🌱 All phases are SAFE - data is preserved, duplicates are skipped.");
         console.log("\nAvailable phases:");
-        console.log("  1. cleanup      - Clear database");
-        console.log("  2. school       - Demo school");
-        console.log("  3. auth         - Admin users");
-        console.log("  4. academic     - Year, terms, levels, periods");
-        console.log("  5. departments  - Departments + subjects");
-        console.log("  6. classrooms   - Physical rooms");
-        console.log("  7. people       - Teachers, students, guardians");
-        console.log("  8. classes      - Class sections");
-        console.log("  9. library      - Books");
-        console.log(" 10. announcements");
-        console.log(" 11. events");
-        console.log(" 12. fees");
-        console.log(" 13. finance");
-        console.log(" 14. exams");
-        console.log(" 15. grades");
-        console.log(" 16. timetable");
-        console.log(" 17. stream       - LMS");
-        console.log(" 18. lessons");
-        console.log(" 19. reports");
-        console.log(" 20. attendance");
-        console.log(" 21. admission");
+        console.log("  1. school       - Demo school");
+        console.log("  2. auth         - Admin users");
+        console.log("  3. academic     - Year, terms, levels, periods");
+        console.log("  4. departments  - Departments + subjects");
+        console.log("  5. classrooms   - Physical rooms");
+        console.log("  6. people       - Teachers, students, guardians");
+        console.log("  7. classes      - Class sections");
+        console.log("  8. library      - Books");
+        console.log("  9. announcements");
+        console.log(" 10. events");
+        console.log(" 11. fees");
+        console.log(" 12. finance");
+        console.log(" 13. exams");
+        console.log(" 14. grades");
+        console.log(" 15. timetable");
+        console.log(" 16. stream       - LMS");
+        console.log(" 17. lessons");
+        console.log(" 18. reports");
+        console.log(" 19. attendance");
+        console.log(" 20. admission");
         process.exit(1);
     }
 
@@ -337,8 +331,8 @@ const phase = process.argv[2];
 
 if (!phase) {
   console.log("Usage: npx tsx prisma/seeds/run-single.ts <phase>");
+  console.log("\n🌱 All phases are SAFE - data is preserved, duplicates are skipped.");
   console.log("\nRun phases in order:");
-  console.log("  npx tsx prisma/seeds/run-single.ts cleanup");
   console.log("  npx tsx prisma/seeds/run-single.ts school");
   console.log("  npx tsx prisma/seeds/run-single.ts auth");
   console.log("  npx tsx prisma/seeds/run-single.ts academic");

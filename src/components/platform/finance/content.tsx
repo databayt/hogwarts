@@ -14,9 +14,9 @@ import { PieChart, FileBarChart } from "lucide-react"
 import Link from 'next/link'
 import { db } from '@/lib/db'
 import { getTenantContext } from '@/lib/tenant-context'
-import { InteractiveBarChart } from '@/components/platform/dashboard/charts/interactive-bar-chart'
-import { RadialTextChart } from '@/components/platform/dashboard/charts/radial-text-chart'
-import { AreaChartStacked } from '@/components/platform/dashboard/charts/area-chart-stacked'
+import { InteractiveBarChart } from '@/components/platform/dashboard/chart-interactive-bar'
+import { RadialTextChart } from '@/components/platform/dashboard/chart-radial-text'
+import { AreaChartStacked } from '@/components/platform/dashboard/chart-area-stacked'
 
 interface Props {
   dictionary: Dictionary

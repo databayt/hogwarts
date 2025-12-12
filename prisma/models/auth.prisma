@@ -87,6 +87,7 @@ model User {
   createdAnnouncements      Announcement[]             @relation("AnnouncementCreator")
   announcementReads         AnnouncementRead[]         @relation("AnnouncementReads")
   announcementNotifications AnnouncementNotification[] @relation("AnnouncementNotifications")
+  announcementTemplates     AnnouncementTemplate[]     @relation("TemplateCreator")
 
   // Notification relations
   notifications             Notification[]             @relation("UserNotifications")
@@ -113,10 +114,15 @@ model User {
   filePermissions    FilePermission[] @relation("FilePermissions")
   grantedPermissions FilePermission[] @relation("GrantedPermissions")
   fileAuditLogs      FileAuditLog[]   @relation("FileAuditLogs")
+  fileRecords        FileRecord[]
 
   // Timetable optimization relations
   timetableTemplates   TimetableTemplate[]
   templateApplications TemplateApplication[]
+
+  // Sales Module relations
+  assignedLeads         Lead[]         @relation("LeadAssignment")
+  leadActivitiesCreated LeadActivity[] @relation("LeadActivityCreator")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

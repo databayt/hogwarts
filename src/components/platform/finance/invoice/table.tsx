@@ -11,7 +11,8 @@ import { Plus } from "lucide-react";
 import { useModal } from "@/components/atom/modal/context";
 import Modal from "@/components/atom/modal/modal";
 import { InvoiceCreateForm } from "@/components/platform/finance/invoice/form";
-import { getInvoicesWithFilters } from "./actions";
+import { getInvoicesWithFilters, deleteInvoice } from "./actions";
+import { DeleteToast, ErrorToast, confirmDeleteDialog } from "@/components/atom/toast";
 
 interface InvoiceTableProps {
   initialData: InvoiceRow[];
@@ -21,7 +22,7 @@ interface InvoiceTableProps {
 
 export function InvoiceTable({ initialData, total, perPage = 20 }: InvoiceTableProps) {
   const router = useRouter();
-  const columns = useMemo(() => getInvoiceColumns(), []);
+
   // State for incremental loading
   const [data, setData] = useState<InvoiceRow[]>(initialData);
   const [currentPage, setCurrentPage] = useState(1);
@@ -36,6 +37,34 @@ export function InvoiceTable({ initialData, total, perPage = 20 }: InvoiceTableP
   }, [router]);
 
   const hasMore = data.length < total;
+
+  // Handle delete with optimistic update (must be before columns useMemo)
+  const handleDelete = useCallback(async (invoice: InvoiceRow) => {
+    try {
+      const ok = await confirmDeleteDialog(`Delete invoice ${invoice.invoice_no}?`);
+      if (!ok) return;
+
+      // Optimistic remove
+      setData(prev => prev.filter(i => i.id !== invoice.id));
+
+      const result = await deleteInvoice({ id: invoice.id });
+      if (result.success) {
+        DeleteToast();
+      } else {
+        // Revert on error
+        refresh();
+        ErrorToast("Failed to delete invoice");
+      }
+    } catch (e) {
+      refresh();
+      ErrorToast(e instanceof Error ? e.message : "Failed to delete");
+    }
+  }, [refresh]);
+
+  // Generate columns with callbacks
+  const columns = useMemo(() => getInvoiceColumns({
+    onDelete: handleDelete,
+  }), [handleDelete]);
 
   const handleLoadMore = useCallback(async () => {
     if (isLoading || !hasMore) return;

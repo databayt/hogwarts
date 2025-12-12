@@ -1,0 +1,103 @@
+version: 2
+
+updates:
+  # npm dependencies
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "automated"
+    commit-message:
+      prefix: "chore(deps)"
+    # Group similar updates together
+    groups:
+      # Development dependencies
+      development:
+        patterns:
+          - "@types/*"
+          - "eslint*"
+          - "prettier*"
+          - "vitest*"
+          - "@vitest/*"
+          - "typescript"
+          - "@typescript-eslint/*"
+        update-types:
+          - "minor"
+          - "patch"
+      # Testing dependencies
+      testing:
+        patterns:
+          - "@testing-library/*"
+          - "playwright*"
+          - "@playwright/*"
+          - "jest*"
+        update-types:
+          - "minor"
+          - "patch"
+      # React ecosystem
+      react:
+        patterns:
+          - "react"
+          - "react-dom"
+          - "@types/react*"
+        update-types:
+          - "patch"
+      # Next.js ecosystem
+      nextjs:
+        patterns:
+          - "next"
+          - "next-*"
+          - "@next/*"
+        update-types:
+          - "patch"
+      # Radix UI components
+      radix:
+        patterns:
+          - "@radix-ui/*"
+        update-types:
+          - "minor"
+          - "patch"
+      # Tanstack libraries
+      tanstack:
+        patterns:
+          - "@tanstack/*"
+        update-types:
+          - "minor"
+          - "patch"
+    # Ignore specific packages
+    ignore:
+      # React 19 is latest, don't suggest downgrades
+      - dependency-name: "react"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react-dom"
+        update-types: ["version-update:semver-major"]
+      # Next.js major updates need manual review
+      - dependency-name: "next"
+        update-types: ["version-update:semver-major"]
+    # Reviewers for dependency PRs
+    reviewers:
+      - "abdout"
+
+  # GitHub Actions
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+      timezone: "UTC"
+    labels:
+      - "dependencies"
+      - "ci"
+      - "automated"
+    commit-message:
+      prefix: "chore(ci)"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "abdout"

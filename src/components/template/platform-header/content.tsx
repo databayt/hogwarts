@@ -10,7 +10,6 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { Bell, Mail } from "lucide-react";
 import ImpersonationBanner from "../../operator/impersonation-banner";
@@ -25,6 +24,10 @@ import { useCurrentRole } from "@/components/auth/use-current-role";
 import { usePathname } from "next/navigation";
 import type { Role } from "@/components/atom/generic-command-menu/types";
 import Link from "next/link";
+import { MobileNav } from "@/components/template/mobile-nav";
+import { platformNav, type Role as PlatformRole } from "@/components/template/platform-sidebar/config";
+import { cn } from "@/lib/utils";
+import { useMemo } from "react";
 
 interface PlatformHeaderProps {
   school?: School;
@@ -42,11 +45,29 @@ export default function PlatformHeader({ school, lang }: PlatformHeaderProps = {
   const messagesUrl = `/${locale}/messages`;
   const notificationsUrl = `/${locale}/notifications`;
 
+  // Filter platform nav items by role for mobile menu
+  const mobileNavItems = useMemo(() => {
+    return platformNav
+      .filter(item => !role || item.roles.includes(role as PlatformRole))
+      .map(item => ({
+        href: item.href,
+        label: item.title,
+      }));
+  }, [role]);
+
   return (
     <div className="sticky top-0 z-40 bg-background -mx-2">
       <header className="flex h-12 shrink-0 items-center gap-2 border-b mx-2">
         <div className="flex items-center gap-2">
-          <SidebarTrigger className={`size-7 ${isRTL ? '-mr-1.5' : '-ml-1.5'}`} />
+          {/* Desktop: Sidebar trigger */}
+          <SidebarTrigger className={cn("size-7 hidden lg:flex", isRTL ? '-mr-1.5' : '-ml-1.5')} />
+          {/* Mobile: Popover-based menu */}
+          <MobileNav
+            items={mobileNavItems}
+            className="flex lg:hidden"
+            dictionary={dictionary ?? undefined}
+            locale={locale}
+          />
           <div className="hidden md:flex items-center">
             {breadcrumbItems.length > 0 && (
               <Breadcrumb>

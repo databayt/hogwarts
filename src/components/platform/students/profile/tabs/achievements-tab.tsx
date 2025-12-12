@@ -10,60 +10,8 @@ interface AchievementsTabProps {
 }
 
 export function AchievementsTab({ student }: AchievementsTabProps) {
-  // Mock achievements for demonstration
-  const achievements: Achievement[] = student.achievements || [
-    {
-      id: "1",
-      schoolId: student.schoolId,
-      studentId: student.id,
-      title: "Mathematics Olympiad Winner",
-      description: "First place in regional mathematics olympiad competition",
-      achievementDate: new Date("2024-03-15"),
-      category: "ACADEMIC",
-      level: "STATE",
-      position: "1st Place",
-      certificateUrl: "#",
-      certificateNo: "MATH-2024-001",
-      issuedBy: "State Education Board",
-      points: 100,
-    },
-    {
-      id: "2",
-      schoolId: student.schoolId,
-      studentId: student.id,
-      title: "Science Fair Project",
-      description: "Innovative project on renewable energy solutions",
-      achievementDate: new Date("2024-02-20"),
-      category: "ACADEMIC",
-      level: "SCHOOL",
-      position: "Winner",
-      points: 50,
-    },
-    {
-      id: "3",
-      schoolId: student.schoolId,
-      studentId: student.id,
-      title: "Basketball Championship",
-      description: "Team captain - Inter-school basketball tournament",
-      achievementDate: new Date("2024-01-10"),
-      category: "SPORTS",
-      level: "DISTRICT",
-      position: "Champion",
-      points: 75,
-    },
-    {
-      id: "4",
-      schoolId: student.schoolId,
-      studentId: student.id,
-      title: "Art Exhibition",
-      description: "Selected artwork displayed in annual school art exhibition",
-      achievementDate: new Date("2023-12-05"),
-      category: "ARTS",
-      level: "SCHOOL",
-      position: "Participant",
-      points: 25,
-    },
-  ];
+  // Use real achievements from database
+  const achievements: Achievement[] = student.achievements || [];
 
   const getCategoryIcon = (category: string) => {
     switch (category) {
@@ -261,36 +209,43 @@ export function AchievementsTab({ student }: AchievementsTabProps) {
       )}
 
       {/* Achievement Summary by Year */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Achievement Timeline</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {[2024, 2023].map(year => {
-              const yearAchievements = achievements.filter(
-                a => new Date(a.achievementDate).getFullYear() === year
-              );
-              return yearAchievements.length > 0 ? (
-                <div key={year} className="border-l-2 border-primary pl-4">
-                  <h5 className="font-medium mb-2">{year}</h5>
-                  <div className="space-y-1">
-                    {yearAchievements.map(a => (
-                      <div key={a.id} className="flex items-center gap-2 text-sm">
-                        <span>{getCategoryIcon(a.category)}</span>
-                        <span>{a.title}</span>
-                        <span className="text-muted-foreground">
-                          ({format(new Date(a.achievementDate), "MMM dd")})
-                        </span>
+      {achievements.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Achievement Timeline</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {/* Get unique years from actual achievements */}
+              {Array.from(
+                new Set(achievements.map(a => new Date(a.achievementDate).getFullYear()))
+              )
+                .sort((a, b) => b - a)
+                .map(year => {
+                  const yearAchievements = achievements.filter(
+                    a => new Date(a.achievementDate).getFullYear() === year
+                  );
+                  return (
+                    <div key={year} className="border-l-2 border-primary pl-4">
+                      <h5 className="font-medium mb-2">{year}</h5>
+                      <div className="space-y-1">
+                        {yearAchievements.map(a => (
+                          <div key={a.id} className="flex items-center gap-2 text-sm">
+                            <span>{getCategoryIcon(a.category)}</span>
+                            <span>{a.title}</span>
+                            <span className="text-muted-foreground">
+                              ({format(new Date(a.achievementDate), "MMM dd")})
+                            </span>
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                </div>
-              ) : null;
-            })}
-          </div>
-        </CardContent>
-      </Card>
+                    </div>
+                  );
+                })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

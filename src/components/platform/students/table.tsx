@@ -4,6 +4,8 @@ import { useMemo, useState, useCallback, useTransition } from "react";
 import { DataTable } from "@/components/table/data-table";
 import { useDataTable } from "@/components/table/use-data-table";
 import { getStudentColumns, type StudentRow } from "./columns";
+import { getSelectColumn } from "@/components/table/select-column";
+import { BulkActionsToolbar, createDeleteAction, createExportAction, createMessageAction } from "@/components/table/bulk-actions-toolbar";
 import { useModal } from "@/components/atom/modal/context";
 import Modal from "@/components/atom/modal/modal";
 import { StudentCreateForm } from "@/components/platform/students/form";
@@ -78,7 +80,10 @@ export function StudentsTable({ initialData, total, dictionary, lang, perPage = 
     perPage,
     fetcher: async (params) => {
       const result = await getStudents(params);
-      return { rows: result.rows as StudentRow[], total: result.total };
+      if (!result.success || !result.data) {
+        return { rows: [], total: 0 };
+      }
+      return { rows: result.data.rows as StudentRow[], total: result.data.total };
     },
     filters: searchValue ? { name: searchValue } : undefined,
   });
@@ -89,9 +94,12 @@ export function StudentsTable({ initialData, total, dictionary, lang, perPage = 
   }, [optimisticRemove]);
 
   // Generate columns on the client side with dictionary, lang, and delete callback
-  const columns = useMemo(() => getStudentColumns(dictionary, lang, {
-    onDeleteSuccess: handleColumnDeleteSuccess,
-  }), [dictionary, lang, handleColumnDeleteSuccess]);
+  const columns = useMemo(() => [
+    getSelectColumn<StudentRow>(),
+    ...getStudentColumns(dictionary, lang, {
+      onDeleteSuccess: handleColumnDeleteSuccess,
+    }),
+  ], [dictionary, lang, handleColumnDeleteSuccess]);
 
   // Table instance
   const { table } = useDataTable<StudentRow>({
@@ -156,6 +164,58 @@ export function StudentsTable({ initialData, total, dictionary, lang, perPage = 
     router.push(`/profile/${student.userId}`);
   }, [router, lang]);
 
+  // Bulk delete handler
+  const handleBulkDelete = useCallback(async (rows: StudentRow[]) => {
+    const deleteMsg = lang === 'ar'
+      ? `حذف ${rows.length} طالب؟`
+      : `Delete ${rows.length} students?`;
+    const ok = await confirmDeleteDialog(deleteMsg);
+    if (!ok) return;
+
+    // Optimistically remove all selected rows
+    rows.forEach((row) => optimisticRemove(row.id));
+
+    // Delete each student
+    const results = await Promise.all(
+      rows.map((row) => deleteStudent({ id: row.id }))
+    );
+
+    const failures = results.filter((r) => !r.success);
+    if (failures.length === 0) {
+      DeleteToast();
+      table.toggleAllPageRowsSelected(false);
+    } else {
+      refresh();
+      ErrorToast(lang === 'ar' ? `فشل حذف ${failures.length} طالب` : `Failed to delete ${failures.length} students`);
+    }
+  }, [lang, optimisticRemove, refresh, table]);
+
+  // Bulk export handler
+  const handleBulkExport = useCallback(async (rows: StudentRow[]) => {
+    // Export selected rows as CSV
+    const csv = rows.map((r) =>
+      `${r.name},${r.className},${r.status},${r.createdAt}`
+    ).join('\n');
+    const header = lang === 'ar'
+      ? 'الاسم,الفصل,الحالة,تاريخ الإنشاء'
+      : 'Name,Class,Status,Created';
+    const csvContent = `${header}\n${csv}`;
+
+    // Download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'selected-students.csv';
+    link.click();
+    table.toggleAllPageRowsSelected(false);
+  }, [lang, table]);
+
+  // Bulk actions
+  const bulkActions = useMemo(() => [
+    createDeleteAction<StudentRow>(handleBulkDelete, lang),
+    createExportAction<StudentRow>(handleBulkExport, lang),
+  ], [handleBulkDelete, handleBulkExport, lang]);
+
   // Get status badge
   const getStatusBadge = (status: string) => {
     return status === "active"
@@ -165,7 +225,11 @@ export function StudentsTable({ initialData, total, dictionary, lang, perPage = 
 
   // Export CSV wrapper
   const handleExportCSV = useCallback(async (filters?: Record<string, unknown>) => {
-    return getStudentsCSV(filters);
+    const result = await getStudentsCSV(filters);
+    if (!result.success || !result.data) {
+      throw new Error('error' in result ? result.error : 'Export failed');
+    }
+    return result.data;
   }, []);
 
   // Toolbar translations
@@ -194,13 +258,20 @@ export function StudentsTable({ initialData, total, dictionary, lang, perPage = 
       />
 
       {view === "table" ? (
-        <DataTable
-          table={table}
-          paginationMode="load-more"
-          hasMore={hasMore}
-          isLoading={isLoading || isPending}
-          onLoadMore={loadMore}
-        />
+        <>
+          <DataTable
+            table={table}
+            paginationMode="load-more"
+            hasMore={hasMore}
+            isLoading={isLoading || isPending}
+            onLoadMore={loadMore}
+          />
+          <BulkActionsToolbar
+            table={table}
+            actions={bulkActions}
+            lang={lang}
+          />
+        </>
       ) : (
         <>
           {data.length === 0 ? (

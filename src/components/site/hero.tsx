@@ -1,8 +1,17 @@
 import { Button } from "@/components/ui/button";
 import { AnimatedButton } from "@/components/atom/animated-button";
 import Image from "next/image";
+import Link from "next/link";
+import type { Locale } from "@/components/internationalization/config";
 
-export function Hero() {
+interface HeroProps {
+  lang?: Locale;
+  subdomain?: string;
+}
+
+export function Hero({ lang = "en", subdomain = "demo" }: HeroProps) {
+  const isRTL = lang === "ar";
+
   return (
     <section className="h-[calc(80vh-3.5rem)] max-h-[700px] w-full grid grid-cols-1 lg:grid-cols-2">
       {/* Image Half */}
@@ -25,26 +34,35 @@ export function Hero() {
               <Image src="/site/ball.png" alt="Hogwarts Logo" width={100} height={100} className="w-14 h-14 dark:invert"/>
             </div>
             <h1 className="font-heading font-black text-4xl sm:text-5xl tracking-tighter text-white py-4">
-              Beautiful Mind,<br />
-              Curious. Wonder.
+              {isRTL ? (
+                <>عقل جميل،<br />فضولي. عجيب.</>
+              ) : (
+                <>Beautiful Mind,<br />Curious. Wonder.</>
+              )}
             </h1>
             <p className="pb-6 text-white/80 max-w-[80%]">
-              The most magical part of the Harry Potter books, is that they eventually used the skills they learned at school
+              {isRTL
+                ? "الجزء الأكثر سحراً في كتب هاري بوتر، هو أنهم استخدموا في النهاية المهارات التي تعلموها في المدرسة"
+                : "The most magical part of the Harry Potter books, is that they eventually used the skills they learned at school"}
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <AnimatedButton
-                size="lg"
-                className="w-full sm:w-auto"
-              >
-                Schedule a Visit
-              </AnimatedButton>
-              <Button
-                variant="outline"
-                size="lg"
-                className="w-full sm:w-auto bg-transparent text-white border-white hover:bg-white/10"
-              >
-                Learn More
-              </Button>
+              <Link href={`/${lang}/tour`}>
+                <AnimatedButton
+                  size="lg"
+                  className="w-full sm:w-auto"
+                >
+                  {isRTL ? "احجز زيارة" : "Schedule a Visit"}
+                </AnimatedButton>
+              </Link>
+              <Link href={`/${lang}/admissions`}>
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="w-full sm:w-auto bg-transparent text-white border-white hover:bg-white/10"
+                >
+                  {isRTL ? "اعرف المزيد" : "Learn More"}
+                </Button>
+              </Link>
             </div>
           </div>
         </div>
@@ -57,24 +75,28 @@ export function Hero() {
             <Image src="/site/ball.png" alt="Hogwarts Logo" width={100} height={100} className="w-14 h-14 dark:invert"/>
           </div>
           <h1 className="font-heading font-black text-5xl lg:text-6xl xl:text-7xl tracking-tighter py-4">
-            Beautiful Mind,<br />
-            Curious. Wonder.
+            {isRTL ? (
+              <>عقل جميل،<br />فضولي. عجيب.</>
+            ) : (
+              <>Beautiful Mind,<br />Curious. Wonder.</>
+            )}
           </h1>
           <p className="pb-6 text-muted-foreground max-w-[80%]">
-            The most magical part of the Harry Potter books, is that they eventually used the skills they learned at school
+            {isRTL
+              ? "الجزء الأكثر سحراً في كتب هاري بوتر، هو أنهم استخدموا في النهاية المهارات التي تعلموها في المدرسة"
+              : "The most magical part of the Harry Potter books, is that they eventually used the skills they learned at school"}
           </p>
           <div className="flex flex-row gap-4">
-            <AnimatedButton
-              size="lg"
-            >
-              Schedule a Visit
-            </AnimatedButton>
-            <Button
-              variant="outline"
-              size="lg"
-            >
-              Learn More
-            </Button>
+            <Link href={`/${lang}/tour`}>
+              <AnimatedButton size="lg">
+                {isRTL ? "احجز زيارة" : "Schedule a Visit"}
+              </AnimatedButton>
+            </Link>
+            <Link href={`/${lang}/admissions`}>
+              <Button variant="outline" size="lg">
+                {isRTL ? "اعرف المزيد" : "Learn More"}
+              </Button>
+            </Link>
           </div>
         </div>
       </div>

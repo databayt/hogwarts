@@ -1,0 +1,207 @@
+---
+title: "Block Rebound Workflow"
+description: "Systematic block optimization for production-readiness through research, assessment, and actionable recommendations"
+---
+
+# Block Rebound Workflow
+
+The Block Rebound workflow systematically optimizes any platform block for production-readiness through competitor research, technical assessment, and actionable recommendations.
+
+## Quick Start
+
+Simply say one of these to trigger the workflow:
+
+```bash
+rebound finance
+rebound the attendance block
+optimize students for production
+make grades production-ready
+```
+
+Or use the slash command:
+
+```bash
+/rebound finance
+/rebound attendance
+```
+
+## Why Block Rebound?
+
+Before Block Rebound, optimizing a block required writing detailed prompts like:
+
+```
+ultrathink This is a multi tenant schools management system,
+and I wanted to have advance attendance feature. I want you
+to look at competitors search the web to see what is the best
+practices to follow with src/components/platform/attendance/
+optimize it to solve real problems to be practical and useful
+and integrate well with other blocks and be production ready
+```
+
+Now, you just say: **rebound attendance**
+
+## Workflow Phases
+
+### Phase 1: Research (5-10 min)
+
+Competitive intelligence gathering:
+
+- **Web search** for top 5 competitors in the domain
+- **Feature benchmarking** matrix comparison
+- **Industry best practices** identification
+- **Innovation opportunities** discovery
+
+Example searches for finance block:
+- "best school fee management software 2025"
+- "school billing system features"
+- "education payment gateway integration"
+
+### Phase 2: Assessment (10-15 min)
+
+Technical evaluation of current implementation:
+
+| Check | Description |
+|-------|-------------|
+| Architecture | Mirror pattern, server/client boundaries |
+| Multi-tenant | schoolId in all queries |
+| Security | Validation, auth checks, OWASP |
+| Performance | N+1 queries, bundle size |
+| UX | Loading states, error handling |
+| i18n | Arabic/English coverage |
+| Tests | Coverage target: 95% |
+
+### Phase 3: Checklist (5 min)
+
+Prioritized production checklist with effort estimates:
+
+| Priority | Description | Examples |
+|----------|-------------|----------|
+| **Critical** | Must fix before production | Security vulnerabilities, multi-tenant issues |
+| **High** | Should fix soon | Missing core features, performance issues |
+| **Medium** | Plan for near-term | Enhancements, i18n gaps |
+| **Low** | Backlog | Nice-to-have features |
+
+### Phase 4: Recommendations (5 min)
+
+Strategic improvement plan:
+
+- **Quick wins** - High impact, low effort tasks
+- **Implementation phases** - Weekly breakdown
+- **Dependencies** - Task relationships
+- **Success metrics** - Production-ready criteria
+
+## Valid Blocks
+
+### Core
+`dashboard` `profile` `settings` `admin`
+
+### People
+`students` `teachers` `parents` `staff`
+
+### Academic
+`subjects` `classes` `lessons` `timetable` `attendance`
+
+### Assessment
+`exams` `assignments` `grades`
+
+### Finance
+`finance` `fees` `billing` `invoice` `receipt` `banking` `salary` `expenses` `payroll` `budget` `wallet` `accounts`
+
+### Operations
+`announcements` `messaging` `notifications` `events` `library`
+
+## Output
+
+Reports are saved to:
+
+```
+.claude/workflows/rebound-outputs/{block}/rebound-{date}.md
+```
+
+Each report contains:
+1. **Research findings** - Competitor analysis, feature gaps
+2. **Technical assessment** - Scores and issues found
+3. **Production checklist** - Prioritized tasks with estimates
+4. **Recommendations** - Quick wins and implementation phases
+
+## Integration
+
+Block Rebound integrates with existing agents:
+
+| Agent | Purpose |
+|-------|---------|
+| `/agents/security` | Security deep-dive |
+| `/agents/multi-tenant` | Tenant isolation verification |
+| `/agents/performance` | Performance optimization |
+| `/agents/i18n` | Translation audit |
+
+And skills:
+
+| Skill | Purpose |
+|-------|---------|
+| `multi-tenant-validator` | schoolId verification |
+| `security-scanner` | OWASP compliance |
+| `prisma-optimizer` | Query analysis |
+| `react-performance` | Component optimization |
+
+## Success Criteria
+
+A block is **production-ready** when:
+
+- [ ] Zero critical issues
+- [ ] Zero high-priority security issues
+- [ ] Multi-tenant isolation verified
+- [ ] 95%+ test coverage
+- [ ] 100% i18n coverage (Arabic + English)
+- [ ] All core features implemented
+- [ ] Performance within targets (&lt;200ms API, &lt;100KB bundle)
+- [ ] Accessibility compliant (WCAG 2.1 AA)
+- [ ] Mobile-responsive
+
+## Example Output
+
+```
+User: rebound finance
+
+Claude: Starting Block Rebound for finance...
+
+[Phase 1: Research]
+✓ Found 5 competitors: Blackbaud, FACTS, PowerSchool...
+✓ Identified 15 must-have features
+✓ 8 differentiation opportunities
+
+[Phase 2: Assessment]
+✓ 147 files analyzed
+✓ Architecture: 85% compliant
+✓ Multi-tenant: 3 issues found
+✓ Security: 4 issues found
+✓ Test coverage: 67%
+
+[Phase 3: Checklist]
+• Critical: 8 items (20h)
+• High: 8 items (30h)
+• Medium: 5 items (20h)
+• Low: 3 items (10h)
+
+[Phase 4: Recommendations]
+Week 1: Security fixes
+Week 2-3: Core features
+Week 4: Polish
+
+✓ Report saved to: .claude/workflows/rebound-outputs/finance/
+```
+
+## Files
+
+| File | Purpose |
+|------|---------|
+| `CLAUDE.md` | Natural language recognition |
+| `.claude/skills/rebound.md` | Workflow logic |
+| `.claude/commands/rebound.md` | Slash command |
+| `.claude/agents/rebound.md` | Deep analysis agent |
+
+## Related
+
+- [Architecture](/docs/architecture) - Mirror pattern and structure
+- [Competitors](/docs/competitors) - Competitive landscape
+- [PRD](/docs/prd) - Product requirements
