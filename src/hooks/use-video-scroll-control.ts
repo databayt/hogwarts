@@ -3,13 +3,13 @@
 import { useEffect, useRef, useState, useCallback } from "react"
 
 interface UseVideoScrollControlOptions {
-  /** Intersection Observer threshold (0-1). Default: 0.5 */
+  /** Intersection Observer threshold (0-1). Default: 0.4 */
   threshold?: number
-  /** Fade-in duration in ms. Default: 500 */
+  /** Fade-in duration in ms. Default: 600 */
   fadeInDuration?: number
   /** Fade-out duration in ms. Default: 300 */
   fadeOutDuration?: number
-  /** Target volume when unmuted (0-1). Default: 1 */
+  /** Target volume when unmuted (0-1). Default: 0.7 */
   targetVolume?: number
 }
 
@@ -18,13 +18,15 @@ interface UseVideoScrollControlReturn {
   videoRef: React.RefObject<HTMLVideoElement | null>
   isInView: boolean
   isMuted: boolean
+  toggleMute: () => void
 }
 
 /**
- * Pure video scroll control - no UI needed.
+ * Video scroll control with click-to-unmute.
  *
- * - Auto-plays with sound when in view
- * - Auto-pauses and mutes when out of view
+ * - Auto-plays (muted) when in view
+ * - Auto-pauses when out of view
+ * - Click video to toggle sound
  * - Smooth volume transitions
  */
 export function useVideoScrollControl(
@@ -40,30 +42,9 @@ export function useVideoScrollControl(
   const containerRef = useRef<HTMLDivElement | null>(null)
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const animationRef = useRef<number | null>(null)
-  const hasUserInteracted = useRef(false)
 
   const [isInView, setIsInView] = useState(false)
   const [isMuted, setIsMuted] = useState(true)
-
-  // Track any user interaction on the page
-  useEffect(() => {
-    const handleInteraction = () => {
-      hasUserInteracted.current = true
-    }
-
-    // These events indicate user interaction
-    window.addEventListener('click', handleInteraction, { once: true })
-    window.addEventListener('touchstart', handleInteraction, { once: true })
-    window.addEventListener('keydown', handleInteraction, { once: true })
-    window.addEventListener('scroll', handleInteraction, { once: true })
-
-    return () => {
-      window.removeEventListener('click', handleInteraction)
-      window.removeEventListener('touchstart', handleInteraction)
-      window.removeEventListener('keydown', handleInteraction)
-      window.removeEventListener('scroll', handleInteraction)
-    }
-  }, [])
 
   // Cancel animation
   const cancelAnimation = useCallback(() => {
@@ -103,6 +84,26 @@ export function useVideoScrollControl(
     [cancelAnimation]
   )
 
+  // Toggle mute - must be called from user gesture (click)
+  const toggleMute = useCallback(() => {
+    const video = videoRef.current
+    if (!video || targetVolume === 0) return
+
+    if (video.muted) {
+      // Unmute with fade-in
+      video.muted = false
+      video.volume = 0
+      setIsMuted(false)
+      animateVolume(video, 0, targetVolume, fadeInDuration)
+    } else {
+      // Mute with fade-out
+      animateVolume(video, video.volume, 0, fadeOutDuration, () => {
+        video.muted = true
+        setIsMuted(true)
+      })
+    }
+  }, [targetVolume, fadeInDuration, fadeOutDuration, animateVolume])
+
   // Intersection Observer
   useEffect(() => {
     const container = containerRef.current
@@ -123,40 +124,19 @@ export function useVideoScrollControl(
     }
   }, [threshold, cancelAnimation])
 
-  // Handle play/pause and audio based on visibility
+  // Handle play/pause based on visibility
   useEffect(() => {
     const video = videoRef.current
     if (!video) return
 
     if (isInView) {
-      // Video is in view - play
-
-      // Start muted for autoplay to work
-      video.muted = true
-      video.volume = 0
-
-      video.play().then(() => {
-        // Play succeeded
-        // If targetVolume > 0, try to unmute with fade-in
-        if (targetVolume > 0) {
-          try {
-            video.muted = false
-            setIsMuted(false)
-            animateVolume(video, 0, targetVolume, fadeInDuration)
-          } catch {
-            // Browser blocked unmute - stay muted
-            video.muted = true
-            setIsMuted(true)
-          }
-        }
-        // If targetVolume is 0, keep muted (don't try to unmute)
-      }).catch(() => {
-        // Autoplay blocked entirely
+      // Video is in view - play (muted by default, user clicks to unmute)
+      video.play().catch(() => {
+        // Autoplay blocked
       })
     } else {
-      // Video is out of view - fade out and pause
-
-      if (!video.paused && !video.muted && targetVolume > 0) {
+      // Video is out of view - mute and pause
+      if (!video.muted && targetVolume > 0) {
         // Fade out audio then pause
         animateVolume(video, video.volume, 0, fadeOutDuration, () => {
           video.muted = true
@@ -164,11 +144,10 @@ export function useVideoScrollControl(
           video.pause()
         })
       } else {
-        // Already muted or paused, just pause
         video.pause()
       }
     }
-  }, [isInView, targetVolume, fadeInDuration, fadeOutDuration, animateVolume])
+  }, [isInView, targetVolume, fadeOutDuration, animateVolume])
 
   // Cleanup
   useEffect(() => {
@@ -180,5 +159,6 @@ export function useVideoScrollControl(
     videoRef,
     isInView,
     isMuted,
+    toggleMute,
   }
 }

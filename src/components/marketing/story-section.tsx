@@ -3,17 +3,18 @@
 import type { Dictionary } from '@/components/internationalization/dictionaries'
 import { Icons } from '@/components/icons'
 import { useVideoScrollControl } from "@/hooks/use-video-scroll-control"
+import { Volume2, VolumeX } from "lucide-react"
 
 interface StorySectionProps {
     dictionary?: Dictionary
 }
 
 export default function StorySection({ dictionary }: StorySectionProps) {
-    const { containerRef, videoRef } = useVideoScrollControl({
-        threshold: 0.4, // Play when 40% visible
-        fadeInDuration: 600, // Smooth audio fade in
-        fadeOutDuration: 300, // Quick fade out
-        targetVolume: 0.7, // 70% volume
+    const { containerRef, videoRef, isMuted, toggleMute } = useVideoScrollControl({
+        threshold: 0.4,
+        fadeInDuration: 600,
+        fadeOutDuration: 300,
+        targetVolume: 0.7,
     })
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -27,7 +28,8 @@ export default function StorySection({ dictionary }: StorySectionProps) {
                 {/* Video - Left side (2/3 width) */}
                 <div
                     ref={containerRef}
-                    className="lg:col-span-2 relative rounded-lg overflow-hidden bg-[#2C2418]"
+                    className="lg:col-span-2 relative rounded-lg overflow-hidden bg-[#2C2418] cursor-pointer group"
+                    onClick={toggleMute}
                 >
                     <video
                         ref={videoRef}
@@ -39,6 +41,15 @@ export default function StorySection({ dictionary }: StorySectionProps) {
                         <source src="/story.mp4" type="video/mp4" />
                         Your browser does not support the video tag.
                     </video>
+
+                    {/* Sound indicator - subtle, bottom right */}
+                    <div className="absolute bottom-4 end-4 p-2 rounded-full bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                        {isMuted ? (
+                            <VolumeX className="size-5" />
+                        ) : (
+                            <Volume2 className="size-5" />
+                        )}
+                    </div>
                 </div>
 
                 {/* Quote - Right side (1/3 width) */}
