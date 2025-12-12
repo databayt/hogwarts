@@ -35,7 +35,7 @@ export default function CampaignSelectorContent({
 
   const handleStartApplication = () => {
     if (selectedCampaign) {
-      router.push(`/${lang}/apply/${selectedCampaign}`);
+      router.push(`/${lang}/s/${subdomain}/apply/${selectedCampaign}`);
     }
   };
 
@@ -61,7 +61,7 @@ export default function CampaignSelectorContent({
             ? "لا توجد حاليًا برامج قبول مفتوحة. يرجى التحقق مرة أخرى لاحقًا."
             : "There are currently no open admission programs. Please check back later."}
         </p>
-        <Button variant="outline" onClick={() => router.push(`/${lang}`)} className="group">
+        <Button variant="outline" onClick={() => router.push(`/${lang}/s/${subdomain}`)} className="group">
           {lang === "ar" ? "العودة للصفحة الرئيسية" : "Back to Home"}
         </Button>
       </div>
@@ -168,7 +168,7 @@ export default function CampaignSelectorContent({
       <div className="flex flex-wrap justify-center gap-6 text-sm pt-6 border-t border-border/50">
         <Button
           variant="ghost"
-          onClick={() => router.push(`/${lang}/apply/status`)}
+          onClick={() => router.push(`/${lang}/s/${subdomain}/apply/status`)}
           className="text-muted-foreground hover:text-foreground"
         >
           <AnthropicIcons.Checklist className="w-4 h-4 me-2" />
@@ -176,7 +176,7 @@ export default function CampaignSelectorContent({
         </Button>
         <Button
           variant="ghost"
-          onClick={() => router.push(`/${lang}/apply/continue`)}
+          onClick={() => router.push(`/${lang}/s/${subdomain}/apply/continue`)}
           className="text-muted-foreground hover:text-foreground"
         >
           <AnthropicIcons.Archive className="w-4 h-4 me-2" />

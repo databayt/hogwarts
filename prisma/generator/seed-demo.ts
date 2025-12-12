@@ -1548,25 +1548,70 @@ async function ensureQuestionBank(schoolId: string, subjects: any[]) {
 
 // Admission System Seeding
 async function ensureAdmissions(schoolId: string) {
-  // Create Admission Campaign for 2025-2026
+  // Create Admission Campaign for 2026-2027 (current open campaign)
+  // Using dates that will be valid for demo purposes
   const campaign = await prisma.admissionCampaign.upsert({
+    where: {
+      schoolId_name: {
+        schoolId,
+        name: "Academic Year 2026-2027 Admissions"
+      }
+    },
+    update: {
+      // Update dates on re-seed to keep campaign active
+      startDate: new Date("2025-11-01"),
+      endDate: new Date("2026-03-31"),
+      status: AdmissionStatus.OPEN,
+    },
+    create: {
+      schoolId,
+      name: "Academic Year 2026-2027 Admissions",
+      academicYear: "2026-2027",
+      startDate: new Date("2025-11-01"),
+      endDate: new Date("2026-03-31"),
+      status: AdmissionStatus.OPEN,
+      description: "Open admissions for Academic Year 2026-2027 across all grades (7-12)",
+      applicationFee: "500.00",
+      totalSeats: 180, // 30 per grade × 6 grades
+      requiredDocuments: {
+        list: [
+          "Birth Certificate",
+          "Previous School Transfer Certificate",
+          "Previous Year Marksheet",
+          "Recent Photograph (2)",
+          "Address Proof",
+          "Parent ID Proof"
+        ]
+      },
+      eligibilityCriteria: {
+        minAge: 12,
+        maxAge: 18,
+        minPreviousPercentage: 50
+      }
+    }
+  });
+
+  // Also upsert old 2025-2026 campaign (keep for historical data)
+  await prisma.admissionCampaign.upsert({
     where: {
       schoolId_name: {
         schoolId,
         name: "Academic Year 2025-2026 Admissions"
       }
     },
-    update: {},
+    update: {
+      status: AdmissionStatus.CLOSED,
+    },
     create: {
       schoolId,
       name: "Academic Year 2025-2026 Admissions",
       academicYear: "2025-2026",
       startDate: new Date("2025-03-01"),
       endDate: new Date("2025-05-31"),
-      status: AdmissionStatus.OPEN,
-      description: "Open admissions for Academic Year 2025-2026 across all grades (7-12)",
+      status: AdmissionStatus.CLOSED,
+      description: "Closed admissions for Academic Year 2025-2026",
       applicationFee: "500.00",
-      totalSeats: 180, // 30 per grade × 6 grades
+      totalSeats: 180,
       requiredDocuments: {
         list: [
           "Birth Certificate",
