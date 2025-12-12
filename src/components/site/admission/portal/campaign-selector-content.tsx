@@ -60,7 +60,7 @@ export default function CampaignSelectorContent({
             className="border hover:border-foreground/50 bg-card hover:bg-accent transition-all cursor-pointer shadow-none hover:shadow-none rounded-lg"
             onClick={() => activeCampaign && handleStartNew(activeCampaign.id)}
           >
-            <CardContent className="flex items-center justify-center py-6 sm:py-8 px-4 gap-3">
+            <CardContent className="flex items-center justify-start py-6 sm:py-8 px-4 gap-3">
               <div className="w-10 h-10 sm:w-12 sm:h-12 bg-muted rounded-md flex items-center justify-center flex-shrink-0">
                 <FileText className="w-5 h-5 sm:w-6 sm:h-6" />
               </div>
