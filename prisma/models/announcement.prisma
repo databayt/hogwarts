@@ -101,3 +101,97 @@ model AnnouncementNotification {
   @@index([announcementId])
   @@map("announcement_notifications")
 }
+
+// Template types for quick announcement creation
+enum AnnouncementTemplateType {
+  holiday
+  exam
+  event
+  meeting
+  policy
+  emergency
+  general
+  custom
+}
+
+// Announcement templates for quick creation
+model AnnouncementTemplate {
+  id          String                   @id @default(cuid())
+  schoolId    String
+  name        String
+  description String?
+  type        AnnouncementTemplateType @default(custom)
+
+  // Content templates (bilingual)
+  titleEn String?
+  titleAr String?
+  bodyEn  String? @db.Text
+  bodyAr  String? @db.Text
+
+  // Preset configurations
+  scope    AnnouncementScope    @default(school)
+  priority AnnouncementPriority @default(normal)
+  classId  String?
+  role     UserRole?
+
+  // Ownership
+  isSystem  Boolean @default(false)
+  createdBy String?
+  creator   User?   @relation("TemplateCreator", fields: [createdBy], references: [id])
+  school    School  @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([schoolId, name])
+  @@index([schoolId, type])
+  @@map("announcement_templates")
+
+  // Back-relation for default template
+  configsAsDefault AnnouncementConfig[]
+}
+
+// Digest frequency options
+enum DigestFrequency {
+  none
+  daily
+  weekly
+}
+
+// School-level announcement configuration
+model AnnouncementConfig {
+  id       String @id @default(cuid())
+  schoolId String @unique
+
+  // Publishing Defaults
+  defaultScope      AnnouncementScope    @default(school)
+  defaultPriority   AnnouncementPriority @default(normal)
+  autoPublish       Boolean              @default(false)
+  defaultExpiryDays Int                  @default(30)
+
+  // Notifications
+  emailOnPublish    Boolean @default(true)
+  pushNotifications Boolean @default(false)
+  quietHoursStart   String? @default("22:00")
+  quietHoursEnd     String? @default("07:00")
+  digestFrequency   DigestFrequency @default(none)
+
+  // Templates
+  defaultTemplateId    String?
+  allowCustomTemplates Boolean @default(true)
+
+  // Tracking & Retention
+  readTracking     Boolean @default(true)
+  retentionDays    Int     @default(90)
+  autoArchive      Boolean @default(true)
+  archiveAfterDays Int     @default(30)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  school          School                @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  defaultTemplate AnnouncementTemplate? @relation(fields: [defaultTemplateId], references: [id])
+
+  @@index([schoolId])
+  @@map("announcement_configs")
+}

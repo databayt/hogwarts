@@ -23,6 +23,9 @@ export type StudentRow = {
   className: string;
   status: string;
   createdAt: string;
+  // Relationship counts
+  classCount: number;
+  gradeCount: number;
 }
 
 export interface StudentFormStepProps {

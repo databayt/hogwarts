@@ -1,5 +1,6 @@
 'use client'
 
+import './print.css'
 import { useParams } from 'next/navigation'
 import { SessionProvider } from 'next-auth/react'
 import type { Dictionary } from '@/components/internationalization/dictionaries'

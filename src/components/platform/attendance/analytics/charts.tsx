@@ -60,6 +60,22 @@ interface AttendanceTrendsChartProps {
 }
 
 export function AttendanceTrendsChart({ data, className }: AttendanceTrendsChartProps) {
+  if (!data || data.length === 0) {
+    return (
+      <Card className={className}>
+        <CardHeader>
+          <CardTitle>Attendance Trends</CardTitle>
+          <CardDescription>Daily attendance rates over time</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center h-[350px] text-muted-foreground">
+            No attendance data available for the selected period
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className={className}>
       <CardHeader>
@@ -119,6 +135,22 @@ export function MethodUsagePieChart({ data, className }: MethodUsagePieChartProp
     '#84cc16'
   ];
 
+  if (!data || data.length === 0) {
+    return (
+      <Card className={className}>
+        <CardHeader>
+          <CardTitle>Method Distribution</CardTitle>
+          <CardDescription>How attendance is being tracked</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center h-[350px] text-muted-foreground">
+            No tracking methods used in selected period
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className={className}>
       <CardHeader>
@@ -161,6 +193,22 @@ interface DayWisePatternChartProps {
 }
 
 export function DayWisePatternChart({ data, className }: DayWisePatternChartProps) {
+  if (!data || data.length === 0) {
+    return (
+      <Card className={className}>
+        <CardHeader>
+          <CardTitle>Weekly Pattern Analysis</CardTitle>
+          <CardDescription>Attendance patterns by day of week</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center h-[300px] text-muted-foreground">
+            No pattern data available
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className={className}>
       <CardHeader>
@@ -200,6 +248,24 @@ interface TimeDistributionChartProps {
 }
 
 export function TimeDistributionChart({ data, className }: TimeDistributionChartProps) {
+  const hasData = data && data.some(d => d.checkIns > 0 || d.onTime > 0 || d.late > 0);
+
+  if (!hasData) {
+    return (
+      <Card className={className}>
+        <CardHeader>
+          <CardTitle>Check-in Time Distribution</CardTitle>
+          <CardDescription>When students are arriving</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center h-[300px] text-muted-foreground">
+            No check-in time data available
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className={className}>
       <CardHeader>
@@ -253,6 +319,22 @@ interface ClassComparisonChartProps {
 }
 
 export function ClassComparisonChart({ data, className }: ClassComparisonChartProps) {
+  if (!data || data.length === 0) {
+    return (
+      <Card className={className}>
+        <CardHeader>
+          <CardTitle>Class Performance Comparison</CardTitle>
+          <CardDescription>Attendance rates across different classes</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center h-[350px] text-muted-foreground">
+            No class comparison data available
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className={className}>
       <CardHeader>

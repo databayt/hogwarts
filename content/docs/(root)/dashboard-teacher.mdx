@@ -1,0 +1,320 @@
+---
+title: "Dashboard - Teacher"
+description: "Complete guide to the Teacher dashboard including daily classes, grading queue, attendance tracking, and student management."
+---
+
+The **Teacher Dashboard** provides educators with tools to manage their daily teaching activities, track student progress, and handle administrative tasks efficiently.
+
+## Target Users
+
+- **TEACHER**: Classroom teachers and instructors
+
+## Layout Structure
+
+```tsx
+<div className="space-y-6">
+  {/* Welcome Banner */}
+  <WelcomeBanner
+    userName={user.name}
+    role="Teacher"
+    subtitle={`You have ${todaysClasses.length} classes scheduled for today`}
+  />
+
+  {/* Key Metrics Row - 4 columns */}
+  <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+    <MetricCard title="Today's Classes" ... />
+    <MetricCard title="Total Students" ... />
+    <MetricCard title="Pending Grading" ... />
+    <MetricCard title="Attendance Due" ... />
+  </div>
+
+  {/* Quick Actions */}
+  <QuickActions actions={...} locale={locale} />
+
+  {/* Main Content Grid - 3 columns */}
+  <div className="grid gap-6 lg:grid-cols-3">
+    <TodaysScheduleCard className="lg:col-span-2" />
+    <ActivityRings activities={activityData} />
+  </div>
+
+  {/* Secondary Content Grid - 2 columns */}
+  <div className="grid gap-6 md:grid-cols-2">
+    <WeeklyActivityChart />
+    <PendingAssignmentsCard />
+    <ClassPerformanceCard />
+    <UpcomingDeadlinesCard />
+  </div>
+
+  {/* Teaching Overview Stats */}
+  <TeachingStatsCard />
+
+  {/* Progress Cards - 3 columns */}
+  <div className="grid gap-6 md:grid-cols-3">
+    <ProgressCard title="Grading Progress" ... />
+    <ProgressCard title="Attendance Taken" ... />
+    <ProgressCard title="Term Progress" ... />
+  </div>
+</div>
+```
+
+## Welcome Banner
+
+Personalized greeting with class count:
+
+```tsx
+<WelcomeBanner
+  userName={user.name || user.email?.split("@")[0]}
+  role="Teacher"
+  subtitle={`You have ${data.todaysClasses.length} classes scheduled for today`}
+/>
+```
+
+## Key Metrics
+
+**4-column responsive grid**:
+
+| Metric | Icon | Color Logic |
+|--------|------|-------------|
+| Today's Classes | BookOpen | Blue |
+| Total Students | Users | Purple |
+| Pending Grading | FileText | Red if >5, else orange |
+| Attendance Due | CheckCircle | Amber if >0, else green |
+
+```tsx
+<MetricCard
+  title="Pending Grading"
+  value={data.pendingGrading}
+  iconName="FileText"
+  iconColor={data.pendingGrading > 5 ? "text-destructive" : "text-orange-500"}
+  href={`/${locale}/s/${school?.domain}/assignments`}
+/>
+```
+
+## Today's Schedule
+
+2-column span card with `ScheduleItem` components:
+
+```tsx
+{data.todaysClasses.map((cls, index) => (
+  <ScheduleItem
+    key={cls.id}
+    time={cls.time}
+    title={cls.name}
+    subtitle={`Room ${cls.room} • ${cls.students} students`}
+    badge={index === 0 ? "Next" : undefined}
+    isActive={index === 0}
+  />
+))}
+```
+
+Features:
+- Time display
+- Class name
+- Room and student count
+- "Next" badge for upcoming class
+- Active state highlighting
+
+## Activity Rings
+
+3 teaching metrics with Apple-style rings:
+
+```tsx
+const activityData = [
+  {
+    label: "Classes",
+    value: (todaysClasses.length / 8) * 100,
+    color: "#3b82f6",
+    current: todaysClasses.length,
+    target: 8,
+    unit: "today",
+  },
+  {
+    label: "Grading",
+    value: 100 - pendingGrading * 10,
+    color: pendingGrading > 5 ? "#ef4444" : "#22c55e",
+    current: pendingGrading,
+    target: 0,
+    unit: "pending",
+  },
+  {
+    label: "Students",
+    value: 100,
+    color: "#8b5cf6",
+    current: totalStudents,
+    target: totalStudents,
+    unit: "total",
+  },
+];
+```
+
+## Weekly Activity Chart
+
+Bar chart showing classes per day:
+
+```tsx
+<WeeklyActivityChart
+  data={weeklyClasses}
+  title="Classes This Week"
+  label="Classes"
+  color="hsl(var(--chart-1))"
+/>
+```
+
+## Pending Assignments
+
+List with due date indicators:
+
+```tsx
+{pendingAssignments.map((assignment) => {
+  const dueDate = new Date(assignment.dueDate);
+  const isOverdue = dueDate < new Date();
+  const isDueToday = isToday(dueDate);
+  const isDueTomorrow = isTomorrow(dueDate);
+
+  return (
+    <div className="flex items-center justify-between p-3 rounded-lg border">
+      <div>
+        <p className="font-medium">{assignment.title}</p>
+        <p className="text-sm text-muted-foreground">
+          {assignment.className} • {assignment.submissionsCount} submissions
+        </p>
+      </div>
+      <Badge variant={isOverdue ? "destructive" : isDueToday ? "default" : "outline"}>
+        {isOverdue ? "Overdue" : isDueToday ? "Due Today" : format(dueDate, "MMM d")}
+      </Badge>
+    </div>
+  );
+})}
+```
+
+## Class Performance Summary
+
+Performance by class with status badges:
+
+| Grade Range | Badge Style |
+|-------------|-------------|
+| >= 80% | Default (emerald) |
+| >= 60% | Secondary |
+| < 60% | Destructive |
+
+```tsx
+<Badge
+  variant={cls.average >= 80 ? "default" : cls.average >= 60 ? "secondary" : "destructive"}
+>
+  {cls.average >= 80 ? "Excellent" : cls.average >= 60 ? "Good" : "Needs Attention"}
+</Badge>
+```
+
+## Upcoming Deadlines
+
+Task list with countdown:
+
+```tsx
+const daysLeft = Math.ceil((dueDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+
+<Badge variant={daysLeft <= 2 ? "destructive" : daysLeft <= 7 ? "secondary" : "outline"}>
+  {daysLeft <= 0 ? "Today" : daysLeft === 1 ? "1 day" : `${daysLeft} days`}
+</Badge>
+```
+
+## Teaching Overview Stats
+
+4-column summary grid:
+
+```tsx
+<div className="grid gap-6 md:grid-cols-4">
+  <StatBlock value={todaysClasses.length} label="Classes Today" color="primary" />
+  <StatBlock value={totalStudents} label="Total Students" color="blue" />
+  <StatBlock value={pendingAssignments.length} label="Assignments" color="purple" />
+  <StatBlock value={avgPerformance} label="Avg Performance" color="emerald" />
+</div>
+```
+
+## Progress Cards
+
+3 progress trackers:
+
+| Card | Current | Total |
+|------|---------|-------|
+| Grading Progress | Graded assignments | Total assignments |
+| Attendance Taken | Classes with attendance | Total classes |
+| Term Progress | Current week | Total weeks |
+
+## Data Fetching
+
+Uses `getTeacherDashboardData()`:
+
+```tsx
+const data = await getTeacherDashboardData();
+
+// Returns:
+{
+  todaysClasses: [...],
+  pendingGrading: number,
+  attendanceDue: number,
+  totalStudents: number,
+  pendingAssignments: [...],
+  classPerformance: [...],
+  upcomingDeadlines: [...],
+}
+```
+
+## Quick Actions
+
+6 actions for TEACHER role:
+
+| Action | Icon | Destination |
+|--------|------|-------------|
+| Attendance | Users | /attendance/mark |
+| Grades | FileText | /grades/enter |
+| Assignments | BookOpen | /assignments/create |
+| Messages | MessageSquare | /messages |
+| Timetable | Calendar | /timetable |
+| Lessons | ClipboardList | /lessons |
+
+## Error Handling
+
+Comprehensive try-catch with user feedback:
+
+```tsx
+try {
+  data = await getTeacherDashboardData();
+} catch (error) {
+  console.error("[TeacherDashboard] Error:", error);
+  return (
+    <Card>
+      <CardContent className="p-6">
+        <h3>Unable to Load Dashboard</h3>
+        <p>Please try refreshing the page.</p>
+      </CardContent>
+    </Card>
+  );
+}
+```
+
+## Internationalization
+
+Uses `dictionary.teacherDashboard`:
+
+```tsx
+const dashDict = dictionary?.teacherDashboard || {
+  stats: { todaysClasses: "Today's Classes", ... },
+  sections: { todaysClasses: "Today's Classes", ... },
+  labels: { room: "Room", students: "students", ... },
+};
+```
+
+## File Locations
+
+| File | Purpose |
+|------|---------|
+| `dashboards/teacher-dashboard.tsx` | Dashboard component |
+| `dashboards/actions.ts` | `getTeacherDashboardData()` |
+| `widgets/index.tsx` | Widget components |
+| `widgets/dashboard-charts.tsx` | Chart components |
+
+## Related
+
+- [Dashboard Overview](/docs/dashboard)
+- [Attendance System](/docs/attendance)
+- [Grading System](/docs/grades)

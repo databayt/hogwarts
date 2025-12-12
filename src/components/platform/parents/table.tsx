@@ -76,29 +76,12 @@ export function ParentsTable({ initialData, total, dictionary, lang, perPage = 2
     perPage,
     fetcher: async (params) => {
       const result = await getParents(params);
-      return { rows: result.rows as ParentRow[], total: result.total };
+      if (!result.success || !result.data) {
+        return { rows: [], total: 0 };
+      }
+      return { rows: result.data.rows as ParentRow[], total: result.data.total };
     },
     filters: searchValue ? { name: searchValue } : undefined,
-  });
-
-  // Generate columns on the client side with dictionary and lang
-  const columns = useMemo(() => getParentColumns(dictionary, lang), [dictionary, lang]);
-
-  // Table instance
-  const { table } = useDataTable<ParentRow>({
-    data,
-    columns,
-    pageCount: 1,
-    initialState: {
-      pagination: {
-        pageIndex: 0,
-        pageSize: data.length || perPage,
-      },
-      columnVisibility: {
-        // Default visible: name, emailAddress, status
-        createdAt: false,
-      },
-    },
   });
 
   // Handle search
@@ -109,7 +92,7 @@ export function ParentsTable({ initialData, total, dictionary, lang, perPage = 2
     });
   }, [router]);
 
-  // Handle delete with optimistic update
+  // Handle delete with optimistic update (must be before columns useMemo)
   const handleDelete = useCallback(async (parent: ParentRow) => {
     try {
       const deleteMsg = lang === 'ar' ? `حذف ${parent.name}؟` : `Delete ${parent.name}?`;
@@ -133,6 +116,28 @@ export function ParentsTable({ initialData, total, dictionary, lang, perPage = 2
     }
   }, [optimisticRemove, refresh, lang]);
 
+  // Generate columns on the client side with dictionary, lang, and callbacks
+  const columns = useMemo(() => getParentColumns(dictionary, lang, {
+    onDelete: handleDelete,
+  }), [dictionary, lang, handleDelete]);
+
+  // Table instance
+  const { table } = useDataTable<ParentRow>({
+    data,
+    columns,
+    pageCount: 1,
+    initialState: {
+      pagination: {
+        pageIndex: 0,
+        pageSize: data.length || perPage,
+      },
+      columnVisibility: {
+        // Default visible: name, emailAddress, status
+        createdAt: false,
+      },
+    },
+  });
+
   // Handle edit
   const handleEdit = useCallback((id: string) => {
     openModal(id);
@@ -149,7 +154,11 @@ export function ParentsTable({ initialData, total, dictionary, lang, perPage = 2
 
   // Export CSV wrapper
   const handleExportCSV = useCallback(async (filters?: Record<string, unknown>) => {
-    return getParentsCSV(filters);
+    const result = await getParentsCSV(filters);
+    if (!result.success || !result.data) {
+      throw new Error('error' in result ? result.error : 'Export failed');
+    }
+    return result.data;
   }, []);
 
   // Get status badge

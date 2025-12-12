@@ -18,18 +18,30 @@ export async function seedSchool(prisma: SeedPrisma): Promise<SchoolRef> {
   console.log("   🇸🇩 Location: Khartoum, Sudan");
   console.log("");
 
-  // Create school with primary name (using Arabic as stored name)
-  // The app will display Arabic or English based on locale
-  const school = await prisma.school.create({
-    data: {
-      // School uses Arabic name as primary (RTL default)
-      // App components should check locale and use appropriate display name
-      name: DEMO_SCHOOL.nameEn, // Store English for broader compatibility
+  // Upsert school - create if not exists, update if exists
+  const school = await prisma.school.upsert({
+    where: { domain: DEMO_SCHOOL.domain },
+    update: {
+      // Update existing school
+      name: DEMO_SCHOOL.nameEn,
+      email: DEMO_SCHOOL.email,
+      website: DEMO_SCHOOL.website,
+      phoneNumber: DEMO_SCHOOL.phoneEn,
+      address: DEMO_SCHOOL.addressEn,
+      timezone: DEMO_SCHOOL.timezone,
+      planType: DEMO_SCHOOL.planType,
+      maxStudents: DEMO_SCHOOL.maxStudents,
+      maxTeachers: DEMO_SCHOOL.maxTeachers,
+      isActive: true,
+    },
+    create: {
+      // Create new school
+      name: DEMO_SCHOOL.nameEn,
       domain: DEMO_SCHOOL.domain,
       email: DEMO_SCHOOL.email,
       website: DEMO_SCHOOL.website,
       phoneNumber: DEMO_SCHOOL.phoneEn,
-      address: DEMO_SCHOOL.addressEn, // English for database
+      address: DEMO_SCHOOL.addressEn,
       timezone: DEMO_SCHOOL.timezone,
       planType: DEMO_SCHOOL.planType,
       maxStudents: DEMO_SCHOOL.maxStudents,
@@ -38,18 +50,25 @@ export async function seedSchool(prisma: SeedPrisma): Promise<SchoolRef> {
     },
   });
 
-  // Create school branding
-  // Databayt colors: Primary Blue (#3B82F6), Secondary Amber (#F59E0B)
-  await prisma.schoolBranding.create({
-    data: {
-      schoolId: school.id,
-      // Colors inspired by Sudanese flag (green, white, black, red)
-      // with modern educational twist
-      primaryColor: "#3B82F6",    // Databayt Blue (knowledge & trust)
-      secondaryColor: "#F59E0B",  // Amber (achievement & excellence)
+  // Upsert school branding
+  await prisma.schoolBranding.upsert({
+    where: { schoolId: school.id },
+    update: {
+      primaryColor: "#3B82F6",
+      secondaryColor: "#F59E0B",
       borderRadius: "md",
       shadow: "lg",
-      // Visibility settings
+      isPubliclyListed: true,
+      allowSelfEnrollment: true,
+      requireParentApproval: true,
+      informationSharing: "full-sharing",
+    },
+    create: {
+      schoolId: school.id,
+      primaryColor: "#3B82F6",
+      secondaryColor: "#F59E0B",
+      borderRadius: "md",
+      shadow: "lg",
       isPubliclyListed: true,
       allowSelfEnrollment: true,
       requireParentApproval: true,

@@ -12,7 +12,8 @@ import { useModal } from "@/components/atom/modal/context";
 import { useRouter } from "next/navigation";
 import { StudentAssignmentStep } from "./student-assignment";
 import { GradingStep } from "./grading";
-import { ResultFormFooter } from "./footer";
+import { ModalFormLayout } from "@/components/atom/modal/modal-form-layout";
+import { ModalFooter } from "@/components/atom/modal/modal-footer";
 import { type Dictionary } from "@/components/internationalization/dictionaries";
 
 interface ResultCreateFormProps {
@@ -128,38 +129,41 @@ export function ResultCreateForm({ dictionary, onSuccess }: ResultCreateFormProp
     }
   };
 
+  const stepLabels: Record<number, string> = {
+    1: t.studentAssignmentInfo || "Student & Assignment",
+    2: t.gradingInfo || "Grading",
+  };
+
   return (
-    <div className="flex h-full flex-col">
-      <Form {...form}>
-        <form className="flex flex-col h-full" onSubmit={(e) => e.preventDefault()}>
-          <div className="flex-grow flex flex-col md:flex-row gap-6">
-            {/* Title Section */}
-            <div className="md:w-1/3">
-              <h2>{isView ? t.viewResult : currentId ? t.editResult : t.createResult}</h2>
-              <p className="muted">{isView ? t.viewResultDetails : currentId ? t.updateResultDetails : t.recordNewResult}</p>
-            </div>
+    <Form {...form}>
+      <form onSubmit={(e) => e.preventDefault()}>
+        <ModalFormLayout
+          title={isView ? t.viewResult : currentId ? t.editResult : t.createResult}
+          description={isView ? t.viewResultDetails : currentId ? t.updateResultDetails : t.recordNewResult}
+        >
+          {renderCurrentStep()}
+        </ModalFormLayout>
 
-            {/* Form Content */}
-            <div className="flex-1">
-              <div className="overflow-y-auto">
-                {renderCurrentStep()}
-              </div>
-            </div>
-          </div>
-
-          <ResultFormFooter
-            currentStep={currentStep}
-            isView={isView}
-            currentId={currentId}
-            onBack={handleBack}
-            onNext={handleNext}
-            onSaveCurrentStep={handleSaveCurrentStep}
-            form={form}
-            dictionary={t}
-          />
-        </form>
-      </Form>
-    </div>
+        <ModalFooter
+          currentStep={currentStep}
+          totalSteps={2}
+          stepLabel={stepLabels[currentStep]}
+          isView={isView}
+          isEdit={!!currentId}
+          isDirty={form.formState.isDirty}
+          onBack={handleBack}
+          onNext={handleNext}
+          onSaveStep={handleSaveCurrentStep}
+          labels={{
+            cancel: t.cancel,
+            back: t.back,
+            next: t.next,
+            save: t.save,
+            create: t.createResult,
+          }}
+        />
+      </form>
+    </Form>
   );
 }
 

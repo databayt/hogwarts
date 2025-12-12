@@ -6,9 +6,6 @@ import { Button } from "@/components/ui/button";
 import { MoreHorizontal } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useModal } from "@/components/atom/modal/context";
-import { deleteSubject } from "@/components/platform/subjects/actions";
-import { DeleteToast, ErrorToast, confirmDeleteDialog } from "@/components/atom/toast";
-import { useRouter } from "next/navigation";
 import type { Dictionary } from "@/components/internationalization/dictionaries";
 import type { Locale } from "@/components/internationalization/config";
 
@@ -41,7 +38,11 @@ export function getLocalizedDepartmentName(row: SubjectRow, locale: Locale): str
   return row.departmentName || row.departmentNameAr || '';
 }
 
-export const getSubjectColumns = (dictionary?: Dictionary['school']['subjects'], lang?: Locale): ColumnDef<SubjectRow>[] => {
+export interface SubjectColumnCallbacks {
+  onDelete?: (row: SubjectRow) => void;
+}
+
+export const getSubjectColumns = (dictionary?: Dictionary['school']['subjects'], lang?: Locale, callbacks?: SubjectColumnCallbacks): ColumnDef<SubjectRow>[] => {
   const t = {
     subject: dictionary?.subject || (lang === 'ar' ? 'المادة' : 'Subject'),
     department: dictionary?.department || (lang === 'ar' ? 'القسم' : 'Department'),
@@ -89,24 +90,18 @@ export const getSubjectColumns = (dictionary?: Dictionary['school']['subjects'],
     cell: ({ row }) => {
       const subject = row.original;
       const { openModal } = useModal();
-      const router = useRouter();
-      const displayName = lang ? getLocalizedSubjectName(subject, lang) : subject.subjectName;
+
       const onView = () => {
         const qs = typeof window !== 'undefined' ? (window.location.search || "") : "";
         window.location.href = `/subjects/${subject.id}${qs}`;
       };
+
       const onEdit = () => openModal(subject.id);
-      const onDelete = async () => {
-        try {
-          const ok = await confirmDeleteDialog(`${t.delete} ${displayName}?`);
-          if (!ok) return;
-          await deleteSubject({ id: subject.id });
-          DeleteToast();
-          router.refresh();
-        } catch (e) {
-          ErrorToast(e instanceof Error ? e.message : "Failed to delete");
-        }
+
+      const onDelete = () => {
+        callbacks?.onDelete?.(subject);
       };
+
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

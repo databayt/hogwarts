@@ -1,0 +1,14 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions & Discussions
+    url: https://github.com/abdout/hogwarts/discussions
+    about: Ask questions or start a discussion about Hogwarts
+  - name: Discord Community
+    url: https://discord.gg/uPa4gGG62c
+    about: Join our Discord for real-time help and community chat
+  - name: Documentation
+    url: https://ed.databayt.org/docs
+    about: Check our documentation before opening an issue
+  - name: Security Vulnerabilities
+    url: https://github.com/abdout/hogwarts/security/policy
+    about: Report security vulnerabilities privately

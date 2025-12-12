@@ -9,7 +9,7 @@
 
 export async function InvoiceContent() {
   return (
-    <div className="flex flex-1 flex-col gap-4 p-6">
+    <div className="flex flex-1 flex-col gap-4">
       <div className="text-center text-muted-foreground">
         <p>Enhanced invoice content is currently unavailable.</p>
         <p className="text-sm mt-2">Please use the standard invoice interface.</p>

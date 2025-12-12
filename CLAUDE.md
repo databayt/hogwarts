@@ -11,6 +11,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - [Multi-Tenant Safety](#multi-tenant-safety)
 - [Development Workflows](#development-workflows)
 - [Automation & Agents](#automation--agents)
+- [Block Rebound Workflow](#block-rebound-workflow)
 - [Build System](#build-system)
 - [Testing](#testing)
 - [UI Factory System](#ui-factory-system)
@@ -505,6 +506,69 @@ When you manually run `git commit`, these checks run:
 ### MCP Integration (13 Servers)
 
 PostgreSQL, GitHub, Vercel, Sentry, Figma, Linear, Browser (Playwright), Stripe, Ref Tools, PostHog, Notion, Memory Bank, Slack
+
+---
+
+## Block Rebound Workflow
+
+**Purpose**: Systematically optimize any block for production-readiness through research, assessment, and actionable recommendations.
+
+### Natural Language Triggers
+
+When the user says any of these, invoke the Block Rebound workflow:
+- "rebound {block}" (e.g., "rebound finance")
+- "rebound the {block} block"
+- "optimize {block} for production"
+- "make {block} production-ready"
+- "audit {block} block"
+
+### Valid Blocks (37 total)
+
+- **Core**: dashboard, profile, settings, admin
+- **People**: students, teachers, parents, staff
+- **Academic**: subjects, classes, lessons, timetable, attendance
+- **Assessment**: exams, assignments, grades
+- **Finance**: finance, fees, billing, invoice, receipt, banking, salary, expenses, payroll, budget, wallet, accounts
+- **Operations**: announcements, messaging, notifications, events, library
+
+### Workflow Phases
+
+1. **Research** (5-10 min): Web search competitors, feature benchmarking, industry best practices
+2. **Assess** (10-15 min): Analyze current implementation, architecture compliance, multi-tenant safety, security, performance, i18n, test coverage
+3. **Checklist** (5 min): Generate prioritized production checklist with effort estimates
+4. **Recommend** (5 min): Strategic improvement plan with quick wins and phases
+
+### Invocation
+
+```bash
+# Natural language (preferred)
+rebound finance
+rebound the attendance block
+
+# Slash command
+/rebound finance
+
+# Agent direct
+/agents/rebound -p "Analyze finance block"
+```
+
+### Output
+
+Reports saved to: `.claude/workflows/rebound-outputs/{block}/rebound-{date}.md`
+
+Contains:
+- Competitor analysis and feature benchmarks
+- Technical assessment with gap analysis
+- Prioritized checklist (Critical → High → Medium → Low)
+- Implementation recommendations with phases
+
+### Integration
+
+Reuses existing agents:
+- `/agents/security` - Security deep-dive
+- `/agents/multi-tenant` - Tenant isolation
+- `/agents/performance` - Performance analysis
+- `/agents/i18n` - Translation audit
 
 ---
 

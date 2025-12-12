@@ -13,7 +13,8 @@ import { useRouter } from "next/navigation";
 import { BasicInformationStep } from "./basic-information";
 import { ScheduleDetailsStep } from "./schedule-details";
 import { ContentAssessmentStep } from "./content-assessment";
-import { LessonFormFooter } from "./footer";
+import { ModalFormLayout } from "@/components/atom/modal/modal-form-layout";
+import { ModalFooter } from "@/components/atom/modal/modal-footer";
 
 interface LessonCreateFormProps {
   /** Callback fired on successful create/update - use for optimistic refresh */
@@ -49,9 +50,9 @@ export function LessonCreateForm({ onSuccess }: LessonCreateFormProps) {
     const load = async () => {
       if (!currentId) return;
       const res = await getLesson({ id: currentId });
-      const l = res.lesson as any;
-      if (!l) return;
-      
+      if (!res.success || !res.data) return;
+      const l = res.data as any;
+
       form.reset({
         title: l.title ?? "",
         description: l.description ?? "",
@@ -71,21 +72,26 @@ export function LessonCreateForm({ onSuccess }: LessonCreateFormProps) {
   }, [currentId]);
 
   async function onSubmit(values: z.infer<typeof lessonCreateSchema>) {
-    const res = currentId
-      ? await updateLesson({ id: currentId, ...values })
-      : await createLesson(values);
+    try {
+      const res = currentId
+        ? await updateLesson({ id: currentId, ...values })
+        : await createLesson(values);
 
-    if (res?.success) {
-      toast.success(currentId ? "Lesson updated" : "Lesson created");
-      closeModal();
-      // Use callback for optimistic update, fallback to router.refresh()
-      if (onSuccess) {
-        onSuccess();
+      if (res?.success) {
+        toast.success(currentId ? "Lesson updated" : "Lesson created");
+        closeModal();
+        // Use callback for optimistic update, fallback to router.refresh()
+        if (onSuccess) {
+          onSuccess();
+        } else {
+          router.refresh();
+        }
       } else {
-        router.refresh();
+        toast.error(res?.error || (currentId ? "Failed to update lesson" : "Failed to create lesson"));
       }
-    } else {
-      toast.error(currentId ? "Failed to update lesson" : "Failed to create lesson");
+    } catch (error) {
+      console.error("Form submission error:", error);
+      toast.error("An unexpected error occurred");
     }
   }
 
@@ -149,41 +155,35 @@ export function LessonCreateForm({ onSuccess }: LessonCreateFormProps) {
     }
   };
 
+  const stepLabels: Record<number, string> = {
+    1: "Basic Information",
+    2: "Schedule Details",
+    3: "Content & Assessment",
+  };
+
   return (
-    <div className="flex h-full flex-col">
-      <Form {...form}>
-        <form className="flex flex-col h-full" onSubmit={(e) => e.preventDefault()}>
-          <div className="flex-grow flex flex-col md:flex-row gap-6">
-            {/* Title Section */}
-            <div className="md:w-1/3">
-              <h2 className="text-2xl font-semibold">
-                {isView ? "View Lesson" : currentId ? "Edit Lesson" : "Create Lesson"}
-              </h2>
-              <p className="text-sm text-muted-foreground mt-2">
-                {isView ? "View lesson details" : currentId ? "Update lesson details" : "Plan a new lesson for your class"}
-              </p>
-            </div>
+    <Form {...form}>
+      <form onSubmit={(e) => e.preventDefault()}>
+        <ModalFormLayout
+          title={isView ? "View Lesson" : currentId ? "Edit Lesson" : "Create Lesson"}
+          description={isView ? "View lesson details" : currentId ? "Update lesson details" : "Plan a new lesson for your class"}
+        >
+          {renderCurrentStep()}
+        </ModalFormLayout>
 
-            {/* Form Content */}
-            <div className="flex-1">
-              <div className="overflow-y-auto">
-                {renderCurrentStep()}
-              </div>
-            </div>
-          </div>
-
-          <LessonFormFooter 
-            currentStep={currentStep}
-            isView={isView}
-            currentId={currentId}
-            onBack={handleBack}
-            onNext={handleNext}
-            onSaveCurrentStep={handleSaveCurrentStep}
-            form={form}
-          />
-        </form>
-      </Form>
-    </div>
+        <ModalFooter
+          currentStep={currentStep}
+          totalSteps={3}
+          stepLabel={stepLabels[currentStep]}
+          isView={isView}
+          isEdit={!!currentId}
+          isDirty={form.formState.isDirty}
+          onBack={handleBack}
+          onNext={handleNext}
+          onSaveStep={handleSaveCurrentStep}
+        />
+      </form>
+    </Form>
   );
 }
 

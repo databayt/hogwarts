@@ -18,17 +18,37 @@ import { useDictionary } from "@/components/internationalization/use-dictionary"
 import { useLocale } from "@/components/internationalization/use-locale";
 import { GenericCommandMenu } from "@/components/atom/generic-command-menu";
 import { saasSearchConfig } from "@/components/atom/generic-command-menu/saas-config";
+import { MobileNav } from "@/components/template/mobile-nav";
+import { platformNav } from "@/components/template/saas-sidebar/config";
+import { cn } from "@/lib/utils";
+import { useMemo } from "react";
 
 export default function SaasHeader() {
   const breadcrumbItems = useBreadcrumbs();
   const { dictionary } = useDictionary();
-  const { isRTL } = useLocale();
+  const { isRTL, locale } = useLocale();
+
+  // Transform operator nav items for mobile menu
+  const mobileNavItems = useMemo(() => {
+    return platformNav.map(item => ({
+      href: item.href,
+      label: item.title,
+    }));
+  }, []);
 
   return (
     <div className="sticky top-0 z-40 bg-background -mx-2">
       <header className="flex h-12 shrink-0 items-center gap-2 border-b mx-2">
         <div className="flex items-center gap-2">
-          <SidebarTrigger className={`size-7 ${isRTL ? '-mr-1.5' : '-ml-1.5'}`} />
+          {/* Desktop: Sidebar trigger */}
+          <SidebarTrigger className={cn("size-7 hidden lg:flex", isRTL ? '-mr-1.5' : '-ml-1.5')} />
+          {/* Mobile: Popover-based menu */}
+          <MobileNav
+            items={mobileNavItems}
+            className="flex lg:hidden"
+            dictionary={dictionary ?? undefined}
+            locale={locale}
+          />
           <div className="hidden md:flex items-center">
             {breadcrumbItems.length > 0 && (
               <Breadcrumb>

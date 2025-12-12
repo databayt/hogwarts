@@ -7,30 +7,42 @@ import { FormControl, FormField, FormItem, FormMessage, FormLabel } from "@/comp
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useEffect, useState } from "react";
+import { getSubjects } from "@/components/platform/subjects/actions";
+import { getTeachers } from "@/components/platform/teachers/actions";
 
 import { ClassFormStepProps } from "./types";
 
 export function InformationStep({ form, isView }: ClassFormStepProps) {
   const [subjects, setSubjects] = useState<Array<{ id: string; subjectName: string }>>([]);
   const [teachers, setTeachers] = useState<Array<{ id: string; givenName: string; surname: string }>>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        // This would need to be implemented in separate actions
-        // For now, we'll use placeholders
-        setSubjects([
-          { id: "sub_001", subjectName: "Transfiguration" },
-          { id: "sub_002", subjectName: "Potions" },
-          { id: "sub_003", subjectName: "Creatures" }
-        ]);
-        setTeachers([
-          { id: "tch_001", givenName: "Minerva", surname: "McGonagall" },
-          { id: "tch_002", givenName: "Severus", surname: "Snape" },
-          { id: "tch_003", givenName: "Rubeus", surname: "Hagrid" }
-        ]);
+        setIsLoading(true);
+        // Load subjects from database
+        const subjectsRes = await getSubjects({ perPage: 100 });
+        if (subjectsRes.success && subjectsRes.data) {
+          setSubjects(subjectsRes.data.rows.map((s: any) => ({
+            id: s.id,
+            subjectName: s.subjectName || s.name || 'Unknown'
+          })));
+        }
+
+        // Load teachers from database
+        const teachersRes = await getTeachers({ perPage: 100 });
+        if (teachersRes.success && teachersRes.data) {
+          setTeachers(teachersRes.data.rows.map((t: any) => ({
+            id: t.id,
+            givenName: t.givenName || '',
+            surname: t.surname || ''
+          })));
+        }
       } catch (error) {
         console.error("Failed to load data:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
     loadData();

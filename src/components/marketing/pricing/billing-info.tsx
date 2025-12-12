@@ -1,7 +1,7 @@
 import Link from "next/link";
 import * as React from "react";
 
-import { CustomerPortalButton } from "@/components/platform/admin/billing/customer-portal-button";
+import { CustomerPortalButton } from "@/components/platform/school/billing/customer-portal-button";
 import { buttonVariants } from "@/components/ui/button";
 import {
   Card,

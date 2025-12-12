@@ -13,7 +13,8 @@ import { useRouter } from "next/navigation";
 import { BasicInformationStep } from "./basic-information";
 import { ScheduleLocationStep } from "./schedule-location";
 import { DetailsAttendeesStep } from "./details-attendees";
-import { EventFormFooter } from "./footer";
+import { ModalFormLayout } from "@/components/atom/modal/modal-form-layout";
+import { ModalFooter } from "@/components/atom/modal/modal-footer";
 
 interface EventCreateFormProps {
   /** Callback fired on successful create/update - use for optimistic refresh */
@@ -51,9 +52,9 @@ export function EventCreateForm({ onSuccess }: EventCreateFormProps) {
     const load = async () => {
       if (!currentId) return;
       const res = await getEvent({ id: currentId });
-      const e = res.event as any;
-      if (!e) return;
-      
+      if (!res.success || !res.data) return;
+      const e = res.data as any;
+
       form.reset({
         title: e.title ?? "",
         description: e.description ?? "",
@@ -75,21 +76,26 @@ export function EventCreateForm({ onSuccess }: EventCreateFormProps) {
   }, [currentId]);
 
   async function onSubmit(values: z.infer<typeof eventCreateSchema>) {
-    const res = currentId
-      ? await updateEvent({ id: currentId, ...values })
-      : await createEvent(values);
+    try {
+      const res = currentId
+        ? await updateEvent({ id: currentId, ...values })
+        : await createEvent(values);
 
-    if (res?.success) {
-      toast.success(currentId ? "Event updated" : "Event created");
-      closeModal();
-      // Use callback for optimistic update, fallback to router.refresh()
-      if (onSuccess) {
-        onSuccess();
+      if (res?.success) {
+        toast.success(currentId ? "Event updated" : "Event created");
+        closeModal();
+        // Use callback for optimistic update, fallback to router.refresh()
+        if (onSuccess) {
+          onSuccess();
+        } else {
+          router.refresh();
+        }
       } else {
-        router.refresh();
+        toast.error(res?.error || (currentId ? "Failed to update event" : "Failed to create event"));
       }
-    } else {
-      toast.error(currentId ? "Failed to update event" : "Failed to create event");
+    } catch (error) {
+      console.error("Form submission error:", error);
+      toast.error("An unexpected error occurred");
     }
   }
 
@@ -153,41 +159,35 @@ export function EventCreateForm({ onSuccess }: EventCreateFormProps) {
     }
   };
 
+  const stepLabels: Record<number, string> = {
+    1: "Basic Information",
+    2: "Schedule & Location",
+    3: "Details & Attendees",
+  };
+
   return (
-    <div className="flex h-full flex-col">
-      <Form {...form}>
-        <form className="flex flex-col h-full" onSubmit={(e) => e.preventDefault()}>
-          <div className="flex-grow flex flex-col md:flex-row gap-6">
-            {/* Title Section */}
-            <div className="md:w-1/3">
-              <h2 className="text-2xl font-semibold">
-                {isView ? "View Event" : currentId ? "Edit Event" : "Create Event"}
-              </h2>
-              <p className="text-sm text-muted-foreground mt-2">
-                {isView ? "View event details" : currentId ? "Update event details" : "Schedule a new school event"}
-              </p>
-            </div>
+    <Form {...form}>
+      <form onSubmit={(e) => e.preventDefault()}>
+        <ModalFormLayout
+          title={isView ? "View Event" : currentId ? "Edit Event" : "Create Event"}
+          description={isView ? "View event details" : currentId ? "Update event details" : "Schedule a new school event"}
+        >
+          {renderCurrentStep()}
+        </ModalFormLayout>
 
-            {/* Form Content */}
-            <div className="flex-1">
-              <div className="overflow-y-auto">
-                {renderCurrentStep()}
-              </div>
-            </div>
-          </div>
-
-          <EventFormFooter 
-            currentStep={currentStep}
-            isView={isView}
-            currentId={currentId}
-            onBack={handleBack}
-            onNext={handleNext}
-            onSaveCurrentStep={handleSaveCurrentStep}
-            form={form}
-          />
-        </form>
-      </Form>
-    </div>
+        <ModalFooter
+          currentStep={currentStep}
+          totalSteps={3}
+          stepLabel={stepLabels[currentStep]}
+          isView={isView}
+          isEdit={!!currentId}
+          isDirty={form.formState.isDirty}
+          onBack={handleBack}
+          onNext={handleNext}
+          onSaveStep={handleSaveCurrentStep}
+        />
+      </form>
+    </Form>
   );
 }
 

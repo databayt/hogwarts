@@ -73,8 +73,11 @@ export function BulkUploadContent({ dictionary }: BulkUploadContentProps) {
           getClassesForSelection(),
           getRecentBulkUploads(5),
         ]);
-        setClasses(classesResult.classes);
-        setRecentUploads(uploadsResult.uploads);
+        if (classesResult.success && classesResult.data) setClasses(classesResult.data.classes);
+        // uploadsResult returns raw data on success
+        if (!('success' in uploadsResult && !uploadsResult.success) && 'uploads' in uploadsResult) {
+          setRecentUploads(uploadsResult.uploads);
+        }
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {

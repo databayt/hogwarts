@@ -1,10 +1,11 @@
 "use client"
 
 import { useState, useEffect, useCallback, useOptimistic } from "react"
-import { Users, Phone, Video, EllipsisVertical, Info } from "lucide-react"
+import { Users, Phone, Video, EllipsisVertical, Info, Search } from "lucide-react"
 import type { ConversationDTO, MessageDTO, TypingIndicatorDTO } from "./types"
 import { MessageList, MessageListSkeleton } from "./message-list"
 import { MessageInput } from "./message-input"
+import { MessageSearch } from "./message-search"
 import type { UploadedFileResult } from "@/components/file-upload/enhanced/file-uploader"
 import { CONVERSATION_TYPE_CONFIG } from "./config"
 import { cn } from "@/lib/utils"
@@ -373,6 +374,12 @@ export function ChatInterface({
 
         {/* Header actions */}
         <div className="flex items-center gap-2">
+          {/* Message Search */}
+          <MessageSearch
+            conversationId={conversation.id}
+            locale={locale}
+          />
+
           {conversation.type !== "direct" && (
             <Button variant="ghost" size="icon" onClick={onViewParticipants}>
               <Users className="h-5 w-5" />

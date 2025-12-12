@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { Search, MessageSquarePlus, ListFilter, LoaderCircle } from "lucide-react"
 import type { ConversationDTO, ConversationType } from "./types"
 import { ConversationCard, ConversationCardSkeleton } from "./conversation-card"
+import { ConversationListEmpty } from "./empty-state"
 import { cn } from "@/lib/utils"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -188,23 +189,22 @@ export function ConversationList({
             ))}
           </div>
         ) : sortedConversations.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full p-4 text-center">
-            <p className="text-muted-foreground mb-2">
-              {searchQuery || filter !== "all" || typeFilter !== "all"
-                ? locale === "ar"
-                  ? "لا توجد محادثات مطابقة"
-                  : "No matching conversations"
-                : locale === "ar"
-                ? "لا توجد محادثات بعد"
-                : "No conversations yet"}
-            </p>
-            {!searchQuery && filter === "all" && typeFilter === "all" && (
-              <Button variant="outline" onClick={onNewConversation}>
-                <MessageSquarePlus className="h-4 w-4 mr-2" />
-                {locale === "ar" ? "بدء محادثة جديدة" : "Start a new conversation"}
-              </Button>
-            )}
-          </div>
+          searchQuery || filter !== "all" || typeFilter !== "all" ? (
+            <div className="flex flex-col items-center justify-center h-64 p-4 text-center">
+              <Search className="h-8 w-8 text-muted-foreground/50 mb-3" />
+              <p className="text-muted-foreground">
+                {locale === "ar" ? "لا توجد محادثات مطابقة" : "No matching conversations"}
+              </p>
+              <p className="text-sm text-muted-foreground/70 mt-1">
+                {locale === "ar" ? "جرب كلمات بحث مختلفة" : "Try different search terms"}
+              </p>
+            </div>
+          ) : (
+            <ConversationListEmpty
+              locale={locale}
+              onNewConversation={onNewConversation}
+            />
+          )
         ) : (
           <div className="p-2 space-y-1">
             {sortedConversations.map((conversation) => (

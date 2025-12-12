@@ -32,7 +32,7 @@ export {
 } from "./results";
 
 // Export Operations
-export { getExamsCSV, getExamResultsCSV, getAnalyticsCSV } from "./export";
+export { getExamsCSV, getExamResultsCSV, getAnalyticsCSV, getExamsExportData } from "./export";
 
 // Conflict Detection Operations
 export {
@@ -42,6 +42,15 @@ export {
   type TimeSlot,
   type AvailableSlot,
 } from "./conflict-detection";
+
+// Status Management Operations
+export {
+  startExam,
+  completeExam,
+  cancelExam,
+  getExamForTaking,
+  submitExamAnswers,
+} from "./status";
 
 // Type Exports
 export type {

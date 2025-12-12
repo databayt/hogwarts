@@ -2,7 +2,8 @@ import { db } from "@/lib/db";
 import { getTenantContext } from "@/lib/tenant-context";
 import BookOverview from "./book-list/book-overview";
 import BookList from "./book-list/content";
-import { LibraryHeroSection } from "./hero-section";
+import { CollaborateSection } from "./collaborate-section";
+import { LibraryHero } from "./hero";
 
 interface Props {
   userId: string;
@@ -24,26 +25,39 @@ export default async function LibraryContent({ userId, dictionary, lang }: Props
     );
   }
 
-  // Fetch books in parallel for different sections
-  const [heroBook, latestBooks, featuredBooks, literatureBooks, scienceBooks] = await Promise.all([
-    // Hero Book - the most recent featured book (Harry Potter)
-    db.book.findFirst({
+  // First try to get Harry Potter specifically
+  let heroBook = await db.book.findFirst({
+    where: {
+      schoolId,
+      title: { contains: "Harry Potter" }
+    },
+  });
+
+  // Fallback to most recent if Harry Potter not found
+  if (!heroBook) {
+    heroBook = await db.book.findFirst({
       where: { schoolId },
       orderBy: { createdAt: "desc" },
+    });
+  }
+
+  // Fetch other books in parallel
+  const [latestBooks, featuredBooks, literatureBooks, scienceBooks] = await Promise.all([
+    // Latest Books - exclude Harry Potter (hero), get 12 books
+    db.book.findMany({
+      where: {
+        schoolId,
+        NOT: { title: { contains: "Harry Potter" } }
+      },
+      orderBy: { createdAt: "desc" },
+      take: 12,
     }),
-    // Latest Books - skip hero, get next 6 books
+    // Featured - skip latest 13 to show different ones
     db.book.findMany({
       where: { schoolId },
       orderBy: { createdAt: "desc" },
-      skip: 1,
-      take: 6,
-    }),
-    // Featured - skip latest 7 to show different ones
-    db.book.findMany({
-      where: { schoolId },
-      orderBy: { createdAt: "desc" },
-      skip: 7,
-      take: 6,
+      skip: 13,
+      take: 12,
     }),
     // Literature - fiction, classic, drama, poetry genres
     db.book.findMany({
@@ -57,7 +71,7 @@ export default async function LibraryContent({ userId, dictionary, lang }: Props
           { genre: { contains: "شعر" } },
         ],
       },
-      take: 6,
+      take: 12,
     }),
     // Science - science, history genres
     db.book.findMany({
@@ -69,7 +83,7 @@ export default async function LibraryContent({ userId, dictionary, lang }: Props
           { genre: { contains: "فلسفة" } },
         ],
       },
-      take: 6,
+      take: 12,
     }),
   ]);
 
@@ -103,14 +117,12 @@ export default async function LibraryContent({ userId, dictionary, lang }: Props
   }
 
   return (
-    <div className="space-y-12">
-      {/* Hero Section */}
-      <LibraryHeroSection dictionary={dictionary} lang={lang} />
+    <div className="space-y-12 min-w-0 w-full overflow-hidden">
+      {/* Hero Section - Stream style */}
+      <LibraryHero lang={lang} dictionary={dictionary} />
 
-      {/* Featured Book - Single book highlight */}
-      {heroBook && (
-        <BookOverview book={heroBook} userId={userId} />
-      )}
+      {/* Collaborate Section */}
+      <CollaborateSection lang={lang} />
 
       {/* Row 1: Latest Books */}
       {latestBooks.length > 0 && (
@@ -121,28 +133,28 @@ export default async function LibraryContent({ userId, dictionary, lang }: Props
         />
       )}
 
-      {/* Row 2: Featured */}
+      {/* Row 2: Featured Books */}
       {featuredBooks.length > 0 && (
         <BookList
-          title="Featured"
+          title="Featured Books"
           books={featuredBooks}
           containerClassName=""
         />
       )}
 
-      {/* Row 3: Literature */}
+      {/* Row 3: Literature Books */}
       {literatureBooks.length > 0 && (
         <BookList
-          title="Literature"
+          title="Literature Books"
           books={literatureBooks}
           containerClassName=""
         />
       )}
 
-      {/* Row 4: Science */}
+      {/* Row 4: Science Books */}
       {scienceBooks.length > 0 && (
         <BookList
-          title="Science"
+          title="Science Books"
           books={scienceBooks}
           containerClassName=""
         />

@@ -141,11 +141,24 @@ We wish all families blessed celebrations.`,
     },
   ];
 
+  let createdCount = 0;
+  let skippedCount = 0;
+
   for (const ann of announcements) {
-    await prisma.announcement.create({
-      data: { schoolId, ...ann },
+    // Check if announcement already exists (by titleEn + schoolId)
+    const existing = await prisma.announcement.findFirst({
+      where: { schoolId, titleEn: ann.titleEn },
     });
+
+    if (!existing) {
+      await prisma.announcement.create({
+        data: { schoolId, ...ann },
+      });
+      createdCount++;
+    } else {
+      skippedCount++;
+    }
   }
 
-  console.log(`   ✅ Created: ${announcements.length} bilingual announcements (EN/AR with fallback)\n`);
+  console.log(`   ✅ Announcements: ${createdCount} new, ${skippedCount} already existed\n`);
 }

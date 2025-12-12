@@ -12,7 +12,8 @@ import { useModal } from "@/components/atom/modal/context";
 import Modal from "@/components/atom/modal/modal";
 import { ExamCreateForm } from "./form";
 import { ExportButton } from "./export-button";
-import { getExams } from "./actions";
+import { getExams, deleteExam } from "./actions";
+import { DeleteToast, ErrorToast, confirmDeleteDialog } from "@/components/atom/toast";
 
 interface ExamsTableProps {
   initialData: ExamRow[];
@@ -22,7 +23,6 @@ interface ExamsTableProps {
 
 export function ExamsTable({ initialData, total, perPage = 20 }: ExamsTableProps) {
   const router = useRouter();
-  const columns = useMemo(() => getExamColumns(), []);
 
   // State for incremental loading
   const [data, setData] = useState<ExamRow[]>(initialData);
@@ -57,6 +57,34 @@ export function ExamsTable({ initialData, total, perPage = 20 }: ExamsTableProps
       setIsLoading(false);
     }
   }, [currentPage, perPage, isLoading, hasMore]);
+
+  // Handle delete with optimistic update (must be before columns useMemo)
+  const handleDelete = useCallback(async (exam: ExamRow) => {
+    try {
+      const ok = await confirmDeleteDialog(`Delete "${exam.title}"?`);
+      if (!ok) return;
+
+      // Optimistic remove
+      setData(prev => prev.filter(e => e.id !== exam.id));
+
+      const result = await deleteExam({ id: exam.id });
+      if (result.success) {
+        DeleteToast();
+      } else {
+        // Revert on error
+        refresh();
+        ErrorToast('Failed to delete exam');
+      }
+    } catch (e) {
+      refresh();
+      ErrorToast(e instanceof Error ? e.message : 'Failed to delete');
+    }
+  }, [refresh]);
+
+  // Generate columns with callbacks
+  const columns = useMemo(() => getExamColumns({
+    onDelete: handleDelete,
+  }), [handleDelete]);
 
   // Use pageCount of 1 since we're handling all data client-side
   const { table } = useDataTable<ExamRow>({

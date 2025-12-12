@@ -1,108 +1,95 @@
-"use client"
-
 import * as React from "react"
+import fs from "node:fs/promises"
+import path from "node:path"
 import { cn } from "@/lib/utils"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { highlightCode } from "@/lib/highlight-code"
+import { CopyButton } from "@/components/docs/copy-button"
+import { AtomsIndex } from "@/registry/atoms-index"
 
 interface ComponentPreviewProps extends React.HTMLAttributes<HTMLDivElement> {
+  name?: string
   align?: "center" | "start" | "end"
+  hideCode?: boolean
+  chromeLessOnMobile?: boolean
+  code?: string
 }
 
-export function ComponentPreview({
+export async function ComponentPreview({
+  name,
   children,
   className,
   align = "center",
+  hideCode = false,
+  chromeLessOnMobile = false,
+  code: codeProp,
   ...props
 }: ComponentPreviewProps) {
-  const Preview = React.useMemo(() => {
-    const Component = React.Children.only(children) as React.ReactElement & {
-      type: { render?: (() => React.ReactElement) | undefined; __docgenInfo?: unknown }
+  let code = codeProp
+  let highlightedCode: string | null = null
+
+  // If name provided, fetch code from registry
+  if (name && !code) {
+    const item = AtomsIndex[name]
+    if (item?.files?.[0]) {
+      const filePath = path.join(process.cwd(), item.files[0].path)
+      try {
+        code = await fs.readFile(filePath, "utf-8")
+        // Transform imports for user consumption
+        code = code
+          .replace(/^"use client"\s*\n?/m, "")
+          .replace(/\/\* eslint-disable \*\/\s*\n?/g, "")
+      } catch (error) {
+        console.error(`Failed to read file: ${filePath}`, error)
+      }
     }
+  }
 
-    if (!Component) {
-      return (
-        <p className="muted">
-          No preview available.
-        </p>
-      )
-    }
-
-    return Component
-  }, [children])
-
-  const codeToString = React.useMemo(() => {
-    if (React.isValidElement(children)) {
-      const element = children as React.ReactElement<unknown>
-      const props = element.props || {}
-      const { children: childrenProp, ...restProps } = props as Record<string, unknown>
-
-      // Remove unwanted props.
-      const cleanedProps = Object.fromEntries(
-        Object.entries(restProps).filter(([key]) =>
-          !["__reactInternalInstance", "__reactInternalMemoizedUnmaskedChildContext", "__reactInternalMemoizedMaskedChildContext"].includes(key)
-        )
-      )
-
-      const jsx = React.createElement(
-        element.type as React.ComponentType<Record<string, unknown>> | string,
-        cleanedProps,
-        childrenProp as React.ReactNode
-      )
-      return jsx
-    }
-
-    return null
-  }, [children])
+  if (code) {
+    highlightedCode = await highlightCode(code, "tsx")
+  }
 
   return (
     <div
-      className={cn("relative my-4 flex flex-col space-y-2", className)}
+      className={cn(
+        "group relative mt-4 mb-12 flex flex-col gap-2 rounded-lg border",
+        className
+      )}
       {...props}
     >
-      <Tabs defaultValue="preview" className="relative me-auto w-full">
-        <div className="flex items-center justify-between pb-3">
-          <TabsList className="w-full justify-start rounded-none border-b bg-transparent p-0">
-            <TabsTrigger
-              value="preview"
-              className="relative h-9 rounded-none border-b-2 border-b-transparent bg-transparent px-4 pb-3 pt-2 muted shadow-none transition-none data-[state=active]:border-b-primary data-[state=active]:text-foreground data-[state=active]:shadow-none"
-            >
-              Preview
-            </TabsTrigger>
-            <TabsTrigger
-              value="code"
-              className="relative h-9 rounded-none border-b-2 border-b-transparent bg-transparent px-4 pb-3 pt-2 muted shadow-none transition-none data-[state=active]:border-b-primary data-[state=active]:text-foreground data-[state=active]:shadow-none"
-            >
-              Code
-            </TabsTrigger>
-          </TabsList>
+      <div data-slot="preview">
+        <div
+          data-align={align}
+          className={cn(
+            "preview flex w-full justify-center data-[align=center]:items-center data-[align=end]:items-end data-[align=start]:items-start",
+            chromeLessOnMobile ? "sm:p-10" : "h-[450px] p-10"
+          )}
+        >
+          {children}
         </div>
-        <TabsContent value="preview" className="relative rounded-md border">
+        {!hideCode && code && highlightedCode && (
           <div
-            className={cn("flex min-h-[350px] w-full justify-center p-10", {
-              "items-center": align === "center",
-              "items-start": align === "start",
-              "items-end": align === "end",
-            })}
+            data-slot="code"
+            className="overflow-hidden [&_[data-rehype-pretty-code-figure]]:!m-0 [&_[data-rehype-pretty-code-figure]]:rounded-t-none [&_[data-rehype-pretty-code-figure]]:border-t [&_pre]:max-h-[400px]"
           >
-            {Preview}
+            <ComponentCode code={code} highlightedCode={highlightedCode} />
           </div>
-        </TabsContent>
-        <TabsContent value="code">
-          <div className="flex flex-col space-y-4">
-            <div className="w-full rounded-md [&_pre]:my-0 [&_pre]:max-h-[350px] [&_pre]:overflow-auto">
-              {codeToString ? (
-                <pre className="language-tsx">
-                  <code>{JSON.stringify(codeToString, null, 2)}</code>
-                </pre>
-              ) : (
-                <p className="muted">
-                  Code not available.
-                </p>
-              )}
-            </div>
-          </div>
-        </TabsContent>
-      </Tabs>
+        )}
+      </div>
     </div>
   )
-} 
+}
+
+function ComponentCode({
+  code,
+  highlightedCode,
+}: {
+  code: string
+  highlightedCode: string
+}) {
+  return (
+    <figure data-rehype-pretty-code-figure="" className="[&>pre]:max-h-96">
+      <CopyButton value={code} />
+      <div dangerouslySetInnerHTML={{ __html: highlightedCode }} />
+    </figure>
+  )
+}

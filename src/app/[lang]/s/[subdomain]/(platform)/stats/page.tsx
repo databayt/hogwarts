@@ -1,4 +1,4 @@
-import StatsContent from "@/components/platform/dashboard/stats/content"
+import StatsContent from "@/components/platform/dashboard/stat-showcase"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { type Locale } from "@/components/internationalization/config"
 

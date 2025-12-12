@@ -28,11 +28,12 @@ export function useBreadcrumbs() {
 
 	useEffect(() => {
 		setDynamicTitle(null);
-		// Resolve dynamic names for known resources (e.g., students/:id)
+		// Resolve dynamic names for known resources (e.g., students/:id, grades/:id)
 		try {
-			const match = pathname.match(/^\/students\/([^\/\?]+)/);
-			if (match) {
-				const id = match[1];
+			// Students pattern
+			const studentsMatch = pathname.match(/\/students\/([^\/\?]+)$/);
+			if (studentsMatch) {
+				const id = studentsMatch[1];
 				const qs = typeof window !== 'undefined' ? (window.location.search || '') : '';
 				void fetch(`/api/students/${id}${qs}`)
 					.then((res) => (res.ok ? res.json() : null))
@@ -40,9 +41,24 @@ export function useBreadcrumbs() {
 						if (data?.name) setDynamicTitle(data.name as string);
 					})
 					.catch(() => {});
+				return;
+			}
+
+			// Grades pattern - exclude known sub-routes
+			const gradesMatch = pathname.match(/\/grades\/([^\/\?]+)$/);
+			if (gradesMatch && !['analytics', 'reports', 'generate'].includes(gradesMatch[1])) {
+				const id = gradesMatch[1];
+				const qs = typeof window !== 'undefined' ? (window.location.search || '') : '';
+				void fetch(`/api/grades/${id}${qs}`)
+					.then((res) => (res.ok ? res.json() : null))
+					.then((data) => {
+						if (data?.name) setDynamicTitle(data.name as string);
+					})
+					.catch(() => {});
+				return;
 			}
 		} catch {}
-	}, [pathname, dynamicTitle]);
+	}, [pathname]);
 
 	const breadcrumbs = useMemo(() => {
     // Check if we have a custom mapping for this exact path

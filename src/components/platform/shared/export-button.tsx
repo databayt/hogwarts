@@ -1,5 +1,29 @@
 "use client";
 
+/**
+ * Legacy Export Button - DEPRECATED
+ * This component is deprecated. Use ExportButton from @/components/platform/file instead.
+ *
+ * @example
+ * ```tsx
+ * // New way (recommended)
+ * import { ExportButton, type ExportColumn } from "@/components/platform/file"
+ *
+ * const columns: ExportColumn<YourType>[] = [
+ *   { key: "name", header: "Name", headerAr: "الاسم" },
+ *   // ...
+ * ]
+ *
+ * <ExportButton
+ *   data={yourData}
+ *   config={{ filename: "export", columns }}
+ *   formats={["csv", "excel", "pdf"]}
+ * />
+ * ```
+ *
+ * @deprecated Use ExportButton from @/components/platform/file instead
+ */
+
 import * as React from "react";
 import { Download, FileSpreadsheet, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,7 +33,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { generateCSVFilename } from "@/lib/csv-export";
+import { generateExportFilename, downloadBlob, generateCsvContent } from "@/components/platform/file";
 
 export type ExportFormat = "csv" | "excel" | "pdf";
 
@@ -36,6 +60,9 @@ interface ExportButtonProps {
   };
 }
 
+/**
+ * @deprecated Use ExportButton from @/components/platform/file instead
+ */
 export function ExportButton({
   getCSV,
   filters,
@@ -61,18 +88,12 @@ export function ExportButton({
       if (format === "csv") {
         const csv = await getCSV(filters);
 
-        // Create blob and download
+        // Create blob and download using File module utilities
         const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = generateCSVFilename(entityName);
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        URL.revokeObjectURL(url);
+        const filename = generateExportFilename(entityName, "csv");
+        downloadBlob(blob, filename);
       }
-      // TODO: Add Excel and PDF export support
+      // TODO: Add Excel and PDF export support via File module
     } catch (error) {
       console.error("Export failed:", error);
     } finally {
@@ -147,3 +168,8 @@ export function ExportButton({
     </DropdownMenu>
   );
 }
+
+/**
+ * Re-export the new ExportButton from File module for migration
+ */
+export { ExportButton as NewExportButton, SimpleExportButton } from "@/components/platform/file";

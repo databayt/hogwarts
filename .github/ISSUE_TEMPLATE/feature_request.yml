@@ -1,0 +1,114 @@
+name: Feature Request
+description: Suggest a new feature or enhancement
+title: "[Feature]: "
+labels: ["enhancement", "needs-triage"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting a feature! Please fill out the form below.
+
+  - type: checkboxes
+    id: existing-issue
+    attributes:
+      label: Existing Feature Check
+      description: Please search existing issues and discussions before creating a new request
+      options:
+        - label: I have searched existing issues and this feature hasn't been requested
+          required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement
+      description: Is your feature request related to a problem? Please describe.
+      placeholder: "I'm always frustrated when..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: Describe the solution you'd like
+      placeholder: "I would like to..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Have you considered any alternative solutions or workarounds?
+      placeholder: "I've also considered..."
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Feature Area
+      description: Which part of the application would this feature affect?
+      options:
+        - Platform (School Dashboard)
+        - Authentication
+        - Students Module
+        - Teachers Module
+        - Finance Module
+        - Attendance
+        - Timetable
+        - Exams
+        - Reports
+        - Settings
+        - Marketing Site
+        - API
+        - Documentation
+        - Developer Experience
+        - Performance
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: How important is this feature to you?
+      options:
+        - Critical (Blocking my work)
+        - High (Would significantly improve my workflow)
+        - Medium (Nice to have)
+        - Low (Minor improvement)
+    validations:
+      required: true
+
+  - type: textarea
+    id: mockups
+    attributes:
+      label: Mockups/Examples
+      description: If you have any mockups, wireframes, or examples from other apps, please share
+      placeholder: Drag and drop images here or add links...
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Add any other context about the feature request
+      placeholder: Any additional information...
+
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Contribution
+      description: Would you be interested in contributing this feature?
+      options:
+        - label: I would be willing to help implement this feature
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Code of Conduct
+      description: By submitting this issue, you agree to follow our Code of Conduct
+      options:
+        - label: I agree to follow the project's Code of Conduct
+          required: true

@@ -6,7 +6,7 @@
 export const publicRoutes = [
   "/",
   "/new-verification",
-  "/admin",
+  "/school",
   "/client",
   "/server",
   "/setting",

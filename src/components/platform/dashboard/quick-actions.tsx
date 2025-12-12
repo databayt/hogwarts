@@ -2,17 +2,16 @@
 
 import React from "react";
 import { cn } from "@/lib/utils";
-import * as LucideIcons from "lucide-react";
+import { AnthropicIcons } from "@/components/icons/anthropic";
 import Link from "next/link";
-import { Card, CardContent } from "@/components/ui/card";
 
 /**
  * QuickActions Component
- * Displays a grid of quick action items for lab
- * - No outer cards, just action items
- * - Icon and text in columns (icon on top, text below)
- * - Full width, responsive grid
+ * Displays a row of quick action items
+ * - Icon and text in a row (horizontal layout)
+ * - 4 actions taking full width with solid colored backgrounds
  * - Role-specific and reusable
+ * - Uses Anthropic icons exclusively
  */
 
 export interface QuickAction {
@@ -22,24 +21,60 @@ export interface QuickAction {
   onClick?: () => void;
 }
 
-// Map icon names to Lucide icon components
+// Card background colors (matching Quick Look section)
+const cardColors = [
+  { bg: "bg-[#D97757]", text: "text-background" }, // Coral/orange
+  { bg: "bg-[#6A9BCC]", text: "text-background" }, // Blue
+  { bg: "bg-[#CBCADB]", text: "text-background" }, // Lavender
+  { bg: "bg-[#BCD1CA]", text: "text-background" }, // Mint
+];
+
+// Map icon names to Anthropic icon components
 const iconMap: Record<string, React.ComponentType<{ className?: string; "aria-hidden"?: boolean }>> = {
-  Users: LucideIcons.Users,
-  FileText: LucideIcons.FileText,
-  Bell: LucideIcons.Bell,
-  CheckCircle: LucideIcons.CheckCircle,
-  Calendar: LucideIcons.Calendar,
-  BookOpen: LucideIcons.BookOpen,
-  Award: LucideIcons.Award,
-  CalendarDays: LucideIcons.CalendarDays,
-  MessageSquare: LucideIcons.MessageSquare,
-  ClipboardList: LucideIcons.ClipboardList,
-  DollarSign: LucideIcons.DollarSign,
-  Settings: LucideIcons.Settings,
-  UserPlus: LucideIcons.UserPlus,
-  BarChart3: LucideIcons.BarChart3,
-  Clock: LucideIcons.Clock,
-  FolderOpen: LucideIcons.FolderOpen,
+  // Core Anthropic icons
+  Checklist: AnthropicIcons.Checklist,
+  TaskList: AnthropicIcons.TaskList,
+  Book: AnthropicIcons.Book,
+  Briefcase: AnthropicIcons.Briefcase,
+  Chat: AnthropicIcons.Chat,
+  Calendar: AnthropicIcons.CalendarChart,
+  CalendarDays: AnthropicIcons.CalendarChart,
+  CalendarChart: AnthropicIcons.CalendarChart,
+  Clock: AnthropicIcons.Stopwatch,
+  Stopwatch: AnthropicIcons.Stopwatch,
+  Archive: AnthropicIcons.Archive,
+  FolderOpen: AnthropicIcons.Archive,
+  Notebook: AnthropicIcons.Notebook,
+  FileText: AnthropicIcons.Notebook,
+  Pencil: AnthropicIcons.Pencil,
+  Globe: AnthropicIcons.Globe,
+  Lightning: AnthropicIcons.Lightning,
+  Bell: AnthropicIcons.Lightning,
+  Terminal: AnthropicIcons.Terminal,
+  CodeWindow: AnthropicIcons.CodeWindow,
+  Copy: AnthropicIcons.Copy,
+  Flow: AnthropicIcons.Flow,
+  ShieldCheck: AnthropicIcons.ShieldCheck,
+  Announcement: AnthropicIcons.Announcement,
+  Sparkle: AnthropicIcons.Sparkle,
+  Gear: AnthropicIcons.Gear,
+  Users: AnthropicIcons.Users,
+  BarChart: AnthropicIcons.BarChart,
+  // Mapped aliases
+  Settings: AnthropicIcons.Gear,           // Settings → Gear
+  UserPlus: AnthropicIcons.Users,          // Add user → Users
+  BarChart3: AnthropicIcons.BarChart,      // Analytics → BarChart
+  TrendingUp: AnthropicIcons.BarChart,     // Growth → BarChart
+  CheckCircle: AnthropicIcons.Checklist,   // Completion
+  BookOpen: AnthropicIcons.Book,           // Reading
+  Award: AnthropicIcons.Sparkle,           // Achievement
+  MessageSquare: AnthropicIcons.Chat,      // Communication
+  ClipboardList: AnthropicIcons.TaskList,  // Tasks
+  DollarSign: AnthropicIcons.Notebook,     // Finance
+  Receipt: AnthropicIcons.Notebook,        // Documents
+  GraduationCap: AnthropicIcons.Book,      // Education
+  Building: AnthropicIcons.Briefcase,      // Organization
+  Contact: AnthropicIcons.Chat,            // Contact
 };
 
 interface QuickActionsProps {
@@ -51,18 +86,21 @@ interface QuickActionsProps {
 export function QuickActions({ actions, locale = "en", className }: QuickActionsProps) {
   return (
     <div className={cn("w-full", className)}>
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-        {actions.map((action, index) => {
-          // Get icon component from map, fallback to FileText if not found
-          const Icon = iconMap[action.iconName] || LucideIcons.FileText;
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {actions.slice(0, 4).map((action, index) => {
+          // Get icon component from map, fallback to Notebook if not found
+          const Icon = iconMap[action.iconName] || AnthropicIcons.Notebook;
+          // Cycle through colors for each card
+          const color = cardColors[index % cardColors.length];
 
           const content = (
-            <Card className="aspect-square">
-              <CardContent className="flex flex-col items-center justify-center gap-2 p-4 h-full">
-                <Icon className="h-6 w-6" aria-hidden={true} />
-                <span className="text-sm font-medium text-center">{action.label}</span>
-              </CardContent>
-            </Card>
+            <div className={cn(
+              "flex items-center gap-4 p-4 rounded-lg transition-all hover:opacity-90",
+              color.bg
+            )}>
+              <Icon className={cn("h-6 w-6 flex-shrink-0", color.text)} aria-hidden={true} />
+              <span className={cn("text-base font-semibold truncate", color.text)}>{action.label}</span>
+            </div>
           );
 
           if (action.href) {
@@ -81,7 +119,7 @@ export function QuickActions({ actions, locale = "en", className }: QuickActions
             <button
               key={`${action.label}-${index}`}
               onClick={action.onClick}
-              className="block w-full"
+              className="block w-full text-left"
               type="button"
             >
               {content}

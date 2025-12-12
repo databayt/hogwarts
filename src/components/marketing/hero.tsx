@@ -1,4 +1,3 @@
-import { siteConfig } from "./config"
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
 import React from 'react'
@@ -17,7 +16,6 @@ const Hero = ({ dictionary, lang }: HeroProps) => {
   const heroDict = dictionary?.marketing?.hero || {
     title: "Automate Education,",
     subtitle: "Educational management system streamlining operations for students, educators, and school leaders. Transform your institution's efficiency today.",
-    badge: "700+ School automated",
     appointment: "Get Started",
     services: "GitHub"
   }
@@ -51,24 +49,12 @@ const Hero = ({ dictionary, lang }: HeroProps) => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center min-h-[calc(100vh-3.5rem)]">
         {/* Left: Content */}
         <div className="space-y-6 py-12 lg:py-0">
-          <Link
-            href={siteConfig.links.twitter}
-            className="rounded-2xl bg-muted px-4 py-1.5 inline-block hover:bg-muted/80 transition-colors"
-            target="_blank"
-          >
-            <small>{heroDict.badge || "700+ School automated"}</small>
-          </Link>
-
           <h1 className="font-heading font-black text-5xl sm:text-6xl lg:text-7xl xl:text-8xl tracking-tight">
             <span className="block">Automate</span>
             <span className="block">the boring,</span>
             <span className="block">elevate the</span>
             <span className="block">wonder.</span>
           </h1>
-
-          <p className="text-2xl text-muted-foreground">
-            open source. open code.
-          </p>
 
           <div className="flex flex-col sm:flex-row gap-3">
             <Link

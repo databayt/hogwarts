@@ -1,0 +1,735 @@
+---
+title: "Admission"
+description: "Complete guide to the admission portal - public application forms, tour scheduling, status tracking, inquiry capture, and comprehensive parent self-service"
+---
+
+## Overview
+
+The Admission module provides a comprehensive, production-ready self-service portal for parents and students. It enables public application submissions without requiring an account, self-service tour booking, real-time application status tracking, and lead capture for interested families.
+
+### Module Flow
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                         ENTRY POINTS                                     │
+├─────────────────────────────────────────────────────────────────────────┤
+│  Public Site: /admissions        → Info page with hero, process, CTA    │
+│  Platform:    /admission         → Admin campaign & application mgmt    │
+│  Parent:      /apply             → Public application portal            │
+└─────────────────────────────────────────────────────────────────────────┘
+                                   │
+                                   ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                    PUBLIC APPLICATION PORTAL                            │
+├──────────────┬──────────────┬──────────────┬────────────────────────────┤
+│   /apply     │  /apply/     │  /apply/     │      /apply/               │
+│  Campaign    │ [campaignId] │   status     │     continue               │
+│  Selector    │  6-Step Form │ OTP Tracker  │   Resume Session           │
+└──────┬───────┴──────┬───────┴──────┬───────┴────────────┬───────────────┘
+       │              │              │                    │
+       └──────────────┴──────────────┴────────────────────┘
+                                   │
+                                   ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│              APPLICATION FORM (6 STEPS)                                 │
+├─────────────────────────────────────────────────────────────────────────┤
+│  Step 1: Personal Info    → Student name, DOB, gender, nationality      │
+│  Step 2: Contact Details  → Address, phone, emergency contacts          │
+│  Step 3: Guardian Info    → Parent/guardian details                     │
+│  Step 4: Academic History → Previous school, grades, transcripts        │
+│  Step 5: Documents        → Upload required documents                   │
+│  Step 6: Review & Submit  → Review all info, payment (if applicable)    │
+└─────────────────────────────────────────────────────────────────────────┘
+                                   │
+                          ┌────────┴────────┐
+                          │ Auto-save every │
+                          │    30 seconds   │
+                          └────────┬────────┘
+                                   │
+                                   ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│              actions/application.ts: submitApplication()                │
+│                                                                         │
+│  ┌─────────────────────────────────────────────────────────────────┐   │
+│  │  1. Validate all form data                                       │   │
+│  │  2. Generate application number (APP-YYYY-MM-XXXXXX)             │   │
+│  │  3. Generate access token for status tracking                    │   │
+│  │  4. Create Application record with schoolId scope                │   │
+│  │  5. Send confirmation email to parent                            │   │
+│  │  6. Clean up session data                                        │   │
+│  └─────────────────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────────────────┘
+                                   │
+                                   ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                     STATUS TRACKING (OTP-VERIFIED)                      │
+├─────────────────────────────────────────────────────────────────────────┤
+│  1. Parent enters application number + email                           │
+│  2. System sends 6-digit OTP (10-min expiry, rate limited)             │
+│  3. On verification: Show application timeline                          │
+│  ┌────────────────────────────────────────────────────────────────┐    │
+│  │  Timeline States:                                               │    │
+│  │  SUBMITTED → REVIEWING → INTERVIEW → DECISION → ENROLLED       │    │
+│  └────────────────────────────────────────────────────────────────┘    │
+│  4. Display document checklist, communication history                   │
+└─────────────────────────────────────────────────────────────────────────┘
+                                   │
+                                   ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                      TOUR BOOKING (/tour)                               │
+├─────────────────────────────────────────────────────────────────────────┤
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────────────┐ │
+│  │  Calendar View  │  │  Time Slots     │  │  Booking Form           │ │
+│  │  Date Picker    │→ │  Available/Full │→ │  Contact + Student Info │ │
+│  └─────────────────┘  └─────────────────┘  └─────────────────────────┘ │
+│                                   │                                     │
+│                                   ▼                                     │
+│              createTourBooking() → Email confirmation                   │
+│              /tour/[bookingId]   → Manage/Cancel booking                │
+└─────────────────────────────────────────────────────────────────────────┘
+                                   │
+                                   ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                     INQUIRY FORM (/inquiry)                             │
+├─────────────────────────────────────────────────────────────────────────┤
+│  Lead capture for families not ready to apply:                          │
+│  • Contact info (name, email, phone)                                    │
+│  • Student info (optional)                                              │
+│  • Interested grade level                                               │
+│  • "How did you hear about us?" (source tracking)                       │
+│  • Message/questions                                                    │
+│  • Newsletter subscription                                              │
+│                                   │                                     │
+│              submitInquiry() → Admissions team notification             │
+│              Status: NEW → CONTACTED → QUALIFIED → CONVERTED            │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+### Key Features
+
+| Feature | Status | Description |
+|---------|--------|-------------|
+| Public Application Portal | **Production** | Parents can apply without creating an account first |
+| Campaign Selection | **Production** | Multiple admission campaigns (Early Decision, Regular, etc.) |
+| Multi-Step Form | **Production** | 6-step form with progress indicator and validation |
+| Auto-Save Sessions | **Production** | Forms auto-save every 30 seconds, resumable for 7 days |
+| OTP Status Tracking | **Production** | Secure status access with 6-digit OTP verification |
+| Tour Booking | **Production** | Calendar-based self-service tour scheduling |
+| Booking Management | **Production** | View, reschedule, or cancel tour bookings |
+| Inquiry Form | **Production** | Lead capture with source tracking |
+| Email Notifications | **Production** | Confirmation emails for applications and bookings |
+| Admin Dashboard | **Production** | Campaign management, application review, merit scoring |
+
+### File Structure
+
+```
+src/
+├── app/[lang]/s/[subdomain]/(site)/
+│   ├── admissions/page.tsx          # Public info page with hero + CTA
+│   ├── apply/
+│   │   ├── page.tsx                 # Campaign selector
+│   │   ├── [campaignId]/page.tsx    # 6-step application form
+│   │   ├── continue/page.tsx        # Resume saved application
+│   │   ├── status/page.tsx          # OTP-verified status tracker
+│   │   └── success/page.tsx         # Confirmation page
+│   ├── tour/
+│   │   ├── page.tsx                 # Tour booking calendar
+│   │   └── [bookingId]/page.tsx     # Manage booking
+│   └── inquiry/page.tsx             # Lead capture form
+│
+├── app/[lang]/s/[subdomain]/(platform)/
+│   ├── admission/page.tsx           # Admin campaigns dashboard
+│   └── admission/merit/page.tsx     # Merit scoring system
+│
+├── components/site/admission/
+│   ├── content.tsx                  # Public info page content (hero, process, CTA)
+│   ├── types.ts                     # TypeScript types
+│   ├── validation.ts                # Zod schemas
+│   │
+│   ├── portal/
+│   │   ├── campaign-selector-content.tsx   # Campaign selection UI
+│   │   ├── application-form-content.tsx    # Multi-step form wrapper
+│   │   └── continue-application-content.tsx # Resume flow
+│   │
+│   ├── steps/
+│   │   ├── step-personal.tsx        # Personal information
+│   │   ├── step-contact.tsx         # Contact details
+│   │   ├── step-guardian.tsx        # Guardian information
+│   │   ├── step-academic.tsx        # Academic history
+│   │   ├── step-documents.tsx       # Document uploads
+│   │   └── step-review.tsx          # Review and submit
+│   │
+│   ├── status/
+│   │   ├── status-tracker-content.tsx  # OTP verification + timeline
+│   │   └── status-display.tsx          # Timeline visualization
+│   │
+│   ├── tour/
+│   │   └── tour-booking-content.tsx    # Calendar + booking form
+│   │
+│   ├── inquiry/
+│   │   └── inquiry-form-content.tsx    # Lead capture form
+│   │
+│   └── actions/
+│       ├── index.ts                 # Re-exports all actions
+│       ├── application.ts           # Application server actions
+│       ├── status.ts                # Status tracking actions
+│       ├── tour.ts                  # Tour booking actions
+│       └── inquiry.ts               # Inquiry actions
+│
+└── components/platform/admission/
+    ├── campaigns-content.tsx        # Admin campaign management
+    └── merit-content.tsx            # Merit scoring dashboard
+```
+
+## Quick Start
+
+### For Parents (Public Portal)
+
+1. Navigate to the school's **Admissions** page from the main menu
+2. Click **"Start Application"** to begin
+3. Select the appropriate admission campaign
+4. Complete the 6-step form (can save and resume later)
+5. Submit and receive confirmation with application number
+6. Track status anytime using your application number + email
+
+### For Administrators (Platform)
+
+1. Navigate to **Admission** in the platform sidebar
+2. Create and manage admission campaigns
+3. Review submitted applications
+4. Schedule interviews and assessments
+5. Make admission decisions
+6. Track merit scores and rankings
+
+## Routes
+
+### Public Routes (School Site)
+
+| Route | Component | Purpose |
+|-------|-----------|---------|
+| `/admissions` | `AdmissionContent` | Info page with hero, process steps, requirements, and CTAs |
+| `/apply` | `CampaignSelectorContent` | Select admission campaign to apply to |
+| `/apply/[campaignId]` | `ApplicationFormContent` | 6-step application form |
+| `/apply/success` | Success page | Confirmation with application number |
+| `/apply/status` | `StatusTrackerContent` | OTP-verified status tracking |
+| `/apply/continue` | `ContinueApplicationContent` | Resume saved application |
+| `/tour` | `TourBookingContent` | Calendar-based tour booking |
+| `/tour/[bookingId]` | Booking details | View/manage existing booking |
+| `/inquiry` | `InquiryFormContent` | Lead capture form |
+
+### Platform Routes (Admin)
+
+| Route | Component | Purpose |
+|-------|-----------|---------|
+| `/admission` | `CampaignsContent` | Campaign management dashboard |
+| `/admission/merit` | `MeritContent` | Merit scoring system |
+
+## Application Form
+
+### 6-Step Process
+
+The application form is broken into 6 manageable steps:
+
+**Step 1: Personal Information**
+- Student's full name (English and Arabic)
+- Date of birth
+- Gender
+- Nationality
+- National ID (optional)
+- Photo upload
+
+**Step 2: Contact Details**
+- Home address
+- City, state, postal code
+- Country
+- Phone numbers (home, mobile)
+- Emergency contact
+
+**Step 3: Guardian Information**
+- Father's details (name, occupation, phone, email)
+- Mother's details (name, occupation, phone, email)
+- Primary guardian selection
+- Relationship to student
+
+**Step 4: Academic History**
+- Previous school name
+- Years attended
+- Grade level completed
+- Reason for leaving
+- Academic transcripts upload
+
+**Step 5: Documents**
+- Required documents checklist (configured per school)
+- Document upload with verification
+- Birth certificate
+- Previous report cards
+- Medical records
+- Passport photos
+
+**Step 6: Review & Submit**
+- Review all entered information
+- Application fee payment (if configured)
+- Terms and conditions acceptance
+- Final submission
+
+### Auto-Save Feature
+
+Applications are automatically saved every 30 seconds to prevent data loss:
+
+```typescript
+// Session stored in ApplicationSession model
+{
+  sessionToken: "unique-token",
+  formData: { /* all form fields */ },
+  currentStep: 3,
+  email: "parent@example.com",
+  expiresAt: "7 days from creation"
+}
+```
+
+Parents can resume their application at `/apply/continue` using their email and session token.
+
+## Status Tracking
+
+### OTP Verification
+
+For security without requiring account creation, status tracking uses OTP:
+
+1. Parent enters application number + email
+2. System generates 6-digit OTP
+3. OTP sent via email (10-minute expiry)
+4. Rate limited to prevent abuse (max 5 attempts per hour)
+5. On verification, show application status
+
+### Application Timeline
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  SUBMITTED  →  REVIEWING  →  INTERVIEW  →  DECISION  →  ENROLLED│
+│     ●            ○             ○            ○            ○      │
+│  Dec 10      (pending)     (pending)    (pending)    (pending)  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+Status display includes:
+- Current stage indicator
+- Date of last update
+- Required documents checklist
+- Communication history
+- Next steps information
+
+## Tour Booking
+
+### Calendar System
+
+The tour booking system provides:
+
+- **Calendar View**: Select available dates (weekends excluded by default)
+- **Time Slots**: Show available times with capacity
+- **Booking Form**: Collect visitor information
+- **Confirmation**: Email with booking number and details
+- **Management**: Reschedule or cancel bookings
+
+### Time Slot Configuration
+
+Administrators configure available slots in the platform:
+
+```typescript
+// AdmissionTimeSlot model
+{
+  slotType: "TOUR" | "INTERVIEW" | "ORIENTATION" | "OPEN_HOUSE",
+  date: Date,
+  startTime: Time,
+  endTime: Time,
+  maxCapacity: 10,
+  currentBookings: 3,
+  location: "Main Building Lobby"
+}
+```
+
+### Booking Confirmation
+
+After booking, parents receive:
+- Booking number (e.g., `TOUR-2412-ABC123`)
+- Date and time details
+- Location information
+- Link to manage booking
+- Calendar invite attachment
+
+## Inquiry Form
+
+### Lead Capture
+
+The inquiry form captures leads for families not ready to apply:
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| Parent Name | Yes | Contact name |
+| Email | Yes | For follow-up |
+| Phone | No | Alternative contact |
+| Student Name | No | For personalization |
+| Student DOB | No | Grade suggestion |
+| Interested Grade | No | Target grade level |
+| Source | No | How they heard about the school |
+| Message | No | Questions or comments |
+| Newsletter | No | Opt-in for updates |
+
+### Source Tracking
+
+Track where inquiries come from:
+- Website
+- Social Media
+- Referral
+- Open House
+- Advertisement
+- Other
+
+### Inquiry Status Flow
+
+```
+NEW → CONTACTED → QUALIFIED → CONVERTED → CLOSED
+                              (applied)   (not interested)
+```
+
+## Database Models
+
+### Core Models
+
+```prisma
+// Admission Campaign
+model AdmissionCampaign {
+  id              String   @id @default(cuid())
+  schoolId        String
+  name            String   // "Early Decision 2025"
+  academicYear    String   // "2024-2025"
+  gradeLevel      String?  // "Grade 1" or null for all
+  startDate       DateTime
+  endDate         DateTime
+  applicationFee  Decimal?
+  isActive        Boolean  @default(true)
+}
+
+// Application
+model Application {
+  id              String            @id @default(cuid())
+  schoolId        String
+  campaignId      String
+  applicationNo   String            @unique
+  status          ApplicationStatus @default(SUBMITTED)
+  studentInfo     Json              // Personal details
+  contactInfo     Json              // Address, phone
+  guardianInfo    Json              // Parent details
+  academicHistory Json              // Previous school
+  documents       Json?             // Uploaded files
+  accessToken     String?           @unique  // For status tracking
+}
+
+// Inquiry
+model AdmissionInquiry {
+  id              String        @id @default(cuid())
+  schoolId        String
+  parentName      String
+  email           String
+  status          InquiryStatus @default(NEW)
+  source          String?       // website, social, referral
+}
+
+// Tour Booking
+model TourBooking {
+  id              String        @id @default(cuid())
+  schoolId        String
+  slotId          String
+  bookingNumber   String        @unique
+  parentName      String
+  email           String
+  status          BookingStatus @default(CONFIRMED)
+}
+
+// Time Slot
+model AdmissionTimeSlot {
+  id              String   @id @default(cuid())
+  schoolId        String
+  slotType        SlotType
+  date            DateTime @db.Date
+  startTime       DateTime @db.Time
+  endTime         DateTime @db.Time
+  maxCapacity     Int      @default(10)
+  currentBookings Int      @default(0)
+}
+
+// Session (Auto-save)
+model ApplicationSession {
+  id              String   @id @default(cuid())
+  schoolId        String
+  sessionToken    String   @unique
+  formData        Json
+  currentStep     Int      @default(1)
+  email           String
+  expiresAt       DateTime
+}
+
+// OTP Verification
+model AdmissionOTP {
+  id              String   @id @default(cuid())
+  schoolId        String
+  applicationId   String
+  otp             String
+  email           String
+  expiresAt       DateTime
+  verified        Boolean  @default(false)
+  attempts        Int      @default(0)
+}
+```
+
+### Enums
+
+```prisma
+enum ApplicationStatus {
+  SUBMITTED
+  REVIEWING
+  INTERVIEW_SCHEDULED
+  INTERVIEW_COMPLETED
+  PENDING_DECISION
+  ACCEPTED
+  WAITLISTED
+  REJECTED
+  ENROLLED
+  WITHDRAWN
+}
+
+enum InquiryStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  CONVERTED
+  UNQUALIFIED
+  CLOSED
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  RESCHEDULED
+  COMPLETED
+  NO_SHOW
+}
+
+enum SlotType {
+  TOUR
+  INTERVIEW
+  ORIENTATION
+  OPEN_HOUSE
+}
+```
+
+## API Reference
+
+### Server Actions Quick Reference
+
+| Action | Purpose | Key Parameters |
+|--------|---------|----------------|
+| `getActiveCampaigns()` | List active campaigns | subdomain |
+| `getCampaignById()` | Get campaign details | subdomain, campaignId |
+| `submitApplication()` | Submit application | subdomain, campaignId, formData |
+| `saveApplicationSession()` | Auto-save progress | subdomain, sessionToken, formData, step |
+| `resumeApplicationSession()` | Load saved session | sessionToken |
+| `requestStatusOTP()` | Send OTP for tracking | subdomain, appNumber, email |
+| `verifyStatusOTP()` | Verify OTP code | subdomain, appNumber, email, otp |
+| `getApplicationStatus()` | Get status after verify | accessToken |
+| `getAvailableSlots()` | List tour time slots | subdomain, slotType, date |
+| `createTourBooking()` | Book a tour | subdomain, bookingData |
+| `getBookingDetails()` | Get booking info | bookingNumber |
+| `cancelTourBooking()` | Cancel booking | bookingNumber, reason? |
+| `rescheduleTourBooking()` | Change booking time | bookingNumber, newSlotId |
+| `submitInquiry()` | Submit inquiry form | subdomain, inquiryData |
+
+### Application Actions
+
+```typescript
+// Submit a new application
+await submitApplication(subdomain, campaignId, {
+  studentInfo: {
+    firstName: string,
+    lastName: string,
+    dateOfBirth: Date,
+    gender: "male" | "female",
+    nationality: string,
+  },
+  contactInfo: {
+    address: string,
+    city: string,
+    phone: string,
+  },
+  guardianInfo: {
+    fatherName: string,
+    motherName: string,
+    primaryGuardian: "father" | "mother" | "other",
+  },
+  academicHistory: {
+    previousSchool: string,
+    gradeCompleted: string,
+  },
+  documents: {
+    birthCertificate: string, // file URL
+    transcripts: string,
+  },
+})
+
+// Returns
+{
+  success: true,
+  data: {
+    applicationNumber: "APP-2412-ABC123",
+    accessToken: "tok_xxxxx",
+    message: "Application submitted successfully"
+  }
+}
+```
+
+### Tour Actions
+
+```typescript
+// Get available slots
+await getAvailableSlots(subdomain, "TOUR", new Date())
+
+// Returns
+{
+  success: true,
+  data: [
+    {
+      id: "slot_123",
+      date: "2024-12-15",
+      startTime: "09:00",
+      endTime: "10:00",
+      availableSpots: 5,
+      maxCapacity: 10,
+      location: "Main Building"
+    }
+  ]
+}
+
+// Book a tour
+await createTourBooking(subdomain, {
+  slotId: "slot_123",
+  parentName: "John Smith",
+  email: "john@example.com",
+  phone: "+1234567890",
+  studentName: "Jane Smith",
+  interestedGrade: "Grade 5",
+  numberOfAttendees: 2,
+})
+```
+
+## Configuration
+
+### School Settings
+
+Configure admission portal in the platform settings:
+
+```typescript
+// AdmissionSettings model
+{
+  enablePublicPortal: true,      // Show public application form
+  enableInquiryForm: true,       // Show inquiry form
+  enableTourBooking: true,       // Show tour booking
+  enableStatusTracker: true,     // Allow status checking
+  defaultApplicationFee: 500,    // In school currency
+  tourDuration: 60,              // Minutes per tour
+  maxToursPerDay: 5,             // Limit daily tours
+  documentRequirements: [        // Required documents
+    "birth_certificate",
+    "previous_transcripts",
+    "medical_records"
+  ]
+}
+```
+
+### Email Templates
+
+The system sends emails for:
+- Application confirmation
+- Tour booking confirmation
+- Tour cancellation
+- Inquiry acknowledgment
+- OTP verification
+- Status updates
+
+Emails are sent via Resend API with school branding.
+
+## Multi-Tenant Safety
+
+All queries are scoped by `schoolId`:
+
+```typescript
+// In server actions
+const schoolResult = await getSchoolBySubdomain(subdomain)
+const schoolId = schoolResult.data.id
+
+// All queries include schoolId
+await db.application.create({
+  data: {
+    ...formData,
+    schoolId, // Required for tenant isolation
+  }
+})
+```
+
+## Competitor Features Comparison
+
+| Feature | Hogwarts | OpenApply | Blackbaud | PowerSchool |
+|---------|----------|-----------|-----------|-------------|
+| Public Application Portal | Yes | Yes | Yes | Yes |
+| No Account Required | Yes | No | No | No |
+| Multi-Step Form | Yes | Yes | Yes | Yes |
+| Auto-Save | Yes | Yes | Yes | Partial |
+| OTP Status Tracking | Yes | No | No | No |
+| Self-Service Tour Booking | Yes | Yes | Limited | No |
+| Lead Capture | Yes | Yes | Yes | Yes |
+| Grade Auto-Suggestion | Yes | Yes | No | No |
+| Email Notifications | Yes | Yes | Yes | Yes |
+| Payment Integration | Planned | Yes | Yes | Yes |
+| Document Upload | Yes | Yes | Yes | Yes |
+| Mobile Responsive | Yes | Yes | Yes | Partial |
+
+## Best Practices
+
+### For Administrators
+
+1. **Campaign Setup**: Create campaigns well before application season opens
+2. **Document Requirements**: Clearly list all required documents in settings
+3. **Tour Slots**: Add tour slots in advance and manage capacity
+4. **Inquiry Follow-up**: Respond to inquiries within 24-48 hours
+5. **Status Updates**: Keep application statuses current for parent transparency
+
+### For Development
+
+1. **Always scope by schoolId**: Every query must include tenant scope
+2. **Validate twice**: Client-side for UX, server-side for security
+3. **Handle edge cases**: Expired sessions, full tour slots, duplicate applications
+4. **Test email flows**: Verify all notification emails render correctly
+5. **Monitor OTP attempts**: Implement rate limiting to prevent abuse
+
+## Troubleshooting
+
+### Common Issues
+
+**Application Not Saving**
+- Check browser console for network errors
+- Verify session token hasn't expired (7-day limit)
+- Ensure all required fields are filled
+
+**OTP Not Received**
+- Check spam folder
+- Verify email address matches application
+- Check rate limit (max 5 per hour)
+
+**Tour Slot Not Available**
+- Slot may have reached capacity
+- Date may be in the past
+- Check if tours are enabled in settings
+
+**Payment Not Processing**
+- Stripe integration requires configuration
+- Check application fee is set in campaign
+- Verify Stripe webhook is configured

@@ -1474,6 +1474,15 @@
             "description": "Configure timetable and attendance, publish announcements, and go live."
           }
         }
+      },
+      "apply": {
+        "title": "How would you like to start?",
+        "subtitle": "Choose the way that suits you best to create your school",
+        "createFromScratch": "Create from scratch",
+        "createFromScratchDescription": "Start with basic setup and customize everything",
+        "useTemplate": "Use a template",
+        "useTemplateDescription": "Start with pre-configured settings",
+        "back": "Back"
       }
     },
     "library": {
@@ -1834,7 +1843,48 @@
       "openMenu": "Open menu",
       "navAll": "All",
       "navAnalytics": "Analytics",
-      "navReports": "Reports"
+      "navReports": "Reports",
+      "gradeDetail": "Grade Detail",
+      "backToGrades": "Back to Grades",
+      "studentInfo": "Student Information",
+      "studentId": "Student ID",
+      "studentEmail": "Email",
+      "assignmentInfo": "Assignment Information",
+      "examInfo": "Exam Information",
+      "dueDate": "Due Date",
+      "totalPoints": "Total Points",
+      "type": "Type",
+      "scoreDetails": "Score Details",
+      "outOf": "out of",
+      "classAverage": "Class Average",
+      "aboveAverage": "Above Average",
+      "belowAverage": "Below Average",
+      "percentile": "Percentile",
+      "rank": "Rank",
+      "feedbackSection": "Teacher Feedback",
+      "gradedBy": "Graded By",
+      "gradedOn": "Graded On",
+      "noFeedback": "No feedback provided",
+      "printGrade": "Print",
+      "exportPDF": "Export PDF",
+      "gradeHistory": "Grade History",
+      "previousGrades": "Previous Grades",
+      "trend": "Trend",
+      "improving": "Improving",
+      "declining": "Declining",
+      "stable": "Stable",
+      "classComparison": "Class Comparison",
+      "gradeDistribution": "Grade Distribution",
+      "highestScore": "Highest",
+      "lowestScore": "Lowest",
+      "studentsInClass": "students in class",
+      "yourScore": "Your Score",
+      "passStatus": "Pass",
+      "failStatus": "Fail",
+      "download": "Download",
+      "downloadCertificate": "Certificate (Wall Display)",
+      "downloadReport": "Grade Report (Print)",
+      "downloadFailed": "Failed to download"
     },
     "common": {
       "actions": {

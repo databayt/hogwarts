@@ -1,4 +1,4 @@
-import CardsContent from "@/components/platform/dashboard/cards/content"
+import CardsContent from "@/components/platform/dashboard/card-showcase"
 import { getDictionary } from "@/components/internationalization/dictionaries"
 import { type Locale } from "@/components/internationalization/config"
 

@@ -17,8 +17,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/components/ui/use-toast';
 import { Barcode, Camera, CameraOff, CircleCheck, CircleAlert, LoaderCircle, Upload, Keyboard, Volume2, VolumeX } from "lucide-react";
-import { useAttendanceContext } from '../core/attendance-context';
 import { useCamera } from '../shared/hooks';
+import { processBarcodeScan } from './actions';
 import type { Dictionary } from '@/components/internationalization/dictionaries';
 
 interface BarcodeScannerProps {
@@ -50,7 +50,6 @@ export function BarcodeScanner({
   } | null>(null);
 
   const { hasPermission, requestPermission } = useCamera();
-  const { markAttendance, studentIdentifiers } = useAttendanceContext();
 
   // Initialize scanner
   const initScanner = useCallback(() => {
@@ -126,40 +125,33 @@ export function BarcodeScanner({
     }
 
     try {
-      // Find student by barcode
-      const studentIdentifier = studentIdentifiers.find(
-        id => id.type === 'BARCODE' && id.value === code
-      );
-
-      if (!studentIdentifier) {
-        throw new Error('Barcode not found in system');
-      }
-
-      // Mark attendance
-      await markAttendance({
+      // Call server action to process barcode scan
+      // Server action handles authentication, finds student by barcode, and marks attendance
+      const scanResult = await processBarcodeScan({
+        barcode: code,
         classId,
-        studentId: studentIdentifier.studentId,
-        status: 'PRESENT',
-        method: 'BARCODE',
-        deviceId: code,
-        checkInTime: new Date().toISOString(),
-        confidence: 1.0
+        scannedAt: new Date().toISOString(),
+        deviceId: navigator.userAgent
       });
+
+      if (!scanResult.success) {
+        throw new Error(scanResult.error || 'Failed to process barcode');
+      }
 
       setScanResult({
         success: true,
-        message: `Attendance marked for ${studentIdentifier.studentName || 'Student'}`
+        message: `Attendance marked for ${scanResult.studentName || 'Student'}`
       });
 
       toast({
         title: "Success",
-        description: `Attendance marked for ${studentIdentifier.studentName || code}`,
+        description: `Attendance marked for ${scanResult.studentName || code}`,
       });
 
       onScanSuccess?.({
         barcode: code,
-        studentId: studentIdentifier.studentId,
-        studentName: studentIdentifier.studentName
+        studentId: scanResult.studentId,
+        studentName: scanResult.studentName
       });
 
       // Reset after 2 seconds
@@ -190,7 +182,7 @@ export function BarcodeScanner({
     } finally {
       setProcessing(false);
     }
-  }, [classId, lastScan, processing, soundEnabled, studentIdentifiers, markAttendance, onScanSuccess, onScanError]);
+  }, [classId, lastScan, processing, soundEnabled, onScanSuccess, onScanError]);
 
   // Handle processed frames (for UI feedback)
   const handleProcessed = (result: any) => {
@@ -252,36 +244,29 @@ export function BarcodeScanner({
     setProcessing(true);
 
     try {
-      // Find student by barcode
-      const studentIdentifier = studentIdentifiers.find(
-        id => id.type === 'BARCODE' && id.value === manualInput
-      );
-
-      if (!studentIdentifier) {
-        throw new Error('Barcode not found in system');
-      }
-
-      // Mark attendance
-      await markAttendance({
+      // Call server action to process barcode scan
+      // Server action handles authentication, finds student by barcode, and marks attendance
+      const result = await processBarcodeScan({
+        barcode: manualInput,
         classId,
-        studentId: studentIdentifier.studentId,
-        status: 'PRESENT',
-        method: 'BARCODE',
-        deviceId: manualInput,
-        checkInTime: new Date().toISOString(),
-        confidence: 1.0
+        scannedAt: new Date().toISOString(),
+        deviceId: navigator.userAgent
       });
+
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to process barcode');
+      }
 
       toast({
         title: "Success",
-        description: `Attendance marked for ${studentIdentifier.studentName || manualInput}`,
+        description: `Attendance marked for ${result.studentName || manualInput}`,
       });
 
       setManualInput('');
       onScanSuccess?.({
         barcode: manualInput,
-        studentId: studentIdentifier.studentId,
-        studentName: studentIdentifier.studentName
+        studentId: result.studentId,
+        studentName: result.studentName
       });
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to process barcode';

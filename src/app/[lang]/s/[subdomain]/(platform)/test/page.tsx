@@ -11,8 +11,8 @@ export default async function Test({ params }: Props) {
     const result = await getSchoolBySubdomain(subdomain);
     
     return (
-      <div className="p-8">
-        <h3 className="mb-4">Subdomain Test Page</h3>
+      <div className="space-y-4">
+        <h3>Subdomain Test Page</h3>
         <div className="space-y-4">
           <div>
             <strong>Subdomain:</strong> {subdomain}
@@ -30,8 +30,8 @@ export default async function Test({ params }: Props) {
     );
   } catch (error) {
     return (
-      <div className="p-8">
-        <h3 className="mb-4">Error</h3>
+      <div className="space-y-4">
+        <h3>Error</h3>
         <pre className="text-red-600">{JSON.stringify(error, null, 2)}</pre>
       </div>
     );

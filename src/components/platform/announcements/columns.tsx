@@ -7,11 +7,18 @@ import { Button } from "@/components/ui/button";
 import { Ellipsis } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useModal } from "@/components/atom/modal/context";
-import { deleteAnnouncement, toggleAnnouncementPublish } from "@/components/platform/announcements/actions";
-import { DeleteToast, ErrorToast, confirmDeleteDialog } from "@/components/atom/toast";
 import type { Dictionary } from "@/components/internationalization/dictionaries";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { Locale } from "@/components/internationalization/config";
+
+/**
+ * Callback options for optimistic updates
+ * Pass these from the table component for instant UI updates
+ */
+export interface ColumnCallbacks {
+  onDelete?: (announcement: AnnouncementRow) => void;
+  onTogglePublish?: (announcement: AnnouncementRow) => void;
+}
 
 // Bilingual row type - both language versions
 export type AnnouncementRow = {
@@ -40,7 +47,8 @@ function getLocalizedTitle(row: AnnouncementRow, locale: Locale): string {
 
 export const getAnnouncementColumns = (
   dictionary: Dictionary['school']['announcements'],
-  locale: Locale
+  locale: Locale,
+  callbacks?: ColumnCallbacks
 ): ColumnDef<AnnouncementRow>[] => {
   const t = dictionary;
 
@@ -129,32 +137,18 @@ export const getAnnouncementColumns = (
       const router = useRouter();
       const searchParams = useSearchParams();
 
-      // Get display title for confirmation dialog
-      const displayTitle = getLocalizedTitle(announcement, locale);
-
       const onView = () => {
         const qs = searchParams.toString();
         router.push(`/announcements/${announcement.id}${qs ? `?${qs}` : ''}`);
       };
       const onEdit = () => openModal(announcement.id);
-      const onToggle = async () => {
-        try {
-          await toggleAnnouncementPublish({ id: announcement.id, publish: !announcement.published });
-          // Success toast will be handled by the action
-        } catch (e) {
-          ErrorToast(e instanceof Error ? e.message : t.failedToTogglePublish);
-        }
+      const onToggle = () => {
+        // Use callback for instant optimistic update
+        callbacks?.onTogglePublish?.(announcement);
       };
-      const onDelete = async () => {
-        try {
-          const ok = await confirmDeleteDialog(t.confirmDelete.replace('{title}', displayTitle));
-          if (!ok) return;
-          await deleteAnnouncement({ id: announcement.id });
-          DeleteToast();
-          router.refresh();
-        } catch (e) {
-          ErrorToast(e instanceof Error ? e.message : t.failedToDelete);
-        }
+      const onDelete = () => {
+        // Use callback for instant optimistic removal
+        callbacks?.onDelete?.(announcement);
       };
       return (
         <DropdownMenu>
@@ -168,11 +162,11 @@ export const getAnnouncementColumns = (
             <DropdownMenuLabel>{columns.actions}</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={onView}>{t.view}</DropdownMenuItem>
-            <DropdownMenuItem onClick={onEdit}>{t.editAnnouncement}</DropdownMenuItem>
+            <DropdownMenuItem onClick={onEdit}>{locale === 'ar' ? 'تعديل' : 'Edit'}</DropdownMenuItem>
             <DropdownMenuItem onClick={onToggle}>
               {announcement.published ? t.unpublish : t.publish}
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={onDelete}>{t.deleteAnnouncement}</DropdownMenuItem>
+            <DropdownMenuItem onClick={onDelete}>{locale === 'ar' ? 'حذف' : 'Delete'}</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       );

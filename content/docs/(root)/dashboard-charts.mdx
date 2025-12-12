@@ -1,0 +1,408 @@
+---
+title: "Dashboard - Charts"
+description: "Complete reference for dashboard chart components including AttendanceTrendChart, GradeDistributionChart, RevenueChart, and more."
+---
+
+The dashboard system uses **Recharts** with shadcn/ui chart components for data visualization. All chart components are located in `src/components/platform/dashboard/widgets/dashboard-charts.tsx`.
+
+## Component Overview
+
+| Chart | Type | Purpose |
+|-------|------|---------|
+| `AttendanceTrendChart` | Area | Attendance over time |
+| `GradeDistributionChart` | Radial Bar | Grade breakdown |
+| `RevenueChart` | Bar | Revenue vs expenses |
+| `PerformanceGauge` | Radial | Single metric gauge |
+| `WeeklyActivityChart` | Bar | Weekly data |
+| `ComparisonLineChart` | Line | Period comparison |
+
+## AttendanceTrendChart
+
+Stacked area chart showing attendance patterns over time.
+
+### Props
+
+```tsx
+interface AttendanceTrendData {
+  date: string;
+  present: number;
+  absent: number;
+  late?: number;
+}
+
+interface AttendanceTrendChartProps {
+  data: AttendanceTrendData[];
+  title?: string;
+  description?: string;
+  trend?: number;  // Percentage change indicator
+  className?: string;
+}
+```
+
+### Usage
+
+```tsx
+const attendanceData = [
+  { date: "Monday", present: 42, absent: 3 },
+  { date: "Tuesday", present: 44, absent: 1 },
+  { date: "Wednesday", present: 40, absent: 5 },
+  { date: "Thursday", present: 43, absent: 2 },
+  { date: "Friday", present: 41, absent: 4 },
+];
+
+<AttendanceTrendChart
+  data={attendanceData}
+  title="Attendance Trend"
+  description="Daily attendance over the past week"
+  trend={5.2}
+/>
+```
+
+### Features
+
+- **Stacked areas** for present/absent
+- **Trend indicator** in footer (positive/negative)
+- **Tooltip** on hover
+- **Responsive** width
+
+### Chart Config
+
+```tsx
+const attendanceChartConfig = {
+  present: { label: "Present", color: "hsl(var(--chart-1))" },
+  absent: { label: "Absent", color: "hsl(var(--chart-2))" },
+  late: { label: "Late", color: "hsl(var(--chart-3))" },
+};
+```
+
+## GradeDistributionChart
+
+Radial bar chart showing grade breakdown.
+
+### Props
+
+```tsx
+interface GradeDistributionData {
+  grade: string;
+  count: number;
+  fill: string;  // Color for segment
+}
+
+interface GradeDistributionChartProps {
+  data: GradeDistributionData[];
+  title?: string;
+  totalStudents?: number;
+  className?: string;
+}
+```
+
+### Usage
+
+```tsx
+const gradeData = [
+  { grade: "A", count: 25, fill: "hsl(142, 76%, 36%)" },
+  { grade: "B", count: 35, fill: "hsl(199, 89%, 48%)" },
+  { grade: "C", count: 20, fill: "hsl(48, 96%, 53%)" },
+  { grade: "D", count: 12, fill: "hsl(25, 95%, 53%)" },
+  { grade: "F", count: 8, fill: "hsl(0, 84%, 60%)" },
+];
+
+<GradeDistributionChart
+  data={gradeData}
+  title="Grade Distribution"
+  totalStudents={100}
+/>
+```
+
+### Features
+
+- **Radial bars** for each grade
+- **Tooltip** on hover
+- **Total count** in footer
+- **Custom colors** per grade
+
+### Chart Config
+
+```tsx
+const gradeChartConfig = {
+  count: { label: "Students" },
+  A: { label: "A", color: "hsl(142, 76%, 36%)" },  // Green
+  B: { label: "B", color: "hsl(199, 89%, 48%)" },  // Blue
+  C: { label: "C", color: "hsl(48, 96%, 53%)" },   // Yellow
+  D: { label: "D", color: "hsl(25, 95%, 53%)" },   // Orange
+  F: { label: "F", color: "hsl(0, 84%, 60%)" },    // Red
+};
+```
+
+## RevenueChart
+
+Grouped bar chart for financial comparison.
+
+### Props
+
+```tsx
+interface RevenueData {
+  month: string;
+  revenue: number;
+  expenses: number;
+}
+
+interface RevenueChartProps {
+  data: RevenueData[];
+  title?: string;
+  description?: string;
+  currency?: string;
+  className?: string;
+}
+```
+
+### Usage
+
+```tsx
+const revenueData = [
+  { month: "September", revenue: 42000, expenses: 35000 },
+  { month: "October", revenue: 45000, expenses: 38000 },
+  { month: "November", revenue: 48000, expenses: 36000 },
+  { month: "December", revenue: 52000, expenses: 42000 },
+];
+
+<RevenueChart
+  data={revenueData}
+  title="Financial Overview"
+  description="Revenue vs Expenses"
+  currency="$"
+/>
+```
+
+### Features
+
+- **Side-by-side bars** for comparison
+- **Currency formatting** in tooltip
+- **Rounded bar corners**
+- **Responsive** width
+
+### Chart Config
+
+```tsx
+const revenueChartConfig = {
+  revenue: { label: "Revenue", color: "hsl(var(--chart-1))" },
+  expenses: { label: "Expenses", color: "hsl(var(--chart-2))" },
+};
+```
+
+## PerformanceGauge
+
+Radial gauge for single metric display.
+
+### Props
+
+```tsx
+interface PerformanceGaugeProps {
+  value: number;
+  label: string;
+  description?: string;
+  maxValue?: number;     // Default: 100
+  color?: string;        // Default: primary
+  className?: string;
+}
+```
+
+### Usage
+
+```tsx
+<PerformanceGauge
+  value={85}
+  label="Average"
+  description="Current academic performance"
+  maxValue={100}
+  color="hsl(142, 76%, 36%)"
+/>
+```
+
+### Features
+
+- **Radial progress** from -90 to calculated end angle
+- **Center label** with value and text
+- **Background track** in muted color
+- **Optional description** in footer
+
+### Calculation
+
+```tsx
+const percentage = (value / maxValue) * 100;
+const endAngle = (percentage / 100) * 360 - 90;
+```
+
+## WeeklyActivityChart
+
+Simple bar chart for weekly data.
+
+### Props
+
+```tsx
+interface WeeklyActivityData {
+  day: string;
+  value: number;
+}
+
+interface WeeklyActivityChartProps {
+  data: WeeklyActivityData[];
+  title?: string;
+  label?: string;
+  color?: string;
+  className?: string;
+}
+```
+
+### Usage
+
+```tsx
+const weeklyData = [
+  { day: "Mon", value: 15 },
+  { day: "Tue", value: 18 },
+  { day: "Wed", value: 12 },
+  { day: "Thu", value: 20 },
+  { day: "Fri", value: 14 },
+];
+
+<WeeklyActivityChart
+  data={weeklyData}
+  title="Weekly Task Completion"
+  label="Tasks"
+  color="hsl(var(--chart-1))"
+/>
+```
+
+### Features
+
+- **5-day display** (Mon-Fri)
+- **Tooltip** with label
+- **Custom color** support
+- **Compact height** (150px)
+
+## ComparisonLineChart
+
+Dual-line chart for period comparison.
+
+### Props
+
+```tsx
+interface ComparisonData {
+  period: string;
+  current: number;
+  previous: number;
+}
+
+interface ComparisonLineChartProps {
+  data: ComparisonData[];
+  title?: string;
+  description?: string;
+  currentLabel?: string;   // Default: "This Term"
+  previousLabel?: string;  // Default: "Last Term"
+  className?: string;
+}
+```
+
+### Usage
+
+```tsx
+const comparisonData = [
+  { period: "Sep", current: 75, previous: 70 },
+  { period: "Oct", current: 78, previous: 72 },
+  { period: "Nov", current: 82, previous: 75 },
+  { period: "Dec", current: 85, previous: 78 },
+];
+
+<ComparisonLineChart
+  data={comparisonData}
+  title="Grade Trend"
+  description="Your performance compared to last term"
+  currentLabel="This Term"
+  previousLabel="Last Term"
+/>
+```
+
+### Features
+
+- **Solid line** for current period
+- **Dashed line** for previous period
+- **Dot markers** on data points
+- **Cartesian grid** with dashed lines
+- **Tooltip** with both values
+
+### Chart Config
+
+```tsx
+const config = {
+  current: { label: currentLabel, color: "hsl(var(--chart-1))" },
+  previous: { label: previousLabel, color: "hsl(var(--chart-2))" },
+};
+```
+
+## Type Exports
+
+All chart types are exported:
+
+```tsx
+export {
+  type AttendanceTrendData,
+  type AttendanceTrendChartProps,
+  type GradeDistributionData,
+  type GradeDistributionChartProps,
+  type RevenueData,
+  type RevenueChartProps,
+  type PerformanceGaugeProps,
+  type WeeklyActivityData,
+  type WeeklyActivityChartProps,
+  type ComparisonData,
+  type ComparisonLineChartProps,
+};
+```
+
+## Dependencies
+
+Charts use shadcn/ui chart components:
+
+```tsx
+import {
+  ChartConfig,
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart";
+```
+
+And Recharts primitives:
+
+```tsx
+import {
+  Area, AreaChart, Bar, BarChart, CartesianGrid,
+  Line, LineChart, PolarAngleAxis, PolarGrid,
+  PolarRadiusAxis, RadialBar, RadialBarChart,
+  ResponsiveContainer, Tooltip, XAxis, YAxis, Label,
+} from "recharts";
+```
+
+## Styling
+
+All charts use CSS variables for theming:
+
+```css
+--chart-1: 12 76% 61%;   /* Primary chart color */
+--chart-2: 173 58% 39%;  /* Secondary chart color */
+--chart-3: 197 37% 24%;  /* Tertiary chart color */
+--chart-4: 43 74% 66%;   /* Quaternary chart color */
+--chart-5: 27 87% 67%;   /* Quinary chart color */
+```
+
+## File Location
+
+```
+src/components/platform/dashboard/widgets/dashboard-charts.tsx
+```
+
+## Related
+
+- [Dashboard Overview](/docs/dashboard)
+- [Dashboard Widgets](/docs/dashboard-widgets)
+- [UI Charts](/docs/charts)

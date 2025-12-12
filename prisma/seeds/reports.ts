@@ -285,9 +285,22 @@ export async function seedReports(
   const gradeDistribution: Record<string, number> = {};
   let totalAvgScore = 0;
 
-  // Create report cards for ALL students
+  // Create report cards for ALL students (additive - skip existing)
+  let skippedCount = 0;
+
   for (let i = 0; i < students.length; i++) {
     const student = students[i];
+
+    // Check if report card already exists for this student + term
+    const existingReport = await prisma.reportCard.findFirst({
+      where: { schoolId, studentId: student.id, termId },
+    });
+
+    if (existingReport) {
+      skippedCount++;
+      continue; // Skip - report already exists
+    }
+
     const studentProfile = generateStudentPerformanceProfile(i);
 
     // Get subjects for this student (or all subjects if not enrolled)
@@ -347,7 +360,7 @@ export async function seedReports(
     // Calculate rank (will be updated later)
     const rank = i + 1;
 
-    // Create report card
+    // Create report card (only if not exists - checked above)
     const reportCard = await prisma.reportCard.create({
       data: {
         schoolId,
@@ -368,21 +381,24 @@ export async function seedReports(
     });
     reportCount++;
 
-    // Create grades for each subject
-    for (const gradeData of subjectGrades) {
-      await prisma.reportCardGrade.create({
-        data: {
-          schoolId,
-          reportCardId: reportCard.id,
-          subjectId: gradeData.subjectId,
-          grade: gradeData.grade,
-          score: gradeData.score.toString(),
-          maxScore: "100.00",
-          percentage: gradeData.score,
-          comments: getSubjectComment(gradeData.score),
-        },
+    // Create grades for each subject (batch insert with skipDuplicates)
+    const gradeRecords = subjectGrades.map(gradeData => ({
+      schoolId,
+      reportCardId: reportCard.id,
+      subjectId: gradeData.subjectId,
+      grade: gradeData.grade,
+      score: gradeData.score.toString(),
+      maxScore: "100.00",
+      percentage: gradeData.score,
+      comments: getSubjectComment(gradeData.score),
+    }));
+
+    if (gradeRecords.length > 0) {
+      await prisma.reportCardGrade.createMany({
+        data: gradeRecords,
+        skipDuplicates: true,
       });
-      gradeCount++;
+      gradeCount += gradeRecords.length;
     }
 
     // Award achievement badges
@@ -402,7 +418,7 @@ export async function seedReports(
   const honorRollCount = (gradeDistribution["A+"] || 0) + (gradeDistribution["A"] || 0);
   const needsImprovementCount = (gradeDistribution["D"] || 0) + (gradeDistribution["D+"] || 0) + (gradeDistribution["F"] || 0);
 
-  console.log(`   ✅ Created: ${reportCount} comprehensive report cards (ALL students)`);
+  console.log(`   ✅ Created: ${reportCount} comprehensive report cards${skippedCount > 0 ? ` (${skippedCount} existing skipped)` : ""}`);
   console.log(`   ✅ Created: ${gradeCount} subject grades with bilingual comments`);
   console.log(`   ✅ Awarded: ${badgeCount} achievement badges`);
   console.log(`   📈 School Statistics:`);

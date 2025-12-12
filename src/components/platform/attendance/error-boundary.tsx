@@ -79,7 +79,7 @@ export class AttendanceErrorBoundary extends Component<ErrorBoundaryProps, Error
 
       // Default error UI
       return (
-        <div className="min-h-[400px] flex items-center justify-center p-4">
+        <div className="min-h-[400px] flex items-center justify-center">
           <Card className="w-full max-w-lg">
             <CardHeader className="text-center">
               <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">

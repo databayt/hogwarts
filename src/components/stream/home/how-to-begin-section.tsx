@@ -75,7 +75,7 @@ export function HowToBeginSection({ dictionary, lang }: Omit<StreamContentProps,
 
       {/* Content - Text left (40%), Image right (60%) */}
       <div className={cn(
-        "flex flex-col md:flex-row items-center gap-8 md:gap-16 px-4 md:px-12 lg:px-24",
+        "flex flex-col md:flex-row items-center gap-8 md:gap-16",
         isRTL && "md:flex-row-reverse"
       )}>
         {/* Text Content */}

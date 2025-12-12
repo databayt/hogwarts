@@ -3,13 +3,15 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { DataTableColumnHeader } from "@/components/table/data-table-column-header";
 import { Button } from "@/components/ui/button";
-import { Ellipsis } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Ellipsis, GraduationCap, CalendarCheck, School } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useModal } from "@/components/atom/modal/context";
 import { deleteStudent } from "@/components/platform/students/actions";
 import { DeleteToast, ErrorToast, confirmDeleteDialog } from "@/components/atom/toast";
 import type { Dictionary } from "@/components/internationalization/dictionaries";
 import type { Locale } from "@/components/internationalization/config";
+import Link from "next/link";
 
 export type StudentRow = {
   id: string;
@@ -18,6 +20,8 @@ export type StudentRow = {
   className: string;
   status: string;
   createdAt: string;
+  classCount: number;
+  gradeCount: number;
 };
 
 interface ColumnOptions {
@@ -28,6 +32,8 @@ export const getStudentColumns = (dictionary?: Dictionary['school']['students'],
   const t = {
     name: dictionary?.fullName || (lang === 'ar' ? 'الاسم' : 'Name'),
     class: dictionary?.class || (lang === 'ar' ? 'الفصل' : 'Class'),
+    classes: lang === 'ar' ? 'الفصول' : 'Classes',
+    grades: lang === 'ar' ? 'الدرجات' : 'Grades',
     status: dictionary?.status || (lang === 'ar' ? 'الحالة' : 'Status'),
     created: dictionary?.created || (lang === 'ar' ? 'تاريخ الإنشاء' : 'Created'),
     actions: lang === 'ar' ? 'إجراءات' : 'Actions',
@@ -36,6 +42,9 @@ export const getStudentColumns = (dictionary?: Dictionary['school']['students'],
     delete: lang === 'ar' ? 'حذف' : 'Delete',
     active: dictionary?.active || (lang === 'ar' ? 'نشط' : 'Active'),
     inactive: dictionary?.inactive || (lang === 'ar' ? 'غير نشط' : 'Inactive'),
+    viewGrades: lang === 'ar' ? 'عرض الدرجات' : 'View Grades',
+    viewAttendance: lang === 'ar' ? 'عرض الحضور' : 'View Attendance',
+    viewClasses: lang === 'ar' ? 'عرض الفصول' : 'View Classes',
   };
 
   return [
@@ -51,6 +60,30 @@ export const getStudentColumns = (dictionary?: Dictionary['school']['students'],
     id: 'className',
     header: ({ column }) => <DataTableColumnHeader column={column} title={t.class} />,
     meta: { label: t.class, variant: "text" }
+  },
+  {
+    accessorKey: "classCount",
+    id: 'classCount',
+    header: ({ column }) => <DataTableColumnHeader column={column} title={t.classes} />,
+    cell: ({ getValue }) => (
+      <Badge variant="secondary" className="tabular-nums">
+        <School className="mr-1 h-3 w-3" />
+        {getValue<number>()}
+      </Badge>
+    ),
+    meta: { label: t.classes, variant: "text" }
+  },
+  {
+    accessorKey: "gradeCount",
+    id: 'gradeCount',
+    header: ({ column }) => <DataTableColumnHeader column={column} title={t.grades} />,
+    cell: ({ getValue }) => (
+      <Badge variant="outline" className="tabular-nums">
+        <GraduationCap className="mr-1 h-3 w-3" />
+        {getValue<number>()}
+      </Badge>
+    ),
+    meta: { label: t.grades, variant: "text" }
   },
   {
     accessorKey: "status",
@@ -118,6 +151,26 @@ export const getStudentColumns = (dictionary?: Dictionary['school']['students'],
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={onView}>{t.view}</DropdownMenuItem>
             <DropdownMenuItem onClick={onEdit}>{t.edit}</DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem asChild>
+              <Link href={`/${lang}/grades?studentId=${student.id}`}>
+                <GraduationCap className="mr-2 h-4 w-4" />
+                {t.viewGrades}
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href={`/${lang}/attendance?studentId=${student.id}`}>
+                <CalendarCheck className="mr-2 h-4 w-4" />
+                {t.viewAttendance}
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href={`/${lang}/classes?studentId=${student.id}`}>
+                <School className="mr-2 h-4 w-4" />
+                {t.viewClasses}
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
             <DropdownMenuItem onClick={onDelete}>{t.delete}</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

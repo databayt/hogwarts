@@ -13,7 +13,7 @@ export default function LabPage() {
   const [viewMode, setViewMode] = useState<ViewMode>("browse")
 
   return (
-    <div className="container mx-auto space-y-6 p-6">
+    <div className="space-y-6">
       {/* Page Header */}
       <PageHeadingSetter
         title="Atom"

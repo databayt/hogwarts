@@ -24,15 +24,21 @@ export async function seedTimetable(
 ): Promise<void> {
   console.log("📅 Creating timetable...");
 
-  // Create week config
-  await prisma.schoolWeekConfig.create({
-    data: {
-      schoolId,
-      termId,
-      workingDays: WORKING_DAYS,
-      defaultLunchAfterPeriod: 4, // Lunch after 4th period
-    },
+  // Find or create week config
+  const existingConfig = await prisma.schoolWeekConfig.findFirst({
+    where: { schoolId, termId },
   });
+
+  if (!existingConfig) {
+    await prisma.schoolWeekConfig.create({
+      data: {
+        schoolId,
+        termId,
+        workingDays: WORKING_DAYS,
+        defaultLunchAfterPeriod: 4, // Lunch after 4th period
+      },
+    });
+  }
 
   // Get classes with teacher, classroom, and subject info
   const classesWithDetails: ClassWithDetails[] = await prisma.class.findMany({

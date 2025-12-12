@@ -432,7 +432,6 @@ export default function GuardianView({
                   isRTL={isRTL}
                   viewMode="class"
                   editable={false}
-                  highlightToday={true}
                 />
               </CardContent>
             </Card>

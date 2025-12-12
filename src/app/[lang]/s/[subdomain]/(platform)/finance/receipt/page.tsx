@@ -17,7 +17,7 @@ export default async function ReceiptsPage() {
   const initialReceipts = result.success && result.data ? result.data.receipts : []
 
   return (
-    <div className="container mx-auto py-8">
+    <div className="py-8">
       <ReceiptsContent initialReceipts={initialReceipts} locale="en" />
     </div>
   )

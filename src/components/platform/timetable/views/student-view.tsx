@@ -306,7 +306,6 @@ export default function StudentView({
                   isRTL={isRTL}
                   viewMode="class"
                   editable={false}
-                  highlightToday={true}
                 />
               </CardContent>
             </Card>

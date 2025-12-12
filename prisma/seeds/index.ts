@@ -17,7 +17,6 @@
  */
 
 import { PrismaClient } from "@prisma/client";
-import { seedCleanup } from "./cleanup";
 import { seedSchool } from "./school";
 import { seedAuth } from "./auth";
 import { seedAcademic } from "./academic";
@@ -44,6 +43,7 @@ const prisma = new PrismaClient() as SeedPrisma;
 
 async function main() {
   console.log("\n" + "=".repeat(60));
+  console.log("  🌱 ADDITIVE SEED MODE - Data is preserved");
   console.log("  🏫 BILINGUAL K-12 SCHOOL SEED (AR/EN)");
   console.log("  📍 demo.databayt.org | مدرسة دار بايت التجريبية");
   console.log("  🇸🇩 Sudanese Education System | النظام التعليمي السوداني");
@@ -52,26 +52,31 @@ async function main() {
   const startTime = Date.now();
 
   try {
-    // Phase 1: Cleanup
-    console.log("PHASE 1: DATABASE CLEANUP");
-    console.log("-".repeat(40));
-    await seedCleanup(prisma);
-
-    // Phase 2: Core Setup
-    console.log("\nPHASE 2: CORE SETUP");
+    // Phase 1: Core Setup (find or create school)
+    console.log("PHASE 1: CORE SETUP");
     console.log("-".repeat(40));
 
-    const school = await seedSchool(prisma);
-    const schoolId = school.id;
-    const schoolName = school.name;
+    // Find existing school or create new one
+    const existingSchool = await prisma.school.findFirst({ where: { domain: "demo" } });
+    let schoolId: string;
+    let schoolName: string;
+    if (existingSchool) {
+      console.log("   ✓ School already exists, using existing");
+      schoolId = existingSchool.id;
+      schoolName = existingSchool.name;
+    } else {
+      const newSchool = await seedSchool(prisma);
+      schoolId = newSchool.id;
+      schoolName = newSchool.name;
+    }
 
     const { devUser, adminUser, accountantUser, staffUser } = await seedAuth(
       prisma,
       schoolId
     );
 
-    // Phase 3: Academic Structure
-    console.log("\nPHASE 3: ACADEMIC STRUCTURE");
+    // Phase 2: Academic Structure
+    console.log("\nPHASE 2: ACADEMIC STRUCTURE");
     console.log("-".repeat(40));
 
     const { schoolYear, term1, term2, yearLevels, periods } = await seedAcademic(
@@ -84,8 +89,8 @@ async function main() {
 
     const { classrooms } = await seedClassrooms(prisma, schoolId);
 
-    // Phase 4: People (100 students, 25 teachers, 200 guardians)
-    console.log("\nPHASE 4: PEOPLE");
+    // Phase 3: People (100 students, 25 teachers, 200 guardians)
+    console.log("\nPHASE 3: PEOPLE");
     console.log("-".repeat(40));
 
     const { teachers, students, guardians } = await seedPeople(
@@ -96,8 +101,8 @@ async function main() {
       schoolYear
     );
 
-    // Phase 5: Classes & Enrollments
-    console.log("\nPHASE 5: CLASSES & ENROLLMENTS");
+    // Phase 4: Classes & Enrollments
+    console.log("\nPHASE 4: CLASSES & ENROLLMENTS");
     console.log("-".repeat(40));
 
     const { classes } = await seedClasses(
@@ -111,16 +116,16 @@ async function main() {
       students
     );
 
-    // Phase 6: Resources
-    console.log("\nPHASE 6: RESOURCES");
+    // Phase 5: Resources
+    console.log("\nPHASE 5: RESOURCES");
     console.log("-".repeat(40));
 
     await seedLibrary(prisma, schoolId);
     await seedAnnouncements(prisma, schoolId, classes);
     await seedEvents(prisma, schoolId);
 
-    // Phase 7: Finance & Fees
-    console.log("\nPHASE 7: FINANCE & FEES");
+    // Phase 6: Finance & Fees
+    console.log("\nPHASE 6: FINANCE & FEES");
     console.log("-".repeat(40));
 
     await seedFees(prisma, schoolId, classes, students);
@@ -133,35 +138,35 @@ async function main() {
       students
     );
 
-    // Phase 8: Assessments
-    console.log("\nPHASE 8: ASSESSMENTS");
+    // Phase 7: Assessments
+    console.log("\nPHASE 7: ASSESSMENTS");
     console.log("-".repeat(40));
 
     await seedExams(prisma, schoolId, classes, subjects, students, teachers);
     await seedGrades(prisma, schoolId, classes, subjects, students, teachers);
 
-    // Phase 9: Scheduling
-    console.log("\nPHASE 9: SCHEDULING");
+    // Phase 8: Scheduling
+    console.log("\nPHASE 8: SCHEDULING");
     console.log("-".repeat(40));
 
     await seedTimetable(prisma, schoolId, term1.id, periods, classes);
 
-    // Phase 10: Learning Management
-    console.log("\nPHASE 10: LEARNING MANAGEMENT");
+    // Phase 9: Learning Management
+    console.log("\nPHASE 9: LEARNING MANAGEMENT");
     console.log("-".repeat(40));
 
     await seedStream(prisma, schoolId, teachers);
     await seedLessons(prisma, schoolId, classes);
     await seedReports(prisma, schoolId, terms[0].id, students, subjects);
 
-    // Phase 11: Attendance
-    console.log("\nPHASE 11: ATTENDANCE");
+    // Phase 10: Attendance
+    console.log("\nPHASE 10: ATTENDANCE");
     console.log("-".repeat(40));
 
     await seedAttendance(prisma, schoolId, classes, students);
 
-    // Phase 12: Admissions
-    console.log("\nPHASE 12: ADMISSIONS");
+    // Phase 11: Admissions
+    console.log("\nPHASE 11: ADMISSIONS");
     console.log("-".repeat(40));
 
     await seedAdmission(prisma, schoolId, schoolName, adminUser);

@@ -3,7 +3,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function TenantsLoading() {
   return (
-    <div className="flex flex-1 flex-col gap-6 p-6">
+    <div className="flex flex-1 flex-col gap-6">
       {/* Header skeleton */}
       <div>
         <Skeleton className="h-8 w-32 mb-2" />

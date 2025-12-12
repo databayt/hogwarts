@@ -369,6 +369,337 @@ const chemistryQuestions: QuestionData[] = [
     sampleAnswer: "Ionic compounds have high melting points because they form crystal lattices with strong electrostatic forces between oppositely charged ions. Breaking these bonds requires significant energy. Covalent compounds have weaker intermolecular forces (van der Waals, hydrogen bonds) that require less energy to overcome, resulting in lower melting points.",
     tags: ["bonding", "ionic", "covalent", "properties"],
   },
+  {
+    questionText: "Which element has the atomic number 6?",
+    questionType: QuestionType.MULTIPLE_CHOICE,
+    difficulty: DifficultyLevel.EASY,
+    bloomLevel: BloomLevel.REMEMBER,
+    points: 1,
+    options: [
+      { text: "Carbon", isCorrect: true },
+      { text: "Oxygen", isCorrect: false },
+      { text: "Nitrogen", isCorrect: false },
+      { text: "Helium", isCorrect: false },
+    ],
+    tags: ["elements", "atomic-number", "periodic-table"],
+  },
+  {
+    questionText: "Noble gases are chemically reactive.",
+    questionType: QuestionType.TRUE_FALSE,
+    difficulty: DifficultyLevel.EASY,
+    bloomLevel: BloomLevel.REMEMBER,
+    points: 1,
+    options: [
+      { text: "True", isCorrect: false },
+      { text: "False", isCorrect: true },
+    ],
+    tags: ["noble-gases", "periodic-table", "reactivity"],
+    explanation: "Noble gases have complete outer electron shells, making them chemically inert.",
+  },
+  {
+    questionText: "The number of protons in an atom equals the ___.",
+    questionType: QuestionType.FILL_BLANK,
+    difficulty: DifficultyLevel.EASY,
+    bloomLevel: BloomLevel.REMEMBER,
+    points: 1,
+    options: { acceptedAnswers: ["atomic number", "number of electrons"], caseSensitive: false },
+    tags: ["atomic-structure", "protons"],
+  },
+];
+
+// Computer Science Questions
+const computerScienceQuestions: QuestionData[] = [
+  {
+    questionText: "What does CPU stand for?",
+    questionType: QuestionType.MULTIPLE_CHOICE,
+    difficulty: DifficultyLevel.EASY,
+    bloomLevel: BloomLevel.REMEMBER,
+    points: 1,
+    options: [
+      { text: "Central Processing Unit", isCorrect: true },
+      { text: "Computer Personal Unit", isCorrect: false },
+      { text: "Central Program Unit", isCorrect: false },
+      { text: "Computer Processing Unit", isCorrect: false },
+    ],
+    tags: ["hardware", "cpu", "basics"],
+  },
+  {
+    questionText: "HTML is a programming language.",
+    questionType: QuestionType.TRUE_FALSE,
+    difficulty: DifficultyLevel.EASY,
+    bloomLevel: BloomLevel.REMEMBER,
+    points: 1,
+    options: [
+      { text: "True", isCorrect: false },
+      { text: "False", isCorrect: true },
+    ],
+    tags: ["web", "html", "markup"],
+    explanation: "HTML is a markup language, not a programming language.",
+  },
+  {
+    questionText: "Which data structure follows the LIFO (Last In First Out) principle?",
+    questionType: QuestionType.MULTIPLE_CHOICE,
+    difficulty: DifficultyLevel.MEDIUM,
+    bloomLevel: BloomLevel.UNDERSTAND,
+    points: 2,
+    options: [
+      { text: "Stack", isCorrect: true },
+      { text: "Queue", isCorrect: false },
+      { text: "Array", isCorrect: false },
+      { text: "Linked List", isCorrect: false },
+    ],
+    tags: ["data-structures", "stack", "algorithms"],
+  },
+  {
+    questionText: "Write a function in Python to calculate the factorial of a number.",
+    questionType: QuestionType.SHORT_ANSWER,
+    difficulty: DifficultyLevel.MEDIUM,
+    bloomLevel: BloomLevel.APPLY,
+    points: 5,
+    sampleAnswer: "def factorial(n):\n    if n <= 1:\n        return 1\n    return n * factorial(n-1)",
+    tags: ["python", "recursion", "functions"],
+  },
+  {
+    questionText: "The time complexity of binary search is ___.",
+    questionType: QuestionType.FILL_BLANK,
+    difficulty: DifficultyLevel.MEDIUM,
+    bloomLevel: BloomLevel.UNDERSTAND,
+    points: 2,
+    options: { acceptedAnswers: ["O(log n)", "O(logn)", "log n"], caseSensitive: false },
+    tags: ["algorithms", "complexity", "search"],
+  },
+  {
+    questionText: "Explain the difference between compilation and interpretation in programming languages.",
+    questionType: QuestionType.ESSAY,
+    difficulty: DifficultyLevel.HARD,
+    bloomLevel: BloomLevel.EVALUATE,
+    points: 10,
+    sampleAnswer: "Compilation translates entire source code to machine code before execution (C, C++), producing fast executables but requiring recompilation for changes. Interpretation executes code line by line at runtime (Python, JavaScript), offering flexibility and easier debugging but slower execution. JIT compilers combine both approaches for optimization.",
+    tags: ["programming-languages", "compilation", "interpretation"],
+  },
+  {
+    questionText: "Which of the following is NOT a valid JavaScript variable declaration?",
+    questionType: QuestionType.MULTIPLE_CHOICE,
+    difficulty: DifficultyLevel.MEDIUM,
+    bloomLevel: BloomLevel.ANALYZE,
+    points: 2,
+    options: [
+      { text: "variable x = 5", isCorrect: true },
+      { text: "let x = 5", isCorrect: false },
+      { text: "const x = 5", isCorrect: false },
+      { text: "var x = 5", isCorrect: false },
+    ],
+    tags: ["javascript", "variables", "syntax"],
+  },
+  {
+    questionText: "SQL stands for ___.",
+    questionType: QuestionType.FILL_BLANK,
+    difficulty: DifficultyLevel.EASY,
+    bloomLevel: BloomLevel.REMEMBER,
+    points: 1,
+    options: { acceptedAnswers: ["Structured Query Language"], caseSensitive: false },
+    tags: ["databases", "sql", "basics"],
+  },
+];
+
+// History Questions
+const historyQuestions: QuestionData[] = [
+  {
+    questionText: "In which year did World War II end?",
+    questionType: QuestionType.MULTIPLE_CHOICE,
+    difficulty: DifficultyLevel.EASY,
+    bloomLevel: BloomLevel.REMEMBER,
+    points: 1,
+    options: [
+      { text: "1945", isCorrect: true },
+      { text: "1944", isCorrect: false },
+      { text: "1946", isCorrect: false },
+      { text: "1943", isCorrect: false },
+    ],
+    tags: ["world-war-2", "20th-century", "dates"],
+  },
+  {
+    questionText: "The French Revolution began in 1789.",
+    questionType: QuestionType.TRUE_FALSE,
+    difficulty: DifficultyLevel.EASY,
+    bloomLevel: BloomLevel.REMEMBER,
+    points: 1,
+    options: [
+      { text: "True", isCorrect: true },
+      { text: "False", isCorrect: false },
+    ],
+    tags: ["french-revolution", "18th-century", "europe"],
+  },
+  {
+    questionText: "Who was the first President of the United States?",
+    questionType: QuestionType.SHORT_ANSWER,
+    difficulty: DifficultyLevel.EASY,
+    bloomLevel: BloomLevel.REMEMBER,
+    points: 2,
+    sampleAnswer: "George Washington",
+    tags: ["american-history", "presidents", "18th-century"],
+  },
+  {
+    questionText: "The ancient city of ___ was destroyed by the eruption of Mount Vesuvius in 79 AD.",
+    questionType: QuestionType.FILL_BLANK,
+    difficulty: DifficultyLevel.MEDIUM,
+    bloomLevel: BloomLevel.REMEMBER,
+    points: 2,
+    options: { acceptedAnswers: ["Pompeii", "pompeii"], caseSensitive: false },
+    tags: ["ancient-rome", "natural-disasters", "1st-century"],
+  },
+  {
+    questionText: "Analyze the causes and consequences of the Industrial Revolution on society.",
+    questionType: QuestionType.ESSAY,
+    difficulty: DifficultyLevel.HARD,
+    bloomLevel: BloomLevel.ANALYZE,
+    points: 15,
+    sampleAnswer: "The Industrial Revolution (1760-1840) was caused by agricultural improvements, capital accumulation, natural resources, and technological innovation. Consequences included urbanization, new social classes (industrial capitalists and working class), child labor, environmental pollution, but also increased productivity, improved living standards over time, and global trade expansion.",
+    tags: ["industrial-revolution", "18th-century", "social-change"],
+  },
+  {
+    questionText: "Which civilization built the pyramids of Giza?",
+    questionType: QuestionType.MULTIPLE_CHOICE,
+    difficulty: DifficultyLevel.EASY,
+    bloomLevel: BloomLevel.REMEMBER,
+    points: 1,
+    options: [
+      { text: "Ancient Egyptians", isCorrect: true },
+      { text: "Ancient Greeks", isCorrect: false },
+      { text: "Mayans", isCorrect: false },
+      { text: "Romans", isCorrect: false },
+    ],
+    tags: ["ancient-egypt", "pyramids", "civilizations"],
+  },
+];
+
+// Geography Questions
+const geographyQuestions: QuestionData[] = [
+  {
+    questionText: "What is the largest continent by land area?",
+    questionType: QuestionType.MULTIPLE_CHOICE,
+    difficulty: DifficultyLevel.EASY,
+    bloomLevel: BloomLevel.REMEMBER,
+    points: 1,
+    options: [
+      { text: "Asia", isCorrect: true },
+      { text: "Africa", isCorrect: false },
+      { text: "North America", isCorrect: false },
+      { text: "Europe", isCorrect: false },
+    ],
+    tags: ["continents", "physical-geography"],
+  },
+  {
+    questionText: "The Amazon River is the longest river in the world.",
+    questionType: QuestionType.TRUE_FALSE,
+    difficulty: DifficultyLevel.MEDIUM,
+    bloomLevel: BloomLevel.REMEMBER,
+    points: 1,
+    options: [
+      { text: "True", isCorrect: false },
+      { text: "False", isCorrect: true },
+    ],
+    tags: ["rivers", "south-america"],
+    explanation: "The Nile River is the longest; Amazon is the largest by volume.",
+  },
+  {
+    questionText: "Name the capital city of Japan.",
+    questionType: QuestionType.SHORT_ANSWER,
+    difficulty: DifficultyLevel.EASY,
+    bloomLevel: BloomLevel.REMEMBER,
+    points: 1,
+    sampleAnswer: "Tokyo",
+    tags: ["capitals", "asia", "japan"],
+  },
+  {
+    questionText: "The deepest ocean trench is the ___ Trench.",
+    questionType: QuestionType.FILL_BLANK,
+    difficulty: DifficultyLevel.MEDIUM,
+    bloomLevel: BloomLevel.REMEMBER,
+    points: 2,
+    options: { acceptedAnswers: ["Mariana", "mariana", "Marianas"], caseSensitive: false },
+    tags: ["oceans", "physical-geography"],
+  },
+  {
+    questionText: "Explain how plate tectonics cause earthquakes and volcanic activity.",
+    questionType: QuestionType.ESSAY,
+    difficulty: DifficultyLevel.HARD,
+    bloomLevel: BloomLevel.UNDERSTAND,
+    points: 12,
+    sampleAnswer: "Earth's lithosphere is divided into tectonic plates floating on the asthenosphere. At convergent boundaries, plates collide causing earthquakes and volcanic mountains. At divergent boundaries, plates separate allowing magma to rise. Transform boundaries cause lateral movement and earthquakes. The Pacific Ring of Fire demonstrates these processes with 75% of world's volcanoes.",
+    tags: ["plate-tectonics", "earthquakes", "volcanoes"],
+  },
+  {
+    questionText: "Which country has the largest population?",
+    questionType: QuestionType.MULTIPLE_CHOICE,
+    difficulty: DifficultyLevel.EASY,
+    bloomLevel: BloomLevel.REMEMBER,
+    points: 1,
+    options: [
+      { text: "India", isCorrect: true },
+      { text: "China", isCorrect: false },
+      { text: "United States", isCorrect: false },
+      { text: "Indonesia", isCorrect: false },
+    ],
+    tags: ["population", "demographics"],
+  },
+];
+
+// Arabic Language Questions (for Arabic schools)
+const arabicQuestions: QuestionData[] = [
+  {
+    questionText: "ما هو جمع كلمة 'كتاب'؟",
+    questionType: QuestionType.MULTIPLE_CHOICE,
+    difficulty: DifficultyLevel.EASY,
+    bloomLevel: BloomLevel.REMEMBER,
+    points: 1,
+    options: [
+      { text: "كُتُب", isCorrect: true },
+      { text: "كتابات", isCorrect: false },
+      { text: "كتّاب", isCorrect: false },
+      { text: "مكاتب", isCorrect: false },
+    ],
+    tags: ["grammar", "plurals", "arabic"],
+  },
+  {
+    questionText: "الفعل الماضي من 'يكتب' هو 'كتب'.",
+    questionType: QuestionType.TRUE_FALSE,
+    difficulty: DifficultyLevel.EASY,
+    bloomLevel: BloomLevel.REMEMBER,
+    points: 1,
+    options: [
+      { text: "صحيح", isCorrect: true },
+      { text: "خطأ", isCorrect: false },
+    ],
+    tags: ["grammar", "verbs", "arabic"],
+  },
+  {
+    questionText: "أعرب الجملة التالية: 'قرأ الطالب الكتاب'",
+    questionType: QuestionType.SHORT_ANSWER,
+    difficulty: DifficultyLevel.MEDIUM,
+    bloomLevel: BloomLevel.APPLY,
+    points: 4,
+    sampleAnswer: "قرأ: فعل ماضٍ مبني على الفتح. الطالب: فاعل مرفوع بالضمة. الكتاب: مفعول به منصوب بالفتحة.",
+    tags: ["grammar", "parsing", "arabic"],
+  },
+  {
+    questionText: "اكتب موضوعاً تعبيرياً عن أهمية القراءة في حياة الإنسان.",
+    questionType: QuestionType.ESSAY,
+    difficulty: DifficultyLevel.HARD,
+    bloomLevel: BloomLevel.CREATE,
+    points: 15,
+    sampleAnswer: "القراءة غذاء الروح والعقل، فهي تنمي المعرفة وتوسع الأفق وتثري اللغة. من خلال القراءة نتعرف على ثقافات الشعوب ونستفيد من تجارب الآخرين. إنها المفتاح الذي يفتح أبواب النجاح والتقدم.",
+    tags: ["composition", "expression", "arabic"],
+  },
+  {
+    questionText: "الهمزة في كلمة 'سماء' تُسمى همزة ___.",
+    questionType: QuestionType.FILL_BLANK,
+    difficulty: DifficultyLevel.MEDIUM,
+    bloomLevel: BloomLevel.UNDERSTAND,
+    points: 2,
+    options: { acceptedAnswers: ["متطرفة", "المتطرفة"], caseSensitive: false },
+    tags: ["spelling", "hamza", "arabic"],
+  },
 ];
 
 // ============================================================================
@@ -391,6 +722,10 @@ export async function seedExams(
   const englishSubject = subjects.find((s) => s.subjectName === "English Language");
   const biologySubject = subjects.find((s) => s.subjectName === "Biology") || subjects.find((s) => s.subjectName === "Science");
   const chemistrySubject = subjects.find((s) => s.subjectName === "Chemistry") || subjects.find((s) => s.subjectName === "Science");
+  const csSubject = subjects.find((s) => s.subjectName === "Computer Science") || subjects.find((s) => s.subjectName === "ICT");
+  const historySubject = subjects.find((s) => s.subjectName === "History") || subjects.find((s) => s.subjectName === "Social Studies");
+  const geographySubject = subjects.find((s) => s.subjectName === "Geography") || subjects.find((s) => s.subjectName === "Social Studies");
+  const arabicSubject = subjects.find((s) => s.subjectName === "Arabic Language") || subjects.find((s) => s.subjectName === "Arabic");
 
   const teacherId = teachers?.[0]?.id || "system";
 
@@ -454,6 +789,10 @@ export async function seedExams(
   await createQuestionsForSubject(englishSubject?.id, englishQuestions);
   await createQuestionsForSubject(biologySubject?.id, biologyQuestions);
   await createQuestionsForSubject(chemistrySubject?.id, chemistryQuestions);
+  await createQuestionsForSubject(csSubject?.id, computerScienceQuestions);
+  await createQuestionsForSubject(historySubject?.id, historyQuestions);
+  await createQuestionsForSubject(geographySubject?.id, geographyQuestions);
+  await createQuestionsForSubject(arabicSubject?.id, arabicQuestions);
 
   // ========== 3. QUESTION ANALYTICS ==========
   console.log("   📈 Creating question analytics...");
@@ -525,6 +864,150 @@ export async function seedExams(
     templates.push({ id: template.id, subjectId: physicsSubject.id });
   }
 
+  // English Quick Quiz Template
+  if (englishSubject) {
+    const template = await prisma.examTemplate.create({
+      data: {
+        schoolId,
+        name: "English Quick Quiz Template",
+        description: "Short assessment for grammar and vocabulary",
+        subjectId: englishSubject.id,
+        duration: 30,
+        totalMarks: 25,
+        distribution: {
+          MULTIPLE_CHOICE: { EASY: 5, MEDIUM: 5 },
+          TRUE_FALSE: { EASY: 3 },
+          FILL_BLANK: { EASY: 3, MEDIUM: 2 },
+        },
+        bloomDistribution: {
+          REMEMBER: 8,
+          UNDERSTAND: 5,
+          APPLY: 5,
+        },
+        createdBy: teacherId,
+        isActive: true,
+      },
+    });
+    templates.push({ id: template.id, subjectId: englishSubject.id });
+  }
+
+  // Biology Lab Assessment Template
+  if (biologySubject) {
+    const template = await prisma.examTemplate.create({
+      data: {
+        schoolId,
+        name: "Biology Lab Assessment Template",
+        description: "Practical exam with theory and application questions",
+        subjectId: biologySubject.id,
+        duration: 60,
+        totalMarks: 40,
+        distribution: {
+          MULTIPLE_CHOICE: { EASY: 5, MEDIUM: 5 },
+          SHORT_ANSWER: { MEDIUM: 3, HARD: 2 },
+          ESSAY: { HARD: 1 },
+        },
+        bloomDistribution: {
+          REMEMBER: 5,
+          UNDERSTAND: 5,
+          APPLY: 4,
+          ANALYZE: 3,
+        },
+        createdBy: teacherId,
+        isActive: true,
+      },
+    });
+    templates.push({ id: template.id, subjectId: biologySubject.id });
+  }
+
+  // Computer Science Coding Test Template
+  if (csSubject) {
+    const template = await prisma.examTemplate.create({
+      data: {
+        schoolId,
+        name: "Computer Science Coding Test",
+        description: "Programming fundamentals and problem-solving",
+        subjectId: csSubject.id,
+        duration: 90,
+        totalMarks: 50,
+        distribution: {
+          MULTIPLE_CHOICE: { EASY: 5, MEDIUM: 5 },
+          FILL_BLANK: { EASY: 3, MEDIUM: 2 },
+          SHORT_ANSWER: { MEDIUM: 3, HARD: 2 },
+          ESSAY: { HARD: 1 },
+        },
+        bloomDistribution: {
+          REMEMBER: 5,
+          UNDERSTAND: 5,
+          APPLY: 8,
+          ANALYZE: 2,
+        },
+        createdBy: teacherId,
+        isActive: true,
+      },
+    });
+    templates.push({ id: template.id, subjectId: csSubject.id });
+  }
+
+  // History Comprehensive Test Template
+  if (historySubject) {
+    const template = await prisma.examTemplate.create({
+      data: {
+        schoolId,
+        name: "History Comprehensive Test",
+        description: "In-depth assessment covering major historical events",
+        subjectId: historySubject.id,
+        duration: 75,
+        totalMarks: 60,
+        distribution: {
+          MULTIPLE_CHOICE: { EASY: 10, MEDIUM: 5 },
+          TRUE_FALSE: { EASY: 5 },
+          FILL_BLANK: { MEDIUM: 5 },
+          SHORT_ANSWER: { MEDIUM: 2 },
+          ESSAY: { HARD: 2 },
+        },
+        bloomDistribution: {
+          REMEMBER: 10,
+          UNDERSTAND: 5,
+          ANALYZE: 5,
+          EVALUATE: 2,
+        },
+        createdBy: teacherId,
+        isActive: true,
+      },
+    });
+    templates.push({ id: template.id, subjectId: historySubject.id });
+  }
+
+  // Arabic Language Assessment Template
+  if (arabicSubject) {
+    const template = await prisma.examTemplate.create({
+      data: {
+        schoolId,
+        name: "Arabic Language Assessment",
+        description: "Grammar, comprehension, and composition",
+        subjectId: arabicSubject.id,
+        duration: 90,
+        totalMarks: 50,
+        distribution: {
+          MULTIPLE_CHOICE: { EASY: 5, MEDIUM: 5 },
+          TRUE_FALSE: { EASY: 5 },
+          FILL_BLANK: { MEDIUM: 5 },
+          SHORT_ANSWER: { MEDIUM: 3 },
+          ESSAY: { HARD: 1 },
+        },
+        bloomDistribution: {
+          REMEMBER: 8,
+          UNDERSTAND: 5,
+          APPLY: 5,
+          CREATE: 2,
+        },
+        createdBy: teacherId,
+        isActive: true,
+      },
+    });
+    templates.push({ id: template.id, subjectId: arabicSubject.id });
+  }
+
   // ========== 5. EXAMS ==========
   console.log("   📝 Creating exams...");
   const exams: { id: string; subjectId: string; status: ExamStatus; classId: string }[] = [];
@@ -536,6 +1019,10 @@ export async function seedExams(
     { subject: englishSubject, name: "English" },
     { subject: biologySubject, name: "Biology" },
     { subject: chemistrySubject, name: "Chemistry" },
+    { subject: csSubject, name: "Computer Science" },
+    { subject: historySubject, name: "History" },
+    { subject: geographySubject, name: "Geography" },
+    { subject: arabicSubject, name: "Arabic Language" },
   ].filter((s) => s.subject);
 
   for (const { subject, name } of examSubjects) {

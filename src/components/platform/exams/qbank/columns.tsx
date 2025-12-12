@@ -13,13 +13,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useModal } from "@/components/atom/modal/context";
-import { deleteQuestion } from "./actions";
-import {
-  DeleteToast,
-  ErrorToast,
-  confirmDeleteDialog,
-} from "@/components/atom/toast";
-import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import type { QuestionBankRow } from "./types";
 import {
@@ -29,6 +22,10 @@ import {
 } from "./config";
 
 export type { QuestionBankRow };
+
+export interface QuestionBankColumnCallbacks {
+  onDelete?: (row: QuestionBankRow) => void;
+}
 
 const getQuestionTypeBadge = (type: string) => {
   const config = QUESTION_TYPES.find((qt) => qt.value === type);
@@ -83,7 +80,7 @@ const getSourceBadge = (source: string) => {
   );
 };
 
-export const getQuestionBankColumns = (): ColumnDef<QuestionBankRow>[] => [
+export const getQuestionBankColumns = (callbacks?: QuestionBankColumnCallbacks): ColumnDef<QuestionBankRow>[] => [
   {
     accessorKey: "questionText",
     id: "questionText",
@@ -249,7 +246,6 @@ export const getQuestionBankColumns = (): ColumnDef<QuestionBankRow>[] => [
     cell: ({ row }) => {
       const question = row.original;
       const { openModal } = useModal();
-      const router = useRouter();
 
       const onView = () => {
         const qs =
@@ -259,22 +255,8 @@ export const getQuestionBankColumns = (): ColumnDef<QuestionBankRow>[] => [
 
       const onEdit = () => openModal(question.id);
 
-      const onDelete = async () => {
-        try {
-          const ok = await confirmDeleteDialog(
-            `Delete question "${question.questionText.substring(0, 50)}..."?`
-          );
-          if (!ok) return;
-          const result = await deleteQuestion(question.id);
-          if (result.success) {
-            DeleteToast();
-            router.refresh();
-          } else {
-            ErrorToast(result.error);
-          }
-        } catch (e) {
-          ErrorToast(e instanceof Error ? e.message : "Failed to delete");
-        }
+      const onDelete = () => {
+        callbacks?.onDelete?.(question);
       };
 
       return (

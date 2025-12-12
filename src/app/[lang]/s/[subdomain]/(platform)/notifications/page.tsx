@@ -37,7 +37,7 @@ export default async function NotificationsPage({
   const resolvedSearchParams = await searchParams
 
   return (
-    <div className="container py-6">
+    <div className="py-6">
       <Suspense fallback={<NotificationCenterSkeleton />}>
         <NotificationCenterContent
           locale={lang}

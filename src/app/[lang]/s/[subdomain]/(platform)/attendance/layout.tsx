@@ -13,22 +13,28 @@ export default async function AttendanceLayout({ children, params }: Props) {
   const dictionary = await getDictionary(lang as Locale)
   const d = dictionary?.school?.attendance
 
+  const basePath = `/${lang}/s/${subdomain}/attendance`
+
   const attendancePages: PageNavItem[] = [
     {
-      name: 'Overview',
-      href: `/${lang}/s/${subdomain}/attendance`,
+      name: d?.overview || 'Overview',
+      href: basePath,
+    },
+    {
+      name: d?.settings || 'Config',
+      href: `${basePath}/config`,
     },
     {
       name: 'Bulk',
-      href: `/${lang}/s/${subdomain}/attendance/bulk`,
+      href: `${basePath}/bulk`,
     },
     {
-      name: 'Report',
-      href: `/${lang}/s/${subdomain}/attendance/reports`,
+      name: d?.reports || 'Report',
+      href: `${basePath}/reports`,
     },
     {
-      name: 'Settings',
-      href: `/${lang}/s/${subdomain}/attendance/config`,
+      name: d?.analytics || 'Analysis',
+      href: `${basePath}/analysis`,
     },
   ]
 

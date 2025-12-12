@@ -1,7 +1,39 @@
 /**
- * File Uploader Components
- * Export all file upload UI components
+ * File Uploader Components - DEPRECATED
+ *
+ * @deprecated This module is deprecated. Use @/components/platform/file instead.
+ *
+ * @example Migration guide:
+ * ```tsx
+ * // OLD (deprecated)
+ * import { FileUploader, useFileUpload } from "@/components/file-upload"
+ *
+ * // NEW (recommended)
+ * import {
+ *   Uploader,
+ *   UploadButton,
+ *   useUpload,
+ *   FileBrowser,
+ *   useBrowser,
+ *   AvatarUpload,
+ *   DocumentUpload,
+ * } from "@/components/platform/file"
+ *
+ * // Upload files
+ * <Uploader
+ *   folder="documents"
+ *   category="document"
+ *   onUpload={(urls) => console.log(urls)}
+ * />
+ *
+ * // Browse files
+ * <FileBrowser schoolId={schoolId} />
+ * ```
  */
+
+// ============================================================================
+// Legacy Exports (for backward compatibility during migration)
+// ============================================================================
 
 // Core components
 export { FileUploader } from './file-uploader/file-uploader';
@@ -54,3 +86,36 @@ export { validateFile, validateFiles } from './lib/validation';
 // Config
 export { FILE_TYPE_CONFIGS, getFileTypeConfig, detectCategory } from './config/file-types';
 export { STORAGE_CONFIG, getStorageProvider } from './config/storage-config';
+
+// ============================================================================
+// New Module Re-exports (for easier migration)
+// ============================================================================
+
+/**
+ * Re-export new file module components for migration
+ * @see {@link @/components/platform/file}
+ */
+export {
+  // Upload
+  Uploader as NewUploader,
+  UploadButton as NewUploadButton,
+  useUpload as useNewUpload,
+  AvatarUpload,
+  LogoUpload,
+  DocumentUpload,
+  AssignmentUpload,
+  // Browser
+  FileBrowser as NewFileBrowser,
+  useBrowser as useNewBrowser,
+  // Export
+  ExportButton,
+  useExport,
+  // Import
+  Importer,
+  useImport,
+  // Print
+  PrintButton,
+  usePrint,
+  // Generate
+  useGenerate,
+} from "@/components/platform/file";

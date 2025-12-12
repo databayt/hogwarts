@@ -44,10 +44,40 @@ export default async function StudentsContent({ searchParams, school, dictionary
       ? sp.sort.map((s: any) => ({ [s.id]: s.desc ? 'desc' : 'asc' }))
       : [{ createdAt: 'desc' }]
     const [rows, count] = await Promise.all([
-      (db as any).student.findMany({ where, orderBy, skip, take }),
+      (db as any).student.findMany({
+        where,
+        orderBy,
+        skip,
+        take,
+        include: {
+          _count: {
+            select: {
+              studentClasses: true,
+              results: true,
+            }
+          },
+          studentClasses: {
+            take: 1,
+            include: {
+              class: {
+                select: { name: true }
+              }
+            }
+          }
+        }
+      }),
       (db as any).student.count({ where }),
     ])
-    data = rows.map((s: any) => ({ id: s.id, name: [s.givenName, s.surname].filter(Boolean).join(' '), className: '-', status: s.userId ? 'active' : 'inactive', createdAt: (s.createdAt as Date).toISOString() }))
+    data = rows.map((s: any) => ({
+      id: s.id,
+      userId: s.userId,
+      name: [s.givenName, s.surname].filter(Boolean).join(' '),
+      className: s.studentClasses?.[0]?.class?.name || '-',
+      status: s.userId ? 'active' : 'inactive',
+      createdAt: (s.createdAt as Date).toISOString(),
+      classCount: s._count?.studentClasses || 0,
+      gradeCount: s._count?.results || 0,
+    }))
     total = count as number
   }
   return (

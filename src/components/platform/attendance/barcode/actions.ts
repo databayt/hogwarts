@@ -130,11 +130,10 @@ export async function processBarcodeScan(data: z.infer<typeof barcodeScanSchema>
 
     return {
       success: true,
-      data: {
-        attendanceId: attendance.id,
-        studentName: studentIdentifier.student.givenName + ' ' + studentIdentifier.student.surname,
-        status: attendance.status
-      }
+      attendanceId: attendance.id,
+      studentId: studentIdentifier.studentId,
+      studentName: studentIdentifier.student.givenName + ' ' + studentIdentifier.student.surname,
+      status: attendance.status
     };
   } catch (error) {
     return {

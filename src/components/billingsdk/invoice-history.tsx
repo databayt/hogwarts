@@ -2,13 +2,6 @@
 
 import { cn } from "@/lib/utils"
 import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from "@/components/ui/card"
-import {
     Table,
     TableBody,
     TableCell,
@@ -18,8 +11,7 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { CalendarDays, Download, ReceiptText } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Download, ReceiptText } from "lucide-react"
 
 export interface InvoiceItem {
     id: string
@@ -61,32 +53,32 @@ export function InvoiceHistory({
     }
 
     return (
-        <Card className={cn("w-full", className)}>
+        <div className={cn("w-full", className)}>
             {(title || description) && (
-                <CardHeader className="space-y-1">
+                <div className="mb-4">
                     {title && (
-                        <CardTitle className="text-base font-medium leading-tight truncate flex items-center gap-2 sm:gap-3 text-lg sm:text-xl">
+                        <h3 className="text-lg font-semibold flex items-center gap-2">
                             <ReceiptText className="h-4 w-4 text-primary" />
                             {title}
-                        </CardTitle>
+                        </h3>
                     )}
                     {description && (
-                        <CardDescription className="text-sm text-muted-foreground">
+                        <p className="text-sm text-muted-foreground">
                             {description}
-                        </CardDescription>
+                        </p>
                     )}
-                </CardHeader>
+                </div>
             )}
-            <CardContent>
+            <div className="rounded-md border">
                 <Table>
                     <TableCaption className="sr-only">List of past invoices with dates, amounts, status and download actions</TableCaption>
                     <TableHeader>
                         <TableRow>
-                            <TableHead className="w-[120px]">Date</TableHead>
-                            <TableHead>Description</TableHead>
-                            <TableHead className="text-end">Amount</TableHead>
-                            <TableHead className="text-end">Status</TableHead>
-                            <TableHead className="text-end">Action</TableHead>
+                            <TableHead className="w-[120px] px-6">Date</TableHead>
+                            <TableHead className="px-6">Description</TableHead>
+                            <TableHead className="text-end px-6">Amount</TableHead>
+                            <TableHead className="text-end px-6">Status</TableHead>
+                            <TableHead className="text-end px-6">Action</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -99,28 +91,23 @@ export function InvoiceHistory({
                         )}
                         {invoices.map((inv) => (
                             <TableRow key={inv.id} className="group">
-                                <TableCell className="text-muted-foreground">
-                                    <div className="inline-flex items-center gap-2">
-                                        <CalendarDays className="h-3.5 w-3.5" />
-                                        {inv.date}
-                                    </div>
+                                <TableCell className="text-muted-foreground px-6">
+                                    {inv.date}
                                 </TableCell>
-                                <TableCell className="max-w-[320px]">
+                                <TableCell className="max-w-[320px] px-6">
                                     <div className="truncate" title={inv.description || "Invoice"}>
                                         {inv.description || "Invoice"}
                                     </div>
                                 </TableCell>
-                                <TableCell className="text-end font-medium">
+                                <TableCell className="text-end font-medium px-6">
                                     {inv.amount}
                                 </TableCell>
-                                <TableCell className="text-end">
+                                <TableCell className="text-end px-6">
                                     {statusBadge(inv.status)}
                                 </TableCell>
-                                <TableCell className="text-end">
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        className="h-8 text-xs"
+                                <TableCell className="text-end px-6">
+                                    <button
+                                        className="p-2 rounded-md hover:bg-muted transition-colors"
                                         onClick={() =>
                                             inv.invoiceUrl
                                                 ? window.open(inv.invoiceUrl, "_blank", "noopener,noreferrer")
@@ -128,16 +115,15 @@ export function InvoiceHistory({
                                         }
                                         aria-label={`Download invoice ${inv.id}`}
                                     >
-                                        <Download className="h-3.5 w-3.5" />
-                                        Download
-                                    </Button>
+                                        <Download className="h-4 w-4 text-muted-foreground" />
+                                    </button>
                                 </TableCell>
                             </TableRow>
                         ))}
                     </TableBody>
                 </Table>
-            </CardContent>
-        </Card>
+            </div>
+        </div>
     )
 }
 

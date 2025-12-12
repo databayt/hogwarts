@@ -33,6 +33,7 @@ type AnnouncementSelectResult = {
   bodyEn: string | null;
   bodyAr: string | null;
   scope: string;
+  priority: string;
   classId: string | null;
   role: string | null;
   published: boolean;
@@ -474,6 +475,7 @@ export async function getAnnouncement(
         bodyEn: true,
         bodyAr: true,
         scope: true,
+        priority: true,
         classId: true,
         role: true,
         published: true,
@@ -626,6 +628,254 @@ export async function getAnnouncements(
     return {
       success: false,
       error: error instanceof Error ? error.message : "Failed to fetch announcements"
+    };
+  }
+}
+
+/**
+ * Get previous announcements for autocomplete suggestions
+ * Returns recent announcements with titles and bodies
+ */
+export async function getPreviousAnnouncements(): Promise<ActionResponse<Array<{
+  id: string;
+  titleEn: string | null;
+  titleAr: string | null;
+  bodyEn: string | null;
+  bodyAr: string | null;
+}>>> {
+  try {
+    // Get authentication context
+    const session = await auth();
+    const authContext = getAuthContext(session);
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" };
+    }
+
+    // Get tenant context
+    const { schoolId } = await getTenantContext();
+    if (!schoolId) {
+      return { success: false, error: "Missing school context" };
+    }
+
+    // Fetch recent announcements for suggestions (limit to 20 most recent)
+    const announcements = await db.announcement.findMany({
+      where: { schoolId },
+      orderBy: { createdAt: 'desc' },
+      take: 20,
+      select: {
+        id: true,
+        titleEn: true,
+        titleAr: true,
+        bodyEn: true,
+        bodyAr: true,
+      },
+    });
+
+    return { success: true, data: announcements };
+  } catch (error) {
+    console.error("[getPreviousAnnouncements] Error:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to fetch suggestions"
+    };
+  }
+}
+
+// ============================================================================
+// Announcement Config Actions
+// ============================================================================
+
+import { announcementConfigSchema } from "@/components/platform/announcements/validation";
+import type { AnnouncementConfig as PrismaAnnouncementConfig } from "@prisma/client";
+
+export type AnnouncementConfigData = {
+  id: string;
+  schoolId: string;
+  defaultScope: string;
+  defaultPriority: string;
+  autoPublish: boolean;
+  defaultExpiryDays: number;
+  emailOnPublish: boolean;
+  pushNotifications: boolean;
+  quietHoursStart: string | null;
+  quietHoursEnd: string | null;
+  digestFrequency: string;
+  defaultTemplateId: string | null;
+  allowCustomTemplates: boolean;
+  readTracking: boolean;
+  retentionDays: number;
+  autoArchive: boolean;
+  archiveAfterDays: number;
+};
+
+/**
+ * Get announcement config for the current school
+ * Creates default config if none exists
+ */
+export async function getAnnouncementConfig(): Promise<ActionResponse<AnnouncementConfigData>> {
+  try {
+    // Get authentication context
+    const session = await auth();
+    const authContext = getAuthContext(session);
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" };
+    }
+
+    // Get tenant context
+    const { schoolId } = await getTenantContext();
+    if (!schoolId) {
+      return { success: false, error: "Missing school context" };
+    }
+
+    // Try to find existing config
+    let config = await db.announcementConfig.findUnique({
+      where: { schoolId },
+    });
+
+    // Create default config if none exists
+    if (!config) {
+      config = await db.announcementConfig.create({
+        data: {
+          schoolId,
+          // All defaults are set in the Prisma schema
+        },
+      });
+    }
+
+    return {
+      success: true,
+      data: {
+        id: config.id,
+        schoolId: config.schoolId,
+        defaultScope: config.defaultScope,
+        defaultPriority: config.defaultPriority,
+        autoPublish: config.autoPublish,
+        defaultExpiryDays: config.defaultExpiryDays,
+        emailOnPublish: config.emailOnPublish,
+        pushNotifications: config.pushNotifications,
+        quietHoursStart: config.quietHoursStart,
+        quietHoursEnd: config.quietHoursEnd,
+        digestFrequency: config.digestFrequency,
+        defaultTemplateId: config.defaultTemplateId,
+        allowCustomTemplates: config.allowCustomTemplates,
+        readTracking: config.readTracking,
+        retentionDays: config.retentionDays,
+        autoArchive: config.autoArchive,
+        archiveAfterDays: config.archiveAfterDays,
+      },
+    };
+  } catch (error) {
+    console.error("[getAnnouncementConfig] Error:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to fetch config"
+    };
+  }
+}
+
+/**
+ * Update announcement config for the current school
+ */
+export async function updateAnnouncementConfig(
+  input: z.infer<typeof announcementConfigSchema>
+): Promise<ActionResponse<AnnouncementConfigData>> {
+  try {
+    // Get authentication context
+    const session = await auth();
+    const authContext = getAuthContext(session);
+    if (!authContext) {
+      return { success: false, error: "Not authenticated" };
+    }
+
+    // Only admins can update config
+    if (!["ADMIN", "DEVELOPER"].includes(authContext.role)) {
+      return { success: false, error: "Only admins can update announcement settings" };
+    }
+
+    // Get tenant context
+    const { schoolId } = await getTenantContext();
+    if (!schoolId) {
+      return { success: false, error: "Missing school context" };
+    }
+
+    // Parse and validate input
+    const parsed = announcementConfigSchema.parse(input);
+
+    // Upsert config
+    const config = await db.announcementConfig.upsert({
+      where: { schoolId },
+      create: {
+        schoolId,
+        ...parsed,
+      },
+      update: parsed,
+    });
+
+    // Revalidate config page
+    revalidatePath("/announcements/config");
+
+    return {
+      success: true,
+      data: {
+        id: config.id,
+        schoolId: config.schoolId,
+        defaultScope: config.defaultScope,
+        defaultPriority: config.defaultPriority,
+        autoPublish: config.autoPublish,
+        defaultExpiryDays: config.defaultExpiryDays,
+        emailOnPublish: config.emailOnPublish,
+        pushNotifications: config.pushNotifications,
+        quietHoursStart: config.quietHoursStart,
+        quietHoursEnd: config.quietHoursEnd,
+        digestFrequency: config.digestFrequency,
+        defaultTemplateId: config.defaultTemplateId,
+        allowCustomTemplates: config.allowCustomTemplates,
+        readTracking: config.readTracking,
+        retentionDays: config.retentionDays,
+        autoArchive: config.autoArchive,
+        archiveAfterDays: config.archiveAfterDays,
+      },
+    };
+  } catch (error) {
+    console.error("[updateAnnouncementConfig] Error:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to update config"
+    };
+  }
+}
+
+/**
+ * Get announcement templates for the current school (for config dropdown)
+ */
+export async function getAnnouncementTemplates(): Promise<ActionResponse<Array<{
+  id: string;
+  name: string;
+  type: string;
+}>>> {
+  try {
+    // Get tenant context
+    const { schoolId } = await getTenantContext();
+    if (!schoolId) {
+      return { success: false, error: "Missing school context" };
+    }
+
+    const templates = await db.announcementTemplate.findMany({
+      where: { schoolId },
+      select: {
+        id: true,
+        name: true,
+        type: true,
+      },
+      orderBy: { name: 'asc' },
+    });
+
+    return { success: true, data: templates };
+  } catch (error) {
+    console.error("[getAnnouncementTemplates] Error:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to fetch templates"
     };
   }
 }

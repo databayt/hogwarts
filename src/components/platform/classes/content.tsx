@@ -54,6 +54,11 @@ export default async function ClassesContent({ searchParams, dictionary, lang }:
             select: {
               termNumber: true
             }
+          },
+          _count: {
+            select: {
+              studentClasses: true
+            }
           }
         }
       }),
@@ -70,7 +75,7 @@ export default async function ClassesContent({ searchParams, dictionary, lang }:
       courseCode: c.courseCode || null,
       credits: c.credits || null,
       evaluationType: c.evaluationType || 'NORMAL',
-      enrolledStudents: 0, // TODO: Count from studentClasses
+      enrolledStudents: c._count?.studentClasses || 0,
       maxCapacity: c.maxCapacity || 50,
       createdAt: (c.createdAt as Date).toISOString()
     }))

@@ -1,0 +1,435 @@
+---
+title: "Dashboard - Widgets"
+description: "Complete reference for dashboard widget components including ActivityRings, WelcomeBanner, MetricCard, ScheduleItem, and more."
+---
+
+The dashboard system uses a comprehensive set of **reusable widget components** located in `src/components/platform/dashboard/widgets/index.tsx`. These client components provide consistent UI patterns across all role-based dashboards.
+
+## Component Overview
+
+| Widget | Purpose | Props |
+|--------|---------|-------|
+| `ActivityRings` | Apple-style circular progress | activities, title |
+| `WelcomeBanner` | Personalized greeting | userName, role, subtitle |
+| `MetricCard` | Key stat with icon | title, value, icon, change |
+| `ScheduleItem` | Timetable entry | time, title, subtitle, badge |
+| `AnnouncementCard` | School announcements | title, content, date, priority |
+| `ProgressCard` | Goal tracking | title, current, total |
+| `QuickActionsGrid` | Shortcut buttons | actions, columns |
+| `ChartCard` | Chart wrapper | title, description, children |
+| `EmptyState` | No data placeholder | icon, title, description |
+
+## ActivityRings
+
+Apple-style circular progress indicators with animation.
+
+### Props
+
+```tsx
+interface ActivityRingData {
+  label: string;
+  value: number;    // 0-100 percentage
+  color: string;    // Hex color
+  current: number;  // Current value
+  target: number;   // Target value
+  unit: string;     // Display unit
+}
+
+interface ActivityRingsProps {
+  activities: ActivityRingData[];
+  title?: string;
+  className?: string;
+}
+```
+
+### Usage
+
+```tsx
+const activityData = [
+  {
+    label: "Attendance",
+    value: 92,
+    color: "#22c55e",
+    current: 46,
+    target: 50,
+    unit: "days",
+  },
+  {
+    label: "Grades",
+    value: 85,
+    color: "#3b82f6",
+    current: 85,
+    target: 100,
+    unit: "%",
+  },
+  {
+    label: "Tasks",
+    value: 60,
+    color: "#8b5cf6",
+    current: 3,
+    target: 5,
+    unit: "due",
+  },
+];
+
+<ActivityRings activities={activityData} title="My Progress" />
+```
+
+### Features
+
+- **3 concentric rings** with animated progress
+- **Framer Motion** animations on mount
+- **Legend display** with current/target values
+- **Gradient strokes** for visual depth
+
+## WelcomeBanner
+
+Personalized greeting with current time and date.
+
+### Props
+
+```tsx
+interface WelcomeBannerProps {
+  userName?: string;
+  role?: string;
+  greeting?: string;    // Override auto-greeting
+  subtitle?: string;
+  className?: string;
+}
+```
+
+### Usage
+
+```tsx
+<WelcomeBanner
+  userName="John"
+  role="Teacher"
+  subtitle="You have 5 classes scheduled for today"
+/>
+```
+
+### Features
+
+- **Auto-greeting** based on time of day (morning/afternoon/evening)
+- **Real-time clock** with minute updates
+- **Full date display** (weekday, month day, year)
+- **Gradient background** for visual emphasis
+
+## MetricCard
+
+Key statistic display with optional trend indicator.
+
+### Props
+
+```tsx
+interface MetricCardProps {
+  title: string;
+  value: string | number;
+  change?: number;
+  changeType?: "positive" | "negative" | "neutral";
+  icon?: ElementType;      // Direct icon component
+  iconName?: string;       // String for server components
+  iconColor?: string;
+  description?: string;
+  href?: string;           // Makes card clickable
+  className?: string;
+}
+```
+
+### Usage
+
+```tsx
+// Client component with icon prop
+<MetricCard
+  title="Students"
+  value={245}
+  change={12}
+  changeType="positive"
+  icon={Users}
+  iconColor="text-blue-500"
+  href="/students"
+/>
+
+// Server component with iconName prop
+<MetricCard
+  title="Attendance"
+  value="92%"
+  iconName="Calendar"
+  iconColor="text-green-500"
+/>
+```
+
+### Icon Mapping
+
+For server components, use `iconName` string:
+
+```tsx
+const iconMap = {
+  Calendar, Clock, TrendingUp, TrendingDown, ChevronRight,
+  Bell, Users, BookOpen, GraduationCap, DollarSign,
+  Settings, ClipboardList, FileText, Award, CalendarDays,
+  MessageSquare, UserPlus, BarChart3, FolderOpen, CheckCircle, Trophy,
+};
+```
+
+### Features
+
+- **Hover effects** with shadow and border color change
+- **Trend indicator** with up/down icons
+- **Click-through** navigation when href provided
+- **Motion animation** on value change
+
+## ScheduleItem
+
+Timetable or calendar entry display.
+
+### Props
+
+```tsx
+interface ScheduleItemProps {
+  time: string;
+  title: string;
+  subtitle?: string;
+  badge?: string;
+  badgeVariant?: "default" | "secondary" | "destructive" | "outline";
+  isActive?: boolean;
+  className?: string;
+}
+```
+
+### Usage
+
+```tsx
+<ScheduleItem
+  time="09:00"
+  title="Mathematics"
+  subtitle="Room 101 • 25 students"
+  badge="Next"
+  badgeVariant="default"
+  isActive={true}
+/>
+```
+
+### Features
+
+- **Active state** highlighting for current item
+- **Fixed-width time** column for alignment
+- **Badge support** for status indicators
+- **Hover effects** for interactivity
+
+## AnnouncementCard
+
+School announcement display with priority indicator.
+
+### Props
+
+```tsx
+interface AnnouncementCardProps {
+  title: string;
+  content: string;
+  date: string | Date;
+  author?: string;
+  priority?: "high" | "normal" | "low";
+  href?: string;
+  className?: string;
+}
+```
+
+### Usage
+
+```tsx
+<AnnouncementCard
+  title="School Event Reminder"
+  content="Annual sports day will be held next Friday..."
+  date={new Date()}
+  author="Admin"
+  priority="high"
+/>
+```
+
+### Features
+
+- **Priority indicator** with left border for high priority
+- **Date formatting** with fallback handling
+- **Content truncation** (2 lines)
+- **Urgent badge** for high priority items
+
+## ProgressCard
+
+Goal tracking with visual progress bar.
+
+### Props
+
+```tsx
+interface ProgressCardProps {
+  title: string;
+  current: number;
+  total: number;
+  unit?: string;
+  icon?: ElementType;
+  iconName?: string;
+  color?: string;
+  showPercentage?: boolean;
+  className?: string;
+}
+```
+
+### Usage
+
+```tsx
+<ProgressCard
+  title="Attendance Goal"
+  current={46}
+  total={50}
+  unit="days"
+  iconName="Calendar"
+  showPercentage={true}
+/>
+```
+
+### Features
+
+- **Auto-calculated** percentage
+- **Progress bar** with custom color
+- **Current/total display** below bar
+- **Optional percentage** display
+
+## QuickActionsGrid
+
+Grid of shortcut buttons for common actions.
+
+### Props
+
+```tsx
+interface QuickActionItem {
+  label: string;
+  icon: ElementType;
+  href: string;
+  color?: string;
+}
+
+interface QuickActionsGridProps {
+  actions: QuickActionItem[];
+  title?: string;
+  columns?: 2 | 3 | 4;
+  className?: string;
+}
+```
+
+### Usage
+
+```tsx
+const actions = [
+  { label: "Add Student", icon: UserPlus, href: "/students/new" },
+  { label: "Attendance", icon: Calendar, href: "/attendance" },
+  { label: "Grades", icon: FileText, href: "/grades" },
+  { label: "Reports", icon: BarChart3, href: "/reports" },
+];
+
+<QuickActionsGrid actions={actions} title="Quick Actions" columns={4} />
+```
+
+### Features
+
+- **Responsive columns** (2, 3, or 4)
+- **Hover effects** with primary color highlight
+- **Icon + label** layout
+- **Card wrapper** with optional title
+
+## ChartCard
+
+Consistent wrapper for chart components.
+
+### Props
+
+```tsx
+interface ChartCardProps {
+  title: string;
+  description?: string;
+  children: React.ReactNode;
+  footer?: React.ReactNode;
+  className?: string;
+}
+```
+
+### Usage
+
+```tsx
+<ChartCard
+  title="Revenue Trend"
+  description="Monthly revenue over the past year"
+  footer={<span>Updated daily</span>}
+>
+  <LineChart data={data} />
+</ChartCard>
+```
+
+## EmptyState
+
+Placeholder for sections with no data.
+
+### Props
+
+```tsx
+interface EmptyStateProps {
+  icon?: ElementType;
+  iconName?: string;
+  title: string;
+  description?: string;
+  action?: {
+    label: string;
+    href?: string;
+    onClick?: () => void;
+  };
+  className?: string;
+}
+```
+
+### Usage
+
+```tsx
+<EmptyState
+  iconName="Calendar"
+  title="No classes scheduled"
+  description="Enjoy your day off!"
+  action={{ label: "View Schedule", href: "/schedule" }}
+/>
+```
+
+### Features
+
+- **Centered layout** with icon
+- **Optional action button** (link or click handler)
+- **Muted styling** for visual hierarchy
+
+## Type Exports
+
+All component types are exported for TypeScript usage:
+
+```tsx
+export {
+  type ActivityRingData,
+  type ActivityRingsProps,
+  type WelcomeBannerProps,
+  type MetricCardProps,
+  type ScheduleItemProps,
+  type AnnouncementCardProps,
+  type ProgressCardProps,
+  type QuickActionItem,
+  type QuickActionsGridProps,
+  type ChartCardProps,
+  type EmptyStateProps,
+};
+```
+
+## File Location
+
+```
+src/components/platform/dashboard/widgets/index.tsx
+```
+
+## Related
+
+- [Dashboard Overview](/docs/dashboard)
+- [Dashboard Charts](/docs/dashboard-charts)
+- [UI Components](/docs/ui)

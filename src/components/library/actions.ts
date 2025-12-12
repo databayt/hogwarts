@@ -81,6 +81,19 @@ export async function borrowBook(
     const schoolId = contextSchoolId;
     const { bookId, userId } = data;
 
+    // Verify the user exists in the database
+    const user = await db.user.findUnique({
+      where: { id: userId },
+      select: { id: true },
+    });
+
+    if (!user) {
+      return {
+        success: false,
+        message: "User not found. Please log in again.",
+      };
+    }
+
     // Check if book exists and is available
     const book = await db.book.findFirst({
       where: {

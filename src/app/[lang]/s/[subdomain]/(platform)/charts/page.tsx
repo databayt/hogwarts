@@ -1,4 +1,4 @@
-import ChartsContent from "@/components/platform/dashboard/charts/content";
+import ChartsContent from "@/components/platform/dashboard/chart-showcase";
 import { getDictionary } from "@/components/internationalization/dictionaries";
 import { type Locale } from "@/components/internationalization/config";
 

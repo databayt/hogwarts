@@ -3,7 +3,7 @@ import type { Dictionary } from "@/components/internationalization/dictionaries"
 
 /**
  * Get quick actions based on user role
- * Each role has specific actions tailored to their responsibilities
+ * Each role has 4 focused actions tailored to their most critical responsibilities
  */
 export function getQuickActionsByRole(
   role: string,
@@ -14,22 +14,8 @@ export function getQuickActionsByRole(
 
   switch (role.toUpperCase()) {
     case "ADMIN":
+      // Admin: System management focused
       return [
-        {
-          iconName: "FileText",
-          label: "Reports",
-          href: `${baseUrl}/reports`,
-        },
-        {
-          iconName: "CheckCircle",
-          label: "Approvals",
-          href: `${baseUrl}/approvals`,
-        },
-        {
-          iconName: "Bell",
-          label: "Announce",
-          href: `${baseUrl}/announcements/create`,
-        },
         {
           iconName: "Users",
           label: "Users",
@@ -41,6 +27,11 @@ export function getQuickActionsByRole(
           href: `${baseUrl}/settings`,
         },
         {
+          iconName: "FileText",
+          label: "Reports",
+          href: `${baseUrl}/reports`,
+        },
+        {
           iconName: "BarChart3",
           label: "Analytics",
           href: `${baseUrl}/analytics`,
@@ -48,6 +39,7 @@ export function getQuickActionsByRole(
       ];
 
     case "PRINCIPAL":
+      // Principal: School oversight focused
       return [
         {
           iconName: "FileText",
@@ -60,28 +52,19 @@ export function getQuickActionsByRole(
           href: `${baseUrl}/staff`,
         },
         {
-          iconName: "Bell",
-          label: "Announce",
-          href: `${baseUrl}/announcements`,
-        },
-        {
-          iconName: "CheckCircle",
-          label: "Approvals",
-          href: `${baseUrl}/approvals`,
-        },
-        {
           iconName: "BarChart3",
           label: "Performance",
           href: `${baseUrl}/performance`,
         },
         {
-          iconName: "Calendar",
-          label: "Events",
-          href: `${baseUrl}/events`,
+          iconName: "PieChart",
+          label: "Analytics",
+          href: `${baseUrl}/analytics`,
         },
       ];
 
     case "TEACHER":
+      // Teacher: Classroom management focused
       return [
         {
           iconName: "Users",
@@ -99,23 +82,14 @@ export function getQuickActionsByRole(
           href: `${baseUrl}/assignments/create`,
         },
         {
-          iconName: "MessageSquare",
-          label: "Messages",
-          href: `${baseUrl}/messages`,
-        },
-        {
           iconName: "Calendar",
           label: "Timetable",
           href: `${baseUrl}/timetable`,
         },
-        {
-          iconName: "ClipboardList",
-          label: "Lessons",
-          href: `${baseUrl}/lessons`,
-        },
       ];
 
     case "STUDENT":
+      // Student: Academic progress focused
       return [
         {
           iconName: "FileText",
@@ -137,19 +111,10 @@ export function getQuickActionsByRole(
           label: "Messages",
           href: `${baseUrl}/messages`,
         },
-        {
-          iconName: "BookOpen",
-          label: "Library",
-          href: `${baseUrl}/library`,
-        },
-        {
-          iconName: "Clock",
-          label: "Attendance",
-          href: `${baseUrl}/attendance`,
-        },
       ];
 
     case "GUARDIAN":
+      // Parent: Child monitoring focused
       return [
         {
           iconName: "Users",
@@ -171,19 +136,10 @@ export function getQuickActionsByRole(
           label: "Messages",
           href: `${baseUrl}/messages`,
         },
-        {
-          iconName: "DollarSign",
-          label: "Fees",
-          href: `${baseUrl}/finance/fees`,
-        },
-        {
-          iconName: "Bell",
-          label: "Announce",
-          href: `${baseUrl}/announcements`,
-        },
       ];
 
     case "ACCOUNTANT":
+      // Accountant: Financial management focused
       return [
         {
           iconName: "DollarSign",
@@ -191,9 +147,9 @@ export function getQuickActionsByRole(
           href: `${baseUrl}/finance/invoice`,
         },
         {
-          iconName: "FileText",
-          label: "Receipts",
-          href: `${baseUrl}/finance/receipt`,
+          iconName: "Users",
+          label: "Fees",
+          href: `${baseUrl}/finance/fees`,
         },
         {
           iconName: "BarChart3",
@@ -201,23 +157,14 @@ export function getQuickActionsByRole(
           href: `${baseUrl}/finance/reports`,
         },
         {
-          iconName: "Users",
-          label: "Fees",
-          href: `${baseUrl}/finance/fees`,
-        },
-        {
-          iconName: "CheckCircle",
-          label: "Approvals",
-          href: `${baseUrl}/finance/approvals`,
-        },
-        {
-          iconName: "FolderOpen",
-          label: "Budget",
-          href: `${baseUrl}/finance/budget`,
+          iconName: "FileText",
+          label: "Receipts",
+          href: `${baseUrl}/finance/receipt`,
         },
       ];
 
     case "STAFF":
+      // Staff: Operations focused
       return [
         {
           iconName: "ClipboardList",
@@ -225,24 +172,14 @@ export function getQuickActionsByRole(
           href: `${baseUrl}/tasks`,
         },
         {
+          iconName: "FileText",
+          label: "Requests",
+          href: `${baseUrl}/requests`,
+        },
+        {
           iconName: "Calendar",
           label: "Schedule",
           href: `${baseUrl}/schedule`,
-        },
-        {
-          iconName: "MessageSquare",
-          label: "Messages",
-          href: `${baseUrl}/messages`,
-        },
-        {
-          iconName: "Bell",
-          label: "Announce",
-          href: `${baseUrl}/announcements`,
-        },
-        {
-          iconName: "FileText",
-          label: "Reports",
-          href: `${baseUrl}/reports`,
         },
         {
           iconName: "Users",
@@ -252,16 +189,22 @@ export function getQuickActionsByRole(
       ];
 
     default:
+      // Default: Basic navigation
       return [
         {
           iconName: "Bell",
-          label: "Announce",
+          label: "Announcements",
           href: `${baseUrl}/announcements`,
         },
         {
           iconName: "MessageSquare",
           label: "Messages",
           href: `${baseUrl}/messages`,
+        },
+        {
+          iconName: "Calendar",
+          label: "Calendar",
+          href: `${baseUrl}/calendar`,
         },
         {
           iconName: "Settings",

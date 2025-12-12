@@ -1,10 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { BookOpen } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 import { PublicCourseType } from "@/components/stream/data/course/get-all-courses";
 import { CourseCard, CourseCardSkeleton } from "./course-card";
-import { Suspense } from "react";
+import { cn } from "@/lib/utils";
+import { SearchBar } from "@/components/stream/search-bar";
 
 interface Props {
   dictionary: any;
@@ -21,6 +24,9 @@ export function StreamCoursesContent({
   courses,
   searchParams
 }: Props) {
+  const isRTL = lang === "ar";
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+
   // Filter courses based on search params
   const filteredCourses = courses.filter((course) => {
     if (searchParams?.category && course.category?.name !== searchParams.category) {
@@ -37,14 +43,41 @@ export function StreamCoursesContent({
   });
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
-      <div className="flex flex-col space-y-2">
-        <h2>Explore Courses</h2>
-        <p className="muted">
-          Discover our wide range of courses designed to help you achieve your
-          learning goals.
-        </p>
-      </div>
+    <div className="py-6 space-y-10">
+      {/* Hero Section - Like "Come teach with us" */}
+      <section className="py-8">
+        <div className={cn(
+          "flex flex-col md:flex-row items-center justify-center gap-6 max-w-2xl mx-auto",
+          isRTL && "md:flex-row-reverse"
+        )}>
+          {/* Hero Image */}
+          <div className="relative flex items-center justify-center rounded-xl p-4 size-28 md:size-32 bg-[#D97757] shrink-0">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/anthropic/6903d22d0099a66d72e05699_33ddc751e21fb4b116b3f57dd553f0bc55ea09d1-1000x1000.svg"
+              alt="Courses"
+              className="size-20 md:size-24"
+            />
+          </div>
+
+          {/* Text Content */}
+          <div className={cn(
+            "text-center md:text-left",
+            isRTL && "md:text-right"
+          )}>
+            <h1 className="text-4xl md:text-5xl font-bold leading-none">
+              {dictionary?.courses?.heroTitle || "Explore"}
+              <br />
+              {dictionary?.courses?.heroSubtitle || "courses"}
+            </h1>
+          </div>
+        </div>
+      </section>
+
+      {/* Search Bar with Explore */}
+      <section>
+        <SearchBar lang={lang} dictionary={dictionary} />
+      </section>
 
       {filteredCourses.length === 0 ? (
         <Card>
@@ -59,9 +92,35 @@ export function StreamCoursesContent({
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredCourses.map((course) => (
-            <CourseCard key={course.id} course={course} lang={lang} />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {filteredCourses.map((course, idx) => (
+            <div
+              key={course.id}
+              className="relative group block p-2 h-full w-full"
+              onMouseEnter={() => setHoveredIndex(idx)}
+              onMouseLeave={() => setHoveredIndex(null)}
+            >
+              <AnimatePresence>
+                {hoveredIndex === idx && (
+                  <motion.span
+                    className="absolute inset-0 h-full w-full bg-muted dark:bg-muted/80 block rounded-2xl"
+                    layoutId="courseHoverBackground"
+                    initial={{ opacity: 0 }}
+                    animate={{
+                      opacity: 1,
+                      transition: { duration: 0.15 },
+                    }}
+                    exit={{
+                      opacity: 0,
+                      transition: { duration: 0.15, delay: 0.2 },
+                    }}
+                  />
+                )}
+              </AnimatePresence>
+              <div className="relative z-10">
+                <CourseCard course={course} lang={lang} />
+              </div>
+            </div>
           ))}
         </div>
       )}
@@ -71,14 +130,33 @@ export function StreamCoursesContent({
 
 export function StreamCoursesLoadingSkeleton() {
   return (
-    <div className="container mx-auto py-6 space-y-6">
-      <div className="flex flex-col space-y-2">
-        <h2>Explore Courses</h2>
-        <p className="muted">
-          Discover our wide range of courses designed to help you achieve your
-          learning goals.
-        </p>
-      </div>
+    <div className="py-6 space-y-10">
+      {/* Hero Section Skeleton */}
+      <section className="py-8">
+        <div className="flex flex-col md:flex-row items-center gap-8">
+          <div className="relative flex items-center justify-center rounded-xl p-6 size-40 md:size-44 bg-[#D97757] shrink-0">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/anthropic/6903d22d0099a66d72e05699_33ddc751e21fb4b116b3f57dd553f0bc55ea09d1-1000x1000.svg"
+              alt="Courses"
+              className="size-32 md:size-36"
+            />
+          </div>
+          <div className="space-y-3">
+            <h1 className="text-4xl md:text-5xl font-bold leading-tight">
+              Explore courses
+            </h1>
+            <p className="text-lg text-muted-foreground max-w-lg">
+              Explore our collection of courses and begin your learning journey
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Search Bar Skeleton */}
+      <section>
+        <div className="h-11 w-full bg-muted rounded-full animate-pulse" />
+      </section>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {Array.from({ length: 6 }).map((_, index) => (

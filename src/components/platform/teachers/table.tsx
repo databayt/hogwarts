@@ -9,7 +9,7 @@ import Modal from "@/components/atom/modal/modal";
 import { TeacherCreateForm } from "@/components/platform/teachers/form";
 import type { Dictionary } from "@/components/internationalization/dictionaries";
 import type { Locale } from "@/components/internationalization/config";
-import { getTeachers, getTeachersCSV, deleteTeacher } from "./actions";
+import { getTeachers, getTeachersCSV, deleteTeacher, updateTeacher } from "./actions";
 import { usePlatformView } from "@/hooks/use-platform-view";
 import { usePlatformData } from "@/hooks/use-platform-data";
 import {
@@ -19,9 +19,14 @@ import {
   GridEmptyState,
 } from "@/components/platform/shared";
 import { Badge } from "@/components/ui/badge";
-import { Users, User, Mail } from "lucide-react";
+import {
+  Users,
+  BookOpen,
+  UserCheck,
+  UserX
+} from "lucide-react";
 import { useRouter } from "next/navigation";
-import { DeleteToast, ErrorToast, confirmDeleteDialog } from "@/components/atom/toast";
+import { DeleteToast, SuccessToast, ErrorToast, confirmDeleteDialog } from "@/components/atom/toast";
 
 interface TeachersTableProps {
   initialData: TeacherRow[];
@@ -35,26 +40,37 @@ export function TeachersTable({ initialData, total, dictionary, lang, perPage = 
   const router = useRouter();
   const { openModal } = useModal();
   const [isPending, startTransition] = useTransition();
+  const isRtl = lang === 'ar';
 
   // Translations with fallbacks
   const t = {
-    fullName: dictionary?.fullName || (lang === 'ar' ? 'الاسم' : 'Name'),
-    email: dictionary?.email || (lang === 'ar' ? 'البريد الإلكتروني' : 'Email'),
-    status: dictionary?.status || (lang === 'ar' ? 'الحالة' : 'Status'),
-    created: dictionary?.created || (lang === 'ar' ? 'تاريخ الإنشاء' : 'Created'),
-    actions: lang === 'ar' ? 'إجراءات' : 'Actions',
-    view: lang === 'ar' ? 'عرض' : 'View',
-    edit: lang === 'ar' ? 'تعديل' : 'Edit',
-    delete: lang === 'ar' ? 'حذف' : 'Delete',
-    allTeachers: dictionary?.allTeachers || (lang === 'ar' ? 'جميع المعلمين' : 'All Teachers'),
-    addNewTeacher: dictionary?.addNewTeacher || (lang === 'ar' ? 'أضف معلماً جديداً إلى مدرستك' : 'Add a new teacher to your school'),
-    active: dictionary?.active || (lang === 'ar' ? 'نشط' : 'Active'),
-    inactive: dictionary?.inactive || (lang === 'ar' ? 'غير نشط' : 'Inactive'),
-    search: dictionary?.search || (lang === 'ar' ? 'بحث في المعلمين...' : 'Search teachers...'),
-    create: dictionary?.create || (lang === 'ar' ? 'إنشاء' : 'Create'),
-    export: dictionary?.export || (lang === 'ar' ? 'تصدير' : 'Export'),
-    reset: dictionary?.reset || (lang === 'ar' ? 'إعادة تعيين' : 'Reset'),
-    noAccount: lang === 'ar' ? 'لا يوجد حساب' : 'No Account',
+    fullName: dictionary?.fullName || (isRtl ? 'الاسم' : 'Name'),
+    email: dictionary?.email || (isRtl ? 'البريد الإلكتروني' : 'Email'),
+    phone: isRtl ? 'الهاتف' : 'Phone',
+    department: isRtl ? 'القسم' : 'Department',
+    subjects: isRtl ? 'المواد' : 'Subjects',
+    classes: isRtl ? 'الفصول' : 'Classes',
+    status: dictionary?.status || (isRtl ? 'الحالة' : 'Status'),
+    created: dictionary?.created || (isRtl ? 'تاريخ الإنشاء' : 'Created'),
+    actions: isRtl ? 'إجراءات' : 'Actions',
+    view: isRtl ? 'عرض الملف' : 'View Profile',
+    edit: isRtl ? 'تعديل' : 'Edit',
+    delete: isRtl ? 'حذف' : 'Delete',
+    allTeachers: dictionary?.allTeachers || (isRtl ? 'جميع المعلمين' : 'All Teachers'),
+    addNewTeacher: dictionary?.addNewTeacher || (isRtl ? 'أضف معلماً جديداً إلى مدرستك' : 'Add a new teacher to your school'),
+    active: dictionary?.active || (isRtl ? 'نشط' : 'Active'),
+    inactive: dictionary?.inactive || (isRtl ? 'غير نشط' : 'Inactive'),
+    search: dictionary?.search || (isRtl ? 'بحث في المعلمين...' : 'Search teachers...'),
+    create: dictionary?.create || (isRtl ? 'إنشاء' : 'Create'),
+    export: dictionary?.export || (isRtl ? 'تصدير' : 'Export'),
+    reset: dictionary?.reset || (isRtl ? 'إعادة تعيين' : 'Reset'),
+    noAccount: isRtl ? 'بدون حساب' : 'No Account',
+    hasAccount: isRtl ? 'لديه حساب' : 'Has Account',
+    noDepartment: isRtl ? 'غير معين' : 'Unassigned',
+    statusUpdated: isRtl ? 'تم تحديث الحالة' : 'Status updated',
+    activate: isRtl ? 'تفعيل' : 'Activate',
+    deactivate: isRtl ? 'إلغاء التفعيل' : 'Deactivate',
+    joined: isRtl ? 'انضم' : 'Joined',
   };
 
   // View mode (table/grid)
@@ -72,35 +88,38 @@ export function TeachersTable({ initialData, total, dictionary, lang, perPage = 
     loadMore,
     refresh,
     optimisticRemove,
+    optimisticUpdate,
   } = usePlatformData<TeacherRow, { name?: string }>({
     initialData,
     total,
     perPage,
     fetcher: async (params) => {
+      // Note: getTeachers returns simplified format, but initialData from server has full format
+      // For search/filter operations, we refresh from server which has the full data
       const result = await getTeachers(params);
-      return { rows: result.rows as TeacherRow[], total: result.total };
+      if (!result.success || !result.data) {
+        return { rows: [], total: 0 };
+      }
+      // Map old format to new format with defaults
+      const rows = result.data.rows.map((r: any) => ({
+        ...r,
+        givenName: r.givenName || r.name?.split(' ')[0] || '',
+        surname: r.surname || r.name?.split(' ').slice(1).join(' ') || '',
+        phone: r.phone || null,
+        department: r.department || null,
+        departmentId: r.departmentId || null,
+        subjectCount: r.subjectCount || 0,
+        classCount: r.classCount || 0,
+        employmentStatus: r.employmentStatus || 'ACTIVE',
+        employmentType: r.employmentType || 'FULL_TIME',
+        hasAccount: r.hasAccount ?? !!r.userId,
+        userId: r.userId || null,
+        profilePhotoUrl: r.profilePhotoUrl || null,
+        joiningDate: r.joiningDate || null,
+      })) as TeacherRow[];
+      return { rows, total: result.data.total };
     },
     filters: searchValue ? { name: searchValue } : undefined,
-  });
-
-  // Generate columns on the client side with dictionary and lang
-  const columns = useMemo(() => getTeacherColumns(dictionary, lang), [dictionary, lang]);
-
-  // Table instance
-  const { table } = useDataTable<TeacherRow>({
-    data,
-    columns,
-    pageCount: 1,
-    initialState: {
-      pagination: {
-        pageIndex: 0,
-        pageSize: data.length || perPage,
-      },
-      columnVisibility: {
-        // Default visible: name, emailAddress, status
-        createdAt: false,
-      },
-    },
   });
 
   // Handle search
@@ -114,7 +133,7 @@ export function TeachersTable({ initialData, total, dictionary, lang, perPage = 
   // Handle delete with optimistic update
   const handleDelete = useCallback(async (teacher: TeacherRow) => {
     try {
-      const deleteMsg = lang === 'ar' ? `حذف ${teacher.name}؟` : `Delete ${teacher.name}?`;
+      const deleteMsg = isRtl ? `حذف ${teacher.name}؟` : `Delete ${teacher.name}?`;
       const ok = await confirmDeleteDialog(deleteMsg);
       if (!ok) return;
 
@@ -127,38 +146,104 @@ export function TeachersTable({ initialData, total, dictionary, lang, perPage = 
       } else {
         // Revert on error
         refresh();
-        ErrorToast(lang === 'ar' ? 'فشل حذف المعلم' : 'Failed to delete teacher');
+        ErrorToast(isRtl ? 'فشل حذف المعلم' : 'Failed to delete teacher');
       }
     } catch (e) {
       refresh();
-      ErrorToast(e instanceof Error ? e.message : (lang === 'ar' ? 'فشل الحذف' : 'Failed to delete'));
+      ErrorToast(e instanceof Error ? e.message : (isRtl ? 'فشل الحذف' : 'Failed to delete'));
     }
-  }, [optimisticRemove, refresh, lang]);
+  }, [optimisticRemove, refresh, isRtl]);
 
   // Handle edit
-  const handleEdit = useCallback((id: string) => {
-    openModal(id);
+  const handleEdit = useCallback((teacher: TeacherRow) => {
+    openModal(teacher.id);
   }, [openModal]);
 
-  // Handle view
-  const handleView = useCallback((teacher: TeacherRow) => {
-    if (!teacher.userId) {
-      ErrorToast(lang === 'ar' ? 'هذا المعلم ليس لديه حساب مستخدم' : 'This teacher does not have a user account');
-      return;
-    }
-    router.push(`/profile/${teacher.userId}`);
-  }, [router, lang]);
+  // Handle toggle status
+  const handleToggleStatus = useCallback(async (teacher: TeacherRow) => {
+    try {
+      const newStatus = teacher.employmentStatus === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
 
-  // Get status badge
-  const getStatusBadge = (status: string) => {
-    return status === "active"
-      ? { label: t.active || "Active", variant: "default" as const }
-      : { label: t.inactive || "Inactive", variant: "outline" as const };
+      // Optimistic update with callback function
+      optimisticUpdate(teacher.id, (item) => ({
+        ...item,
+        employmentStatus: newStatus
+      }));
+
+      const result = await updateTeacher({
+        id: teacher.id,
+        employmentStatus: newStatus as 'ACTIVE' | 'ON_LEAVE' | 'TERMINATED' | 'RETIRED'
+      });
+
+      if (result.success) {
+        SuccessToast(t.statusUpdated);
+      } else {
+        // Revert on error
+        refresh();
+        ErrorToast(result.error || (isRtl ? 'فشل تحديث الحالة' : 'Failed to update status'));
+      }
+    } catch (e) {
+      refresh();
+      ErrorToast(e instanceof Error ? e.message : (isRtl ? 'فشل التحديث' : 'Failed to update'));
+    }
+  }, [optimisticUpdate, refresh, isRtl, t.statusUpdated]);
+
+  // Generate columns on the client side with dictionary, lang, and callbacks
+  const columns = useMemo(() => getTeacherColumns(dictionary, lang, {
+    onEdit: handleEdit,
+    onDelete: handleDelete,
+    onToggleStatus: handleToggleStatus,
+  }), [dictionary, lang, handleEdit, handleDelete, handleToggleStatus]);
+
+  // Table instance
+  const { table } = useDataTable<TeacherRow>({
+    data,
+    columns,
+    pageCount: 1,
+    initialState: {
+      pagination: {
+        pageIndex: 0,
+        pageSize: data.length || perPage,
+      },
+      columnVisibility: {
+        // Default visible columns
+        name: true,
+        department: true,
+        phone: false, // Hidden by default
+        workload: true,
+        status: true,
+        account: false, // Hidden by default
+        joiningDate: false, // Hidden by default
+      },
+    },
+  });
+
+  // Get status badge for grid view
+  const getStatusBadge = (status: string): { label: string; variant?: 'default' | 'secondary' | 'destructive' | 'outline' } => {
+    const isActive = status === 'ACTIVE';
+    return {
+      label: isActive ? t.active : t.inactive,
+      variant: isActive ? 'default' : 'outline',
+    };
+  };
+
+  // Get initials for avatar
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map((n) => n[0])
+      .join('')
+      .substring(0, 2)
+      .toUpperCase();
   };
 
   // Export CSV wrapper
   const handleExportCSV = useCallback(async (filters?: Record<string, unknown>) => {
-    return getTeachersCSV(filters);
+    const result = await getTeachersCSV(filters);
+    if (!result.success || !result.data) {
+      throw new Error('error' in result ? result.error : 'Export failed');
+    }
+    return result.data;
   }, []);
 
   // Toolbar translations
@@ -167,8 +252,8 @@ export function TeachersTable({ initialData, total, dictionary, lang, perPage = 
     create: t.create,
     reset: t.reset,
     export: t.export,
-    exportCSV: lang === 'ar' ? 'تصدير CSV' : 'Export CSV',
-    exporting: lang === 'ar' ? 'جاري التصدير...' : 'Exporting...',
+    exportCSV: isRtl ? 'تصدير CSV' : 'Export CSV',
+    exporting: isRtl ? 'جاري التصدير...' : 'Exporting...',
   };
 
   return (
@@ -205,30 +290,34 @@ export function TeachersTable({ initialData, total, dictionary, lang, perPage = 
           ) : (
             <GridContainer columns={3}>
               {data.map((teacher) => {
-                const statusBadge = getStatusBadge(teacher.status);
-                const initials = teacher.name
-                  .split(" ")
-                  .map((n) => n[0])
-                  .join("")
-                  .substring(0, 2)
-                  .toUpperCase();
+                const statusBadge = getStatusBadge(teacher.employmentStatus);
 
                 return (
                   <GridCard
                     key={teacher.id}
                     title={teacher.name}
-                    subtitle={teacher.emailAddress !== "-" ? teacher.emailAddress : undefined}
-                    avatarFallback={initials}
+                    subtitle={teacher.department || t.noDepartment}
+                    avatarUrl={teacher.profilePhotoUrl || undefined}
+                    avatarFallback={getInitials(teacher.name)}
                     status={statusBadge}
                     metadata={[
-                      { label: t.email, value: teacher.emailAddress },
-                      { label: t.created, value: new Date(teacher.createdAt).toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-US') },
+                      ...(teacher.emailAddress !== '-'
+                        ? [{ label: t.email, value: teacher.emailAddress }]
+                        : []),
+                      ...(teacher.phone
+                        ? [{ label: t.phone, value: teacher.phone }]
+                        : []),
                     ]}
                     actions={[
-                      ...(teacher.userId
-                        ? [{ label: t.view, onClick: () => handleView(teacher) }]
-                        : []),
-                      { label: t.edit, onClick: () => handleEdit(teacher.id) },
+                      {
+                        label: t.view,
+                        onClick: () => router.push(`/${lang}/teachers/${teacher.id}`),
+                      },
+                      { label: t.edit, onClick: () => handleEdit(teacher) },
+                      {
+                        label: teacher.employmentStatus === 'ACTIVE' ? t.deactivate : t.activate,
+                        onClick: () => handleToggleStatus(teacher),
+                      },
                       {
                         label: t.delete,
                         onClick: () => handleDelete(teacher),
@@ -236,21 +325,40 @@ export function TeachersTable({ initialData, total, dictionary, lang, perPage = 
                       },
                     ]}
                     actionsLabel={t.actions}
-                    onClick={() => teacher.userId && handleView(teacher)}
+                    onClick={() => router.push(`/${lang}/teachers/${teacher.id}`)}
                   >
-                    <div className="flex flex-col gap-1 mt-2">
-                      {teacher.emailAddress !== "-" && (
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          <Mail className="h-3 w-3" />
-                          <span className="truncate">{teacher.emailAddress}</span>
-                        </div>
-                      )}
-                      {!teacher.userId && (
-                        <Badge variant="outline" className="gap-1 text-xs w-fit">
-                          <User className="h-3 w-3" />
-                          {t.noAccount}
-                        </Badge>
-                      )}
+                    {/* Stats row */}
+                    <div className="flex items-center gap-4 mt-3 pt-3 border-t">
+                      <div className="flex items-center gap-1.5">
+                        <BookOpen className="h-3.5 w-3.5 text-blue-500" />
+                        <span className="text-xs font-medium">{teacher.subjectCount}</span>
+                        <span className="text-xs text-muted-foreground">{t.subjects}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <Users className="h-3.5 w-3.5 text-green-500" />
+                        <span className="text-xs font-medium">{teacher.classCount}</span>
+                        <span className="text-xs text-muted-foreground">{t.classes}</span>
+                      </div>
+                    </div>
+
+                    {/* Account status */}
+                    <div className="mt-2">
+                      <Badge
+                        variant="outline"
+                        className={`text-xs ${teacher.hasAccount ? 'border-green-300 text-green-700' : 'border-gray-300 text-gray-500'}`}
+                      >
+                        {teacher.hasAccount ? (
+                          <>
+                            <UserCheck className="h-3 w-3 mr-1" />
+                            {t.hasAccount}
+                          </>
+                        ) : (
+                          <>
+                            <UserX className="h-3 w-3 mr-1" />
+                            {t.noAccount}
+                          </>
+                        )}
+                      </Badge>
                     </div>
                   </GridCard>
                 );
@@ -266,7 +374,7 @@ export function TeachersTable({ initialData, total, dictionary, lang, perPage = 
                 disabled={isLoading}
                 className="px-4 py-2 text-sm border rounded-md hover:bg-accent disabled:opacity-50"
               >
-                {isLoading ? (lang === 'ar' ? 'جاري التحميل...' : 'Loading...') : (lang === 'ar' ? 'تحميل المزيد' : 'Load More')}
+                {isLoading ? (isRtl ? 'جاري التحميل...' : 'Loading...') : (isRtl ? 'تحميل المزيد' : 'Load More')}
               </button>
             </div>
           )}

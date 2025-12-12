@@ -6,15 +6,16 @@ import { Button } from "@/components/ui/button";
 import { Ellipsis } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useModal } from "@/components/atom/modal/context";
-import { deleteEvent } from "@/components/platform/events/actions";
-import { DeleteToast, ErrorToast, confirmDeleteDialog } from "@/components/atom/toast";
-import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { EventRow } from "./types";
 import type { Dictionary } from "@/components/internationalization/dictionaries";
 import type { Locale } from "@/components/internationalization/config";
 
 export type { EventRow };
+
+export interface EventColumnCallbacks {
+  onDelete?: (row: EventRow) => void;
+}
 
 const getStatusBadge = (status: string, lang?: Locale) => {
   const variants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
@@ -70,7 +71,7 @@ const getEventTypeBadge = (type: string, lang?: Locale) => {
   );
 };
 
-export const getEventColumns = (dictionary?: Dictionary['school']['events'], lang?: Locale): ColumnDef<EventRow>[] => {
+export const getEventColumns = (dictionary?: Dictionary['school']['events'], lang?: Locale, callbacks?: EventColumnCallbacks): ColumnDef<EventRow>[] => {
   const t = {
     title: dictionary?.title || (lang === 'ar' ? 'العنوان' : 'Title'),
     type: dictionary?.type || (lang === 'ar' ? 'النوع' : 'Type'),
@@ -202,7 +203,6 @@ export const getEventColumns = (dictionary?: Dictionary['school']['events'], lan
     cell: ({ row }) => {
       const event = row.original;
       const { openModal } = useModal();
-      const router = useRouter();
 
       const onView = () => {
         const qs = typeof window !== 'undefined' ? (window.location.search || "") : "";
@@ -211,17 +211,8 @@ export const getEventColumns = (dictionary?: Dictionary['school']['events'], lan
 
       const onEdit = () => openModal(event.id);
 
-      const onDelete = async () => {
-        try {
-          const deleteMsg = lang === 'ar' ? `حذف الحدث "${event.title}"؟` : `Delete event "${event.title}"?`;
-          const ok = await confirmDeleteDialog(deleteMsg);
-          if (!ok) return;
-          await deleteEvent({ id: event.id });
-          DeleteToast();
-          router.refresh();
-        } catch (e) {
-          ErrorToast(e instanceof Error ? e.message : (lang === 'ar' ? 'فشل الحذف' : 'Failed to delete'));
-        }
+      const onDelete = () => {
+        callbacks?.onDelete?.(event);
       };
 
       return (

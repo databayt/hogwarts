@@ -281,14 +281,9 @@ export async function seedEnhancedTimetable(
 
     console.log(`✅ ${classes.length} classes available`)
 
-    // 6. Clear existing timetable data (optional)
-    console.log('🧹 Clearing existing timetable data...')
-    await prisma.timetable.deleteMany({
-      where: {
-        schoolId,
-        termId,
-      },
-    })
+    // 6. ADDITIVE APPROACH: Skip deletion, use skipDuplicates instead
+    // This preserves existing data and only adds missing slots
+    console.log('📝 Using additive approach (preserving existing data)...')
 
     // 7. Generate realistic timetable
     console.log('📊 Generating realistic timetable...')

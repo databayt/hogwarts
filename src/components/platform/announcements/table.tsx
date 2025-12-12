@@ -122,34 +122,6 @@ export function AnnouncementsTable({
     filters,
   });
 
-  // Generate columns with dictionary and locale for bilingual display
-  const columns = useMemo(() => getAnnouncementColumns(t, lang), [t, lang]);
-
-  // Table instance (for table view)
-  const { table } = useDataTable<AnnouncementRow>({
-    data,
-    columns,
-    pageCount: 1,
-    enableClientFiltering: true, // Enable client-side column filters
-    initialState: {
-      pagination: {
-        pageIndex: 0,
-        pageSize: data.length || perPage,
-      },
-      columnVisibility: {
-        // Default visible: title, scope, published, createdAt
-        featured: false,
-        pinned: false,
-        createdBy: false,
-      },
-    },
-  });
-
-  // Handle search (debounced via useDeferredValue)
-  const handleSearchChange = useCallback((value: string) => {
-    setSearchInput(value);
-  }, []);
-
   // Handle delete with optimistic update
   const handleDelete = useCallback(async (announcement: AnnouncementRow) => {
     const displayTitle = getLocalizedTitle(announcement, lang);
@@ -198,6 +170,37 @@ export function AnnouncementsTable({
       ErrorToast(e instanceof Error ? e.message : t.failedToTogglePublish);
     }
   }, [t, optimisticUpdate, refresh]);
+
+  // Generate columns with dictionary, locale, and optimistic callbacks
+  const columns = useMemo(() => getAnnouncementColumns(t, lang, {
+    onDelete: handleDelete,
+    onTogglePublish: handleTogglePublish,
+  }), [t, lang, handleDelete, handleTogglePublish]);
+
+  // Table instance (for table view)
+  const { table } = useDataTable<AnnouncementRow>({
+    data,
+    columns,
+    pageCount: 1,
+    enableClientFiltering: true, // Enable client-side column filters
+    initialState: {
+      pagination: {
+        pageIndex: 0,
+        pageSize: data.length || perPage,
+      },
+      columnVisibility: {
+        // Default visible: title, scope, published, createdAt
+        featured: false,
+        pinned: false,
+        createdBy: false,
+      },
+    },
+  });
+
+  // Handle search (debounced via useDeferredValue)
+  const handleSearchChange = useCallback((value: string) => {
+    setSearchInput(value);
+  }, []);
 
   // Handle edit
   const handleEdit = useCallback((id: string) => {
@@ -295,13 +298,13 @@ export function AnnouncementsTable({
                     ]}
                     actions={[
                       { label: t.view, onClick: () => handleView(announcement.id) },
-                      { label: t.editAnnouncement, onClick: () => handleEdit(announcement.id) },
+                      { label: lang === 'ar' ? 'تعديل' : 'Edit', onClick: () => handleEdit(announcement.id) },
                       {
                         label: announcement.published ? t.unpublish : t.publish,
                         onClick: () => handleTogglePublish(announcement),
                       },
                       {
-                        label: t.deleteAnnouncement,
+                        label: lang === 'ar' ? 'حذف' : 'Delete',
                         onClick: () => handleDelete(announcement),
                         variant: "destructive",
                       },

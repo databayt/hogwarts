@@ -15,8 +15,8 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { toast } from '@/components/ui/use-toast';
 import { Scan, Camera, CameraOff, CircleCheck, CircleAlert, MapPin, LoaderCircle, Upload, RefreshCw } from "lucide-react";
 import { useCamera, useGeolocation } from '../shared/hooks';
-import { useAttendanceContext } from '../core/attendance-context';
 import { validateQRPayload } from '../shared/utils';
+import { processQRScan } from './actions';
 import type { Dictionary } from '@/components/internationalization/dictionaries';
 import type { QRCodeScanPayload } from '../shared/types';
 
@@ -48,8 +48,6 @@ export function QRScanner({
     timeout: 10000,
     maximumAge: 0
   });
-
-  const { markAttendance } = useAttendanceContext();
 
   const handleScan = useCallback(async (result: any) => {
     // Prevent duplicate scans
@@ -93,16 +91,18 @@ export function QRScanner({
         } : undefined
       };
 
-      // Mark attendance
-      await markAttendance({
-        classId: validation.classId,
-        studentId: 'current-student-id', // This should come from auth context
-        status: 'PRESENT',
-        method: 'QR_CODE',
-        checkInTime: new Date().toISOString(),
-        location: scanPayload.location,
-        confidence: 1.0
+      // Call server action to process QR scan
+      // Server action handles authentication and gets studentId from session
+      const result = await processQRScan({
+        code: scanData,
+        scannedAt: new Date().toISOString(),
+        deviceId: navigator.userAgent,
+        location: scanPayload.location
       });
+
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to process QR scan');
+      }
 
       setScanResult({
         success: true,
@@ -144,7 +144,7 @@ export function QRScanner({
     } finally {
       setProcessing(false);
     }
-  }, [lastScan, processing, location, requestLocation, markAttendance, onScanSuccess, onScanError]);
+  }, [lastScan, processing, location, requestLocation, onScanSuccess, onScanError]);
 
   const startScanning = async () => {
     if (hasPermission === false) {

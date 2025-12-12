@@ -17,7 +17,9 @@ import { QualificationsStep } from "./qualifications";
 import { ExperienceStep } from "./experience";
 import { SubjectExpertiseStep } from "./expertise";
 import { ReviewStep } from "./review";
-import { TeacherFormFooter } from "./footer";
+import { ModalFormLayout } from "@/components/atom/modal/modal-form-layout";
+import { ModalFooter } from "@/components/atom/modal/modal-footer";
+import { STEPS, STEP_FIELDS, TOTAL_FIELDS } from "./config";
 
 interface TeacherCreateFormProps {
   /** Callback fired on successful create/update - use for optimistic refresh */
@@ -57,8 +59,8 @@ export function TeacherCreateForm({ onSuccess }: TeacherCreateFormProps) {
     const load = async () => {
       if (!currentId) return;
       const res = await getTeacher({ id: currentId });
-      const t = res.teacher as any;
-      if (!t) return;
+      if (!res.success || !res.data) return;
+      const t = res.data as any;
       form.reset({
         givenName: t.givenName ?? "",
         surname: t.surname ?? "",
@@ -78,20 +80,25 @@ export function TeacherCreateForm({ onSuccess }: TeacherCreateFormProps) {
   }, [currentId]);
 
   async function onSubmit(values: z.infer<typeof teacherCreateSchema>) {
-    const res = currentId
-      ? await updateTeacher({ id: currentId, ...values })
-      : await createTeacher(values);
-    if (res?.success) {
-      toast.success(currentId ? "Teacher updated" : "Teacher created");
-      closeModal();
-      // Use callback for optimistic update, fallback to router.refresh()
-      if (onSuccess) {
-        onSuccess();
+    try {
+      const res = currentId
+        ? await updateTeacher({ id: currentId, ...values })
+        : await createTeacher(values);
+      if (res?.success) {
+        toast.success(currentId ? "Teacher updated" : "Teacher created");
+        closeModal();
+        // Use callback for optimistic update, fallback to router.refresh()
+        if (onSuccess) {
+          onSuccess();
+        } else {
+          router.refresh();
+        }
       } else {
-        router.refresh();
+        toast.error(res?.error || (currentId ? "Failed to update teacher" : "Failed to create teacher"));
       }
-    } else {
-      toast.error(currentId ? "Failed to update teacher" : "Failed to create teacher");
+    } catch (error) {
+      console.error("Form submission error:", error);
+      toast.error("An unexpected error occurred");
     }
   }
 
@@ -173,37 +180,42 @@ export function TeacherCreateForm({ onSuccess }: TeacherCreateFormProps) {
     }
   };
 
+  // Calculate progress based on filled fields
+  const values = form.watch();
+  const getFilledFieldsCount = () => {
+    const allFields = [...STEP_FIELDS[1], ...STEP_FIELDS[2], ...STEP_FIELDS[3]];
+    const filledCount = allFields.filter(field => {
+      const value = values[field as keyof typeof values];
+      return value !== undefined && value !== "" && value !== null;
+    }).length;
+    return filledCount;
+  };
+  const progressPercentage = (getFilledFieldsCount() / TOTAL_FIELDS) * 100;
+
   return (
-    <div className="flex h-full flex-col">
-      <Form {...form}>
-        <form className="flex flex-col h-full" onSubmit={(e) => e.preventDefault()}>
-          <div className="flex-grow flex flex-col md:flex-row gap-6">
-            {/* Title Section */}
-            <div className="md:w-1/3">
-              <h2 className="text-2xl font-semibold">{isView ? "View Teacher" : currentId ? "Pencil Teacher" : "Create Teacher"}</h2>
-              <p className="text-sm text-muted-foreground mt-2">{isView ? "View teacher details" : currentId ? "Update teacher details" : "Add a new teacher to your school"}</p>
-            </div>
+    <Form {...form}>
+      <form onSubmit={(e) => e.preventDefault()}>
+        <ModalFormLayout
+          title={isView ? "View Teacher" : currentId ? "Edit Teacher" : "Create Teacher"}
+          description={isView ? "View teacher details" : currentId ? "Update teacher details" : "Add a new teacher to your school"}
+        >
+          {renderCurrentStep()}
+        </ModalFormLayout>
 
-            {/* Form Content */}
-            <div className="flex-1">
-              <div className="overflow-y-auto">
-                {renderCurrentStep()}
-              </div>
-            </div>
-          </div>
-
-          <TeacherFormFooter 
-            currentStep={currentStep}
-            isView={isView}
-            currentId={currentId}
-            onBack={handleBack}
-            onNext={handleNext}
-            onSaveCurrentStep={handleSaveCurrentStep}
-            form={form}
-          />
-        </form>
-      </Form>
-    </div>
+        <ModalFooter
+          currentStep={currentStep}
+          totalSteps={7}
+          stepLabel={STEPS[currentStep as keyof typeof STEPS]}
+          isView={isView}
+          isEdit={!!currentId}
+          isDirty={form.formState.isDirty}
+          progress={progressPercentage}
+          onBack={handleBack}
+          onNext={handleNext}
+          onSaveStep={handleSaveCurrentStep}
+        />
+      </form>
+    </Form>
   );
 }
 

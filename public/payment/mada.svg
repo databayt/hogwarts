@@ -1,4 +1,7 @@
-<svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-  <title>Mada</title>
-  <path fill="#006A4D" d="M2 6h20v12H2V6zm2 2v8h16V8H4zm2 2h2v1H7v3H6v-4zm3 0h2l.5 2 .5-2h2v4h-1v-3l-.7 3h-.6l-.7-3v3H9v-4zm6 0h2c.6 0 1 .4 1 1v2c0 .6-.4 1-1 1h-2v-4zm1 1v2h1v-2h-1z"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 316">
+  <rect fill="#fff" width="512" height="316" rx="15"/>
+  <rect fill="#1E3A5F" x="60" y="80" width="392" height="156" rx="20"/>
+  <rect fill="#00A4A6" x="80" y="100" width="352" height="116" rx="15"/>
+  <path d="M150 130h35l20 40 20-40h35v75h-25v-50l-25 50h-10l-25-50v50h-25V130z" fill="#fff"/>
+  <path d="M290 130h40l35 75h-28l-6-15h-42l-6 15h-28l35-75zm20 20l-12 25h24l-12-25z" fill="#fff"/>
 </svg>

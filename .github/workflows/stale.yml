@@ -1,0 +1,72 @@
+name: Stale Issue Management
+
+on:
+  schedule:
+    # Run every day at midnight UTC
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  stale:
+    name: Mark Stale Issues and PRs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Stale Action
+        uses: actions/stale@v9
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+          # Issue settings
+          stale-issue-message: |
+            This issue has been automatically marked as stale because it has not had any activity for 30 days.
+
+            It will be closed in 7 days if no further activity occurs. If this issue is still relevant, please:
+            - Add a comment with any updates
+            - Remove the `stale` label
+
+            Thank you for your contributions to Hogwarts!
+          stale-issue-label: 'stale'
+          days-before-issue-stale: 30
+          days-before-issue-close: 7
+          close-issue-message: |
+            This issue has been automatically closed due to inactivity.
+
+            If you believe this issue is still relevant, please feel free to reopen it with additional context or create a new issue.
+
+          # PR settings
+          stale-pr-message: |
+            This pull request has been automatically marked as stale because it has not had any activity for 30 days.
+
+            It will be closed in 7 days if no further activity occurs. If you're still working on this:
+            - Push new commits to update the PR
+            - Add a comment with your progress
+            - Remove the `stale` label
+
+            Thank you for your contributions to Hogwarts!
+          stale-pr-label: 'stale'
+          days-before-pr-stale: 30
+          days-before-pr-close: 7
+          close-pr-message: |
+            This pull request has been automatically closed due to inactivity.
+
+            Feel free to reopen it if you'd like to continue working on it, or create a new PR.
+
+          # Exempt labels - issues/PRs with these labels won't be marked stale
+          exempt-issue-labels: 'pinned,security,help wanted,good first issue,in progress'
+          exempt-pr-labels: 'pinned,security,in progress,do not close'
+
+          # Only process issues/PRs that match these labels (empty = all)
+          # only-labels: ''
+
+          # Operations per run (to avoid rate limiting)
+          operations-per-run: 100
+
+          # Remove stale label when there's activity
+          remove-stale-when-updated: true
+
+          # Don't close issues with assignees
+          exempt-all-assignees: true
