@@ -51,6 +51,9 @@ export const env = createEnv({
     STORAGE_HOT_MAX_IDLE: z.string().optional(),
     STORAGE_WARM_MAX_IDLE: z.string().optional(),
     USE_CLOUDFLARE_R2: z.string().optional(),
+
+    // Weather API
+    OPENWEATHERMAP_API_KEY: z.string().optional(),
   },
   client: {
     NEXT_PUBLIC_APP_URL: z.string().min(1),
@@ -112,6 +115,9 @@ export const env = createEnv({
     STORAGE_HOT_MAX_IDLE: process.env.STORAGE_HOT_MAX_IDLE,
     STORAGE_WARM_MAX_IDLE: process.env.STORAGE_WARM_MAX_IDLE,
     USE_CLOUDFLARE_R2: process.env.USE_CLOUDFLARE_R2,
+
+    // Weather API
+    OPENWEATHERMAP_API_KEY: process.env.OPENWEATHERMAP_API_KEY,
 
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
     NEXT_PUBLIC_ROOT_DOMAIN: process.env.NEXT_PUBLIC_ROOT_DOMAIN,

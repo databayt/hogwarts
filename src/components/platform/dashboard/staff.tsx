@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { format } from "date-fns"
 import { getQuickLookData, getStaffDashboardData } from "./actions"
+import { getWeatherData } from "./weather-actions"
 import { QuickActions } from "./quick-actions"
 import { getQuickActionsByRole } from "./quick-actions-config"
 import { getTenantContext } from "@/lib/tenant-context"
@@ -41,12 +42,18 @@ export async function StaffDashboard({
 }: StaffDashboardProps) {
   // Wrap entire component in try-catch for comprehensive error handling (like AdminDashboard)
   try {
-    // Fetch Quick Look data
+    // Fetch Quick Look and Weather data
     let quickLookData
+    let weatherData
     try {
-      quickLookData = await getQuickLookData()
+      const [qlData, weather] = await Promise.all([
+        getQuickLookData(),
+        getWeatherData(),
+      ])
+      quickLookData = qlData
+      weatherData = weather
     } catch (error) {
-      console.error("[StaffDashboard] Error fetching quick look data:", error)
+      console.error("[StaffDashboard] Error fetching data:", error)
     }
 
     // Get tenant context for subdomain with error handling
@@ -133,7 +140,11 @@ export async function StaffDashboard({
         {/* Section 1: Upcoming + Weather */}
         <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:gap-8">
           <Upcoming role="STAFF" locale={locale} subdomain={school?.domain || ""} />
-          <Weather />
+          <Weather
+            current={weatherData?.current}
+            forecast={weatherData?.forecast}
+            location={weatherData?.location}
+          />
         </div>
 
         {/* Section 2: Quick Look (no title) */}

@@ -15,6 +15,7 @@ function safeFormatDistanceToNow(date: Date | string | null | undefined): string
 }
 
 import { getDashboardSummary, getQuickLookData, type QuickLookData } from "./actions"
+import { getWeatherData, type WeatherData } from "./weather-actions"
 import { getTenantContext } from "@/lib/tenant-context"
 import { AdminDashboardClient } from "./admin-client"
 
@@ -36,14 +37,17 @@ export async function AdminDashboard({ user, dictionary, locale = "en" }: Props)
     // Fetch real data from server actions with error handling
     let dashboardData
     let quickLookData: QuickLookData | undefined
+    let weatherData: WeatherData | null = null
     try {
-      // Fetch dashboard summary and quick look data in parallel
-      const [summaryData, qlData] = await Promise.all([
+      // Fetch dashboard summary, quick look, and weather data in parallel
+      const [summaryData, qlData, weather] = await Promise.all([
         getDashboardSummary(),
         getQuickLookData(),
+        getWeatherData(),
       ])
       dashboardData = summaryData
       quickLookData = qlData
+      weatherData = weather
     } catch (error) {
       console.error("[AdminDashboard] Error fetching data:", error)
       return (
@@ -109,6 +113,8 @@ export async function AdminDashboard({ user, dictionary, locale = "en" }: Props)
       schoolName: school?.name || "Your School",
       // Quick Look data (real-time from database)
       quickLookData,
+      // Weather data (real-time from OpenWeatherMap)
+      weatherData,
       // Section 2: Financial data
       financeStats: [
         { label: "Revenue", value: `$${(financialData.totalRevenue / 1000).toFixed(0)}K` },

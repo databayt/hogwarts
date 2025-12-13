@@ -5,6 +5,7 @@ import { Clock, Target, Trophy, FileText, ChevronRight, Bell, Calendar } from "l
 import { format, isToday, isTomorrow, differenceInDays } from "date-fns"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { getStudentDashboardData, getQuickLookData } from "./actions"
+import { getWeatherData } from "./weather-actions"
 import { QuickActions } from "./quick-actions"
 import { getQuickActionsByRole } from "./quick-actions-config"
 import { getTenantContext } from "@/lib/tenant-context"
@@ -44,13 +45,16 @@ export async function StudentDashboard({ user, dictionary, locale = "en" }: Stud
     // Fetch real data from server action with error handling
     let data
     let quickLookData
+    let weatherData
     try {
-      const [studentData, qlData] = await Promise.all([
+      const [studentData, qlData, weather] = await Promise.all([
         getStudentDashboardData(),
         getQuickLookData(),
+        getWeatherData(),
       ])
       data = studentData
       quickLookData = qlData
+      weatherData = weather
     } catch (error) {
       console.error("[StudentDashboard] Error fetching data:", error)
       return (
@@ -165,7 +169,11 @@ export async function StudentDashboard({ user, dictionary, locale = "en" }: Stud
         {/* Section 1: Upcoming + Weather */}
         <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:gap-8">
           <Upcoming role="STUDENT" locale={locale} subdomain={school?.domain || ""} />
-          <Weather />
+          <Weather
+            current={weatherData?.current}
+            forecast={weatherData?.forecast}
+            location={weatherData?.location}
+          />
         </div>
 
         {/* Section 2: Quick Look (with real data) */}

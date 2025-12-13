@@ -29,6 +29,7 @@ import {
 // New unified components
 import { Upcoming } from "./upcoming"
 import { Weather } from "./weather"
+import type { WeatherData } from "./weather-actions"
 import { QuickLookSection } from "./quick-look-section"
 import { QuickActions } from "./quick-actions"
 import { getQuickActionsByRole } from "./quick-actions-config"
@@ -69,6 +70,7 @@ interface AdminDashboardClientProps {
   userName: string
   schoolName: string
   quickLookData?: QuickLookData
+  weatherData?: WeatherData | null
   recentActivities: ActivityData[]
   todaySummary: SummaryData[]
 }
@@ -330,11 +332,15 @@ function QuickActionsSection({ locale, subdomain }: { locale: string; subdomain:
 // SECTION: Hero Section (Upcoming + Weather)
 // ============================================================================
 
-function HeroSection({ locale, subdomain }: { locale: string; subdomain: string }) {
+function HeroSection({ locale, subdomain, weatherData }: { locale: string; subdomain: string; weatherData?: WeatherData | null }) {
   return (
     <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:gap-8">
       <Upcoming role="ADMIN" locale={locale} subdomain={subdomain} />
-      <Weather />
+      <Weather
+        current={weatherData?.current}
+        forecast={weatherData?.forecast}
+        location={weatherData?.location}
+      />
     </div>
   )
 }
@@ -349,6 +355,7 @@ export function AdminDashboardClient({
   userName,
   schoolName,
   quickLookData,
+  weatherData,
   recentActivities,
   todaySummary,
 }: AdminDashboardClientProps) {
@@ -357,7 +364,7 @@ export function AdminDashboardClient({
       {/* ============ TOP HERO SECTION (Unified Order) ============ */}
       <div className="space-y-6">
         {/* Section 1: Upcoming + Weather */}
-        <HeroSection locale={locale} subdomain={subdomain} />
+        <HeroSection locale={locale} subdomain={subdomain} weatherData={weatherData} />
 
         {/* Section 2: Quick Look (with real data) */}
         <QuickLookSection locale={locale} subdomain={subdomain} data={quickLookData} />

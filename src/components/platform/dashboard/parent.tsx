@@ -5,6 +5,7 @@ import { ChevronRight, Calendar, Users, Trophy, FileText, Bell } from "lucide-re
 import { isToday, isTomorrow, differenceInDays } from "date-fns"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { getParentDashboardData, getQuickLookData } from "./actions"
+import { getWeatherData } from "./weather-actions"
 import { QuickActions } from "./quick-actions"
 import { getQuickActionsByRole } from "./quick-actions-config"
 import { getTenantContext } from "@/lib/tenant-context"
@@ -42,13 +43,16 @@ export async function ParentDashboard({ user, dictionary, locale = "en" }: Paren
     // Fetch real data from server action with error handling
     let data
     let quickLookData
+    let weatherData
     try {
-      const [parentData, qlData] = await Promise.all([
+      const [parentData, qlData, weather] = await Promise.all([
         getParentDashboardData(),
         getQuickLookData(),
+        getWeatherData(),
       ])
       data = parentData
       quickLookData = qlData
+      weatherData = weather
     } catch (error) {
       console.error("[ParentDashboard] Error fetching data:", error)
       return (
@@ -172,7 +176,11 @@ export async function ParentDashboard({ user, dictionary, locale = "en" }: Paren
         {/* Section 1: Upcoming + Weather */}
         <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:gap-8">
           <Upcoming role="GUARDIAN" locale={locale} subdomain={school?.domain || ""} />
-          <Weather />
+          <Weather
+            current={weatherData?.current}
+            forecast={weatherData?.forecast}
+            location={weatherData?.location}
+          />
         </div>
 
         {/* Section 2: Quick Look (no title) */}

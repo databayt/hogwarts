@@ -52,6 +52,9 @@ async function ensureDemoSchool() {
       maxStudents: DEMO_SCHOOL.maxStudents,
       maxTeachers: DEMO_SCHOOL.maxTeachers,
       isActive: true,
+      // Weather coordinates for Khartoum, Sudan
+      latitude: 15.5007,
+      longitude: 32.5599,
     },
   });
 

@@ -6,6 +6,8 @@ model School {
   domain      String  @unique // e.g., "hogwarts" for hogwarts.schoolapp.com
   logoUrl     String?
   address     String?
+  latitude    Decimal?  @db.Decimal(10, 8)
+  longitude   Decimal?  @db.Decimal(11, 8)
   phoneNumber String?
   email       String?
   website     String?

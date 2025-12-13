@@ -4,6 +4,7 @@ import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { ChevronRight, Calendar, FileText, GraduationCap, Clock } from "lucide-react"
 import { format, isToday, isTomorrow } from "date-fns"
 import { getTeacherDashboardData, getQuickLookData } from "./actions"
+import { getWeatherData } from "./weather-actions"
 import { QuickActions } from "./quick-actions"
 import { getQuickActionsByRole } from "./quick-actions-config"
 import { getTenantContext } from "@/lib/tenant-context"
@@ -41,13 +42,16 @@ export async function TeacherDashboard({ user, dictionary, locale = "en" }: Teac
     // Fetch real data from server action with error handling
     let data
     let quickLookData
+    let weatherData
     try {
-      const [teacherData, qlData] = await Promise.all([
+      const [teacherData, qlData, weather] = await Promise.all([
         getTeacherDashboardData(),
         getQuickLookData(),
+        getWeatherData(),
       ])
       data = teacherData
       quickLookData = qlData
+      weatherData = weather
     } catch (error) {
       console.error("[TeacherDashboard] Error fetching data:", error)
       return (
@@ -169,7 +173,11 @@ export async function TeacherDashboard({ user, dictionary, locale = "en" }: Teac
         {/* Section 1: Upcoming + Weather */}
         <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:gap-8">
           <Upcoming role="TEACHER" locale={locale} subdomain={school?.domain || ""} />
-          <Weather />
+          <Weather
+            current={weatherData?.current}
+            forecast={weatherData?.forecast}
+            location={weatherData?.location}
+          />
         </div>
 
         {/* Section 2: Quick Look (no title) */}
