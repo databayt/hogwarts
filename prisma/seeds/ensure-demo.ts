@@ -1,0 +1,130 @@
+/**
+ * Auto-Recovery Seed for Demo School
+ *
+ * This script ensures the demo school exists on every deployment.
+ * It is SAFE to run multiple times (idempotent).
+ *
+ * Features:
+ * - Runs on every Vercel deployment (via build script)
+ * - Creates demo school if missing
+ * - NEVER deletes any data
+ * - Safe for contributors to run
+ *
+ * Usage:
+ *   tsx prisma/seeds/ensure-demo.ts
+ *
+ * This script is automatically run during build:
+ *   pnpm build → prisma generate → ensure-demo.ts → next build
+ */
+
+import { PrismaClient } from "@prisma/client";
+import { DEMO_SCHOOL, DEMO_PASSWORD } from "./constants";
+import bcrypt from "bcryptjs";
+
+const prisma = new PrismaClient();
+
+async function ensureDemoSchool() {
+  console.log("🔍 Checking demo school...");
+
+  const existing = await prisma.school.findUnique({
+    where: { domain: "demo" },
+    select: { id: true, name: true, domain: true },
+  });
+
+  if (existing) {
+    console.log(`✅ Demo school exists: ${existing.name} (${existing.id})`);
+    return existing;
+  }
+
+  console.log("⚠️ Demo school missing, creating...");
+
+  // Create the demo school with only existing schema fields
+  const school = await prisma.school.create({
+    data: {
+      name: DEMO_SCHOOL.nameEn,
+      domain: DEMO_SCHOOL.domain,
+      email: DEMO_SCHOOL.email,
+      website: DEMO_SCHOOL.website,
+      phoneNumber: DEMO_SCHOOL.phoneEn,
+      address: DEMO_SCHOOL.addressEn,
+      timezone: DEMO_SCHOOL.timezone,
+      planType: DEMO_SCHOOL.planType,
+      maxStudents: DEMO_SCHOOL.maxStudents,
+      maxTeachers: DEMO_SCHOOL.maxTeachers,
+      isActive: true,
+    },
+  });
+
+  console.log(`✅ Demo school created: ${school.name} (${school.id})`);
+  return school;
+}
+
+async function ensureAdminUser(schoolId: string) {
+  console.log("🔍 Checking admin user...");
+
+  const existingAdmin = await prisma.user.findFirst({
+    where: {
+      email: "admin@demo.databayt.org",
+      schoolId,
+    },
+    select: { id: true, email: true },
+  });
+
+  if (existingAdmin) {
+    console.log(`✅ Admin user exists: ${existingAdmin.email}`);
+    return existingAdmin;
+  }
+
+  console.log("⚠️ Admin user missing, creating...");
+
+  const hashedPassword = await bcrypt.hash(DEMO_PASSWORD, 10);
+
+  const admin = await prisma.user.upsert({
+    where: {
+      email_schoolId: {
+        email: "admin@demo.databayt.org",
+        schoolId,
+      },
+    },
+    update: {},
+    create: {
+      email: "admin@demo.databayt.org",
+      password: hashedPassword,
+      role: "ADMIN",
+      emailVerified: new Date(),
+      schoolId,
+    },
+  });
+
+  console.log(`✅ Admin user created: ${admin.email}`);
+  return admin;
+}
+
+async function main() {
+  console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+  console.log("🌱 ENSURE DEMO - Auto-Recovery Seed");
+  console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+
+  try {
+    // Ensure demo school exists
+    const school = await ensureDemoSchool();
+
+    // Ensure admin user exists
+    await ensureAdminUser(school.id);
+
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    console.log("✅ Demo environment verified");
+    console.log(`🌐 URL: https://demo.databayt.org`);
+    console.log(`📧 Admin: admin@demo.databayt.org`);
+    console.log(`🔑 Password: ${DEMO_PASSWORD}`);
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+  } catch (error) {
+    console.error("❌ Ensure demo error:", error);
+    // Don't exit with error code - build should continue
+    // The app can still work, just demo might not be available
+  } finally {
+    await prisma.$disconnect();
+  }
+}
+
+main();
