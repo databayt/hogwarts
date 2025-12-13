@@ -50,14 +50,14 @@ export const examBaseSchema = z.object({
   }
 })
 
-export const examCreateSchema = examBaseSchema.extend({
+export const examCreateSchema = examBaseSchema.merge(z.object({
   forceCreate: z.boolean().default(false), // Allow creation despite conflicts
-})
+}))
 
-export const examUpdateSchema = examBaseSchema.partial().extend({
+export const examUpdateSchema = examBaseSchema.partial().merge(z.object({
   id: z.string().min(1, "Required"),
   forceUpdate: z.boolean().optional().default(false), // Allow update despite conflicts
-})
+}))
 
 export const sortItemSchema = z.object({ id: z.string(), desc: z.boolean().optional() })
 

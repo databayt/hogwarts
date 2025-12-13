@@ -1,6 +1,6 @@
 import "server-only";
 
-import type { Prisma } from "@prisma/client";
+import type { Prisma, TaskStatus, TaskPriority } from "@prisma/client";
 import { db } from "@/lib/db";
 import { getTenantContext } from "@/components/operator/lib/tenant";
 
@@ -38,10 +38,10 @@ export async function getTasks(input: GetTasksSchema) {
             };
           }
           if (input.status.length > 0) {
-            basicWhere.status = { in: input.status };
+            basicWhere.status = { in: input.status as TaskStatus[] };
           }
           if (input.priority.length > 0) {
-            basicWhere.priority = { in: input.priority };
+            basicWhere.priority = { in: input.priority as TaskPriority[] };
           }
           if (input.estimatedHours.length > 0) {
             const estimatedHoursCondition: Prisma.FloatFilter = {};

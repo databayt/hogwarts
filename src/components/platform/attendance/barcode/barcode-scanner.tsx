@@ -191,6 +191,8 @@ export function BarcodeScanner({
     const drawingCtx = Quagga.canvas.ctx.overlay;
     const drawingCanvas = Quagga.canvas.dom.overlay;
 
+    if (!drawingCtx || !drawingCanvas) return;
+
     if (result.boxes) {
       drawingCtx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
 
