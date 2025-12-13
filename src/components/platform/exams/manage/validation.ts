@@ -1,6 +1,7 @@
 import { z } from "zod"
 
-export const examBaseSchema = z.object({
+// Base object schema without refinements (for use with .partial())
+const examBaseObjectSchema = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string().optional(),
   classId: z.string().min(1, "Class is required"),
@@ -13,51 +14,59 @@ export const examBaseSchema = z.object({
   passingMarks: z.number().min(1, "Passing marks must be at least 1"),
   examType: z.enum(["MIDTERM", "FINAL", "QUIZ", "TEST", "PRACTICAL"]),
   instructions: z.string().optional(),
-}).superRefine((val, ctx) => {
+})
+
+// Refinement function to reuse
+const examRefinement = <T extends { startTime?: string; endTime?: string; examDate?: Date; passingMarks?: number; totalMarks?: number }>(val: T, ctx: z.RefinementCtx) => {
   // Ensure end time is after start time
   if (val.startTime && val.endTime) {
     const start = new Date(`2000-01-01T${val.startTime}`);
     const end = new Date(`2000-01-01T${val.endTime}`);
     if (end <= start) {
-      ctx.addIssue({ 
-        code: z.ZodIssueCode.custom, 
-        message: "End time must be after start time", 
-        path: ["endTime"] 
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "End time must be after start time",
+        path: ["endTime"]
       })
     }
   }
-  
+
   // Ensure exam date is not in the past
   if (val.examDate) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     if (val.examDate < today) {
-      ctx.addIssue({ 
-        code: z.ZodIssueCode.custom, 
-        message: "Exam date cannot be in the past", 
-        path: ["examDate"] 
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Exam date cannot be in the past",
+        path: ["examDate"]
       })
     }
   }
 
   // Ensure passing marks don't exceed total marks
-  if (val.passingMarks > val.totalMarks) {
+  if (val.passingMarks !== undefined && val.totalMarks !== undefined && val.passingMarks > val.totalMarks) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       message: "Passing marks cannot exceed total marks",
       path: ["passingMarks"]
     })
   }
-})
+}
 
-export const examCreateSchema = examBaseSchema.extend({
+// Base schema with refinements (for type inference)
+export const examBaseSchema = examBaseObjectSchema.superRefine(examRefinement)
+
+// Create schema - merge with extra fields and add refinement
+export const examCreateSchema = examBaseObjectSchema.merge(z.object({
   forceCreate: z.boolean().default(false), // Allow creation despite conflicts
-})
+})).superRefine(examRefinement)
 
-export const examUpdateSchema = examBaseSchema.partial().extend({
+// Update schema - use partial and merge, then add refinement
+export const examUpdateSchema = examBaseObjectSchema.partial().merge(z.object({
   id: z.string().min(1, "Required"),
   forceUpdate: z.boolean().optional().default(false), // Allow update despite conflicts
-})
+})).superRefine(examRefinement)
 
 export const sortItemSchema = z.object({ id: z.string(), desc: z.boolean().optional() })
 
