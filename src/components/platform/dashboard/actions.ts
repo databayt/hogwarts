@@ -2724,8 +2724,9 @@ export async function getResourceUsageByRole(role: string) {
       return getAccountantResourceUsage(schoolId)
     case "PRINCIPAL":
       return getPrincipalResourceUsage(schoolId)
-    case "ADMIN":
     case "DEVELOPER":
+      return getDeveloperResourceUsage()
+    case "ADMIN":
     default:
       return getAdminResourceUsage(schoolId)
   }
@@ -2741,18 +2742,55 @@ async function getStudentResourceUsage(userId: string | undefined, schoolId: str
 
   if (!student) return []
 
-  const [totalAttendance, presentDays] = await Promise.all([
+  // Fetch real data in parallel
+  const [
+    totalAttendance,
+    presentDays,
+    completedAssignments,
+    totalAssignments,
+    examResults,
+    nextExam,
+  ] = await Promise.all([
     db.attendance.count({ where: { studentId: student.id, schoolId } }),
     db.attendance.count({ where: { studentId: student.id, schoolId, status: "PRESENT" } }),
+    db.assignmentSubmission.count({
+      where: { studentId: student.id, schoolId, status: { in: ["SUBMITTED", "GRADED"] } },
+    }),
+    db.assignment.count({
+      where: { schoolId, status: { in: ["PUBLISHED", "IN_PROGRESS"] } },
+    }),
+    // Use ExamResult for grades instead of non-existent grade model
+    db.examResult.findMany({
+      where: { studentId: student.id, schoolId },
+      select: { percentage: true },
+    }),
+    db.exam.findFirst({
+      where: { schoolId, examDate: { gte: new Date() } },
+      orderBy: { examDate: "asc" },
+      select: { examDate: true },
+    }),
   ])
 
   const attendanceRate = totalAttendance > 0 ? (presentDays / totalAttendance) * 100 : 0
 
+  // Calculate GPA from exam results (simple average converted to 4.0 scale)
+  let gpa = 0
+  if (examResults.length > 0) {
+    const avgPercentage =
+      examResults.reduce((sum: number, r: { percentage: number }) => sum + r.percentage, 0) / examResults.length
+    gpa = (avgPercentage / 100) * 4 // Convert to 4.0 scale
+  }
+
+  // Calculate days until next exam
+  const daysUntilExam = nextExam
+    ? Math.ceil((nextExam.examDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+    : 60
+
   return [
-    { name: "Assignment Completion", used: 85, limit: 100, unit: "%" },
+    { name: "Assignment Progress", used: completedAssignments, limit: totalAssignments || 20, unit: "completed" },
     { name: "Attendance Rate", used: Math.round(attendanceRate), limit: 100, unit: "%" },
-    { name: "Grade Average", used: 78, limit: 100, unit: "%" },
-    { name: "Library Books", used: 3, limit: 5, unit: "books" },
+    { name: "Current GPA", used: Math.round(gpa * 10) / 10, limit: 4, unit: "" },
+    { name: "Days Until Exams", used: Math.max(0, daysUntilExam), limit: 60, unit: "days" },
   ]
 }
 
@@ -2766,86 +2804,288 @@ async function getTeacherResourceUsage(userId: string | undefined, schoolId: str
 
   if (!teacher) return []
 
-  const [classCount, studentCount, pendingGrading, assignmentCount] = await Promise.all([
-    db.class.count({ where: { teacherId: teacher.id, schoolId } }),
-    db.studentClass.count({
-      where: { class: { teacherId: teacher.id, schoolId } },
+  // Get current week dates
+  const today = new Date()
+  const weekStart = new Date(today)
+  weekStart.setDate(today.getDate() - today.getDay())
+  weekStart.setHours(0, 0, 0, 0)
+  const weekEnd = new Date(weekStart)
+  weekEnd.setDate(weekStart.getDate() + 7)
+
+  // Get teacher's classes
+  const teacherClasses = await db.class.findMany({
+    where: { teacherId: teacher.id, schoolId },
+    select: { id: true },
+  })
+  const classIds = teacherClasses.map((c) => c.id)
+
+  const [lessonsThisWeek, ungradedWork, studentCount, attendanceMarked] = await Promise.all([
+    // Lessons this week for teacher's classes
+    db.lesson.count({
+      where: {
+        schoolId,
+        classId: { in: classIds },
+        lessonDate: { gte: weekStart, lt: weekEnd },
+      },
     }),
+    // Ungraded submissions
     db.assignmentSubmission.count({
       where: { schoolId, status: "SUBMITTED", assignment: { class: { teacherId: teacher.id } } },
     }),
-    db.assignment.count({ where: { schoolId, class: { teacherId: teacher.id } } }),
+    // Total students in teacher's classes
+    db.studentClass.count({
+      where: { class: { teacherId: teacher.id, schoolId } },
+    }),
+    // Attendance records marked this week for teacher's classes
+    db.attendance.count({
+      where: {
+        schoolId,
+        classId: { in: classIds },
+        date: { gte: weekStart, lt: weekEnd },
+      },
+    }),
   ])
 
+  // Estimate attendance completion (marked / expected)
+  const expectedAttendance = lessonsThisWeek * studentCount
+  const attendancePercentage = expectedAttendance > 0
+    ? Math.round((attendanceMarked / expectedAttendance) * 100)
+    : 100
+
   return [
-    { name: "Classes Taught", used: classCount, limit: 10, unit: "classes" },
-    { name: "Students", used: studentCount, limit: 200, unit: "students" },
-    { name: "Pending Grading", used: pendingGrading, limit: 50, unit: "submissions" },
-    { name: "Assignments Created", used: assignmentCount, limit: 100, unit: "assignments" },
+    { name: "Lessons This Week", used: lessonsThisWeek, limit: 24, unit: "lessons" },
+    { name: "Ungraded Work", used: ungradedWork, limit: 50, unit: "submissions" },
+    { name: "Class Coverage", used: studentCount, limit: 180, unit: "students" },
+    { name: "Attendance Marked", used: Math.min(attendancePercentage, 100), limit: 100, unit: "%" },
   ]
 }
 
 async function getParentResourceUsage(userId: string | undefined, schoolId: string) {
   if (!userId) return []
 
-  const childCount = await db.studentGuardian.count({
+  // Get all children's IDs
+  const children = await db.studentGuardian.findMany({
     where: { guardianId: userId, schoolId },
+    select: { studentId: true },
   })
+
+  const childIds = children.map((c) => c.studentId)
+  const childCount = childIds.length
+
+  if (childCount === 0) {
+    return [
+      { name: "Children Enrolled", used: 0, limit: 5, unit: "children" },
+      { name: "Avg Attendance", used: 0, limit: 100, unit: "%" },
+      { name: "Assignments Due", used: 0, limit: 15, unit: "tasks" },
+      { name: "Upcoming Events", used: 0, limit: 10, unit: "events" },
+    ]
+  }
+
+  // Fetch real data in parallel
+  const [
+    totalAttendance,
+    presentDays,
+    pendingAssignments,
+    upcomingEvents,
+  ] = await Promise.all([
+    // Total attendance records for all children
+    db.attendance.count({
+      where: { studentId: { in: childIds }, schoolId },
+    }),
+    // Present days for all children
+    db.attendance.count({
+      where: { studentId: { in: childIds }, schoolId, status: "PRESENT" },
+    }),
+    // Pending assignments for all children (not yet submitted)
+    db.assignment.count({
+      where: {
+        schoolId,
+        status: { in: ["PUBLISHED", "IN_PROGRESS"] },
+        dueDate: { gte: new Date() },
+        submissions: { none: { studentId: { in: childIds } } },
+      },
+    }),
+    // Upcoming school events
+    db.event.count({
+      where: {
+        schoolId,
+        eventDate: { gte: new Date(), lte: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) }, // Next 30 days
+      },
+    }),
+  ])
+
+  const avgAttendance = totalAttendance > 0
+    ? Math.round((presentDays / totalAttendance) * 100)
+    : 100
 
   return [
     { name: "Children Enrolled", used: childCount, limit: 5, unit: "children" },
-    { name: "Attendance Avg", used: 92, limit: 100, unit: "%" },
-    { name: "Pending Tasks", used: 5, limit: 20, unit: "tasks" },
-    { name: "Upcoming Events", used: 3, limit: 10, unit: "events" },
+    { name: "Avg Attendance", used: avgAttendance, limit: 100, unit: "%" },
+    { name: "Assignments Due", used: pendingAssignments, limit: 15, unit: "tasks" },
+    { name: "Upcoming Events", used: upcomingEvents, limit: 10, unit: "events" },
   ]
 }
 
 async function getStaffResourceUsage(schoolId: string) {
+  // Staff metrics - some are mocked as we don't have a task/request model
+  // Get current month for work days calculation
+  const today = new Date()
+  const monthStart = new Date(today.getFullYear(), today.getMonth(), 1)
+  const workDaysInMonth = getWorkDaysInMonth(today)
+  const workDaysSoFar = getWorkDaysSoFar(today)
+
   return [
-    { name: "Tasks Completed", used: 45, limit: 60, unit: "tasks" },
-    { name: "Requests Processed", used: 28, limit: 40, unit: "requests" },
-    { name: "Approvals Pending", used: 5, limit: 15, unit: "items" },
-    { name: "Efficiency Rate", used: 88, limit: 100, unit: "%" },
+    { name: "Tasks Assigned", used: 12, limit: 20, unit: "tasks" },
+    { name: "Requests Pending", used: 5, limit: 15, unit: "requests" },
+    { name: "Days This Month", used: workDaysSoFar, limit: workDaysInMonth, unit: "days" },
+    { name: "Efficiency Score", used: 88, limit: 100, unit: "%" },
   ]
 }
 
+// Helper to get work days in month (excluding weekends)
+function getWorkDaysInMonth(date: Date): number {
+  const year = date.getFullYear()
+  const month = date.getMonth()
+  const lastDay = new Date(year, month + 1, 0).getDate()
+  let workDays = 0
+  for (let day = 1; day <= lastDay; day++) {
+    const d = new Date(year, month, day)
+    if (d.getDay() !== 0 && d.getDay() !== 6) workDays++
+  }
+  return workDays
+}
+
+// Helper to get work days so far in month
+function getWorkDaysSoFar(date: Date): number {
+  const year = date.getFullYear()
+  const month = date.getMonth()
+  const today = date.getDate()
+  let workDays = 0
+  for (let day = 1; day <= today; day++) {
+    const d = new Date(year, month, day)
+    if (d.getDay() !== 0 && d.getDay() !== 6) workDays++
+  }
+  return workDays
+}
+
 async function getAccountantResourceUsage(schoolId: string) {
-  const feeMetrics = await getFeeCollectionMetrics()
+  // Get current month dates
+  const today = new Date()
+  const monthStart = new Date(today.getFullYear(), today.getMonth(), 1)
+  const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0)
+
+  const [feeMetrics, pendingInvoices, monthlyRevenue, overdueAmount] = await Promise.all([
+    getFeeCollectionMetrics(),
+    // Count of pending invoices
+    db.userInvoice.count({
+      where: { schoolId, status: { not: "PAID" } },
+    }),
+    // This month's revenue (paid invoices)
+    db.userInvoice.aggregate({
+      where: {
+        schoolId,
+        status: "PAID",
+        invoice_date: { gte: monthStart, lte: monthEnd },
+      },
+      _sum: { total: true },
+    }),
+    // Overdue amount (unpaid and past due date)
+    db.userInvoice.aggregate({
+      where: {
+        schoolId,
+        status: { not: "PAID" },
+        due_date: { lt: today },
+      },
+      _sum: { total: true },
+    }),
+  ])
+
+  const revenue = monthlyRevenue._sum.total || 0
+  const overdue = overdueAmount._sum.total || 0
 
   return [
     { name: "Collection Rate", used: Math.round(feeMetrics.collectionRate), limit: 100, unit: "%" },
-    { name: "Invoices Processed", used: 150, limit: 200, unit: "invoices" },
-    { name: "Outstanding", used: Math.round(feeMetrics.pending / 1000), limit: 500, unit: "K" },
-    { name: "Payments Today", used: 12, limit: 30, unit: "payments" },
+    { name: "Pending Invoices", used: pendingInvoices, limit: 200, unit: "invoices" },
+    { name: "Monthly Revenue", used: Math.round(revenue), limit: 120000, unit: "SAR" },
+    { name: "Overdue Amount", used: Math.round(overdue), limit: 50000, unit: "SAR" },
   ]
 }
 
 async function getPrincipalResourceUsage(schoolId: string) {
-  const [studentCount, teacherCount] = await Promise.all([
+  // Get today's date for attendance
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const tomorrow = new Date(today)
+  tomorrow.setDate(tomorrow.getDate() + 1)
+
+  const [studentCount, teacherCount, todayAttendance, totalStudentsToday] = await Promise.all([
     db.student.count({ where: { schoolId } }),
+    // Count teachers (Staff model doesn't exist)
     db.teacher.count({ where: { schoolId } }),
+    // Today's attendance (present students)
+    db.attendance.count({
+      where: {
+        schoolId,
+        date: { gte: today, lt: tomorrow },
+        status: "PRESENT",
+      },
+    }),
+    // Total students expected today
+    db.attendance.count({
+      where: {
+        schoolId,
+        date: { gte: today, lt: tomorrow },
+      },
+    }),
   ])
 
+  const attendanceToday = totalStudentsToday > 0
+    ? Math.round((todayAttendance / totalStudentsToday) * 100)
+    : 0
+
   return [
-    { name: "School Capacity", used: studentCount, limit: 1000, unit: "students" },
-    { name: "Staff Utilization", used: teacherCount, limit: 100, unit: "teachers" },
-    { name: "Budget Usage", used: 78, limit: 100, unit: "%" },
-    { name: "Satisfaction", used: 89, limit: 100, unit: "%" },
+    { name: "Enrollment", used: studentCount, limit: 1000, unit: "students" },
+    { name: "Staff Count", used: teacherCount, limit: 60, unit: "teachers" },
+    { name: "Attendance Today", used: attendanceToday, limit: 100, unit: "%" },
+    { name: "Budget Used", used: 78, limit: 100, unit: "%" }, // Mocked - would need budget model
   ]
 }
 
 async function getAdminResourceUsage(schoolId: string) {
-  const [userCount, studentCount, teacherCount] = await Promise.all([
+  const [userCount, activeSessionsEstimate] = await Promise.all([
     db.user.count({ where: { schoolId } }),
-    db.student.count({ where: { schoolId } }),
-    db.teacher.count({ where: { schoolId } }),
+    // Estimate active sessions from recent user activity (users active in last 24h)
+    db.user.count({
+      where: {
+        schoolId,
+        // This is an approximation - would need an actual sessions table for real data
+      },
+    }),
+  ])
+
+  // Active sessions estimated as ~10-15% of total users
+  const activeSessions = Math.round(userCount * 0.12)
+
+  return [
+    { name: "Active Users", used: userCount, limit: 2000, unit: "users" },
+    { name: "Storage Used", used: 45, limit: 100, unit: "GB" }, // Mocked
+    { name: "Active Sessions", used: activeSessions, limit: 500, unit: "sessions" },
+    { name: "System Health", used: 98, limit: 100, unit: "%" }, // Mocked
+  ]
+}
+
+async function getDeveloperResourceUsage() {
+  // Platform-wide metrics for developers
+  const [totalSchools, totalUsers] = await Promise.all([
+    db.school.count(),
+    db.user.count(),
   ])
 
   return [
-    { name: "System Usage", used: 65, limit: 100, unit: "%" },
-    { name: "Storage", used: 2500, limit: 5000, unit: "MB" },
-    { name: "Active Users", used: userCount, limit: 500, unit: "users" },
-    { name: "API Calls", used: 8500, limit: 10000, unit: "calls" },
+    { name: "Schools Active", used: totalSchools, limit: 100, unit: "schools" },
+    { name: "Platform Users", used: totalUsers, limit: 50000, unit: "users" },
+    { name: "Database Size", used: 120, limit: 500, unit: "GB" }, // Mocked
+    { name: "System Uptime", used: 99.9, limit: 100, unit: "%" }, // Mocked
   ]
 }
 

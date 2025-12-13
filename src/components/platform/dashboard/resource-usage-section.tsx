@@ -22,6 +22,34 @@ export type DashboardRole =
 export interface ResourceUsageSectionProps {
   role: DashboardRole
   className?: string
+  sectionTitle?: string
+}
+
+// ============================================================================
+// ROLE-SPECIFIC TITLES
+// ============================================================================
+
+function getResourceTitleByRole(role: DashboardRole): string {
+  switch (role) {
+    case "STUDENT":
+      return "Academic Progress"
+    case "TEACHER":
+      return "Teaching Workload"
+    case "GUARDIAN":
+      return "Children Overview"
+    case "STAFF":
+      return "Work Overview"
+    case "ACCOUNTANT":
+      return "Financial Metrics"
+    case "PRINCIPAL":
+      return "School Overview"
+    case "ADMIN":
+      return "System Health"
+    case "DEVELOPER":
+      return "Platform Metrics"
+    default:
+      return "Resource Usage"
+  }
 }
 
 // ============================================================================
@@ -29,53 +57,61 @@ export interface ResourceUsageSectionProps {
 // ============================================================================
 
 const defaultResourcesByRole: Record<DashboardRole, UsageResource[]> = {
+  // Academic Progress - Student metrics that matter
   STUDENT: [
-    { name: "Assignment Completion", used: 18, limit: 22, unit: "tasks" },
+    { name: "Assignment Progress", used: 18, limit: 22, unit: "completed" },
     { name: "Attendance Rate", used: 92, limit: 100, unit: "%" },
-    { name: "Grade Average", used: 78, limit: 100, unit: "%" },
-    { name: "Library Books", used: 3, limit: 5, unit: "books" },
+    { name: "Current GPA", used: 3.2, limit: 4, unit: "" },
+    { name: "Days Until Exams", used: 45, limit: 60, unit: "days" },
   ],
+  // Teaching Workload - What teachers need to track
   TEACHER: [
-    { name: "Classes Taught", used: 18, limit: 24, unit: "classes" },
-    { name: "Students Count", used: 145, limit: 200, unit: "students" },
-    { name: "Pending Grading", used: 23, limit: 50, unit: "assignments" },
-    { name: "Assignments Created", used: 45, limit: 100, unit: "total" },
+    { name: "Lessons This Week", used: 18, limit: 24, unit: "lessons" },
+    { name: "Ungraded Work", used: 23, limit: 50, unit: "submissions" },
+    { name: "Class Coverage", used: 145, limit: 180, unit: "students" },
+    { name: "Attendance Marked", used: 85, limit: 100, unit: "%" },
   ],
+  // Children Overview - What parents care about
   GUARDIAN: [
     { name: "Children Enrolled", used: 2, limit: 5, unit: "children" },
-    { name: "Attendance Avg", used: 94, limit: 100, unit: "%" },
-    { name: "Pending Tasks", used: 3, limit: 10, unit: "items" },
-    { name: "Upcoming Events", used: 4, limit: 10, unit: "events" },
+    { name: "Avg Attendance", used: 94, limit: 100, unit: "%" },
+    { name: "Assignments Due", used: 5, limit: 15, unit: "tasks" },
+    { name: "Upcoming Events", used: 3, limit: 10, unit: "events" },
   ],
+  // Work Overview - Staff work metrics
   STAFF: [
-    { name: "Tasks Completed", used: 42, limit: 50, unit: "tasks" },
-    { name: "Requests Processed", used: 28, limit: 40, unit: "requests" },
-    { name: "Approvals Pending", used: 5, limit: 20, unit: "items" },
-    { name: "Efficiency Rate", used: 87, limit: 100, unit: "%" },
+    { name: "Tasks Assigned", used: 12, limit: 20, unit: "tasks" },
+    { name: "Requests Pending", used: 5, limit: 15, unit: "requests" },
+    { name: "Days This Month", used: 18, limit: 22, unit: "days" },
+    { name: "Efficiency Score", used: 88, limit: 100, unit: "%" },
   ],
+  // Financial Metrics - What accountants need
   ACCOUNTANT: [
     { name: "Collection Rate", used: 87, limit: 100, unit: "%" },
-    { name: "Invoices Processed", used: 156, limit: 200, unit: "invoices" },
-    { name: "Outstanding Amount", used: 45000, limit: 150000, unit: "SAR" },
-    { name: "Payments Today", used: 12, limit: 30, unit: "payments" },
+    { name: "Pending Invoices", used: 45, limit: 200, unit: "invoices" },
+    { name: "Monthly Revenue", used: 85000, limit: 120000, unit: "SAR" },
+    { name: "Overdue Amount", used: 12000, limit: 50000, unit: "SAR" },
   ],
+  // School Overview - Principal's dashboard
   PRINCIPAL: [
-    { name: "School Capacity", used: 892, limit: 1000, unit: "students" },
-    { name: "Staff Utilization", used: 86, limit: 100, unit: "%" },
-    { name: "Budget Usage", used: 780000, limit: 1000000, unit: "SAR" },
-    { name: "Satisfaction Score", used: 4.2, limit: 5, unit: "rating" },
+    { name: "Enrollment", used: 892, limit: 1000, unit: "students" },
+    { name: "Staff Count", used: 45, limit: 60, unit: "staff" },
+    { name: "Attendance Today", used: 88, limit: 100, unit: "%" },
+    { name: "Budget Used", used: 78, limit: 100, unit: "%" },
   ],
+  // System Health - Admin monitoring
   ADMIN: [
-    { name: "System Users", used: 1245, limit: 2000, unit: "users" },
+    { name: "Active Users", used: 1245, limit: 2000, unit: "users" },
     { name: "Storage Used", used: 45, limit: 100, unit: "GB" },
     { name: "Active Sessions", used: 156, limit: 500, unit: "sessions" },
-    { name: "API Calls Today", used: 12500, limit: 50000, unit: "calls" },
+    { name: "System Health", used: 98, limit: 100, unit: "%" },
   ],
+  // Platform Metrics - Developer view
   DEVELOPER: [
-    { name: "Total Schools", used: 45, limit: 100, unit: "schools" },
+    { name: "Schools Active", used: 45, limit: 100, unit: "schools" },
     { name: "Platform Users", used: 25000, limit: 50000, unit: "users" },
     { name: "Database Size", used: 120, limit: 500, unit: "GB" },
-    { name: "API Requests/Day", used: 450000, limit: 1000000, unit: "requests" },
+    { name: "System Uptime", used: 99.9, limit: 100, unit: "%" },
   ],
 }
 
@@ -90,9 +126,12 @@ const defaultResourcesByRole: Record<DashboardRole, UsageResource[]> = {
  * @example
  * <ResourceUsageSection role="STUDENT" />
  */
-export function ResourceUsageSection({ role, className }: ResourceUsageSectionProps) {
+export function ResourceUsageSection({ role, className, sectionTitle }: ResourceUsageSectionProps) {
   const [resources, setResources] = useState<UsageResource[]>(defaultResourcesByRole[role] || defaultResourcesByRole.ADMIN)
   const [isLoading, setIsLoading] = useState(true)
+
+  // Use provided title or derive from role
+  const title = sectionTitle || getResourceTitleByRole(role)
 
   useEffect(() => {
     async function fetchData() {
@@ -121,7 +160,7 @@ export function ResourceUsageSection({ role, className }: ResourceUsageSectionPr
 
   return (
     <section className={className}>
-      <SectionHeading title="Resource Usage" />
+      <SectionHeading title={title} />
       <DetailedUsageTable
         resources={resources}
         title=""
@@ -139,6 +178,7 @@ export interface StaticResourceUsageSectionProps {
   role: DashboardRole
   resources?: UsageResource[]
   className?: string
+  sectionTitle?: string
 }
 
 /**
@@ -149,12 +189,14 @@ export function StaticResourceUsageSection({
   role,
   resources,
   className,
+  sectionTitle,
 }: StaticResourceUsageSectionProps) {
   const data = resources || defaultResourcesByRole[role] || defaultResourcesByRole.ADMIN
+  const title = sectionTitle || getResourceTitleByRole(role)
 
   return (
     <section className={className}>
-      <SectionHeading title="Resource Usage" />
+      <SectionHeading title={title} />
       <DetailedUsageTable
         resources={data}
         title=""
