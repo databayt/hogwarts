@@ -4,7 +4,7 @@ import { Progress } from "@/components/ui/progress"
 import { ChevronRight, Calendar, Users, Trophy, FileText, Bell } from "lucide-react"
 import { isToday, isTomorrow, differenceInDays } from "date-fns"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
-import { getParentDashboardData } from "./actions"
+import { getParentDashboardData, getQuickLookData } from "./actions"
 import { QuickActions } from "./quick-actions"
 import { getQuickActionsByRole } from "./quick-actions-config"
 import { getTenantContext } from "@/lib/tenant-context"
@@ -41,8 +41,14 @@ export async function ParentDashboard({ user, dictionary, locale = "en" }: Paren
   try {
     // Fetch real data from server action with error handling
     let data
+    let quickLookData
     try {
-      data = await getParentDashboardData()
+      const [parentData, qlData] = await Promise.all([
+        getParentDashboardData(),
+        getQuickLookData(),
+      ])
+      data = parentData
+      quickLookData = qlData
     } catch (error) {
       console.error("[ParentDashboard] Error fetching data:", error)
       return (
@@ -170,13 +176,13 @@ export async function ParentDashboard({ user, dictionary, locale = "en" }: Paren
         </div>
 
         {/* Section 2: Quick Look (no title) */}
-        <QuickLookSection locale={locale} subdomain={school?.domain || ""} />
+        <QuickLookSection locale={locale} subdomain={school?.domain || ""} data={quickLookData} />
 
         {/* Section 3: Quick Actions (4 focused actions) */}
         <section>
           <SectionHeading title="Quick Actions" />
           <QuickActions
-            actions={getQuickActionsByRole("GUARDIAN", dictionary, school?.domain ?? undefined)}
+            actions={getQuickActionsByRole("GUARDIAN", school?.domain ?? undefined)}
             locale={locale}
           />
         </section>

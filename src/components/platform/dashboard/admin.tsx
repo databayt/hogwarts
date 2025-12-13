@@ -14,7 +14,7 @@ function safeFormatDistanceToNow(date: Date | string | null | undefined): string
   }
 }
 
-import { getDashboardSummary } from "./actions"
+import { getDashboardSummary, getQuickLookData, type QuickLookData } from "./actions"
 import { getTenantContext } from "@/lib/tenant-context"
 import { AdminDashboardClient } from "./admin-client"
 
@@ -35,8 +35,15 @@ export async function AdminDashboard({ user, dictionary, locale = "en" }: Props)
   try {
     // Fetch real data from server actions with error handling
     let dashboardData
+    let quickLookData: QuickLookData | undefined
     try {
-      dashboardData = await getDashboardSummary()
+      // Fetch dashboard summary and quick look data in parallel
+      const [summaryData, qlData] = await Promise.all([
+        getDashboardSummary(),
+        getQuickLookData(),
+      ])
+      dashboardData = summaryData
+      quickLookData = qlData
     } catch (error) {
       console.error("[AdminDashboard] Error fetching data:", error)
       return (
@@ -100,6 +107,8 @@ export async function AdminDashboard({ user, dictionary, locale = "en" }: Props)
       subdomain: school?.domain || "",
       userName: user.name || user.email?.split("@")[0] || "Admin",
       schoolName: school?.name || "Your School",
+      // Quick Look data (real-time from database)
+      quickLookData,
       // Section 2: Financial data
       financeStats: [
         { label: "Revenue", value: `$${(financialData.totalRevenue / 1000).toFixed(0)}K` },

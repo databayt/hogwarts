@@ -3184,3 +3184,383 @@ async function getAdminFinancialOverview(schoolId: string) {
     },
   }
 }
+
+// ============================================================================
+// QUICK LOOK DATA (Production-ready with real database integration)
+// ============================================================================
+
+export interface QuickLookItem {
+  type: "announcements" | "events" | "notifications" | "messages"
+  count: number
+  newCount: number
+  recent: string
+}
+
+export interface QuickLookData {
+  announcements: QuickLookItem
+  events: QuickLookItem
+  notifications: QuickLookItem
+  messages: QuickLookItem
+}
+
+/**
+ * Fetch Quick Look data with real database integration
+ * Returns counts and recent items for announcements, events, notifications, and messages
+ */
+export async function getQuickLookData(): Promise<QuickLookData> {
+  const session = await auth()
+  const userId = session?.user?.id
+  const schoolId = session?.user?.schoolId
+  const userRole = session?.user?.role
+
+  // Default empty data
+  const emptyData: QuickLookData = {
+    announcements: { type: "announcements", count: 0, newCount: 0, recent: "" },
+    events: { type: "events", count: 0, newCount: 0, recent: "" },
+    notifications: { type: "notifications", count: 0, newCount: 0, recent: "" },
+    messages: { type: "messages", count: 0, newCount: 0, recent: "" },
+  }
+
+  if (!userId || !schoolId) return emptyData
+
+  const now = new Date()
+  const last24Hours = subHours(now, 24)
+  const last7Days = subDays(now, 7)
+
+  try {
+    // Fetch all data in parallel for performance
+    const [
+      announcementsData,
+      eventsData,
+      notificationsData,
+      messagesData,
+    ] = await Promise.all([
+      // 1. ANNOUNCEMENTS - published, not expired, scoped to user
+      getAnnouncementsQuickLook(schoolId, userId, userRole, last24Hours, now),
+      // 2. EVENTS - upcoming events in the next 30 days
+      getEventsQuickLook(schoolId, last7Days, now),
+      // 3. NOTIFICATIONS - unread notifications for user
+      getNotificationsQuickLook(schoolId, userId, last24Hours),
+      // 4. MESSAGES - unread messages in conversations
+      getMessagesQuickLook(schoolId, userId, last24Hours),
+    ])
+
+    return {
+      announcements: announcementsData,
+      events: eventsData,
+      notifications: notificationsData,
+      messages: messagesData,
+    }
+  } catch (error) {
+    console.error("[getQuickLookData] Error fetching quick look data:", error)
+    return emptyData
+  }
+}
+
+async function getAnnouncementsQuickLook(
+  schoolId: string,
+  userId: string,
+  userRole: string | undefined,
+  last24Hours: Date,
+  now: Date
+): Promise<QuickLookItem> {
+  // Get all active announcements for the school
+  const announcements = await db.announcement.findMany({
+    where: {
+      schoolId,
+      published: true,
+      OR: [
+        { expiresAt: null },
+        { expiresAt: { gte: now } },
+      ],
+      // Scope by role if applicable
+      ...(userRole && userRole !== "ADMIN" && userRole !== "DEVELOPER"
+        ? {
+            OR: [
+              { scope: "school" },
+              { role: userRole as import("@prisma/client").UserRole },
+            ],
+          }
+        : {}),
+    },
+    select: {
+      id: true,
+      titleEn: true,
+      titleAr: true,
+      createdAt: true,
+      readReceipts: {
+        where: { userId },
+        select: { id: true },
+      },
+    },
+    orderBy: { createdAt: "desc" },
+    take: 20,
+  })
+
+  const totalCount = announcements.length
+  const unreadCount = announcements.filter((a) => a.readReceipts.length === 0).length
+  const newCount = announcements.filter((a) => a.createdAt >= last24Hours).length
+  const mostRecent = announcements[0]
+
+  return {
+    type: "announcements",
+    count: totalCount,
+    newCount: unreadCount > 0 ? unreadCount : newCount,
+    recent: mostRecent?.titleEn || mostRecent?.titleAr || "",
+  }
+}
+
+async function getEventsQuickLook(
+  schoolId: string,
+  last7Days: Date,
+  now: Date
+): Promise<QuickLookItem> {
+  const thirtyDaysFromNow = addDays(now, 30)
+
+  const events = await db.event.findMany({
+    where: {
+      schoolId,
+      eventDate: {
+        gte: now,
+        lte: thirtyDaysFromNow,
+      },
+      status: { in: ["PLANNED", "ONGOING"] },
+    },
+    select: {
+      id: true,
+      title: true,
+      eventDate: true,
+      createdAt: true,
+    },
+    orderBy: { eventDate: "asc" },
+    take: 20,
+  })
+
+  const totalCount = events.length
+  const newCount = events.filter((e) => e.createdAt >= last7Days).length
+  const nextEvent = events[0]
+
+  return {
+    type: "events",
+    count: totalCount,
+    newCount,
+    recent: nextEvent?.title || "",
+  }
+}
+
+async function getNotificationsQuickLook(
+  schoolId: string,
+  userId: string,
+  last24Hours: Date
+): Promise<QuickLookItem> {
+  const [totalUnread, newNotifications, mostRecent] = await Promise.all([
+    // Total unread notifications
+    db.notification.count({
+      where: {
+        schoolId,
+        userId,
+        read: false,
+      },
+    }),
+    // Notifications created in last 24 hours
+    db.notification.count({
+      where: {
+        schoolId,
+        userId,
+        createdAt: { gte: last24Hours },
+      },
+    }),
+    // Most recent unread notification
+    db.notification.findFirst({
+      where: {
+        schoolId,
+        userId,
+        read: false,
+      },
+      select: { title: true },
+      orderBy: { createdAt: "desc" },
+    }),
+  ])
+
+  return {
+    type: "notifications",
+    count: totalUnread,
+    newCount: newNotifications,
+    recent: mostRecent?.title || "",
+  }
+}
+
+async function getMessagesQuickLook(
+  schoolId: string,
+  userId: string,
+  last24Hours: Date
+): Promise<QuickLookItem> {
+  // Get user's conversations with unread counts
+  const participations = await db.conversationParticipant.findMany({
+    where: {
+      userId,
+      isActive: true,
+      conversation: { schoolId },
+    },
+    select: {
+      unreadCount: true,
+      conversation: {
+        select: {
+          lastMessageAt: true,
+          messages: {
+            where: {
+              senderId: { not: userId },
+              isDeleted: false,
+            },
+            orderBy: { createdAt: "desc" },
+            take: 1,
+            select: { content: true, createdAt: true },
+          },
+        },
+      },
+    },
+  })
+
+  const totalUnread = participations.reduce((sum, p) => sum + p.unreadCount, 0)
+  const newMessages = participations.filter((p) => {
+    const lastMessage = p.conversation.messages[0]
+    return lastMessage && lastMessage.createdAt >= last24Hours
+  }).length
+
+  // Get most recent message preview
+  let recentPreview = ""
+  const mostRecentParticipation = participations
+    .filter((p) => p.conversation.messages[0])
+    .sort((a, b) => {
+      const aDate = a.conversation.messages[0]?.createdAt.getTime() || 0
+      const bDate = b.conversation.messages[0]?.createdAt.getTime() || 0
+      return bDate - aDate
+    })[0]
+
+  if (mostRecentParticipation?.conversation.messages[0]) {
+    const content = mostRecentParticipation.conversation.messages[0].content
+    recentPreview = content.length > 50 ? content.substring(0, 47) + "..." : content
+  }
+
+  return {
+    type: "messages",
+    count: totalUnread,
+    newCount: newMessages,
+    recent: recentPreview,
+  }
+}
+
+// ============================================================================
+// QUICK ACTIONS DATA
+// ============================================================================
+
+export interface DashboardAnalytics {
+  totalStudents: number
+  totalTeachers: number
+  attendanceRate: number
+  feeCollectionRate: number
+  upcomingEvents: number
+  pendingAssignments: number
+  unreadMessages: number
+  overdueInvoices: number
+}
+
+/**
+ * Get dashboard analytics for report/analysis quick action
+ */
+export async function getDashboardAnalytics(): Promise<DashboardAnalytics> {
+  const { schoolId } = await getTenantContext()
+
+  if (!schoolId) {
+    return {
+      totalStudents: 0,
+      totalTeachers: 0,
+      attendanceRate: 0,
+      feeCollectionRate: 0,
+      upcomingEvents: 0,
+      pendingAssignments: 0,
+      unreadMessages: 0,
+      overdueInvoices: 0,
+    }
+  }
+
+  const now = new Date()
+  const startOfCurrentMonth = startOfMonth(now)
+
+  const [
+    totalStudents,
+    totalTeachers,
+    attendanceData,
+    feeData,
+    upcomingEvents,
+    pendingAssignments,
+    overdueInvoices,
+  ] = await Promise.all([
+    db.student.count({ where: { schoolId } }),
+    db.teacher.count({ where: { schoolId } }),
+    db.attendance.findMany({
+      where: {
+        schoolId,
+        date: { gte: startOfCurrentMonth },
+      },
+      select: { status: true },
+    }),
+    db.invoice.findMany({
+      where: { schoolId },
+      select: { amountDue: true, amountPaid: true, status: true },
+    }),
+    db.event.count({
+      where: {
+        schoolId,
+        eventDate: { gte: now },
+        status: "PLANNED",
+      },
+    }),
+    db.assignment.count({
+      where: {
+        schoolId,
+        dueDate: { gte: now },
+        status: { in: ["PUBLISHED", "IN_PROGRESS"] },
+      },
+    }),
+    db.invoice.count({
+      where: {
+        schoolId,
+        status: "uncollectible", // Stripe invoice status for overdue
+      },
+    }),
+  ])
+
+  // Calculate attendance rate
+  const totalAttendance = attendanceData.length
+  const presentCount = attendanceData.filter(
+    (a) => a.status === "PRESENT" || a.status === "LATE"
+  ).length
+  const attendanceRate = totalAttendance > 0
+    ? Math.round((presentCount / totalAttendance) * 100)
+    : 0
+
+  // Calculate fee collection rate
+  const totalFees = feeData.reduce(
+    (sum, inv) => sum + (Number(inv.amountDue) || 0),
+    0
+  )
+  const collectedFees = feeData.reduce(
+    (sum, inv) => sum + (Number(inv.amountPaid) || 0),
+    0
+  )
+  const feeCollectionRate = totalFees > 0
+    ? Math.round((collectedFees / totalFees) * 100)
+    : 0
+
+  return {
+    totalStudents,
+    totalTeachers,
+    attendanceRate,
+    feeCollectionRate,
+    upcomingEvents,
+    pendingAssignments,
+    unreadMessages: 0, // Calculated per user in getQuickLookData
+    overdueInvoices,
+  }
+}

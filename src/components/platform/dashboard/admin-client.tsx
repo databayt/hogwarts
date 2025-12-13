@@ -36,6 +36,7 @@ import { ResourceUsageSection } from "./resource-usage-section"
 import { InvoiceHistorySection } from "./invoice-history-section"
 import { FinancialOverviewSection } from "./financial-overview-section"
 import { SectionHeading } from "./section-heading"
+import type { QuickLookData } from "./actions"
 
 import Link from "next/link"
 import {
@@ -67,6 +68,7 @@ interface AdminDashboardClientProps {
   subdomain: string
   userName: string
   schoolName: string
+  quickLookData?: QuickLookData
   recentActivities: ActivityData[]
   todaySummary: SummaryData[]
 }
@@ -314,7 +316,7 @@ function RecentActivitySection({
 // ============================================================================
 
 function QuickActionsSection({ locale, subdomain }: { locale: string; subdomain: string }) {
-  const actions = getQuickActionsByRole("ADMIN", undefined, subdomain)
+  const actions = getQuickActionsByRole("ADMIN", subdomain)
 
   return (
     <section>
@@ -346,6 +348,7 @@ export function AdminDashboardClient({
   subdomain,
   userName,
   schoolName,
+  quickLookData,
   recentActivities,
   todaySummary,
 }: AdminDashboardClientProps) {
@@ -356,8 +359,8 @@ export function AdminDashboardClient({
         {/* Section 1: Upcoming + Weather */}
         <HeroSection locale={locale} subdomain={subdomain} />
 
-        {/* Section 2: Quick Look (no title) */}
-        <QuickLookSection locale={locale} subdomain={subdomain} />
+        {/* Section 2: Quick Look (with real data) */}
+        <QuickLookSection locale={locale} subdomain={subdomain} data={quickLookData} />
 
         {/* Section 3: Quick Actions (4 focused actions) */}
         <QuickActionsSection locale={locale} subdomain={subdomain} />

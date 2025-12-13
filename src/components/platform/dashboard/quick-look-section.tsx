@@ -6,89 +6,120 @@ import { cn } from "@/lib/utils"
 import { ChevronRight } from "lucide-react"
 import { AnthropicIcons } from "@/components/icons/anthropic"
 import Link from "next/link"
+import type { QuickLookData } from "./actions"
 
 export interface QuickLookSectionProps {
   locale: string
   subdomain: string
+  data?: QuickLookData
 }
 
-export function QuickLookSection({ locale, subdomain }: QuickLookSectionProps) {
+// Quick Look item configuration with colors and icons
+const quickLookConfig = {
+  announcements: {
+    icon: AnthropicIcons.Announcement,
+    label: "Announcements",
+    href: "/announcements",
+    color: "text-[#D97757]",
+    bgColor: "bg-[#D97757]/15",
+  },
+  events: {
+    icon: AnthropicIcons.CalendarChart,
+    label: "Events",
+    href: "/events",
+    color: "text-[#6A9BCC]",
+    bgColor: "bg-[#6A9BCC]/15",
+  },
+  notifications: {
+    icon: AnthropicIcons.Lightning,
+    label: "Notifications",
+    href: "/notifications",
+    color: "text-[#CBCADB]",
+    bgColor: "bg-[#CBCADB]/15",
+  },
+  messages: {
+    icon: AnthropicIcons.Chat,
+    label: "Messages",
+    href: "/messaging",
+    color: "text-[#BCD1CA]",
+    bgColor: "bg-[#BCD1CA]/15",
+  },
+} as const
+
+export function QuickLookSection({ locale, subdomain, data }: QuickLookSectionProps) {
+  // Default/fallback data when no real data is provided
+  const defaultData: QuickLookData = {
+    announcements: { type: "announcements", count: 0, newCount: 0, recent: "" },
+    events: { type: "events", count: 0, newCount: 0, recent: "" },
+    notifications: { type: "notifications", count: 0, newCount: 0, recent: "" },
+    messages: { type: "messages", count: 0, newCount: 0, recent: "" },
+  }
+
+  const quickLookData = data || defaultData
+
   const quickLookItems = [
-    {
-      icon: AnthropicIcons.Announcement,
-      label: "Announcements",
-      count: 3,
-      newCount: 1,
-      recent: "Holiday Schedule Update",
-      href: `/${locale}/s/${subdomain}/announcements`,
-      color: "text-[#D97757]",
-      bgColor: "bg-[#D97757]/15"
-    },
-    {
-      icon: AnthropicIcons.CalendarChart,
-      label: "Events",
-      count: 5,
-      newCount: 2,
-      recent: "Parent-Teacher Meeting",
-      href: `/${locale}/s/${subdomain}/events`,
-      color: "text-[#6A9BCC]",
-      bgColor: "bg-[#6A9BCC]/15"
-    },
-    {
-      icon: AnthropicIcons.Lightning,
-      label: "Notifications",
-      count: 12,
-      newCount: 4,
-      recent: "Fee reminder for Grade 10",
-      href: `/${locale}/s/${subdomain}/notifications`,
-      color: "text-[#CBCADB]",
-      bgColor: "bg-[#CBCADB]/15"
-    },
-    {
-      icon: AnthropicIcons.Chat,
-      label: "Messages",
-      count: 8,
-      newCount: 2,
-      recent: "Request for meeting",
-      href: `/${locale}/s/${subdomain}/messaging`,
-      color: "text-[#BCD1CA]",
-      bgColor: "bg-[#BCD1CA]/15"
-    },
+    { ...quickLookConfig.announcements, data: quickLookData.announcements },
+    { ...quickLookConfig.events, data: quickLookData.events },
+    { ...quickLookConfig.notifications, data: quickLookData.notifications },
+    { ...quickLookConfig.messages, data: quickLookData.messages },
   ]
 
   return (
     <section>
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        {quickLookItems.map((item) => (
-          <Card key={item.label} className="p-4">
-            <CardContent className="p-0 space-y-3">
-              <div className="flex items-center gap-3">
-                <div className={cn("flex h-10 w-10 items-center justify-center rounded-lg", item.bgColor)}>
-                  <item.icon className={cn("h-5 w-5", item.color)} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs text-muted-foreground">{item.label}</p>
-                  <div className="flex items-center gap-2">
-                    <p className="text-lg font-semibold">{item.count}</p>
-                    {item.newCount > 0 && (
-                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                        +{item.newCount}
-                      </Badge>
-                    )}
+        {quickLookItems.map((item) => {
+          const Icon = item.icon
+          const hasNew = item.data.newCount > 0
+
+          return (
+            <Card key={item.label} className="p-4 transition-shadow hover:shadow-md">
+              <CardContent className="p-0 space-y-3">
+                <div className="flex items-center gap-3">
+                  <div className={cn("flex h-10 w-10 items-center justify-center rounded-lg", item.bgColor)}>
+                    <Icon className={cn("h-5 w-5", item.color)} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs text-muted-foreground">{item.label}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-lg font-semibold">{item.data.count}</p>
+                      {hasNew && (
+                        <Badge
+                          variant="secondary"
+                          className={cn(
+                            "text-[10px] px-1.5 py-0",
+                            item.data.newCount > 0 && "bg-primary/10 text-primary"
+                          )}
+                        >
+                          +{item.data.newCount} new
+                        </Badge>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-              <p className="text-xs text-muted-foreground truncate">{item.recent}</p>
-              <Link
-                href={item.href}
-                className="inline-flex items-center text-xs text-primary hover:underline"
-              >
-                View All <ChevronRight className="ml-1 h-3 w-3" />
-              </Link>
-            </CardContent>
-          </Card>
-        ))}
+                {item.data.recent && (
+                  <p className="text-xs text-muted-foreground truncate" title={item.data.recent}>
+                    {item.data.recent}
+                  </p>
+                )}
+                {!item.data.recent && item.data.count === 0 && (
+                  <p className="text-xs text-muted-foreground italic">
+                    No recent {item.label.toLowerCase()}
+                  </p>
+                )}
+                <Link
+                  href={`/${locale}/s/${subdomain}${item.href}`}
+                  className="inline-flex items-center text-xs text-primary hover:underline"
+                >
+                  View All <ChevronRight className="ml-1 h-3 w-3" />
+                </Link>
+              </CardContent>
+            </Card>
+          )
+        })}
       </div>
     </section>
   )
 }
+
+// Server wrapper component to fetch data and pass to client
+export { QuickLookSectionServer } from "./quick-look-section-server"

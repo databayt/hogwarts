@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { format, isToday, isTomorrow } from "date-fns"
+import { getQuickLookData } from "./actions"
 import { QuickActions } from "./quick-actions"
 import { getQuickActionsByRole } from "./quick-actions-config"
 import { getTenantContext } from "@/lib/tenant-context"
@@ -41,6 +42,14 @@ export async function AccountantDashboard({
 }: AccountantDashboardProps) {
   // Wrap entire component in try-catch for comprehensive error handling (like AdminDashboard)
   try {
+    // Fetch Quick Look data
+    let quickLookData
+    try {
+      quickLookData = await getQuickLookData()
+    } catch (error) {
+      console.error("[AccountantDashboard] Error fetching quick look data:", error)
+    }
+
     // Get tenant context for subdomain with error handling
     let schoolId: string | null = null
     try {
@@ -175,13 +184,13 @@ export async function AccountantDashboard({
         </div>
 
         {/* Section 2: Quick Look (no title) */}
-        <QuickLookSection locale={locale} subdomain={school?.domain || ""} />
+        <QuickLookSection locale={locale} subdomain={school?.domain || ""} data={quickLookData} />
 
         {/* Section 3: Quick Actions (4 focused actions) */}
         <section>
           <SectionHeading title="Quick Actions" />
           <QuickActions
-            actions={getQuickActionsByRole("ACCOUNTANT", dictionary, school?.domain ?? undefined)}
+            actions={getQuickActionsByRole("ACCOUNTANT", school?.domain ?? undefined)}
             locale={locale}
           />
         </section>

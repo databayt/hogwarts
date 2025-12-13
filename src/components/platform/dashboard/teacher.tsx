@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge"
 import type { Dictionary } from "@/components/internationalization/dictionaries"
 import { ChevronRight, Calendar, FileText, GraduationCap, Clock } from "lucide-react"
 import { format, isToday, isTomorrow } from "date-fns"
-import { getTeacherDashboardData } from "./actions"
+import { getTeacherDashboardData, getQuickLookData } from "./actions"
 import { QuickActions } from "./quick-actions"
 import { getQuickActionsByRole } from "./quick-actions-config"
 import { getTenantContext } from "@/lib/tenant-context"
@@ -40,8 +40,14 @@ export async function TeacherDashboard({ user, dictionary, locale = "en" }: Teac
   try {
     // Fetch real data from server action with error handling
     let data
+    let quickLookData
     try {
-      data = await getTeacherDashboardData()
+      const [teacherData, qlData] = await Promise.all([
+        getTeacherDashboardData(),
+        getQuickLookData(),
+      ])
+      data = teacherData
+      quickLookData = qlData
     } catch (error) {
       console.error("[TeacherDashboard] Error fetching data:", error)
       return (
@@ -167,13 +173,13 @@ export async function TeacherDashboard({ user, dictionary, locale = "en" }: Teac
         </div>
 
         {/* Section 2: Quick Look (no title) */}
-        <QuickLookSection locale={locale} subdomain={school?.domain || ""} />
+        <QuickLookSection locale={locale} subdomain={school?.domain || ""} data={quickLookData} />
 
         {/* Section 3: Quick Actions (4 focused actions) */}
         <section>
           <SectionHeading title="Quick Actions" />
           <QuickActions
-            actions={getQuickActionsByRole("TEACHER", dictionary, school?.domain ?? undefined)}
+            actions={getQuickActionsByRole("TEACHER", school?.domain ?? undefined)}
             locale={locale}
           />
         </section>
