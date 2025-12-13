@@ -34,7 +34,7 @@ import { QuickActions } from "./quick-actions"
 import { getQuickActionsByRole } from "./quick-actions-config"
 import { ResourceUsageSection } from "./resource-usage-section"
 import { InvoiceHistorySection } from "./invoice-history-section"
-import { FinancialOverviewSection } from "./financial-overview-section"
+import { ChartSection } from "./chart-section"
 import { SectionHeading } from "./section-heading"
 import type { QuickLookData } from "./actions"
 
@@ -371,8 +371,8 @@ export function AdminDashboardClient({
         {/* Section 5: Invoice History */}
         <InvoiceHistorySection role="ADMIN" />
 
-        {/* Section 6: Financial Overview */}
-        <FinancialOverviewSection role="ADMIN" />
+        {/* Section 6: Analytics Charts */}
+        <ChartSection role="ADMIN" />
       </div>
 
       {/* ============ ADMIN-SPECIFIC SECTIONS ============ */}

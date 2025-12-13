@@ -18,7 +18,7 @@ import { Weather } from "./weather"
 import { QuickLookSection } from "./quick-look-section"
 import { ResourceUsageSection } from "./resource-usage-section"
 import { InvoiceHistorySection } from "./invoice-history-section"
-import { FinancialOverviewSection } from "./financial-overview-section"
+import { ChartSection } from "./chart-section"
 import { SectionHeading } from "./section-heading"
 import Link from "next/link"
 import { ChevronRight, ArrowDownRight, ArrowUpRight } from "lucide-react"
@@ -201,8 +201,8 @@ export async function AccountantDashboard({
         {/* Section 5: Invoice History */}
         <InvoiceHistorySection role="ACCOUNTANT" />
 
-        {/* Section 6: Financial Overview */}
-        <FinancialOverviewSection role="ACCOUNTANT" />
+        {/* Section 6: Analytics Charts */}
+        <ChartSection role="ACCOUNTANT" />
 
         {/* ============ ACCOUNTANT-SPECIFIC SECTIONS ============ */}
         {/* Key Metrics Row */}

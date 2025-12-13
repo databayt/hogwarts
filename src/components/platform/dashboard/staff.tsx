@@ -17,7 +17,7 @@ import { Weather } from "./weather"
 import { QuickLookSection } from "./quick-look-section"
 import { ResourceUsageSection } from "./resource-usage-section"
 import { InvoiceHistorySection } from "./invoice-history-section"
-import { FinancialOverviewSection } from "./financial-overview-section"
+import { ChartSection } from "./chart-section"
 import { SectionHeading } from "./section-heading"
 import Link from "next/link"
 import { ChevronRight } from "lucide-react"
@@ -209,8 +209,8 @@ export async function StaffDashboard({
         {/* Section 5: Invoice History (Expense Reports) */}
         <InvoiceHistorySection role="STAFF" />
 
-        {/* Section 6: Financial Overview */}
-        <FinancialOverviewSection role="STAFF" />
+        {/* Section 6: Analytics Charts */}
+        <ChartSection role="STAFF" />
 
         {/* ============ STAFF-SPECIFIC SECTIONS ============ */}
         {/* Key Metrics Row */}

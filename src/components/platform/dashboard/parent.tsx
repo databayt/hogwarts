@@ -20,7 +20,7 @@ import { Weather } from "./weather"
 import { QuickLookSection } from "./quick-look-section"
 import { ResourceUsageSection } from "./resource-usage-section"
 import { InvoiceHistorySection } from "./invoice-history-section"
-import { FinancialOverviewSection } from "./financial-overview-section"
+import { ChartSection } from "./chart-section"
 import { SectionHeading } from "./section-heading"
 import Link from "next/link"
 
@@ -193,8 +193,8 @@ export async function ParentDashboard({ user, dictionary, locale = "en" }: Paren
         {/* Section 5: Invoice History (Children's Fees) */}
         <InvoiceHistorySection role="GUARDIAN" />
 
-        {/* Section 6: Financial Overview */}
-        <FinancialOverviewSection role="GUARDIAN" />
+        {/* Section 6: Analytics Charts */}
+        <ChartSection role="GUARDIAN" />
 
         {/* ============ PARENT-SPECIFIC SECTIONS ============ */}
         {/* Key Metrics Row */}
