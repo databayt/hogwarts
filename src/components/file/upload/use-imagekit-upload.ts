@@ -8,7 +8,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { IMAGEKIT_FOLDERS } from "@/lib/imagekit";
+import { IMAGEKIT_FOLDERS } from "../providers/imagekit";
 
 // ============================================================================
 // Types

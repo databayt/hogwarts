@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { logger } from '@/lib/logger';
-import { uploadLogo, uploadAvatar } from '@/lib/file-upload';
+import { uploadFile } from '@/components/file';
 import { db } from '@/lib/db';
 
 export async function POST(request: NextRequest) {
@@ -33,7 +33,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    let result;
+    // Configure upload options based on type
+    const uploadFormData = new FormData();
+    uploadFormData.set('file', file);
+
+    const uploadOptions = type === 'logo'
+      ? { category: 'image' as const, type: 'logo' as const, folder: 'logos' }
+      : { category: 'image' as const, type: 'avatar' as const, folder: 'avatars' };
 
     if (type === 'logo') {
       // Only allow school admins to upload logos
@@ -50,45 +56,10 @@ export async function POST(request: NextRequest) {
           { status: 400 }
         );
       }
-
-      result = await uploadLogo(file, session.user.schoolId);
-
-      if (result.success && result.url) {
-        // Update school logo in database
-        await db.school.update({
-          where: { id: session.user.schoolId },
-          data: { logoUrl: result.url },
-        });
-
-        logger.info('School logo updated', {
-          action: 'school_logo_update',
-          schoolId: session.user.schoolId,
-          userId: session.user.id,
-        });
-      }
-    } else if (type === 'avatar') {
-      result = await uploadAvatar(file, session.user.id);
-
-      if (result.success && result.url) {
-        // Update user avatar in database
-        await db.user.update({
-          where: { id: session.user.id },
-          data: { image: result.url },
-        });
-
-        logger.info('User avatar updated', {
-          action: 'user_avatar_update',
-          userId: session.user.id,
-        });
-      }
     }
 
-    if (!result) {
-      return NextResponse.json(
-        { error: 'Upload failed' },
-        { status: 500 }
-      );
-    }
+    // Upload file using centralized file module
+    const result = await uploadFile(uploadFormData, uploadOptions);
 
     if (!result.success) {
       return NextResponse.json(
@@ -97,10 +68,37 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Update database with new URL
+    if (type === 'logo' && session.user.schoolId) {
+      await db.school.update({
+        where: { id: session.user.schoolId },
+        data: { logoUrl: result.url },
+      });
+
+      logger.info('School logo updated', {
+        action: 'school_logo_update',
+        schoolId: session.user.schoolId,
+        userId: session.user.id,
+      });
+    } else if (type === 'avatar') {
+      await db.user.update({
+        where: { id: session.user.id },
+        data: { image: result.url },
+      });
+
+      logger.info('User avatar updated', {
+        action: 'user_avatar_update',
+        userId: session.user.id,
+      });
+    }
+
     return NextResponse.json({
       success: true,
       url: result.url,
-      metadata: result.metadata,
+      metadata: {
+        size: result.size,
+        type: result.mimeType,
+      },
     });
   } catch (error) {
     logger.error('Upload API error', error instanceof Error ? error : new Error('Unknown error'), {

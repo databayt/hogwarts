@@ -5,11 +5,12 @@ import Image from 'next/image';
 import { useRouter, useParams, usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { HelpCircle, Bookmark, Loader2 } from 'lucide-react';
+import { HelpCircle, Bookmark, Loader2, Check } from 'lucide-react';
 import { useApplyValidation } from './validation-context';
 import { useApplication } from './application-context';
 import { useLocale } from '@/components/internationalization/use-locale';
-import { APPLY_STEPS, STEP_GROUPS, STEP_GROUP_LABELS, type ApplyStep } from './config.client';
+import { APPLY_STEPS, STEP_GROUPS, type ApplyStep } from './config.client';
+import { formatRelativeTime } from '@/components/file';
 
 interface ApplyFooterProps {
   dictionary?: Record<string, unknown>;
@@ -118,21 +119,35 @@ const ApplyFooter: React.FC<ApplyFooterProps> = ({
     return 0;
   };
 
-  const dict: Record<string, string> = (dictionary as Record<string, Record<string, string>> | null)?.apply ?? {};
+  // Access apply dictionary from admission.apply
+  const applyDict = (dictionary as Record<string, Record<string, Record<string, unknown>>> | null)?.admission?.apply;
+  const footerDict = (applyDict?.footer ?? {}) as Record<string, string>;
+  const groupsDict = (applyDict?.groups ?? {}) as Record<string, string>;
+
   const isLastStep = currentStepSlug === 'review';
   const canGoBack = currentStepIndex > 0;
   const canGoNext = !contextNextDisabled && !(customNavigation?.nextDisabled);
 
+  // Get step group labels from dictionary
   const stepLabels = [
-    isRTL ? STEP_GROUP_LABELS[1].ar : STEP_GROUP_LABELS[1].en,
-    isRTL ? STEP_GROUP_LABELS[2].ar : STEP_GROUP_LABELS[2].en,
-    isRTL ? STEP_GROUP_LABELS[3].ar : STEP_GROUP_LABELS[3].en,
+    groupsDict.basicInfo || (isRTL ? 'المعلومات الأساسية' : 'Basic Information'),
+    groupsDict.familyEducation || (isRTL ? 'العائلة والتعليم' : 'Family & Education'),
+    groupsDict.finalize || (isRTL ? 'إنهاء' : 'Finalize'),
   ];
 
-  const backLabel = dict.back || (isRTL ? 'السابق' : 'Back');
+  const backLabel = footerDict.back || (isRTL ? 'السابق' : 'Back');
   const nextLabel = isLastStep
-    ? (dict.submit || (isRTL ? 'تقديم الطلب' : 'Submit Application'))
-    : (dict.next || (isRTL ? 'التالي' : 'Next'));
+    ? (footerDict.submit || (isRTL ? 'تقديم الطلب' : 'Submit Application'))
+    : (footerDict.next || (isRTL ? 'التالي' : 'Next'));
+  const helpLabel = footerDict.help || (isRTL ? 'مساعدة' : 'Help');
+  const saveLabel = footerDict.save || (isRTL ? 'حفظ' : 'Save');
+  const savingLabel = footerDict.saving || (isRTL ? 'جاري الحفظ...' : 'Saving...');
+  const lastSavedTemplate = footerDict.lastSaved || (isRTL ? 'آخر حفظ {time}' : 'Last saved {time}');
+
+  // Format last saved time
+  const lastSavedText = session.lastSaved
+    ? lastSavedTemplate.replace('{time}', formatRelativeTime(session.lastSaved))
+    : null;
 
   return (
     <footer className="fixed bottom-0 left-0 right-0 bg-white border-t">
@@ -151,7 +166,7 @@ const ApplyFooter: React.FC<ApplyFooterProps> = ({
 
       {/* All controls in one row */}
       <div className={`flex items-center justify-between px-4 sm:px-6 md:px-12 lg:px-20 py-3 sm:py-4 ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
-        {/* Left side - Logo, Help, Save */}
+        {/* Left side - Logo, Help, Save, Last Saved */}
         <div className={`flex items-center gap-1 ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
           <div className="relative w-8 h-8 flex items-center justify-center">
             <div className="relative w-6 h-6">
@@ -168,7 +183,7 @@ const ApplyFooter: React.FC<ApplyFooterProps> = ({
             variant="link"
             size="icon"
             className="rounded-full w-8 h-8 p-0 hover:bg-muted"
-            aria-label={dict.help || (isRTL ? 'مساعدة' : 'Help')}
+            aria-label={helpLabel}
           >
             <HelpCircle className="h-5 w-5" />
           </Button>
@@ -178,7 +193,7 @@ const ApplyFooter: React.FC<ApplyFooterProps> = ({
             onClick={handleSave}
             disabled={session.isSaving}
             className="rounded-full w-8 h-8 p-0 hover:bg-muted"
-            aria-label={dict.save || (isRTL ? 'حفظ' : 'Save')}
+            aria-label={saveLabel}
           >
             {session.isSaving ? (
               <Loader2 className="h-5 w-5 animate-spin" />
@@ -186,6 +201,18 @@ const ApplyFooter: React.FC<ApplyFooterProps> = ({
               <Bookmark className="h-5 w-5" />
             )}
           </Button>
+          {/* Last Saved Indicator */}
+          {lastSavedText && !session.isSaving && (
+            <div className={`hidden sm:flex items-center gap-1 text-xs text-muted-foreground ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
+              <Check className="h-3 w-3 text-green-500" />
+              <span>{lastSavedText}</span>
+            </div>
+          )}
+          {session.isSaving && (
+            <span className="hidden sm:inline text-xs text-muted-foreground">
+              {savingLabel}
+            </span>
+          )}
         </div>
 
         {/* Right side - Back and Next buttons */}

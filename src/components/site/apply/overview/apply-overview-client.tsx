@@ -33,45 +33,50 @@ const ApplyOverviewClient: React.FC<ApplyOverviewClientProps> = ({
   const [isStarting, setIsStarting] = React.useState(false);
   const { isRTL } = useLocale();
 
+  // Access the apply dictionary for overview and steps
+  const applyDict = (dictionary as unknown as { apply?: { overview?: Record<string, string>; steps?: Record<string, { title?: string; description?: string }> } })?.apply;
+  const overviewDict = applyDict?.overview ?? {};
+  const stepsDict = applyDict?.steps ?? {};
+
   const steps: Step[] = [
     {
       number: 1,
-      title: dictionary.stepPersonal,
-      description: isRTL
+      title: stepsDict.personal?.title || dictionary.stepPersonal,
+      description: stepsDict.personal?.description || (isRTL
         ? 'أدخل بياناتك الشخصية الأساسية'
-        : 'Enter your basic personal information',
+        : 'Enter your basic personal information'),
       illustration: "https://www-cdn.anthropic.com/images/4zrzovbb/website/5dfb835ad3cbbf76b85824e969146eac20329e72-1000x1000.svg"
     },
     {
       number: 2,
-      title: dictionary.stepGuardian,
-      description: isRTL
+      title: stepsDict.guardian?.title || dictionary.stepGuardian,
+      description: stepsDict.guardian?.description || (isRTL
         ? 'أضف معلومات ولي الأمر'
-        : 'Add guardian/parent information',
+        : 'Add guardian/parent information'),
       illustration: "https://www-cdn.anthropic.com/images/4zrzovbb/website/521a945a74f2d25262db4a002073aaeec9bc1919-1000x1000.svg"
     },
     {
       number: 3,
-      title: dictionary.stepAcademic,
-      description: isRTL
+      title: stepsDict.academic?.title || dictionary.stepAcademic,
+      description: stepsDict.academic?.description || (isRTL
         ? 'أدخل خلفيتك الأكاديمية'
-        : 'Enter your academic background',
+        : 'Enter your academic background'),
       illustration: "https://www-cdn.anthropic.com/images/4zrzovbb/website/0321b0ecbbf93535e93be1310ae1935157bcebdd-1000x1000.svg"
     },
     {
       number: 4,
-      title: dictionary.stepDocuments,
-      description: isRTL
+      title: stepsDict.documents?.title || dictionary.stepDocuments,
+      description: stepsDict.documents?.description || (isRTL
         ? 'ارفع المستندات المطلوبة'
-        : 'Upload required documents',
+        : 'Upload required documents'),
       illustration: "https://www-cdn.anthropic.com/images/4zrzovbb/website/5dfb835ad3cbbf76b85824e969146eac20329e72-1000x1000.svg"
     },
     {
       number: 5,
-      title: dictionary.stepReview,
-      description: isRTL
+      title: stepsDict.review?.title || dictionary.stepReview,
+      description: stepsDict.review?.description || (isRTL
         ? 'راجع طلبك وقدمه'
-        : 'Review and submit your application',
+        : 'Review and submit your application'),
       illustration: "https://www-cdn.anthropic.com/images/4zrzovbb/website/521a945a74f2d25262db4a002073aaeec9bc1919-1000x1000.svg"
     }
   ];
@@ -101,12 +106,12 @@ const ApplyOverviewClient: React.FC<ApplyOverviewClientProps> = ({
             {/* Left Side - Title */}
             <div>
               <h2 className={`text-4xl font-bold tracking-tight ${isRTL ? 'text-right' : 'text-left'}`}>
-                {isRTL ? 'خطوات التقديم' : 'Application Steps'}
+                {overviewDict.title || (isRTL ? 'خطوات التقديم' : 'Application Steps')}
               </h2>
               <p className={`mt-4 text-muted-foreground ${isRTL ? 'text-right' : 'text-left'}`}>
-                {isRTL
+                {overviewDict.subtitle || (isRTL
                   ? 'اتبع هذه الخطوات لإكمال طلب التقديم'
-                  : 'Follow these steps to complete your application'}
+                  : 'Follow these steps to complete your application')}
               </p>
             </div>
 
@@ -153,12 +158,12 @@ const ApplyOverviewClient: React.FC<ApplyOverviewClientProps> = ({
         <div className={`flex py-4 ${isRTL ? 'justify-start' : 'justify-end'}`}>
           <div className={`flex gap-4 ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
             <Button variant="ghost" onClick={handleBack}>
-              {isRTL ? 'رجوع' : 'Back'}
+              {overviewDict.back || (isRTL ? 'رجوع' : 'Back')}
             </Button>
             <Button onClick={handleGetStarted} disabled={isStarting || !id}>
               {isStarting
-                ? (isRTL ? 'جاري التحميل...' : 'Loading...')
-                : (isRTL ? 'ابدأ' : 'Get Started')}
+                ? (overviewDict.loading || (isRTL ? 'جاري التحميل...' : 'Loading...'))
+                : (overviewDict.getStarted || (isRTL ? 'ابدأ' : 'Get Started'))}
             </Button>
           </div>
         </div>

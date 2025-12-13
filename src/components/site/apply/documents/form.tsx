@@ -1,16 +1,16 @@
 "use client";
 
-import React, { forwardRef, useImperativeHandle, useState } from 'react';
+import React, { forwardRef, useImperativeHandle, useState, useCallback } from 'react';
 import { useParams } from 'next/navigation';
-import { Upload, FileText, X, CheckCircle } from 'lucide-react';
+import { FileText, X, CheckCircle, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { useLocale } from '@/components/internationalization/use-locale';
 import { useApplication } from '../application-context';
 import { saveDocumentsStep } from './actions';
 import { DOCUMENT_TYPES } from './config';
+import { Uploader, type UploadResult } from '@/components/file';
 import type { DocumentsFormRef, DocumentsFormProps, DocumentUpload } from './types';
 
 export const DocumentsForm = forwardRef<DocumentsFormRef, DocumentsFormProps>(
@@ -25,25 +25,80 @@ export const DocumentsForm = forwardRef<DocumentsFormRef, DocumentsFormProps>(
     const [signatureUrl, setSignatureUrl] = useState(initialData?.signatureUrl || '');
     const [documents, setDocuments] = useState<DocumentUpload[]>(initialData?.documents || []);
 
-    const dict = ((dictionary as Record<string, Record<string, string>> | null)?.apply?.documents ?? {}) as Record<string, string>;
+    // Access apply.documents dictionary
+    const dict = ((dictionary as Record<string, Record<string, Record<string, string>>> | null)?.admission?.apply?.documents ?? {}) as Record<string, string>;
 
-    const handleDocumentUpload = (type: string, name: string, url: string) => {
-      const newDoc: DocumentUpload = {
-        type,
-        name,
-        url,
-        uploadedAt: new Date().toISOString()
-      };
-      const updated = [...documents.filter(d => d.type !== type), newDoc];
-      setDocuments(updated);
-      updateStepData('documents', { photoUrl, signatureUrl, documents: updated });
-    };
+    // Handle photo upload
+    const handlePhotoUpload = useCallback((results: UploadResult[]) => {
+      const file = results[0];
+      if (file?.url) {
+        setPhotoUrl(file.url);
+        updateStepData('documents', {
+          photoUrl: file.url,
+          signatureUrl,
+          documents,
+          photo: {
+            id: file.id || '',
+            url: file.url,
+            name: file.originalName || 'photo',
+            type: 'image',
+          }
+        });
+      }
+    }, [signatureUrl, documents, updateStepData]);
 
-    const removeDocument = (type: string) => {
+    // Handle signature upload
+    const handleSignatureUpload = useCallback((results: UploadResult[]) => {
+      const file = results[0];
+      if (file?.url) {
+        setSignatureUrl(file.url);
+        updateStepData('documents', {
+          photoUrl,
+          signatureUrl: file.url,
+          documents,
+          signature: {
+            id: file.id || '',
+            url: file.url,
+            name: file.originalName || 'signature',
+            type: 'image',
+          }
+        });
+      }
+    }, [photoUrl, documents, updateStepData]);
+
+    // Handle document upload for a specific type
+    const handleDocumentUpload = useCallback((type: string, name: string, results: UploadResult[]) => {
+      const file = results[0];
+      if (file?.url) {
+        const newDoc: DocumentUpload = {
+          type,
+          name,
+          url: file.url,
+          uploadedAt: new Date().toISOString(),
+          fileId: file.id,
+          size: file.size,
+        };
+        const updated = [...documents.filter(d => d.type !== type), newDoc];
+        setDocuments(updated);
+        updateStepData('documents', { photoUrl, signatureUrl, documents: updated });
+      }
+    }, [photoUrl, signatureUrl, documents, updateStepData]);
+
+    const removeDocument = useCallback((type: string) => {
       const updated = documents.filter(d => d.type !== type);
       setDocuments(updated);
       updateStepData('documents', { photoUrl, signatureUrl, documents: updated });
-    };
+    }, [photoUrl, signatureUrl, documents, updateStepData]);
+
+    const removePhoto = useCallback(() => {
+      setPhotoUrl('');
+      updateStepData('documents', { photoUrl: '', signatureUrl, documents, photo: undefined });
+    }, [signatureUrl, documents, updateStepData]);
+
+    const removeSignature = useCallback(() => {
+      setSignatureUrl('');
+      updateStepData('documents', { photoUrl, signatureUrl: '', documents, signature: undefined });
+    }, [photoUrl, documents, updateStepData]);
 
     const saveAndNext = async () => {
       const data = { photoUrl, signatureUrl, documents };
@@ -81,29 +136,23 @@ export const DocumentsForm = forwardRef<DocumentsFormRef, DocumentsFormProps>(
                       variant="destructive"
                       size="icon"
                       className="absolute -top-2 -end-2 h-6 w-6"
-                      onClick={() => {
-                        setPhotoUrl('');
-                        updateStepData('documents', { photoUrl: '', signatureUrl, documents });
-                      }}
+                      onClick={removePhoto}
                     >
                       <X className="h-4 w-4" />
                     </Button>
                   </div>
                 ) : (
-                  <div className="w-32 h-32 border-2 border-dashed rounded-lg flex items-center justify-center text-muted-foreground">
-                    <Upload className="h-8 w-8" />
-                  </div>
+                  <Uploader
+                    category="image"
+                    type="avatar"
+                    folder="applications/photos"
+                    maxSize={2 * 1024 * 1024} // 2MB
+                    maxFiles={1}
+                    variant="compact"
+                    onUploadComplete={handlePhotoUpload}
+                    className="w-full"
+                  />
                 )}
-                <Input
-                  type="url"
-                  placeholder={dict.photoUrlPlaceholder || (isRTL ? 'رابط الصورة' : 'Photo URL')}
-                  value={photoUrl}
-                  onChange={(e) => {
-                    setPhotoUrl(e.target.value);
-                    updateStepData('documents', { photoUrl: e.target.value, signatureUrl, documents });
-                  }}
-                  className="max-w-xs"
-                />
               </div>
             </CardContent>
           </Card>
@@ -125,29 +174,22 @@ export const DocumentsForm = forwardRef<DocumentsFormRef, DocumentsFormProps>(
                       variant="destructive"
                       size="icon"
                       className="absolute -top-2 -end-2 h-6 w-6"
-                      onClick={() => {
-                        setSignatureUrl('');
-                        updateStepData('documents', { photoUrl, signatureUrl: '', documents });
-                      }}
+                      onClick={removeSignature}
                     >
                       <X className="h-4 w-4" />
                     </Button>
                   </div>
                 ) : (
-                  <div className="w-32 h-16 border-2 border-dashed rounded-lg flex items-center justify-center text-muted-foreground">
-                    <Upload className="h-6 w-6" />
-                  </div>
+                  <Uploader
+                    category="image"
+                    folder="applications/signatures"
+                    maxSize={2 * 1024 * 1024} // 2MB
+                    maxFiles={1}
+                    variant="compact"
+                    onUploadComplete={handleSignatureUpload}
+                    className="w-full"
+                  />
                 )}
-                <Input
-                  type="url"
-                  placeholder={dict.signatureUrlPlaceholder || (isRTL ? 'رابط التوقيع' : 'Signature URL')}
-                  value={signatureUrl}
-                  onChange={(e) => {
-                    setSignatureUrl(e.target.value);
-                    updateStepData('documents', { photoUrl, signatureUrl: e.target.value, documents });
-                  }}
-                  className="max-w-xs"
-                />
               </div>
             </CardContent>
           </Card>
@@ -190,19 +232,18 @@ export const DocumentsForm = forwardRef<DocumentsFormRef, DocumentsFormProps>(
                         </Button>
                       </div>
                     ) : (
-                      <Input
-                        type="url"
-                        placeholder={dict.documentUrlPlaceholder || (isRTL ? 'رابط المستند' : 'Document URL')}
-                        onBlur={(e) => {
-                          if (e.target.value) {
-                            handleDocumentUpload(
-                              docType.value,
-                              isRTL ? docType.labelAr : docType.label,
-                              e.target.value
-                            );
-                            e.target.value = '';
-                          }
-                        }}
+                      <Uploader
+                        category="document"
+                        folder="applications/documents"
+                        maxSize={10 * 1024 * 1024} // 10MB
+                        maxFiles={1}
+                        variant="compact"
+                        onUploadComplete={(results) => handleDocumentUpload(
+                          docType.value,
+                          isRTL ? docType.labelAr : docType.label,
+                          results
+                        )}
+                        className="w-full"
                       />
                     )}
                   </CardContent>

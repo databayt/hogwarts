@@ -10,7 +10,7 @@ import { auth } from '@/auth'
 import { db } from '@/lib/db'
 import { getTenantContext } from '@/lib/tenant-context'
 import { logger } from '@/lib/logger'
-import { put, del } from '@vercel/blob'
+import { getProvider } from '@/components/file'
 import { extractReceiptData, retryExtraction } from './ai/extract-receipt-data'
 import {
   uploadReceiptSchema,
@@ -75,22 +75,18 @@ export async function uploadReceipt(
       }
     }
 
-    // 4. Upload to Vercel Blob
-    const arrayBuffer = await file.arrayBuffer()
-    const buffer = Buffer.from(arrayBuffer)
-
+    // 4. Upload to storage using centralized provider
     const filename = `${schoolId}/receipts/${Date.now()}-${file.name}`
-
-    const blob = await put(filename, buffer, {
-      access: 'public',
-      addRandomSuffix: true,
+    const provider = getProvider('vercel_blob')
+    const fileUrl = await provider.upload(file, filename, {
+      contentType: file.type,
     })
 
-    logger.info('Receipt file uploaded to Vercel Blob', {
+    logger.info('Receipt file uploaded to storage', {
       action: 'receipt_upload',
       schoolId,
       userId: session.user.id,
-      filename: blob.pathname,
+      filename,
       size: file.size,
     })
 
@@ -100,7 +96,7 @@ export async function uploadReceipt(
         schoolId,
         userId: session.user.id!,
         fileName: file.name,
-        fileUrl: blob.url,
+        fileUrl,
         fileSize: file.size,
         mimeType: file.type,
         status: 'pending',
@@ -114,7 +110,7 @@ export async function uploadReceipt(
     })
 
     // 6. Trigger AI extraction asynchronously (don't await)
-    void extractReceiptData(receipt.id, blob.url)
+    void extractReceiptData(receipt.id, fileUrl)
 
     // 7. Revalidate receipts list page
     revalidatePath(`/s/[subdomain]/(platform)/receipts`)
@@ -344,10 +340,11 @@ export async function deleteReceipt(
       }
     }
 
-    // 5. Delete file from Vercel Blob
-    await del(receipt.fileUrl)
+    // 5. Delete file from storage using centralized provider
+    const provider = getProvider('vercel_blob')
+    await provider.delete(receipt.fileUrl)
 
-    logger.info('Receipt file deleted from Vercel Blob', {
+    logger.info('Receipt file deleted from storage', {
       action: 'receipt_file_delete',
       receiptId: id,
       schoolId,

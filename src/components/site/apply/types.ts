@@ -87,14 +87,27 @@ export interface AcademicStepData {
   thirdLanguage?: string;
 }
 
+export interface UploadedFileRef {
+  id: string;
+  url: string;
+  name: string;
+  type: string;
+  size?: number;
+  uploadedAt?: string;
+}
+
 export interface DocumentsStepData {
   photoUrl?: string;
   signatureUrl?: string;
+  photo?: UploadedFileRef;
+  signature?: UploadedFileRef;
   documents?: Array<{
     type: string;
     name: string;
     url: string;
     uploadedAt: string;
+    fileId?: string;
+    size?: number;
   }>;
 }
 

@@ -41,3 +41,26 @@ export { useImport } from "./use-import";
 
 // Components
 export { Importer, type ImporterProps } from "./importer";
+
+// Domain-specific CSV Import
+export {
+  csvImportService,
+  importStudents,
+  importTeachers,
+  generateStudentTemplate,
+  generateTeacherTemplate,
+  type ImportResult as CsvImportResult,
+} from "./csv-import";
+
+// CSV Validation Helpers
+export {
+  formatZodError,
+  validateDateFormat,
+  validatePhoneFormat,
+  validateGuardianInfo,
+  formatDuplicateError,
+  formatRequiredFieldError,
+  createRowErrorMessage,
+  validateCSVHeaders,
+  suggestCorrection,
+} from "./csv-validation";

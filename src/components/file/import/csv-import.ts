@@ -2,17 +2,15 @@
  * CSV Import Service - Domain-specific bulk import
  *
  * This file handles domain-specific student/teacher bulk import with database operations.
- * For generic client-side file import with UI wizard, use @/components/file/import.
- *
- * @see {@link @/components/file} - Generic file import/export module
+ * For generic client-side file import with UI wizard, use the Importer component.
  *
  * @example
  * ```tsx
  * // For UI-based file import with preview and mapping:
  * import { Importer, useImport } from "@/components/file"
  *
- * // For bulk database import (this module):
- * import { importStudents, importTeachers } from "@/lib/csv-import"
+ * // For bulk database import:
+ * import { importStudents, importTeachers } from "@/components/file"
  * ```
  */
 
@@ -28,7 +26,7 @@ import {
   validateGuardianInfo,
   formatDuplicateError,
   createRowErrorMessage,
-} from './csv-validation-helpers';
+} from './csv-validation';
 
 // Validation schemas for CSV data
 const studentCsvSchema = z.object({

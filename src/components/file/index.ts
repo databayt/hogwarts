@@ -93,6 +93,10 @@ export {
   DOCUMENT_ICONS,
   getCategoryFromMimeType,
   getSizeLimit,
+  // Storage provider selection
+  STORAGE_CONFIG,
+  SIZE_LABELS,
+  VIDEO_RECOMMENDATIONS,
 } from "./config";
 
 // ============================================================================
@@ -352,11 +356,10 @@ export type {
 } from "./upload";
 
 // ============================================================================
-// ImageKit Upload Hook
+// ImageKit Upload Hook & Utilities
 // ============================================================================
 export {
   useImageKitUpload,
-  IMAGEKIT_FOLDERS,
 } from "./upload";
 export type {
   ImageKitAuthParams,
@@ -365,6 +368,25 @@ export type {
   UseImageKitUploadOptions,
   UseImageKitUploadReturn,
 } from "./upload";
+
+// ImageKit utilities from providers
+export {
+  IMAGEKIT_FOLDERS,
+  BOOK_COVER_PRESETS,
+  IMAGE_TRANSFORMATIONS,
+  getUrlEndpoint,
+  getImagekitUrl,
+  getBookCoverUrl,
+  getAuthenticationParameters,
+  uploadToImageKit,
+  deleteFromImageKit,
+  getImageKitFileDetails,
+} from "./providers";
+export type {
+  TransformationOptions,
+  ImageKitUploadOptions,
+  ImageKitUploadResult as ImageKitDirectUploadResult,
+} from "./providers";
 
 // ============================================================================
 // Export Module
@@ -403,6 +425,10 @@ export {
   // Components
   ExportButton,
   SimpleExportButton,
+  // Legacy CSV Functions (backward compatibility)
+  arrayToCSV,
+  generateCSVFilename,
+  downloadCSV,
 } from "./export";
 export type {
   ExportFormat,
@@ -441,6 +467,22 @@ export {
   useImport,
   // Components
   Importer,
+  // Domain-specific CSV Import
+  csvImportService,
+  importStudents,
+  importTeachers,
+  generateStudentTemplate,
+  generateTeacherTemplate,
+  // CSV Validation Helpers
+  formatZodError,
+  validateDateFormat,
+  validatePhoneFormat,
+  validateGuardianInfo,
+  formatDuplicateError,
+  formatRequiredFieldError,
+  createRowErrorMessage,
+  validateCSVHeaders,
+  suggestCorrection,
 } from "./import";
 export type {
   ImportFormat,
@@ -453,6 +495,7 @@ export type {
   ImportOptions,
   UseImportReturn,
   ImporterProps,
+  CsvImportResult,
 } from "./import";
 
 // ============================================================================

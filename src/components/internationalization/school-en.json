@@ -2191,6 +2191,90 @@
         "saveDraft": "Save Draft",
         "next": "Next",
         "previous": "Previous"
+      },
+      "apply": {
+        "footer": {
+          "back": "Back",
+          "next": "Next",
+          "submit": "Submit Application",
+          "save": "Save",
+          "help": "Help",
+          "saving": "Saving...",
+          "lastSaved": "Last saved {time}"
+        },
+        "groups": {
+          "basicInfo": "Basic Information",
+          "familyEducation": "Family & Education",
+          "finalize": "Finalize"
+        },
+        "overview": {
+          "title": "Application Steps",
+          "subtitle": "Follow these steps to complete your application",
+          "getStarted": "Get Started",
+          "back": "Back",
+          "loading": "Loading..."
+        },
+        "steps": {
+          "personal": {
+            "title": "Personal Information",
+            "description": "Enter your basic personal details"
+          },
+          "contact": {
+            "title": "Contact Information",
+            "description": "Provide your contact details"
+          },
+          "guardian": {
+            "title": "Guardian Information",
+            "description": "Add parent/guardian details"
+          },
+          "academic": {
+            "title": "Academic Background",
+            "description": "Enter your educational history"
+          },
+          "documents": {
+            "title": "Documents",
+            "description": "Upload required documents"
+          },
+          "review": {
+            "title": "Review & Submit",
+            "description": "Review and submit your application"
+          }
+        },
+        "success": {
+          "title": "Application Submitted!",
+          "thankYou": "Thank you for applying to {schoolName}",
+          "applicationNumber": "Application Number",
+          "saveNumber": "Please save this number for future reference",
+          "nextSteps": "Next Steps",
+          "emailConfirmation": "Email Confirmation",
+          "emailConfirmationDesc": "You will receive an email confirming your application receipt",
+          "applicationReview": "Application Review",
+          "applicationReviewDesc": "Our admissions team will review your application within 5-7 business days",
+          "interview": "Interview / Assessment",
+          "interviewDesc": "You will be contacted to schedule an interview or assessment",
+          "finalDecision": "Final Decision",
+          "finalDecisionDesc": "You will receive the admission decision via email",
+          "trackStatus": "Track Application Status",
+          "checkStatus": "Check your application status",
+          "scheduleTour": "Schedule a School Tour",
+          "visitCampus": "Visit our campus",
+          "backToHome": "Back to Home",
+          "questions": "Have questions? Contact us at"
+        },
+        "documents": {
+          "photo": "Passport Photo",
+          "photoUrlPlaceholder": "Photo URL",
+          "signature": "Signature",
+          "signatureUrlPlaceholder": "Signature URL",
+          "otherDocuments": "Other Documents",
+          "documentUrlPlaceholder": "Document URL",
+          "dragDropFiles": "Drag and drop files here, or click to browse",
+          "uploadLimit": "Max {count} files, up to {size}MB each",
+          "uploading": "Uploading...",
+          "uploaded": "Uploaded",
+          "failed": "Upload failed"
+        },
+        "unsavedChanges": "You have unsaved changes. Are you sure you want to leave?"
       }
     }
   }

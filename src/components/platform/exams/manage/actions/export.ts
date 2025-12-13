@@ -4,7 +4,7 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { getTenantContext } from "@/lib/tenant-context";
 import { getExamsSchema } from "../validation";
-import { arrayToCSV } from "@/lib/csv-export";
+import { arrayToCSV } from "@/components/file";
 import type { ExamExportData, ActionResponse } from "./types";
 
 /**

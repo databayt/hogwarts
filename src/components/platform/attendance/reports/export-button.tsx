@@ -12,7 +12,7 @@ import {
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
 import { getAttendanceReportCsv, getAttendanceReport, getAttendanceStats } from "@/components/platform/attendance/actions";
-import { generateCSVFilename } from "@/lib/csv-export";
+import { generateCSVFilename } from "@/components/file";
 import { generateAttendancePDF, downloadPDF } from "./pdf-generator";
 import { generateAttendanceExcel, downloadExcel } from "./excel-generator";
 

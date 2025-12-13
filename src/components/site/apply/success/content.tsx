@@ -26,6 +26,14 @@ export default function SuccessContent({
   const subdomain = params.subdomain as string;
   const id = params.id as string;
 
+  // Access the success dictionary
+  const successDict = (dictionary as unknown as { school?: { admission?: { apply?: { success?: Record<string, string> } } } })?.school?.admission?.apply?.success ?? {};
+
+  // Helper to replace {schoolName} placeholder
+  const thankYouText = (successDict.thankYou || (isRTL
+    ? 'شكراً لتقديمك طلب الالتحاق بـ {schoolName}'
+    : 'Thank you for applying to {schoolName}')).replace('{schoolName}', schoolName);
+
   return (
     <div className="min-h-screen py-12">
       <div className="container max-w-2xl mx-auto px-4">
@@ -34,12 +42,10 @@ export default function SuccessContent({
             <CheckCircle2 className="w-10 h-10 text-green-600" />
           </div>
           <h1 className="text-3xl font-bold">
-            {isRTL ? "تم تقديم طلبك بنجاح!" : "Application Submitted!"}
+            {successDict.title || (isRTL ? "تم تقديم طلبك بنجاح!" : "Application Submitted!")}
           </h1>
           <p className="text-muted-foreground mt-2">
-            {isRTL
-              ? `شكراً لتقديمك طلب الالتحاق بـ ${schoolName}`
-              : `Thank you for applying to ${schoolName}`}
+            {thankYouText}
           </p>
         </div>
 
@@ -47,7 +53,7 @@ export default function SuccessContent({
           <Card className="mb-6">
             <CardHeader className="text-center pb-2">
               <CardDescription>
-                {isRTL ? "رقم الطلب" : "Application Number"}
+                {successDict.applicationNumber || (isRTL ? "رقم الطلب" : "Application Number")}
               </CardDescription>
               <CardTitle className="text-2xl font-mono">
                 {applicationNumber}
@@ -55,9 +61,9 @@ export default function SuccessContent({
             </CardHeader>
             <CardContent className="text-center">
               <p className="text-sm text-muted-foreground">
-                {isRTL
+                {successDict.saveNumber || (isRTL
                   ? "يرجى الاحتفاظ بهذا الرقم للمراجع المستقبلية"
-                  : "Please save this number for future reference"}
+                  : "Please save this number for future reference")}
               </p>
             </CardContent>
           </Card>
@@ -66,7 +72,7 @@ export default function SuccessContent({
         <Card className="mb-6">
           <CardHeader>
             <CardTitle className="text-lg">
-              {isRTL ? "الخطوات التالية" : "Next Steps"}
+              {successDict.nextSteps || (isRTL ? "الخطوات التالية" : "Next Steps")}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -76,12 +82,12 @@ export default function SuccessContent({
               </div>
               <div>
                 <h4 className="font-medium">
-                  {isRTL ? "تأكيد البريد الإلكتروني" : "Email Confirmation"}
+                  {successDict.emailConfirmation || (isRTL ? "تأكيد البريد الإلكتروني" : "Email Confirmation")}
                 </h4>
                 <p className="text-sm text-muted-foreground">
-                  {isRTL
+                  {successDict.emailConfirmationDesc || (isRTL
                     ? "ستتلقى بريداً إلكترونياً يؤكد استلام طلبك"
-                    : "You will receive an email confirming your application receipt"}
+                    : "You will receive an email confirming your application receipt")}
                 </p>
               </div>
             </div>
@@ -92,12 +98,12 @@ export default function SuccessContent({
               </div>
               <div>
                 <h4 className="font-medium">
-                  {isRTL ? "مراجعة الطلب" : "Application Review"}
+                  {successDict.applicationReview || (isRTL ? "مراجعة الطلب" : "Application Review")}
                 </h4>
                 <p className="text-sm text-muted-foreground">
-                  {isRTL
+                  {successDict.applicationReviewDesc || (isRTL
                     ? "سيقوم فريق القبول بمراجعة طلبك خلال 5-7 أيام عمل"
-                    : "Our admissions team will review your application within 5-7 business days"}
+                    : "Our admissions team will review your application within 5-7 business days")}
                 </p>
               </div>
             </div>
@@ -108,12 +114,12 @@ export default function SuccessContent({
               </div>
               <div>
                 <h4 className="font-medium">
-                  {isRTL ? "المقابلة / الاختبار" : "Interview / Assessment"}
+                  {successDict.interview || (isRTL ? "المقابلة / الاختبار" : "Interview / Assessment")}
                 </h4>
                 <p className="text-sm text-muted-foreground">
-                  {isRTL
+                  {successDict.interviewDesc || (isRTL
                     ? "سيتم التواصل معك لتحديد موعد المقابلة أو الاختبار"
-                    : "You will be contacted to schedule an interview or assessment"}
+                    : "You will be contacted to schedule an interview or assessment")}
                 </p>
               </div>
             </div>
@@ -124,12 +130,12 @@ export default function SuccessContent({
               </div>
               <div>
                 <h4 className="font-medium">
-                  {isRTL ? "القرار النهائي" : "Final Decision"}
+                  {successDict.finalDecision || (isRTL ? "القرار النهائي" : "Final Decision")}
                 </h4>
                 <p className="text-sm text-muted-foreground">
-                  {isRTL
+                  {successDict.finalDecisionDesc || (isRTL
                     ? "ستتلقى قرار القبول عبر البريد الإلكتروني"
-                    : "You will receive the admission decision via email"}
+                    : "You will receive the admission decision via email")}
                 </p>
               </div>
             </div>
@@ -143,10 +149,10 @@ export default function SuccessContent({
                 <FileText className="h-8 w-8 text-primary" />
                 <div>
                   <h4 className="font-medium">
-                    {isRTL ? "تتبع حالة الطلب" : "Track Application Status"}
+                    {successDict.trackStatus || (isRTL ? "تتبع حالة الطلب" : "Track Application Status")}
                   </h4>
                   <p className="text-sm text-muted-foreground">
-                    {isRTL ? "راجع حالة طلبك" : "Check your application status"}
+                    {successDict.checkStatus || (isRTL ? "راجع حالة طلبك" : "Check your application status")}
                   </p>
                 </div>
               </CardContent>
@@ -159,10 +165,10 @@ export default function SuccessContent({
                 <Calendar className="h-8 w-8 text-primary" />
                 <div>
                   <h4 className="font-medium">
-                    {isRTL ? "حجز جولة في المدرسة" : "Schedule a School Tour"}
+                    {successDict.scheduleTour || (isRTL ? "حجز جولة في المدرسة" : "Schedule a School Tour")}
                   </h4>
                   <p className="text-sm text-muted-foreground">
-                    {isRTL ? "زر حرمنا الجامعي" : "Visit our campus"}
+                    {successDict.visitCampus || (isRTL ? "زر حرمنا الجامعي" : "Visit our campus")}
                   </p>
                 </div>
               </CardContent>
@@ -173,7 +179,7 @@ export default function SuccessContent({
         <div className="mt-8 text-center">
           <Link href={`/${locale}/s/${subdomain}`}>
             <Button variant="outline">
-              {isRTL ? "العودة إلى الصفحة الرئيسية" : "Back to Home"}
+              {successDict.backToHome || (isRTL ? "العودة إلى الصفحة الرئيسية" : "Back to Home")}
               <ArrowRight className="w-4 h-4 ms-2" />
             </Button>
           </Link>
@@ -181,7 +187,7 @@ export default function SuccessContent({
 
         <div className="mt-8 text-center text-sm text-muted-foreground">
           <p>
-            {isRTL ? "هل لديك أسئلة؟ تواصل معنا على" : "Have questions? Contact us at"}{" "}
+            {successDict.questions || (isRTL ? "هل لديك أسئلة؟ تواصل معنا على" : "Have questions? Contact us at")}{" "}
             <a href={`mailto:admissions@${subdomain}.edu`} className="text-primary hover:underline">
               admissions@{subdomain}.edu
             </a>

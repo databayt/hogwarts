@@ -10,10 +10,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import {
   getAuthenticationParameters,
-  uploadFile,
+  uploadToImageKit,
   IMAGEKIT_FOLDERS,
-  type UploadResult,
-} from "@/lib/imagekit";
+  type ImageKitUploadResult,
+} from "@/components/file";
 
 // ============================================================================
 // GET: Authentication Parameters for Client-Side Upload
@@ -72,7 +72,7 @@ interface UploadRequest {
 
 interface UploadResponse {
   success: boolean;
-  data?: UploadResult;
+  data?: ImageKitUploadResult;
   error?: string;
 }
 
@@ -122,7 +122,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<UploadRes
     };
 
     // Upload to ImageKit
-    const result = await uploadFile({
+    const result = await uploadToImageKit({
       file: body.file,
       fileName: body.fileName,
       folder,

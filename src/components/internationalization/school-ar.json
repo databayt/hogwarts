@@ -2192,6 +2192,90 @@
         "saveDraft": "حفظ كمسودة",
         "next": "التالي",
         "previous": "السابق"
+      },
+      "apply": {
+        "footer": {
+          "back": "السابق",
+          "next": "التالي",
+          "submit": "تقديم الطلب",
+          "save": "حفظ",
+          "help": "مساعدة",
+          "saving": "جاري الحفظ...",
+          "lastSaved": "آخر حفظ {time}"
+        },
+        "groups": {
+          "basicInfo": "المعلومات الأساسية",
+          "familyEducation": "العائلة والتعليم",
+          "finalize": "إنهاء"
+        },
+        "overview": {
+          "title": "خطوات التقديم",
+          "subtitle": "اتبع هذه الخطوات لإكمال طلب التقديم",
+          "getStarted": "ابدأ",
+          "back": "رجوع",
+          "loading": "جاري التحميل..."
+        },
+        "steps": {
+          "personal": {
+            "title": "المعلومات الشخصية",
+            "description": "أدخل بياناتك الشخصية الأساسية"
+          },
+          "contact": {
+            "title": "معلومات الاتصال",
+            "description": "أدخل معلومات الاتصال الخاصة بك"
+          },
+          "guardian": {
+            "title": "معلومات ولي الأمر",
+            "description": "أضف معلومات ولي الأمر"
+          },
+          "academic": {
+            "title": "الخلفية الأكاديمية",
+            "description": "أدخل تاريخك التعليمي"
+          },
+          "documents": {
+            "title": "الوثائق",
+            "description": "ارفع الوثائق المطلوبة"
+          },
+          "review": {
+            "title": "المراجعة والإرسال",
+            "description": "راجع طلبك وقدمه"
+          }
+        },
+        "success": {
+          "title": "تم تقديم طلبك بنجاح!",
+          "thankYou": "شكراً لتقديمك طلب الالتحاق بـ {schoolName}",
+          "applicationNumber": "رقم الطلب",
+          "saveNumber": "يرجى الاحتفاظ بهذا الرقم للمراجع المستقبلية",
+          "nextSteps": "الخطوات التالية",
+          "emailConfirmation": "تأكيد البريد الإلكتروني",
+          "emailConfirmationDesc": "ستتلقى بريداً إلكترونياً يؤكد استلام طلبك",
+          "applicationReview": "مراجعة الطلب",
+          "applicationReviewDesc": "سيقوم فريق القبول بمراجعة طلبك خلال 5-7 أيام عمل",
+          "interview": "المقابلة / الاختبار",
+          "interviewDesc": "سيتم التواصل معك لتحديد موعد المقابلة أو الاختبار",
+          "finalDecision": "القرار النهائي",
+          "finalDecisionDesc": "ستتلقى قرار القبول عبر البريد الإلكتروني",
+          "trackStatus": "تتبع حالة الطلب",
+          "checkStatus": "راجع حالة طلبك",
+          "scheduleTour": "حجز جولة في المدرسة",
+          "visitCampus": "زر حرمنا الجامعي",
+          "backToHome": "العودة إلى الصفحة الرئيسية",
+          "questions": "هل لديك أسئلة؟ تواصل معنا على"
+        },
+        "documents": {
+          "photo": "الصورة الشخصية",
+          "photoUrlPlaceholder": "رابط الصورة",
+          "signature": "التوقيع",
+          "signatureUrlPlaceholder": "رابط التوقيع",
+          "otherDocuments": "المستندات الأخرى",
+          "documentUrlPlaceholder": "رابط المستند",
+          "dragDropFiles": "اسحب وأفلت الملفات هنا، أو انقر للتصفح",
+          "uploadLimit": "بحد أقصى {count} ملفات، حتى {size} ميجابايت لكل منها",
+          "uploading": "جاري الرفع...",
+          "uploaded": "تم الرفع",
+          "failed": "فشل الرفع"
+        },
+        "unsavedChanges": "لديك تغييرات غير محفوظة. هل أنت متأكد أنك تريد المغادرة؟"
       }
     }
   }

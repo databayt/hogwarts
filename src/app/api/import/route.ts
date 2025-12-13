@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { logger } from '@/lib/logger';
-import { importStudents, importTeachers, generateStudentTemplate, generateTeacherTemplate } from '@/lib/csv-import';
+import { importStudents, importTeachers, generateStudentTemplate, generateTeacherTemplate } from '@/components/file';
 
 export async function POST(request: NextRequest) {
   try {

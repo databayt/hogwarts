@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { getTenantContext } from "@/lib/tenant-context";
 import { studentCreateSchema, studentUpdateSchema, getStudentsSchema } from "@/components/platform/students/validation";
-import { arrayToCSV } from "@/lib/csv-export";
+import { arrayToCSV } from "@/components/file";
 
 // ============================================================================
 // Types

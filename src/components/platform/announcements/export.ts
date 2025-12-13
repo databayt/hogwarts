@@ -10,7 +10,7 @@ import { auth } from "@/auth";
 import { getTenantContext } from "@/lib/tenant-context";
 import { getAuthContext, assertAnnouncementPermission } from "./authorization";
 import { getAnnouncementsList } from "./queries";
-import { arrayToCSV, generateCSVFilename } from "@/lib/csv-export";
+import { arrayToCSV, generateCSVFilename } from "@/components/file";
 import type { ActionResponse } from "./actions";
 import type { AnnouncementListFilters, PaginationParams, SortParam } from "./queries";
 

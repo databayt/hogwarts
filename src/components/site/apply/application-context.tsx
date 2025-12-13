@@ -281,6 +281,22 @@ export const ApplicationProvider: React.FC<ApplicationProviderProps> = ({
     };
   }, [session.isDirty, session.isSaving, saveSession]);
 
+  // Unsaved changes warning - prevent accidental navigation/close
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (session.isDirty) {
+        // Standard way to trigger the browser's confirmation dialog
+        e.preventDefault();
+        // For older browsers
+        e.returnValue = '';
+        return '';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [session.isDirty]);
+
   // Load initial session if token provided
   useEffect(() => {
     if (initialSessionToken && !session.formData.personal) {

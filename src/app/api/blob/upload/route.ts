@@ -5,7 +5,7 @@ import { put } from "@vercel/blob";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { logger } from "@/lib/logger";
 import { rateLimit, RATE_LIMITS } from "@/lib/rate-limit";
-import { STORAGE_CONFIG, SIZE_LABELS } from "@/lib/storage-config";
+import { STORAGE_CONFIG, SIZE_LABELS } from "@/components/file";
 
 // S3 client for large file uploads (lazy initialized)
 let s3Client: S3Client | null = null;
